@@ -22,7 +22,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         cd woke
-        python -m pip install -e ".[tests,dev]"
+        python -m pip install -e ".[tests]"
         cd ..
     - name: Test with pytest
       run: |
