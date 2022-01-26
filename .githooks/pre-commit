@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-echo "/woke/.githooks/pre-commit.sh executing..."
+echo "/woke/.githooks/pre-commit executing..."
 
 ZERO=0
 
 function run_pre_commit_for()
 {
-    ./"$1"/.githooks/pre-commit.sh
+    ./"$1"/.githooks/pre-commit
     if [ $? -gt $ZERO ];
     then
         exit 1;
@@ -17,9 +17,9 @@ do
     number=$(git diff --cached --name-only --diff-filter=ACM $i | wc -l)
     if [ $number -gt $ZERO ];
     then
-        echo "calling /woke/$i/.githooks/pre-commit.sh"
+        echo "calling /woke/$i/.githooks/pre-commit"
         run_pre_commit_for $i
     fi
 done
 
-echo "/woke/.githooks/pre-commit.sh successfully executed."
+echo "/woke/.githooks/pre-commit successfully executed."
