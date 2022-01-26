@@ -6,6 +6,13 @@ Woke is a static analyzer and symbolic execution engine for Solidity.
 
 ### Creating a virtual environment
 
+We recommend creating a virtual environment inside of the `woke` subdirectory; we have encountered problems when creating it in the root directory.
+
+[source, bash]
+----
+$ cd woke
+----
+
 Using https://virtualenvwrapper.readthedocs.io[virtualenvwrapper]:
 
 [source, bash]
@@ -45,6 +52,6 @@ After cloning, execute.
 [source, bash]
 ----
 $ chmod +x ./setup-githooks.sh
-$  ./setup-githooks.sh
+$ ./setup-githooks.sh
 ----
 
