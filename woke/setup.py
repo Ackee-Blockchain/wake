@@ -1,11 +1,17 @@
 from setuptools import setup, find_packages
 
-install_requires = []
+install_requires = [
+    "pydantic >= 1.9.0",
+    "StrEnum",
+]
 
 # Also: [pyright](https://github.com/microsoft/pyright/) (distributed through npm)
 extras_require = dict(
     tests=["pytest >= 6.2.5, < 7.0"],
-    dev=["black, portray"],
+    dev=[
+        "black",
+        "portray",
+    ],
 )
 
 setup(
