@@ -2,10 +2,11 @@ from setuptools import setup, find_packages
 
 install_requires = []
 
-tests_require = ["pytest >= 6.25, < 0.7"]
-
 # Also: [pyright](https://github.com/microsoft/pyright/) (distributed through npm)
-extras_require = dict(dev=["black"])
+extras_require = dict(
+    tests=["pytest >= 6.25, < 0.7"],
+    dev=["black"],
+)
 
 setup(
     name="woke",
@@ -16,7 +17,6 @@ setup(
     packages=find_packages(),
     python_requires=">=3.7",
     install_requires=install_requires,
-    tests_require=tests_require,
     extras_require=extras_require,
     license="ISC",
     long_description=open("README.adoc", "r", encoding="utf-8").read(),
