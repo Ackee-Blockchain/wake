@@ -2,7 +2,7 @@
   "name": "solidity-intellisense",
   "version": "0.1.0",
   "description": "Solidity Intellisense provides intellisense language features for Solidity.",
-  "main": "src/index.js",
+  "main": "src/out/index.js",
   "scripts": {
     "test": "npm test"
   },

@@ -68,7 +68,7 @@ function arithmetic(uint a) pure returns (uint) {
 //                 - two interfaces:
 //                     - solidity `/// custom tags/annotations`
 //                     - `woke-config.toml`
-//     - solc version manager - MP // TODO: Implement woke/svm
+//     - solc version manager - MP
 //     - regex parser - MP
 //     - woke compile - MP
 //     - ast parsing - MP & MC
