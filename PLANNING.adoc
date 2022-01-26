@@ -35,6 +35,8 @@
 *** node_type discriminator
 **** should be supported in latest pydantic
 **** BUT doesn't work with alias
+*** The current version is based on https://unpkg.com/solidity-ast@0.4.28/types.d.ts
+**** unpkg provides the files on npm (that may be gitignored on github and built only when publishing to npm)
 
 * symbolic execution
 ** import ast, start creating nodes (in /tests) and start writing symbolic semantics
@@ -43,6 +45,8 @@
 *** OR just one class OR separate class for each type
 *** MVP: 
 
+// Afaik solidity is not natively supported, so using javascript as the highlight language...
+[source,javascript]
 ----
 function arithmetic(uint a) pure returns (uint) {
     if (a == 1) {
@@ -52,6 +56,8 @@ function arithmetic(uint a) pure returns (uint) {
     }
 } 
 ----
+
+*** should use native `__mul__` etc. functinos
 
 // - woke
 //     - config - MP
