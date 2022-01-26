@@ -1,0 +1,9 @@
+# `ast_parsing` tests
+
+Example ipython script in `woke` subdirectory:
+
+[source, python]
+----
+from woke.e_ast_parsing.b_solc.c_ast_nodes import AstSolc
+AstSolc.parse_file('./woke/e_ast_parsing/t_tests/series_vault.json')
+----
