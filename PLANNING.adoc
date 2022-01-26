@@ -26,6 +26,31 @@
 ** `woke server`
 ** in vs code (extension repo) click Debug: Launch extension (you need to configure launch.json)
 
+* ast parsing
+** we need to turn ast json into python object (+ data validation + type hints)
+** potential issues
+*** cyclic definitions
+*** node_type discriminator
+**** should be supported in latest pydantic
+**** BUT doesn't work with alias
+
+* symbolic execution
+** import ast, start creating nodes (in /tests) and start writing symbolic semantics
+** several options
+*** symbolic Uint/Int, then divide by bit-size
+*** OR just one class OR separate class for each type
+*** MVP: 
+
+----
+function arithmetic(uint a) pure returns (uint) {
+    if (a == 1) {
+        return 1;
+    } else {
+        return 2;
+    }
+} 
+----
+
 // - woke
 //     - config - MP
 //         - merging 3 dictionaries:
