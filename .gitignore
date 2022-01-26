@@ -46,7 +46,6 @@ nosetests.xml
 coverage.xml
 *.cover
 .hypothesis/
-.vscode/
 
 # pyenv
 .python-version
