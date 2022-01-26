@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-echo "/woke/.githooks/pre-commit executing..."
+echo "./.githooks/pre-commit executing..."
 
 ZERO=0
 
@@ -17,9 +17,9 @@ do
     number=$(git diff --cached --name-only --diff-filter=ACM $i | wc -l)
     if [ $number -gt $ZERO ];
     then
-        echo "calling /woke/$i/.githooks/pre-commit"
+        echo "calling ./$i/.githooks/pre-commit"
         run_pre_commit_for $i
     fi
 done
 
-echo "/woke/.githooks/pre-commit successfully executed."
+echo "./.githooks/pre-commit successfully executed."
