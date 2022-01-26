@@ -4,6 +4,40 @@ Woke is a static analyzer and symbolic execution engine for Solidity.
 
 ## Contributing
 
+### Creating a virtual environment
+
+Using https://virtualenvwrapper.readthedocs.io[virtualenvwrapper]:
+
+[source, bash]
+----
+$ mkvirtualenv woke
+----
+
+Using https://docs.python.org/3/library/venv.html[venv]:
+
+[source, bash]
+----
+$ python3 -m venv env
+$ source env/bin/activate
+----
+
+### Installation
+
+[source, bash]
+----
+$ cd woke
+$ pip install -e .[tests,dev]
+----
+
+Pyright, our static type checker, is distributed through npm:
+
+[source, bash]
+----
+$ npm i -g pyright
+----
+
+### Git hooks
+
 For Unix-like platforms, we provide a script that will set-up git hooks.
 
 After cloning, execute.
