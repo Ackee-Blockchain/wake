@@ -1,4 +1,7 @@
 [tool.black]
 target-version = ["py37"]
+
 [tool.pyright]
 strict = "**/*.py"
+
+[tool.portray]
