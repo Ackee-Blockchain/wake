@@ -11,6 +11,7 @@ extras_require = dict(
     dev=[
         "black",
         "portray",
+        "ipython",
     ],
 )
 
