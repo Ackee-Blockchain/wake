@@ -5,7 +5,7 @@ install_requires = []
 tests_require = ["pytest >= 6.25, < 0.7"]
 
 # Also: [pyright](https://github.com/microsoft/pyright/) (distributed through npm)
-extras_require = dict(dev=["black", "pylint"])
+extras_require = dict(dev=["black"])
 
 setup(
     name="woke",

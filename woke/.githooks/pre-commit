@@ -1,26 +1,25 @@
 #!/usr/bin/env bash
 
-# ZERO=0;
+ZERO=0;
 
-# echo "woke pre-commit hook"
+echo "/woke/.githooks/pre-commit executing..."
 
-# function check_last_command()
-# {
-#     if [ $? -gt $ZERO ];
-#     then
-#         exit 1;
-#     fi
-# }
+function check_last_command()
+{
+    if [ $? -gt $ZERO ];
+    then
+        exit 1;
+    fi
+}
 
-# echo "running \`black woke\`"
-# black woke;
-# check_last_command;
-# echo "running \`pylint woke/woke\`"
-# pylint woke/woke;
-# check_last_command;
-# echo "running \`pytest woke\`"
-# pytest woke;
-# check_last_command;
-# echo "running \`pyright woke/woke\`"
-# pyright woke/woke;
-# check_last_command;
+echo "running \`black woke\`"
+black woke;
+check_last_command;
+echo "running \`pytest woke\`"
+pytest woke;
+check_last_command;
+echo "running \`pyright woke/woke\`"
+pyright woke/woke;
+check_last_command;
+
+echo "/woke/.githooks/pre-commit successfully executed."
