@@ -1,3 +1,5 @@
+# Planning
+
 * woke-js
 ** at first just command-line interface to `woke`
 ** in the future can add programmatic interface

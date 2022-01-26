@@ -2,4 +2,15 @@
 
 Woke is a static analyzer and symbolic execution engine for Solidity.
 
-Check out 
+## Contributing
+
+For Unix-like platforms, we provide a script that will set-up git hooks.
+
+After cloning, execute.
+
+[source, bash]
+----
+$ chmod +x ./setup-githooks.sh
+$  ./setup-githooks.sh
+----
+
