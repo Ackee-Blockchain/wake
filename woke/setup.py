@@ -4,7 +4,7 @@ install_requires = []
 
 # Also: [pyright](https://github.com/microsoft/pyright/) (distributed through npm)
 extras_require = dict(
-    tests=["pytest >= 6.25, < 0.7"],
+    tests=["pytest >= 6.2.5, < 0.7"],
     dev=["black"],
 )
 
