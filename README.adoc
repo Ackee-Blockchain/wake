@@ -26,7 +26,7 @@ $ source env/bin/activate
 [source, bash]
 ----
 $ cd woke
-$ pip install -e .[tests,dev]
+$ pip install -e ".[tests,dev]"
 ----
 
 Pyright, our static type checker, is distributed through npm:
