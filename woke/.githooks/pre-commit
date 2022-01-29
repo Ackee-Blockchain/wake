@@ -4,20 +4,48 @@ ZERO=0;
 
 echo "/woke/.githooks/pre-commit executing..."
 
+function gen_stash_id()
+{
+    abc="abcdefghijklmonpqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    stash_id=""
+
+    for i in {1..16}
+    do
+        stash_id+=${abc:$RANDOM % ${#abc}:1}
+    done
+
+    echo "$stash_id"
+}
+
+function pop_stash()
+{
+    git stash list -n 1 | grep -f woke/.stash-id >/dev/null 2>&1
+
+    if [ $? -eq $ZERO ];
+    then
+        git stash pop
+    fi
+    rm woke/.stash-id
+}
+
 function check_last_command()
 {
     if [ $? -gt $ZERO ];
     then
+        pop_stash;
         exit 1;
     fi
 }
 
 touch woke/.post-commit-ignore
 
+stash_id=$(gen_stash_id)
+echo "$stash_id" > woke/.stash-id
+
 # commit staged changes so that they are not included into stash
 git commit --no-verify -m 'pre-commit hook tmp commit'
 # stash unstaged changes
-git stash
+git stash -m "$stash_id"
 # restore staged changes
 git reset --soft 'HEAD^'
 

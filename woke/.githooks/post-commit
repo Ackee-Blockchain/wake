@@ -1,8 +1,21 @@
 #!/usr/bin/env bash
 
-if [ -e woke/.post-commit-ignore ]; then
-    exit 0
+ZERO=0;
+
+if [[ -e woke/.post-commit-ignore || ! -e woke/.stash-id ]]; then
+    exit $ZERO
 fi
+
+function pop_stash()
+{
+    git stash list -n 1 | grep -f woke/.stash-id >/dev/null 2>&1
+
+    if [ $? -eq $ZERO ];
+    then
+        git stash pop
+    fi
+    rm woke/.stash-id
+}
 
 # add all changes made by 'black' as fixup commit
 touch woke/.post-commit-ignore
@@ -10,4 +23,4 @@ git add -u
 git commit --fixup='HEAD' --no-verify
 rm woke/.post-commit-ignore
 
-git stash pop
+pop_stash;
