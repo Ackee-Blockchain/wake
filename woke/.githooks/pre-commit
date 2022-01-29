@@ -32,6 +32,7 @@ function check_last_command()
 {
     if [ $? -gt $ZERO ];
     then
+        git restore .
         pop_stash;
         exit 1;
     fi
