@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+echo "./.githooks/post-commit executing..."
+
+ZERO=0
+
+function run_post_commit_for()
+{
+    ./"$1"/.githooks/post-commit
+    if [ $? -gt $ZERO ];
+    then
+        exit 1;
+    fi
+}
+
+for i in "woke" "woke-js" "editors/code";
+do
+    echo "calling ./$i/.githooks/post-commit"
+    run_post_commit_for $i
+done
+
+echo "./.githooks/post-commit successfully executed."
