@@ -2,22 +2,33 @@
 
 ZERO=0;
 
+# in case that post-commit hook should not run ('woke/.post-commit-ignore' exists)
+# or pre-commit hook did not run prior to this hook ('woke/.stash-id' does not exist)
+# just exit the hook
 if [[ -e woke/.post-commit-ignore || ! -e woke/.stash-id ]]; then
     exit $ZERO
 fi
 
+# there may be unstaged changes that were stashed in the pre-commit hook
+# try to pop them from the stash
 function pop_stash()
 {
+    # check if the top entry on the stash has the message matching the content of 'woke/.stash-id' file
+    # if it matches, there were unstaged changes prior to the commit that should be popped from the stash now
+    # in the other case there were no unstaged changes
     git stash list -n 1 | grep -f woke/.stash-id >/dev/null 2>&1
 
     if [ $? -eq $ZERO ];
     then
+        # this command may introduce merging conflicts
+        # this is an expected behavior
         git stash pop
     fi
+    # delete temporary .stash-id file anyway
     rm woke/.stash-id
 }
 
-# add all changes made by 'black' as fixup commit
+# add all changes made by 'black' and other pre-commit tools as a fixup commit
 touch woke/.post-commit-ignore
 git add -u
 git commit --fixup='HEAD' --no-verify

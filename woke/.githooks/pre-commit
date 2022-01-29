@@ -4,6 +4,8 @@ ZERO=0;
 
 echo "/woke/.githooks/pre-commit executing..."
 
+# generate a random 16 characters long string that will be used
+# to distinguish "user" stash entries from "pre-commit" stash entries
 function gen_stash_id()
 {
     abc="abcdefghijklmonpqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -17,12 +19,18 @@ function gen_stash_id()
     echo "$stash_id"
 }
 
+# there may be unstaged changes that were stashed before 'black' and other tools ran
+# try to pop them from the stash
 function pop_stash()
 {
+    # check if the top entry on the stash has the message matching the content of 'woke/.stash-id' file
+    # if it matches, there were unstaged changes prior to the commit that should be popped from the stash now
+    # in the other case there were no unstaged changes
     git stash list -n 1 | grep -f woke/.stash-id >/dev/null 2>&1
 
     if [ $? -eq $ZERO ];
     then
+        # this command should not case merging issues
         git stash pop
     fi
     rm woke/.stash-id
@@ -32,6 +40,8 @@ function check_last_command()
 {
     if [ $? -gt $ZERO ];
     then
+        # something went wrong
+        # revert all changes made by 'black' and the other tools
         git restore .
         pop_stash;
         exit 1;
@@ -43,7 +53,7 @@ touch woke/.post-commit-ignore
 stash_id=$(gen_stash_id)
 echo "$stash_id" > woke/.stash-id
 
-# commit staged changes so that they are not included into stash
+# commit staged changes so that they are not included into the stash
 git commit --no-verify -m 'pre-commit hook tmp commit'
 # stash unstaged changes
 git stash -m "$stash_id"
@@ -52,6 +62,7 @@ git reset --soft 'HEAD^'
 
 rm woke/.post-commit-ignore
 
+# find all staged "*.py" files
 pyfiles=()
 IFS=$'\n'
 for f in $(git diff --cached --name-only --diff-filter=ACMR)
