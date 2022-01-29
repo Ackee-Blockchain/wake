@@ -12,14 +12,29 @@ function check_last_command()
     fi
 }
 
-echo "running \`black woke\`"
-black woke;
-check_last_command;
+pyfiles=()
+IFS=$'\n'
+for f in $(git diff --cached --name-only --diff-filter=ACMR)
+do
+    if [[ "$f" == *.py ]]; then
+        pyfiles+=("$f")
+    fi
+done
+
+if [ ${#pyfiles[@]} -ne 0 ]; then
+    echo "running \`black ${pyfiles[@]}\`"
+    black woke;
+    check_last_command;
+fi
+
 echo "running \`pytest woke\`"
 pytest woke;
 check_last_command;
-echo "running \`pyright woke/woke\`"
-pyright woke/woke;
-check_last_command;
+
+if [ ${#pyfiles[@]} -ne 0 ]; then
+    echo "running \`pyright ${pyfiles[@]}\`"
+    pyright "${pyfiles[@]}";
+    check_last_command;
+fi
 
 echo "/woke/.githooks/pre-commit successfully executed."
