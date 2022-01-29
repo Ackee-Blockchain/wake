@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, Annotated, Any, Match, Union, Literal, List
+from typing import TYPE_CHECKING, Any, Match, Union, List
+from typing_extensions import Literal, Annotated
 import re
 from dataclasses import dataclass
 
