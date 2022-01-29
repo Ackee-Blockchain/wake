@@ -22,9 +22,4 @@ echo "running \`pyright woke/woke\`"
 pyright woke/woke;
 check_last_command;
 
-cd woke;
-echo "running \`portray as_html --overwrite\`"
-portray as_html --overwrite;
-cd ..;
-
 echo "/woke/.githooks/pre-commit successfully executed."
