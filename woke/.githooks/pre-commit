@@ -12,6 +12,17 @@ function check_last_command()
     fi
 }
 
+touch woke/.post-commit-ignore
+
+# commit staged changes so that they are not included into stash
+git commit --no-verify -m 'pre-commit hook tmp commit'
+# stash unstaged changes
+git stash
+# restore staged changes
+git reset --soft 'HEAD^'
+
+rm woke/.post-commit-ignore
+
 pyfiles=()
 IFS=$'\n'
 for f in $(git diff --cached --name-only --diff-filter=ACMR)

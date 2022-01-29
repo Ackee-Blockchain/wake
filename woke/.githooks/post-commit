@@ -1,1 +1,13 @@
 #!/usr/bin/env bash
+
+if [ -e woke/.post-commit-ignore ]; then
+    exit 0
+fi
+
+# add all changes made by 'black' as fixup commit
+touch woke/.post-commit-ignore
+git add -u
+git commit --fixup='HEAD' --no-verify
+rm woke/.post-commit-ignore
+
+git stash pop
