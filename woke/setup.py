@@ -3,6 +3,7 @@ from setuptools import setup, find_packages
 install_requires = [
     "pydantic >= 1.9.0",
     "typing_extensions >= 4.0, < 5",
+    "requests >= 2.20, < 3.0",
     "StrEnum",
 ]
 
