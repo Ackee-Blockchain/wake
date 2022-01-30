@@ -14,7 +14,7 @@ function run_pre_commit_for()
 
 for i in "woke" "woke-js" "editors/code";
 do
-    number=$(git diff --cached --name-only --diff-filter=ACM $i | wc -l)
+    number=$(git diff --cached --name-only --diff-filter=ACMR $i | wc -l)
     if [ $number -gt $ZERO ];
     then
         echo "calling ./$i/.githooks/pre-commit"
