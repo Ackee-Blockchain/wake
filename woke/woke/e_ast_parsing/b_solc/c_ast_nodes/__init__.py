@@ -205,11 +205,11 @@ class YulNode(SolcOrYulNode):
 
 class SolcSourceUnit(SolcNode):
     # override alias
-    nodeType: Literal["SourceUnit"] = Field(alias="nodeType")
+    node_type: Literal["SourceUnit"] = Field(alias="nodeType")
     # required
     absolute_path: AbsolutePath
     exported_symbols: ExportedSymbols
-    nodes: List[Annotated[SolcTopLevelMemberUnion, Field(discriminator="nodeType")]]
+    nodes: List[Annotated[SolcTopLevelMemberUnion, Field(discriminator="node_type")]]
     # optional
     license: Optional[License]
 
@@ -220,13 +220,13 @@ AstSolc = SolcSourceUnit
 
 class SolcPragmaDirective(SolcNode):
     # override alias
-    nodeType: Literal["PragmaDirective"] = Field(alias="nodeType")
+    node_type: Literal["PragmaDirective"] = Field(alias="nodeType")
     literals: Literals
 
 
 class SolcImportDirective(SolcNode):
     # override alias
-    nodeType: Literal["ImportDirective"] = Field(alias="nodeType")
+    node_type: Literal["ImportDirective"] = Field(alias="nodeType")
     # required
     absolute_path: AbsolutePath
     file: File
@@ -241,7 +241,7 @@ class SolcImportDirective(SolcNode):
 class SolcVariableDeclaration(SolcNode):
     # required
     # override alias
-    nodeType: Literal["VariableDeclaration"] = Field(alias="nodeType")
+    node_type: Literal["VariableDeclaration"] = Field(alias="nodeType")
     name: Name
     constant: Constant
     mutability: Mutability
@@ -263,7 +263,7 @@ class SolcVariableDeclaration(SolcNode):
 
 class SolcEnumDefinition(SolcNode):
     # override alias
-    nodeType: Literal["EnumDefinition"] = Field(alias="nodeType")
+    node_type: Literal["EnumDefinition"] = Field(alias="nodeType")
     # required
     name: Name
     canonical_name: CanonicalName
@@ -274,7 +274,7 @@ class SolcEnumDefinition(SolcNode):
 
 class SolcFunctionDefinition(SolcNode):
     # override alias
-    nodeType: Literal["FunctionDefinition"] = Field(alias="nodeType")
+    node_type: Literal["FunctionDefinition"] = Field(alias="nodeType")
     # required
     name: Name
     implemented: Implemented
@@ -297,7 +297,7 @@ class SolcFunctionDefinition(SolcNode):
 
 class SolcStructDefinition(SolcNode):
     # override alias
-    nodeType: Literal["StructDefinition"] = Field(alias="nodeType")
+    node_type: Literal["StructDefinition"] = Field(alias="nodeType")
     # required
     name: Name
     canonical_name: CanonicalName
@@ -310,7 +310,7 @@ class SolcStructDefinition(SolcNode):
 
 class SolcErrorDefinition(SolcNode):
     # override alias
-    nodeType: Literal["ErrorDefinition"] = Field(alias="nodeType")
+    node_type: Literal["ErrorDefinition"] = Field(alias="nodeType")
     # required
     name: Name
     name_location: NameLocation
@@ -321,10 +321,10 @@ class SolcErrorDefinition(SolcNode):
 
 class SolcUserDefinedValueTypeDefinition(SolcNode):
     # override alias
-    nodeType: Literal["UserDefinedValueTypeDefinition"] = Field(alias="nodeType")
+    node_type: Literal["UserDefinedValueTypeDefinition"] = Field(alias="nodeType")
     # required
     name: Name
-    underlying_type: SolcTypeNameUnion = Field(discriminator="nodeType")
+    underlying_type: SolcTypeNameUnion = Field(discriminator="node_type")
     # optional
     name_location: Optional[NameLocation]
     canonical_name: Optional[CanonicalName]
@@ -332,7 +332,7 @@ class SolcUserDefinedValueTypeDefinition(SolcNode):
 
 class SolcContractDefinition(SolcNode):
     # override alias
-    nodeType: Literal["ContractDefinition"] = Field(alias="nodeType")
+    node_type: Literal["ContractDefinition"] = Field(alias="nodeType")
     # required
     name: Name
     abstract: Abstract
@@ -341,7 +341,7 @@ class SolcContractDefinition(SolcNode):
     contract_kind: ContractKind
     fully_implemented: FullyImplemented
     linearized_base_contracts: LinearizedBaseContracts
-    nodes: List[Annotated[SolcContractMemberUnion, Field(discriminator="nodeType")]]
+    nodes: List[Annotated[SolcContractMemberUnion, Field(discriminator="node_type")]]
     scope: Scope
     # optional
     name_location: Optional[NameLocation]
@@ -352,7 +352,7 @@ class SolcContractDefinition(SolcNode):
 
 class SolcEventDefinition(SolcNode):
     # override alias
-    nodeType: Literal["EventDefinition"] = Field(alias="nodeType")
+    node_type: Literal["EventDefinition"] = Field(alias="nodeType")
     # required
     name: Name
     anonymous: Anonymous
@@ -364,7 +364,7 @@ class SolcEventDefinition(SolcNode):
 
 class SolcModifierDefinition(SolcNode):
     # override alias
-    nodeType: Literal["ModifierDefinition"] = Field(alias="nodeType")
+    node_type: Literal["ModifierDefinition"] = Field(alias="nodeType")
     # required
     name: Name
     body: "SolcBlock"
@@ -380,27 +380,27 @@ class SolcModifierDefinition(SolcNode):
 
 class SolcUsingForDirective(SolcNode):
     # override alias
-    nodeType: Literal["UsingForDirective"] = Field(alias="nodeType")
+    node_type: Literal["UsingForDirective"] = Field(alias="nodeType")
     # required
     # library_name: LibraryName
-    library_name: SolcLibraryNameUnion = Field(discriminator="nodeType")
-    type_name: SolcTypeNameUnion = Field(discriminator="nodeType")
+    library_name: SolcLibraryNameUnion = Field(discriminator="node_type")
+    type_name: SolcTypeNameUnion = Field(discriminator="node_type")
     # optional
 
 
 class SolcArrayTypeName(SolcNode):
     # override alias
-    nodeType: Literal["ArrayTypeName"] = Field(alias="nodeType")
+    node_type: Literal["ArrayTypeName"] = Field(alias="nodeType")
     # required
     type_descriptions: TypeDescriptionsModel
-    base_type: SolcTypeNameUnion = Field(discriminator="nodeType")
+    base_type: SolcTypeNameUnion = Field(discriminator="node_type")
     # optional
     length: Optional[SolcExpressionUnion]
 
 
 class SolcElementaryTypeName(SolcNode):
     # override alias
-    nodeType: Literal["ElementaryTypeName"] = Field(alias="nodeType")
+    node_type: Literal["ElementaryTypeName"] = Field(alias="nodeType")
     # required
     type_descriptions: TypeDescriptionsModel
     name: Name
@@ -410,7 +410,7 @@ class SolcElementaryTypeName(SolcNode):
 
 class SolcFunctionTypeName(SolcNode):
     # override alias
-    nodeType: Literal["FunctionTypeName"] = Field(alias="nodeType")
+    node_type: Literal["FunctionTypeName"] = Field(alias="nodeType")
     # required
     type_descriptions: TypeDescriptionsModel
     parameter_types: "SolcParameterList"
@@ -422,16 +422,16 @@ class SolcFunctionTypeName(SolcNode):
 
 class SolcMapping(SolcNode):
     # override alias
-    nodeType: Literal["Mapping"] = Field(alias="nodeType")
+    node_type: Literal["Mapping"] = Field(alias="nodeType")
     # required
     type_descriptions: TypeDescriptionsModel
-    key_type: SolcTypeNameUnion = Field(discriminator="nodeType")
-    value_Type: SolcTypeNameUnion = Field(discriminator="nodeType")
+    key_type: SolcTypeNameUnion = Field(discriminator="node_type")
+    value_Type: SolcTypeNameUnion = Field(discriminator="node_type")
     # optional
 
 
 class SolcUserDefinedTypeName(SolcNode):
-    nodeType: Literal["UserDefinedTypeName"] = Field(alias="nodeType")
+    node_type: Literal["UserDefinedTypeName"] = Field(alias="nodeType")
     # required
     type_descriptions: TypeDescriptionsModel
     referenced_declaration: ReferencedDeclaration
@@ -444,19 +444,19 @@ class SolcUserDefinedTypeName(SolcNode):
 
 class SolcBlock(SolcNode):
     # override alias
-    nodeType: Literal["Block"] = Field(alias="nodeType")
+    node_type: Literal["Block"] = Field(alias="nodeType")
     # required
     # optional
     # TODO:
     documentation: Optional[StrictStr]
     statements: Optional[
-        List[Annotated[SolcStatementUnion, Field(discriminator="nodeType")]]
+        List[Annotated[SolcStatementUnion, Field(discriminator="node_type")]]
     ]
 
 
 class SolcBreak(SolcNode):
     # override alias
-    nodeType: Literal["Break"] = Field(alias="nodeType")
+    node_type: Literal["Break"] = Field(alias="nodeType")
     # required
     # optional
     # TODO:
@@ -465,7 +465,7 @@ class SolcBreak(SolcNode):
 
 class SolcContinue(SolcNode):
     # override alias
-    nodeType: Literal["Continue"] = Field(alias="nodeType")
+    node_type: Literal["Continue"] = Field(alias="nodeType")
     # required
     # optional
     documentation: Optional[StrictStr]
@@ -473,17 +473,17 @@ class SolcContinue(SolcNode):
 
 class SolcDoWhileStatement(SolcNode):
     # override alias
-    nodeType: Literal["DoWhileStatement"] = Field(alias="nodeType")
+    node_type: Literal["DoWhileStatement"] = Field(alias="nodeType")
     # required
-    body: SolcStatementUnion = Field(discriminator="nodeType")
-    condition: SolcExpressionUnion = Field(discriminator="nodeType")
+    body: SolcStatementUnion = Field(discriminator="node_type")
+    condition: SolcExpressionUnion = Field(discriminator="node_type")
     # optional
     documentation: Optional[StrictStr]
 
 
 class SolcEmitStatement(SolcNode):
     # override alias
-    nodeType: Literal["EmitStatement"] = Field(alias="nodeType")
+    node_type: Literal["EmitStatement"] = Field(alias="nodeType")
     # required
     event_call: "SolcFunctionCall"
     # optional
@@ -492,18 +492,18 @@ class SolcEmitStatement(SolcNode):
 
 class SolcExpressionStatement(SolcNode):
     # override alias
-    nodeType: Literal["ExpressionStatement"] = Field(alias="nodeType")
+    node_type: Literal["ExpressionStatement"] = Field(alias="nodeType")
     # required
-    expression: SolcExpressionUnion = Field(discriminator="nodeType")
+    expression: SolcExpressionUnion = Field(discriminator="node_type")
     # optional
     documentation: Optional[StrictStr]
 
 
 class SolcForStatement(SolcNode):
     # override alias
-    nodeType: Literal["ForStatement"] = Field(alias="nodeType")
+    node_type: Literal["ForStatement"] = Field(alias="nodeType")
     # required
-    body: SolcStatementUnion = Field(discriminator="nodeType")
+    body: SolcStatementUnion = Field(discriminator="node_type")
     # optional
     documentation: Optional[StrictStr]
     condition: Optional[SolcExpressionUnion]
@@ -513,10 +513,10 @@ class SolcForStatement(SolcNode):
 
 class SolcIfStatement(SolcNode):
     # override alias
-    nodeType: Literal["IfStatement"] = Field(alias="nodeType")
+    node_type: Literal["IfStatement"] = Field(alias="nodeType")
     # required
-    condition: SolcExpressionUnion = Field(discriminator="nodeType")
-    true_body: SolcStatementUnion = Field(discriminator="nodeType")
+    condition: SolcExpressionUnion = Field(discriminator="node_type")
+    true_body: SolcStatementUnion = Field(discriminator="node_type")
     # optional
     documentation: Optional[StrictStr]
     false_body: Optional[SolcStatementUnion]
@@ -524,7 +524,7 @@ class SolcIfStatement(SolcNode):
 
 class SolcInlineAssembly(SolcNode):
     # override alias
-    nodeType: Literal["InlineAssembly"] = Field(alias="nodeType")
+    node_type: Literal["InlineAssembly"] = Field(alias="nodeType")
     # required
     # this one requires special care...
     ast: "YulBlock" = Field(..., alias="AST")
@@ -536,7 +536,7 @@ class SolcInlineAssembly(SolcNode):
 
 class SolcPlaceholderStatement(SolcNode):
     # override alias
-    nodeType: Literal["PlaceholderStatement"] = Field(alias="nodeType")
+    node_type: Literal["PlaceholderStatement"] = Field(alias="nodeType")
     # required
     # optional
     documentation: Optional[StrictStr]
@@ -544,7 +544,7 @@ class SolcPlaceholderStatement(SolcNode):
 
 class SolcReturn(SolcNode):
     # override alias
-    nodeType: Literal["Return"] = Field(alias="nodeType")
+    node_type: Literal["Return"] = Field(alias="nodeType")
     # required
     function_return_parameters: FunctionReturnParameters
     # optional
@@ -554,7 +554,7 @@ class SolcReturn(SolcNode):
 
 class SolcRevertStatement(SolcNode):
     # override alias
-    nodeType: Literal["RevertStatement"] = Field(alias="nodeType")
+    node_type: Literal["RevertStatement"] = Field(alias="nodeType")
     # required
     error_call: "SolcFunctionCall"
     # optional
@@ -563,7 +563,7 @@ class SolcRevertStatement(SolcNode):
 
 class SolcTryStatement(SolcNode):
     # override alias
-    nodeType: Literal["TryStatement"] = Field(alias="nodeType")
+    node_type: Literal["TryStatement"] = Field(alias="nodeType")
     # required
     clauses: List["SolcTryCatchClause"]
     external_call: "SolcFunctionCall"
@@ -573,16 +573,16 @@ class SolcTryStatement(SolcNode):
 
 class SolcUncheckedBlock(SolcNode):
     # override alias
-    nodeType: Literal["UncheckedBlock"] = Field(alias="nodeType")
+    node_type: Literal["UncheckedBlock"] = Field(alias="nodeType")
     # required
-    statements: List[Annotated[SolcStatementUnion, Field(discriminator="nodeType")]]
+    statements: List[Annotated[SolcStatementUnion, Field(discriminator="node_type")]]
     # optional
     documentation: Optional[StrictStr]
 
 
 class SolcVariableDeclarationStatement(SolcNode):
     # override alias
-    nodeType: Literal["VariableDeclarationStatement"] = Field(alias="nodeType")
+    node_type: Literal["VariableDeclarationStatement"] = Field(alias="nodeType")
     # required
     assignments: Assignments
     declarations: Declarations
@@ -593,33 +593,33 @@ class SolcVariableDeclarationStatement(SolcNode):
 
 class SolcWhileStatement(SolcNode):
     # override alias
-    nodeType: Literal["WhileStatement"] = Field(alias="nodeType")
+    node_type: Literal["WhileStatement"] = Field(alias="nodeType")
     # required
-    body: SolcStatementUnion = Field(discriminator="nodeType")
-    condition: SolcExpressionUnion = Field(discriminator="nodeType")
+    body: SolcStatementUnion = Field(discriminator="node_type")
+    condition: SolcExpressionUnion = Field(discriminator="node_type")
     # optional
     documentation: Optional[StrictStr]
 
 
 class SolcAssignment(SolcNode):
     # override alias
-    nodeType: Literal["Assignment"] = Field(alias="nodeType")
+    node_type: Literal["Assignment"] = Field(alias="nodeType")
     # required
     is_constant: IsConstant
     is_l_value: IsLValue
     is_pure: IsPure
     l_value_requested: LValueRequested
     type_descriptions: TypeDescriptionsModel
-    left_hand_side: SolcExpressionUnion = Field(discriminator="nodeType")
+    left_hand_side: SolcExpressionUnion = Field(discriminator="node_type")
     operator: AssignmentOperator
-    right_hand_side: SolcExpressionUnion = Field(discriminator="nodeType")
+    right_hand_side: SolcExpressionUnion = Field(discriminator="node_type")
     # optional
     argument_types: Optional[List[TypeDescriptionsModel]]
 
 
 class SolcBinaryOperation(SolcNode):
     # override alias
-    nodeType: Literal["BinaryOperation"] = Field(alias="nodeType")
+    node_type: Literal["BinaryOperation"] = Field(alias="nodeType")
     # required
     is_constant: IsConstant
     is_l_value: IsLValue
@@ -627,32 +627,32 @@ class SolcBinaryOperation(SolcNode):
     l_value_requested: LValueRequested
     type_descriptions: TypeDescriptionsModel
     common_type: TypeDescriptionsModel
-    left_expression: SolcExpressionUnion = Field(discriminator="nodeType")
+    left_expression: SolcExpressionUnion = Field(discriminator="node_type")
     operator: BinaryOpOperator
-    right_expression: SolcExpressionUnion = Field(discriminator="nodeType")
+    right_expression: SolcExpressionUnion = Field(discriminator="node_type")
     # optional
     argument_types: Optional[List[TypeDescriptionsModel]]
 
 
 class SolcConditional(SolcNode):
     # override alias
-    nodeType: Literal["Conditional"] = Field(alias="nodeType")
+    node_type: Literal["Conditional"] = Field(alias="nodeType")
     # required
     is_constant: IsConstant
     is_l_value: IsLValue
     is_pure: IsPure
     l_value_requested: LValueRequested
     type_descriptions: TypeDescriptionsModel
-    condition: SolcExpressionUnion = Field(discriminator="nodeType")
-    false_expression: SolcExpressionUnion = Field(discriminator="nodeType")
-    true_expression: SolcExpressionUnion = Field(discriminator="nodeType")
+    condition: SolcExpressionUnion = Field(discriminator="node_type")
+    false_expression: SolcExpressionUnion = Field(discriminator="node_type")
+    true_expression: SolcExpressionUnion = Field(discriminator="node_type")
     # optional
     argument_types: Optional[List[TypeDescriptionsModel]]
 
 
 class SolcElementaryTypeNameExpression(SolcNode):
     # override alias
-    nodeType: Literal["ElementaryTypeNameExpression"] = Field(alias="nodeType")
+    node_type: Literal["ElementaryTypeNameExpression"] = Field(alias="nodeType")
     # required
     is_constant: IsConstant
     is_l_value: IsLValue
@@ -666,15 +666,15 @@ class SolcElementaryTypeNameExpression(SolcNode):
 
 class SolcFunctionCall(SolcNode):
     # override alias
-    nodeType: Literal["FunctionCall"] = Field(alias="nodeType")
+    node_type: Literal["FunctionCall"] = Field(alias="nodeType")
     # required
     is_constant: IsConstant
     is_l_value: IsLValue
     is_pure: IsPure
     l_value_requested: LValueRequested
     type_descriptions: TypeDescriptionsModel
-    arguments: List[Annotated[SolcExpressionUnion, Field(discriminator="nodeType")]]
-    expression: SolcExpressionUnion = Field(discriminator="nodeType")
+    arguments: List[Annotated[SolcExpressionUnion, Field(discriminator="node_type")]]
+    expression: SolcExpressionUnion = Field(discriminator="node_type")
     kind: FunctionCallKind
     names: Names
     try_call: TryCall
@@ -684,15 +684,15 @@ class SolcFunctionCall(SolcNode):
 
 class SolcFunctionCallOptions(SolcNode):
     # override alias
-    nodeType: Literal["FunctionCallOptions"] = Field(alias="nodeType")
+    node_type: Literal["FunctionCallOptions"] = Field(alias="nodeType")
     # required
     is_constant: IsConstant
     is_pure: IsPure
     l_value_requested: LValueRequested
     type_descriptions: TypeDescriptionsModel
-    expression: SolcExpressionUnion = Field(discriminator="nodeType")
+    expression: SolcExpressionUnion = Field(discriminator="node_type")
     names: Names
-    options: List[Annotated[SolcExpressionUnion, Field(discriminator="nodeType")]]
+    options: List[Annotated[SolcExpressionUnion, Field(discriminator="node_type")]]
     # optional
     # TODO:
     is_l_value: Optional[IsLValue]
@@ -701,7 +701,7 @@ class SolcFunctionCallOptions(SolcNode):
 
 class SolcIdentifier(SolcNode):
     # override alias
-    nodeType: Literal["Identifier"] = Field(alias="nodeType")
+    node_type: Literal["Identifier"] = Field(alias="nodeType")
     # required
     name: Name
     overloaded_declarations: OverloadedDeclarations
@@ -713,29 +713,29 @@ class SolcIdentifier(SolcNode):
 
 class SolcIndexAccess(SolcNode):
     # override alias
-    nodeType: Literal["IndexAccess"] = Field(alias="nodeType")
+    node_type: Literal["IndexAccess"] = Field(alias="nodeType")
     # required
     is_constant: IsConstant
     is_l_value: IsLValue
     is_pure: IsPure
     l_value_requested: LValueRequested
     type_descriptions: TypeDescriptionsModel
-    base_expression: SolcExpressionUnion = Field(discriminator="nodeType")
-    index_expression: SolcExpressionUnion = Field(discriminator="nodeType")
+    base_expression: SolcExpressionUnion = Field(discriminator="node_type")
+    index_expression: SolcExpressionUnion = Field(discriminator="node_type")
     # optional
     argument_types: Optional[List[TypeDescriptionsModel]]
 
 
 class SolcIndexRangeAccess(SolcNode):
     # override alias
-    nodeType: Literal["IndexRangeAccess"] = Field(alias="nodeType")
+    node_type: Literal["IndexRangeAccess"] = Field(alias="nodeType")
     # required
     is_constant: IsConstant
     is_l_value: IsLValue
     is_pure: IsPure
     l_value_requested: LValueRequested
     type_descriptions: TypeDescriptionsModel
-    base_expression: SolcExpressionUnion = Field(discriminator="nodeType")
+    base_expression: SolcExpressionUnion = Field(discriminator="node_type")
     # optional
     argument_types: Optional[List[TypeDescriptionsModel]]
     end_expression: Optional[SolcExpressionUnion]
@@ -744,7 +744,7 @@ class SolcIndexRangeAccess(SolcNode):
 
 class SolcLiteral(SolcNode):
     # override alias
-    nodeType: Literal["Literal"] = Field(alias="nodeType")
+    node_type: Literal["Literal"] = Field(alias="nodeType")
     # required
     is_constant: IsConstant
     is_l_value: IsLValue
@@ -762,14 +762,14 @@ class SolcLiteral(SolcNode):
 
 class SolcMemberAccess(SolcNode):
     # override alias
-    nodeType: Literal["MemberAccess"] = Field(alias="nodeType")
+    node_type: Literal["MemberAccess"] = Field(alias="nodeType")
     # required
     is_constant: IsConstant
     is_l_value: IsLValue
     is_pure: IsPure
     l_value_requested: LValueRequested
     type_descriptions: TypeDescriptionsModel
-    expression: SolcExpressionUnion = Field(discriminator="nodeType")
+    expression: SolcExpressionUnion = Field(discriminator="node_type")
     member_name: MemberName
     # optional
     argument_types: Optional[List[TypeDescriptionsModel]]
@@ -778,13 +778,13 @@ class SolcMemberAccess(SolcNode):
 
 class SolcNewExpression(SolcNode):
     # override alias
-    nodeType: Literal["NewExpression"] = Field(alias="nodeType")
+    node_type: Literal["NewExpression"] = Field(alias="nodeType")
     # required
     is_constant: IsConstant
     is_pure: IsPure
     l_value_requested: LValueRequested
     type_descriptions: TypeDescriptionsModel
-    type_name: SolcTypeNameUnion = Field(discriminator="nodeType")
+    type_name: SolcTypeNameUnion = Field(discriminator="node_type")
     # optional
     argument_types: Optional[List[TypeDescriptionsModel]]
     is_l_value: Optional[IsLValue]
@@ -792,14 +792,14 @@ class SolcNewExpression(SolcNode):
 
 class SolcTupleExpression(SolcNode):
     # override alias
-    nodeType: Literal["TupleExpression"] = Field(alias="nodeType")
+    node_type: Literal["TupleExpression"] = Field(alias="nodeType")
     # required
     is_constant: IsConstant
     is_l_value: IsLValue
     is_pure: IsPure
     l_value_requested: LValueRequested
     type_descriptions: TypeDescriptionsModel
-    components: List[Annotated[SolcExpressionUnion, Field(discriminator="nodeType")]]
+    components: List[Annotated[SolcExpressionUnion, Field(discriminator="node_type")]]
     is_inline_array: IsInlineArray
     # optional
     argument_types: Optional[List[TypeDescriptionsModel]]
@@ -807,7 +807,7 @@ class SolcTupleExpression(SolcNode):
 
 class SolcUnaryOperation(SolcNode):
     # override alias
-    nodeType: Literal["UnaryOperation"] = Field(alias="nodeType")
+    node_type: Literal["UnaryOperation"] = Field(alias="nodeType")
     # required
     is_constant: IsConstant
     is_l_value: IsLValue
@@ -816,21 +816,21 @@ class SolcUnaryOperation(SolcNode):
     type_descriptions: TypeDescriptionsModel
     operator: UnaryOpOperator
     prefix: Prefix
-    sub_expression: SolcExpressionUnion = Field(discriminator="nodeType")
+    sub_expression: SolcExpressionUnion = Field(discriminator="node_type")
     # optional
     argument_types: Optional[List[TypeDescriptionsModel]]
 
 
 class SolcOverrideSpecifier(SolcNode):
     # override alias
-    nodeType: Literal["OverrideSpecifier"] = Field(alias="nodeType")
+    node_type: Literal["OverrideSpecifier"] = Field(alias="nodeType")
     # required
     overrides: Overrides
     # optional
 
 
 class SolcIdentifierPath(SolcNode):
-    nodeType: Literal["IdentifierPath"] = Field(alias="nodeType")
+    node_type: Literal["IdentifierPath"] = Field(alias="nodeType")
 
     # required
     name: Name
@@ -840,7 +840,7 @@ class SolcIdentifierPath(SolcNode):
 
 class SolcParameterList(SolcNode):
     # override alias
-    nodeType: Literal["ParameterList"] = Field(alias="nodeType")
+    node_type: Literal["ParameterList"] = Field(alias="nodeType")
     # required
     parameters: List["SolcVariableDeclaration"]
     # optional
@@ -848,7 +848,7 @@ class SolcParameterList(SolcNode):
 
 class SolcTryCatchClause(SolcNode):
     # override alias
-    nodeType: Literal["TryCatchClause"] = Field(alias="nodeType")
+    node_type: Literal["TryCatchClause"] = Field(alias="nodeType")
     # required
     block: "SolcBlock"
     error_name: ErrorName
@@ -858,7 +858,7 @@ class SolcTryCatchClause(SolcNode):
 
 class SolcStructuredDocumentation(SolcNode):
     # override alias
-    nodeType: Literal["StructuredDocumentation"] = Field(alias="nodeType")
+    node_type: Literal["StructuredDocumentation"] = Field(alias="nodeType")
     # required
     text: Text
     # optional
@@ -866,7 +866,7 @@ class SolcStructuredDocumentation(SolcNode):
 
 class SolcEnumValue(SolcNode):
     # override alias
-    nodeType: Literal["EnumValue"] = Field(alias="nodeType")
+    node_type: Literal["EnumValue"] = Field(alias="nodeType")
     # required
     name: Name
     # optional
@@ -875,31 +875,31 @@ class SolcEnumValue(SolcNode):
 
 class SolcInheritanceSpecifier(SolcNode):
     # override alias
-    nodeType: Literal["InheritanceSpecifier"] = Field(alias="nodeType")
+    node_type: Literal["InheritanceSpecifier"] = Field(alias="nodeType")
     # required
     base_name: BaseName
     # optional
     # arguments: Optional[List['SolcExpressionAnn']]
     arguments: Optional[
-        List[Annotated[SolcExpressionUnion, Field(discriminator="nodeType")]]
+        List[Annotated[SolcExpressionUnion, Field(discriminator="node_type")]]
     ]
 
 
 class SolcModifierInvocation(SolcNode):
     # override alias
-    nodeType: Literal["ModifierInvocation"] = Field(alias="nodeType")
+    node_type: Literal["ModifierInvocation"] = Field(alias="nodeType")
     # required
     modifier_name: ModifierName
     # optional
     arguments: Optional[
-        List[Annotated[SolcExpressionUnion, Field(discriminator="nodeType")]]
+        List[Annotated[SolcExpressionUnion, Field(discriminator="node_type")]]
     ]
     kind: Optional[ModifierInvocationKind]
 
 
 class YulAssignment(YulNode):
     # override alias
-    nodeType: Literal["YulAssignment"] = Field(alias="nodeType")
+    node_type: Literal["YulAssignment"] = Field(alias="nodeType")
     # required
     value: "YulExpressionUnion"
     variable_names: List["YulIdentifier"]
@@ -908,7 +908,7 @@ class YulAssignment(YulNode):
 
 class YulBlock(YulNode):
     # override alias
-    nodeType: Literal["YulBlock"] = Field(alias="nodeType")
+    node_type: Literal["YulBlock"] = Field(alias="nodeType")
     # required
     statements: List["YulStatementUnion"]
     # optional
@@ -916,7 +916,7 @@ class YulBlock(YulNode):
 
 class YulBreak(YulNode):
     # override alias
-    nodeType: Literal["YulBreak"] = Field(alias="nodeType")
+    node_type: Literal["YulBreak"] = Field(alias="nodeType")
     # required
 
     # optional
@@ -924,14 +924,14 @@ class YulBreak(YulNode):
 
 class YulContinue(YulNode):
     # override alias
-    nodeType: Literal["YulContinue"] = Field(alias="nodeType")
+    node_type: Literal["YulContinue"] = Field(alias="nodeType")
     # required
     # optional
 
 
 class YulExpressionStatement(YulNode):
     # override alias
-    nodeType: Literal["YulExpressionStatement"] = Field(alias="nodeType")
+    node_type: Literal["YulExpressionStatement"] = Field(alias="nodeType")
     # required
     expression: "YulExpressionUnion"
     # optional
@@ -939,14 +939,14 @@ class YulExpressionStatement(YulNode):
 
 class YulLeave(YulNode):
     # override alias
-    nodeType: Literal["YulLeave"] = Field(alias="nodeType")
+    node_type: Literal["YulLeave"] = Field(alias="nodeType")
     # required
     # optional
 
 
 class YulForLoop(YulNode):
     # override alias
-    nodeType: Literal["YulForLoop"] = Field(alias="nodeType")
+    node_type: Literal["YulForLoop"] = Field(alias="nodeType")
     # required
     body: "YulBlock"
     condition: "YulExpressionUnion"
@@ -957,7 +957,7 @@ class YulForLoop(YulNode):
 
 class YulFunctionDefinition(YulNode):
     # override alias
-    nodeType: Literal["YulFunctionDefinition"] = Field(alias="nodeType")
+    node_type: Literal["YulFunctionDefinition"] = Field(alias="nodeType")
     # required
     body: "YulBlock"
     name: Name
@@ -968,7 +968,7 @@ class YulFunctionDefinition(YulNode):
 
 class YulIf(YulNode):
     # override alias
-    nodeType: Literal["YulIf"] = Field(alias="nodeType")
+    node_type: Literal["YulIf"] = Field(alias="nodeType")
     # required
     body: "YulBlock"
     condition: "YulExpressionUnion"
@@ -977,7 +977,7 @@ class YulIf(YulNode):
 
 class YulSwitch(YulNode):
     # override alias
-    nodeType: Literal["YulSwitch"] = Field(alias="nodeType")
+    node_type: Literal["YulSwitch"] = Field(alias="nodeType")
     # required
     cases: List["YulCase"]
     expression: "YulExpressionUnion"
@@ -986,7 +986,7 @@ class YulSwitch(YulNode):
 
 class YulVariableDeclaration(YulNode):
     # override alias
-    nodeType: Literal["YulVariableDeclaration"] = Field(alias="nodeType")
+    node_type: Literal["YulVariableDeclaration"] = Field(alias="nodeType")
     # required
     variables: List["YulTypedName"]
     # optional
@@ -995,7 +995,7 @@ class YulVariableDeclaration(YulNode):
 
 class YulFunctionCall(YulNode):
     # override alias
-    nodeType: Literal["YulFunctionCall"] = Field(alias="nodeType")
+    node_type: Literal["YulFunctionCall"] = Field(alias="nodeType")
     # required
     arguments: List["YulExpressionUnion"]
     function_name: "YulIdentifier"
@@ -1004,7 +1004,7 @@ class YulFunctionCall(YulNode):
 
 class YulIdentifier(YulNode):
     # override alias
-    nodeType: Literal["YulIdentifier"] = Field(alias="nodeType")
+    node_type: Literal["YulIdentifier"] = Field(alias="nodeType")
     # required
     name: Name
     # optional
@@ -1012,7 +1012,7 @@ class YulIdentifier(YulNode):
 
 class YulLiteralValue(YulNode):
     # override alias
-    nodeType: Literal["YulLiteralValue"] = Field(alias="nodeType")
+    node_type: Literal["YulLiteralValue"] = Field(alias="nodeType")
     # required
     value: Value
     kind: YulLiteralValueKind
@@ -1022,7 +1022,7 @@ class YulLiteralValue(YulNode):
 
 class YulLiteralHexValue(YulNode):
     # override alias
-    nodeType: Literal["YulLiteralHexValue"] = Field(alias="nodeType")
+    node_type: Literal["YulLiteralHexValue"] = Field(alias="nodeType")
     # required
     hex_value: HexValue
     kind: YulLiteralHexValueKind
@@ -1033,7 +1033,7 @@ class YulLiteralHexValue(YulNode):
 
 class YulTypedName(YulNode):
     # override alias
-    nodeType: Literal["YulTypedName"] = Field(alias="nodeType")
+    node_type: Literal["YulTypedName"] = Field(alias="nodeType")
     # required
     name: Name
     type: Type
@@ -1042,7 +1042,7 @@ class YulTypedName(YulNode):
 
 class YulCase(YulNode):
     # override alias
-    nodeType: Literal["YulCase"] = Field(alias="nodeType")
+    node_type: Literal["YulCase"] = Field(alias="nodeType")
     # required
     body: "YulBlock"
     # value = Annotated[YulCaseValue, Field(..., discriminator='node_type')]
