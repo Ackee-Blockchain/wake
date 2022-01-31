@@ -4,7 +4,7 @@ import re
 from dataclasses import dataclass
 
 from pydantic import Field
-from pydantic.class_validators import validator
+from pydantic.class_validators import validator, root_validator
 
 from woke.e_ast_parsing.a_abc import AstAbc
 from woke.e_ast_parsing.b_solc.a_ast_basic_types import *
@@ -129,12 +129,7 @@ YulStatementUnion = Union[
 YulExpressionUnion = Union[
     "YulFunctionCall",
     "YulIdentifier",
-    "YulLiteralUnion",
-]
-
-YulLiteralUnion = Union[
-    "YulLiteralValue",
-    "YulLiteralHexValue",
+    "YulLiteral",
 ]
 
 Declarations = List[Optional["SolcVariableDeclaration"]]
@@ -152,7 +147,7 @@ Overrides = Union[
 
 YulCaseValue = Union[
     Literal["default"],
-    "YulLiteralUnion",
+    "YulLiteral",
 ]
 
 # VariableDeclaration
@@ -1012,25 +1007,23 @@ class YulIdentifier(YulNode):
     # optional
 
 
-class YulLiteralValue(YulNode):
+class YulLiteral(YulNode):
     # override alias
-    node_type: Literal["YulLiteralValue"] = Field(alias="nodeType")
+    node_type: Literal["YulLiteral"] = Field(alias="nodeType")
     # required
-    value: Value
     kind: YulLiteralValueKind
     type: Type
-    # optional
-
-
-class YulLiteralHexValue(YulNode):
-    # override alias
-    node_type: Literal["YulLiteralHexValue"] = Field(alias="nodeType")
-    # required
-    hex_value: HexValue
-    kind: YulLiteralHexValueKind
-    type: Type
-    # optional
+    # at least one of these should be set
     value: Optional[Value]
+    hex_value: Optional[HexValue]
+
+    @root_validator
+    def value_or_hex_value_set(cls, values):
+        value, hex_value = values.get("value"), values.get("hex_value")
+        assert (
+            value is not None or hex_value is not None
+        ), "YulLiteral: either 'value' or 'hex_value' must be set"
+        return values
 
 
 class YulTypedName(YulNode):
@@ -1120,8 +1113,7 @@ YulSwitch.update_forward_refs()
 YulVariableDeclaration.update_forward_refs()
 YulFunctionCall.update_forward_refs()
 YulIdentifier.update_forward_refs()
-YulLiteralValue.update_forward_refs()
-YulLiteralHexValue.update_forward_refs()
+YulLiteral.update_forward_refs()
 YulTypedName.update_forward_refs()
 YulCase.update_forward_refs()
 # endregion update_forward_refs
