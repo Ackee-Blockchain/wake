@@ -77,14 +77,14 @@ SolcExpressionUnion = Union[
     "SolcConditional",
     "SolcElementaryTypeNameExpression",
     "SolcFunctionCall",
-    # 'SolcFunctionCallOptions',
+    "SolcFunctionCallOptions",
     "SolcIdentifier",
     "SolcIndexAccess",
     "SolcIndexRangeAccess",
     "SolcLiteral",
     "SolcMemberAccess",
     "SolcNewExpression",
-    # 'SolcTupleExpression',
+    "SolcTupleExpression",
     "SolcUnaryOperation",
 ]
 
