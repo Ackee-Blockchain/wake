@@ -257,8 +257,8 @@ class SolcVariableDeclaration(SolcNode):
     function_selector: Optional[StrictStr]
     indexed: Optional[Indexed]
     overrides: Optional["SolcOverrideSpecifier"]
-    type_name: Optional[SolcTypeNameUnion]
-    value: Optional[SolcExpressionUnion]
+    type_name: Optional[SolcTypeNameUnion] = Field(discriminator="node_type")
+    value: Optional[SolcExpressionUnion] = Field(discriminator="node_type")
 
 
 class SolcEnumDefinition(SolcNode):
@@ -395,7 +395,7 @@ class SolcArrayTypeName(SolcNode):
     type_descriptions: TypeDescriptionsModel
     base_type: SolcTypeNameUnion = Field(discriminator="node_type")
     # optional
-    length: Optional[SolcExpressionUnion]
+    length: Optional[SolcExpressionUnion] = Field(discriminator="node_type")
 
 
 class SolcElementaryTypeName(SolcNode):
@@ -506,8 +506,10 @@ class SolcForStatement(SolcNode):
     body: SolcStatementUnion = Field(discriminator="node_type")
     # optional
     documentation: Optional[StrictStr]
-    condition: Optional[SolcExpressionUnion]
-    initialization_expression: Optional[SolcInitExprUnion]
+    condition: Optional[SolcExpressionUnion] = Field(discriminator="node_type")
+    initialization_expression: Optional[SolcInitExprUnion] = Field(
+        discriminator="node_type"
+    )
     loop_expression: "SolcExpressionStatement"
 
 
@@ -519,7 +521,7 @@ class SolcIfStatement(SolcNode):
     true_body: SolcStatementUnion = Field(discriminator="node_type")
     # optional
     documentation: Optional[StrictStr]
-    false_body: Optional[SolcStatementUnion]
+    false_body: Optional[SolcStatementUnion] = Field(discriminator="node_type")
 
 
 class SolcInlineAssembly(SolcNode):
@@ -549,7 +551,7 @@ class SolcReturn(SolcNode):
     function_return_parameters: FunctionReturnParameters
     # optional
     documentation: Optional[StrictStr]
-    expression: Optional[SolcExpressionUnion]
+    expression: Optional[SolcExpressionUnion] = Field(discriminator="node_type")
 
 
 class SolcRevertStatement(SolcNode):
@@ -588,7 +590,7 @@ class SolcVariableDeclarationStatement(SolcNode):
     declarations: Declarations
     # optional
     documentation: Optional[StrictStr]
-    initial_value: Optional[SolcExpressionUnion]
+    initial_value: Optional[SolcExpressionUnion] = Field(discriminator="node_type")
 
 
 class SolcWhileStatement(SolcNode):
@@ -738,8 +740,8 @@ class SolcIndexRangeAccess(SolcNode):
     base_expression: SolcExpressionUnion = Field(discriminator="node_type")
     # optional
     argument_types: Optional[List[TypeDescriptionsModel]]
-    end_expression: Optional[SolcExpressionUnion]
-    start_expression: Optional[SolcExpressionUnion]
+    end_expression: Optional[SolcExpressionUnion] = Field(discriminator="node_type")
+    start_expression: Optional[SolcExpressionUnion] = Field(discriminator="node_type")
 
 
 class SolcLiteral(SolcNode):
@@ -901,7 +903,7 @@ class YulAssignment(YulNode):
     # override alias
     node_type: Literal["YulAssignment"] = Field(alias="nodeType")
     # required
-    value: "YulExpressionUnion"
+    value: "YulExpressionUnion" = Field(discriminator="node_type")
     variable_names: List["YulIdentifier"]
     # optional
 
@@ -933,7 +935,7 @@ class YulExpressionStatement(YulNode):
     # override alias
     node_type: Literal["YulExpressionStatement"] = Field(alias="nodeType")
     # required
-    expression: "YulExpressionUnion"
+    expression: "YulExpressionUnion" = Field(discriminator="node_type")
     # optional
 
 
@@ -949,7 +951,7 @@ class YulForLoop(YulNode):
     node_type: Literal["YulForLoop"] = Field(alias="nodeType")
     # required
     body: "YulBlock"
-    condition: "YulExpressionUnion"
+    condition: "YulExpressionUnion" = Field(discriminator="node_type")
     post: "YulBlock"
     pre: "YulBlock"
     # optional
@@ -971,7 +973,7 @@ class YulIf(YulNode):
     node_type: Literal["YulIf"] = Field(alias="nodeType")
     # required
     body: "YulBlock"
-    condition: "YulExpressionUnion"
+    condition: "YulExpressionUnion" = Field(discriminator="node_type")
     # optional
 
 
@@ -980,7 +982,7 @@ class YulSwitch(YulNode):
     node_type: Literal["YulSwitch"] = Field(alias="nodeType")
     # required
     cases: List["YulCase"]
-    expression: "YulExpressionUnion"
+    expression: "YulExpressionUnion" = Field(discriminator="node_type")
     # optional
 
 
@@ -990,14 +992,14 @@ class YulVariableDeclaration(YulNode):
     # required
     variables: List["YulTypedName"]
     # optional
-    value: Optional["YulExpressionUnion"]
+    value: Optional["YulExpressionUnion"] = Field(discriminator="node_type")
 
 
 class YulFunctionCall(YulNode):
     # override alias
     node_type: Literal["YulFunctionCall"] = Field(alias="nodeType")
     # required
-    arguments: List["YulExpressionUnion"]
+    arguments: List[Annotated["YulExpressionUnion", Field(discriminator="node_type")]]
     function_name: "YulIdentifier"
     # optional
 
