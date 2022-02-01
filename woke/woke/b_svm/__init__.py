@@ -1,4 +1,4 @@
-from typing import Optional, Union, Dict, List
+from typing import Optional, Union, Dict, List, Set
 from abc import ABC, abstractmethod
 from pathlib import Path
 import platform
@@ -44,6 +44,17 @@ class CompilerVersionManagerAbc(ABC):
     @abstractmethod
     def get_path(self, version: str) -> Path:
         pass
+
+    @abstractmethod
+    def list_all(self) -> Set[str]:
+        pass
+
+    def list_installed(self) -> Set[str]:
+        installed = set()
+        for version in self.list_all():
+            if self.get_path(version).is_file():
+                installed.add(version)
+        return installed
 
 
 class SolcVersionManager(CompilerVersionManagerAbc):
@@ -136,6 +147,16 @@ class SolcVersionManager(CompilerVersionManagerAbc):
             raise ValueError(f"solc version '{version}' does not exist")
 
         return self.__compilers_path / self.__solc_builds.releases[version]
+
+    def list_all(self) -> Set[str]:
+        if self.__solc_builds is None:
+            self.__fetch_list_file()
+            if self.__solc_builds is None:
+                raise RuntimeError(
+                    f"Unable to fetch or correctly parse {self.__solc_list_url}."
+                )
+
+        return set(self.__solc_builds.releases.keys())
 
     def __fetch_list_file(self) -> None:
         response = requests.get(self.__solc_list_url)
