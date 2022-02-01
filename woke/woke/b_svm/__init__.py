@@ -91,12 +91,11 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         self.__compilers_path.mkdir(parents=True, exist_ok=True)
 
     def install(self, version: str, force_reinstall: bool = False) -> None:
+        self.__fetch_list_file()
         if self.__solc_builds is None:
-            self.__fetch_list_file()
-            if self.__solc_builds is None:
-                raise RuntimeError(
-                    f"Unable to fetch or correctly parse {self.__solc_list_url}."
-                )
+            raise RuntimeError(
+                f"Unable to fetch or correctly parse {self.__solc_list_url}."
+            )
 
         if self.get_path(version).is_file() and not force_reinstall:
             return
@@ -136,12 +135,11 @@ class SolcVersionManager(CompilerVersionManagerAbc):
             )
 
     def get_path(self, version: str) -> Path:
+        self.__fetch_list_file()
         if self.__solc_builds is None:
-            self.__fetch_list_file()
-            if self.__solc_builds is None:
-                raise RuntimeError(
-                    f"Unable to fetch or correctly parse {self.__solc_list_url}."
-                )
+            raise RuntimeError(
+                f"Unable to fetch or correctly parse {self.__solc_list_url}."
+            )
 
         if version not in self.__solc_builds.releases:
             raise ValueError(f"solc version '{version}' does not exist")
@@ -149,16 +147,18 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         return self.__compilers_path / self.__solc_builds.releases[version]
 
     def list_all(self) -> Set[str]:
+        self.__fetch_list_file()
         if self.__solc_builds is None:
-            self.__fetch_list_file()
-            if self.__solc_builds is None:
-                raise RuntimeError(
-                    f"Unable to fetch or correctly parse {self.__solc_list_url}."
-                )
+            raise RuntimeError(
+                f"Unable to fetch or correctly parse {self.__solc_list_url}."
+            )
 
         return set(self.__solc_builds.releases.keys())
 
     def __fetch_list_file(self) -> None:
+        if self.__solc_builds is not None:
+            return
+
         response = requests.get(self.__solc_list_url)
         self.__solc_builds = SolcBuilds.parse_raw(response.text)
         self.__solc_list_path.write_text(response.text, encoding="utf-8")
