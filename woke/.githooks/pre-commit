@@ -56,7 +56,7 @@ echo "$stash_id" > woke/.stash-id
 # commit staged changes so that they are not included into the stash
 git commit --no-verify -m 'pre-commit hook tmp commit' >/dev/null
 # stash unstaged changes
-git stash -m "$stash_id" >/dev/null
+git stash -u -m "$stash_id" >/dev/null
 # restore staged changes
 git reset --soft 'HEAD^'
 
