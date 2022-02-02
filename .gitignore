@@ -1,3 +1,7 @@
+# git hooks magic
+woke/.stash-id
+woke/.post-commit-ignore
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.DS_Store
