@@ -78,9 +78,17 @@ if [ ${#pyfiles[@]} -ne 0 ]; then
     check_last_command;
 fi
 
-echo "running \`pytest woke\`"
-pytest woke;
-check_last_command;
+if [ -z ${WOKE_HOOKS_RUN_ALL_TESTS+dummy} ]; then
+    # WOKE_HOOKS_RUN_ALL_TESTS is unset
+    echo "running \`pytest woke -m \"not slow\"\`"
+    pytest woke -m "not slow";
+    check_last_command;
+else
+    # WOKE_HOOKS_RUN_ALL_TESTS is set
+    echo "running \`pytest woke\`"
+    pytest woke;
+    check_last_command;
+fi
 
 if [ ${#pyfiles[@]} -ne 0 ]; then
     echo "running \`pyright ${pyfiles[@]}\`"
