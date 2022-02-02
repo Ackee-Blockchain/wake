@@ -31,7 +31,7 @@ function pop_stash()
     if [ $? -eq $ZERO ];
     then
         # this command should not case merging issues
-        git stash pop
+        git stash pop >/dev/null
     fi
     rm woke/.stash-id
 }
@@ -54,9 +54,9 @@ stash_id=$(gen_stash_id)
 echo "$stash_id" > woke/.stash-id
 
 # commit staged changes so that they are not included into the stash
-git commit --no-verify -m 'pre-commit hook tmp commit'
+git commit --no-verify -m 'pre-commit hook tmp commit' >/dev/null
 # stash unstaged changes
-git stash -m "$stash_id"
+git stash -m "$stash_id" >/dev/null
 # restore staged changes
 git reset --soft 'HEAD^'
 
