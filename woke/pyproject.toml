@@ -9,4 +9,5 @@ strict = "**/*.py"
 [tool.pytest.ini_options]
 markers = [
     "platform_dependent: platform-dependent test that will need to run on all CIs",
+    "slow: slow tests that will not run in git hooks",
 ]
