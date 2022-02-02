@@ -22,7 +22,7 @@ function pop_stash()
     then
         # this command may introduce merging conflicts
         # this is an expected behavior
-        git stash pop
+        git stash pop >/dev/null
     fi
     # delete temporary .stash-id file anyway
     rm woke/.stash-id
@@ -31,7 +31,7 @@ function pop_stash()
 # add all changes made by 'black' and other pre-commit tools as a fixup commit
 touch woke/.post-commit-ignore
 git add -u
-git commit --fixup='HEAD' --no-verify
+git commit --fixup='HEAD' --no-verify >/dev/null
 rm woke/.post-commit-ignore
 
 pop_stash;
