@@ -1,0 +1,29 @@
+name: Windows Woke tests
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        cd woke
+        python -m pip install -e ".[tests,dev]"
+        cd ..
+    - name: Test platform-dependent with pytest
+      run: |
+        pytest woke -m platform_dependent
+
