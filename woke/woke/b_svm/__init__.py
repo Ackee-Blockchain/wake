@@ -127,7 +127,7 @@ class SolcVersionManager(CompilerVersionManagerAbc):
 
         self.__solc_list_url = f"{self.BINARIES_URL}/{self.__platform}/list.json"
         self.__compilers_path = Path(woke_root_path) / "compilers"
-        self.__solc_list_path = self.__compilers_path / "list.json"
+        self.__solc_list_path = self.__compilers_path / "solc.json"
         self.__solc_builds = None
 
         self.__compilers_path.mkdir(parents=True, exist_ok=True)
@@ -202,7 +202,7 @@ class SolcVersionManager(CompilerVersionManagerAbc):
     def __fetch_list_file(self) -> None:
         """
         Download ``list.json`` file from `binaries.soliditylang.org <binaries.soliditylang.org>`_ for the current
-        platform and save it into ``{woke_root_path}/compilers`` directory.
+        platform and save it as ``{woke_root_path}/compilers/solc.json``.
         """
         if self.__solc_builds is not None:
             return
