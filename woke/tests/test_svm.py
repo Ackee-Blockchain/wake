@@ -22,6 +22,7 @@ def run_cleanup(request):
             shutil.rmtree(path, True)
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("run_cleanup", [[PYTEST_WOKE_PATH]], indirect=True)
 def test_basic_usage(run_cleanup):
     svm = SolcVersionManager(woke_root_path=PYTEST_WOKE_PATH)
@@ -42,6 +43,7 @@ def test_install_invalid_version(run_cleanup):
     assert len(svm.list_installed()) == 0
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize(
     "run_cleanup", [[PYTEST_WOKE_PATH, PYTEST_WOKE_PATH2]], indirect=True
 )
@@ -68,6 +70,7 @@ def test_remove_not_installed_version(run_cleanup):
         svm.remove("0.8.10")
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("run_cleanup", [[PYTEST_WOKE_PATH]], indirect=True)
 def test_file_executable(run_cleanup):
     svm = SolcVersionManager(woke_root_path=PYTEST_WOKE_PATH)
