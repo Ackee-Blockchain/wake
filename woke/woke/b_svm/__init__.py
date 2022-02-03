@@ -202,14 +202,22 @@ class SolcVersionManager(CompilerVersionManagerAbc):
     def __fetch_list_file(self) -> None:
         """
         Download ``list.json`` file from `binaries.soliditylang.org <binaries.soliditylang.org>`_ for the current
-        platform and save it as ``{woke_root_path}/compilers/solc.json``.
+        platform and save it as ``{woke_root_path}/compilers/solc.json``. In case of network issues, try to
+        use the locally downloaded solc builds file as a fallback.
         """
         if self.__solc_builds is not None:
             return
 
-        response = requests.get(self.__solc_list_url)
-        self.__solc_builds = SolcBuilds.parse_raw(response.text)
-        self.__solc_list_path.write_text(response.text, encoding="utf-8")
+        try:
+            response = requests.get(self.__solc_list_url)
+            self.__solc_builds = SolcBuilds.parse_raw(response.text)
+            self.__solc_list_path.write_text(response.text, encoding="utf-8")
+        except requests.exceptions.RequestException:
+            # in case of networking issues try to use the locally downloaded solc builds file as a fallback
+            if self.__solc_list_path.is_file():
+                self.__solc_builds = SolcBuilds.parse_file(self.__solc_list_path)
+            else:
+                raise
 
     def __verify_sha256(self, path: Path, expected: str) -> bool:
         """
