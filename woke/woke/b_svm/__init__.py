@@ -9,11 +9,15 @@ import requests
 
 
 class UnsupportedPlatformError(Exception):
-    pass
+    """
+    The current platform is not supported. Supported platforms are: Linux, macOS, Windows.
+    """
 
 
 class ChecksumError(Exception):
-    pass
+    """
+    Checksum of a downloaded file did not match the expected value.
+    """
 
 
 class SolcBuildInfo(BaseModel):
@@ -33,23 +37,44 @@ class SolcBuilds(BaseModel):
 
 
 class CompilerVersionManagerAbc(ABC):
+    """
+    ABC for all compiler version managers.
+    """
+
     @abstractmethod
     def install(self, version: str, force_reinstall: bool = False) -> None:
-        pass
+        """
+        Install the target compiler version.
+        :param version: compiler version to be installed
+        :param force_reinstall: if True, download target compiler version even if already installed
+        """
 
     @abstractmethod
     def remove(self, version: str) -> None:
-        pass
+        """
+        Remove the target compiler version.
+        :param version: compiler version to be removed
+        """
 
     @abstractmethod
     def get_path(self, version: str) -> Path:
-        pass
+        """
+        Return a system path of the target compiler version executable.
+        :param version: version of the compiler executable whose path is returned
+        """
 
     @abstractmethod
     def list_all(self) -> Set[str]:
-        pass
+        """
+        Return a set of all supported compiler versions.
+        :return set of all supported compiler versions
+        """
 
     def list_installed(self) -> Set[str]:
+        """
+        Return a set of installed compiler versions.
+        :return: set of installed compiler versions
+        """
         installed = set()
         for version in self.list_all():
             if self.get_path(version).is_file():
@@ -58,6 +83,10 @@ class CompilerVersionManagerAbc(ABC):
 
 
 class SolcVersionManager(CompilerVersionManagerAbc):
+    """
+    Solc version manager that can install, remove and provide info about `solc` compiler.
+    """
+
     BINARIES_URL: str = "https://binaries.soliditylang.org"
 
     __platform: str
@@ -67,6 +96,9 @@ class SolcVersionManager(CompilerVersionManagerAbc):
     __solc_builds: Optional[SolcBuilds]
 
     def __init__(self, *_, woke_root_path: Optional[Union[str, Path]] = None):
+        """
+        :param woke_root_path: woke config directory path, useful in unit tests
+        """
         system = platform.system()
         if system == "Linux":
             self.__platform = "linux-amd64"
@@ -156,6 +188,10 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         return set(self.__solc_builds.releases.keys())
 
     def __fetch_list_file(self) -> None:
+        """
+        Download ``list.json`` file from `binaries.soliditylang.org <binaries.soliditylang.org>`_ for the current
+        platform and save it into ``{woke_root_path}/compilers`` directory.
+        """
         if self.__solc_builds is not None:
             return
 
@@ -164,6 +200,12 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         self.__solc_list_path.write_text(response.text, encoding="utf-8")
 
     def __verify_sha256(self, path: Path, expected: str) -> bool:
+        """
+        Check SHA256 checksum of the provided file against the expected value.
+        :param path: path of the file whose checksum to be verified
+        :param expected: expected value of SHA256 checksum
+        :return: True if checksum matches the expected value, False otherwise
+        """
         h = hashlib.sha256()
         with path.open("rb") as f:
             while True:
