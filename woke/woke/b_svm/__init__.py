@@ -87,6 +87,14 @@ class SolcVersionManager(CompilerVersionManagerAbc):
     Solc version manager that can install, remove and provide info about `solc` compiler.
     """
 
+    # TODO: Add checks for minimal solc version into svm module
+    # assignees: michprev
+
+    # TODO: Add support for older solc versions in svm module
+    #  Currently only builds present in binaries.soliditylang.org repository are supported.
+    #  We should also support older solc releases.
+    # assignees: michprev
+
     BINARIES_URL: str = "https://binaries.soliditylang.org"
 
     __platform: str
@@ -99,6 +107,8 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         """
         :param woke_root_path: woke config directory path, useful in unit tests
         """
+        # TODO: Move default Woke path into config module
+        # assignees: michprev
         system = platform.system()
         if system == "Linux":
             self.__platform = "linux-amd64"
@@ -145,6 +155,8 @@ class SolcVersionManager(CompilerVersionManagerAbc):
                 for chunk in r.iter_content(8 * 1024):
                     f.write(chunk)
 
+        # TODO: Implement keccak256 checksum verifying in svm module
+        # assignees: michprev
         sha256 = build_info.sha256
         if sha256.startswith("0x"):
             sha256 = sha256[2:]
