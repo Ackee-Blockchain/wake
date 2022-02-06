@@ -134,11 +134,11 @@ class SolidityVersionRange:
         else:
             self.__higher = SolidityVersion.fromstring(str(higher_bound))
 
-            if self.__lower > self.__higher:
+            if self.lower > self.higher:
                 raise ValueError(
                     "The lower bound must be less than or equal to the higher bound."
                 )
-            elif self.__lower == self.__higher and (
+            elif self.lower == self.higher and (
                 not lower_inclusive or not higher_inclusive
             ):
                 raise ValueError(
@@ -152,23 +152,21 @@ class SolidityVersionRange:
             item = SolidityVersion.fromstring(item)
         if not isinstance(item, SolidityVersion):
             return NotImplemented
-        lower_check = (
-            item >= self.__lower if self.__lower_inclusive else item > self.__lower
-        )
-        if not lower_check or self.__higher is None:
+        lower_check = item >= self.lower if self.lower_inclusive else item > self.lower
+        if not lower_check or self.higher is None:
             return lower_check
         higher_check = (
-            item <= self.__higher if self.__higher_inclusive else item < self.__higher
+            item <= self.higher if self.higher_inclusive else item < self.higher
         )
         return lower_check and higher_check
 
     def __hash__(self):
         return hash(
             (
-                self.__lower,
-                self.__lower_inclusive,
-                self.__higher,
-                self.__higher_inclusive,
+                self.lower,
+                self.lower_inclusive,
+                self.higher,
+                self.higher_inclusive,
             )
         )
 
@@ -176,26 +174,42 @@ class SolidityVersionRange:
         if not isinstance(other, SolidityVersionRange):
             return NotImplemented
         self_attr = (
-            self.__lower,
-            self.__lower_inclusive,
-            self.__higher,
-            self.__higher_inclusive,
+            self.lower,
+            self.lower_inclusive,
+            self.higher,
+            self.higher_inclusive,
         )
         other_attr = (
-            other.__lower,
-            other.__lower_inclusive,
-            other.__higher,
-            other.__higher_inclusive,
+            other.lower,
+            other.lower_inclusive,
+            other.higher,
+            other.higher_inclusive,
         )
         return self_attr == other_attr
 
     def __str__(self):
-        s = f"{'>=' if self.__lower_inclusive else '>'}{self.__lower}"
-        if self.__higher is not None:
-            s = s + f" {'<=' if self.__higher_inclusive else '<'}{self.__higher}"
+        s = f"{'>=' if self.lower_inclusive else '>'}{self.lower}"
+        if self.higher is not None:
+            s = s + f" {'<=' if self.higher_inclusive else '<'}{self.higher}"
         return s
 
     def __repr__(self):
-        lower = '"' + str(self.__lower) + '"'
-        higher = '"' + str(self.__higher) + '"' if self.__higher is not None else None
-        return f"{self.__class__.__name__}({lower}, {self.__lower_inclusive}, {higher}, {self.__higher_inclusive})"
+        lower = '"' + str(self.lower) + '"'
+        higher = '"' + str(self.higher) + '"' if self.higher is not None else None
+        return f"{self.__class__.__name__}({lower}, {self.lower_inclusive}, {higher}, {self.higher_inclusive})"
+
+    @property
+    def lower(self):
+        return self.__lower
+
+    @property
+    def lower_inclusive(self):
+        return self.__lower_inclusive
+
+    @property
+    def higher(self):
+        return self.__higher
+
+    @property
+    def higher_inclusive(self):
+        return self.__higher_inclusive

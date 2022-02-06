@@ -46,6 +46,18 @@ def test_version_range_basic():
         None, None, "3.4.5", False
     )
 
+    r1 = SolidityVersionRange(None, None, None, None)
+    assert r1.lower == SolidityVersion(0, 0, 0)
+    assert r1.lower_inclusive
+    assert r1.higher is None
+    assert r1.higher_inclusive is None
+
+    r2 = SolidityVersionRange("1.2.3", True, "3.4.5", False)
+    assert r2.lower == SolidityVersion(1, 2, 3)
+    assert r2.lower_inclusive
+    assert r2.higher == SolidityVersion(3, 4, 5)
+    assert not r2.higher_inclusive
+
 
 def test_version_range_errors():
     r1 = SolidityVersionRange(None, None, None, None)
