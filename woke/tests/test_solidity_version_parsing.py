@@ -4,35 +4,35 @@ from woke.c_regex_parsing import SolidityVersion, SolidityVersionRange
 
 
 def test_version_basic_usage():
-    v1 = SolidityVersion("0.8.9")
+    v1 = SolidityVersion.fromstring("0.8.9")
     assert v1.major == 0
     assert v1.minor == 8
     assert v1.patch == 9
 
-    v2 = SolidityVersion("0.8.7")
+    v2 = SolidityVersion.fromstring("0.8.7")
     assert v1 > v2
-    v3 = SolidityVersion("0.8.9")
+    v3 = SolidityVersion.fromstring("0.8.9")
     assert v1 == v3
-    v4 = SolidityVersion("0.8.9-abc+def")
+    v4 = SolidityVersion.fromstring("0.8.9-abc+def")
     assert v3 == v4  # prerelease and build tags are ignored
 
 
 def test_version_str_and_repr():
     s = "1.2.3-abc.def-012-ABC-abc+xyz-123.XYZ"
-    v = SolidityVersion(s)
+    v = SolidityVersion.fromstring(s)
     assert str(v) == s
     assert eval(repr(v)) == v
 
 
 def test_version_invalid():
     with pytest.raises(ValueError):
-        SolidityVersion(">0.8.1")
+        SolidityVersion.fromstring(">0.8.1")
     with pytest.raises(ValueError):
-        SolidityVersion("=0.8.1")
+        SolidityVersion.fromstring("=0.8.1")
     with pytest.raises(ValueError):
-        SolidityVersion("v0.8.1")
+        SolidityVersion.fromstring("v0.8.1")
     with pytest.raises(ValueError):
-        SolidityVersion("x.8.1")
+        SolidityVersion.fromstring("x.8.1")
 
 
 def test_version_range_basic():
@@ -77,7 +77,7 @@ def test_version_range_errors():
 
 def test_version_range_contains():
     r1 = SolidityVersionRange("1.2.3", True, "2.0.0", False)
-    assert SolidityVersion("1.2.3") in r1
+    assert SolidityVersion.fromstring("1.2.3") in r1
     assert "1.2.4" in r1
     assert "1.2.2" not in r1
     assert "2.0.0" not in r1
