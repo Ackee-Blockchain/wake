@@ -132,3 +132,29 @@ def test_version_range_str_and_repr():
     assert r4.isempty()
     assert str(r4) == ">0.0.0 <0.0.0"
     assert eval(repr(r4)) == r4
+
+
+def test_version_range_intersection():
+    r1 = SolidityVersionRange("1.0.0", True, "2.0.0", True)
+    r2 = SolidityVersionRange("1.0.1", False, None, None)
+    assert r1 & r2 == SolidityVersionRange("1.0.1", False, "2.0.0", True)
+    assert r1 & r2 == SolidityVersionRange.intersection(r1, r2)
+
+    r3 = SolidityVersionRange("1.0.0", False, "2.0.0", False)
+    assert r1 & r3 == r3
+    assert r1 & r2 & r3 == r3 & r2 & r1
+    assert r2 & r3 & r1 == SolidityVersionRange.intersection(r1, r3, r2)
+
+    r4 = SolidityVersionRange("0.9.8", True, "1.9.8", False)
+    assert r1 & r4 == SolidityVersionRange("1.0.0", True, "1.9.8", False)
+
+    r5 = SolidityVersionRange("1.2.3", False, "2.0.1", False)
+    assert r1 & r5 == SolidityVersionRange("1.2.3", False, "2.0.0", True)
+
+    r6 = SolidityVersionRange(None, None, "1.0.0", False)
+    r7 = SolidityVersionRange("2.0.0", False, None, None)
+    assert (r1 & r6).isempty()
+    assert r1 & r7
+
+    r8 = SolidityVersionRange("0.0.0", False, "0.0.0", False)
+    assert (r1 & r8).isempty()

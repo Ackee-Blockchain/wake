@@ -201,6 +201,51 @@ class SolidityVersionRange:
         higher = '"' + str(self.higher) + '"' if self.higher is not None else None
         return f"{self.__class__.__name__}({lower}, {self.lower_inclusive}, {higher}, {self.higher_inclusive})"
 
+    def __and__(self, other: "SolidityVersionRange") -> "SolidityVersionRange":
+        if self.lower < other.lower:
+            lower_bound = other.lower
+            lower_inclusive = other.lower_inclusive
+        elif self.lower > other.lower:
+            lower_bound = self.lower
+            lower_inclusive = self.lower_inclusive
+        else:
+            lower_bound = self.lower
+            if not self.lower_inclusive:
+                lower_inclusive = self.lower_inclusive
+            else:
+                lower_inclusive = other.lower_inclusive
+
+        if self.higher is None:
+            higher_bound = other.higher
+            higher_inclusive = other.higher_inclusive
+        elif other.higher is None:
+            higher_bound = self.higher
+            higher_inclusive = self.higher_inclusive
+        else:
+            if self.higher < other.higher:
+                higher_bound = self.higher
+                higher_inclusive = self.higher_inclusive
+            elif self.higher > other.higher:
+                higher_bound = other.higher
+                higher_inclusive = other.higher_inclusive
+            else:
+                higher_bound = self.higher
+                if not self.higher_inclusive:
+                    higher_inclusive = self.higher_inclusive
+                else:
+                    higher_inclusive = other.higher_inclusive
+
+        return SolidityVersionRange(
+            lower_bound, lower_inclusive, higher_bound, higher_inclusive
+        )
+
+    @classmethod
+    def intersection(cls, *args: "SolidityVersionRange") -> "SolidityVersionRange":
+        ret = cls(None, None, None, None)
+        for r in args:
+            ret &= r
+        return ret
+
     def isempty(self) -> bool:
         return (
             self.lower == SolidityVersion(0, 0, 0)
