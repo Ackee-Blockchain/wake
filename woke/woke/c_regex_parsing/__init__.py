@@ -100,6 +100,7 @@ class SolidityVersionRange:
     A class representing a range of Solidity versions by keeping the lower and the higher bound.
     Both bounds can be inclusive or non-inclusive.
     In case the lower bound is unspecified, the default value 0.0.0 (inclusive) is used.
+    If the lower bound is semantically greater than the higher bound, create an empty range.
     """
 
     __lower: SolidityVersion
@@ -123,35 +124,37 @@ class SolidityVersionRange:
                 "Both arguments higher_bound and higher_inclusive must be either set or unset."
             )
 
+        self.__lower_inclusive = True if lower_inclusive is None else lower_inclusive
         if lower_bound is None:
             self.__lower = SolidityVersion(0, 0, 0)
         else:
             self.__lower = SolidityVersion.fromstring(str(lower_bound))
-        self.__lower_inclusive = True if lower_inclusive is None else lower_inclusive
 
+        self.__higher_inclusive = higher_inclusive
         if higher_bound is None:
             self.__higher = None
         else:
             self.__higher = SolidityVersion.fromstring(str(higher_bound))
 
-            if self.lower > self.higher:
-                raise ValueError(
-                    "The lower bound must be less than or equal to the higher bound."
-                )
-            elif self.lower == self.higher and (
-                not lower_inclusive or not higher_inclusive
+            if (
+                self.lower > self.higher
+                or self.lower == self.higher
+                and (not lower_inclusive or not higher_inclusive)
             ):
-                raise ValueError(
-                    "In case the lower and the higher bounds are equal, both must be inclusive."
-                )
-
-        self.__higher_inclusive = higher_inclusive
+                # create an empty range
+                self.__lower = SolidityVersion(0, 0, 0)
+                self.__lower_inclusive = False
+                self.__higher = self.lower
+                self.__higher_inclusive = False
 
     def __contains__(self, item):
         if isinstance(item, str):
             item = SolidityVersion.fromstring(item)
         if not isinstance(item, SolidityVersion):
             return NotImplemented
+        if self.isempty():
+            return False
+
         lower_check = item >= self.lower if self.lower_inclusive else item > self.lower
         if not lower_check or self.higher is None:
             return lower_check
@@ -197,6 +200,14 @@ class SolidityVersionRange:
         lower = '"' + str(self.lower) + '"'
         higher = '"' + str(self.higher) + '"' if self.higher is not None else None
         return f"{self.__class__.__name__}({lower}, {self.lower_inclusive}, {higher}, {self.higher_inclusive})"
+
+    def isempty(self) -> bool:
+        return (
+            self.lower == SolidityVersion(0, 0, 0)
+            and not self.lower_inclusive
+            and self.higher == SolidityVersion(0, 0, 0)
+            and not self.higher_inclusive
+        )
 
     @property
     def lower(self):
