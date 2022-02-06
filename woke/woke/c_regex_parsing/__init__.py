@@ -19,16 +19,19 @@ class SolidityVersion:
     __prerelease: Optional[str]
     __build: Optional[str]
 
-    def __init__(self, version_str: str):
-        match = self.__class__.RE.match(version_str)
-        if not match:
-            raise ValueError(f"Invalid Solidity version: {version_str}")
-        groups = match.groups()
-        self.__major = int(groups[0])
-        self.__minor = int(groups[1])
-        self.__patch = int(groups[2])
-        self.__prerelease = None if groups[3] is None else groups[3][1:]
-        self.__build = None if groups[4] is None else groups[4][1:]
+    def __init__(
+        self,
+        major: int,
+        minor: int,
+        patch: int,
+        prerelease: Optional[str] = None,
+        build: Optional[str] = None,
+    ):
+        self.__major = major
+        self.__minor = minor
+        self.__patch = patch
+        self.__prerelease = prerelease
+        self.__build = build
 
     def __str__(self):
         s = f"{self.major}.{self.minor}.{self.patch}"
@@ -39,7 +42,11 @@ class SolidityVersion:
         return s
 
     def __repr__(self):
-        return f'{self.__class__.__name__}("{str(self)}")'
+        prerelease = (
+            '"' + self.__prerelease + '"' if self.__prerelease is not None else None
+        )
+        build = '"' + self.__build + '"' if self.__build is not None else None
+        return f"{self.__class__.__name__}({self.major}, {self.minor}, {self.patch}, {prerelease}, {build})"
 
     def __hash__(self):
         return hash((self.major, self.minor, self.patch))
@@ -61,6 +68,19 @@ class SolidityVersion:
             other.minor,
             other.patch,
         )
+
+    @classmethod
+    def fromstring(cls, version_str: str) -> "SolidityVersion":
+        match = cls.RE.match(version_str)
+        if not match:
+            raise ValueError(f"Invalid Solidity version: {version_str}")
+        groups = match.groups()
+        major = int(groups[0])
+        minor = int(groups[1])
+        patch = int(groups[2])
+        prerelease = None if groups[3] is None else groups[3][1:]
+        build = None if groups[4] is None else groups[4][1:]
+        return SolidityVersion(major, minor, patch, prerelease, build)
 
     @property
     def major(self):
@@ -104,15 +124,15 @@ class SolidityVersionRange:
             )
 
         if lower_bound is None:
-            self.__lower = SolidityVersion("0.0.0")
+            self.__lower = SolidityVersion(0, 0, 0)
         else:
-            self.__lower = SolidityVersion(str(lower_bound))
+            self.__lower = SolidityVersion.fromstring(str(lower_bound))
         self.__lower_inclusive = True if lower_inclusive is None else lower_inclusive
 
         if higher_bound is None:
             self.__higher = None
         else:
-            self.__higher = SolidityVersion(str(higher_bound))
+            self.__higher = SolidityVersion.fromstring(str(higher_bound))
 
             if self.__lower > self.__higher:
                 raise ValueError(
@@ -129,7 +149,7 @@ class SolidityVersionRange:
 
     def __contains__(self, item):
         if isinstance(item, str):
-            item = SolidityVersion(item)
+            item = SolidityVersion.fromstring(item)
         if not isinstance(item, SolidityVersion):
             return NotImplemented
         lower_check = (
