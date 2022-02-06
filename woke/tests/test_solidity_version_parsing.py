@@ -1,6 +1,6 @@
 import pytest
 
-from woke.c_regex_parsing import SolidityVersion
+from woke.c_regex_parsing import SolidityVersion, SolidityVersionRange
 
 
 def test_version_basic_usage():
@@ -33,3 +33,79 @@ def test_version_invalid():
         SolidityVersion("v0.8.1")
     with pytest.raises(ValueError):
         SolidityVersion("x.8.1")
+
+
+def test_version_range_basic():
+    assert SolidityVersionRange(None, None, None, None) == SolidityVersionRange(
+        "0.0.0", True, None, None
+    )
+    assert SolidityVersionRange("1.2.3", True, None, None) != SolidityVersionRange(
+        "1.2.3", False, None, None
+    )
+    assert SolidityVersionRange(None, None, "3.4.5", True) != SolidityVersionRange(
+        None, None, "3.4.5", False
+    )
+
+
+def test_version_range_errors():
+    r1 = SolidityVersionRange(None, None, None, None)
+    with pytest.raises(ValueError):
+        x = "abcd" in r1
+
+    with pytest.raises(ValueError):
+        SolidityVersionRange("1.2.3", True, "0.9.9", False)
+    with pytest.raises(ValueError):
+        SolidityVersionRange("1.2.3", True, "1.2.3", False)
+    with pytest.raises(ValueError):
+        SolidityVersionRange("1.2.3", False, "1.2.3", True)
+    with pytest.raises(ValueError):
+        SolidityVersionRange("1.2.3", False, "1.2.3", False)
+    SolidityVersionRange("1.2.3", True, "1.2.3", True)
+
+    with pytest.raises(ValueError):
+        SolidityVersionRange("-1.2.3", True, None, None)
+
+    with pytest.raises(ValueError):
+        SolidityVersionRange("1.2.3", None, None, None)
+    with pytest.raises(ValueError):
+        SolidityVersionRange(None, True, None, None)
+    with pytest.raises(ValueError):
+        SolidityVersionRange(None, None, "1.2.3", None)
+    with pytest.raises(ValueError):
+        SolidityVersionRange(None, None, None, True)
+
+
+def test_version_range_contains():
+    r1 = SolidityVersionRange("1.2.3", True, "2.0.0", False)
+    assert SolidityVersion("1.2.3") in r1
+    assert "1.2.4" in r1
+    assert "1.2.2" not in r1
+    assert "2.0.0" not in r1
+    assert "1.9.999" in r1
+
+    r2 = SolidityVersionRange("0.8.9", False, "1.0.1", True)
+    assert "0.8.9" not in r2
+    assert "0.8.8" not in r2
+    assert "0.8.10" in r2
+    assert "1.0.1" in r2
+    assert "1.0.0" in r2
+    assert "0.9.9" in r2
+
+    r3 = SolidityVersionRange("0.8.1", False, None, None)
+    assert "0.8.1" not in r3
+    assert "0.8.2" in r3
+    assert "999999.999999.99999" in r3
+
+
+def test_version_range_str_and_repr():
+    r1 = SolidityVersionRange(None, None, None, None)
+    assert str(r1) == ">=0.0.0"
+    assert eval(repr(r1)) == r1
+
+    r2 = SolidityVersionRange("1.2.3", True, "4.5.6", False)
+    assert str(r2) == ">=1.2.3 <4.5.6"
+    assert eval(repr(r2)) == r2
+
+    r3 = SolidityVersionRange("0.7.6", False, "2.0.7", True)
+    assert str(r3) == ">0.7.6 <=2.0.7"
+    assert eval(repr(r3)) == r3
