@@ -1,6 +1,10 @@
 import pytest
 
-from woke.c_regex_parsing import SolidityVersion, SolidityVersionRange
+from woke.c_regex_parsing import (
+    SolidityVersion,
+    SolidityVersionRange,
+    SolidityVersionExpr,
+)
 
 
 def test_version_basic_usage():
@@ -158,3 +162,218 @@ def test_version_range_intersection():
 
     r8 = SolidityVersionRange("0.0.0", False, "0.0.0", False)
     assert (r1 & r8).isempty()
+
+
+def test_version_expr_invalid():
+    invalid = [
+        "v0.8.10",
+        "v 0.8.10",
+        "0 .8.10",
+        "0.8. 10",
+        ".1.2.3",
+        "1.2.3.",
+        "0.1.2.3.4",
+        "abc",
+        "o.8.7",
+        "y.8.7",
+        ">=0.8.0 - 0.9.0",
+        "0.8.0 - <0.9.0",
+        "^1.2.3 - 4.5.6",
+        "7.8.9 - ~1.2.4",
+        "12.2.3 - x",
+        "x.0.1",
+        "x.0.x",
+        "1.x.2",
+        "x.x.2",
+        "0.8.10-alpha.1",
+        ">*",
+        "<X",
+        "<=x",
+        "",
+        "^x",
+        "^0.0.0",
+    ]
+    for i in invalid:
+        with pytest.raises(ValueError):
+            SolidityVersionExpr(i)
+
+
+def test_version_expr_comparators():
+    expressions = [
+        # expression, list of matching versions, list of nonmatching versions
+        ("=0.8.10", ["0.8.10"], ["0.8.9", "0.8.11", "0.0.0"]),
+        ("0.2", ["0.2.0", "0.2.1", "0.2.7", "0.2.99"], ["0.1.999", "0.3.0", "0.0.0"]),
+        ("=2.*.X", ["2.0.0", "2.0.1", "2.1.3"], ["1.2.3", "0.0.0", "3.1.0"]),
+        ("*", ["0.0.0", "1.2.3", "0.2.8", "0.8.10"], []),
+        (">=0.8.10", ["0.8.10", "0.8.11"], ["0.8.9"]),
+        (">=1.2", ["1.2.0", "1.2.1", "1.3.0", "2.0.7"], ["1.1.9", "0.0.0", "1.1.1"]),
+        (">=1.X.X", ["1.0.0", "1.2.3", "9.8.7"], ["0.9.9", "0.0.0"]),
+        (">=*", ["0.0.0", "1.2.3", "0.3.4", "9.9.9"], []),
+        (">0.8.10", ["0.8.11", "0.9.0", "1.0.1"], ["0.8.10", "0.8.9"]),
+        (">0.6", ["0.7.0", "0.7.1", "1.2.3"], ["0.6.0", "0.6.999", "0.0.0"]),
+        (">1", ["2.0.0", "2.0.1", "3.4.5"], ["1.0.0", "1.999.999"]),
+        (
+            "<0.8.10",
+            ["0.8.9", "0.8.8", "0.7.0", "0.0.0"],
+            ["0.8.10", "0.8.11", "0.9.0"],
+        ),
+        ("<1.1.x", ["1.0.9", "1.0.0", "0.8.9"], ["1.1.0", "1.1.1", "1.2.0"]),
+        ("<1", ["0.9.9", "0.0.7", "0.9.99999"], ["1.0.0", "1.2.3", "2.0.1"]),
+        (
+            "<=0.8.10",
+            ["0.8.10", "0.8.9", "0.5.1", "0.0.0"],
+            ["0.8.11", "1.0.0", "0.9.0"],
+        ),
+        ("<=2.0", ["2.0.0", "2.0.999", "1.9.9"], ["2.1.0", "2.1.1", "3.0.1"]),
+        ("<=1", ["1.0.0", "1.9.9", "0.8.9"], ["2.0.0", "2.8.1", "3.0.7"]),
+    ]
+
+    for exp in expressions:
+        e = SolidityVersionExpr(exp[0])
+        for matching in exp[1]:
+            assert (
+                SolidityVersion.fromstring(matching) in e
+            ), f"Assertion failed: {matching} in {exp[0]}"
+        for nonmatching in exp[2]:
+            assert (
+                SolidityVersion.fromstring(nonmatching) not in e
+            ), f"Assertion failed: {nonmatching} not in {exp[0]}"
+
+
+def test_version_expr_hyphen():
+    expressions = [
+        # expression, list of matching versions, list of nonmatching versions
+        (
+            "0.7.5 - 0.8.10",
+            ["0.7.5", "0.8.1", "0.8.10"],
+            ["0.7.4", "0.8.11", "0.0.0", "1.2.3"],
+        ),
+        ("1.2 - 1.3.2", ["1.2.0", "1.2.10", "1.3.0", "1.3.2"], ["1.1.999", "1.3.3"]),
+        ("2 - 3", ["2.0.0", "2.5.7", "3.0.0", "3.9.9"], ["4.0.0", "4.9.99"]),
+        (
+            "0.2.5 - 0.3",
+            ["0.2.5", "0.2.99", "0.3.1", "0.3.999"],
+            ["0.2.4", "0.4.0", "0.4.2"],
+        ),
+        (
+            "0.6.9 - 1",
+            ["0.6.9", "0.9.9", "1.0.0", "1.8.7"],
+            ["0.6.8", "2.0.0", "0.0.0"],
+        ),
+    ]
+
+    for exp in expressions:
+        e = SolidityVersionExpr(exp[0])
+        for matching in exp[1]:
+            assert (
+                SolidityVersion.fromstring(matching) in e
+            ), f"Assertion failed: {matching} in {exp[0]}"
+        for nonmatching in exp[2]:
+            assert (
+                SolidityVersion.fromstring(nonmatching) not in e
+            ), f"Assertion failed: {nonmatching} not in {exp[0]}"
+
+
+def test_version_expr_tilde():
+    expressions = [
+        # expression, list of matching versions, list of nonmatching versions
+        ("~0.8.7", ["0.8.7", "0.8.8", "0.8.999"], ["0.9.0", "0.8.6"]),
+        ("~2.1", ["2.1.0", "2.1.1", "2.1.999"], ["2.2.0", "2.2.1", "2.0.9"]),
+        ("~1", ["1.0.0", "1.2.3", "1.999.99"], ["2.0.0", "2.0.2", "0.9.9"]),
+        ("~0", ["0.0.0", "0.1.2", "0.9.9"], ["1.0.0", "2.1.3"]),
+    ]
+
+    for exp in expressions:
+        e = SolidityVersionExpr(exp[0])
+        for matching in exp[1]:
+            assert (
+                SolidityVersion.fromstring(matching) in e
+            ), f"Assertion failed: {matching} in {exp[0]}"
+        for nonmatching in exp[2]:
+            assert (
+                SolidityVersion.fromstring(nonmatching) not in e
+            ), f"Assertion failed: {nonmatching} not in {exp[0]}"
+
+
+def test_version_expr_caret():
+    expressions = [
+        # expression, list of matching versions, list of nonmatching versions
+        ("^3.2.1", ["3.2.1", "3.9.8", "3.5.0"], ["3.2.0", "4.0.0"]),
+        ("^0.4.0", ["0.4.0", "0.4.1", "0.4.99"], ["0.3.99", "0.5.0"]),
+        ("^0.0.7", ["0.0.7"], ["0.0.6", "0.0.8", "0.0.0"]),
+        ("^1.2", ["1.2.0", "1.9.99"], ["2.0.0", "1.1.99"]),
+        ("^0.0.X", ["0.0.0", "0.0.99"], ["0.1.0", "1.0.0"]),
+        ("^1", ["1.0.0", "1.9.8", "1.4.0"], ["0.0.0", "0.9.9", "2.0.0"]),
+        ("^0.*.X", ["0.0.0", "0.9.70"], ["1.0.0", "1.2.0"]),
+    ]
+
+    for exp in expressions:
+        e = SolidityVersionExpr(exp[0])
+        for matching in exp[1]:
+            assert (
+                SolidityVersion.fromstring(matching) in e
+            ), f"Assertion failed: {matching} in {exp[0]}"
+        for nonmatching in exp[2]:
+            assert (
+                SolidityVersion.fromstring(nonmatching) not in e
+            ), f"Assertion failed: {nonmatching} not in {exp[0]}"
+
+
+def test_version_expr_complex():
+    expressions = [
+        # expression, list of matching versions, list of nonmatching versions
+        (
+            "0.8.7 || 1 - 1.2.7",
+            ["0.8.7", "1.0.0", "1.2.7"],
+            ["0.8.6", "0.8.8", "0.9.9", "1.2.8"],
+        ),
+        (
+            "^0.8 || 0.6.1 - 0.7.8",
+            ["0.6.1", "0.7.0", "0.7.8", "0.8.0", "0.8.9"],
+            ["0.6.0", "0.7.9", "0.9.0"],
+        ),
+        ("~0 || >=1.0.0 <1 || ^0", ["0.0.0", "0.1.2", "0.9.1"], ["1.0.0", "1.2.3"]),
+    ]
+
+    for exp in expressions:
+        e = SolidityVersionExpr(exp[0])
+        for matching in exp[1]:
+            assert (
+                SolidityVersion.fromstring(matching) in e
+            ), f"Assertion failed: {matching} in {exp[0]}"
+        for nonmatching in exp[2]:
+            assert (
+                SolidityVersion.fromstring(nonmatching) not in e
+            ), f"Assertion failed: {nonmatching} not in {exp[0]}"
+
+
+def test_version_expr_whitespace():
+    expressions = [
+        # expression, list of matching versions, list of nonmatching versions
+        (
+            "      0.8.7||1 - 1.2.7\n",
+            ["0.8.7", "1.0.0", "1.2.7"],
+            ["0.8.6", "0.8.8", "0.9.9", "1.2.8"],
+        ),
+        (
+            "\r^0.8\t||0.6.1 - 0.7.8\r",
+            ["0.6.1", "0.7.0", "0.7.8", "0.8.0", "0.8.9"],
+            ["0.6.0", "0.7.9", "0.9.0"],
+        ),
+        (
+            "~\t0\n \t|| >=\r\n1.0.0<1||^0",
+            ["0.0.0", "0.1.2", "0.9.1"],
+            ["1.0.0", "1.2.3"],
+        ),
+    ]
+
+    for exp in expressions:
+        e = SolidityVersionExpr(exp[0])
+        for matching in exp[1]:
+            assert (
+                SolidityVersion.fromstring(matching) in e
+            ), f"Assertion failed: {matching} in {exp[0]}"
+        for nonmatching in exp[2]:
+            assert (
+                SolidityVersion.fromstring(nonmatching) not in e
+            ), f"Assertion failed: {nonmatching} not in {exp[0]}"
