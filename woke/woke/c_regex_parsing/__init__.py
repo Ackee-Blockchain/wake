@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional, Tuple, List, Union, Dict, Any
 from functools import total_ordering
 import re
 
@@ -269,3 +269,296 @@ class SolidityVersionRange:
     @property
     def higher_inclusive(self):
         return self.__higher_inclusive
+
+
+class SolidityVersionExpr:
+    ERROR_MSG = r"Invalid Solidity version expression: {value}"
+    VERSION = r"x|X|\*|0|[1-9][0-9]*"
+    PARTIAL = r"(?P<major>{version})(?:\.(?P<minor>{version}))?(?:\.(?P<patch>{version}))?".format(
+        version=VERSION
+    )
+    PARTIAL_RE = re.compile(r"^\s*{partial}\s*$".format(partial=PARTIAL))
+    PART = r"(?P<operator>\^|~|<|<=|>|>=|=)?\s*(?P<major>{version})(?:\.(?P<minor>{version}))?(?:\.(?P<patch>{version}))?".format(
+        version=VERSION
+    )
+    RANGE_RE = re.compile(r"\s*{part}\s*".format(part=PART))
+    RANGES_RE = re.compile(r"^(\s*{part}\s*)+$".format(part=PART))
+
+    __expression: str
+    __ranges: List[SolidityVersionRange]
+
+    def __init__(self, expr: str):
+        cls = self.__class__
+        self.__expression = expr
+        self.__ranges = []
+
+        ranges = expr.split("||")
+        for r in ranges:
+            if "-" in r:
+                self.__ranges.append(cls.__parse_hyphen_range(r))
+            else:
+                self.__ranges.append(cls.__parse_range(r))
+        if len(self.__ranges) == 0:
+            raise ValueError(cls.ERROR_MSG.format(value=expr))
+
+    @classmethod
+    def __parse_range(cls, range_str: str) -> SolidityVersionRange:
+        check = cls.RANGES_RE.match(range_str)
+        if not check:
+            raise ValueError(cls.ERROR_MSG.format(value=range_str))
+
+        matches = cls.RANGE_RE.finditer(range_str)
+        ret = SolidityVersionRange(None, None, None, None)
+        for match in matches:
+            ret &= cls.__parse_simple(match.groupdict(), match.string.strip())
+        return ret
+
+    @classmethod
+    def __parse_hyphen_range(cls, hyphen_range: str) -> SolidityVersionRange:
+        partials = hyphen_range.split("-")
+        if len(partials) != 2:
+            raise ValueError(cls.ERROR_MSG.format(value=hyphen_range))
+        match_left = cls.PARTIAL_RE.match(partials[0])
+        match_right = cls.PARTIAL_RE.match(partials[1])
+        if not match_left or not match_right:
+            raise ValueError(cls.ERROR_MSG.format(value=hyphen_range))
+
+        partial_left = cls.__parse_partial(
+            match_left.groupdict(), match_left.string.strip()
+        )
+        left = cls.__evaluate_ge(*partial_left)
+        partial_right = cls.__parse_partial(
+            match_right.groupdict(), match_right.string.strip()
+        )
+        right = cls.__evaluate_le(*partial_right, match_right.string.strip())
+        return left & right
+
+    @classmethod
+    def __parse_partial(
+        cls, match_dict: Dict[str, Any], match_str: str
+    ) -> Tuple[Optional[int], Optional[int], Optional[int]]:
+        major = match_dict["major"]
+        minor = match_dict["minor"]
+        patch = match_dict["patch"]
+        if major in {None, "x", "X", "*"}:
+            major = None
+        else:
+            major = int(major)
+        if minor in {None, "x", "X", "*"}:
+            minor = None
+        else:
+            minor = int(minor)
+        if patch in {None, "x", "X", "*"}:
+            patch = None
+        else:
+            patch = int(patch)
+
+        # partials should be in ascending order, i.e.: 1.0.x, 1.x.x, x.x.x, not x.0.1 or 1.x.5
+        if (major is None and not all(x is None for x in (minor, patch))) or (
+            minor is None and patch is not None
+        ):
+            raise ValueError(cls.ERROR_MSG.format(value=match_str))
+
+        return major, minor, patch
+
+    @classmethod
+    def __evaluate_caret(
+        cls,
+        major: Optional[int],
+        minor: Optional[int],
+        patch: Optional[int],
+        match_str: str,
+    ) -> SolidityVersionRange:
+        if major is None:
+            raise ValueError(cls.ERROR_MSG.format(value=match_str))
+        elif minor is None:
+            # ^1.x.x := >=1.0.0 < 2.0.0
+            v1 = SolidityVersion(major, 0, 0)
+            v2 = SolidityVersion(major + 1, 0, 0)
+            return SolidityVersionRange(v1, True, v2, False)
+        elif patch is None:
+            if major != 0:
+                # ^1.2.x := >=1.2.0 < 2.0.0
+                v1 = SolidityVersion(major, minor, 0)
+                v2 = SolidityVersion(major + 1, 0, 0)
+                return SolidityVersionRange(v1, True, v2, False)
+            else:
+                # ^0.2.x := >=0.2.0 <0.3.0
+                # ^0.0.x := >=0.0.0 <0.1.0
+                v1 = SolidityVersion(major, minor, 0)
+                v2 = SolidityVersion(major, minor + 1, 0)
+                return SolidityVersionRange(v1, True, v2, False)
+        elif major != 0:
+            # ^1.2.3 := >=1.2.3 <2.0.0
+            v1 = SolidityVersion(major, minor, patch)
+            v2 = SolidityVersion(major + 1, 0, 0)
+            return SolidityVersionRange(v1, True, v2, False)
+        elif minor != 0:
+            # ^0.2.3 := >=0.2.3 <0.3.0
+            v1 = SolidityVersion(major, minor, patch)
+            v2 = SolidityVersion(major, minor + 1, 0)
+            return SolidityVersionRange(v1, True, v2, False)
+        elif patch != 0:
+            # ^0.0.3 := >=0.0.3 <0.0.4
+            v1 = SolidityVersion(major, minor, patch)
+            v2 = SolidityVersion(major, minor, patch + 1)
+            return SolidityVersionRange(v1, True, v2, False)
+        else:
+            raise ValueError(cls.ERROR_MSG.format(value=match_str))
+
+    @classmethod
+    def __evaluate_tilde(
+        cls,
+        major: Optional[int],
+        minor: Optional[int],
+        patch: Optional[int],
+        match_str: str,
+    ) -> SolidityVersionRange:
+        if major is None:
+            raise ValueError(cls.ERROR_MSG.format(value=match_str))
+        elif minor is None:
+            # ~1.x.x := >=1.0.0 <2.0.0
+            v1 = SolidityVersion(major, 0, 0)
+            v2 = SolidityVersion(major + 1, 0, 0)
+            return SolidityVersionRange(v1, True, v2, False)
+        elif patch is None:
+            # ~1.2.x := >=1.2.0 <1.3.0
+            v1 = SolidityVersion(major, minor, 0)
+            v2 = SolidityVersion(major, minor + 1, 0)
+            return SolidityVersionRange(v1, True, v2, False)
+        else:
+            # ~1.2.3 := >=1.2.3 <1.3.0
+            v1 = SolidityVersion(major, minor, patch)
+            v2 = SolidityVersion(major, minor + 1, 0)
+            return SolidityVersionRange(v1, True, v2, False)
+
+    @classmethod
+    def __evaluate_lt(
+        cls,
+        major: Optional[int],
+        minor: Optional[int],
+        patch: Optional[int],
+        match_str: str,
+    ) -> SolidityVersionRange:
+        if major is None:
+            raise ValueError(cls.ERROR_MSG.format(value=match_str))
+        # <1.x.x := <1.0.0
+        # <1.2.x := <1.2.0
+        # <1.2.3 := <1.2.3
+        v2 = SolidityVersion(major, minor or 0, patch or 0)
+        return SolidityVersionRange(None, None, v2, False)
+
+    @classmethod
+    def __evaluate_le(
+        cls,
+        major: Optional[int],
+        minor: Optional[int],
+        patch: Optional[int],
+        match_str: str,
+    ) -> SolidityVersionRange:
+        if major is None:
+            raise ValueError(cls.ERROR_MSG.format(value=match_str))
+        elif minor is None:
+            # <=1.x.x := <2.0.0
+            v2 = SolidityVersion(major + 1, 0, 0)
+            return SolidityVersionRange(None, None, v2, False)
+        elif patch is None:
+            # <=1.2.x := <1.3.0
+            v2 = SolidityVersion(major, minor + 1, 0)
+            return SolidityVersionRange(None, None, v2, False)
+        else:
+            # <=1.2.3 := <=1.2.3
+            v2 = SolidityVersion(major, minor, patch)
+            return SolidityVersionRange(None, None, v2, True)
+
+    @classmethod
+    def __evaluate_gt(
+        cls,
+        major: Optional[int],
+        minor: Optional[int],
+        patch: Optional[int],
+        match_str: str,
+    ) -> SolidityVersionRange:
+        if major is None:
+            raise ValueError(cls.ERROR_MSG.format(value=match_str))
+        elif minor is None:
+            # >1.x.x := >=2.0.0
+            v1 = SolidityVersion(major + 1, 0, 0)
+            return SolidityVersionRange(v1, True, None, None)
+        elif patch is None:
+            # >1.2.x := >=1.3.0
+            v1 = SolidityVersion(major, minor + 1, 0)
+            return SolidityVersionRange(v1, True, None, None)
+        else:
+            # >1.2.3 := >1.2.3
+            v1 = SolidityVersion(major, minor, patch)
+            return SolidityVersionRange(v1, False, None, None)
+
+    @classmethod
+    def __evaluate_ge(
+        cls, major: Optional[int], minor: Optional[int], patch: Optional[int]
+    ) -> SolidityVersionRange:
+        # >=x.x.x := >=0.0.0
+        # >=1.x.x := >=1.0.0
+        # >=1.2.x := >=1.2.0
+        # >=1.2.3 := >=1.2.3
+        v1 = SolidityVersion(major or 0, minor or 0, patch or 0)
+        return SolidityVersionRange(v1, True, None, None)
+
+    @classmethod
+    def __evaluate_eq(
+        cls, major: Optional[int], minor: Optional[int], patch: Optional[int]
+    ) -> SolidityVersionRange:
+        # x.x.x := >=0.0.0
+        if major is None:
+            return SolidityVersionRange("0.0.0", True, None, None)
+        # 1.x.x := >=1.0.0 <2.0.0
+        elif minor is None:
+            v1 = SolidityVersion(major, 0, 0)
+            v2 = SolidityVersion(major + 1, 0, 0)
+            return SolidityVersionRange(v1, True, v2, False)
+        # 1.2.x := >=1.2.0 <1.3.0
+        elif patch is None:
+            v1 = SolidityVersion(major, minor, 0)
+            v2 = SolidityVersion(major, minor + 1, 0)
+            return SolidityVersionRange(v1, True, v2, False)
+        # 1.2.3 := >=1.2.3 <=1.2.3
+        else:
+            v = SolidityVersion(major, minor, patch)
+            return SolidityVersionRange(v, True, v, True)
+
+    @classmethod
+    def __parse_simple(cls, match_dict: dict, match_str: str) -> SolidityVersionRange:
+        operator: Optional[str] = match_dict["operator"]
+        major, minor, patch = cls.__parse_partial(match_dict, match_str)
+
+        if operator == "^":
+            return cls.__evaluate_caret(major, minor, patch, match_str)
+        elif operator == "~":
+            return cls.__evaluate_tilde(major, minor, patch, match_str)
+        elif operator == "<":
+            return cls.__evaluate_lt(major, minor, patch, match_str)
+        elif operator == "<=":
+            return cls.__evaluate_le(major, minor, patch, match_str)
+        elif operator == ">":
+            return cls.__evaluate_gt(major, minor, patch, match_str)
+        elif operator == ">=":
+            return cls.__evaluate_ge(major, minor, patch)
+        elif operator == "=" or operator is None:
+            return cls.__evaluate_eq(major, minor, patch)
+        else:
+            raise ValueError(cls.ERROR_MSG.format(value=match_str))
+
+    def __contains__(self, item):
+        if not isinstance(item, SolidityVersion):
+            return NotImplemented
+        for r in self.__ranges:
+            if item in r:
+                return True
+        return False
+
+    def __str__(self):
+        return self.__expression
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}("{str(self)}")'
