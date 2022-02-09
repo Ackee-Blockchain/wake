@@ -8,10 +8,12 @@ from woke.c_regex_parsing import (
 
 
 def test_version_basic_usage():
-    v1 = SolidityVersion.fromstring("0.8.9")
+    v1 = SolidityVersion.fromstring("0.8.9-alpha.2+commit.12345678")
     assert v1.major == 0
     assert v1.minor == 8
     assert v1.patch == 9
+    assert v1.prerelease == "alpha.2"
+    assert v1.build == "commit.12345678"
 
     v2 = SolidityVersion.fromstring("0.8.7")
     assert v1 > v2
