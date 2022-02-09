@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, List, Union, Dict, Any
+from typing import Optional, Tuple, Union, Dict, Any
 from functools import total_ordering
 import re
 
@@ -10,12 +10,12 @@ class SolidityVersion:
     Prerelease and build tags are parsed but ignored (even in comparison). As of `solc` version 0.8.11 there is no use for them.
     """
 
-    VERSION = r"0|[1-9][0-9]*"
+    NUMBER = r"0|[1-9][0-9]*"
     PRERELEASE_OR_BUILD_PART = r"[-0-9A-Za-z]+"
     PRERELEASE_OR_BUILD = r"{part}(?:\.{part})*".format(part=PRERELEASE_OR_BUILD_PART)
     RE = re.compile(
-        r"^(?P<major>{version})\.(?P<minor>{version})\.(?P<patch>{version})(?:-(?P<prerelease>{prerelease}))?(?:\+(?P<build>{build}))?$".format(
-            version=VERSION, prerelease=PRERELEASE_OR_BUILD, build=PRERELEASE_OR_BUILD
+        r"^(?P<major>{number})\.(?P<minor>{number})\.(?P<patch>{number})(?:-(?P<prerelease>{prerelease}))?(?:\+(?P<build>{build}))?$".format(
+            number=NUMBER, prerelease=PRERELEASE_OR_BUILD, build=PRERELEASE_OR_BUILD
         )
     )
     __major: int
@@ -38,7 +38,7 @@ class SolidityVersion:
         self.__prerelease = prerelease
         self.__build = build
 
-    def __str__(self):
+    def __str__(self) -> str:
         s = f"{self.major}.{self.minor}.{self.patch}"
         if self.prerelease is not None:
             s += f"-{self.prerelease}"
@@ -46,17 +46,17 @@ class SolidityVersion:
             s += f"+{self.build}"
         return s
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         prerelease = (
             '"' + self.prerelease + '"' if self.prerelease is not None else None
         )
         build = '"' + self.build + '"' if self.build is not None else None
         return f"{self.__class__.__name__}({self.major}, {self.minor}, {self.patch}, {prerelease}, {build})"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self.major, self.minor, self.patch))
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if not isinstance(other, self.__class__):
             return NotImplemented
         return (
@@ -65,7 +65,7 @@ class SolidityVersion:
             and self.patch == other.patch
         )
 
-    def __lt__(self, other):
+    def __lt__(self, other) -> bool:
         if not isinstance(other, self.__class__):
             return NotImplemented
         return (self.major, self.minor, self.patch) < (
@@ -88,23 +88,23 @@ class SolidityVersion:
         return SolidityVersion(major, minor, patch, prerelease, build)
 
     @property
-    def major(self):
+    def major(self) -> int:
         return self.__major
 
     @property
-    def minor(self):
+    def minor(self) -> int:
         return self.__minor
 
     @property
-    def patch(self):
+    def patch(self) -> int:
         return self.__patch
 
     @property
-    def prerelease(self):
+    def prerelease(self) -> Optional[str]:
         return self.__prerelease
 
     @property
-    def build(self):
+    def build(self) -> Optional[str]:
         return self.__build
 
 
@@ -160,7 +160,7 @@ class SolidityVersionRange:
                 self.__higher = self.lower
                 self.__higher_inclusive = False
 
-    def __contains__(self, item):
+    def __contains__(self, item) -> bool:
         if isinstance(item, str):
             item = SolidityVersion.fromstring(item)
         if not isinstance(item, SolidityVersion):
@@ -176,7 +176,7 @@ class SolidityVersionRange:
         )
         return lower_check and higher_check
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(
             (
                 self.lower,
@@ -186,7 +186,7 @@ class SolidityVersionRange:
             )
         )
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if not isinstance(other, SolidityVersionRange):
             return NotImplemented
         self_attr = (
@@ -203,13 +203,13 @@ class SolidityVersionRange:
         )
         return self_attr == other_attr
 
-    def __str__(self):
+    def __str__(self) -> str:
         s = f"{'>=' if self.lower_inclusive else '>'}{self.lower}"
         if self.higher is not None:
             s = s + f" {'<=' if self.higher_inclusive else '<'}{self.higher}"
         return s
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         lower = '"' + str(self.lower) + '"'
         higher = '"' + str(self.higher) + '"' if self.higher is not None else None
         return f"{self.__class__.__name__}({lower}, {self.lower_inclusive}, {higher}, {self.higher_inclusive})"
@@ -268,32 +268,30 @@ class SolidityVersionRange:
         )
 
     @property
-    def lower(self):
+    def lower(self) -> SolidityVersion:
         return self.__lower
 
     @property
-    def lower_inclusive(self):
+    def lower_inclusive(self) -> bool:
         return self.__lower_inclusive
 
     @property
-    def higher(self):
+    def higher(self) -> Optional[SolidityVersion]:
         return self.__higher
 
     @property
-    def higher_inclusive(self):
+    def higher_inclusive(self) -> Optional[bool]:
         return self.__higher_inclusive
 
 
 class SolidityVersionExpr:
     ERROR_MSG = r"Invalid Solidity version expression: {value}"
-    VERSION = r"x|X|\*|0|[1-9][0-9]*"
-    PARTIAL = r"(?P<major>{version})(?:\.(?P<minor>{version}))?(?:\.(?P<patch>{version}))?".format(
-        version=VERSION
+    NUMBER = r"x|X|\*|0|[1-9][0-9]*"
+    PARTIAL = r"(?P<major>{number})(?:\.(?P<minor>{number}))?(?:\.(?P<patch>{number}))?".format(
+        number=NUMBER
     )
     PARTIAL_RE = re.compile(r"^\s*{partial}\s*$".format(partial=PARTIAL))
-    PART = r"(?P<operator>\^|~|<|<=|>|>=|=)?\s*(?P<major>{version})(?:\.(?P<minor>{version}))?(?:\.(?P<patch>{version}))?".format(
-        version=VERSION
-    )
+    PART = r"(?P<operator>\^|~|<|<=|>|>=|=)?\s*{partial}".format(partial=PARTIAL)
     RANGE_RE = re.compile(r"\s*{part}\s*".format(part=PART))
     RANGES_RE = re.compile(r"^(\s*{part}\s*)+$".format(part=PART))
 
@@ -563,7 +561,7 @@ class SolidityVersionExpr:
         else:
             raise ValueError(cls.ERROR_MSG.format(value=match_str))
 
-    def __contains__(self, item):
+    def __contains__(self, item) -> bool:
         if not isinstance(item, SolidityVersion):
             return NotImplemented
         for r in self.__ranges:
@@ -571,10 +569,10 @@ class SolidityVersionExpr:
                 return True
         return False
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.__expression
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'{self.__class__.__name__}("{str(self)}")'
 
     @property
