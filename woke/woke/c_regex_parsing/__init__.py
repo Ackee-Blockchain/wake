@@ -2,6 +2,17 @@ from typing import Optional, Tuple, Union, Dict, Any
 from functools import total_ordering
 import re
 
+"""
+This module implements semantic version (and `npm` semantic version range) parsing as described
+by `NPM semver <https://www.npmjs.com/package/semver>`_ and `solc source code <https://github.com/ethereum/solidity/blob/55467c1ccaffd5fcf6ea988d5e091d468a08f533/liblangutil/SemVerHandler.cpp>`_.
+As these two implementations are not compatible, some compromises have been made. These include:
+* A version cannot start with `v` prefix.
+* Partial versions that do not represent a range are not supported. These are e.g. `x.1.2`, `0.X.7` or `*.*.3`.
+* Whitespace between a partial expression and operator are permitted. `>= 1.2.3 <= 7.8.9`, `1.2.3 \t-\r\n 4.5.6` are valid expressions.
+* Version prereleases and build strings are ignored in comparison.
+* A hyphen range cannot include additional operators. Expressions `>=1.2.3 - <=4.5.6` or `~1.2.3 - ^4.5.6` are not permitted.
+"""
+
 
 @total_ordering
 class SolidityVersion:
@@ -215,6 +226,9 @@ class SolidityVersionRange:
         return f"{self.__class__.__name__}({lower}, {self.lower_inclusive}, {higher}, {self.higher_inclusive})"
 
     def __and__(self, other: "SolidityVersionRange") -> "SolidityVersionRange":
+        """
+        Perform an intersection of two Solidity version ranges and return a new instance of `SolidityVersionRange`.
+        """
         if self.lower < other.lower:
             lower_bound = other.lower
             lower_inclusive = other.lower_inclusive
@@ -254,12 +268,18 @@ class SolidityVersionRange:
 
     @classmethod
     def intersection(cls, *args: "SolidityVersionRange") -> "SolidityVersionRange":
+        """
+        Perform an intersection of all `SolidityVersionRange` arguments and return a new instance of `SolidityVersionRange`.
+        """
         ret = cls(None, None, None, None)
         for r in args:
             ret &= r
         return ret
 
     def isempty(self) -> bool:
+        """
+        Return `True` if the range is empty (no Solidity version can be contained in this range), `False` otherwise.
+        """
         return (
             self.lower == SolidityVersion(0, 0, 0)
             and not self.lower_inclusive
