@@ -298,21 +298,22 @@ class SolidityVersionExpr:
     RANGES_RE = re.compile(r"^(\s*{part}\s*)+$".format(part=PART))
 
     __expression: str
-    __ranges: List[SolidityVersionRange]
+    __ranges: Tuple[SolidityVersionRange]
 
     def __init__(self, expr: str):
         cls = self.__class__
         self.__expression = expr
-        self.__ranges = []
+        evaluated_ranges = []
 
         ranges = expr.split("||")
         for r in ranges:
             if "-" in r:
-                self.__ranges.append(cls.__parse_hyphen_range(r))
+                evaluated_ranges.append(cls.__parse_hyphen_range(r))
             else:
-                self.__ranges.append(cls.__parse_range(r))
-        if len(self.__ranges) == 0:
+                evaluated_ranges.append(cls.__parse_range(r))
+        if len(evaluated_ranges) == 0:
             raise ValueError(cls.ERROR_MSG.format(value=expr))
+        self.__ranges = tuple(evaluated_ranges)
 
     @classmethod
     def __parse_range(cls, range_str: str) -> SolidityVersionRange:
@@ -575,3 +576,7 @@ class SolidityVersionExpr:
 
     def __repr__(self):
         return f'{self.__class__.__name__}("{str(self)}")'
+
+    @property
+    def version_ranges(self) -> Tuple[SolidityVersionRange]:
+        return self.__ranges
