@@ -35,17 +35,17 @@ class SolidityVersion:
 
     def __str__(self):
         s = f"{self.major}.{self.minor}.{self.patch}"
-        if self.__prerelease is not None:
-            s += f"-{self.__prerelease}"
-        if self.__build is not None:
-            s += f"+{self.__build}"
+        if self.prerelease is not None:
+            s += f"-{self.prerelease}"
+        if self.build is not None:
+            s += f"+{self.build}"
         return s
 
     def __repr__(self):
         prerelease = (
-            '"' + self.__prerelease + '"' if self.__prerelease is not None else None
+            '"' + self.prerelease + '"' if self.prerelease is not None else None
         )
-        build = '"' + self.__build + '"' if self.__build is not None else None
+        build = '"' + self.build + '"' if self.build is not None else None
         return f"{self.__class__.__name__}({self.major}, {self.minor}, {self.patch}, {prerelease}, {build})"
 
     def __hash__(self):
@@ -93,6 +93,14 @@ class SolidityVersion:
     @property
     def patch(self):
         return self.__patch
+
+    @property
+    def prerelease(self):
+        return self.__prerelease
+
+    @property
+    def build(self):
+        return self.__build
 
 
 class SolidityVersionRange:
