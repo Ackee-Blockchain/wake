@@ -10,8 +10,13 @@ class SolidityVersion:
     Prerelease and build tags are parsed but ignored (even in comparison). As of `solc` version 0.8.11 there is no use for them.
     """
 
+    VERSION = r"0|[1-9][0-9]*"
+    PRERELEASE_OR_BUILD_PART = r"[-0-9A-Za-z]+"
+    PRERELEASE_OR_BUILD = r"{part}(?:\.{part})*".format(part=PRERELEASE_OR_BUILD_PART)
     RE = re.compile(
-        r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[^\s+]+)?(\+[^\s]+)?$"
+        r"^(?P<major>{version})\.(?P<minor>{version})\.(?P<patch>{version})(?:-(?P<prerelease>{prerelease}))?(?:\+(?P<build>{build}))?$".format(
+            version=VERSION, prerelease=PRERELEASE_OR_BUILD, build=PRERELEASE_OR_BUILD
+        )
     )
     __major: int
     __minor: int
@@ -74,12 +79,12 @@ class SolidityVersion:
         match = cls.RE.match(version_str)
         if not match:
             raise ValueError(f"Invalid Solidity version: {version_str}")
-        groups = match.groups()
-        major = int(groups[0])
-        minor = int(groups[1])
-        patch = int(groups[2])
-        prerelease = None if groups[3] is None else groups[3][1:]
-        build = None if groups[4] is None else groups[4][1:]
+        groups = match.groupdict()
+        major = int(groups["major"])
+        minor = int(groups["minor"])
+        patch = int(groups["patch"])
+        prerelease = groups["prerelease"]
+        build = groups["build"]
         return SolidityVersion(major, minor, patch, prerelease, build)
 
     @property
