@@ -68,7 +68,11 @@ class SolidityVersion:
         return hash((self.major, self.minor, self.patch))
 
     def __eq__(self, other) -> bool:
-        if not isinstance(other, self.__class__):
+        cls = self.__class__
+
+        if isinstance(other, str):
+            other = cls.fromstring(other)
+        elif not isinstance(other, cls):
             return NotImplemented
         return (
             self.major == other.major
@@ -77,7 +81,11 @@ class SolidityVersion:
         )
 
     def __lt__(self, other) -> bool:
-        if not isinstance(other, self.__class__):
+        cls = self.__class__
+
+        if isinstance(other, str):
+            other = cls.fromstring(other)
+        elif not isinstance(other, self.__class__):
             return NotImplemented
         return (self.major, self.minor, self.patch) < (
             other.major,
