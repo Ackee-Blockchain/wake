@@ -307,7 +307,7 @@ class SolidityVersionRange:
 class SolidityVersionExpr:
     ERROR_MSG = r"Invalid Solidity version expression: {value}"
     NUMBER = r"x|X|\*|0|[1-9][0-9]*"
-    PARTIAL = r"(?P<major>{number})(?:\.(?P<minor>{number}))?(?:\.(?P<patch>{number}))?".format(
+    PARTIAL = r"(?P<major>{number})\s*(?:\.\s*(?P<minor>{number}))?\s*(?:\.\s*(?P<patch>{number}))?".format(
         number=NUMBER
     )
     PARTIAL_RE = re.compile(r"^\s*{partial}\s*$".format(partial=PARTIAL))

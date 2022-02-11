@@ -170,8 +170,6 @@ def test_version_expr_invalid():
     invalid = [
         "v0.8.10",
         "v 0.8.10",
-        "0 .8.10",
-        "0.8. 10",
         ".1.2.3",
         "1.2.3.",
         "0.1.2.3.4",
@@ -353,7 +351,7 @@ def test_version_expr_whitespace():
     expressions = [
         # expression, list of matching versions, list of nonmatching versions
         (
-            "      0.8.7||1 - 1.2.7\n",
+            "      0 .\t8\n.\r7||1 - 1.2.7\n",
             ["0.8.7", "1.0.0", "1.2.7"],
             ["0.8.6", "0.8.8", "0.9.9", "1.2.8"],
         ),
