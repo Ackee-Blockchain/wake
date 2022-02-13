@@ -4,6 +4,8 @@ install_requires = [
     "pydantic >= 1.9.0",
     "typing_extensions >= 4.0, < 5",
     "requests >= 2.20, < 3.0",
+    "tomli >= 2.0.0, < 3",
+    "networkx >= 2.5, < 3",
     "StrEnum",
 ]
 
