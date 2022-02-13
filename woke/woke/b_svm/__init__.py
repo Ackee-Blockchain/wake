@@ -7,11 +7,7 @@ import hashlib
 from pydantic import BaseModel, Field
 import requests
 
-
-class UnsupportedPlatformError(Exception):
-    """
-    The current platform is not supported. Supported platforms are: Linux, macOS, Windows.
-    """
+from woke.a_config import WokeConfig, UnsupportedPlatformError
 
 
 class ChecksumError(Exception):
@@ -103,30 +99,19 @@ class SolcVersionManager(CompilerVersionManagerAbc):
     __solc_list_path: Path
     __solc_builds: Optional[SolcBuilds]
 
-    def __init__(self, *_, woke_root_path: Optional[Union[str, Path]] = None):
-        """
-        :param woke_root_path: woke config directory path, useful in unit tests
-        """
-        # TODO: Move default Woke path into config module
-        # assignees: michprev
+    def __init__(self, woke_config: WokeConfig):
         system = platform.system()
         if system == "Linux":
             self.__platform = "linux-amd64"
-            default_root_path = Path.home() / ".woke"
         elif system == "Darwin":
             self.__platform = "macosx-amd64"
-            default_root_path = Path.home() / ".woke"
         elif system == "Windows":
             self.__platform = "windows-amd64"
-            default_root_path = Path.home() / "Woke"
         else:
             raise UnsupportedPlatformError(f"Platform '{system}' is not supported.")
 
-        if woke_root_path is None:
-            woke_root_path = default_root_path
-
         self.__solc_list_url = f"{self.BINARIES_URL}/{self.__platform}/list.json"
-        self.__compilers_path = Path(woke_root_path) / "compilers"
+        self.__compilers_path = woke_config.woke_root_path / "compilers"
         self.__solc_list_path = self.__compilers_path / "solc.json"
         self.__solc_builds = None
 
