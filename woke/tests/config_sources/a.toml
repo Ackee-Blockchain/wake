@@ -1,0 +1,4 @@
+imports = ["b.toml", "./c.toml"]
+
+[solc]
+remappings = ["123"]
