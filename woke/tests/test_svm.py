@@ -23,6 +23,7 @@ def run_cleanup(request):
 
 
 @pytest.mark.slow
+@pytest.mark.platform_dependent
 @pytest.mark.parametrize("run_cleanup", [[PYTEST_WOKE_PATH]], indirect=True)
 def test_basic_usage(run_cleanup):
     svm = SolcVersionManager(woke_root_path=PYTEST_WOKE_PATH)
@@ -35,6 +36,7 @@ def test_basic_usage(run_cleanup):
     assert len(svm.list_installed()) == 0
 
 
+@pytest.mark.platform_dependent
 @pytest.mark.parametrize("run_cleanup", [[PYTEST_WOKE_PATH]], indirect=True)
 def test_install_invalid_version(run_cleanup):
     svm = SolcVersionManager(woke_root_path=PYTEST_WOKE_PATH)
@@ -44,6 +46,7 @@ def test_install_invalid_version(run_cleanup):
 
 
 @pytest.mark.slow
+@pytest.mark.platform_dependent
 @pytest.mark.parametrize(
     "run_cleanup", [[PYTEST_WOKE_PATH, PYTEST_WOKE_PATH2]], indirect=True
 )
@@ -63,6 +66,7 @@ def test_two_woke_root_paths(run_cleanup):
     assert "0.8.10" not in svm2.list_installed()
 
 
+@pytest.mark.platform_dependent
 @pytest.mark.parametrize("run_cleanup", [[PYTEST_WOKE_PATH]], indirect=True)
 def test_remove_not_installed_version(run_cleanup):
     svm = SolcVersionManager(woke_root_path=PYTEST_WOKE_PATH)
@@ -71,6 +75,7 @@ def test_remove_not_installed_version(run_cleanup):
 
 
 @pytest.mark.slow
+@pytest.mark.platform_dependent
 @pytest.mark.parametrize("run_cleanup", [[PYTEST_WOKE_PATH]], indirect=True)
 def test_file_executable(run_cleanup):
     svm = SolcVersionManager(woke_root_path=PYTEST_WOKE_PATH)
