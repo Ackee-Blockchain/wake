@@ -81,5 +81,5 @@ def test_file_executable(run_cleanup):
     svm = SolcVersionManager(woke_root_path=PYTEST_WOKE_PATH)
     svm.install("0.8.10")
 
-    output = subprocess.check_output([svm.get_path("0.8.10"), "--version"])
+    output = subprocess.check_output([str(svm.get_path("0.8.10")), "--version"])
     assert b"0.8.10" in output
