@@ -1,4 +1,4 @@
 imports = ["../empty.toml"]
 
 [solc]
-remappings = ["abc", "123"]
+remappings = [":https://url.com=", ":123=xyz"]

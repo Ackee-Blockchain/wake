@@ -1,2 +1,2 @@
 [solc]
-remappings = ["woke"]
+remappings = ["woke=test-target"]
