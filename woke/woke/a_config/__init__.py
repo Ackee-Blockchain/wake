@@ -51,6 +51,7 @@ class SolcRemapping:
 
 
 class SolcWokeConfig(WokeConfigModel):
+    include_paths: List[Path] = []
     remappings: List[SolcRemapping] = []
 
     @validator("remappings", pre=True, each_item=True)
