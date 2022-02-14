@@ -2,7 +2,7 @@ from pathlib import Path, PosixPath, WindowsPath
 import pydantic
 import pytest
 
-from woke.a_config import WokeConfig
+from woke.a_config import WokeConfig, SolcRemapping
 
 
 sources_path = Path(__file__).parent.resolve() / "config_sources"
@@ -37,14 +37,14 @@ def test_config_simple():
     assert (sources_path / "c.toml").resolve() in config.loaded_files
     assert (sources_path / "empty.toml").resolve() in config.loaded_files
     assert len(config.solc.remappings) == 1
-    assert config.solc.remappings[0] == "xyz"
+    assert config.solc.remappings[0] == SolcRemapping(None, "xyz", None)
 
     # loaded config should be short enough not to be truncated by reprlib.repr
     repr_config = eval(repr(config))
     assert repr_config.woke_root_path.resolve() == sources_path.resolve()
     assert len(repr_config.loaded_files) == 0
     assert len(repr_config.solc.remappings) == 1
-    assert repr_config.solc.remappings[0] == "xyz"
+    assert repr_config.solc.remappings[0] == SolcRemapping(None, "xyz", None)
 
 
 @pytest.mark.platform_dependent
@@ -58,8 +58,8 @@ def test_config_global():
     ).resolve() in config.loaded_files
     assert (sources_path / "empty.toml").resolve() in config.loaded_files
     assert len(config.solc.remappings) == 2
-    assert config.solc.remappings[0] == "abc"
-    assert config.solc.remappings[1] == "123"
+    assert config.solc.remappings[0] == SolcRemapping(None, "https://url.com", None)
+    assert config.solc.remappings[1] == SolcRemapping(None, "123", "xyz")
 
 
 @pytest.mark.platform_dependent
@@ -71,7 +71,7 @@ def test_config_project():
     config.load_configs()
 
     assert len(config.solc.remappings) == 1
-    assert config.solc.remappings[0] == "woke"
+    assert config.solc.remappings[0] == SolcRemapping(None, "woke", "test-target")
 
 
 @pytest.mark.platform_dependent
@@ -92,7 +92,7 @@ def test_config_import_abs_path():
     assert (sources_path / "c.toml").resolve() in config.loaded_files
     assert (sources_path / "empty.toml").resolve() in config.loaded_files
     assert len(config.solc.remappings) == 1
-    assert config.solc.remappings[0] == "xyz"
+    assert config.solc.remappings[0] == SolcRemapping(None, "xyz", None)
 
     tmp_file.unlink()
 

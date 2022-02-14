@@ -1,4 +1,4 @@
 imports = ["empty.toml"]
 
 [solc]
-remappings = ["xyz"]
+remappings = ["xyz="]

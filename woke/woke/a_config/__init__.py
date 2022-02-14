@@ -6,8 +6,10 @@ import platform
 import logging
 import pprint
 import os
+import re
 
-from pydantic import BaseModel, Extra, Field
+from pydantic import BaseModel, Extra, Field, validator
+from pydantic.dataclasses import dataclass
 import networkx as nx
 import tomli
 
@@ -41,8 +43,29 @@ class WokeConfigModel(BaseModel):
         extra = Extra.forbid
 
 
+@dataclass
+class SolcRemapping:
+    context: Optional[str]
+    prefix: str
+    target: Optional[str]
+
+
 class SolcWokeConfig(WokeConfigModel):
-    remappings: List[str] = []
+    remappings: List[SolcRemapping] = []
+
+    @validator("remappings", pre=True, each_item=True)
+    def set_remapping(cls, v):
+        remapping_re = re.compile(
+            r"(?:(?P<context>[^:\s]+)?:)?(?P<prefix>[^\s=]+)=(?P<target>[^\s]+)?"
+        )
+        match = remapping_re.match(v)
+        assert match, f"`{v}` is not a valid solc remapping."
+
+        groupdict = match.groupdict()
+        context = groupdict["context"]
+        prefix = groupdict["prefix"]
+        target = groupdict["target"]
+        return SolcRemapping(context, prefix, target)
 
 
 class TopLevelWokeConfig(WokeConfigModel):
