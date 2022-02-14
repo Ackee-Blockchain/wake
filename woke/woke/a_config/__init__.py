@@ -53,7 +53,6 @@ class TopLevelWokeConfig(WokeConfigModel):
 class WokeConfig:
     __woke_root_path: Path
     __project_root_path: Path
-    __config_file_path: Path
     __loaded_files: Set[Path]
     __config_raw: Dict[str, Any]
     __config: TopLevelWokeConfig
@@ -91,7 +90,6 @@ class WokeConfig:
         self.__woke_root_path.mkdir(parents=True, exist_ok=True)
         self.__woke_root_path = self.__woke_root_path.resolve(strict=True)
 
-        self.__config_file_path = self.__woke_root_path / "config.toml"
         self.__loaded_files = set()
         self.__config_raw = dict()
         self.__config = TopLevelWokeConfig()
@@ -167,12 +165,14 @@ class WokeConfig:
         instance.__config = config
         return instance
 
-    def load_global(self) -> None:
+    def load_configs(self) -> None:
         """
-        Load the global config file `config.toml` located in the Woke root directory.
+        Load both the global config file `config.toml` located in the Woke root directory
+        and the project specific config file `woke-config.toml` located in the project root directory.
         This is expected to be called right after `WokeConfig` instantiation.
         """
-        self.load(self.__config_file_path)
+        self.load(self.woke_root_path / "config.toml")
+        self.load(self.project_root_path / "woke-config.toml")
 
     def load(self, path: Path) -> None:
         """

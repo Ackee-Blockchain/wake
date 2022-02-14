@@ -24,7 +24,7 @@ def test_config_empty():
 @pytest.mark.platform_dependent
 def test_config_simple():
     config = WokeConfig(woke_root_path=sources_path)
-    config.load_global()  # should not have any effect
+    config.load_configs()  # should not have any effect
     assert len(config.loaded_files) == 0
     assert config.woke_root_path.resolve() == sources_path.resolve()
     assert len(config.solc.remappings) == 0
@@ -51,7 +51,7 @@ def test_config_simple():
 def test_config_global():
     config = WokeConfig(woke_root_path=(sources_path / "containing_global_conf"))
     assert len(config.loaded_files) == 0
-    config.load_global()
+    config.load_configs()
     assert len(config.loaded_files) == 2
     assert (
         sources_path / "containing_global_conf" / "config.toml"
@@ -60,6 +60,18 @@ def test_config_global():
     assert len(config.solc.remappings) == 2
     assert config.solc.remappings[0] == "abc"
     assert config.solc.remappings[1] == "123"
+
+
+@pytest.mark.platform_dependent
+def test_config_project():
+    config = WokeConfig(
+        project_root_path=(sources_path / "containing_project_conf"),
+        woke_root_path=(sources_path / "containing_global_conf"),
+    )
+    config.load_configs()
+
+    assert len(config.solc.remappings) == 1
+    assert config.solc.remappings[0] == "woke"
 
 
 @pytest.mark.platform_dependent
