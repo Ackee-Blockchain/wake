@@ -89,6 +89,7 @@ class WokeConfig:
 
         # make sure that Woke root path exists
         self.__woke_root_path.mkdir(parents=True, exist_ok=True)
+        self.__woke_root_path = self.__woke_root_path.resolve(strict=True)
 
         self.__config_file_path = self.__woke_root_path / "config.toml"
         self.__loaded_files = set()
