@@ -52,12 +52,18 @@ class TopLevelWokeConfig(WokeConfigModel):
 
 class WokeConfig:
     __woke_root_path: Path
+    __project_root_path: Path
     __config_file_path: Path
     __loaded_files: Set[Path]
     __config_raw: Dict[str, Any]
     __config: TopLevelWokeConfig
 
-    def __init__(self, *_, woke_root_path: Optional[Union[str, Path]] = None):
+    def __init__(
+        self,
+        *_,
+        project_root_path: Optional[Union[str, Path]] = None,
+        woke_root_path: Optional[Union[str, Path]] = None,
+    ):
         if woke_root_path is None:
             system = platform.system()
             if system == "Linux":
@@ -70,6 +76,16 @@ class WokeConfig:
                 raise UnsupportedPlatformError(f"Platform `{system}` is not supported.")
         else:
             self.__woke_root_path = Path(woke_root_path)
+
+        if project_root_path is None:
+            self.__project_root_path = Path.cwd().resolve()
+        else:
+            self.__project_root_path = Path(project_root_path).resolve()
+
+        if not self.__project_root_path.is_dir():
+            raise ValueError(
+                f"Project root path `{self.__project_root_path}` is not a directory."
+            )
 
         # make sure that Woke root path exists
         self.__woke_root_path.mkdir(parents=True, exist_ok=True)
@@ -84,7 +100,7 @@ class WokeConfig:
 
     def __repr__(self) -> str:
         config_dict = reprlib.repr(self.__config_raw)
-        return f"{self.__class__.__name__}.fromdict({config_dict}, woke_root_path={repr(self.__woke_root_path)})"
+        return f"{self.__class__.__name__}.fromdict({config_dict}, project_root_path={repr(self.__project_root_path)}, woke_root_path={repr(self.__woke_root_path)})"
 
     def __load_file(
         self,
@@ -136,12 +152,15 @@ class WokeConfig:
         cls,
         config_dict: Dict[str, Any],
         *_,
+        project_root_path: Optional[Union[str, Path]] = None,
         woke_root_path: Optional[Union[str, Path]] = None,
     ) -> "WokeConfig":
         """
         Build `WokeConfig` class from a dictionary and an optional Woke root path.
         """
-        instance = cls(woke_root_path=woke_root_path)
+        instance = cls(
+            project_root_path=project_root_path, woke_root_path=woke_root_path
+        )
         config = TopLevelWokeConfig.parse_obj(config_dict)
         instance.__config_raw = deepcopy(config_dict)
         instance.__config = config
@@ -183,6 +202,13 @@ class WokeConfig:
         Return the system path to the Woke root directory.
         """
         return self.__woke_root_path
+
+    @property
+    def project_root_path(self) -> Path:
+        """
+        Return the system path of the currently open project.
+        """
+        return self.__project_root_path
 
     @property
     def solc(self) -> SolcWokeConfig:
