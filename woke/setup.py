@@ -7,6 +7,7 @@ install_requires = [
     "tomli >= 2.0.0, < 3",
     "networkx >= 2.5, < 3",
     "pycryptodomex >= 3.12, < 4",
+    "click >= 8, < 9",
     "StrEnum",
 ]
 
