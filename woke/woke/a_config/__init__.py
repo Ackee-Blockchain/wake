@@ -2,6 +2,7 @@ import reprlib
 from typing import Optional, Union, Dict, Any, List, Set, FrozenSet
 from pathlib import Path
 from copy import deepcopy
+from dataclasses import astuple
 import platform
 import logging
 import pprint
@@ -48,6 +49,9 @@ class SolcRemapping:
     context: Optional[str]
     prefix: str
     target: Optional[str]
+
+    def __iter__(self):
+        return iter(astuple(self))
 
 
 class SolcWokeConfig(WokeConfigModel):
