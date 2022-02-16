@@ -1,4 +1,5 @@
-from typing import Optional, Tuple, Union, Dict, Any
+import itertools
+from typing import Optional, Tuple, Union, Dict, Any, List, Iterable
 from functools import total_ordering
 import re
 
@@ -312,6 +313,38 @@ class SolidityVersionRange:
         return self.__higher_inclusive
 
 
+class SolidityVersionRanges:
+    """
+    Helper class implementing intersection on List[SolidityVersionRange].
+    """
+
+    __version_ranges: Tuple[SolidityVersionRange]
+
+    def __init__(self, version_ranges: Iterable[SolidityVersionRange]):
+        self.__version_ranges = tuple(version_ranges)
+
+    def __and__(self, other):
+        if not isinstance(other, SolidityVersionRanges):
+            return NotImplemented
+        ret = []
+        for r1, r2 in itertools.product(self.version_ranges, other.version_ranges):
+            new_range = r1 & r2
+            if not new_range.isempty():
+                ret.append(new_range)
+        return SolidityVersionRanges(ret)
+
+    def __iter__(self):
+        for version_range in self.__version_ranges:
+            yield version_range
+
+    def __len__(self):
+        return len(self.__version_ranges)
+
+    @property
+    def version_ranges(self) -> Tuple[SolidityVersionRange]:
+        return self.__version_ranges
+
+
 class SolidityVersionExpr:
     ERROR_MSG = r"Invalid Solidity version expression: {value}"
     NUMBER = r"x|X|\*|0|[1-9][0-9]*"
@@ -324,7 +357,7 @@ class SolidityVersionExpr:
     RANGES_RE = re.compile(r"^(\s*{part}\s*)+$".format(part=PART))
 
     __expression: str
-    __ranges: Tuple[SolidityVersionRange]
+    __ranges: SolidityVersionRanges
 
     def __init__(self, expr: str):
         cls = self.__class__
@@ -339,7 +372,7 @@ class SolidityVersionExpr:
                 evaluated_ranges.append(cls.__parse_range(r))
         if len(evaluated_ranges) == 0:
             raise ValueError(cls.ERROR_MSG.format(value=expr))
-        self.__ranges = tuple(evaluated_ranges)
+        self.__ranges = SolidityVersionRanges(evaluated_ranges)
 
     @classmethod
     def __parse_range(cls, range_str: str) -> SolidityVersionRange:
@@ -604,5 +637,5 @@ class SolidityVersionExpr:
         return f'{self.__class__.__name__}("{str(self)}")'
 
     @property
-    def version_ranges(self) -> Tuple[SolidityVersionRange]:
+    def version_ranges(self) -> SolidityVersionRanges:
         return self.__ranges
