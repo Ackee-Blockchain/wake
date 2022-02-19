@@ -18,7 +18,7 @@ import tomli
 This module handles config file management. Each config option has its default value.
 There are two main sources of config files:
 * `config.toml` global config file in the Woke root directory ($HOME/.woke on macOS and Linux, $HOME/Woke on Windows)
-* `woke-config.toml` project-specific config file present in a project root directory
+* `woke.toml` project-specific config file present in a project root directory
 
 There may be additional config files included with the `imports` top-level config key. Paths in the `imports` key can
 be both relative and absolute.
@@ -196,11 +196,11 @@ class WokeConfig:
     def load_configs(self) -> None:
         """
         Load both the global config file `config.toml` located in the Woke root directory
-        and the project specific config file `woke-config.toml` located in the project root directory.
+        and the project specific config file `woke.toml` located in the project root directory.
         This is expected to be called right after `WokeConfig` instantiation.
         """
         self.load(self.woke_root_path / "config.toml")
-        self.load(self.project_root_path / "woke-config.toml")
+        self.load(self.project_root_path / "woke.toml")
 
     def load(self, path: Path) -> None:
         """
