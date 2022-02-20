@@ -1,4 +1,4 @@
-imports = ["b.toml", "./c.toml"]
+subconfigs = ["b.toml", "./c.toml"]
 
 [solc]
 remappings = ["123="]

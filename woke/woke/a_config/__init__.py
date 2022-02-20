@@ -20,11 +20,11 @@ There are two main sources of config files:
 * `config.toml` global config file in the Woke root directory ($HOME/.woke on macOS and Linux, $HOME/Woke on Windows)
 * `woke.toml` project-specific config file present in a project root directory
 
-There may be additional config files included with the `imports` top-level config key. Paths in the `imports` key can
+There may be additional config files included with the `subconfigs` top-level config key. Paths in the `subconfigs` key can
 be both relative and absolute.
 
 Config options can be overridden. Imported config options override the options in the original file. Order of files
-listed in `imports` also matters. Latter files in the list override earlier files. Config options loaded from the
+listed in `subconfigs` also matters. Latter files in the list override earlier files. Config options loaded from the
 global `config.toml` file can be overridden by options supplied through project-specific config files.
 
 While this module enforces valid syntax of config files, it does not (and cannot) verify the semantics of the provided
@@ -74,7 +74,7 @@ class SolcWokeConfig(WokeConfigModel):
 
 
 class TopLevelWokeConfig(WokeConfigModel):
-    imports: List[str] = []
+    subconfigs: List[str] = []
     solc: SolcWokeConfig = Field(default_factory=SolcWokeConfig)
 
 
@@ -141,7 +141,7 @@ class WokeConfig:
                 logging.warning(f"Config file `{path}` does not exist.")
             else:
                 logging.warning(
-                    f"Config file `{path}` imported from `{parent}` does not exist."
+                    f"Config file `{path}` loaded from `{parent}` does not exist."
                 )
         else:
             with path.open("rb") as f:
@@ -151,10 +151,10 @@ class WokeConfig:
             if parent is not None:
                 graph.add_edge(parent, path)
 
-            # detect cyclic imports
+            # detect cyclic subconfigs
             if not nx.is_directed_acyclic_graph(graph):
                 cycles = list(nx.simple_cycles(graph))
-                error = f"Found cyclic config imports:"
+                error = f"Found cyclic config subconfigs:"
                 for no, cycle in enumerate(cycles):
                     error += f"\nCycle {no}:\n"
                     for path in cycle:
@@ -167,12 +167,12 @@ class WokeConfig:
             # merge the original config and the newly loaded config
             new_config.update(loaded_config)
 
-            for import_file in parsed_config.imports:
-                if os.path.isabs(import_file):
-                    import_path = Path(import_file).resolve()
+            for subconfig_file in parsed_config.subconfigs:
+                if os.path.isabs(subconfig_file):
+                    subconfig_path = Path(subconfig_file).resolve()
                 else:
-                    import_path = (path.parent / import_file).resolve()
-                self.__load_file(path, import_path, new_config, graph)
+                    subconfig_path = (path.parent / subconfig_file).resolve()
+                self.__load_file(path, subconfig_path, new_config, graph)
 
     @classmethod
     def fromdict(
@@ -207,21 +207,21 @@ class WokeConfig:
         Load config from the provided file path. Any already loaded config options are overridden by the options loaded
         from this file.
         """
-        imports_graph = nx.DiGraph()
+        subconfigs_graph = nx.DiGraph()
         config_raw_copy = deepcopy(self.__config_raw)
 
-        self.__load_file(None, path.resolve(), config_raw_copy, imports_graph)
+        self.__load_file(None, path.resolve(), config_raw_copy, subconfigs_graph)
 
         # validate newly loaded config
         config = TopLevelWokeConfig.parse_obj(config_raw_copy)
         self.__config_raw = config_raw_copy
         self.__config = config
-        self.__loaded_files.update(imports_graph.nodes)
+        self.__loaded_files.update(subconfigs_graph.nodes)
 
     @property
     def loaded_files(self) -> FrozenSet[Path]:
         """
-        Return frozenset of all loaded config file paths, including files that were loaded using the `imports` config key.
+        Return frozenset of all loaded config file paths, including files that were loaded using the `subconfigs` config key.
         """
         return frozenset(self.__loaded_files)
 

@@ -1,4 +1,4 @@
-imports = ["../empty.toml"]
+subconfigs = ["../empty.toml"]
 
 [solc]
 remappings = [":https://url.com=", ":123=xyz"]

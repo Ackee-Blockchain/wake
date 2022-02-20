@@ -1,1 +1,1 @@
-imports = ["./cyclic_x.toml"]
+subconfigs = ["./cyclic_x.toml"]

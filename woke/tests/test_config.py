@@ -78,7 +78,7 @@ def test_config_project():
 def test_config_import_abs_path():
     tmp_file = sources_path / "tmp_bHtvhGrDp6.toml"
     abs_path = (sources_path / "a.toml").resolve()
-    content = 'imports = ["{path}"]'.format(path=str(abs_path).replace("\\", "\\\\"))
+    content = 'subconfigs = ["{path}"]'.format(path=str(abs_path).replace("\\", "\\\\"))
 
     tmp_file.write_text(content)
     config = WokeConfig(woke_root_path=sources_path)
