@@ -38,6 +38,8 @@ def test_config_simple():
     assert (sources_path / "empty.toml").resolve() in config.loaded_files
     assert len(config.solc.remappings) == 1
     assert config.solc.remappings[0] == SolcRemapping(None, "xyz", None)
+    assert len(config.solc.include_paths) == 1
+    assert str(config.solc.include_paths[0]) == "."
 
     # loaded config should be short enough not to be truncated by reprlib.repr
     repr_config = eval(repr(config))
@@ -45,6 +47,8 @@ def test_config_simple():
     assert len(repr_config.loaded_files) == 0
     assert len(repr_config.solc.remappings) == 1
     assert repr_config.solc.remappings[0] == SolcRemapping(None, "xyz", None)
+    assert len(repr_config.solc.include_paths) == 1
+    assert str(repr_config.solc.include_paths[0]) == "."
 
 
 @pytest.mark.platform_dependent
@@ -93,6 +97,8 @@ def test_config_import_abs_path():
     assert (sources_path / "empty.toml").resolve() in config.loaded_files
     assert len(config.solc.remappings) == 1
     assert config.solc.remappings[0] == SolcRemapping(None, "xyz", None)
+    assert len(config.solc.include_paths) == 1
+    assert str(config.solc.include_paths[0]) == "."
 
     tmp_file.unlink()
 

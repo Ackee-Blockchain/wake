@@ -129,6 +129,16 @@ class WokeConfig:
         config_dict = reprlib.repr(self.__config_raw)
         return f"{self.__class__.__name__}.fromdict({config_dict}, project_root_path={repr(self.__project_root_path)}, woke_root_path={repr(self.__woke_root_path)})"
 
+    def __merge_dicts(self, old: Dict[str, Any], new: Dict[str, Any]) -> None:
+        for k, v in new.items():
+            if k not in old.keys():
+                old[k] = v
+            else:
+                if isinstance(v, dict):
+                    self.__merge_dicts(old[k], new[k])
+                else:
+                    old[k] = v
+
     def __load_file(
         self,
         parent: Optional[Path],
@@ -165,7 +175,7 @@ class WokeConfig:
             parsed_config = TopLevelWokeConfig.parse_obj(loaded_config)
 
             # merge the original config and the newly loaded config
-            new_config.update(loaded_config)
+            self.__merge_dicts(new_config, loaded_config)
 
             for subconfig_path in parsed_config.subconfigs:
                 if not subconfig_path.is_absolute():
