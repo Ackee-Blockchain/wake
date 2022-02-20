@@ -1,1 +1,1 @@
-imports = ["nonexistent.toml"]
+subconfigs = ["nonexistent.toml"]

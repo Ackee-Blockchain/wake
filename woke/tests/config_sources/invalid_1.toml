@@ -1,3 +1,3 @@
-imports = ["empty.toml"]
+subconfigs = ["empty.toml"]
 
 invalid_config_key = "some value"

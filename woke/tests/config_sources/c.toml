@@ -1,4 +1,4 @@
-imports = ["empty.toml"]
+subconfigs = ["empty.toml"]
 
 [solc]
 remappings = ["xyz="]

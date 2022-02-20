@@ -1,1 +1,1 @@
-import = ["empty.toml"]
+subconfig = ["empty.toml"]
