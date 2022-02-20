@@ -74,7 +74,7 @@ class SolcWokeConfig(WokeConfigModel):
 
 
 class TopLevelWokeConfig(WokeConfigModel):
-    subconfigs: List[str] = []
+    subconfigs: List[Path] = []
     solc: SolcWokeConfig = Field(default_factory=SolcWokeConfig)
 
 
@@ -167,12 +167,10 @@ class WokeConfig:
             # merge the original config and the newly loaded config
             new_config.update(loaded_config)
 
-            for subconfig_file in parsed_config.subconfigs:
-                if os.path.isabs(subconfig_file):
-                    subconfig_path = Path(subconfig_file).resolve()
-                else:
-                    subconfig_path = (path.parent / subconfig_file).resolve()
-                self.__load_file(path, subconfig_path, new_config, graph)
+            for subconfig_path in parsed_config.subconfigs:
+                if not subconfig_path.is_absolute():
+                    subconfig_path = path.parent / subconfig_path
+                self.__load_file(path, subconfig_path.resolve(), new_config, graph)
 
     @classmethod
     def fromdict(
