@@ -6,13 +6,14 @@ from dataclasses import astuple
 import platform
 import logging
 import pprint
-import os
 import re
 
 from pydantic import BaseModel, Extra, Field, validator
 from pydantic.dataclasses import dataclass
 import networkx as nx
 import tomli
+
+from .utils import change_cwd
 
 """
 This module handles config file management. Each config option has its default value.
@@ -58,8 +59,14 @@ class SolcWokeConfig(WokeConfigModel):
     include_paths: List[Path] = []
     remappings: List[SolcRemapping] = []
 
+    @validator("include_paths", pre=True, each_item=True)
+    def set_include_path(cls, v):
+        return Path(v).resolve()
+
     @validator("remappings", pre=True, each_item=True)
     def set_remapping(cls, v):
+        if isinstance(v, SolcRemapping):
+            return v
         remapping_re = re.compile(
             r"(?:(?P<context>[^:\s]+)?:)?(?P<prefix>[^\s=]+)=(?P<target>[^\s]+)?"
         )
@@ -76,6 +83,10 @@ class SolcWokeConfig(WokeConfigModel):
 class TopLevelWokeConfig(WokeConfigModel):
     subconfigs: List[Path] = []
     solc: SolcWokeConfig = Field(default_factory=SolcWokeConfig)
+
+    @validator("subconfigs", pre=True, each_item=True)
+    def set_subconfig(cls, v):
+        return Path(v).resolve()
 
 
 class WokeConfig:
@@ -154,33 +165,37 @@ class WokeConfig:
                     f"Config file `{path}` loaded from `{parent}` does not exist."
                 )
         else:
-            with path.open("rb") as f:
-                loaded_config = tomli.load(f)
+            # change the current working dir so that we can resolve relative paths
+            with change_cwd(path.parent):
+                with path.open("rb") as f:
+                    loaded_config = tomli.load(f)
 
-            graph.add_node(path, config=loaded_config)
-            if parent is not None:
-                graph.add_edge(parent, path)
+                graph.add_node(path, config=loaded_config)
+                if parent is not None:
+                    graph.add_edge(parent, path)
 
-            # detect cyclic subconfigs
-            if not nx.is_directed_acyclic_graph(graph):
-                cycles = list(nx.simple_cycles(graph))
-                error = f"Found cyclic config subconfigs:"
-                for no, cycle in enumerate(cycles):
-                    error += f"\nCycle {no}:\n"
-                    for path in cycle:
-                        error += f"{path}\n"
-                raise ValueError(error)
+                # detect cyclic subconfigs
+                if not nx.is_directed_acyclic_graph(graph):
+                    cycles = list(nx.simple_cycles(graph))
+                    error = f"Found cyclic config subconfigs:"
+                    for no, cycle in enumerate(cycles):
+                        error += f"\nCycle {no}:\n"
+                        for path in cycle:
+                            error += f"{path}\n"
+                    raise ValueError(error)
 
-            # validate loaded config
-            parsed_config = TopLevelWokeConfig.parse_obj(loaded_config)
+                # validate the loaded config
+                parsed_config = TopLevelWokeConfig.parse_obj(loaded_config)
 
-            # merge the original config and the newly loaded config
-            self.__merge_dicts(new_config, loaded_config)
+                # rebuild the loaded config from the pydantic model
+                # this ensures that all stored paths are absolute
+                loaded_config = parsed_config.dict(by_alias=True, exclude_unset=True)
 
-            for subconfig_path in parsed_config.subconfigs:
-                if not subconfig_path.is_absolute():
-                    subconfig_path = path.parent / subconfig_path
-                self.__load_file(path, subconfig_path.resolve(), new_config, graph)
+                # merge the original config and the newly loaded config
+                self.__merge_dicts(new_config, loaded_config)
+
+                for subconfig_path in parsed_config.subconfigs:
+                    self.__load_file(path, subconfig_path, new_config, graph)
 
     @classmethod
     def fromdict(

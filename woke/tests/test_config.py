@@ -5,7 +5,7 @@ import pytest
 from woke.a_config import WokeConfig, SolcRemapping
 
 
-sources_path = Path(__file__).parent.resolve() / "config_sources"
+sources_path = (Path(__file__).parent / "config_sources").resolve()
 
 
 @pytest.mark.platform_dependent
@@ -39,16 +39,7 @@ def test_config_simple():
     assert len(config.solc.remappings) == 1
     assert config.solc.remappings[0] == SolcRemapping(None, "xyz", None)
     assert len(config.solc.include_paths) == 1
-    assert str(config.solc.include_paths[0]) == "."
-
-    # loaded config should be short enough not to be truncated by reprlib.repr
-    repr_config = eval(repr(config))
-    assert repr_config.woke_root_path.resolve() == sources_path.resolve()
-    assert len(repr_config.loaded_files) == 0
-    assert len(repr_config.solc.remappings) == 1
-    assert repr_config.solc.remappings[0] == SolcRemapping(None, "xyz", None)
-    assert len(repr_config.solc.include_paths) == 1
-    assert str(repr_config.solc.include_paths[0]) == "."
+    assert config.solc.include_paths[0] == sources_path
 
 
 @pytest.mark.platform_dependent
@@ -98,7 +89,7 @@ def test_config_import_abs_path():
     assert len(config.solc.remappings) == 1
     assert config.solc.remappings[0] == SolcRemapping(None, "xyz", None)
     assert len(config.solc.include_paths) == 1
-    assert str(config.solc.include_paths[0]) == "."
+    assert config.solc.include_paths[0] == sources_path
 
     tmp_file.unlink()
 
