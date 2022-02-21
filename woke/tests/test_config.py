@@ -2,7 +2,8 @@ from pathlib import Path, PosixPath, WindowsPath
 import pydantic
 import pytest
 
-from woke.a_config import WokeConfig, SolcRemapping
+from woke.a_config import WokeConfig
+from woke.a_config.data_model import SolcRemapping
 
 
 sources_path = (Path(__file__).parent / "config_sources").resolve()
