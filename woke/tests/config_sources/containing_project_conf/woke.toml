@@ -1,2 +1,1 @@
-[solc]
-remappings = ["woke=test-target"]
+subconfigs = ["config_dir/a.toml"]
