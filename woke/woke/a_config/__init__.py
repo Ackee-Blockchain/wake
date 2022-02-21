@@ -80,9 +80,13 @@ class SolcWokeConfig(WokeConfigModel):
         return SolcRemapping(context, prefix, target)
 
 
+class CompilerWokeConfig(WokeConfigModel):
+    solc: SolcWokeConfig = Field(default_factory=SolcWokeConfig)
+
+
 class TopLevelWokeConfig(WokeConfigModel):
     subconfigs: List[Path] = []
-    solc: SolcWokeConfig = Field(default_factory=SolcWokeConfig)
+    compiler: CompilerWokeConfig = Field(default_factory=CompilerWokeConfig)
 
     @validator("subconfigs", pre=True, each_item=True)
     def set_subconfig(cls, v):
@@ -263,8 +267,8 @@ class WokeConfig:
         return self.__project_root_path
 
     @property
-    def solc(self) -> SolcWokeConfig:
+    def compiler(self) -> CompilerWokeConfig:
         """
-        Return `solc` specific config options.
+        Return compiler-specific config options.
         """
-        return self.__config.solc
+        return self.__config.compiler

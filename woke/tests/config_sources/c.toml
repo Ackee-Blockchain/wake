@@ -1,4 +1,4 @@
 subconfigs = ["empty.toml"]
 
-[solc]
+[compiler.solc]
 remappings = ["xyz="]

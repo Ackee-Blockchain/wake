@@ -18,7 +18,7 @@ def test_config_empty():
     config.load(file_path)
     assert len(config.loaded_files) == 1
     assert file_path in config.loaded_files
-    assert len(config.solc.remappings) == 0
+    assert len(config.compiler.solc.remappings) == 0
 
 
 @pytest.mark.platform_dependent
@@ -27,7 +27,7 @@ def test_config_simple():
     config.load_configs()  # should not have any effect
     assert len(config.loaded_files) == 0
     assert config.woke_root_path.resolve() == sources_path.resolve()
-    assert len(config.solc.remappings) == 0
+    assert len(config.compiler.solc.remappings) == 0
 
     config.load(sources_path / "a.toml")
     assert config.woke_root_path.resolve() == sources_path.resolve()
@@ -36,10 +36,10 @@ def test_config_simple():
     assert (sources_path / "b.toml").resolve() in config.loaded_files
     assert (sources_path / "c.toml").resolve() in config.loaded_files
     assert (sources_path / "empty.toml").resolve() in config.loaded_files
-    assert len(config.solc.remappings) == 1
-    assert config.solc.remappings[0] == SolcRemapping(None, "xyz", None)
-    assert len(config.solc.include_paths) == 1
-    assert config.solc.include_paths[0] == sources_path
+    assert len(config.compiler.solc.remappings) == 1
+    assert config.compiler.solc.remappings[0] == SolcRemapping(None, "xyz", None)
+    assert len(config.compiler.solc.include_paths) == 1
+    assert config.compiler.solc.include_paths[0] == sources_path
 
 
 @pytest.mark.platform_dependent
@@ -52,9 +52,11 @@ def test_config_global():
         sources_path / "containing_global_conf" / "config.toml"
     ).resolve() in config.loaded_files
     assert (sources_path / "empty.toml").resolve() in config.loaded_files
-    assert len(config.solc.remappings) == 2
-    assert config.solc.remappings[0] == SolcRemapping(None, "https://url.com", None)
-    assert config.solc.remappings[1] == SolcRemapping(None, "123", "xyz")
+    assert len(config.compiler.solc.remappings) == 2
+    assert config.compiler.solc.remappings[0] == SolcRemapping(
+        None, "https://url.com", None
+    )
+    assert config.compiler.solc.remappings[1] == SolcRemapping(None, "123", "xyz")
 
 
 @pytest.mark.platform_dependent
@@ -65,8 +67,10 @@ def test_config_project():
     )
     config.load_configs()
 
-    assert len(config.solc.remappings) == 1
-    assert config.solc.remappings[0] == SolcRemapping(None, "woke", "test-target")
+    assert len(config.compiler.solc.remappings) == 1
+    assert config.compiler.solc.remappings[0] == SolcRemapping(
+        None, "woke", "test-target"
+    )
 
 
 @pytest.mark.platform_dependent
@@ -86,10 +90,10 @@ def test_config_import_abs_path():
     assert (sources_path / "b.toml").resolve() in config.loaded_files
     assert (sources_path / "c.toml").resolve() in config.loaded_files
     assert (sources_path / "empty.toml").resolve() in config.loaded_files
-    assert len(config.solc.remappings) == 1
-    assert config.solc.remappings[0] == SolcRemapping(None, "xyz", None)
-    assert len(config.solc.include_paths) == 1
-    assert config.solc.include_paths[0] == sources_path
+    assert len(config.compiler.solc.remappings) == 1
+    assert config.compiler.solc.remappings[0] == SolcRemapping(None, "xyz", None)
+    assert len(config.compiler.solc.include_paths) == 1
+    assert config.compiler.solc.include_paths[0] == sources_path
 
     tmp_file.unlink()
 

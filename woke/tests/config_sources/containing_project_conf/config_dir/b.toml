@@ -1,2 +1,2 @@
-[solc]
+[compiler.solc]
 remappings = ["woke=test-target"]
