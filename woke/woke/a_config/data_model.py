@@ -24,8 +24,14 @@ class SolcRemapping:
 
 
 class SolcWokeConfig(WokeConfigModel):
+    allow_paths: List[Path] = []
+    """Woke should set solc `--allow-paths` automatically. This option allows to specify additional allowed paths."""
     include_paths: List[Path] = []
     remappings: List[SolcRemapping] = []
+
+    @validator("allow_paths", pre=True, each_item=True)
+    def set_allow_path(cls, v):
+        return Path(v).resolve()
 
     @validator("include_paths", pre=True, each_item=True)
     def set_include_path(cls, v):
