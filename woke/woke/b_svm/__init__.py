@@ -1,4 +1,4 @@
-from typing import Optional, Union, Dict, List, Set
+from typing import Optional, Union, Dict, List, Tuple
 from abc import ABC, abstractmethod
 from pathlib import Path
 import platform
@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 import aiohttp
 
 from woke.a_config import WokeConfig, UnsupportedPlatformError
+from woke.c_regex_parsing.a_version import SolidityVersion, VersionAbc
 
 
 class ChecksumError(Exception):
@@ -20,9 +21,9 @@ class ChecksumError(Exception):
 
 class SolcBuildInfo(BaseModel):
     path: str
-    version: str
+    version: SolidityVersion
     build: str
-    long_version: str = Field(alias="longVersion")
+    long_version: SolidityVersion = Field(alias="longVersion")
     keccak256: str
     sha256: str
     urls: List[str]
@@ -30,7 +31,7 @@ class SolcBuildInfo(BaseModel):
 
 class SolcBuilds(BaseModel):
     builds: List[SolcBuildInfo]
-    releases: Dict[str, str]
+    releases: Dict[SolidityVersion, str]
     latest_release: str = Field(alias="latestRelease")
 
 
@@ -40,7 +41,9 @@ class CompilerVersionManagerAbc(ABC):
     """
 
     @abstractmethod
-    def install(self, version: str, force_reinstall: bool = False) -> None:
+    def install(
+        self, version: Union[VersionAbc, str], force_reinstall: bool = False
+    ) -> None:
         """
         Install the target compiler version.
         :param version: compiler version to be installed
@@ -48,36 +51,36 @@ class CompilerVersionManagerAbc(ABC):
         """
 
     @abstractmethod
-    def remove(self, version: str) -> None:
+    def remove(self, version: Union[VersionAbc, str]) -> None:
         """
         Remove the target compiler version.
         :param version: compiler version to be removed
         """
 
     @abstractmethod
-    def get_path(self, version: str) -> Path:
+    def get_path(self, version: Union[VersionAbc, str]) -> Path:
         """
         Return a system path of the target compiler version executable.
         :param version: version of the compiler executable whose path is returned
         """
 
     @abstractmethod
-    def list_all(self) -> Set[str]:
+    def list_all(self) -> Tuple[VersionAbc]:
         """
         Return a set of all supported compiler versions.
         :return set of all supported compiler versions
         """
 
-    def list_installed(self) -> Set[str]:
+    def list_installed(self) -> Tuple[VersionAbc]:
         """
         Return a set of installed compiler versions.
         :return: set of installed compiler versions
         """
-        installed = set()
+        installed = []
         for version in self.list_all():
             if self.get_path(version).is_file():
-                installed.add(version)
-        return installed
+                installed.append(version)
+        return tuple(installed)
 
 
 class SolcVersionManager(CompilerVersionManagerAbc):
@@ -119,12 +122,17 @@ class SolcVersionManager(CompilerVersionManagerAbc):
 
         self.__compilers_path.mkdir(parents=True, exist_ok=True)
 
-    async def install(self, version: str, force_reinstall: bool = False) -> None:
+    async def install(
+        self, version: Union[SolidityVersion, str], force_reinstall: bool = False
+    ) -> None:
         self.__fetch_list_file()
         if self.__solc_builds is None:
             raise RuntimeError(
                 f"Unable to fetch or correctly parse {self.__solc_list_url}."
             )
+
+        if isinstance(version, str):
+            version = SolidityVersion.fromstring(version)
 
         if self.get_path(version).is_file() and not force_reinstall:
             return
@@ -156,7 +164,7 @@ class SolcVersionManager(CompilerVersionManagerAbc):
 
         local_path.chmod(0o775)
 
-    def remove(self, version: str) -> None:
+    def remove(self, version: Union[SolidityVersion, str]) -> None:
         path = self.get_path(version)
         if path.is_file():
             path.unlink()
@@ -165,26 +173,29 @@ class SolcVersionManager(CompilerVersionManagerAbc):
                 f"solc version '{version}' was not installed - cannot remove."
             )
 
-    def get_path(self, version: str) -> Path:
+    def get_path(self, version: Union[SolidityVersion, str]) -> Path:
         self.__fetch_list_file()
         if self.__solc_builds is None:
             raise RuntimeError(
                 f"Unable to fetch or correctly parse {self.__solc_list_url}."
             )
+
+        if isinstance(version, str):
+            version = SolidityVersion.fromstring(version)
 
         if version not in self.__solc_builds.releases:
             raise ValueError(f"solc version '{version}' does not exist")
 
         return self.__compilers_path / self.__solc_builds.releases[version]
 
-    def list_all(self) -> Set[str]:
+    def list_all(self) -> Tuple[SolidityVersion]:
         self.__fetch_list_file()
         if self.__solc_builds is None:
             raise RuntimeError(
                 f"Unable to fetch or correctly parse {self.__solc_list_url}."
             )
 
-        return set(self.__solc_builds.releases.keys())
+        return tuple(sorted(self.__solc_builds.releases.keys()))
 
     def __fetch_list_file(self) -> None:
         """
