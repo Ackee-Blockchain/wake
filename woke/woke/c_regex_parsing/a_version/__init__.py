@@ -1,7 +1,7 @@
-import itertools
-from typing import Optional, Tuple, Union, Dict, Any, List, Iterable
-from functools import total_ordering
+from typing import Optional, Tuple, Union, Dict, Any, Iterable
+from abc import ABC, abstractmethod
 import re
+import itertools
 
 """
 This module implements semantic version (and `npm` semantic version range) parsing as described
@@ -15,8 +15,42 @@ As these two implementations are not compatible, some compromises have been made
 """
 
 
-@total_ordering
-class SolidityVersion:
+class VersionAbc(ABC):
+    @abstractmethod
+    def __str__(self):
+        ...
+
+    @abstractmethod
+    def __hash__(self):
+        ...
+
+    @abstractmethod
+    def __eq__(self, other):
+        ...
+
+    @abstractmethod
+    def __lt__(self, other):
+        ...
+
+    @abstractmethod
+    def __le__(self, other):
+        ...
+
+    @abstractmethod
+    def __gt__(self, other):
+        ...
+
+    @abstractmethod
+    def __ge__(self, other):
+        ...
+
+    @classmethod
+    @abstractmethod
+    def fromstring(cls, version_str: str) -> "VersionAbc":
+        ...
+
+
+class SolidityVersion(VersionAbc):
     """
     A class representing a single Solidity version (not a range of versions).
     Prerelease and build tags are parsed but ignored (even in comparison). As of `solc` version 0.8.11 there is no use for them.
@@ -93,6 +127,21 @@ class SolidityVersion:
             other.minor,
             other.patch,
         )
+
+    def __le__(self, other) -> bool:
+        return self < other or self == other
+
+    def __gt__(self, other):
+        lt = self < other
+        if lt is NotImplemented:
+            return NotImplemented
+        return not lt and self != other
+
+    def __ge__(self, other):
+        lt = self < other
+        if lt is NotImplemented:
+            return NotImplemented
+        return not lt
 
     @classmethod
     def fromstring(cls, version_str: str) -> "SolidityVersion":
