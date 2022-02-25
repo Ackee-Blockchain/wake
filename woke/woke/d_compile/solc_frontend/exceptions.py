@@ -1,0 +1,2 @@
+class CompilationError(Exception):
+    pass
