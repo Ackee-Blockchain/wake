@@ -7,6 +7,7 @@ strict = "**/*.py"
 [tool.portray]
 
 [tool.pytest.ini_options]
+asyncio_mode = "auto"
 markers = [
     "platform_dependent: platform-dependent test that will need to run on all CIs",
     "slow: slow tests that will not run in git hooks",
