@@ -3,9 +3,11 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 import platform
 import hashlib
+import urllib.request
+import urllib.error
 
 from pydantic import BaseModel, Field
-import requests
+import aiohttp
 
 from woke.a_config import WokeConfig, UnsupportedPlatformError
 
@@ -117,7 +119,7 @@ class SolcVersionManager(CompilerVersionManagerAbc):
 
         self.__compilers_path.mkdir(parents=True, exist_ok=True)
 
-    def install(self, version: str, force_reinstall: bool = False) -> None:
+    async def install(self, version: str, force_reinstall: bool = False) -> None:
         self.__fetch_list_file()
         if self.__solc_builds is None:
             raise RuntimeError(
@@ -134,11 +136,11 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         download_url = f"{self.BINARIES_URL}/{self.__platform}/{filename}"
         local_path = self.__compilers_path / filename
 
-        with requests.get(download_url, stream=True) as r:
-            r.raise_for_status()
-            with local_path.open("wb") as f:
-                for chunk in r.iter_content(8 * 1024):
-                    f.write(chunk)
+        async with aiohttp.ClientSession() as session:
+            async with session.get(download_url) as r:
+                with local_path.open("wb") as f:
+                    async for chunk in r.content.iter_chunked(8 * 1024):
+                        f.write(chunk)
 
         # TODO: Implement keccak256 checksum verifying in svm module
         # assignees: michprev
@@ -194,10 +196,11 @@ class SolcVersionManager(CompilerVersionManagerAbc):
             return
 
         try:
-            response = requests.get(self.__solc_list_url)
-            self.__solc_builds = SolcBuilds.parse_raw(response.text)
-            self.__solc_list_path.write_text(response.text, encoding="utf-8")
-        except requests.exceptions.RequestException:
+            with urllib.request.urlopen(self.__solc_list_url) as response:
+                json = response.read()
+                self.__solc_builds = SolcBuilds.parse_raw(json)
+                self.__solc_list_path.write_bytes(json)
+        except urllib.error.URLError:
             # in case of networking issues try to use the locally downloaded solc builds file as a fallback
             if self.__solc_list_path.is_file():
                 self.__solc_builds = SolcBuilds.parse_file(self.__solc_list_path)
