@@ -49,6 +49,18 @@ class VersionAbc(ABC):
     def fromstring(cls, version_str: str) -> "VersionAbc":
         ...
 
+    @classmethod
+    def validate(cls, v):
+        if isinstance(v, VersionAbc):
+            return v
+        if isinstance(v, str):
+            return cls.fromstring(v)
+        raise TypeError()
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
 
 class SolidityVersion(VersionAbc):
     """
