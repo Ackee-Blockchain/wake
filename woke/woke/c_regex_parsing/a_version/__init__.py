@@ -406,6 +406,13 @@ class SolidityVersionRanges:
             str(version_range) for version_range in self.__version_ranges
         )
 
+    def __contains__(self, item):
+        if isinstance(item, str):
+            item = SolidityVersion.fromstring(item)
+        if not isinstance(item, SolidityVersion):
+            return NotImplemented
+        return any(item in version_range for version_range in self.__version_ranges)
+
     @property
     def version_ranges(self) -> Tuple[SolidityVersionRange]:
         return self.__version_ranges
