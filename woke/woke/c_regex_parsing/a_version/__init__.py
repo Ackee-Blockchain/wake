@@ -401,6 +401,11 @@ class SolidityVersionRanges:
     def __len__(self):
         return len(self.__version_ranges)
 
+    def __str__(self):
+        return " || ".join(
+            str(version_range) for version_range in self.__version_ranges
+        )
+
     @property
     def version_ranges(self) -> Tuple[SolidityVersionRange]:
         return self.__version_ranges
