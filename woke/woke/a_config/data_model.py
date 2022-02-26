@@ -6,6 +6,8 @@ import re
 from pydantic import BaseModel, Field, Extra, validator
 from pydantic.dataclasses import dataclass
 
+from woke.c_regex_parsing.a_version import SolidityVersion
+
 
 class WokeConfigModel(BaseModel):
     class Config:
@@ -28,6 +30,7 @@ class SolcWokeConfig(WokeConfigModel):
     """Woke should set solc `--allow-paths` automatically. This option allows to specify additional allowed paths."""
     include_paths: List[Path] = []
     remappings: List[SolcRemapping] = []
+    target_version: Optional[SolidityVersion] = None
 
     @validator("allow_paths", pre=True, each_item=True)
     def set_allow_path(cls, v):
