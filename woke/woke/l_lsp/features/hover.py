@@ -1,11 +1,11 @@
 from typing import List, Optional, Union
-from server.structures import (
-                                MarkupContent, 
-                                MarkupKind,
-                                Range,
-                                TextDocumentPositionParams, 
-                                WorkDoneProgressOptions,
-                                WorkDoneProgressParams)
+from structures import (
+                        MarkupContent, 
+                        MarkupKind,
+                        Range,
+                        TextDocumentPositionParams, 
+                        WorkDoneProgressOptions,
+                        WorkDoneProgressParams)
 
 
 class HoverClientCapabilities:
