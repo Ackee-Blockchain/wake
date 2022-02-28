@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 import platform
 import hashlib
+import asyncio
 import urllib.request
 import urllib.error
 
@@ -144,11 +145,12 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         download_url = f"{self.BINARIES_URL}/{self.__platform}/{filename}"
         local_path = self.__compilers_path / filename
 
+        loop = asyncio.get_running_loop()
         async with aiohttp.ClientSession() as session:
             async with session.get(download_url) as r:
                 with local_path.open("wb") as f:
-                    async for chunk in r.content.iter_chunked(8 * 1024):
-                        f.write(chunk)
+                    data = await r.read()
+                    await loop.run_in_executor(None, f.write, data)
 
         # TODO: Implement keccak256 checksum verifying in svm module
         # assignees: michprev
