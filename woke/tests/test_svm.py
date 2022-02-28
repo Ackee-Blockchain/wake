@@ -7,6 +7,7 @@ import pytest
 
 from woke.a_config import WokeConfig
 from woke.b_svm import SolcVersionManager
+from woke.b_svm.exceptions import UnsupportedVersionError
 
 
 PYTEST_WOKE_PATH = Path.home() / ".tmpwoke_KVUhSovO5J"
@@ -45,6 +46,9 @@ async def test_basic_usage(run_cleanup, config):
     assert "0.8.10" in svm.list_installed()
     svm.remove("0.8.10")
     assert len(svm.list_installed()) == 0
+
+    with pytest.raises(UnsupportedVersionError):
+        await svm.install("0.1.2")
 
 
 @pytest.mark.platform_dependent
