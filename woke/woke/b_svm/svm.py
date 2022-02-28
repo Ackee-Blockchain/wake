@@ -13,7 +13,7 @@ import aiohttp
 from woke.a_config import WokeConfig, UnsupportedPlatformError
 from woke.c_regex_parsing.a_version import SolidityVersion
 from .abc import CompilerVersionManagerAbc
-from .exceptions import ChecksumError
+from .exceptions import ChecksumError, UnsupportedVersionError
 
 
 class SolcBuildInfo(BaseModel):
@@ -36,9 +36,6 @@ class SolcVersionManager(CompilerVersionManagerAbc):
     """
     Solc version manager that can install, remove and provide info about `solc` compiler.
     """
-
-    # TODO: Add checks for minimal solc version into svm module
-    # assignees: michprev
 
     # TODO: Add support for older solc versions in svm module
     #  Currently only builds present in binaries.soliditylang.org repository are supported.
@@ -85,6 +82,12 @@ class SolcVersionManager(CompilerVersionManagerAbc):
 
         if isinstance(version, str):
             version = SolidityVersion.fromstring(version)
+
+        minimal_version = self.list_all()[0]
+        if version < minimal_version:
+            raise UnsupportedVersionError(
+                f"The minimal supported solc version for the current platform is {minimal_version}."
+            )
 
         if self.get_path(version).is_file() and not force_reinstall:
             return
