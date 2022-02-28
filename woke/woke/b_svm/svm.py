@@ -7,6 +7,7 @@ import urllib.request
 import urllib.error
 
 from pydantic import BaseModel, Field
+from sha3 import keccak_256
 import aiohttp
 
 from woke.a_config import WokeConfig, UnsupportedPlatformError
@@ -101,16 +102,23 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         else:
             await self.__download_file(download_url, local_path, http_session)
 
-        # TODO: Implement keccak256 checksum verifying in svm module
-        # assignees: michprev
         sha256 = build_info.sha256
         if sha256.startswith("0x"):
             sha256 = sha256[2:]
+
+        keccak256 = build_info.keccak256
+        if keccak256.startswith("0x"):
+            keccak256 = keccak256[2:]
 
         if not self.__verify_sha256(local_path, sha256):
             local_path.unlink()
             raise ChecksumError(
                 f"Failed to verify SHA256 checksum of '{filename}' file."
+            )
+        if not self.__verify_keccak256(local_path, keccak256):
+            local_path.unlink()
+            raise ChecksumError(
+                f"Failed to verify KECCAK256 checksum of '{filename}' file."
             )
 
         local_path.chmod(0o775)
@@ -186,6 +194,23 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         :return: True if checksum matches the expected value, False otherwise
         """
         h = hashlib.sha256()
+        with path.open("rb") as f:
+            while True:
+                chunk = f.read(4 * 1024)
+                if not chunk:
+                    break
+                h.update(chunk)
+
+        return h.hexdigest() == expected
+
+    def __verify_keccak256(self, path: Path, expected: str) -> bool:
+        """
+        Check KECCAK256 checksum of the provided file against the expected value.
+        :param path: path of the file whose checksum to be verified
+        :param expected: expected value of KECCAK256 checksum
+        :return: True if checksum matches the expected value, False otherwise
+        """
+        h = keccak_256()
         with path.open("rb") as f:
             while True:
                 chunk = f.read(4 * 1024)
