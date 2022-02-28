@@ -32,6 +32,7 @@ extras_require = dict(
         "mkdocstrings[python]",
         "pymdown-extensions >= 9.0",
         "pygments",
+        "mike",
     ],
 )
 
