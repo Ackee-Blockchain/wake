@@ -28,6 +28,8 @@ extras_require = dict(
         "black",
         "portray",
         "ipython < 8",
+        "mkdocs-material >= 8.0",
+        "mkdocstrings[python]",
     ],
 )
 
