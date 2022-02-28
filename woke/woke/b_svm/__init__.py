@@ -124,7 +124,10 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         self.__compilers_path.mkdir(parents=True, exist_ok=True)
 
     async def install(
-        self, version: Union[SolidityVersion, str], force_reinstall: bool = False
+        self,
+        version: Union[SolidityVersion, str],
+        force_reinstall: bool = False,
+        http_session: Optional[aiohttp.ClientSession] = None,
     ) -> None:
         self.__fetch_list_file()
         if self.__solc_builds is None:
@@ -145,12 +148,11 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         download_url = f"{self.BINARIES_URL}/{self.__platform}/{filename}"
         local_path = self.__compilers_path / filename
 
-        loop = asyncio.get_running_loop()
-        async with aiohttp.ClientSession() as session:
-            async with session.get(download_url) as r:
-                with local_path.open("wb") as f:
-                    data = await r.read()
-                    await loop.run_in_executor(None, f.write, data)
+        if http_session is None:
+            async with aiohttp.ClientSession() as session:
+                await self.__download_file(download_url, local_path, session)
+        else:
+            await self.__download_file(download_url, local_path, http_session)
 
         # TODO: Implement keccak256 checksum verifying in svm module
         # assignees: michprev
@@ -198,6 +200,15 @@ class SolcVersionManager(CompilerVersionManagerAbc):
             )
 
         return tuple(sorted(self.__solc_builds.releases.keys()))
+
+    async def __download_file(
+        self, url: str, path: Path, http_session: aiohttp.ClientSession
+    ) -> None:
+        loop = asyncio.get_running_loop()
+        async with http_session.get(url) as r:
+            with path.open("wb") as f:
+                data = await r.read()
+                await loop.run_in_executor(None, f.write, data)
 
     def __fetch_list_file(self) -> None:
         """
