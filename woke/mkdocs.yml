@@ -13,6 +13,7 @@ plugins:
         import:
           - https://docs.python.org/3/objects.inv
           - https://networkx.org/documentation/stable/objects.inv
+- mike
 
 markdown_extensions:
   - pymdownx.highlight:
