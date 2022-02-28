@@ -1,0 +1,15 @@
+site_name: Woke
+
+theme:
+  name: "material"
+
+plugins:
+- search
+- mkdocstrings:
+    watch:
+      - woke
+    handlers:
+      python:
+        import:
+          - https://docs.python.org/3/objects.inv
+          - https://networkx.org/documentation/stable/objects.inv
