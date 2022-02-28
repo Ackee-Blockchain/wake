@@ -30,6 +30,8 @@ extras_require = dict(
         "ipython < 8",
         "mkdocs-material >= 8.0",
         "mkdocstrings[python]",
+        "pymdown-extensions >= 9.0",
+        "pygments",
     ],
 )
 

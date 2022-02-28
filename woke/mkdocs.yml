@@ -13,3 +13,10 @@ plugins:
         import:
           - https://docs.python.org/3/objects.inv
           - https://networkx.org/documentation/stable/objects.inv
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
