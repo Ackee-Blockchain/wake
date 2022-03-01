@@ -2,6 +2,20 @@ site_name: Woke
 
 theme:
   name: "material"
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    - navigation.expand
+    - navigation.indexes
+    - navigation.top
+
+nav:
+  - Woke: 'index.md'
+  - Contributing: 'contributing.md'
+  - API reference:
+    - api_reference/index.md
+    - a_config: api_reference/a_config.md
 
 plugins:
 - search
