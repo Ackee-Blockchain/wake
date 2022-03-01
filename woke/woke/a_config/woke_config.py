@@ -35,9 +35,9 @@ class WokeConfig:
         if woke_root_path is None:
             system = platform.system()
             if system == "Linux":
-                self.__woke_root_path = Path.home() / ".woke"
+                self.__woke_root_path = Path.home() / ".config" / "Woke"
             elif system == "Darwin":
-                self.__woke_root_path = Path.home() / ".woke"
+                self.__woke_root_path = Path.home() / ".config" / "Woke"
             elif system == "Windows":
                 self.__woke_root_path = Path.home() / "Woke"
             else:
