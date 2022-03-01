@@ -95,6 +95,10 @@ def test_remove_not_installed_version(run_cleanup, config):
 async def test_file_executable(run_cleanup, config):
     svm = SolcVersionManager(config)
     await svm.install("0.8.10")
-
     output = subprocess.check_output([str(svm.get_path("0.8.10")), "--version"])
     assert b"0.8.10" in output
+
+    oldest_version = svm.list_all()[0]
+    await svm.install(oldest_version)
+    output = subprocess.check_output([str(svm.get_path(oldest_version)), "--version"])
+    assert str(oldest_version).encode("utf-8") in output
