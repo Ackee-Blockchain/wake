@@ -1,5 +1,6 @@
 from typing import Optional, Union, List, Dict, Tuple
 from pathlib import Path
+from zipfile import ZipFile
 import platform
 import asyncio
 import hashlib
@@ -97,7 +98,7 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         filename = self.__solc_builds.releases[version]
         build_info = next(b for b in self.__solc_builds.builds if b.version == version)
         download_url = f"{self.BINARIES_URL}/{self.__platform}/{filename}"
-        local_path = self.get_path(version)
+        local_path = self.get_path(version).parent / filename
 
         local_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -126,6 +127,10 @@ class SolcVersionManager(CompilerVersionManagerAbc):
                 f"Failed to verify KECCAK256 checksum of '{filename}' file."
             )
 
+        # unzip older Windows solc binary zipped together with DLLs
+        if filename.endswith(".zip"):
+            local_path = self.__unzip(local_path)
+
         local_path.chmod(0o775)
 
     def remove(self, version: Union[SolidityVersion, str]) -> None:
@@ -153,7 +158,9 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         filename = self.__solc_builds.releases[version]
         dirname = filename
         if dirname.endswith((".exe", ".zip")):
-            dirname = dirname[:-3]
+            dirname = dirname[:-4]
+        if filename.endswith(".zip"):
+            filename = filename[:-3] + "exe"
         return self.__compilers_path / dirname / filename
 
     def list_all(self) -> Tuple[SolidityVersion]:
@@ -173,6 +180,34 @@ class SolcVersionManager(CompilerVersionManagerAbc):
             with path.open("wb") as f:
                 data = await r.read()
                 await loop.run_in_executor(None, f.write, data)
+
+    def __unzip(self, zip_path: Path) -> Path:
+        """
+        Unzip the Windows `solc` executable zip containing:
+        - solc.exe - extract this file and rename it as `solc-windows-amd64-v{version}+commit.{commit}.exe`
+        - soltest.exe - ignore this file (i.e. do not extract it)
+        - extract any additional files (DLLs) next to the solc binary
+        After that, delete the zip file.
+        """
+        base_path = zip_path.parent
+        solc_filename = zip_path.name[:-3] + "exe"
+        solc_path = zip_path.parent / solc_filename
+
+        with ZipFile(zip_path, "r") as _zip:
+            members = _zip.namelist()
+            for member in members:
+                if member == "soltest.exe":
+                    # do not extract soltest.exe to save up the space
+                    continue
+                elif member == "solc.exe":
+                    # rename solc.exe to the long name (containing version number, commit number etc.)
+                    _zip.extract(member, base_path)
+                    (base_path / "solc.exe").rename(solc_path)
+                else:
+                    # extract all the remaining files
+                    _zip.extract(member, base_path)
+        zip_path.unlink()
+        return solc_path
 
     def __fetch_list_file(self) -> None:
         """
