@@ -6,7 +6,7 @@ install_requires = [
     "aiohttp >= 3.8, < 4",
     "tomli >= 2.0.0, < 3",
     "networkx >= 2.5, < 3",
-    "pysha3 >= 1.0.2",
+    "pycryptodomex >= 3.12, < 4",
     "StrEnum",
 ]
 

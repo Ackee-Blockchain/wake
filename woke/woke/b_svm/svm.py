@@ -7,7 +7,7 @@ import urllib.request
 import urllib.error
 
 from pydantic import BaseModel, Field
-from sha3 import keccak_256
+from Cryptodome.Hash import keccak
 import aiohttp
 
 from woke.a_config import WokeConfig, UnsupportedPlatformError
@@ -213,7 +213,7 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         :param expected: expected value of KECCAK256 checksum
         :return: True if checksum matches the expected value, False otherwise
         """
-        h = keccak_256()
+        h = keccak.new(digest_bits=256)
         with path.open("rb") as f:
             while True:
                 chunk = f.read(4 * 1024)
