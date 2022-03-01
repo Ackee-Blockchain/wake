@@ -8,6 +8,7 @@ install_requires = [
     "networkx >= 2.5, < 3",
     "pycryptodomex >= 3.12, < 4",
     "click >= 8, < 9",
+    "rich >= 10.16",
     "StrEnum",
 ]
 
