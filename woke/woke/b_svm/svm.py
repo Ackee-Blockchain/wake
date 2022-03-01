@@ -97,7 +97,9 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         filename = self.__solc_builds.releases[version]
         build_info = next(b for b in self.__solc_builds.builds if b.version == version)
         download_url = f"{self.BINARIES_URL}/{self.__platform}/{filename}"
-        local_path = self.__compilers_path / filename
+        local_path = self.get_path(version)
+
+        local_path.parent.mkdir(parents=True, exist_ok=True)
 
         if http_session is None:
             async with aiohttp.ClientSession() as session:
@@ -148,7 +150,11 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         if version not in self.__solc_builds.releases:
             raise ValueError(f"solc version '{version}' does not exist")
 
-        return self.__compilers_path / self.__solc_builds.releases[version]
+        filename = self.__solc_builds.releases[version]
+        dirname = filename
+        if dirname.endswith((".exe", ".zip")):
+            dirname = dirname[:-3]
+        return self.__compilers_path / dirname / filename
 
     def list_all(self) -> Tuple[SolidityVersion]:
         self.__fetch_list_file()
