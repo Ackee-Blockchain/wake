@@ -155,6 +155,12 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         if isinstance(version, str):
             version = SolidityVersion.fromstring(version)
 
+        minimal_version = self.list_all()[0]
+        if version < minimal_version:
+            raise UnsupportedVersionError(
+                f"The minimal supported solc version for the current platform is {minimal_version}."
+            )
+
         if version not in self.__solc_builds.releases:
             raise ValueError(f"solc version '{version}' does not exist")
 
