@@ -1,4 +1,4 @@
-from typing import Optional, Union, List, Dict, Tuple
+from typing import Optional, Union, List, Dict, Tuple, Callable, Any
 from pathlib import Path
 from zipfile import ZipFile
 import platform
@@ -74,6 +74,7 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         version: Union[SolidityVersion, str],
         force_reinstall: bool = False,
         http_session: Optional[aiohttp.ClientSession] = None,
+        progress: Optional[Callable[[float], Any]] = None,
     ) -> None:
         self.__fetch_list_file()
         if self.__solc_builds is None:
@@ -91,6 +92,8 @@ class SolcVersionManager(CompilerVersionManagerAbc):
             )
 
         if self.get_path(version).is_file() and not force_reinstall:
+            if progress is not None:
+                progress(1)
             return
         if version not in self.__solc_builds.releases:
             raise ValueError(f"solc version '{version}' does not exist.")
@@ -104,9 +107,9 @@ class SolcVersionManager(CompilerVersionManagerAbc):
 
         if http_session is None:
             async with aiohttp.ClientSession() as session:
-                await self.__download_file(download_url, local_path, session)
+                await self.__download_file(download_url, local_path, session, progress)
         else:
-            await self.__download_file(download_url, local_path, http_session)
+            await self.__download_file(download_url, local_path, http_session, progress)
 
         sha256 = build_info.sha256
         if sha256.startswith("0x"):
@@ -173,13 +176,23 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         return tuple(sorted(self.__solc_builds.releases.keys()))
 
     async def __download_file(
-        self, url: str, path: Path, http_session: aiohttp.ClientSession
+        self,
+        url: str,
+        path: Path,
+        http_session: aiohttp.ClientSession,
+        progress: Optional[Callable[[float], Any]] = None,
     ) -> None:
-        loop = asyncio.get_running_loop()
         async with http_session.get(url) as r:
+            total_size = r.headers.get("Content-Length")
+            if total_size is not None:
+                total_size = int(total_size)
+            downloaded_size = 0
             with path.open("wb") as f:
-                data = await r.read()
-                await loop.run_in_executor(None, f.write, data)
+                async for chunk in r.content.iter_chunked(8 * 1024):
+                    f.write(chunk)
+                    downloaded_size += len(chunk)
+                    if total_size is not None and progress is not None:
+                        progress(downloaded_size / total_size)
 
     def __unzip(self, zip_path: Path) -> Path:
         """

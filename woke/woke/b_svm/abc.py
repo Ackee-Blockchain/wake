@@ -1,4 +1,4 @@
-from typing import Union, Tuple
+from typing import Union, Tuple, AsyncIterator
 from abc import ABC, abstractmethod
 from pathlib import Path
 
@@ -11,7 +11,7 @@ class CompilerVersionManagerAbc(ABC):
     """
 
     @abstractmethod
-    def install(
+    async def install(
         self, version: Union[VersionAbc, str], force_reinstall: bool = False
     ) -> None:
         """
