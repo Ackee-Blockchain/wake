@@ -50,6 +50,9 @@ class SolcFrontend:
         )
         args.append(f"--allow-paths=.,{allow_paths}")
 
+        for include_path in self.__config.compiler.solc.include_paths:
+            args.append(f"--include-path={include_path}")
+
         if target_version >= "0.6.9":
             args.append("--base-path=.")
 
