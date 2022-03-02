@@ -12,6 +12,9 @@ from .data_model import TopLevelWokeConfig, CompilerWokeConfig
 from .utils import change_cwd
 
 
+logger = logging.getLogger(__name__)
+
+
 class UnsupportedPlatformError(Exception):
     """
     The current platform is not supported. Supported platforms are: Linux, macOS, Windows.
@@ -88,9 +91,9 @@ class WokeConfig:
     ) -> None:
         if not path.is_file():
             if parent is None:
-                logging.warning(f"Config file `{path}` does not exist.")
+                logger.warning(f"Config file `{path}` does not exist.")
             else:
-                logging.warning(
+                logger.warning(
                     f"Config file `{path}` loaded from `{parent}` does not exist."
                 )
         else:
