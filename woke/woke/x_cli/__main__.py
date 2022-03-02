@@ -1,5 +1,6 @@
 from click.core import Context
 import click
+import rich.traceback
 
 
 @click.group()
@@ -8,3 +9,5 @@ import click
 def main(ctx: Context, debug: bool) -> None:
     ctx.ensure_object(dict)
     ctx.obj["debug"] = debug
+
+    rich.traceback.install(show_locals=True, suppress=[click])
