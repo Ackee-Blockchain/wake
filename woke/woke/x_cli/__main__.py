@@ -16,6 +16,11 @@ def main(ctx: Context, debug: bool) -> None:
     rich.traceback.install(show_locals=True, suppress=[click], console=console)
 
 
+@click.group()
+def svm_main() -> None:
+    rich.traceback.install(show_locals=True, suppress=[click], console=console)
+
+
 @main.command(name="config")
 @click.pass_context
 def config(ctx: Context) -> None:
