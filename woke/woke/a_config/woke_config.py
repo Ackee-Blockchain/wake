@@ -2,7 +2,6 @@ from typing import Set, Dict, Any, Optional, Union, FrozenSet
 from pathlib import Path
 from copy import deepcopy
 import platform
-import pprint
 import reprlib
 import logging
 
@@ -64,7 +63,7 @@ class WokeConfig:
         self.__config = TopLevelWokeConfig()
 
     def __str__(self) -> str:
-        return pprint.pformat(self.__config_raw, indent=4)
+        return self.__config.json(by_alias=True, exclude_unset=True)
 
     def __repr__(self) -> str:
         config_dict = reprlib.repr(self.__config_raw)
