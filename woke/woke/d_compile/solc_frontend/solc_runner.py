@@ -29,8 +29,6 @@ class SolcFrontend:
     async def compile_files(
         self, files: Dict[str, Path], target_version: SolidityVersion
     ) -> SolcOutput:
-        await self.__svm.install(target_version)
-
         standard_input = SolcInput()
 
         for unit_name, path in files.items():
@@ -38,20 +36,26 @@ class SolcFrontend:
         standard_input.settings = SolcInputSettings()  # type: ignore
         standard_input.settings.output_selection = {"*": {"": ["ast"]}}
 
-        solc_path = self.__svm.get_path(str(target_version))
-        return await self.__run_solc(solc_path, standard_input)
+        return await self.__run_solc(target_version, standard_input)
 
-    async def __run_solc(self, path: Path, standard_input: SolcInput) -> SolcOutput:
+    async def __run_solc(
+        self, target_version: SolidityVersion, standard_input: SolcInput
+    ) -> SolcOutput:
+        await self.__svm.install(target_version)
+        path = self.__svm.get_path(target_version)
+        args = [str(path.resolve()), "--standard-json"]
+
         allow_paths = ",".join(
             str(path) for path in self.__config.compiler.solc.allow_paths
         )
+        args.append(f"--allow-paths=.,{allow_paths}")
+
+        if target_version >= "0.6.9":
+            args.append("--base-path=.")
 
         # the first argument in this call cannot be `Path` because of https://bugs.python.org/issue35246
         proc = await asyncio.create_subprocess_exec(
-            str(path.resolve()),
-            f"--standard-json",
-            "--base-path=.",
-            f"--allow-paths=.,{allow_paths}",
+            *args,
             cwd=self.__config.project_root_path,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
