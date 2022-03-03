@@ -8,7 +8,7 @@ base_path = Path(__file__).parent.resolve() / "re_parsing_sources"
 
 def test_a():
     path = base_path / "a.sol"
-    versions, imports = SoliditySourceParser.parse(path)
+    versions, imports, *_ = SoliditySourceParser.parse(path)
 
     assert len(versions) == 1
     version_range = next(iter(versions))
@@ -22,7 +22,7 @@ def test_a():
 
 def test_b():
     path = base_path / "b.sol"
-    versions, imports = SoliditySourceParser.parse(path)
+    versions, imports, *_ = SoliditySourceParser.parse(path)
 
     assert len(versions) == 1
     version_range = next(iter(versions))
@@ -37,7 +37,7 @@ def test_b():
 
 def test_c():
     path = base_path / "c.sol"
-    versions, imports = SoliditySourceParser.parse(path)
+    versions, imports, *_ = SoliditySourceParser.parse(path)
 
     assert len(versions) == 2
     it = iter(versions)
@@ -55,7 +55,7 @@ def test_c():
 
 def test_d():
     path = base_path / "d.sol"
-    versions, imports = SoliditySourceParser.parse(path)
+    versions, imports, *_ = SoliditySourceParser.parse(path)
 
     assert len(versions) == 1
     version_range = next(iter(versions))
