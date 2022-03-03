@@ -3,19 +3,9 @@ from typing import Optional, List, Dict
 from strenum import StrEnum
 from pydantic import BaseModel, Field, root_validator
 
+from woke.core.enums import EvmVersionEnum
+
 __doc__ = """Solc standard JSON input data model as described by https://docs.soliditylang.org/en/v0.8.12/using-the-compiler.html#input-description"""
-
-
-class EvmVersionEnum(StrEnum):
-    HOMESTEAD = "homestead"
-    TANGERINE_WHISTLE = "tangerineWhistle"
-    SPURIOUS_DRAGON = "spuriousDragon"
-    BYZANTIUM = "byzantium"
-    CONSTANTINOPLE = "constantinople"
-    PETERSBURG = "petersburg"
-    ISTANBUL = "istanbul"
-    BERLIN = "berlin"
-    LONDON = "london"
 
 
 class SolcStopAfterEnum(StrEnum):
