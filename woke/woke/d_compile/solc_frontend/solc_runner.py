@@ -69,11 +69,9 @@ class SolcFrontend:
         args.append(f"--allow-paths=.,{allow_paths}")
 
         if target_version >= "0.8.8":
+            args.append("--base-path=.")
             for include_path in self.__config.compiler.solc.include_paths:
                 args.append(f"--include-path={include_path}")
-
-        if target_version >= "0.6.9":
-            args.append("--base-path=.")
 
         # the first argument in this call cannot be `Path` because of https://bugs.python.org/issue35246
         proc = await asyncio.create_subprocess_exec(
