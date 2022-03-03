@@ -2,6 +2,8 @@ from typing import Tuple, List
 from pathlib import Path
 import re
 
+from Cryptodome.Hash import BLAKE2b
+
 from woke.c_regex_parsing.a_version import (
     SolidityVersionExpr,
     SolidityVersionRange,
@@ -85,15 +87,22 @@ class SoliditySourceParser:
         return list(imports)
 
     @classmethod
-    def parse(cls, path: Path) -> Tuple[SolidityVersionRanges, List[str]]:
+    def parse(cls, path: Path) -> Tuple[SolidityVersionRanges, List[str], str]:
         """
         Return a tuple of two lists. The first list contains Solidity version ranges that can be used to compile
         the given file. The second list contains filenames / URLs that are imported from the given file.
         """
-        content = path.read_text(encoding="utf-8")
+        raw_content = path.read_bytes()
+        content = raw_content.decode("utf-8")
+
+        h = BLAKE2b.new(data=raw_content, digest_bits=256)
 
         # strip all comments
         content = cls.ONELINE_COMMENT_RE.sub("", content)
         content = cls.MULTILINE_COMMENT_RE.sub("", content)
 
-        return cls.__parse_version_pragma(content), cls.__parse_import(content)
+        return (
+            cls.__parse_version_pragma(content),
+            cls.__parse_import(content),
+            h.hexdigest(),
+        )
