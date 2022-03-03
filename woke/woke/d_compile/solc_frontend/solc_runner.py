@@ -83,7 +83,7 @@ class SolcFrontend:
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
-        standard_input_json = standard_input.json(by_alias=True, exclude_unset=True)
+        standard_input_json = standard_input.json(by_alias=True, exclude_none=True)
         out, err = await proc.communicate(standard_input_json.encode("utf-8"))
         if proc.returncode != 0:
             raise CompilationError(err)
