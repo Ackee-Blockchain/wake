@@ -796,7 +796,7 @@ class SolcTupleExpression(SolcNode):
     is_pure: IsPure
     l_value_requested: LValueRequested
     type_descriptions: TypeDescriptionsModel
-    components: List[Annotated[SolcExpressionUnion, Field(discriminator="node_type")]]
+    components: List[Optional[Annotated[SolcExpressionUnion, Field(discriminator="node_type")]]]
     is_inline_array: IsInlineArray
     # optional
     argument_types: Optional[List[TypeDescriptionsModel]]
