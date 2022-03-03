@@ -6,6 +6,7 @@ import re
 from pydantic import BaseModel, Field, Extra, validator
 from pydantic.dataclasses import dataclass
 
+from woke.core.enums import EvmVersionEnum
 from woke.c_regex_parsing.a_version import SolidityVersion
 
 
@@ -28,6 +29,8 @@ class SolcRemapping:
 class SolcWokeConfig(WokeConfigModel):
     allow_paths: List[Path] = []
     """Woke should set solc `--allow-paths` automatically. This option allows to specify additional allowed paths."""
+    evm_version: Optional[EvmVersionEnum] = None
+    """Version of the EVM to compile for. Leave unset to let the solc decide."""
     include_paths: List[Path] = []
     remappings: List[SolcRemapping] = []
     target_version: Optional[SolidityVersion] = None

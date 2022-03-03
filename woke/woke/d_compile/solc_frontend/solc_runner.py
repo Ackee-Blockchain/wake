@@ -34,6 +34,7 @@ class SolcFrontend:
         for unit_name, path in files.items():
             standard_input.sources[unit_name] = SolcInputSource(urls=[str(path)])
         standard_input.settings = SolcInputSettings()  # type: ignore
+        standard_input.settings.evm_version = self.__config.compiler.solc.evm_version
         standard_input.settings.remappings = [
             str(remapping) for remapping in self.__config.compiler.solc.remappings
         ]
