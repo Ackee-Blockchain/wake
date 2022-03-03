@@ -8,6 +8,11 @@ from woke.core.enums import EvmVersionEnum
 __doc__ = """Solc standard JSON input data model as described by https://docs.soliditylang.org/en/v0.8.12/using-the-compiler.html#input-description"""
 
 
+class SolcInputLanguageEnum(StrEnum):
+    SOLIDITY = "Solidity"
+    YUL = "Yul"
+
+
 class SolcStopAfterEnum(StrEnum):
     PARSING = "parsing"
 
@@ -118,26 +123,26 @@ class SolcInputSource(SolcInputModel):
 
 
 class SolcInputOptimizerYulDetailsSettings(SolcInputModel):
-    stack_allocation: bool = True
-    optimizer_steps: Optional[str]
+    stack_allocation: Optional[bool] = None
+    optimizer_steps: Optional[str] = None
 
 
 class SolcInputOptimizerDetailsSettings(SolcInputModel):
-    peephole: bool = True
-    inliner: bool = True
-    jumpdest_remover: bool = True
-    order_literals: bool = False
-    deduplicate: bool = False
-    cse: bool = False
-    constant_optimizer: bool = False
-    yul: bool = False
-    yul_details: Optional[SolcInputOptimizerYulDetailsSettings]
+    peephole: Optional[bool] = None
+    inliner: Optional[bool] = None
+    jumpdest_remover: Optional[bool] = None
+    order_literals: Optional[bool] = None
+    deduplicate: Optional[bool] = None
+    cse: Optional[bool] = None
+    constant_optimizer: Optional[bool] = None
+    yul: Optional[bool] = None
+    yul_details: Optional[SolcInputOptimizerYulDetailsSettings] = None
 
 
 class SolcInputOptimizerSettings(SolcInputModel):
-    enabled: bool = False
-    runs: int
-    details: Optional[SolcInputOptimizerDetailsSettings]
+    enabled: Optional[bool] = None
+    runs: Optional[int] = None
+    details: Optional[SolcInputOptimizerDetailsSettings] = None
 
 
 class SolcInputDebugRevertStringsSettingsEnum(StrEnum):
@@ -168,24 +173,24 @@ class SolcInputDebugInfoSettingsEnum(StrEnum):
 
 
 class SolcInputDebugSettings(SolcInputModel):
-    revert_strings: SolcInputDebugRevertStringsSettingsEnum
-    debug_info: Optional[List[SolcInputDebugInfoSettingsEnum]]
+    revert_strings: Optional[SolcInputDebugRevertStringsSettingsEnum] = None
+    debug_info: Optional[List[SolcInputDebugInfoSettingsEnum]] = None
 
 
 class SolcInputMetadataSettings(SolcInputModel):
-    use_literal_content: bool = False
-    bytecode_hash: MetadataBytecodeHashEnum = Field(MetadataBytecodeHashEnum.IPFS)
+    use_literal_content: Optional[bool] = None
+    bytecode_hash: Optional[MetadataBytecodeHashEnum] = None
 
 
 class SolcInputModelCheckerSettings(SolcInputModel):
-    contracts: Dict[str, List[str]]  # source unit name -> list of contract names
-    div_mod_with_slacks: bool = True
-    engine: ModelCheckerEngineEnum = Field(ModelCheckerEngineEnum.ALL)
-    invariants: List[ModelCheckerInvariantsEnum]
-    show_unproved: bool = False
-    solvers: List[ModelCheckerSolversEnum]
-    targets: List[ModelCheckerTargetsEnum]
-    timeout: Optional[int]
+    contracts: Dict[str, List[str]] = {}  # source unit name -> list of contract names
+    div_mod_with_slacks: Optional[bool] = None
+    engine: Optional[ModelCheckerEngineEnum] = None
+    invariants: List[ModelCheckerInvariantsEnum] = []
+    show_unproved: Optional[bool] = None
+    solvers: List[ModelCheckerSolversEnum] = []
+    targets: List[ModelCheckerTargetsEnum] = []
+    timeout: Optional[int] = None
 
 
 class SolcInputSettings(SolcInputModel):
@@ -193,7 +198,7 @@ class SolcInputSettings(SolcInputModel):
     remappings: Optional[List[str]] = None
     optimizer: Optional[SolcInputOptimizerSettings] = None
     evm_version: Optional[EvmVersionEnum] = None
-    via_IR: bool = Field(False, alias="viaIR")
+    via_IR: Optional[bool] = Field(None, alias="viaIR")
     debug: Optional[SolcInputDebugSettings] = None
     metadata: Optional[SolcInputMetadataSettings] = None
     libraries: Optional[
@@ -206,6 +211,6 @@ class SolcInputSettings(SolcInputModel):
 
 
 class SolcInput(SolcInputModel):
-    language = "Solidity"
+    language: SolcInputLanguageEnum = Field(SolcInputLanguageEnum.SOLIDITY)
     sources: Dict[str, SolcInputSource] = {}
     settings: Optional[SolcInputSettings] = None
