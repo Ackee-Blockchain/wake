@@ -10,7 +10,6 @@ from .input_data_model import (
     SolcInput,
     SolcInputSource,
     SolcInputSettings,
-    SolcInputLanguageEnum,
 )
 from .output_data_model import SolcOutput
 from .exceptions import SolcCompilationError
@@ -25,14 +24,20 @@ class SolcFrontend:
         self.__svm = SolcVersionManager(woke_config)
 
     async def compile_src(
-        self, solidity_src: AnyStr, target_version: SolidityVersion
+        self,
+        solidity_src: AnyStr,
+        target_version: SolidityVersion,
+        settings: SolcInputSettings,
     ) -> SolcOutput:
         raise NotImplementedError(
             "Direct source code compilation (instead of a list of files) is currently not implemented."
         )
 
     async def compile_files(
-        self, files: Dict[str, Path], target_version: SolidityVersion
+        self,
+        files: Dict[str, Path],
+        target_version: SolidityVersion,
+        settings: SolcInputSettings,
     ) -> SolcOutput:
         standard_input = SolcInput()  # type: ignore
 
@@ -47,12 +52,7 @@ class SolcFrontend:
                 # because of this, absolute paths must be used here
                 standard_input.sources[unit_name] = SolcInputSource(urls=[str(path)])
 
-        standard_input.settings = SolcInputSettings()  # type: ignore
-        standard_input.settings.evm_version = self.__config.compiler.solc.evm_version
-        standard_input.settings.remappings = [
-            str(remapping) for remapping in self.__config.compiler.solc.remappings
-        ]
-        standard_input.settings.output_selection = {"*": {"": ["ast"]}}
+        standard_input.settings = settings
 
         return await self.__run_solc(target_version, standard_input)
 
