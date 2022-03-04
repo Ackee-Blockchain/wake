@@ -1,2 +1,1 @@
-# TODO: Implement woke/compile
-#  assignees: michprev
+from .compiler import SolidityCompiler
