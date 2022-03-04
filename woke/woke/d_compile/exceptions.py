@@ -1,0 +1,2 @@
+class CompilationResolveError(Exception):
+    pass
