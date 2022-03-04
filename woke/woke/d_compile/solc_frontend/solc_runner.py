@@ -13,7 +13,7 @@ from .input_data_model import (
     SolcInputLanguageEnum,
 )
 from .output_data_model import SolcOutput
-from .exceptions import CompilationError
+from .exceptions import SolcCompilationError
 
 
 class SolcFrontend:
@@ -84,6 +84,6 @@ class SolcFrontend:
         standard_input_json = standard_input.json(by_alias=True, exclude_none=True)
         out, err = await proc.communicate(standard_input_json.encode("utf-8"))
         if proc.returncode != 0:
-            raise CompilationError(err)
+            raise SolcCompilationError(err)
 
         return SolcOutput.parse_raw(out)
