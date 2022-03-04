@@ -8,8 +8,8 @@ import logging
 import networkx as nx
 import tomli
 
+from woke.utils import change_cwd
 from .data_model import TopLevelWokeConfig, CompilerWokeConfig
-from .utils import change_cwd
 
 
 logger = logging.getLogger(__name__)

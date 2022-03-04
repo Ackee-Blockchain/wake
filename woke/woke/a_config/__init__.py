@@ -1,4 +1,3 @@
-from .utils import change_cwd
 from .woke_config import WokeConfig, UnsupportedPlatformError
 
 __doc__ = """This module handles config file management. Each config option has its default value.
