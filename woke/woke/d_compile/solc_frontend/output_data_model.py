@@ -3,7 +3,6 @@ from typing import List, Optional, Dict
 from pydantic import BaseModel
 from strenum import StrEnum
 
-from woke.e_ast_parsing.b_solc.c_ast_nodes import AstSolc
 
 __doc__ = """Solc standard JSON output data model as described by https://docs.soliditylang.org/en/v0.8.12/using-the-compiler.html#output-description"""
 
@@ -83,7 +82,7 @@ class SolcOutputError(SolcOutputModel):
 
 class SolcOutputSourceInfo(SolcOutputModel):
     id: int
-    ast: AstSolc
+    ast: Dict
 
 
 class SolcOutputStorageLayout(SolcOutputModel):
