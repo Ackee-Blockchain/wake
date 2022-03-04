@@ -67,6 +67,8 @@ class SolcOutputSelectionEnum(StrEnum):
     """Ewasm in WebAssembly S-expressions format"""
     EWASM_WASM = "ewasm.wasm"
     """Ewasm in WebAssembly binary format"""
+    ALL = "*"
+    """All solc outputs including AST"""
 
 
 class ModelCheckerEngineEnum(StrEnum):
