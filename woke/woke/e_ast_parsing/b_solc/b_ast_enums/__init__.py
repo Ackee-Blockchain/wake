@@ -85,6 +85,7 @@ class UnaryOpOperator(StrEnum):
     MINUS_MINUS = r"--"
     MINUS = r"-"
     NOT = r"!"
+    TILDE = r"~"
     DELETE = "delete"
 
 
