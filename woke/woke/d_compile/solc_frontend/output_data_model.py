@@ -133,32 +133,35 @@ class SolcOutputEvmData(SolcOutputModel):
 
 
 class SolcOutputEwasmData(SolcOutputModel):
-    wast: str
+    wast: Optional[str]
     """S-expressions format"""
-    wasm: str
+    wasm: Optional[str]
     """Binary format (hex string)"""
 
 
-class SolcOutputData(SolcOutputModel):
-    abi: List  # TODO
+# TODO provide better data model for solc output
+class SolcOutputContractInfo(SolcOutputModel):
+    abi: Optional[List] = None
     """The Ethereum Contract ABI. If empty, it is represented as an empty array. See https://docs.soliditylang.org/en/latest/abi-spec.html."""
-    metadata: str
+    metadata: Optional[str] = None
     """Serialized JSON metadata string. See https://docs.soliditylang.org/en/latest/metadata.html."""
-    userdoc: Dict  # TODO
+    userdoc: Optional[Dict] = None
     """User documentation (natspec)"""
-    devdoc: Dict  # TODO
+    devdoc: Optional[Dict] = None
     """Developer documentation (natspec)"""
-    ir: str
+    ir: Optional[str] = None
     """Intermediate representation (string)"""
-    storage_layout: SolcOutputStorageLayout
+    storage_layout: Optional[Dict] = None
     """See https://docs.soliditylang.org/en/latest/internals/layout_in_storage.html#json-output"""
-    evm: SolcOutputEvmData
+    evm: Optional[Dict] = None
     """EVM-related outputs"""
-    ewasm: SolcOutputEwasmData
+    ewasm: Optional[SolcOutputEwasmData] = None
     """Ewasm related outputs"""
 
 
 class SolcOutput(SolcOutputModel):
     errors: Optional[List[SolcOutputError]] = []
     sources: Optional[Dict[str, SolcOutputSourceInfo]] = {}
-    contracts: Optional[Dict]  # TODO
+    contracts: Optional[
+        Dict[str, Dict[str, SolcOutputContractInfo]]
+    ]  # source_unit_name -> (contract_name -> info)
