@@ -23,7 +23,7 @@ class MetadataBytecodeHashEnum(StrEnum):
     BZZR1 = "bzzr1"
 
 
-class OutputSelectionEnum(StrEnum):
+class SolcOutputSelectionEnum(StrEnum):
     AST = "ast"
     ABI = "abi"
     DEVDOC = "devdoc"
@@ -205,7 +205,7 @@ class SolcInputSettings(SolcInputModel):
         Dict[str, Dict[str, str]]
     ] = None  # source unit name -> (lib name -> address)
     output_selection: Optional[
-        Dict[str, Dict[str, List[OutputSelectionEnum]]]
+        Dict[str, Dict[str, List[SolcOutputSelectionEnum]]]
     ] = None  # source unit name -> (contract name / empty for whole file / start for all contracts ->
     model_checker: Optional[SolcInputModelCheckerSettings] = None
 
