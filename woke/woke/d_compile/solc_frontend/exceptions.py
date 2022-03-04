@@ -1,2 +1,2 @@
-class CompilationError(Exception):
+class SolcCompilationError(Exception):
     pass
