@@ -4,6 +4,7 @@ install_requires = [
     "pydantic >= 1.9.0",
     "typing_extensions >= 4.0, < 5",
     "aiohttp >= 3.8, < 4",
+    "aiofiles >= 0.8.0",
     "tomli >= 2.0.0, < 3",
     "networkx >= 2.5, < 3",
     "pycryptodomex >= 3.12, < 4",
