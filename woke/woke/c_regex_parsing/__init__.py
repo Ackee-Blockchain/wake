@@ -87,7 +87,7 @@ class SoliditySourceParser:
         return list(imports)
 
     @classmethod
-    def parse(cls, path: Path) -> Tuple[SolidityVersionRanges, List[str], str]:
+    def parse(cls, path: Path) -> Tuple[SolidityVersionRanges, List[str], bytes]:
         """
         Return a tuple of two lists. The first list contains Solidity version ranges that can be used to compile
         the given file. The second list contains filenames / URLs that are imported from the given file.
@@ -104,5 +104,5 @@ class SoliditySourceParser:
         return (
             cls.__parse_version_pragma(content),
             cls.__parse_import(content),
-            h.hexdigest(),
+            h.digest(),
         )
