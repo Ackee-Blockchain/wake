@@ -1,5 +1,6 @@
 import json
 import collections
+from typing import Union
 from pydantic import BaseModel
 from protocol_structures import (
                                 RequestMessage,
@@ -62,20 +63,15 @@ class RPCProtocol():
         return content_length
 
 
-    def _read_content(self) -> RequestMessage:
+    def _read_content(self) -> dict:
         '''
-        Reads message content and creates object
+        Reads message content
         '''
         body = self.reader.read()
-        content = json.loads(body)
-        request_object = RequestMessage(
-                            json_rpc=content['json_rpc'],
-                            id=content['id'],
-                            method=content['method'],
-                            params=content['params'])
-        return request_object
+        return json.loads(body)
+        
 
-    def recieve_message(self) -> RequestMessage:
+    def recieve_message(self) -> Union[RequestMessage, NotificationMessage]:
         '''
         Get content length parameters from http header
         (Is useless variable at this point, but function
@@ -85,9 +81,20 @@ class RPCProtocol():
         #if self.msg_buffer:
         #    return self.msg_buffer.popleft()
         _ = self._read_header()
-        request_object = self._read_content()
-        #self.buffer.append(request_content)
-        return request_object
+        json_content = self._read_content()
+        if "id" in json_content:
+            message_object = RequestMessage(
+                                json_rpc=json_content['json_rpc'],
+                                id=json_content['id'],
+                                method=json_content['method'],
+                                params=json_content['params'])
+        else:
+            message_object = NotificationMessage(
+                                json_rpc=json_content['json_rpc'],
+                                method=json_content['method'],
+                                params=json_content['params'])
+        #self.buffer.append(message)
+        return message_object
 
 
     def send_rpc_response(self, response: ResponseMessage):
