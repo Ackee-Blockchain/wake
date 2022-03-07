@@ -69,6 +69,17 @@ class SolcOutputErrorSeverityEnum(StrEnum):
     INFO = "info"
 
 
+class SolcOutputStorageLayoutTypeEncodingEnum(StrEnum):
+    INPLACE = "inplace"
+    """Data is laid out contiguously in storage"""
+    MAPPING = "mapping"
+    """Keccak-256 hash-based method (see https://docs.soliditylang.org/en/latest/internals/layout_in_storage.html#mappings-and-dynamic-arrays)"""
+    DYNAMIC_ARRAY = "dynamic_array"
+    """Keccak-256 hash-based method (see https://docs.soliditylang.org/en/latest/internals/layout_in_storage.html#mappings-and-dynamic-arrays)"""
+    BYTES = "bytes"
+    """Single slot or Keccak-256 hash-based depending on the data size (see https://docs.soliditylang.org/en/latest/internals/layout_in_storage.html#bytes-and-string)"""
+
+
 class SolcOutputError(SolcOutputModel):
     source_location: Optional[SolcOutputErrorSourceLocation]
     secondary_source_locations: Optional[List[SolcOutputErrorSecondarySourceLocation]]
@@ -85,9 +96,28 @@ class SolcOutputSourceInfo(SolcOutputModel):
     ast: Dict
 
 
+class SolcOutputStorageLayoutStorage(SolcOutputModel):
+    ast_id: int
+    contract: str
+    label: str
+    offset: int
+    slot: int
+    type: str
+
+
+class SolcOutputStorageLayoutType(SolcOutputModel):
+    encoding: SolcOutputStorageLayoutTypeEncodingEnum
+    label: str
+    number_of_bytes: int
+    base: Optional[str] = None
+    key: Optional[str] = None
+    value: Optional[str] = None
+    members: Optional[List[SolcOutputStorageLayoutStorage]] = None
+
+
 class SolcOutputStorageLayout(SolcOutputModel):
-    storage: List  # TODO
-    types: Dict  # TODO
+    storage: List[SolcOutputStorageLayoutStorage]
+    types: Optional[Dict[str, SolcOutputStorageLayoutType]] = None
 
 
 class SolcOutputEvmBytecodeFunctionDebugData(SolcOutputModel):
@@ -111,25 +141,31 @@ class SolcOutputEvmBytecodeLinkReferencesInfo(SolcOutputModel):
 
 
 class SolcOutputEvmBytecodeData(SolcOutputModel):
-    function_debug_data: Dict[
-        str, SolcOutputEvmBytecodeFunctionDebugData
-    ]  # internal name of the function -> debug data
-    object: str
-    opcodes: str
-    source_map: str
-    generated_sources: List[SolcOutputEvmBytecodeGeneratedSources]
-    link_references: Dict[str, Dict[str, List[SolcOutputEvmBytecodeLinkReferencesInfo]]]
+    function_debug_data: Optional[
+        Dict[str, SolcOutputEvmBytecodeFunctionDebugData]
+    ] = None  # internal name of the function -> debug data
+    object: Optional[str] = None
+    opcodes: Optional[str] = None
+    source_map: Optional[str] = None
+    generated_sources: Optional[List[SolcOutputEvmBytecodeGeneratedSources]] = None
+    link_references: Optional[
+        Dict[str, Dict[str, List[SolcOutputEvmBytecodeLinkReferencesInfo]]]
+    ] = None
+
+
+class SolcOutputEvmDeployedBytecodeData(SolcOutputModel):
+    immutable_references: Optional[
+        Dict[str, List[SolcOutputEvmBytecodeLinkReferencesInfo]]
+    ] = None
 
 
 class SolcOutputEvmData(SolcOutputModel):
-    assembly: str
-    legacy_assembly: Dict
-    bytecode: SolcOutputEvmBytecodeData
-    deployed_bytecode: Dict[
-        str, Dict[str, List[SolcOutputEvmBytecodeLinkReferencesInfo]]
-    ]
-    method_identifiers: Dict[str, str]
-    gas_estimates: Dict  # TODO
+    assembly: Optional[str] = None
+    legacy_assembly: Optional[Dict] = None  # TODO
+    bytecode: Optional[SolcOutputEvmBytecodeData] = None
+    deployed_bytecode: Optional[SolcOutputEvmDeployedBytecodeData] = None
+    method_identifiers: Optional[Dict[str, str]] = None
+    gas_estimates: Optional[Dict] = None  # TODO
 
 
 class SolcOutputEwasmData(SolcOutputModel):
@@ -151,9 +187,9 @@ class SolcOutputContractInfo(SolcOutputModel):
     """Developer documentation (natspec)"""
     ir: Optional[str] = None
     """Intermediate representation (string)"""
-    storage_layout: Optional[Dict] = None
+    storage_layout: Optional[SolcOutputStorageLayout] = None
     """See https://docs.soliditylang.org/en/latest/internals/layout_in_storage.html#json-output"""
-    evm: Optional[Dict] = None
+    evm: Optional[SolcOutputEvmData] = None
     """EVM-related outputs"""
     ewasm: Optional[SolcOutputEwasmData] = None
     """Ewasm related outputs"""
