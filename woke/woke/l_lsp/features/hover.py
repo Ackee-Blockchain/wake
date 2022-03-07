@@ -1,5 +1,5 @@
 from typing import List, Optional, Union
-from structures import (
+from basic_structures import (
                         MarkupContent, 
                         MarkupKind,
                         Range,
