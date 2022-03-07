@@ -1,7 +1,7 @@
 from typing import List, Optional, Union, Any
 import enum
 from pydantic import BaseModel
-from structures import ( MarkupContent, MarkupKind,
+from basic_structures import ( MarkupContent, MarkupKind,
                                 PartialResultParams,
                                 Range,
                                 TextEdit,
