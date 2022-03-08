@@ -6,6 +6,7 @@ import json
 import time
 
 from Cryptodome.Hash import BLAKE2b
+from pathvalidate import sanitize_filename  # type: ignore
 import aiofiles
 import networkx as nx
 
@@ -228,6 +229,9 @@ class SolidityCompiler:
         self.__build_compilation_units()
         build_settings = self.__create_build_settings(output_types)
 
+        # sort compilation units by their BLAKE2b hexdigest
+        self.__compilation_units.sort(key=lambda u: u.blake2b_hexdigest)
+
         if write_artifacts:
             # prepare build dir
             build_path = (
@@ -239,10 +243,13 @@ class SolidityCompiler:
 
         target_version = self.__config.compiler.solc.target_version
         tasks = []
-        for compilation_unit in self.__compilation_units:
+        for index, compilation_unit in enumerate(self.__compilation_units):
             task = asyncio.create_task(
                 self.__compile_unit(
-                    compilation_unit, target_version, build_settings, build_path
+                    compilation_unit,
+                    target_version,
+                    build_settings,
+                    build_path / f"{index:03d}" if build_path is not None else None,
                 )
             )
             tasks.append(task)
@@ -296,28 +303,36 @@ class SolidityCompiler:
 
         # write build artifacts
         if build_path is not None:
-            build_path = build_path / compilation_unit.blake2b_hexdigest
             build_path.mkdir(parents=False, exist_ok=False)
             await self.__write_artifacts(out, build_path)
 
     async def __write_artifacts(self, output: SolcOutput, build_path: Path) -> None:
         if output.sources is not None:
+            ast_path = build_path / "asts"
+            ast_path.mkdir(parents=False, exist_ok=False)
             for source_unit_name, value in output.sources.items():
                 # AST output is generated per file (source unit name)
                 # Because a source unit name can contain slashes, it is not possible to name the AST build file
                 # by its source unit name. Blake2b hash of the Solidity source file content is used instead.
-                path = self.__source_units[source_unit_name]
-                ast_path = build_path / self.__files_graph.nodes[path]["hash"].hex()
+                file_path = ast_path / sanitize_filename(
+                    source_unit_name, "_", platform="universal"
+                )
 
-                async with aiofiles.open(ast_path, mode="w") as f:
+                if file_path.is_file():
+                    raise CompilationError(
+                        f"Cannot write build info to `{file_path}` - file already exists."
+                    )
+                async with aiofiles.open(file_path, mode="w") as f:
                     await f.write(json.dumps(value.ast))
 
         if output.contracts is not None:
+            contract_path = build_path / "contracts"
+            contract_path.mkdir(parents=False, exist_ok=False)
             for source_unit_name, d in output.contracts.items():
                 # All other build info is generated per contract. Contract names cannot contain slashes so it should
                 # be safe to name the build info file by its contract name.
                 for contract, info in d.items():
-                    info_path = build_path / (contract + ".json")
+                    file_path = contract_path / (contract + ".json")
 
-                    async with aiofiles.open(info_path, mode="w") as f:
+                    async with aiofiles.open(file_path, mode="w") as f:
                         await f.write(info.json(by_alias=True, exclude_none=True))
