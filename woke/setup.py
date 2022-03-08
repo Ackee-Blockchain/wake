@@ -10,6 +10,7 @@ install_requires = [
     "pycryptodomex >= 3.12, < 4",
     "click >= 8, < 9",
     "rich >= 10.16",
+    "pathvalidate >= 2.5.0, < 3",
     "StrEnum",
 ]
 
