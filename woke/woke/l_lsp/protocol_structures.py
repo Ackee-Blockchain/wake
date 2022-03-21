@@ -1,6 +1,9 @@
-from pydantic import BaseModel
 import enum
 from typing import Any, Optional, Union
+
+from pydantic import BaseModel
+
+from methods import RequestMethodEnum
 
 class Message(BaseModel):
     json_rpc: str
@@ -11,7 +14,7 @@ class RequestMessage(Message):
     """
     The request id.
     """
-    method: str
+    method: RequestMethodEnum
     """
     The method to be invoked.
     """
@@ -82,7 +85,3 @@ class ErrorCodes(enum.IntEnum):
     ContentModified = -32801
     RequestCancelled = -32800
     lspReservedErrorRangeEnd = -32800   # ...
-
-class LSPError(BaseModel):
-    error_code: ErrorCodes
-    response: ResponseError
