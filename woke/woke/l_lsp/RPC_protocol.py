@@ -1,5 +1,6 @@
 import json
 import collections
+from sys import stdin
 from typing import Union
 from pydantic import BaseModel
 from protocol_structures import (
@@ -21,15 +22,15 @@ class TCPReader():
         self.reader = reader
         self.writer = writer
 
-    def read(self, input):
-        return self.reader.read(input).decode("utf-8")
+    def read(self, *args):
+        return self.reader.read(*args).decode("utf-8")
 
     def write(self, output):
         self.writer.write(output.encode("utf-8"))
         self.writer.flush()
 
-    def read_line(self, input):
-        return self.reader.readline(input).decode("utf-8")
+    def read_line(self, *args):
+        return self.reader.readline(*args).decode("utf-8")
 
 
 class RPCProtocol():
@@ -47,13 +48,14 @@ class RPCProtocol():
         Reads message header (Content length only)
         '''
         # Is there anything to read ?
-        line = self.reader.read_line()
-        if not line:
-            raise RPCProtocolError(f"No message to read")
-                            
+        try:
+            line = self.reader.read_line()
+            #print(line)
+        except:
+            raise EOFError()
         # It is, read header then
         if line.startswith("Content-Length: ") and line.endswith("\r\n"):
-            content_length = line.split(':').strip()
+            content_length = int(line.split(':')[-1])
         else:
             raise RPCProtocolError(f"Invalid HTTP header")
         # Skip unnecessary header part
@@ -82,17 +84,21 @@ class RPCProtocol():
         #    return self.msg_buffer.popleft()
         _ = self._read_header()
         json_content = self._read_content()
-        if "id" in json_content:
-            message_object = RequestMessage(
-                                json_rpc=json_content['json_rpc'],
-                                id=json_content['id'],
-                                method=json_content['method'],
-                                params=json_content['params'])
-        else:
-            message_object = NotificationMessage(
-                                json_rpc=json_content['json_rpc'],
-                                method=json_content['method'],
-                                params=json_content['params'])
+        try:
+            if "id" in json_content:
+                message_object = RequestMessage(
+                                    json_rpc=json_content['jsonrpc'],
+                                    id=json_content['id'],
+                                    method=json_content['method'],
+                                    params=json_content['params'])
+            else:
+                message_object = NotificationMessage(
+                                    json_rpc=json_content['jsonrpc'],
+                                    method=json_content['method'],
+                                    params=json_content['params'])
+        except:
+                raise RPCProtocolError(f"Invalid Request")
+
         #self.buffer.append(message)
         return message_object
 
@@ -101,28 +107,28 @@ class RPCProtocol():
         '''
         Response object to be send
         '''
-        return self._send(response.__dict__)
+        return self._send(response.dict())
 
 
     def send_rpc_request(self, request: RequestMessage):
         '''
         Request object to be send
         '''
-        return self._send(request.__dict__)
+        return self._send(request.dict())
 
 
     def send_rpc_error(self, error: ResponseError):
         '''
         Error object to be send
         '''
-        return self._send(error.__dict__)
+        return self._send(error.dict())
 
 
     def send_rpc_notification(self, notification: NotificationMessage):
         '''
         Notification object to be send
         '''
-        return self._send(notification.__dict__)
+        return self._send(notification.dict())
 
 
     def _send(self, message: dict):
@@ -132,7 +138,5 @@ class RPCProtocol():
         message = json.dumps(message, separators=(",", ":"))
         content_length = len(message)
         response = f"Content-Length: {content_length}\r\nContent-Type: application/vscode-jsonrpc; charset=utf8\r\n\r\n{message}"
-        self.stdout.write(response)
-        # Flush if something collected in buffer
-        self.stdout.flush()
-
+        self.reader.write(response)
+ 
