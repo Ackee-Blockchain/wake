@@ -27,8 +27,16 @@ class Server:
             try:
                 # Read it
                 message = self.protocol.recieve_message()
-                # Handle it
-                self.handle_message(message)
+                print(f'model - {type(message)} ---- {RequestMessage} --- {type(RequestMessage)}')
+                #DEBUUG
+                print(f'REQUEST:\n{message.dict()}\n')
+                if type(message) == RequestMessage:
+                    print('*REQUEST')
+                    self.handle_message(message)
+                else:
+                    print('*NOTIFICATION')
+                    self.handle_notification(message)
+                
             # Proper error handling
             except EOFError:
                 break
@@ -39,34 +47,36 @@ class Server:
         logging.shutdown()
         self.running = False
 
-    def handle_message(self, request: Union[RequestMessage, NotificationMessage]):
+    def handle_message(self, request: RequestMessage):
         # Double initialization
         if self.init_request_received and request.method == RequestMethodEnum.INITIALIZE:
             logging.error("Double init")
-            response_message = self._serve_error(request, ErrorCodes.InvalidRequest, "Server already initialized")
+            response_message = self._serve_error(request, ErrorCodes.InvalidRequest.value, "Server already initialized")
             self.protocol.send_rpc_response(response_message)
             return
-        # Init before request needed    
+        # Init before request needed  
+        print('here 2')  
         if request.id and not self.init_request_received:
             logging.error("Request before init")
-            response_message = self._serve_error(request, ErrorCodes.ServerNotInitialized, "Server has not been initialized")                                
+            response_message = self._serve_error(request, ErrorCodes.ServerNotInitialized.value, "Server has not been initialized")                                
             self.protocol.send_rpc_response(response_message)
             return           
         # Handle here
         try:
-            if request.id:
-                # If id --> request handling and send
-                logging.info(f"Handling\nRequest id: {request.id}\nRequest method: {request.method}")
-                response =  self._serve_response(request)
-                self.protocol.send_rpc_response(response)
-            else:
-                # Notification is without response
-                self._serve_notification(request)
+            logging.info(f"Handling\nRequest id: {request.id}\nRequest method: {request.method}")
+            response =  self._serve_response(request)
+            self.protocol.send_rpc_response(response)
         except Exception as e:
             logging.error(e)
             error = self._serve_error(request, ErrorCodes.RequestCancelled, "Error in handling message")
             self.protocol.send_rpc_response(error)
 
+    def handle_notification(self, notification: NotificationMessage):
+        try:
+            self._serve_notification(notification)
+            print('h')
+        except Exception as e:
+            logging.error(e)
 
     def _serve_response(self, request: RequestMessage) ->  ResponseMessage:
         response = method_mapping[request.method](self.context, request.params)
@@ -82,7 +92,7 @@ class Server:
         return response_message
 
 
-    def _serve_error(self, request: RequestMessage, error_code: ErrorCodes, msg: str) -> ResponseMessage:
+    def _serve_error(self, request: RequestMessage, error_code: int, msg: str) -> ResponseMessage:
         response_error = ResponseError(
                                 code = error_code,
                                 message = msg)
@@ -94,6 +104,7 @@ class Server:
 
     def _serve_notification(self, request: RequestMessage) -> None:
         # Methods do their job
+        print('here')
         notification_mapping[request.method](self.context, request.params)
         return
 
