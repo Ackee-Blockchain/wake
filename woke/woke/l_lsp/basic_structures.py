@@ -960,6 +960,25 @@ class SymbolTag(IntEnum):
     DEPRECATED = 1
 
 
+class DocumentSymbol(BaseModel):
+    name: str
+    detail: Optional[str]
+    kind: SymbolKind
+    tags: Optional[List[SymbolTag]]
+    deprecated: Optional[bool]
+    range: Range
+    selection_range: Range
+    children: Optional[List[DocumentSymbol]]
+
+
+class SymbolInformation(BaseModel):
+    name: str
+    kind: SymbolKind
+    tags: Optional[List[SymbolTag]]
+    deprecated: Optional[bool]
+    location: Location
+    container_name: Optional[str]
+
 class WorkspaceSymbolClientCapabilitiesSymbolKind(BaseModel):
     value_set: Optional[List[SymbolKind]]
 
@@ -987,7 +1006,7 @@ class WorkspaceSymbolRegistrationOptions(WorkspaceSymbolOptions):
     pass
 
 
-class WorskpaceSymbolParams(WorkDoneProgressParams, PartialResultParams):
+class WorkspaceSymbolParams(WorkDoneProgressParams, PartialResultParams):
     query: str
 
 
@@ -1037,7 +1056,7 @@ class FileCreate(BaseModel):
     uri: str
 
 
-class CreateFileParams(BaseModel):
+class CreateFilesParams(BaseModel):
     files: List[FileCreate]
 
 
