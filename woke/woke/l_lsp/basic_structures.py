@@ -968,7 +968,7 @@ class DocumentSymbol(BaseModel):
     deprecated: Optional[bool]
     range: Range
     selection_range: Range
-    children: Optional[List[DocumentSymbol]]
+    #children: Optional[List[DocumentSymbol]]
 
 
 class SymbolInformation(BaseModel):
