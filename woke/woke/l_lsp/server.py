@@ -3,8 +3,8 @@ from context import LSPContext
 from protocol_structures import NotificationMessage, RequestMessage, ResponseMessage, ResponseError, ErrorCodes
 from RPC_protocol import RPCProtocol
 from methods import RequestMethodEnum
-#from methods_impl import method_mapping
-#from notifications_impl import notification_mapping
+from methods_impl import method_mapping
+from notifications_impl import notification_mapping
 from typing import Union
 
 
@@ -27,17 +27,13 @@ class Server:
             try:
                 # Read it
                 message = self.protocol.recieve_message()
-                print(f'model - {type(message)} ---- {RequestMessage} --- {type(RequestMessage)}')
-                #DEBUUG
-                print(f'REQUEST:\n{message.dict()}\n')
+                print(f'MESSAGE:\n{message.dict()}\n-------------------\n')
                 if type(message) == RequestMessage:
                     print('*REQUEST')
                     self.handle_message(message)
                 else:
                     print('*NOTIFICATION')
-                    self.handle_notification(message)
-                
-            # Proper error handling
+                    self.handle_notification(message)             
             except EOFError:
                 break
             except Exception as e:
@@ -55,8 +51,7 @@ class Server:
             self.protocol.send_rpc_response(response_message)
             return
         # Init before request needed  
-        print('here 2')  
-        if request.id and not self.init_request_received:
+        if request.method != RequestMethodEnum.INITIALIZE and not self.init_request_received:
             logging.error("Request before init")
             response_message = self._serve_error(request, ErrorCodes.ServerNotInitialized.value, "Server has not been initialized")                                
             self.protocol.send_rpc_response(response_message)
@@ -72,6 +67,7 @@ class Server:
             self.protocol.send_rpc_response(error)
 
     def handle_notification(self, notification: NotificationMessage):
+        print('handling')
         try:
             self._serve_notification(notification)
             print('h')
@@ -79,6 +75,7 @@ class Server:
             logging.error(e)
 
     def _serve_response(self, request: RequestMessage) ->  ResponseMessage:
+        print('serving')
         response = method_mapping[request.method](self.context, request.params)
         if self.context.initialized:
             self.init_request_received = True
@@ -104,7 +101,6 @@ class Server:
 
     def _serve_notification(self, request: RequestMessage) -> None:
         # Methods do their job
-        print('here')
         notification_mapping[request.method](self.context, request.params)
         return
 
