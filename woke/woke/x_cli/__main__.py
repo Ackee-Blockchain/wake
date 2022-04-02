@@ -7,6 +7,7 @@ import rich.traceback
 
 from woke.a_config import WokeConfig
 from .console import console
+from .compile import run_compile
 
 
 @click.group()
@@ -21,6 +22,9 @@ def main(ctx: Context, debug: bool) -> None:
 
     ctx.ensure_object(dict)
     ctx.obj["debug"] = debug
+
+
+main.add_command(run_compile)
 
 
 @click.group()
