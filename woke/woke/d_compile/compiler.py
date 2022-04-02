@@ -198,7 +198,7 @@ class SolidityCompiler:
         self, output_types: Collection[SolcOutputSelectionEnum]
     ) -> SolcInputSettings:
         settings = SolcInputSettings()  # type: ignore
-        # TODO Allow to set all solc build settings
+        # TODO Allow setting all solc build settings
         # Currently it is not possible to set all solc standard JSON input build settings.
         # These include: stopAfter, optimizer, via_IR, debug, metadata, libraries and model checker settings.
         # See https://docs.soliditylang.org/en/v0.8.12/using-the-compiler.html#input-description.
