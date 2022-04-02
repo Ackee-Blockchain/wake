@@ -221,7 +221,7 @@ class SolidityCompiler:
         self,
         output_types: Collection[SolcOutputSelectionEnum],
         write_artifacts: bool = True,
-    ) -> None:
+    ) -> List[SolcOutput]:
         if len(self.__files) == 0:
             raise CompilationError("No source files provided to compile.")
 
@@ -255,8 +255,10 @@ class SolidityCompiler:
             tasks.append(task)
 
         # wait for compilation of all compilation units
-        for task in asyncio.as_completed(tasks):
-            await task
+        ret = []
+        done, _ = await asyncio.wait(tasks)
+        for task in done:
+            ret.append(task.result())
 
         if write_artifacts:
             # create `latest` symlink to the just created build directory
@@ -267,13 +269,15 @@ class SolidityCompiler:
                 latest_build_path.unlink()
             latest_build_path.symlink_to(build_path, target_is_directory=True)
 
+        return ret
+
     async def __compile_unit(
         self,
         compilation_unit: CompilationUnit,
         target_version: SolidityVersion,
         build_settings: SolcInputSettings,
         build_path: Optional[Path],
-    ) -> None:
+    ) -> SolcOutput:
         # Dict[source_unit_name: str, path: Path]
         files = {}
         for file in compilation_unit.files:
@@ -305,6 +309,8 @@ class SolidityCompiler:
         if build_path is not None:
             build_path.mkdir(parents=False, exist_ok=False)
             await self.__write_artifacts(out, build_path)
+
+        return out
 
     async def __write_artifacts(self, output: SolcOutput, build_path: Path) -> None:
         if output.sources is not None:
