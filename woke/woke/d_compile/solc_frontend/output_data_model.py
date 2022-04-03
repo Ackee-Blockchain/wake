@@ -196,8 +196,8 @@ class SolcOutputContractInfo(SolcOutputModel):
 
 
 class SolcOutput(SolcOutputModel):
-    errors: Optional[List[SolcOutputError]] = []
-    sources: Optional[Dict[str, SolcOutputSourceInfo]] = {}
-    contracts: Optional[
-        Dict[str, Dict[str, SolcOutputContractInfo]]
-    ]  # source_unit_name -> (contract_name -> info)
+    errors: List[SolcOutputError] = []
+    sources: Dict[str, SolcOutputSourceInfo] = {}
+    contracts: Dict[
+        str, Dict[str, SolcOutputContractInfo]
+    ] = {}  # source_unit_name -> (contract_name -> info)

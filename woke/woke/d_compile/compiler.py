@@ -2,13 +2,13 @@ from typing import List, Dict, Iterable, FrozenSet, Set, Tuple, Optional, Collec
 from collections import deque
 from pathlib import Path
 import asyncio
-import json
 import time
 
 from Cryptodome.Hash import BLAKE2b
 from pathvalidate import sanitize_filename  # type: ignore
 import aiofiles
 import networkx as nx
+from pydantic import ValidationError
 
 from woke.a_config import WokeConfig
 from woke.b_svm import SolcVersionManager
@@ -23,10 +23,13 @@ from .solc_frontend import (
     SolcOutput,
     SolcInputSettings,
     SolcOutputSelectionEnum,
+    SolcOutputSourceInfo,
+    SolcOutputContractInfo,
 )
 from .source_unit_name_resolver import SourceUnitNameResolver
 from .source_path_resolver import SourcePathResolver
 from .exceptions import CompilationError
+from .build_data_model import CompilationUnitBuildInfo, ProjectBuildInfo
 
 
 class CompilationUnit:
@@ -38,7 +41,7 @@ class CompilationUnit:
         self.__unit_graph = unit_graph
         self.__version_ranges = version_ranges
 
-        blake2 = BLAKE2b.new(digest_bits=128)
+        blake2 = BLAKE2b.new(digest_bits=256)
         paths: List[Path] = list(unit_graph.nodes)
         paths.sort()
         for path in paths:
@@ -54,6 +57,13 @@ class CompilationUnit:
     @property
     def files(self) -> FrozenSet[Path]:
         return frozenset(self.__unit_graph.nodes)
+
+    @property
+    def source_unit_names(self) -> FrozenSet[str]:
+        return frozenset(
+            self.__unit_graph.nodes[node]["source_unit_name"]
+            for node in self.__unit_graph.nodes
+        )
 
     @property
     def versions(self) -> SolidityVersionRanges:
@@ -217,11 +227,54 @@ class SolidityCompiler:
 
         return settings
 
+    def __write_global_artifacts(
+        self,
+        build_path: Path,
+        build_settings: SolcInputSettings,
+        output: Tuple[SolcOutput],
+    ) -> None:
+        units_info = {}
+
+        # units are already sorted
+        for index, (unit, out) in enumerate(zip(self.__compilation_units, output)):
+            sources = {}
+            for source_unit_name in out.sources.keys():
+                sources[source_unit_name] = (
+                    Path(f"{index:03d}")
+                    / "asts"
+                    / sanitize_filename(source_unit_name, "_", platform="universal")
+                )
+
+            contracts = {}
+            for source_unit_name, info in out.contracts.items():
+                contracts[source_unit_name] = {}
+                for contract in info.keys():
+                    contracts[source_unit_name][contract] = (
+                        Path(f"{index:03d}") / "contracts" / f"{contract}.json"
+                    )
+
+            info = CompilationUnitBuildInfo(
+                build_dir=f"{index:03d}",
+                sources=sources,
+                contracts=contracts,
+                errors=out.errors,
+                source_units=sorted(unit.source_unit_names),
+                allow_paths=sorted(self.__config.compiler.solc.allow_paths),
+                include_paths=sorted(self.__config.compiler.solc.include_paths),
+                settings=build_settings,
+            )
+            units_info[unit.blake2b_hexdigest] = info
+
+        build_info = ProjectBuildInfo(compilation_units=units_info)
+        with (build_path / "build.json").open("w") as f:
+            f.write(build_info.json(by_alias=True, exclude_none=True))
+
     async def compile(
         self,
         output_types: Collection[SolcOutputSelectionEnum],
         write_artifacts: bool = True,
-    ) -> List[SolcOutput]:
+        reuse_latest_artifacts: bool = True,
+    ) -> Tuple[SolcOutput]:
         if len(self.__files) == 0:
             raise CompilationError("No source files provided to compile.")
 
@@ -241,6 +294,17 @@ class SolidityCompiler:
         else:
             build_path = None
 
+        latest_build_path = self.__config.project_root_path / ".woke-build" / "latest"
+        if reuse_latest_artifacts and (latest_build_path / "build.json").is_file():
+            try:
+                latest_build_info = ProjectBuildInfo.parse_file(
+                    latest_build_path / "build.json"
+                )
+            except ValidationError:
+                latest_build_info = None
+        else:
+            latest_build_info = None
+
         target_version = self.__config.compiler.solc.target_version
         tasks = []
         for index, compilation_unit in enumerate(self.__compilation_units):
@@ -250,21 +314,23 @@ class SolidityCompiler:
                     target_version,
                     build_settings,
                     build_path / f"{index:03d}" if build_path is not None else None,
+                    latest_build_info,
                 )
             )
             tasks.append(task)
 
         # wait for compilation of all compilation units
-        ret = []
-        done, _ = await asyncio.wait(tasks)
-        for task in done:
-            ret.append(task.result())
+        try:
+            ret = await asyncio.gather(*tasks)
+        except Exception:
+            for task in tasks:
+                task.cancel()
+            raise
 
         if write_artifacts:
-            # create `latest` symlink to the just created build directory
-            latest_build_path = (
-                self.__config.project_root_path / ".woke-build" / "latest"
-            )
+            self.__write_global_artifacts(build_path, build_settings, ret)
+
+            # create `latest` symlink pointing to the just created build directory
             if latest_build_path.is_symlink():
                 latest_build_path.unlink()
             latest_build_path.symlink_to(build_path, target_is_directory=True)
@@ -277,6 +343,83 @@ class SolidityCompiler:
         target_version: SolidityVersion,
         build_settings: SolcInputSettings,
         build_path: Optional[Path],
+        latest_build_info: Optional[ProjectBuildInfo],
+    ) -> SolcOutput:
+        # try to reuse the latest build artifacts
+        if (
+            latest_build_info is not None
+            and compilation_unit.blake2b_hexdigest
+            in latest_build_info.compilation_units
+        ):
+            latest_unit_info = latest_build_info.compilation_units[
+                compilation_unit.blake2b_hexdigest
+            ]
+
+            if (
+                latest_unit_info.source_units
+                == sorted(compilation_unit.source_unit_names)
+                and latest_unit_info.allow_paths
+                == sorted(self.__config.compiler.solc.allow_paths)
+                and latest_unit_info.include_paths
+                == sorted(self.__config.compiler.solc.include_paths)
+                and latest_unit_info.settings == build_settings
+            ):
+                try:
+                    latest_build_path = (
+                        self.__config.project_root_path / ".woke-build" / "latest"
+                    )
+                    sources = {}
+                    for source, path in latest_unit_info.sources.items():
+                        sources[source] = SolcOutputSourceInfo.parse_file(
+                            latest_build_path / path
+                        )
+
+                    contracts = {}
+                    for (
+                        source_unit,
+                        source_unit_info,
+                    ) in latest_unit_info.contracts.items():
+                        contracts[source_unit] = {}
+                        for contract, path in source_unit_info.items():
+                            contracts[source_unit][
+                                contract
+                            ] = SolcOutputContractInfo.parse_file(
+                                latest_build_path / path
+                            )
+                    out = SolcOutput(
+                        errors=latest_unit_info.errors,
+                        sources=sources,
+                        contracts=contracts,
+                    )
+                except ValidationError:
+                    out = await self.__compile_unit_raw(
+                        compilation_unit, target_version, build_settings
+                    )
+                except FileNotFoundError as e:
+                    out = await self.__compile_unit_raw(
+                        compilation_unit, target_version, build_settings
+                    )
+            else:
+                out = await self.__compile_unit_raw(
+                    compilation_unit, target_version, build_settings
+                )
+        else:
+            out = await self.__compile_unit_raw(
+                compilation_unit, target_version, build_settings
+            )
+
+        # write build artifacts
+        if build_path is not None:
+            build_path.mkdir(parents=False, exist_ok=False)
+            await self.__write_artifacts(out, build_path)
+
+        return out
+
+    async def __compile_unit_raw(
+        self,
+        compilation_unit: CompilationUnit,
+        target_version: SolidityVersion,
+        build_settings: SolcInputSettings,
     ) -> SolcOutput:
         # Dict[source_unit_name: str, path: Path]
         files = {}
@@ -301,18 +444,12 @@ class SolidityCompiler:
             )
 
         # run the solc executable
-        out = await self.__solc_frontend.compile_files(
+        return await self.__solc_frontend.compile_files(
             files, target_version, build_settings
         )
 
-        # write build artifacts
-        if build_path is not None:
-            build_path.mkdir(parents=False, exist_ok=False)
-            await self.__write_artifacts(out, build_path)
-
-        return out
-
-    async def __write_artifacts(self, output: SolcOutput, build_path: Path) -> None:
+    @staticmethod
+    async def __write_artifacts(output: SolcOutput, build_path: Path) -> None:
         if output.sources is not None:
             ast_path = build_path / "asts"
             ast_path.mkdir(parents=False, exist_ok=False)
@@ -326,10 +463,10 @@ class SolidityCompiler:
 
                 if file_path.is_file():
                     raise CompilationError(
-                        f"Cannot write build info to `{file_path}` - file already exists."
+                        f"Cannot write build info into '{file_path}' - file already exists."
                     )
                 async with aiofiles.open(file_path, mode="w") as f:
-                    await f.write(json.dumps(value.ast))
+                    await f.write(value.json(by_alias=True, exclude_none=True))
 
         if output.contracts is not None:
             contract_path = build_path / "contracts"

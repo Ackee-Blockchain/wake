@@ -1,7 +1,7 @@
 from typing import Optional, List, Dict
 
 from strenum import StrEnum
-from pydantic import BaseModel, Field, root_validator
+from pydantic import BaseModel, Field, root_validator, Extra
 
 from woke.core.enums import EvmVersionEnum
 
@@ -118,6 +118,7 @@ def _to_camel(s: str) -> str:
 class SolcInputModel(BaseModel):
     class Config:
         alias_generator = _to_camel
+        extra = Extra.allow
 
 
 class SolcInputSource(SolcInputModel):
