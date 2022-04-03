@@ -453,7 +453,7 @@ class SolidityCompiler:
             if target_version not in compilation_unit.versions:
                 files_str = "\n".join(str(path) for path in compilation_unit.files)
                 raise CompilationError(
-                    f"Unable to compile following files with solc version {target_version} set in config files:\n"
+                    f"Unable to compile following files with solc version `{target_version}` set in config files:\n"
                     + files_str
                 )
         else:

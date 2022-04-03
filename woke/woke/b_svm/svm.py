@@ -60,7 +60,7 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         elif system == "Windows":
             self.__platform = "windows-amd64"
         else:
-            raise UnsupportedPlatformError(f"Platform '{system}' is not supported.")
+            raise UnsupportedPlatformError(f"Platform `{system}` is not supported.")
 
         self.__solc_list_url = f"{self.BINARIES_URL}/{self.__platform}/list.json"
         self.__compilers_path = woke_config.woke_root_path / "compilers"
@@ -79,7 +79,7 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         self.__fetch_list_file()
         if self.__solc_builds is None:
             raise RuntimeError(
-                f"Unable to fetch or correctly parse {self.__solc_list_url}."
+                f"Unable to fetch or correctly parse '{self.__solc_list_url}'."
             )
 
         if isinstance(version, str):
@@ -88,7 +88,7 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         minimal_version = self.list_all()[0]
         if version < minimal_version:
             raise UnsupportedVersionError(
-                f"The minimal supported solc version for the current platform is {minimal_version}."
+                f"The minimal supported solc version for the current platform is `{minimal_version}`."
             )
 
         if self.get_path(version).is_file() and not force_reinstall:
@@ -96,7 +96,7 @@ class SolcVersionManager(CompilerVersionManagerAbc):
                 progress(1)
             return
         if version not in self.__solc_builds.releases:
-            raise ValueError(f"solc version '{version}' does not exist.")
+            raise ValueError(f"solc version `{version}` does not exist.")
 
         filename = self.__solc_builds.releases[version]
         build_info = next(b for b in self.__solc_builds.builds if b.version == version)
@@ -142,14 +142,14 @@ class SolcVersionManager(CompilerVersionManagerAbc):
             path.unlink()
         else:
             raise ValueError(
-                f"solc version '{version}' was not installed - cannot remove."
+                f"solc version `{version}` was not installed - cannot remove."
             )
 
     def get_path(self, version: Union[SolidityVersion, str]) -> Path:
         self.__fetch_list_file()
         if self.__solc_builds is None:
             raise RuntimeError(
-                f"Unable to fetch or correctly parse {self.__solc_list_url}."
+                f"Unable to fetch or correctly parse '{self.__solc_list_url}'."
             )
 
         if isinstance(version, str):
@@ -158,11 +158,11 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         minimal_version = self.list_all()[0]
         if version < minimal_version:
             raise UnsupportedVersionError(
-                f"The minimal supported solc version for the current platform is {minimal_version}."
+                f"The minimal supported solc version for the current platform is `{minimal_version}`."
             )
 
         if version not in self.__solc_builds.releases:
-            raise ValueError(f"solc version '{version}' does not exist")
+            raise ValueError(f"solc version `{version}` does not exist")
 
         filename = self.__solc_builds.releases[version]
         dirname = filename
@@ -176,7 +176,7 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         self.__fetch_list_file()
         if self.__solc_builds is None:
             raise RuntimeError(
-                f"Unable to fetch or correctly parse {self.__solc_list_url}."
+                f"Unable to fetch or correctly parse '{self.__solc_list_url}'."
             )
 
         return tuple(sorted(self.__solc_builds.releases.keys()))

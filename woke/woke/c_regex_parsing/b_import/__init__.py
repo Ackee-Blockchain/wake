@@ -38,7 +38,7 @@ class SolidityImportExpr:
         matches = list(re.match(expr) for re in res)
 
         if not any(matches):
-            raise ValueError(f"Invalid import expression: {expr}")
+            raise ValueError(f"Invalid import expression: `{expr}`")
 
         match = next(match for match in matches if match is not None)
         # strip leading and trailing quote and replace escapes

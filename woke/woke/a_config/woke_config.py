@@ -54,7 +54,7 @@ class WokeConfig:
 
         if not self.__project_root_path.is_dir():
             raise ValueError(
-                f"Project root path `{self.__project_root_path}` is not a directory."
+                f"Project root path '{self.__project_root_path}' is not a directory."
             )
 
         # make sure that Woke root path exists
@@ -91,10 +91,10 @@ class WokeConfig:
     ) -> None:
         if not path.is_file():
             if parent is None:
-                logger.warning(f"Config file `{path}` does not exist.")
+                logger.warning(f"Config file '{path}' does not exist.")
             else:
                 logger.warning(
-                    f"Config file `{path}` loaded from `{parent}` does not exist."
+                    f"Config file '{path}' loaded from '{parent}' does not exist."
                 )
         else:
             # change the current working dir so that we can resolve relative paths

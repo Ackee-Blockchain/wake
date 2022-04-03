@@ -159,7 +159,7 @@ class SolidityVersion(VersionAbc):
     def fromstring(cls, version_str: str) -> "SolidityVersion":
         match = cls.RE.match(version_str)
         if not match:
-            raise ValueError(f"Invalid Solidity version: {version_str}")
+            raise ValueError(f"Invalid Solidity version: `{version_str}`")
         groups = match.groupdict()
         major = int(groups["major"])
         minor = int(groups["minor"])
@@ -419,7 +419,7 @@ class SolidityVersionRanges:
 
 
 class SolidityVersionExpr:
-    ERROR_MSG = r"Invalid Solidity version expression: {value}"
+    ERROR_MSG = r"Invalid Solidity version expression: `{value}`"
     NUMBER = r"x|X|\*|0|[1-9][0-9]*"
     PARTIAL = r"(?P<major>{number})\s*(?:\.\s*(?P<minor>{number}))?\s*(?:\.\s*(?P<patch>{number}))?".format(
         number=NUMBER
