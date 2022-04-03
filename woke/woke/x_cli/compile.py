@@ -15,9 +15,10 @@ from woke.e_ast_parsing.b_solc.c_ast_nodes import AstSolc
 @click.argument("files", nargs=-1, type=click.Path(exists=True))
 @click.option("--parse", is_flag=True, default=False)
 @click.option("--no-artifacts", is_flag=True, default=False)
+@click.option("--force", is_flag=True, default=False)
 @click.pass_context
 def run_compile(
-    ctx: Context, files: Tuple[str], parse: bool, no_artifacts: bool
+    ctx: Context, files: Tuple[str], parse: bool, no_artifacts: bool, force: bool
 ) -> None:
     config = WokeConfig()
     config.load_configs()  # load ~/.woke/config.toml and ./woke.toml
@@ -39,7 +40,11 @@ def run_compile(
     x = SolidityCompiler(config, sol_files)
     # TODO Allow choosing build artifacts subset in compile subcommand
     outputs: List[SolcOutput] = asyncio.run(
-        x.compile([SolcOutputSelectionEnum.ALL], write_artifacts=(not no_artifacts))
+        x.compile(
+            [SolcOutputSelectionEnum.ALL],
+            write_artifacts=(not no_artifacts),
+            reuse_latest_artifacts=(not force),
+        )
     )
 
     if parse:
