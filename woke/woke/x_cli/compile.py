@@ -13,13 +13,23 @@ from woke.e_ast_parsing.b_solc.c_ast_nodes import AstSolc
 
 @click.command(name="compile")
 @click.argument("files", nargs=-1, type=click.Path(exists=True))
-@click.option("--parse", is_flag=True, default=False)
-@click.option("--no-artifacts", is_flag=True, default=False)
-@click.option("--force", is_flag=True, default=False)
+@click.option(
+    "--parse", is_flag=True, default=False, help="Also try to parse the generated AST."
+)
+@click.option(
+    "--no-artifacts", is_flag=True, default=False, help="Do not write build artifacts."
+)
+@click.option(
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force recompile the project without previous build artifacts.",
+)
 @click.pass_context
 def run_compile(
     ctx: Context, files: Tuple[str], parse: bool, no_artifacts: bool, force: bool
 ) -> None:
+    """Compile the project."""
     config = WokeConfig()
     config.load_configs()  # load ~/.woke/config.toml and ./woke.toml
 
