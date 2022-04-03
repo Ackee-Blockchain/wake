@@ -1,8 +1,6 @@
 [tool.black]
 target-version = ["py37"]
 
-[tool.portray]
-
 [tool.pyright]
 include = ["**/*.py"]
 pythonVersion = "3.7"
