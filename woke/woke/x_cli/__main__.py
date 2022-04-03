@@ -11,13 +11,14 @@ from .compile import run_compile
 
 
 @click.group()
-@click.option("--debug/--no-debug", default=True)
+@click.option("--debug/--no-debug", default=False)
 @click.pass_context
 def main(ctx: Context, debug: bool) -> None:
-    rich.traceback.install(show_locals=True, suppress=[click], console=console)
+    rich.traceback.install(show_locals=debug, suppress=[click], console=console)
     logging.basicConfig(
         format="%(name)s: %(message)s",
         handlers=[RichHandler(show_time=False, console=console)],
+        level=(logging.WARNING if not debug else logging.DEBUG),
     )
 
     ctx.ensure_object(dict)
