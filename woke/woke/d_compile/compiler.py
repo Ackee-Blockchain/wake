@@ -2,6 +2,7 @@ from typing import List, Dict, Iterable, FrozenSet, Set, Tuple, Optional, Collec
 from collections import deque
 from pathlib import Path
 import asyncio
+import logging
 import time
 
 from Cryptodome.Hash import BLAKE2b
@@ -30,6 +31,9 @@ from .source_unit_name_resolver import SourceUnitNameResolver
 from .source_path_resolver import SourcePathResolver
 from .exceptions import CompilationError
 from .build_data_model import CompilationUnitBuildInfo, ProjectBuildInfo
+
+
+logger = logging.getLogger(__name__)
 
 
 class CompilationUnit:
@@ -295,12 +299,20 @@ class SolidityCompiler:
             build_path = None
 
         latest_build_path = self.__config.project_root_path / ".woke-build" / "latest"
-        if reuse_latest_artifacts and (latest_build_path / "build.json").is_file():
+        if reuse_latest_artifacts:
             try:
                 latest_build_info = ProjectBuildInfo.parse_file(
                     latest_build_path / "build.json"
                 )
             except ValidationError:
+                logger.warning(
+                    f"Failed to parse '{latest_build_path / 'build.json'}' file while trying to reuse the latest build artifacts."
+                )
+                latest_build_info = None
+            except FileNotFoundError as e:
+                logger.warning(
+                    f"Unable to find '{e.filename}' file while trying to reuse the latest build artifacts."
+                )
                 latest_build_info = None
         else:
             latest_build_info = None
@@ -365,6 +377,7 @@ class SolidityCompiler:
                 and latest_unit_info.settings == build_settings
             ):
                 try:
+                    logger.info("Reusing the latest build artifacts.")
                     latest_build_path = (
                         self.__config.project_root_path / ".woke-build" / "latest"
                     )
@@ -392,14 +405,23 @@ class SolidityCompiler:
                         contracts=contracts,
                     )
                 except ValidationError:
+                    logger.warning(
+                        "Failed to parse the latest build artifacts, falling back to solc compilation."
+                    )
                     out = await self.__compile_unit_raw(
                         compilation_unit, target_version, build_settings
                     )
                 except FileNotFoundError as e:
+                    logger.warning(
+                        f"Unable to find '{e.filename}' file while reusing the latest build info. Build artifacts may be corrupted."
+                    )
                     out = await self.__compile_unit_raw(
                         compilation_unit, target_version, build_settings
                     )
             else:
+                logger.info(
+                    "Build settings have changed since the last build. Falling back to solc compilation."
+                )
                 out = await self.__compile_unit_raw(
                     compilation_unit, target_version, build_settings
                 )
