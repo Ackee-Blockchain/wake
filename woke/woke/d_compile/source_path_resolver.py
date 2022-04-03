@@ -29,11 +29,11 @@ class SourcePathResolver:
 
         if len(matching_paths) == 0:
             raise CompilationResolveError(
-                f"Unable to find `{source_unit_name}` in the project root dir or include paths provided through the config files."
+                f"Unable to find '{source_unit_name}' in the project root dir or include paths provided through the config files."
             )
 
         if len(matching_paths) > 1:
-            err = f"Source unit name `{source_unit_name}` is ambiguous. It can be included as:"
+            err = f"Source unit name '{source_unit_name}' is ambiguous. It can be included as:"
             for matching_path in matching_paths:
                 err += f"\n{matching_path}"
             raise CompilationResolveError(err)
