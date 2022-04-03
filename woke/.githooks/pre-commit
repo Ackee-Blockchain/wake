@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 ZERO=0;
+cd woke;
 
 echo "/woke/.githooks/pre-commit executing..."
 
@@ -23,17 +24,17 @@ function gen_stash_id()
 # try to pop them from the stash
 function pop_stash()
 {
-    # check if the top entry on the stash has the message matching the content of 'woke/.stash-id' file
+    # check if the top entry on the stash has the message matching the content of '.stash-id' file
     # if it matches, there were unstaged changes prior to the commit that should be popped from the stash now
     # in the other case there were no unstaged changes
-    git stash list -n 1 | grep -f woke/.stash-id >/dev/null 2>&1
+    git stash list -n 1 | grep -f .stash-id >/dev/null 2>&1
 
     if [ $? -eq $ZERO ];
     then
         # this command should not case merging issues
         git stash pop >/dev/null
     fi
-    rm woke/.stash-id
+    rm .stash-id
 }
 
 function check_last_command()
@@ -44,14 +45,15 @@ function check_last_command()
         # revert all changes made by 'black' and the other tools
         git restore .
         pop_stash;
+        cd ..;
         exit 1;
     fi
 }
 
-touch woke/.post-commit-ignore
+touch .post-commit-ignore
 
 stash_id=$(gen_stash_id)
-echo "$stash_id" > woke/.stash-id
+echo "$stash_id" > .stash-id
 
 # commit staged changes so that they are not included into the stash
 git commit --no-gpg-sign --no-verify -m 'pre-commit hook tmp commit' >/dev/null
@@ -60,12 +62,12 @@ git stash -u -m "$stash_id" >/dev/null
 # restore staged changes
 git reset --soft 'HEAD^'
 
-rm woke/.post-commit-ignore
+rm .post-commit-ignore
 
 # find all staged "*.py" files
 pyfiles=()
 IFS=$'\n'
-for f in $(git diff --cached --name-only --diff-filter=ACMR)
+for f in $(git diff --cached --name-only --relative --diff-filter=ACMR)
 do
     if [[ "$f" == *.py ]]; then
         pyfiles+=("$f")
@@ -75,12 +77,12 @@ done
 if [ -z ${WOKE_HOOKS_RUN_ALL_TESTS+dummy} ]; then
     # WOKE_HOOKS_RUN_ALL_TESTS is unset
     echo "running \`pytest woke -m \"not slow\"\`"
-    pytest woke -m "not slow";
+    pytest . -m "not slow";
     check_last_command;
 else
     # WOKE_HOOKS_RUN_ALL_TESTS is set
     echo "running \`pytest woke\`"
-    pytest woke;
+    pytest .;
     check_last_command;
 fi
 
@@ -92,8 +94,10 @@ fi
 
 if [ ${#pyfiles[@]} -ne 0 ]; then
     echo "running \`black ${pyfiles[@]}\`"
-    black woke;
+    black .;
     check_last_command;
 fi
+
+cd ..;
 
 echo "/woke/.githooks/pre-commit successfully executed."
