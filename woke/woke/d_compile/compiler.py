@@ -317,9 +317,25 @@ class SolidityCompiler:
         else:
             latest_build_info = None
 
-        target_version = self.__config.compiler.solc.target_version
         tasks = []
         for index, compilation_unit in enumerate(self.__compilation_units):
+            target_version = self.__config.compiler.solc.target_version
+            if target_version is not None:
+                if target_version not in compilation_unit.versions:
+                    files_str = "\n".join(str(path) for path in compilation_unit.files)
+                    raise CompilationError(
+                        f"Unable to compile following files with solc version `{target_version}` set in config files:\n"
+                        + files_str
+                    )
+            else:
+                # use the latest matching version
+                # TODO Do not use the latest matching version in Woke compiler
+                target_version = next(
+                    version
+                    for version in reversed(self.__svm.list_all())
+                    if version in compilation_unit.versions
+                )
+
             task = asyncio.create_task(
                 self.__compile_unit(
                     compilation_unit,
@@ -448,22 +464,6 @@ class SolidityCompiler:
         for file in compilation_unit.files:
             source_unit_name = self.__files_graph.nodes[file]["source_unit_name"]
             files[source_unit_name] = file
-
-        if target_version is not None:
-            if target_version not in compilation_unit.versions:
-                files_str = "\n".join(str(path) for path in compilation_unit.files)
-                raise CompilationError(
-                    f"Unable to compile following files with solc version `{target_version}` set in config files:\n"
-                    + files_str
-                )
-        else:
-            # use the latest matching version
-            # TODO Do not use the latest matching version in Woke compiler
-            target_version = next(
-                version
-                for version in reversed(self.__svm.list_all())
-                if version in compilation_unit.versions
-            )
 
         # run the solc executable
         return await self.__solc_frontend.compile_files(
