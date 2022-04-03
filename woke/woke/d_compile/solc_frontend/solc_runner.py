@@ -59,8 +59,11 @@ class SolcFrontend:
     async def __run_solc(
         self, target_version: SolidityVersion, standard_input: SolcInput
     ) -> SolcOutput:
-        await self.__svm.install(target_version)
         path = self.__svm.get_path(target_version)
+        if not path.is_file():
+            raise SolcCompilationError(
+                f"solc version `{target_version}` is not installed."
+            )
         args = [str(path.resolve()), "--standard-json"]
 
         allow_paths = ",".join(
