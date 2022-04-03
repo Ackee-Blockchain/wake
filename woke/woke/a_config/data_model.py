@@ -25,6 +25,9 @@ class SolcRemapping:
     def __iter__(self):
         return iter(astuple(self))
 
+    def __str__(self):
+        return f"{self.context or ''}:{self.prefix}={self.target or ''}"
+
 
 class SolcWokeConfig(WokeConfigModel):
     allow_paths: List[Path] = []

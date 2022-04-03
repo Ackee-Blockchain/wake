@@ -25,7 +25,7 @@ class SourceUnitNameResolver:
         """
         matching_remappings: List[SolcRemapping] = []
         for remapping in self.__config.compiler.solc.remappings:
-            context, prefix, target = remapping
+            context, prefix, target = remapping  # type: ignore
             context_matches = (context is None) or (
                 context is not None and parent_source_unit.startswith(context)
             )
@@ -35,13 +35,13 @@ class SourceUnitNameResolver:
         if len(matching_remappings) == 0:
             return source_unit_name
 
-        longest = max(matching_remappings, key=lambda r: len(r.context or ""))
+        longest = max(matching_remappings, key=lambda r: len(r.context or ""))  # type: ignore
         remapping = next(
             r
             for r in reversed(matching_remappings)
-            if len(r.context or "") == len(longest.context or "")
+            if len(r.context or "") == len(longest.context or "")  # type: ignore
         )
-        return source_unit_name.replace(remapping.prefix, remapping.target, 1)
+        return source_unit_name.replace(remapping.prefix, remapping.target, 1)  # type: ignore
 
     def __resolve_direct_import(self, parent_source_unit: str, import_str: str) -> str:
         """

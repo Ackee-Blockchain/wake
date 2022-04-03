@@ -51,7 +51,7 @@ def run_compile(
     # TODO Allow choosing build artifacts subset in compile subcommand
     outputs: List[SolcOutput] = asyncio.run(
         x.compile(
-            [SolcOutputSelectionEnum.ALL],
+            [SolcOutputSelectionEnum.ALL],  # type: ignore
             write_artifacts=(not no_artifacts),
             reuse_latest_artifacts=(not force),
         )

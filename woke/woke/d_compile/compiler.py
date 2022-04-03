@@ -218,7 +218,9 @@ class SolidityCompiler:
         # These include: stopAfter, optimizer, via_IR, debug, metadata, libraries and model checker settings.
         # See https://docs.soliditylang.org/en/v0.8.12/using-the-compiler.html#input-description.
         # Also it is not possible to specify solc output per contract or per source file.
-        settings.remappings = self.__config.compiler.solc.remappings
+        settings.remappings = [
+            str(remapping) for remapping in self.__config.compiler.solc.remappings
+        ]
         settings.evm_version = self.__config.compiler.solc.evm_version
         settings.output_selection = {"*": {}}
 
@@ -372,6 +374,9 @@ class SolidityCompiler:
             raise
 
         if write_artifacts:
+            if build_path is None:
+                # should not really happen (it is present here just to silence the linter)
+                raise ValueError("Build path is not set.")
             self.__write_global_artifacts(build_path, build_settings, ret)
 
             # create `latest` symlink pointing to the just created build directory
