@@ -1,10 +1,12 @@
 [tool.black]
 target-version = ["py37"]
 
-[tool.pyright]
-strict = "**/*.py"
-
 [tool.portray]
+
+[tool.pyright]
+include = ["**/*.py"]
+pythonVersion = "3.7"
+pythonPlatform = "All"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
