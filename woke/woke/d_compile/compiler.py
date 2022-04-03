@@ -335,6 +335,7 @@ class SolidityCompiler:
                     for version in reversed(self.__svm.list_all())
                     if version in compilation_unit.versions
                 )
+            await self.__svm.install(target_version)
 
             task = asyncio.create_task(
                 self.__compile_unit(
