@@ -10,6 +10,7 @@ from pathvalidate import sanitize_filename  # type: ignore
 import aiofiles
 import networkx as nx
 from pydantic import ValidationError
+from rich.progress import Progress
 
 from woke.a_config import WokeConfig
 from woke.b_svm import SolcVersionManager
@@ -317,8 +318,8 @@ class SolidityCompiler:
         else:
             latest_build_info = None
 
-        tasks = []
-        for index, compilation_unit in enumerate(self.__compilation_units):
+        target_versions = []
+        for compilation_unit in self.__compilation_units:
             target_version = self.__config.compiler.solc.target_version
             if target_version is not None:
                 if target_version not in compilation_unit.versions:
@@ -335,8 +336,22 @@ class SolidityCompiler:
                     for version in reversed(self.__svm.list_all())
                     if version in compilation_unit.versions
                 )
-            await self.__svm.install(target_version)
+            target_versions.append(target_version)
 
+            if not self.__svm.get_path(target_version).is_file():
+                with Progress() as progress:
+                    task = progress.add_task(
+                        f"[green]Downloading solc {target_version}", total=1
+                    )
+                    await self.__svm.install(
+                        target_version,
+                        progress=(lambda x: progress.update(task, completed=x)),
+                    )
+
+        tasks = []
+        for index, (compilation_unit, target_version) in enumerate(
+            zip(self.__compilation_units, target_versions)
+        ):
             task = asyncio.create_task(
                 self.__compile_unit(
                     compilation_unit,
