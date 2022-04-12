@@ -968,7 +968,7 @@ class DocumentSymbol(BaseModel):
     deprecated: Optional[bool]
     range: Range
     selection_range: Range
-    #children: Optional[List[DocumentSymbol]]
+    children: Optional[List["DocumentSymbol"]]
 
 
 class SymbolInformation(BaseModel):
@@ -1255,9 +1255,14 @@ class ClientCapabilities(BaseModel):
     experimental: Optional[Any]
 
 
+class InitializeParamsClientInfo():
+    name: str
+    verison: Optional[str]
+
+
 class InitializeParams(WorkDoneProgressParams):
     process_id: Union[int, None]
-    #client_info: Optional[]
+    client_info: Optional[InitializeParamsClientInfo]
     locale: Optional[str]
     root_path: Optional[Union[str, None]]
     root_uri: Union[DocumentUri, None]
