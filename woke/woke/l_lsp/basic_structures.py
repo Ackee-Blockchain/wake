@@ -873,8 +873,9 @@ class TextDocumentChangeRegistrationOptions(TextDocumentRegistrationOptions):
     sync_kind: TextDocumentSyncKind
 
 
+
 class TextDocumentContentChangeEvent(BaseModel):
-    range: Range
+    range: Optional[Range]
     """
     The range of the document that changed.
     """
