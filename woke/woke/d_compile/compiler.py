@@ -281,7 +281,7 @@ class SolidityCompiler:
         output_types: Collection[SolcOutputSelectionEnum],
         write_artifacts: bool = True,
         reuse_latest_artifacts: bool = True,
-    ) -> Tuple[SolcOutput]:
+    ) -> List[SolcOutput]:
         if len(self.__files) == 0:
             raise CompilationError("No source files provided to compile.")
 
@@ -384,7 +384,7 @@ class SolidityCompiler:
                 latest_build_path.unlink()
             latest_build_path.symlink_to(build_path, target_is_directory=True)
 
-        return ret
+        return list(ret)
 
     async def __compile_unit(
         self,

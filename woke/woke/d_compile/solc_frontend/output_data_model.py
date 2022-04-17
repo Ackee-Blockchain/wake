@@ -1,6 +1,6 @@
 from typing import List, Optional, Dict
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Extra
 from strenum import StrEnum
 
 
@@ -15,6 +15,7 @@ def _to_camel(s: str) -> str:
 class SolcOutputModel(BaseModel):
     class Config:
         alias_generator = _to_camel
+        extra = Extra.forbid
 
 
 class SolcOutputErrorSourceLocation(SolcOutputModel):
@@ -93,7 +94,7 @@ class SolcOutputError(SolcOutputModel):
 
 class SolcOutputSourceInfo(SolcOutputModel):
     id: int
-    ast: Dict
+    ast: Optional[Dict]
 
 
 class SolcOutputStorageLayoutStorage(SolcOutputModel):
@@ -121,8 +122,8 @@ class SolcOutputStorageLayout(SolcOutputModel):
 
 
 class SolcOutputEvmBytecodeFunctionDebugData(SolcOutputModel):
-    entry_point: int
-    id: int
+    entry_point: Optional[int]
+    id: Optional[int]
     parameter_slots: int
     return_slots: int
 
@@ -153,7 +154,7 @@ class SolcOutputEvmBytecodeData(SolcOutputModel):
     ] = None
 
 
-class SolcOutputEvmDeployedBytecodeData(SolcOutputModel):
+class SolcOutputEvmDeployedBytecodeData(SolcOutputEvmBytecodeData):
     immutable_references: Optional[
         Dict[str, List[SolcOutputEvmBytecodeLinkReferencesInfo]]
     ] = None
