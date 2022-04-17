@@ -9,6 +9,7 @@ from woke.a_config import WokeConfig
 from woke.d_compile import SolidityCompiler, SolcOutput
 from woke.d_compile.solc_frontend.input_data_model import SolcOutputSelectionEnum
 from woke.e_ast_parsing.b_solc.c_ast_nodes import AstSolc
+from .console import console
 
 
 @click.command(name="compile")
@@ -47,15 +48,22 @@ def run_compile(
                 raise ValueError(f"Argument `{file}` is not a Solidity file.")
             sol_files.append(path)
 
-    x = SolidityCompiler(config, sol_files)
+    compiler = SolidityCompiler(config, sol_files)
     # TODO Allow choosing build artifacts subset in compile subcommand
     outputs: List[SolcOutput] = asyncio.run(
-        x.compile(
+        compiler.compile(
             [SolcOutputSelectionEnum.ALL],  # type: ignore
             write_artifacts=(not no_artifacts),
             reuse_latest_artifacts=(not force),
         )
     )
+
+    for output in outputs:
+        for error in output.errors:
+            if error.formatted_message is not None:
+                console.print(error.formatted_message)
+            else:
+                console.print(error.message)
 
     if parse:
         for output in outputs:
