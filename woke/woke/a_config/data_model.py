@@ -13,6 +13,9 @@ from woke.c_regex_parsing.a_version import SolidityVersion
 class WokeConfigModel(BaseModel):
     class Config:
         allow_mutation = False
+        json_encoders = {
+            SolidityVersion: str,
+        }
         extra = Extra.forbid
 
 
