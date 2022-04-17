@@ -193,6 +193,22 @@ class SolcOrYulNode(ConfiguredModel):
 class SolcNode(SolcOrYulNode):
     id: Id
 
+    def __iter__(self):
+        def iter_list(l: List):
+            for item in l:
+                if isinstance(item, SolcNode):
+                    yield item
+                    yield from item
+                elif isinstance(item, List):
+                    yield from iter_list(item)
+
+        for item in self.__dict__.values():
+            if isinstance(item, SolcNode):
+                yield item
+                yield from item
+            elif isinstance(item, List):
+                yield from iter_list(item)
+
 
 class YulNode(SolcOrYulNode):
     pass
