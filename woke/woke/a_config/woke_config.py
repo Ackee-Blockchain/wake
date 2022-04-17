@@ -143,7 +143,8 @@ class WokeConfig:
         instance = cls(
             project_root_path=project_root_path, woke_root_path=woke_root_path
         )
-        config = TopLevelWokeConfig.parse_obj(config_dict)
+        with change_cwd(instance.project_root_path):
+            config = TopLevelWokeConfig.parse_obj(config_dict)
         instance.__config_raw = deepcopy(config_dict)
         instance.__config = config
         return instance
