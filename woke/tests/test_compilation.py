@@ -1,4 +1,5 @@
 import os
+import platform
 import shutil
 import stat
 import subprocess
@@ -31,7 +32,11 @@ def setup_project(request):
 
     try:
         repo = Repo.clone_from(clone_url, PYTEST_BUILD_PATH)
-        subprocess.run(["npm", "install"], cwd=PYTEST_BUILD_PATH, shell=True)
+        subprocess.run(
+            ["npm", "install"],
+            cwd=PYTEST_BUILD_PATH,
+            shell=(platform.system() == "Windows"),
+        )
 
         yield
     finally:
