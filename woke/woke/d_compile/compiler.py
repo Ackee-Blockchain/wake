@@ -3,6 +3,7 @@ from collections import deque
 from pathlib import Path
 import asyncio
 import logging
+import platform
 import time
 
 from Cryptodome.Hash import BLAKE2b
@@ -380,9 +381,10 @@ class SolidityCompiler:
             self.__write_global_artifacts(build_path, build_settings, ret)
 
             # create `latest` symlink pointing to the just created build directory
-            if latest_build_path.is_symlink():
-                latest_build_path.unlink()
-            latest_build_path.symlink_to(build_path, target_is_directory=True)
+            if platform.system() != "Windows":
+                if latest_build_path.is_symlink():
+                    latest_build_path.unlink()
+                latest_build_path.symlink_to(build_path, target_is_directory=True)
 
         return list(ret)
 
