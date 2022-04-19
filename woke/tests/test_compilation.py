@@ -49,7 +49,6 @@ def setup_project(request):
 
 
 @pytest.mark.slow
-@pytest.mark.platform_dependent
 @pytest.mark.parametrize(
     "setup_project", [r"https://github.com/Uniswap/v3-core.git"], indirect=True
 )
@@ -65,7 +64,6 @@ async def test_compile_uniswap_v3(setup_project, config):
 
 
 @pytest.mark.slow
-@pytest.mark.platform_dependent
 @pytest.mark.parametrize(
     "setup_project", [r"https://github.com/graphprotocol/contracts.git"], indirect=True
 )
@@ -81,7 +79,6 @@ async def test_compile_the_graph(setup_project, config):
 
 
 @pytest.mark.slow
-@pytest.mark.platform_dependent
 @pytest.mark.parametrize(
     "setup_project", [r"https://github.com/traderjoe-xyz/joe-core.git"], indirect=True
 )
@@ -97,7 +94,6 @@ async def test_compile_trader_joe(setup_project, config):
 
 
 @pytest.mark.slow
-@pytest.mark.platform_dependent
 @pytest.mark.parametrize(
     "setup_project",
     [r"https://github.com/axelarnetwork/axelar-cgp-solidity.git"],
