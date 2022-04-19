@@ -443,8 +443,6 @@ class SolidityVersionExpr:
                 evaluated_ranges.append(cls.__parse_hyphen_range(r))
             else:
                 evaluated_ranges.append(cls.__parse_range(r))
-        if len(evaluated_ranges) == 0:
-            raise ValueError(cls.ERROR_MSG.format(value=expr))
         self.__ranges = SolidityVersionRanges(evaluated_ranges)
 
     @classmethod
@@ -696,6 +694,8 @@ class SolidityVersionExpr:
             raise ValueError(cls.ERROR_MSG.format(value=match_str))
 
     def __contains__(self, item) -> bool:
+        if isinstance(item, str):
+            item = SolidityVersion.fromstring(item)
         if not isinstance(item, SolidityVersion):
             return NotImplemented
         for r in self.__ranges:

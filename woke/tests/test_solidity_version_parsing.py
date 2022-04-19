@@ -14,6 +14,7 @@ def test_version_basic_usage():
     assert v1.patch == 9
     assert v1.prerelease == "alpha.2"
     assert v1.build == "commit.12345678"
+    assert v1 < "0.8.13"
 
     v2 = SolidityVersion.fromstring("0.8.7")
     assert v1 > v2
@@ -148,6 +149,7 @@ def test_version_range_intersection():
 
     r3 = SolidityVersionRange("1.0.0", False, "2.0.0", False)
     assert r1 & r3 == r3
+    assert r3 & r1 == r3
     assert r1 & r2 & r3 == r3 & r2 & r1
     assert r2 & r3 & r1 == SolidityVersionRange.intersection(r1, r3, r2)
 
@@ -176,6 +178,7 @@ def test_version_expr_invalid():
         "abc",
         "o.8.7",
         "y.8.7",
+        "1.2.3 - 4.5.6 - 7.8.9",
         ">=0.8.0 - 0.9.0",
         "0.8.0 - <0.9.0",
         "^1.2.3 - 4.5.6",
@@ -192,6 +195,7 @@ def test_version_expr_invalid():
         "",
         "^x",
         "^0.0.0",
+        "~*",
     ]
     for i in invalid:
         with pytest.raises(ValueError):
@@ -231,12 +235,20 @@ def test_version_expr_comparators():
     for exp in expressions:
         e = SolidityVersionExpr(exp[0])
         for matching in exp[1]:
+            version = SolidityVersion.fromstring(matching)
             assert (
-                SolidityVersion.fromstring(matching) in e
+                version in e
+                and version in e.version_ranges
+                and matching in e
+                and matching in e.version_ranges
             ), f"Assertion failed: {matching} in {exp[0]}"
         for nonmatching in exp[2]:
+            version = SolidityVersion.fromstring(nonmatching)
             assert (
-                SolidityVersion.fromstring(nonmatching) not in e
+                version not in e
+                and version not in e.version_ranges
+                and nonmatching not in e
+                and nonmatching not in e.version_ranges
             ), f"Assertion failed: {nonmatching} not in {exp[0]}"
 
 
@@ -265,12 +277,20 @@ def test_version_expr_hyphen():
     for exp in expressions:
         e = SolidityVersionExpr(exp[0])
         for matching in exp[1]:
+            version = SolidityVersion.fromstring(matching)
             assert (
-                SolidityVersion.fromstring(matching) in e
+                version in e
+                and version in e.version_ranges
+                and matching in e
+                and matching in e.version_ranges
             ), f"Assertion failed: {matching} in {exp[0]}"
         for nonmatching in exp[2]:
+            version = SolidityVersion.fromstring(nonmatching)
             assert (
-                SolidityVersion.fromstring(nonmatching) not in e
+                version not in e
+                and version not in e.version_ranges
+                and nonmatching not in e
+                and nonmatching not in e.version_ranges
             ), f"Assertion failed: {nonmatching} not in {exp[0]}"
 
 
@@ -286,12 +306,20 @@ def test_version_expr_tilde():
     for exp in expressions:
         e = SolidityVersionExpr(exp[0])
         for matching in exp[1]:
+            version = SolidityVersion.fromstring(matching)
             assert (
-                SolidityVersion.fromstring(matching) in e
+                version in e
+                and version in e.version_ranges
+                and matching in e
+                and matching in e.version_ranges
             ), f"Assertion failed: {matching} in {exp[0]}"
         for nonmatching in exp[2]:
+            version = SolidityVersion.fromstring(nonmatching)
             assert (
-                SolidityVersion.fromstring(nonmatching) not in e
+                version not in e
+                and version not in e.version_ranges
+                and nonmatching not in e
+                and nonmatching not in e.version_ranges
             ), f"Assertion failed: {nonmatching} not in {exp[0]}"
 
 
@@ -310,12 +338,20 @@ def test_version_expr_caret():
     for exp in expressions:
         e = SolidityVersionExpr(exp[0])
         for matching in exp[1]:
+            version = SolidityVersion.fromstring(matching)
             assert (
-                SolidityVersion.fromstring(matching) in e
+                version in e
+                and version in e.version_ranges
+                and matching in e
+                and matching in e.version_ranges
             ), f"Assertion failed: {matching} in {exp[0]}"
         for nonmatching in exp[2]:
+            version = SolidityVersion.fromstring(nonmatching)
             assert (
-                SolidityVersion.fromstring(nonmatching) not in e
+                version not in e
+                and version not in e.version_ranges
+                and nonmatching not in e
+                and nonmatching not in e.version_ranges
             ), f"Assertion failed: {nonmatching} not in {exp[0]}"
 
 
@@ -338,12 +374,20 @@ def test_version_expr_complex():
     for exp in expressions:
         e = SolidityVersionExpr(exp[0])
         for matching in exp[1]:
+            version = SolidityVersion.fromstring(matching)
             assert (
-                SolidityVersion.fromstring(matching) in e
+                version in e
+                and version in e.version_ranges
+                and matching in e
+                and matching in e.version_ranges
             ), f"Assertion failed: {matching} in {exp[0]}"
         for nonmatching in exp[2]:
+            version = SolidityVersion.fromstring(nonmatching)
             assert (
-                SolidityVersion.fromstring(nonmatching) not in e
+                version not in e
+                and version not in e.version_ranges
+                and nonmatching not in e
+                and nonmatching not in e.version_ranges
             ), f"Assertion failed: {nonmatching} not in {exp[0]}"
 
 
@@ -370,10 +414,18 @@ def test_version_expr_whitespace():
     for exp in expressions:
         e = SolidityVersionExpr(exp[0])
         for matching in exp[1]:
+            version = SolidityVersion.fromstring(matching)
             assert (
-                SolidityVersion.fromstring(matching) in e
+                version in e
+                and version in e.version_ranges
+                and matching in e
+                and matching in e.version_ranges
             ), f"Assertion failed: {matching} in {exp[0]}"
         for nonmatching in exp[2]:
+            version = SolidityVersion.fromstring(nonmatching)
             assert (
-                SolidityVersion.fromstring(nonmatching) not in e
+                version not in e
+                and version not in e.version_ranges
+                and nonmatching not in e
+                and nonmatching not in e.version_ranges
             ), f"Assertion failed: {nonmatching} not in {exp[0]}"
