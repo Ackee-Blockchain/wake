@@ -1,4 +1,6 @@
+import os
 import shutil
+import stat
 import subprocess
 from pathlib import Path
 
@@ -25,12 +27,25 @@ def config():
 @pytest.fixture()
 def setup_project(request):
     clone_url = request.param
-    repo = Repo.clone_from(clone_url, PYTEST_BUILD_PATH)
-    subprocess.run(["npm", "install"], cwd=PYTEST_BUILD_PATH)
+    repo = None
 
-    yield
+    try:
+        repo = Repo.clone_from(clone_url, PYTEST_BUILD_PATH)
+        subprocess.run(["npm", "install"], cwd=PYTEST_BUILD_PATH, shell=True)
 
-    shutil.rmtree(PYTEST_BUILD_PATH, True)
+        yield
+    finally:
+
+        def onerror(func, path, exc_info):
+            if not os.access(path, os.W_OK):
+                os.chmod(path, stat.S_IWUSR)
+                func(path)
+            else:
+                raise
+
+        if repo is not None:
+            repo.close()
+        shutil.rmtree(PYTEST_BUILD_PATH, onerror=onerror)
 
 
 @pytest.mark.slow
