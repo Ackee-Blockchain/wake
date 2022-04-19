@@ -3,6 +3,7 @@ from typing import Optional, List, Union
 import shutil
 import subprocess
 
+import aiohttp
 import pytest
 
 from woke.a_config import WokeConfig
@@ -43,6 +44,10 @@ async def test_basic_usage(run_cleanup, config):
     assert len(svm.list_installed()) == 0
     assert "0.8.10" in svm.list_all()
     await svm.install("0.8.10")
+    assert len(svm.list_installed()) == 1
+    assert "0.8.10" in svm.list_installed()
+    await svm.install("0.8.10")  # repeat the installation
+    assert len(svm.list_installed()) == 1
     assert "0.8.10" in svm.list_installed()
     svm.remove("0.8.10")
     assert len(svm.list_installed()) == 0
@@ -87,6 +92,37 @@ def test_remove_not_installed_version(run_cleanup, config):
     svm = SolcVersionManager(config)
     with pytest.raises(ValueError):
         svm.remove("0.8.10")
+
+
+@pytest.mark.platform_dependent
+@pytest.mark.parametrize("run_cleanup", [[PYTEST_WOKE_PATH]], indirect=True)
+async def test_install_nonexistent_version(run_cleanup, config):
+    svm = SolcVersionManager(config)
+    with pytest.raises(UnsupportedVersionError):
+        await svm.install("0.0.0")
+    with pytest.raises(ValueError):
+        await svm.install("0.4.100")
+
+
+@pytest.mark.slow
+@pytest.mark.platform_dependent
+@pytest.mark.parametrize("run_cleanup", [[PYTEST_WOKE_PATH]], indirect=True)
+async def test_install_aiohttp_session(run_cleanup, config):
+    svm = SolcVersionManager(config)
+    async with aiohttp.ClientSession() as session:
+        await svm.install("0.8.10", http_session=session)
+        assert len(svm.list_installed()) == 1
+        assert "0.8.10" in svm.list_installed()
+
+
+@pytest.mark.platform_dependent
+@pytest.mark.parametrize("run_cleanup", [[PYTEST_WOKE_PATH]], indirect=True)
+async def test_get_path_nonexistent_version(run_cleanup, config):
+    svm = SolcVersionManager(config)
+    with pytest.raises(UnsupportedVersionError):
+        svm.get_path("0.0.0")
+    with pytest.raises(ValueError):
+        svm.get_path("0.4.255")
 
 
 @pytest.mark.slow

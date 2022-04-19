@@ -91,12 +91,12 @@ class SolcVersionManager(CompilerVersionManagerAbc):
                 f"The minimal supported solc version for the current platform is `{minimal_version}`."
             )
 
+        if version not in self.__solc_builds.releases:
+            raise ValueError(f"solc version `{version}` does not exist.")
         if self.get_path(version).is_file() and not force_reinstall:
             if progress is not None:
                 progress(1)
             return
-        if version not in self.__solc_builds.releases:
-            raise ValueError(f"solc version `{version}` does not exist.")
 
         filename = self.__solc_builds.releases[version]
         build_info = next(b for b in self.__solc_builds.builds if b.version == version)
