@@ -1,5 +1,6 @@
 subconfigs = ["b.toml", "./c.toml"]
 
 [compiler.solc]
+allow_paths = ["../"]
 include_paths = ["."]
 remappings = ["123="]

@@ -4,7 +4,8 @@ import pytest
 
 from woke.a_config import WokeConfig
 from woke.a_config.data_model import SolcRemapping
-
+from woke.c_regex_parsing import SolidityVersion
+from woke.core.enums import EvmVersionEnum
 
 sources_path = (Path(__file__).parent / "config_sources").resolve()
 
@@ -39,8 +40,43 @@ def test_config_simple():
     assert (sources_path / "empty.toml").resolve() in config.loaded_files
     assert len(config.compiler.solc.remappings) == 1
     assert config.compiler.solc.remappings[0] == SolcRemapping(None, "xyz", None)
+    assert str(config.compiler.solc.remappings[0]) == ":xyz="
     assert len(config.compiler.solc.include_paths) == 1
     assert config.compiler.solc.include_paths[0] == sources_path
+    assert len(config.compiler.solc.allow_paths) == 1
+    assert config.compiler.solc.allow_paths[0] == (sources_path / "../").resolve()
+
+
+def test_config_from_dict():
+    config_dict = {
+        "compiler": {
+            "solc": {
+                "allow_paths": ["."],
+                "evm_version": "london",
+                "include_paths": ["../"],
+                "remappings": ["hardhat/=node_modules/hardhat/"],
+                "target_version": "0.8.12",
+            }
+        }
+    }
+    config = WokeConfig.fromdict(
+        config_dict,
+        woke_root_path=sources_path,
+        project_root_path=(sources_path / "containing_global_conf"),
+    )
+
+    assert len(config.compiler.solc.allow_paths) == 1
+    assert (
+        config.compiler.solc.allow_paths[0] == sources_path / "containing_global_conf"
+    )
+    assert config.compiler.solc.evm_version == EvmVersionEnum.LONDON
+    assert len(config.compiler.solc.include_paths) == 1
+    assert config.compiler.solc.include_paths[0] == sources_path
+    assert len(config.compiler.solc.remappings) == 1
+    assert config.compiler.solc.remappings[0] == SolcRemapping(
+        None, "hardhat/", "node_modules/hardhat/"
+    )
+    assert config.compiler.solc.target_version == SolidityVersion.fromstring("0.8.12")
 
 
 @pytest.mark.platform_dependent
@@ -72,6 +108,14 @@ def test_config_project():
     assert config.compiler.solc.remappings[0] == SolcRemapping(
         None, "woke", "test-target"
     )
+
+
+@pytest.mark.platform_dependent
+def test_config_project_path_not_dir():
+    with pytest.raises(ValueError):
+        config = WokeConfig(
+            project_root_path=(sources_path / "a,toml"), woke_root_path=sources_path
+        )
 
 
 @pytest.mark.platform_dependent
