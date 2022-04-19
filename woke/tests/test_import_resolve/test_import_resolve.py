@@ -46,6 +46,10 @@ def test_simple():
         resolver.resolve_import("protocol://test/abc.sol", "./dummy.sol")
         == "protocol://test/dummy.sol"
     )
+    assert (
+        resolver.resolve_import("protocol://test/abc///", "./dummy.sol")
+        == "protocol://test/dummy.sol"
+    )
 
 
 def test_cmdline_args():
