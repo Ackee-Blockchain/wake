@@ -1,8 +1,7 @@
 import json
 import collections
-from sys import stdin
+
 from typing import Union
-from pydantic import BaseModel
 from protocol_structures import (
                                 RequestMessage,
                                 ResponseMessage,
@@ -50,14 +49,14 @@ class RPCProtocol():
         # Is there anything to read ?
         try:
             line = self.reader.read_line()
-            #print(line)
         except:
             raise EOFError()
         # It is, read header then
         if line.startswith("Content-Length: ") and line.endswith("\r\n"):
             content_length = int(line.split(':')[-1])
         else:
-            raise RPCProtocolError(f"Invalid HTTP header")
+            #raise EOFError()
+            raise RPCProtocolError(f"Invalid HTTP header: {line}")
         # Skip unnecessary header part
         while line != "\r\n":
             line = self.reader.read_line()
@@ -138,5 +137,7 @@ class RPCProtocol():
         message = json.dumps(message, separators=(",", ":"))
         content_length = len(message)
         response = f"Content-Length: {content_length}\r\nContent-Type: application/vscode-jsonrpc; charset=utf8\r\n\r\n{message}"
+        print(f'RESPONSE:\n{response}\n')
+        #raise EOFError()
         self.reader.write(response)
  
