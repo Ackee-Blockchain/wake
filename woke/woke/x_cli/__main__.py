@@ -10,6 +10,7 @@ import rich.traceback
 from woke.a_config import WokeConfig
 from .console import console
 from .compile import run_compile
+from .svm import run_svm
 
 
 @click.group()
@@ -37,15 +38,7 @@ def main(ctx: Context, woke_root_path: Optional[str], debug: bool) -> None:
 
 
 main.add_command(run_compile)
-
-
-@click.group()
-def svm_main() -> None:
-    rich.traceback.install(show_locals=True, suppress=[click], console=console)
-    logging.basicConfig(
-        format="%(name)s: %(message)s",
-        handlers=[RichHandler(show_time=False, console=console)],
-    )
+main.add_command(run_svm)
 
 
 @main.command(name="config")
