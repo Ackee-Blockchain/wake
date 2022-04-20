@@ -31,7 +31,7 @@ def run_compile(
     ctx: Context, files: Tuple[str], parse: bool, no_artifacts: bool, force: bool
 ) -> None:
     """Compile the project."""
-    config = WokeConfig()
+    config = WokeConfig(woke_root_path=ctx.obj["woke_root_path"])
     config.load_configs()  # load ~/.woke/config.toml and ./woke.toml
 
     sol_files: List[Path] = []
