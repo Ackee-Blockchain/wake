@@ -1,6 +1,5 @@
 import enum
 from typing import Any, Optional, Union
-
 from pydantic import BaseModel
 
 from methods import RequestMethodEnum
