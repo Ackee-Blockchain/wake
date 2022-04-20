@@ -35,7 +35,9 @@ def setup_project(request):
     repo = None
 
     try:
-        repo = Repo.clone_from(clone_url, PYTEST_BUILD_PATH)
+        repo = Repo.clone_from(
+            clone_url, PYTEST_BUILD_PATH, multi_options=["--depth=1"]
+        )
         (PYTEST_BUILD_PATH / "woke.toml").write_text(
             '[compiler.solc]\ninclude_paths = ["./node_modules"]'
         )
