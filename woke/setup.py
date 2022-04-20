@@ -43,6 +43,7 @@ setup(
     entry_points=dict(
         console_scripts=[
             "woke=woke.x_cli.__main__:main",
+            "woke-solc=woke.x_cli.__main__:woke_solc",
         ]
     ),
 )

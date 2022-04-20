@@ -1,4 +1,6 @@
 import logging
+import subprocess
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -8,6 +10,8 @@ import click
 import rich.traceback
 
 from woke.a_config import WokeConfig
+from woke.b_svm import SolcVersionManager
+from woke.c_regex_parsing import SolidityVersion
 from .console import console
 from .compile import run_compile
 from .svm import run_svm
@@ -48,3 +52,29 @@ def config(ctx: Context) -> None:
     config = WokeConfig()
     config.load_configs()
     console.print_json(str(config))
+
+
+def woke_solc() -> None:
+    logging.basicConfig(level=logging.CRITICAL)
+    config = WokeConfig()
+    config.load_configs()
+    svm = SolcVersionManager(config)
+    version = SolidityVersion.fromstring(
+        (config.woke_root_path / ".woke_solc_version").read_text()
+    )
+    solc_path = svm.get_path(version)
+
+    if not solc_path.is_file():
+        raise ValueError(f"solc version {version} is not installed.")
+    try:
+        proc = subprocess.run(
+            [str(solc_path)] + sys.argv[1:],
+            stdin=None,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            check=True,
+        )
+        print(proc.stdout.decode("utf-8"))
+    except subprocess.CalledProcessError as e:
+        print(e.output)
+        raise
