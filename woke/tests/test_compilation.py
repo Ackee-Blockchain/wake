@@ -39,6 +39,7 @@ def setup_project(request):
         (PYTEST_BUILD_PATH / "woke.toml").write_text(
             '[compiler.solc]\ninclude_paths = ["./node_modules"]'
         )
+        (PYTEST_BUILD_PATH / "woke_root").mkdir()
         subprocess.run(
             ["npm", "install"],
             cwd=PYTEST_BUILD_PATH,
@@ -76,7 +77,9 @@ def test_compile_uniswap_v3(setup_project, config):
 
     cli_runner = CliRunner()
     with change_cwd(PYTEST_BUILD_PATH):
-        cli_result = cli_runner.invoke(main, ["compile"])
+        cli_result = cli_runner.invoke(
+            main, [f"--woke-root-path={PYTEST_BUILD_PATH / 'woke_root'}", "compile"]
+        )
     assert cli_result.exit_code == 0
 
 
@@ -96,7 +99,9 @@ def test_compile_the_graph(setup_project, config):
 
     cli_runner = CliRunner()
     with change_cwd(PYTEST_BUILD_PATH):
-        cli_result = cli_runner.invoke(main, ["compile"])
+        cli_result = cli_runner.invoke(
+            main, [f"--woke-root-path={PYTEST_BUILD_PATH / 'woke_root'}", "compile"]
+        )
     assert cli_result.exit_code == 0
 
 
@@ -116,7 +121,9 @@ def test_compile_trader_joe(setup_project, config):
 
     cli_runner = CliRunner()
     with change_cwd(PYTEST_BUILD_PATH):
-        cli_result = cli_runner.invoke(main, ["compile"])
+        cli_result = cli_runner.invoke(
+            main, [f"--woke-root-path={PYTEST_BUILD_PATH / 'woke_root'}", "compile"]
+        )
     assert cli_result.exit_code == 0
 
 
@@ -139,6 +146,8 @@ def test_compile_axelar(setup_project, config):
     cli_runner = CliRunner()
     with change_cwd(PYTEST_BUILD_PATH):
         cli_result = cli_runner.invoke(
-            main, ["compile"] + [str(file.resolve()) for file in files]
+            main,
+            [f"--woke-root-path={PYTEST_BUILD_PATH / 'woke_root'}", "compile"]
+            + [str(file.resolve()) for file in files],
         )
     assert cli_result.exit_code == 0
