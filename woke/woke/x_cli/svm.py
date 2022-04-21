@@ -24,7 +24,7 @@ def run_svm(ctx: Context):
 @run_svm.command(name="install")
 @click.argument("version_range", nargs=-1)
 @click.option(
-    "--force", is_flag=True, help="reinstall the target version if already installed"
+    "--force", is_flag=True, help="Reinstall the target version if already installed."
 )
 @click.pass_context
 def svm_install(ctx: Context, version_range: Tuple[str], force: bool) -> None:
@@ -69,11 +69,11 @@ def svm_switch(ctx: Context, version: str) -> None:
 @run_svm.command(name="use")
 @click.argument("version", nargs=1)
 @click.option(
-    "--force", is_flag=True, help="reinstall the target version if already installed"
+    "--force", is_flag=True, help="Reinstall the target version if already installed."
 )
 @click.pass_context
 def svm_use(ctx: Context, version: str, force: bool) -> None:
-    """Install the target solc version (if not already installed) and use it as the global version."""
+    """Install the target solc version and use it as the global version."""
     config: WokeConfig = ctx.obj["config"]
     svm = SolcVersionManager(config)
     parsed_version = SolidityVersion.fromstring(version)
@@ -87,7 +87,9 @@ def svm_use(ctx: Context, version: str, force: bool) -> None:
 
 
 @run_svm.command(name="list")  # TODO alias `ls`
-@click.option("--all", is_flag=True, help="list all versions including not installed")
+@click.option(
+    "--all", is_flag=True, help="List all versions including non-installed ones."
+)
 @click.pass_context
 def svm_list(ctx: Context, all: bool) -> None:
     """List installed solc versions."""
@@ -113,6 +115,7 @@ def svm_list(ctx: Context, all: bool) -> None:
 )
 @click.pass_context
 def svm_remove(ctx: Context, version: str, ignore_missing: bool) -> None:
+    """Remove the target solc version."""
     config: WokeConfig = ctx.obj["config"]
     svm = SolcVersionManager(config)
     parsed_version = SolidityVersion.fromstring(version)
