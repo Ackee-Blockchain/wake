@@ -1005,14 +1005,14 @@ class YulVariableDeclaration(YulNode):
     # required
     variables: List["YulTypedName"]
     # optional
-    value: Optional["YulExpressionUnion"] = Field(discriminator="node_type")
+    value: Optional[YulExpressionUnion] = Field(discriminator="node_type")
 
 
 class YulFunctionCall(YulNode):
     # override alias
     node_type: Literal["YulFunctionCall"] = Field(alias="nodeType")
     # required
-    arguments: List[Annotated["YulExpressionUnion", Field(discriminator="node_type")]]
+    arguments: List[Annotated[YulExpressionUnion, Field(discriminator="node_type")]]
     function_name: "YulIdentifier"
     # optional
 
