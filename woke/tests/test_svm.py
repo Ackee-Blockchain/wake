@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Optional, List, Union
+import asyncio
 import shutil
 import subprocess
 
@@ -54,6 +55,24 @@ async def test_basic_usage(run_cleanup, config):
 
     with pytest.raises(UnsupportedVersionError):
         await svm.install("0.1.2")
+
+
+@pytest.mark.slow
+@pytest.mark.platform_dependent
+@pytest.mark.parametrize("run_cleanup", [[PYTEST_WOKE_PATH]], indirect=True)
+async def test_parallel_install(run_cleanup, config):
+    svm = SolcVersionManager(config)
+    to_be_installed = [f"0.8.{x}" for x in range(5)]
+
+    async with aiohttp.ClientSession() as session:
+        await asyncio.gather(
+            *[svm.install(version, http_session=session) for version in to_be_installed]
+        )
+
+    installed = svm.list_installed()
+    assert len(installed) == len(to_be_installed)
+    for version in to_be_installed:
+        assert version in installed
 
 
 @pytest.mark.platform_dependent
