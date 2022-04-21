@@ -59,13 +59,20 @@ def woke_solc() -> None:
     config = WokeConfig()
     config.load_configs()
     svm = SolcVersionManager(config)
-    version = SolidityVersion.fromstring(
-        (config.woke_root_path / ".woke_solc_version").read_text()
-    )
+
+    version_file_path = config.woke_root_path / ".woke_solc_version"
+    if not version_file_path.is_file():
+        console.print(
+            "Target solc version is not configured. Run 'woke svm use' or 'woke svm switch' command."
+        )
+        sys.exit(1)
+
+    version = SolidityVersion.fromstring(version_file_path.read_text())
     solc_path = svm.get_path(version)
 
     if not solc_path.is_file():
-        raise ValueError(f"solc version {version} is not installed.")
+        console.print(f"solc version {version} is not installed.")
+        sys.exit(1)
     try:
         proc = subprocess.run(
             [str(solc_path)] + sys.argv[1:],
