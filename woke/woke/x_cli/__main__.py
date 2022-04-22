@@ -18,7 +18,12 @@ from .svm import run_svm
 
 
 @click.group()
-@click.option("--woke-root-path", required=False, type=click.Path(exists=True))
+@click.option(
+    "--woke-root-path",
+    required=False,
+    type=click.Path(exists=True),
+    help="Override Woke root path.",
+)
 @click.option("--debug/--no-debug", default=False)
 @click.pass_context
 def main(ctx: Context, woke_root_path: Optional[str], debug: bool) -> None:
