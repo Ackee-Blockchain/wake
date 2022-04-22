@@ -4,6 +4,7 @@ import asyncio
 
 import click
 from click.core import Context
+from rich.panel import Panel
 
 from woke.a_config import WokeConfig
 from woke.d_compile import SolidityCompiler, SolcOutput
@@ -61,9 +62,9 @@ def run_compile(
     for output in outputs:
         for error in output.errors:
             if error.formatted_message is not None:
-                console.print(error.formatted_message)
+                console.print(Panel(error.formatted_message, highlight=True))
             else:
-                console.print(error.message)
+                console.print(Panel(error.message, highlight=True))
 
     if parse:
         for output in outputs:
