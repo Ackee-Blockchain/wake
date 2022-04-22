@@ -49,6 +49,7 @@ async def run_solc_install(
             force_reinstall=force,
             progress=(lambda x: progress.update(task, completed=x)),
         )
+    console.print(f"Installed solc version {version}.")
 
 
 @run_svm.command(name="switch")
@@ -64,6 +65,7 @@ def svm_switch(ctx: Context, version: str) -> None:
         raise ValueError(f"solc version {parsed_version} is not installed.")
 
     (config.woke_root_path / ".woke_solc_version").write_text(str(parsed_version))
+    console.print(f"Using woke-solc version {version}.")
 
 
 @run_svm.command(name="use")
@@ -85,6 +87,7 @@ def svm_use(ctx: Context, version_range: Tuple[str], force: bool) -> None:
         asyncio.run(run_solc_install(svm, SolidityVersionExpr(str(version)), force))
 
     (config.woke_root_path / ".woke_solc_version").write_text(str(version))
+    console.print(f"Using woke-solc version {version}.")
 
 
 @run_svm.command(name="list")  # TODO alias `ls`
@@ -124,9 +127,9 @@ def svm_remove(ctx: Context, version: str, ignore_missing: bool) -> None:
     if ignore_missing:
         try:
             svm.remove(parsed_version)
-            console.print(f"Removed solc {parsed_version}")
+            console.print(f"Removed solc version {parsed_version}.")
         except ValueError:
-            console.print(f"solc {parsed_version} is not installed")
+            console.print(f"solc {parsed_version} is not installed.")
     else:
         svm.remove(parsed_version)
-        console.print(f"Removed solc {parsed_version}")
+        console.print(f"Removed solc version {parsed_version}.")
