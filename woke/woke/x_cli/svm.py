@@ -67,23 +67,24 @@ def svm_switch(ctx: Context, version: str) -> None:
 
 
 @run_svm.command(name="use")
-@click.argument("version", nargs=1)
+@click.argument("version_range", nargs=-1)
 @click.option(
     "--force", is_flag=True, help="Reinstall the target version if already installed."
 )
 @click.pass_context
-def svm_use(ctx: Context, version: str, force: bool) -> None:
+def svm_use(ctx: Context, version_range: Tuple[str], force: bool) -> None:
     """Install the target solc version and use it as the global version."""
     config: WokeConfig = ctx.obj["config"]
     svm = SolcVersionManager(config)
-    parsed_version = SolidityVersion.fromstring(version)
+    version_expr = SolidityVersionExpr(" ".join(version_range))
+    version = next(
+        version for version in reversed(svm.list_all()) if version in version_expr
+    )
 
-    if not svm.get_path(parsed_version).is_file():
-        asyncio.run(
-            run_solc_install(svm, SolidityVersionExpr(str(parsed_version)), force)
-        )
+    if not svm.get_path(version).is_file():
+        asyncio.run(run_solc_install(svm, SolidityVersionExpr(str(version)), force))
 
-    (config.woke_root_path / ".woke_solc_version").write_text(str(parsed_version))
+    (config.woke_root_path / ".woke_solc_version").write_text(str(version))
 
 
 @run_svm.command(name="list")  # TODO alias `ls`
