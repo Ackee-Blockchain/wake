@@ -4,6 +4,7 @@ from zipfile import ZipFile
 import platform
 import asyncio
 import hashlib
+import shutil
 import urllib.request
 import urllib.error
 
@@ -137,9 +138,9 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         local_path.chmod(0o775)
 
     def remove(self, version: Union[SolidityVersion, str]) -> None:
-        path = self.get_path(version)
-        if path.is_file():
-            path.unlink()
+        path = self.get_path(version).parent
+        if path.is_dir():
+            shutil.rmtree(path)
         else:
             raise ValueError(
                 f"solc version `{version}` was not installed - cannot remove."
