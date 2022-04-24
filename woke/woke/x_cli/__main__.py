@@ -78,15 +78,12 @@ def woke_solc() -> None:
     if not solc_path.is_file():
         console.print(f"solc version {version} is not installed.")
         sys.exit(1)
-    try:
-        proc = subprocess.run(
-            [str(solc_path)] + sys.argv[1:],
-            stdin=None,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            check=True,
-        )
-        print(proc.stdout.decode("utf-8"))
-    except subprocess.CalledProcessError as e:
-        print(e.output)
-        raise
+
+    proc = subprocess.run(
+        [str(solc_path)] + sys.argv[1:],
+        stdin=None,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
+    print(proc.stdout.decode("utf-8"))
+    sys.exit(proc.returncode)
