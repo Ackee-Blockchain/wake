@@ -164,3 +164,4 @@ def test_svm_remove(woke_root_path):
     )
     assert cli_result.exit_code == 0
     assert len(svm.list_installed()) == 0
+    assert not svm.get_path("0.6.3").parent.is_dir()
