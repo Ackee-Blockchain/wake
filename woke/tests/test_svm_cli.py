@@ -7,7 +7,7 @@ from click.testing import CliRunner
 
 from woke.a_config import WokeConfig
 from woke.b_svm import SolcVersionManager
-from woke.c_regex_parsing import SolidityVersion
+from woke.c_regex_parsing.solidity_version import SolidityVersion
 from woke.x_cli.__main__ import main
 
 

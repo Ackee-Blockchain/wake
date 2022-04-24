@@ -2,7 +2,7 @@ from typing import Union, Tuple, AsyncIterator
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-from woke.c_regex_parsing.a_version import VersionAbc
+from woke.c_regex_parsing.solidity_version import VersionAbc
 
 
 class CompilerVersionManagerAbc(ABC):

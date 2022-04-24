@@ -12,7 +12,7 @@ from Cryptodome.Hash import keccak
 import aiohttp
 
 from woke.a_config import WokeConfig, UnsupportedPlatformError
-from woke.c_regex_parsing.a_version import SolidityVersion
+from woke.c_regex_parsing.solidity_version import SolidityVersion
 from .abc import CompilerVersionManagerAbc
 from .exceptions import ChecksumError, UnsupportedVersionError
 
