@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field, Extra, validator
 from pydantic.dataclasses import dataclass
 
 from woke.core.enums import EvmVersionEnum
-from woke.c_regex_parsing.a_version import SolidityVersion
+from woke.c_regex_parsing.solidity_version import SolidityVersion
 
 
 class WokeConfigModel(BaseModel):

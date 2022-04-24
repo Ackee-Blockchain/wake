@@ -4,7 +4,7 @@ import pytest
 
 from woke.a_config import WokeConfig
 from woke.a_config.data_model import SolcRemapping
-from woke.c_regex_parsing import SolidityVersion
+from woke.c_regex_parsing.solidity_version import SolidityVersion
 from woke.core.enums import EvmVersionEnum
 
 sources_path = (Path(__file__).parent / "config_sources").resolve()
