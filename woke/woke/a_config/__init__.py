@@ -2,7 +2,7 @@ from .woke_config import WokeConfig, UnsupportedPlatformError
 
 __doc__ = """This module handles config file management. Each config option has its default value.
 There are two main sources of config files:
-* `config.toml` global config file in the Woke root directory ($HOME/.woke on macOS and Linux, $HOME/Woke on Windows)
+* `config.toml` global config file in the Woke root directory ($HOME/.config/Woke on macOS and Linux, $HOME/Woke on Windows)
 * `woke.toml` project-specific config file present in a project root directory
 
 There may be additional config files included with the `subconfigs` top-level config key. Paths in the `subconfigs` key can
