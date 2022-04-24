@@ -37,7 +37,9 @@ class SolcWokeConfig(WokeConfigModel):
     """Woke should set solc `--allow-paths` automatically. This option allows to specify additional allowed paths."""
     evm_version: Optional[EvmVersionEnum] = None
     """Version of the EVM to compile for. Leave unset to let the solc decide."""
-    include_paths: List[Path] = []
+    include_paths: List[Path] = Field(
+        default_factory=lambda: [Path.cwd() / "node_modules"]
+    )
     remappings: List[SolcRemapping] = []
     target_version: Optional[SolidityVersion] = None
 
