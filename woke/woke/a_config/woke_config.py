@@ -62,8 +62,9 @@ class WokeConfig:
         self.__woke_root_path = self.__woke_root_path.resolve(strict=True)
 
         self.__loaded_files = set()
-        self.__config_raw = dict()
-        self.__config = TopLevelWokeConfig()
+        with change_cwd(self.__project_root_path):
+            self.__config = TopLevelWokeConfig()
+        self.__config_raw = self.__config.dict(by_alias=True)
 
     def __str__(self) -> str:
         return self.__config.json(by_alias=True, exclude_unset=True)

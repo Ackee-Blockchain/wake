@@ -29,7 +29,7 @@ class SourcePathResolver:
 
         if len(matching_paths) == 0:
             raise CompilationResolveError(
-                f"Unable to find '{source_unit_name}' in the project root dir or include paths provided through the config files."
+                f"Unable to find '{source_unit_name}' in the project root dir or include paths."
             )
 
         if len(matching_paths) > 1:
