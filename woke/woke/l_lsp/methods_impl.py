@@ -20,82 +20,124 @@ def uri_to_path(uri: str) -> str:
         _, path = uri.split("file://", 1)
     return str(Path(unquote(path)).resolve())
 
-
-def lsp_initialize(context: LSPContext, params: InitializeParams) -> InitializeResult:
-    if params.workspace_folders is not None:
+######################
+## client -> server ##
+######################
+def lsp_initialize(
+    context: LSPContext, params: InitializeParams
+    ) -> InitializeResult:
+    if params.worskpace_folders is not None:
         if len(params.workspace_folders) != 1:
-            raise Exception("Exactly one workspace directory must be provided.", InitializeError(retry=False))
-        path = uri_to_path(params.workspace_folders[0].uri)
-        # print(path)
+            raise InitializeError("Exactly one workspace directory must be provided.", retry=False)
+        path = uri_to_path(params.worskpace_folders[0].uri)
+        #print(path)
     elif params.root_uri is not None:
         path = uri_to_path(params.root_uri)
     elif params.root_path is not None:
         path = Path(params.root_path).resolve(strict=True)
     else:
-        raise Exception("Workspace/root directory was not specified.", InitializeError(retry=False))
+        raise InitializeError("Workspace/root directory was not specified.", retry=False)
 
     context.woke_config = WokeConfig(project_root_path=path)
-    server_capabilities = ServerCapabilities(
-        text_document_sync=None,
-        workspace_symbol_provider=None,
-        workspace=None,
-        experimental=None,
-    )
-    return InitializeResult(capabilities=server_capabilities, server_info=None)
-
-
-def lsp_initialized(context: LSPContext, params: InitializedParams) -> None:
-    pass
-    # probably not really useful
+    return InitializeResult(context.server_capabilities)
 
 
 def lsp_shutdown(context: LSPContext, _) -> None:
     context.shutdown_received = True
 
 
-def lsp_exit(context: LSPContext, _) -> None:
-    if context.shutdown_received:
-        sys.exit(0)
-    else:
-        sys.exit(1)
-
-
-def lsp_set_trace(context: LSPContext, params: SetTraceParams) -> None:
-    context.trace_value = TraceValueEnum(params.value)
-
-
-def lsp_window_progress_cancel(
-    context: LSPContext, params: WorkDoneProgressCancelParams
-) -> None:
-    raise NotImplementedError()  # TODO
-
-
 def lsp_workspace_symbol(
     context: LSPContext, params: WorkspaceSymbolParams
-) -> Union[List[SymbolInformation], List[WorkspaceSymbol], None]:
+    ) -> Union[List[SymbolInformation], List[WorkspaceSymbol], None]:
     raise NotImplementedError()  # TODO
 
 
 def lsp_workspace_symbol_resolve(
     context: LSPContext, params: WorkspaceSymbol
-) -> WorkspaceSymbol:
+    ) -> WorkspaceSymbol:
+    raise NotImplementedError()  # TODO
+
+
+def lsp_workspace_execute_command(context: LSPContext):
     raise NotImplementedError()  # TODO
 
 
 def lsp_workspace_will_create_files(
     context: LSPContext, params: CreateFilesParams
-) -> Optional[WorkspaceEdit]:
+    ) -> Optional[WorkspaceEdit]:
     raise NotImplementedError()  # TODO
 
 
+def lsp_workspace_will_rename_files(context: LSPContext):
+    raise NotImplementedError()  # TODO
+
+
+def lsp_workspace_will_delete_files(context: LSPContext):
+    raise NotImplementedError()  # TODO
+
+
+def lsp_will_save_wait_until(context: LSPContext):
+    raise NotImplementedError()  # TODO
+
+
+######################
+## server -> client ##
+######################
+
+def lsp_window_show_message_request(context: LSPContext):
+    raise NotImplementedError()  # TODO
+
+
+def lsp_window_show_document(context: LSPContext):
+    raise NotImplementedError()  # TODO
+
+
+def lsp_window_work_done_progress_create(context: LSPContext):
+    raise NotImplementedError()  # TODO
+
+
+def lsp_client_register_capability(context: LSPContext):
+    raise NotImplementedError()  # TODO
+
+
+def lsp_client_unregister_capability(context: LSPContext):
+    raise NotImplementedError()  # TODO
+
+
+def lsp_workspace_folders(context: LSPContext):
+    raise NotImplementedError()  # TODO
+
+
+def lsp_workspace_configuration(context: LSPContext):
+    raise NotImplementedError()  # TODO
+
+
+def lsp_workspace_apply_edit(context: LSPContext):
+    raise NotImplementedError()  # TODO
+
+
+'''
+Mapping for all the requests defined by LSP Specification
+https://microsoft.github.io/language-server-protocol/specifications/specification-current/
+'''
 method_mapping: Dict[str, Callable[[LSPContext, Any], Any]] = {
     RequestMethodEnum.INITIALIZE: lsp_initialize,
-    RequestMethodEnum.INITIALIZED: lsp_initialized,
     RequestMethodEnum.SHUTDOWN: lsp_shutdown,
-    RequestMethodEnum.EXIT: lsp_exit,
-    RequestMethodEnum.SET_TRACE_NOTIFICATION: lsp_set_trace,
-    RequestMethodEnum.WINDOW_WORK_DONE_PROGRESS_CANCEL: lsp_window_progress_cancel,
+    RequestMethodEnum.WINDOW_SHOW_MESSAGE_REQUEST: lsp_window_show_message_request,
+    RequestMethodEnum.WINDOW_SHOW_DOCUMENT: lsp_window_show_document,
+    RequestMethodEnum.WINDOW_WORK_DONE_PROGRESS_CREATE: lsp_window_work_done_progress_create,
+    RequestMethodEnum.CLIENT_REGISTER_CAPABILITY: lsp_client_register_capability,
+    RequestMethodEnum.CLIENT_UNREGISTER_CAPABILITY: lsp_client_unregister_capability,
+    RequestMethodEnum.WORKSPACE_WORKSPACE_FOLDERS: lsp_workspace_folders,
+    RequestMethodEnum.WORKSPACE_CONFIGURATION: lsp_workspace_configuration,
     RequestMethodEnum.WORKSPACE_SYMBOL: lsp_workspace_symbol,
     RequestMethodEnum.WORKSPACE_SYMBOL_RESOLVE: lsp_workspace_symbol_resolve,
+    RequestMethodEnum.WORKSPACE_EXECUTE_COMMAND: lsp_workspace_execute_command,
+    RequestMethodEnum.WORKSPACE_APPLY_EDIT: lsp_workspace_apply_edit,
     RequestMethodEnum.WORKSPACE_WILL_CREATE_FILES: lsp_workspace_will_create_files,
+    RequestMethodEnum.WORKSPACE_WILL_RENAME_FILES: lsp_workspace_will_rename_files,
+    RequestMethodEnum.WORKSPACE_WILL_DELETE_FILES: lsp_workspace_will_delete_files,
+    RequestMethodEnum.WILL_SAVE_WAIT_UNTIL: lsp_will_save_wait_until,
+    #RequestMethodEnum.CANCEL_REQUEST: lsp_cancel_request,
+    #RequestMethodEnum.PROGRESS_NOTIFICATION: lsp_progrss_notification,
 }
