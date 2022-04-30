@@ -17,11 +17,7 @@ class RPCProtocolError(Exception):
     pass
 
 
-class TCPReader:
-    """
-    Also a writer
-    """
-
+class TcpCommunicator:
     def __init__(self, reader, writer):
         self.reader = reader
         self.writer = writer

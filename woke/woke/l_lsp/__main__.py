@@ -3,7 +3,7 @@ import logging
 import argparse
 
 from .server import Server
-from .RPC_protocol import TCPReader, RPCProtocol
+from .RPC_protocol import TcpCommunicator, RPCProtocol
 
 
 class TCPHandler(socketserver.StreamRequestHandler):
@@ -17,7 +17,7 @@ class TCPHandler(socketserver.StreamRequestHandler):
     """
 
     def handle(self):
-        rpc_protocol = RPCProtocol(TCPReader(self.rfile, self.wfile))
+        rpc_protocol = RPCProtocol(TcpCommunicator(self.rfile, self.wfile))
         s = Server(protocol=rpc_protocol, client_capabilities=["test", "completion"])
         s.run_server()
 
