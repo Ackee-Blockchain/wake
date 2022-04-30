@@ -1,8 +1,6 @@
-from typing import List, Optional, Union
-
 from woke.a_config import WokeConfig
 from .enums import TraceValueEnum
-from basic_structures import *
+from .basic_structures import *
 
 
 class LSPContext:
@@ -11,15 +9,15 @@ class LSPContext:
     initialized: bool
     trace_value: TraceValueEnum
     client_capabilities: dict
-    #workspace: Union[dict, None]
-
+    # workspace: Union[dict, None]
 
     def __init__(self) -> None:
         self.woke_config = None
         self.shutdown_received = False
         self.initialized = False
         self.trace_value = TraceValueEnum.OFF
-    '''
+
+    """
     def update_workspace(self,
                         document_uri: DocumentUri,
                         document_veriosn: int, 
@@ -31,4 +29,4 @@ class LSPContext:
             change_from = document_change.range.start
             change_to = document_change.range.end
             self.workspace[document_uri].text[]
-    '''
+    """
