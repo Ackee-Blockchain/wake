@@ -8,14 +8,15 @@ class LSPContext:
     shutdown_received: bool
     initialized: bool
     trace_value: TraceValueEnum
-    client_capabilities: dict
+    client_capabilities: List[str]
     # workspace: Union[dict, None]
 
     def __init__(self) -> None:
         self.woke_config = None
         self.shutdown_received = False
         self.initialized = False
-        self.trace_value = TraceValueEnum.OFF
+        self.trace_value = TraceValueEnum(TraceValueEnum.OFF)
+        self.client_capabilities = []
 
     """
     def update_workspace(self,

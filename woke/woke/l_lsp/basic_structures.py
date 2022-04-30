@@ -371,6 +371,7 @@ class WorkspaceEdit(BaseModel):
     :param change_annotations: A map of change annotations that can be referenced in `AnnotatedTextEdit`s or create,
         rename and delete file / folder operations.
     """
+
     # TODO
 
 
@@ -712,7 +713,7 @@ class TextDocumentSyncOptions(BaseModel):
     save: Optional[Union[bool, SaveOptions]]
 
 
-class InitializeError(IntEnum):
+class InitializeErrorCodes(IntEnum):
     unknown_protocol_version = 1
 
 
@@ -722,24 +723,6 @@ class InitializeError(BaseModel):
 
 class InitializedParams(BaseModel):
     pass
-
-
-class LogTraceParams(BaseModel):
-    message: str
-    """
-    The message to be logged
-    """
-    verbose: Optional[str]
-    """
-    Additional information
-    """
-
-
-class SetTraceParams(BaseModel):
-    value: TraceValue
-    """
-    The new value that should be assigned to the trace setting.
-    """
 
 
 class MessageType(IntEnum):
@@ -798,6 +781,23 @@ class LogMessageParams(BaseModel):
     message: str
     """
     The actual message
+    """
+
+
+class PublishDiagnosticsParams(BaseModel):
+    uri: DocumentUri
+    """
+    The URI for which diagnostic information is reported.
+    """
+    version: Optional[int]
+    """
+    Optional the version number of the document the diagnostics are published for.
+
+    @since 3.15.0
+    """
+    diagnostics: List[Diagnostic]
+    """
+    An array of diagnostic information items.
     """
 
 
@@ -907,6 +907,11 @@ class TextDocumentSaveReason(IntEnum):
 class WillSaveTextDocumentParams(BaseModel):
     text_document: TextDocumentIdentifier
     reason: TextDocumentSaveReason
+
+
+class DidSaveTextDocumentParams(BaseModel):
+    text_document: TextDocumentIdentifier
+    text: Optional[str]
 
 
 class TextDocumentSaveRegistrationOptions(TextDocumentRegistrationOptions):
@@ -1275,4 +1280,4 @@ class InitializeParams(WorkDoneProgressParams):
     initialization_options: Optional[Any]
     capabilities: ClientCapabilities  # soon
     trace: Optional[TraceValue]
-    worskpace_folders: Optional[List[WorkspaceFolder]]  # soon
+    workspace_folders: Optional[List[WorkspaceFolder]]  # soon

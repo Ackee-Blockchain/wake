@@ -1,4 +1,5 @@
 import logging
+from typing import List, Iterable
 
 from .context import LSPContext
 from .protocol_structures import (
@@ -15,10 +16,10 @@ from .notifications_impl import notification_mapping
 
 
 class Server:
-    def __init__(self, protocol: RPCProtocol, threads: int = 1):
+    def __init__(self, protocol: RPCProtocol, client_capabilities: Iterable[str], threads: int = 1):
         self.protocol = protocol
         self.threads = threads
-        self.client_capabilities = {}
+        self.client_capabilities = list(client_capabilities)
         self.running = True
         self.init_request_received = False
         self.context = LSPContext()
@@ -31,7 +32,7 @@ class Server:
             try:
                 # Read the message
                 message = self.protocol.recieve_message()
-                if type(message) == RequestMessage:
+                if isinstance(message, RequestMessage):
                     # print('* REQUEST *')
                     self.handle_message(message)
                 else:
@@ -101,25 +102,26 @@ class Server:
         if self.context.shutdown_received:
             self.stop_server()
         response_message = ResponseMessage(
-            json_rpc="2.0", id=request.id, result=response
+            json_rpc="2.0", id=request.id, result=response, error=None
         )
 
         return response_message
 
+    @staticmethod
     def _serve_error(
-        self, request: RequestMessage, error_code: int, msg: str
+            request: RequestMessage, error_code: int, msg: str
     ) -> ResponseMessage:
-        response_error = ResponseError(code=error_code, message=msg)
+        response_error = ResponseError(code=error_code, message=msg, data=None)
         response_message = ResponseMessage(
-            json_rpc="2.0", id=request.id, error=response_error
+            json_rpc="2.0", id=request.id, error=response_error, result=None
         )
         return response_message
 
-    def _serve_notification(self, request: RequestMessage) -> None:
+    def _serve_notification(self, request: NotificationMessage) -> None:
         # Server handles notification
         # Nothing to return
         notification_mapping[request.method](self.context, request.params)
         return
 
-    def get_client_capabilities(self, ClientCapabilities):
+    def get_client_capabilities(self) -> List[str]:
         return self.client_capabilities

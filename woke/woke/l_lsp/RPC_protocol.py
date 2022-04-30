@@ -134,9 +134,9 @@ class RPCProtocol:
         """
         Formats object to message and sends it
         """
-        message = json.dumps(message, separators=(",", ":"))
-        content_length = len(message)
-        response = f"Content-Length: {content_length}\r\nContent-Type: application/vscode-jsonrpc; charset=utf8\r\n\r\n{message}"
+        message_str = json.dumps(message, separators=(",", ":"))
+        content_length = len(message_str)
+        response = f"Content-Length: {content_length}\r\nContent-Type: application/vscode-jsonrpc; charset=utf8\r\n\r\n{message_str}"
         print(f"RESPONSE:\n{response}\n")
         # raise EOFError()
         self.reader.write(response)
