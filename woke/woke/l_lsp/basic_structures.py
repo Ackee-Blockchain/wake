@@ -1,19 +1,14 @@
-from ctypes.wintypes import UINT
-from lib2to3.pgen2.grammar import opmap_raw
-from optparse import Option, OptionParser
-from pickletools import uint8
-from re import L
-from types import DynamicClassAttribute
-from xxlimited import Str
-from pydantic import BaseModel
 from enum import Enum, IntEnum
 from typing import Any, List, Optional, Union, NewType
+
+from pydantic import BaseModel
 
 DocumentUri = NewType("URI", str)
 URI = NewType("URI", str)
 ChangeAnnotationIdentifier = NewType("ChangeAnnotationIdentifier", str)
 ProgressToken = Union[int, str]
-TraceValue = NewType("Trace", str)#NewType(Union["off","message","verbose"], str)
+TraceValue = NewType("Trace", str)  # NewType(Union["off","message","verbose"], str)
+
 
 class RegularExpressionsClientCapabilities(BaseModel):
     engine: str
@@ -52,6 +47,7 @@ class Location(BaseModel):
     """
     Represents a location inside a resource, such as a line inside a text file.
     """
+
     uri: DocumentUri
     range: Range
 
@@ -89,11 +85,12 @@ class DiagnosticTag(IntEnum):
     UNNECESSARY = 1
     """ 
     Unused or unnecessary code
-    """ 
+    """
     DEPRECATED = 2
     """
     Deprecated or obsolete code 
     """
+
 
 class DiagnosticRelatedInformation(BaseModel):
     location: Location
@@ -180,6 +177,7 @@ class TextEdit(BaseModel):
     The text to be inserted. For delete operations use an empty string.
     """
 
+
 class ChangeAnnotation(BaseModel):
     label: str
     """
@@ -213,8 +211,8 @@ class VersionedTextDocumentIdentifier(TextDocumentIdentifier):
     version: int
     """
     The version number of this document.
-	The version number of a document will increase after each change,
-	including undo/redo. The number doesn't need to be consecutive.
+    The version number of a document will increase after each change,
+    including undo/redo. The number doesn't need to be consecutive.
     """
 
 
@@ -222,13 +220,13 @@ class OptionalVersionedTextDocumentIdentifier(TextDocumentIdentifier):
     version: Optional[Union[int, None]]
     """
     The version number of this document. If an optional versioned text document
-	identifier is sent from the server to the client and the file is not
-	open in the editor (the server has not received an open notification
-	before) the server can send `null` to indicate that the version is
-	known and the content on disk is the master (as specified with document
-	content ownership).
+    identifier is sent from the server to the client and the file is not
+    open in the editor (the server has not received an open notification
+    before) the server can send `null` to indicate that the version is
+    known and the content on disk is the master (as specified with document
+    content ownership).
     The version number of a document will increase after each change,
-	including undo/redo. The number doesn't need to be consecutive.
+    including undo/redo. The number doesn't need to be consecutive.
     """
 
 
@@ -247,6 +245,7 @@ class CreateFileOptions(BaseModel):
     """
     Options to create a file.
     """
+
     overwrite: Optional[bool]
     """
     Overwrite existing file. Overwrite wins over `ignoreIfExists`
@@ -261,7 +260,8 @@ class CreateFile(BaseModel):
     """
     Create file operation.
     """
-    kind: str = 'create'
+
+    kind: str = "create"
     """
     A create.
     """
@@ -283,6 +283,7 @@ class RenameFileOptions(BaseModel):
     """
     Rename file options.
     """
+
     overwrite: Optional[bool]
     """
     Overwrite target if existing. Overwrite wins over `ignoreIfExists`.
@@ -297,7 +298,8 @@ class RenameFile(BaseModel):
     """
     Rename file operation.
     """
-    kind: str = 'rename'
+
+    kind: str = "rename"
     """
     A rename.
     """
@@ -323,6 +325,7 @@ class DeleteFileOptions(BaseModel):
     """
     Delete file options.
     """
+
     recursive: Optional[bool]
     """
     Delete the content recursively if a folder denoted.
@@ -333,13 +336,12 @@ class DeleteFileOptions(BaseModel):
     """
 
 
-
-
 class DeleteFile(BaseModel):
     """
     Delete file operation
     """
-    kind: str = 'delete'
+
+    kind: str = "delete"
     """
     A delete.
     """
@@ -356,6 +358,7 @@ class DeleteFile(BaseModel):
     An optional annotation identifier describing the operation.
     """
 
+
 class WorkspaceEdit(BaseModel):
     """
     :param changes: Holds changes to existing resources.
@@ -364,7 +367,7 @@ class WorkspaceEdit(BaseModel):
         document changes are either an array of `TextDocumentEdit`s to express changes to n different text documents
         where each text document edit addresses a specific version of a text document.
         Or it can contain above `TextDocumentEdit`s mixed with create, rename and delete file / folder operations.
-    
+
     :param change_annotations: A map of change annotations that can be referenced in `AnnotatedTextEdit`s or create,
         rename and delete file / folder operations.
     """
@@ -372,16 +375,16 @@ class WorkspaceEdit(BaseModel):
 
 
 class ResourceOperationKind(Enum):
-    CREATE = 'create'
-    RENAME = 'rename'
-    DELETE = 'delete'
+    CREATE = "create"
+    RENAME = "rename"
+    DELETE = "delete"
 
 
 class FailureHandlingKind(Enum):
-    ABORT = 'abort'
-    TRANSACTIONAL = 'transactional'
-    TEXT_ONLY_TRANSACTIONAL = 'textonlytransactional'
-    UNDO = 'undo'
+    ABORT = "abort"
+    TRANSACTIONAL = "transactional"
+    TEXT_ONLY_TRANSACTIONAL = "textonlytransactional"
+    UNDO = "undo"
 
 
 class WorkspaceEditClientCapabilities(BaseModel):
@@ -405,12 +408,11 @@ class WorkspaceEditClientCapabilities(BaseModel):
     in a workspace edit to the client specific new line character(s).
     """
     # ?
-    change_annotation_support: Optional[bool] 
+    change_annotation_support: Optional[bool]
     """
     Whether the client in general supports change annotations on text edits,
     create file, rename file and delete file changes.
     """
-
 
 
 class TextDocumentItem(BaseModel):
@@ -459,7 +461,7 @@ class DocumentFilter(BaseModel):
     * `?` to match on one character in a path segment
     * `**` to match any number of path segments, including none
     * `{}` to group sub patterns into an OR expression. (e.g. `**​/*.{ts,js}`
-	    matches all TypeScript and JavaScript files)
+        matches all TypeScript and JavaScript files)
     * `[]` to declare a range of characters to match in a path segment
         (e.g., `example.[0-9]` to match on `example.0`, `example.1`, …)
     * `[!...]` to negate a range of characters to match in a path segment
@@ -472,6 +474,7 @@ class StaticRegistrationOptions(BaseModel):
     """
     Static registration options to be returned in the initialize request.
     """
+
     id: Optional[str]
     """
     The id used to register the request.
@@ -483,6 +486,7 @@ class TextDocumentRegistrationOptions(BaseModel):
     """
     General text document registration options.
     """
+
     document_selector: Union[List[DocumentFilter], None]
     """
     A document selector to identify the scope of the registration.
@@ -530,54 +534,54 @@ class MarkupClientCapabilities(BaseModel):
 
 
 class WorkDoneProgressBegin(BaseModel):
-    kind: str  = "begin"
+    kind: str = "begin"
     title: str
     """
     Mandatory title of the progress operation. Used to briefly inform about
-	the kind of operation being performed.
+    the kind of operation being performed.
 
     Examples: "Indexing" or "Linking dependencies".
     """
     cancellable: Optional[bool]
     """
     Controls if a cancel button should show to allow the user to cancel the
-	long running operation. Clients that don't support cancellation are
-	allowed to ignore the setting.
+    long running operation. Clients that don't support cancellation are
+    allowed to ignore the setting.
     """
     message: Optional[str]
     """
     Optional, more detailed associated progress message. Contains
-	complementary information to the `title`.
-	
-	Examples: "3/25 files", "project/src/module2", "node_modules/some_dep".
-	If unset, the previous progress message (if any) is still valid.
+    complementary information to the `title`.
+
+    Examples: "3/25 files", "project/src/module2", "node_modules/some_dep".
+    If unset, the previous progress message (if any) is still valid.
     """
-    percentage: Optional[int] #uint8
+    percentage: Optional[int]  # uint8
     """
     Optional progress percentage to display (value 100 is considered 100%).
-	If not provided infinite progress is assumed and clients are allowed
-	to ignore the `percentage` value in subsequent in report notifications.
+    If not provided infinite progress is assumed and clients are allowed
+    to ignore the `percentage` value in subsequent in report notifications.
     """
 
 
-class  WorkDoneProgressReport(BaseModel):
+class WorkDoneProgressReport(BaseModel):
     kind: str = "report"
     cancellable: Optional[bool]
     """
     Controls if a cancel button should show to allow the user to cancel the
-	long running operation. Clients that don't support cancellation are
-	allowed to ignore the setting.
+    long running operation. Clients that don't support cancellation are
+    allowed to ignore the setting.
     """
     message: Optional[str]
     """
     Optional, more detailed associated progress message. Contains
-	complementary information to the `title`.
+    complementary information to the `title`.
     """
-    percentage: Optional[int] #uint8
+    percentage: Optional[int]  # uint8
     """
     Optional progress percentage to display (value 100 is considered 100%).
-	If not provided infinite progress is assumed and clients are allowed
-	to ignore the `percentage` value in subsequent in report notifications.
+    If not provided infinite progress is assumed and clients are allowed
+    to ignore the `percentage` value in subsequent in report notifications.
     """
 
 
@@ -586,7 +590,7 @@ class WorkDoneProgressEnd(BaseModel):
     message: Optional[bool]
     """
     Optional, a final message indicating to for example indicate the outcome
-	of the operation.
+    of the operation.
     """
 
 
@@ -609,7 +613,8 @@ class PartialResultParams(BaseModel):
     """
 
 
-###################### Lifecycle Message #####################
+# ##################### Lifecycle Message #####################
+
 
 class ClientCapabilitiesWorkspaceFileOperation(BaseModel):
     dynamic_registration: Optional[bool]
@@ -649,6 +654,7 @@ class ServerCapabilitiesWorkspaceFileOperations(BaseModel):
     """
     ServerCapabilities subsubClass
     """
+
     did_create: Optional[FileOperationRegistrationOptions]
     will_create: Optional[FileOperationRegistrationOptions]
     did_rename: Optional[FileOperationRegistrationOptions]
@@ -666,9 +672,9 @@ class ServerCapabilitiesWorkspace(BaseModel):
     """
     ServerCapabilities subClass
     """
+
     workspace_folders: Optional[WorkspaceFoldersServerCapabilities]
     file_operations: Optional[ServerCapabilitiesWorkspaceFileOperations]
-    
 
 
 class TextDocumentSyncKind(IntEnum):
@@ -679,14 +685,14 @@ class TextDocumentSyncKind(IntEnum):
     FULL = 1
     """
     Documents are synced by always sending the full content
-	of the document.
+    of the document.
     """
     INCREMENTAL = 2
     """
     Documents are synced by sending the full content on open.
-	After that only incremental updates to the document are
-	send.Documents are synced by sending the full content on open.
-	After that only incremental updates to the document are send.
+    After that only incremental updates to the document are
+    send.Documents are synced by sending the full content on open.
+    After that only incremental updates to the document are send.
     """
 
 
@@ -698,7 +704,7 @@ class TextDocumentSyncOptions(BaseModel):
     open_close: Optional[bool]
     """
     Open and close notifications are sent to the server. If omitted open
-	 close notification should not be sent.
+    close notification should not be sent.
     """
     change: Optional[TextDocumentSyncKind]
     will_save: Optional[bool]
@@ -727,6 +733,7 @@ class LogTraceParams(BaseModel):
     """
     Additional information
     """
+
 
 class SetTraceParams(BaseModel):
     value: TraceValue
@@ -809,7 +816,7 @@ class Registration(BaseModel):
     id: str
     """
     The id used to register the request. The id can be used to deregister
-	the request again.
+    the request again.
     """
     method: str
     """
@@ -829,9 +836,9 @@ class Unregistration(BaseModel):
     id: str
     """
     The id used to unregister the request or notification. Usually an id
-	provided during the register request.
+    provided during the register request.
     """
-    method:str
+    method: str
     """
     The method / capability to unregister for.
     """
@@ -856,13 +863,11 @@ class LogTraceParams(BaseModel):
     verbose: Optional[str]
     """
     Additional information that can be computed if the `trace` configuration
-	is set to `'verbose'`
+    is set to `'verbose'`
     """
 
 
-###################### Document Synchronization ######################
-
-
+# ##################### Document Synchronization ######################
 
 
 class DidOpenTextDocumentParams(BaseModel):
@@ -873,13 +878,12 @@ class TextDocumentChangeRegistrationOptions(TextDocumentRegistrationOptions):
     sync_kind: TextDocumentSyncKind
 
 
-
 class TextDocumentContentChangeEvent(BaseModel):
     range: Optional[Range]
     """
     The range of the document that changed.
     """
-    range_length: Optional[int] # uint ?
+    range_length: Optional[int]  # uint ?
     """
     The optional length of the range that got replaced.
     """
@@ -905,7 +909,6 @@ class WillSaveTextDocumentParams(BaseModel):
     reason: TextDocumentSaveReason
 
 
-
 class TextDocumentSaveRegistrationOptions(TextDocumentRegistrationOptions):
     text_document: TextDocumentIdentifier
     """
@@ -926,6 +929,7 @@ class TextDocumentSyncClientCapabilities(BaseModel):
     will_save: Optional[bool]
     will_save_wait_until: Optional[bool]
     did_save: Optional[bool]
+
 
 ######################################################################################
 class SymbolKind(IntEnum):
@@ -980,6 +984,7 @@ class SymbolInformation(BaseModel):
     location: Location
     container_name: Optional[str]
 
+
 class WorkspaceSymbolClientCapabilitiesSymbolKind(BaseModel):
     value_set: Optional[List[SymbolKind]]
 
@@ -1028,15 +1033,12 @@ class ConfigurationParams(BaseModel):
     items: Optional[List[ConfigurationItems]]
 
 
-
 class DidChangeConfigurationClientCapabilities(BaseModel):
     dynamic_registration: Optional[bool]
 
 
 class DidChangeConfigurationParams(BaseModel):
     settings: Any
-
-
 
 
 class WorkspaceFolder(BaseModel):
@@ -1084,7 +1086,8 @@ class DidChangeWatchedFilesClientCapabilities(BaseModel):
 
 class FileSystemWatcher(BaseModel):
     glob_pattern: str
-    kind: Optional[int] # uint
+    kind: Optional[int]  # uint
+
 
 class DidChangeWatchedFilesRegistrationOptions(BaseModel):
     watchers: List[FileSystemWatcher]
@@ -1098,7 +1101,7 @@ class WatchKind(IntEnum):
 
 class FileEvent(BaseModel):
     uri: DocumentUri
-    type: int # uint
+    type: int  # uint
 
 
 class DidChangeWatchedParams(BaseModel):
@@ -1112,7 +1115,7 @@ class FileChangeType(IntEnum):
 
 
 class ExecuteCommandClientCapabilities(BaseModel):
-    dynamic_registration: Optional[bool]\
+    dynamic_registration: Optional[bool]
 
 
 class ExecuteCommandOptions(WorkDoneProgressOptions):
@@ -1136,7 +1139,7 @@ class ApplyWorkspaceEditParams(BaseModel):
 class ApplyWorkspaceEditResult(BaseModel):
     applied: bool
     failure_reason: Optional[str]
-    failed_change: Optional[int] # uint
+    failed_change: Optional[int]  # uint
 
 
 class ClientCapabilitiesWorkspace(BaseModel):
@@ -1147,16 +1150,16 @@ class ClientCapabilitiesWorkspace(BaseModel):
     symbol: Optional[WorkspaceSymbolClientCapabilities]
     execute_command: Optional[ExecuteCommandClientCapabilities]
     workspace_folders: Optional[bool]
-    '''
+    """
     sematic_tokens: Optional[SemanticTokensWorkspaceClientCapabilities]
     code_lens: Optional[CodeLensWorkspaceClientCapabilities]
-    '''
+    """
     file_operations: Optional[ClientCapabilitiesWorkspaceFileOperation]
 
 
 class ServerCapabilities(BaseModel):
     text_document_sync: Optional[Union[TextDocumentSyncOptions, TextDocumentSyncKind]]
-    '''
+    """
     completion_provider: Optional[CompletionOptions]
     hover_provider: Optional[Union[bool, HoverOptions]]
     signature_help_provider: Optional[SignatureHelpOptions]
@@ -1182,7 +1185,7 @@ class ServerCapabilities(BaseModel):
     call_hierarchy_provider: Optional[Union[bool, CallHierarchyOptions, CallHierarchyRegistrationOptions]]
     semantic_token_provider: Optional[Union[SemanticTokensOptions, SemanticTokensRegistrationOptions]]
     moniker_provider: Optional[Union[bool, MonikerOptions, MonikerRegistrationOptions]]
-    '''
+    """
     workspace_symbol_provider: Optional[Union[bool, WorkspaceSymbolOptions]]
     workspace: Optional[ServerCapabilitiesWorkspace]
     experimental: Optional[Any]
@@ -1200,7 +1203,7 @@ class InitializeResult(BaseModel):
 
 class TextDocumentClientCapabilities(BaseModel):
     synchronization: Optional[TextDocumentSyncClientCapabilities]
-    '''
+    """
     completion: Optional[CompletionClientCapabilities]
     hover: Optional[HoverClientCapabilities]
     signature_help: Optional[SignatureHelpClientCapabilities]
@@ -1228,7 +1231,8 @@ class TextDocumentClientCapabilities(BaseModel):
     type_hierarchy: Optional[TypeHierarchyClientCapabilities]
     inline_valie: Optional[InlineValueClientCapabilities]
     inlay_hint: Optional[InlayHintClientCapabilities]
-    '''
+    """
+
 
 class ClientCapabilitiesGeneralStaleRequestSupport(BaseModel):
     cancel: bool
@@ -1238,9 +1242,10 @@ class ClientCapabilitiesGeneralStaleRequestSupport(BaseModel):
 class ClientCapabilitiesGeneral(BaseModel):
     stale_request_support: Optional[ClientCapabilitiesGeneralStaleRequestSupport]
     regular_expressions: Optional[RegularExpressionsClientCapabilities]
-    '''
+    """
     markdown: Optional[MarkdownClientCapabilities]
-    '''
+    """
+
 
 class ClientCapabilitiesWindow(BaseModel):
     work_done_progress: Optional[bool]
@@ -1256,7 +1261,7 @@ class ClientCapabilities(BaseModel):
     experimental: Optional[Any]
 
 
-class InitializeParamsClientInfo():
+class InitializeParamsClientInfo:
     name: str
     verison: Optional[str]
 
@@ -1268,14 +1273,6 @@ class InitializeParams(WorkDoneProgressParams):
     root_path: Optional[Union[str, None]]
     root_uri: Union[DocumentUri, None]
     initialization_options: Optional[Any]
-    capabilities: ClientCapabilities #soon
+    capabilities: ClientCapabilities  # soon
     trace: Optional[TraceValue]
-    worskpace_folders: Optional[List[WorkspaceFolder]] #soon
-
-
-
-
-
-
-
-
+    worskpace_folders: Optional[List[WorkspaceFolder]]  # soon

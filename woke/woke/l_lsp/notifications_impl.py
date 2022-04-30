@@ -1,17 +1,19 @@
-from typing import Dict, Callable, Any
 import sys
+from typing import Dict, Callable
 
-from basic_structures import *
-from context import LSPContext
-from methods import RequestMethodEnum
-'''
+from .basic_structures import *
+from .context import LSPContext
+from .methods import RequestMethodEnum
+
+"""
 Notifications methods just handle what they have to
 No return/response necessary
-'''
+"""
 
 ######################
-## client -> server ##
+#  client -> server  #
 ######################
+
 
 def lsp_initialized(context: LSPContext, params: InitializedParams) -> None:
     # probably not really useful
@@ -26,21 +28,27 @@ def lsp_exit(context: LSPContext, _) -> None:
 
 
 def lsp_window_show_message(context: LSPContext, params: ShowMessageParams) -> None:
-    '''
+    """
     Display particular message in the user interface
-    '''
+    """
     raise NotImplementedError()  # TODO
 
 
-def lsp_window_work_done_progress_cancel(context: LSPContext, params: WorkDoneProgressCancelParams) -> None:
+def lsp_window_work_done_progress_cancel(
+    context: LSPContext, params: WorkDoneProgressCancelParams
+) -> None:
     raise NotImplementedError()  # TODO
 
 
-def lsp_workspace_did_change_workspace_folders(context: LSPContext, params: DidChangeWorkspaceFoldersParams) -> None:
+def lsp_workspace_did_change_workspace_folders(
+    context: LSPContext, params: DidChangeWorkspaceFoldersParams
+) -> None:
     raise NotImplementedError()  # TODO
 
 
-def lsp_workspace_did_change_configuration(context: LSPContext, params: DidChangeConfigurationParams) -> None:
+def lsp_workspace_did_change_configuration(
+    context: LSPContext, params: DidChangeConfigurationParams
+) -> None:
     raise NotImplementedError()  # TODO
 
 
@@ -48,7 +56,9 @@ def lsp_workspace_did_watched_files(context: LSPContext) -> None:
     raise NotImplementedError()  # TODO
 
 
-def lsp_workspace_did_create_files(context: LSPContext, params: CreateFilesParams) -> None:
+def lsp_workspace_did_create_files(
+    context: LSPContext, params: CreateFilesParams
+) -> None:
     raise NotImplementedError()  # TODO
 
 
@@ -61,28 +71,28 @@ def lsp_workspace_did_delete_files(context: LSPContext) -> None:
 
 
 def lsp_did_open(context: LSPContext, params: DidOpenTextDocumentParams) -> None:
-    '''
+    """
     Update workspace with new document
-    '''
-    '''
+    """
+    """
     if params.text_document is not None:
         document = params.text_document
         context.workspace[document.uri] = document
-    '''
+    """
 
 
 def lsp_did_change(context: LSPContext, params: DidChangeTextDocumentParams) -> None:
-    '''
+    """
     Update worskpace document
-    '''
-    '''
+    """
+    """
     if params.text_document is not None:
         uri = params.text_document.uri
         if context.workspace[uri] is not None:
             version = params.text_document.version
             changes = params.content_changes
             context.update_workspace(uri, version, changes)
-    '''
+    """
     raise NotImplementedError()  # TODO
 
 
@@ -101,9 +111,11 @@ def lsp_did_close(context: LSPContext) -> None:
 def lsp_set_trace_notification(context: LSPContext, params: SetTraceParams) -> None:
     context.trace_value = params.value
 
+
 ######################
-## server -> client ##
+#  server -> client  #
 ######################
+
 
 def lsp_window_log_message(context: LSPContext, params: LogMessageParams) -> None:
     raise NotImplementedError()  # TODO
@@ -115,15 +127,16 @@ def lsp_telemetry_event(context: LSPContext) -> None:
 
 def lsp_publish_diagnostic(context: LSPContext) -> None:
     raise NotImplementedError()  # TODO
-    
+
 
 def lsp_log_trace_notification(context: LSPContext) -> None:
     raise NotImplementedError()  # TODO
-        
-'''
+
+
+"""
 Mapping for all the notifications defined by LSP Specification
 https://microsoft.github.io/language-server-protocol/specifications/specification-current/
-'''
+"""
 notification_mapping: Dict[str, Callable[[LSPContext, Any], None]] = {
     RequestMethodEnum.INITIALIZED: lsp_initialized,
     RequestMethodEnum.EXIT: lsp_exit,

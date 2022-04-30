@@ -1,8 +1,10 @@
 import enum
 from typing import Any, Optional, Union
+
 from pydantic import BaseModel
 
-from methods import RequestMethodEnum
+from .methods import RequestMethodEnum
+
 
 class Message(BaseModel):
     json_rpc: str
@@ -32,8 +34,9 @@ class ResponseError(BaseModel):
     data: Optional[Any]
     """
     A primitive or structured value that contains additional
-	information about the error. Can be omitted.
+    information about the error. Can be omitted.
     """
+
 
 class ResponseMessage(Message):
     id: Union[int, str, None]
@@ -43,7 +46,7 @@ class ResponseMessage(Message):
     result: Optional[Any]
     """
     The result of a request. This member is REQUIRED on success.
-	This member MUST NOT exist if there was an error invoking the method.
+    This member MUST NOT exist if there was an error invoking the method.
     """
     error: Optional[ResponseError]
     """
@@ -68,6 +71,7 @@ class CancelParams(BaseModel):
     The request id to cancel.
     """
 
+
 class ErrorCodes(enum.IntEnum):
     ParseError = -32700
     InvalidRequest = -32600
@@ -75,12 +79,12 @@ class ErrorCodes(enum.IntEnum):
     InvalidParams = -32602
     InternalError = -32603
     jsonrpcReservedErrorRangeStart = -32099
-    serverErrorStart = -32099           # yeah, the same
+    serverErrorStart = -32099  # yeah, the same
     ServerNotInitialized = -32002
     UnknownErrorCode = -32001
     jsonrpcReservedErrorRangeEnd = -32000
-    serverErrorEnd = -32000             # again
+    serverErrorEnd = -32000  # again
     lspReservedErrorRangeStart = -32899
     ContentModified = -32801
     RequestCancelled = -32800
-    lspReservedErrorRangeEnd = -32800   # ...
+    lspReservedErrorRangeEnd = -32800  # ...
