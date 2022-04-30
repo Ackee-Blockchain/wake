@@ -7,6 +7,7 @@ from urllib.parse import unquote
 from woke.a_config import WokeConfig
 from .basic_structures import *
 from .context import LSPContext
+from .enums import TraceValueEnum
 from .methods import RequestMethodEnum
 
 
@@ -21,24 +22,26 @@ def uri_to_path(uri: str) -> str:
 
 
 def lsp_initialize(context: LSPContext, params: InitializeParams) -> InitializeResult:
-    if params.worskpace_folders is not None:
+    if params.workspace_folders is not None:
         if len(params.workspace_folders) != 1:
-            raise InitializeError(
-                "Exactly one workspace directory must be provided.", retry=False
-            )
-        path = uri_to_path(params.worskpace_folders[0].uri)
+            raise Exception("Exactly one workspace directory must be provided.", InitializeError(retry=False))
+        path = uri_to_path(params.workspace_folders[0].uri)
         # print(path)
     elif params.root_uri is not None:
         path = uri_to_path(params.root_uri)
     elif params.root_path is not None:
         path = Path(params.root_path).resolve(strict=True)
     else:
-        raise InitializeError(
-            "Workspace/root directory was not specified.", retry=False
-        )
+        raise Exception("Workspace/root directory was not specified.", InitializeError(retry=False))
 
     context.woke_config = WokeConfig(project_root_path=path)
-    # return InitializeResult(server_capabilities)
+    server_capabilities = ServerCapabilities(
+        text_document_sync=None,
+        workspace_symbol_provider=None,
+        workspace=None,
+        experimental=None,
+    )
+    return InitializeResult(capabilities=server_capabilities, server_info=None)
 
 
 def lsp_initialized(context: LSPContext, params: InitializedParams) -> None:
@@ -58,7 +61,7 @@ def lsp_exit(context: LSPContext, _) -> None:
 
 
 def lsp_set_trace(context: LSPContext, params: SetTraceParams) -> None:
-    context.trace_value = params.value
+    context.trace_value = TraceValueEnum(params.value)
 
 
 def lsp_window_progress_cancel(

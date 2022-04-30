@@ -3,6 +3,7 @@ from typing import Dict, Callable
 
 from .basic_structures import *
 from .context import LSPContext
+from .enums import TraceValueEnum
 from .methods import RequestMethodEnum
 
 """
@@ -52,7 +53,7 @@ def lsp_workspace_did_change_configuration(
     raise NotImplementedError()  # TODO
 
 
-def lsp_workspace_did_watched_files(context: LSPContext) -> None:
+def lsp_workspace_did_change_watched_files(context: LSPContext, params: DidChangeWatchedParams) -> None:
     raise NotImplementedError()  # TODO
 
 
@@ -62,11 +63,11 @@ def lsp_workspace_did_create_files(
     raise NotImplementedError()  # TODO
 
 
-def lsp_workspace_did_rename_files(context: LSPContext) -> None:
+def lsp_workspace_did_rename_files(context: LSPContext, params: RenameFilesParams) -> None:
     raise NotImplementedError()  # TODO
 
 
-def lsp_workspace_did_delete_files(context: LSPContext) -> None:
+def lsp_workspace_did_delete_files(context: LSPContext, params: DeleteFilesParams) -> None:
     raise NotImplementedError()  # TODO
 
 
@@ -96,20 +97,20 @@ def lsp_did_change(context: LSPContext, params: DidChangeTextDocumentParams) -> 
     raise NotImplementedError()  # TODO
 
 
-def lsp_will_save(context: LSPContext) -> None:
+def lsp_will_save(context: LSPContext, params: WillSaveTextDocumentParams) -> None:
     raise NotImplementedError()  # TODO
 
 
-def lsp_did_save(context: LSPContext) -> None:
+def lsp_did_save(context: LSPContext, params: DidSaveTextDocumentParams) -> None:
     raise NotImplementedError()  # TODO
 
 
-def lsp_did_close(context: LSPContext) -> None:
+def lsp_did_close(context: LSPContext, params: DidCloseTextDocumentParams) -> None:
     raise NotImplementedError()  # TODO
 
 
 def lsp_set_trace_notification(context: LSPContext, params: SetTraceParams) -> None:
-    context.trace_value = params.value
+    context.trace_value = TraceValueEnum(params.value)
 
 
 ######################
@@ -121,15 +122,15 @@ def lsp_window_log_message(context: LSPContext, params: LogMessageParams) -> Non
     raise NotImplementedError()  # TODO
 
 
-def lsp_telemetry_event(context: LSPContext) -> None:
+def lsp_telemetry_event(context: LSPContext, params: Any) -> None:
     raise NotImplementedError()  # TODO
 
 
-def lsp_publish_diagnostic(context: LSPContext) -> None:
+def lsp_publish_diagnostics(context: LSPContext, params: PublishDiagnosticsParams) -> None:
     raise NotImplementedError()  # TODO
 
 
-def lsp_log_trace_notification(context: LSPContext) -> None:
+def lsp_log_trace_notification(context: LSPContext, params: LogTraceParams) -> None:
     raise NotImplementedError()  # TODO
 
 
@@ -146,7 +147,7 @@ notification_mapping: Dict[str, Callable[[LSPContext, Any], None]] = {
     RequestMethodEnum.TELEMETRY_EVENT: lsp_telemetry_event,
     RequestMethodEnum.WORKSPACE_DID_CHANGE_WORKSPACE_FOLDERS: lsp_workspace_did_change_workspace_folders,
     RequestMethodEnum.WORKSPACE_DID_CHANGE_CONFIGURATION: lsp_workspace_did_change_configuration,
-    RequestMethodEnum.WORKSPACE_DID_CHANGE_WATCHED_FILES: lsp_workspace_did_watched_files,
+    RequestMethodEnum.WORKSPACE_DID_CHANGE_WATCHED_FILES: lsp_workspace_did_change_watched_files,
     RequestMethodEnum.WORKSPACE_DID_CREATE_FILES: lsp_workspace_did_create_files,
     RequestMethodEnum.WORKSPACE_DID_RENAME_FILES: lsp_workspace_did_rename_files,
     RequestMethodEnum.WORKSPACE_DID_DELETE_FILES: lsp_workspace_did_delete_files,
@@ -155,7 +156,7 @@ notification_mapping: Dict[str, Callable[[LSPContext, Any], None]] = {
     RequestMethodEnum.WILL_SAVE: lsp_will_save,
     RequestMethodEnum.DID_SAVE: lsp_did_save,
     RequestMethodEnum.DID_CLOSE: lsp_did_close,
-    RequestMethodEnum.PUBLISH_DIAGNOSTICS: lsp_publish_diagnostic,
+    RequestMethodEnum.PUBLISH_DIAGNOSTICS: lsp_publish_diagnostics,
     RequestMethodEnum.LOG_TRACE_NOTIFICATION: lsp_log_trace_notification,
     RequestMethodEnum.SET_TRACE_NOTIFICATION: lsp_set_trace_notification,
 }

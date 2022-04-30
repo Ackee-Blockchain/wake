@@ -1,11 +1,13 @@
 from typing import List, Optional, Union
-from basic_structures import (
-                        MarkupContent, 
-                        MarkupKind,
-                        Range,
-                        TextDocumentPositionParams, 
-                        WorkDoneProgressOptions,
-                        WorkDoneProgressParams)
+
+from ..basic_structures import (
+    MarkupContent,
+    MarkupKind,
+    Range,
+    TextDocumentPositionParams,
+    WorkDoneProgressOptions,
+    WorkDoneProgressParams,
+)
 
 
 class HoverClientCapabilities:
