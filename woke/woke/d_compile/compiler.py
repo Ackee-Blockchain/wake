@@ -47,11 +47,13 @@ class CompilationUnit:
         self.__unit_graph = unit_graph
         self.__version_ranges = version_ranges
 
+        sorted_nodes = sorted(
+            unit_graph, key=(lambda node: unit_graph.nodes[node]["source_unit_name"])
+        )
         blake2 = BLAKE2b.new(digest_bits=256)
-        paths: List[Path] = list(unit_graph.nodes)
-        paths.sort()
-        for path in paths:
-            blake2.update(unit_graph.nodes[path]["hash"])
+
+        for node in sorted_nodes:
+            blake2.update(unit_graph.nodes[node]["hash"])
         self.__blake2b_digest = blake2.digest()
 
     def __len__(self):
