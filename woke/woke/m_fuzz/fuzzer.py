@@ -6,7 +6,7 @@ import time
 from contextlib import redirect_stdout, redirect_stderr
 from multiprocessing import Process
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Iterable
 
 import brownie
 from brownie import rpc, web3
@@ -70,7 +70,9 @@ def __run(
         rpc.kill()
 
 
-def fuzz(config: WokeConfig, fuzz_test: Callable, process_count: int):
+def fuzz(
+    config: WokeConfig, fuzz_test: Callable, process_count: int, seeds: Iterable[bytes]
+):
     logs_dir = config.project_root_path / ".woke-logs" / "fuzz" / str(int(time.time()))
     logs_dir.mkdir(parents=True, exist_ok=False)
     latest_dir = logs_dir.parent / "latest"
@@ -81,9 +83,13 @@ def fuzz(config: WokeConfig, fuzz_test: Callable, process_count: int):
             latest_dir.unlink()
         latest_dir.symlink_to(logs_dir, target_is_directory=True)
 
+    random_seeds = list(seeds)
+    if len(random_seeds) < process_count:
+        for i in range(process_count - len(random_seeds)):
+            random_seeds.append(os.urandom(8))
+
     processes = []
-    for i in range(process_count):
-        seed = os.urandom(8)
+    for i, seed in zip(range(process_count), random_seeds):
         console.print(f"Using seed '{seed.hex()}' for process #{i}")
         p = Process(
             target=__run,
