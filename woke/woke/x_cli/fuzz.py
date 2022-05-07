@@ -21,12 +21,16 @@ MODULE_NAME = "woke_fuzz_tests"
     default=(multiprocessing.cpu_count()),
     help="Number of processes to create for fuzzing.",
 )
+@click.option("--seed", "-s", "seeds", multiple=True, type=str, help="Random seeds")
 @click.pass_context
-def run_fuzz(ctx: click.Context, paths: Tuple[str], process_count: int) -> None:
+def run_fuzz(
+    ctx: click.Context, paths: Tuple[str], process_count: int, seeds: Tuple[str]
+) -> None:
     """Run Woke fuzzer."""
     config = WokeConfig(woke_root_path=ctx.obj["woke_root_path"])
     config.load_configs()  # load ~/.woke/config.toml and ./woke.toml
 
+    random_seeds = [bytes.fromhex(seed) for seed in seeds]
     if len(paths) == 0:
         paths = (str(config.project_root_path / "test"),)
 
@@ -63,4 +67,4 @@ def run_fuzz(ctx: click.Context, paths: Tuple[str], process_count: int) -> None:
             fuzz_functions.append(func)
 
     for func in fuzz_functions:
-        fuzz(config, func, process_count)
+        fuzz(config, func, process_count, random_seeds)
