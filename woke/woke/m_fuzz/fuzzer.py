@@ -34,8 +34,8 @@ def __run(
 ):
     random.seed(random_seed)
 
-    try:
-        with log_file.open("w") as f, redirect_stdout(f), redirect_stderr(f):
+    with log_file.open("w") as f, redirect_stdout(f), redirect_stderr(f):
+        try:
             print(f"Using seed '{random_seed.hex()}' for process #{index}")
             __setup(port)
 
@@ -66,8 +66,8 @@ def __run(
                         f"Unable to set value for '{arg}' argument in '{fuzz_test.__name__}' function."
                     )
             fuzz_test(*args)
-    finally:
-        rpc.kill()
+        finally:
+            rpc.kill()
 
 
 def fuzz(
