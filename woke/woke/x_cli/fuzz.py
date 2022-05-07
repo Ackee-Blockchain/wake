@@ -2,6 +2,7 @@ import inspect
 import importlib.resources
 import importlib.util
 import multiprocessing
+import sys
 from pathlib import Path
 from typing import Tuple, Callable, Iterable
 
@@ -55,6 +56,7 @@ def run_fuzz(
         if module_spec is None or module_spec.loader is None:
             raise ValueError()
         module = importlib.util.module_from_spec(module_spec)
+        sys.modules[MODULE_NAME] = module
         module_spec.loader.exec_module(module)
 
         functions: Iterable[Callable] = (
