@@ -12,6 +12,7 @@ install_requires = [
     "rich >= 10.16",
     "pathvalidate >= 2.5.0, < 3",
     "StrEnum",
+    "eth-brownie <= 1.16.4",
 ]
 
 # Also: [pyright](https://github.com/microsoft/pyright/) (distributed through npm)
