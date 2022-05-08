@@ -12,7 +12,10 @@ from woke.a_config import WokeConfig
 from woke.m_fuzz import fuzz
 from .console import console
 
-MODULE_NAME = "woke_fuzz_tests"
+
+def _get_module_name(path: Path, root: Path) -> str:
+    path = path.with_suffix("")
+    return ".".join(path.relative_to(root).parts)
 
 
 @click.command(name="fuzz")
@@ -35,34 +38,36 @@ def run_fuzz(
     if len(paths) == 0:
         paths = (str(config.project_root_path / "test"),)
 
-    py_files = []
+    py_files = set()
 
     for path in paths:
-        fuzz_path = Path(path)
+        fuzz_path = Path(path).resolve()
 
         if fuzz_path.is_file() and fuzz_path.match("*.py"):
-            py_files.append(fuzz_path)
+            py_files.add(fuzz_path)
         elif fuzz_path.is_dir():
             for p in fuzz_path.rglob("*.py"):
                 if p.is_file():
-                    py_files.append(p)
+                    py_files.add(p)
         else:
             raise ValueError(f"'{fuzz_path}' is not a Python file or directory.")
 
     fuzz_functions = []
 
+    sys.path.append(str(config.project_root_path))
     for file in py_files:
-        module_spec = importlib.util.spec_from_file_location(MODULE_NAME, file)
+        module_name = _get_module_name(file, config.project_root_path)
+        module_spec = importlib.util.spec_from_file_location(module_name, file)
         if module_spec is None or module_spec.loader is None:
             raise ValueError()
         module = importlib.util.module_from_spec(module_spec)
-        sys.modules[MODULE_NAME] = module
+        sys.modules[module_name] = module
         module_spec.loader.exec_module(module)
 
         functions: Iterable[Callable] = (
             func
             for _, func in inspect.getmembers(module, inspect.isfunction)
-            if func.__module__ == MODULE_NAME and func.__name__.startswith("test")
+            if func.__module__ == module_name and func.__name__.startswith("test")
         )
         for func in functions:
             console.print(f"Found '{func.__name__}' function in '{file}' file.")
