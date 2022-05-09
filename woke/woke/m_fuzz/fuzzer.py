@@ -26,51 +26,6 @@ from woke.a_config import WokeConfig
 from woke.x_cli.console import console
 
 
-class Process(multiprocessing.Process):
-    __parent_conn: multiprocessing.connection.Connection
-    __self_conn: multiprocessing.connection.Connection
-    __exception: Optional[Tuple[type, BaseException, TracebackType]]
-    __finished_event: multiprocessing.synchronize.Event
-
-    def __init__(
-        self, finished_event: multiprocessing.synchronize.Event, *args, **kwargs
-    ):
-        super().__init__(*args, **kwargs)
-        self.__parent_conn, self.__self_conn = multiprocessing.Pipe()
-        self.__exception = None
-        self.__finished_event = finished_event
-
-    def run(self):
-        try:
-            multiprocessing.Process.run(self)
-            self.__self_conn.send(None)
-            self.__finished_event.set()
-        except Exception:
-            self.__self_conn.send(pickle.dumps(sys.exc_info()))
-            self.__finished_event.set()
-
-            try:
-                attach: bool = self.__self_conn.recv()
-                if attach:
-                    sys.stdin = os.fdopen(0)
-                    ipdb.post_mortem()
-            finally:
-                self.__finished_event.set()
-
-    def set_attach_debugger(self, attach: bool) -> None:
-        self.__parent_conn.send(attach)
-
-    @property
-    def exception(self) -> Optional[Tuple[type, BaseException, TracebackType]]:
-        if self.__parent_conn.poll():
-            info = self.__parent_conn.recv()
-            if info is None:
-                self.__exception = None
-            else:
-                self.__exception = pickle.loads(info)
-        return self.__exception
-
-
 def __setup(port: int) -> None:
     brownie.reverts = RevertContextManager
     active_network = CONFIG.set_active_network("development")
@@ -84,15 +39,21 @@ def __setup(port: int) -> None:
 
 
 def __run(
-    fuzz_test: Callable, index: int, port: int, random_seed: bytes, log_file: Path
+    fuzz_test: Callable,
+    index: int,
+    port: int,
+    random_seed: bytes,
+    log_file: Path,
+    finished_event: multiprocessing.synchronize.Event,
+    child_conn: multiprocessing.connection.Connection,
 ):
     pickling_support.install()
     random.seed(random_seed)
 
     logging.basicConfig(filename=log_file)
 
-    with log_file.open("w") as f, redirect_stdout(f), redirect_stderr(f):
-        try:
+    try:
+        with log_file.open("w") as f, redirect_stdout(f), redirect_stderr(f):
             print(f"Using seed '{random_seed.hex()}' for process #{index}")
             __setup(port)
 
@@ -123,7 +84,22 @@ def __run(
                         f"Unable to set value for '{arg}' argument in '{fuzz_test.__name__}' function."
                     )
             fuzz_test(*args)
+
+            child_conn.send(None)
+            finished_event.set()
+    except Exception:
+        child_conn.send(pickle.dumps(sys.exc_info()))
+        finished_event.set()
+
+        try:
+            attach: bool = child_conn.recv()
+            if attach:
+                sys.stdin = os.fdopen(0)
+                ipdb.post_mortem()
         finally:
+            finished_event.set()
+    finally:
+        with log_file.open("a") as f, redirect_stdout(f), redirect_stderr(f):
             rpc.kill()
 
 
@@ -149,23 +125,36 @@ def fuzz(
     for i, seed in zip(range(process_count), random_seeds):
         console.print(f"Using seed '{seed.hex()}' for process #{i}")
         finished_event = multiprocessing.Event()
-        p = Process(
-            finished_event,
+        parent_conn, child_conn = multiprocessing.Pipe()
+        p = multiprocessing.Process(
             target=__run,
-            args=(fuzz_test, i, 8545 + i, seed, logs_dir / f"fuzz{i}.ansi"),
+            args=(
+                fuzz_test,
+                i,
+                8545 + i,
+                seed,
+                logs_dir / f"fuzz{i}.ansi",
+                finished_event,
+                child_conn,
+            ),
         )
-        processes[i] = (p, finished_event)
+        processes[i] = (p, finished_event, parent_conn, child_conn)
         p.start()
 
     while len(processes):
         to_be_removed = []
-        for i, (p, e) in processes.items():
+        for i, (p, e, parent_conn, child_conn) in processes.items():
             finished = e.wait(0.125)
             if finished:
                 to_be_removed.append(i)
-                if p.exception is not None:
+
+                exception_info = parent_conn.recv()
+                if exception_info is not None:
+                    exception_info = pickle.loads(exception_info)
+
+                if exception_info is not None:
                     tb = Traceback.from_exception(
-                        p.exception[0], p.exception[1], p.exception[2]
+                        exception_info[0], exception_info[1], exception_info[2]
                     )
                     console.print(tb)
                     console.print(f"Process #{i} failed with an exception above.")
@@ -181,7 +170,7 @@ def fuzz(
                             attach = False
 
                     e.clear()
-                    p.set_attach_debugger(attach)
+                    parent_conn.send(attach)
                     e.wait()
                 else:
                     console.print(f"Process #{i} finished without issues.")
