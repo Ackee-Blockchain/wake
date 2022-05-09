@@ -5,10 +5,9 @@ import multiprocessing.connection
 import multiprocessing.synchronize
 import os
 import pickle
-import platform
 import random
 import sys
-import time
+import types
 from contextlib import redirect_stdout, redirect_stderr
 from pathlib import Path
 from types import TracebackType
@@ -19,6 +18,7 @@ import ipdb
 from brownie import rpc, web3
 from brownie._config import CONFIG
 from brownie.test.managers.runner import RevertContextManager
+from pathvalidate import sanitize_filename  # type: ignore
 from rich.traceback import Traceback
 from tblib import pickling_support
 
@@ -104,18 +104,12 @@ def __run(
 
 
 def fuzz(
-    config: WokeConfig, fuzz_test: Callable, process_count: int, seeds: Iterable[bytes]
+    config: WokeConfig,
+    fuzz_test: types.FunctionType,
+    process_count: int,
+    seeds: Iterable[bytes],
+    logs_dir: Path,
 ):
-    logs_dir = config.project_root_path / ".woke-logs" / "fuzz" / str(int(time.time()))
-    logs_dir.mkdir(parents=True, exist_ok=False)
-    latest_dir = logs_dir.parent / "latest"
-
-    # create `latest` symlink
-    if platform.system() != "Windows":
-        if latest_dir.is_symlink():
-            latest_dir.unlink()
-        latest_dir.symlink_to(logs_dir, target_is_directory=True)
-
     random_seeds = list(seeds)
     if len(random_seeds) < process_count:
         for i in range(process_count - len(random_seeds)):
@@ -126,6 +120,11 @@ def fuzz(
         console.print(f"Using seed '{seed.hex()}' for process #{i}")
         finished_event = multiprocessing.Event()
         parent_conn, child_conn = multiprocessing.Pipe()
+
+        log_path = logs_dir / sanitize_filename(
+            f"{fuzz_test.__module__}.{fuzz_test.__name__}_{i}.ansi"
+        )
+
         p = multiprocessing.Process(
             target=__run,
             args=(
@@ -133,7 +132,7 @@ def fuzz(
                 i,
                 8545 + i,
                 seed,
-                logs_dir / f"fuzz{i}.ansi",
+                log_path,
                 finished_event,
                 child_conn,
             ),

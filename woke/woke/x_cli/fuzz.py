@@ -2,7 +2,9 @@ import inspect
 import importlib.resources
 import importlib.util
 import multiprocessing
+import platform
 import sys
+import time
 from pathlib import Path
 from typing import Tuple, Callable, Iterable
 
@@ -75,7 +77,17 @@ def run_fuzz(
             )
             fuzz_functions.append(func)
 
+    logs_dir = config.project_root_path / ".woke-logs" / "fuzz" / str(int(time.time()))
+    logs_dir.mkdir(parents=True, exist_ok=False)
+    latest_dir = logs_dir.parent / "latest"
+
+    # create `latest` symlink
+    if platform.system() != "Windows":
+        if latest_dir.is_symlink():
+            latest_dir.unlink()
+        latest_dir.symlink_to(logs_dir, target_is_directory=True)
+
     for func in fuzz_functions:
         console.print("\n\n")
         console.print(f"Fuzzing '{func.__name__}' in '{func.__module__}'.")
-        fuzz(config, func, process_count, random_seeds)
+        fuzz(config, func, process_count, random_seeds, logs_dir)
