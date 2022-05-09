@@ -2,6 +2,7 @@ import inspect
 import logging
 import multiprocessing
 import multiprocessing.connection
+import multiprocessing.synchronize
 import os
 import pickle
 import platform
@@ -14,6 +15,7 @@ from types import TracebackType
 from typing import Callable, Iterable, Optional, Tuple
 
 import brownie
+import ipdb
 from brownie import rpc, web3
 from brownie._config import CONFIG
 from brownie.test.managers.runner import RevertContextManager
@@ -28,18 +30,35 @@ class Process(multiprocessing.Process):
     __parent_conn: multiprocessing.connection.Connection
     __self_conn: multiprocessing.connection.Connection
     __exception: Optional[Tuple[type, BaseException, TracebackType]]
+    __finished_event: multiprocessing.synchronize.Event
 
-    def __init__(self, *args, **kwargs):
+    def __init__(
+        self, finished_event: multiprocessing.synchronize.Event, *args, **kwargs
+    ):
         super().__init__(*args, **kwargs)
         self.__parent_conn, self.__self_conn = multiprocessing.Pipe()
         self.__exception = None
+        self.__finished_event = finished_event
 
     def run(self):
         try:
             multiprocessing.Process.run(self)
             self.__self_conn.send(None)
+            self.__finished_event.set()
         except Exception:
             self.__self_conn.send(pickle.dumps(sys.exc_info()))
+            self.__finished_event.set()
+
+            try:
+                attach: bool = self.__self_conn.recv()
+                if attach:
+                    sys.stdin = os.fdopen(0)
+                    ipdb.post_mortem()
+            finally:
+                self.__finished_event.set()
+
+    def set_attach_debugger(self, attach: bool) -> None:
+        self.__parent_conn.send(attach)
 
     @property
     def exception(self) -> Optional[Tuple[type, BaseException, TracebackType]]:
@@ -124,21 +143,43 @@ def fuzz(
         for i in range(process_count - len(random_seeds)):
             random_seeds.append(os.urandom(8))
 
-    processes = []
+    processes = dict()
     for i, seed in zip(range(process_count), random_seeds):
         console.print(f"Using seed '{seed.hex()}' for process #{i}")
+        finished_event = multiprocessing.Event()
         p = Process(
+            finished_event,
             target=__run,
             args=(fuzz_test, i, 8545 + i, seed, logs_dir / f"fuzz{i}.ansi"),
         )
-        processes.append(p)
+        processes[i] = (p, finished_event)
         p.start()
 
-    for i, p in enumerate(processes):
-        p.join()
-        if p.exception is not None:
-            tb = Traceback.from_exception(
-                p.exception[0], p.exception[1], p.exception[2]
-            )
-            console.print(tb)
-            console.print(f"Process #{i} failed with an exception above.")
+    while len(processes):
+        to_be_removed = []
+        for i, (p, e) in processes.items():
+            finished = e.wait(0.5)
+            if finished:
+                to_be_removed.append(i)
+                if p.exception is not None:
+                    tb = Traceback.from_exception(
+                        p.exception[0], p.exception[1], p.exception[2]
+                    )
+                    console.print(tb)
+                    console.print(f"Process #{i} failed with an exception above.")
+
+                    attach = None
+                    while attach is None:
+                        response = input(
+                            "Would you like to attach the debugger? [y/n] "
+                        )
+                        if response == "y":
+                            attach = True
+                        elif response == "n":
+                            attach = False
+
+                    e.clear()
+                    p.set_attach_debugger(attach)
+                    e.wait()
+        for i in to_be_removed:
+            processes.pop(i)
