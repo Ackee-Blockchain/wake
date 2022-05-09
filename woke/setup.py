@@ -13,6 +13,7 @@ install_requires = [
     "pathvalidate >= 2.5.0, < 3",
     "StrEnum",
     "eth-brownie <= 1.16.4",
+    "tblib >= 1.7.0, < 2",
 ]
 
 # Also: [pyright](https://github.com/microsoft/pyright/) (distributed through npm)
