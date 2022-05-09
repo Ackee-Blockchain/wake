@@ -70,8 +70,12 @@ def run_fuzz(
             if func.__module__ == module_name and func.__name__.startswith("test")
         )
         for func in functions:
-            console.print(f"Found '{func.__name__}' function in '{file}' file.")
+            console.print(
+                f"Found '{func.__name__}' function in '{func.__module__}' file."
+            )
             fuzz_functions.append(func)
 
     for func in fuzz_functions:
+        console.print("\n\n")
+        console.print(f"Fuzzing '{func.__name__}' in '{func.__module__}'.")
         fuzz(config, func, process_count, random_seeds)

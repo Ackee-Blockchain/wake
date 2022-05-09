@@ -158,7 +158,7 @@ def fuzz(
     while len(processes):
         to_be_removed = []
         for i, (p, e) in processes.items():
-            finished = e.wait(0.5)
+            finished = e.wait(0.125)
             if finished:
                 to_be_removed.append(i)
                 if p.exception is not None:
@@ -181,5 +181,7 @@ def fuzz(
                     e.clear()
                     p.set_attach_debugger(attach)
                     e.wait()
+                else:
+                    console.print(f"Process #{i} finished without issues.")
         for i in to_be_removed:
             processes.pop(i)
