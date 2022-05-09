@@ -12,7 +12,7 @@ install_requires = [
     "rich >= 10.16",
     "pathvalidate >= 2.5.0, < 3",
     "StrEnum",
-    "eth-brownie <= 1.16.4",
+    "eth-brownie >= 1.16",
     "tblib >= 1.7.0, < 2",
     "ipdb",
 ]
