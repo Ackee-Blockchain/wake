@@ -14,6 +14,7 @@ install_requires = [
     "StrEnum",
     "eth-brownie <= 1.16.4",
     "tblib >= 1.7.0, < 2",
+    "ipdb",
 ]
 
 # Also: [pyright](https://github.com/microsoft/pyright/) (distributed through npm)
