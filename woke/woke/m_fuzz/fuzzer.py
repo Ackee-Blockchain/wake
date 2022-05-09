@@ -89,6 +89,8 @@ def __run(
     pickling_support.install()
     random.seed(random_seed)
 
+    logging.basicConfig(filename=log_file)
+
     with log_file.open("w") as f, redirect_stdout(f), redirect_stderr(f):
         try:
             print(f"Using seed '{random_seed.hex()}' for process #{index}")
