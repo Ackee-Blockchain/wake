@@ -1,20 +1,55 @@
 import inspect
+import logging
+import multiprocessing
+import multiprocessing.connection
 import os
+import pickle
 import platform
 import random
+import sys
 import time
 from contextlib import redirect_stdout, redirect_stderr
-from multiprocessing import Process
 from pathlib import Path
-from typing import Callable, Iterable
+from types import TracebackType
+from typing import Callable, Iterable, Optional, Tuple
 
 import brownie
 from brownie import rpc, web3
 from brownie._config import CONFIG
 from brownie.test.managers.runner import RevertContextManager
+from rich.traceback import Traceback
+from tblib import pickling_support
 
 from woke.a_config import WokeConfig
 from woke.x_cli.console import console
+
+
+class Process(multiprocessing.Process):
+    __parent_conn: multiprocessing.connection.Connection
+    __self_conn: multiprocessing.connection.Connection
+    __exception: Optional[Tuple[type, BaseException, TracebackType]]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__parent_conn, self.__self_conn = multiprocessing.Pipe()
+        self.__exception = None
+
+    def run(self):
+        try:
+            multiprocessing.Process.run(self)
+            self.__self_conn.send(None)
+        except Exception:
+            self.__self_conn.send(pickle.dumps(sys.exc_info()))
+
+    @property
+    def exception(self) -> Optional[Tuple[type, BaseException, TracebackType]]:
+        if self.__parent_conn.poll():
+            info = self.__parent_conn.recv()
+            if info is None:
+                self.__exception = None
+            else:
+                self.__exception = pickle.loads(info)
+        return self.__exception
 
 
 def __setup(port: int) -> None:
@@ -32,6 +67,7 @@ def __setup(port: int) -> None:
 def __run(
     fuzz_test: Callable, index: int, port: int, random_seed: bytes, log_file: Path
 ):
+    pickling_support.install()
     random.seed(random_seed)
 
     with log_file.open("w") as f, redirect_stdout(f), redirect_stderr(f):
@@ -98,5 +134,11 @@ def fuzz(
         processes.append(p)
         p.start()
 
-    for p in processes:
+    for i, p in enumerate(processes):
         p.join()
+        if p.exception is not None:
+            tb = Traceback.from_exception(
+                p.exception[0], p.exception[1], p.exception[2]
+            )
+            console.print(tb)
+            console.print(f"Process #{i} failed with an exception above.")
