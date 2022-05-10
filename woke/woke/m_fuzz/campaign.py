@@ -42,7 +42,7 @@ class Campaign:
             seq = self.__sequence_constructor()
 
             rules, _ = self.__get_methods(seq, attr="rule")
-            invs, _ = self.__get_methods(seq, prefix="invariant")
+            invs, _ = self.__get_methods(seq, attr="invariant")
 
             called = Counter[str]()
             point_coverage = Counter[str]()
@@ -108,18 +108,16 @@ class Campaign:
         return hasattr(m, "ignore") and m.ignore
 
     @staticmethod
-    def __get_methods(o, prefix: str = "", attr: str = "") -> Tuple[Methods, Methods]:
+    def __get_methods(o, attr: str) -> Tuple[Methods, Methods]:
         """get not ignored and ignored methods of object {o} beginning with {prefix} and having attribute a truthy attribute {attr}"""
-        m_strs = [m for m in dir(o) if m.startswith(prefix)]
         ms = []
-        for m_str in m_strs:
+        for m_str in dir(o):
             m = getattr(o, m_str)
-            if not attr or hasattr(m, attr) and getattr(m, attr):
+            if hasattr(m, attr) and getattr(m, attr):
                 # m_str_body = m_str.split(prefix)[1] if prefix else m_str
                 # if m_str_body.startswith('_'):
                 #     m_str_body = m_str_body[1:]
                 ms.append((m, m_str))
-        del m_strs
 
         # invariant: at this point, ms contains all relevant methods
         # now find those that aren't and are ignored
@@ -127,8 +125,8 @@ class Campaign:
         ms_ign, ms_not_ign = partition(ms, lambda m: Campaign.__is_ign(m[0]))
 
         if ms_ign:
-            logger.info(f"Ignoring {prefix}s:")
-            logger.info([m[1] for m in ms_ign])
+            s = "Ignoring:\n" + "\n".join(m[1] for m in ms_ign)
+            logger.info(s)
         del ms
         return ms_not_ign, ms_ign
 

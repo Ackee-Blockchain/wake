@@ -42,6 +42,11 @@ def rule(fn):
     return fn
 
 
+def invariant(fn):
+    fn.invariant = True
+    return fn
+
+
 def precondition(_precondition):
     def decorator(fn):
         fn.precondition = _precondition
