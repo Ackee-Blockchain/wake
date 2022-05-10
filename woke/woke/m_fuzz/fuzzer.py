@@ -14,10 +14,11 @@ from types import TracebackType
 from typing import Callable, Iterable, Optional, Tuple
 
 import brownie
-import ipdb
+from IPython.core.debugger import BdbQuit_excepthook
 from brownie import rpc, web3
 from brownie._config import CONFIG
 from brownie.test.managers.runner import RevertContextManager
+from ipdb.__main__ import _init_pdb
 from pathvalidate import sanitize_filename  # type: ignore
 from rich.traceback import Traceback
 from tblib import pickling_support
@@ -36,6 +37,15 @@ def __setup(port: int) -> None:
     cmd_settings["port"] = port
 
     rpc.launch(cmd, **cmd_settings)
+
+
+def __attach_debugger() -> None:
+    if sys.excepthook != BdbQuit_excepthook:
+        BdbQuit_excepthook.excepthook_ori = sys.excepthook
+        sys.excepthook = BdbQuit_excepthook
+    p = _init_pdb(commands=["from IPython import embed"])
+    p.reset()
+    p.interaction(None, sys.exc_info()[2])
 
 
 def __run(
@@ -95,7 +105,7 @@ def __run(
             attach: bool = child_conn.recv()
             if attach:
                 sys.stdin = os.fdopen(0)
-                ipdb.post_mortem()
+                __attach_debugger()
         finally:
             finished_event.set()
     finally:
