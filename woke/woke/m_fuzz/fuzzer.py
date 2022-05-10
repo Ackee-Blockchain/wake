@@ -10,8 +10,7 @@ import sys
 import types
 from contextlib import redirect_stdout, redirect_stderr
 from pathlib import Path
-from types import TracebackType
-from typing import Callable, Iterable, Optional, Tuple
+from typing import Callable, Iterable
 
 import brownie
 from IPython.core.debugger import BdbQuit_excepthook
@@ -27,7 +26,7 @@ from woke.a_config import WokeConfig
 from woke.x_cli.console import console
 
 
-def __setup(port: int) -> None:
+def _setup(port: int) -> None:
     brownie.reverts = RevertContextManager
     active_network = CONFIG.set_active_network("development")
 
@@ -39,7 +38,7 @@ def __setup(port: int) -> None:
     rpc.launch(cmd, **cmd_settings)
 
 
-def __attach_debugger() -> None:
+def _attach_debugger() -> None:
     if sys.excepthook != BdbQuit_excepthook:
         BdbQuit_excepthook.excepthook_ori = sys.excepthook
         sys.excepthook = BdbQuit_excepthook
@@ -48,7 +47,7 @@ def __attach_debugger() -> None:
     p.interaction(None, sys.exc_info()[2])
 
 
-def __run(
+def _run(
     fuzz_test: Callable,
     index: int,
     port: int,
@@ -65,7 +64,7 @@ def __run(
     try:
         with log_file.open("w") as f, redirect_stdout(f), redirect_stderr(f):
             print(f"Using seed '{random_seed.hex()}' for process #{index}")
-            __setup(port)
+            _setup(port)
 
             project = brownie.project.load()
 
@@ -105,7 +104,7 @@ def __run(
             attach: bool = child_conn.recv()
             if attach:
                 sys.stdin = os.fdopen(0)
-                __attach_debugger()
+                _attach_debugger()
         finally:
             finished_event.set()
     finally:
@@ -136,7 +135,7 @@ def fuzz(
         )
 
         p = multiprocessing.Process(
-            target=__run,
+            target=_run,
             args=(
                 fuzz_test,
                 i,
