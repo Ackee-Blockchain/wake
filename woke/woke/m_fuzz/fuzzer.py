@@ -39,6 +39,9 @@ def _setup(port: int) -> None:
 
 
 def _attach_debugger() -> None:
+    # TODO Implement `ipdb` package functionalities
+    # This function relies on `ipdb` internal functions
+    # We could implement all the `ipdb` functionalities ourselves (it is rather small codebase)
     if sys.excepthook != BdbQuit_excepthook:
         BdbQuit_excepthook.excepthook_ori = sys.excepthook
         sys.excepthook = BdbQuit_excepthook
