@@ -24,6 +24,7 @@ def _get_module_name(path: Path, root: Path) -> str:
 @click.argument("paths", nargs=-1, type=click.Path(exists=True))
 @click.option(
     "--process-count",
+    "-n",
     default=(multiprocessing.cpu_count()),
     help="Number of processes to create for fuzzing.",
 )
