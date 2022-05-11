@@ -39,7 +39,7 @@ def run_fuzz(
 
     random_seeds = [bytes.fromhex(seed) for seed in seeds]
     if len(paths) == 0:
-        paths = (str(config.project_root_path / "test"),)
+        paths = (str(config.project_root_path / "tests"),)
 
     py_files = set()
 
