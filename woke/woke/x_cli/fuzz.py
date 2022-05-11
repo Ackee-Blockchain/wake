@@ -29,9 +29,19 @@ def _get_module_name(path: Path, root: Path) -> str:
     help="Number of processes to create for fuzzing.",
 )
 @click.option("--seed", "-s", "seeds", multiple=True, type=str, help="Random seeds")
+@click.option(
+    "--passive",
+    is_flag=True,
+    default=False,
+    help="Print one process output into console, run other in background.",
+)
 @click.pass_context
 def run_fuzz(
-    ctx: click.Context, paths: Tuple[str], process_count: int, seeds: Tuple[str]
+    ctx: click.Context,
+    paths: Tuple[str],
+    process_count: int,
+    seeds: Tuple[str],
+    passive: bool,
 ) -> None:
     """Run Woke fuzzer."""
     config = WokeConfig(woke_root_path=ctx.obj["woke_root_path"])
@@ -91,4 +101,4 @@ def run_fuzz(
     for func in fuzz_functions:
         console.print("\n\n")
         console.print(f"Fuzzing '{func.__name__}' in '{func.__module__}'.")
-        fuzz(config, func, process_count, random_seeds, logs_dir)
+        fuzz(config, func, process_count, random_seeds, logs_dir, passive)

@@ -8,12 +8,13 @@ import pickle
 import random
 import sys
 import types
-from contextlib import redirect_stdout, redirect_stderr
+from contextlib import redirect_stdout, redirect_stderr, closing
 from pathlib import Path
 from typing import Callable, Iterable
 
 import brownie
 from IPython.core.debugger import BdbQuit_excepthook
+from IPython.utils.io import Tee
 from brownie import rpc, web3
 from brownie._config import CONFIG
 from brownie.test.managers.runner import RevertContextManager
@@ -50,55 +51,76 @@ def _attach_debugger() -> None:
     p.interaction(None, sys.exc_info()[2])
 
 
+def _run_core(
+    fuzz_test: Callable,
+    index: int,
+    port: int,
+    random_seed: bytes,
+    finished_event: multiprocessing.synchronize.Event,
+    child_conn: multiprocessing.connection.Connection,
+):
+    print(f"Using seed '{random_seed.hex()}' for process #{index}")
+    _setup(port)
+
+    project = brownie.project.load()
+
+    brownie.chain.reset()
+
+    args = []
+    for arg in inspect.getfullargspec(fuzz_test).args:
+        if arg in {"a", "accounts"}:
+            args.append(brownie.accounts)
+        elif arg == "chain":
+            args.append(brownie.chain)
+        elif arg == "Contract":
+            args.append(brownie.Contract)
+        elif arg == "history":
+            args.append(brownie.history)
+        elif arg == "interface":
+            args.append(project.interface)
+        elif arg == "rpc":
+            args.append(brownie.rpc)
+        elif arg == "web3":
+            args.append(brownie.web3)
+        elif arg in project.keys():
+            args.append(project[arg])
+        else:
+            raise ValueError(
+                f"Unable to set value for '{arg}' argument in '{fuzz_test.__name__}' function."
+            )
+    fuzz_test(*args)
+
+    child_conn.send(None)
+    finished_event.set()
+
+
 def _run(
     fuzz_test: Callable,
     index: int,
     port: int,
     random_seed: bytes,
     log_file: Path,
+    tee: bool,
     finished_event: multiprocessing.synchronize.Event,
     child_conn: multiprocessing.connection.Connection,
 ):
     pickling_support.install()
     random.seed(random_seed)
 
-    logging.basicConfig(filename=log_file)
+    if not tee:
+        logging.basicConfig(filename=log_file)
 
     try:
-        with log_file.open("w") as f, redirect_stdout(f), redirect_stderr(f):
-            print(f"Using seed '{random_seed.hex()}' for process #{index}")
-            _setup(port)
-
-            project = brownie.project.load()
-
-            brownie.chain.reset()
-
-            args = []
-            for arg in inspect.getfullargspec(fuzz_test).args:
-                if arg in {"a", "accounts"}:
-                    args.append(brownie.accounts)
-                elif arg == "chain":
-                    args.append(brownie.chain)
-                elif arg == "Contract":
-                    args.append(brownie.Contract)
-                elif arg == "history":
-                    args.append(brownie.history)
-                elif arg == "interface":
-                    args.append(project.interface)
-                elif arg == "rpc":
-                    args.append(brownie.rpc)
-                elif arg == "web3":
-                    args.append(brownie.web3)
-                elif arg in project.keys():
-                    args.append(project[arg])
-                else:
-                    raise ValueError(
-                        f"Unable to set value for '{arg}' argument in '{fuzz_test.__name__}' function."
-                    )
-            fuzz_test(*args)
-
-            child_conn.send(None)
-            finished_event.set()
+        if tee:
+            with closing(Tee(log_file)):
+                _run_core(
+                    fuzz_test, index, port, random_seed, finished_event, child_conn
+                )
+        else:
+            with log_file.open("w") as f, redirect_stdout(f), redirect_stderr(f):
+                _run_core(
+                    fuzz_test, index, port, random_seed, finished_event, child_conn
+                )
     except Exception:
         child_conn.send(pickle.dumps(sys.exc_info()))
         finished_event.set()
@@ -121,6 +143,7 @@ def fuzz(
     process_count: int,
     seeds: Iterable[bytes],
     logs_dir: Path,
+    passive: bool,
 ):
     random_seeds = list(seeds)
     if len(random_seeds) < process_count:
@@ -145,6 +168,7 @@ def fuzz(
                 8545 + i,
                 seed,
                 log_path,
+                passive and i == 0,
                 finished_event,
                 child_conn,
             ),
@@ -164,26 +188,30 @@ def fuzz(
                     exception_info = pickle.loads(exception_info)
 
                 if exception_info is not None:
-                    tb = Traceback.from_exception(
-                        exception_info[0], exception_info[1], exception_info[2]
-                    )
-                    console.print(tb)
-                    console.print(f"Process #{i} failed with an exception above.")
-
-                    attach = None
-                    while attach is None:
-                        response = input(
-                            "Would you like to attach the debugger? [y/n] "
+                    if not passive or i == 0:
+                        tb = Traceback.from_exception(
+                            exception_info[0], exception_info[1], exception_info[2]
                         )
-                        if response == "y":
-                            attach = True
-                        elif response == "n":
-                            attach = False
+                        console.print(tb)
+                        console.print(f"Process #{i} failed with an exception above.")
+
+                        attach = None
+                        while attach is None:
+                            response = input(
+                                "Would you like to attach the debugger? [y/n] "
+                            )
+                            if response == "y":
+                                attach = True
+                            elif response == "n":
+                                attach = False
+                    else:
+                        attach = False
 
                     e.clear()
                     parent_conn.send(attach)
                     e.wait()
                 else:
-                    console.print(f"Process #{i} finished without issues.")
+                    if not passive or i == 0:
+                        console.print(f"Process #{i} finished without issues.")
         for i in to_be_removed:
             processes.pop(i)
