@@ -2,7 +2,7 @@ import json
 import collections
 from typing import Union
 
-from .protocol_structures import (
+from protocol_structures import (
     RequestMessage,
     ResponseMessage,
     ResponseError,
@@ -22,8 +22,8 @@ class TcpCommunicator:
         self.reader = reader
         self.writer = writer
 
-    def read(self, *args):
-        return self.reader.read(*args).decode("utf-8")
+    def read(self, args):
+        return self.reader.read(args).decode("utf-8")
 
     def write(self, output):
         self.writer.write(output.encode("utf-8"))
@@ -56,7 +56,6 @@ class RPCProtocol:
         if line.startswith("Content-Length: ") and line.endswith("\r\n"):
             content_length = int(line.split(":")[-1])
         else:
-            # raise EOFError()
             raise RPCProtocolError(f"Invalid HTTP header: {line}")
         # Skip unnecessary header part
         while line != "\r\n":
@@ -64,11 +63,12 @@ class RPCProtocol:
         # Return content length
         return content_length
 
-    def _read_content(self) -> dict:
+    def _read_content(self,len) -> dict:
         """
         Reads message content
         """
-        body = self.reader.read()
+        
+        body = self.reader.read(len)
         return json.loads(body)
 
     def recieve_message(self) -> Union[RequestMessage, NotificationMessage]:
@@ -80,9 +80,9 @@ class RPCProtocol:
         """
         # if self.msg_buffer:
         #    return self.msg_buffer.popleft()
-        _ = self._read_header()
-        json_content = self._read_content()
         try:
+            len = self._read_header()
+            json_content = self._read_content(len)
             if "id" in json_content:
                 message_object = RequestMessage(
                     json_rpc=json_content["jsonrpc"],
@@ -133,6 +133,7 @@ class RPCProtocol:
         message_str = json.dumps(message, separators=(",", ":"))
         content_length = len(message_str)
         response = f"Content-Length: {content_length}\r\nContent-Type: application/vscode-jsonrpc; charset=utf8\r\n\r\n{message_str}"
-        print(f"RESPONSE:\n{response}\n")
+        #print(f"RESPONSE:\n{response}\n")
+        print('RESPONSE HAVE BEEN SENT')
         # raise EOFError()
         self.reader.write(response)
