@@ -46,7 +46,9 @@ def _attach_debugger() -> None:
     if sys.excepthook != BdbQuit_excepthook:
         BdbQuit_excepthook.excepthook_ori = sys.excepthook
         sys.excepthook = BdbQuit_excepthook
-    p = _init_pdb(commands=["from IPython import embed"])
+    p = _init_pdb(
+        commands=["import IPython", "alias embed() IPython.embed(colors='neutral')"]
+    )
     p.reset()
     p.interaction(None, sys.exc_info()[2])
 

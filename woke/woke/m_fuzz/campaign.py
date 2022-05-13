@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from typing import Counter, List, Tuple, Callable, Optional
 
 import brownie
+import IPython
 
 from .utils import partition
 
