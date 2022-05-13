@@ -16,13 +16,14 @@ from .notifications_impl import notification_mapping
 
 
 class Server:
-    def __init__(self, protocol: RPCProtocol, client_capabilities: Iterable[str], threads: int = 1):
+    def __init__(self, protocol: RPCProtocol, server_capabilities: Iterable[str], threads: int = 1):
         self.protocol = protocol
         self.threads = threads
-        self.client_capabilities = list(client_capabilities)
         self.running = True
         self.init_request_received = False
         self.context = LSPContext()
+        self.context.server_capabilities = list(server_capabilities)
+        self.context.client_capabilities = list()
 
     def run_server(self):
         """
@@ -126,4 +127,7 @@ class Server:
         return
 
     def get_client_capabilities(self) -> List[str]:
-        return self.client_capabilities
+        return self.context.client_capabilities
+
+    def get_server_capabilities(self) -> List[str]:
+        return self.context.server_capabilities
