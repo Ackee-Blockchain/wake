@@ -85,13 +85,15 @@ class Server:
             self.protocol.send_rpc_response(error)
 
     def handle_notification(self, notification: NotificationMessage):
-        # print('handling')
         # Handling notification
         # No error response send after failed notification
-        try:
-            self._serve_notification(notification)
-        except Exception as e:
-            logging.error(e)
+        # Drop if not initialized
+        if self.init_request_received or  notification.method == 'exit':
+            #print('-- handling notification')
+            try:
+                self._serve_notification(notification)
+            except Exception as e:
+                logging.error(e)
 
     def _serve_response(self, request: RequestMessage) -> ResponseMessage:
         # print('serving')
