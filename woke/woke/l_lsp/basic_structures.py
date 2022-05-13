@@ -1,3 +1,8 @@
+import os
+import sys
+import re
+from pathlib import Path
+from urllib.parse import unquote
 from enum import Enum, IntEnum
 from typing import Any, List, Optional, Union, NewType
 
@@ -8,6 +13,23 @@ URI = NewType("URI", str)
 ChangeAnnotationIdentifier = NewType("ChangeAnnotationIdentifier", str)
 ProgressToken = Union[int, str]
 TraceValue = NewType("Trace", str)  # NewType(Union["off","message","verbose"], str)
+
+def to_snake(s):
+  return re.sub('([A-Z]\w+$)', '_\\1', s).lower()
+
+def t_dict(d):
+   if isinstance(d, list):
+      return [t_dict(i) if isinstance(i, (dict, list)) else i for i in d]
+   return {to_snake(a):t_dict(b) if isinstance(b, (dict, list)) else b for a, b in d.items()}
+
+def uri_to_path(uri: str) -> str:
+    if not uri.startswith("file://"):
+        return os.path.abspath(uri)
+    if os.name == "nt":
+        _, path = uri.split("file:///", 1)
+    else:
+        _, path = uri.split("file://", 1)
+    return str(Path(unquote(path)).resolve())
 
 
 class RegularExpressionsClientCapabilities(BaseModel):
@@ -895,7 +917,7 @@ class TextDocumentContentChangeEvent(BaseModel):
 
 class DidChangeTextDocumentParams(BaseModel):
     text_document: VersionedTextDocumentIdentifier
-    content_changes: List[TextDocumentContentChangeEvent]
+    content_changes: Union[List[TextDocumentContentChangeEvent],TextDocumentContentChangeEvent]
 
 
 class TextDocumentSaveReason(IntEnum):
@@ -1266,7 +1288,7 @@ class ClientCapabilities(BaseModel):
     experimental: Optional[Any]
 
 
-class InitializeParamsClientInfo:
+class InitializeParamsClientInfo(BaseModel):
     name: str
     verison: Optional[str]
 
@@ -1280,4 +1302,4 @@ class InitializeParams(WorkDoneProgressParams):
     initialization_options: Optional[Any]
     capabilities: ClientCapabilities  # soon
     trace: Optional[TraceValue]
-    workspace_folders: Optional[List[WorkspaceFolder]]  # soon
+    workspace_folders: Union[List[WorkspaceFolder], None]  # soon
