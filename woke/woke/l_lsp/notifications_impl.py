@@ -7,7 +7,7 @@ from .enums import TraceValueEnum
 from .methods import RequestMethodEnum
 
 """
-Notifications methods just handle what they have to
+Notification methods just handle what they have to
 No return/response necessary
 """
 
@@ -16,62 +16,75 @@ No return/response necessary
 ######################
 
 
-def lsp_initialized(context: LSPContext, params: InitializedParams) -> None:
+def lsp_initialized(context: LSPContext, params: dict) -> None:
     # probably not really useful
+    initialized_params = InitializedParams.parse_obj(t_dict(params))
     pass
 
 
 def lsp_exit(context: LSPContext, _) -> None:
+    print('Stop listening')
     if context.shutdown_received:
         sys.exit(0)
     else:
         sys.exit(1)
 
 
-def lsp_window_show_message(context: LSPContext, params: ShowMessageParams) -> None:
+def lsp_window_show_message(context: LSPContext, params: dict) -> None:
     """
     Display particular message in the user interface
     """
+    show_message_params = ShowMessageParams.parse_obj(t_dict(params))
     raise NotImplementedError()  # TODO
 
 
 def lsp_window_work_done_progress_cancel(
-    context: LSPContext, params: WorkDoneProgressCancelParams
+    context: LSPContext, params: dict
 ) -> None:
+    work_done_progress_params = WorkDoneProgressCancelParams.parse_obj(t_dict(params))
     raise NotImplementedError()  # TODO
 
 
 def lsp_workspace_did_change_workspace_folders(
-    context: LSPContext, params: DidChangeWorkspaceFoldersParams
+    context: LSPContext, params: dict
 ) -> None:
+    did_change_workspace_params = DidChangeWorkspaceFoldersParams.parse_obj(t_dict(params))
     raise NotImplementedError()  # TODO
 
 
 def lsp_workspace_did_change_configuration(
-    context: LSPContext, params: DidChangeConfigurationParams
+    context: LSPContext, params: dict
 ) -> None:
+    did_change_config_params = DidChangeConfigurationParams.parse_obj(t_dict(params))
     raise NotImplementedError()  # TODO
 
 
-def lsp_workspace_did_change_watched_files(context: LSPContext, params: DidChangeWatchedParams) -> None:
+def lsp_workspace_did_change_watched_files(context: LSPContext, params: dict) -> None:
+    did_change_watcher_params = DidChangeWatchedParams.parse_obj(t_dict(params))
     raise NotImplementedError()  # TODO
 
 
 def lsp_workspace_did_create_files(
-    context: LSPContext, params: CreateFilesParams
+    context: LSPContext, params: dict
 ) -> None:
+    did_create_params = CreateFilesParams.parse_obj(t_dict(params))
     raise NotImplementedError()  # TODO
 
 
 def lsp_workspace_did_rename_files(context: LSPContext, params: RenameFilesParams) -> None:
+    did_rename_params = RenameFilesParams.parse_obj(t_dict(params))
     raise NotImplementedError()  # TODO
 
 
-def lsp_workspace_did_delete_files(context: LSPContext, params: DeleteFilesParams) -> None:
+def lsp_workspace_did_delete_files(context: LSPContext, params: dict) -> None:
+    did_delete_params = DeleteFilesParams.parse_obj(t_dict(params))
     raise NotImplementedError()  # TODO
 
 
-def lsp_did_open(context: LSPContext, params: DidOpenTextDocumentParams) -> None:
+def lsp_did_open(context: LSPContext, params: dict) -> None:
+    did_open_params = DidOpenTextDocumentParams.parse_obj(t_dict(params))
+    # print for testing
+    #print(f'Testing print\n*** LSP_DID_open params:\n{did_open_params}\n**Not connected with woke -> ')
     """
     Update workspace with new document
     """
@@ -80,9 +93,12 @@ def lsp_did_open(context: LSPContext, params: DidOpenTextDocumentParams) -> None
         document = params.text_document
         context.workspace[document.uri] = document
     """
+    raise NotImplementedError()  # TODO
 
-
-def lsp_did_change(context: LSPContext, params: DidChangeTextDocumentParams) -> None:
+def lsp_did_change(context: LSPContext, params: dict) -> None:
+    did_change_params = DidChangeTextDocumentParams.parse_obj(t_dict(params))
+    # print for testing
+    #print(f'Testing print\n*** LSP_DID_CHANGE params:\n{did_change_params}\n**Not connected with woke -> ')
     """
     Update worskpace document
     """
@@ -97,20 +113,24 @@ def lsp_did_change(context: LSPContext, params: DidChangeTextDocumentParams) -> 
     raise NotImplementedError()  # TODO
 
 
-def lsp_will_save(context: LSPContext, params: WillSaveTextDocumentParams) -> None:
+def lsp_will_save(context: LSPContext, params: dict) -> None:
+    will_save_params = WillSaveTextDocumentParams.parse_obj(t_dict(params))    
     raise NotImplementedError()  # TODO
 
 
-def lsp_did_save(context: LSPContext, params: DidSaveTextDocumentParams) -> None:
+def lsp_did_save(context: LSPContext, params: dict) -> None:
+    did_save_params = DidSaveTextDocumentParams.parse_obj(t_dict(params))    
     raise NotImplementedError()  # TODO
 
 
-def lsp_did_close(context: LSPContext, params: DidCloseTextDocumentParams) -> None:
+def lsp_did_close(context: LSPContext, params: dict) -> None:
+    did_close_params = DidCloseTextDocumentParams.parse_obj(t_dict(params))    
     raise NotImplementedError()  # TODO
 
 
-def lsp_set_trace_notification(context: LSPContext, params: SetTraceParams) -> None:
-    context.trace_value = TraceValueEnum(params.value)
+def lsp_set_trace_notification(context: LSPContext, params: dict) -> None:
+    set_trace_params = SetTraceParams.parse_obj(t_dict(params))    
+    context.trace_value = TraceValueEnum(set_trace_params.value)
 
 
 ######################
@@ -118,7 +138,8 @@ def lsp_set_trace_notification(context: LSPContext, params: SetTraceParams) -> N
 ######################
 
 
-def lsp_window_log_message(context: LSPContext, params: LogMessageParams) -> None:
+def lsp_window_log_message(context: LSPContext, params: dict) -> None:
+    window_log_params = LogMessageParams.parse_obj(t_dict(params))
     raise NotImplementedError()  # TODO
 
 
@@ -126,11 +147,13 @@ def lsp_telemetry_event(context: LSPContext, params: Any) -> None:
     raise NotImplementedError()  # TODO
 
 
-def lsp_publish_diagnostics(context: LSPContext, params: PublishDiagnosticsParams) -> None:
+def lsp_publish_diagnostics(context: LSPContext, params: dict) -> None:
+    publish_diagnostic_params = PublishDiagnosticsParams.parse_obj(t_dict(params))
     raise NotImplementedError()  # TODO
 
 
-def lsp_log_trace_notification(context: LSPContext, params: LogTraceParams) -> None:
+def lsp_log_trace_notification(context: LSPContext, params: dict) -> None:
+    log_trace_params = LogTraceParams.parse_obj(t_dict(params))
     raise NotImplementedError()  # TODO
 
 
