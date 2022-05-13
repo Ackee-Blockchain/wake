@@ -18,7 +18,7 @@ class TCPHandler(socketserver.StreamRequestHandler):
 
     def handle(self):
         rpc_protocol = RPCProtocol(TcpCommunicator(self.rfile, self.wfile))
-        s = Server(protocol=rpc_protocol, client_capabilities=["test", "completion"])
+        s = Server(protocol=rpc_protocol, server_capabilities=["test", "completion"])
         s.run_server()
 
 
