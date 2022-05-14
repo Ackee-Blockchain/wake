@@ -1,4 +1,4 @@
-'''
+"""
 PROTOCOL/SERVER Tesing client
 Manual
 - run server from separate procce $python __main__.py
@@ -20,22 +20,22 @@ Automat
 * Notifications sdould be dropped if server was not initialized (except exit)
 * Notifications handled after successful init 
     (Print for did_change and did_open notificaions to check whether the right model was returned or not)
-'''
+"""
 import json
 from base64 import decode
 import socket
 
-from test_data import *
-from lsp.basic_structures import *
+from .test_data import *
+from woke.l_lsp.basic_structures import *
 
 HOST = "127.0.0.1"  # The server's hostname or IP address
 PORT = 65432  # The port used by the server
 
+
 class Client:
     def __init__(self, sock=None):
         if sock is None:
-            self.sock = socket.socket(
-                            socket.AF_INET, socket.SOCK_STREAM)
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         else:
             self.sock = sock
 
@@ -58,8 +58,7 @@ class Client:
             raise RuntimeError("socket connection broken")
 
 
-
-'''
+"""
 def test_run():
     client = Client()
     client.connect()
@@ -68,4 +67,4 @@ def test_run():
     print(response)
         
 #test_run()
-'''
+"""
