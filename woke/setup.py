@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 install_requires = [
-    "pydantic >= 1.9.0",
+    "pydantic >= 1.9.1",
     "typing_extensions >= 4.0, < 5",
     "aiohttp >= 3.8, < 4",
     "aiofiles >= 0.8.0",
