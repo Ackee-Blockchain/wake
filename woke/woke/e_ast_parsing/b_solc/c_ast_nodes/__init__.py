@@ -371,6 +371,7 @@ class SolcEventDefinition(SolcNode):
     # optional
     name_location: Optional[NameLocation]
     documentation: Optional["SolcStructuredDocumentation"]
+    event_selector: Optional[str]  # an example: "0d3648bd0f6ba80134a33ba9275ac585d9d315f0ad8355cddefde31afa28d0e9"
 
 
 class SolcModifierDefinition(SolcNode):
@@ -559,8 +560,8 @@ class SolcReturn(SolcNode):
     # override alias
     node_type: Literal["Return"] = Field(alias="nodeType")
     # required
-    function_return_parameters: FunctionReturnParameters
     # optional
+    function_return_parameters: Optional[FunctionReturnParameters]
     documentation: Optional[StrictStr]
     expression: Optional[SolcExpressionUnion] = Field(discriminator="node_type")
 
@@ -1118,6 +1119,7 @@ SolcParameterList.update_forward_refs()
 SolcTryCatchClause.update_forward_refs()
 SolcStructuredDocumentation.update_forward_refs()
 SolcEnumValue.update_forward_refs()
+SymbolAliasModel.update_forward_refs()
 YulAssignment.update_forward_refs()
 YulBlock.update_forward_refs()
 YulBreak.update_forward_refs()
