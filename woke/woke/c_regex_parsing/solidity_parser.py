@@ -25,8 +25,10 @@ from .solidity_version import (
 class SoliditySourceParser:
     PRAGMA_SOLIDITY_RE = re.compile(r"pragma\s+solidity\s+(?P<version>[^;]+)\s*;")
     IMPORT_RE = re.compile(r"import\s*(?P<import>[^;]+)\s*;")
-    ONELINE_COMMENT_RE = re.compile(r"//.*$", re.MULTILINE)
-    MULTILINE_COMMENT_RE = re.compile(r"/\*.*?\*/", re.DOTALL)
+    MULTILINE_COMMENT_END_RE = re.compile(r"\*/")
+    ONELINE_COMMENT_OR_MULTILINE_COMMENT_START_RE = re.compile(
+        r"(//.*$|/\*)", re.MULTILINE
+    )
 
     @classmethod
     def __string_closed(cls, line: str) -> bool:
@@ -86,6 +88,44 @@ class SoliditySourceParser:
         return list(imports)
 
     @classmethod
+    def strip_comments(cls, source_code: str) -> str:
+        stop = False
+        while not stop:
+            # try to find a single-line or multi-line comment (whichever comes first)
+            matches = cls.ONELINE_COMMENT_OR_MULTILINE_COMMENT_START_RE.finditer(
+                source_code
+            )
+            stop = True
+
+            for match in matches:
+                s = source_code[0 : match.start()].splitlines()
+                if len(s) > 0:
+                    # ignore `//` and `/*` in Solidity strings
+                    if not cls.__string_closed(s[-1]):
+                        continue
+
+                stop = False
+
+                if source_code[match.start() : match.end()] == "/*":
+                    # found a multi-line comment start
+                    end_match = cls.MULTILINE_COMMENT_END_RE.search(
+                        source_code, match.end()
+                    )
+                    if end_match is None:
+                        raise ValueError(f"Multi-line comment not closed.")
+                    source_code = (
+                        source_code[0 : match.start()] + source_code[end_match.end() :]
+                    )
+                else:
+                    # found a single-line comment
+                    source_code = (
+                        source_code[0 : match.start()] + source_code[match.end() :]
+                    )
+
+                break
+        return source_code
+
+    @classmethod
     def parse(cls, path: Path) -> Tuple[SolidityVersionRanges, List[str], bytes]:
         """
         Return a tuple of two lists. The first list contains Solidity version ranges that can be used to compile
@@ -97,8 +137,7 @@ class SoliditySourceParser:
         h = BLAKE2b.new(data=raw_content, digest_bits=256)
 
         # strip all comments
-        content = cls.ONELINE_COMMENT_RE.sub("", content)
-        content = cls.MULTILINE_COMMENT_RE.sub("", content)
+        content = cls.strip_comments(content)
 
         return (
             cls.__parse_version_pragma(content),

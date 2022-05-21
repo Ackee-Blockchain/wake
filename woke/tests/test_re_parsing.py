@@ -6,6 +6,29 @@ from woke.c_regex_parsing import SoliditySourceParser
 base_path = Path(__file__).parent.resolve() / "re_parsing_sources"
 
 
+def test_comment_stripping():
+    assert SoliditySourceParser.strip_comments("abc // ikejfurgdi") == "abc "
+    assert SoliditySourceParser.strip_comments("xy/*1234*/z") == "xyz"
+
+    original = """
+    import "abc.sol"; // test
+    import "..//x/y.sol";
+    import "/*abc.sol";
+    import "de*/f.sol";// /* */ *//*//
+    import /* "xyz";
+    // */ "helper.sol";
+    """
+    stripped = """
+    import "abc.sol"; 
+    import "..//x/y.sol";
+    import "/*abc.sol";
+    import "de*/f.sol";
+    import  "helper.sol";
+    """
+
+    assert SoliditySourceParser.strip_comments(original) == stripped
+
+
 def test_a():
     path = base_path / "a.sol"
     versions, imports, *_ = SoliditySourceParser.parse(path)
