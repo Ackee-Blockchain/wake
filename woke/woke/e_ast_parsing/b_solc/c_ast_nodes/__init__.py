@@ -263,7 +263,7 @@ class SymbolAliasModel(ConfiguredModel):  # helper class
 
 # InlineAssembly
 class ExternalReferenceModel(ConfiguredModel):  # helper class
-    declaration: StrictInt
+    declaration: AstNodeId
     is_offset: StrictBool
     is_slot: StrictBool
     src: Src
@@ -290,7 +290,7 @@ class SolcOrYulNode(ConfiguredModel):
 
 
 class SolcNode(SolcOrYulNode):
-    id: Id
+    id: AstNodeId
 
     def __iter__(self):
         def iter_list(l: List):
@@ -340,8 +340,8 @@ class SolcImportDirective(SolcNode):
     # required
     absolute_path: AbsolutePath
     file: File
-    scope: Scope
-    source_unit: SourceUnit
+    scope: AstNodeId
+    source_unit: AstNodeId
     symbol_aliases: List[SymbolAliasModel]
     unit_alias: UnitAlias
     # optional
@@ -355,7 +355,7 @@ class SolcVariableDeclaration(SolcNode):
     name: Name
     constant: Constant
     mutability: Mutability
-    scope: Scope
+    scope: AstNodeId
     state_variable: StateVariable
     storage_location: StorageLocation
     type_descriptions: "TypeDescriptionsModel"
@@ -392,7 +392,7 @@ class SolcFunctionDefinition(SolcNode):
     modifiers: List["SolcModifierInvocation"]
     parameters: "SolcParameterList"
     return_parameters: "SolcParameterList"
-    scope: Scope
+    scope: AstNodeId
     state_mutability: StateMutability
     virtual: Virtual
     visibility: Visibility
@@ -412,7 +412,7 @@ class SolcStructDefinition(SolcNode):
     name: Name
     canonical_name: CanonicalName
     members: List["SolcVariableDeclaration"]
-    scope: Scope
+    scope: AstNodeId
     visibility: Visibility
     # optional
     name_location: Optional[NameLocation]
@@ -452,7 +452,7 @@ class SolcContractDefinition(SolcNode):
     fully_implemented: FullyImplemented
     linearized_base_contracts: LinearizedBaseContracts
     nodes: List[SolcContractMemberUnion]
-    scope: Scope
+    scope: AstNodeId
     # optional
     name_location: Optional[NameLocation]
     canonical_name: Optional[CanonicalName]
@@ -550,7 +550,7 @@ class SolcUserDefinedTypeName(SolcNode):
     referenced_declaration: ReferencedDeclaration
     # optional
     # TODO:
-    contract_scope: Optional[Scope]
+    contract_scope: Optional[AstNodeId]
     name: Optional[Name]
     path_node: Optional["SolcIdentifierPath"]
 
