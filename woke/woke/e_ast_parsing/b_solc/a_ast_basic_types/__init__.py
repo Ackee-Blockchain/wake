@@ -1,17 +1,17 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, NewType
 
 from pydantic.types import StrictBool, StrictInt, StrictStr
 
 # Comments are the first ocurrence per the ordering in the definition file
 
 # SolcNode
-Id = StrictInt
+AstNodeId = NewType("AstNodeId", StrictInt)
 Src = StrictStr
 
 # SolcSourceUnit
 SourceLocation = StrictStr
 AbsolutePath = StrictStr
-ExportedSymbols = Dict[StrictStr, List[StrictInt]]
+ExportedSymbols = Dict[StrictStr, List[AstNodeId]]
 # optional
 License = StrictStr
 
@@ -20,8 +20,6 @@ Literals = List[StrictStr]
 
 # SolcImportDirective
 File = StrictStr
-Scope = StrictInt
-SourceUnit = StrictInt
 UnitAlias = StrictStr
 # optional
 NameLocation = StrictStr
@@ -33,7 +31,7 @@ FunctionSelector = StrictStr
 Indexed = StrictBool
 StateVariable = StrictBool
 # optional
-BaseFunctions = List[StrictInt]
+BaseFunctions = List[AstNodeId]
 
 # EnumDefinition
 CanonicalName = StrictStr
@@ -44,26 +42,26 @@ Virtual = StrictBool
 
 # ContractDefinition
 Abstract = StrictBool
-ContractDependencies = List[StrictInt]
+ContractDependencies = List[AstNodeId]
 FullyImplemented = StrictBool
-LinearizedBaseContracts = List[StrictInt]
+LinearizedBaseContracts = List[AstNodeId]
 # optional
-UsedErrors = List[StrictInt]
+UsedErrors = List[AstNodeId]
 
 # EventDefinition
 Anonymous = StrictBool
 
 # ModifierDefinition
-BaseModifiers = List[StrictInt]
+BaseModifiers = List[AstNodeId]
 
 # UserDefinedTypeName
-ReferencedDeclaration = StrictInt
+ReferencedDeclaration = AstNodeId
 
 # Return
-FunctionReturnParameters = StrictInt
+FunctionReturnParameters = AstNodeId
 
 # VariableDeclarationStatement
-Assignments = List[Optional[StrictInt]]
+Assignments = List[Optional[AstNodeId]]
 
 # Assignment
 IsConstant = StrictBool
@@ -76,9 +74,7 @@ Names = List[StrictStr]
 TryCall = StrictBool
 
 # Identifier
-OverloadedDeclarations = List[StrictInt]
-# optional
-ReferencedDeclaration = StrictInt
+OverloadedDeclarations = List[AstNodeId]
 
 # Literal
 HexValue = StrictStr
