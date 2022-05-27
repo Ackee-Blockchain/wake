@@ -6,7 +6,7 @@ from urllib.parse import unquote
 from enum import Enum, IntEnum
 from typing import Any, List, Optional, Union, NewType
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Extra
 
 DocumentUri = NewType("URI", str)
 URI = NewType("URI", str)
@@ -14,13 +14,31 @@ ChangeAnnotationIdentifier = NewType("ChangeAnnotationIdentifier", str)
 ProgressToken = Union[int, str]
 TraceValue = NewType("Trace", str)  # NewType(Union["off","message","verbose"], str)
 
+
 def to_snake(s):
-  return re.sub('([A-Z]\w+$)', '_\\1', s).lower()
+    return re.sub("([A-Z]\w+$)", "_\\1", s).lower()
+
+
+def to_camel(s: str) -> str:
+    split = s.split("_")
+    return split[0].lower() + "".join([w.capitalize() for w in split[1:]])
+
 
 def t_dict(d):
-   if isinstance(d, list):
-      return [t_dict(i) if isinstance(i, (dict, list)) else i for i in d]
-   return {to_snake(a):t_dict(b) if isinstance(b, (dict, list)) else b for a, b in d.items()}
+    if isinstance(d, list):
+        return [t_dict(i) if isinstance(i, (dict, list)) else i for i in d]
+    return {
+        to_snake(a): t_dict(b) if isinstance(b, (dict, list)) else b
+        for a, b in d.items()
+    }
+
+
+class LspModel(BaseModel):
+    class Config:
+        alias_generator = to_camel
+        allow_population_by_field_name = True
+        extra = Extra.ignore
+
 
 def uri_to_path(uri: str) -> str:
     if not uri.startswith("file://"):
@@ -32,7 +50,7 @@ def uri_to_path(uri: str) -> str:
     return str(Path(unquote(path)).resolve())
 
 
-class RegularExpressionsClientCapabilities(BaseModel):
+class RegularExpressionsClientCapabilities(LspModel):
     engine: str
     """
     The engine's name.
@@ -43,7 +61,7 @@ class RegularExpressionsClientCapabilities(BaseModel):
     """
 
 
-class Position(BaseModel):
+class Position(LspModel):
     line: int
     """
     Position in a document (zero-based).
@@ -54,7 +72,7 @@ class Position(BaseModel):
     """
 
 
-class Range(BaseModel):
+class Range(LspModel):
     start: Position
     """
     The range's start position.
@@ -65,7 +83,7 @@ class Range(BaseModel):
     """
 
 
-class Location(BaseModel):
+class Location(LspModel):
     """
     Represents a location inside a resource, such as a line inside a text file.
     """
@@ -74,7 +92,7 @@ class Location(BaseModel):
     range: Range
 
 
-class LocationLink(BaseModel):
+class LocationLink(LspModel):
     origin_selection_range: Optional[Range]
     """
     Span of the origin of this link.
@@ -114,7 +132,7 @@ class DiagnosticTag(IntEnum):
     """
 
 
-class DiagnosticRelatedInformation(BaseModel):
+class DiagnosticRelatedInformation(LspModel):
     location: Location
     """
     The location of this related diagnostic information.
@@ -125,14 +143,14 @@ class DiagnosticRelatedInformation(BaseModel):
     """
 
 
-class CodeDescription(BaseModel):
+class CodeDescription(LspModel):
     href: URI
     """
     URI to open with more info.
     """
 
 
-class Diagnostic(BaseModel):
+class Diagnostic(LspModel):
     range: Range
     """
     The range at which the message applies.
@@ -173,7 +191,7 @@ class Diagnostic(BaseModel):
     """
 
 
-class Command(BaseModel):
+class Command(LspModel):
     title: str
     """
     Title of the command, like `save`.
@@ -188,7 +206,7 @@ class Command(BaseModel):
     """
 
 
-class TextEdit(BaseModel):
+class TextEdit(LspModel):
     range: Range
     """
     The range of the text document to be manipulated.
@@ -200,7 +218,7 @@ class TextEdit(BaseModel):
     """
 
 
-class ChangeAnnotation(BaseModel):
+class ChangeAnnotation(LspModel):
     label: str
     """
     A human-readable string describing the actual change.
@@ -222,7 +240,7 @@ class AnnotatedTextEdit(TextEdit):
     """
 
 
-class TextDocumentIdentifier(BaseModel):
+class TextDocumentIdentifier(LspModel):
     uri: DocumentUri
     """
     The text document's URI.
@@ -252,7 +270,7 @@ class OptionalVersionedTextDocumentIdentifier(TextDocumentIdentifier):
     """
 
 
-class TextDocumentEdit(BaseModel):
+class TextDocumentEdit(LspModel):
     text_document: OptionalVersionedTextDocumentIdentifier
     """
     The text document to change.
@@ -263,7 +281,7 @@ class TextDocumentEdit(BaseModel):
     """
 
 
-class CreateFileOptions(BaseModel):
+class CreateFileOptions(LspModel):
     """
     Options to create a file.
     """
@@ -278,7 +296,7 @@ class CreateFileOptions(BaseModel):
     """
 
 
-class CreateFile(BaseModel):
+class CreateFile(LspModel):
     """
     Create file operation.
     """
@@ -301,7 +319,7 @@ class CreateFile(BaseModel):
     """
 
 
-class RenameFileOptions(BaseModel):
+class RenameFileOptions(LspModel):
     """
     Rename file options.
     """
@@ -316,7 +334,7 @@ class RenameFileOptions(BaseModel):
     """
 
 
-class RenameFile(BaseModel):
+class RenameFile(LspModel):
     """
     Rename file operation.
     """
@@ -343,7 +361,7 @@ class RenameFile(BaseModel):
     """
 
 
-class DeleteFileOptions(BaseModel):
+class DeleteFileOptions(LspModel):
     """
     Delete file options.
     """
@@ -358,7 +376,7 @@ class DeleteFileOptions(BaseModel):
     """
 
 
-class DeleteFile(BaseModel):
+class DeleteFile(LspModel):
     """
     Delete file operation
     """
@@ -381,7 +399,7 @@ class DeleteFile(BaseModel):
     """
 
 
-class WorkspaceEdit(BaseModel):
+class WorkspaceEdit(LspModel):
     """
     :param changes: Holds changes to existing resources.
 
@@ -406,11 +424,15 @@ class ResourceOperationKind(Enum):
 class FailureHandlingKind(Enum):
     ABORT = "abort"
     TRANSACTIONAL = "transactional"
-    TEXT_ONLY_TRANSACTIONAL = "textonlytransactional"
+    TEXT_ONLY_TRANSACTIONAL = "textOnlyTransactional"
     UNDO = "undo"
 
 
-class WorkspaceEditClientCapabilities(BaseModel):
+class ChangeAnnotationsSupport(LspModel):
+    groups_on_label: Optional[bool]
+
+
+class WorkspaceEditClientCapabilities(LspModel):
     document_changes: Optional[bool]
     """
     The client supports versioned document changes in `WorkspaceEdit`s
@@ -420,7 +442,7 @@ class WorkspaceEditClientCapabilities(BaseModel):
     The resource operations the client supports.
     Clients should at least support 'create', 'rename' and 'delete' files and folders.
     """
-    failure_handlings: Optional[FailureHandlingKind]
+    failure_handling: Optional[FailureHandlingKind]
     """
     The failure handling strategy of a client if applying the workspace edit fails.
     """
@@ -431,14 +453,14 @@ class WorkspaceEditClientCapabilities(BaseModel):
     in a workspace edit to the client specific new line character(s).
     """
     # ?
-    change_annotation_support: Optional[bool]
+    change_annotation_support: Optional[ChangeAnnotationsSupport]
     """
     Whether the client in general supports change annotations on text edits,
     create file, rename file and delete file changes.
     """
 
 
-class TextDocumentItem(BaseModel):
+class TextDocumentItem(LspModel):
     uri: DocumentUri
     """
     The text document's URI.
@@ -457,7 +479,7 @@ class TextDocumentItem(BaseModel):
     """
 
 
-class TextDocumentPositionParams(BaseModel):
+class TextDocumentPositionParams(LspModel):
     text_document: TextDocumentIdentifier
     """
     The text document.
@@ -468,16 +490,16 @@ class TextDocumentPositionParams(BaseModel):
     """
 
 
-class DocumentFilter(BaseModel):
-    language: Optional[str]
+class DocumentFilter(LspModel):
+    language: Optional[str] = None
     """
     A language ID, like 'typescript'.
     """
-    scheme: Optional[str]
+    scheme: Optional[str] = None
     """
      A Uri [scheme](#Uri.scheme), like `file` or `untitled`.
     """
-    pattern: Optional[str]
+    pattern: Optional[str] = None
     """
     Glob patterns can have the following syntax:
     * `*` to match one or more characters in a path segment
@@ -493,24 +515,24 @@ class DocumentFilter(BaseModel):
     """
 
 
-class StaticRegistrationOptions(BaseModel):
+class StaticRegistrationOptions(LspModel):
     """
     Static registration options to be returned in the initialize request.
     """
 
-    id: Optional[str]
+    id: Optional[str] = None
     """
     The id used to register the request.
     The id can be used to deregister the request again. See also Registration#id.
     """
 
 
-class TextDocumentRegistrationOptions(BaseModel):
+class TextDocumentRegistrationOptions(LspModel):
     """
     General text document registration options.
     """
 
-    document_selector: Union[List[DocumentFilter], None]
+    document_selector: Optional[List[DocumentFilter]] = None
     """
     A document selector to identify the scope of the registration.
     If set to null the document selector provided on the client side will be used.
@@ -522,7 +544,7 @@ class MarkupKind(Enum):
     MARKDOWN = "markdown"
 
 
-class MarkupContent(BaseModel):
+class MarkupContent(LspModel):
     kind: MarkupKind
     """
     The type of the Markup.
@@ -533,7 +555,7 @@ class MarkupContent(BaseModel):
     """
 
 
-class MarkupClientCapabilities(BaseModel):
+class MarkupClientCapabilities(LspModel):
     parser: MarkupKind
     """
     The name of the parser.
@@ -556,7 +578,7 @@ class MarkupClientCapabilities(BaseModel):
     """
 
 
-class WorkDoneProgressBegin(BaseModel):
+class WorkDoneProgressBegin(LspModel):
     kind: str = "begin"
     title: str
     """
@@ -587,7 +609,7 @@ class WorkDoneProgressBegin(BaseModel):
     """
 
 
-class WorkDoneProgressReport(BaseModel):
+class WorkDoneProgressReport(LspModel):
     kind: str = "report"
     cancellable: Optional[bool]
     """
@@ -608,7 +630,7 @@ class WorkDoneProgressReport(BaseModel):
     """
 
 
-class WorkDoneProgressEnd(BaseModel):
+class WorkDoneProgressEnd(LspModel):
     kind: str = "end"
     message: Optional[bool]
     """
@@ -617,18 +639,46 @@ class WorkDoneProgressEnd(BaseModel):
     """
 
 
-class WorkDoneProgressParams(BaseModel):
+class WorkDoneProgressParams(LspModel):
     work_done_token: Optional[ProgressToken]
     """
     An optional token that a server can use to report work done progress.
     """
 
 
-class WorkDoneProgressOptions(BaseModel):
-    work_done_progress: Optional[bool]
+class WorkDoneProgressOptions(LspModel):
+    work_done_progress: Optional[bool] = None
 
 
-class PartialResultParams(BaseModel):
+class DiagnosticOptions(WorkDoneProgressOptions):
+    """
+    Diagnostics options.
+    """
+
+    identifier: Optional[str] = None
+    """
+    An optional identifier under which the diagnostics are managed by the client.
+    """
+    inter_file_dependencies: bool
+    """
+    Whether the language has inter file dependencies meaning that
+    editing code in one file can result in a different diagnostic
+    set in another file. Inter file dependencies are common for
+    most programming languages and typically uncommon for linters.
+    """
+    workspace_diagnostics: bool
+    """
+    The server provides support for workspace diagnostics as well.
+    """
+
+
+class DiagnosticRegistrationOptions(
+    TextDocumentRegistrationOptions, DiagnosticOptions, StaticRegistrationOptions
+):
+    pass
+
+
+class PartialResultParams(LspModel):
     partial_result_token: Optional[ProgressToken]
     """
     An optional token that a server can use to report partial results (e.g.streaming)
@@ -639,7 +689,7 @@ class PartialResultParams(BaseModel):
 # ##################### Lifecycle Message #####################
 
 
-class ClientCapabilitiesWorkspaceFileOperation(BaseModel):
+class ClientCapabilitiesWorkspaceFileOperation(LspModel):
     dynamic_registration: Optional[bool]
     did_create: Optional[bool]
     will_create: Optional[bool]
@@ -654,26 +704,26 @@ class FileOperationPatternKind(Enum):
     FOLDER = "folder"
 
 
-class FileOperationPatternOptions(BaseModel):
+class FileOperationPatternOptions(LspModel):
     ignore_case: Optional[bool]
 
 
-class FileOperationPattern(BaseModel):
+class FileOperationPattern(LspModel):
     glob: str
     matches: Optional[FileOperationPatternKind]
     options: Optional[FileOperationPatternOptions]
 
 
-class FileOperationFilter(BaseModel):
+class FileOperationFilter(LspModel):
     scheme: Optional[str]
     pattern: FileOperationPattern
 
 
-class FileOperationRegistrationOptions(BaseModel):
+class FileOperationRegistrationOptions(LspModel):
     filters: List[FileOperationFilter]
 
 
-class ServerCapabilitiesWorkspaceFileOperations(BaseModel):
+class ServerCapabilitiesWorkspaceFileOperations(LspModel):
     """
     ServerCapabilities subsubClass
     """
@@ -686,12 +736,12 @@ class ServerCapabilitiesWorkspaceFileOperations(BaseModel):
     will_delete: Optional[FileOperationRegistrationOptions]
 
 
-class WorkspaceFoldersServerCapabilities(BaseModel):
+class WorkspaceFoldersServerCapabilities(LspModel):
     supported: Optional[bool]
     change_notifications: Optional[Union[str, bool]]
 
 
-class ServerCapabilitiesWorkspace(BaseModel):
+class ServerCapabilitiesWorkspace(LspModel):
     """
     ServerCapabilities subClass
     """
@@ -719,31 +769,31 @@ class TextDocumentSyncKind(IntEnum):
     """
 
 
-class SaveOptions(BaseModel):
+class SaveOptions(LspModel):
     include_text: Optional[bool]
 
 
-class TextDocumentSyncOptions(BaseModel):
-    open_close: Optional[bool]
+class TextDocumentSyncOptions(LspModel):
+    open_close: Optional[bool] = None
     """
     Open and close notifications are sent to the server. If omitted open
     close notification should not be sent.
     """
-    change: Optional[TextDocumentSyncKind]
-    will_save: Optional[bool]
-    will_save_wait_until: Optional[bool]
-    save: Optional[Union[bool, SaveOptions]]
+    change: Optional[TextDocumentSyncKind] = None
+    will_save: Optional[bool] = None
+    will_save_wait_until: Optional[bool] = None
+    save: Optional[Union[bool, SaveOptions]] = None
 
 
 class InitializeErrorCodes(IntEnum):
     unknown_protocol_version = 1
 
 
-class InitializeError(BaseModel):
+class InitializeError(LspModel):
     retry: bool
 
 
-class InitializedParams(BaseModel):
+class InitializedParams(LspModel):
     pass
 
 
@@ -754,48 +804,48 @@ class MessageType(IntEnum):
     LOG = 4
 
 
-class ShowMessageParams(BaseModel):
+class ShowMessageParams(LspModel):
     type: MessageType
     message: str
 
 
-class ShowMessageRequestClientCapabilitiesMessageActionItem(BaseModel):
+class ShowMessageRequestClientCapabilitiesMessageActionItem(LspModel):
     additional_properties_support: Optional[bool]
 
 
-class ShowMessageRequestClientCapabilities(BaseModel):
+class ShowMessageRequestClientCapabilities(LspModel):
     message_action_item: Optional[ShowMessageRequestClientCapabilitiesMessageActionItem]
 
 
-class MessageActionItem(BaseModel):
+class MessageActionItem(LspModel):
     title: str
 
 
-class ShowMessageRequestParams(BaseModel):
+class ShowMessageRequestParams(LspModel):
     type: MessageType
     message: str
     actions: Optional[List[MessageActionItem]]
 
 
-class ShowDocumentClientCapabilities(BaseModel):
+class ShowDocumentClientCapabilities(LspModel):
     support: bool
 
 
-class ShowDocumentParams(BaseModel):
+class ShowDocumentParams(LspModel):
     uri: URI
     external: Optional[bool]
     take_focus: Optional[bool]
     selection: Optional[Range]
 
 
-class ShowDocumentResult(BaseModel):
+class ShowDocumentResult(LspModel):
     success: bool
     """
     A boolean indicating if the show was successful.
     """
 
 
-class LogMessageParams(BaseModel):
+class LogMessageParams(LspModel):
     type: MessageType
     """
     The message type
@@ -806,7 +856,7 @@ class LogMessageParams(BaseModel):
     """
 
 
-class PublishDiagnosticsParams(BaseModel):
+class PublishDiagnosticsParams(LspModel):
     uri: DocumentUri
     """
     The URI for which diagnostic information is reported.
@@ -823,18 +873,18 @@ class PublishDiagnosticsParams(BaseModel):
     """
 
 
-class WorkDoneProgressCreateParams(BaseModel):
+class WorkDoneProgressCreateParams(LspModel):
     token: ProgressToken
     """
     The token to be used to report progress.
     """
 
 
-class WorkDoneProgressCancelParams(BaseModel):
+class WorkDoneProgressCancelParams(LspModel):
     token: ProgressToken
 
 
-class Registration(BaseModel):
+class Registration(LspModel):
     id: str
     """
     The id used to register the request. The id can be used to deregister
@@ -850,11 +900,11 @@ class Registration(BaseModel):
     """
 
 
-class RegistrationParams(BaseModel):
+class RegistrationParams(LspModel):
     registrations: List[Registration]
 
 
-class Unregistration(BaseModel):
+class Unregistration(LspModel):
     id: str
     """
     The id used to unregister the request or notification. Usually an id
@@ -866,18 +916,18 @@ class Unregistration(BaseModel):
     """
 
 
-class UnregistrationParams(BaseModel):
+class UnregistrationParams(LspModel):
     unregistrations: List[Unregistration]
 
 
-class SetTraceParams(BaseModel):
+class SetTraceParams(LspModel):
     value: TraceValue
     """
     The new value that should be assigned to the trace setting.
     """
 
 
-class LogTraceParams(BaseModel):
+class LogTraceParams(LspModel):
     message: str
     """
     The message to be logged.
@@ -892,7 +942,7 @@ class LogTraceParams(BaseModel):
 # ##################### Document Synchronization ######################
 
 
-class DidOpenTextDocumentParams(BaseModel):
+class DidOpenTextDocumentParams(LspModel):
     text_document: TextDocumentItem
 
 
@@ -900,7 +950,7 @@ class TextDocumentChangeRegistrationOptions(TextDocumentRegistrationOptions):
     sync_kind: TextDocumentSyncKind
 
 
-class TextDocumentContentChangeEvent(BaseModel):
+class TextDocumentContentChangeEvent(LspModel):
     range: Optional[Range]
     """
     The range of the document that changed.
@@ -915,9 +965,11 @@ class TextDocumentContentChangeEvent(BaseModel):
     """
 
 
-class DidChangeTextDocumentParams(BaseModel):
+class DidChangeTextDocumentParams(LspModel):
     text_document: VersionedTextDocumentIdentifier
-    content_changes: Union[List[TextDocumentContentChangeEvent],TextDocumentContentChangeEvent]
+    content_changes: Union[
+        List[TextDocumentContentChangeEvent], TextDocumentContentChangeEvent
+    ]
 
 
 class TextDocumentSaveReason(IntEnum):
@@ -926,12 +978,12 @@ class TextDocumentSaveReason(IntEnum):
     FOCUS_OUT = 3
 
 
-class WillSaveTextDocumentParams(BaseModel):
+class WillSaveTextDocumentParams(LspModel):
     text_document: TextDocumentIdentifier
     reason: TextDocumentSaveReason
 
 
-class DidSaveTextDocumentParams(BaseModel):
+class DidSaveTextDocumentParams(LspModel):
     text_document: TextDocumentIdentifier
     text: Optional[str]
 
@@ -944,14 +996,14 @@ class TextDocumentSaveRegistrationOptions(TextDocumentRegistrationOptions):
     text: Optional[str]
 
 
-class DidCloseTextDocumentParams(BaseModel):
+class DidCloseTextDocumentParams(LspModel):
     text_document: TextDocumentIdentifier
     """
     The document that was closed.
     """
 
 
-class TextDocumentSyncClientCapabilities(BaseModel):
+class TextDocumentSyncClientCapabilities(LspModel):
     dynamic_registration: Optional[bool]
     will_save: Optional[bool]
     will_save_wait_until: Optional[bool]
@@ -992,7 +1044,7 @@ class SymbolTag(IntEnum):
     DEPRECATED = 1
 
 
-class DocumentSymbol(BaseModel):
+class DocumentSymbol(LspModel):
     name: str
     detail: Optional[str]
     kind: SymbolKind
@@ -1003,7 +1055,7 @@ class DocumentSymbol(BaseModel):
     children: Optional[List["DocumentSymbol"]]
 
 
-class SymbolInformation(BaseModel):
+class SymbolInformation(LspModel):
     name: str
     kind: SymbolKind
     tags: Optional[List[SymbolTag]]
@@ -1012,21 +1064,21 @@ class SymbolInformation(BaseModel):
     container_name: Optional[str]
 
 
-class WorkspaceSymbolClientCapabilitiesSymbolKind(BaseModel):
+class WorkspaceSymbolClientCapabilitiesSymbolKind(LspModel):
     value_set: Optional[List[SymbolKind]]
 
 
-class WorkspaceSymbolClientCapabilitiesTagSupport(BaseModel):
+class WorkspaceSymbolClientCapabilitiesTagSupport(LspModel):
     value_set: List[SymbolTag]
 
 
-class WorkspaceSymbolClientCapabilitiesResolveSupport(BaseModel):
+class WorkspaceSymbolClientCapabilitiesResolveSupport(LspModel):
     properties: List[str]
 
 
-class WorkspaceSymbolClientCapabilities(BaseModel):
+class WorkspaceSymbolClientCapabilities(LspModel):
     dynamic_registration: Optional[bool]
-    sumbol_kind: Optional[WorkspaceSymbolClientCapabilitiesSymbolKind]
+    symbol_kind: Optional[WorkspaceSymbolClientCapabilitiesSymbolKind]
     tag_support: Optional[WorkspaceSymbolClientCapabilitiesTagSupport]
     resolve_support: Optional[WorkspaceSymbolClientCapabilitiesResolveSupport]
 
@@ -1043,7 +1095,7 @@ class WorkspaceSymbolParams(WorkDoneProgressParams, PartialResultParams):
     query: str
 
 
-class WorkspaceSymbol(BaseModel):
+class WorkspaceSymbol(LspModel):
     name: str
     kind: SymbolKind
     tags: Optional[List[SymbolTag]]
@@ -1051,72 +1103,72 @@ class WorkspaceSymbol(BaseModel):
     container_name: Optional[str]
 
 
-class ConfigurationItems(BaseModel):
+class ConfigurationItems(LspModel):
     scope_uri: Optional[DocumentUri]
     section: Optional[bool]
 
 
-class ConfigurationParams(BaseModel):
+class ConfigurationParams(LspModel):
     items: Optional[List[ConfigurationItems]]
 
 
-class DidChangeConfigurationClientCapabilities(BaseModel):
+class DidChangeConfigurationClientCapabilities(LspModel):
     dynamic_registration: Optional[bool]
 
 
-class DidChangeConfigurationParams(BaseModel):
+class DidChangeConfigurationParams(LspModel):
     settings: Any
 
 
-class WorkspaceFolder(BaseModel):
+class WorkspaceFolder(LspModel):
     uri: DocumentUri
     name: str
 
 
-class WorkspaceFoldersChangeEvent(BaseModel):
+class WorkspaceFoldersChangeEvent(LspModel):
     added: List[WorkspaceFolder]
     removed: List[WorkspaceFolder]
 
 
-class DidChangeWorkspaceFoldersParams(BaseModel):
+class DidChangeWorkspaceFoldersParams(LspModel):
     event: WorkspaceFoldersChangeEvent
 
 
-class FileCreate(BaseModel):
+class FileCreate(LspModel):
     uri: str
 
 
-class CreateFilesParams(BaseModel):
+class CreateFilesParams(LspModel):
     files: List[FileCreate]
 
 
-class FileRename(BaseModel):
+class FileRename(LspModel):
     old_uri: str
     new_uri: str
 
 
-class RenameFilesParams(BaseModel):
+class RenameFilesParams(LspModel):
     files: List[FileRename]
 
 
-class FileDelete(BaseModel):
+class FileDelete(LspModel):
     uri: str
 
 
-class DeleteFilesParams(BaseModel):
+class DeleteFilesParams(LspModel):
     files: List[FileDelete]
 
 
-class DidChangeWatchedFilesClientCapabilities(BaseModel):
+class DidChangeWatchedFilesClientCapabilities(LspModel):
     dynamic_registration: Optional[bool]
 
 
-class FileSystemWatcher(BaseModel):
+class FileSystemWatcher(LspModel):
     glob_pattern: str
     kind: Optional[int]  # uint
 
 
-class DidChangeWatchedFilesRegistrationOptions(BaseModel):
+class DidChangeWatchedFilesRegistrationOptions(LspModel):
     watchers: List[FileSystemWatcher]
 
 
@@ -1126,12 +1178,12 @@ class WatchKind(IntEnum):
     DELETE = 4
 
 
-class FileEvent(BaseModel):
+class FileEvent(LspModel):
     uri: DocumentUri
     type: int  # uint
 
 
-class DidChangeWatchedParams(BaseModel):
+class DidChangeWatchedParams(LspModel):
     changes: List[FileEvent]
 
 
@@ -1141,7 +1193,7 @@ class FileChangeType(IntEnum):
     DELETED = 3
 
 
-class ExecuteCommandClientCapabilities(BaseModel):
+class ExecuteCommandClientCapabilities(LspModel):
     dynamic_registration: Optional[bool]
 
 
@@ -1158,18 +1210,51 @@ class ExecuteCommandParams(WorkDoneProgressParams):
     arguments: Optional[List[Any]]
 
 
-class ApplyWorkspaceEditParams(BaseModel):
+class ApplyWorkspaceEditParams(LspModel):
     label: Optional[str]
     edit: WorkspaceEdit
 
 
-class ApplyWorkspaceEditResult(BaseModel):
+class ApplyWorkspaceEditResult(LspModel):
     applied: bool
     failure_reason: Optional[str]
     failed_change: Optional[int]  # uint
 
 
-class ClientCapabilitiesWorkspace(BaseModel):
+class CodeLensWorkspaceClientCapabilities(LspModel):
+    refresh_support: Optional[bool]
+
+
+class SemanticTokensClientCapabilitiesRequestsFull(LspModel):
+    delta: Optional[bool]
+
+
+class SemanticTokensClientCapabilitiesRequests(LspModel):
+    range: Optional[bool]
+    full: Optional[Union[bool, SemanticTokensClientCapabilitiesRequestsFull]]
+
+
+class TokenFormat(LspModel):
+    pass
+
+
+class SemanticTokensClientCapabilities(LspModel):
+    dynamic_registration: Optional[bool]
+    requests: Optional[SemanticTokensClientCapabilitiesRequests]
+    token_types: List[str] = []
+    token_modifiers: List[str] = []
+    formats: List[TokenFormat] = []
+    overlapping_token_support: Optional[bool]
+    multiline_token_support: Optional[bool]
+    server_cancel_support: Optional[bool]
+    augments_syntax_tokens: Optional[bool]
+
+
+class SemanticTokensWorkspaceClientCapabilities(LspModel):
+    refresh_support: Optional[bool]
+
+
+class ClientCapabilitiesWorkspace(LspModel):
     apply_edit: Optional[bool]
     workspace_edit: Optional[WorkspaceEditClientCapabilities]
     did_change_configuration: Optional[DidChangeConfigurationClientCapabilities]
@@ -1177,15 +1262,23 @@ class ClientCapabilitiesWorkspace(BaseModel):
     symbol: Optional[WorkspaceSymbolClientCapabilities]
     execute_command: Optional[ExecuteCommandClientCapabilities]
     workspace_folders: Optional[bool]
-    """
-    sematic_tokens: Optional[SemanticTokensWorkspaceClientCapabilities]
+    configuration: Optional[bool]
+    semantic_tokens: Optional[SemanticTokensWorkspaceClientCapabilities]
     code_lens: Optional[CodeLensWorkspaceClientCapabilities]
-    """
     file_operations: Optional[ClientCapabilitiesWorkspaceFileOperation]
 
 
-class ServerCapabilities(BaseModel):
-    text_document_sync: Optional[Union[TextDocumentSyncOptions, TextDocumentSyncKind]]
+class PositionEncodingKind(str, Enum):
+    UTF8 = "utf-8"
+    UTF16 = "utf-16"
+    UTF32 = "utf-32"
+
+
+class ServerCapabilities(LspModel):
+    position_encoding: Optional[PositionEncodingKind] = None
+    text_document_sync: Optional[
+        Union[TextDocumentSyncOptions, TextDocumentSyncKind]
+    ] = None
     """
     completion_provider: Optional[CompletionOptions]
     hover_provider: Optional[Union[bool, HoverOptions]]
@@ -1196,7 +1289,7 @@ class ServerCapabilities(BaseModel):
     implementation_provider: Optional[Union[bool, ImplementationOptions, ImplementationRegistrationOptions]]
     references_provider: Optional[Union[bool, ReferenceOptions]]
     document_highlight_provider: Optional[Union[bool, ReferenceOptions]]
-    document_symbol_providet: Optional[Union[bool, DocumentSymbolOptions]]
+    document_symbol_provider: Optional[Union[bool, DocumentSymbolOptions]]
     code_action_provider: Optional[Union[bool, CodeActionOptions]]
     code_lens_provider: Optional[CodeLensOptions]
     document_link_provider: Optional[DocumentLinkOptions]
@@ -1213,22 +1306,25 @@ class ServerCapabilities(BaseModel):
     semantic_token_provider: Optional[Union[SemanticTokensOptions, SemanticTokensRegistrationOptions]]
     moniker_provider: Optional[Union[bool, MonikerOptions, MonikerRegistrationOptions]]
     """
-    workspace_symbol_provider: Optional[Union[bool, WorkspaceSymbolOptions]]
-    workspace: Optional[ServerCapabilitiesWorkspace]
-    experimental: Optional[Any]
+    diagnostic_provider: Optional[
+        Union[DiagnosticOptions, DiagnosticRegistrationOptions]
+    ] = None
+    workspace_symbol_provider: Optional[Union[bool, WorkspaceSymbolOptions]] = None
+    workspace: Optional[ServerCapabilitiesWorkspace] = None
+    experimental: Optional[Any] = None
 
 
-class InitializeResultServerInfo(BaseModel):
+class InitializeResultServerInfo(LspModel):
     name: str
     version: Optional[str]
 
 
-class InitializeResult(BaseModel):
+class InitializeResult(LspModel):
     capabilities: ServerCapabilities
     server_info: Optional[InitializeResultServerInfo]
 
 
-class TextDocumentClientCapabilities(BaseModel):
+class TextDocumentClientCapabilities(LspModel):
     synchronization: Optional[TextDocumentSyncClientCapabilities]
     """
     completion: Optional[CompletionClientCapabilities]
@@ -1248,7 +1344,7 @@ class TextDocumentClientCapabilities(BaseModel):
     range_formatting: Optional[DocumentRangeFormattingClientCapabilities]
     on_type_formatting: Optional[DocumentOnTypeFormattingClientCapabilities]
     rename: Optional[RenameClientCapabilities]
-    publish_diagnostic: Optional[PublishDiagnosticClientCapabilities]
+    publish_diagnostic: Optional[PublishDiagnosticsClientCapabilities]
     folding_range: Optional[FoldingRangeClientCapabilities]
     selection_range: Optional[SelectionRangeClientCapabilities]
     linked_editing_range: Optional[LinkedEditingRangeClientCapabilities]
@@ -1261,12 +1357,12 @@ class TextDocumentClientCapabilities(BaseModel):
     """
 
 
-class ClientCapabilitiesGeneralStaleRequestSupport(BaseModel):
+class ClientCapabilitiesGeneralStaleRequestSupport(LspModel):
     cancel: bool
     retry_on_content_modified: List[str]
 
 
-class ClientCapabilitiesGeneral(BaseModel):
+class ClientCapabilitiesGeneral(LspModel):
     stale_request_support: Optional[ClientCapabilitiesGeneralStaleRequestSupport]
     regular_expressions: Optional[RegularExpressionsClientCapabilities]
     """
@@ -1274,26 +1370,36 @@ class ClientCapabilitiesGeneral(BaseModel):
     """
 
 
-class ClientCapabilitiesWindow(BaseModel):
+class ClientCapabilitiesWindow(LspModel):
     work_done_progress: Optional[bool]
     show_message: Optional[ShowMessageRequestClientCapabilities]
     show_document: Optional[ShowDocumentClientCapabilities]
 
 
-class ClientCapabilities(BaseModel):
+class NotebookDocumentSyncClientCapabilities(LspModel):
+    dynamic_registration: Optional[bool]
+    execution_summary_support: Optional[bool]
+
+
+class NotebookDocumentClientCapabilities(LspModel):
+    synchronization: NotebookDocumentSyncClientCapabilities
+
+
+class ClientCapabilities(LspModel):
     workspace: Optional[ClientCapabilitiesWorkspace]
     text_document: Optional[TextDocumentClientCapabilities]
+    notebook_document: Optional[NotebookDocumentClientCapabilities]
     window: Optional[ClientCapabilitiesWindow]
     general: Optional[ClientCapabilitiesGeneral]
     experimental: Optional[Any]
 
 
-class InitializeParamsClientInfo(BaseModel):
+class InitializeParamsClientInfo(LspModel):
     name: str
-    verison: Optional[str]
+    version: Optional[str]
 
 
-class InitializeParams(WorkDoneProgressParams):
+class InitializeParams(LspModel):
     process_id: Union[int, None]
     client_info: Optional[InitializeParamsClientInfo]
     locale: Optional[str]

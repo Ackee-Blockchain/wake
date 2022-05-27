@@ -49,12 +49,18 @@ class RequestMethodEnum(StrEnum):
     WORKSPACE_DID_DELETE_FILES = "workspace/didDeleteFiles"  # Notification
 
     # Text Synchronization
-    DID_OPEN = "textDocument/didOpen"  # Notification
-    DID_CHANGE = "textDocument/didChange"  # Notification
-    WILL_SAVE = "textDocument/willSave"  # Notification
-    WILL_SAVE_WAIT_UNTIL = "textDocument/willSaveWaitUntil"
-    DID_SAVE = "textDocument/didSave"  # Notification
-    DID_CLOSE = "textDocument/didClose"  # Notification
+    TEXT_DOCUMENT_DID_OPEN = "textDocument/didOpen"  # Notification
+    TEXT_DOCUMENT_DID_CHANGE = "textDocument/didChange"  # Notification
+    TEXT_DOCUMENT_WILL_SAVE = "textDocument/willSave"  # Notification
+    TEXT_DOCUMENT_WILL_SAVE_WAIT_UNTIL = "textDocument/willSaveWaitUntil"
+    TEXT_DOCUMENT_DID_SAVE = "textDocument/didSave"  # Notification
+    TEXT_DOCUMENT_DID_CLOSE = "textDocument/didClose"  # Notification
+
+    # Notebook Document
+    NOTEBOOK_DOCUMENT_DID_OPEN = "notebookDocument/didOpen"  # Notification
+    NOTEBOOK_DOCUMENT_DID_CHANGE = "notebookDocument/didChange"  # Notification
+    NOTEBOOK_DOCUMENT_DID_SAVE = "notebookDocument/didSave"  # Notification
+    NOTEBOOK_DOCUMENT_DID_CLOSE = "notebookDocument/didClose"  # Notification
 
     # Diagnostics
     PUBLISH_DIAGNOSTICS = "textDocument/publishDiagnostics"  # Notification
@@ -100,6 +106,6 @@ class RequestMethodEnum(StrEnum):
 
     # Other
     CANCEL_REQUEST = "$/cancelRequest"
-    PROGRESS_NOTIFICATION = "$/progress"
-    LOG_TRACE_NOTIFICATION = "$/logTrace"  # Notification
-    SET_TRACE_NOTIFICATION = "$/setTrace"  # Notification
+    PROGRESS = "$/progress"
+    LOG_TRACE = "$/logTrace"  # Notification
+    SET_TRACE = "$/setTrace"  # Notification

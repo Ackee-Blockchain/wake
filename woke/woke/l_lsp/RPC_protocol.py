@@ -2,7 +2,7 @@ import json
 import collections
 from typing import Union
 
-from protocol_structures import (
+from .protocol_structures import (
     RequestMessage,
     ResponseMessage,
     ResponseError,
@@ -63,15 +63,15 @@ class RPCProtocol:
         # Return content length
         return content_length
 
-    def _read_content(self,len) -> dict:
+    def _read_content(self, len) -> dict:
         """
         Reads message content
         """
-        
+
         body = self.reader.read(len)
         return json.loads(body)
 
-    def recieve_message(self) -> Union[RequestMessage, NotificationMessage]:
+    def receive_message(self) -> Union[RequestMessage, NotificationMessage]:
         """
         Get content length parameters from http header
         (Is useless variable at this point, but function
@@ -106,34 +106,30 @@ class RPCProtocol:
         """
         Response object to be send
         """
-        return self._send(response.dict())
+        return self._send(response.json(exclude_none=True, by_alias=True))
 
     def send_rpc_request(self, request: RequestMessage):
         """
         Request object to be send
         """
-        return self._send(request.dict())
+        return self._send(request.json(exclude_none=True, by_alias=True))
 
     def send_rpc_error(self, error: ResponseError):
         """
         Error object to be send
         """
-        return self._send(error.dict())
+        return self._send(error.json(exclude_none=True, by_alias=True))
 
     def send_rpc_notification(self, notification: NotificationMessage):
         """
         Notification object to be send
         """
-        return self._send(notification.dict())
+        return self._send(notification.json(exclude_none=True, by_alias=True))
 
-    def _send(self, message: dict):
+    def _send(self, message: str):
         """
         Formats object to message and sends it
         """
-        message_str = json.dumps(message, separators=(",", ":"))
-        content_length = len(message_str)
-        response = f"Content-Length: {content_length}\r\nContent-Type: application/vscode-jsonrpc; charset=utf8\r\n\r\n{message_str}"
-        #print(f"RESPONSE:\n{response}\n")
-        print('RESPONSE HAVE BEEN SENT')
-        # raise EOFError()
+        content_length = len(message)
+        response = f"Content-Length: {content_length}\r\nContent-Type: application/vscode-jsonrpc; charset=utf8\r\n\r\n{message}"
         self.reader.write(response)
