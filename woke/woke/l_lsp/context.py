@@ -3,14 +3,14 @@ from .enums import TraceValueEnum
 from .basic_structures import *
 
 
-class LSPContext:
+class LspContext:
     woke_config: Optional[WokeConfig]
     shutdown_received: bool
     initialized: bool
     trace_value: TraceValueEnum
     client_capabilities: List[str]
     server_capabilities: List[str]
-    #workspace: Union[dict, None]
+    # workspace: Union[dict, None]
 
     def __init__(self) -> None:
         self.woke_config = None

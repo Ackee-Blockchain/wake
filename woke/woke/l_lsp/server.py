@@ -1,7 +1,8 @@
 import logging
 from typing import List, Iterable
 
-from .context import LSPContext
+from .context import LspContext
+from .exceptions import LspError
 from .protocol_structures import (
     NotificationMessage,
     RequestMessage,
@@ -11,17 +12,23 @@ from .protocol_structures import (
 )
 from .RPC_protocol import RPCProtocol
 from .methods import RequestMethodEnum
-from .methods_impl import method_mapping
-from .notifications_impl import notification_mapping
+from .methods_impl import handle_client_to_server_method
+from .notifications_impl import handle_client_to_server_notification
+
+logger = logging.getLogger(__name__)
 
 
 class Server:
-    def __init__(self, protocol: RPCProtocol, server_capabilities: Iterable[str], threads: int = 1):
+    def __init__(
+        self,
+        protocol: RPCProtocol,
+        server_capabilities: Iterable[str],
+        threads: int = 1,
+    ):
         self.protocol = protocol
         self.threads = threads
         self.running = True
-        self.init_request_received = False
-        self.context = LSPContext()
+        self.context = LspContext()
         self.context.server_capabilities = list(server_capabilities)
         self.context.client_capabilities = list()
 
@@ -30,75 +37,53 @@ class Server:
         Start the server
         """
         while self.running:
-            try:
-                # Read the message
-                message = self.protocol.recieve_message()
-                if isinstance(message, RequestMessage):
-                    # print('* REQUEST *')
-                    self.handle_message(message)
-                else:
-                    # print('* NOTIFICATION  *')
-                    self.handle_notification(message)
-            except EOFError:
-                break
-            except Exception as e:
-                logging.error("Error: %s", e)
+            # Read the message
+            message = self.protocol.receive_message()
+            if isinstance(message, RequestMessage):
+                self.handle_message(message)
+            else:
+                self.handle_notification(message)
 
     def stop_server(self):
         logging.shutdown()
         self.running = False
 
     def handle_message(self, request: RequestMessage):
-        # Double initialization
-        if (
-            self.init_request_received
-            and request.method == RequestMethodEnum.INITIALIZE
-        ):
-            # logging.error("Double init")
-            response_message = self._serve_error(
-                request, ErrorCodes.InvalidRequest.value, "Server already initialized"
-            )
-            self.protocol.send_rpc_response(response_message)
-            return
+        logger.info(f"Message received: {request}")
+
         # Init before request needed
         if (
             request.method != RequestMethodEnum.INITIALIZE
-            and not self.init_request_received
+            and not self.context.initialized
         ):
-            # logging.error("Request before init")
-            response_message = self._serve_error(
+            response = self._serve_error(
                 request,
-                ErrorCodes.ServerNotInitialized.value,
+                ErrorCodes.ServerNotInitialized,
                 "Server has not been initialized",
             )
-            self.protocol.send_rpc_response(response_message)
+            self.protocol.send_rpc_response(response)
             return
+
         # Handling request
         try:
-            # logging.info(f"Handling\nRequest id: {request.id}\nRequest method: {request.method}")
             response = self._serve_response(request)
-            self.protocol.send_rpc_response(response)
-        except Exception as e:
-            # logging.error(e)
-            error = self._serve_error(
-                request, ErrorCodes.RequestCancelled, "Error in handling message"
-            )
-            self.protocol.send_rpc_response(error)
+        except LspError as e:
+            response = self._serve_error(request, e.code, e.message)
+        self.protocol.send_rpc_response(response)
 
     def handle_notification(self, notification: NotificationMessage):
+        logger.info(f"Notification received: {notification}")
+
         # Handling notification
         # No error response send after failed notification
         # Drop if not initialized
-        if self.init_request_received or  notification.method == 'exit':
-            #print('-- handling notification')
-            try:
-                self._serve_notification(notification)
-            except Exception as e:
-                logging.error(e)
+        if self.context.initialized or notification.method == "exit":
+            self._serve_notification(notification)
 
     def _serve_response(self, request: RequestMessage) -> ResponseMessage:
-        # print('serving')
-        response = method_mapping[request.method](self.context, request.params)
+        response = handle_client_to_server_method(
+            self.context, request.method, request.params
+        )
         if self.context.initialized:
             self.init_request_received = True
             self.client_capabilities = self.context.client_capabilities
@@ -107,24 +92,26 @@ class Server:
         response_message = ResponseMessage(
             json_rpc="2.0", id=request.id, result=response, error=None
         )
-
+        logger.info(f"Serving response: {response_message}")
         return response_message
 
     @staticmethod
     def _serve_error(
-            request: RequestMessage, error_code: int, msg: str
+        request: RequestMessage, error_code: int, msg: str
     ) -> ResponseMessage:
         response_error = ResponseError(code=error_code, message=msg, data=None)
         response_message = ResponseMessage(
             json_rpc="2.0", id=request.id, error=response_error, result=None
         )
+        logger.warning(f"Serving error response: {response_message}")
         return response_message
 
     def _serve_notification(self, request: NotificationMessage) -> None:
         # Server handles notification
         # Nothing to return
-        notification_mapping[request.method](self.context, request.params)
-        return
+        handle_client_to_server_notification(
+            self.context, request.method, request.params
+        )
 
     def get_client_capabilities(self) -> List[str]:
         return self.context.client_capabilities
