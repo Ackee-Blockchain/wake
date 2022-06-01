@@ -45,19 +45,19 @@ def _initialize(context: LspContext, params: InitializeParams) -> InitializeResu
             InitializeError(retry=False),
         )
 
-    context.woke_config = WokeConfig(project_root_path=path)
+    context.create_compilation_thread()
     context.initialized = True
 
     server_capabilities = ServerCapabilities(
-        position_encoding=PositionEncodingKind.UTF8,
+        position_encoding=PositionEncodingKind.UTF16,
         text_document_sync=TextDocumentSyncOptions(
             open_close=True, change=TextDocumentSyncKind.INCREMENTAL
         ),
-        diagnostic_provider=DiagnosticRegistrationOptions(
-            document_selector=[DocumentFilter(language="solidity")],
-            inter_file_dependencies=True,
-            workspace_diagnostics=True,
-        ),
+        #diagnostic_provider=DiagnosticRegistrationOptions(
+            #document_selector=[DocumentFilter(language="solidity")],
+            #inter_file_dependencies=True,
+            #workspace_diagnostics=True,
+        #),
     )
     return InitializeResult(capabilities=server_capabilities, server_info=None)
 

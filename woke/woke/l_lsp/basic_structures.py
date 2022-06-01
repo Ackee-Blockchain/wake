@@ -951,7 +951,7 @@ class TextDocumentChangeRegistrationOptions(TextDocumentRegistrationOptions):
 
 
 class TextDocumentContentChangeEvent(LspModel):
-    range: Optional[Range]
+    range: Range
     """
     The range of the document that changed.
     """
@@ -967,9 +967,7 @@ class TextDocumentContentChangeEvent(LspModel):
 
 class DidChangeTextDocumentParams(LspModel):
     text_document: VersionedTextDocumentIdentifier
-    content_changes: Union[
-        List[TextDocumentContentChangeEvent], TextDocumentContentChangeEvent
-    ]
+    content_changes: List[TextDocumentContentChangeEvent]
 
 
 class TextDocumentSaveReason(IntEnum):
@@ -1400,12 +1398,12 @@ class InitializeParamsClientInfo(LspModel):
 
 
 class InitializeParams(LspModel):
-    process_id: Union[int, None]
+    process_id: Optional[int]
     client_info: Optional[InitializeParamsClientInfo]
     locale: Optional[str]
-    root_path: Optional[Union[str, None]]
-    root_uri: Union[DocumentUri, None]
+    root_path: Optional[str]
+    root_uri: Optional[DocumentUri]
     initialization_options: Optional[Any]
-    capabilities: ClientCapabilities  # soon
+    capabilities: ClientCapabilities
     trace: Optional[TraceValue]
-    workspace_folders: Union[List[WorkspaceFolder], None]  # soon
+    workspace_folders: Optional[List[WorkspaceFolder]]

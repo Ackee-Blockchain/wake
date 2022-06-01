@@ -22,8 +22,21 @@ class TestClass:
     init_params = (
         InitializeParams(
             process_id=1,
-            root_uri="foo://uri/here/folder/",
-            capabilities=ClientCapabilities(experimental="test_capability"),
+            client_info=None,
+            locale=None,
+            root_path=None,
+            root_uri=DocumentUri("foo://uri/here/folder/"),
+            initialization_options=None,
+            capabilities=ClientCapabilities(
+                workspace=None,
+                text_document=None,
+                notebook_document=None,
+                window=None,
+                general=None,
+                experimental="test_capability"
+            ),
+            trace=None,
+            workspace_folders=None,
         )
     ).dict()
     """
@@ -32,7 +45,7 @@ class TestClass:
     did_open_params = (
         DidOpenTextDocumentParams(
             text_document=TextDocumentItem(
-                uri="foo://uri/here/folder/contract.sol",
+                uri=DocumentUri("foo://uri/here/folder/contract.sol"),
                 language_id="sol",
                 version=1,
                 text="text of the document source code",
@@ -45,15 +58,16 @@ class TestClass:
     did_change_params = (
         DidChangeTextDocumentParams(
             text_document=VersionedTextDocumentIdentifier(
-                version=1, uri="foo://uri/here/folder/contract.sol"
+                version=1, uri=DocumentUri("foo://uri/here/folder/contract.sol")
             ),
-            content_changes=TextDocumentContentChangeEvent(
+            content_changes=[TextDocumentContentChangeEvent(
                 range=Range(
                     start=Position(line=1, character=10),
                     end=Position(line=1, character=25),
                 ),
+                range_length=None,
                 text="changed text of length 25",
-            ),
+            )],
         )
     ).dict()
     # init messages
