@@ -1,23 +1,33 @@
+from typing import Optional
+
 from woke.a_config import WokeConfig
 from .enums import TraceValueEnum
-from .basic_structures import *
+from .lsp_compiler import LspCompiler
 
 
 class LspContext:
-    woke_config: Optional[WokeConfig]
+    __compiler: LspCompiler
+    __config: WokeConfig
+
     shutdown_received: bool
     initialized: bool
     trace_value: TraceValueEnum
-    client_capabilities: List[str]
-    server_capabilities: List[str]
-    # workspace: Union[dict, None]
 
-    def __init__(self) -> None:
-        self.woke_config = None
+    def __init__(self, config: WokeConfig) -> None:
+        self.__config = config
+        self.__compiler = LspCompiler(self.__config)
+
         self.shutdown_received = False
         self.initialized = False
         self.trace_value = TraceValueEnum(TraceValueEnum.OFF)
-        self.client_capabilities = []
+
+    def create_compilation_thread(self) -> None:
+        self.__compiler.run()
+
+    @property
+    def compiler(self) -> LspCompiler:
+        return self.__compiler
+
 
     """
     def update_workspace(self,

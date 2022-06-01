@@ -14,6 +14,7 @@ from .RPC_protocol import RPCProtocol
 from .methods import RequestMethodEnum
 from .methods_impl import handle_client_to_server_method
 from .notifications_impl import handle_client_to_server_notification
+from ..a_config import WokeConfig
 
 logger = logging.getLogger(__name__)
 
@@ -21,16 +22,14 @@ logger = logging.getLogger(__name__)
 class Server:
     def __init__(
         self,
+        config: WokeConfig,
         protocol: RPCProtocol,
-        server_capabilities: Iterable[str],
         threads: int = 1,
     ):
         self.protocol = protocol
         self.threads = threads
         self.running = True
-        self.context = LspContext()
-        self.context.server_capabilities = list(server_capabilities)
-        self.context.client_capabilities = list()
+        self.context = LspContext(config)
 
     def run_server(self):
         """
@@ -86,7 +85,6 @@ class Server:
         )
         if self.context.initialized:
             self.init_request_received = True
-            self.client_capabilities = self.context.client_capabilities
         if self.context.shutdown_received:
             self.stop_server()
         response_message = ResponseMessage(
@@ -112,9 +110,3 @@ class Server:
         handle_client_to_server_notification(
             self.context, request.method, request.params
         )
-
-    def get_client_capabilities(self) -> List[str]:
-        return self.context.client_capabilities
-
-    def get_server_capabilities(self) -> List[str]:
-        return self.context.server_capabilities
