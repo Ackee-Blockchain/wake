@@ -24,21 +24,21 @@ class RequestMethodEnum(StrEnum):
     CLIENT_UNREGISTER_CAPABILITY = "client/unregisterCapability"
 
     # Workspace
+    WORKSPACE_SYMBOL = "workspace/symbol"
+    WORKSPACE_SYMBOL_RESOLVE = "workspaceSymbol/resolve"
+    WORKSPACE_CONFIGURATION = "workspace/configuration"
+    WORKSPACE_DID_CHANGE_CONFIGURATION = (
+        "workspace/didChangeConfiguration"  # Notification
+    )
     WORKSPACE_WORKSPACE_FOLDERS = "workspace/workspaceFolders"
     WORKSPACE_DID_CHANGE_WORKSPACE_FOLDERS = (
         "workspace/didChangeWorkspaceFolders"  # Notification
     )
-    WORKSPACE_DID_CHANGE_CONFIGURATION = (
-        "workspace/didChangeConfiguration"  # Notification
-    )
-    WORKSPACE_CONFIGURATION = "workspace/configuration"
-    WORKSPACE_DID_CHANGE_WATCHED_FILES = (
-        "workspace/didChangeWatchedFiles"  # Notification
-    )
-    WORKSPACE_SYMBOL = "workspace/symbol"
-    WORKSPACE_SYMBOL_RESOLVE = "workspaceSymbol/resolve"
     WORKSPACE_EXECUTE_COMMAND = "workspace/executeCommand"
     WORKSPACE_APPLY_EDIT = "workspace/applyEdit"
+    WORKSPACE_CODE_LENS_REFRESH = "workspace/codeLens/refresh"
+    WORKSPACE_DIAGNOSTIC = "workspace/diagnostic"
+    WORKSPACE_DIAGNOSTIC_REFRESH = "workspace/diagnostic/refresh"
 
     # File Operations
     WORKSPACE_WILL_CREATE_FILES = "workspace/willCreateFiles"
@@ -47,6 +47,9 @@ class RequestMethodEnum(StrEnum):
     WORKSPACE_DID_RENAME_FILES = "workspace/didRenameFiles"  # Notification
     WORKSPACE_WILL_DELETE_FILES = "workspace/willDeleteFiles"
     WORKSPACE_DID_DELETE_FILES = "workspace/didDeleteFiles"  # Notification
+    WORKSPACE_DID_CHANGE_WATCHED_FILES = (
+        "workspace/didChangeWatchedFiles"  # Notification
+    )
 
     # Text Synchronization
     TEXT_DOCUMENT_DID_OPEN = "textDocument/didOpen"  # Notification
@@ -62,28 +65,45 @@ class RequestMethodEnum(StrEnum):
     NOTEBOOK_DOCUMENT_DID_SAVE = "notebookDocument/didSave"  # Notification
     NOTEBOOK_DOCUMENT_DID_CLOSE = "notebookDocument/didClose"  # Notification
 
-    # Diagnostics
-    PUBLISH_DIAGNOSTICS = "textDocument/publishDiagnostics"  # Notification
-
     # Language Features
-    COMPLETION = "textDocument/completion"
-    COMPLETION_ITEM_RESOLVE = "completionItem/resolve"
-    HOVER = "textDocument/hover"
-    SIGNATURE_HELP = "textDocument/signatureHelp"
     DECLARATION = "textDocument/declaration"
     DEFINITION = "textDocument/definition"
     TYPE_DEFINITION = "textDocument/typeDefinition"
     IMPLEMENTATION = "textDocument/implementation"
     REFERENCES = "textDocument/references"
+    PREPARE_CALL_HIERARCHY = "textDocument/prepareCallHierarchy"
+    CALL_HIERARCHY_INCOMING_CALLS = "callHierarchy/incomingCalls"
+    CALL_HIERARCHY_OUTGOING_CALLS = "callHierarchy/outgoingCalls"
+    PREPARE_TYPE_HIERARCHY = "textDocument/prepareTypeHierarchy"
+    TYPE_HIERARCHY_SUPERTYPES = "typeHierarchy/supertypes"
+    TYPE_HIERARCHY_SUBTYPES = "typeHierarchy/subtypes"
     DOCUMENT_HIGHLIGHT = "textDocument/documentHighlight"
-    DOCUMENT_SYMBOL = "textDocument/documentSymbol"
-    CODE_ACTION = "textDocument/codeAction"
-    CODE_ACTION_RESOLVE = "codeAction/resolve"
-    CODE_LENS = "textDocument/codeLens"
-    CODE_LENS_RESOLVE = "codeLens/resolve"
-    WORKSPACE_CODE_LENS_REFRESH = "workspace/codeLens/refresh"
     DOCUMENT_LINK = "textDocument/documentLink"
     DOCUMENT_LINK_RESOLVE = "documentLink/resolve"
+    HOVER = "textDocument/hover"
+    CODE_LENS = "textDocument/codeLens"
+    CODE_LENS_RESOLVE = "codeLens/resolve"
+    FOLDING_RANGE = "textDocument/foldingRange"
+    SELECTION_RANGE = "textDocument/selectionRange"
+    DOCUMENT_SYMBOL = "textDocument/documentSymbol"
+    SEMANTIC_TOKENS = "textDocument/semanticTokens"  # TODO: only used for registration
+    SEMANTIC_TOKENS_FULL = "textDocument/semanticTokens/full"
+    SEMANTIC_TOKENS_FULL_DELTA = "textDocument/semanticTokens/full/delta"
+    SEMANTIC_TOKENS_RANGE = "textDocument/semanticTokens/range"
+    SEMANTIC_TOKENS_REFRESH = "workspace/semanticTokens/refresh"
+    INLAY_HINT = "textDocument/inlayHint"
+    INLAY_HINT_RESOLVE = "inlayHint/resolve"
+    INLAY_HINT_REFRESH = "workspace/inlayHint/refresh"
+    INLINE_VALUE = "textDocument/inlineValue"
+    INLINE_VALUE_REFRESH = "textDocument/inlineValue/refresh"
+    MONIKER = "textDocument/moniker"
+    COMPLETION = "textDocument/completion"
+    COMPLETION_ITEM_RESOLVE = "completionItem/resolve"
+    PUBLISH_DIAGNOSTICS = "textDocument/publishDiagnostics"  # Notification
+    DIAGNOSTIC = "textDocument/diagnostic"
+    SIGNATURE_HELP = "textDocument/signatureHelp"
+    CODE_ACTION = "textDocument/codeAction"
+    CODE_ACTION_RESOLVE = "codeAction/resolve"
     DOCUMENT_COLOR = "textDocument/documentColor"
     COLOR_PRESENTATION = "textDocument/colorPresentation"
     FORMATTING = "textDocument/formatting"
@@ -91,18 +111,7 @@ class RequestMethodEnum(StrEnum):
     ON_TYPE_FORMATTING = "textDocument/onTypeFormatting"
     RENAME = "textDocument/rename"
     PREPARE_RENAME = "textDocument/prepareRename"
-    FOLDING_RANGE = "textDocument/foldingRange"
-    SELECTION_RANGE = "textDocument/selectionRange"
-    PREPARE_CALL_HIERARCHY_ = "textDocument/prepareCallHierarchy"
-    CALL_HIERARCHY_INCOMING_CALLS = "callHierarchy/incomingCalls"
-    CALL_HIERARCHY_OUTGOING_CALLS = "callHierarchy/outgoingCalls"
-    SEMANTIC_TOKENS = "textDocument/semanticTokens"
-    SEMANTIC_TOKENS_FULL = "textDocument/semanticTokens/full"
-    SEMANTIC_TOKENS_FULL_DELTA = "textDocument/semanticTokens/full/delta"
-    SEMANTIC_TOKENS_RANGE = "textDocument/semanticTokens/range"
-    SEMANTIC_TOKENS_REFRESH = "workspace/semanticTokens/refresh"
     LINKED_EDITING_RANGE = "textDocument/linkedEditingRange"
-    MONIKER = "textDocument/moniker"
 
     # Other
     CANCEL_REQUEST = "$/cancelRequest"
