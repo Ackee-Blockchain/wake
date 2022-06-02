@@ -94,7 +94,7 @@ fi
 
 if [ ${#pyfiles[@]} -ne 0 ]; then
     echo "running \`black ${pyfiles[@]}\`"
-    black .;
+    black "${pyfiles[@]}";
     check_last_command;
 fi
 
