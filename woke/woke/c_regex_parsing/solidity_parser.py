@@ -144,3 +144,22 @@ class SoliditySourceParser:
             cls.__parse_import(content),
             h.digest(),
         )
+
+    @classmethod
+    def parse_source(
+        cls, source_code: str
+    ) -> Tuple[SolidityVersionRanges, List[str], bytes]:
+        """
+        Return a tuple of two lists. The first list contains Solidity version ranges that can be used to compile
+        the given file. The second list contains filenames / URLs that are imported from the given file.
+        """
+        h = BLAKE2b.new(data=source_code.encode("utf-8"), digest_bits=256)
+
+        # strip all comments
+        content = cls.strip_comments(source_code)
+
+        return (
+            cls.__parse_version_pragma(content),
+            cls.__parse_import(content),
+            h.digest(),
+        )
