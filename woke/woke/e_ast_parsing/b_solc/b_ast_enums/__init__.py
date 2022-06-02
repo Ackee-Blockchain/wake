@@ -1,22 +1,23 @@
+import enum
 from enum import auto
-from strenum import StrEnum
+
 
 # Contracts
-class ContractKind(StrEnum):
+class ContractKind(str, enum.Enum):
     CONTRACT = "contract"
     INTERFACE = "interface"
     LIBRARY = "library"
 
 
 # State variables
-class Mutability(StrEnum):
+class Mutability(str, enum.Enum):
     MUTABLE = "mutable"
     IMMUTABLE = "immutable"
     CONSTANT = "constant"
 
 
 # Functions
-class FunctionKind(StrEnum):
+class FunctionKind(str, enum.Enum):
     FUNCTION = "function"
     RECEIVE = "receive"
     CONSTRUCTOR = "constructor"
@@ -24,27 +25,27 @@ class FunctionKind(StrEnum):
     FREE_FUNCTION = "freeFunction"
 
 
-class Visibility(StrEnum):
+class Visibility(str, enum.Enum):
     EXTERNAL = "external"
     PUBLIC = "public"
     INTERNAL = "internal"
     PRIVATE = "private"
 
 
-class StateMutability(StrEnum):
+class StateMutability(str, enum.Enum):
     PAYABLE = "payable"
     PURE = "pure"
     NONPAYABLE = "nonpayable"
     VIEW = "view"
 
 
-class ModifierInvocationKind(StrEnum):
+class ModifierInvocationKind(str, enum.Enum):
     MODIFIER_INVOCATION = "modifierInvocation"
     BASE_CONSTRUCTOR_SPECIFIER = "baseConstructorSpecifier"
 
 
 # Literals
-class LiteralKind(StrEnum):
+class LiteralKind(str, enum.Enum):
     BOOL = "bool"
     NUMBER = "number"
     STRING = "string"
@@ -52,27 +53,27 @@ class LiteralKind(StrEnum):
     UNICODE_STRING = "unicodeString"
 
 
-class YulLiteralValueKind(StrEnum):
+class YulLiteralValueKind(str, enum.Enum):
     NUMBER = "number"
     STRING = "string"
     BOOL = "bool"
 
 
-class YulLiteralHexValueKind(StrEnum):
+class YulLiteralHexValueKind(str, enum.Enum):
     NUMBER = "number"
     STRING = "string"
     BOOL = "bool"
 
 
 # Function call
-class FunctionCallKind(StrEnum):
+class FunctionCallKind(str, enum.Enum):
     FUNCTION_CALL = "functionCall"
     TYPE_CONVERSION = "typeConversion"
     STRUCT_CONSTRUCTOR_CALL = "structConstructorCall"
 
 
 # Compound types
-class StorageLocation(StrEnum):
+class StorageLocation(str, enum.Enum):
     CALLDATA = "calldata"
     DEFAULT = "default"
     MEMORY = "memory"
@@ -80,7 +81,7 @@ class StorageLocation(StrEnum):
 
 
 # Operations
-class UnaryOpOperator(StrEnum):
+class UnaryOpOperator(str, enum.Enum):
     PLUS_PLUS = r"++"
     MINUS_MINUS = r"--"
     MINUS = r"-"
@@ -89,7 +90,7 @@ class UnaryOpOperator(StrEnum):
     DELETE = "delete"
 
 
-class AssignmentOperator(StrEnum):
+class AssignmentOperator(str, enum.Enum):
     EQUALS = r"="
     PLUS_EQUALS = r"+="
     MINUS_EQUALS = r"-="
@@ -103,7 +104,7 @@ class AssignmentOperator(StrEnum):
     LEFT_SHIFT_EQUALS = r"<<="
 
 
-class BinaryOpOperator(StrEnum):
+class BinaryOpOperator(str, enum.Enum):
     PLUS = r"+"
     MINUS = r"-"
     TIMES = r"*"
@@ -126,7 +127,7 @@ class BinaryOpOperator(StrEnum):
 
 
 # Inline assembly
-class InlineAssemblyEvmVersion(StrEnum):
+class InlineAssemblyEvmVersion(str, enum.Enum):
     HOMESTEAD = "homestead"
     TANGERINE_WHISTLE = "tangerineWhistle"
     SPURIOUS_DRAGON = "spuriousDragon"
@@ -138,6 +139,6 @@ class InlineAssemblyEvmVersion(StrEnum):
     LONDON = "london"
 
 
-class InlineAssemblySuffix(StrEnum):
+class InlineAssemblySuffix(str, enum.Enum):
     SLOT = "slot"
     OFFSET = "offset"

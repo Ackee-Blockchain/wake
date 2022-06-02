@@ -1,7 +1,7 @@
-from strenum import StrEnum
+import enum
 
 
-class EvmVersionEnum(StrEnum):
+class EvmVersionEnum(str, enum.Enum):
     HOMESTEAD = "homestead"
     TANGERINE_WHISTLE = "tangerineWhistle"
     SPURIOUS_DRAGON = "spuriousDragon"

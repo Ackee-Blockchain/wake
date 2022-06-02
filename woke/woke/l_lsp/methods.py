@@ -1,7 +1,7 @@
-from strenum import StrEnum
+import enum
 
 
-class RequestMethodEnum(StrEnum):
+class RequestMethodEnum(str, enum.Enum):
     # General
     INITIALIZE = "initialize"
     INITIALIZED = "initialized"  # Notification
