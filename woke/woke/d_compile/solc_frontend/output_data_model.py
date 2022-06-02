@@ -1,7 +1,7 @@
+import enum
 from typing import List, Optional, Dict
 
 from pydantic import BaseModel, Extra
-from strenum import StrEnum
 
 
 __doc__ = """Solc standard JSON output data model as described by https://docs.soliditylang.org/en/v0.8.12/using-the-compiler.html#output-description"""
@@ -31,7 +31,7 @@ class SolcOutputErrorSecondarySourceLocation(SolcOutputModel):
     message: str
 
 
-class SolcOutputErrorTypeEnum(StrEnum):
+class SolcOutputErrorTypeEnum(str, enum.Enum):
     """Solc output error types as described by https://docs.soliditylang.org/en/v0.8.11/using-the-compiler.html#error-types"""
 
     JSON_ERROR = "JSONError"
@@ -64,13 +64,13 @@ class SolcOutputErrorTypeEnum(StrEnum):
     """Information that the compiler thinks the user might find useful, but is not dangerous and does not necessarily need to be addressed."""
 
 
-class SolcOutputErrorSeverityEnum(StrEnum):
+class SolcOutputErrorSeverityEnum(str, enum.Enum):
     ERROR = "error"
     WARNING = "warning"
     INFO = "info"
 
 
-class SolcOutputStorageLayoutTypeEncodingEnum(StrEnum):
+class SolcOutputStorageLayoutTypeEncodingEnum(str, enum.Enum):
     INPLACE = "inplace"
     """Data is laid out contiguously in storage"""
     MAPPING = "mapping"

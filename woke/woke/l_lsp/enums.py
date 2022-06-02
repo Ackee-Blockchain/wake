@@ -1,7 +1,7 @@
-from strenum import StrEnum
+import enum
 
 
-class TraceValueEnum(StrEnum):
+class TraceValueEnum(str, enum.Enum):
     OFF = "off"
     MESSAGES = "messages"
     VERBOSE = "verbose"
