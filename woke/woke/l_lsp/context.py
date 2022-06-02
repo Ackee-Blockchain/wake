@@ -28,7 +28,6 @@ class LspContext:
     def compiler(self) -> LspCompiler:
         return self.__compiler
 
-
     """
     def update_workspace(self,
                         document_uri: DocumentUri,

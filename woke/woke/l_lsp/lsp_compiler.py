@@ -7,7 +7,10 @@ from typing import Dict, List
 from urllib.parse import urlparse
 
 from woke.a_config import WokeConfig
-from woke.l_lsp.basic_structures import DidOpenTextDocumentParams, DidChangeTextDocumentParams
+from woke.l_lsp.basic_structures import (
+    DidOpenTextDocumentParams,
+    DidChangeTextDocumentParams,
+)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -75,22 +78,28 @@ class LspCompiler:
                             else:
                                 tmp_lines2.append(line)
 
-                        lines: List[bytearray] = [bytearray(line.encode(ENCODING)) for line in tmp_lines2]
+                        lines: List[bytearray] = [
+                            bytearray(line.encode(ENCODING)) for line in tmp_lines2
+                        ]
 
                         if start.line == end.line:
                             line = lines[start.line]
-                            line[start.character*2:end.character*2] = b""
-                            line[start.character*2:start.character*2] = content_change.text.encode(ENCODING)
+                            line[start.character * 2 : end.character * 2] = b""
+                            line[
+                                start.character * 2 : start.character * 2
+                            ] = content_change.text.encode(ENCODING)
                         else:
                             start_line = lines[start.line]
                             end_line = lines[end.line]
-                            start_line[start.character*2:] = b""
-                            end_line[:end.character*2] = b""
+                            start_line[start.character * 2 :] = b""
+                            end_line[: end.character * 2] = b""
 
-                            for i in range(start.line+1, end.line):
+                            for i in range(start.line + 1, end.line):
                                 lines[i] = bytearray(b"")
 
-                        self.__files[path] = "".join(line.decode(ENCODING) for line in lines)
+                        self.__files[path] = "".join(
+                            line.decode(ENCODING) for line in lines
+                        )
                 else:
                     raise Exception("Unknown change type")
 
