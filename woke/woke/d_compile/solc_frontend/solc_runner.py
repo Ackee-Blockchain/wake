@@ -10,6 +10,7 @@ from .input_data_model import (
     SolcInput,
     SolcInputSource,
     SolcInputSettings,
+    SolcInputLanguageEnum,
 )
 from .output_data_model import SolcOutput
 from .exceptions import SolcCompilationError
@@ -25,13 +26,17 @@ class SolcFrontend:
 
     async def compile_src(
         self,
-        solidity_src: AnyStr,
+        sources: Dict[str, str],
         target_version: SolidityVersion,
         settings: SolcInputSettings,
     ) -> SolcOutput:
-        raise NotImplementedError(
-            "Direct source code compilation (instead of a list of files) is currently not implemented."
-        )
+        standard_input = SolcInput(language=SolcInputLanguageEnum.SOLIDITY)
+
+        for unit_name, content in sources.items():
+            standard_input.sources[unit_name] = SolcInputSource(content=content)
+        standard_input.settings = settings
+
+        return await self.__run_solc(target_version, standard_input)
 
     async def compile_files(
         self,
@@ -39,7 +44,7 @@ class SolcFrontend:
         target_version: SolidityVersion,
         settings: SolcInputSettings,
     ) -> SolcOutput:
-        standard_input = SolcInput()  # type: ignore
+        standard_input = SolcInput(language=SolcInputLanguageEnum.SOLIDITY)
 
         for unit_name, path in files.items():
             if target_version >= "0.8.8":

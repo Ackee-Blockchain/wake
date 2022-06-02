@@ -1,3 +1,4 @@
+import enum
 from typing import Optional, List, Dict
 
 from strenum import StrEnum
@@ -8,7 +9,7 @@ from woke.core.enums import EvmVersionEnum
 __doc__ = """Solc standard JSON input data model as described by https://docs.soliditylang.org/en/v0.8.12/using-the-compiler.html#input-description"""
 
 
-class SolcInputLanguageEnum(StrEnum):
+class SolcInputLanguageEnum(str, enum.Enum):
     SOLIDITY = "Solidity"
     YUL = "Yul"
 
