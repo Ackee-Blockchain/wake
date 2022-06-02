@@ -53,11 +53,11 @@ def _initialize(context: LspContext, params: InitializeParams) -> InitializeResu
         text_document_sync=TextDocumentSyncOptions(
             open_close=True, change=TextDocumentSyncKind.INCREMENTAL
         ),
-        #diagnostic_provider=DiagnosticRegistrationOptions(
-            #document_selector=[DocumentFilter(language="solidity")],
-            #inter_file_dependencies=True,
-            #workspace_diagnostics=True,
-        #),
+        # diagnostic_provider=DiagnosticRegistrationOptions(
+        # document_selector=[DocumentFilter(language="solidity")],
+        # inter_file_dependencies=True,
+        # workspace_diagnostics=True,
+        # ),
     )
     return InitializeResult(capabilities=server_capabilities, server_info=None)
 

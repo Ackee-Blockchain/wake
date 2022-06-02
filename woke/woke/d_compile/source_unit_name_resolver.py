@@ -11,11 +11,9 @@ class SourceUnitNameResolver:
     to https://docs.soliditylang.org/en/v0.8.11/path-resolution.html.
     """
 
-    __base_path: Path
     __config: WokeConfig
 
     def __init__(self, woke_config: WokeConfig):
-        self.__base_path = woke_config.project_root_path
         self.__config = woke_config
 
     def __apply_remapping(self, parent_source_unit: str, source_unit_name: str) -> str:
@@ -109,5 +107,5 @@ class SourceUnitNameResolver:
         """
         path = Path(arg).resolve(strict=True)
         pure_path = PurePath(path)
-        rel_path = pure_path.relative_to(self.__base_path)
+        rel_path = pure_path.relative_to(self.__config.project_root_path)
         return str(PurePosixPath(rel_path))

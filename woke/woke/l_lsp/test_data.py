@@ -33,7 +33,7 @@ class TestClass:
                 notebook_document=None,
                 window=None,
                 general=None,
-                experimental="test_capability"
+                experimental="test_capability",
             ),
             trace=None,
             workspace_folders=None,
@@ -60,14 +60,16 @@ class TestClass:
             text_document=VersionedTextDocumentIdentifier(
                 version=1, uri=DocumentUri("foo://uri/here/folder/contract.sol")
             ),
-            content_changes=[TextDocumentContentChangeEvent(
-                range=Range(
-                    start=Position(line=1, character=10),
-                    end=Position(line=1, character=25),
-                ),
-                range_length=None,
-                text="changed text of length 25",
-            )],
+            content_changes=[
+                TextDocumentContentChangeEvent(
+                    range=Range(
+                        start=Position(line=1, character=10),
+                        end=Position(line=1, character=25),
+                    ),
+                    range_length=None,
+                    text="changed text of length 25",
+                )
+            ],
         )
     ).dict()
     # init messages
