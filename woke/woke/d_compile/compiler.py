@@ -85,6 +85,10 @@ class CompilationUnit:
     def blake2b_hexdigest(self) -> str:
         return self.blake2b_digest.hex()
 
+    @property
+    def graph(self) -> nx.DiGraph:
+        return self.__unit_graph
+
 
 class SolidityCompiler:
     __config: WokeConfig
@@ -93,9 +97,6 @@ class SolidityCompiler:
     __source_unit_name_resolver: SourceUnitNameResolver
     __source_path_resolver: SourcePathResolver
     __files: Set[Path]
-    __files_graph: nx.DiGraph
-    __source_units: Dict[str, Path]
-    __compilation_units: List[CompilationUnit]
 
     def __init__(self, woke_config: WokeConfig, files: Iterable[Path]):
         self.__config = woke_config
@@ -110,35 +111,34 @@ class SolidityCompiler:
             resolved = file.resolve(strict=True)
             self.__files.add(resolved)
 
-        self.__files_graph = nx.DiGraph()
-        self.__source_units = dict()
-        self.__compilation_units = []
-
-    def __resolve_source_unit_names(self) -> None:
+    def __resolve_source_unit_names(self) -> nx.DiGraph:
         source_units_queue: deque[Tuple[str, Path]] = deque()
+        source_units: Dict[str, Path] = {}
 
         # for every source file resolve a source unit name
         for file in self.__files:
             source_unit_name = self.__source_unit_name_resolver.resolve_cmdline_arg(
                 str(file)
             )
-            if source_unit_name in self.__source_units:
-                first = str(self.__source_units[source_unit_name])
+            if source_unit_name in source_units:
+                first = str(source_units[source_unit_name])
                 second = str(file)
                 raise CompilationError(
                     f"Same source unit name `{source_unit_name}` for multiple source files:\n{first}\n{second}"
                 )
-
+            source_units[source_unit_name] = file
             source_units_queue.append((source_unit_name, file))
+
+        graph = nx.DiGraph()
 
         # recursively process all sources
         while len(source_units_queue) > 0:
             source_unit_name, path = source_units_queue.pop()
             versions, imports, h = SoliditySourceParser.parse(path)
-            self.__files_graph.add_node(
+            graph.add_node(
                 path, source_unit_name=source_unit_name, versions=versions, hash=h
             )
-            self.__source_units[source_unit_name] = path
+            source_units[source_unit_name] = path
 
             for _import in imports:
                 import_unit_name = self.__source_unit_name_resolver.resolve_import(
@@ -148,40 +148,41 @@ class SolidityCompiler:
                     import_unit_name
                 ).resolve(strict=True)
 
-                if import_unit_name in self.__source_units:
-                    other_path = self.__source_units[import_unit_name]
+                if import_unit_name in source_units:
+                    other_path = source_units[import_unit_name]
                     if import_path != other_path:
                         raise ValueError(
                             f"Same source unit name `{import_unit_name}` for multiple source files:\n{import_path}\n{other_path}"
                         )
 
-                if import_path not in self.__files_graph.nodes:
+                if import_path not in graph.nodes:
                     source_units_queue.append((import_unit_name, import_path))
 
-                self.__files_graph.add_edge(import_path, path)
+                graph.add_edge(import_path, path)
+        return graph
 
-    def __build_compilation_units(self) -> None:
-        sinks = [
-            node
-            for node, out_degree in self.__files_graph.out_degree()
-            if out_degree == 0
-        ]
+    def __build_compilation_units(self, graph: nx.DiGraph) -> List[CompilationUnit]:
+        sinks = [node for node, out_degree in graph.out_degree() if out_degree == 0]
+        compilation_units = []
 
         for sink in sinks:
-            compilation_unit = self.__build_compilation_unit([sink])
-            self.__compilation_units.append(compilation_unit)
+            compilation_unit = self.__build_compilation_unit(graph, [sink])
+            compilation_units.append(compilation_unit)
 
         # cycles can also be "sinks" in terms of compilation units
-        for cycle in nx.simple_cycles(self.__files_graph):
+        for cycle in nx.simple_cycles(graph):
             out_degree_sum = sum(
-                out_degree for *_, out_degree in self.__files_graph.out_degree(cycle)
+                out_degree for *_, out_degree in graph.out_degree(cycle)
             )
 
             if out_degree_sum == len(cycle):
-                compilation_unit = self.__build_compilation_unit(cycle)
-                self.__compilation_units.append(compilation_unit)
+                compilation_unit = self.__build_compilation_unit(graph, cycle)
+                compilation_units.append(compilation_unit)
+        return compilation_units
 
-    def __build_compilation_unit(self, start: Iterable[Path]) -> CompilationUnit:
+    def __build_compilation_unit(
+        self, graph: nx.DiGraph, start: Iterable[Path]
+    ) -> CompilationUnit:
         nodes_subset = set()
         nodes_queue: deque[Path] = deque()
         nodes_queue.extend(start)
@@ -192,13 +193,13 @@ class SolidityCompiler:
 
         while len(nodes_queue) > 0:
             node = nodes_queue.pop()
-            versions &= self.__files_graph.nodes[node]["versions"]
+            versions &= graph.nodes[node]["versions"]
 
             if node in nodes_subset:
                 continue
             nodes_subset.add(node)
 
-            for in_edge in self.__files_graph.in_edges(node):
+            for in_edge in graph.in_edges(node):
                 _from, to = in_edge
                 if _from not in nodes_subset:
                     nodes_queue.append(_from)
@@ -209,7 +210,7 @@ class SolidityCompiler:
                 + "\n".join(str(path) for path in nodes_subset)
             )
 
-        subgraph = self.__files_graph.subgraph(nodes_subset)
+        subgraph = graph.subgraph(nodes_subset)
         return CompilationUnit(subgraph, versions)
 
     def __create_build_settings(
@@ -242,11 +243,12 @@ class SolidityCompiler:
         build_path: Path,
         build_settings: SolcInputSettings,
         output: Tuple[SolcOutput],
+        compilation_units: List[CompilationUnit],
     ) -> None:
         units_info = {}
 
         # units are already sorted
-        for index, (unit, out) in enumerate(zip(self.__compilation_units, output)):
+        for index, (unit, out) in enumerate(zip(compilation_units, output)):
             sources = {}
             for source_unit_name in out.sources.keys():
                 sources[source_unit_name] = (
@@ -288,12 +290,12 @@ class SolidityCompiler:
         if len(self.__files) == 0:
             raise CompilationError("No source files provided to compile.")
 
-        self.__resolve_source_unit_names()
-        self.__build_compilation_units()
+        graph = self.__resolve_source_unit_names()
+        compilation_units = self.__build_compilation_units(graph)
         build_settings = self.__create_build_settings(output_types)
 
         # sort compilation units by their BLAKE2b hexdigest
-        self.__compilation_units.sort(key=lambda u: u.blake2b_hexdigest)
+        compilation_units.sort(key=lambda u: u.blake2b_hexdigest)
 
         if write_artifacts:
             # prepare build dir
@@ -324,7 +326,7 @@ class SolidityCompiler:
             latest_build_info = None
 
         target_versions = []
-        for compilation_unit in self.__compilation_units:
+        for compilation_unit in compilation_units:
             target_version = self.__config.compiler.solc.target_version
             if target_version is not None:
                 if target_version not in compilation_unit.versions:
@@ -355,7 +357,7 @@ class SolidityCompiler:
 
         tasks = []
         for index, (compilation_unit, target_version) in enumerate(
-            zip(self.__compilation_units, target_versions)
+            zip(compilation_units, target_versions)
         ):
             task = asyncio.create_task(
                 self.__compile_unit(
@@ -380,7 +382,9 @@ class SolidityCompiler:
             if build_path is None:
                 # should not really happen (it is present here just to silence the linter)
                 raise ValueError("Build path is not set.")
-            self.__write_global_artifacts(build_path, build_settings, ret)
+            self.__write_global_artifacts(
+                build_path, build_settings, ret, compilation_units
+            )
 
             # create `latest` symlink pointing to the just created build directory
             if platform.system() != "Windows":
@@ -486,8 +490,9 @@ class SolidityCompiler:
     ) -> SolcOutput:
         # Dict[source_unit_name: str, path: Path]
         files = {}
-        for file in compilation_unit.files:
-            source_unit_name = self.__files_graph.nodes[file]["source_unit_name"]
+        for file, source_unit_name in compilation_unit.graph.nodes(
+            data="source_unit_name"
+        ):
             files[source_unit_name] = file
 
         # run the solc executable
