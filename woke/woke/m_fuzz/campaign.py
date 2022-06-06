@@ -70,6 +70,12 @@ class Campaign:
                     else:
                         logger.info(f"\n")
 
+                    if len(flows_p) == 0:
+                        logger.warning(
+                            "There are no rules satisfying conditions. Terminating the sequence..."
+                        )
+                        break
+
                     flows_weights = []
 
                     for flow in flows_p:
