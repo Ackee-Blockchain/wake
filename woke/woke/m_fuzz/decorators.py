@@ -37,8 +37,8 @@ def ignore(fn):
     return fn
 
 
-def rule(fn):
-    fn.rule = True
+def flow(fn):
+    fn.flow = True
     return fn
 
 

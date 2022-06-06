@@ -25,7 +25,7 @@ class Campaign:
     def run(
         self,
         sequences_count: int,
-        rules_count: int,
+        flows_count: int,
         run_for_seconds: Optional[int] = None,
         dry_run: bool = False,
     ):
@@ -42,52 +42,52 @@ class Campaign:
             brownie.chain.reset()
             seq = self.__sequence_constructor()
 
-            rules, _ = self.__get_methods(seq, attr="rule")
+            flows, _ = self.__get_methods(seq, attr="flow")
             invs, _ = self.__get_methods(seq, attr="invariant")
 
             called = Counter[str]()
             point_coverage = Counter[str]()
 
-            for j in range(rules_count):
-                if rules:
+            for j in range(flows_count):
+                if flows:
 
-                    def meets_preconditions(rule):
-                        rule = rule[0]
+                    def meets_preconditions(flow):
+                        flow = flow[0]
                         meets_precondition = not hasattr(
-                            rule, "precondition"
-                        ) or rule.precondition(seq)
+                            flow, "precondition"
+                        ) or flow.precondition(seq)
                         meets_max_times = (
-                            not hasattr(rule, "max_times")
-                            or called[rule] < rule.max_times
+                            not hasattr(flow, "max_times")
+                            or called[flow] < flow.max_times
                         )
                         return meets_precondition and meets_max_times
 
-                    rules_p, rules_not_p = partition(rules, meets_preconditions)
-                    if rules_not_p:
-                        logger.info(f"\nThe following rules' preconditions are falsy:")
-                        for rule_not_p in rules_not_p:
-                            logger.info(f"    {rule_not_p[1]}")
+                    flows_p, flows_not_p = partition(flows, meets_preconditions)
+                    if flows_not_p:
+                        logger.info(f"\nThe following flows' preconditions are falsy:")
+                        for flow_not_p in flows_not_p:
+                            logger.info(f"    {flow_not_p[1]}")
                     else:
                         logger.info(f"\n")
 
-                    rules_weights = []
+                    flows_weights = []
 
-                    for rule in rules_p:
-                        if hasattr(rule[0], "weight"):
-                            rules_weights.append(rule[0].weight)
+                    for flow in flows_p:
+                        if hasattr(flow[0], "weight"):
+                            flows_weights.append(flow[0].weight)
                         else:
-                            rules_weights.append(100)
+                            flows_weights.append(100)
 
                     logger.info("Weights:")
-                    for idx in range(len(rules_p)):
-                        logger.info(f"    {rules_p[idx][1]}: {rules_weights[idx]}")
-                    rule = random.choices(rules_p, weights=rules_weights, k=1)[0]
-                    called.update((rule[0],))  # type: ignore
+                    for idx in range(len(flows_p)):
+                        logger.info(f"    {flows_p[idx][1]}: {flows_weights[idx]}")
+                    flow = random.choices(flows_p, weights=flows_weights, k=1)[0]
+                    called.update((flow[0],))  # type: ignore
 
                     logger.info(
-                        f'\n{f"RULE...":<9} {j:>4} IN SEQUENCE {i:>5} {rule[1]}:'
+                        f'\n{f"FLOW...":<9} {j:>4} IN SEQUENCE {i:>5} {flow[1]}:'
                     )
-                    rule[0]()
+                    flow[0]()
 
                 if not dry_run and invs:
                     for idx, inv in enumerate(invs):
@@ -95,14 +95,14 @@ class Campaign:
                         inv[0]()
                         del inv
 
-            del invs, rules
+            del invs, flows
             point_coverage += seq.point_coverage
             logger.info(self.__format_heading("Sequence point coverage:"))
             self.__log_point_coverage(seq.point_coverage)
             logger.info(self.__format_heading("Campaign point coverage:"))
             self.__log_point_coverage(point_coverage)
             del seq
-        logger.info(f"\nRan {rules_count} rules. All rules and invariants passed.")
+        logger.info(f"\nRan {flows_count} flows. All flows and invariants passed.")
 
     @staticmethod
     def __is_ign(m: Callable) -> bool:
