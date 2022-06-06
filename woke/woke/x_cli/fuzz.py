@@ -67,7 +67,7 @@ def run_fuzz(
 
     fuzz_functions = []
 
-    sys.path.append(str(config.project_root_path))
+    sys.path.insert(0, str(config.project_root_path))
     for file in py_files:
         module_name = _get_module_name(file, config.project_root_path)
         module_spec = importlib.util.spec_from_file_location(module_name, file)
