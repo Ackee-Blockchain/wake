@@ -23,7 +23,7 @@ def lsp_initialized(context: LSPContext, params: dict) -> None:
 
 
 def lsp_exit(context: LSPContext, _) -> None:
-    print('Stop listening')
+    print("Stop listening")
     if context.shutdown_received:
         sys.exit(0)
     else:
@@ -38,9 +38,7 @@ def lsp_window_show_message(context: LSPContext, params: dict) -> None:
     raise NotImplementedError()  # TODO
 
 
-def lsp_window_work_done_progress_cancel(
-    context: LSPContext, params: dict
-) -> None:
+def lsp_window_work_done_progress_cancel(context: LSPContext, params: dict) -> None:
     work_done_progress_params = WorkDoneProgressCancelParams.parse_obj(t_dict(params))
     raise NotImplementedError()  # TODO
 
@@ -48,13 +46,13 @@ def lsp_window_work_done_progress_cancel(
 def lsp_workspace_did_change_workspace_folders(
     context: LSPContext, params: dict
 ) -> None:
-    did_change_workspace_params = DidChangeWorkspaceFoldersParams.parse_obj(t_dict(params))
+    did_change_workspace_params = DidChangeWorkspaceFoldersParams.parse_obj(
+        t_dict(params)
+    )
     raise NotImplementedError()  # TODO
 
 
-def lsp_workspace_did_change_configuration(
-    context: LSPContext, params: dict
-) -> None:
+def lsp_workspace_did_change_configuration(context: LSPContext, params: dict) -> None:
     did_change_config_params = DidChangeConfigurationParams.parse_obj(t_dict(params))
     raise NotImplementedError()  # TODO
 
@@ -64,14 +62,14 @@ def lsp_workspace_did_change_watched_files(context: LSPContext, params: dict) ->
     raise NotImplementedError()  # TODO
 
 
-def lsp_workspace_did_create_files(
-    context: LSPContext, params: dict
-) -> None:
+def lsp_workspace_did_create_files(context: LSPContext, params: dict) -> None:
     did_create_params = CreateFilesParams.parse_obj(t_dict(params))
     raise NotImplementedError()  # TODO
 
 
-def lsp_workspace_did_rename_files(context: LSPContext, params: RenameFilesParams) -> None:
+def lsp_workspace_did_rename_files(
+    context: LSPContext, params: RenameFilesParams
+) -> None:
     did_rename_params = RenameFilesParams.parse_obj(t_dict(params))
     raise NotImplementedError()  # TODO
 
@@ -84,7 +82,7 @@ def lsp_workspace_did_delete_files(context: LSPContext, params: dict) -> None:
 def lsp_did_open(context: LSPContext, params: dict) -> None:
     did_open_params = DidOpenTextDocumentParams.parse_obj(t_dict(params))
     # print for testing
-    #print(f'Testing print\n*** LSP_DID_open params:\n{did_open_params}\n**Not connected with woke -> ')
+    # print(f'Testing print\n*** LSP_DID_open params:\n{did_open_params}\n**Not connected with woke -> ')
     """
     Update workspace with new document
     """
@@ -95,10 +93,11 @@ def lsp_did_open(context: LSPContext, params: dict) -> None:
     """
     raise NotImplementedError()  # TODO
 
+
 def lsp_did_change(context: LSPContext, params: dict) -> None:
     did_change_params = DidChangeTextDocumentParams.parse_obj(t_dict(params))
     # print for testing
-    #print(f'Testing print\n*** LSP_DID_CHANGE params:\n{did_change_params}\n**Not connected with woke -> ')
+    # print(f'Testing print\n*** LSP_DID_CHANGE params:\n{did_change_params}\n**Not connected with woke -> ')
     """
     Update worskpace document
     """
@@ -114,22 +113,22 @@ def lsp_did_change(context: LSPContext, params: dict) -> None:
 
 
 def lsp_will_save(context: LSPContext, params: dict) -> None:
-    will_save_params = WillSaveTextDocumentParams.parse_obj(t_dict(params))    
+    will_save_params = WillSaveTextDocumentParams.parse_obj(t_dict(params))
     raise NotImplementedError()  # TODO
 
 
 def lsp_did_save(context: LSPContext, params: dict) -> None:
-    did_save_params = DidSaveTextDocumentParams.parse_obj(t_dict(params))    
+    did_save_params = DidSaveTextDocumentParams.parse_obj(t_dict(params))
     raise NotImplementedError()  # TODO
 
 
 def lsp_did_close(context: LSPContext, params: dict) -> None:
-    did_close_params = DidCloseTextDocumentParams.parse_obj(t_dict(params))    
+    did_close_params = DidCloseTextDocumentParams.parse_obj(t_dict(params))
     raise NotImplementedError()  # TODO
 
 
 def lsp_set_trace_notification(context: LSPContext, params: dict) -> None:
-    set_trace_params = SetTraceParams.parse_obj(t_dict(params))    
+    set_trace_params = SetTraceParams.parse_obj(t_dict(params))
     context.trace_value = TraceValueEnum(set_trace_params.value)
 
 

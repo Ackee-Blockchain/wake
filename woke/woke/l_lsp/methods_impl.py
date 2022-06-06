@@ -20,23 +20,26 @@ def uri_to_path(uri: str) -> str:
         _, path = uri.split("file://", 1)
     return str(Path(unquote(path)).resolve())
 
+
 ######################
 ## client -> server ##
 ######################
-def lsp_initialize(
-    context: LSPContext, params: InitializeParams
-    ) -> InitializeResult:
+def lsp_initialize(context: LSPContext, params: InitializeParams) -> InitializeResult:
     if params.worskpace_folders is not None:
         if len(params.workspace_folders) != 1:
-            raise InitializeError("Exactly one workspace directory must be provided.", retry=False)
+            raise InitializeError(
+                "Exactly one workspace directory must be provided.", retry=False
+            )
         path = uri_to_path(params.worskpace_folders[0].uri)
-        #print(path)
+        # print(path)
     elif params.root_uri is not None:
         path = uri_to_path(params.root_uri)
     elif params.root_path is not None:
         path = Path(params.root_path).resolve(strict=True)
     else:
-        raise InitializeError("Workspace/root directory was not specified.", retry=False)
+        raise InitializeError(
+            "Workspace/root directory was not specified.", retry=False
+        )
 
     context.woke_config = WokeConfig(project_root_path=path)
     return InitializeResult(context.server_capabilities)
@@ -48,13 +51,13 @@ def lsp_shutdown(context: LSPContext, _) -> None:
 
 def lsp_workspace_symbol(
     context: LSPContext, params: WorkspaceSymbolParams
-    ) -> Union[List[SymbolInformation], List[WorkspaceSymbol], None]:
+) -> Union[List[SymbolInformation], List[WorkspaceSymbol], None]:
     raise NotImplementedError()  # TODO
 
 
 def lsp_workspace_symbol_resolve(
     context: LSPContext, params: WorkspaceSymbol
-    ) -> WorkspaceSymbol:
+) -> WorkspaceSymbol:
     raise NotImplementedError()  # TODO
 
 
@@ -64,7 +67,7 @@ def lsp_workspace_execute_command(context: LSPContext):
 
 def lsp_workspace_will_create_files(
     context: LSPContext, params: CreateFilesParams
-    ) -> Optional[WorkspaceEdit]:
+) -> Optional[WorkspaceEdit]:
     raise NotImplementedError()  # TODO
 
 
@@ -83,6 +86,7 @@ def lsp_will_save_wait_until(context: LSPContext):
 ######################
 ## server -> client ##
 ######################
+
 
 def lsp_window_show_message_request(context: LSPContext):
     raise NotImplementedError()  # TODO
@@ -116,10 +120,10 @@ def lsp_workspace_apply_edit(context: LSPContext):
     raise NotImplementedError()  # TODO
 
 
-'''
+"""
 Mapping for all the requests defined by LSP Specification
 https://microsoft.github.io/language-server-protocol/specifications/specification-current/
-'''
+"""
 method_mapping: Dict[str, Callable[[LSPContext, Any], Any]] = {
     RequestMethodEnum.INITIALIZE: lsp_initialize,
     RequestMethodEnum.SHUTDOWN: lsp_shutdown,
@@ -138,6 +142,6 @@ method_mapping: Dict[str, Callable[[LSPContext, Any], Any]] = {
     RequestMethodEnum.WORKSPACE_WILL_RENAME_FILES: lsp_workspace_will_rename_files,
     RequestMethodEnum.WORKSPACE_WILL_DELETE_FILES: lsp_workspace_will_delete_files,
     RequestMethodEnum.WILL_SAVE_WAIT_UNTIL: lsp_will_save_wait_until,
-    #RequestMethodEnum.CANCEL_REQUEST: lsp_cancel_request,
-    #RequestMethodEnum.PROGRESS_NOTIFICATION: lsp_progrss_notification,
+    # RequestMethodEnum.CANCEL_REQUEST: lsp_cancel_request,
+    # RequestMethodEnum.PROGRESS_NOTIFICATION: lsp_progrss_notification,
 }
