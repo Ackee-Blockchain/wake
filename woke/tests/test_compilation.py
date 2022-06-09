@@ -136,7 +136,7 @@ def test_compile_trader_joe(setup_project, config):
     indirect=True,
 )
 def test_compile_axelar(setup_project, config):
-    files = list((PYTEST_BUILD_PATH / "src").rglob("*.sol"))
+    files = list((PYTEST_BUILD_PATH / "contracts").rglob("*.sol"))
     compiler = SolidityCompiler(config, files)
     output = asyncio.run(compiler.compile(SolcOutputSelectionEnum.ALL, reuse_latest_artifacts=False))  # type: ignore
     assert len(output)
