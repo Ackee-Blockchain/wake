@@ -49,11 +49,12 @@ def run_compile(
                 raise ValueError(f"Argument `{file}` is not a Solidity file.")
             sol_files.append(path)
 
-    compiler = SolidityCompiler(config, sol_files)
+    compiler = SolidityCompiler(config)
     # TODO Allow choosing build artifacts subset in compile subcommand
     outputs: List[SolcOutput] = asyncio.run(
         compiler.compile(
-            [SolcOutputSelectionEnum.ALL],  # type: ignore
+            sol_files,
+            [SolcOutputSelectionEnum.ALL],
             write_artifacts=(not no_artifacts),
             reuse_latest_artifacts=(not force),
         )

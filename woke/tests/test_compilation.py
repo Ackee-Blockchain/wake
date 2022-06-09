@@ -69,12 +69,19 @@ def setup_project(request):
 )
 def test_compile_uniswap_v3(setup_project, config):
     files = list((PYTEST_BUILD_PATH / "contracts").rglob("*.sol"))
-    compiler = SolidityCompiler(config, files)
-    output = asyncio.run(compiler.compile(SolcOutputSelectionEnum.ALL, reuse_latest_artifacts=False))  # type: ignore
+    compiler = SolidityCompiler(config)
+    output = asyncio.run(
+        compiler.compile(
+            files, [SolcOutputSelectionEnum.ALL], reuse_latest_artifacts=False
+        )
+    )
     assert len(output)
 
-    compiler = SolidityCompiler(config, files)
-    output = asyncio.run(compiler.compile(SolcOutputSelectionEnum.ALL, reuse_latest_artifacts=True))  # type: ignore
+    output = asyncio.run(
+        compiler.compile(
+            files, [SolcOutputSelectionEnum.ALL], reuse_latest_artifacts=True
+        )
+    )
     assert len(output)
 
     cli_runner = CliRunner()
@@ -91,12 +98,20 @@ def test_compile_uniswap_v3(setup_project, config):
 )
 def test_compile_the_graph(setup_project, config):
     files = list((PYTEST_BUILD_PATH / "contracts").rglob("*.sol"))
-    compiler = SolidityCompiler(config, files)
-    output = asyncio.run(compiler.compile(SolcOutputSelectionEnum.ALL, reuse_latest_artifacts=False))  # type: ignore
+    compiler = SolidityCompiler(config)
+    output = asyncio.run(
+        compiler.compile(
+            files, [SolcOutputSelectionEnum.ALL], reuse_latest_artifacts=False
+        )
+    )
     assert len(output)
 
-    compiler = SolidityCompiler(config, files)
-    output = asyncio.run(compiler.compile(SolcOutputSelectionEnum.ALL, reuse_latest_artifacts=True))  # type: ignore
+    compiler = SolidityCompiler(config)
+    output = asyncio.run(
+        compiler.compile(
+            files, [SolcOutputSelectionEnum.ALL], reuse_latest_artifacts=True
+        )
+    )
     assert len(output)
 
     cli_runner = CliRunner()
@@ -113,12 +128,19 @@ def test_compile_the_graph(setup_project, config):
 )
 def test_compile_trader_joe(setup_project, config):
     files = list((PYTEST_BUILD_PATH / "contracts").rglob("*.sol"))
-    compiler = SolidityCompiler(config, files)
-    output = asyncio.run(compiler.compile(SolcOutputSelectionEnum.ALL, reuse_latest_artifacts=False))  # type: ignore
+    compiler = SolidityCompiler(config)
+    output = asyncio.run(
+        compiler.compile(
+            files, [SolcOutputSelectionEnum.ALL], reuse_latest_artifacts=False
+        )
+    )
     assert len(output)
 
-    compiler = SolidityCompiler(config, files)
-    output = asyncio.run(compiler.compile(SolcOutputSelectionEnum.ALL, reuse_latest_artifacts=True))  # type: ignore
+    output = asyncio.run(
+        compiler.compile(
+            files, [SolcOutputSelectionEnum.ALL], reuse_latest_artifacts=True
+        )
+    )
     assert len(output)
 
     cli_runner = CliRunner()
@@ -137,12 +159,19 @@ def test_compile_trader_joe(setup_project, config):
 )
 def test_compile_axelar(setup_project, config):
     files = list((PYTEST_BUILD_PATH / "contracts").rglob("*.sol"))
-    compiler = SolidityCompiler(config, files)
-    output = asyncio.run(compiler.compile(SolcOutputSelectionEnum.ALL, reuse_latest_artifacts=False))  # type: ignore
+    compiler = SolidityCompiler(config)
+    output = asyncio.run(
+        compiler.compile(
+            files, [SolcOutputSelectionEnum.ALL], reuse_latest_artifacts=False
+        )
+    )
     assert len(output)
 
-    compiler = SolidityCompiler(config, files)
-    output = asyncio.run(compiler.compile(SolcOutputSelectionEnum.ALL, reuse_latest_artifacts=True))  # type: ignore
+    output = asyncio.run(
+        compiler.compile(
+            files, [SolcOutputSelectionEnum.ALL], reuse_latest_artifacts=True
+        )
+    )
     assert len(output)
 
     cli_runner = CliRunner()
