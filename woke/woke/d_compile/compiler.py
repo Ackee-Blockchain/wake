@@ -1,4 +1,15 @@
-from typing import List, Dict, Iterable, FrozenSet, Set, Tuple, Optional, Collection
+from itertools import chain
+from typing import (
+    List,
+    Dict,
+    Iterable,
+    FrozenSet,
+    Set,
+    Tuple,
+    Optional,
+    Collection,
+    Mapping,
+)
 from collections import deque
 from pathlib import Path
 import asyncio
@@ -96,27 +107,25 @@ class SolidityCompiler:
     __solc_frontend: SolcFrontend
     __source_unit_name_resolver: SourceUnitNameResolver
     __source_path_resolver: SourcePathResolver
-    __files: Set[Path]
 
-    def __init__(self, woke_config: WokeConfig, files: Iterable[Path]):
+    def __init__(self, woke_config: WokeConfig):
         self.__config = woke_config
         self.__svm = SolcVersionManager(woke_config)
         self.__solc_frontend = SolcFrontend(woke_config)
         self.__source_unit_name_resolver = SourceUnitNameResolver(woke_config)
         self.__source_path_resolver = SourcePathResolver(woke_config)
-        self.__files = set()
 
-        # deduplicate source files
-        for file in files:
-            resolved = file.resolve(strict=True)
-            self.__files.add(resolved)
-
-    def __resolve_source_unit_names(self) -> nx.DiGraph:
-        source_units_queue: deque[Tuple[str, Path]] = deque()
+    def __resolve_source_unit_names(
+        self, files: Collection[Path], modified_files: Mapping[Path, str]
+    ) -> nx.DiGraph:
+        # source unit name, full path, file content
+        source_units_queue: deque[Tuple[str, Path, Optional[str]]] = deque()
         source_units: Dict[str, Path] = {}
 
         # for every source file resolve a source unit name
-        for file in self.__files:
+        for file in chain(files, modified_files.keys()):
+            file = file.resolve(strict=True)
+
             source_unit_name = self.__source_unit_name_resolver.resolve_cmdline_arg(
                 str(file)
             )
@@ -127,16 +136,24 @@ class SolidityCompiler:
                     f"Same source unit name `{source_unit_name}` for multiple source files:\n{first}\n{second}"
                 )
             source_units[source_unit_name] = file
-            source_units_queue.append((source_unit_name, file))
+            content = modified_files.get(file, None)
+            source_units_queue.append((source_unit_name, file, content))
 
         graph = nx.DiGraph()
 
         # recursively process all sources
         while len(source_units_queue) > 0:
-            source_unit_name, path = source_units_queue.pop()
-            versions, imports, h = SoliditySourceParser.parse(path)
+            source_unit_name, path, content = source_units_queue.pop()
+            if content is None:
+                versions, imports, h = SoliditySourceParser.parse(path)
+            else:
+                versions, imports, h = SoliditySourceParser.parse_source(content)
             graph.add_node(
-                path, source_unit_name=source_unit_name, versions=versions, hash=h
+                path,
+                source_unit_name=source_unit_name,
+                versions=versions,
+                hash=h,
+                content=content,
             )
             source_units[source_unit_name] = path
 
@@ -156,7 +173,7 @@ class SolidityCompiler:
                         )
 
                 if import_path not in graph.nodes:
-                    source_units_queue.append((import_unit_name, import_path))
+                    source_units_queue.append((import_unit_name, import_path, None))
 
                 graph.add_edge(import_path, path)
         return graph
@@ -283,14 +300,20 @@ class SolidityCompiler:
 
     async def compile(
         self,
+        files: Collection[Path],
         output_types: Collection[SolcOutputSelectionEnum],
         write_artifacts: bool = True,
         reuse_latest_artifacts: bool = True,
+        modified_files: Optional[Mapping[Path, str]] = None,
     ) -> List[SolcOutput]:
-        if len(self.__files) == 0:
+        if modified_files is None:
+            modified_files = {}
+        if len(files) + len(modified_files) == 0:
             raise CompilationError("No source files provided to compile.")
+        if not set(files).isdisjoint(set(modified_files.keys())):
+            raise ValueError("Files and modified files must not overlap.")
 
-        graph = self.__resolve_source_unit_names()
+        graph = self.__resolve_source_unit_names(files, modified_files)
         compilation_units = self.__build_compilation_units(graph)
         build_settings = self.__create_build_settings(output_types)
 
@@ -490,14 +513,19 @@ class SolidityCompiler:
     ) -> SolcOutput:
         # Dict[source_unit_name: str, path: Path]
         files = {}
-        for file, source_unit_name in compilation_unit.graph.nodes(
-            data="source_unit_name"
-        ):
-            files[source_unit_name] = file
+        # Dict[source_unit_name: str, content: str]
+        sources = {}
+        for node, data in compilation_unit.graph.nodes.items():
+            source_unit_name = data["source_unit_name"]
+            content = data["content"]
+            if content is None:
+                files[source_unit_name] = node
+            else:
+                sources[source_unit_name] = content
 
         # run the solc executable
         return await self.__solc_frontend.compile(
-            files, {}, target_version, build_settings
+            files, sources, target_version, build_settings
         )
 
     @staticmethod
