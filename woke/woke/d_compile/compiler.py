@@ -496,8 +496,8 @@ class SolidityCompiler:
             files[source_unit_name] = file
 
         # run the solc executable
-        return await self.__solc_frontend.compile_files(
-            files, target_version, build_settings
+        return await self.__solc_frontend.compile(
+            files, {}, target_version, build_settings
         )
 
     @staticmethod

@@ -24,23 +24,10 @@ class SolcFrontend:
         self.__config = woke_config
         self.__svm = SolcVersionManager(woke_config)
 
-    async def compile_src(
-        self,
-        sources: Dict[str, str],
-        target_version: SolidityVersion,
-        settings: SolcInputSettings,
-    ) -> SolcOutput:
-        standard_input = SolcInput(language=SolcInputLanguageEnum.SOLIDITY)
-
-        for unit_name, content in sources.items():
-            standard_input.sources[unit_name] = SolcInputSource(content=content)
-        standard_input.settings = settings
-
-        return await self.__run_solc(target_version, standard_input)
-
-    async def compile_files(
+    async def compile(
         self,
         files: Dict[str, Path],
+        sources: Dict[str, str],
         target_version: SolidityVersion,
         settings: SolcInputSettings,
     ) -> SolcOutput:
@@ -57,6 +44,8 @@ class SolcFrontend:
                 # because of this, absolute paths must be used here
                 standard_input.sources[unit_name] = SolcInputSource(urls=[str(path)])
 
+        for unit_name, content in sources.items():
+            standard_input.sources[unit_name] = SolcInputSource(content=content)
         standard_input.settings = settings
 
         return await self.__run_solc(target_version, standard_input)
