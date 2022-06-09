@@ -1,5 +1,5 @@
+import asyncio
 import logging
-from typing import List, Iterable
 
 from .context import LspContext
 from .exceptions import LspError
@@ -10,7 +10,7 @@ from .protocol_structures import (
     ResponseError,
     ErrorCodes,
 )
-from .RPC_protocol import RPCProtocol
+from .rpc_protocol import RpcProtocol
 from .methods import RequestMethodEnum
 from .methods_impl import handle_client_to_server_method
 from .notifications_impl import handle_client_to_server_notification
@@ -19,35 +19,29 @@ from ..a_config import WokeConfig
 logger = logging.getLogger(__name__)
 
 
-class Server:
+class LspServer:
+    __protocol: RpcProtocol
+    __run: bool
+
     def __init__(
         self,
         config: WokeConfig,
-        protocol: RPCProtocol,
-        threads: int = 1,
+        reader: asyncio.StreamReader,
+        writer: asyncio.StreamWriter,
     ):
-        self.protocol = protocol
-        self.threads = threads
-        self.running = True
+        self.__protocol = RpcProtocol(reader, writer)
+        self.__run = True
         self.context = LspContext(config)
 
-    def run_server(self):
-        """
-        Start the server
-        """
-        while self.running:
-            # Read the message
-            message = self.protocol.receive_message()
+    async def run(self) -> None:
+        while self.__run:
+            message = await self.__protocol.receive()
             if isinstance(message, RequestMessage):
-                self.handle_message(message)
+                await self._handle_message(message)
             else:
-                self.handle_notification(message)
+                self._handle_notification(message)
 
-    def stop_server(self):
-        logging.shutdown()
-        self.running = False
-
-    def handle_message(self, request: RequestMessage):
+    async def _handle_message(self, request: RequestMessage) -> None:
         logger.info(f"Message received: {request}")
 
         # Init before request needed
@@ -60,7 +54,7 @@ class Server:
                 ErrorCodes.ServerNotInitialized,
                 "Server has not been initialized",
             )
-            self.protocol.send_rpc_response(response)
+            await self.__protocol.send(response)
             return
 
         # Handling request
@@ -68,9 +62,9 @@ class Server:
             response = self._serve_response(request)
         except LspError as e:
             response = self._serve_error(request, e.code, e.message)
-        self.protocol.send_rpc_response(response)
+        await self.__protocol.send(response)
 
-    def handle_notification(self, notification: NotificationMessage):
+    def _handle_notification(self, notification: NotificationMessage):
         logger.info(f"Notification received: {notification}")
 
         # Handling notification
@@ -86,7 +80,7 @@ class Server:
         if self.context.initialized:
             self.init_request_received = True
         if self.context.shutdown_received:
-            self.stop_server()
+            self.__run = False
         response_message = ResponseMessage(
             json_rpc="2.0", id=request.id, result=response, error=None
         )
