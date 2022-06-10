@@ -2,6 +2,7 @@ import asyncio
 import queue
 import logging
 import re
+import sys
 import threading
 from pathlib import Path
 from threading import Thread
@@ -16,6 +17,7 @@ from woke.l_lsp.basic_structures import (
     DidChangeTextDocumentParams,
     DidCloseTextDocumentParams,
 )
+from woke.l_lsp.utils.threaded_child_watcher import ThreadedChildWatcher
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +84,12 @@ class LspCompiler:
         return self.__output_contents[file]
 
     def __compilation_loop(self):
+        if sys.version_info < (3, 8):
+            loop = asyncio.new_event_loop()
+            watcher = ThreadedChildWatcher()
+            asyncio.set_child_watcher(watcher)
+            watcher.attach_loop(loop)
+
         # perform Solidity files discovery
         project_path = self.__config.project_root_path
 
