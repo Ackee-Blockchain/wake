@@ -258,7 +258,7 @@ class TypeDescriptionsModel(ConfiguredModel):
 class SymbolAliasModel(ConfiguredModel):  # helper class
     foreign: "SolcIdentifier"
     local: Optional[StrictStr]
-    name_location: Optional[NameLocation]
+    name_location: Optional[NameLocation]  # since 0.8.2
 
 
 # InlineAssembly
@@ -345,7 +345,7 @@ class SolcImportDirective(SolcNode):
     symbol_aliases: List[SymbolAliasModel]
     unit_alias: UnitAlias
     # optional
-    name_location: Optional[NameLocation]
+    name_location: Optional[NameLocation]  # since 0.8.2
 
 
 class SolcVariableDeclaration(SolcNode):
@@ -361,7 +361,7 @@ class SolcVariableDeclaration(SolcNode):
     type_descriptions: "TypeDescriptionsModel"
     visibility: Visibility
     # optional
-    name_location: Optional[NameLocation]
+    name_location: Optional[NameLocation]  # since 0.8.2
     base_functions: Optional[BaseFunctions]
     documentation: Optional["SolcStructuredDocumentation"]
     function_selector: Optional[StrictStr]
@@ -379,7 +379,7 @@ class SolcEnumDefinition(SolcNode):
     canonical_name: CanonicalName
     members: List["SolcEnumValue"]
     # optional
-    name_location: Optional[NameLocation]
+    name_location: Optional[NameLocation]  # since 0.8.2
 
 
 class SolcFunctionDefinition(SolcNode):
@@ -397,7 +397,7 @@ class SolcFunctionDefinition(SolcNode):
     virtual: Virtual
     visibility: Visibility
     # optional
-    name_location: Optional[NameLocation]
+    name_location: Optional[NameLocation]  # since 0.8.2
     base_functions: Optional[BaseFunctions]
     documentation: Optional["SolcStructuredDocumentation"]
     function_selector: Optional[FunctionSelector]
@@ -415,7 +415,7 @@ class SolcStructDefinition(SolcNode):
     scope: AstNodeId
     visibility: Visibility
     # optional
-    name_location: Optional[NameLocation]
+    name_location: Optional[NameLocation]  # since 0.8.2
 
 
 class SolcErrorDefinition(SolcNode):
@@ -436,7 +436,7 @@ class SolcUserDefinedValueTypeDefinition(SolcNode):
     name: Name
     underlying_type: SolcTypeNameUnion
     # optional
-    name_location: Optional[NameLocation]
+    name_location: Optional[NameLocation]  # since 0.8.2
     canonical_name: Optional[CanonicalName]
 
 
@@ -454,7 +454,7 @@ class SolcContractDefinition(SolcNode):
     nodes: List[SolcContractMemberUnion]
     scope: AstNodeId
     # optional
-    name_location: Optional[NameLocation]
+    name_location: Optional[NameLocation]  # since 0.8.2
     canonical_name: Optional[CanonicalName]
     documentation: Optional["SolcStructuredDocumentation"]
     used_errors: Optional[UsedErrors]
@@ -468,7 +468,7 @@ class SolcEventDefinition(SolcNode):
     anonymous: Anonymous
     parameters: "SolcParameterList"
     # optional
-    name_location: Optional[NameLocation]
+    name_location: Optional[NameLocation]  # since 0.8.2
     documentation: Optional["SolcStructuredDocumentation"]
     event_selector: Optional[
         str
@@ -485,7 +485,7 @@ class SolcModifierDefinition(SolcNode):
     virtual: Virtual
     visibility: Visibility
     # optional
-    name_location: Optional[NameLocation]
+    name_location: Optional[NameLocation]  # since 0.8.2
     base_modifiers: Optional[BaseModifiers]
     documentation: Optional["SolcStructuredDocumentation"]
     overrides: Optional["SolcOverrideSpecifier"]
@@ -979,7 +979,7 @@ class SolcEnumValue(SolcNode):
     # required
     name: Name
     # optional
-    name_location: Optional[NameLocation]
+    name_location: Optional[NameLocation]  # since 0.8.2
 
 
 class SolcInheritanceSpecifier(SolcNode):
