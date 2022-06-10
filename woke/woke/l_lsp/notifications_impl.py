@@ -84,13 +84,13 @@ def lsp_workspace_did_delete_files(context: LspContext, params: dict) -> None:
 def _text_document_did_open(
     context: LspContext, params: DidOpenTextDocumentParams
 ) -> None:
-    context.compiler.file_changes_queue.put(params)
+    context.compiler.add_change(params)
 
 
 def _text_document_did_change(
     context: LspContext, params: DidChangeTextDocumentParams
 ) -> None:
-    context.compiler.file_changes_queue.put(params)
+    context.compiler.add_change(params)
 
 
 def _text_document_will_save(
@@ -108,7 +108,7 @@ def _text_document_did_save(
 def _text_document_did_close(
     context: LspContext, params: DidCloseTextDocumentParams
 ) -> None:
-    pass
+    context.compiler.add_change(params)
 
 
 def lsp_set_trace_notification(context: LspContext, params: dict) -> None:
