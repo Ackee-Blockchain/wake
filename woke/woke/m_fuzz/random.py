@@ -6,12 +6,19 @@ import brownie
 from brownie.network.account import Account
 
 
-def random_account(predicate: Optional[Callable[[Account], bool]] = None) -> Account:
+def random_account(
+    lower_bound: int = 0,
+    length: Optional[int] = None,
+    predicate: Optional[Callable[[Account], bool]] = None,
+) -> Account:
+    if length is None:
+        length = len(brownie.accounts)
     if predicate is None:
-        acc = brownie.accounts
+        accs = brownie.accounts[lower_bound : lower_bound + length]
     else:
-        acc = [account for account in brownie.accounts if predicate(account)]
-    return random.choice(acc)
+        accs = brownie.accounts[lower_bound : lower_bound + length]
+        accs = [acc for acc in accs if predicate(acc)]
+    return random.choice(accs)
 
 
 def random_int(min: int, max: int) -> int:
