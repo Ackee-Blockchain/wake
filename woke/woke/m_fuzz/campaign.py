@@ -46,7 +46,7 @@ class Campaign:
             invs, _ = self.__get_methods(seq, attr="invariant")
 
             called = Counter[str]()
-            point_coverage = Counter[str]()
+            # point_coverage = Counter[str]()
 
             for j in range(flows_count):
                 if flows:
@@ -102,11 +102,11 @@ class Campaign:
                         del inv
 
             del invs, flows
-            point_coverage += seq.point_coverage
-            logger.info(self.__format_heading("Sequence point coverage:"))
-            self.__log_point_coverage(seq.point_coverage)
-            logger.info(self.__format_heading("Campaign point coverage:"))
-            self.__log_point_coverage(point_coverage)
+            # point_coverage += seq.point_coverage
+            # logger.info(self.__format_heading("Sequence point coverage:"))
+            # self.__log_point_coverage(seq.point_coverage)
+            # logger.info(self.__format_heading("Campaign point coverage:"))
+            # self.__log_point_coverage(point_coverage)
             del seq
         logger.info(f"\nRan {flows_count} flows. All flows and invariants passed.")
 
