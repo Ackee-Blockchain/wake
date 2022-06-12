@@ -11,39 +11,56 @@ from woke.a_config import WokeConfig
 
 
 EvmAccount = Union[Account, ProjectContract]
-TxnConfig = TypedDict("TxnConfig", {"from": EvmAccount})
+TxnConfig = TypedDict("TxnConfig", {"from": EvmAccount, "amount": int})
+
+_typed_dict_counter = 0
 
 
-def _sol_to_py(sol: str, input: bool) -> str:
+def _sol_to_py(sol: dict, input: bool) -> str:
+    global _typed_dict_counter, template
     primitive = None
 
-    if sol.startswith("int") or sol.startswith("uint"):
+    t = sol["type"]
+
+    if t.startswith("int") or t.startswith("uint"):
         if input:
             primitive = "Union[int, float, Decimal]"
         else:
             primitive = "int"
 
-    if sol.startswith("contract") or sol.startswith("address"):
+    if t.startswith("contract") or t.startswith("address"):
         primitive = "EvmAccount"
 
-    if sol.startswith("bool"):
+    if t.startswith("bool"):
         primitive = "bool"
 
-    if sol.startswith("string"):
+    if t.startswith("string"):
         primitive = "str"
 
-    if sol.startswith("bytes"):
+    if t.startswith("bytes"):
         primitive = "bytes"
 
-    assert primitive, f"Unexpected type: {sol}"
+    if t.startswith("tuple"):
+        type_name = f"TypedDict_{_typed_dict_counter}"
+        _typed_dict_counter += 1
+        decl = f'{type_name} = TypedDict("{type_name}", '
+        decl += "{\n"
+        for component in sol["components"]:
+            decl += f"    \"{component['name']}\": {_sol_to_py(component, input)},\n"
+        decl += "})\n\n\n"
+        template += decl
+        primitive = type_name
 
-    if sol.endswith("[]"):
-        return f"List[{primitive}]"
-    else:
-        return primitive
+    assert primitive, f"Unexpected type: {t}"
+
+    while t.endswith("[]"):
+        primitive = f"List[{primitive}]"
+        t = t[:-2]
+    return primitive
 
 
 template = """from typing import Tuple, Union, List
+from typing_extensions import TypedDict
 
 from brownie.network.contract import ProjectContract
 from brownie.network.transaction import TransactionReceipt
@@ -62,14 +79,17 @@ def generate_types(config: WokeConfig, overwrite: bool = False) -> None:
     if any(pytypes_dir.iterdir()) and not overwrite:
         raise ValueError("'pytypes' directory is not empty.")
 
+    init_content = ""
+
     project = brownie.project.load()
     for contract in project:
         contract_name = contract._name
         abi = contract.abi
         target_path = pytypes_dir / f"{contract_name}.py"
         class_name = f"{contract_name}Type"
-        res = template
-        res += f"class {class_name}(ProjectContract):\n"
+        res = f"class {class_name}(ProjectContract):\n"
+        init_content += f"from .{contract_name} import {class_name}\n"
+
         for el in abi:
             try:
                 if el["type"] == "function":
@@ -89,9 +109,7 @@ def generate_types(config: WokeConfig, overwrite: bool = False) -> None:
                             no_of_unknowns += 1
                         if keyword.iskeyword(param_name):
                             param_name += "_"
-                        params.append(
-                            (param_name, _sol_to_py(input["type"], input=True))
-                        )
+                        params.append((param_name, _sol_to_py(input, input=True)))
                         del param_name
 
                     del inputs
@@ -114,8 +132,7 @@ def generate_types(config: WokeConfig, overwrite: bool = False) -> None:
 
                     if el["stateMutability"] in ["pure", "view"]:
                         return_values = [
-                            _sol_to_py(output["type"], input=False)
-                            for output in el["outputs"]
+                            _sol_to_py(output, input=False) for output in el["outputs"]
                         ]
 
                         if len(return_values) == 0:
@@ -141,4 +158,6 @@ def generate_types(config: WokeConfig, overwrite: bool = False) -> None:
                 raise Exception()
         # ensure parents exist
         plib.Path.mkdir(target_path.parent, parents=True, exist_ok=True)
-        target_path.write_text(res)
+        target_path.write_text(template + res)
+
+    (pytypes_dir / "__init__.py").write_text(init_content)
