@@ -59,7 +59,7 @@ def run_fuzz(
         if fuzz_path.is_file() and fuzz_path.match("*.py"):
             py_files.add(fuzz_path)
         elif fuzz_path.is_dir():
-            for p in fuzz_path.rglob("*.py"):
+            for p in fuzz_path.rglob("*_test.py"):
                 if p.is_file():
                     py_files.add(p)
         else:
