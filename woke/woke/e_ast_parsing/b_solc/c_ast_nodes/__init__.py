@@ -1,13 +1,12 @@
-from typing import TYPE_CHECKING, Any, Match, Union, List
-from typing_extensions import Literal, Annotated
 import re
 from dataclasses import dataclass
+from typing import Match, Union, List, Optional, Dict
+from typing_extensions import Literal, Annotated
 
-from pydantic import Field
+from pydantic import Field, StrictStr, StrictBool, StrictInt
 from pydantic.class_validators import validator, root_validator
 
 from woke.e_ast_parsing.a_abc import AstAbc
-from woke.e_ast_parsing.b_solc.a_ast_basic_types import *
 from woke.e_ast_parsing.b_solc.b_ast_enums import *
 
 REGEX_SRC = re.compile(r"(\d+):(\d+):(\d+)")
@@ -250,6 +249,21 @@ Override = Annotated[
 ]
 
 
+class AstNodeId(int):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v):
+        if not isinstance(v, int):
+            raise TypeError(f"{cls.__name__} must be an int")
+        return v
+
+    def __repr__(self):
+        return f"AstNodeId({self})"
+
+
 class TypeDescriptionsModel(ConfiguredModel):
     type_identifier: Optional[StrictStr]
     type_string: Optional[StrictStr]
@@ -258,7 +272,7 @@ class TypeDescriptionsModel(ConfiguredModel):
 class SymbolAliasModel(ConfiguredModel):  # helper class
     foreign: "SolcIdentifier"
     local: Optional[StrictStr]
-    name_location: Optional[NameLocation]  # since 0.8.2
+    name_location: Optional[StrictStr]  # since 0.8.2
 
 
 # InlineAssembly
@@ -266,7 +280,7 @@ class ExternalReferenceModel(ConfiguredModel):  # helper class
     declaration: AstNodeId
     is_offset: StrictBool
     is_slot: StrictBool
-    src: Src
+    src: StrictStr
     value_size: StrictInt
     suffix: Optional[InlineAssemblySuffix]
 
@@ -277,12 +291,18 @@ class SrcParsed:
     byte_length: int
     file_id: int
 
+    def __eq__(self, other):
+        return (
+            self.byte_offset == other.byte_offset
+            and self.byte_length == other.byte_length
+        )
+
 
 class SolcOrYulNode(ConfiguredModel):
-    src: Src
+    src: StrictStr
 
     @validator("src")
-    def parse_src(cls, src: Src) -> SrcParsed:
+    def parse_src(cls, src: StrictStr) -> SrcParsed:
         res = re.search(REGEX_SRC, src)
         assert isinstance(res, Match), "Bad src"
         [m1, m2, m3] = [int(res.group(i)) for i in range(1, 4)]
@@ -317,11 +337,11 @@ class SolcSourceUnit(SolcNode):
     # override alias
     node_type: Literal["SourceUnit"] = Field(alias="nodeType")
     # required
-    absolute_path: AbsolutePath
-    exported_symbols: ExportedSymbols
+    absolute_path: StrictStr
+    exported_symbols: Dict[StrictStr, List[AstNodeId]]
     nodes: List[SolcTopLevelMemberUnion]
     # optional
-    license: Optional[License]
+    license: Optional[StrictStr]
 
 
 # todo: replace by __root__
@@ -331,41 +351,41 @@ AstSolc = SolcSourceUnit
 class SolcPragmaDirective(SolcNode):
     # override alias
     node_type: Literal["PragmaDirective"] = Field(alias="nodeType")
-    literals: Literals
+    literals: List[StrictStr]
 
 
 class SolcImportDirective(SolcNode):
     # override alias
     node_type: Literal["ImportDirective"] = Field(alias="nodeType")
     # required
-    absolute_path: AbsolutePath
-    file: File
+    absolute_path: StrictStr
+    file: StrictStr
     scope: AstNodeId
     source_unit: AstNodeId
     symbol_aliases: List[SymbolAliasModel]
-    unit_alias: UnitAlias
+    unit_alias: StrictStr
     # optional
-    name_location: Optional[NameLocation]  # since 0.8.2
+    name_location: Optional[StrictStr]  # since 0.8.2
 
 
 class SolcVariableDeclaration(SolcNode):
     # required
     # override alias
     node_type: Literal["VariableDeclaration"] = Field(alias="nodeType")
-    name: Name
-    constant: Constant
+    name: StrictStr
+    constant: StrictBool
     mutability: Mutability
     scope: AstNodeId
-    state_variable: StateVariable
+    state_variable: StrictBool
     storage_location: StorageLocation
     type_descriptions: "TypeDescriptionsModel"
     visibility: Visibility
     # optional
-    name_location: Optional[NameLocation]  # since 0.8.2
-    base_functions: Optional[BaseFunctions]
+    name_location: Optional[StrictStr]  # since 0.8.2
+    base_functions: Optional[List[AstNodeId]]
     documentation: Optional["SolcStructuredDocumentation"]
     function_selector: Optional[StrictStr]
-    indexed: Optional[Indexed]
+    indexed: Optional[StrictBool]
     overrides: Optional["SolcOverrideSpecifier"]
     type_name: OptionalSolcTypeNameUnion
     value: OptionalSolcExpressionUnion
@@ -375,32 +395,32 @@ class SolcEnumDefinition(SolcNode):
     # override alias
     node_type: Literal["EnumDefinition"] = Field(alias="nodeType")
     # required
-    name: Name
-    canonical_name: CanonicalName
+    name: StrictStr
+    canonical_name: StrictStr
     members: List["SolcEnumValue"]
     # optional
-    name_location: Optional[NameLocation]  # since 0.8.2
+    name_location: Optional[StrictStr]  # since 0.8.2
 
 
 class SolcFunctionDefinition(SolcNode):
     # override alias
     node_type: Literal["FunctionDefinition"] = Field(alias="nodeType")
     # required
-    name: Name
-    implemented: Implemented
+    name: StrictStr
+    implemented: StrictBool
     kind: FunctionKind
     modifiers: List["SolcModifierInvocation"]
     parameters: "SolcParameterList"
     return_parameters: "SolcParameterList"
     scope: AstNodeId
     state_mutability: StateMutability
-    virtual: Virtual
+    virtual: StrictBool
     visibility: Visibility
     # optional
-    name_location: Optional[NameLocation]  # since 0.8.2
-    base_functions: Optional[BaseFunctions]
+    name_location: Optional[StrictStr]  # since 0.8.2
+    base_functions: Optional[List[AstNodeId]]
     documentation: Optional["SolcStructuredDocumentation"]
-    function_selector: Optional[FunctionSelector]
+    function_selector: Optional[StrictStr]
     body: Optional["SolcBlock"]
     overrides: Optional["SolcOverrideSpecifier"]
 
@@ -409,21 +429,21 @@ class SolcStructDefinition(SolcNode):
     # override alias
     node_type: Literal["StructDefinition"] = Field(alias="nodeType")
     # required
-    name: Name
-    canonical_name: CanonicalName
+    name: StrictStr
+    canonical_name: StrictStr
     members: List["SolcVariableDeclaration"]
     scope: AstNodeId
     visibility: Visibility
     # optional
-    name_location: Optional[NameLocation]  # since 0.8.2
+    name_location: Optional[StrictStr]  # since 0.8.2
 
 
 class SolcErrorDefinition(SolcNode):
     # override alias
     node_type: Literal["ErrorDefinition"] = Field(alias="nodeType")
     # required
-    name: Name
-    name_location: NameLocation
+    name: StrictStr
+    name_location: StrictStr
     parameters: "SolcParameterList"
     # optional
     documentation: Optional["SolcStructuredDocumentation"]
@@ -433,42 +453,42 @@ class SolcUserDefinedValueTypeDefinition(SolcNode):
     # override alias
     node_type: Literal["UserDefinedValueTypeDefinition"] = Field(alias="nodeType")
     # required
-    name: Name
+    name: StrictStr
     underlying_type: SolcTypeNameUnion
     # optional
-    name_location: Optional[NameLocation]  # since 0.8.2
-    canonical_name: Optional[CanonicalName]
+    name_location: Optional[StrictStr]  # since 0.8.2
+    canonical_name: Optional[StrictStr]
 
 
 class SolcContractDefinition(SolcNode):
     # override alias
     node_type: Literal["ContractDefinition"] = Field(alias="nodeType")
     # required
-    name: Name
-    abstract: Abstract
+    name: StrictStr
+    abstract: StrictBool
     base_contracts: List["SolcInheritanceSpecifier"]
-    contract_dependencies: ContractDependencies
+    contract_dependencies: List[AstNodeId]
     contract_kind: ContractKind
-    fully_implemented: FullyImplemented
-    linearized_base_contracts: LinearizedBaseContracts
+    fully_implemented: StrictBool
+    linearized_base_contracts: List[AstNodeId]
     nodes: List[SolcContractMemberUnion]
     scope: AstNodeId
     # optional
-    name_location: Optional[NameLocation]  # since 0.8.2
-    canonical_name: Optional[CanonicalName]
+    name_location: Optional[StrictStr]  # since 0.8.2
+    canonical_name: Optional[StrictStr]
     documentation: Optional["SolcStructuredDocumentation"]
-    used_errors: Optional[UsedErrors]
+    used_errors: Optional[List[AstNodeId]]
 
 
 class SolcEventDefinition(SolcNode):
     # override alias
     node_type: Literal["EventDefinition"] = Field(alias="nodeType")
     # required
-    name: Name
-    anonymous: Anonymous
+    name: StrictStr
+    anonymous: StrictBool
     parameters: "SolcParameterList"
     # optional
-    name_location: Optional[NameLocation]  # since 0.8.2
+    name_location: Optional[StrictStr]  # since 0.8.2
     documentation: Optional["SolcStructuredDocumentation"]
     event_selector: Optional[
         str
@@ -479,14 +499,14 @@ class SolcModifierDefinition(SolcNode):
     # override alias
     node_type: Literal["ModifierDefinition"] = Field(alias="nodeType")
     # required
-    name: Name
+    name: StrictStr
     body: "SolcBlock"
     parameters: "SolcParameterList"
-    virtual: Virtual
+    virtual: StrictBool
     visibility: Visibility
     # optional
-    name_location: Optional[NameLocation]  # since 0.8.2
-    base_modifiers: Optional[BaseModifiers]
+    name_location: Optional[StrictStr]  # since 0.8.2
+    base_modifiers: Optional[List[AstNodeId]]
     documentation: Optional["SolcStructuredDocumentation"]
     overrides: Optional["SolcOverrideSpecifier"]
 
@@ -516,7 +536,7 @@ class SolcElementaryTypeName(SolcNode):
     node_type: Literal["ElementaryTypeName"] = Field(alias="nodeType")
     # required
     type_descriptions: TypeDescriptionsModel
-    name: Name
+    name: StrictStr
     # optional
     state_mutability: Optional[StateMutability]
 
@@ -547,11 +567,11 @@ class SolcUserDefinedTypeName(SolcNode):
     node_type: Literal["UserDefinedTypeName"] = Field(alias="nodeType")
     # required
     type_descriptions: TypeDescriptionsModel
-    referenced_declaration: ReferencedDeclaration
+    referenced_declaration: AstNodeId
     # optional
     # TODO:
     contract_scope: Optional[AstNodeId]
-    name: Optional[Name]
+    name: Optional[StrictStr]
     path_node: Optional["SolcIdentifierPath"]
 
 
@@ -658,7 +678,7 @@ class SolcReturn(SolcNode):
     node_type: Literal["Return"] = Field(alias="nodeType")
     # required
     # optional
-    function_return_parameters: Optional[FunctionReturnParameters]
+    function_return_parameters: Optional[AstNodeId]
     documentation: Optional[StrictStr]
     expression: OptionalSolcExpressionUnion
 
@@ -695,7 +715,7 @@ class SolcVariableDeclarationStatement(SolcNode):
     # override alias
     node_type: Literal["VariableDeclarationStatement"] = Field(alias="nodeType")
     # required
-    assignments: Assignments
+    assignments: List[Optional[AstNodeId]]
     declarations: List[Optional["SolcVariableDeclaration"]]
     # optional
     documentation: Optional[StrictStr]
@@ -716,10 +736,10 @@ class SolcAssignment(SolcNode):
     # override alias
     node_type: Literal["Assignment"] = Field(alias="nodeType")
     # required
-    is_constant: IsConstant
-    is_l_value: IsLValue
-    is_pure: IsPure
-    l_value_requested: LValueRequested
+    is_constant: StrictBool
+    is_l_value: StrictBool
+    is_pure: StrictBool
+    l_value_requested: StrictBool
     type_descriptions: TypeDescriptionsModel
     left_hand_side: SolcExpressionUnion
     operator: AssignmentOperator
@@ -732,10 +752,10 @@ class SolcBinaryOperation(SolcNode):
     # override alias
     node_type: Literal["BinaryOperation"] = Field(alias="nodeType")
     # required
-    is_constant: IsConstant
-    is_l_value: IsLValue
-    is_pure: IsPure
-    l_value_requested: LValueRequested
+    is_constant: StrictBool
+    is_l_value: StrictBool
+    is_pure: StrictBool
+    l_value_requested: StrictBool
     type_descriptions: TypeDescriptionsModel
     common_type: TypeDescriptionsModel
     left_expression: SolcExpressionUnion
@@ -749,10 +769,10 @@ class SolcConditional(SolcNode):
     # override alias
     node_type: Literal["Conditional"] = Field(alias="nodeType")
     # required
-    is_constant: IsConstant
-    is_l_value: IsLValue
-    is_pure: IsPure
-    l_value_requested: LValueRequested
+    is_constant: StrictBool
+    is_l_value: StrictBool
+    is_pure: StrictBool
+    l_value_requested: StrictBool
     type_descriptions: TypeDescriptionsModel
     condition: SolcExpressionUnion
     false_expression: SolcExpressionUnion
@@ -765,10 +785,10 @@ class SolcElementaryTypeNameExpression(SolcNode):
     # override alias
     node_type: Literal["ElementaryTypeNameExpression"] = Field(alias="nodeType")
     # required
-    is_constant: IsConstant
-    is_l_value: IsLValue
-    is_pure: IsPure
-    l_value_requested: LValueRequested
+    is_constant: StrictBool
+    is_l_value: StrictBool
+    is_pure: StrictBool
+    l_value_requested: StrictBool
     type_descriptions: TypeDescriptionsModel
     type_name: "SolcElementaryTypeName"
     # optional
@@ -779,16 +799,16 @@ class SolcFunctionCall(SolcNode):
     # override alias
     node_type: Literal["FunctionCall"] = Field(alias="nodeType")
     # required
-    is_constant: IsConstant
-    is_l_value: IsLValue
-    is_pure: IsPure
-    l_value_requested: LValueRequested
+    is_constant: StrictBool
+    is_l_value: StrictBool
+    is_pure: StrictBool
+    l_value_requested: StrictBool
     type_descriptions: TypeDescriptionsModel
     arguments: List[SolcExpressionUnion]
     expression: SolcExpressionUnion
     kind: FunctionCallKind
-    names: Names
-    try_call: TryCall
+    names: List[StrictStr]
+    try_call: StrictBool
     # optional
     argument_types: Optional[List[TypeDescriptionsModel]]
 
@@ -797,16 +817,16 @@ class SolcFunctionCallOptions(SolcNode):
     # override alias
     node_type: Literal["FunctionCallOptions"] = Field(alias="nodeType")
     # required
-    is_constant: IsConstant
-    is_pure: IsPure
-    l_value_requested: LValueRequested
+    is_constant: StrictBool
+    is_pure: StrictBool
+    l_value_requested: StrictBool
     type_descriptions: TypeDescriptionsModel
     expression: SolcExpressionUnion
-    names: Names
+    names: List[StrictStr]
     options: List[SolcExpressionUnion]
     # optional
     # TODO:
-    is_l_value: Optional[IsLValue]
+    is_l_value: Optional[StrictBool]
     argument_types: Optional[List[TypeDescriptionsModel]]
 
 
@@ -814,22 +834,22 @@ class SolcIdentifier(SolcNode):
     # override alias
     node_type: Literal["Identifier"] = Field(alias="nodeType")
     # required
-    name: Name
-    overloaded_declarations: OverloadedDeclarations
+    name: StrictStr
+    overloaded_declarations: List[AstNodeId]
     type_descriptions: TypeDescriptionsModel
     # optional
     argument_types: Optional[List[TypeDescriptionsModel]]
-    referenced_declaration: Optional[ReferencedDeclaration]
+    referenced_declaration: Optional[AstNodeId]
 
 
 class SolcIndexAccess(SolcNode):
     # override alias
     node_type: Literal["IndexAccess"] = Field(alias="nodeType")
     # required
-    is_constant: IsConstant
-    is_l_value: IsLValue
-    is_pure: IsPure
-    l_value_requested: LValueRequested
+    is_constant: StrictBool
+    is_l_value: StrictBool
+    is_pure: StrictBool
+    l_value_requested: StrictBool
     type_descriptions: TypeDescriptionsModel
     base_expression: SolcExpressionUnion
     # optional
@@ -841,10 +861,10 @@ class SolcIndexRangeAccess(SolcNode):
     # override alias
     node_type: Literal["IndexRangeAccess"] = Field(alias="nodeType")
     # required
-    is_constant: IsConstant
-    is_l_value: IsLValue
-    is_pure: IsPure
-    l_value_requested: LValueRequested
+    is_constant: StrictBool
+    is_l_value: StrictBool
+    is_pure: StrictBool
+    l_value_requested: StrictBool
     type_descriptions: TypeDescriptionsModel
     base_expression: SolcExpressionUnion
     # optional
@@ -857,60 +877,60 @@ class SolcLiteral(SolcNode):
     # override alias
     node_type: Literal["Literal"] = Field(alias="nodeType")
     # required
-    is_constant: IsConstant
-    is_l_value: IsLValue
-    is_pure: IsPure
-    l_value_requested: LValueRequested
+    is_constant: StrictBool
+    is_l_value: StrictBool
+    is_pure: StrictBool
+    l_value_requested: StrictBool
     type_descriptions: TypeDescriptionsModel
-    hex_value: HexValue
+    hex_value: StrictStr
     kind: LiteralKind
     # optional
     argument_types: Optional[List[TypeDescriptionsModel]]
     subdenomination: Optional[StrictStr]  # can be for example "days" or "ether"
-    value: Optional[Value]
+    value: Optional[StrictStr]
 
 
 class SolcMemberAccess(SolcNode):
     # override alias
     node_type: Literal["MemberAccess"] = Field(alias="nodeType")
     # required
-    is_constant: IsConstant
-    is_l_value: IsLValue
-    is_pure: IsPure
-    l_value_requested: LValueRequested
+    is_constant: StrictBool
+    is_l_value: StrictBool
+    is_pure: StrictBool
+    l_value_requested: StrictBool
     type_descriptions: TypeDescriptionsModel
     expression: SolcExpressionUnion
-    member_name: MemberName
+    member_name: StrictStr
     # optional
     argument_types: Optional[List[TypeDescriptionsModel]]
-    referenced_declaration: Optional[ReferencedDeclaration]
+    referenced_declaration: Optional[AstNodeId]
 
 
 class SolcNewExpression(SolcNode):
     # override alias
     node_type: Literal["NewExpression"] = Field(alias="nodeType")
     # required
-    is_constant: IsConstant
-    is_pure: IsPure
-    l_value_requested: LValueRequested
+    is_constant: StrictBool
+    is_pure: StrictBool
+    l_value_requested: StrictBool
     type_descriptions: TypeDescriptionsModel
     type_name: SolcTypeNameUnion
     # optional
     argument_types: Optional[List[TypeDescriptionsModel]]
-    is_l_value: Optional[IsLValue]
+    is_l_value: Optional[StrictBool]
 
 
 class SolcTupleExpression(SolcNode):
     # override alias
     node_type: Literal["TupleExpression"] = Field(alias="nodeType")
     # required
-    is_constant: IsConstant
-    is_l_value: IsLValue
-    is_pure: IsPure
-    l_value_requested: LValueRequested
+    is_constant: StrictBool
+    is_l_value: StrictBool
+    is_pure: StrictBool
+    l_value_requested: StrictBool
     type_descriptions: TypeDescriptionsModel
     components: List[OptionalSolcExpressionUnion]
-    is_inline_array: IsInlineArray
+    is_inline_array: StrictBool
     # optional
     argument_types: Optional[List[TypeDescriptionsModel]]
 
@@ -919,13 +939,13 @@ class SolcUnaryOperation(SolcNode):
     # override alias
     node_type: Literal["UnaryOperation"] = Field(alias="nodeType")
     # required
-    is_constant: IsConstant
-    is_l_value: IsLValue
-    is_pure: IsPure
-    l_value_requested: LValueRequested
+    is_constant: StrictBool
+    is_l_value: StrictBool
+    is_pure: StrictBool
+    l_value_requested: StrictBool
     type_descriptions: TypeDescriptionsModel
     operator: UnaryOpOperator
-    prefix: Prefix
+    prefix: StrictBool
     sub_expression: SolcExpressionUnion
     # optional
     argument_types: Optional[List[TypeDescriptionsModel]]
@@ -942,8 +962,8 @@ class SolcOverrideSpecifier(SolcNode):
 class SolcIdentifierPath(SolcNode):
     node_type: Literal["IdentifierPath"] = Field(alias="nodeType")
     # required
-    name: Name
-    referenced_declaration: ReferencedDeclaration
+    name: StrictStr
+    referenced_declaration: AstNodeId
     # optional
 
 
@@ -960,7 +980,7 @@ class SolcTryCatchClause(SolcNode):
     node_type: Literal["TryCatchClause"] = Field(alias="nodeType")
     # required
     block: "SolcBlock"
-    error_name: ErrorName
+    error_name: StrictStr
     # optional
     parameters: Optional["SolcParameterList"]
 
@@ -969,7 +989,7 @@ class SolcStructuredDocumentation(SolcNode):
     # override alias
     node_type: Literal["StructuredDocumentation"] = Field(alias="nodeType")
     # required
-    text: Text
+    text: StrictStr
     # optional
 
 
@@ -977,9 +997,9 @@ class SolcEnumValue(SolcNode):
     # override alias
     node_type: Literal["EnumValue"] = Field(alias="nodeType")
     # required
-    name: Name
+    name: StrictStr
     # optional
-    name_location: Optional[NameLocation]  # since 0.8.2
+    name_location: Optional[StrictStr]  # since 0.8.2
 
 
 class SolcInheritanceSpecifier(SolcNode):
@@ -1063,7 +1083,7 @@ class YulFunctionDefinition(YulNode):
     node_type: Literal["YulFunctionDefinition"] = Field(alias="nodeType")
     # required
     body: "YulBlock"
-    name: Name
+    name: StrictStr
     parameters: List["YulTypedName"]
     return_variables: List["YulTypedName"]
     # optional
@@ -1109,7 +1129,7 @@ class YulIdentifier(YulNode):
     # override alias
     node_type: Literal["YulIdentifier"] = Field(alias="nodeType")
     # required
-    name: Name
+    name: StrictStr
     # optional
 
 
@@ -1118,10 +1138,10 @@ class YulLiteral(YulNode):
     node_type: Literal["YulLiteral"] = Field(alias="nodeType")
     # required
     kind: YulLiteralValueKind
-    type: Type
+    type: StrictStr
     # at least one of these should be set
-    value: Optional[Value]
-    hex_value: Optional[HexValue]
+    value: Optional[StrictStr]
+    hex_value: Optional[StrictStr]
 
     @root_validator
     def value_or_hex_value_set(cls, values):
@@ -1136,8 +1156,8 @@ class YulTypedName(YulNode):
     # override alias
     node_type: Literal["YulTypedName"] = Field(alias="nodeType")
     # required
-    name: Name
-    type: Type
+    name: StrictStr
+    type: StrictStr
     # optional
 
 
