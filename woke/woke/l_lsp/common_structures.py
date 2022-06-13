@@ -1,12 +1,11 @@
 import os
-import sys
 import re
 from pathlib import Path
 from urllib.parse import unquote
 from enum import Enum, IntEnum
 from typing import Any, List, Optional, Union, NewType
 
-from pydantic import BaseModel, Extra
+from .lsp_data_model import LspModel
 
 DocumentUri = NewType("URI", str)
 URI = NewType("URI", str)
@@ -19,11 +18,6 @@ def to_snake(s):
     return re.sub("([A-Z]\w+$)", "_\\1", s).lower()
 
 
-def to_camel(s: str) -> str:
-    split = s.split("_")
-    return split[0].lower() + "".join([w.capitalize() for w in split[1:]])
-
-
 def t_dict(d):
     if isinstance(d, list):
         return [t_dict(i) if isinstance(i, (dict, list)) else i for i in d]
@@ -31,13 +25,6 @@ def t_dict(d):
         to_snake(a): t_dict(b) if isinstance(b, (dict, list)) else b
         for a, b in d.items()
     }
-
-
-class LspModel(BaseModel):
-    class Config:
-        alias_generator = to_camel
-        allow_population_by_field_name = True
-        extra = Extra.ignore
 
 
 def uri_to_path(uri: str) -> str:
@@ -650,34 +637,6 @@ class WorkDoneProgressOptions(LspModel):
     work_done_progress: Optional[bool] = None
 
 
-class DiagnosticOptions(WorkDoneProgressOptions):
-    """
-    Diagnostics options.
-    """
-
-    identifier: Optional[str] = None
-    """
-    An optional identifier under which the diagnostics are managed by the client.
-    """
-    inter_file_dependencies: bool
-    """
-    Whether the language has inter file dependencies meaning that
-    editing code in one file can result in a different diagnostic
-    set in another file. Inter file dependencies are common for
-    most programming languages and typically uncommon for linters.
-    """
-    workspace_diagnostics: bool
-    """
-    The server provides support for workspace diagnostics as well.
-    """
-
-
-class DiagnosticRegistrationOptions(
-    TextDocumentRegistrationOptions, DiagnosticOptions, StaticRegistrationOptions
-):
-    pass
-
-
 class PartialResultParams(LspModel):
     partial_result_token: Optional[ProgressToken]
     """
@@ -697,92 +656,6 @@ class ClientCapabilitiesWorkspaceFileOperation(LspModel):
     will_rename: Optional[bool]
     did_delete: Optional[bool]
     will_delete: Optional[bool]
-
-
-class FileOperationPatternKind(Enum):
-    FILE = "file"
-    FOLDER = "folder"
-
-
-class FileOperationPatternOptions(LspModel):
-    ignore_case: Optional[bool]
-
-
-class FileOperationPattern(LspModel):
-    glob: str
-    matches: Optional[FileOperationPatternKind]
-    options: Optional[FileOperationPatternOptions]
-
-
-class FileOperationFilter(LspModel):
-    scheme: Optional[str]
-    pattern: FileOperationPattern
-
-
-class FileOperationRegistrationOptions(LspModel):
-    filters: List[FileOperationFilter]
-
-
-class ServerCapabilitiesWorkspaceFileOperations(LspModel):
-    """
-    ServerCapabilities subsubClass
-    """
-
-    did_create: Optional[FileOperationRegistrationOptions]
-    will_create: Optional[FileOperationRegistrationOptions]
-    did_rename: Optional[FileOperationRegistrationOptions]
-    will_rename: Optional[FileOperationRegistrationOptions]
-    did_delete: Optional[FileOperationRegistrationOptions]
-    will_delete: Optional[FileOperationRegistrationOptions]
-
-
-class WorkspaceFoldersServerCapabilities(LspModel):
-    supported: Optional[bool]
-    change_notifications: Optional[Union[str, bool]]
-
-
-class ServerCapabilitiesWorkspace(LspModel):
-    """
-    ServerCapabilities subClass
-    """
-
-    workspace_folders: Optional[WorkspaceFoldersServerCapabilities]
-    file_operations: Optional[ServerCapabilitiesWorkspaceFileOperations]
-
-
-class TextDocumentSyncKind(IntEnum):
-    NONE = 0
-    """
-    Documents should not be synced at all.
-    """
-    FULL = 1
-    """
-    Documents are synced by always sending the full content
-    of the document.
-    """
-    INCREMENTAL = 2
-    """
-    Documents are synced by sending the full content on open.
-    After that only incremental updates to the document are
-    send.Documents are synced by sending the full content on open.
-    After that only incremental updates to the document are send.
-    """
-
-
-class SaveOptions(LspModel):
-    include_text: Optional[bool]
-
-
-class TextDocumentSyncOptions(LspModel):
-    open_close: Optional[bool] = None
-    """
-    Open and close notifications are sent to the server. If omitted open
-    close notification should not be sent.
-    """
-    change: Optional[TextDocumentSyncKind] = None
-    will_save: Optional[bool] = None
-    will_save_wait_until: Optional[bool] = None
-    save: Optional[Union[bool, SaveOptions]] = None
 
 
 class InitializeErrorCodes(IntEnum):
@@ -939,76 +812,6 @@ class LogTraceParams(LspModel):
     """
 
 
-# ##################### Document Synchronization ######################
-
-
-class DidOpenTextDocumentParams(LspModel):
-    text_document: TextDocumentItem
-
-
-class TextDocumentChangeRegistrationOptions(TextDocumentRegistrationOptions):
-    sync_kind: TextDocumentSyncKind
-
-
-class TextDocumentContentChangeEvent(LspModel):
-    range: Range
-    """
-    The range of the document that changed.
-    """
-    range_length: Optional[int]  # uint ?
-    """
-    The optional length of the range that got replaced.
-    """
-    text: str
-    """
-    The new text for the provided range.
-    """
-
-
-class DidChangeTextDocumentParams(LspModel):
-    text_document: VersionedTextDocumentIdentifier
-    content_changes: List[TextDocumentContentChangeEvent]
-
-
-class TextDocumentSaveReason(IntEnum):
-    MANUAL = 1
-    AFTER_DELAY = 2
-    FOCUS_OUT = 3
-
-
-class WillSaveTextDocumentParams(LspModel):
-    text_document: TextDocumentIdentifier
-    reason: TextDocumentSaveReason
-
-
-class DidSaveTextDocumentParams(LspModel):
-    text_document: TextDocumentIdentifier
-    text: Optional[str]
-
-
-class TextDocumentSaveRegistrationOptions(TextDocumentRegistrationOptions):
-    text_document: TextDocumentIdentifier
-    """
-    The document that was saved.
-    """
-    text: Optional[str]
-
-
-class DidCloseTextDocumentParams(LspModel):
-    text_document: TextDocumentIdentifier
-    """
-    The document that was closed.
-    """
-
-
-class TextDocumentSyncClientCapabilities(LspModel):
-    dynamic_registration: Optional[bool]
-    will_save: Optional[bool]
-    will_save_wait_until: Optional[bool]
-    did_save: Optional[bool]
-
-
-######################################################################################
 class SymbolKind(IntEnum):
     FILE = 1
     MODULE = 2
@@ -1252,6 +1055,13 @@ class SemanticTokensWorkspaceClientCapabilities(LspModel):
     refresh_support: Optional[bool]
 
 
+class TextDocumentSyncClientCapabilities(LspModel):
+    dynamic_registration: Optional[bool]
+    will_save: Optional[bool]
+    will_save_wait_until: Optional[bool]
+    did_save: Optional[bool]
+
+
 class ClientCapabilitiesWorkspace(LspModel):
     apply_edit: Optional[bool]
     workspace_edit: Optional[WorkspaceEditClientCapabilities]
@@ -1264,62 +1074,6 @@ class ClientCapabilitiesWorkspace(LspModel):
     semantic_tokens: Optional[SemanticTokensWorkspaceClientCapabilities]
     code_lens: Optional[CodeLensWorkspaceClientCapabilities]
     file_operations: Optional[ClientCapabilitiesWorkspaceFileOperation]
-
-
-class PositionEncodingKind(str, Enum):
-    UTF8 = "utf-8"
-    UTF16 = "utf-16"
-    UTF32 = "utf-32"
-
-
-class ServerCapabilities(LspModel):
-    position_encoding: Optional[PositionEncodingKind] = None
-    text_document_sync: Optional[
-        Union[TextDocumentSyncOptions, TextDocumentSyncKind]
-    ] = None
-    """
-    completion_provider: Optional[CompletionOptions]
-    hover_provider: Optional[Union[bool, HoverOptions]]
-    signature_help_provider: Optional[SignatureHelpOptions]
-    declaration_provider: Optional[Union[bool, DeclarationOptions, DeclarationRegistrationOptions]]
-    definition_provider: Optional[Union[bool, DefinitionOptions]]
-    type_definition_provider: Optional[Union[bool, TypeDefinitionOptions, TypeDefinitionRegistrationOptions]]
-    implementation_provider: Optional[Union[bool, ImplementationOptions, ImplementationRegistrationOptions]]
-    references_provider: Optional[Union[bool, ReferenceOptions]]
-    document_highlight_provider: Optional[Union[bool, ReferenceOptions]]
-    document_symbol_provider: Optional[Union[bool, DocumentSymbolOptions]]
-    code_action_provider: Optional[Union[bool, CodeActionOptions]]
-    code_lens_provider: Optional[CodeLensOptions]
-    document_link_provider: Optional[DocumentLinkOptions]
-    color_provider: Optional[Union[bool, DocumentColorOptions, DocumentColorRegistrationOptions]]
-    document_formatting_provider: Optional[Union[bool, DocumentFormattingOptions]]
-    document_range_formatting_provider: Optional[Union[bool, DocumentRangeFormattingOptions]]
-    document_on_type_formatting_provider: Optional[DocumentOnTypeFormattingOptions]
-    rename_provider: Optional[Union[bool, RenameOptions]]
-    folding_range_provider: Optional[Union[bool, FoldingRangeOptions, FoldingRangeRegistrationOptions]]
-    execute_command_rovider: Optional[ExecuteCommandOptions]
-    selection_range_provider: Optional[Union[bool, SelectionRangeOptions, SelectionRangeRegistrationOptions]]
-    linked_editing_range_provider: Optional[Union[bool, LinkedEditingRangeOptions, LinkedEditingRangeRegistrationOptions]]
-    call_hierarchy_provider: Optional[Union[bool, CallHierarchyOptions, CallHierarchyRegistrationOptions]]
-    semantic_token_provider: Optional[Union[SemanticTokensOptions, SemanticTokensRegistrationOptions]]
-    moniker_provider: Optional[Union[bool, MonikerOptions, MonikerRegistrationOptions]]
-    """
-    diagnostic_provider: Optional[
-        Union[DiagnosticOptions, DiagnosticRegistrationOptions]
-    ] = None
-    workspace_symbol_provider: Optional[Union[bool, WorkspaceSymbolOptions]] = None
-    workspace: Optional[ServerCapabilitiesWorkspace] = None
-    experimental: Optional[Any] = None
-
-
-class InitializeResultServerInfo(LspModel):
-    name: str
-    version: Optional[str]
-
-
-class InitializeResult(LspModel):
-    capabilities: ServerCapabilities
-    server_info: Optional[InitializeResultServerInfo]
 
 
 class TextDocumentClientCapabilities(LspModel):

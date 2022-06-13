@@ -1,5 +1,10 @@
 import json
 from woke.l_lsp.common_structures import *
+from woke.l_lsp.document_sync import (
+    DidOpenTextDocumentParams,
+    DidChangeTextDocumentParams,
+    TextDocumentContentChangeEvent,
+)
 
 """
 Class for providing test messages

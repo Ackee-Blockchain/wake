@@ -12,7 +12,7 @@ from urllib.parse import urlparse
 from woke.a_config import WokeConfig
 from woke.d_compile import SolcOutput, SolcOutputSelectionEnum
 from woke.d_compile.compiler import SolidityCompiler
-from woke.l_lsp.common_structures import (
+from woke.l_lsp.document_sync import (
     DidOpenTextDocumentParams,
     DidChangeTextDocumentParams,
     DidCloseTextDocumentParams,
