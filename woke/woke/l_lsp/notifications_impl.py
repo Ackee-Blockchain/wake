@@ -4,6 +4,13 @@ from typing import Dict, Callable, Tuple, Type
 
 from .common_structures import *
 from .context import LspContext
+from .document_sync import (
+    DidOpenTextDocumentParams,
+    DidChangeTextDocumentParams,
+    WillSaveTextDocumentParams,
+    DidSaveTextDocumentParams,
+    DidCloseTextDocumentParams,
+)
 from .enums import TraceValueEnum
 from .methods import RequestMethodEnum
 

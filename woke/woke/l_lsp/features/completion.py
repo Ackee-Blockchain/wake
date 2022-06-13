@@ -1,8 +1,6 @@
 import enum
 from typing import List, Optional, Union, Any
 
-from pydantic import BaseModel
-
 from ..common_structures import (
     MarkupContent,
     MarkupKind,
@@ -15,6 +13,7 @@ from ..common_structures import (
     Command,
     TextDocumentRegistrationOptions,
 )
+from ..lsp_data_model import LspModel
 
 
 class CompletionItemKind(enum.IntEnum):
@@ -88,18 +87,18 @@ class InsertTextFormat(enum.IntEnum):
 # ########## ClientCapabilitiesCompletionItem subclasses ########
 
 
-class ClientCapabilitiesCompletionItemTagSupport(BaseModel):
+class ClientCapabilitiesCompletionItemTagSupport(LspModel):
     value_set: List[CompletionItemTag]
 
 
-class ClientCapabilitiesCompletionItemResolveSupport(BaseModel):
+class ClientCapabilitiesCompletionItemResolveSupport(LspModel):
     properties: List[str]
     """
     The properties that a client can resolve lazily.
     """
 
 
-class ClientCapabilitiesCompletionItemKind(BaseModel):
+class ClientCapabilitiesCompletionItemKind(LspModel):
     value_set: Optional[CompletionItemKind]
     """
     If this property is not present the client only supports
@@ -112,7 +111,7 @@ class ClientCapabilitiesCompletionItemKind(BaseModel):
 # ########## CompletionClientCapabilities subclasses ############
 
 
-class ClientCapabilitiesCompletionItem(BaseModel):
+class ClientCapabilitiesCompletionItem(LspModel):
     snippet_support: Optional[bool]
     """
     Client supports snippets as insert text.
@@ -165,7 +164,7 @@ class ClientCapabilitiesCompletionItem(BaseModel):
     label_details_support: Optional[bool]
 
 
-class ClientCapabilitiesCompletionList(BaseModel):
+class ClientCapabilitiesCompletionList(LspModel):
     item_defaults: Optional[List[str]]
     """
     The value lists the supported property names of the
@@ -177,7 +176,7 @@ class ClientCapabilitiesCompletionList(BaseModel):
 #################################################################
 
 
-class CompletionClientCapabilities(BaseModel):
+class CompletionClientCapabilities(LspModel):
     dynamic_registration: Optional[bool]
     """
     Whether completion supports dynamic registration.
@@ -215,7 +214,7 @@ class CompletionClientCapabilities(BaseModel):
 # ########## CompletionOptions subclass #########################
 
 
-class OptionsCompletionItem(BaseModel):
+class OptionsCompletionItem(LspModel):
     label_details_support: Optional[bool]
     """
     The server has support for completion item label
@@ -298,12 +297,12 @@ class CompletionParams(
     context: Optional[CompletionContext]
 
 
-class CompletionListItemDefaultEditRange(BaseModel):
+class CompletionListItemDefaultEditRange(LspModel):
     insert: Range
     replace: Range
 
 
-class CompletionListItemDefault(BaseModel):
+class CompletionListItemDefault(LspModel):
     commit_characters: Optional[List[str]]
     """
     A default commit character set.
@@ -322,7 +321,7 @@ class CompletionListItemDefault(BaseModel):
     """
 
 
-class CompletionList(BaseModel):
+class CompletionList(LspModel):
     """
     * Represents a collection of [completion items](#CompletionItem) to be
     presented in the editor.
@@ -352,7 +351,7 @@ class CompletionList(BaseModel):
     """
 
 
-class InsertReplaceEdit(BaseModel):
+class InsertReplaceEdit(LspModel):
     """
     * A special text edit to provide an insert and a replace operation.
     """
@@ -371,7 +370,7 @@ class InsertReplaceEdit(BaseModel):
     """
 
 
-class CompletionItemLabelDetails(BaseModel):
+class CompletionItemLabelDetails(LspModel):
     """
     * Additional details for a completion item label.
     """
@@ -390,7 +389,7 @@ class CompletionItemLabelDetails(BaseModel):
     """
 
 
-class CompletionItem(BaseModel):
+class CompletionItem(LspModel):
     label: str
     """
     The label of this completion item.
