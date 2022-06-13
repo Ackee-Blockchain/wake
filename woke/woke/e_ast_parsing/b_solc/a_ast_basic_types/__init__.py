@@ -4,8 +4,23 @@ from pydantic.types import StrictBool, StrictInt, StrictStr
 
 # Comments are the first ocurrence per the ordering in the definition file
 
+
+class AstNodeId(int):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v):
+        if not isinstance(v, int):
+            raise TypeError(f"{cls.__name__} must be an int")
+        return v
+
+    def __repr__(self):
+        return f"AstNodeId({self})"
+
+
 # SolcNode
-AstNodeId = NewType("AstNodeId", StrictInt)
 Src = StrictStr
 
 # SolcSourceUnit
