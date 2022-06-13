@@ -2,7 +2,7 @@ import logging
 from typing import Dict, Callable, Tuple, Type
 
 from woke.a_config import WokeConfig
-from .basic_structures import *
+from .common_structures import *
 from .context import LspContext
 from .exceptions import LspError
 from .methods import RequestMethodEnum

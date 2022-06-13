@@ -2,7 +2,7 @@ import logging
 import sys
 from typing import Dict, Callable, Tuple, Type
 
-from .basic_structures import *
+from .common_structures import *
 from .context import LspContext
 from .enums import TraceValueEnum
 from .methods import RequestMethodEnum

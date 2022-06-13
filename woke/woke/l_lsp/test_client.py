@@ -26,7 +26,7 @@ from base64 import decode
 import socket
 
 from .test_data import *
-from woke.l_lsp.basic_structures import *
+from woke.l_lsp.common_structures import *
 
 HOST = "127.0.0.1"  # The server's hostname or IP address
 PORT = 65432  # The port used by the server

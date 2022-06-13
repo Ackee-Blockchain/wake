@@ -3,7 +3,7 @@ from typing import List, Optional, Union, Any
 
 from pydantic import BaseModel
 
-from ..basic_structures import (
+from ..common_structures import (
     MarkupContent,
     MarkupKind,
     PartialResultParams,
