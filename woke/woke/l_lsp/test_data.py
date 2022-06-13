@@ -1,5 +1,5 @@
 import json
-from woke.l_lsp.basic_structures import *
+from woke.l_lsp.common_structures import *
 
 """
 Class for providing test messages
