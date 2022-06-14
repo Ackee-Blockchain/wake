@@ -51,17 +51,8 @@ class RpcProtocol:
         raw_message = await self._read_message()
 
         if "id" in raw_message:
-            return RequestMessage(
-                json_rpc=raw_message["jsonrpc"],
-                id=raw_message["id"],
-                method=raw_message["method"],
-                params=raw_message["params"],
-            )
-        return NotificationMessage(
-            json_rpc=raw_message["jsonrpc"],
-            method=raw_message["method"],
-            params=raw_message["params"],
-        )
+            return RequestMessage.parse_obj(raw_message)
+        return NotificationMessage.parse_obj(raw_message)
 
     async def _send(self, message: str) -> None:
         content_length = len(message)
