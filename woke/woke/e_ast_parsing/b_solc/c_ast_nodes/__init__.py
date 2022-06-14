@@ -1,9 +1,9 @@
 import re
-from dataclasses import dataclass
 from typing import Match, Union, List, Optional, Dict
 from typing_extensions import Literal, Annotated
 
 from pydantic import Field, StrictStr, StrictBool, StrictInt
+from pydantic.dataclasses import dataclass
 from pydantic.class_validators import validator, root_validator
 
 from woke.e_ast_parsing.a_abc import AstAbc
@@ -286,7 +286,7 @@ class ExternalReferenceModel(ConfiguredModel):  # helper class
 
 
 @dataclass
-class SrcParsed:
+class Src:
     byte_offset: int
     byte_length: int
     file_id: int
@@ -299,14 +299,19 @@ class SrcParsed:
 
 
 class SolcOrYulNode(ConfiguredModel):
-    src: StrictStr
+    src: Src
 
-    @validator("src")
-    def parse_src(cls, src: StrictStr) -> SrcParsed:
+    @validator("src", pre=True)
+    def parse_src(cls, src: Union[StrictStr, Src]) -> Src:
+        if isinstance(src, Src):
+            return src
+        if not isinstance(src, str):
+            raise TypeError(f"src must be a string or NodeSrc")
+
         res = re.search(REGEX_SRC, src)
         assert isinstance(res, Match), "Bad src"
         [m1, m2, m3] = [int(res.group(i)) for i in range(1, 4)]
-        return SrcParsed(m1, m2, m3)
+        return Src(m1, m2, m3)
 
 
 class SolcNode(SolcOrYulNode):
