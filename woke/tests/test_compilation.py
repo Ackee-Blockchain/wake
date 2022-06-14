@@ -131,14 +131,20 @@ def test_compile_trader_joe(setup_project, config):
     compiler = SolidityCompiler(config)
     output = asyncio.run(
         compiler.compile(
-            files, [SolcOutputSelectionEnum.ALL], reuse_latest_artifacts=False
+            files,
+            [SolcOutputSelectionEnum.ALL],
+            reuse_latest_artifacts=False,
+            maximize_compilation_units=True,
         )
     )
     assert len(output)
 
     output = asyncio.run(
         compiler.compile(
-            files, [SolcOutputSelectionEnum.ALL], reuse_latest_artifacts=True
+            files,
+            [SolcOutputSelectionEnum.ALL],
+            reuse_latest_artifacts=True,
+            maximize_compilation_units=True,
         )
     )
     assert len(output)

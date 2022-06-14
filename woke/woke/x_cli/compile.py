@@ -57,6 +57,7 @@ def run_compile(
             [SolcOutputSelectionEnum.ALL],
             write_artifacts=(not no_artifacts),
             reuse_latest_artifacts=(not force),
+            maximize_compilation_units=True,
         )
     )
 
