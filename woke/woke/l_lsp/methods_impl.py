@@ -2,7 +2,11 @@ import logging
 from typing import Dict, Callable, Tuple, Type
 
 from woke.a_config import WokeConfig
-from .capabilities import InitializeResult, ServerCapabilities, PositionEncodingKind
+from .server_capabilities import (
+    InitializeResult,
+    ServerCapabilities,
+    PositionEncodingKind,
+)
 from .common_structures import *
 from .context import LspContext
 from .document_sync import TextDocumentSyncOptions, TextDocumentSyncKind
