@@ -3,8 +3,6 @@ from typing import (
     List,
     Dict,
     Iterable,
-    FrozenSet,
-    Set,
     Tuple,
     Optional,
     Collection,
@@ -17,7 +15,6 @@ import logging
 import platform
 import time
 
-from Cryptodome.Hash import BLAKE2b
 from pathvalidate import sanitize_filename  # type: ignore
 import aiofiles
 import networkx as nx
@@ -40,6 +37,7 @@ from .solc_frontend import (
     SolcOutputSourceInfo,
     SolcOutputContractInfo,
 )
+from .compilation_unit import CompilationUnit
 from .source_unit_name_resolver import SourceUnitNameResolver
 from .source_path_resolver import SourcePathResolver
 from .exceptions import CompilationError
@@ -47,58 +45,6 @@ from .build_data_model import CompilationUnitBuildInfo, ProjectBuildInfo
 
 
 logger = logging.getLogger(__name__)
-
-
-class CompilationUnit:
-    __unit_graph: nx.DiGraph
-    __version_ranges: SolidityVersionRanges
-    __blake2b_digest: bytes
-
-    def __init__(self, unit_graph: nx.DiGraph, version_ranges: SolidityVersionRanges):
-        self.__unit_graph = unit_graph
-        self.__version_ranges = version_ranges
-
-        sorted_nodes = sorted(
-            unit_graph, key=(lambda node: unit_graph.nodes[node]["source_unit_name"])
-        )
-        blake2 = BLAKE2b.new(digest_bits=256)
-
-        for node in sorted_nodes:
-            blake2.update(unit_graph.nodes[node]["hash"])
-        self.__blake2b_digest = blake2.digest()
-
-    def __len__(self):
-        return len(self.__unit_graph.nodes)
-
-    def __str__(self):
-        return "\n".join(str(path) for path in self.__unit_graph.nodes)
-
-    @property
-    def files(self) -> FrozenSet[Path]:
-        return frozenset(self.__unit_graph.nodes)
-
-    @property
-    def source_unit_names(self) -> FrozenSet[str]:
-        return frozenset(
-            self.__unit_graph.nodes[node]["source_unit_name"]
-            for node in self.__unit_graph.nodes
-        )
-
-    @property
-    def versions(self) -> SolidityVersionRanges:
-        return self.__version_ranges
-
-    @property
-    def blake2b_digest(self) -> bytes:
-        return self.__blake2b_digest
-
-    @property
-    def blake2b_hexdigest(self) -> str:
-        return self.blake2b_digest.hex()
-
-    @property
-    def graph(self) -> nx.DiGraph:
-        return self.__unit_graph
 
 
 class SolidityCompiler:
@@ -227,7 +173,7 @@ class SolidityCompiler:
                 + "\n".join(str(path) for path in nodes_subset)
             )
 
-        subgraph = graph.subgraph(nodes_subset)
+        subgraph = graph.subgraph(nodes_subset).copy()
         return CompilationUnit(subgraph, versions)
 
     def __create_build_settings(
