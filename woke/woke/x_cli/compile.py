@@ -51,7 +51,7 @@ def run_compile(
 
     compiler = SolidityCompiler(config)
     # TODO Allow choosing build artifacts subset in compile subcommand
-    outputs: List[SolcOutput] = asyncio.run(
+    outputs = asyncio.run(
         compiler.compile(
             sol_files,
             [SolcOutputSelectionEnum.ALL],
@@ -60,7 +60,7 @@ def run_compile(
         )
     )
 
-    for output in outputs:
+    for _, output in outputs:
         for error in output.errors:
             if error.formatted_message is not None:
                 console.print(Panel(error.formatted_message, highlight=True))
@@ -68,6 +68,6 @@ def run_compile(
                 console.print(Panel(error.message, highlight=True))
 
     if parse:
-        for output in outputs:
+        for _, output in outputs:
             for source_unit_name, info in output.sources.items():
                 AstSolc.parse_obj(info.ast)

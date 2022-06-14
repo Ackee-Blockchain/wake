@@ -251,7 +251,7 @@ class SolidityCompiler:
         write_artifacts: bool = True,
         reuse_latest_artifacts: bool = True,
         modified_files: Optional[Mapping[Path, str]] = None,
-    ) -> List[SolcOutput]:
+    ) -> List[Tuple[CompilationUnit, SolcOutput]]:
         if modified_files is None:
             modified_files = {}
         if len(files) + len(modified_files) == 0:
@@ -360,8 +360,7 @@ class SolidityCompiler:
                 if latest_build_path.is_symlink():
                     latest_build_path.unlink()
                 latest_build_path.symlink_to(build_path, target_is_directory=True)
-
-        return list(ret)
+        return [(cu, out) for cu, out in zip(compilation_units, ret)]
 
     async def __compile_unit(
         self,
