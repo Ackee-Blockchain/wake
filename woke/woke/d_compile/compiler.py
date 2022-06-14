@@ -124,12 +124,48 @@ class SolidityCompiler:
                 graph.add_edge(import_path, path)
         return graph
 
-    def __build_compilation_units(self, graph: nx.DiGraph) -> List[CompilationUnit]:
+    @staticmethod
+    def __build_compilation_units_maximize(graph: nx.DiGraph) -> List[CompilationUnit]:
+        """
+        Builds a list of compilation units from a graph. Number of compilation units is maximized.
+        """
+
+        def __build_compilation_unit(
+            graph: nx.DiGraph, start: Iterable[Path]
+        ) -> CompilationUnit:
+            nodes_subset = set()
+            nodes_queue: deque[Path] = deque(start)
+            versions: SolidityVersionRanges = SolidityVersionRanges(
+                [SolidityVersionRange(None, None, None, None)]
+            )
+
+            while len(nodes_queue) > 0:
+                node = nodes_queue.pop()
+                versions &= graph.nodes[node]["versions"]
+
+                if node in nodes_subset:
+                    continue
+                nodes_subset.add(node)
+
+                for in_edge in graph.in_edges(node):
+                    _from, to = in_edge
+                    if _from not in nodes_subset:
+                        nodes_queue.append(_from)
+
+            if len(versions) == 0:
+                raise CompilationError(
+                    "Unable to find any solc version to compile following files:\n"
+                    + "\n".join(str(path) for path in nodes_subset)
+                )
+
+            subgraph = graph.subgraph(nodes_subset).copy()
+            return CompilationUnit(subgraph, versions)
+
         sinks = [node for node, out_degree in graph.out_degree() if out_degree == 0]
         compilation_units = []
 
         for sink in sinks:
-            compilation_unit = self.__build_compilation_unit(graph, [sink])
+            compilation_unit = __build_compilation_unit(graph, [sink])
             compilation_units.append(compilation_unit)
 
         # cycles can also be "sinks" in terms of compilation units
@@ -139,42 +175,31 @@ class SolidityCompiler:
             )
 
             if out_degree_sum == len(cycle):
-                compilation_unit = self.__build_compilation_unit(graph, cycle)
+                compilation_unit = __build_compilation_unit(graph, cycle)
                 compilation_units.append(compilation_unit)
         return compilation_units
 
-    def __build_compilation_unit(
-        self, graph: nx.DiGraph, start: Iterable[Path]
-    ) -> CompilationUnit:
-        nodes_subset = set()
-        nodes_queue: deque[Path] = deque()
-        nodes_queue.extend(start)
+    @staticmethod
+    def __build_compilation_units_minimize(graph: nx.DiGraph) -> List[CompilationUnit]:
+        """
+        Builds a list of compilation units from a graph. Number of compilation units is *almost* minimized.
+        This approach assures that every compiled file is in exactly one compilation unit.
+        In very rare cases the project may not be possible to compile using this method. An example:
+        - Lib.sol requires solc v0.5.*
+        - A.sol requires solc v0.5.0 and imports Lib.sol
+        - B.sol requires solc v0.5.1 and imports Lib.sol
+        """
+        compilation_units = []
+        for component in nx.weakly_connected_components(graph):
+            subgraph = graph.subgraph(component)
 
-        versions: SolidityVersionRanges = SolidityVersionRanges(
-            [SolidityVersionRange(None, None, None, None)]
-        )
-
-        while len(nodes_queue) > 0:
-            node = nodes_queue.pop()
-            versions &= graph.nodes[node]["versions"]
-
-            if node in nodes_subset:
-                continue
-            nodes_subset.add(node)
-
-            for in_edge in graph.in_edges(node):
-                _from, to = in_edge
-                if _from not in nodes_subset:
-                    nodes_queue.append(_from)
-
-        if len(versions) == 0:
-            raise CompilationError(
-                "Unable to find any solc version to compile following files:\n"
-                + "\n".join(str(path) for path in nodes_subset)
+            versions: SolidityVersionRanges = SolidityVersionRanges(
+                [SolidityVersionRange(None, None, None, None)]
             )
-
-        subgraph = graph.subgraph(nodes_subset).copy()
-        return CompilationUnit(subgraph, versions)
+            for file in component:
+                versions &= graph.nodes[file]["versions"]
+            compilation_units.append(CompilationUnit(subgraph, versions))
+        return compilation_units
 
     def __create_build_settings(
         self, output_types: Collection[SolcOutputSelectionEnum]
@@ -251,6 +276,7 @@ class SolidityCompiler:
         write_artifacts: bool = True,
         reuse_latest_artifacts: bool = True,
         modified_files: Optional[Mapping[Path, str]] = None,
+        maximize_compilation_units: bool = False,
     ) -> List[Tuple[CompilationUnit, SolcOutput]]:
         if modified_files is None:
             modified_files = {}
@@ -260,7 +286,10 @@ class SolidityCompiler:
             raise ValueError("Files and modified files must not overlap.")
 
         graph = self.__resolve_source_unit_names(files, modified_files)
-        compilation_units = self.__build_compilation_units(graph)
+        if maximize_compilation_units:
+            compilation_units = self.__build_compilation_units_maximize(graph)
+        else:
+            compilation_units = self.__build_compilation_units_minimize(graph)
         build_settings = self.__create_build_settings(output_types)
 
         # sort compilation units by their BLAKE2b hexdigest
