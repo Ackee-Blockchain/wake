@@ -82,7 +82,7 @@ class LspServer:
         if self.context.shutdown_received:
             self.__run = False
         response_message = ResponseMessage(
-            json_rpc="2.0", id=request.id, result=response, error=None
+            jsonrpc="2.0", id=request.id, result=response, error=None
         )
         logger.info(f"Serving response: {response_message}")
         return response_message
@@ -93,7 +93,7 @@ class LspServer:
     ) -> ResponseMessage:
         response_error = ResponseError(code=error_code, message=msg, data=None)
         response_message = ResponseMessage(
-            json_rpc="2.0", id=request.id, error=response_error, result=None
+            jsonrpc="2.0", id=request.id, error=response_error, result=None
         )
         logger.warning(f"Serving error response: {response_message}")
         return response_message

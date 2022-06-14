@@ -7,7 +7,7 @@ from .methods import RequestMethodEnum
 
 
 class Message(BaseModel):
-    json_rpc: str
+    jsonrpc: str
 
 
 class RequestMessage(Message):
