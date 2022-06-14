@@ -6,7 +6,7 @@ import sys
 import threading
 from pathlib import Path
 from threading import Thread
-from typing import Dict, List, Set, Optional, Union
+from typing import Dict, List, Set, Optional, Union, Tuple
 from urllib.parse import urlparse
 
 from woke.a_config import WokeConfig
@@ -25,6 +25,20 @@ logger = logging.getLogger(__name__)
 ENCODING = "utf-16-le"
 
 
+def _binary_search(lines: List[Tuple[bytes, int]], x: int) -> int:
+    l = 0
+    r = len(lines)
+
+    while l < r:
+        mid = l + (r - l) // 2
+        if lines[mid][1] < x + 1:
+            l = mid + 1
+        else:
+            r = mid
+
+    return l - 1
+
+
 class LspCompiler:
     __config: WokeConfig
     __thread: Thread
@@ -39,6 +53,8 @@ class LspCompiler:
     __output: Optional[List[SolcOutput]]
     __output_contents: Dict[Path, str]
 
+    __line_indexes: Dict[Path, List[Tuple[bytes, int]]]
+
     output_ready: threading.Event
 
     def __init__(self, config: WokeConfig):
@@ -49,6 +65,7 @@ class LspCompiler:
         self.__modified_files = set()
         self.__compiler = SolidityCompiler(config)
         self.__output = None
+        self.__line_indexes = {}
         self.__output_contents = dict()
 
         self.output_ready = threading.Event()
@@ -81,7 +98,21 @@ class LspCompiler:
     def get_file_content(self, file: Union[Path, str]) -> str:
         if isinstance(file, str):
             file = self.uri_to_path(file)
+        if file not in self.__output_contents:
+            self.__output_contents[file] = file.read_text(encoding="utf-8")
         return self.__output_contents[file]
+
+    def get_line_pos_from_byte_offset(
+        self, file: Path, byte_offset: int
+    ) -> Tuple[int, int]:
+        if file not in self.__line_indexes:
+            self.__setup_line_index(file)
+
+        encoded_lines = self.__line_indexes[file]
+        line_num = _binary_search(encoded_lines, byte_offset)
+        line_data, prefix_sum = encoded_lines[line_num]
+        line_offset = byte_offset - prefix_sum
+        return line_num, line_offset
 
     def __compilation_loop(self):
         if sys.version_info < (3, 8):
@@ -175,8 +206,27 @@ class LspCompiler:
                     )
                 )
                 self.__output = list(out)
-                self.__output_contents = self.__files.copy()
+                self.__output_contents.update(self.__files)
                 self.__modified_files.clear()
 
                 if self.__file_changes_queue.empty():
                     self.output_ready.set()
+
+    def __setup_line_index(self, file: Path):
+        content = self.get_file_content(file)
+        tmp_lines = re.split(r"(\r?\n)", content)
+        lines: List[str] = []
+        for line in tmp_lines:
+            if line in {"\r\n", "\n"}:
+                lines[-1] += line
+            else:
+                lines.append(line)
+
+        # UTF-8 encoded lines with prefix length
+        encoded_lines: List[Tuple[bytes, int]] = []
+        prefix_sum = 0
+        for line in lines:
+            encoded_line = line.encode("utf-8")
+            encoded_lines.append((encoded_line, prefix_sum))
+            prefix_sum += len(encoded_line)
+        self.__line_indexes[file] = encoded_lines
