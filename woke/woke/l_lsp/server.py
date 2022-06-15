@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from functools import partial
 from pathlib import Path
 from typing import Dict, Tuple, Callable, Any, Optional, Type
 
@@ -23,6 +24,11 @@ from .document_sync import (
     DidCloseTextDocumentParams,
 )
 from .exceptions import LspError
+from .features.document_link import (
+    DocumentLinkOptions,
+    document_link,
+    DocumentLinkParams,
+)
 from .lsp_data_model import LspModel
 from .protocol_structures import (
     NotificationMessage,
@@ -71,6 +77,10 @@ class LspServer:
         self.__method_mapping = {
             RequestMethodEnum.INITIALIZE: (self._initialize, InitializeParams),
             RequestMethodEnum.SHUTDOWN: (self._shutdown, None),
+            RequestMethodEnum.DOCUMENT_LINK: (
+                partial(document_link, self.__context),
+                DocumentLinkParams,
+            ),
         }
 
         self.__notification_mapping = {
@@ -209,6 +219,9 @@ class LspServer:
             position_encoding=PositionEncodingKind.UTF16,
             text_document_sync=TextDocumentSyncOptions(
                 open_close=True, change=TextDocumentSyncKind.INCREMENTAL
+            ),
+            document_link_provider=DocumentLinkOptions(
+                resolve_provider=False,
             ),
         )
         return InitializeResult(capabilities=server_capabilities, server_info=None)
