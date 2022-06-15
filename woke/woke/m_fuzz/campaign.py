@@ -30,6 +30,7 @@ class Campaign:
         dry_run: bool = False,
     ):
         init_timestamp = datetime.now()
+        brownie.chain.snapshot()
 
         for i in range(sequences_count):
             if (
@@ -39,7 +40,7 @@ class Campaign:
             ):
                 break
             logger.info(self.__format_heading(f"SEQUENCE {i}"))
-            brownie.chain.reset()
+            brownie.chain.revert()
             seq = self.__sequence_constructor()
 
             flows, _ = self.__get_methods(seq, attr="flow")
