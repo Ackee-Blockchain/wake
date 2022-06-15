@@ -7,7 +7,6 @@ import threading
 from pathlib import Path
 from threading import Thread
 from typing import Dict, List, Set, Union, Tuple, Collection, Mapping
-from urllib.parse import urlparse
 
 from woke.a_config import WokeConfig
 from woke.d_compile import SolcOutput, SolcOutputSelectionEnum
@@ -22,6 +21,7 @@ from woke.l_lsp.document_sync import (
     DidCloseTextDocumentParams,
 )
 from woke.l_lsp.utils.threaded_child_watcher import ThreadedChildWatcher
+from woke.l_lsp.utils.uri import uri_to_path
 
 logger = logging.getLogger(__name__)
 
@@ -93,11 +93,6 @@ class LspCompiler:
     def source_units(self) -> Dict[Path, SourceUnit]:
         return self.__source_units
 
-    @staticmethod
-    def uri_to_path(uri: str) -> Path:
-        p = urlparse(uri)
-        return Path(p.path)
-
     def add_change(
         self,
         change: Union[
@@ -112,7 +107,7 @@ class LspCompiler:
 
     def get_file_content(self, file: Union[Path, str]) -> str:
         if isinstance(file, str):
-            file = self.uri_to_path(file)
+            file = uri_to_path(file)
         if file not in self.__output_contents:
             self.__output_contents[file] = file.read_text(encoding="utf-8")
         return self.__output_contents[file]
@@ -188,15 +183,15 @@ class LspCompiler:
                 change = self.__file_changes_queue.get()
 
                 if isinstance(change, DidOpenTextDocumentParams):
-                    path = self.uri_to_path(change.text_document.uri).resolve()
+                    path = uri_to_path(change.text_document.uri).resolve()
                     self.__files[path] = change.text_document.text
                     self.__opened_files.add(path)
                     self.__modified_files.add(path)
                 elif isinstance(change, DidCloseTextDocumentParams):
-                    path = self.uri_to_path(change.text_document.uri).resolve()
+                    path = uri_to_path(change.text_document.uri).resolve()
                     self.__opened_files.remove(path)
                 elif isinstance(change, DidChangeTextDocumentParams):
-                    path = self.uri_to_path(change.text_document.uri).resolve()
+                    path = uri_to_path(change.text_document.uri).resolve()
                     self.__modified_files.add(path)
 
                     for content_change in change.content_changes:

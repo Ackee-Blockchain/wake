@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from typing import Dict, Callable, Tuple, Type
 
 from woke.a_config import WokeConfig
@@ -13,19 +14,10 @@ from .document_sync import TextDocumentSyncOptions, TextDocumentSyncKind
 from .exceptions import LspError
 from .methods import RequestMethodEnum
 from .protocol_structures import ErrorCodes
+from .utils.uri import uri_to_path
 
 
 logger = logging.getLogger(__name__)
-
-
-def uri_to_path(uri: str) -> str:
-    if not uri.startswith("file://"):
-        return os.path.abspath(uri)
-    if os.name == "nt":
-        _, path = uri.split("file:///", 1)
-    else:
-        _, path = uri.split("file://", 1)
-    return str(Path(unquote(path)).resolve())
 
 
 def _initialize(context: LspContext, params: InitializeParams) -> InitializeResult:
