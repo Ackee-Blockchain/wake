@@ -1,5 +1,5 @@
 import enum
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Tuple
 
 from pydantic import BaseModel, Extra
 
@@ -23,12 +23,34 @@ class SolcOutputErrorSourceLocation(SolcOutputModel):
     start: int
     end: int
 
+    def __members(self) -> Tuple:
+        return self.file, self.start, self.end
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.__members() == other.__members()
+        return NotImplemented
+
+    def __hash__(self):
+        return hash(self.__members())
+
 
 class SolcOutputErrorSecondarySourceLocation(SolcOutputModel):
     file: str
     start: int
     end: int
     message: str
+
+    def __members(self) -> Tuple:
+        return self.file, self.start, self.end, self.message
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.__members() == other.__members()
+        return NotImplemented
+
+    def __hash__(self):
+        return hash(self.__members())
 
 
 class SolcOutputErrorTypeEnum(str, enum.Enum):
@@ -90,6 +112,28 @@ class SolcOutputError(SolcOutputModel):
     error_code: Optional[str]
     message: str
     formatted_message: Optional[str]
+
+    def __members(self) -> Tuple:
+        return (
+            self.source_location,
+            tuple(self.secondary_source_locations)
+            if self.secondary_source_locations
+            else None,
+            self.type,
+            self.component,
+            self.severity,
+            self.error_code,
+            self.message,
+            self.formatted_message,
+        )
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.__members() == other.__members()
+        return NotImplemented
+
+    def __hash__(self):
+        return hash(self.__members())
 
 
 class SolcOutputSourceInfo(SolcOutputModel):
