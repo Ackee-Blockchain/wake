@@ -48,6 +48,8 @@ class LspCompiler:
     __thread: Thread
     __file_changes_queue: queue.Queue
 
+    __processed_files: Set[Path]
+
     # accessed from the compilation thread
     # full path -> contents
     __files: Dict[Path, str]
@@ -65,6 +67,7 @@ class LspCompiler:
     def __init__(self, config: WokeConfig):
         self.__config = config
         self.__file_changes_queue = queue.Queue()
+        self.__processed_files = set()
         self.__files = dict()
         self.__opened_files = set()
         self.__modified_files = set()
@@ -101,7 +104,11 @@ class LspCompiler:
             DidCloseTextDocumentParams,
         ],
     ) -> None:
-        if not isinstance(change, DidCloseTextDocumentParams):
+        file = uri_to_path(change.text_document.uri)
+        if (
+            isinstance(change, DidChangeTextDocumentParams)
+            or file not in self.__processed_files
+        ):
             self.output_ready.clear()
         self.__file_changes_queue.put(change)
 
@@ -137,6 +144,10 @@ class LspCompiler:
 
         for cu, solc_output in out:
             self.__errors.update(solc_output.errors)
+            for file in cu.files:
+                self.__processed_files.add(file)
+                if file in self.__line_indexes:
+                    self.__line_indexes.pop(file)
             errored = any(
                 error.severity == SolcOutputErrorSeverityEnum.ERROR
                 for error in solc_output.errors
@@ -148,8 +159,10 @@ class LspCompiler:
                     # AST still may be provided, but it must NOT be parsed (pydantic model is not defined for this case)
                     path = cu.source_unit_name_to_path(source_unit_name)
                     if path in modified_files:
-                        self.__asts.pop(path)
-                        self.__source_units.pop(path)
+                        if path in self.__asts:
+                            self.__asts.pop(path)
+                        if path in self.__source_units:
+                            self.__source_units.pop(path)
                 else:
                     path = cu.source_unit_name_to_path(source_unit_name)
                     ast = AstSolc.parse_obj(raw_ast.ast)
@@ -186,7 +199,6 @@ class LspCompiler:
                     path = uri_to_path(change.text_document.uri).resolve()
                     self.__files[path] = change.text_document.text
                     self.__opened_files.add(path)
-                    self.__modified_files.add(path)
                 elif isinstance(change, DidCloseTextDocumentParams):
                     path = uri_to_path(change.text_document.uri).resolve()
                     self.__opened_files.remove(path)
