@@ -15,6 +15,7 @@ from woke.c_regex_parsing.solidity_version import SolidityVersion
 from .console import console
 from .compile import run_compile
 from .init import run_init
+from .lsp import run_lsp
 from .svm import run_svm
 from .fuzz import run_fuzz
 
@@ -31,7 +32,7 @@ from .fuzz import run_fuzz
 def main(ctx: Context, woke_root_path: Optional[str], debug: bool) -> None:
     rich.traceback.install(show_locals=debug, suppress=[click], console=console)
     logging.basicConfig(
-        format="%(name)s: %(message)s",
+        format="%(asctime)s %(name)s: %(message)s",
         handlers=[RichHandler(show_time=False, console=console)],
         level=(logging.WARNING if not debug else logging.DEBUG),
     )
@@ -50,6 +51,7 @@ def main(ctx: Context, woke_root_path: Optional[str], debug: bool) -> None:
 
 main.add_command(run_compile)
 main.add_command(run_init)
+main.add_command(run_lsp)
 main.add_command(run_svm)
 main.add_command(run_fuzz)
 
