@@ -785,6 +785,17 @@ class LogTraceParams(LspModel):
     """
 
 
+class ProgressParams(LspModel):
+    token: ProgressToken
+    """
+    The progress token provided by the client or server.
+    """
+    value: Any
+    """
+    The progress data.
+    """
+
+
 class SymbolKind(IntEnum):
     FILE = 1
     MODULE = 2

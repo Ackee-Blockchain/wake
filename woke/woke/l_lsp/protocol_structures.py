@@ -1,12 +1,11 @@
 import enum
 from typing import Any, Optional, Union
 
-from pydantic import BaseModel
-
+from .lsp_data_model import LspModel
 from .methods import RequestMethodEnum
 
 
-class Message(BaseModel):
+class Message(LspModel):
     jsonrpc: str
 
 
@@ -22,7 +21,7 @@ class RequestMessage(Message):
     params: Optional[Any]
 
 
-class ResponseError(BaseModel):
+class ResponseError(LspModel):
     code: int
     """
     A number indicating the error type that occurred.
@@ -65,7 +64,7 @@ class NotificationMessage(Message):
     """
 
 
-class CancelParams(BaseModel):
+class CancelParams(LspModel):
     id: Union[str, int]
     """
     The request id to cancel.

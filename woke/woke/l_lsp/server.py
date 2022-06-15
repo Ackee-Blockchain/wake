@@ -3,7 +3,15 @@ import logging
 from pathlib import Path
 from typing import Dict, Tuple, Callable, Any, Optional, Type
 
-from .common_structures import InitializeParams, InitializeError, InitializedParams
+from .common_structures import (
+    InitializeParams,
+    InitializeError,
+    InitializedParams,
+    DocumentFilter,
+    SetTraceParams,
+    LogTraceParams,
+    ProgressParams,
+)
 from .context import LspContext
 from .document_sync import (
     TextDocumentSyncOptions,
@@ -22,6 +30,7 @@ from .protocol_structures import (
     ResponseMessage,
     ResponseError,
     ErrorCodes,
+    CancelParams,
 )
 from .rpc_protocol import RpcProtocol
 from .methods import RequestMethodEnum
@@ -66,6 +75,10 @@ class LspServer:
 
         self.__notification_mapping = {
             RequestMethodEnum.INITIALIZED: (self._initialized, InitializedParams),
+            RequestMethodEnum.CANCEL_REQUEST: (self._cancel_request, CancelParams),
+            RequestMethodEnum.PROGRESS: (self._progress, ProgressParams),
+            RequestMethodEnum.LOG_TRACE: (self._log_trace, LogTraceParams),
+            RequestMethodEnum.SET_TRACE: (self._set_trace, SetTraceParams),
             RequestMethodEnum.TEXT_DOCUMENT_DID_OPEN: (
                 self._text_document_did_open,
                 DidOpenTextDocumentParams,
@@ -199,6 +212,18 @@ class LspServer:
             ),
         )
         return InitializeResult(capabilities=server_capabilities, server_info=None)
+
+    def _cancel_request(self, params: CancelParams) -> None:
+        pass
+
+    def _progress(self, params: ProgressParams) -> None:
+        pass
+
+    def _log_trace(self, params: LogTraceParams) -> None:
+        pass
+
+    def _set_trace(self, params: SetTraceParams) -> None:
+        pass
 
     def _shutdown(self, params: Any) -> None:
         self.__run = False
