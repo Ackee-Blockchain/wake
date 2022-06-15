@@ -1,4 +1,3 @@
-import re
 from enum import Enum, IntEnum
 from typing import Any, List, Optional, Union, NewType
 
@@ -9,19 +8,6 @@ URI = NewType("URI", str)
 ChangeAnnotationIdentifier = NewType("ChangeAnnotationIdentifier", str)
 ProgressToken = Union[int, str]
 TraceValue = NewType("Trace", str)  # NewType(Union["off","message","verbose"], str)
-
-
-def to_snake(s):
-    return re.sub("([A-Z]\w+$)", "_\\1", s).lower()
-
-
-def t_dict(d):
-    if isinstance(d, list):
-        return [t_dict(i) if isinstance(i, (dict, list)) else i for i in d]
-    return {
-        to_snake(a): t_dict(b) if isinstance(b, (dict, list)) else b
-        for a, b in d.items()
-    }
 
 
 class RegularExpressionsClientCapabilities(LspModel):
