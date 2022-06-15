@@ -1,7 +1,4 @@
-import os
 import re
-from pathlib import Path
-from urllib.parse import unquote
 from enum import Enum, IntEnum
 from typing import Any, List, Optional, Union, NewType
 
@@ -25,16 +22,6 @@ def t_dict(d):
         to_snake(a): t_dict(b) if isinstance(b, (dict, list)) else b
         for a, b in d.items()
     }
-
-
-def uri_to_path(uri: str) -> str:
-    if not uri.startswith("file://"):
-        return os.path.abspath(uri)
-    if os.name == "nt":
-        _, path = uri.split("file:///", 1)
-    else:
-        _, path = uri.split("file://", 1)
-    return str(Path(unquote(path)).resolve())
 
 
 class RegularExpressionsClientCapabilities(LspModel):
