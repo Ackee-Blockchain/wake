@@ -9,10 +9,6 @@ class LspContext:
     __compiler: LspCompiler
     __config: WokeConfig
 
-    shutdown_received: bool
-    initialized: bool
-    trace_value: TraceValueEnum
-
     def __init__(self, config: WokeConfig) -> None:
         self.__config = config
         self.__compiler = LspCompiler(self.__config)
@@ -28,16 +24,6 @@ class LspContext:
     def compiler(self) -> LspCompiler:
         return self.__compiler
 
-    """
-    def update_workspace(self,
-                        document_uri: DocumentUri,
-                        document_veriosn: int, 
-                        document_change: TextDocumentContentChangeEvent):
-        old_doc = self.workspace[document_uri]
-        if document_change.range is None:
-            self.workspace[document_uri].text = document_change.text
-        else:
-            change_from = document_change.range.start
-            change_to = document_change.range.end
-            self.workspace[document_uri].text[]
-    """
+    @property
+    def config(self) -> WokeConfig:
+        return self.__config
