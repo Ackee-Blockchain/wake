@@ -3,7 +3,7 @@ woke/.stash-id
 woke/.post-commit-ignore
 
 # docs build dir
-woke/site/
+site/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
