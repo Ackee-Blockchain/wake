@@ -1,3 +1,0 @@
-# woke-js
-
-`woke-js` is a woke subsystem that exposes `woke` through the package `@ackee-blockchain/woke` on npm. 
