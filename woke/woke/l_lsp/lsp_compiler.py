@@ -1,6 +1,7 @@
 import asyncio
 import queue
 import logging
+import platform
 import re
 import sys
 import threading
@@ -20,8 +21,10 @@ from woke.l_lsp.document_sync import (
     DidChangeTextDocumentParams,
     DidCloseTextDocumentParams,
 )
-from woke.l_lsp.utils.threaded_child_watcher import ThreadedChildWatcher
 from woke.l_lsp.utils.uri import uri_to_path
+
+if platform.system() != "Windows":
+    from woke.l_lsp.utils.threaded_child_watcher import ThreadedChildWatcher
 
 logger = logging.getLogger(__name__)
 
@@ -172,7 +175,7 @@ class LspCompiler:
                     )
 
     def __compilation_loop(self):
-        if sys.version_info < (3, 8):
+        if platform.system() != "Windows" and sys.version_info < (3, 8):
             loop = asyncio.new_event_loop()
             watcher = ThreadedChildWatcher()
             asyncio.set_child_watcher(watcher)
