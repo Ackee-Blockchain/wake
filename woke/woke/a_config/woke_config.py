@@ -92,9 +92,9 @@ class WokeConfig:
     ) -> None:
         if not path.is_file():
             if parent is None:
-                logger.info(f"Config file '{path}' does not exist.")
+                logger.warning(f"Config file '{path}' does not exist.")
             else:
-                logger.info(
+                logger.warning(
                     f"Config file '{path}' loaded from '{parent}' does not exist."
                 )
         else:
