@@ -16,12 +16,7 @@ from .notifications_impl import notification_mapping
 
 
 class Server:
-    def __init__(
-        self,
-        protocol: RPCProtocol,
-        server_capabilities: Iterable[str],
-        threads: int = 1,
-    ):
+    def __init__(self, protocol: RPCProtocol, server_capabilities: Iterable[str], threads: int = 1):
         self.protocol = protocol
         self.threads = threads
         self.running = True
@@ -94,8 +89,8 @@ class Server:
         # Handling notification
         # No error response send after failed notification
         # Drop if not initialized
-        if self.init_request_received or notification.method == "exit":
-            # print('-- handling notification')
+        if self.init_request_received or  notification.method == 'exit':
+            #print('-- handling notification')
             try:
                 self._serve_notification(notification)
             except Exception as e:
@@ -117,7 +112,7 @@ class Server:
 
     @staticmethod
     def _serve_error(
-        request: RequestMessage, error_code: int, msg: str
+            request: RequestMessage, error_code: int, msg: str
     ) -> ResponseMessage:
         response_error = ResponseError(code=error_code, message=msg, data=None)
         response_message = ResponseMessage(

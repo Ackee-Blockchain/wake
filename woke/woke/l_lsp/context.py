@@ -10,7 +10,7 @@ class LSPContext:
     trace_value: TraceValueEnum
     client_capabilities: List[str]
     server_capabilities: List[str]
-    # workspace: Union[dict, None]
+    #workspace: Union[dict, None]
 
     def __init__(self) -> None:
         self.woke_config = None

@@ -63,11 +63,11 @@ class RPCProtocol:
         # Return content length
         return content_length
 
-    def _read_content(self, len) -> dict:
+    def _read_content(self,len) -> dict:
         """
         Reads message content
         """
-
+        
         body = self.reader.read(len)
         return json.loads(body)
 
@@ -133,7 +133,7 @@ class RPCProtocol:
         message_str = json.dumps(message, separators=(",", ":"))
         content_length = len(message_str)
         response = f"Content-Length: {content_length}\r\nContent-Type: application/vscode-jsonrpc; charset=utf8\r\n\r\n{message_str}"
-        # print(f"RESPONSE:\n{response}\n")
-        print("RESPONSE HAVE BEEN SENT")
+        #print(f"RESPONSE:\n{response}\n")
+        print('RESPONSE HAVE BEEN SENT')
         # raise EOFError()
         self.reader.write(response)

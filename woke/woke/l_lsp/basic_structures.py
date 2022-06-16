@@ -14,19 +14,13 @@ ChangeAnnotationIdentifier = NewType("ChangeAnnotationIdentifier", str)
 ProgressToken = Union[int, str]
 TraceValue = NewType("Trace", str)  # NewType(Union["off","message","verbose"], str)
 
-
 def to_snake(s):
-    return re.sub("([A-Z]\w+$)", "_\\1", s).lower()
-
+  return re.sub('([A-Z]\w+$)', '_\\1', s).lower()
 
 def t_dict(d):
-    if isinstance(d, list):
-        return [t_dict(i) if isinstance(i, (dict, list)) else i for i in d]
-    return {
-        to_snake(a): t_dict(b) if isinstance(b, (dict, list)) else b
-        for a, b in d.items()
-    }
-
+   if isinstance(d, list):
+      return [t_dict(i) if isinstance(i, (dict, list)) else i for i in d]
+   return {to_snake(a):t_dict(b) if isinstance(b, (dict, list)) else b for a, b in d.items()}
 
 def uri_to_path(uri: str) -> str:
     if not uri.startswith("file://"):
@@ -923,9 +917,7 @@ class TextDocumentContentChangeEvent(BaseModel):
 
 class DidChangeTextDocumentParams(BaseModel):
     text_document: VersionedTextDocumentIdentifier
-    content_changes: Union[
-        List[TextDocumentContentChangeEvent], TextDocumentContentChangeEvent
-    ]
+    content_changes: Union[List[TextDocumentContentChangeEvent],TextDocumentContentChangeEvent]
 
 
 class TextDocumentSaveReason(IntEnum):

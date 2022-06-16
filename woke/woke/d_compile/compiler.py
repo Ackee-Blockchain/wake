@@ -311,12 +311,12 @@ class SolidityCompiler:
                     latest_build_path / "build.json"
                 )
             except ValidationError:
-                logger.info(
+                logger.warning(
                     f"Failed to parse '{latest_build_path / 'build.json'}' file while trying to reuse the latest build artifacts."
                 )
                 latest_build_info = None
             except FileNotFoundError as e:
-                logger.info(
+                logger.warning(
                     f"Unable to find '{e.filename}' file while trying to reuse the latest build artifacts."
                 )
                 latest_build_info = None
@@ -446,14 +446,14 @@ class SolidityCompiler:
                         contracts=contracts,
                     )
                 except ValidationError:
-                    logger.info(
+                    logger.warning(
                         "Failed to parse the latest build artifacts, falling back to solc compilation."
                     )
                     out = await self.__compile_unit_raw(
                         compilation_unit, target_version, build_settings
                     )
                 except FileNotFoundError as e:
-                    logger.info(
+                    logger.warning(
                         f"Unable to find '{e.filename}' file while reusing the latest build info. Build artifacts may be corrupted."
                     )
                     out = await self.__compile_unit_raw(
