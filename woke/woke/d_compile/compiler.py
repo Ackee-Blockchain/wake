@@ -350,7 +350,7 @@ class SolidityCompiler:
                     )
                     await self.__svm.install(
                         target_version,
-                        progress=(lambda x: progress.update(task, completed=x)),
+                        progress=(lambda x: progress.update(task, completed=x)),  # type: ignore
                     )
 
         tasks = []

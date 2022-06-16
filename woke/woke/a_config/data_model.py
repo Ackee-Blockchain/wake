@@ -65,7 +65,7 @@ class SolcWokeConfig(WokeConfigModel):
         context = groupdict["context"]
         prefix = groupdict["prefix"]
         target = groupdict["target"]
-        return SolcRemapping(context, prefix, target)
+        return SolcRemapping(context=context, prefix=prefix, target=target)
 
 
 class CompilerWokeConfig(WokeConfigModel):

@@ -311,7 +311,7 @@ class SolcOrYulNode(ConfiguredModel):
         res = re.search(REGEX_SRC, src)
         assert isinstance(res, Match), "Bad src"
         [m1, m2, m3] = [int(res.group(i)) for i in range(1, 4)]
-        return Src(m1, m2, m3)
+        return Src(byte_offset=m1, byte_length=m2, file_id=m3)
 
 
 class SolcNode(SolcOrYulNode):
