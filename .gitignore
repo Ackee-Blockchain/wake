@@ -1,6 +1,6 @@
 # git hooks magic
-woke/.stash-id
-woke/.post-commit-ignore
+.stash-id
+.post-commit-ignore
 
 # docs build dir
 site/
