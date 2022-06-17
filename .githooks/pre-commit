@@ -56,7 +56,7 @@ echo "$stash_id" > .stash-id
 # commit staged changes so that they are not included into the stash
 git commit --no-gpg-sign --no-verify -m 'pre-commit hook tmp commit' >/dev/null
 # stash unstaged changes
-git stash -u -m "$stash_id" -- woke tests >/dev/null
+git stash -u -m "$stash_id" -- woke tests docs >/dev/null
 # restore staged changes
 git reset --soft 'HEAD^'
 
@@ -95,5 +95,9 @@ if [ ${#pyfiles[@]} -ne 0 ]; then
     black "${pyfiles[@]}";
     check_last_command;
 fi
+
+echo "running mkdocs build"
+mkdocs build
+check_last_command
 
 echo "/.githooks/pre-commit successfully executed."
