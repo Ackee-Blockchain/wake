@@ -3,8 +3,8 @@ import re
 from pathlib import Path
 from typing import Tuple
 
-from woke.ast.b_solc.c_ast_nodes import SolcImportDirective
-from ...compile.compilation_unit import CompilationUnit
+from ..nodes import SolcImportDirective
+from woke.compile.compilation_unit import CompilationUnit
 
 logger = logging.getLogger(__name__)
 

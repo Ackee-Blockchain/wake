@@ -9,7 +9,7 @@ from rich.panel import Panel
 from woke.config import WokeConfig
 from woke.compile import SolidityCompiler, SolcOutput
 from woke.compile.solc_frontend.input_data_model import SolcOutputSelectionEnum
-from woke.ast.b_solc.c_ast_nodes import AstSolc
+from woke.ast.nodes import AstSolc
 from .console import console
 
 

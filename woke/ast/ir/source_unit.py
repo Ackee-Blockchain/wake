@@ -2,14 +2,14 @@ import logging
 from pathlib import Path
 from typing import Optional, List, Tuple
 
-from woke.ast.b_solc.c_ast_nodes import (
+from ..nodes import (
     SolcSourceUnit,
     SolcPragmaDirective,
     SolcImportDirective,
 )
 from .import_directive import ImportDirective
 from .pragma_directive import PragmaDirective
-from ...compile.compilation_unit import CompilationUnit
+from woke.compile.compilation_unit import CompilationUnit
 
 logger = logging.getLogger(__name__)
 

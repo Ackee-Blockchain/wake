@@ -1,5 +1,4 @@
 import enum
-from enum import auto
 
 
 # Contracts

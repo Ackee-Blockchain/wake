@@ -1,13 +1,14 @@
 import re
 from typing import Match, Union, List, Optional, Dict
+
+from pydantic import BaseModel
 from typing_extensions import Literal, Annotated
 
 from pydantic import Field, StrictStr, StrictBool, StrictInt
 from pydantic.dataclasses import dataclass
 from pydantic.class_validators import validator, root_validator
 
-from woke.ast.a_abc import AstAbc
-from woke.ast.b_solc.b_ast_enums import *
+from .enums import *
 
 REGEX_SRC = re.compile(r"(\d+):(\d+):(\d+)")
 PYDANTIC_CONFIG_EXTRA = "forbid"
@@ -19,7 +20,7 @@ def to_camel(s: str) -> str:
     return split[0].lower() + "".join([w.capitalize() for w in split[1:]])
 
 
-class ConfiguredModel(AstAbc):
+class AstModel(BaseModel):
     class Config:
         alias_generator = to_camel
         extra = PYDANTIC_CONFIG_EXTRA
@@ -264,19 +265,19 @@ class AstNodeId(int):
         return f"AstNodeId({self})"
 
 
-class TypeDescriptionsModel(ConfiguredModel):
+class TypeDescriptionsModel(AstModel):
     type_identifier: Optional[StrictStr]
     type_string: Optional[StrictStr]
 
 
-class SymbolAliasModel(ConfiguredModel):  # helper class
+class SymbolAliasModel(AstModel):  # helper class
     foreign: "SolcIdentifier"
     local: Optional[StrictStr]
     name_location: Optional[StrictStr]  # since 0.8.2
 
 
 # InlineAssembly
-class ExternalReferenceModel(ConfiguredModel):  # helper class
+class ExternalReferenceModel(AstModel):  # helper class
     declaration: AstNodeId
     is_offset: StrictBool
     is_slot: StrictBool
@@ -298,7 +299,7 @@ class Src:
         )
 
 
-class SolcOrYulNode(ConfiguredModel):
+class SolcOrYulNode(AstModel):
     src: Src
 
     @validator("src", pre=True)
