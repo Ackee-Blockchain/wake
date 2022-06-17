@@ -2,9 +2,9 @@ from pathlib import Path, PosixPath, WindowsPath
 import pydantic
 import pytest
 
-from woke.a_config import WokeConfig
-from woke.a_config.data_model import SolcRemapping
-from woke.c_regex_parsing.solidity_version import SolidityVersion
+from woke.config import WokeConfig
+from woke.config.data_model import SolcRemapping
+from woke.regex_parsing.solidity_version import SolidityVersion
 from woke.core.enums import EvmVersionEnum
 
 sources_path = (Path(__file__).parent / "config_sources").resolve()
@@ -39,7 +39,9 @@ def test_config_simple():
     assert (sources_path / "c.toml").resolve() in config.loaded_files
     assert (sources_path / "empty.toml").resolve() in config.loaded_files
     assert len(config.compiler.solc.remappings) == 1
-    assert config.compiler.solc.remappings[0] == SolcRemapping(None, "xyz", None)
+    assert config.compiler.solc.remappings[0] == SolcRemapping(
+        context=None, prefix="xyz", target=None
+    )
     assert str(config.compiler.solc.remappings[0]) == ":xyz="
     assert len(config.compiler.solc.include_paths) == 1
     assert config.compiler.solc.include_paths[0] == sources_path
@@ -74,7 +76,7 @@ def test_config_from_dict():
     assert config.compiler.solc.include_paths[0] == sources_path
     assert len(config.compiler.solc.remappings) == 1
     assert config.compiler.solc.remappings[0] == SolcRemapping(
-        None, "hardhat/", "node_modules/hardhat/"
+        context=None, prefix="hardhat/", target="node_modules/hardhat/"
     )
     assert config.compiler.solc.target_version == SolidityVersion.fromstring("0.8.12")
 
@@ -91,9 +93,11 @@ def test_config_global():
     assert (sources_path / "empty.toml").resolve() in config.loaded_files
     assert len(config.compiler.solc.remappings) == 2
     assert config.compiler.solc.remappings[0] == SolcRemapping(
-        None, "https://url.com", None
+        context=None, prefix="https://url.com", target=None
     )
-    assert config.compiler.solc.remappings[1] == SolcRemapping(None, "123", "xyz")
+    assert config.compiler.solc.remappings[1] == SolcRemapping(
+        context=None, prefix="123", target="xyz"
+    )
 
 
 @pytest.mark.platform_dependent
@@ -106,7 +110,7 @@ def test_config_project():
 
     assert len(config.compiler.solc.remappings) == 1
     assert config.compiler.solc.remappings[0] == SolcRemapping(
-        None, "woke", "test-target"
+        context=None, prefix="woke", target="test-target"
     )
 
 
@@ -136,7 +140,9 @@ def test_config_import_abs_path():
     assert (sources_path / "c.toml").resolve() in config.loaded_files
     assert (sources_path / "empty.toml").resolve() in config.loaded_files
     assert len(config.compiler.solc.remappings) == 1
-    assert config.compiler.solc.remappings[0] == SolcRemapping(None, "xyz", None)
+    assert config.compiler.solc.remappings[0] == SolcRemapping(
+        context=None, prefix="xyz", target=None
+    )
     assert len(config.compiler.solc.include_paths) == 1
     assert config.compiler.solc.include_paths[0] == sources_path
 

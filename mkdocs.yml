@@ -15,7 +15,7 @@ nav:
   - Contributing: 'contributing.md'
   - API reference:
     - api_reference/index.md
-    - a_config: api_reference/a_config.md
+    - config: api_reference/config.md
 
 plugins:
 - search

@@ -1,1 +1,1 @@
-from .m_fuzz import Campaign
+from .fuzzer import Campaign

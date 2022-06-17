@@ -10,10 +10,10 @@ import pytest
 from git import Repo  # type: ignore
 from click.testing import CliRunner
 
-from woke.a_config import WokeConfig
-from woke.d_compile import SolidityCompiler, SolcOutputSelectionEnum
+from woke.config import WokeConfig
+from woke.compile import SolidityCompiler, SolcOutputSelectionEnum
 from woke.utils import change_cwd
-from woke.x_cli.__main__ import main
+from woke.cli.__main__ import main
 
 
 PYTEST_BUILD_PATH = Path.home() / ".tmpwoke_rkDv61DDf7"
