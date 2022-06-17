@@ -47,8 +47,8 @@ setup(
     license="ISC",
     entry_points=dict(
         console_scripts=[
-            "woke=woke.x_cli.__main__:main",
-            "woke-solc=woke.x_cli.__main__:woke_solc",
+            "woke=woke.cli.__main__:main",
+            "woke-solc=woke.cli.__main__:woke_solc",
         ]
     ),
 )

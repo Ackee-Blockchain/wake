@@ -7,9 +7,9 @@ import subprocess
 import aiohttp
 import pytest
 
-from woke.a_config import WokeConfig
-from woke.b_svm import SolcVersionManager
-from woke.b_svm.exceptions import UnsupportedVersionError
+from woke.config import WokeConfig
+from woke.svm import SolcVersionManager
+from woke.svm.exceptions import UnsupportedVersionError
 
 
 PYTEST_WOKE_PATH = Path.home() / ".tmpwoke_KVUhSovO5J"
