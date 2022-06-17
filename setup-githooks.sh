@@ -7,8 +7,3 @@
 git config --local core.hooksPath .githooks/ # since git 2.9
 # make hooks executable
 chmod +x ./.githooks/*
-
-for i in "woke" "woke-js" "editors/code";
-do
-    chmod +x ./"$i"/.githooks/*
-done
