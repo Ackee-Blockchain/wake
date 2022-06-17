@@ -2,7 +2,6 @@ from typing import Optional, Union, List, Dict, Tuple, Callable, Any
 from pathlib import Path
 from zipfile import ZipFile
 import platform
-import asyncio
 import hashlib
 import shutil
 import urllib.request
@@ -13,7 +12,7 @@ from Cryptodome.Hash import keccak
 import aiohttp
 
 from woke.config import WokeConfig, UnsupportedPlatformError
-from woke.regex_parsing.solidity_version import SolidityVersion
+from woke.core.solidity_version import SolidityVersion
 from .abc import CompilerVersionManagerAbc
 from .exceptions import ChecksumError, UnsupportedVersionError
 

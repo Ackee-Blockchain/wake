@@ -24,7 +24,7 @@ from rich.progress import Progress
 from woke.config import WokeConfig
 from woke.svm import SolcVersionManager
 from woke.regex_parsing import SoliditySourceParser
-from woke.regex_parsing.solidity_version import (
+from woke.core.solidity_version import (
     SolidityVersionRanges,
     SolidityVersionRange,
     SolidityVersion,

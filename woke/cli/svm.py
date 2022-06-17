@@ -1,4 +1,4 @@
-from typing import Tuple, AnyStr
+from typing import Tuple
 import asyncio
 
 from click import Context
@@ -7,7 +7,7 @@ import click
 
 from woke.config import WokeConfig
 from woke.svm import SolcVersionManager
-from woke.regex_parsing.solidity_version import SolidityVersion, SolidityVersionExpr
+from woke.core.solidity_version import SolidityVersion, SolidityVersionExpr
 from .console import console
 
 

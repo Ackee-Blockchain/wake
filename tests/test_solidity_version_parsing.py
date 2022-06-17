@@ -1,6 +1,6 @@
 import pytest
 
-from woke.regex_parsing.solidity_version import (
+from woke.core.solidity_version import (
     SolidityVersion,
     SolidityVersionRange,
     SolidityVersionExpr,
