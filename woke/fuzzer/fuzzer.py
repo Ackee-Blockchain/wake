@@ -8,23 +8,23 @@ import pickle
 import random
 import sys
 import types
-from contextlib import redirect_stdout, redirect_stderr, closing
+from contextlib import closing, redirect_stderr, redirect_stdout
 from pathlib import Path
 from typing import Callable, Iterable
 
 import brownie
-from IPython.core.debugger import BdbQuit_excepthook
-from IPython.utils.io import Tee
 from brownie import rpc, web3
 from brownie._config import CONFIG
 from brownie.test.managers.runner import RevertContextManager
 from ipdb.__main__ import _init_pdb
+from IPython.core.debugger import BdbQuit_excepthook
+from IPython.utils.io import Tee
 from pathvalidate import sanitize_filename  # type: ignore
 from rich.traceback import Traceback
 from tblib import pickling_support
 
-from woke.config import WokeConfig
 from woke.cli.console import console
+from woke.config import WokeConfig
 
 
 def _setup(port: int) -> None:

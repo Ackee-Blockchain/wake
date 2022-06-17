@@ -3,8 +3,7 @@ import logging
 import os
 import threading
 import warnings
-from asyncio import events, AbstractChildWatcher
-
+from asyncio import AbstractChildWatcher, events
 
 logger = logging.getLogger(__name__)
 

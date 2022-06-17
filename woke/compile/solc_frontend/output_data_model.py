@@ -1,8 +1,7 @@
 import enum
-from typing import List, Optional, Dict, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from pydantic import BaseModel, Extra
-
 
 __doc__ = """Solc standard JSON output data model as described by https://docs.soliditylang.org/en/v0.8.12/using-the-compiler.html#output-description"""
 

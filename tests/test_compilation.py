@@ -1,20 +1,19 @@
+import asyncio
 import os
 import platform
 import shutil
 import stat
 import subprocess
-import asyncio
 from pathlib import Path
 
 import pytest
-from git import Repo  # type: ignore
 from click.testing import CliRunner
+from git import Repo  # type: ignore
 
-from woke.config import WokeConfig
-from woke.compile import SolidityCompiler, SolcOutputSelectionEnum
-from woke.utils import change_cwd
 from woke.cli.__main__ import main
-
+from woke.compile import SolcOutputSelectionEnum, SolidityCompiler
+from woke.config import WokeConfig
+from woke.utils import change_cwd
 
 PYTEST_BUILD_PATH = Path.home() / ".tmpwoke_rkDv61DDf7"
 

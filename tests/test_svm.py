@@ -1,8 +1,8 @@
-from pathlib import Path
-from typing import Optional, List, Union
 import asyncio
 import shutil
 import subprocess
+from pathlib import Path
+from typing import List, Optional, Union
 
 import aiohttp
 import pytest
@@ -10,7 +10,6 @@ import pytest
 from woke.config import WokeConfig
 from woke.svm import SolcVersionManager
 from woke.svm.exceptions import UnsupportedVersionError
-
 
 PYTEST_WOKE_PATH = Path.home() / ".tmpwoke_KVUhSovO5J"
 PYTEST_WOKE_PATH2 = Path.home() / ".tmpwoke2_fLtqXkHeVH"

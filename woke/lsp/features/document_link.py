@@ -1,19 +1,19 @@
 import logging
-from typing import Optional, Any, List
+from typing import Any, List, Optional
 
 from woke.ast.ir.source_unit import SourceUnit
 from woke.lsp.common_structures import (
+    DocumentUri,
+    PartialResultParams,
+    Position,
+    Range,
+    TextDocumentIdentifier,
     WorkDoneProgressOptions,
     WorkDoneProgressParams,
-    PartialResultParams,
-    TextDocumentIdentifier,
-    Range,
-    DocumentUri,
-    Position,
 )
 from woke.lsp.context import LspContext
 from woke.lsp.lsp_data_model import LspModel
-from woke.lsp.utils.uri import uri_to_path, path_to_uri
+from woke.lsp.utils.uri import path_to_uri, uri_to_path
 
 logger = logging.getLogger(__name__)
 

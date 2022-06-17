@@ -1,6 +1,6 @@
 import random
 import string
-from typing import Optional, Callable
+from typing import Callable, Optional
 
 import brownie
 from brownie.network.account import Account

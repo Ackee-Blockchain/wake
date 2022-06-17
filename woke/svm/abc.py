@@ -1,6 +1,6 @@
-from typing import Union, Tuple
 from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import Tuple, Union
 
 from woke.core.solidity_version import VersionAbc
 

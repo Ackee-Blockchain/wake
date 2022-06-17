@@ -1,4 +1,4 @@
-from .woke_config import WokeConfig, UnsupportedPlatformError
+from .woke_config import UnsupportedPlatformError, WokeConfig
 
 __doc__ = """This module handles config file management. Each config option has its default value.
 There are two main sources of config files:

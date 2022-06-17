@@ -1,17 +1,17 @@
 import enum
-from typing import List, Optional, Union, Any
+from typing import Any, List, Optional, Union
 
 from ..common_structures import (
+    Command,
     MarkupContent,
     MarkupKind,
     PartialResultParams,
     Range,
+    TextDocumentPositionParams,
+    TextDocumentRegistrationOptions,
     TextEdit,
     WorkDoneProgressOptions,
-    TextDocumentPositionParams,
     WorkDoneProgressParams,
-    Command,
-    TextDocumentRegistrationOptions,
 )
 from ..lsp_data_model import LspModel
 

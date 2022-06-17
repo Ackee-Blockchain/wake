@@ -1,5 +1,5 @@
+from pathlib import Path, PurePath, PurePosixPath
 from typing import List
-from pathlib import Path, PurePosixPath, PurePath
 
 from woke.config import WokeConfig
 from woke.config.data_model import SolcRemapping

@@ -1,25 +1,25 @@
 import asyncio
-import queue
 import logging
 import platform
+import queue
 import re
 import sys
 import threading
 from pathlib import Path
 from threading import Thread
-from typing import Dict, List, Set, Union, Tuple, Collection, Mapping
+from typing import Collection, Dict, List, Mapping, Set, Tuple, Union
 
-from woke.config import WokeConfig
+from woke.ast.ir.source_unit import SourceUnit
+from woke.ast.nodes import AstSolc
 from woke.compile import SolcOutput, SolcOutputSelectionEnum
 from woke.compile.compilation_unit import CompilationUnit
 from woke.compile.compiler import SolidityCompiler
 from woke.compile.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
-from woke.ast.nodes import AstSolc
-from woke.ast.ir.source_unit import SourceUnit
+from woke.config import WokeConfig
 from woke.lsp.document_sync import (
-    DidOpenTextDocumentParams,
     DidChangeTextDocumentParams,
     DidCloseTextDocumentParams,
+    DidOpenTextDocumentParams,
 )
 from woke.lsp.utils.uri import uri_to_path
 

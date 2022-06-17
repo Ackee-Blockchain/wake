@@ -2,7 +2,6 @@ from pathlib import Path
 
 from woke.regex_parsing import SoliditySourceParser
 
-
 base_path = Path(__file__).parent.resolve() / "re_parsing_sources"
 
 

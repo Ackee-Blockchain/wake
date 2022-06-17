@@ -1,18 +1,19 @@
-from typing import Optional, Union, List, Dict, Tuple, Callable, Any
-from pathlib import Path
-from zipfile import ZipFile
-import platform
 import hashlib
+import platform
 import shutil
-import urllib.request
 import urllib.error
+import urllib.request
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from zipfile import ZipFile
 
-from pydantic import BaseModel, Field
-from Cryptodome.Hash import keccak
 import aiohttp
+from Cryptodome.Hash import keccak
+from pydantic import BaseModel, Field
 
-from woke.config import WokeConfig, UnsupportedPlatformError
+from woke.config import UnsupportedPlatformError, WokeConfig
 from woke.core.solidity_version import SolidityVersion
+
 from .abc import CompilerVersionManagerAbc
 from .exceptions import ChecksumError, UnsupportedVersionError
 

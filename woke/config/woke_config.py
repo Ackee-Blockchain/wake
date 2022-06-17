@@ -1,16 +1,16 @@
-from typing import Set, Dict, Any, Optional, Union, FrozenSet
-from pathlib import Path
-from copy import deepcopy
+import logging
 import platform
 import reprlib
-import logging
+from copy import deepcopy
+from pathlib import Path
+from typing import Any, Dict, FrozenSet, Optional, Set, Union
 
 import networkx as nx
 import tomli
 
 from woke.utils import change_cwd
-from .data_model import TopLevelWokeConfig, CompilerWokeConfig
 
+from .data_model import CompilerWokeConfig, TopLevelWokeConfig
 
 logger = logging.getLogger(__name__)
 

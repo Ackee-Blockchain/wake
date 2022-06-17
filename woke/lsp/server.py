@@ -2,52 +2,51 @@ import asyncio
 import logging
 from functools import partial
 from pathlib import Path
-from typing import Dict, Tuple, Callable, Any, Optional, Type
+from typing import Any, Callable, Dict, Optional, Tuple, Type
 
+from ..config import WokeConfig
 from .common_structures import (
-    InitializeParams,
-    InitializeError,
-    InitializedParams,
     DocumentFilter,
-    SetTraceParams,
+    InitializedParams,
+    InitializeError,
+    InitializeParams,
     LogTraceParams,
     ProgressParams,
+    SetTraceParams,
 )
 from .context import LspContext
 from .document_sync import (
-    TextDocumentSyncOptions,
-    TextDocumentSyncKind,
-    DidOpenTextDocumentParams,
     DidChangeTextDocumentParams,
-    WillSaveTextDocumentParams,
-    DidSaveTextDocumentParams,
     DidCloseTextDocumentParams,
+    DidOpenTextDocumentParams,
+    DidSaveTextDocumentParams,
+    TextDocumentSyncKind,
+    TextDocumentSyncOptions,
+    WillSaveTextDocumentParams,
 )
 from .exceptions import LspError
 from .features.document_link import (
     DocumentLinkOptions,
-    document_link,
     DocumentLinkParams,
+    document_link,
 )
 from .lsp_data_model import LspModel
+from .methods import RequestMethodEnum
 from .protocol_structures import (
+    CancelParams,
+    ErrorCodes,
     NotificationMessage,
     RequestMessage,
-    ResponseMessage,
     ResponseError,
-    ErrorCodes,
-    CancelParams,
+    ResponseMessage,
 )
 from .rpc_protocol import RpcProtocol
-from .methods import RequestMethodEnum
 from .server_capabilities import (
-    ServerCapabilities,
-    PositionEncodingKind,
     InitializeResult,
+    PositionEncodingKind,
+    ServerCapabilities,
 )
 from .utils.uri import uri_to_path
-from ..config import WokeConfig
-
 
 logger = logging.getLogger(__name__)
 

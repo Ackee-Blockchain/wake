@@ -1,48 +1,40 @@
-from itertools import chain
-from typing import (
-    List,
-    Dict,
-    Iterable,
-    Tuple,
-    Optional,
-    Collection,
-    Mapping,
-)
-from collections import deque
-from pathlib import Path
 import asyncio
 import logging
 import platform
 import time
+from collections import deque
+from itertools import chain
+from pathlib import Path
+from typing import Collection, Dict, Iterable, List, Mapping, Optional, Tuple
 
-from pathvalidate import sanitize_filename  # type: ignore
 import aiofiles
 import networkx as nx
+from pathvalidate import sanitize_filename  # type: ignore
 from pydantic import ValidationError
 from rich.progress import Progress
 
 from woke.config import WokeConfig
-from woke.svm import SolcVersionManager
-from woke.regex_parsing import SoliditySourceParser
 from woke.core.solidity_version import (
-    SolidityVersionRanges,
-    SolidityVersionRange,
     SolidityVersion,
+    SolidityVersionRange,
+    SolidityVersionRanges,
 )
+from woke.regex_parsing import SoliditySourceParser
+from woke.svm import SolcVersionManager
+
+from .build_data_model import CompilationUnitBuildInfo, ProjectBuildInfo
+from .compilation_unit import CompilationUnit
+from .exceptions import CompilationError
 from .solc_frontend import (
     SolcFrontend,
-    SolcOutput,
     SolcInputSettings,
+    SolcOutput,
+    SolcOutputContractInfo,
     SolcOutputSelectionEnum,
     SolcOutputSourceInfo,
-    SolcOutputContractInfo,
 )
-from .compilation_unit import CompilationUnit
-from .source_unit_name_resolver import SourceUnitNameResolver
 from .source_path_resolver import SourcePathResolver
-from .exceptions import CompilationError
-from .build_data_model import CompilationUnitBuildInfo, ProjectBuildInfo
-
+from .source_unit_name_resolver import SourceUnitNameResolver
 
 logger = logging.getLogger(__name__)
 

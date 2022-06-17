@@ -1,13 +1,14 @@
-from typing import Tuple
 import asyncio
+from typing import Tuple
 
+import click
 from click import Context
 from rich.progress import Progress
-import click
 
 from woke.config import WokeConfig
-from woke.svm import SolcVersionManager
 from woke.core.solidity_version import SolidityVersion, SolidityVersionExpr
+from woke.svm import SolcVersionManager
+
 from .console import console
 
 

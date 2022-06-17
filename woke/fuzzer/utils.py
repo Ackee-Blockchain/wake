@@ -1,6 +1,6 @@
-from collections import defaultdict
-import math
 import inspect
+import math
+from collections import defaultdict
 from typing import Callable, Iterable, List, Tuple, TypeVar
 
 from Cryptodome.Hash import keccak

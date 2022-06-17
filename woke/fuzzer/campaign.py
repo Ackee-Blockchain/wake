@@ -1,13 +1,12 @@
 import logging
 import random
 from datetime import datetime, timedelta
-from typing import Counter, List, Tuple, Callable, Optional
+from typing import Callable, Counter, List, Optional, Tuple
 
 import brownie
 import IPython
 
 from .utils import partition
-
 
 Methods = List[Tuple[Callable, str]]
 

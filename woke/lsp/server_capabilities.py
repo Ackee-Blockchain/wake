@@ -1,8 +1,9 @@
 from enum import Enum
-from typing import Optional, Union, Any, List
+from typing import Any, List, Optional, Union
 
 from woke.lsp.common_structures import WorkspaceSymbolOptions
-from woke.lsp.document_sync import TextDocumentSyncOptions, TextDocumentSyncKind
+from woke.lsp.document_sync import TextDocumentSyncKind, TextDocumentSyncOptions
+
 from .features.document_link import DocumentLinkOptions
 from .lsp_data_model import LspModel
 

@@ -1,7 +1,8 @@
-from pathlib import Path
 import itertools
+from pathlib import Path
 
 from woke.config import WokeConfig
+
 from .exceptions import CompilationResolveError
 
 

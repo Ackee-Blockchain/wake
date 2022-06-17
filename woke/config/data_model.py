@@ -1,9 +1,9 @@
-from typing import Optional, List
-from pathlib import Path
-from dataclasses import astuple
 import re
+from dataclasses import astuple
+from pathlib import Path
+from typing import List, Optional
 
-from pydantic import BaseModel, Field, Extra, validator
+from pydantic import BaseModel, Extra, Field, validator
 from pydantic.dataclasses import dataclass
 
 from woke.core.enums import EvmVersionEnum
