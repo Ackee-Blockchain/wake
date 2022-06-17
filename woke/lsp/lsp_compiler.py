@@ -14,7 +14,7 @@ from woke.compile import SolcOutput, SolcOutputSelectionEnum
 from woke.compile.compilation_unit import CompilationUnit
 from woke.compile.compiler import SolidityCompiler
 from woke.compile.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
-from woke.ast.b_solc.c_ast_nodes import AstSolc
+from woke.ast.nodes import AstSolc
 from woke.ast.ir.source_unit import SourceUnit
 from woke.lsp.document_sync import (
     DidOpenTextDocumentParams,

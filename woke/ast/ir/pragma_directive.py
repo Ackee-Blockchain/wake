@@ -2,7 +2,7 @@ import logging
 from typing import List, Tuple
 
 from woke.compile.compilation_unit import CompilationUnit
-from woke.ast.b_solc.c_ast_nodes import SolcPragmaDirective
+from ..nodes import SolcPragmaDirective
 
 
 logger = logging.getLogger(__name__)
