@@ -31,6 +31,7 @@ extras_require = dict(
         "pymdown-extensions >= 9.0",
         "pygments",
         "mike",
+        "isort >= 5.10.0, < 6",
     ],
 )
 
