@@ -96,6 +96,13 @@ if [ ${#pyfiles[@]} -ne 0 ]; then
     check_last_command;
 fi
 
+
+if [ ${#pyfiles[@]} -ne 0 ]; then
+    echo "running \`isort ${pyfiles[@]}\`"
+    isort "${pyfiles[@]}";
+    check_last_command;
+fi
+
 echo "running mkdocs build"
 mkdocs build
 check_last_command

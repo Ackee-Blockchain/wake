@@ -6,6 +6,10 @@ include = ["**/*.py"]
 pythonVersion = "3.7"
 pythonPlatform = "All"
 
+[tool.isort]
+profile = "black"
+skip_gitignore = true
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 markers = [
