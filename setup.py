@@ -45,7 +45,6 @@ setup(
     install_requires=install_requires,
     extras_require=extras_require,
     license="ISC",
-    long_description=open("README.md", "r", encoding="utf-8").read(),
     entry_points=dict(
         console_scripts=[
             "woke=woke.x_cli.__main__:main",
