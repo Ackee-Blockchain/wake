@@ -11,7 +11,7 @@ import rich.traceback
 
 from woke.config import WokeConfig
 from woke.svm import SolcVersionManager
-from woke.regex_parsing.solidity_version import SolidityVersion
+from woke.core.solidity_version import SolidityVersion
 from .console import console
 from .compile import run_compile
 from .init import run_init

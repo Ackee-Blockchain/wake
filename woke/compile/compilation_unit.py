@@ -4,7 +4,7 @@ from typing import Dict, FrozenSet
 import networkx as nx
 from Cryptodome.Hash import BLAKE2b
 
-from woke.regex_parsing.solidity_version import SolidityVersionRanges
+from woke.core.solidity_version import SolidityVersionRanges
 
 
 class CompilationUnit:

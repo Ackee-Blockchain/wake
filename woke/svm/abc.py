@@ -1,8 +1,8 @@
-from typing import Union, Tuple, AsyncIterator
+from typing import Union, Tuple
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-from woke.regex_parsing.solidity_version import VersionAbc
+from woke.core.solidity_version import VersionAbc
 
 
 class CompilerVersionManagerAbc(ABC):

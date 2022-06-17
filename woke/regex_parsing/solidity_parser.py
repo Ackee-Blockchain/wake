@@ -5,7 +5,7 @@ import re
 from Cryptodome.Hash import BLAKE2b
 
 from .solidity_import import SolidityImportExpr
-from .solidity_version import (
+from woke.core.solidity_version import (
     SolidityVersionExpr,
     SolidityVersionRange,
     SolidityVersionRanges,

@@ -1,11 +1,11 @@
-from typing import AnyStr, Dict
+from typing import Dict
 from pathlib import Path
 import subprocess
 import asyncio
 
 from woke.config import WokeConfig
 from woke.svm import SolcVersionManager
-from woke.regex_parsing.solidity_version import SolidityVersion
+from woke.core.solidity_version import SolidityVersion
 from .input_data_model import (
     SolcInput,
     SolcInputSource,
