@@ -1,7 +1,7 @@
-from typing import Union
 from contextlib import contextmanager
-from pathlib import Path
 from os import chdir
+from pathlib import Path
+from typing import Union
 
 
 @contextmanager

@@ -4,20 +4,21 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from click.core import Context
-from rich.logging import RichHandler
 import click
 import rich.traceback
+from click.core import Context
+from rich.logging import RichHandler
 
 from woke.config import WokeConfig
-from woke.svm import SolcVersionManager
 from woke.core.solidity_version import SolidityVersion
-from .console import console
+from woke.svm import SolcVersionManager
+
 from .compile import run_compile
+from .console import console
+from .fuzz import run_fuzz
 from .init import run_init
 from .lsp import run_lsp
 from .svm import run_svm
-from .fuzz import run_fuzz
 
 
 @click.group()

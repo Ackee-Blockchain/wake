@@ -5,11 +5,10 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
-from woke.config import WokeConfig
-from woke.svm import SolcVersionManager
-from woke.core.solidity_version import SolidityVersion
 from woke.cli.__main__ import main
-
+from woke.config import WokeConfig
+from woke.core.solidity_version import SolidityVersion
+from woke.svm import SolcVersionManager
 
 PYTEST_WOKE_ROOT_PATH = (Path.home() / ".tmpwoke_Z6yVySfqSk").resolve()
 

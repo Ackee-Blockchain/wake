@@ -1,12 +1,12 @@
 from enum import IntEnum
-from typing import Optional, Union, List
+from typing import List, Optional, Union
 
 from .common_structures import (
-    TextDocumentIdentifier,
-    VersionedTextDocumentIdentifier,
     Range,
+    TextDocumentIdentifier,
     TextDocumentItem,
     TextDocumentRegistrationOptions,
+    VersionedTextDocumentIdentifier,
 )
 from .lsp_data_model import LspModel
 

@@ -1,19 +1,20 @@
-from typing import Dict
-from pathlib import Path
-import subprocess
 import asyncio
+import subprocess
+from pathlib import Path
+from typing import Dict
 
 from woke.config import WokeConfig
-from woke.svm import SolcVersionManager
 from woke.core.solidity_version import SolidityVersion
+from woke.svm import SolcVersionManager
+
+from .exceptions import SolcCompilationError
 from .input_data_model import (
     SolcInput,
-    SolcInputSource,
-    SolcInputSettings,
     SolcInputLanguageEnum,
+    SolcInputSettings,
+    SolcInputSource,
 )
 from .output_data_model import SolcOutput
-from .exceptions import SolcCompilationError
 
 
 class SolcFrontend:

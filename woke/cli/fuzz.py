@@ -1,17 +1,18 @@
-import inspect
 import importlib.resources
 import importlib.util
+import inspect
 import multiprocessing
 import platform
 import sys
 import time
 from pathlib import Path
-from typing import Tuple, Callable, Iterable
+from typing import Callable, Iterable, Tuple
 
 import click
 
 from woke.config import WokeConfig
 from woke.fuzzer import fuzz
+
 from .console import console
 
 

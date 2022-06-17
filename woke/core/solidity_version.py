@@ -1,7 +1,7 @@
-from typing import Optional, Tuple, Union, Dict, Any, Iterable
-from abc import ABC, abstractmethod
-import re
 import itertools
+import re
+from abc import ABC, abstractmethod
+from typing import Any, Dict, Iterable, Optional, Tuple, Union
 
 """
 This module implements semantic version (and `npm` semantic version range) parsing as described

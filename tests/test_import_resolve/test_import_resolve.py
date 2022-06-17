@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from woke.config import WokeConfig
 from woke.compile.source_unit_name_resolver import SourceUnitNameResolver
+from woke.config import WokeConfig
 from woke.utils import change_cwd
 
 current_path = Path(__file__).parent.resolve()

@@ -1,15 +1,16 @@
-from typing import Tuple, AnyStr, List, Set
-from pathlib import Path
 import asyncio
+from pathlib import Path
+from typing import AnyStr, List, Set, Tuple
 
 import click
 from click.core import Context
 from rich.panel import Panel
 
-from woke.config import WokeConfig
-from woke.compile import SolidityCompiler, SolcOutput
-from woke.compile.solc_frontend.input_data_model import SolcOutputSelectionEnum
 from woke.ast.nodes import AstSolc
+from woke.compile import SolcOutput, SolidityCompiler
+from woke.compile.solc_frontend.input_data_model import SolcOutputSelectionEnum
+from woke.config import WokeConfig
+
 from .console import console
 
 

@@ -1,15 +1,14 @@
 import asyncio
 import collections
 import json
-from typing import Union, Optional
+from typing import Optional, Union
 
 from .protocol_structures import (
-    RequestMessage,
-    ResponseMessage,
-    ResponseError,
     NotificationMessage,
+    RequestMessage,
+    ResponseError,
+    ResponseMessage,
 )
-
 
 # TODO Buffering messages
 

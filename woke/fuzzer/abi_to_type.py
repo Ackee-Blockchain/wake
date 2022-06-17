@@ -1,14 +1,13 @@
-import pathlib as plib
 import keyword
+import pathlib as plib
 from typing import Union
-from typing_extensions import TypedDict
 
 import brownie.project
-from brownie.network.contract import ProjectContract
 from brownie.network.account import Account
+from brownie.network.contract import ProjectContract
+from typing_extensions import TypedDict
 
 from woke.config import WokeConfig
-
 
 EvmAccount = Union[Account, ProjectContract]
 TxnConfig = TypedDict("TxnConfig", {"from": EvmAccount, "amount": int})

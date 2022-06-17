@@ -1,12 +1,10 @@
 import re
-from typing import Match, Union, List, Optional, Dict
+from typing import Dict, List, Match, Optional, Union
 
-from pydantic import BaseModel
-from typing_extensions import Literal, Annotated
-
-from pydantic import Field, StrictStr, StrictBool, StrictInt
+from pydantic import BaseModel, Field, StrictBool, StrictInt, StrictStr
+from pydantic.class_validators import root_validator, validator
 from pydantic.dataclasses import dataclass
-from pydantic.class_validators import validator, root_validator
+from typing_extensions import Annotated, Literal
 
 from .enums import *
 

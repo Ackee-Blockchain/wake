@@ -1,15 +1,16 @@
-from typing import Tuple, List
-from pathlib import Path
 import re
+from pathlib import Path
+from typing import List, Tuple
 
 from Cryptodome.Hash import BLAKE2b
 
-from .solidity_import import SolidityImportExpr
 from woke.core.solidity_version import (
     SolidityVersionExpr,
     SolidityVersionRange,
     SolidityVersionRanges,
 )
+
+from .solidity_import import SolidityImportExpr
 
 # TODO Raise error on `pragma` or `import` in contract definition
 # Instead of parsing `pragma solidity` and `import` statements inside a contract definition, we should raise an exception.

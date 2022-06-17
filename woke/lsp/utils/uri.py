@@ -1,5 +1,5 @@
 from pathlib import Path
-from urllib.parse import urlparse, unquote, quote
+from urllib.parse import quote, unquote, urlparse
 
 
 def uri_to_path(uri: str) -> Path:

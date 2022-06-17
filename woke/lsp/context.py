@@ -1,6 +1,7 @@
 from typing import Optional
 
 from woke.config import WokeConfig
+
 from .enums import TraceValueEnum
 from .lsp_compiler import LspCompiler
 

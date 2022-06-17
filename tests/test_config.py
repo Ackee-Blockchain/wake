@@ -1,11 +1,12 @@
 from pathlib import Path
+
 import pydantic
 import pytest
 
 from woke.config import WokeConfig
 from woke.config.data_model import SolcRemapping
-from woke.core.solidity_version import SolidityVersion
 from woke.core.enums import EvmVersionEnum
+from woke.core.solidity_version import SolidityVersion
 
 sources_path = (Path(__file__).parent / "config_sources").resolve()
 

@@ -2,8 +2,8 @@ import pytest
 
 from woke.core.solidity_version import (
     SolidityVersion,
-    SolidityVersionRange,
     SolidityVersionExpr,
+    SolidityVersionRange,
 )
 
 

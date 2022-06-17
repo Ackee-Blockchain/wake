@@ -6,7 +6,6 @@ import click
 from woke.config import WokeConfig
 from woke.lsp.server import LspServer
 
-
 logger = logging.getLogger(__name__)
 
 

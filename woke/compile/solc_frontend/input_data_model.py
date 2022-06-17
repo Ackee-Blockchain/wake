@@ -1,7 +1,7 @@
 import enum
-from typing import Optional, List, Dict
+from typing import Dict, List, Optional
 
-from pydantic import BaseModel, Field, root_validator, Extra
+from pydantic import BaseModel, Extra, Field, root_validator
 
 from woke.core.enums import EvmVersionEnum
 

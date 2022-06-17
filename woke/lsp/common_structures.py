@@ -1,5 +1,5 @@
 from enum import Enum, IntEnum
-from typing import Any, List, Optional, Union, NewType
+from typing import Any, List, NewType, Optional, Union
 
 from .lsp_data_model import LspModel
 
