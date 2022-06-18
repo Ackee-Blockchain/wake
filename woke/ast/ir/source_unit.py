@@ -5,13 +5,16 @@ from typing import List, Optional, Tuple
 from woke.compile.compilation_unit import CompilationUnit
 
 from ..nodes import SolcImportDirective, SolcPragmaDirective, SolcSourceUnit
+from .abc import IrAbc
 from .import_directive import ImportDirective
 from .pragma_directive import PragmaDirective
 
 logger = logging.getLogger(__name__)
 
 
-class SourceUnit:
+class SourceUnit(IrAbc):
+    _ast_node: SolcSourceUnit
+
     __license: Optional[str]
     __source_unit_name: str
     __path: Path
@@ -25,6 +28,7 @@ class SourceUnit:
         source: bytes,
         cu: CompilationUnit,
     ):
+        super().__init__(source_unit, source, cu)
         self.__license = source_unit.license
         self.__source_unit_name = source_unit.absolute_path
         self.__path = path.resolve()

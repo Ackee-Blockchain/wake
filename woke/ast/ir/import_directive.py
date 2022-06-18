@@ -6,6 +6,7 @@ from typing import Tuple
 from woke.compile.compilation_unit import CompilationUnit
 
 from ..nodes import SolcImportDirective
+from .abc import IrAbc
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +35,9 @@ IMPORT_ALIAS_LIST = re.compile(
 )
 
 
-class ImportDirective:
+class ImportDirective(IrAbc):
+    _ast_node: SolcImportDirective
+
     __source_unit_name: str
     __import_string: str
     __imported_file: Path
@@ -43,6 +46,7 @@ class ImportDirective:
     def __init__(
         self, import_directive: SolcImportDirective, source: bytes, cu: CompilationUnit
     ):
+        super().__init__(import_directive, source, cu)
         self.__source_unit_name = import_directive.absolute_path
         self.__import_string = import_directive.file
         self.__imported_file = cu.source_unit_name_to_path(self.__source_unit_name)
