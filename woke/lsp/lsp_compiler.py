@@ -10,6 +10,7 @@ from threading import Thread
 from typing import Collection, Dict, List, Mapping, Set, Tuple, Union
 
 from woke.ast.ir.source_unit import SourceUnit
+from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import AstSolc
 from woke.compile import SolcOutput, SolcOutputSelectionEnum
 from woke.compile.compilation_unit import CompilationUnit
@@ -169,10 +170,13 @@ class LspCompiler:
                 else:
                     path = cu.source_unit_name_to_path(source_unit_name)
                     ast = AstSolc.parse_obj(raw_ast.ast)
-                    self.__asts[path] = ast
-                    self.__source_units[path] = SourceUnit(
-                        path, ast, self.get_file_content(path).encode("utf-8"), cu
+                    init = IrInitTuple(
+                        path,
+                        self.get_file_content(path).encode("utf-8"),
+                        cu,
                     )
+                    self.__asts[path] = ast
+                    self.__source_units[path] = SourceUnit(init, ast)
 
     def __compilation_loop(self):
         if platform.system() != "Windows" and sys.version_info < (3, 8):
