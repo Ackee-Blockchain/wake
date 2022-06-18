@@ -7,6 +7,7 @@ from woke.compile.compilation_unit import CompilationUnit
 
 from ..nodes import SolcImportDirective
 from .abc import IrAbc
+from .utils import lazy_property
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +42,6 @@ class ImportDirective(IrAbc):
     __source_unit_name: str
     __import_string: str
     __imported_file: Path
-    __import_string_pos: Tuple[int, int]
 
     def __init__(
         self, import_directive: SolcImportDirective, source: bytes, cu: CompilationUnit
@@ -50,23 +50,6 @@ class ImportDirective(IrAbc):
         self.__source_unit_name = import_directive.absolute_path
         self.__import_string = import_directive.file
         self.__imported_file = cu.source_unit_name_to_path(self.__source_unit_name)
-
-        source_start = import_directive.src.byte_offset
-        source_end = source_start + import_directive.src.byte_length
-        directive_source = source[source_start:source_end]
-
-        res = (
-            IMPORT_FILENAME_RE,
-            IMPORT_AS_FROM_RE,
-            IMPORT_AS_RE,
-            IMPORT_ALIAS_LIST,
-        )
-        matches = list(re.match(directive_source) for re in res)
-        assert any(matches)
-        match = next(m for m in matches if m)
-        self.__import_string_pos = source_start + match.start("filename"), match.end(
-            "filename"
-        ) - match.start("filename")
 
     @property
     def source_unit_name(self) -> str:
@@ -89,9 +72,22 @@ class ImportDirective(IrAbc):
         """
         return self.__import_string
 
-    @property
+    @lazy_property
     def import_string_pos(self) -> Tuple[int, int]:
         """
         The byte position and the byte length of the import string in the source file.
         """
-        return self.__import_string_pos
+        source_start = self._ast_node.src.byte_offset
+
+        res = (
+            IMPORT_FILENAME_RE,
+            IMPORT_AS_FROM_RE,
+            IMPORT_AS_RE,
+            IMPORT_ALIAS_LIST,
+        )
+        matches = list(re.match(self._source) for re in res)
+        assert any(matches)
+        match = next(m for m in matches if m)
+        return source_start + match.start("filename"), match.end(
+            "filename"
+        ) - match.start("filename")
