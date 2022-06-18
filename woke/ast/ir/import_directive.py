@@ -1,13 +1,16 @@
+from __future__ import annotations
+
 import logging
 import re
 from pathlib import Path
-from typing import Tuple
+from typing import TYPE_CHECKING, Tuple
 
-from woke.compile.compilation_unit import CompilationUnit
+if TYPE_CHECKING:
+    from .source_unit import SourceUnit
 
 from ..nodes import SolcImportDirective
 from .abc import IrAbc
-from .utils import lazy_property
+from .utils import IrInitTuple, lazy_property
 
 logger = logging.getLogger(__name__)
 
@@ -38,18 +41,23 @@ IMPORT_ALIAS_LIST = re.compile(
 
 class ImportDirective(IrAbc):
     _ast_node: SolcImportDirective
+    _parent: SourceUnit
 
     __source_unit_name: str
     __import_string: str
     __imported_file: Path
 
     def __init__(
-        self, import_directive: SolcImportDirective, source: bytes, cu: CompilationUnit
+        self, init: IrInitTuple, import_directive: SolcImportDirective, parent: IrAbc
     ):
-        super().__init__(import_directive, source, cu)
+        super().__init__(init, import_directive, parent)
         self.__source_unit_name = import_directive.absolute_path
         self.__import_string = import_directive.file
-        self.__imported_file = cu.source_unit_name_to_path(self.__source_unit_name)
+        self.__imported_file = init.cu.source_unit_name_to_path(self.__source_unit_name)
+
+    @property
+    def parent(self) -> SourceUnit:
+        return self._parent
 
     @property
     def source_unit_name(self) -> str:

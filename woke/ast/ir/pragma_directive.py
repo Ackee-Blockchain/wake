@@ -1,22 +1,31 @@
-import logging
-from typing import List, Tuple
+from __future__ import annotations
 
-from woke.compile.compilation_unit import CompilationUnit
+import logging
+from typing import TYPE_CHECKING, List, Tuple
+
+if TYPE_CHECKING:
+    from .source_unit import SourceUnit
 
 from ..nodes import SolcPragmaDirective
 from .abc import IrAbc
+from .utils import IrInitTuple
 
 logger = logging.getLogger(__name__)
 
 
 class PragmaDirective(IrAbc):
     _ast_node: SolcPragmaDirective
+    _parent: SourceUnit
 
     __literals: List[str]
 
-    def __init__(self, pragma: SolcPragmaDirective, source: bytes, cu: CompilationUnit):
-        super().__init__(pragma, source, cu)
+    def __init__(self, init: IrInitTuple, pragma: SolcPragmaDirective, parent: IrAbc):
+        super().__init__(init, pragma, parent)
         self.__literals = list(pragma.literals)
+
+    @property
+    def parent(self) -> SourceUnit:
+        return self._parent
 
     @property
     def literals(self) -> Tuple[str]:
