@@ -8,9 +8,10 @@ from typing import TYPE_CHECKING, Tuple
 if TYPE_CHECKING:
     from .source_unit import SourceUnit
 
-from ..nodes import SolcImportDirective
-from .abc import IrAbc
-from .utils import IrInitTuple, lazy_property
+from woke.ast.nodes import SolcImportDirective
+
+from ..abc import IrAbc
+from ..utils import IrInitTuple, lazy_property
 
 logger = logging.getLogger(__name__)
 

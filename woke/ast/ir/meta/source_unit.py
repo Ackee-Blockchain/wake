@@ -1,17 +1,18 @@
 import logging
 from typing import List, Optional, Tuple
 
-from ..nodes import (
+from woke.ast.ir.abc import IrAbc
+from woke.ast.nodes import (
     SolcEnumDefinition,
     SolcImportDirective,
     SolcPragmaDirective,
     SolcSourceUnit,
 )
-from .abc import IrAbc
-from .enum_definition import EnumDefinition
+
+from ..declaration.enum_definition import EnumDefinition
+from ..utils import IrInitTuple
 from .import_directive import ImportDirective
 from .pragma_directive import PragmaDirective
-from .utils import IrInitTuple
 
 logger = logging.getLogger(__name__)
 

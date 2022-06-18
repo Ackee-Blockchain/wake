@@ -9,7 +9,7 @@ from pathlib import Path
 from threading import Thread
 from typing import Collection, Dict, List, Mapping, Set, Tuple, Union
 
-from woke.ast.ir.source_unit import SourceUnit
+from woke.ast.ir.meta.source_unit import SourceUnit
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import AstSolc
 from woke.compile import SolcOutput, SolcOutputSelectionEnum

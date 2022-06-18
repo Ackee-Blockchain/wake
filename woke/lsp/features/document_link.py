@@ -1,7 +1,6 @@
 import logging
 from typing import Any, List, Optional
 
-from woke.ast.ir.source_unit import SourceUnit
 from woke.lsp.common_structures import (
     DocumentUri,
     PartialResultParams,
@@ -73,7 +72,7 @@ def document_link(
         source_unit = context.compiler.source_units[path]
 
         for import_directive in source_unit.imports:
-            byte_offset, byte_length = import_directive.import_string_pos
+            byte_offset, byte_length = import_directive.import_string_pos  # type: ignore
             start_line, start_col = context.compiler.get_line_pos_from_byte_offset(
                 path, byte_offset
             )

@@ -4,11 +4,12 @@ import logging
 from typing import TYPE_CHECKING, List, Tuple
 
 if TYPE_CHECKING:
-    from .source_unit import SourceUnit
+    from woke.ast.ir.meta.source_unit import SourceUnit
 
-from ..nodes import SolcPragmaDirective
-from .abc import IrAbc
-from .utils import IrInitTuple
+from woke.ast.nodes import SolcPragmaDirective
+
+from ..abc import IrAbc
+from ..utils import IrInitTuple
 
 logger = logging.getLogger(__name__)
 
