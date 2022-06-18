@@ -1,8 +1,14 @@
 import logging
 from typing import List, Optional, Tuple
 
-from ..nodes import SolcImportDirective, SolcPragmaDirective, SolcSourceUnit
+from ..nodes import (
+    SolcEnumDefinition,
+    SolcImportDirective,
+    SolcPragmaDirective,
+    SolcSourceUnit,
+)
 from .abc import IrAbc
+from .enum_definition import EnumDefinition
 from .import_directive import ImportDirective
 from .pragma_directive import PragmaDirective
 from .utils import IrInitTuple
@@ -17,6 +23,7 @@ class SourceUnit(IrAbc):
     __source_unit_name: str
     __pragmas: List[PragmaDirective]
     __imports: List[ImportDirective]
+    __enums: List[EnumDefinition]
 
     def __init__(
         self,
@@ -29,11 +36,14 @@ class SourceUnit(IrAbc):
 
         self.__pragmas = []
         self.__imports = []
+        self.__enums = []
         for node in source_unit.nodes:
             if isinstance(node, SolcPragmaDirective):
                 self.__pragmas.append(PragmaDirective(init, node, self))
             elif isinstance(node, SolcImportDirective):
                 self.__imports.append(ImportDirective(init, node, self))
+            elif isinstance(node, SolcEnumDefinition):
+                self.__enums.append(EnumDefinition(init, node, self))
 
     @property
     def license(self) -> Optional[str]:
@@ -62,3 +72,10 @@ class SourceUnit(IrAbc):
         A tuple of import directives present in the file.
         """
         return tuple(self.__imports)
+
+    @property
+    def enums(self) -> Tuple[EnumDefinition]:
+        """
+        A tuple of enum definitions present in the file.
+        """
+        return tuple(self.__enums)
