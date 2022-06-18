@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, List, Tuple, Union
+from typing import List, Tuple
 
-from ..nodes import SolcEnumDefinition
-from .abc import IrAbc
+from woke.ast.nodes import SolcEnumDefinition
+
+from ..abc import IrAbc
+from ..utils import IrInitTuple
 from .enum_value import EnumValue
-from .utils import IrInitTuple
 
 # if TYPE_CHECKING:
 # from .contract_definition import ContractDefinition
