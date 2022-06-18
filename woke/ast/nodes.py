@@ -161,7 +161,7 @@ SolcStatementUnion = Annotated[
         "SolcReturn",
         "SolcRevertStatement",
         "SolcTryStatement",
-        # 'SolcUncheckedBlock',
+        "SolcUncheckedBlock",
         "SolcVariableDeclarationStatement",
         "SolcWhileStatement",
     ],
@@ -183,7 +183,7 @@ OptionalSolcStatementUnion = Annotated[
         "SolcReturn",
         "SolcRevertStatement",
         "SolcTryStatement",
-        # 'SolcUncheckedBlock',
+        "SolcUncheckedBlock",
         "SolcVariableDeclarationStatement",
         "SolcWhileStatement",
         None,
@@ -584,7 +584,6 @@ class SolcBlock(SolcNode):
     node_type: Literal["Block"] = Field(alias="nodeType")
     # required
     # optional
-    # TODO:
     documentation: Optional[StrictStr]
     statements: Optional[List[SolcStatementUnion]]
 
@@ -594,7 +593,6 @@ class SolcBreak(SolcNode):
     node_type: Literal["Break"] = Field(alias="nodeType")
     # required
     # optional
-    # TODO:
     documentation: Optional[StrictStr]
 
 
