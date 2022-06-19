@@ -1,4 +1,9 @@
-from typing import List, Optional, Tuple
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, List, Optional, Tuple
+
+if TYPE_CHECKING:
+    from ..meta.source_unit import SourceUnit
 
 from woke.ast.enums import ContractKind
 from woke.ast.ir.abc import IrAbc
@@ -12,7 +17,6 @@ from woke.ast.ir.declaration.user_defined_value_type_definition import (
     UserDefinedValueTypeDefinition,
 )
 from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
-from woke.ast.ir.meta.source_unit import SourceUnit
 from woke.ast.ir.meta.structured_documentation import StructuredDocumentation
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import (

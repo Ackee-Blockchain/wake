@@ -1,4 +1,10 @@
-from typing import List, Tuple
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, List, Tuple, Union
+
+if TYPE_CHECKING:
+    from .contract_definition import ContractDefinition
+    from ..meta.source_unit import SourceUnit
 
 from woke.ast.enums import Visibility
 from woke.ast.ir.abc import IrAbc
@@ -9,7 +15,7 @@ from woke.ast.nodes import SolcStructDefinition
 
 class StructDefinition(IrAbc):
     _ast_node: SolcStructDefinition
-    # _parent: Union[ContractDefinition, SourceUnit]
+    _parent: Union[ContractDefinition, SourceUnit]
 
     __name: str
     __canonical_name: str
@@ -28,6 +34,10 @@ class StructDefinition(IrAbc):
         self.__members = []
         for member in struct_definition.members:
             self.__members.append(VariableDeclaration(init, member, self))
+
+    @property
+    def parent(self) -> Union[ContractDefinition, SourceUnit]:
+        return self._parent
 
     @property
     def name(self) -> str:

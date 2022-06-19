@@ -1,4 +1,9 @@
-from typing import Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from .contract_definition import ContractDefinition
 
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.meta.parameter_list import ParameterList
@@ -9,7 +14,7 @@ from woke.ast.nodes import SolcEventDefinition
 
 class EventDefinition(IrAbc):
     _ast_node: SolcEventDefinition
-    # _parent: ContractDefinition
+    _parent: ContractDefinition
 
     __name: str
     __anonymous: bool
@@ -27,6 +32,10 @@ class EventDefinition(IrAbc):
             else None
         )
         # TODO event selector?
+
+    @property
+    def parent(self) -> ContractDefinition:
+        return self._parent
 
     @property
     def name(self) -> str:

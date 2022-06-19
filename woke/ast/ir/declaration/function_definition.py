@@ -1,4 +1,10 @@
-from typing import List, Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, List, Optional, Union
+
+if TYPE_CHECKING:
+    from .contract_definition import ContractDefinition
+    from ..meta.source_unit import SourceUnit
 
 from woke.ast.enums import FunctionKind, StateMutability, Visibility
 from woke.ast.ir.abc import IrAbc
@@ -10,7 +16,7 @@ from woke.ast.nodes import SolcFunctionDefinition
 
 class FunctionDefinition(IrAbc):
     _ast_node: SolcFunctionDefinition
-    # _parent: ContractDefinition
+    _parent: Union[ContractDefinition, SourceUnit]
 
     __name: str
     __implemented: bool
@@ -51,6 +57,10 @@ class FunctionDefinition(IrAbc):
         # self.__function_selector = function.function_selector
         # self.__body = Block(init, function.body, self) if function.body else None
         # self.__overrides = OverrideSpecifier(init, function.overrides, self) if function.overrides else None
+
+    @property
+    def parent(self) -> Union[ContractDefinition, SourceUnit]:
+        return self._parent
 
     @property
     def name(self) -> str:

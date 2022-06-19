@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import List, Tuple
+from typing import TYPE_CHECKING, List, Tuple, Union
 
 from woke.ast.nodes import SolcEnumDefinition
 
@@ -9,9 +9,9 @@ from ..abc import IrAbc
 from ..utils import IrInitTuple
 from .enum_value import EnumValue
 
-# if TYPE_CHECKING:
-# from .contract_definition import ContractDefinition
-# from .source_unit import SourceUnit
+if TYPE_CHECKING:
+    from ..meta.source_unit import SourceUnit
+    from .contract_definition import ContractDefinition
 
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 class EnumDefinition(IrAbc):
     _ast_node: SolcEnumDefinition
-    # _parent: Union[ContractDefinition, SourceUnit]
+    _parent: Union[ContractDefinition, SourceUnit]
 
     __name: str
     __canonical_name: str
@@ -34,9 +34,9 @@ class EnumDefinition(IrAbc):
         for value in enum.members:
             self.__values.append(EnumValue(init, value, self))
 
-    # @property
-    # def parent(self) -> Union[SourceUnit, ContractDefinition]:
-    # return self._parent
+    @property
+    def parent(self) -> Union[SourceUnit, ContractDefinition]:
+        return self._parent
 
     @property
     def name(self) -> str:
