@@ -271,7 +271,7 @@ class TypeDescriptionsModel(AstModel):
 class SymbolAliasModel(AstModel):  # helper class
     foreign: "SolcIdentifier"
     local: Optional[StrictStr]
-    name_location: Optional[StrictStr]  # since 0.8.2
+    name_location: Optional[StrictStr]  # new in 0.8.2
 
 
 # InlineAssembly
@@ -369,7 +369,7 @@ class SolcImportDirective(SolcNode):
     symbol_aliases: List[SymbolAliasModel]
     unit_alias: StrictStr
     # optional
-    name_location: Optional[StrictStr]  # since 0.8.2
+    name_location: Optional[StrictStr]  # new in 0.8.2
 
 
 class SolcVariableDeclaration(SolcNode):
@@ -378,20 +378,23 @@ class SolcVariableDeclaration(SolcNode):
     node_type: Literal["VariableDeclaration"] = Field(alias="nodeType")
     name: StrictStr
     constant: StrictBool
-    mutability: Mutability
     scope: AstNodeId
     state_variable: StrictBool
     storage_location: StorageLocation
     type_descriptions: "TypeDescriptionsModel"
     visibility: Visibility
     # optional
-    name_location: Optional[StrictStr]  # since 0.8.2
+    name_location: Optional[StrictStr]  # new in 0.8.2
+    # immutable is new in 0.6.5 but `mutability` field is set in >=0.6.6
+    # in 0.6.5 `mutability` field is not exported for immutable variables because of a bug
+    # constant variables were distinguished by `constant` field in versions <= 0.6.5 (this field is still present in newer versions)
+    mutability: Optional[Mutability]
     base_functions: Optional[List[AstNodeId]]
     documentation: Optional["SolcStructuredDocumentation"]
     function_selector: Optional[StrictStr]
     indexed: Optional[StrictBool]
     overrides: Optional["SolcOverrideSpecifier"]
-    type_name: OptionalSolcTypeNameUnion
+    type_name: OptionalSolcTypeNameUnion  # is None only for <0.5.0 where `var` keyword was supported
     value: OptionalSolcExpressionUnion
 
 
@@ -403,7 +406,7 @@ class SolcEnumDefinition(SolcNode):
     canonical_name: StrictStr
     members: List["SolcEnumValue"]
     # optional
-    name_location: Optional[StrictStr]  # since 0.8.2
+    name_location: Optional[StrictStr]  # new in 0.8.2
 
 
 class SolcFunctionDefinition(SolcNode):
@@ -421,7 +424,7 @@ class SolcFunctionDefinition(SolcNode):
     virtual: StrictBool
     visibility: Visibility
     # optional
-    name_location: Optional[StrictStr]  # since 0.8.2
+    name_location: Optional[StrictStr]  # new in 0.8.2
     base_functions: Optional[List[AstNodeId]]
     documentation: Optional["SolcStructuredDocumentation"]
     function_selector: Optional[StrictStr]
@@ -439,9 +442,10 @@ class SolcStructDefinition(SolcNode):
     scope: AstNodeId
     visibility: Visibility
     # optional
-    name_location: Optional[StrictStr]  # since 0.8.2
+    name_location: Optional[StrictStr]  # new in 0.8.2
 
 
+# new in 0.8.4
 class SolcErrorDefinition(SolcNode):
     # override alias
     node_type: Literal["ErrorDefinition"] = Field(alias="nodeType")
@@ -453,6 +457,7 @@ class SolcErrorDefinition(SolcNode):
     documentation: Optional["SolcStructuredDocumentation"]
 
 
+# new in 0.8.0
 class SolcUserDefinedValueTypeDefinition(SolcNode):
     # override alias
     node_type: Literal["UserDefinedValueTypeDefinition"] = Field(alias="nodeType")
@@ -460,8 +465,10 @@ class SolcUserDefinedValueTypeDefinition(SolcNode):
     name: StrictStr
     underlying_type: SolcTypeNameUnion
     # optional
-    name_location: Optional[StrictStr]  # since 0.8.2
-    canonical_name: Optional[StrictStr]
+    name_location: Optional[StrictStr]  # new in 0.8.2
+    canonical_name: Optional[
+        StrictStr
+    ]  # should be present but because of a bug it is exported in >=0.8.9
 
 
 class SolcContractDefinition(SolcNode):
@@ -478,10 +485,12 @@ class SolcContractDefinition(SolcNode):
     nodes: List[SolcContractMemberUnion]
     scope: AstNodeId
     # optional
-    name_location: Optional[StrictStr]  # since 0.8.2
-    canonical_name: Optional[StrictStr]
+    name_location: Optional[StrictStr]  # new in 0.8.2
+    canonical_name: Optional[
+        StrictStr
+    ]  # should be present but because of a bug it is exported in >=0.8.9
     documentation: Optional["SolcStructuredDocumentation"]
-    used_errors: Optional[List[AstNodeId]]
+    used_errors: Optional[List[AstNodeId]]  # new in 0.8.4
 
 
 class SolcEventDefinition(SolcNode):
@@ -492,7 +501,7 @@ class SolcEventDefinition(SolcNode):
     anonymous: StrictBool
     parameters: "SolcParameterList"
     # optional
-    name_location: Optional[StrictStr]  # since 0.8.2
+    name_location: Optional[StrictStr]  # new in 0.8.2
     documentation: Optional["SolcStructuredDocumentation"]
     event_selector: Optional[
         str
@@ -509,7 +518,7 @@ class SolcModifierDefinition(SolcNode):
     virtual: StrictBool
     visibility: Visibility
     # optional
-    name_location: Optional[StrictStr]  # since 0.8.2
+    name_location: Optional[StrictStr]  # new in 0.8.2
     base_modifiers: Optional[List[AstNodeId]]
     documentation: Optional["SolcStructuredDocumentation"]
     overrides: Optional["SolcOverrideSpecifier"]
@@ -704,6 +713,7 @@ class SolcTryStatement(SolcNode):
     documentation: Optional[StrictStr]
 
 
+# new in 0.8.0
 class SolcUncheckedBlock(SolcNode):
     # override alias
     node_type: Literal["UncheckedBlock"] = Field(alias="nodeType")
@@ -885,7 +895,7 @@ class SolcLiteral(SolcNode):
     l_value_requested: StrictBool
     type_descriptions: TypeDescriptionsModel
     hex_value: StrictStr
-    kind: LiteralKind
+    kind: LiteralKind  # hexString new in 0.7.0, prior to 0.7.0 hex strings were marked as strings
     # optional
     argument_types: Optional[List[TypeDescriptionsModel]]
     subdenomination: Optional[StrictStr]  # can be for example "days" or "ether"
@@ -905,7 +915,9 @@ class SolcMemberAccess(SolcNode):
     member_name: StrictStr
     # optional
     argument_types: Optional[List[TypeDescriptionsModel]]
-    referenced_declaration: Optional[AstNodeId]
+    referenced_declaration: Optional[
+        AstNodeId
+    ]  # because of a bug this is None for enum value access in versions prior to 0.8.2
 
 
 class SolcNewExpression(SolcNode):
@@ -961,6 +973,7 @@ class SolcOverrideSpecifier(SolcNode):
     # optional
 
 
+# new in 0.8.0 to replace SolcUserDefinedTypeName in many places
 class SolcIdentifierPath(SolcNode):
     node_type: Literal["IdentifierPath"] = Field(alias="nodeType")
     # required
@@ -1001,7 +1014,7 @@ class SolcEnumValue(SolcNode):
     # required
     name: StrictStr
     # optional
-    name_location: Optional[StrictStr]  # since 0.8.2
+    name_location: Optional[StrictStr]  # new in 0.8.2
 
 
 class SolcInheritanceSpecifier(SolcNode):
@@ -1020,7 +1033,9 @@ class SolcModifierInvocation(SolcNode):
     modifier_name: ModifierName
     # optional
     arguments: Optional[List[SolcExpressionUnion]]
-    kind: Optional[ModifierInvocationKind]
+    kind: Optional[
+        ModifierInvocationKind
+    ]  # new in 0.8.3, fixed in 0.8.4 for base constructor calls
 
 
 class YulAssignment(YulNode):
@@ -1143,7 +1158,7 @@ class YulLiteral(YulNode):
     type: StrictStr
     # at least one of these should be set
     value: Optional[StrictStr]
-    hex_value: Optional[StrictStr]
+    hex_value: Optional[StrictStr]  # sice 0.8.5
 
     @root_validator
     def value_or_hex_value_set(cls, values):
