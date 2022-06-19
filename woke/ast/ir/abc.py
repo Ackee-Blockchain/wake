@@ -3,7 +3,12 @@ from pathlib import Path
 from typing import Optional
 
 from woke.ast.ir.utils.init_tuple import IrInitTuple
-from woke.ast.nodes import SolcNode
+from woke.ast.nodes import (
+    SolcExpressionUnion,
+    SolcNode,
+    SolcStatementUnion,
+    SolcTypeNameUnion,
+)
 
 
 class IrAbc(ABC):
@@ -35,3 +40,51 @@ class IrAbc(ABC):
     @property
     def ast_tree_depth(self) -> int:
         return self._depth
+
+
+class TypeNameAbc(IrAbc):
+    _type_identifier: Optional[str]
+    _type_string: Optional[str]
+
+    def __init__(self, init: IrInitTuple, type_name: SolcTypeNameUnion, parent: IrAbc):
+        super().__init__(init, type_name, parent)
+        self._type_identifier = type_name.type_descriptions.type_identifier
+        self._type_string = type_name.type_descriptions.type_string
+
+    @staticmethod
+    def from_ast(
+        init: IrInitTuple, type_name: SolcTypeNameUnion, parent: IrAbc
+    ) -> "TypeNameAbc":
+        ...
+
+    @property
+    def type_identifier(self) -> Optional[str]:
+        return self._type_identifier
+
+    @property
+    def type_string(self) -> Optional[str]:
+        return self._type_string
+
+
+class ExpressionAbc(IrAbc):
+    def __init__(
+        self, init: IrInitTuple, expression: SolcExpressionUnion, parent: IrAbc
+    ):
+        super().__init__(init, expression, parent)
+
+    @staticmethod
+    def from_ast(
+        init: IrInitTuple, expression: SolcExpressionUnion, parent: IrAbc
+    ) -> "ExpressionAbc":
+        ...
+
+
+class StatementAbc(IrAbc):
+    def __init__(self, init: IrInitTuple, statement: SolcStatementUnion, parent: IrAbc):
+        super().__init__(init, statement, parent)
+
+    @staticmethod
+    def from_ast(
+        init: IrInitTuple, statement: SolcStatementUnion, parent: IrAbc
+    ) -> "StatementAbc":
+        ...
