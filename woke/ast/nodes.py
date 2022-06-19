@@ -572,7 +572,7 @@ class SolcMapping(SolcNode):
     # required
     type_descriptions: TypeDescriptionsModel
     key_type: SolcTypeNameUnion
-    value_Type: SolcTypeNameUnion
+    value_type: SolcTypeNameUnion
     # optional
 
 
