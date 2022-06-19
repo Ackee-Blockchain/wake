@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List, Optional, Tuple
 
+from ..meta.using_for_directive import UsingForDirective
+
 if TYPE_CHECKING:
     from ..meta.source_unit import SourceUnit
 
@@ -54,7 +56,7 @@ class ContractDefinition(IrAbc):
     __modifiers: List[ModifierDefinition]
     __structs: List[StructDefinition]
     __user_defined_value_types: List[UserDefinedValueTypeDefinition]
-    # __using_for_directives: List[UsingForDirective]
+    __using_for_directives: List[UsingForDirective]
     __declared_variables: List[VariableDeclaration]
 
     def __init__(
@@ -78,7 +80,7 @@ class ContractDefinition(IrAbc):
         self.__modifiers = []
         self.__structs = []
         self.__user_defined_value_types = []
-        # self.__using_for_directives = []
+        self.__using_for_directives = []
         self.__declared_variables = []
 
         for node in contract.nodes:
@@ -98,8 +100,8 @@ class ContractDefinition(IrAbc):
                 self.__user_defined_value_types.append(
                     UserDefinedValueTypeDefinition(init, node, self)
                 )
-            # elif isinstance(node, SolcUsingForDirective):
-            # self.__using_for_directives.append(UsingForDirective(init, node, self))
+            elif isinstance(node, SolcUsingForDirective):
+                self.__using_for_directives.append(UsingForDirective(init, node, self))
             elif isinstance(node, SolcVariableDeclaration):
                 self.__declared_variables.append(VariableDeclaration(init, node, self))
 
@@ -155,9 +157,9 @@ class ContractDefinition(IrAbc):
     def user_defined_value_types(self) -> Tuple[UserDefinedValueTypeDefinition]:
         return tuple(self.__user_defined_value_types)
 
-    # @property
-    # def using_for_directives(self) -> Tuple[UsingForDirective]:
-    # return tuple(self.__using_for_directives)
+    @property
+    def using_for_directives(self) -> Tuple[UsingForDirective]:
+        return tuple(self.__using_for_directives)
 
     @property
     def declared_variables(self) -> Tuple[VariableDeclaration]:
