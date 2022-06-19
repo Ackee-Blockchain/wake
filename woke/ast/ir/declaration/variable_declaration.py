@@ -19,7 +19,6 @@ from woke.ast.nodes import SolcVariableDeclaration
 # from .variable_declaration_statement import VariableDeclarationStatement
 
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -29,7 +28,7 @@ class VariableDeclaration(IrAbc):
 
     __name: str
     __constant: bool
-    __mutability: Mutability
+    __mutability: Optional[Mutability]
     __state_variable: bool
     __storage_location: StorageLocation
     __visibility: Visibility
@@ -97,7 +96,7 @@ class VariableDeclaration(IrAbc):
         return self.__constant
 
     @property
-    def mutability(self) -> Mutability:
+    def mutability(self) -> Optional[Mutability]:
         return self.__mutability
 
     @property
