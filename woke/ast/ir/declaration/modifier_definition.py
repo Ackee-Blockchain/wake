@@ -1,4 +1,9 @@
-from typing import Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from .contract_definition import ContractDefinition
 
 from woke.ast.enums import Visibility
 from woke.ast.ir.abc import IrAbc
@@ -10,7 +15,7 @@ from woke.ast.nodes import SolcModifierDefinition
 
 class ModifierDefinition(IrAbc):
     _ast_node: SolcModifierDefinition
-    # _parent: ContractDefinition
+    _parent: ContractDefinition
 
     __name: str
     # __body: Block
@@ -37,6 +42,10 @@ class ModifierDefinition(IrAbc):
             else None
         )
         # self.__overrides = OverrideSpecifier(init, modifier.overrides, self) if modifier.overrides else None
+
+    @property
+    def parent(self) -> ContractDefinition:
+        return self._parent
 
     @property
     def name(self) -> str:
