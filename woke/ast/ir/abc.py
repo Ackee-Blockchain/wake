@@ -4,10 +4,15 @@ from typing import Optional
 
 from woke.ast.ir.utils.init_tuple import IrInitTuple
 from woke.ast.nodes import (
+    SolcArrayTypeName,
+    SolcElementaryTypeName,
     SolcExpressionUnion,
+    SolcFunctionTypeName,
+    SolcMapping,
     SolcNode,
     SolcStatementUnion,
     SolcTypeNameUnion,
+    SolcUserDefinedTypeName,
 )
 
 
@@ -55,7 +60,18 @@ class TypeNameAbc(IrAbc):
     def from_ast(
         init: IrInitTuple, type_name: SolcTypeNameUnion, parent: IrAbc
     ) -> "TypeNameAbc":
-        ...
+        import woke.ast.ir.type_name as ir_type_name
+
+        if isinstance(type_name, SolcArrayTypeName):
+            return ir_type_name.ArrayTypeName(init, type_name, parent)
+        elif isinstance(type_name, SolcElementaryTypeName):
+            return ir_type_name.ElementaryTypeName(init, type_name, parent)
+        elif isinstance(type_name, SolcFunctionTypeName):
+            return ir_type_name.FunctionTypeName(init, type_name, parent)
+        elif isinstance(type_name, SolcMapping):
+            return ir_type_name.Mapping(init, type_name, parent)
+        elif isinstance(type_name, SolcUserDefinedTypeName):
+            return ir_type_name.UserDefinedTypeName(init, type_name, parent)
 
     @property
     def type_identifier(self) -> Optional[str]:
