@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List, Optional, Tuple
 
+from ..meta.inheritance_specifier import InheritanceSpecifier
 from ..meta.using_for_directive import UsingForDirective
 
 if TYPE_CHECKING:
@@ -41,7 +42,7 @@ class ContractDefinition(IrAbc):
 
     __name: str
     __abstract: bool
-    # __base_contracts: List[InheritanceSpecifier]
+    __base_contracts: List[InheritanceSpecifier]
     # ___dependencies
     __kind: ContractKind
     __fully_implemented: bool
@@ -72,6 +73,12 @@ class ContractDefinition(IrAbc):
             if contract.documentation
             else None
         )
+
+        self.__base_contracts = []
+        for base_contract in contract.base_contracts:
+            self.__base_contracts.append(
+                InheritanceSpecifier(init, base_contract, self)
+            )
 
         self.__enums = []
         self.__errors = []
@@ -116,6 +123,10 @@ class ContractDefinition(IrAbc):
     @property
     def abstract(self) -> bool:
         return self.__abstract
+
+    @property
+    def base_contracts(self) -> Tuple[InheritanceSpecifier]:
+        return tuple(self.__base_contracts)
 
     @property
     def kind(self) -> ContractKind:
