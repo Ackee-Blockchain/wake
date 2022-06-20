@@ -1,14 +1,14 @@
 import re
-from typing import Dict, List, Match, Optional, Union
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field, StrictBool, StrictInt, StrictStr
-from pydantic.class_validators import root_validator, validator
-from pydantic.dataclasses import dataclass
+from pydantic.class_validators import root_validator
 from typing_extensions import Annotated, Literal
 
 from .enums import *
 
-REGEX_SRC = re.compile(r"(\d+):(\d+):(\d+)")
+REGEX_SRC = re.compile(r"(-?\d+):(-?\d+):(-?\d+)")
 PYDANTIC_CONFIG_EXTRA = "forbid"
 PYDANTIC_CONFIG_ALLOW_MUTATION = False
 
@@ -142,6 +142,7 @@ OptionalSolcInitExprUnion = Annotated[
     Union[
         "SolcExpressionStatement",
         "SolcVariableDeclarationStatement",
+        None,
     ],
     Field(discriminator="node_type"),
 ]
@@ -263,6 +264,28 @@ class AstNodeId(int):
         return f"AstNodeId({self})"
 
 
+@dataclass
+class Src:
+    byte_offset: int
+    byte_length: int
+    file_id: int
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v):
+        if not isinstance(v, str):
+            raise TypeError(f"{cls.__name__} must be a str")
+        match = re.search(REGEX_SRC, v)
+        assert (
+            match
+        ), f"Src must be in the format '<byte_offset>:<byte_length>:<file_id>': {v}"
+        [m1, m2, m3] = [int(match.group(i)) for i in range(1, 4)]
+        return Src(byte_offset=m1, byte_length=m2, file_id=m3)
+
+
 class TypeDescriptionsModel(AstModel):
     type_identifier: Optional[StrictStr]
     type_string: Optional[StrictStr]
@@ -271,7 +294,7 @@ class TypeDescriptionsModel(AstModel):
 class SymbolAliasModel(AstModel):  # helper class
     foreign: "SolcIdentifier"
     local: Optional[StrictStr]
-    name_location: Optional[StrictStr]  # new in 0.8.2
+    name_location: Optional[Src]  # new in 0.8.2
 
 
 # InlineAssembly
@@ -284,33 +307,8 @@ class ExternalReferenceModel(AstModel):  # helper class
     suffix: Optional[InlineAssemblySuffix]
 
 
-@dataclass
-class Src:
-    byte_offset: int
-    byte_length: int
-    file_id: int
-
-    def __eq__(self, other):
-        return (
-            self.byte_offset == other.byte_offset
-            and self.byte_length == other.byte_length
-        )
-
-
 class SolcOrYulNode(AstModel):
     src: Src
-
-    @validator("src", pre=True)
-    def parse_src(cls, src: Union[StrictStr, Src]) -> Src:
-        if isinstance(src, Src):
-            return src
-        if not isinstance(src, str):
-            raise TypeError(f"src must be a string or NodeSrc")
-
-        res = re.search(REGEX_SRC, src)
-        assert isinstance(res, Match), "Bad src"
-        [m1, m2, m3] = [int(res.group(i)) for i in range(1, 4)]
-        return Src(byte_offset=m1, byte_length=m2, file_id=m3)
 
 
 class SolcNode(SolcOrYulNode):
@@ -369,7 +367,7 @@ class SolcImportDirective(SolcNode):
     symbol_aliases: List[SymbolAliasModel]
     unit_alias: StrictStr
     # optional
-    name_location: Optional[StrictStr]  # new in 0.8.2
+    name_location: Optional[Src]  # new in 0.8.2
 
 
 class SolcVariableDeclaration(SolcNode):
@@ -384,7 +382,7 @@ class SolcVariableDeclaration(SolcNode):
     type_descriptions: "TypeDescriptionsModel"
     visibility: Visibility
     # optional
-    name_location: Optional[StrictStr]  # new in 0.8.2
+    name_location: Optional[Src]  # new in 0.8.2
     # immutable is new in 0.6.5 but `mutability` field is set in >=0.6.6
     # in 0.6.5 `mutability` field is not exported for immutable variables because of a bug
     # constant variables were distinguished by `constant` field in versions <= 0.6.5 (this field is still present in newer versions)
@@ -406,7 +404,7 @@ class SolcEnumDefinition(SolcNode):
     canonical_name: StrictStr
     members: List["SolcEnumValue"]
     # optional
-    name_location: Optional[StrictStr]  # new in 0.8.2
+    name_location: Optional[Src]  # new in 0.8.2
 
 
 class SolcFunctionDefinition(SolcNode):
@@ -424,7 +422,7 @@ class SolcFunctionDefinition(SolcNode):
     virtual: StrictBool
     visibility: Visibility
     # optional
-    name_location: Optional[StrictStr]  # new in 0.8.2
+    name_location: Optional[Src]  # new in 0.8.2
     base_functions: Optional[List[AstNodeId]]
     documentation: Optional["SolcStructuredDocumentation"]
     function_selector: Optional[StrictStr]
@@ -442,7 +440,7 @@ class SolcStructDefinition(SolcNode):
     scope: AstNodeId
     visibility: Visibility
     # optional
-    name_location: Optional[StrictStr]  # new in 0.8.2
+    name_location: Optional[Src]  # new in 0.8.2
 
 
 # new in 0.8.4
@@ -451,7 +449,7 @@ class SolcErrorDefinition(SolcNode):
     node_type: Literal["ErrorDefinition"] = Field(alias="nodeType")
     # required
     name: StrictStr
-    name_location: StrictStr
+    name_location: Src
     parameters: "SolcParameterList"
     # optional
     documentation: Optional["SolcStructuredDocumentation"]
@@ -465,7 +463,7 @@ class SolcUserDefinedValueTypeDefinition(SolcNode):
     name: StrictStr
     underlying_type: SolcTypeNameUnion
     # optional
-    name_location: Optional[StrictStr]  # new in 0.8.2
+    name_location: Optional[Src]  # new in 0.8.2
     canonical_name: Optional[
         StrictStr
     ]  # should be present but because of a bug it is exported in >=0.8.9
@@ -485,7 +483,7 @@ class SolcContractDefinition(SolcNode):
     nodes: List[SolcContractMemberUnion]
     scope: AstNodeId
     # optional
-    name_location: Optional[StrictStr]  # new in 0.8.2
+    name_location: Optional[Src]  # new in 0.8.2
     canonical_name: Optional[
         StrictStr
     ]  # should be present but because of a bug it is exported in >=0.8.9
@@ -501,7 +499,7 @@ class SolcEventDefinition(SolcNode):
     anonymous: StrictBool
     parameters: "SolcParameterList"
     # optional
-    name_location: Optional[StrictStr]  # new in 0.8.2
+    name_location: Optional[Src]  # new in 0.8.2
     documentation: Optional["SolcStructuredDocumentation"]
     event_selector: Optional[
         str
@@ -518,7 +516,7 @@ class SolcModifierDefinition(SolcNode):
     virtual: StrictBool
     visibility: Visibility
     # optional
-    name_location: Optional[StrictStr]  # new in 0.8.2
+    name_location: Optional[Src]  # new in 0.8.2
     base_modifiers: Optional[List[AstNodeId]]
     documentation: Optional["SolcStructuredDocumentation"]
     overrides: Optional["SolcOverrideSpecifier"]
@@ -1014,7 +1012,7 @@ class SolcEnumValue(SolcNode):
     # required
     name: StrictStr
     # optional
-    name_location: Optional[StrictStr]  # new in 0.8.2
+    name_location: Optional[Src]  # new in 0.8.2
 
 
 class SolcInheritanceSpecifier(SolcNode):
