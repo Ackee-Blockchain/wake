@@ -33,10 +33,12 @@ class IrAbc(ABC):
             self._depth = self._parent.ast_tree_depth + 1
         else:
             self._depth = 0
-        self._source = init.source[
-            solc_node.src.byte_offset : solc_node.src.byte_offset
-            + solc_node.src.byte_length
-        ]
+
+        source_start = solc_node.src.byte_offset
+        source_end = source_start + solc_node.src.byte_length
+        self._source = init.source[source_start:source_end]
+        if source_start != source_end:
+            init.interval_tree[source_start:source_end] = self
 
     @property
     def file(self) -> Path:
