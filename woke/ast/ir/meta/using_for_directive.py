@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Union
 
 from woke.ast.ir.meta.identifier_path import IdentifierPath
-from woke.ast.ir.type_name import UserDefinedTypeName
+from woke.ast.ir.type_name.user_defined_type_name import UserDefinedTypeName
 from woke.ast.ir.utils import IrInitTuple
 
 if TYPE_CHECKING:

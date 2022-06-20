@@ -62,18 +62,22 @@ class TypeNameAbc(IrAbc):
     def from_ast(
         init: IrInitTuple, type_name: SolcTypeNameUnion, parent: IrAbc
     ) -> "TypeNameAbc":
-        import woke.ast.ir.type_name as ir_type_name
+        from woke.ast.ir.type_name.array_type_name import ArrayTypeName
+        from woke.ast.ir.type_name.elementary_type_name import ElementaryTypeName
+        from woke.ast.ir.type_name.function_type_name import FunctionTypeName
+        from woke.ast.ir.type_name.mapping import Mapping
+        from woke.ast.ir.type_name.user_defined_type_name import UserDefinedTypeName
 
         if isinstance(type_name, SolcArrayTypeName):
-            return ir_type_name.ArrayTypeName(init, type_name, parent)
+            return ArrayTypeName(init, type_name, parent)
         elif isinstance(type_name, SolcElementaryTypeName):
-            return ir_type_name.ElementaryTypeName(init, type_name, parent)
+            return ElementaryTypeName(init, type_name, parent)
         elif isinstance(type_name, SolcFunctionTypeName):
-            return ir_type_name.FunctionTypeName(init, type_name, parent)
+            return FunctionTypeName(init, type_name, parent)
         elif isinstance(type_name, SolcMapping):
-            return ir_type_name.Mapping(init, type_name, parent)
+            return Mapping(init, type_name, parent)
         elif isinstance(type_name, SolcUserDefinedTypeName):
-            return ir_type_name.UserDefinedTypeName(init, type_name, parent)
+            return UserDefinedTypeName(init, type_name, parent)
 
     @property
     def type_identifier(self) -> Optional[str]:
