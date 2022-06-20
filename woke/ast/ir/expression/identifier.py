@@ -1,6 +1,7 @@
 from typing import List, Optional, Tuple
 
 from woke.ast.ir.abc import ExpressionAbc, IrAbc
+from woke.ast.ir.declaration.abc import DeclarationAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import AstNodeId, SolcIdentifier
 
@@ -35,9 +36,11 @@ class Identifier(ExpressionAbc):
         )
 
     @property
-    def referenced_declaration(self) -> Optional[IrAbc]:
+    def referenced_declaration(self) -> Optional[DeclarationAbc]:
         if self.__referenced_declaration is None:
             return None
-        return self._reference_resolver.resolve_node(
+        node = self._reference_resolver.resolve_node(
             self.__referenced_declaration, self._cu_hash
         )
+        assert isinstance(node, DeclarationAbc)
+        return node

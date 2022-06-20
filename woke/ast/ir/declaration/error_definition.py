@@ -8,13 +8,14 @@ from woke.ast.nodes import SolcErrorDefinition
 
 from ..meta.parameter_list import ParameterList
 from ..meta.structured_documentation import StructuredDocumentation
+from .abc import DeclarationAbc
 
 if TYPE_CHECKING:
     from ..meta.source_unit import SourceUnit
     from .contract_definition import ContractDefinition
 
 
-class ErrorDefinition(IrAbc):
+class ErrorDefinition(DeclarationAbc):
     _ast_node: SolcErrorDefinition
     _parent: Union[ContractDefinition, SourceUnit]
 
@@ -35,10 +36,6 @@ class ErrorDefinition(IrAbc):
     @property
     def parent(self) -> Union[ContractDefinition, SourceUnit]:
         return self._parent
-
-    @property
-    def name(self) -> str:
-        return self.__name
 
     @property
     def parameters(self) -> ParameterList:

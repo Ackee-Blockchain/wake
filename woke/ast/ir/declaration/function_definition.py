@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List, Optional, Union
 
+from .abc import DeclarationAbc
+
 if TYPE_CHECKING:
     from .contract_definition import ContractDefinition
     from ..meta.source_unit import SourceUnit
@@ -14,11 +16,10 @@ from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcFunctionDefinition
 
 
-class FunctionDefinition(IrAbc):
+class FunctionDefinition(DeclarationAbc):
     _ast_node: SolcFunctionDefinition
     _parent: Union[ContractDefinition, SourceUnit]
 
-    __name: str
     __implemented: bool
     __kind: FunctionKind
     # __modifiers: List[ModifierInvocation]
@@ -61,10 +62,6 @@ class FunctionDefinition(IrAbc):
     @property
     def parent(self) -> Union[ContractDefinition, SourceUnit]:
         return self._parent
-
-    @property
-    def name(self) -> str:
-        return self.__name
 
     @property
     def implemented(self) -> bool:

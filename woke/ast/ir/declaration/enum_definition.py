@@ -7,6 +7,7 @@ from woke.ast.nodes import SolcEnumDefinition
 
 from ..abc import IrAbc
 from ..utils import IrInitTuple
+from .abc import DeclarationAbc
 from .enum_value import EnumValue
 
 if TYPE_CHECKING:
@@ -17,11 +18,10 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class EnumDefinition(IrAbc):
+class EnumDefinition(DeclarationAbc):
     _ast_node: SolcEnumDefinition
     _parent: Union[ContractDefinition, SourceUnit]
 
-    __name: str
     __canonical_name: str
     __values: List[EnumValue]
 
@@ -37,10 +37,6 @@ class EnumDefinition(IrAbc):
     @property
     def parent(self) -> Union[SourceUnit, ContractDefinition]:
         return self._parent
-
-    @property
-    def name(self) -> str:
-        return self.__name
 
     @property
     def canonical_name(self) -> str:

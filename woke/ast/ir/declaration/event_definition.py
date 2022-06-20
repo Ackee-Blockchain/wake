@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Optional
 
+from .abc import DeclarationAbc
+
 if TYPE_CHECKING:
     from .contract_definition import ContractDefinition
 
@@ -12,7 +14,7 @@ from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcEventDefinition
 
 
-class EventDefinition(IrAbc):
+class EventDefinition(DeclarationAbc):
     _ast_node: SolcEventDefinition
     _parent: ContractDefinition
 
@@ -36,10 +38,6 @@ class EventDefinition(IrAbc):
     @property
     def parent(self) -> ContractDefinition:
         return self._parent
-
-    @property
-    def name(self) -> str:
-        return self.__name
 
     @property
     def anonymous(self) -> bool:

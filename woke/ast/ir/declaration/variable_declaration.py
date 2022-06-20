@@ -7,6 +7,7 @@ from woke.ast.enums import Mutability, StorageLocation, Visibility
 from woke.ast.ir.abc import ExpressionAbc, IrAbc, TypeNameAbc
 
 # from woke.ast.ir.meta.override_specifier import OverrideSpecifier
+from woke.ast.ir.declaration.abc import DeclarationAbc
 from woke.ast.ir.meta.structured_documentation import StructuredDocumentation
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcVariableDeclaration
@@ -22,11 +23,10 @@ from woke.ast.nodes import SolcVariableDeclaration
 logger = logging.getLogger(__name__)
 
 
-class VariableDeclaration(IrAbc):
+class VariableDeclaration(DeclarationAbc):
     _ast_node: SolcVariableDeclaration
     # _parent: Union[ContractDefinition, ParameterList, SourceUnit, StructDefinition, VariableDeclarationStatement]
 
-    __name: str
     __constant: bool
     __mutability: Optional[Mutability]
     __state_variable: bool
@@ -86,10 +86,6 @@ class VariableDeclaration(IrAbc):
     # @property
     # def parent(self) -> Union[ContractDefinition, ParameterList, SourceUnit, StructDefinition, VariableDeclarationStatement]:
     # return self._parent
-
-    @property
-    def name(self) -> str:
-        return self.__name
 
     @property
     def constant(self) -> bool:
