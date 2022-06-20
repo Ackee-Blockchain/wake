@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List, Optional, Union
 
-from ..type_name import UserDefinedTypeName
+from ..type_name.user_defined_type_name import UserDefinedTypeName
 from ..utils import IrInitTuple
 from .identifier_path import IdentifierPath
 
