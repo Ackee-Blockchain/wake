@@ -14,6 +14,7 @@ install_requires = [
     "eth-brownie >= 1.16",
     "tblib >= 1.7.0, < 2",
     "ipdb",
+    "intervaltree >= 3.1",
 ]
 
 # Also: [pyright](https://github.com/microsoft/pyright/) (distributed through npm)

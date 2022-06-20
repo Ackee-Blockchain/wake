@@ -9,6 +9,8 @@ from pathlib import Path
 from threading import Thread
 from typing import Collection, Dict, List, Mapping, Set, Tuple, Union
 
+from intervaltree import IntervalTree
+
 from woke.ast.ir.meta.source_unit import SourceUnit
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import AstSolc
@@ -63,6 +65,7 @@ class LspCompiler:
     __output_contents: Dict[Path, str]
     __errors: Set[SolcOutputError]
     __asts: Dict[Path, AstSolc]
+    __interval_trees: Dict[Path, IntervalTree]
     __source_units: Dict[Path, SourceUnit]
     __line_indexes: Dict[Path, List[Tuple[bytes, int]]]
 
@@ -77,6 +80,7 @@ class LspCompiler:
         self.__modified_files = set()
         self.__compiler = SolidityCompiler(config)
         self.__asts = {}
+        self.__interval_trees = {}
         self.__errors = set()
         self.__source_units = {}
         self.__line_indexes = {}
@@ -91,6 +95,10 @@ class LspCompiler:
     @property
     def asts(self) -> Dict[Path, AstSolc]:
         return self.__asts
+
+    @property
+    def interval_trees(self) -> Dict[Path, IntervalTree]:
+        return self.__interval_trees
 
     @property
     def errors(self) -> Set[SolcOutputError]:
@@ -135,6 +143,15 @@ class LspCompiler:
         line_offset = byte_offset - prefix_sum
         return line_num, line_offset
 
+    def get_byte_offset_from_line_pos(self, file: Path, line: int, col: int) -> int:
+        if file not in self.__line_indexes:
+            self.__setup_line_index(file)
+
+        encoded_lines = self.__line_indexes[file]
+        line_bytes, prefix = encoded_lines[line]
+        line_offset = len(line_bytes.decode("utf-8")[:col].encode("utf-8"))
+        return prefix + line_offset
+
     def __compile(self, files: Collection[Path], modified_files: Mapping[Path, str]):
         out: List[Tuple[CompilationUnit, SolcOutput]] = asyncio.run(
             self.__compiler.compile(
@@ -167,16 +184,21 @@ class LspCompiler:
                             self.__asts.pop(path)
                         if path in self.__source_units:
                             self.__source_units.pop(path)
+                        if path in self.__interval_trees:
+                            self.__interval_trees.pop(path)
                 else:
                     path = cu.source_unit_name_to_path(source_unit_name)
                     ast = AstSolc.parse_obj(raw_ast.ast)
+                    interval_tree = IntervalTree()
                     init = IrInitTuple(
                         path,
                         self.get_file_content(path).encode("utf-8"),
                         cu,
+                        interval_tree,
                     )
                     self.__asts[path] = ast
                     self.__source_units[path] = SourceUnit(init, ast)
+                    self.__interval_trees[path] = interval_tree
 
     def __compilation_loop(self):
         if platform.system() != "Windows" and sys.version_info < (3, 8):
