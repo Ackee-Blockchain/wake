@@ -12,6 +12,7 @@ from typing import Collection, Dict, List, Mapping, Set, Tuple, Union
 from intervaltree import IntervalTree
 
 from woke.ast.ir.meta.source_unit import SourceUnit
+from woke.ast.ir.reference_resolver import ReferenceResolver
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import AstSolc
 from woke.compile import SolcOutput, SolcOutputSelectionEnum
@@ -69,6 +70,8 @@ class LspCompiler:
     __source_units: Dict[Path, SourceUnit]
     __line_indexes: Dict[Path, List[Tuple[bytes, int]]]
 
+    __ir_reference_resolver: ReferenceResolver
+
     output_ready: threading.Event
 
     def __init__(self, config: WokeConfig):
@@ -85,6 +88,8 @@ class LspCompiler:
         self.__source_units = {}
         self.__line_indexes = {}
         self.__output_contents = dict()
+
+        self.__ir_reference_resolver = ReferenceResolver()
 
         self.output_ready = threading.Event()
 
@@ -195,6 +200,7 @@ class LspCompiler:
                         self.get_file_content(path).encode("utf-8"),
                         cu,
                         interval_tree,
+                        self.__ir_reference_resolver,
                     )
                     self.__asts[path] = ast
                     self.__source_units[path] = SourceUnit(init, ast)

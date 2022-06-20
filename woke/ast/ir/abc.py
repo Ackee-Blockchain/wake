@@ -1,7 +1,8 @@
 from abc import ABC
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Tuple
 
+from woke.ast.ir.reference_resolver import ReferenceResolver
 from woke.ast.ir.utils.init_tuple import IrInitTuple
 from woke.ast.nodes import (
     SolcArrayTypeName,
@@ -22,6 +23,8 @@ class IrAbc(ABC):
     _ast_node: SolcNode
     _parent: Optional["IrAbc"]
     _depth: int
+    _cu_hash: bytes
+    _reference_resolver: ReferenceResolver
 
     def __init__(
         self, init: IrInitTuple, solc_node: SolcNode, parent: Optional["IrAbc"]
@@ -33,6 +36,10 @@ class IrAbc(ABC):
             self._depth = self._parent.ast_tree_depth + 1
         else:
             self._depth = 0
+        self._cu_hash = init.cu.blake2b_digest
+
+        self._reference_resolver = init.reference_resolver
+        self._reference_resolver.register_node(self, solc_node.id, self._cu_hash)
 
         source_start = solc_node.src.byte_offset
         source_end = source_start + solc_node.src.byte_length
@@ -47,6 +54,13 @@ class IrAbc(ABC):
     @property
     def ast_tree_depth(self) -> int:
         return self._depth
+
+    @property
+    def byte_location(self) -> Tuple[int, int]:
+        return (
+            self._ast_node.src.byte_offset,
+            self._ast_node.src.byte_offset + self._ast_node.src.byte_length,
+        )
 
 
 class TypeNameAbc(IrAbc):
