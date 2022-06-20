@@ -4,12 +4,12 @@ from typing import TYPE_CHECKING, List, Optional, Tuple
 
 from ..meta.inheritance_specifier import InheritanceSpecifier
 from ..meta.using_for_directive import UsingForDirective
+from .abc import DeclarationAbc
 
 if TYPE_CHECKING:
     from ..meta.source_unit import SourceUnit
 
 from woke.ast.enums import ContractKind
-from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.declaration.enum_definition import EnumDefinition
 from woke.ast.ir.declaration.error_definition import ErrorDefinition
 from woke.ast.ir.declaration.event_definition import EventDefinition
@@ -23,6 +23,7 @@ from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
 from woke.ast.ir.meta.structured_documentation import StructuredDocumentation
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import (
+    AstNodeId,
     SolcContractDefinition,
     SolcEnumDefinition,
     SolcErrorDefinition,
@@ -36,11 +37,10 @@ from woke.ast.nodes import (
 )
 
 
-class ContractDefinition(IrAbc):
+class ContractDefinition(DeclarationAbc):
     _ast_node: SolcContractDefinition
     _parent: SourceUnit
 
-    __name: str
     __abstract: bool
     __base_contracts: List[InheritanceSpecifier]
     # ___dependencies
@@ -115,10 +115,6 @@ class ContractDefinition(IrAbc):
     @property
     def parent(self) -> SourceUnit:
         return self._parent
-
-    @property
-    def name(self) -> str:
-        return self.__name
 
     @property
     def abstract(self) -> bool:

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Optional
 
+from .abc import DeclarationAbc
+
 if TYPE_CHECKING:
     from .contract_definition import ContractDefinition
 
@@ -13,7 +15,7 @@ from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcModifierDefinition
 
 
-class ModifierDefinition(IrAbc):
+class ModifierDefinition(DeclarationAbc):
     _ast_node: SolcModifierDefinition
     _parent: ContractDefinition
 
@@ -46,10 +48,6 @@ class ModifierDefinition(IrAbc):
     @property
     def parent(self) -> ContractDefinition:
         return self._parent
-
-    @property
-    def name(self) -> str:
-        return self.__name
 
     @property
     def parameters(self) -> ParameterList:

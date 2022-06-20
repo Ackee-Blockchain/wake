@@ -1,6 +1,7 @@
 from typing import Optional
 
 from woke.ast.ir.abc import IrAbc, TypeNameAbc
+from woke.ast.ir.declaration.abc import DeclarationAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import AstNodeId, SolcUserDefinedTypeName
 
@@ -33,7 +34,9 @@ class UserDefinedTypeName(TypeNameAbc):
         return self.__name
 
     @property
-    def referenced_declaration(self) -> IrAbc:
-        return self._reference_resolver.resolve_node(
+    def referenced_declaration(self) -> DeclarationAbc:
+        node = self._reference_resolver.resolve_node(
             self.__referenced_declaration_id, self._cu_hash
         )
+        assert isinstance(node, DeclarationAbc)
+        return node
