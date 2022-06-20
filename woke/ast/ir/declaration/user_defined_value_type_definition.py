@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Union
 
+from ..type_name.abc import TypeNameAbc
 from .abc import DeclarationAbc
 
 if TYPE_CHECKING:
     from .contract_definition import ContractDefinition
     from ..meta.source_unit import SourceUnit
 
-from woke.ast.ir.abc import IrAbc, TypeNameAbc
+from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcUserDefinedValueTypeDefinition
 
