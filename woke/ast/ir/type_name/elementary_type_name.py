@@ -1,7 +1,8 @@
 from typing import Optional
 
 from woke.ast.enums import StateMutability
-from woke.ast.ir.abc import IrAbc, TypeNameAbc
+from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.type_name.abc import TypeNameAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcElementaryTypeName
 
