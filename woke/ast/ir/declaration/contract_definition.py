@@ -46,7 +46,7 @@ class ContractDefinition(DeclarationAbc):
     # ___dependencies
     __kind: ContractKind
     __fully_implemented: bool
-    # __linearized_base_contracts
+    __linearized_base_contracts: List[AstNodeId]
     # __scope
     __documentation: Optional[StructuredDocumentation]
     # __user_errors
@@ -68,6 +68,7 @@ class ContractDefinition(DeclarationAbc):
         self.__abstract = contract.abstract
         self.__kind = contract.contract_kind
         self.__fully_implemented = contract.fully_implemented
+        self.__linearized_base_contracts = list(contract.linearized_base_contracts)
         self.__documentation = (
             StructuredDocumentation(init, contract.documentation, self)
             if contract.documentation
@@ -131,6 +132,15 @@ class ContractDefinition(DeclarationAbc):
     @property
     def fully_implemented(self) -> bool:
         return self.__fully_implemented
+
+    @property
+    def linearized_base_contracts(self) -> Tuple[ContractDefinition]:
+        base_contracts = []
+        for base_contract in self.__linearized_base_contracts:
+            node = self._reference_resolver.resolve_node(base_contract, self._cu_hash)
+            assert isinstance(node, ContractDefinition)
+            base_contracts.append(node)
+        return tuple(base_contracts)
 
     @property
     def documentation(self) -> Optional[StructuredDocumentation]:
