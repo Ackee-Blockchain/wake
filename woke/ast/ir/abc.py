@@ -4,7 +4,7 @@ from typing import Optional, Tuple
 
 from woke.ast.ir.reference_resolver import ReferenceResolver
 from woke.ast.ir.utils.init_tuple import IrInitTuple
-from woke.ast.nodes import SolcExpressionUnion, SolcNode, SolcStatementUnion
+from woke.ast.nodes import SolcNode
 
 
 class IrAbc(ABC):
@@ -51,14 +51,3 @@ class IrAbc(ABC):
             self._ast_node.src.byte_offset,
             self._ast_node.src.byte_offset + self._ast_node.src.byte_length,
         )
-
-
-class StatementAbc(IrAbc):
-    def __init__(self, init: IrInitTuple, statement: SolcStatementUnion, parent: IrAbc):
-        super().__init__(init, statement, parent)
-
-    @staticmethod
-    def from_ast(
-        init: IrInitTuple, statement: SolcStatementUnion, parent: IrAbc
-    ) -> "StatementAbc":
-        ...

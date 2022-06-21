@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Optional
 
+from ..statement.block import Block
 from .abc import DeclarationAbc
 
 if TYPE_CHECKING:
@@ -20,7 +21,7 @@ class ModifierDefinition(DeclarationAbc):
     _parent: ContractDefinition
 
     __name: str
-    # __body: Block
+    __body: Block
     __parameters: ParameterList
     __virtual: bool
     __visibility: Visibility
@@ -33,7 +34,7 @@ class ModifierDefinition(DeclarationAbc):
     ):
         super().__init__(init, modifier, parent)
         self.__name = modifier.name
-        # self.__body = Block(init, modifier.body, self)
+        self.__body = Block(init, modifier.body, self)
         self.__parameters = ParameterList(init, modifier.parameters, self)
         self.__virtual = modifier.virtual
         self.__visibility = modifier.visibility
@@ -48,6 +49,10 @@ class ModifierDefinition(DeclarationAbc):
     @property
     def parent(self) -> ContractDefinition:
         return self._parent
+
+    @property
+    def body(self) -> Block:
+        return self.__body
 
     @property
     def parameters(self) -> ParameterList:
