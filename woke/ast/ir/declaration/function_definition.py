@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List, Optional, Union
 
+from ..statement.block import Block
 from .abc import DeclarationAbc
 
 if TYPE_CHECKING:
@@ -32,7 +33,7 @@ class FunctionDefinition(DeclarationAbc):
     # __base_functions
     __documentation: Optional[StructuredDocumentation]
     # __function_selector
-    # __body: Optional[Block]
+    __body: Optional[Block]
     # __overrides: Optional[OverrideSpecifier]
 
     def __init__(
@@ -56,7 +57,7 @@ class FunctionDefinition(DeclarationAbc):
             else None
         )
         # self.__function_selector = function.function_selector
-        # self.__body = Block(init, function.body, self) if function.body else None
+        self.__body = Block(init, function.body, self) if function.body else None
         # self.__overrides = OverrideSpecifier(init, function.overrides, self) if function.overrides else None
 
     @property
@@ -94,3 +95,7 @@ class FunctionDefinition(DeclarationAbc):
     @property
     def documentation(self) -> Optional[StructuredDocumentation]:
         return self.__documentation
+
+    @property
+    def body(self) -> Optional[Block]:
+        return self.__body
