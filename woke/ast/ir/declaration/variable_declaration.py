@@ -4,10 +4,11 @@ import logging
 from typing import TYPE_CHECKING, Optional, Union
 
 from woke.ast.enums import Mutability, StorageLocation, Visibility
-from woke.ast.ir.abc import ExpressionAbc, IrAbc
+from woke.ast.ir.abc import IrAbc
 
 # from woke.ast.ir.meta.override_specifier import OverrideSpecifier
 from woke.ast.ir.declaration.abc import DeclarationAbc
+from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.meta.structured_documentation import StructuredDocumentation
 from woke.ast.ir.type_name.abc import TypeNameAbc
 from woke.ast.ir.utils import IrInitTuple

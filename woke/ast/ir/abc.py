@@ -53,19 +53,6 @@ class IrAbc(ABC):
         )
 
 
-class ExpressionAbc(IrAbc):
-    def __init__(
-        self, init: IrInitTuple, expression: SolcExpressionUnion, parent: IrAbc
-    ):
-        super().__init__(init, expression, parent)
-
-    @staticmethod
-    def from_ast(
-        init: IrInitTuple, expression: SolcExpressionUnion, parent: IrAbc
-    ) -> "ExpressionAbc":
-        ...
-
-
 class StatementAbc(IrAbc):
     def __init__(self, init: IrInitTuple, statement: SolcStatementUnion, parent: IrAbc):
         super().__init__(init, statement, parent)

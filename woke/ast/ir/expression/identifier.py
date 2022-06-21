@@ -1,7 +1,8 @@
 from typing import List, Optional, Tuple
 
-from woke.ast.ir.abc import ExpressionAbc, IrAbc
+from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.declaration.abc import DeclarationAbc
+from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import AstNodeId, SolcIdentifier
 

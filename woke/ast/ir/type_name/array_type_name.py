@@ -1,6 +1,7 @@
 from typing import Optional, Union
 
-from woke.ast.ir.abc import ExpressionAbc, IrAbc
+from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.type_name.abc import TypeNameAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcArrayTypeName
