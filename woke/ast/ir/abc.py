@@ -42,6 +42,14 @@ class IrAbc(ABC):
         return self._file
 
     @property
+    def ast_node_id(self) -> int:
+        return self._ast_node.id
+
+    @property
+    def cu_hash(self) -> bytes:
+        return self._cu_hash
+
+    @property
     def ast_tree_depth(self) -> int:
         return self._depth
 

@@ -30,6 +30,7 @@ class VariableDeclaration(DeclarationAbc):
     # _parent: Union[ContractDefinition, ParameterList, SourceUnit, StructDefinition, VariableDeclarationStatement]
 
     __constant: bool
+    # __scope
     __mutability: Optional[Mutability]
     __state_variable: bool
     __storage_location: StorageLocation

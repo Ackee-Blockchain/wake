@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, List, Optional, Tuple
 
+from ..meta.override_specifier import OverrideSpecifier
 from ..statement.block import Block
 from .abc import DeclarationAbc
 
@@ -13,7 +14,7 @@ from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.meta.parameter_list import ParameterList
 from woke.ast.ir.meta.structured_documentation import StructuredDocumentation
 from woke.ast.ir.utils import IrInitTuple
-from woke.ast.nodes import SolcModifierDefinition
+from woke.ast.nodes import AstNodeId, SolcModifierDefinition
 
 
 class ModifierDefinition(DeclarationAbc):
@@ -25,9 +26,9 @@ class ModifierDefinition(DeclarationAbc):
     __parameters: ParameterList
     __virtual: bool
     __visibility: Visibility
-    # __base_modifiers
+    __base_modifiers: Optional[List[AstNodeId]]
     __documentation: Optional[StructuredDocumentation]
-    # __overrides: Optional[OverrideSpecifier]
+    __overrides: Optional[OverrideSpecifier]
 
     def __init__(
         self, init: IrInitTuple, modifier: SolcModifierDefinition, parent: IrAbc
@@ -38,13 +39,19 @@ class ModifierDefinition(DeclarationAbc):
         self.__parameters = ParameterList(init, modifier.parameters, self)
         self.__virtual = modifier.virtual
         self.__visibility = modifier.visibility
-        # self.__base_modifiers = modifier.base_modifiers
+        self.__base_modifiers = (
+            list(modifier.base_modifiers) if modifier.base_modifiers else None
+        )
         self.__documentation = (
             StructuredDocumentation(init, modifier.documentation, self)
             if modifier.documentation
             else None
         )
-        # self.__overrides = OverrideSpecifier(init, modifier.overrides, self) if modifier.overrides else None
+        self.__overrides = (
+            OverrideSpecifier(init, modifier.overrides, self)
+            if modifier.overrides
+            else None
+        )
 
     @property
     def parent(self) -> ContractDefinition:
@@ -67,5 +74,22 @@ class ModifierDefinition(DeclarationAbc):
         return self.__visibility
 
     @property
+    def base_modifiers(self) -> Optional[Tuple[ModifierDefinition]]:
+        if self.__base_modifiers is None:
+            return None
+        base_modifiers = []
+        for base_modifier_id in self.__base_modifiers:
+            base_modifier = self._reference_resolver.resolve_node(
+                base_modifier_id, self._cu_hash
+            )
+            assert isinstance(base_modifier, ModifierDefinition)
+            base_modifiers.append(base_modifier)
+        return tuple(base_modifiers)
+
+    @property
     def documentation(self) -> Optional[StructuredDocumentation]:
         return self.__documentation
+
+    @property
+    def overrides(self) -> Optional[OverrideSpecifier]:
+        return self.__overrides
