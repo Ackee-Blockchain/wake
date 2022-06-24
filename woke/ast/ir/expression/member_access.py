@@ -2,7 +2,9 @@ from typing import Optional
 
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.declaration.abc import DeclarationAbc
+from woke.ast.ir.declaration.enum_definition import EnumDefinition
 from woke.ast.ir.expression.abc import ExpressionAbc
+from woke.ast.ir.expression.identifier import Identifier
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import AstNodeId, SolcMemberAccess
 
@@ -26,6 +28,24 @@ class MemberAccess(ExpressionAbc):
         self._reference_resolver.register_post_process_callback(self.__post_process)
 
     def __post_process(self):
+        # workaround for enum value bug in Solidity versions prior to 0.8.2
+        if (
+            isinstance(self.__expression, Identifier)
+            and self.__referenced_declaration_id is None
+            and self.__expression._referenced_declaration_id is not None
+            and self.__expression._referenced_declaration_id >= 0
+        ):
+            referenced_declaration = self._reference_resolver.resolve_node(
+                self.__expression._referenced_declaration_id, self.__expression.cu_hash
+            )
+            if isinstance(referenced_declaration, EnumDefinition):
+                for enum_value in referenced_declaration.values:
+                    if enum_value.name == self.__member_name:
+                        self.__referenced_declaration_id = AstNodeId(
+                            enum_value.ast_node_id
+                        )
+                        break
+
         referenced_declaration = self.referenced_declaration
         if referenced_declaration is not None:
             referenced_declaration.register_reference(self)
