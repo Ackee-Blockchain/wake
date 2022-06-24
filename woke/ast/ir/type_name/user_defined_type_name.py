@@ -31,6 +31,7 @@ class UserDefinedTypeName(TypeNameAbc):
         super().__init__(init, user_defined_type_name, parent)
         self.__name = user_defined_type_name.name
         self.__referenced_declaration_id = user_defined_type_name.referenced_declaration
+        assert self.__referenced_declaration_id >= 0
         self.__contract_scope_id = user_defined_type_name.contract_scope
         if user_defined_type_name.path_node is None:
             self.__path_node = None
@@ -38,6 +39,11 @@ class UserDefinedTypeName(TypeNameAbc):
             self.__path_node = IdentifierPath(
                 init, user_defined_type_name.path_node, self
             )
+        self._reference_resolver.register_post_process_callback(self.__post_process)
+
+    def __post_process(self):
+        referenced_declaration = self.referenced_declaration
+        referenced_declaration.register_reference(self)
 
     @property
     def parent(self) -> IrAbc:

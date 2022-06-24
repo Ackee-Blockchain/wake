@@ -1,5 +1,13 @@
+from __future__ import annotations
+
 from abc import abstractmethod
-from typing import Optional, Tuple, Union
+from typing import TYPE_CHECKING, List, Optional, Tuple, Union
+
+if TYPE_CHECKING:
+    from ..expression.identifier import Identifier
+    from ..meta.identifier_path import IdentifierPath
+    from ..expression.member_access import MemberAccess
+    from ..type_name.user_defined_type_name import UserDefinedTypeName
 
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.utils import IrInitTuple
@@ -29,10 +37,19 @@ SolcDeclarationUnion = Union[
     SolcVariableDeclaration,
 ]
 
+if TYPE_CHECKING:
+    ReferencingNodesUnion = Union[
+        Identifier,
+        IdentifierPath,
+        MemberAccess,
+        UserDefinedTypeName,
+    ]
+
 
 class DeclarationAbc(IrAbc):
     _name: str
     _name_location: Optional[Tuple[int, int]]
+    _references: List[ReferencingNodesUnion]
 
     def __init__(
         self, init: IrInitTuple, solc_node: SolcDeclarationUnion, parent: IrAbc
@@ -47,6 +64,10 @@ class DeclarationAbc(IrAbc):
                 solc_node.name_location.byte_offset
                 + solc_node.name_location.byte_length,
             )
+        self._references = []
+
+    def register_reference(self, reference: ReferencingNodesUnion):
+        self._references.append(reference)
 
     @abstractmethod
     def _parse_name_location(self) -> Tuple[int, int]:
@@ -61,3 +82,7 @@ class DeclarationAbc(IrAbc):
         if self._name_location is None:
             self._name_location = self._parse_name_location()
         return self._name_location
+
+    @property
+    def references(self) -> Tuple[ReferencingNodesUnion]:
+        return tuple(self._references)

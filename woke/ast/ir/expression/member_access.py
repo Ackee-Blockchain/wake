@@ -1,6 +1,7 @@
 from typing import Optional
 
 from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.declaration.abc import DeclarationAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import AstNodeId, SolcMemberAccess
@@ -22,6 +23,13 @@ class MemberAccess(ExpressionAbc):
         self.__member_name = member_access.member_name
         self.__referenced_declaration_id = member_access.referenced_declaration
 
+        self._reference_resolver.register_post_process_callback(self.__post_process)
+
+    def __post_process(self):
+        referenced_declaration = self.referenced_declaration
+        if referenced_declaration is not None:
+            referenced_declaration.register_reference(self)
+
     @property
     def parent(self) -> IrAbc:
         return self._parent
@@ -35,5 +43,14 @@ class MemberAccess(ExpressionAbc):
         return self.__member_name
 
     @property
-    def referenced_declaration(self) -> Optional[AstNodeId]:
-        return self.__referenced_declaration_id
+    def referenced_declaration(self) -> Optional[DeclarationAbc]:
+        if (
+            self.__referenced_declaration_id is None
+            or self.__referenced_declaration_id < 0
+        ):
+            return None
+        node = self._reference_resolver.resolve_node(
+            self.__referenced_declaration_id, self._cu_hash
+        )
+        assert isinstance(node, DeclarationAbc)
+        return node
