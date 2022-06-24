@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Union
 
-from ..type_name.abc import TypeNameAbc
+from ..type_name.elementary_type_name import ElementaryTypeName
 from .abc import DeclarationAbc
 
 if TYPE_CHECKING:
@@ -18,7 +18,7 @@ class UserDefinedValueTypeDefinition(DeclarationAbc):
     _ast_node: SolcUserDefinedValueTypeDefinition
     _parent: Union[ContractDefinition, SourceUnit]
 
-    __underlying_type: TypeNameAbc
+    __underlying_type: ElementaryTypeName
 
     def __init__(
         self,
@@ -28,7 +28,7 @@ class UserDefinedValueTypeDefinition(DeclarationAbc):
     ):
         super().__init__(init, user_defined_value_type_definition, parent)
         self.__name = user_defined_value_type_definition.name
-        self.__underlying_type = TypeNameAbc.from_ast(
+        self.__underlying_type = ElementaryTypeName(
             init, user_defined_value_type_definition.underlying_type, self
         )
 
@@ -37,5 +37,5 @@ class UserDefinedValueTypeDefinition(DeclarationAbc):
         return self._parent
 
     @property
-    def underlying_type(self) -> TypeNameAbc:
+    def underlying_type(self) -> ElementaryTypeName:
         return self.__underlying_type

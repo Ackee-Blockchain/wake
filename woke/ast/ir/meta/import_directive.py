@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import logging
 import re
+from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING, List, Optional, Tuple
+
+from ..expression.identifier import Identifier
 
 if TYPE_CHECKING:
     from .source_unit import SourceUnit
@@ -40,6 +43,12 @@ IMPORT_ALIAS_LIST = re.compile(
 )
 
 
+@dataclass
+class SymbolAlias:
+    foreign: Identifier
+    local: Optional[str]
+
+
 class ImportDirective(IrAbc):
     _ast_node: SolcImportDirective
     _parent: SourceUnit
@@ -47,6 +56,7 @@ class ImportDirective(IrAbc):
     __source_unit_name: str
     __import_string: str
     __imported_file: Path
+    __symbol_aliases: List[SymbolAlias]
 
     def __init__(
         self, init: IrInitTuple, import_directive: SolcImportDirective, parent: IrAbc
@@ -55,6 +65,12 @@ class ImportDirective(IrAbc):
         self.__source_unit_name = import_directive.absolute_path
         self.__import_string = import_directive.file
         self.__imported_file = init.cu.source_unit_name_to_path(self.__source_unit_name)
+        self.__symbol_aliases = []
+
+        for alias in import_directive.symbol_aliases:
+            self.__symbol_aliases.append(
+                SymbolAlias(Identifier(init, alias.foreign, self), alias.local)
+            )
 
     @property
     def parent(self) -> SourceUnit:
@@ -80,6 +96,13 @@ class ImportDirective(IrAbc):
         The import string as it appears in the source code.
         """
         return self.__import_string
+
+    @property
+    def symbol_aliases(self) -> Tuple[SymbolAlias]:
+        """
+        The symbols that are specified (and optionally aliased) in the import directive.
+        """
+        return tuple(self.__symbol_aliases)
 
     @lazy_property
     def import_string_pos(self) -> Tuple[int, int]:

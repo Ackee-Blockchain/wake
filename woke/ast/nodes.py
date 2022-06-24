@@ -461,7 +461,7 @@ class SolcUserDefinedValueTypeDefinition(SolcNode):
     node_type: Literal["UserDefinedValueTypeDefinition"] = Field(alias="nodeType")
     # required
     name: StrictStr
-    underlying_type: SolcTypeNameUnion
+    underlying_type: "SolcElementaryTypeName"
     # optional
     name_location: Optional[Src]  # new in 0.8.2
     canonical_name: Optional[
@@ -800,7 +800,7 @@ class SolcElementaryTypeNameExpression(SolcNode):
     is_pure: StrictBool
     l_value_requested: StrictBool
     type_descriptions: TypeDescriptionsModel
-    type_name: "SolcElementaryTypeName"
+    type_name: "SolcElementaryTypeName"  # in versions < 0.6.0 this was a string
     # optional
     argument_types: Optional[List[TypeDescriptionsModel]]
 
