@@ -17,6 +17,12 @@ class IdentifierPath(IrAbc):
         super().__init__(init, identifier_path, parent)
         self.__name = identifier_path.name
         self.__referenced_declaration_id = identifier_path.referenced_declaration
+        assert self.__referenced_declaration_id >= 0
+        self._reference_resolver.register_post_process_callback(self.__post_process)
+
+    def __post_process(self):
+        referenced_declaration = self.referenced_declaration
+        referenced_declaration.register_reference(self)
 
     @property
     def parent(self) -> IrAbc:

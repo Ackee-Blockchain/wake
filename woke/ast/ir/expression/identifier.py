@@ -13,13 +13,19 @@ class Identifier(ExpressionAbc):
 
     __name: str
     __overloaded_declarations: List[AstNodeId]
-    __referenced_declaration: Optional[AstNodeId]
+    _referenced_declaration_id: Optional[AstNodeId]
 
     def __init__(self, init: IrInitTuple, identifier: SolcIdentifier, parent: IrAbc):
         super().__init__(init, identifier, parent)
         self.__name = identifier.name
         self.__overloaded_declarations = list(identifier.overloaded_declarations)
-        self.__referenced_declaration = identifier.referenced_declaration
+        self._referenced_declaration_id = identifier.referenced_declaration
+        init.reference_resolver.register_post_process_callback(self.__post_process)
+
+    def __post_process(self):
+        referenced_declaration = self.referenced_declaration
+        if referenced_declaration is not None:
+            referenced_declaration.register_reference(self)
 
     @property
     def parent(self) -> IrAbc:
@@ -30,18 +36,28 @@ class Identifier(ExpressionAbc):
         return self.__name
 
     @property
-    def overloaded_declarations(self) -> Tuple[IrAbc]:
-        return tuple(
-            self._reference_resolver.resolve_node(node_id, self._cu_hash)
-            for node_id in self.__overloaded_declarations
-        )
+    def overloaded_declarations(self) -> Tuple[DeclarationAbc]:
+        overloaded_declarations = []
+        for overloaded_declaration_id in self.__overloaded_declarations:
+            if overloaded_declaration_id < 0:
+                continue
+
+            overloaded_declaration = self._reference_resolver.resolve_node(
+                overloaded_declaration_id, self._cu_hash
+            )
+            assert isinstance(overloaded_declaration, DeclarationAbc)
+            overloaded_declarations.append(overloaded_declaration)
+        return tuple(overloaded_declarations)
 
     @property
     def referenced_declaration(self) -> Optional[DeclarationAbc]:
-        if self.__referenced_declaration is None:
+        if (
+            self._referenced_declaration_id is None
+            or self._referenced_declaration_id < 0
+        ):
             return None
         node = self._reference_resolver.resolve_node(
-            self.__referenced_declaration, self._cu_hash
+            self._referenced_declaration_id, self._cu_hash
         )
         assert isinstance(node, DeclarationAbc)
         return node
