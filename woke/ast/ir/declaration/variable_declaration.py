@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import TYPE_CHECKING, Optional, Tuple, Union
+from typing import TYPE_CHECKING, List, Optional, Tuple, Union
 
 from woke.ast.enums import Mutability, StorageLocation, Visibility
 from woke.ast.ir.abc import IrAbc
@@ -13,7 +13,10 @@ from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.meta.structured_documentation import StructuredDocumentation
 from woke.ast.ir.type_name.abc import TypeNameAbc
 from woke.ast.ir.utils import IrInitTuple
-from woke.ast.nodes import SolcVariableDeclaration
+from woke.ast.nodes import AstNodeId, SolcVariableDeclaration
+
+if TYPE_CHECKING:
+    from ..declaration.function_definition import FunctionDefinition
 
 # if TYPE_CHECKING:
 # from .contract_definition import ContractDefinition
@@ -36,6 +39,7 @@ class VariableDeclaration(DeclarationAbc):
     __state_variable: bool
     __storage_location: StorageLocation
     __visibility: Visibility
+    __base_functions: Optional[List[AstNodeId]]
     __documentation: Optional[StructuredDocumentation]
     __function_selector: Optional[bytes]
     __indexed: bool
@@ -58,7 +62,11 @@ class VariableDeclaration(DeclarationAbc):
         self.__storage_location = variable_declaration.storage_location
         # TODO type descriptions?
         self.__visibility = variable_declaration.visibility
-        # TODO base functions
+        self.__base_functions = (
+            list(variable_declaration.base_functions)
+            if variable_declaration.base_functions
+            else None
+        )
         self.__documentation = (
             StructuredDocumentation(init, variable_declaration.documentation, self)
             if variable_declaration.documentation
@@ -86,6 +94,12 @@ class VariableDeclaration(DeclarationAbc):
             if variable_declaration.value
             else None
         )
+        self._reference_resolver.register_post_process_callback(self.__post_process)
+
+    def __post_process(self):
+        if self.base_functions is not None:
+            for base_function in self.base_functions:
+                base_function._child_functions.append(self)
 
     def _parse_name_location(self) -> Tuple[int, int]:
         # this one is a bit tricky
@@ -130,6 +144,21 @@ class VariableDeclaration(DeclarationAbc):
     @property
     def visibility(self) -> Visibility:
         return self.__visibility
+
+    @property
+    def base_functions(self) -> Optional[Tuple[FunctionDefinition]]:
+        from ..declaration.function_definition import FunctionDefinition
+
+        if self.__base_functions is None:
+            return None
+        base_functions = []
+        for base_function_id in self.__base_functions:
+            base_function = self._reference_resolver.resolve_node(
+                base_function_id, self._cu_hash
+            )
+            assert isinstance(base_function, FunctionDefinition)
+            base_functions.append(base_function)
+        return tuple(base_functions)
 
     @property
     def documentation(self) -> Optional[StructuredDocumentation]:

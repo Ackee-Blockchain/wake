@@ -10,6 +10,7 @@ from .abc import DeclarationAbc
 
 if TYPE_CHECKING:
     from .contract_definition import ContractDefinition
+    from .variable_declaration import VariableDeclaration
     from ..meta.source_unit import SourceUnit
 
 from woke.ast.enums import FunctionKind, StateMutability, Visibility
@@ -23,6 +24,7 @@ from woke.ast.nodes import AstNodeId, SolcFunctionDefinition
 class FunctionDefinition(DeclarationAbc):
     _ast_node: SolcFunctionDefinition
     _parent: Union[ContractDefinition, SourceUnit]
+    _child_functions: List[Union[FunctionDefinition, VariableDeclaration]]
 
     __implemented: bool
     __kind: FunctionKind
@@ -43,6 +45,8 @@ class FunctionDefinition(DeclarationAbc):
         self, init: IrInitTuple, function: SolcFunctionDefinition, parent: IrAbc
     ):
         super().__init__(init, function, parent)
+        self._child_functions = []
+
         self.__name = function.name
         self.__implemented = function.implemented
         self.__kind = function.kind
@@ -70,6 +74,12 @@ class FunctionDefinition(DeclarationAbc):
             if function.overrides
             else None
         )
+        self._reference_resolver.register_post_process_callback(self.__post_process)
+
+    def __post_process(self):
+        if self.base_functions is not None:
+            for base_function in self.base_functions:
+                base_function._child_functions.append(self)
 
     def _parse_name_location(self) -> Tuple[int, int]:
         IDENTIFIER = r"[a-zA-Z$_][a-zA-Z0-9$_]*"
@@ -132,6 +142,10 @@ class FunctionDefinition(DeclarationAbc):
             assert isinstance(base_function, FunctionDefinition)
             base_functions.append(base_function)
         return tuple(base_functions)
+
+    @property
+    def child_functions(self) -> Tuple[Union[FunctionDefinition, VariableDeclaration]]:
+        return tuple(self._child_functions)
 
     @property
     def documentation(self) -> Optional[StructuredDocumentation]:
