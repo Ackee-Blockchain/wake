@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING, List, Optional, Tuple
 
 from ..meta.inheritance_specifier import InheritanceSpecifier
@@ -123,6 +124,30 @@ class ContractDefinition(DeclarationAbc):
             contract = base_contract.base_name.referenced_declaration
             assert isinstance(contract, ContractDefinition)
             contract.__child_contracts.append(self)
+
+    def _parse_name_location(self) -> Tuple[int, int]:
+        IDENTIFIER = r"[a-zA-Z$_][a-zA-Z0-9$_]*"
+        CONTRACT_RE = re.compile(
+            r"^\s*(abstract\s)?\s*contract\s+(?P<name>{identifier})".format(
+                identifier=IDENTIFIER
+            ).encode("utf-8")
+        )
+        INTERFACE_RE = re.compile(
+            r"^\s*interface\s+(?P<name>{identifier})".format(
+                identifier=IDENTIFIER
+            ).encode("utf-8")
+        )
+
+        byte_start = self._ast_node.src.byte_offset
+        contract_match = CONTRACT_RE.match(self._source)
+        interface_match = INTERFACE_RE.match(self._source)
+        assert contract_match or interface_match
+        if contract_match:
+            return byte_start + contract_match.start(
+                "name"
+            ), byte_start + contract_match.end("name")
+        else:
+            return byte_start + interface_match.start("name"), byte_start + interface_match.end("name")  # type: ignore
 
     @property
     def parent(self) -> SourceUnit:

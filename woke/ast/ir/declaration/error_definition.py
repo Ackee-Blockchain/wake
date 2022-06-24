@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Optional, Tuple, Union
 
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.utils import IrInitTuple
@@ -32,6 +32,13 @@ class ErrorDefinition(DeclarationAbc):
             if error.documentation
             else None
         )
+
+    def _parse_name_location(self) -> Tuple[int, int]:
+        # SolcErrorDefinition node always contains name_location attribute
+        # this method is implemented here just for completeness and to satisfy the linter
+        byte_start = self._ast_node.name_location.byte_offset
+        byte_length = self._ast_node.name_location.byte_length
+        return byte_start, byte_start + byte_length
 
     @property
     def parent(self) -> Union[ContractDefinition, SourceUnit]:

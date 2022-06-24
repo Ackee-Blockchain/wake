@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+import re
+from typing import TYPE_CHECKING, Optional, Tuple
 
 from .abc import DeclarationAbc
 
@@ -34,6 +35,19 @@ class EventDefinition(DeclarationAbc):
             else None
         )
         # TODO event selector?
+
+    def _parse_name_location(self) -> Tuple[int, int]:
+        IDENTIFIER = r"[a-zA-Z$_][a-zA-Z0-9$_]*"
+        EVENT_RE = re.compile(
+            r"^\s*event\s+(?P<name>{identifier})".format(identifier=IDENTIFIER).encode(
+                "utf-8"
+            )
+        )
+
+        byte_start = self._ast_node.src.byte_offset
+        match = EVENT_RE.match(self._source)
+        assert match
+        return byte_start + match.start("name"), byte_start + match.end("name")
 
     @property
     def parent(self) -> ContractDefinition:

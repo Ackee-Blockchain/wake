@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Optional, Union
+import re
+from typing import TYPE_CHECKING, Optional, Tuple, Union
 
 from woke.ast.enums import Mutability, StorageLocation, Visibility
 from woke.ast.ir.abc import IrAbc
@@ -85,6 +86,26 @@ class VariableDeclaration(DeclarationAbc):
             if variable_declaration.value
             else None
         )
+
+    def _parse_name_location(self) -> Tuple[int, int]:
+        # this one is a bit tricky
+        # it is easier to parse the variable declaration from the end (while omitting an optional assigned expression)
+        if self.__value is None:
+            source_without_value = self._source
+        else:
+            length_without_value = self.__value.byte_location[0] - self.byte_location[0]
+            source_without_value = self._source[:length_without_value]
+
+        IDENTIFIER = r"[a-zA-Z$_][a-zA-Z0-9$_]*"
+        VARIABLE_RE = re.compile(
+            r"(?P<name>{identifier})(\s*=)?\s*$".format(identifier=IDENTIFIER).encode(
+                "utf-8"
+            )
+        )
+        match = VARIABLE_RE.search(source_without_value)
+        assert match
+        byte_start = self._ast_node.src.byte_offset
+        return byte_start + match.start("name"), byte_start + match.end("name")
 
     # @property
     # def parent(self) -> Union[ContractDefinition, ParameterList, SourceUnit, StructDefinition, VariableDeclarationStatement]:

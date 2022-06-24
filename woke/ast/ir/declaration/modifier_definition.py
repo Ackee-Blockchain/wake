@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING, List, Optional, Tuple
 
 from ..meta.override_specifier import OverrideSpecifier
@@ -52,6 +53,19 @@ class ModifierDefinition(DeclarationAbc):
             if modifier.overrides
             else None
         )
+
+    def _parse_name_location(self) -> Tuple[int, int]:
+        IDENTIFIER = r"[a-zA-Z$_][a-zA-Z0-9$_]*"
+        MODIFIER_RE = re.compile(
+            r"^\s*modifier\s+(?P<name>{identifier})".format(
+                identifier=IDENTIFIER
+            ).encode("utf-8")
+        )
+
+        byte_start = self._ast_node.src.byte_offset
+        match = MODIFIER_RE.match(self._source)
+        assert match
+        return byte_start + match.start("name"), byte_start + match.end("name")
 
     @property
     def parent(self) -> ContractDefinition:

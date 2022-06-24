@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Tuple
 
 from .abc import DeclarationAbc
 
@@ -22,6 +22,10 @@ class EnumValue(DeclarationAbc):
     def __init__(self, init: IrInitTuple, value: SolcEnumValue, parent: IrAbc):
         super().__init__(init, value, parent)
         self.__name = value.name
+
+    def _parse_name_location(self) -> Tuple[int, int]:
+        src = self._ast_node.src
+        return src.byte_offset, src.byte_offset + src.byte_length
 
     @property
     def parent(self) -> EnumDefinition:

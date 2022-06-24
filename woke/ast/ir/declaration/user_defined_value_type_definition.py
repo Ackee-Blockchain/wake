@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Union
+import re
+from typing import TYPE_CHECKING, Tuple, Union
 
 from ..type_name.elementary_type_name import ElementaryTypeName
 from .abc import DeclarationAbc
@@ -31,6 +32,19 @@ class UserDefinedValueTypeDefinition(DeclarationAbc):
         self.__underlying_type = ElementaryTypeName(
             init, user_defined_value_type_definition.underlying_type, self
         )
+
+    def _parse_name_location(self) -> Tuple[int, int]:
+        IDENTIFIER = r"[a-zA-Z$_][a-zA-Z0-9$_]*"
+        USER_DEF_VAL_TYPE_RE = re.compile(
+            r"^\s*type\s+(?P<name>{identifier})".format(identifier=IDENTIFIER).encode(
+                "utf-8"
+            )
+        )
+
+        byte_start = self._ast_node.src.byte_offset
+        match = USER_DEF_VAL_TYPE_RE.match(self._source)
+        assert match
+        return byte_start + match.start("name"), byte_start + match.end("name")
 
     @property
     def parent(self) -> Union[ContractDefinition, SourceUnit]:

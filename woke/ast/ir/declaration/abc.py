@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from typing import Optional, Tuple, Union
 
 from woke.ast.ir.abc import IrAbc
@@ -43,13 +44,20 @@ class DeclarationAbc(IrAbc):
         else:
             self._name_location = (
                 solc_node.name_location.byte_offset,
-                solc_node.name_location.byte_length,
+                solc_node.name_location.byte_offset
+                + solc_node.name_location.byte_length,
             )
+
+    @abstractmethod
+    def _parse_name_location(self) -> Tuple[int, int]:
+        ...
 
     @property
     def name(self) -> str:
         return self._name
 
     @property
-    def name_location(self) -> Optional[Tuple[int, int]]:
+    def name_location(self) -> Tuple[int, int]:
+        if self._name_location is None:
+            self._name_location = self._parse_name_location()
         return self._name_location
