@@ -22,7 +22,7 @@ class RpcProtocolError(Exception):
 
 class RpcProtocol:
     """
-    Json rpc comunication
+    Json rpc communication
     """
 
     __port: int
@@ -44,7 +44,7 @@ class RpcProtocol:
         while line != b"\r\n":
             line = await self.__reader.readline()
 
-        return json.loads(await self.__reader.read(content_length))
+        return json.loads(await self.__reader.readexactly(content_length))
 
     async def receive(self) -> Union[RequestMessage, NotificationMessage]:
         raw_message = await self._read_message()
@@ -65,4 +65,4 @@ class RpcProtocol:
             ResponseMessage, RequestMessage, ResponseError, NotificationMessage
         ],
     ) -> None:
-        await self._send(message.json(exclude_none=True, by_alias=True))
+        await self._send(message.json(exclude_unset=True, by_alias=True))
