@@ -137,17 +137,27 @@ class ContractDefinition(DeclarationAbc):
                 identifier=IDENTIFIER
             ).encode("utf-8")
         )
+        LIBRARY_RE = re.compile(
+            r"^\s*library\s+(?P<name>{identifier})".format(
+                identifier=IDENTIFIER
+            ).encode("utf-8")
+        )
 
         byte_start = self._ast_node.src.byte_offset
         contract_match = CONTRACT_RE.match(self._source)
         interface_match = INTERFACE_RE.match(self._source)
-        assert contract_match or interface_match
+        library_match = LIBRARY_RE.match(self._source)
+        assert contract_match or interface_match or library_match
         if contract_match:
             return byte_start + contract_match.start(
                 "name"
             ), byte_start + contract_match.end("name")
+        elif interface_match:
+            return byte_start + interface_match.start(
+                "name"
+            ), byte_start + interface_match.end("name")
         else:
-            return byte_start + interface_match.start("name"), byte_start + interface_match.end("name")  # type: ignore
+            return byte_start + library_match.start("name"), byte_start + library_match.end("name")  # type: ignore
 
     @property
     def parent(self) -> SourceUnit:
