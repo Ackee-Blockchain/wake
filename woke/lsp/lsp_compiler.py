@@ -102,6 +102,10 @@ class LspCompiler:
         return self.__asts
 
     @property
+    def ir_reference_resolver(self) -> ReferenceResolver:
+        return self.__ir_reference_resolver
+
+    @property
     def interval_trees(self) -> Dict[Path, IntervalTree]:
         return self.__interval_trees
 
@@ -205,6 +209,8 @@ class LspCompiler:
                     self.__asts[path] = ast
                     self.__source_units[path] = SourceUnit(init, ast)
                     self.__interval_trees[path] = interval_tree
+
+            self.__ir_reference_resolver.run_post_process_callbacks()
 
     def __compilation_loop(self):
         if platform.system() != "Windows" and sys.version_info < (3, 8):

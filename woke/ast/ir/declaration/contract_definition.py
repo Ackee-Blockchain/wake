@@ -60,6 +60,8 @@ class ContractDefinition(DeclarationAbc):
     __using_for_directives: List[UsingForDirective]
     __declared_variables: List[VariableDeclaration]
 
+    __child_contracts: List[ContractDefinition]
+
     def __init__(
         self, init: IrInitTuple, contract: SolcContractDefinition, parent: SourceUnit
     ):
@@ -80,6 +82,7 @@ class ContractDefinition(DeclarationAbc):
             self.__base_contracts.append(
                 InheritanceSpecifier(init, base_contract, self)
             )
+        self.__child_contracts = []
 
         self.__enums = []
         self.__errors = []
@@ -113,6 +116,14 @@ class ContractDefinition(DeclarationAbc):
             elif isinstance(node, SolcVariableDeclaration):
                 self.__declared_variables.append(VariableDeclaration(init, node, self))
 
+        init.reference_resolver.register_post_process_callback(self.__post_process)
+
+    def __post_process(self):
+        for base_contract in self.__base_contracts:
+            contract = base_contract.base_name.referenced_declaration
+            assert isinstance(contract, ContractDefinition)
+            contract.__child_contracts.append(self)
+
     @property
     def parent(self) -> SourceUnit:
         return self._parent
@@ -124,6 +135,10 @@ class ContractDefinition(DeclarationAbc):
     @property
     def base_contracts(self) -> Tuple[InheritanceSpecifier]:
         return tuple(self.__base_contracts)
+
+    @property
+    def child_contracts(self) -> Tuple[ContractDefinition]:
+        return tuple(self.__child_contracts)
 
     @property
     def kind(self) -> ContractKind:
