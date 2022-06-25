@@ -5,6 +5,7 @@ from woke.ast.enums import ContractKind
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.declaration.contract_definition import ContractDefinition
 from woke.ast.ir.declaration.function_definition import FunctionDefinition
+from woke.ast.ir.declaration.modifier_definition import ModifierDefinition
 from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
 from woke.ast.ir.expression.identifier import Identifier
 from woke.ast.ir.expression.member_access import MemberAccess
@@ -100,7 +101,9 @@ class TypeHierarchySubtypesParams(WorkDoneProgressParams, PartialResultParams):
 
 
 def _get_node_symbol_kind(
-    node: Union[ContractDefinition, FunctionDefinition, VariableDeclaration]
+    node: Union[
+        ContractDefinition, FunctionDefinition, ModifierDefinition, VariableDeclaration
+    ]
 ) -> SymbolKind:
     if isinstance(node, ContractDefinition):
         if node.kind == ContractKind.CONTRACT:
@@ -116,6 +119,8 @@ def _get_node_symbol_kind(
             return SymbolKind.METHOD
         else:
             return SymbolKind.FUNCTION
+    elif isinstance(node, ModifierDefinition):
+        return SymbolKind.FUNCTION
     elif isinstance(node, VariableDeclaration):
         return SymbolKind.VARIABLE
     else:
@@ -152,9 +157,9 @@ def prepare_type_hierarchy(
         node = node.referenced_declaration
         logger.debug(f"Found referenced declaration {node}")
 
-    if isinstance(node, (ContractDefinition, FunctionDefinition)) or (
-        isinstance(node, VariableDeclaration) and node.overrides is not None
-    ):
+    if isinstance(
+        node, (ContractDefinition, FunctionDefinition, ModifierDefinition)
+    ) or (isinstance(node, VariableDeclaration) and node.overrides is not None):
         name_byte_start, name_byte_end = node.name_location
         (
             name_start_line,
@@ -198,11 +203,24 @@ def supertypes(
         AstNodeId(ast_node_id), cu_hash
     )
     assert isinstance(
-        node, (ContractDefinition, FunctionDefinition, VariableDeclaration)
+        node,
+        (
+            ContractDefinition,
+            FunctionDefinition,
+            ModifierDefinition,
+            VariableDeclaration,
+        ),
     )
 
     type_items = []
-    nodes = []
+    nodes: List[
+        Union[
+            ContractDefinition,
+            FunctionDefinition,
+            ModifierDefinition,
+            VariableDeclaration,
+        ]
+    ] = []
     if isinstance(node, ContractDefinition):
         for base_contract in node.base_contracts:
             contract = base_contract.base_name.referenced_declaration
@@ -214,6 +232,9 @@ def supertypes(
     ):
         for base_function in node.base_functions:
             nodes.append(base_function)
+    elif isinstance(node, ModifierDefinition) and node.base_modifiers is not None:
+        for base_modifier in node.base_modifiers:
+            nodes.append(base_modifier)
 
     for node in nodes:
         name_byte_start, name_byte_end = node.name_location
@@ -258,17 +279,33 @@ def subtypes(
         AstNodeId(ast_node_id), cu_hash
     )
     assert isinstance(
-        node, (ContractDefinition, FunctionDefinition, VariableDeclaration)
+        node,
+        (
+            ContractDefinition,
+            FunctionDefinition,
+            ModifierDefinition,
+            VariableDeclaration,
+        ),
     )
 
     type_items = []
-    nodes: List[Union[ContractDefinition, FunctionDefinition, VariableDeclaration]] = []
+    nodes: List[
+        Union[
+            ContractDefinition,
+            FunctionDefinition,
+            ModifierDefinition,
+            VariableDeclaration,
+        ]
+    ] = []
     if isinstance(node, ContractDefinition):
         for child_contract in node.child_contracts:
             nodes.append(child_contract)
     elif isinstance(node, FunctionDefinition) and node.child_functions:
         for child_function in node.child_functions:
             nodes.append(child_function)
+    elif isinstance(node, ModifierDefinition):
+        for child_modifier in node.child_modifiers:
+            nodes.append(child_modifier)
 
     for node in nodes:
         name_byte_start, name_byte_end = node.name_location

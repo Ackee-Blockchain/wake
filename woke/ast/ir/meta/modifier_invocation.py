@@ -41,7 +41,7 @@ class ModifierInvocation(IrAbc):
             self.__arguments = None
         else:
             self.__arguments = [
-                ExpressionAbc(init, argument, self)
+                ExpressionAbc.from_ast(init, argument, self)
                 for argument in modifier_invocation.arguments
             ]
 
