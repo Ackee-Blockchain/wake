@@ -54,6 +54,7 @@ class LspCompiler:
     __config: WokeConfig
     __thread: Thread
     __file_changes_queue: queue.Queue
+    __stop_event: threading.Event
 
     __processed_files: Set[Path]
 
@@ -77,6 +78,7 @@ class LspCompiler:
     def __init__(self, config: WokeConfig):
         self.__config = config
         self.__file_changes_queue = queue.Queue()
+        self.__stop_event = threading.Event()
         self.__processed_files = set()
         self.__files = dict()
         self.__opened_files = set()
@@ -161,6 +163,10 @@ class LspCompiler:
         line_offset = len(line_bytes.decode("utf-8")[:col].encode("utf-8"))
         return prefix + line_offset
 
+    def terminate(self):
+        self.__stop_event.set()
+        self.__thread.join()
+
     def __compile(self, files: Collection[Path], modified_files: Mapping[Path, str]):
         out: List[Tuple[CompilationUnit, SolcOutput]] = asyncio.run(
             self.__compiler.compile(
@@ -232,7 +238,7 @@ class LspCompiler:
         self.__output_contents = self.__files.copy()
         self.output_ready.set()
 
-        while True:
+        while not self.__stop_event.is_set():
             while not self.__file_changes_queue.empty():
                 change = self.__file_changes_queue.get()
 
