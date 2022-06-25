@@ -16,14 +16,12 @@ from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import AstNodeId, SolcVariableDeclaration
 
 if TYPE_CHECKING:
+    from ..declaration.contract_definition import ContractDefinition
     from ..declaration.function_definition import FunctionDefinition
-
-# if TYPE_CHECKING:
-# from .contract_definition import ContractDefinition
-# from woke.ast.ir.meta.parameter_list import ParameterList
-# from woke.ast.ir.meta.source_unit import SourceUnit
-# from .struct_definition import StructDefinition
-# from .variable_declaration_statement import VariableDeclarationStatement
+    from ..declaration.struct_definition import StructDefinition
+    from ..meta.parameter_list import ParameterList
+    from ..meta.source_unit import SourceUnit
+    from ..statement.variable_declaration_statement import VariableDeclarationStatement
 
 
 logger = logging.getLogger(__name__)
@@ -31,7 +29,13 @@ logger = logging.getLogger(__name__)
 
 class VariableDeclaration(DeclarationAbc):
     _ast_node: SolcVariableDeclaration
-    # _parent: Union[ContractDefinition, ParameterList, SourceUnit, StructDefinition, VariableDeclarationStatement]
+    _parent: Union[
+        ContractDefinition,
+        ParameterList,
+        SourceUnit,
+        StructDefinition,
+        VariableDeclarationStatement,
+    ]
 
     __constant: bool
     # __scope
@@ -121,9 +125,17 @@ class VariableDeclaration(DeclarationAbc):
         byte_start = self._ast_node.src.byte_offset
         return byte_start + match.start("name"), byte_start + match.end("name")
 
-    # @property
-    # def parent(self) -> Union[ContractDefinition, ParameterList, SourceUnit, StructDefinition, VariableDeclarationStatement]:
-    # return self._parent
+    @property
+    def parent(
+        self,
+    ) -> Union[
+        ContractDefinition,
+        ParameterList,
+        SourceUnit,
+        StructDefinition,
+        VariableDeclarationStatement,
+    ]:
+        return self._parent
 
     @property
     def constant(self) -> bool:

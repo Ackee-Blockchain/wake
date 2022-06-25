@@ -87,6 +87,10 @@ class SourceUnit(IrAbc):
                 self.__contracts.append(ContractDefinition(init, node, self))
 
     @property
+    def parent(self) -> None:
+        return None
+
+    @property
     def license(self) -> Optional[str]:
         """
         The license string of the file (if present).
