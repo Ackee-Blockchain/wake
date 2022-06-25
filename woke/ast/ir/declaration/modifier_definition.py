@@ -21,6 +21,7 @@ from woke.ast.nodes import AstNodeId, SolcModifierDefinition
 class ModifierDefinition(DeclarationAbc):
     _ast_node: SolcModifierDefinition
     _parent: ContractDefinition
+    _child_modifiers: List[ModifierDefinition]
 
     __name: str
     __body: Optional[Block]
@@ -35,6 +36,8 @@ class ModifierDefinition(DeclarationAbc):
         self, init: IrInitTuple, modifier: SolcModifierDefinition, parent: IrAbc
     ):
         super().__init__(init, modifier, parent)
+        self._child_modifiers = []
+
         self.__name = modifier.name
         self.__body = Block(init, modifier.body, self) if modifier.body else None
         self.__parameters = ParameterList(init, modifier.parameters, self)
@@ -53,6 +56,12 @@ class ModifierDefinition(DeclarationAbc):
             if modifier.overrides
             else None
         )
+        self._reference_resolver.register_post_process_callback(self.__post_process)
+
+    def __post_process(self):
+        if self.base_modifiers is not None:
+            for base_modifier in self.base_modifiers:
+                base_modifier._child_modifiers.append(self)
 
     def _parse_name_location(self) -> Tuple[int, int]:
         IDENTIFIER = r"[a-zA-Z$_][a-zA-Z0-9$_]*"
@@ -103,6 +112,10 @@ class ModifierDefinition(DeclarationAbc):
             assert isinstance(base_modifier, ModifierDefinition)
             base_modifiers.append(base_modifier)
         return tuple(base_modifiers)
+
+    @property
+    def child_modifiers(self) -> Tuple[ModifierDefinition]:
+        return tuple(self._child_modifiers)
 
     @property
     def documentation(self) -> Optional[StructuredDocumentation]:
