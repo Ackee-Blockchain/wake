@@ -30,6 +30,7 @@ from .features.document_link import (
     DocumentLinkParams,
     document_link,
 )
+from .features.references import ReferenceParams, references
 from .features.type_hierarchy import (
     TypeHierarchyPrepareParams,
     TypeHierarchySubtypesParams,
@@ -99,6 +100,10 @@ class LspServer:
             RequestMethodEnum.TYPE_HIERARCHY_SUBTYPES: (
                 partial(subtypes, self.__context),
                 TypeHierarchySubtypesParams,
+            ),
+            RequestMethodEnum.REFERENCES: (
+                partial(references, self.__context),
+                ReferenceParams,
             ),
         }
 
@@ -243,6 +248,7 @@ class LspServer:
                 resolve_provider=False,
             ),
             type_hierarchy_provider=True,
+            references_provider=True,
         )
         return InitializeResult(capabilities=server_capabilities, server_info=None)
 
