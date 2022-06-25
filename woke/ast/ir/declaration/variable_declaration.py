@@ -6,14 +6,14 @@ from typing import TYPE_CHECKING, List, Optional, Tuple, Union
 
 from woke.ast.enums import Mutability, StorageLocation, Visibility
 from woke.ast.ir.abc import IrAbc
-
-# from woke.ast.ir.meta.override_specifier import OverrideSpecifier
 from woke.ast.ir.declaration.abc import DeclarationAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.meta.structured_documentation import StructuredDocumentation
 from woke.ast.ir.type_name.abc import TypeNameAbc
 from woke.ast.ir.utils import IrInitTuple, lazy_property
 from woke.ast.nodes import AstNodeId, SolcVariableDeclaration
+
+from ..meta.override_specifier import OverrideSpecifier
 
 if TYPE_CHECKING:
     from ..declaration.contract_definition import ContractDefinition
@@ -47,7 +47,7 @@ class VariableDeclaration(DeclarationAbc):
     __documentation: Optional[StructuredDocumentation]
     __function_selector: Optional[bytes]
     __indexed: bool
-    # __overrides: Optional[OverrideSpecifier] TODO
+    __overrides: Optional[OverrideSpecifier]
     __type_name: TypeNameAbc
     __value: Optional[ExpressionAbc]
 
@@ -83,7 +83,11 @@ class VariableDeclaration(DeclarationAbc):
         )
         # TODO function selector?
         self.__indexed = variable_declaration.indexed or False
-        # self.__overrides = OverrideSpecifier(init, variable_declaration.overrides, self) if variable_declaration.overrides else None
+        self.__overrides = (
+            OverrideSpecifier(init, variable_declaration.overrides, self)
+            if variable_declaration.overrides
+            else None
+        )
 
         # type name should not be None
         # prior 0.5.0, there was a `var` keyword which resulted in the type name being None
@@ -195,9 +199,9 @@ class VariableDeclaration(DeclarationAbc):
     def indexed(self) -> bool:
         return self.__indexed
 
-    # @property
-    # def overrides(self) -> Optional[OverrideSpecifier]:
-    # return self.__overrides
+    @property
+    def overrides(self) -> Optional[OverrideSpecifier]:
+        return self.__overrides
 
     @property
     def type_name(self) -> TypeNameAbc:
