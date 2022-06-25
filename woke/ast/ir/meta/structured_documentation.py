@@ -6,19 +6,25 @@ from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcStructuredDocumentation
 
-# if TYPE_CHECKING:
-# from .contract_definition import ContractDefinition
-# from .error_definition import ErrorDefinition
-# from .event_definition import EventDefinition
-# from .function_definition import FunctionDefinition
-# from .modifier_definition import ModifierDefinition
-# from .variable_declaration import VariableDeclaration
-
+if TYPE_CHECKING:
+    from ..declaration.contract_definition import ContractDefinition
+    from ..declaration.error_definition import ErrorDefinition
+    from ..declaration.event_definition import EventDefinition
+    from ..declaration.function_definition import FunctionDefinition
+    from ..declaration.modifier_definition import ModifierDefinition
+    from ..declaration.variable_declaration import VariableDeclaration
 
 
 class StructuredDocumentation(IrAbc):
     _ast_node: SolcStructuredDocumentation
-    # _parent: Union[ContractDefinition, ErrorDefinition, EventDefinition, FunctionDefinition, ModifierDefinition, VariableDeclaration]
+    _parent: Union[
+        ContractDefinition,
+        ErrorDefinition,
+        EventDefinition,
+        FunctionDefinition,
+        ModifierDefinition,
+        VariableDeclaration,
+    ]
 
     __text: str
 
@@ -31,9 +37,18 @@ class StructuredDocumentation(IrAbc):
         super().__init__(init, structured_documentation, parent)
         self.__text = structured_documentation.text
 
-    # @property
-    # def parent(self) -> Union[ContractDefinition, ErrorDefinition, EventDefinition, FunctionDefinition, ModifierDefinition, VariableDeclaration]:
-    # return self._parent
+    @property
+    def parent(
+        self,
+    ) -> Union[
+        ContractDefinition,
+        ErrorDefinition,
+        EventDefinition,
+        FunctionDefinition,
+        ModifierDefinition,
+        VariableDeclaration,
+    ]:
+        return self._parent
 
     @property
     def text(self) -> str:

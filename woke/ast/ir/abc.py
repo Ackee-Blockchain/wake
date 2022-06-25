@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -36,6 +36,11 @@ class IrAbc(ABC):
         self._source = init.source[source_start:source_end]
         if source_start != source_end:
             init.interval_tree[source_start:source_end] = self
+
+    @property
+    @abstractmethod
+    def parent(self) -> Optional["IrAbc"]:
+        ...
 
     @property
     def file(self) -> Path:
