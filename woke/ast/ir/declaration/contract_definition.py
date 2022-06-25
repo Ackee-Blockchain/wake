@@ -164,6 +164,10 @@ class ContractDefinition(DeclarationAbc):
         return self._parent
 
     @property
+    def canonical_name(self) -> str:
+        return self.__name
+
+    @property
     def abstract(self) -> bool:
         return self.__abstract
 

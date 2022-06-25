@@ -72,6 +72,10 @@ class ModifierDefinition(DeclarationAbc):
         return self._parent
 
     @property
+    def canonical_name(self) -> str:
+        return f"{self._parent.canonical_name}.{self.__name}"
+
+    @property
     def body(self) -> Block:
         return self.__body
 

@@ -12,7 +12,7 @@ from woke.ast.ir.declaration.abc import DeclarationAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.meta.structured_documentation import StructuredDocumentation
 from woke.ast.ir.type_name.abc import TypeNameAbc
-from woke.ast.ir.utils import IrInitTuple
+from woke.ast.ir.utils import IrInitTuple, lazy_property
 from woke.ast.nodes import AstNodeId, SolcVariableDeclaration
 
 if TYPE_CHECKING:
@@ -136,6 +136,17 @@ class VariableDeclaration(DeclarationAbc):
         VariableDeclarationStatement,
     ]:
         return self._parent
+
+    @lazy_property
+    def canonical_name(self) -> str:
+        node = self.parent
+        while not isinstance(node, DeclarationAbc):
+            if node is None:
+                assert (
+                    False
+                ), "Variable declaration must have a parent of type DeclarationAbc"
+            node = node.parent
+        return f"{node.canonical_name}.{self.name}"
 
     @property
     def constant(self) -> bool:
