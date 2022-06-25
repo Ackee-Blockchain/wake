@@ -54,6 +54,10 @@ class EventDefinition(DeclarationAbc):
         return self._parent
 
     @property
+    def canonical_name(self) -> str:
+        return f"{self._parent.canonical_name}.{self.__name}"
+
+    @property
     def anonymous(self) -> bool:
         return self.__anonymous
 

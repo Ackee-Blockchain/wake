@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Optional, Tuple, Union
 
 from woke.ast.ir.abc import IrAbc
-from woke.ast.ir.utils import IrInitTuple
+from woke.ast.ir.utils import IrInitTuple, lazy_property
 from woke.ast.nodes import SolcErrorDefinition
 
 from ..meta.parameter_list import ParameterList
@@ -43,6 +43,14 @@ class ErrorDefinition(DeclarationAbc):
     @property
     def parent(self) -> Union[ContractDefinition, SourceUnit]:
         return self._parent
+
+    @lazy_property
+    def canonical_name(self) -> str:
+        from .contract_definition import ContractDefinition
+
+        if isinstance(self._parent, ContractDefinition):
+            return f"{self._parent.canonical_name}.{self.__name}"
+        return self.__name
 
     @property
     def parameters(self) -> ParameterList:
