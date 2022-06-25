@@ -511,11 +511,11 @@ class SolcModifierDefinition(SolcNode):
     node_type: Literal["ModifierDefinition"] = Field(alias="nodeType")
     # required
     name: StrictStr
-    body: "SolcBlock"
     parameters: "SolcParameterList"
     virtual: StrictBool
     visibility: Visibility
     # optional
+    body: Optional["SolcBlock"]
     name_location: Optional[Src]  # new in 0.8.2
     base_modifiers: Optional[List[AstNodeId]]
     documentation: Optional["SolcStructuredDocumentation"]
