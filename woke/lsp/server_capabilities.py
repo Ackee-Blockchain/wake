@@ -5,6 +5,10 @@ from woke.lsp.common_structures import WorkspaceSymbolOptions
 from woke.lsp.document_sync import TextDocumentSyncKind, TextDocumentSyncOptions
 
 from .features.document_link import DocumentLinkOptions
+from .features.type_hierarchy import (
+    TypeHierarchyOptions,
+    TypeHierarchyRegistrationOptions,
+)
 from .lsp_data_model import LspModel
 
 
@@ -71,6 +75,9 @@ class ServerCapabilities(LspModel):
         Union[TextDocumentSyncOptions, TextDocumentSyncKind]
     ] = None
     document_link_provider: Optional[DocumentLinkOptions] = None
+    type_hierarchy_provider: Optional[
+        Union[bool, TypeHierarchyOptions, TypeHierarchyRegistrationOptions]
+    ] = None
     """
     completion_provider: Optional[CompletionOptions]
     hover_provider: Optional[Union[bool, HoverOptions]]
