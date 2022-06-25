@@ -4,7 +4,10 @@ from typing import Any, List, Optional, Union
 from woke.ast.enums import ContractKind
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.declaration.contract_definition import ContractDefinition
+from woke.ast.ir.declaration.function_definition import FunctionDefinition
+from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
 from woke.ast.ir.expression.identifier import Identifier
+from woke.ast.ir.expression.member_access import MemberAccess
 from woke.ast.ir.meta.identifier_path import IdentifierPath
 from woke.ast.ir.type_name.user_defined_type_name import UserDefinedTypeName
 from woke.ast.nodes import AstNodeId
@@ -96,6 +99,29 @@ class TypeHierarchySubtypesParams(WorkDoneProgressParams, PartialResultParams):
     item: TypeHierarchyItem
 
 
+def _get_node_symbol_kind(
+    node: Union[ContractDefinition, FunctionDefinition, VariableDeclaration]
+) -> SymbolKind:
+    if isinstance(node, ContractDefinition):
+        if node.kind == ContractKind.CONTRACT:
+            return SymbolKind.CLASS
+        elif node.kind == ContractKind.INTERFACE:
+            return SymbolKind.INTERFACE
+        elif node.kind == ContractKind.LIBRARY:
+            return SymbolKind.MODULE
+        else:
+            assert False, f"Unknown contract kind {node.kind}"
+    elif isinstance(node, FunctionDefinition):
+        if isinstance(node.parent, ContractDefinition):
+            return SymbolKind.METHOD
+        else:
+            return SymbolKind.FUNCTION
+    elif isinstance(node, VariableDeclaration):
+        return SymbolKind.VARIABLE
+    else:
+        assert False, f"Unknown node type {type(node)}"
+
+
 def prepare_type_hierarchy(
     context: LspContext, params: TypeHierarchyPrepareParams
 ) -> Union[List[TypeHierarchyItem], None]:
@@ -120,15 +146,15 @@ def prepare_type_hierarchy(
     node = max(nodes, key=lambda n: n.ast_tree_depth)
     logger.debug(f"Found node {node}")
 
-    if (
-        isinstance(node, IdentifierPath)
-        or isinstance(node, UserDefinedTypeName)
-        or isinstance(node, Identifier)
+    if isinstance(
+        node, (Identifier, IdentifierPath, MemberAccess, UserDefinedTypeName)
     ):
         node = node.referenced_declaration
         logger.debug(f"Found referenced declaration {node}")
 
-    if isinstance(node, ContractDefinition):
+    if isinstance(node, (ContractDefinition, FunctionDefinition)) or (
+        isinstance(node, VariableDeclaration) and node.overrides is not None
+    ):
         name_byte_start, name_byte_end = node.name_location
         (
             name_start_line,
@@ -138,19 +164,10 @@ def prepare_type_hierarchy(
             path, name_byte_end
         )
 
-        if node.kind == ContractKind.CONTRACT:
-            kind = SymbolKind.CLASS
-        elif node.kind == ContractKind.INTERFACE:
-            kind = SymbolKind.INTERFACE
-        elif node.kind == ContractKind.LIBRARY:
-            kind = SymbolKind.MODULE
-        else:
-            assert False, f"Unknown contract kind {node.kind}"
-
         return [
             TypeHierarchyItem(
-                name=node.name,
-                kind=kind,
+                name=node.canonical_name,
+                kind=_get_node_symbol_kind(node),
                 tags=None,
                 detail=None,
                 uri=DocumentUri(path_to_uri(node.file)),
@@ -180,40 +197,41 @@ def supertypes(
     node = context.compiler.ir_reference_resolver.resolve_node(
         AstNodeId(ast_node_id), cu_hash
     )
-    assert isinstance(node, ContractDefinition)
+    assert isinstance(
+        node, (ContractDefinition, FunctionDefinition, VariableDeclaration)
+    )
 
     type_items = []
+    nodes = []
+    if isinstance(node, ContractDefinition):
+        for base_contract in node.base_contracts:
+            contract = base_contract.base_name.referenced_declaration
+            assert isinstance(contract, ContractDefinition)
+            nodes.append(contract)
+    elif (
+        isinstance(node, (FunctionDefinition, VariableDeclaration))
+        and node.base_functions is not None
+    ):
+        for base_function in node.base_functions:
+            nodes.append(base_function)
 
-    for base_contract in node.base_contracts:
-        contract = base_contract.base_name.referenced_declaration
-        assert isinstance(contract, ContractDefinition)
-
-        name_byte_start, name_byte_end = contract.name_location
+    for node in nodes:
+        name_byte_start, name_byte_end = node.name_location
         (
             name_start_line,
             name_start_column,
-        ) = context.compiler.get_line_pos_from_byte_offset(
-            contract.file, name_byte_start
-        )
+        ) = context.compiler.get_line_pos_from_byte_offset(node.file, name_byte_start)
         name_end_line, name_end_column = context.compiler.get_line_pos_from_byte_offset(
-            contract.file, name_byte_end
+            node.file, name_byte_end
         )
-        if contract.kind == ContractKind.CONTRACT:
-            kind = SymbolKind.CLASS
-        elif contract.kind == ContractKind.INTERFACE:
-            kind = SymbolKind.INTERFACE
-        elif contract.kind == ContractKind.LIBRARY:
-            kind = SymbolKind.MODULE
-        else:
-            assert False, f"Unknown contract kind {contract.kind}"
 
         type_items.append(
             TypeHierarchyItem(
-                name=contract.name,
-                kind=kind,
+                name=node.canonical_name,
+                kind=_get_node_symbol_kind(node),
                 tags=None,
                 detail=None,
-                uri=DocumentUri(path_to_uri(contract.file)),
+                uri=DocumentUri(path_to_uri(node.file)),
                 range=Range(
                     start=Position(line=name_start_line, character=name_start_column),
                     end=Position(line=name_end_line, character=name_end_column),
@@ -223,7 +241,7 @@ def supertypes(
                     end=Position(line=name_end_line, character=name_end_column),
                 ),
                 data=TypeHierarchyItemData(
-                    ast_node_id=contract.ast_node_id, cu_hash=contract.cu_hash.hex()
+                    ast_node_id=node.ast_node_id, cu_hash=node.cu_hash.hex()
                 ),
             )
         )
@@ -239,36 +257,36 @@ def subtypes(
     node = context.compiler.ir_reference_resolver.resolve_node(
         AstNodeId(ast_node_id), cu_hash
     )
-    assert isinstance(node, ContractDefinition)
+    assert isinstance(
+        node, (ContractDefinition, FunctionDefinition, VariableDeclaration)
+    )
 
     type_items = []
-    for contract in node.child_contracts:
-        name_byte_start, name_byte_end = contract.name_location
+    nodes: List[Union[ContractDefinition, FunctionDefinition, VariableDeclaration]] = []
+    if isinstance(node, ContractDefinition):
+        for child_contract in node.child_contracts:
+            nodes.append(child_contract)
+    elif isinstance(node, FunctionDefinition) and node.child_functions:
+        for child_function in node.child_functions:
+            nodes.append(child_function)
+
+    for node in nodes:
+        name_byte_start, name_byte_end = node.name_location
         (
             name_start_line,
             name_start_column,
-        ) = context.compiler.get_line_pos_from_byte_offset(
-            contract.file, name_byte_start
-        )
+        ) = context.compiler.get_line_pos_from_byte_offset(node.file, name_byte_start)
         name_end_line, name_end_column = context.compiler.get_line_pos_from_byte_offset(
-            contract.file, name_byte_end
+            node.file, name_byte_end
         )
-        if contract.kind == ContractKind.CONTRACT:
-            kind = SymbolKind.CLASS
-        elif contract.kind == ContractKind.INTERFACE:
-            kind = SymbolKind.INTERFACE
-        elif contract.kind == ContractKind.LIBRARY:
-            kind = SymbolKind.MODULE
-        else:
-            assert False, f"Unknown contract kind {contract.kind}"
 
         type_items.append(
             TypeHierarchyItem(
-                name=contract.name,
-                kind=kind,
+                name=node.canonical_name,
+                kind=_get_node_symbol_kind(node),
                 tags=None,
                 detail=None,
-                uri=DocumentUri(path_to_uri(contract.file)),
+                uri=DocumentUri(path_to_uri(node.file)),
                 range=Range(
                     start=Position(line=name_start_line, character=name_start_column),
                     end=Position(line=name_end_line, character=name_end_column),
@@ -278,7 +296,7 @@ def subtypes(
                     end=Position(line=name_end_line, character=name_end_column),
                 ),
                 data=TypeHierarchyItemData(
-                    ast_node_id=contract.ast_node_id, cu_hash=contract.cu_hash.hex()
+                    ast_node_id=node.ast_node_id, cu_hash=node.cu_hash.hex()
                 ),
             )
         )
