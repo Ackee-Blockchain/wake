@@ -142,6 +142,7 @@ class LspServer:
                 await self._handle_message(message)
             else:
                 self._handle_notification(message)
+        self.__context.compiler.terminate()
 
     async def _handle_message(self, request: RequestMessage) -> None:
         logger.info(f"Message received: {request}")
