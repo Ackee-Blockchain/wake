@@ -30,6 +30,14 @@ from .features.document_link import (
     DocumentLinkParams,
     document_link,
 )
+from .features.type_hierarchy import (
+    TypeHierarchyPrepareParams,
+    TypeHierarchySubtypesParams,
+    TypeHierarchySupertypesParams,
+    prepare_type_hierarchy,
+    subtypes,
+    supertypes,
+)
 from .lsp_data_model import LspModel
 from .methods import RequestMethodEnum
 from .protocol_structures import (
@@ -79,6 +87,18 @@ class LspServer:
             RequestMethodEnum.DOCUMENT_LINK: (
                 partial(document_link, self.__context),
                 DocumentLinkParams,
+            ),
+            RequestMethodEnum.PREPARE_TYPE_HIERARCHY: (
+                partial(prepare_type_hierarchy, self.__context),
+                TypeHierarchyPrepareParams,
+            ),
+            RequestMethodEnum.TYPE_HIERARCHY_SUPERTYPES: (
+                partial(supertypes, self.__context),
+                TypeHierarchySupertypesParams,
+            ),
+            RequestMethodEnum.TYPE_HIERARCHY_SUBTYPES: (
+                partial(subtypes, self.__context),
+                TypeHierarchySubtypesParams,
             ),
         }
 
@@ -222,6 +242,7 @@ class LspServer:
             document_link_provider=DocumentLinkOptions(
                 resolve_provider=False,
             ),
+            type_hierarchy_provider=True,
         )
         return InitializeResult(capabilities=server_capabilities, server_info=None)
 
