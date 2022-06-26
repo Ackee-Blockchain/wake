@@ -12,7 +12,7 @@ from typing import Collection, Dict, List, Mapping, Set, Tuple, Union
 from intervaltree import IntervalTree
 
 from woke.ast.ir.meta.source_unit import SourceUnit
-from woke.ast.ir.reference_resolver import ReferenceResolver
+from woke.ast.ir.reference_resolver import CallbackParams, ReferenceResolver
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import AstSolc
 from woke.compile import SolcOutput, SolcOutputSelectionEnum
@@ -216,7 +216,9 @@ class LspCompiler:
                     self.__source_units[path] = SourceUnit(init, ast)
                     self.__interval_trees[path] = interval_tree
 
-            self.__ir_reference_resolver.run_post_process_callbacks()
+            self.__ir_reference_resolver.run_post_process_callbacks(
+                CallbackParams(source_units=self.__source_units)
+            )
 
     def __compilation_loop(self):
         if platform.system() != "Windows" and sys.version_info < (3, 8):

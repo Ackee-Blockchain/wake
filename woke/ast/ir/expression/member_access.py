@@ -5,6 +5,7 @@ from woke.ast.ir.declaration.abc import DeclarationAbc
 from woke.ast.ir.declaration.enum_definition import EnumDefinition
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.expression.identifier import Identifier
+from woke.ast.ir.reference_resolver import CallbackParams
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import AstNodeId, SolcMemberAccess
 
@@ -27,7 +28,7 @@ class MemberAccess(ExpressionAbc):
 
         self._reference_resolver.register_post_process_callback(self.__post_process)
 
-    def __post_process(self):
+    def __post_process(self, callback_params: CallbackParams):
         # workaround for enum value bug in Solidity versions prior to 0.8.2
         if (
             isinstance(self.__expression, Identifier)

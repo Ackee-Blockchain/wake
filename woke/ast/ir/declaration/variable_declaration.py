@@ -14,6 +14,7 @@ from woke.ast.ir.utils import IrInitTuple, lazy_property
 from woke.ast.nodes import AstNodeId, SolcVariableDeclaration
 
 from ..meta.override_specifier import OverrideSpecifier
+from ..reference_resolver import CallbackParams
 
 if TYPE_CHECKING:
     from ..declaration.contract_definition import ContractDefinition
@@ -104,7 +105,7 @@ class VariableDeclaration(DeclarationAbc):
         )
         self._reference_resolver.register_post_process_callback(self.__post_process)
 
-    def __post_process(self):
+    def __post_process(self, callback_params: CallbackParams):
         if self.base_functions is not None:
             for base_function in self.base_functions:
                 base_function._child_functions.append(self)
