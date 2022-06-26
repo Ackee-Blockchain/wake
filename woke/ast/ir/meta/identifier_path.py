@@ -1,5 +1,6 @@
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.declaration.abc import DeclarationAbc
+from woke.ast.ir.reference_resolver import CallbackParams
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import AstNodeId, SolcIdentifierPath
 
@@ -20,7 +21,7 @@ class IdentifierPath(IrAbc):
         assert self.__referenced_declaration_id >= 0
         self._reference_resolver.register_post_process_callback(self.__post_process)
 
-    def __post_process(self):
+    def __post_process(self, callback_params: CallbackParams):
         referenced_declaration = self.referenced_declaration
         referenced_declaration.register_reference(self)
 

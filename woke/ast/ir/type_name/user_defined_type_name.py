@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Optional
 
+from woke.ast.ir.reference_resolver import CallbackParams
+
 if TYPE_CHECKING:
     from woke.ast.ir.declaration.contract_definition import ContractDefinition
 
@@ -41,7 +43,7 @@ class UserDefinedTypeName(TypeNameAbc):
             )
         self._reference_resolver.register_post_process_callback(self.__post_process)
 
-    def __post_process(self):
+    def __post_process(self, callback_params: CallbackParams):
         referenced_declaration = self.referenced_declaration
         referenced_declaration.register_reference(self)
 

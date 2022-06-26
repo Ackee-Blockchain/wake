@@ -4,6 +4,7 @@ import re
 from typing import TYPE_CHECKING, List, Optional, Tuple
 
 from ..meta.override_specifier import OverrideSpecifier
+from ..reference_resolver import CallbackParams
 from ..statement.block import Block
 from .abc import DeclarationAbc
 
@@ -58,7 +59,7 @@ class ModifierDefinition(DeclarationAbc):
         )
         self._reference_resolver.register_post_process_callback(self.__post_process)
 
-    def __post_process(self):
+    def __post_process(self, callback_params: CallbackParams):
         if self.base_modifiers is not None:
             for base_modifier in self.base_modifiers:
                 base_modifier._child_modifiers.append(self)

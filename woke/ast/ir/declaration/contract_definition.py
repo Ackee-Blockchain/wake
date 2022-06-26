@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, List, Optional, Tuple
 
 from ..meta.inheritance_specifier import InheritanceSpecifier
 from ..meta.using_for_directive import UsingForDirective
+from ..reference_resolver import CallbackParams
 from .abc import DeclarationAbc
 
 if TYPE_CHECKING:
@@ -119,7 +120,7 @@ class ContractDefinition(DeclarationAbc):
 
         init.reference_resolver.register_post_process_callback(self.__post_process)
 
-    def __post_process(self):
+    def __post_process(self, callback_params: CallbackParams):
         for base_contract in self.__base_contracts:
             contract = base_contract.base_name.referenced_declaration
             assert isinstance(contract, ContractDefinition)
