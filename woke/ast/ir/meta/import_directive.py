@@ -7,11 +7,12 @@ from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional, Tuple
 
 from ..expression.identifier import Identifier
+from ..reference_resolver import CallbackParams
 
 if TYPE_CHECKING:
     from .source_unit import SourceUnit
 
-from woke.ast.nodes import SolcImportDirective
+from woke.ast.nodes import AstNodeId, SolcImportDirective
 
 from ..abc import IrAbc
 from ..utils import IrInitTuple, lazy_property
@@ -70,6 +71,26 @@ class ImportDirective(IrAbc):
         for alias in import_directive.symbol_aliases:
             self.__symbol_aliases.append(
                 SymbolAlias(Identifier(init, alias.foreign, self), alias.local)
+            )
+        self._reference_resolver.register_post_process_callback(
+            self.__post_process, priority=-1
+        )
+
+    def __post_process(self, callback_params: CallbackParams):
+        # referenced declaration ID is missing (for whatever reason) in import directive symbol aliases
+        # for example `import { SafeType } from "SafeLib.sol";`
+        # fix: find these reference IDs manually
+        for symbol_alias in self.__symbol_aliases:
+            imported_source_unit = callback_params.source_units[self.__imported_file]
+
+            referenced_declaration = None
+            for declaration in imported_source_unit.declarations:
+                if declaration.canonical_name == symbol_alias.foreign.name:
+                    referenced_declaration = declaration
+                    break
+            assert referenced_declaration is not None
+            symbol_alias.foreign._referenced_declaration_id = AstNodeId(
+                referenced_declaration.ast_node_id
             )
 
     @property

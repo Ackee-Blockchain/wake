@@ -17,10 +17,14 @@ class Identifier(ExpressionAbc):
     _referenced_declaration_id: Optional[AstNodeId]
 
     def __init__(self, init: IrInitTuple, identifier: SolcIdentifier, parent: IrAbc):
+        from woke.ast.ir.meta.import_directive import ImportDirective
+
         super().__init__(init, identifier, parent)
         self.__name = identifier.name
         self.__overloaded_declarations = list(identifier.overloaded_declarations)
         self._referenced_declaration_id = identifier.referenced_declaration
+        if self._referenced_declaration_id is None:
+            assert isinstance(self._parent, ImportDirective)
         init.reference_resolver.register_post_process_callback(self.__post_process)
 
     def __post_process(self, callback_params: CallbackParams):
@@ -52,11 +56,10 @@ class Identifier(ExpressionAbc):
 
     @property
     def referenced_declaration(self) -> Optional[DeclarationAbc]:
-        if (
-            self._referenced_declaration_id is None
-            or self._referenced_declaration_id < 0
-        ):
+        assert self._referenced_declaration_id is not None
+        if self._referenced_declaration_id < 0:
             return None
+
         node = self._reference_resolver.resolve_node(
             self._referenced_declaration_id, self._cu_hash
         )
