@@ -30,6 +30,7 @@ from .features.document_link import (
     DocumentLinkParams,
     document_link,
 )
+from .features.document_symbol import DocumentSymbolParams, document_symbol
 from .features.references import ReferenceParams, references
 from .features.type_hierarchy import (
     TypeHierarchyPrepareParams,
@@ -104,6 +105,10 @@ class LspServer:
             RequestMethodEnum.REFERENCES: (
                 partial(references, self.__context),
                 ReferenceParams,
+            ),
+            RequestMethodEnum.DOCUMENT_SYMBOL: (
+                partial(document_symbol, self.__context),
+                DocumentSymbolParams,
             ),
         }
 
@@ -250,6 +255,7 @@ class LspServer:
             ),
             type_hierarchy_provider=True,
             references_provider=True,
+            document_symbol_provider=True,
         )
         return InitializeResult(capabilities=server_capabilities, server_info=None)
 

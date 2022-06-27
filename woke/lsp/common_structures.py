@@ -831,13 +831,13 @@ class SymbolTag(IntEnum):
 
 class DocumentSymbol(LspModel):
     name: str
-    detail: Optional[str]
+    detail: Optional[str] = None
     kind: SymbolKind
-    tags: Optional[List[SymbolTag]]
-    deprecated: Optional[bool]
+    tags: Optional[List[SymbolTag]] = None
+    deprecated: Optional[bool] = None
     range: Range
     selection_range: Range
-    children: Optional[List["DocumentSymbol"]]
+    children: Optional[List["DocumentSymbol"]] = None
 
 
 class SymbolInformation(LspModel):
