@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING, List, Optional, Tuple
+from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple
 
 from ..meta.inheritance_specifier import InheritanceSpecifier
 from ..meta.using_for_directive import UsingForDirective
@@ -236,3 +236,16 @@ class ContractDefinition(DeclarationAbc):
     @property
     def declared_variables(self) -> Tuple[VariableDeclaration]:
         return tuple(self.__declared_variables)
+
+    @property
+    def declarations(self) -> Iterator[DeclarationAbc]:
+        yield from self.enums
+        for enum in self.enums:
+            yield from enum.values
+        yield from self.errors
+        yield from self.events
+        yield from self.functions
+        yield from self.modifiers
+        yield from self.structs
+        yield from self.user_defined_value_types
+        yield from self.declared_variables
