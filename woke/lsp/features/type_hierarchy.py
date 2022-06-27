@@ -237,6 +237,14 @@ def supertypes(
             nodes.append(base_modifier)
 
     for node in nodes:
+        byte_start, byte_end = node.byte_location
+        start_line, start_column = context.compiler.get_line_pos_from_byte_offset(
+            node.file, byte_start
+        )
+        end_line, end_column = context.compiler.get_line_pos_from_byte_offset(
+            node.file, byte_end
+        )
+
         name_byte_start, name_byte_end = node.name_location
         (
             name_start_line,
@@ -254,8 +262,8 @@ def supertypes(
                 detail=None,
                 uri=DocumentUri(path_to_uri(node.file)),
                 range=Range(
-                    start=Position(line=name_start_line, character=name_start_column),
-                    end=Position(line=name_end_line, character=name_end_column),
+                    start=Position(line=start_line, character=start_column),
+                    end=Position(line=end_line, character=end_column),
                 ),
                 selection_range=Range(
                     start=Position(line=name_start_line, character=name_start_column),
