@@ -1,6 +1,31 @@
 import enum
 
 
+class GlobalSymbolsEnum(enum.IntEnum):
+    ABI = -1
+    ADDMOD = -2
+    ASSERT = -3
+    BLOCK = -4
+    BLOCKHASH = -5
+    ECRECOVER = -6
+    GASLEFT = -7
+    KECCAK256 = -8
+    MSG = -15
+    MULMOD = -16
+    NOW = -17
+    REQUIRE = -18
+    REVERT = -19
+    RIPEMD160 = -20
+    SELFDESTRUCT = -21
+    SHA256 = -22
+    SHA3 = -23
+    SUICIDE = -24
+    SUPER = -25
+    TX = -26
+    TYPE = -27
+    THIS = -28
+
+
 # Contracts
 class ContractKind(str, enum.Enum):
     CONTRACT = "contract"

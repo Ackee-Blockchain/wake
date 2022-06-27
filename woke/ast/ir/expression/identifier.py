@@ -1,5 +1,6 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
+from woke.ast.enums import GlobalSymbolsEnum
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.declaration.abc import DeclarationAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
@@ -28,9 +29,15 @@ class Identifier(ExpressionAbc):
         init.reference_resolver.register_post_process_callback(self.__post_process)
 
     def __post_process(self, callback_params: CallbackParams):
-        referenced_declaration = self.referenced_declaration
-        if referenced_declaration is not None:
-            referenced_declaration.register_reference(self)
+        assert self._referenced_declaration_id is not None
+        if self._referenced_declaration_id < 0:
+            global_symbol = GlobalSymbolsEnum(self._referenced_declaration_id)
+            self._reference_resolver.register_global_symbol_reference(
+                global_symbol, self
+            )
+        else:
+            assert isinstance(self.referenced_declaration, DeclarationAbc)
+            self.referenced_declaration.register_reference(self)
 
     @property
     def parent(self) -> IrAbc:
@@ -55,10 +62,10 @@ class Identifier(ExpressionAbc):
         return tuple(overloaded_declarations)
 
     @property
-    def referenced_declaration(self) -> Optional[DeclarationAbc]:
+    def referenced_declaration(self) -> Union[DeclarationAbc, GlobalSymbolsEnum]:
         assert self._referenced_declaration_id is not None
         if self._referenced_declaration_id < 0:
-            return None
+            return GlobalSymbolsEnum(self._referenced_declaration_id)
 
         node = self._reference_resolver.resolve_node(
             self._referenced_declaration_id, self._cu_hash
