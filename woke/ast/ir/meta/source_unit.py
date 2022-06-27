@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional, Tuple
+from typing import Iterator, List, Optional, Tuple
 
 from woke.ast.ir.abc import IrAbc
 from woke.ast.nodes import (
@@ -15,6 +15,7 @@ from woke.ast.nodes import (
     SolcVariableDeclaration,
 )
 
+from ..declaration.abc import DeclarationAbc
 from ..declaration.contract_definition import ContractDefinition
 from ..declaration.enum_definition import EnumDefinition
 from ..declaration.error_definition import ErrorDefinition
@@ -166,3 +167,17 @@ class SourceUnit(IrAbc):
         A tuple of top level contract definitions present in the file.
         """
         return tuple(self.__contracts)
+
+    @property
+    def declarations(self) -> Iterator[DeclarationAbc]:
+        yield from self.declared_variables
+        yield from self.enums
+        for enum in self.enums:
+            yield from enum.values
+        yield from self.functions
+        yield from self.structs
+        yield from self.errors
+        yield from self.user_defined_value_types
+        yield from self.contracts
+        for contract in self.contracts:
+            yield from contract.declarations
