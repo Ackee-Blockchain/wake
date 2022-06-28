@@ -234,7 +234,9 @@ class SolidityCompiler:
                 sources[source_unit_name] = (
                     Path(f"{index:03d}")
                     / "asts"
-                    / sanitize_filename(source_unit_name, "_", platform="universal")
+                    / sanitize_filename(
+                        source_unit_name + ".json", "_", platform="universal"
+                    )
                 )
 
             contracts = {}
@@ -504,7 +506,7 @@ class SolidityCompiler:
                 # Because a source unit name can contain slashes, it is not possible to name the AST build file
                 # by its source unit name. Blake2b hash of the Solidity source file content is used instead.
                 file_path = ast_path / sanitize_filename(
-                    source_unit_name, "_", platform="universal"
+                    source_unit_name + ".json", "_", platform="universal"
                 )
 
                 if file_path.is_file():
