@@ -216,8 +216,8 @@ class LspCompiler:
         # perform Solidity files discovery
         project_path = self.__config.project_root_path
 
-        for file in (project_path / "contracts").rglob("*.sol"):
-            if file.is_file():
+        for file in project_path.rglob("**/*.sol"):
+            if "node_modules" not in file.parts and file.is_file():
                 self.__files[file.resolve()] = file.read_text()
 
         # perform initial compilation
