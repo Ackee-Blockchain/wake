@@ -106,12 +106,13 @@ def _generate_declaration_references(
     return refs
 
 
-def references(
+async def references(
     context: LspContext, params: ReferenceParams
 ) -> Union[List[Location], None]:
     logger.debug(
         f"References for file {params.text_document.uri} at position {params.position} requested"
     )
+    await context.compiler.output_ready.wait()
 
     refs = []
     path = uri_to_path(params.text_document.uri).resolve()

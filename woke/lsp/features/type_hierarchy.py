@@ -127,12 +127,13 @@ def _get_node_symbol_kind(
         assert False, f"Unknown node type {type(node)}"
 
 
-def prepare_type_hierarchy(
+async def prepare_type_hierarchy(
     context: LspContext, params: TypeHierarchyPrepareParams
 ) -> Union[List[TypeHierarchyItem], None]:
     logger.debug(
         f"Type hierarchy for file {params.text_document.uri} at position {params.position} requested"
     )
+    await context.compiler.output_ready.wait()
 
     path = uri_to_path(params.text_document.uri).resolve()
 
@@ -193,7 +194,7 @@ def prepare_type_hierarchy(
     return None
 
 
-def supertypes(
+async def supertypes(
     context: LspContext, params: TypeHierarchySupertypesParams
 ) -> Union[List[TypeHierarchyItem], None]:
     logger.debug(f"Supertypes for {params.item} requested")
@@ -277,7 +278,7 @@ def supertypes(
     return type_items
 
 
-def subtypes(
+async def subtypes(
     context: LspContext, params: TypeHierarchySubtypesParams
 ) -> Union[List[TypeHierarchyItem], None]:
     logger.debug(f"Subtypes for {params.item} requested")

@@ -67,6 +67,7 @@ class LspServer:
     __context: LspContext
     __protocol: RpcProtocol
     __run: bool
+    __compilation_task: Optional[asyncio.Task]
 
     __method_mapping: Dict[str, Tuple[Callable, Optional[Type[LspModel]]]]
     __notification_mapping: Dict[str, Tuple[Callable, Optional[Type[LspModel]]]]
@@ -82,6 +83,7 @@ class LspServer:
         self.__context = LspContext(config)
         self.__protocol = RpcProtocol(reader, writer)
         self.__run = True
+        self.__compilation_task = None
 
         self.__method_mapping = {
             RequestMethodEnum.INITIALIZE: (self._initialize, InitializeParams),
@@ -146,8 +148,9 @@ class LspServer:
             if isinstance(message, RequestMessage):
                 await self._handle_message(message)
             else:
-                self._handle_notification(message)
-        self.__context.compiler.terminate()
+                await self._handle_notification(message)
+        if self.__compilation_task is not None:
+            self.__compilation_task.cancel()
 
     async def _handle_message(self, request: RequestMessage) -> None:
         logger.info(f"Message received: {request}")
@@ -164,12 +167,12 @@ class LspServer:
 
         # Handling request
         try:
-            response = self._serve_response(request)
+            response = await self._serve_response(request)
         except LspError as e:
             response = self._serve_error(request, e.code, e.message)
         await self.__protocol.send(response)
 
-    def _handle_notification(self, notification: NotificationMessage) -> None:
+    async def _handle_notification(self, notification: NotificationMessage) -> None:
         logger.info(f"Notification received: {notification}")
 
         if not self.__initialized and notification.method != RequestMethodEnum.EXIT:
@@ -184,11 +187,11 @@ class LspServer:
             raise NotImplementedError()
 
         if params_type is not None:
-            n(params_type.parse_obj(notification.params))
+            await n(params_type.parse_obj(notification.params))
         else:
-            n(None)
+            await n(None)
 
-    def _serve_response(self, request: RequestMessage) -> ResponseMessage:
+    async def _serve_response(self, request: RequestMessage) -> ResponseMessage:
         try:
             m, params_type = self.__method_mapping[request.method]
         except KeyError:
@@ -196,9 +199,9 @@ class LspServer:
             raise NotImplementedError()
 
         if params_type is not None:
-            response = m(params_type.parse_obj(request.params))
+            response = await m(params_type.parse_obj(request.params))
         else:
-            response = m(None)
+            response = await m(None)
 
         response_message = ResponseMessage(
             jsonrpc="2.0", id=request.id, result=response, error=None
@@ -217,7 +220,7 @@ class LspServer:
         logger.warning(f"Serving error response: {response_message}")
         return response_message
 
-    def _initialize(self, params: InitializeParams) -> InitializeResult:
+    async def _initialize(self, params: InitializeParams) -> InitializeResult:
         if self.__initialized:
             raise LspError(ErrorCodes.InvalidRequest, "Server already initialized")
 
@@ -243,7 +246,7 @@ class LspServer:
         self.__initialized = True
         self.__context.config.project_root_path = path
         self.__context.config.load_configs()
-        self.__context.create_compilation_thread()
+        self.__compilation_task = asyncio.create_task(self.__context.compiler.run())
 
         server_capabilities = ServerCapabilities(
             position_encoding=PositionEncodingKind.UTF16,
@@ -259,35 +262,41 @@ class LspServer:
         )
         return InitializeResult(capabilities=server_capabilities, server_info=None)
 
-    def _cancel_request(self, params: CancelParams) -> None:
+    async def _cancel_request(self, params: CancelParams) -> None:
         pass
 
-    def _progress(self, params: ProgressParams) -> None:
+    async def _progress(self, params: ProgressParams) -> None:
         pass
 
-    def _log_trace(self, params: LogTraceParams) -> None:
+    async def _log_trace(self, params: LogTraceParams) -> None:
         pass
 
-    def _set_trace(self, params: SetTraceParams) -> None:
+    async def _set_trace(self, params: SetTraceParams) -> None:
         pass
 
-    def _shutdown(self, params: Any) -> None:
+    async def _shutdown(self, params: Any) -> None:
         self.__run = False
 
-    def _initialized(self, params: InitializedParams) -> None:
+    async def _initialized(self, params: InitializedParams) -> None:
         pass
 
-    def _text_document_did_open(self, params: DidOpenTextDocumentParams) -> None:
-        self.__context.compiler.add_change(params)
+    async def _text_document_did_open(self, params: DidOpenTextDocumentParams) -> None:
+        await self.__context.compiler.add_change(params)
 
-    def _text_document_did_change(self, params: DidChangeTextDocumentParams) -> None:
-        self.__context.compiler.add_change(params)
+    async def _text_document_did_change(
+        self, params: DidChangeTextDocumentParams
+    ) -> None:
+        await self.__context.compiler.add_change(params)
 
-    def _text_document_will_save(self, params: WillSaveTextDocumentParams) -> None:
+    async def _text_document_will_save(
+        self, params: WillSaveTextDocumentParams
+    ) -> None:
         pass
 
-    def _text_document_did_save(self, params: DidSaveTextDocumentParams) -> None:
+    async def _text_document_did_save(self, params: DidSaveTextDocumentParams) -> None:
         pass
 
-    def _text_document_did_close(self, params: DidCloseTextDocumentParams) -> None:
-        self.__context.compiler.add_change(params)
+    async def _text_document_did_close(
+        self, params: DidCloseTextDocumentParams
+    ) -> None:
+        await self.__context.compiler.add_change(params)

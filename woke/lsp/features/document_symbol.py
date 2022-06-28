@@ -72,10 +72,11 @@ def _declaration_to_symbol(
     )
 
 
-def document_symbol(
+async def document_symbol(
     context: LspContext, params: DocumentSymbolParams
 ) -> Union[List[DocumentSymbol], List[SymbolInformation], None]:
     logger.debug(f"Document symbols for file {params.text_document.uri} requested")
+    await context.compiler.output_ready.wait()
 
     path = uri_to_path(params.text_document.uri).resolve()
 
