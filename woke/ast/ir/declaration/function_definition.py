@@ -50,6 +50,14 @@ class FunctionDefinition(DeclarationAbc):
 
         self.__implemented = function.implemented
         self.__kind = function.kind
+
+        if self.__kind == FunctionKind.CONSTRUCTOR:
+            self._name = "constructor"
+        elif self.__kind == FunctionKind.FALLBACK:
+            self._name = "fallback"
+        elif self.__kind == FunctionKind.RECEIVE:
+            self._name = "receive"
+
         self.__modifiers = [
             ModifierInvocation(init, modifier, self) for modifier in function.modifiers
         ]
@@ -88,10 +96,16 @@ class FunctionDefinition(DeclarationAbc):
                 identifier=IDENTIFIER
             ).encode("utf-8")
         )
+        CONSTRUCTOR_RE = re.compile(r"^\s*(?P<name>constructor)".encode("utf-8"))
+        FALLBACK_RE = re.compile(r"^\s*(?P<name>fallback)".encode("utf-8"))
+        RECEIVE_RE = re.compile(r"^\s*(?P<name>receive)".encode("utf-8"))
+
+        regexps = [FUNCTION_RE, CONSTRUCTOR_RE, FALLBACK_RE, RECEIVE_RE]
+        matches = [regexp.match(self._source) for regexp in regexps]
+        assert any(matches)
 
         byte_start = self._ast_node.src.byte_offset
-        match = FUNCTION_RE.match(self._source)
-        assert match
+        match = next(match for match in matches if match)
         return byte_start + match.start("name"), byte_start + match.end("name")
 
     @property
