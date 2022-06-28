@@ -58,12 +58,11 @@ class DocumentLink(LspModel):
     """
 
 
-def document_link(
+async def document_link(
     context: LspContext, params: DocumentLinkParams
 ) -> Optional[List[DocumentLink]]:
-    logger.info(f"{context}, {params}")
     logger.info(f"Requested document links for file {params.text_document.uri}")
-    context.compiler.output_ready.wait()
+    await context.compiler.output_ready.wait()
 
     document_links = []
 

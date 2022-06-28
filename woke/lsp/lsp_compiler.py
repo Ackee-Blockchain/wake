@@ -6,7 +6,6 @@ import re
 import sys
 import threading
 from pathlib import Path
-from threading import Thread
 from typing import Collection, Dict, List, Mapping, Set, Tuple, Union
 
 from intervaltree import IntervalTree
@@ -26,9 +25,6 @@ from woke.lsp.document_sync import (
     DidOpenTextDocumentParams,
 )
 from woke.lsp.utils.uri import uri_to_path
-
-if platform.system() != "Windows":
-    from woke.lsp.utils.threaded_child_watcher import ThreadedChildWatcher
 
 logger = logging.getLogger(__name__)
 
@@ -52,9 +48,7 @@ def _binary_search(lines: List[Tuple[bytes, int]], x: int) -> int:
 
 class LspCompiler:
     __config: WokeConfig
-    __thread: Thread
-    __file_changes_queue: queue.Queue
-    __stop_event: threading.Event
+    __file_changes_queue: asyncio.Queue
 
     __processed_files: Set[Path]
 
@@ -73,11 +67,11 @@ class LspCompiler:
 
     __ir_reference_resolver: ReferenceResolver
 
-    output_ready: threading.Event
+    __output_ready: asyncio.Event
 
     def __init__(self, config: WokeConfig):
         self.__config = config
-        self.__file_changes_queue = queue.Queue()
+        self.__file_changes_queue = asyncio.Queue()
         self.__stop_event = threading.Event()
         self.__processed_files = set()
         self.__files = dict()
@@ -90,14 +84,16 @@ class LspCompiler:
         self.__source_units = {}
         self.__line_indexes = {}
         self.__output_contents = dict()
+        self.__output_ready = asyncio.Event()
 
         self.__ir_reference_resolver = ReferenceResolver()
 
-        self.output_ready = threading.Event()
+    async def run(self):
+        await self.__compilation_loop()
 
-    def run(self):
-        self.__thread = Thread(target=self.__compilation_loop, args=())
-        self.__thread.start()
+    @property
+    def output_ready(self) -> asyncio.Event:
+        return self.__output_ready
 
     @property
     def asts(self) -> Dict[Path, AstSolc]:
@@ -119,7 +115,7 @@ class LspCompiler:
     def source_units(self) -> Dict[Path, SourceUnit]:
         return self.__source_units
 
-    def add_change(
+    async def add_change(
         self,
         change: Union[
             DidOpenTextDocumentParams,
@@ -133,7 +129,7 @@ class LspCompiler:
             or file not in self.__processed_files
         ):
             self.output_ready.clear()
-        self.__file_changes_queue.put(change)
+        await self.__file_changes_queue.put(change)
 
     def get_file_content(self, file: Union[Path, str]) -> str:
         if isinstance(file, str):
@@ -163,19 +159,15 @@ class LspCompiler:
         line_offset = len(line_bytes.decode("utf-8")[:col].encode("utf-8"))
         return prefix + line_offset
 
-    def terminate(self):
-        self.__stop_event.set()
-        self.__thread.join()
-
-    def __compile(self, files: Collection[Path], modified_files: Mapping[Path, str]):
-        out: List[Tuple[CompilationUnit, SolcOutput]] = asyncio.run(
-            self.__compiler.compile(
-                files,
-                [SolcOutputSelectionEnum.AST],
-                write_artifacts=False,
-                reuse_latest_artifacts=False,
-                modified_files=modified_files,
-            )
+    async def __compile(
+        self, files: Collection[Path], modified_files: Mapping[Path, str]
+    ):
+        out: List[Tuple[CompilationUnit, SolcOutput]] = await self.__compiler.compile(
+            files,
+            [SolcOutputSelectionEnum.AST],
+            write_artifacts=False,
+            reuse_latest_artifacts=False,
+            modified_files=modified_files,
         )
         self.__output_contents.update(self.__files)
 
@@ -220,13 +212,7 @@ class LspCompiler:
                 CallbackParams(source_units=self.__source_units)
             )
 
-    def __compilation_loop(self):
-        if platform.system() != "Windows" and sys.version_info < (3, 8):
-            loop = asyncio.new_event_loop()
-            watcher = ThreadedChildWatcher()
-            asyncio.set_child_watcher(watcher)
-            watcher.attach_loop(loop)
-
+    async def __compilation_loop(self):
         # perform Solidity files discovery
         project_path = self.__config.project_root_path
 
@@ -235,76 +221,76 @@ class LspCompiler:
                 self.__files[file.resolve()] = file.read_text()
 
         # perform initial compilation
-        self.__compile(self.__files.keys(), {})
+        await self.__compile(self.__files.keys(), {})
 
         self.__output_contents = self.__files.copy()
         self.output_ready.set()
 
-        while not self.__stop_event.is_set():
-            try:
-                while True:
-                    change = self.__file_changes_queue.get(timeout=0.1)
+        while True:
+            change = await self.__file_changes_queue.get()
+            while True:
+                if isinstance(change, DidOpenTextDocumentParams):
+                    path = uri_to_path(change.text_document.uri).resolve()
+                    self.__files[path] = change.text_document.text
+                    self.__opened_files.add(path)
+                elif isinstance(change, DidCloseTextDocumentParams):
+                    path = uri_to_path(change.text_document.uri).resolve()
+                    self.__opened_files.remove(path)
+                elif isinstance(change, DidChangeTextDocumentParams):
+                    path = uri_to_path(change.text_document.uri).resolve()
+                    self.__modified_files.add(path)
 
-                    if isinstance(change, DidOpenTextDocumentParams):
-                        path = uri_to_path(change.text_document.uri).resolve()
-                        self.__files[path] = change.text_document.text
-                        self.__opened_files.add(path)
-                    elif isinstance(change, DidCloseTextDocumentParams):
-                        path = uri_to_path(change.text_document.uri).resolve()
-                        self.__opened_files.remove(path)
-                    elif isinstance(change, DidChangeTextDocumentParams):
-                        path = uri_to_path(change.text_document.uri).resolve()
-                        self.__modified_files.add(path)
+                    for content_change in change.content_changes:
+                        start = content_change.range.start
+                        end = content_change.range.end
 
-                        for content_change in change.content_changes:
-                            start = content_change.range.start
-                            end = content_change.range.end
-
-                            # str.splitlines() removes empty lines => cannot be used
-                            # str.split() removes separators => cannot be used
-                            tmp_lines = re.split(r"(\r?\n)", self.__files[path])
-                            tmp_lines2: List[str] = []
-                            for line in tmp_lines:
-                                if line in {"\r\n", "\n"}:
-                                    tmp_lines2[-1] += line
-                                else:
-                                    tmp_lines2.append(line)
-
-                            lines: List[bytearray] = [
-                                bytearray(line.encode(ENCODING)) for line in tmp_lines2
-                            ]
-
-                            if start.line == end.line:
-                                line = lines[start.line]
-                                line[start.character * 2 : end.character * 2] = b""
-                                line[
-                                    start.character * 2 : start.character * 2
-                                ] = content_change.text.encode(ENCODING)
+                        # str.splitlines() removes empty lines => cannot be used
+                        # str.split() removes separators => cannot be used
+                        tmp_lines = re.split(r"(\r?\n)", self.__files[path])
+                        tmp_lines2: List[str] = []
+                        for line in tmp_lines:
+                            if line in {"\r\n", "\n"}:
+                                tmp_lines2[-1] += line
                             else:
-                                start_line = lines[start.line]
-                                end_line = lines[end.line]
-                                start_line[
-                                    start.character * 2 :
-                                ] = content_change.text.encode(ENCODING)
-                                end_line[: end.character * 2] = b""
+                                tmp_lines2.append(line)
 
-                                for i in range(start.line + 1, end.line):
-                                    lines[i] = bytearray(b"")
+                        lines: List[bytearray] = [
+                            bytearray(line.encode(ENCODING)) for line in tmp_lines2
+                        ]
 
-                            self.__files[path] = "".join(
-                                line.decode(ENCODING) for line in lines
-                            )
-                    else:
-                        raise Exception("Unknown change type")
-            except queue.Empty:
-                pass
+                        if start.line == end.line:
+                            line = lines[start.line]
+                            line[start.character * 2 : end.character * 2] = b""
+                            line[
+                                start.character * 2 : start.character * 2
+                            ] = content_change.text.encode(ENCODING)
+                        else:
+                            start_line = lines[start.line]
+                            end_line = lines[end.line]
+                            start_line[
+                                start.character * 2 :
+                            ] = content_change.text.encode(ENCODING)
+                            end_line[: end.character * 2] = b""
+
+                            for i in range(start.line + 1, end.line):
+                                lines[i] = bytearray(b"")
+
+                        self.__files[path] = "".join(
+                            line.decode(ENCODING) for line in lines
+                        )
+                else:
+                    raise Exception("Unknown change type")
+                try:
+                    change = self.__file_changes_queue.get_nowait()
+                except asyncio.QueueEmpty:
+                    break
 
             # run the compilation
             if len(self.__modified_files) > 0:
                 modified_files = {
                     path: self.__files[path] for path in self.__modified_files
                 }
-                self.__compile([], modified_files)
+                await self.__compile([], modified_files)
 
                 self.__modified_files.clear()
 

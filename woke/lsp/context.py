@@ -18,9 +18,6 @@ class LspContext:
         self.initialized = False
         self.trace_value = TraceValueEnum(TraceValueEnum.OFF)
 
-    def create_compilation_thread(self) -> None:
-        self.__compiler.run()
-
     @property
     def compiler(self) -> LspCompiler:
         return self.__compiler
