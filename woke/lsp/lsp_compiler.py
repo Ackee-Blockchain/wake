@@ -189,20 +189,19 @@ class LspCompiler:
                 error.severity == SolcOutputErrorSeverityEnum.ERROR
                 for error in solc_output.errors
             )
-
-            for source_unit_name, raw_ast in solc_output.sources.items():
-                if errored:
-                    # an error occurred during compilation
-                    # AST still may be provided, but it must NOT be parsed (pydantic model is not defined for this case)
-                    path = cu.source_unit_name_to_path(source_unit_name)
+            if errored:
+                for path in cu.files:
                     if path in modified_files:
+                        # an error occurred during compilation
+                        # AST still may be provided, but it must NOT be parsed (pydantic model is not defined for this case)
                         if path in self.__asts:
                             self.__asts.pop(path)
                         if path in self.__source_units:
                             self.__source_units.pop(path)
                         if path in self.__interval_trees:
                             self.__interval_trees.pop(path)
-                else:
+            else:
+                for source_unit_name, raw_ast in solc_output.sources.items():
                     path = cu.source_unit_name_to_path(source_unit_name)
                     ast = AstSolc.parse_obj(raw_ast.ast)
                     interval_tree = IntervalTree()
