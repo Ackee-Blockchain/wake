@@ -177,6 +177,7 @@ class LspCompiler:
                 modified_files=modified_files,
             )
         )
+        self.__output_contents.update(self.__files)
 
         for cu, solc_output in out:
             self.__errors.update(solc_output.errors)
@@ -241,60 +242,63 @@ class LspCompiler:
         self.output_ready.set()
 
         while not self.__stop_event.is_set():
-            while not self.__file_changes_queue.empty():
-                change = self.__file_changes_queue.get()
+            try:
+                while True:
+                    change = self.__file_changes_queue.get(timeout=0.1)
 
-                if isinstance(change, DidOpenTextDocumentParams):
-                    path = uri_to_path(change.text_document.uri).resolve()
-                    self.__files[path] = change.text_document.text
-                    self.__opened_files.add(path)
-                elif isinstance(change, DidCloseTextDocumentParams):
-                    path = uri_to_path(change.text_document.uri).resolve()
-                    self.__opened_files.remove(path)
-                elif isinstance(change, DidChangeTextDocumentParams):
-                    path = uri_to_path(change.text_document.uri).resolve()
-                    self.__modified_files.add(path)
+                    if isinstance(change, DidOpenTextDocumentParams):
+                        path = uri_to_path(change.text_document.uri).resolve()
+                        self.__files[path] = change.text_document.text
+                        self.__opened_files.add(path)
+                    elif isinstance(change, DidCloseTextDocumentParams):
+                        path = uri_to_path(change.text_document.uri).resolve()
+                        self.__opened_files.remove(path)
+                    elif isinstance(change, DidChangeTextDocumentParams):
+                        path = uri_to_path(change.text_document.uri).resolve()
+                        self.__modified_files.add(path)
 
-                    for content_change in change.content_changes:
-                        start = content_change.range.start
-                        end = content_change.range.end
+                        for content_change in change.content_changes:
+                            start = content_change.range.start
+                            end = content_change.range.end
 
-                        # str.splitlines() removes empty lines => cannot be used
-                        # str.split() removes separators => cannot be used
-                        tmp_lines = re.split(r"(\r?\n)", self.__files[path])
-                        tmp_lines2: List[str] = []
-                        for line in tmp_lines:
-                            if line in {"\r\n", "\n"}:
-                                tmp_lines2[-1] += line
+                            # str.splitlines() removes empty lines => cannot be used
+                            # str.split() removes separators => cannot be used
+                            tmp_lines = re.split(r"(\r?\n)", self.__files[path])
+                            tmp_lines2: List[str] = []
+                            for line in tmp_lines:
+                                if line in {"\r\n", "\n"}:
+                                    tmp_lines2[-1] += line
+                                else:
+                                    tmp_lines2.append(line)
+
+                            lines: List[bytearray] = [
+                                bytearray(line.encode(ENCODING)) for line in tmp_lines2
+                            ]
+
+                            if start.line == end.line:
+                                line = lines[start.line]
+                                line[start.character * 2 : end.character * 2] = b""
+                                line[
+                                    start.character * 2 : start.character * 2
+                                ] = content_change.text.encode(ENCODING)
                             else:
-                                tmp_lines2.append(line)
+                                start_line = lines[start.line]
+                                end_line = lines[end.line]
+                                start_line[
+                                    start.character * 2 :
+                                ] = content_change.text.encode(ENCODING)
+                                end_line[: end.character * 2] = b""
 
-                        lines: List[bytearray] = [
-                            bytearray(line.encode(ENCODING)) for line in tmp_lines2
-                        ]
+                                for i in range(start.line + 1, end.line):
+                                    lines[i] = bytearray(b"")
 
-                        if start.line == end.line:
-                            line = lines[start.line]
-                            line[start.character * 2 : end.character * 2] = b""
-                            line[
-                                start.character * 2 : start.character * 2
-                            ] = content_change.text.encode(ENCODING)
-                        else:
-                            start_line = lines[start.line]
-                            end_line = lines[end.line]
-                            start_line[
-                                start.character * 2 :
-                            ] = content_change.text.encode(ENCODING)
-                            end_line[: end.character * 2] = b""
-
-                            for i in range(start.line + 1, end.line):
-                                lines[i] = bytearray(b"")
-
-                        self.__files[path] = "".join(
-                            line.decode(ENCODING) for line in lines
-                        )
-                else:
-                    raise Exception("Unknown change type")
+                            self.__files[path] = "".join(
+                                line.decode(ENCODING) for line in lines
+                            )
+                    else:
+                        raise Exception("Unknown change type")
+            except queue.Empty:
+                pass
 
             # run the compilation
             if len(self.__modified_files) > 0:
@@ -303,7 +307,6 @@ class LspCompiler:
                 }
                 self.__compile([], modified_files)
 
-                self.__output_contents.update(self.__files)
                 self.__modified_files.clear()
 
                 if self.__file_changes_queue.empty():
