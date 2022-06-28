@@ -56,7 +56,7 @@ class DeclarationAbc(IrAbc):
     ):
         super().__init__(init, solc_node, parent)
         self._name = solc_node.name
-        if solc_node.name_location is None:
+        if solc_node.name_location is None or solc_node.name_location.byte_offset < 0:
             self._name_location = None
         else:
             self._name_location = (
