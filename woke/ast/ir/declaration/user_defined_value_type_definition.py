@@ -28,7 +28,6 @@ class UserDefinedValueTypeDefinition(DeclarationAbc):
         parent: IrAbc,
     ):
         super().__init__(init, user_defined_value_type_definition, parent)
-        self.__name = user_defined_value_type_definition.name
         self.__underlying_type = ElementaryTypeName(
             init, user_defined_value_type_definition.underlying_type, self
         )
@@ -55,8 +54,8 @@ class UserDefinedValueTypeDefinition(DeclarationAbc):
         from .contract_definition import ContractDefinition
 
         if isinstance(self._parent, ContractDefinition):
-            return f"{self._parent.canonical_name}.{self.__name}"
-        return self.__name
+            return f"{self._parent.canonical_name}.{self._name}"
+        return self._name
 
     @property
     def underlying_type(self) -> ElementaryTypeName:

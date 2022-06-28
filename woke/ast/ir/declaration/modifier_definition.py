@@ -24,7 +24,6 @@ class ModifierDefinition(DeclarationAbc):
     _parent: ContractDefinition
     _child_modifiers: List[ModifierDefinition]
 
-    __name: str
     __body: Optional[Block]
     __parameters: ParameterList
     __virtual: bool
@@ -39,7 +38,6 @@ class ModifierDefinition(DeclarationAbc):
         super().__init__(init, modifier, parent)
         self._child_modifiers = []
 
-        self.__name = modifier.name
         self.__body = Block(init, modifier.body, self) if modifier.body else None
         self.__parameters = ParameterList(init, modifier.parameters, self)
         self.__virtual = modifier.virtual
@@ -83,7 +81,7 @@ class ModifierDefinition(DeclarationAbc):
 
     @property
     def canonical_name(self) -> str:
-        return f"{self._parent.canonical_name}.{self.__name}"
+        return f"{self._parent.canonical_name}.{self._name}"
 
     @property
     def body(self) -> Optional[Block]:

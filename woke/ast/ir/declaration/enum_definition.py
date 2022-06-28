@@ -28,7 +28,6 @@ class EnumDefinition(DeclarationAbc):
 
     def __init__(self, init: IrInitTuple, enum: SolcEnumDefinition, parent: IrAbc):
         super().__init__(init, enum, parent)
-        self.__name = enum.name
         self.__canonical_name = enum.canonical_name
 
         self.__values = []

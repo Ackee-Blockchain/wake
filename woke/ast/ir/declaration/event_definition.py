@@ -19,14 +19,12 @@ class EventDefinition(DeclarationAbc):
     _ast_node: SolcEventDefinition
     _parent: ContractDefinition
 
-    __name: str
     __anonymous: bool
     __parameters: ParameterList
     __documentation: Optional[StructuredDocumentation]
 
     def __init__(self, init: IrInitTuple, event: SolcEventDefinition, parent: IrAbc):
         super().__init__(init, event, parent)
-        self.__name = event.name
         self.__anonymous = event.anonymous
         self.__parameters = ParameterList(init, event.parameters, self)
         self.__documentation = (
@@ -55,7 +53,7 @@ class EventDefinition(DeclarationAbc):
 
     @property
     def canonical_name(self) -> str:
-        return f"{self._parent.canonical_name}.{self.__name}"
+        return f"{self._parent.canonical_name}.{self._name}"
 
     @property
     def anonymous(self) -> bool:
