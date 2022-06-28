@@ -21,7 +21,6 @@ class EnumValue(DeclarationAbc):
 
     def __init__(self, init: IrInitTuple, value: SolcEnumValue, parent: IrAbc):
         super().__init__(init, value, parent)
-        self.__name = value.name
 
     def _parse_name_location(self) -> Tuple[int, int]:
         src = self._ast_node.src
@@ -33,4 +32,4 @@ class EnumValue(DeclarationAbc):
 
     @property
     def canonical_name(self) -> str:
-        return f"{self._parent.canonical_name}.{self.__name}"
+        return f"{self._parent.canonical_name}.{self._name}"

@@ -68,7 +68,6 @@ class ContractDefinition(DeclarationAbc):
         self, init: IrInitTuple, contract: SolcContractDefinition, parent: SourceUnit
     ):
         super().__init__(init, contract, parent)
-        self.__name = contract.name
         self.__abstract = contract.abstract
         self.__kind = contract.contract_kind
         self.__fully_implemented = contract.fully_implemented
@@ -166,7 +165,7 @@ class ContractDefinition(DeclarationAbc):
 
     @property
     def canonical_name(self) -> str:
-        return self.__name
+        return self._name
 
     @property
     def abstract(self) -> bool:

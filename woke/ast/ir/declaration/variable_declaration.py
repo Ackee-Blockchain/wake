@@ -59,7 +59,6 @@ class VariableDeclaration(DeclarationAbc):
         parent: IrAbc,
     ):
         super().__init__(init, variable_declaration, parent)
-        self.__name = variable_declaration.name
         self.__constant = variable_declaration.constant
         self.__mutability = variable_declaration.mutability
         # TODO scope

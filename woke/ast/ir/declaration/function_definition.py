@@ -48,7 +48,6 @@ class FunctionDefinition(DeclarationAbc):
         super().__init__(init, function, parent)
         self._child_functions = []
 
-        self.__name = function.name
         self.__implemented = function.implemented
         self.__kind = function.kind
         self.__modifiers = [
@@ -104,7 +103,7 @@ class FunctionDefinition(DeclarationAbc):
         from .contract_definition import ContractDefinition
 
         if isinstance(self._parent, ContractDefinition):
-            return f"{self._parent.canonical_name}.{self.__name}"
+            return f"{self._parent.canonical_name}.{self._name}"
         return self.name
 
     @property

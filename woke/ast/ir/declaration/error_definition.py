@@ -19,13 +19,11 @@ class ErrorDefinition(DeclarationAbc):
     _ast_node: SolcErrorDefinition
     _parent: Union[ContractDefinition, SourceUnit]
 
-    __name: str
     __parameters: ParameterList
     __documentation: Optional[StructuredDocumentation]
 
     def __init__(self, init: IrInitTuple, error: SolcErrorDefinition, parent: IrAbc):
         super().__init__(init, error, parent)
-        self.__name = error.name
         self.__parameters = ParameterList(init, error.parameters, self)
         self.__documentation = (
             StructuredDocumentation(init, error.documentation, self)
@@ -49,8 +47,8 @@ class ErrorDefinition(DeclarationAbc):
         from .contract_definition import ContractDefinition
 
         if isinstance(self._parent, ContractDefinition):
-            return f"{self._parent.canonical_name}.{self.__name}"
-        return self.__name
+            return f"{self._parent.canonical_name}.{self._name}"
+        return self._name
 
     @property
     def parameters(self) -> ParameterList:

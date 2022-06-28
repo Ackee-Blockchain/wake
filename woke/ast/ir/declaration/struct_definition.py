@@ -20,7 +20,6 @@ class StructDefinition(DeclarationAbc):
     _ast_node: SolcStructDefinition
     _parent: Union[ContractDefinition, SourceUnit]
 
-    __name: str
     __canonical_name: str
     __members: List[VariableDeclaration]
     __visibility: Visibility
@@ -29,7 +28,6 @@ class StructDefinition(DeclarationAbc):
         self, init: IrInitTuple, struct_definition: SolcStructDefinition, parent: IrAbc
     ):
         super().__init__(init, struct_definition, parent)
-        self.__name = struct_definition.name
         self.__canonical_name = struct_definition.canonical_name
         # TODO scope
         self.__visibility = struct_definition.visibility
