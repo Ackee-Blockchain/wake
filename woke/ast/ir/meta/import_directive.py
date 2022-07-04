@@ -89,6 +89,7 @@ class ImportDirective(IrAbc):
                     referenced_declaration = declaration
                     break
             assert referenced_declaration is not None
+            assert self.cu_hash == referenced_declaration.cu_hash
             symbol_alias.foreign._referenced_declaration_id = AstNodeId(
                 referenced_declaration.ast_node_id
             )
