@@ -67,7 +67,7 @@ async def document_link(
     document_links = []
 
     path = uri_to_path(params.text_document.uri).resolve()
-    if path in context.compiler.asts:
+    if path in context.compiler.source_units:
         source_unit = context.compiler.source_units[path]
 
         for import_directive in source_unit.imports:
