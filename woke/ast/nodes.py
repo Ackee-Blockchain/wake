@@ -369,6 +369,10 @@ class SolcImportDirective(SolcNode):
     # optional
     name_location: Optional[Src]  # new in 0.8.2
 
+    def __iter__(self):
+        for symbol_alias in self.symbol_aliases:
+            yield symbol_alias.foreign
+
 
 class SolcVariableDeclaration(SolcNode):
     # required
