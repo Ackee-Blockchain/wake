@@ -142,6 +142,6 @@ class ImportDirective(IrAbc):
         matches = list(re.match(self._source) for re in res)
         assert any(matches)
         match = next(m for m in matches if m)
-        return source_start + match.start("filename"), match.end(
+        return source_start + match.start("filename"), source_start + match.end(
             "filename"
-        ) - match.start("filename")
+        )

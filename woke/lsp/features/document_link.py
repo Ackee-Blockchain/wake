@@ -4,7 +4,6 @@ from typing import Any, List, Optional
 from woke.lsp.common_structures import (
     DocumentUri,
     PartialResultParams,
-    Position,
     Range,
     TextDocumentIdentifier,
     WorkDoneProgressOptions,
@@ -61,7 +60,7 @@ class DocumentLink(LspModel):
 async def document_link(
     context: LspContext, params: DocumentLinkParams
 ) -> Optional[List[DocumentLink]]:
-    logger.info(f"Requested document links for file {params.text_document.uri}")
+    logger.debug(f"Requested document links for file {params.text_document.uri}")
     await context.compiler.output_ready.wait()
 
     document_links = []
@@ -71,19 +70,11 @@ async def document_link(
         source_unit = context.compiler.source_units[path]
 
         for import_directive in source_unit.imports:
-            byte_offset, byte_length = import_directive.import_string_pos  # type: ignore
-            start_line, start_col = context.compiler.get_line_pos_from_byte_offset(
-                path, byte_offset
-            )
-            end_line, end_col = context.compiler.get_line_pos_from_byte_offset(
-                path, byte_offset + byte_length
-            )
-            start = Position(line=start_line, character=start_col)
-            end = Position(line=end_line, character=end_col)
-
             document_links.append(
                 DocumentLink(
-                    range=Range(start=start, end=end),
+                    range=context.compiler.get_range_from_byte_offsets(
+                        path, import_directive.import_string_pos
+                    ),
                     target=DocumentUri(path_to_uri(import_directive.imported_file)),
                     tooltip=None,
                     data=None,

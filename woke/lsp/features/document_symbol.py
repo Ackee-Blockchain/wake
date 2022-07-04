@@ -43,31 +43,15 @@ class DocumentSymbolParams(WorkDoneProgressParams, PartialResultParams):
 def _declaration_to_symbol(
     declaration: DeclarationAbc, kind: SymbolKind, context: LspContext
 ):
-    byte_start, byte_end = declaration.byte_location
-    start_line, start_column = context.compiler.get_line_pos_from_byte_offset(
-        declaration.file, byte_start
-    )
-    end_line, end_column = context.compiler.get_line_pos_from_byte_offset(
-        declaration.file, byte_end
-    )
-
-    name_byte_start, name_byte_end = declaration.name_location
-    name_start_line, name_start_column = context.compiler.get_line_pos_from_byte_offset(
-        declaration.file, name_byte_start
-    )
-    name_end_line, name_end_column = context.compiler.get_line_pos_from_byte_offset(
-        declaration.file, name_byte_end
-    )
+    file = declaration.file
     return DocumentSymbol(
         name=declaration.name,
         kind=kind,
-        range=Range(
-            start=Position(line=start_line, character=start_column),
-            end=Position(line=end_line, character=end_column),
+        range=context.compiler.get_range_from_byte_offsets(
+            file, declaration.byte_location
         ),
-        selection_range=Range(
-            start=Position(line=name_start_line, character=name_start_column),
-            end=Position(line=name_end_line, character=name_end_column),
+        selection_range=context.compiler.get_range_from_byte_offsets(
+            file, declaration.name_location
         ),
     )
 

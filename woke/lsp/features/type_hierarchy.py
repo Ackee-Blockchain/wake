@@ -161,15 +161,6 @@ async def prepare_type_hierarchy(
     if isinstance(
         node, (ContractDefinition, FunctionDefinition, ModifierDefinition)
     ) or (isinstance(node, VariableDeclaration) and node.overrides is not None):
-        name_byte_start, name_byte_end = node.name_location
-        (
-            name_start_line,
-            name_start_column,
-        ) = context.compiler.get_line_pos_from_byte_offset(path, name_byte_start)
-        name_end_line, name_end_column = context.compiler.get_line_pos_from_byte_offset(
-            path, name_byte_end
-        )
-
         return [
             TypeHierarchyItem(
                 name=node.canonical_name,
@@ -177,13 +168,11 @@ async def prepare_type_hierarchy(
                 tags=None,
                 detail=None,
                 uri=DocumentUri(path_to_uri(node.file)),
-                range=Range(
-                    start=Position(line=name_start_line, character=name_start_column),
-                    end=Position(line=name_end_line, character=name_end_column),
+                range=context.compiler.get_range_from_byte_offsets(
+                    node.file, node.byte_location
                 ),
-                selection_range=Range(
-                    start=Position(line=name_start_line, character=name_start_column),
-                    end=Position(line=name_end_line, character=name_end_column),
+                selection_range=context.compiler.get_range_from_byte_offsets(
+                    node.file, node.name_location
                 ),
                 data=TypeHierarchyItemData(
                     ast_node_id=node.ast_node_id, cu_hash=node.cu_hash.hex()
@@ -238,23 +227,6 @@ async def supertypes(
             nodes.append(base_modifier)
 
     for node in nodes:
-        byte_start, byte_end = node.byte_location
-        start_line, start_column = context.compiler.get_line_pos_from_byte_offset(
-            node.file, byte_start
-        )
-        end_line, end_column = context.compiler.get_line_pos_from_byte_offset(
-            node.file, byte_end
-        )
-
-        name_byte_start, name_byte_end = node.name_location
-        (
-            name_start_line,
-            name_start_column,
-        ) = context.compiler.get_line_pos_from_byte_offset(node.file, name_byte_start)
-        name_end_line, name_end_column = context.compiler.get_line_pos_from_byte_offset(
-            node.file, name_byte_end
-        )
-
         type_items.append(
             TypeHierarchyItem(
                 name=node.canonical_name,
@@ -262,13 +234,11 @@ async def supertypes(
                 tags=None,
                 detail=None,
                 uri=DocumentUri(path_to_uri(node.file)),
-                range=Range(
-                    start=Position(line=start_line, character=start_column),
-                    end=Position(line=end_line, character=end_column),
+                range=context.compiler.get_range_from_byte_offsets(
+                    node.file, node.byte_location
                 ),
-                selection_range=Range(
-                    start=Position(line=name_start_line, character=name_start_column),
-                    end=Position(line=name_end_line, character=name_end_column),
+                selection_range=context.compiler.get_range_from_byte_offsets(
+                    node.file, node.name_location
                 ),
                 data=TypeHierarchyItemData(
                     ast_node_id=node.ast_node_id, cu_hash=node.cu_hash.hex()
@@ -317,15 +287,6 @@ async def subtypes(
             nodes.append(child_modifier)
 
     for node in nodes:
-        name_byte_start, name_byte_end = node.name_location
-        (
-            name_start_line,
-            name_start_column,
-        ) = context.compiler.get_line_pos_from_byte_offset(node.file, name_byte_start)
-        name_end_line, name_end_column = context.compiler.get_line_pos_from_byte_offset(
-            node.file, name_byte_end
-        )
-
         type_items.append(
             TypeHierarchyItem(
                 name=node.canonical_name,
@@ -333,13 +294,11 @@ async def subtypes(
                 tags=None,
                 detail=None,
                 uri=DocumentUri(path_to_uri(node.file)),
-                range=Range(
-                    start=Position(line=name_start_line, character=name_start_column),
-                    end=Position(line=name_end_line, character=name_end_column),
+                range=context.compiler.get_range_from_byte_offsets(
+                    node.file, node.byte_location
                 ),
-                selection_range=Range(
-                    start=Position(line=name_start_line, character=name_start_column),
-                    end=Position(line=name_end_line, character=name_end_column),
+                selection_range=context.compiler.get_range_from_byte_offsets(
+                    node.file, node.name_location
                 ),
                 data=TypeHierarchyItemData(
                     ast_node_id=node.ast_node_id, cu_hash=node.cu_hash.hex()

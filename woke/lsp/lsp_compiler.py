@@ -10,6 +10,8 @@ from pathlib import Path
 from typing import Collection, Dict, Iterable, List, Mapping, Set, Tuple, Union
 
 import networkx as nx
+
+
 from intervaltree import IntervalTree
 
 from woke.ast.ir.meta.source_unit import SourceUnit
@@ -27,6 +29,8 @@ from woke.lsp.document_sync import (
     DidOpenTextDocumentParams,
 )
 from woke.lsp.utils.uri import uri_to_path
+
+from .common_structures import Position, Range
 
 logger = logging.getLogger(__name__)
 
@@ -152,6 +156,19 @@ class LspCompiler:
         line_data, prefix_sum = encoded_lines[line_num]
         line_offset = byte_offset - prefix_sum
         return line_num, line_offset
+
+    def get_range_from_byte_offsets(
+        self, file: Path, byte_offsets: Tuple[int, int]
+    ) -> Range:
+        start_line, start_column = self.get_line_pos_from_byte_offset(
+            file, byte_offsets[0]
+        )
+        end_line, end_column = self.get_line_pos_from_byte_offset(file, byte_offsets[1])
+
+        return Range(
+            start=Position(line=start_line, character=start_column),
+            end=Position(line=end_line, character=end_column),
+        )
 
     def get_byte_offset_from_line_pos(self, file: Path, line: int, col: int) -> int:
         if file not in self.__line_indexes:
