@@ -5,9 +5,11 @@ import queue
 import re
 import sys
 import threading
+from collections import deque
 from pathlib import Path
-from typing import Collection, Dict, List, Mapping, Set, Tuple, Union
+from typing import Collection, Dict, Iterable, List, Mapping, Set, Tuple, Union
 
+import networkx as nx
 from intervaltree import IntervalTree
 
 from woke.ast.ir.meta.source_unit import SourceUnit
@@ -46,6 +48,19 @@ def _binary_search(lines: List[Tuple[bytes, int]], x: int) -> int:
     return l - 1
 
 
+def _out_edge_bfs(graph: nx.DiGraph, start: Iterable[Path], out: Set[Path]) -> None:
+    queue = deque(start)
+    out.update(start)
+
+    while len(queue):
+        node = queue.pop()
+        for out_edge in graph.out_edges(node):
+            from_, to = out_edge
+            if from_ not in out:
+                out.add(from_)
+                queue.append(from_)
+
+
 class LspCompiler:
     __config: WokeConfig
     __file_changes_queue: asyncio.Queue
@@ -59,8 +74,6 @@ class LspCompiler:
     __modified_files: Set[Path]
     __compiler: SolidityCompiler
     __output_contents: Dict[Path, str]
-    __errors: Set[SolcOutputError]
-    __asts: Dict[Path, AstSolc]
     __interval_trees: Dict[Path, IntervalTree]
     __source_units: Dict[Path, SourceUnit]
     __line_indexes: Dict[Path, List[Tuple[bytes, int]]]
@@ -78,9 +91,7 @@ class LspCompiler:
         self.__opened_files = set()
         self.__modified_files = set()
         self.__compiler = SolidityCompiler(config)
-        self.__asts = {}
         self.__interval_trees = {}
-        self.__errors = set()
         self.__source_units = {}
         self.__line_indexes = {}
         self.__output_contents = dict()
@@ -96,20 +107,12 @@ class LspCompiler:
         return self.__output_ready
 
     @property
-    def asts(self) -> Dict[Path, AstSolc]:
-        return self.__asts
-
-    @property
     def ir_reference_resolver(self) -> ReferenceResolver:
         return self.__ir_reference_resolver
 
     @property
     def interval_trees(self) -> Dict[Path, IntervalTree]:
         return self.__interval_trees
-
-    @property
-    def errors(self) -> Set[SolcOutputError]:
-        return self.__errors
 
     @property
     def source_units(self) -> Dict[Path, SourceUnit]:
@@ -168,45 +171,64 @@ class LspCompiler:
             write_artifacts=False,
             reuse_latest_artifacts=False,
             modified_files=modified_files,
+            maximize_compilation_units=True,
         )
         self.__output_contents.update(self.__files)
 
+        errors_per_file: Dict[Path, List[SolcOutputError]] = {}
+
         for cu, solc_output in out:
-            self.__errors.update(solc_output.errors)
             for file in cu.files:
                 self.__processed_files.add(file)
+                errors_per_file[file] = []
                 if file in self.__line_indexes:
                     self.__line_indexes.pop(file)
-            errored = any(
-                error.severity == SolcOutputErrorSeverityEnum.ERROR
-                for error in solc_output.errors
-            )
-            if errored:
-                for path in cu.files:
-                    if path in modified_files:
-                        # an error occurred during compilation
-                        # AST still may be provided, but it must NOT be parsed (pydantic model is not defined for this case)
-                        if path in self.__asts:
-                            self.__asts.pop(path)
-                        if path in self.__source_units:
-                            self.__source_units.pop(path)
-                        if path in self.__interval_trees:
-                            self.__interval_trees.pop(path)
-            else:
-                for source_unit_name, raw_ast in solc_output.sources.items():
-                    path = cu.source_unit_name_to_path(source_unit_name)
-                    ast = AstSolc.parse_obj(raw_ast.ast)
-                    interval_tree = IntervalTree()
-                    init = IrInitTuple(
-                        path,
-                        self.get_file_content(path).encode("utf-8"),
-                        cu,
-                        interval_tree,
-                        self.__ir_reference_resolver,
-                    )
-                    self.__asts[path] = ast
-                    self.__source_units[path] = SourceUnit(init, ast)
-                    self.__interval_trees[path] = interval_tree
+
+            errored_files: Set[Path] = set()
+
+            for error in solc_output.errors:
+                if error.source_location is not None:
+                    path = cu.source_unit_name_to_path(error.source_location.file)
+                    errors_per_file[path].append(error)
+
+                    if error.severity == SolcOutputErrorSeverityEnum.ERROR:
+                        errored_files.add(path)
+
+            _out_edge_bfs(cu.graph, errored_files, errored_files)
+
+            # modified files and files that import modified files (even indirectly)
+            recompiled_files: Set[Path] = set()
+            _out_edge_bfs(cu.graph, modified_files, recompiled_files)
+
+            for file in errored_files:
+                # an error occurred during compilation
+                # AST still may be provided, but it must NOT be parsed (pydantic model is not defined for this case)
+                if file in self.__source_units:
+                    self.__source_units.pop(file)
+                if file in self.__interval_trees:
+                    self.__interval_trees.pop(file)
+
+            for source_unit_name, raw_ast in solc_output.sources.items():
+                path = cu.source_unit_name_to_path(source_unit_name)
+                if path in errored_files:
+                    continue
+                ast = AstSolc.parse_obj(raw_ast.ast)
+
+                self.__ir_reference_resolver.index_nodes(ast, path, cu.blake2b_digest)
+
+                if path not in files and path not in recompiled_files:
+                    continue
+
+                interval_tree = IntervalTree()
+                init = IrInitTuple(
+                    path,
+                    self.get_file_content(path).encode("utf-8"),
+                    cu,
+                    interval_tree,
+                    self.__ir_reference_resolver,
+                )
+                self.__source_units[path] = SourceUnit(init, ast)
+                self.__interval_trees[path] = interval_tree
 
             self.__ir_reference_resolver.run_post_process_callbacks(
                 CallbackParams(source_units=self.__source_units)
