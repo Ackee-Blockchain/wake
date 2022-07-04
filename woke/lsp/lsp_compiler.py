@@ -1,13 +1,10 @@
 import asyncio
 import logging
-import platform
-import queue
 import re
-import sys
 import threading
 from collections import deque
 from pathlib import Path
-from typing import Collection, Dict, Iterable, List, Mapping, Set, Tuple, Union
+from typing import AbstractSet, Dict, Iterable, List, Mapping, Set, Tuple, Union
 
 import networkx as nx
 
@@ -180,8 +177,11 @@ class LspCompiler:
         return prefix + line_offset
 
     async def __compile(
-        self, files: Collection[Path], modified_files: Mapping[Path, str]
+        self, files: AbstractSet[Path], modified_files: Mapping[Path, str]
     ):
+        files_to_recompile = set(files)
+        modified_files_to_recompile = dict(modified_files)
+
         out: List[Tuple[CompilationUnit, SolcOutput]] = await self.__compiler.compile(
             files,
             [SolcOutputSelectionEnum.AST],
@@ -212,6 +212,9 @@ class LspCompiler:
                         errored_files.add(path)
 
             _out_edge_bfs(cu.graph, errored_files, errored_files)
+            for errored_file in errored_files:
+                files_to_recompile.discard(errored_file)
+                modified_files_to_recompile.pop(errored_file, None)
 
             # modified files and files that import modified files (even indirectly)
             recompiled_files: Set[Path] = set()
@@ -227,12 +230,14 @@ class LspCompiler:
 
             for source_unit_name, raw_ast in solc_output.sources.items():
                 path = cu.source_unit_name_to_path(source_unit_name)
-                if path in errored_files:
+                if path in errored_files or raw_ast.ast is None:
                     continue
                 ast = AstSolc.parse_obj(raw_ast.ast)
 
                 self.__ir_reference_resolver.index_nodes(ast, path, cu.blake2b_digest)
 
+                files_to_recompile.discard(path)
+                modified_files_to_recompile.pop(path, None)
                 if path not in files and path not in recompiled_files:
                     continue
 
@@ -250,6 +255,14 @@ class LspCompiler:
             self.__ir_reference_resolver.run_post_process_callbacks(
                 CallbackParams(source_units=self.__source_units)
             )
+
+        if len(files_to_recompile) > 0 or len(modified_files_to_recompile) > 0:
+            # avoid infinite recursion
+            if (
+                files_to_recompile != files
+                or modified_files.keys() != modified_files_to_recompile.keys()
+            ):
+                await self.__compile(files_to_recompile, modified_files_to_recompile)
 
     async def __compilation_loop(self):
         # perform Solidity files discovery
@@ -329,7 +342,7 @@ class LspCompiler:
                 modified_files = {
                     path: self.__files[path] for path in self.__modified_files
                 }
-                await self.__compile([], modified_files)
+                await self.__compile(set(), modified_files)
 
                 self.__modified_files.clear()
 
