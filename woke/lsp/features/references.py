@@ -56,22 +56,11 @@ def _generate_references(
     refs = []
     for reference in node_references:
         path = reference.file
-        uri = path_to_uri(path)
-
-        byte_start, byte_end = reference.byte_location
-        start_line, start_column = context.compiler.get_line_pos_from_byte_offset(
-            path, byte_start
-        )
-        end_line, end_column = context.compiler.get_line_pos_from_byte_offset(
-            path, byte_end
-        )
-
         refs.append(
             Location(
-                uri=DocumentUri(uri),
-                range=Range(
-                    start=Position(line=start_line, character=start_column),
-                    end=Position(line=end_line, character=end_column),
+                uri=DocumentUri(path_to_uri(path)),
+                range=context.compiler.get_range_from_byte_offsets(
+                    path, reference.byte_location
                 ),
             )
         )
@@ -84,20 +73,11 @@ def _generate_declaration_references(
     refs = []
     if include_declaration:
         path = declaration.file
-
-        byte_start, byte_end = declaration.name_location
-        start_line, start_column = context.compiler.get_line_pos_from_byte_offset(
-            path, byte_start
-        )
-        end_line, end_column = context.compiler.get_line_pos_from_byte_offset(
-            path, byte_end
-        )
         refs.append(
             Location(
                 uri=DocumentUri(path_to_uri(path)),
-                range=Range(
-                    start=Position(line=start_line, character=start_column),
-                    end=Position(line=end_line, character=end_column),
+                range=context.compiler.get_range_from_byte_offsets(
+                    path, declaration.name_location
                 ),
             )
         )
