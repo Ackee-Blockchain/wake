@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING, List, Optional, Tuple
+from typing import TYPE_CHECKING, FrozenSet, List, Optional, Set, Tuple
 
 from ..meta.override_specifier import OverrideSpecifier
 from ..reference_resolver import CallbackParams
@@ -22,7 +22,7 @@ from woke.ast.nodes import AstNodeId, SolcModifierDefinition
 class ModifierDefinition(DeclarationAbc):
     _ast_node: SolcModifierDefinition
     _parent: ContractDefinition
-    _child_modifiers: List[ModifierDefinition]
+    _child_modifiers: Set[ModifierDefinition]
 
     __body: Optional[Block]
     __parameters: ParameterList
@@ -36,7 +36,7 @@ class ModifierDefinition(DeclarationAbc):
         self, init: IrInitTuple, modifier: SolcModifierDefinition, parent: IrAbc
     ):
         super().__init__(init, modifier, parent)
-        self._child_modifiers = []
+        self._child_modifiers = set()
 
         self.__body = Block(init, modifier.body, self) if modifier.body else None
         self.__parameters = ParameterList(init, modifier.parameters, self)
@@ -56,11 +56,17 @@ class ModifierDefinition(DeclarationAbc):
             else None
         )
         self._reference_resolver.register_post_process_callback(self.__post_process)
+        self._reference_resolver.register_destroy_callback(self.file, self.__destroy)
 
     def __post_process(self, callback_params: CallbackParams):
         if self.base_modifiers is not None:
             for base_modifier in self.base_modifiers:
-                base_modifier._child_modifiers.append(self)
+                base_modifier._child_modifiers.add(self)
+
+    def __destroy(self) -> None:
+        if self.base_modifiers is not None:
+            for base_modifier in self.base_modifiers:
+                base_modifier._child_modifiers.discard(self)
 
     def _parse_name_location(self) -> Tuple[int, int]:
         IDENTIFIER = r"[a-zA-Z$_][a-zA-Z0-9$_]*"
@@ -113,8 +119,8 @@ class ModifierDefinition(DeclarationAbc):
         return tuple(base_modifiers)
 
     @property
-    def child_modifiers(self) -> Tuple[ModifierDefinition]:
-        return tuple(self._child_modifiers)
+    def child_modifiers(self) -> FrozenSet[ModifierDefinition]:
+        return frozenset(self._child_modifiers)
 
     @property
     def documentation(self) -> Optional[StructuredDocumentation]:

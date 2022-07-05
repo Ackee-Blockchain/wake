@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, FrozenSet, List, Optional, Set, Tuple, Union
 
 from ..meta.modifier_invocation import ModifierInvocation
 from ..meta.override_specifier import OverrideSpecifier
@@ -25,7 +25,7 @@ from woke.ast.nodes import AstNodeId, SolcFunctionDefinition
 class FunctionDefinition(DeclarationAbc):
     _ast_node: SolcFunctionDefinition
     _parent: Union[ContractDefinition, SourceUnit]
-    _child_functions: List[Union[FunctionDefinition, VariableDeclaration]]
+    _child_functions: Set[Union[FunctionDefinition, VariableDeclaration]]
 
     __implemented: bool
     __kind: FunctionKind
@@ -46,7 +46,7 @@ class FunctionDefinition(DeclarationAbc):
         self, init: IrInitTuple, function: SolcFunctionDefinition, parent: IrAbc
     ):
         super().__init__(init, function, parent)
-        self._child_functions = []
+        self._child_functions = set()
 
         self.__implemented = function.implemented
         self.__kind = function.kind
@@ -83,11 +83,17 @@ class FunctionDefinition(DeclarationAbc):
             else None
         )
         self._reference_resolver.register_post_process_callback(self.__post_process)
+        self._reference_resolver.register_destroy_callback(self.file, self.__destroy)
 
     def __post_process(self, callback_params: CallbackParams):
         if self.base_functions is not None:
             for base_function in self.base_functions:
-                base_function._child_functions.append(self)
+                base_function._child_functions.add(self)
+
+    def __destroy(self) -> None:
+        if self.base_functions is not None:
+            for base_function in self.base_functions:
+                base_function._child_functions.discard(self)
 
     def _parse_name_location(self) -> Tuple[int, int]:
         IDENTIFIER = r"[a-zA-Z$_][a-zA-Z0-9$_]*"
@@ -166,8 +172,10 @@ class FunctionDefinition(DeclarationAbc):
         return tuple(base_functions)
 
     @property
-    def child_functions(self) -> Tuple[Union[FunctionDefinition, VariableDeclaration]]:
-        return tuple(self._child_functions)
+    def child_functions(
+        self,
+    ) -> FrozenSet[Union[FunctionDefinition, VariableDeclaration]]:
+        return frozenset(self._child_functions)
 
     @property
     def documentation(self) -> Optional[StructuredDocumentation]:

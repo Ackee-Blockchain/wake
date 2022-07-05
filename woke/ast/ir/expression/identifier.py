@@ -27,6 +27,7 @@ class Identifier(ExpressionAbc):
         if self._referenced_declaration_id is None:
             assert isinstance(self._parent, ImportDirective)
         init.reference_resolver.register_post_process_callback(self.__post_process)
+        self._reference_resolver.register_destroy_callback(self.file, self.__destroy)
 
     def __post_process(self, callback_params: CallbackParams):
         assert self._referenced_declaration_id is not None
@@ -38,6 +39,17 @@ class Identifier(ExpressionAbc):
         else:
             assert isinstance(self.referenced_declaration, DeclarationAbc)
             self.referenced_declaration.register_reference(self)
+
+    def __destroy(self) -> None:
+        assert self._referenced_declaration_id is not None
+        if self._referenced_declaration_id < 0:
+            global_symbol = GlobalSymbolsEnum(self._referenced_declaration_id)
+            self._reference_resolver.unregister_global_symbol_reference(
+                global_symbol, self
+            )
+        else:
+            assert isinstance(self.referenced_declaration, DeclarationAbc)
+            self.referenced_declaration.unregister_reference(self)
 
     @property
     def parent(self) -> IrAbc:

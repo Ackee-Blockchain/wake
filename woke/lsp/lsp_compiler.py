@@ -330,6 +330,7 @@ class LspCompiler:
         self.__output_contents.update(self.__files)
 
         errors_per_file: Dict[Path, List[SolcOutputError]] = {}
+        processed_files: Set[Path] = set()
 
         for cu, solc_output in zip(compilation_units, ret):
             for file in cu.files:
@@ -357,6 +358,7 @@ class LspCompiler:
                 # an error occurred during compilation
                 # AST still may be provided, but it must NOT be parsed (pydantic model is not defined for this case)
                 if file in self.__source_units:
+                    self.__ir_reference_resolver.run_destroy_callbacks(file)
                     self.__source_units.pop(file)
                 if file in self.__interval_trees:
                     self.__interval_trees.pop(file)
@@ -369,8 +371,11 @@ class LspCompiler:
 
                 self.__ir_reference_resolver.index_nodes(ast, path, cu.blake2b_digest)
 
-                if path not in files and path not in recompiled_files:
+                if (
+                    path not in files and path not in recompiled_files
+                ) or path in processed_files:
                     continue
+                processed_files.add(path)
 
                 interval_tree = IntervalTree()
                 init = IrInitTuple(
@@ -380,6 +385,7 @@ class LspCompiler:
                     interval_tree,
                     self.__ir_reference_resolver,
                 )
+                self.__ir_reference_resolver.run_destroy_callbacks(path)
                 self.__source_units[path] = SourceUnit(init, ast)
                 self.__interval_trees[path] = interval_tree
 

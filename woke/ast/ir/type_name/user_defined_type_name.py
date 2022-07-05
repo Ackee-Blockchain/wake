@@ -42,10 +42,13 @@ class UserDefinedTypeName(TypeNameAbc):
                 init, user_defined_type_name.path_node, self
             )
         self._reference_resolver.register_post_process_callback(self.__post_process)
+        self._reference_resolver.register_destroy_callback(self.file, self.__destroy)
 
     def __post_process(self, callback_params: CallbackParams):
-        referenced_declaration = self.referenced_declaration
-        referenced_declaration.register_reference(self)
+        self.referenced_declaration.register_reference(self)
+
+    def __destroy(self) -> None:
+        self.referenced_declaration.unregister_reference(self)
 
     @property
     def parent(self) -> IrAbc:
