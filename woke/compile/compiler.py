@@ -53,7 +53,7 @@ class SolidityCompiler:
         self.__source_unit_name_resolver = SourceUnitNameResolver(woke_config)
         self.__source_path_resolver = SourcePathResolver(woke_config)
 
-    def __resolve_source_unit_names(
+    def build_graph(
         self, files: Collection[Path], modified_files: Mapping[Path, str]
     ) -> nx.DiGraph:
         # source unit name, full path, file content
@@ -117,7 +117,7 @@ class SolidityCompiler:
         return graph
 
     @staticmethod
-    def __build_compilation_units_maximize(graph: nx.DiGraph) -> List[CompilationUnit]:
+    def build_compilation_units_maximize(graph: nx.DiGraph) -> List[CompilationUnit]:
         """
         Builds a list of compilation units from a graph. Number of compilation units is maximized.
         """
@@ -172,7 +172,7 @@ class SolidityCompiler:
         return compilation_units
 
     @staticmethod
-    def __build_compilation_units_minimize(graph: nx.DiGraph) -> List[CompilationUnit]:
+    def build_compilation_units_minimize(graph: nx.DiGraph) -> List[CompilationUnit]:
         """
         Builds a list of compilation units from a graph. Number of compilation units is *almost* minimized.
         This approach assures that every compiled file is in exactly one compilation unit.
@@ -193,7 +193,7 @@ class SolidityCompiler:
             compilation_units.append(CompilationUnit(subgraph, versions))
         return compilation_units
 
-    def __create_build_settings(
+    def create_build_settings(
         self, output_types: Collection[SolcOutputSelectionEnum]
     ) -> SolcInputSettings:
         settings = SolcInputSettings()  # type: ignore
@@ -279,12 +279,12 @@ class SolidityCompiler:
         if not set(files).isdisjoint(set(modified_files.keys())):
             raise ValueError("Files and modified files must not overlap.")
 
-        graph = self.__resolve_source_unit_names(files, modified_files)
+        graph = self.build_graph(files, modified_files)
         if maximize_compilation_units:
-            compilation_units = self.__build_compilation_units_maximize(graph)
+            compilation_units = self.build_compilation_units_maximize(graph)
         else:
-            compilation_units = self.__build_compilation_units_minimize(graph)
-        build_settings = self.__create_build_settings(output_types)
+            compilation_units = self.build_compilation_units_minimize(graph)
+        build_settings = self.create_build_settings(output_types)
 
         # sort compilation units by their BLAKE2b hexdigest
         compilation_units.sort(key=lambda u: u.blake2b_hexdigest)
@@ -444,25 +444,25 @@ class SolidityCompiler:
                     logger.warning(
                         "Failed to parse the latest build artifacts, falling back to solc compilation."
                     )
-                    out = await self.__compile_unit_raw(
+                    out = await self.compile_unit_raw(
                         compilation_unit, target_version, build_settings
                     )
                 except FileNotFoundError as e:
                     logger.warning(
                         f"Unable to find '{e.filename}' file while reusing the latest build info. Build artifacts may be corrupted."
                     )
-                    out = await self.__compile_unit_raw(
+                    out = await self.compile_unit_raw(
                         compilation_unit, target_version, build_settings
                     )
             else:
                 logger.info(
                     "Build settings have changed since the last build. Falling back to solc compilation."
                 )
-                out = await self.__compile_unit_raw(
+                out = await self.compile_unit_raw(
                     compilation_unit, target_version, build_settings
                 )
         else:
-            out = await self.__compile_unit_raw(
+            out = await self.compile_unit_raw(
                 compilation_unit, target_version, build_settings
             )
 
@@ -473,7 +473,7 @@ class SolidityCompiler:
 
         return out
 
-    async def __compile_unit_raw(
+    async def compile_unit_raw(
         self,
         compilation_unit: CompilationUnit,
         target_version: SolidityVersion,
