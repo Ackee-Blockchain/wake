@@ -47,6 +47,21 @@ class ReferenceResolver:
         for index, node in enumerate(root_node):
             self.__ordered_nodes[cu_hash][node.id] = (path, index + 1)
 
+    def get_node_path_order(
+        self, node_id: AstNodeId, cu_hash: bytes
+    ) -> Tuple[Path, int]:
+        return self.__ordered_nodes[cu_hash][node_id]
+
+    def get_ast_id_from_cu_node_path_order(
+        self, node_path_order: Tuple[Path, int], cu_hash: bytes
+    ) -> AstNodeId:
+        for node_id, node_path_order_ in self.__ordered_nodes[cu_hash].items():
+            if node_path_order_ == node_path_order:
+                return node_id
+        raise KeyError(
+            f"No node found for path order {node_path_order} cu hash {cu_hash.hex()}"
+        )
+
     def register_node(self, node: IrAbc, node_id: AstNodeId, cu_hash: bytes):
         assert cu_hash in self.__ordered_nodes
         assert node_id in self.__ordered_nodes[cu_hash]
