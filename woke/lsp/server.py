@@ -27,6 +27,7 @@ from .document_sync import (
     WillSaveTextDocumentParams,
 )
 from .exceptions import LspError
+from .features.diagnostic import diagnostics_loop
 from .features.document_link import (
     DocumentLinkOptions,
     DocumentLinkParams,
@@ -70,6 +71,8 @@ class LspServer:
     __protocol: RpcProtocol
     __run: bool
     __compilation_task: Optional[asyncio.Task]
+    __diagnostics_task: Optional[asyncio.Task]
+    __diagnostics_queue: asyncio.Queue
 
     __method_mapping: Dict[str, Tuple[Callable, Optional[Type[LspModel]]]]
     __notification_mapping: Dict[str, Tuple[Callable, Optional[Type[LspModel]]]]
@@ -80,12 +83,14 @@ class LspServer:
         reader: asyncio.StreamReader,
         writer: asyncio.StreamWriter,
     ):
+        self.__diagnostics_queue = asyncio.Queue()
         self.__initialized = False
         self.__config = config
-        self.__context = LspContext(config, self)
+        self.__context = LspContext(config, self, self.__diagnostics_queue)
         self.__protocol = RpcProtocol(reader, writer)
         self.__run = True
         self.__compilation_task = None
+        self.__diagnostics_task = None
 
         self.__method_mapping = {
             RequestMethodEnum.INITIALIZE: (self._initialize, InitializeParams),
@@ -153,6 +158,8 @@ class LspServer:
                 await self._handle_notification(message)
         if self.__compilation_task is not None:
             self.__compilation_task.cancel()
+        if self.__diagnostics_task is not None:
+            self.__diagnostics_task.cancel()
 
     async def send_notification(
         self, method: str, params: Optional[Any] = None
@@ -267,6 +274,10 @@ class LspServer:
         self.__context.config.project_root_path = path
         self.__context.config.load_configs()
         self.__compilation_task = asyncio.create_task(self.__context.compiler.run())
+
+        self.__diagnostics_task = asyncio.create_task(
+            diagnostics_loop(self, self.__context, self.__diagnostics_queue)
+        )
 
         server_capabilities = ServerCapabilities(
             position_encoding=PositionEncodingKind.UTF16,

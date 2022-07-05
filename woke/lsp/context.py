@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING
 
 from woke.config import WokeConfig
@@ -15,9 +16,11 @@ class LspContext:
     __compiler: LspCompiler
     __config: WokeConfig
 
-    def __init__(self, config: WokeConfig, server: LspServer) -> None:
+    def __init__(
+        self, config: WokeConfig, server: LspServer, diagnostics_queue: asyncio.Queue
+    ) -> None:
         self.__config = config
-        self.__compiler = LspCompiler(self.__config, server)
+        self.__compiler = LspCompiler(self.__config, server, diagnostics_queue)
 
         self.shutdown_received = False
         self.initialized = False

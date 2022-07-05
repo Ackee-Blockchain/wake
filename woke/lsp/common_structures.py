@@ -115,19 +115,19 @@ class Diagnostic(LspModel):
     """
     The range at which the message applies.
     """
-    severity: Optional[DiagnosticSeverity]
+    severity: Optional[DiagnosticSeverity] = None
     """
     The diagnostic's severity.
     """
-    code: Optional[Union[int, str]]
+    code: Optional[Union[int, str]] = None
     """
     The diagnostic's code.
     """
-    code_description: Optional[CodeDescription]
+    code_description: Optional[CodeDescription] = None
     """
     An URI to open with more information about the diagnostic error.
     """
-    source: Optional[str]
+    source: Optional[str] = None
     """
     A human-readable string describing the source of this diagnostic
     """
@@ -135,16 +135,16 @@ class Diagnostic(LspModel):
     """
     The diagnostic's message.
     """
-    tags: Optional[List[DiagnosticTag]]
+    tags: Optional[List[DiagnosticTag]] = None
     """
     Additional metadata about the diagnostic.
     """
-    related_information: Optional[List[DiagnosticRelatedInformation]]
+    related_information: Optional[List[DiagnosticRelatedInformation]] = None
     """
     An array of related diagnostic information,
     e.g. when symbol-names within a scope collide all definitions can be marked via this property.
     """
-    data: Optional[Any]
+    data: Optional[Any] = None
     """
     A data entry field that is preserved between
     a `textDocument/publishDiagnostics` notification and `textDocument/codeAction` request.
