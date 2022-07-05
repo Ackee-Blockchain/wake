@@ -89,10 +89,16 @@ class ImportDirective(IrAbc):
                     referenced_declaration = declaration
                     break
             assert referenced_declaration is not None
-            assert self.cu_hash == referenced_declaration.cu_hash
-            symbol_alias.foreign._referenced_declaration_id = AstNodeId(
-                referenced_declaration.ast_node_id
+            node_path_order = self._reference_resolver.get_node_path_order(
+                AstNodeId(referenced_declaration.ast_node_id),
+                referenced_declaration.cu_hash,
             )
+            referenced_declaration_id = (
+                self._reference_resolver.get_ast_id_from_cu_node_path_order(
+                    node_path_order, self.cu_hash
+                )
+            )
+            symbol_alias.foreign._referenced_declaration_id = referenced_declaration_id
 
     @property
     def parent(self) -> SourceUnit:
