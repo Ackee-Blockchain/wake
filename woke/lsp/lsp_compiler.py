@@ -1,10 +1,25 @@
+from __future__ import annotations
+
 import asyncio
 import logging
 import re
 import threading
 from collections import deque
 from pathlib import Path
-from typing import AbstractSet, Dict, Iterable, List, Mapping, Set, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    AbstractSet,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Set,
+    Tuple,
+    Union,
+)
+
+if TYPE_CHECKING:
+    from .server import LspServer
 
 import networkx as nx
 
@@ -27,7 +42,8 @@ from woke.lsp.document_sync import (
 )
 from woke.lsp.utils.uri import uri_to_path
 
-from .common_structures import Position, Range
+from ..svm import SolcVersionManager
+from .common_structures import MessageType, Position, Range
 
 logger = logging.getLogger(__name__)
 
@@ -57,21 +73,21 @@ def _out_edge_bfs(graph: nx.DiGraph, start: Iterable[Path], out: Set[Path]) -> N
         node = queue.pop()
         for out_edge in graph.out_edges(node):
             from_, to = out_edge
-            if from_ not in out:
-                out.add(from_)
-                queue.append(from_)
+            if to not in out:
+                out.add(to)
+                queue.append(to)
 
 
 class LspCompiler:
     __config: WokeConfig
+    __svm: SolcVersionManager
+    __server: LspServer
     __file_changes_queue: asyncio.Queue
-
-    __processed_files: Set[Path]
+    __discovered_files: Set[Path]
 
     # accessed from the compilation thread
     # full path -> contents
     __files: Dict[Path, str]
-    __opened_files: Set[Path]
     __modified_files: Set[Path]
     __compiler: SolidityCompiler
     __output_contents: Dict[Path, str]
@@ -83,13 +99,14 @@ class LspCompiler:
 
     __output_ready: asyncio.Event
 
-    def __init__(self, config: WokeConfig):
+    def __init__(self, config: WokeConfig, server: LspServer):
         self.__config = config
+        self.__svm = SolcVersionManager(config)
+        self.__server = server
         self.__file_changes_queue = asyncio.Queue()
         self.__stop_event = threading.Event()
-        self.__processed_files = set()
+        self.__discovered_files = set()
         self.__files = dict()
-        self.__opened_files = set()
         self.__modified_files = set()
         self.__compiler = SolidityCompiler(config)
         self.__interval_trees = {}
@@ -127,12 +144,15 @@ class LspCompiler:
             DidCloseTextDocumentParams,
         ],
     ) -> None:
-        file = uri_to_path(change.text_document.uri)
-        if (
-            isinstance(change, DidChangeTextDocumentParams)
-            or file not in self.__processed_files
+        if not isinstance(
+            change, (DidOpenTextDocumentParams, DidCloseTextDocumentParams)
         ):
             self.output_ready.clear()
+        else:
+            file = uri_to_path(change.text_document.uri)
+            if file not in self.__discovered_files:
+                self.output_ready.clear()
+
         await self.__file_changes_queue.put(change)
 
     def get_file_content(self, file: Union[Path, str]) -> str:
@@ -176,27 +196,139 @@ class LspCompiler:
         line_offset = len(line_bytes.decode("utf-8")[:col].encode("utf-8"))
         return prefix + line_offset
 
+    def _handle_change(
+        self,
+        change: Union[
+            DidOpenTextDocumentParams,
+            DidCloseTextDocumentParams,
+            DidChangeTextDocumentParams,
+        ],
+    ) -> None:
+        if isinstance(change, DidOpenTextDocumentParams):
+            path = uri_to_path(change.text_document.uri).resolve()
+            self.__files[path] = change.text_document.text
+            if path not in self.__discovered_files:
+                self.__modified_files.add(path)
+        elif isinstance(change, DidCloseTextDocumentParams):
+            path = uri_to_path(change.text_document.uri).resolve()
+        elif isinstance(change, DidChangeTextDocumentParams):
+            path = uri_to_path(change.text_document.uri).resolve()
+            self.__modified_files.add(path)
+
+            for content_change in change.content_changes:
+                start = content_change.range.start
+                end = content_change.range.end
+
+                # str.splitlines() removes empty lines => cannot be used
+                # str.split() removes separators => cannot be used
+                tmp_lines = re.split(r"(\r?\n)", self.__files[path])
+                tmp_lines2: List[str] = []
+                for line in tmp_lines:
+                    if line in {"\r\n", "\n"}:
+                        tmp_lines2[-1] += line
+                    else:
+                        tmp_lines2.append(line)
+
+                lines: List[bytearray] = [
+                    bytearray(line.encode(ENCODING)) for line in tmp_lines2
+                ]
+
+                if start.line == end.line:
+                    line = lines[start.line]
+                    line[start.character * 2 : end.character * 2] = b""
+                    line[
+                        start.character * 2 : start.character * 2
+                    ] = content_change.text.encode(ENCODING)
+                else:
+                    start_line = lines[start.line]
+                    end_line = lines[end.line]
+                    start_line[start.character * 2 :] = content_change.text.encode(
+                        ENCODING
+                    )
+                    end_line[: end.character * 2] = b""
+
+                    for i in range(start.line + 1, end.line):
+                        lines[i] = bytearray(b"")
+
+                self.__files[path] = "".join(line.decode(ENCODING) for line in lines)
+        else:
+            raise Exception("Unknown change type")
+
     async def __compile(
         self, files: AbstractSet[Path], modified_files: Mapping[Path, str]
-    ):
-        files_to_recompile = set(files)
-        modified_files_to_recompile = dict(modified_files)
-
-        out: List[Tuple[CompilationUnit, SolcOutput]] = await self.__compiler.compile(
-            files,
-            [SolcOutputSelectionEnum.AST],
-            write_artifacts=False,
-            reuse_latest_artifacts=False,
-            modified_files=modified_files,
-            maximize_compilation_units=True,
+    ) -> None:
+        graph = self.__compiler.build_graph(
+            self.__discovered_files - self.__modified_files, modified_files
         )
+        compilation_units = self.__compiler.build_compilation_units_maximize(graph)
+        # filter out only compilation units that need to be compiled
+        compilation_units = [
+            cu for cu in compilation_units if cu.files & (files | modified_files.keys())
+        ]
+        build_settings = self.__compiler.create_build_settings(
+            [SolcOutputSelectionEnum.AST]
+        )
+
+        target_versions = []
+        for compilation_unit in compilation_units:
+            target_version = self.__config.compiler.solc.target_version
+            if (
+                target_version is not None
+                and target_version not in compilation_unit.versions
+            ):
+                files_str = "\n".join(str(path) for path in compilation_unit.files)
+                message = (
+                    f"Unable to compile the following files with solc version `{target_version}` set in config files:\n"
+                    + files_str
+                )
+                await self.__server.log_message(message, MessageType.ERROR)
+                return
+            else:
+                # use the latest matching version
+                try:
+                    target_version = next(
+                        version
+                        for version in reversed(self.__svm.list_all())
+                        if version in compilation_unit.versions
+                    )
+                except StopIteration:
+                    message = (
+                        f"Unable to find a matching solc version for the following files:\n"
+                        + "\n".join(str(path) for path in compilation_unit.files)
+                    )
+                    await self.__server.log_message(message, MessageType.ERROR)
+                    return
+            target_versions.append(target_version)
+
+            if not self.__svm.get_path(target_version).is_file():
+                await self.__svm.install(target_version)
+
+        tasks = []
+        for compilation_unit, target_version in zip(compilation_units, target_versions):
+            task = asyncio.create_task(
+                self.__compiler.compile_unit_raw(
+                    compilation_unit,
+                    target_version,
+                    build_settings,
+                )
+            )
+            tasks.append(task)
+
+        # wait for compilation of all compilation units
+        try:
+            ret = await asyncio.gather(*tasks)
+        except Exception as e:
+            for task in tasks:
+                task.cancel()
+            await self.__server.log_message(str(e), MessageType.ERROR)
+            return
+
         self.__output_contents.update(self.__files)
 
         errors_per_file: Dict[Path, List[SolcOutputError]] = {}
 
-        for cu, solc_output in out:
+        for cu, solc_output in zip(compilation_units, ret):
             for file in cu.files:
-                self.__processed_files.add(file)
                 errors_per_file[file] = []
                 if file in self.__line_indexes:
                     self.__line_indexes.pop(file)
@@ -212,9 +344,6 @@ class LspCompiler:
                         errored_files.add(path)
 
             _out_edge_bfs(cu.graph, errored_files, errored_files)
-            for errored_file in errored_files:
-                files_to_recompile.discard(errored_file)
-                modified_files_to_recompile.pop(errored_file, None)
 
             # modified files and files that import modified files (even indirectly)
             recompiled_files: Set[Path] = set()
@@ -236,8 +365,6 @@ class LspCompiler:
 
                 self.__ir_reference_resolver.index_nodes(ast, path, cu.blake2b_digest)
 
-                files_to_recompile.discard(path)
-                modified_files_to_recompile.pop(path, None)
                 if path not in files and path not in recompiled_files:
                     continue
 
@@ -256,82 +383,22 @@ class LspCompiler:
                 CallbackParams(source_units=self.__source_units)
             )
 
-        if len(files_to_recompile) > 0 or len(modified_files_to_recompile) > 0:
-            # avoid infinite recursion
-            if (
-                files_to_recompile != files
-                or modified_files.keys() != modified_files_to_recompile.keys()
-            ):
-                await self.__compile(files_to_recompile, modified_files_to_recompile)
-
     async def __compilation_loop(self):
         # perform Solidity files discovery
         project_path = self.__config.project_root_path
 
         for file in project_path.rglob("**/*.sol"):
             if "node_modules" not in file.parts and file.is_file():
-                self.__files[file.resolve()] = file.read_text()
+                self.__discovered_files.add(file.resolve())
 
         # perform initial compilation
-        await self.__compile(self.__files.keys(), {})
-
-        self.__output_contents = self.__files.copy()
+        await self.__compile(self.__discovered_files, {})
         self.output_ready.set()
 
         while True:
             change = await self.__file_changes_queue.get()
             while True:
-                if isinstance(change, DidOpenTextDocumentParams):
-                    path = uri_to_path(change.text_document.uri).resolve()
-                    self.__files[path] = change.text_document.text
-                    self.__opened_files.add(path)
-                elif isinstance(change, DidCloseTextDocumentParams):
-                    path = uri_to_path(change.text_document.uri).resolve()
-                    self.__opened_files.remove(path)
-                elif isinstance(change, DidChangeTextDocumentParams):
-                    path = uri_to_path(change.text_document.uri).resolve()
-                    self.__modified_files.add(path)
-
-                    for content_change in change.content_changes:
-                        start = content_change.range.start
-                        end = content_change.range.end
-
-                        # str.splitlines() removes empty lines => cannot be used
-                        # str.split() removes separators => cannot be used
-                        tmp_lines = re.split(r"(\r?\n)", self.__files[path])
-                        tmp_lines2: List[str] = []
-                        for line in tmp_lines:
-                            if line in {"\r\n", "\n"}:
-                                tmp_lines2[-1] += line
-                            else:
-                                tmp_lines2.append(line)
-
-                        lines: List[bytearray] = [
-                            bytearray(line.encode(ENCODING)) for line in tmp_lines2
-                        ]
-
-                        if start.line == end.line:
-                            line = lines[start.line]
-                            line[start.character * 2 : end.character * 2] = b""
-                            line[
-                                start.character * 2 : start.character * 2
-                            ] = content_change.text.encode(ENCODING)
-                        else:
-                            start_line = lines[start.line]
-                            end_line = lines[end.line]
-                            start_line[
-                                start.character * 2 :
-                            ] = content_change.text.encode(ENCODING)
-                            end_line[: end.character * 2] = b""
-
-                            for i in range(start.line + 1, end.line):
-                                lines[i] = bytearray(b"")
-
-                        self.__files[path] = "".join(
-                            line.decode(ENCODING) for line in lines
-                        )
-                else:
-                    raise Exception("Unknown change type")
+                self._handle_change(change)
                 try:
                     change = self.__file_changes_queue.get_nowait()
                 except asyncio.QueueEmpty:

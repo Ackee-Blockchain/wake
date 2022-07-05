@@ -82,7 +82,7 @@ class LspServer:
     ):
         self.__initialized = False
         self.__config = config
-        self.__context = LspContext(config)
+        self.__context = LspContext(config, self)
         self.__protocol = RpcProtocol(reader, writer)
         self.__run = True
         self.__compilation_task = None
