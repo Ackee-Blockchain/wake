@@ -27,6 +27,7 @@ class MemberAccess(ExpressionAbc):
         self.__referenced_declaration_id = member_access.referenced_declaration
 
         self._reference_resolver.register_post_process_callback(self.__post_process)
+        self._reference_resolver.register_destroy_callback(self.file, self.__destroy)
 
     def __post_process(self, callback_params: CallbackParams):
         # workaround for enum value bug in Solidity versions prior to 0.8.2
@@ -50,6 +51,11 @@ class MemberAccess(ExpressionAbc):
         referenced_declaration = self.referenced_declaration
         if referenced_declaration is not None:
             referenced_declaration.register_reference(self)
+
+    def __destroy(self) -> None:
+        referenced_declaration = self.referenced_declaration
+        if referenced_declaration is not None:
+            referenced_declaration.unregister_reference(self)
 
     @property
     def parent(self) -> IrAbc:

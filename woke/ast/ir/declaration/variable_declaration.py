@@ -103,11 +103,17 @@ class VariableDeclaration(DeclarationAbc):
             else None
         )
         self._reference_resolver.register_post_process_callback(self.__post_process)
+        self._reference_resolver.register_destroy_callback(self.file, self.__destroy)
 
     def __post_process(self, callback_params: CallbackParams):
         if self.base_functions is not None:
             for base_function in self.base_functions:
-                base_function._child_functions.append(self)
+                base_function._child_functions.add(self)
+
+    def __destroy(self) -> None:
+        if self.base_functions is not None:
+            for base_function in self.base_functions:
+                base_function._child_functions.discard(self)
 
     def _parse_name_location(self) -> Tuple[int, int]:
         # this one is a bit tricky

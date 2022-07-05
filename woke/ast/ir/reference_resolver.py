@@ -5,7 +5,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
 from queue import PriorityQueue
-from typing import TYPE_CHECKING, Callable, Dict, List, Tuple
+from typing import TYPE_CHECKING, Callable, DefaultDict, Dict, List, Tuple
 
 from woke.ast.enums import GlobalSymbolsEnum
 
@@ -34,12 +34,14 @@ class ReferenceResolver:
     __ordered_nodes: Dict[bytes, Dict[AstNodeId, Tuple[Path, int]]]
     __registered_nodes: Dict[Tuple[Path, int], IrAbc]
     __post_process_callbacks: PriorityQueue[PostProcessQueueItem]
+    __destroy_callbacks: DefaultDict[Path, List[Callable[[], None]]]
     __global_symbol_references: Dict[GlobalSymbolsEnum, List[Identifier]]
 
     def __init__(self):
         self.__ordered_nodes = defaultdict(dict)
         self.__registered_nodes = {}
         self.__post_process_callbacks = PriorityQueue()
+        self.__destroy_callbacks = defaultdict(list)
         self.__global_symbol_references = {}
 
     def index_nodes(self, root_node: AstSolc, path: Path, cu_hash: bytes) -> None:
@@ -77,10 +79,18 @@ class ReferenceResolver:
     ):
         self.__post_process_callbacks.put(PostProcessQueueItem(priority, callback))
 
+    def register_destroy_callback(self, file: Path, callback: Callable[[], None]):
+        self.__destroy_callbacks[file].append(callback)
+
     def run_post_process_callbacks(self, callback_params: CallbackParams):
         while not self.__post_process_callbacks.empty():
             callback = self.__post_process_callbacks.get().callback
             callback(callback_params)
+
+    def run_destroy_callbacks(self, file: Path):
+        for callback in self.__destroy_callbacks[file]:
+            callback()
+        del self.__destroy_callbacks[file]
 
     def register_global_symbol_reference(
         self, node_id: GlobalSymbolsEnum, node: Identifier
@@ -88,6 +98,13 @@ class ReferenceResolver:
         if node_id not in self.__global_symbol_references:
             self.__global_symbol_references[node_id] = []
         self.__global_symbol_references[node_id].append(node)
+
+    def unregister_global_symbol_reference(
+        self, node_id: GlobalSymbolsEnum, node: Identifier
+    ):
+        self.__global_symbol_references[node_id].remove(node)
+        if not self.__global_symbol_references[node_id]:
+            del self.__global_symbol_references[node_id]
 
     def get_global_symbol_references(
         self, node_id: GlobalSymbolsEnum

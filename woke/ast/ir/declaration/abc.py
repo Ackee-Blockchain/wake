@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import TYPE_CHECKING, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, FrozenSet, Optional, Set, Tuple, Union
 
 if TYPE_CHECKING:
     from ..expression.identifier import Identifier
@@ -49,7 +49,7 @@ if TYPE_CHECKING:
 class DeclarationAbc(IrAbc):
     _name: str
     _name_location: Optional[Tuple[int, int]]
-    _references: List[ReferencingNodesUnion]
+    _references: Set[ReferencingNodesUnion]
 
     def __init__(
         self, init: IrInitTuple, solc_node: SolcDeclarationUnion, parent: IrAbc
@@ -64,10 +64,13 @@ class DeclarationAbc(IrAbc):
                 solc_node.name_location.byte_offset
                 + solc_node.name_location.byte_length,
             )
-        self._references = []
+        self._references = set()
 
     def register_reference(self, reference: ReferencingNodesUnion):
-        self._references.append(reference)
+        self._references.add(reference)
+
+    def unregister_reference(self, reference: ReferencingNodesUnion):
+        self._references.discard(reference)
 
     @abstractmethod
     def _parse_name_location(self) -> Tuple[int, int]:
@@ -89,5 +92,5 @@ class DeclarationAbc(IrAbc):
         return self._name_location
 
     @property
-    def references(self) -> Tuple[ReferencingNodesUnion]:
-        return tuple(self._references)
+    def references(self) -> FrozenSet[ReferencingNodesUnion]:
+        return frozenset(self._references)

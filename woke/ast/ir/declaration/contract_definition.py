@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple
+from typing import TYPE_CHECKING, FrozenSet, Iterator, List, Optional, Set, Tuple
 
 from ..meta.inheritance_specifier import InheritanceSpecifier
 from ..meta.using_for_directive import UsingForDirective
@@ -62,7 +62,7 @@ class ContractDefinition(DeclarationAbc):
     __using_for_directives: List[UsingForDirective]
     __declared_variables: List[VariableDeclaration]
 
-    __child_contracts: List[ContractDefinition]
+    __child_contracts: Set[ContractDefinition]
 
     def __init__(
         self, init: IrInitTuple, contract: SolcContractDefinition, parent: SourceUnit
@@ -83,7 +83,7 @@ class ContractDefinition(DeclarationAbc):
             self.__base_contracts.append(
                 InheritanceSpecifier(init, base_contract, self)
             )
-        self.__child_contracts = []
+        self.__child_contracts = set()
 
         self.__enums = []
         self.__errors = []
@@ -118,12 +118,19 @@ class ContractDefinition(DeclarationAbc):
                 self.__declared_variables.append(VariableDeclaration(init, node, self))
 
         init.reference_resolver.register_post_process_callback(self.__post_process)
+        self._reference_resolver.register_destroy_callback(self.file, self.__destroy)
 
     def __post_process(self, callback_params: CallbackParams):
         for base_contract in self.__base_contracts:
             contract = base_contract.base_name.referenced_declaration
             assert isinstance(contract, ContractDefinition)
-            contract.__child_contracts.append(self)
+            contract.__child_contracts.add(self)
+
+    def __destroy(self) -> None:
+        for base_contract in self.__base_contracts:
+            contract = base_contract.base_name.referenced_declaration
+            assert isinstance(contract, ContractDefinition)
+            contract.__child_contracts.discard(self)
 
     def _parse_name_location(self) -> Tuple[int, int]:
         IDENTIFIER = r"[a-zA-Z$_][a-zA-Z0-9$_]*"
@@ -176,8 +183,8 @@ class ContractDefinition(DeclarationAbc):
         return tuple(self.__base_contracts)
 
     @property
-    def child_contracts(self) -> Tuple[ContractDefinition]:
-        return tuple(self.__child_contracts)
+    def child_contracts(self) -> FrozenSet[ContractDefinition]:
+        return frozenset(self.__child_contracts)
 
     @property
     def kind(self) -> ContractKind:
