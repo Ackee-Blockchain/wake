@@ -43,9 +43,15 @@ class MemberAccess(ExpressionAbc):
             if isinstance(referenced_declaration, EnumDefinition):
                 for enum_value in referenced_declaration.values:
                     if enum_value.name == self.__member_name:
-                        self.__referenced_declaration_id = AstNodeId(
-                            enum_value.ast_node_id
+                        node_path_order = self._reference_resolver.get_node_path_order(
+                            AstNodeId(enum_value.ast_node_id), enum_value.cu_hash
                         )
+                        this_cu_id = (
+                            self._reference_resolver.get_ast_id_from_cu_node_path_order(
+                                node_path_order, self.cu_hash
+                            )
+                        )
+                        self.__referenced_declaration_id = this_cu_id
                         break
 
         referenced_declaration = self.referenced_declaration
