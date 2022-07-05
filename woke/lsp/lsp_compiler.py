@@ -259,11 +259,19 @@ class LspCompiler:
             raise Exception("Unknown change type")
 
     async def __compile(
-        self, files: AbstractSet[Path], modified_files: Mapping[Path, str]
+        self,
+        files: AbstractSet[Path],
+        modified_files: Mapping[Path, str],
+        full_compile: bool = True,
     ) -> None:
-        graph = self.__compiler.build_graph(
-            self.__discovered_files - self.__modified_files, modified_files
-        )
+        if full_compile:
+            graph = self.__compiler.build_graph(
+                self.__discovered_files - modified_files.keys(), modified_files
+            )
+        else:
+            graph = self.__compiler.build_graph(
+                files - modified_files.keys(), modified_files
+            )
         compilation_units = self.__compiler.build_compilation_units_maximize(graph)
         # filter out only compilation units that need to be compiled
         compilation_units = [
@@ -330,6 +338,8 @@ class LspCompiler:
         self.__output_contents.update(self.__files)
 
         errors_per_file: Dict[Path, List[SolcOutputError]] = {}
+        files_to_recompile = set(files)
+        modified_files_to_recompile = dict(modified_files)
         processed_files: Set[Path] = set()
 
         for cu, solc_output in zip(compilation_units, ret):
@@ -355,6 +365,8 @@ class LspCompiler:
             _out_edge_bfs(cu.graph, modified_files, recompiled_files)
 
             for file in errored_files:
+                files_to_recompile.discard(file)
+                modified_files_to_recompile.pop(file, None)
                 # an error occurred during compilation
                 # AST still may be provided, but it must NOT be parsed (pydantic model is not defined for this case)
                 if file in self.__source_units:
@@ -371,8 +383,10 @@ class LspCompiler:
 
                 self.__ir_reference_resolver.index_nodes(ast, path, cu.blake2b_digest)
 
+                files_to_recompile.discard(path)
+                modified_files_to_recompile.pop(path, None)
                 if (
-                    path not in files and path not in recompiled_files
+                    path in self.__source_units and path not in recompiled_files
                 ) or path in processed_files:
                     continue
                 processed_files.add(path)
@@ -394,6 +408,17 @@ class LspCompiler:
             )
         for path, errors in errors_per_file.items():
             await self.__diagnostic_queue.put((path, errors))
+
+        if len(files_to_recompile) > 0 or len(modified_files_to_recompile) > 0:
+            # avoid infinite recursion
+            if (
+                files_to_recompile != files
+                or modified_files.keys() != modified_files_to_recompile.keys()
+                or full_compile
+            ):
+                await self.__compile(
+                    files_to_recompile, modified_files_to_recompile, False
+                )
 
     async def __compilation_loop(self):
         # perform Solidity files discovery
