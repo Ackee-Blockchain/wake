@@ -10,7 +10,9 @@ from .common_structures import (
     InitializedParams,
     InitializeError,
     InitializeParams,
+    LogMessageParams,
     LogTraceParams,
+    MessageType,
     ProgressParams,
     SetTraceParams,
 )
@@ -151,6 +153,24 @@ class LspServer:
                 await self._handle_notification(message)
         if self.__compilation_task is not None:
             self.__compilation_task.cancel()
+
+    async def send_notification(
+        self, method: str, params: Optional[Any] = None
+    ) -> None:
+        notification = NotificationMessage(
+            jsonrpc="2.0",
+            method=method,
+            params=params,
+        )
+        logger.debug(f"Sending notification:\n{notification}")
+        await self.__protocol.send(notification)
+
+    async def log_message(self, message: str, type: MessageType) -> None:
+        params = LogMessageParams(
+            type=type,
+            message=message,
+        )
+        await self.send_notification(RequestMethodEnum.WINDOW_LOG_MESSAGE, params)
 
     async def _handle_message(self, request: RequestMessage) -> None:
         logger.info(f"Message received: {request}")
