@@ -83,6 +83,7 @@ class LspCompiler:
     __svm: SolcVersionManager
     __server: LspServer
     __file_changes_queue: asyncio.Queue
+    __diagnostic_queue: asyncio.Queue
     __discovered_files: Set[Path]
 
     # accessed from the compilation thread
@@ -99,11 +100,14 @@ class LspCompiler:
 
     __output_ready: asyncio.Event
 
-    def __init__(self, config: WokeConfig, server: LspServer):
+    def __init__(
+        self, config: WokeConfig, server: LspServer, diagnostic_queue: asyncio.Queue
+    ):
         self.__config = config
         self.__svm = SolcVersionManager(config)
         self.__server = server
         self.__file_changes_queue = asyncio.Queue()
+        self.__diagnostic_queue = diagnostic_queue
         self.__stop_event = threading.Event()
         self.__discovered_files = set()
         self.__files = dict()
@@ -382,6 +386,8 @@ class LspCompiler:
             self.__ir_reference_resolver.run_post_process_callbacks(
                 CallbackParams(source_units=self.__source_units)
             )
+        for path, errors in errors_per_file.items():
+            await self.__diagnostic_queue.put((path, errors))
 
     async def __compilation_loop(self):
         # perform Solidity files discovery
