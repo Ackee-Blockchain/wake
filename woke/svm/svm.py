@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import platform
 import shutil
 import urllib.error
@@ -16,6 +17,8 @@ from woke.core.solidity_version import SolidityVersion
 
 from .abc import CompilerVersionManagerAbc
 from .exceptions import ChecksumError, UnsupportedVersionError
+
+logger = logging.getLogger(__name__)
 
 
 class SolcBuildInfo(BaseModel):
@@ -239,11 +242,11 @@ class SolcVersionManager(CompilerVersionManagerAbc):
             return
 
         try:
-            with urllib.request.urlopen(self.__solc_list_url) as response:
+            with urllib.request.urlopen(self.__solc_list_url, timeout=0.25) as response:
                 json = response.read()
                 self.__solc_builds = SolcBuilds.parse_raw(json)
                 self.__solc_list_path.write_bytes(json)
-        except urllib.error.URLError:
+        except (urllib.error.URLError, OSError) as e:
             # in case of networking issues try to use the locally downloaded solc builds file as a fallback
             if self.__solc_list_path.is_file():
                 self.__solc_builds = SolcBuilds.parse_file(self.__solc_list_path)
