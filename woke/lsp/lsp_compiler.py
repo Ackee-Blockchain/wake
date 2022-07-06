@@ -18,6 +18,8 @@ from typing import (
     Union,
 )
 
+from woke.compile.exceptions import CompilationError
+
 if TYPE_CHECKING:
     from .server import LspServer
 
@@ -265,10 +267,18 @@ class LspCompiler:
         full_compile: bool = True,
     ) -> None:
         if full_compile:
-            graph = self.__compiler.build_graph(self.__discovered_files, modified_files)
+            graph = self.__compiler.build_graph(
+                self.__discovered_files, modified_files, True
+            )
         else:
-            graph = self.__compiler.build_graph(files, modified_files)
-        compilation_units = self.__compiler.build_compilation_units_maximize(graph)
+            graph = self.__compiler.build_graph(files, modified_files, True)
+
+        try:
+            compilation_units = self.__compiler.build_compilation_units_maximize(graph)
+        except CompilationError as e:
+            await self.__server.log_message(str(e), MessageType.ERROR)
+            return
+
         # filter out only compilation units that need to be compiled
         compilation_units = [
             cu for cu in compilation_units if cu.files & (files | modified_files.keys())

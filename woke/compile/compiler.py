@@ -24,7 +24,7 @@ from woke.svm import SolcVersionManager
 
 from .build_data_model import CompilationUnitBuildInfo, ProjectBuildInfo
 from .compilation_unit import CompilationUnit
-from .exceptions import CompilationError
+from .exceptions import CompilationError, CompilationResolveError
 from .solc_frontend import (
     SolcFrontend,
     SolcInputSettings,
@@ -54,7 +54,10 @@ class SolidityCompiler:
         self.__source_path_resolver = SourcePathResolver(woke_config)
 
     def build_graph(
-        self, files: Collection[Path], modified_files: Mapping[Path, str]
+        self,
+        files: Collection[Path],
+        modified_files: Mapping[Path, str],
+        ignore_errors: bool = False,
     ) -> nx.DiGraph:
         # source unit name, full path, file content
         source_units_queue: deque[Tuple[str, Path, Optional[str]]] = deque()
@@ -62,7 +65,12 @@ class SolidityCompiler:
 
         # for every source file resolve a source unit name
         for file in files:
-            file = file.resolve(strict=True)
+            try:
+                file = file.resolve(strict=True)
+            except FileNotFoundError:
+                if ignore_errors:
+                    continue
+                raise
 
             source_unit_name = self.__source_unit_name_resolver.resolve_cmdline_arg(
                 str(file)
@@ -83,9 +91,11 @@ class SolidityCompiler:
         while len(source_units_queue) > 0:
             source_unit_name, path, content = source_units_queue.pop()
             if content is None:
-                versions, imports, h = SoliditySourceParser.parse(path)
+                versions, imports, h = SoliditySourceParser.parse(path, ignore_errors)
             else:
-                versions, imports, h = SoliditySourceParser.parse_source(content)
+                versions, imports, h = SoliditySourceParser.parse_source(
+                    content, ignore_errors
+                )
             graph.add_node(
                 path,
                 source_unit_name=source_unit_name,
@@ -99,9 +109,14 @@ class SolidityCompiler:
                 import_unit_name = self.__source_unit_name_resolver.resolve_import(
                     source_unit_name, _import
                 )
-                import_path = self.__source_path_resolver.resolve(
-                    import_unit_name
-                ).resolve(strict=True)
+                try:
+                    import_path = self.__source_path_resolver.resolve(
+                        import_unit_name
+                    ).resolve(strict=True)
+                except (FileNotFoundError, CompilationResolveError):
+                    if ignore_errors:
+                        continue
+                    raise
 
                 if import_unit_name in source_units:
                     other_path = source_units[import_unit_name]
@@ -152,7 +167,7 @@ class SolidityCompiler:
 
             if len(versions) == 0:
                 raise CompilationError(
-                    "Unable to find any solc version to compile following files:\n"
+                    "Unable to find any solc version to compile the following files:\n"
                     + "\n".join(str(path) for path in nodes_subset)
                 )
 
