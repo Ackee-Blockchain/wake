@@ -431,7 +431,10 @@ class LspCompiler:
         project_path = self.__config.project_root_path
 
         for file in project_path.rglob("**/*.sol"):
-            if "node_modules" not in file.parts and file.is_file():
+            if (
+                not ({"node_modules", ".woke-build"} & set(file.parts))
+                and file.is_file()
+            ):
                 self.__discovered_files.add(file.resolve())
 
         # perform initial compilation
