@@ -2,7 +2,7 @@ import asyncio
 import logging
 from functools import partial
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Tuple, Type
+from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
 
 from ..config import WokeConfig
 from .common_structures import (
@@ -70,6 +70,9 @@ class LspServer:
     __context: LspContext
     __protocol: RpcProtocol
     __run: bool
+    __request_id_counter: int
+    __sent_requests: Dict[Union[int, str], asyncio.Event]
+    __message_responses: Dict[Union[int, str], ResponseMessage]
     __compilation_task: Optional[asyncio.Task]
     __diagnostics_task: Optional[asyncio.Task]
     __diagnostics_queue: asyncio.Queue
@@ -89,6 +92,9 @@ class LspServer:
         self.__context = LspContext(config, self, self.__diagnostics_queue)
         self.__protocol = RpcProtocol(reader, writer)
         self.__run = True
+        self.__request_id_counter = 0
+        self.__sent_requests = {}
+        self.__message_responses = {}
         self.__compilation_task = None
         self.__diagnostics_task = None
 
@@ -154,12 +160,35 @@ class LspServer:
             message = await self.__protocol.receive()
             if isinstance(message, RequestMessage):
                 await self._handle_message(message)
-            else:
+            elif isinstance(message, NotificationMessage):
                 await self._handle_notification(message)
+            elif isinstance(message, ResponseMessage):
+                await self._handle_response(message)
+            else:
+                raise Exception("Unknown message type")
         if self.__compilation_task is not None:
             self.__compilation_task.cancel()
         if self.__diagnostics_task is not None:
             self.__diagnostics_task.cancel()
+
+    async def send_request(self, method: RequestMethodEnum, params: Any = None) -> Any:
+        request = RequestMessage(
+            jsonrpc="2.0", id=self.__request_id_counter, method=method, params=params
+        )
+        self.__sent_requests[request.id] = asyncio.Event()
+        self.__request_id_counter += 1
+
+        logger.debug(f"Sending request:\n{request}")
+        await self.__protocol.send(request)
+        await self.__sent_requests[request.id].wait()
+        self.__sent_requests.pop(request.id)
+        response = self.__message_responses.pop(request.id)
+
+        if response.error is not None:
+            raise LspError(
+                response.error.code, response.error.message, response.error.data
+            )
+        return response.result
 
     async def send_notification(
         self, method: str, params: Optional[Any] = None
@@ -217,6 +246,21 @@ class LspServer:
             await n(params_type.parse_obj(notification.params))
         else:
             await n(None)
+
+    async def _handle_response(self, response: ResponseMessage) -> None:
+        logger.info(f"Response received: {response}")
+
+        if response.id is None:
+            logger.error(f"Response without id: {response}")
+            return
+
+        try:
+            self.__message_responses[response.id] = response
+            self.__sent_requests[response.id].set()
+        except KeyError:
+            logger.error(
+                f"Received response with id {response.id} but no such request was sent."
+            )
 
     async def _serve_response(self, request: RequestMessage) -> ResponseMessage:
         try:

@@ -46,11 +46,16 @@ class RpcProtocol:
 
         return json.loads(await self.__reader.readexactly(content_length))
 
-    async def receive(self) -> Union[RequestMessage, NotificationMessage]:
+    async def receive(
+        self,
+    ) -> Union[RequestMessage, NotificationMessage, ResponseMessage]:
         raw_message = await self._read_message()
 
         if "id" in raw_message:
-            return RequestMessage.parse_obj(raw_message)
+            if "method" in raw_message:
+                return RequestMessage.parse_obj(raw_message)
+            else:
+                return ResponseMessage.parse_obj(raw_message)
         return NotificationMessage.parse_obj(raw_message)
 
     async def _send(self, message: str) -> None:
