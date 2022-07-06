@@ -47,7 +47,9 @@ class SoliditySourceParser:
         return opening_char is None
 
     @classmethod
-    def __parse_version_pragma(cls, source_code: str) -> SolidityVersionRanges:
+    def __parse_version_pragma(
+        cls, source_code: str, ignore_errors: bool
+    ) -> SolidityVersionRanges:
         versions = None
         matches = cls.PRAGMA_SOLIDITY_RE.finditer(source_code)
         for match in matches:
@@ -58,7 +60,12 @@ class SoliditySourceParser:
                     continue
 
             version_str = match.groupdict()["version"]
-            version_expr = SolidityVersionExpr(version_str)
+            try:
+                version_expr = SolidityVersionExpr(version_str)
+            except ValueError:
+                if ignore_errors:
+                    continue
+                raise
             if versions is None:
                 versions = version_expr.version_ranges
             else:
@@ -73,7 +80,7 @@ class SoliditySourceParser:
         return versions
 
     @classmethod
-    def __parse_import(cls, source_code: str) -> List[str]:
+    def __parse_import(cls, source_code: str, ignore_errors: bool) -> List[str]:
         imports = set()  # avoid listing the same import multiple times
         matches = cls.IMPORT_RE.finditer(source_code)
         for match in matches:
@@ -84,7 +91,12 @@ class SoliditySourceParser:
                     continue
 
             import_str = match.groupdict()["import"]
-            import_expr = SolidityImportExpr(import_str)
+            try:
+                import_expr = SolidityImportExpr(import_str)
+            except ValueError:
+                if ignore_errors:
+                    continue
+                raise
             imports.add(import_expr.filename)
         return list(imports)
 
@@ -127,7 +139,9 @@ class SoliditySourceParser:
         return source_code
 
     @classmethod
-    def parse(cls, path: Path) -> Tuple[SolidityVersionRanges, List[str], bytes]:
+    def parse(
+        cls, path: Path, ignore_errors: bool = False
+    ) -> Tuple[SolidityVersionRanges, List[str], bytes]:
         """
         Return a tuple of two lists. The first list contains Solidity version ranges that can be used to compile
         the given file. The second list contains filenames / URLs that are imported from the given file.
@@ -141,14 +155,16 @@ class SoliditySourceParser:
         content = cls.strip_comments(content)
 
         return (
-            cls.__parse_version_pragma(content),
-            cls.__parse_import(content),
+            cls.__parse_version_pragma(content, ignore_errors),
+            cls.__parse_import(content, ignore_errors),
             h.digest(),
         )
 
     @classmethod
     def parse_source(
-        cls, source_code: str
+        cls,
+        source_code: str,
+        ignore_errors: bool = False,
     ) -> Tuple[SolidityVersionRanges, List[str], bytes]:
         """
         Return a tuple of two lists. The first list contains Solidity version ranges that can be used to compile
@@ -160,7 +176,7 @@ class SoliditySourceParser:
         content = cls.strip_comments(source_code)
 
         return (
-            cls.__parse_version_pragma(content),
-            cls.__parse_import(content),
+            cls.__parse_version_pragma(content, ignore_errors),
+            cls.__parse_import(content, ignore_errors),
             h.digest(),
         )
