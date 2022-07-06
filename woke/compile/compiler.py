@@ -61,7 +61,7 @@ class SolidityCompiler:
         source_units: Dict[str, Path] = {}
 
         # for every source file resolve a source unit name
-        for file in chain(files, modified_files.keys()):
+        for file in files:
             file = file.resolve(strict=True)
 
             source_unit_name = self.__source_unit_name_resolver.resolve_cmdline_arg(
@@ -111,7 +111,13 @@ class SolidityCompiler:
                         )
 
                 if import_path not in graph.nodes:
-                    source_units_queue.append((import_unit_name, import_path, None))
+                    source_units_queue.append(
+                        (
+                            import_unit_name,
+                            import_path,
+                            modified_files.get(import_path, None),
+                        )
+                    )
 
                 graph.add_edge(import_path, path)
         return graph
@@ -276,8 +282,6 @@ class SolidityCompiler:
             modified_files = {}
         if len(files) + len(modified_files) == 0:
             raise CompilationError("No source files provided to compile.")
-        if not set(files).isdisjoint(set(modified_files.keys())):
-            raise ValueError("Files and modified files must not overlap.")
 
         graph = self.build_graph(files, modified_files)
         if maximize_compilation_units:

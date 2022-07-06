@@ -265,13 +265,9 @@ class LspCompiler:
         full_compile: bool = True,
     ) -> None:
         if full_compile:
-            graph = self.__compiler.build_graph(
-                self.__discovered_files - modified_files.keys(), modified_files
-            )
+            graph = self.__compiler.build_graph(self.__discovered_files, modified_files)
         else:
-            graph = self.__compiler.build_graph(
-                files - modified_files.keys(), modified_files
-            )
+            graph = self.__compiler.build_graph(files, modified_files)
         compilation_units = self.__compiler.build_compilation_units_maximize(graph)
         # filter out only compilation units that need to be compiled
         compilation_units = [
