@@ -145,10 +145,20 @@ class WokeConfig:
             project_root_path=project_root_path, woke_root_path=woke_root_path
         )
         with change_cwd(instance.project_root_path):
-            config = TopLevelWokeConfig.parse_obj(config_dict)
-        instance.__config_raw = deepcopy(config_dict)
-        instance.__config = config
+            parsed_config = TopLevelWokeConfig.parse_obj(config_dict)
+        instance.__config_raw = parsed_config.dict(by_alias=True, exclude_unset=True)
+        instance.__config = parsed_config
         return instance
+
+    def update(self, config_dict: Dict[str, Any]) -> None:
+        """
+        Update the config with a new dictionary.
+        """
+        with change_cwd(self.project_root_path):
+            parsed_config = TopLevelWokeConfig.parse_obj(config_dict)
+        parsed_config_raw = parsed_config.dict(by_alias=True, exclude_unset=True)
+        self.__merge_dicts(self.__config_raw, parsed_config_raw)
+        self.__config = TopLevelWokeConfig.parse_obj(self.__config_raw)
 
     def load_configs(self) -> None:
         """
