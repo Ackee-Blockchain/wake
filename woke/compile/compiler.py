@@ -243,7 +243,7 @@ class SolidityCompiler:
         self,
         build_path: Path,
         build_settings: SolcInputSettings,
-        output: Tuple[SolcOutput],
+        output: Tuple[SolcOutput, ...],
         compilation_units: List[CompilationUnit],
     ) -> None:
         units_info = {}
