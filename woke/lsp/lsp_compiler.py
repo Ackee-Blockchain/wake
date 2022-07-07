@@ -155,10 +155,6 @@ class LspCompiler:
             change, (DidOpenTextDocumentParams, DidCloseTextDocumentParams)
         ):
             self.output_ready.clear()
-        else:
-            file = uri_to_path(change.text_document.uri)
-            if file not in self.__source_units:
-                self.output_ready.clear()
 
         await self.__file_changes_queue.put(change)
 
@@ -221,8 +217,6 @@ class LspCompiler:
         elif isinstance(change, DidOpenTextDocumentParams):
             path = uri_to_path(change.text_document.uri).resolve()
             self.__files[path] = change.text_document.text
-            if path not in self.__source_units:
-                self.__force_compile_files.add(path)
         elif isinstance(change, DidCloseTextDocumentParams):
             path = uri_to_path(change.text_document.uri).resolve()
         elif isinstance(change, DidChangeTextDocumentParams):
