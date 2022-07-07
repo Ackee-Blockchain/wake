@@ -37,6 +37,8 @@ SolcTopLevelMemberUnion = Annotated[
         "SolcErrorDefinition",
         # new in solc 0.8.8
         "SolcUserDefinedValueTypeDefinition",
+        # new in solc 0.8.13
+        "SolcUsingForDirective",
         # everywhere
         "SolcContractDefinition",
     ],
@@ -63,6 +65,11 @@ SolcLibraryNameUnion = Annotated[
         "SolcUserDefinedTypeName",
         "SolcIdentifierPath",
     ],
+    Field(discriminator="node_type"),
+]
+
+OptionalSolcLibraryNameUnion = Annotated[
+    Union["SolcUserDefinedTypeName", "SolcIdentifierPath", None],
     Field(discriminator="node_type"),
 ]
 
@@ -372,6 +379,7 @@ class SolcImportDirective(SolcNode):
     def __iter__(self):
         for symbol_alias in self.symbol_aliases:
             yield symbol_alias.foreign
+            yield from symbol_alias.foreign
 
 
 class SolcVariableDeclaration(SolcNode):
@@ -457,6 +465,7 @@ class SolcErrorDefinition(SolcNode):
     parameters: "SolcParameterList"
     # optional
     documentation: Optional["SolcStructuredDocumentation"]
+    error_selector: Optional[StrictStr]
 
 
 # new in 0.8.0
@@ -506,7 +515,7 @@ class SolcEventDefinition(SolcNode):
     name_location: Optional[Src]  # new in 0.8.2
     documentation: Optional["SolcStructuredDocumentation"]
     event_selector: Optional[
-        str
+        StrictStr
     ]  # an example: "0d3648bd0f6ba80134a33ba9275ac585d9d315f0ad8355cddefde31afa28d0e9"
 
 
@@ -526,14 +535,31 @@ class SolcModifierDefinition(SolcNode):
     overrides: Optional["SolcOverrideSpecifier"]
 
 
+class UsingForDirectiveFunction(AstModel):
+    function: "SolcIdentifierPath"
+
+
 class SolcUsingForDirective(SolcNode):
     # override alias
     node_type: Literal["UsingForDirective"] = Field(alias="nodeType")
     # required
-    # library_name: LibraryName
-    library_name: SolcLibraryNameUnion
-    type_name: SolcTypeNameUnion
     # optional
+    function_list: Optional[List[UsingForDirectiveFunction]]
+    library_name: OptionalSolcLibraryNameUnion
+    type_name: OptionalSolcTypeNameUnion
+    global_: Optional[StrictBool] = Field(alias="global")
+
+    def __iter__(self):
+        if self.function_list is not None:
+            for function in self.function_list:
+                yield function.function
+                yield from function.function
+        if self.library_name is not None:
+            yield self.library_name
+            yield from self.library_name
+        if self.type_name is not None:
+            yield self.type_name
+            yield from self.type_name
 
 
 class SolcArrayTypeName(SolcNode):
@@ -676,6 +702,7 @@ class SolcInlineAssembly(SolcNode):
     external_references: List[ExternalReferenceModel]
     # optional
     documentation: Optional[StrictStr]
+    flags: Optional[List[InlineAssemblyFlag]]
 
 
 class SolcPlaceholderStatement(SolcNode):
@@ -1202,6 +1229,7 @@ SolcUserDefinedValueTypeDefinition.update_forward_refs()
 SolcContractDefinition.update_forward_refs()
 SolcEventDefinition.update_forward_refs()
 SolcModifierDefinition.update_forward_refs()
+UsingForDirectiveFunction.update_forward_refs()
 SolcUsingForDirective.update_forward_refs()
 SolcArrayTypeName.update_forward_refs()
 SolcElementaryTypeName.update_forward_refs()

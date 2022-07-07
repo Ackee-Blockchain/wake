@@ -166,3 +166,8 @@ class InlineAssemblyEvmVersion(str, enum.Enum):
 class InlineAssemblySuffix(str, enum.Enum):
     SLOT = "slot"
     OFFSET = "offset"
+    LENGTH = "length"
+
+
+class InlineAssemblyFlag(str, enum.Enum):
+    MEMORY_SAFE = "memory-safe"
