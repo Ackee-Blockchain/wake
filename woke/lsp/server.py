@@ -2,10 +2,14 @@ import asyncio
 import logging
 from functools import partial
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
+from typing import Any, Callable, Dict, NoReturn, Optional, Tuple, Type, Union
+
+from pydantic.error_wrappers import ValidationError
 
 from ..config import WokeConfig
 from .common_structures import (
+    ConfigurationItem,
+    ConfigurationParams,
     DocumentFilter,
     InitializedParams,
     InitializeError,
@@ -66,7 +70,8 @@ logger = logging.getLogger(__name__)
 
 class LspServer:
     __initialized: bool
-    __config: WokeConfig
+    __cli_config: WokeConfig
+    __workspace_path: Optional[Path]
     __context: LspContext
     __protocol: RpcProtocol
     __run: bool
@@ -88,8 +93,9 @@ class LspServer:
     ):
         self.__diagnostics_queue = asyncio.Queue()
         self.__initialized = False
-        self.__config = config
-        self.__context = LspContext(config, self, self.__diagnostics_queue)
+        self.__cli_config = config
+        self.__workspace_path = None
+        self.__context = LspContext(self, self.__diagnostics_queue)
         self.__protocol = RpcProtocol(reader, writer)
         self.__run = True
         self.__request_id_counter = 0
@@ -156,20 +162,31 @@ class LspServer:
         }
 
     async def run(self) -> None:
+        messages_queue = asyncio.Queue()
+        messages_task = asyncio.create_task(self._messages_loop(messages_queue))
+
         while self.__run:
             message = await self.__protocol.receive()
-            if isinstance(message, RequestMessage):
-                await self._handle_message(message)
-            elif isinstance(message, NotificationMessage):
-                await self._handle_notification(message)
-            elif isinstance(message, ResponseMessage):
+            if isinstance(message, ResponseMessage):
                 await self._handle_response(message)
             else:
-                raise Exception("Unknown message type")
+                await messages_queue.put(message)
+
+        messages_task.cancel()
         if self.__compilation_task is not None:
             self.__compilation_task.cancel()
         if self.__diagnostics_task is not None:
             self.__diagnostics_task.cancel()
+
+    async def _messages_loop(self, queue: asyncio.Queue) -> NoReturn:
+        while True:
+            message = await queue.get()
+            if isinstance(message, RequestMessage):
+                await self._handle_message(message)
+            elif isinstance(message, NotificationMessage):
+                await self._handle_notification(message)
+            else:
+                raise Exception("Unknown message type")
 
     async def send_request(self, method: RequestMethodEnum, params: Any = None) -> Any:
         request = RequestMessage(
@@ -315,13 +332,7 @@ class LspServer:
             )
 
         self.__initialized = True
-        self.__context.config.project_root_path = path
-        self.__context.config.load_configs()
-        self.__compilation_task = asyncio.create_task(self.__context.compiler.run())
-
-        self.__diagnostics_task = asyncio.create_task(
-            diagnostics_loop(self, self.__context, self.__diagnostics_queue)
-        )
+        self.__workspace_path = path
 
         server_capabilities = ServerCapabilities(
             position_encoding=PositionEncodingKind.UTF16,
@@ -353,7 +364,57 @@ class LspServer:
         self.__run = False
 
     async def _initialized(self, params: InitializedParams) -> None:
-        pass
+        async def _post_initialized():
+            code_config = await self.get_configuration()
+            assert isinstance(code_config, list)
+            assert len(code_config) == 1
+            assert isinstance(code_config[0], dict)
+            assert self.__workspace_path is not None
+            code_config = code_config[0]
+
+            config: Optional[WokeConfig] = None
+            run = True
+            invalid_options = []
+            while run:
+                try:
+                    config = WokeConfig.fromdict(
+                        code_config,
+                        project_root_path=self.__workspace_path,
+                        woke_root_path=self.__cli_config.woke_root_path,
+                    )
+                    run = False
+                except ValidationError as e:
+                    for error in e.errors():
+                        invalid_options.append(error["loc"])
+                        invalid_option = code_config
+                        for segment in error["loc"][:-1]:
+                            invalid_option = invalid_option[segment]
+
+                        if isinstance(invalid_option, list):
+                            invalid_option.remove(error["loc"][-1])
+                        elif isinstance(invalid_option, dict):
+                            del invalid_option[error["loc"][-1]]
+                        else:
+                            raise NotImplementedError()
+            assert config is not None
+            if len(invalid_options) > 0:
+                message = (
+                    "Failed to parse the following config options, will use defaults:\n"
+                    + "\n".join(
+                        f"    woke -> {' -> '.join(option)}"
+                        for option in invalid_options
+                    )
+                )
+                await self.log_message(message, MessageType.WARNING)
+
+            self.__compilation_task = asyncio.create_task(
+                self.__context.compiler.run(config)
+            )
+            self.__diagnostics_task = asyncio.create_task(
+                diagnostics_loop(self, self.__context, self.__diagnostics_queue)
+            )
+
+        asyncio.create_task(_post_initialized())
 
     async def _text_document_did_open(self, params: DidOpenTextDocumentParams) -> None:
         await self.__context.compiler.add_change(params)
@@ -375,3 +436,15 @@ class LspServer:
         self, params: DidCloseTextDocumentParams
     ) -> None:
         await self.__context.compiler.add_change(params)
+
+    async def get_configuration(self) -> None:
+        params = ConfigurationParams(
+            items=[
+                ConfigurationItem(
+                    section="woke",
+                )
+            ]
+        )
+        return await self.send_request(
+            RequestMethodEnum.WORKSPACE_CONFIGURATION, params
+        )

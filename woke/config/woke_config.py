@@ -195,13 +195,6 @@ class WokeConfig:
         """
         return self.__project_root_path
 
-    @project_root_path.setter
-    def project_root_path(self, path: Path) -> None:
-        """
-        Set the system path of the currently open project.
-        """
-        self.__project_root_path = path
-
     @property
     def compiler(self) -> CompilerWokeConfig:
         """
