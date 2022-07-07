@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional, Tuple
 
@@ -15,7 +16,7 @@ if TYPE_CHECKING:
 from woke.ast.nodes import AstNodeId, SolcImportDirective
 
 from ..abc import IrAbc
-from ..utils import IrInitTuple, lazy_property
+from ..utils import IrInitTuple
 
 logger = logging.getLogger(__name__)
 
@@ -132,7 +133,8 @@ class ImportDirective(IrAbc):
         """
         return tuple(self.__symbol_aliases)
 
-    @lazy_property
+    @property
+    @lru_cache(maxsize=None)
     def import_string_pos(self) -> Tuple[int, int]:
         """
         The byte position and the byte length of the import string in the source file.

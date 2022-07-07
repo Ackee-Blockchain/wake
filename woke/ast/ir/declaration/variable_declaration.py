@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import re
+from functools import lru_cache
 from typing import TYPE_CHECKING, List, Optional, Tuple, Union
 
 from woke.ast.enums import Mutability, StorageLocation, Visibility
@@ -10,7 +11,7 @@ from woke.ast.ir.declaration.abc import DeclarationAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.meta.structured_documentation import StructuredDocumentation
 from woke.ast.ir.type_name.abc import TypeNameAbc
-from woke.ast.ir.utils import IrInitTuple, lazy_property
+from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import AstNodeId, SolcVariableDeclaration
 
 from ..meta.override_specifier import OverrideSpecifier
@@ -147,7 +148,8 @@ class VariableDeclaration(DeclarationAbc):
     ]:
         return self._parent
 
-    @lazy_property
+    @property
+    @lru_cache(maxsize=None)
     def canonical_name(self) -> str:
         node = self.parent
         while not isinstance(node, DeclarationAbc):
