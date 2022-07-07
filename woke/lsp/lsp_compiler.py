@@ -93,6 +93,7 @@ class LspCompiler:
     # full path -> contents
     __files: Dict[Path, str]
     __modified_files: Set[Path]
+    __force_compile_files: Set[Path]
     __compiler: SolidityCompiler
     __output_contents: Dict[Path, str]
     __interval_trees: Dict[Path, IntervalTree]
@@ -111,6 +112,7 @@ class LspCompiler:
         self.__discovered_files = set()
         self.__files = dict()
         self.__modified_files = set()
+        self.__force_compile_files = set()
         self.__interval_trees = {}
         self.__source_units = {}
         self.__line_indexes = {}
@@ -160,6 +162,10 @@ class LspCompiler:
 
         await self.__file_changes_queue.put(change)
 
+    async def force_recompile(self) -> None:
+        self.__output_ready.clear()
+        await self.__file_changes_queue.put(None)
+
     def get_file_content(self, file: Union[Path, str]) -> str:
         if isinstance(file, str):
             file = uri_to_path(file)
@@ -207,13 +213,16 @@ class LspCompiler:
             DidOpenTextDocumentParams,
             DidCloseTextDocumentParams,
             DidChangeTextDocumentParams,
+            None,
         ],
     ) -> None:
-        if isinstance(change, DidOpenTextDocumentParams):
+        if change is None:
+            self.__force_compile_files.update(self.__discovered_files)
+        elif isinstance(change, DidOpenTextDocumentParams):
             path = uri_to_path(change.text_document.uri).resolve()
             self.__files[path] = change.text_document.text
-            if path not in self.__discovered_files:
-                self.__modified_files.add(path)
+            if path not in self.__source_units:
+                self.__force_compile_files.add(path)
         elif isinstance(change, DidCloseTextDocumentParams):
             path = uri_to_path(change.text_document.uri).resolve()
         elif isinstance(change, DidChangeTextDocumentParams):
@@ -450,12 +459,13 @@ class LspCompiler:
                     break
 
             # run the compilation
-            if len(self.__modified_files) > 0:
+            if len(self.__force_compile_files) > 0 or len(self.__modified_files) > 0:
                 modified_files = {
                     path: self.__files[path] for path in self.__modified_files
                 }
-                await self.__compile(set(), modified_files)
+                await self.__compile(self.__force_compile_files, modified_files)
 
+                self.__force_compile_files.clear()
                 self.__modified_files.clear()
 
                 if self.__file_changes_queue.empty():

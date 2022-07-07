@@ -150,15 +150,19 @@ class WokeConfig:
         instance.__config = parsed_config
         return instance
 
-    def update(self, config_dict: Dict[str, Any]) -> None:
+    def update(self, config_dict: Dict[str, Any]) -> bool:
         """
-        Update the config with a new dictionary.
+        Update the config with a new dictionary. Return `True` if the config was changed.
         """
         with change_cwd(self.project_root_path):
             parsed_config = TopLevelWokeConfig.parse_obj(config_dict)
         parsed_config_raw = parsed_config.dict(by_alias=True, exclude_unset=True)
         self.__merge_dicts(self.__config_raw, parsed_config_raw)
+
+        new_config = TopLevelWokeConfig.parse_obj(self.__config_raw)
+        ret = new_config != self.__config
         self.__config = TopLevelWokeConfig.parse_obj(self.__config_raw)
+        return ret
 
     def load_configs(self) -> None:
         """

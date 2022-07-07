@@ -370,7 +370,7 @@ class LspServer:
     async def _shutdown(self, params: Any) -> None:
         self.__run = False
 
-    async def _handle_config_change(self, raw_config: dict) -> None:
+    async def _handle_config_change(self, raw_config: dict) -> bool:
         assert self.__workspace_path is not None
 
         run = True
@@ -408,8 +408,9 @@ class LspServer:
                 project_root_path=self.__workspace_path,
                 woke_root_path=self.__cli_config.woke_root_path,
             )
+            return False
         else:
-            self.__workspace_config.update(raw_config)
+            return self.__workspace_config.update(raw_config)
 
     async def _initialized(self, params: InitializedParams) -> None:
         async def _post_initialized():
@@ -435,7 +436,9 @@ class LspServer:
     ) -> None:
         logger.debug(f"Received configuration change: {params}")
         if "woke" in params.settings:
-            await self._handle_config_change(params.settings["woke"])
+            changed = await self._handle_config_change(params.settings["woke"])
+            if changed:
+                await self.__context.compiler.force_recompile()
 
     async def _text_document_did_open(self, params: DidOpenTextDocumentParams) -> None:
         await self.__context.compiler.add_change(params)
