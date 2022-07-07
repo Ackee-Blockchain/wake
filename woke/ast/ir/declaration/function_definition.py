@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import logging
 import re
+from functools import lru_cache
 from typing import TYPE_CHECKING, FrozenSet, List, Optional, Set, Tuple, Union
 
 from ..meta.modifier_invocation import ModifierInvocation
@@ -18,7 +20,7 @@ from woke.ast.enums import FunctionKind, StateMutability, Visibility
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.meta.parameter_list import ParameterList
 from woke.ast.ir.meta.structured_documentation import StructuredDocumentation
-from woke.ast.ir.utils import IrInitTuple, lazy_property
+from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import AstNodeId, SolcFunctionDefinition
 
 
@@ -118,7 +120,8 @@ class FunctionDefinition(DeclarationAbc):
     def parent(self) -> Union[ContractDefinition, SourceUnit]:
         return self._parent
 
-    @lazy_property
+    @property
+    @lru_cache(maxsize=None)
     def canonical_name(self) -> str:
         from .contract_definition import ContractDefinition
 

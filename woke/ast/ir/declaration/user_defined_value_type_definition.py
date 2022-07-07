@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from functools import lru_cache
 from typing import TYPE_CHECKING, Tuple, Union
 
 from ..type_name.elementary_type_name import ElementaryTypeName
@@ -11,7 +12,7 @@ if TYPE_CHECKING:
     from ..meta.source_unit import SourceUnit
 
 from woke.ast.ir.abc import IrAbc
-from woke.ast.ir.utils import IrInitTuple, lazy_property
+from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcUserDefinedValueTypeDefinition
 
 
@@ -49,7 +50,8 @@ class UserDefinedValueTypeDefinition(DeclarationAbc):
     def parent(self) -> Union[ContractDefinition, SourceUnit]:
         return self._parent
 
-    @lazy_property
+    @property
+    @lru_cache(maxsize=None)
     def canonical_name(self) -> str:
         from .contract_definition import ContractDefinition
 
