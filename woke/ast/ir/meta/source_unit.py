@@ -12,6 +12,7 @@ from woke.ast.nodes import (
     SolcSourceUnit,
     SolcStructDefinition,
     SolcUserDefinedValueTypeDefinition,
+    SolcUsingForDirective,
     SolcVariableDeclaration,
 )
 
@@ -28,6 +29,7 @@ from ..declaration.variable_declaration import VariableDeclaration
 from ..utils import IrInitTuple
 from .import_directive import ImportDirective
 from .pragma_directive import PragmaDirective
+from .using_for_directive import UsingForDirective
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +48,7 @@ class SourceUnit(IrAbc):
     __errors: List[ErrorDefinition]
     __user_defined_value_types: List[UserDefinedValueTypeDefinition]
     __contracts: List[ContractDefinition]
+    __using_for_directives: List[UsingForDirective]
 
     def __init__(
         self,
@@ -65,6 +68,7 @@ class SourceUnit(IrAbc):
         self.__errors = []
         self.__user_defined_value_types = []
         self.__contracts = []
+        self.__using_for_directives = []
         for node in source_unit.nodes:
             if isinstance(node, SolcPragmaDirective):
                 self.__pragmas.append(PragmaDirective(init, node, self))
@@ -86,6 +90,10 @@ class SourceUnit(IrAbc):
                 )
             elif isinstance(node, SolcContractDefinition):
                 self.__contracts.append(ContractDefinition(init, node, self))
+            elif isinstance(node, SolcUsingForDirective):
+                self.__using_for_directives.append(UsingForDirective(init, node, self))
+            else:
+                assert False, f"Unknown node type: {node}"
 
     @property
     def parent(self) -> None:
@@ -167,6 +175,13 @@ class SourceUnit(IrAbc):
         A tuple of top level contract definitions present in the file.
         """
         return tuple(self.__contracts)
+
+    @property
+    def using_for_directives(self) -> Tuple[UsingForDirective]:
+        """
+        A tuple of top level using for directives present in the file.
+        """
+        return tuple(self.__using_for_directives)
 
     @property
     def declarations(self) -> Iterator[DeclarationAbc]:
