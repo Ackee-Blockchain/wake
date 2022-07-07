@@ -888,13 +888,13 @@ class WorkspaceSymbol(LspModel):
     container_name: Optional[str]
 
 
-class ConfigurationItems(LspModel):
-    scope_uri: Optional[DocumentUri]
-    section: Optional[bool]
+class ConfigurationItem(LspModel):
+    scope_uri: Optional[DocumentUri] = None
+    section: Optional[str] = None
 
 
 class ConfigurationParams(LspModel):
-    items: Optional[List[ConfigurationItems]]
+    items: List[ConfigurationItem]
 
 
 class DidChangeConfigurationClientCapabilities(LspModel):

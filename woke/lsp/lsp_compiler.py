@@ -13,6 +13,7 @@ from typing import (
     Iterable,
     List,
     Mapping,
+    NoReturn,
     Set,
     Tuple,
     Union,
@@ -102,11 +103,7 @@ class LspCompiler:
 
     __output_ready: asyncio.Event
 
-    def __init__(
-        self, config: WokeConfig, server: LspServer, diagnostic_queue: asyncio.Queue
-    ):
-        self.__config = config
-        self.__svm = SolcVersionManager(config)
+    def __init__(self, server: LspServer, diagnostic_queue: asyncio.Queue):
         self.__server = server
         self.__file_changes_queue = asyncio.Queue()
         self.__diagnostic_queue = diagnostic_queue
@@ -114,7 +111,6 @@ class LspCompiler:
         self.__discovered_files = set()
         self.__files = dict()
         self.__modified_files = set()
-        self.__compiler = SolidityCompiler(config)
         self.__interval_trees = {}
         self.__source_units = {}
         self.__line_indexes = {}
@@ -123,7 +119,10 @@ class LspCompiler:
 
         self.__ir_reference_resolver = ReferenceResolver()
 
-    async def run(self):
+    async def run(self, config: WokeConfig):
+        self.__config = config
+        self.__svm = SolcVersionManager(config)
+        self.__compiler = SolidityCompiler(config)
         await self.__compilation_loop()
 
     @property
