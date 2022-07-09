@@ -1,3 +1,4 @@
+from functools import partial
 from typing import List, Optional, Tuple, Union
 
 from woke.ast.enums import GlobalSymbolsEnum
@@ -27,7 +28,6 @@ class Identifier(ExpressionAbc):
         if self._referenced_declaration_id is None:
             assert isinstance(self._parent, ImportDirective)
         init.reference_resolver.register_post_process_callback(self.__post_process)
-        self._reference_resolver.register_destroy_callback(self.file, self.__destroy)
 
     def __post_process(self, callback_params: CallbackParams):
         assert self._referenced_declaration_id is not None
@@ -36,20 +36,28 @@ class Identifier(ExpressionAbc):
             self._reference_resolver.register_global_symbol_reference(
                 global_symbol, self
             )
-        else:
-            assert isinstance(self.referenced_declaration, DeclarationAbc)
-            self.referenced_declaration.register_reference(self)
-
-    def __destroy(self) -> None:
-        assert self._referenced_declaration_id is not None
-        if self._referenced_declaration_id < 0:
-            global_symbol = GlobalSymbolsEnum(self._referenced_declaration_id)
-            self._reference_resolver.unregister_global_symbol_reference(
-                global_symbol, self
+            self._reference_resolver.register_destroy_callback(
+                self.file, partial(self.__destroy, global_symbol)
             )
         else:
-            assert isinstance(self.referenced_declaration, DeclarationAbc)
-            self.referenced_declaration.unregister_reference(self)
+            referenced_declaration = self.referenced_declaration
+            assert isinstance(referenced_declaration, DeclarationAbc)
+            referenced_declaration.register_reference(self)
+            self._reference_resolver.register_destroy_callback(
+                self.file, partial(self.__destroy, referenced_declaration)
+            )
+
+    def __destroy(
+        self, referenced_declaration: Union[GlobalSymbolsEnum, DeclarationAbc]
+    ) -> None:
+        if isinstance(referenced_declaration, GlobalSymbolsEnum):
+            self._reference_resolver.unregister_global_symbol_reference(
+                referenced_declaration, self
+            )
+        elif isinstance(referenced_declaration, DeclarationAbc):
+            referenced_declaration.unregister_reference(self)
+        else:
+            raise TypeError(f"Unexpected type: {type(referenced_declaration)}")
 
     @property
     def parent(self) -> IrAbc:

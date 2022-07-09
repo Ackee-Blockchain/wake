@@ -1,3 +1,5 @@
+from functools import partial
+
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.declaration.abc import DeclarationAbc
 from woke.ast.ir.reference_resolver import CallbackParams
@@ -20,13 +22,16 @@ class IdentifierPath(IrAbc):
         self.__referenced_declaration_id = identifier_path.referenced_declaration
         assert self.__referenced_declaration_id >= 0
         self._reference_resolver.register_post_process_callback(self.__post_process)
-        self._reference_resolver.register_destroy_callback(self.file, self.__destroy)
 
     def __post_process(self, callback_params: CallbackParams):
-        self.referenced_declaration.register_reference(self)
+        referenced_declaration = self.referenced_declaration
+        referenced_declaration.register_reference(self)
+        self._reference_resolver.register_destroy_callback(
+            self.file, partial(self.__destroy, referenced_declaration)
+        )
 
-    def __destroy(self) -> None:
-        self.referenced_declaration.unregister_reference(self)
+    def __destroy(self, referenced_declaration: DeclarationAbc) -> None:
+        referenced_declaration.unregister_reference(self)
 
     @property
     def parent(self) -> IrAbc:

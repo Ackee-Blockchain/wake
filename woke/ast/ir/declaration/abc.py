@@ -70,7 +70,7 @@ class DeclarationAbc(IrAbc):
         self._references.add(reference)
 
     def unregister_reference(self, reference: ReferencingNodesUnion):
-        self._references.discard(reference)
+        self._references.remove(reference)
 
     @abstractmethod
     def _parse_name_location(self) -> Tuple[int, int]:

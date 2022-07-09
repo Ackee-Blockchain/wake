@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import re
-from functools import lru_cache
+from functools import lru_cache, partial
 from typing import TYPE_CHECKING, List, Optional, Tuple, Union
 
 from woke.ast.enums import Mutability, StorageLocation, Visibility
@@ -100,21 +100,23 @@ class VariableDeclaration(DeclarationAbc):
         )
         self.__value = (
             ExpressionAbc.from_ast(init, variable_declaration.value, self)
-            if variable_declaration.value
+            if variable_declaration.value is not None
             else None
         )
         self._reference_resolver.register_post_process_callback(self.__post_process)
-        self._reference_resolver.register_destroy_callback(self.file, self.__destroy)
 
     def __post_process(self, callback_params: CallbackParams):
         if self.base_functions is not None:
-            for base_function in self.base_functions:
+            base_functions = self.base_functions
+            for base_function in base_functions:
                 base_function._child_functions.add(self)
+            self._reference_resolver.register_destroy_callback(
+                self.file, partial(self.__destroy, base_functions)
+            )
 
-    def __destroy(self) -> None:
-        if self.base_functions is not None:
-            for base_function in self.base_functions:
-                base_function._child_functions.discard(self)
+    def __destroy(self, base_functions: Tuple[FunctionDefinition]) -> None:
+        for base_function in base_functions:
+            base_function._child_functions.discard(self)
 
     def _parse_name_location(self) -> Tuple[int, int]:
         # this one is a bit tricky
