@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from functools import partial
 from typing import TYPE_CHECKING, FrozenSet, List, Optional, Set, Tuple
 
 from ..meta.override_specifier import OverrideSpecifier
@@ -56,17 +57,19 @@ class ModifierDefinition(DeclarationAbc):
             else None
         )
         self._reference_resolver.register_post_process_callback(self.__post_process)
-        self._reference_resolver.register_destroy_callback(self.file, self.__destroy)
 
     def __post_process(self, callback_params: CallbackParams):
         if self.base_modifiers is not None:
-            for base_modifier in self.base_modifiers:
+            base_modifiers = self.base_modifiers
+            for base_modifier in base_modifiers:
                 base_modifier._child_modifiers.add(self)
+            self._reference_resolver.register_destroy_callback(
+                self.file, partial(self.__destroy, base_modifiers)
+            )
 
-    def __destroy(self) -> None:
-        if self.base_modifiers is not None:
-            for base_modifier in self.base_modifiers:
-                base_modifier._child_modifiers.discard(self)
+    def __destroy(self, base_modifiers: Tuple[ModifierDefinition]) -> None:
+        for base_modifier in base_modifiers:
+            base_modifier._child_modifiers.remove(self)
 
     def _parse_name_location(self) -> Tuple[int, int]:
         IDENTIFIER = r"[a-zA-Z$_][a-zA-Z0-9$_]*"

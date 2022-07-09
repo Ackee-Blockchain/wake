@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from functools import partial
 from typing import TYPE_CHECKING, FrozenSet, Iterator, List, Optional, Set, Tuple
 
 from ..meta.inheritance_specifier import InheritanceSpecifier
@@ -118,19 +119,22 @@ class ContractDefinition(DeclarationAbc):
                 self.__declared_variables.append(VariableDeclaration(init, node, self))
 
         init.reference_resolver.register_post_process_callback(self.__post_process)
-        self._reference_resolver.register_destroy_callback(self.file, self.__destroy)
 
     def __post_process(self, callback_params: CallbackParams):
+        base_contracts = []
         for base_contract in self.__base_contracts:
             contract = base_contract.base_name.referenced_declaration
             assert isinstance(contract, ContractDefinition)
             contract.__child_contracts.add(self)
+            base_contracts.append(contract)
 
-    def __destroy(self) -> None:
-        for base_contract in self.__base_contracts:
-            contract = base_contract.base_name.referenced_declaration
-            assert isinstance(contract, ContractDefinition)
-            contract.__child_contracts.discard(self)
+        self._reference_resolver.register_destroy_callback(
+            self.file, partial(self.__destroy, base_contracts)
+        )
+
+    def __destroy(self, base_contracts: List[ContractDefinition]) -> None:
+        for base_contract in base_contracts:
+            base_contract.__child_contracts.remove(self)
 
     def _parse_name_location(self) -> Tuple[int, int]:
         IDENTIFIER = r"[a-zA-Z$_][a-zA-Z0-9$_]*"
