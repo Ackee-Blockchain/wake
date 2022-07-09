@@ -592,7 +592,7 @@ class WorkDoneProgressReport(LspModel):
 
 class WorkDoneProgressEnd(LspModel):
     kind: str = "end"
-    message: Optional[bool]
+    message: Optional[str]
     """
     Optional, a final message indicating to for example indicate the outcome
     of the operation.
