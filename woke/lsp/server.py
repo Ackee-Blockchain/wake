@@ -21,6 +21,7 @@ from .common_structures import (
     MessageType,
     ProgressParams,
     SetTraceParams,
+    ShowMessageParams,
     WorkDoneProgressBegin,
     WorkDoneProgressCreateParams,
     WorkDoneProgressEnd,
@@ -239,6 +240,13 @@ class LspServer:
             message=message,
         )
         await self.send_notification(RequestMethodEnum.WINDOW_LOG_MESSAGE, params)
+
+    async def show_message(self, message: str, type: MessageType) -> None:
+        params = ShowMessageParams(
+            type=type,
+            message=message,
+        )
+        await self.send_notification(RequestMethodEnum.WINDOW_SHOW_MESSAGE, params)
 
     async def progress_begin(
         self,
