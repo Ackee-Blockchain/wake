@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import uuid
 from functools import partial
 from pathlib import Path
 from typing import Any, Callable, Dict, NoReturn, Optional, Tuple, Type, Union
@@ -20,6 +21,10 @@ from .common_structures import (
     MessageType,
     ProgressParams,
     SetTraceParams,
+    WorkDoneProgressBegin,
+    WorkDoneProgressCreateParams,
+    WorkDoneProgressEnd,
+    WorkDoneProgressReport,
 )
 from .context import LspContext
 from .document_sync import (
@@ -231,6 +236,63 @@ class LspServer:
             message=message,
         )
         await self.send_notification(RequestMethodEnum.WINDOW_LOG_MESSAGE, params)
+
+    async def progress_begin(
+        self,
+        title: str,
+        message: Optional[str] = None,
+        percentage: Optional[int] = None,
+        cancellable: Optional[bool] = None,
+    ) -> Optional[str]:
+        token = str(uuid.uuid4())
+        params = WorkDoneProgressCreateParams(token=token)
+        try:
+            await self.send_request(
+                RequestMethodEnum.WINDOW_WORK_DONE_PROGRESS_CREATE, params
+            )
+        except LspError:
+            return None
+
+        params = ProgressParams(
+            token=token,
+            value=WorkDoneProgressBegin(
+                kind="begin",
+                title=title,
+                message=message,
+                percentage=percentage,
+                cancellable=cancellable,
+            ),
+        )
+        await self.send_notification(RequestMethodEnum.PROGRESS, params)
+        return token
+
+    async def progress_report(
+        self,
+        token: str,
+        message: Optional[str] = None,
+        percentage: Optional[int] = None,
+        cancellable: Optional[bool] = None,
+    ) -> None:
+        params = ProgressParams(
+            token=token,
+            value=WorkDoneProgressReport(
+                kind="report",
+                message=message,
+                percentage=percentage,
+                cancellable=cancellable,
+            ),
+        )
+        await self.send_notification(RequestMethodEnum.PROGRESS, params)
+
+    async def progress_end(self, token: str, message: Optional[str] = None) -> None:
+        params = ProgressParams(
+            token=token,
+            value=WorkDoneProgressEnd(
+                kind="end",
+                message=message,
+            ),
+        )
+        await self.send_notification(RequestMethodEnum.PROGRESS, params)
 
     async def _handle_message(self, request: RequestMessage) -> None:
         logger.info(f"Message received: {request}")
