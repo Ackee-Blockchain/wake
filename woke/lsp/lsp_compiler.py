@@ -25,8 +25,6 @@ if TYPE_CHECKING:
     from .server import LspServer
 
 import networkx as nx
-
-
 from intervaltree import IntervalTree
 
 from woke.ast.ir.meta.source_unit import SourceUnit
@@ -321,7 +319,23 @@ class LspCompiler:
             target_versions.append(target_version)
 
             if not self.__svm.get_path(target_version).is_file():
-                await self.__svm.install(target_version)
+                progress_token = await self.__server.progress_begin(
+                    "Downloading", f"solc {target_version}", 0
+                )
+                if progress_token is not None:
+
+                    async def on_progress(downloaded: int, total: int) -> None:
+                        assert progress_token is not None
+                        await self.__server.progress_report(
+                            progress_token,
+                            f"solc {target_version}",
+                            (100 * downloaded) // total,
+                        )
+
+                    await self.__svm.install(target_version, progress=on_progress)
+                    await self.__server.progress_end(progress_token)
+                else:
+                    await self.__svm.install(target_version)
 
         tasks = []
         for compilation_unit, target_version in zip(compilation_units, target_versions):
