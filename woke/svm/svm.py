@@ -5,7 +5,7 @@ import shutil
 import urllib.error
 import urllib.request
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, Union
 from zipfile import ZipFile
 
 import aiohttp
@@ -78,7 +78,7 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         version: Union[SolidityVersion, str],
         force_reinstall: bool = False,
         http_session: Optional[aiohttp.ClientSession] = None,
-        progress: Optional[Callable[[float], Any]] = None,
+        progress: Optional[Callable[[int, int], Awaitable[None]]] = None,
     ) -> None:
         self.__fetch_list_file()
         if self.__solc_builds is None:
@@ -98,8 +98,6 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         if version not in self.__solc_builds.releases:
             raise ValueError(f"solc version `{version}` does not exist.")
         if self.get_path(version).is_file() and not force_reinstall:
-            if progress is not None:
-                progress(1)
             return
 
         filename = self.__solc_builds.releases[version]
@@ -190,7 +188,7 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         url: str,
         path: Path,
         http_session: aiohttp.ClientSession,
-        progress: Optional[Callable[[float], Any]] = None,
+        progress: Optional[Callable[[int, int], Awaitable[None]]] = None,
     ) -> None:
         async with http_session.get(url) as r:
             total_size = r.headers.get("Content-Length")
@@ -202,7 +200,7 @@ class SolcVersionManager(CompilerVersionManagerAbc):
                     f.write(chunk)
                     downloaded_size += len(chunk)
                     if total_size is not None and progress is not None:
-                        progress(downloaded_size / total_size)
+                        await progress(downloaded_size, total_size)
 
     def __unzip(self, zip_path: Path) -> Path:
         """

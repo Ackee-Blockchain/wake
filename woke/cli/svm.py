@@ -42,12 +42,20 @@ async def run_solc_install(
     version = next(
         version for version in reversed(svm.list_all()) if version in version_expr
     )
+    if not force and svm.get_path(version).is_file():
+        console.print(f"Version {version} is already installed.")
+        return
+
     with Progress() as progress:
-        task = progress.add_task(f"[green]Downloading solc {version}", total=1)
+        task = progress.add_task(f"[green]Downloading solc {version}")
+
+        async def on_progress(downloaded: int, total: int) -> None:
+            progress.update(task, completed=downloaded, total=total)
+
         await svm.install(
             version,
             force_reinstall=force,
-            progress=(lambda x: progress.update(task, completed=x)),
+            progress=on_progress,
         )
     console.print(f"Installed solc version {version}.")
 

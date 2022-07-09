@@ -361,9 +361,13 @@ class SolidityCompiler:
                     task = progress.add_task(
                         f"[green]Downloading solc {target_version}", total=1
                     )
+
+                    async def on_progress(downloaded: int, total: int) -> None:
+                        progress.update(task, completed=downloaded, total=total)  # type: ignore
+
                     await self.__svm.install(
                         target_version,
-                        progress=(lambda x: progress.update(task, completed=x)),  # type: ignore
+                        progress=on_progress,
                     )
 
         tasks = []
