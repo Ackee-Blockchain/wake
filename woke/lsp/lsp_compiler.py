@@ -337,6 +337,10 @@ class LspCompiler:
                 else:
                     await self.__svm.install(target_version)
 
+        progress_token = await self.__server.progress_begin(
+            "Compiling", f"0/{len(compilation_units)}", 0
+        )
+
         tasks = []
         for compilation_unit, target_version in zip(compilation_units, target_versions):
             task = asyncio.create_task(
@@ -357,18 +361,18 @@ class LspCompiler:
             await self.__server.log_message(str(e), MessageType.ERROR)
             return
 
-        self.__output_contents.update(self.__files)
-
         errors_per_file: Dict[Path, List[SolcOutputError]] = {}
         files_to_recompile = set(files)
         modified_files_to_recompile = dict(modified_files)
         processed_files: Set[Path] = set()
 
-        for cu, solc_output in zip(compilation_units, ret):
+        for cu_index, (cu, solc_output) in enumerate(zip(compilation_units, ret)):
             for file in cu.files:
                 errors_per_file[file] = []
                 if file in self.__line_indexes:
                     self.__line_indexes.pop(file)
+                if file in self.__files:
+                    self.__output_contents[file] = self.__files[file]
 
             errored_files: Set[Path] = set()
 
@@ -428,6 +432,17 @@ class LspCompiler:
             self.__ir_reference_resolver.run_post_process_callbacks(
                 CallbackParams(source_units=self.__source_units)
             )
+
+            if progress_token is not None:
+                await self.__server.progress_report(
+                    progress_token,
+                    f"{cu_index + 1}/{len(compilation_units)}",
+                    ((cu_index + 1) * 100) // len(compilation_units),
+                )
+
+        if progress_token is not None:
+            await self.__server.progress_end(progress_token)
+
         for path, errors in errors_per_file.items():
             await self.__diagnostic_queue.put((path, errors))
 
