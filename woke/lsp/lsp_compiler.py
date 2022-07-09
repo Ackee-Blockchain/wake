@@ -362,6 +362,7 @@ class LspCompiler:
             return
 
         errors_per_file: Dict[Path, List[SolcOutputError]] = {}
+        errors_without_location: Set[SolcOutputError] = set()
         files_to_recompile = set(files)
         modified_files_to_recompile = dict(modified_files)
         processed_files: Set[Path] = set()
@@ -383,6 +384,8 @@ class LspCompiler:
 
                     if error.severity == SolcOutputErrorSeverityEnum.ERROR:
                         errored_files.add(path)
+                else:
+                    errors_without_location.add(error)
 
             _out_edge_bfs(cu.graph, errored_files, errored_files)
 
@@ -442,6 +445,18 @@ class LspCompiler:
 
         if progress_token is not None:
             await self.__server.progress_end(progress_token)
+
+        for error in errors_without_location:
+            if error.severity == SolcOutputErrorSeverityEnum.ERROR:
+                error_type = MessageType.ERROR
+            elif error.severity == SolcOutputErrorSeverityEnum.WARNING:
+                error_type = MessageType.WARNING
+            elif error.severity == SolcOutputErrorSeverityEnum.INFO:
+                error_type = MessageType.INFO
+            else:
+                error_type = MessageType.LOG
+            await self.__server.show_message(error.message, error_type)
+            await self.__server.log_message(error.message, error_type)
 
         for path, errors in errors_per_file.items():
             await self.__diagnostic_queue.put((path, errors))
