@@ -47,7 +47,7 @@ class ContractDefinition(DeclarationAbc):
     __base_contracts: List[InheritanceSpecifier]
     # ___dependencies
     __kind: ContractKind
-    __fully_implemented: bool
+    __fully_implemented: Optional[bool]
     __linearized_base_contracts: List[AstNodeId]
     # __scope
     __documentation: Optional[StructuredDocumentation]
@@ -191,7 +191,7 @@ class ContractDefinition(DeclarationAbc):
         return self.__kind
 
     @property
-    def fully_implemented(self) -> bool:
+    def fully_implemented(self) -> Optional[bool]:
         return self.__fully_implemented
 
     @property

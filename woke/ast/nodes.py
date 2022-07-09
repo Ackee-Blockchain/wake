@@ -491,7 +491,6 @@ class SolcContractDefinition(SolcNode):
     base_contracts: List["SolcInheritanceSpecifier"]
     contract_dependencies: List[AstNodeId]
     contract_kind: ContractKind
-    fully_implemented: StrictBool
     linearized_base_contracts: List[AstNodeId]
     nodes: List[SolcContractMemberUnion]
     scope: AstNodeId
@@ -500,6 +499,9 @@ class SolcContractDefinition(SolcNode):
     canonical_name: Optional[
         StrictStr
     ]  # should be present but because of a bug it is exported in >=0.8.9
+    fully_implemented: Optional[
+        StrictBool
+    ]  # missing when a file that imports the contract cannot be compiled
     documentation: Optional["SolcStructuredDocumentation"]
     used_errors: Optional[List[AstNodeId]]  # new in 0.8.4
 
