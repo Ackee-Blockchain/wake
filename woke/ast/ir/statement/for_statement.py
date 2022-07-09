@@ -25,7 +25,7 @@ class ForStatement(StatementAbc):
     __initialization_expression: Optional[
         Union[ExpressionStatement, VariableDeclarationStatement]
     ]
-    __loop_expression: ExpressionStatement
+    __loop_expression: Optional[ExpressionStatement]
 
     def __init__(self, init: IrInitTuple, for_: SolcForStatement, parent: IrAbc):
         super().__init__(init, for_, parent)
@@ -52,7 +52,11 @@ class ForStatement(StatementAbc):
                     init, for_.initialization_expression, self
                 )
 
-        self.__loop_expression = ExpressionStatement(init, for_.loop_expression, self)
+        self.__loop_expression = (
+            ExpressionStatement(init, for_.loop_expression, self)
+            if for_.loop_expression
+            else None
+        )
 
     @property
     def parent(self) -> IrAbc:
@@ -77,5 +81,5 @@ class ForStatement(StatementAbc):
         return self.__initialization_expression
 
     @property
-    def loop_expression(self) -> ExpressionStatement:
+    def loop_expression(self) -> Optional[ExpressionStatement]:
         return self.__loop_expression

@@ -680,7 +680,7 @@ class SolcForStatement(SolcNode):
     documentation: Optional[StrictStr]
     condition: OptionalSolcExpressionUnion
     initialization_expression: OptionalSolcInitExprUnion
-    loop_expression: "SolcExpressionStatement"
+    loop_expression: Optional[SolcExpressionStatement]
 
 
 class SolcIfStatement(SolcNode):
