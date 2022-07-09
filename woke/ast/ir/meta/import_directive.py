@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import logging
 import re
+from collections import deque
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Optional, Tuple
+from typing import TYPE_CHECKING, Deque, List, Optional, Set, Tuple
 
 from ..expression.identifier import Identifier
 from ..reference_resolver import CallbackParams
@@ -82,13 +83,27 @@ class ImportDirective(IrAbc):
         # for example `import { SafeType } from "SafeLib.sol";`
         # fix: find these reference IDs manually
         for symbol_alias in self.__symbol_aliases:
-            imported_source_unit = callback_params.source_units[self.__imported_file]
-
+            source_units_queue: Deque[SourceUnit] = deque(
+                [callback_params.source_units[self.__imported_file]]
+            )
+            processed_source_units: Set[Path] = {self.__imported_file}
             referenced_declaration = None
-            for declaration in imported_source_unit.declarations:
-                if declaration.canonical_name == symbol_alias.foreign.name:
-                    referenced_declaration = declaration
-                    break
+
+            while source_units_queue and referenced_declaration is None:
+                imported_source_unit = source_units_queue.pop()
+
+                for declaration in imported_source_unit.declarations:
+                    if declaration.canonical_name == symbol_alias.foreign.name:
+                        referenced_declaration = declaration
+                        break
+
+                for import_ in imported_source_unit.imports:
+                    if import_.imported_file not in processed_source_units:
+                        source_units_queue.append(
+                            callback_params.source_units[import_.imported_file]
+                        )
+                        processed_source_units.add(import_.imported_file)
+
             assert referenced_declaration is not None
             node_path_order = self._reference_resolver.get_node_path_order(
                 AstNodeId(referenced_declaration.ast_node_id),
