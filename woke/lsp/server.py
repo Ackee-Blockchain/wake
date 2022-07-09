@@ -177,12 +177,15 @@ class LspServer:
         messages_queue = asyncio.Queue()
         messages_task = asyncio.create_task(self._messages_loop(messages_queue))
 
-        while self.__run:
-            message = await self.__protocol.receive()
-            if isinstance(message, ResponseMessage):
-                await self._handle_response(message)
-            else:
-                await messages_queue.put(message)
+        try:
+            while self.__run:
+                message = await self.__protocol.receive()
+                if isinstance(message, ResponseMessage):
+                    await self._handle_response(message)
+                else:
+                    await messages_queue.put(message)
+        except ConnectionError:
+            pass
 
         messages_task.cancel()
         if self.__compilation_task is not None:
