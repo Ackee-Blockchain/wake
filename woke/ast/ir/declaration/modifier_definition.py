@@ -26,6 +26,7 @@ class ModifierDefinition(DeclarationAbc):
     _child_modifiers: Set[ModifierDefinition]
 
     __body: Optional[Block]
+    __implemented: bool
     __parameters: ParameterList
     __virtual: bool
     __visibility: Visibility
@@ -40,6 +41,7 @@ class ModifierDefinition(DeclarationAbc):
         self._child_modifiers = set()
 
         self.__body = Block(init, modifier.body, self) if modifier.body else None
+        self.__implemented = self.__body is not None
         self.__parameters = ParameterList(init, modifier.parameters, self)
         self.__virtual = modifier.virtual
         self.__visibility = modifier.visibility
@@ -95,6 +97,10 @@ class ModifierDefinition(DeclarationAbc):
     @property
     def body(self) -> Optional[Block]:
         return self.__body
+
+    @property
+    def implemented(self) -> bool:
+        return self.__implemented
 
     @property
     def parameters(self) -> ParameterList:
