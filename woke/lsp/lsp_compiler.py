@@ -164,7 +164,7 @@ class LspCompiler:
         if isinstance(file, str):
             file = uri_to_path(file)
         if file not in self.__output_contents:
-            self.__output_contents[file] = file.read_text(encoding="utf-8")
+            self.__output_contents[file] = file.read_bytes().decode(encoding="utf-8")
         return self.__output_contents[file]
 
     def get_line_pos_from_byte_offset(
