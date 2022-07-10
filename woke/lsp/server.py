@@ -59,6 +59,7 @@ from .features.document_link import (
 )
 from .features.document_symbol import DocumentSymbolParams, document_symbol
 from .features.references import ReferenceParams, references
+from .features.type_definition import TypeDefinitionParams, type_definition
 from .features.type_hierarchy import (
     TypeHierarchyPrepareParams,
     TypeHierarchySubtypesParams,
@@ -154,6 +155,10 @@ class LspServer:
             RequestMethodEnum.DEFINITION: (
                 partial(definition, self.__context),
                 DefinitionParams,
+            ),
+            RequestMethodEnum.TYPE_DEFINITION: (
+                partial(type_definition, self.__context),
+                TypeDefinitionParams,
             ),
         }
 
@@ -476,6 +481,7 @@ class LspServer:
             references_provider=True,
             document_symbol_provider=True,
             definition_provider=True,
+            type_definition_provider=True,
         )
         return InitializeResult(capabilities=server_capabilities, server_info=None)
 

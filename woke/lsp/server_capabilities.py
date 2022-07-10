@@ -8,6 +8,10 @@ from .features.definition import DefinitionOptions
 from .features.document_link import DocumentLinkOptions
 from .features.document_symbol import DocumentSymbolOptions
 from .features.references import ReferenceOptions
+from .features.type_definition import (
+    TypeDefinitionOptions,
+    TypeDefinitionRegistrationOptions,
+)
 from .features.type_hierarchy import (
     TypeHierarchyOptions,
     TypeHierarchyRegistrationOptions,
@@ -84,12 +88,14 @@ class ServerCapabilities(LspModel):
     references_provider: Optional[Union[bool, ReferenceOptions]] = None
     document_symbol_provider: Optional[Union[bool, DocumentSymbolOptions]] = None
     definition_provider: Optional[Union[bool, DefinitionOptions]] = None
+    type_definition_provider: Optional[
+        Union[bool, TypeDefinitionOptions, TypeDefinitionRegistrationOptions]
+    ] = None
     """
     completion_provider: Optional[CompletionOptions]
     hover_provider: Optional[Union[bool, HoverOptions]]
     signature_help_provider: Optional[SignatureHelpOptions]
     declaration_provider: Optional[Union[bool, DeclarationOptions, DeclarationRegistrationOptions]]
-    type_definition_provider: Optional[Union[bool, TypeDefinitionOptions, TypeDefinitionRegistrationOptions]]
     implementation_provider: Optional[Union[bool, ImplementationOptions, ImplementationRegistrationOptions]]
     document_highlight_provider: Optional[Union[bool, ReferenceOptions]]
     code_action_provider: Optional[Union[bool, CodeActionOptions]]
