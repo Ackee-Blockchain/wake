@@ -3,7 +3,7 @@ import platform
 import reprlib
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Dict, FrozenSet, Optional, Set, Union
+from typing import Any, Dict, FrozenSet, Iterable, Optional, Set, Tuple, Union
 
 import networkx as nx
 import tomli
@@ -150,7 +150,11 @@ class WokeConfig:
         instance.__config = parsed_config
         return instance
 
-    def update(self, config_dict: Dict[str, Any]) -> bool:
+    def update(
+        self,
+        config_dict: Dict[str, Any],
+        deleted_options: Iterable[Tuple[Union[int, str], ...]],
+    ) -> bool:
         """
         Update the config with a new dictionary. Return `True` if the config was changed.
         """
@@ -158,6 +162,23 @@ class WokeConfig:
             parsed_config = TopLevelWokeConfig.parse_obj(config_dict)
         parsed_config_raw = parsed_config.dict(by_alias=True, exclude_unset=True)
         self.__merge_dicts(self.__config_raw, parsed_config_raw)
+
+        for deleted_option in deleted_options:
+            conf = self.__config_raw
+            skip = False
+            for segment in deleted_option[:-1]:
+                if segment in conf:
+                    conf = conf[segment]
+                else:
+                    skip = True
+                    break
+
+            if skip:
+                continue
+            if isinstance(conf, dict):
+                conf.pop(deleted_option[-1], None)  # type: ignore
+            elif isinstance(conf, list):
+                conf.remove(deleted_option[-1])
 
         new_config = TopLevelWokeConfig.parse_obj(self.__config_raw)
         ret = new_config != self.__config

@@ -515,8 +515,11 @@ class LspServer:
                     else:
                         raise NotImplementedError()
         if len(invalid_options) > 0:
-            message = "Failed to parse the following config options:\n" + "\n".join(
-                f"    woke -> {' -> '.join(option)}" for option in invalid_options
+            message = (
+                "Failed to parse the following config options, using defaults:\n"
+                + "\n".join(
+                    f"    woke -> {' -> '.join(option)}" for option in invalid_options
+                )
             )
             await self.log_message(message, MessageType.WARNING)
 
@@ -528,7 +531,7 @@ class LspServer:
             )
             return False
         else:
-            return self.__workspace_config.update(raw_config)
+            return self.__workspace_config.update(raw_config, invalid_options)
 
     async def _initialized(self, params: InitializedParams) -> None:
         async def _post_initialized():
