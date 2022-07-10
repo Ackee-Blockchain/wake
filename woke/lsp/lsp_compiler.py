@@ -404,33 +404,36 @@ class LspCompiler:
                 if file in self.__interval_trees:
                     self.__interval_trees.pop(file)
 
-            for source_unit_name, raw_ast in solc_output.sources.items():
-                path = cu.source_unit_name_to_path(source_unit_name)
-                if path in errored_files or raw_ast.ast is None:
-                    continue
-                ast = AstSolc.parse_obj(raw_ast.ast)
+            if len(errored_files) == 0:
+                for source_unit_name, raw_ast in solc_output.sources.items():
+                    path = cu.source_unit_name_to_path(source_unit_name)
+                    if path in errored_files or raw_ast.ast is None:
+                        continue
+                    ast = AstSolc.parse_obj(raw_ast.ast)
 
-                self.__ir_reference_resolver.index_nodes(ast, path, cu.blake2b_digest)
+                    self.__ir_reference_resolver.index_nodes(
+                        ast, path, cu.blake2b_digest
+                    )
 
-                files_to_recompile.discard(path)
-                modified_files_to_recompile.pop(path, None)
-                if (
-                    path in self.__source_units and path not in recompiled_files
-                ) or path in processed_files:
-                    continue
-                processed_files.add(path)
+                    files_to_recompile.discard(path)
+                    modified_files_to_recompile.pop(path, None)
+                    if (
+                        path in self.__source_units and path not in recompiled_files
+                    ) or path in processed_files:
+                        continue
+                    processed_files.add(path)
 
-                interval_tree = IntervalTree()
-                init = IrInitTuple(
-                    path,
-                    self.get_file_content(path).encode("utf-8"),
-                    cu,
-                    interval_tree,
-                    self.__ir_reference_resolver,
-                )
-                self.__ir_reference_resolver.run_destroy_callbacks(path)
-                self.__source_units[path] = SourceUnit(init, ast)
-                self.__interval_trees[path] = interval_tree
+                    interval_tree = IntervalTree()
+                    init = IrInitTuple(
+                        path,
+                        self.get_file_content(path).encode("utf-8"),
+                        cu,
+                        interval_tree,
+                        self.__ir_reference_resolver,
+                    )
+                    self.__ir_reference_resolver.run_destroy_callbacks(path)
+                    self.__source_units[path] = SourceUnit(init, ast)
+                    self.__interval_trees[path] = interval_tree
 
             self.__ir_reference_resolver.run_post_process_callbacks(
                 CallbackParams(source_units=self.__source_units)
