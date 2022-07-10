@@ -343,7 +343,7 @@ class LspCompiler:
 
         tasks = []
         for compilation_unit, target_version in zip(compilation_units, target_versions):
-            task = asyncio.create_task(
+            task = self.__server.create_task(
                 self.__compiler.compile_unit_raw(
                     compilation_unit,
                     target_version,
