@@ -491,6 +491,23 @@ class LspServer:
     async def _handle_config_change(self, raw_config: dict) -> bool:
         assert self.__workspace_path is not None
 
+        def _normalize_config(config: Union[dict, list]):
+            if isinstance(config, dict):
+                for k in list(config):
+                    v = config[k]
+                    if isinstance(v, (dict, list)):
+                        _normalize_config(v)
+                    elif isinstance(v, str) and len(v.strip()) == 0:
+                        del config[k]
+            else:
+                for item in config:
+                    if isinstance(item, (dict, list)):
+                        _normalize_config(item)
+                    elif isinstance(item, str) and len(item.strip()) == 0:
+                        config.remove(item)
+
+        _normalize_config(raw_config)
+
         run = True
         invalid_options = []
         while run:
