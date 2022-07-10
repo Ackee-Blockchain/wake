@@ -1,9 +1,21 @@
 import asyncio
 import logging
+import traceback
 import uuid
 from functools import partial
 from pathlib import Path
-from typing import Any, Callable, Dict, NoReturn, Optional, Tuple, Type, Union
+from typing import (
+    Any,
+    Callable,
+    Coroutine,
+    Dict,
+    NoReturn,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    Union,
+)
 
 from pydantic.error_wrappers import ValidationError
 
@@ -86,8 +98,7 @@ class LspServer:
     __request_id_counter: int
     __sent_requests: Dict[Union[int, str], asyncio.Event]
     __message_responses: Dict[Union[int, str], ResponseMessage]
-    __compilation_task: Optional[asyncio.Task]
-    __diagnostics_task: Optional[asyncio.Task]
+    __running_tasks: Set[asyncio.Task]
     __diagnostics_queue: asyncio.Queue
 
     __method_mapping: Dict[str, Tuple[Callable, Optional[Type[LspModel]]]]
@@ -110,8 +121,7 @@ class LspServer:
         self.__request_id_counter = 0
         self.__sent_requests = {}
         self.__message_responses = {}
-        self.__compilation_task = None
-        self.__diagnostics_task = None
+        self.__running_tasks = set()
 
         self.__method_mapping = {
             RequestMethodEnum.INITIALIZE: (self._initialize, InitializeParams),
@@ -174,9 +184,47 @@ class LspServer:
             ),
         }
 
+    def _task_done_callback(self, task: asyncio.Task) -> None:
+        try:
+            task.result()
+        except asyncio.CancelledError:
+            pass
+        except Exception as e:
+
+            def _callback(task: asyncio.Task) -> None:
+                for t in self.__running_tasks:
+                    t.cancel()
+
+            logger.exception(e)
+            try:
+                t = asyncio.create_task(
+                    self.log_message(traceback.format_exc(), MessageType.ERROR)
+                )
+                t.add_done_callback(_callback)
+            except Exception as e:
+                logger.exception(e)
+
+                for task in self.__running_tasks:
+                    task.cancel()
+        finally:
+            self.__running_tasks.remove(task)
+
+    def create_task(self, coroutine: Coroutine) -> asyncio.Task:
+        task = asyncio.create_task(coroutine)
+        self.__running_tasks.add(task)
+        task.add_done_callback(self._task_done_callback)
+        return task
+
     async def run(self) -> None:
+        task = self.create_task(self._main_task())
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
+
+    async def _main_task(self) -> None:
         messages_queue = asyncio.Queue()
-        messages_task = asyncio.create_task(self._messages_loop(messages_queue))
+        self.create_task(self._messages_loop(messages_queue))
 
         try:
             while self.__run:
@@ -188,11 +236,8 @@ class LspServer:
         except ConnectionError:
             pass
 
-        messages_task.cancel()
-        if self.__compilation_task is not None:
-            self.__compilation_task.cancel()
-        if self.__diagnostics_task is not None:
-            self.__diagnostics_task.cancel()
+        for task in self.__running_tasks:
+            task.cancel()
 
     async def _messages_loop(self, queue: asyncio.Queue) -> NoReturn:
         while True:
@@ -495,14 +540,12 @@ class LspServer:
             await self._handle_config_change(code_config[0])
             assert self.__workspace_config is not None
 
-            self.__compilation_task = asyncio.create_task(
-                self.__context.compiler.run(self.__workspace_config)
-            )
-            self.__diagnostics_task = asyncio.create_task(
+            self.create_task(self.__context.compiler.run(self.__workspace_config))
+            self.create_task(
                 diagnostics_loop(self, self.__context, self.__diagnostics_queue)
             )
 
-        asyncio.create_task(_post_initialized())
+        self.create_task(_post_initialized())
 
     async def _workspace_did_change_configuration(
         self, params: DidChangeConfigurationParams
