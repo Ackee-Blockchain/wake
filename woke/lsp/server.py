@@ -50,6 +50,7 @@ from .document_sync import (
     WillSaveTextDocumentParams,
 )
 from .exceptions import LspError
+from .features.definition import DefinitionParams, definition
 from .features.diagnostic import diagnostics_loop
 from .features.document_link import (
     DocumentLinkOptions,
@@ -149,6 +150,10 @@ class LspServer:
             RequestMethodEnum.DOCUMENT_SYMBOL: (
                 partial(document_symbol, self.__context),
                 DocumentSymbolParams,
+            ),
+            RequestMethodEnum.DEFINITION: (
+                partial(definition, self.__context),
+                DefinitionParams,
             ),
         }
 
@@ -470,6 +475,7 @@ class LspServer:
             type_hierarchy_provider=True,
             references_provider=True,
             document_symbol_provider=True,
+            definition_provider=True,
         )
         return InitializeResult(capabilities=server_capabilities, server_info=None)
 
