@@ -6,18 +6,7 @@ import re
 import threading
 from collections import deque
 from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-    AbstractSet,
-    Dict,
-    Iterable,
-    List,
-    Mapping,
-    NoReturn,
-    Set,
-    Tuple,
-    Union,
-)
+from typing import TYPE_CHECKING, AbstractSet, Dict, Iterable, List, Set, Tuple, Union
 
 from woke.compile.exceptions import CompilationError
 
@@ -87,9 +76,7 @@ class LspCompiler:
     __diagnostic_queue: asyncio.Queue
     __discovered_files: Set[Path]
 
-    # accessed from the compilation thread
-    # full path -> contents
-    __files: Dict[Path, str]
+    __opened_files: Dict[Path, str]
     __modified_files: Set[Path]
     __force_compile_files: Set[Path]
     __compiler: SolidityCompiler
@@ -108,7 +95,7 @@ class LspCompiler:
         self.__diagnostic_queue = diagnostic_queue
         self.__stop_event = threading.Event()
         self.__discovered_files = set()
-        self.__files = dict()
+        self.__opened_files = {}
         self.__modified_files = set()
         self.__force_compile_files = set()
         self.__interval_trees = {}
@@ -214,9 +201,10 @@ class LspCompiler:
             self.__force_compile_files.update(self.__discovered_files)
         elif isinstance(change, DidOpenTextDocumentParams):
             path = uri_to_path(change.text_document.uri).resolve()
-            self.__files[path] = change.text_document.text
+            self.__opened_files[path] = change.text_document.text
         elif isinstance(change, DidCloseTextDocumentParams):
             path = uri_to_path(change.text_document.uri).resolve()
+            self.__opened_files.pop(path)
         elif isinstance(change, DidChangeTextDocumentParams):
             path = uri_to_path(change.text_document.uri).resolve()
             self.__modified_files.add(path)
@@ -227,7 +215,7 @@ class LspCompiler:
 
                 # str.splitlines() removes empty lines => cannot be used
                 # str.split() removes separators => cannot be used
-                tmp_lines = re.split(r"(\r?\n)", self.__files[path])
+                tmp_lines = re.split(r"(\r?\n)", self.__opened_files[path])
                 tmp_lines2: List[str] = []
                 for line in tmp_lines:
                     if line in {"\r\n", "\n"}:
@@ -256,22 +244,25 @@ class LspCompiler:
                     for i in range(start.line + 1, end.line):
                         lines[i] = bytearray(b"")
 
-                self.__files[path] = "".join(line.decode(ENCODING) for line in lines)
+                self.__opened_files[path] = "".join(
+                    line.decode(ENCODING) for line in lines
+                )
         else:
             raise Exception("Unknown change type")
 
     async def __compile(
         self,
-        files: AbstractSet[Path],
-        modified_files: Mapping[Path, str],
+        files_to_compile: AbstractSet[Path],
         full_compile: bool = True,
     ) -> None:
         if full_compile:
             graph = self.__compiler.build_graph(
-                self.__discovered_files, modified_files, True
+                self.__discovered_files, self.__opened_files, True
             )
         else:
-            graph = self.__compiler.build_graph(files, modified_files, True)
+            graph = self.__compiler.build_graph(
+                files_to_compile, self.__opened_files, True
+            )
 
         try:
             compilation_units = self.__compiler.build_compilation_units_maximize(graph)
@@ -281,7 +272,7 @@ class LspCompiler:
 
         # filter out only compilation units that need to be compiled
         compilation_units = [
-            cu for cu in compilation_units if cu.files & (files | modified_files.keys())
+            cu for cu in compilation_units if cu.files & files_to_compile
         ]
         build_settings = self.__compiler.create_build_settings(
             [SolcOutputSelectionEnum.AST]
@@ -363,17 +354,17 @@ class LspCompiler:
 
         errors_per_file: Dict[Path, List[SolcOutputError]] = {}
         errors_without_location: Set[SolcOutputError] = set()
-        files_to_recompile = set(files)
-        modified_files_to_recompile = dict(modified_files)
+        files_to_recompile = set(files_to_compile)
         processed_files: Set[Path] = set()
 
         for cu_index, (cu, solc_output) in enumerate(zip(compilation_units, ret)):
             for file in cu.files:
-                errors_per_file[file] = []
+                if file not in errors_per_file:
+                    errors_per_file[file] = []
                 if file in self.__line_indexes:
                     self.__line_indexes.pop(file)
-                if file in self.__files:
-                    self.__output_contents[file] = self.__files[file]
+                if file in self.__opened_files:
+                    self.__output_contents[file] = self.__opened_files[file]
 
             errored_files: Set[Path] = set()
 
@@ -389,13 +380,12 @@ class LspCompiler:
 
             _out_edge_bfs(cu.graph, errored_files, errored_files)
 
-            # modified files and files that import modified files (even indirectly)
+            # files requested to be compiled and files that import these files (even indirectly)
             recompiled_files: Set[Path] = set()
-            _out_edge_bfs(cu.graph, modified_files, recompiled_files)
+            _out_edge_bfs(cu.graph, files_to_compile & cu.files, recompiled_files)
 
             for file in errored_files:
                 files_to_recompile.discard(file)
-                modified_files_to_recompile.pop(file, None)
                 # an error occurred during compilation
                 # AST still may be provided, but it must NOT be parsed (pydantic model is not defined for this case)
                 if file in self.__source_units:
@@ -416,7 +406,6 @@ class LspCompiler:
                     )
 
                     files_to_recompile.discard(path)
-                    modified_files_to_recompile.pop(path, None)
                     if (
                         path in self.__source_units and path not in recompiled_files
                     ) or path in processed_files:
@@ -464,16 +453,10 @@ class LspCompiler:
         for path, errors in errors_per_file.items():
             await self.__diagnostic_queue.put((path, errors))
 
-        if len(files_to_recompile) > 0 or len(modified_files_to_recompile) > 0:
+        if len(files_to_recompile) > 0:
             # avoid infinite recursion
-            if (
-                files_to_recompile != files
-                or modified_files.keys() != modified_files_to_recompile.keys()
-                or full_compile
-            ):
-                await self.__compile(
-                    files_to_recompile, modified_files_to_recompile, False
-                )
+            if files_to_recompile != files_to_compile or full_compile:
+                await self.__compile(files_to_recompile, False)
 
     async def __compilation_loop(self):
         # perform Solidity files discovery
@@ -487,7 +470,7 @@ class LspCompiler:
                 self.__discovered_files.add(file.resolve())
 
         # perform initial compilation
-        await self.__compile(self.__discovered_files, {})
+        await self.__compile(self.__discovered_files)
         self.output_ready.set()
 
         while True:
@@ -501,10 +484,9 @@ class LspCompiler:
 
             # run the compilation
             if len(self.__force_compile_files) > 0 or len(self.__modified_files) > 0:
-                modified_files = {
-                    path: self.__files[path] for path in self.__modified_files
-                }
-                await self.__compile(self.__force_compile_files, modified_files)
+                await self.__compile(
+                    self.__force_compile_files.union(self.__modified_files)
+                )
 
                 self.__force_compile_files.clear()
                 self.__modified_files.clear()
