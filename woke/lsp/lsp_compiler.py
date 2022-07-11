@@ -287,19 +287,20 @@ class LspCompiler:
         )
 
         target_versions = []
+        skipped_compilation_units = []
         for compilation_unit in compilation_units:
             target_version = self.__config.compiler.solc.target_version
             if (
                 target_version is not None
                 and target_version not in compilation_unit.versions
             ):
-                files_str = "\n".join(str(path) for path in compilation_unit.files)
-                message = (
-                    f"Unable to compile the following files with solc version `{target_version}` set in config files:\n"
-                    + files_str
+                await self.__server.log_message(
+                    f"Unable to compile the following files with solc version `{target_version}` set in config:\n"
+                    + "\n".join(str(path) for path in compilation_unit.files),
+                    MessageType.ERROR,
                 )
-                await self.__server.log_message(message, MessageType.ERROR)
-                return
+                skipped_compilation_units.append(compilation_unit)
+                continue
             else:
                 # use the latest matching version
                 try:
@@ -309,12 +310,21 @@ class LspCompiler:
                         if version in compilation_unit.versions
                     )
                 except StopIteration:
-                    message = (
+                    await self.__server.log_message(
                         f"Unable to find a matching solc version for the following files:\n"
-                        + "\n".join(str(path) for path in compilation_unit.files)
+                        + "\n".join(str(path) for path in compilation_unit.files),
+                        MessageType.ERROR,
                     )
-                    await self.__server.log_message(message, MessageType.ERROR)
-                    return
+                    skipped_compilation_units.append(compilation_unit)
+                    continue
+            if target_version < "0.6.0":
+                await self.__server.log_message(
+                    "The minimum supported solc version is 0.6.0, unable to compile the following files:\n"
+                    + "\n".join(str(path) for path in compilation_unit.files),
+                    MessageType.ERROR,
+                )
+                skipped_compilation_units.append(compilation_unit)
+                continue
             target_versions.append(target_version)
 
             if not self.__svm.get_path(target_version).is_file():
@@ -335,6 +345,9 @@ class LspCompiler:
                     await self.__server.progress_end(progress_token)
                 else:
                     await self.__svm.install(target_version)
+
+        for compilation_unit in skipped_compilation_units:
+            compilation_units.remove(compilation_unit)
 
         progress_token = await self.__server.progress_begin(
             "Compiling", f"0/{len(compilation_units)}", 0
