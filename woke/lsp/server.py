@@ -511,25 +511,31 @@ class LspServer:
     async def _handle_config_change(self, raw_config: dict) -> bool:
         assert self.__workspace_path is not None
 
-        def _normalize_config(config: Union[dict, list]):
+        removed_options: Set[Tuple[Union[str, int], ...]] = set()
+
+        def _normalize_config(
+            config: Union[dict, list], config_path: Tuple[Union[str, int], ...]
+        ):
             if isinstance(config, dict):
                 for k in list(config):
                     v = config[k]
                     if isinstance(v, (dict, list)):
-                        _normalize_config(v)
+                        _normalize_config(v, config_path + (k,))
                     elif isinstance(v, str) and len(v.strip()) == 0:
                         del config[k]
+                        removed_options.add(config_path + (k,))
             else:
-                for item in config:
+                for no, item in enumerate(config):
                     if isinstance(item, (dict, list)):
-                        _normalize_config(item)
+                        _normalize_config(item, config_path + (no,))
                     elif isinstance(item, str) and len(item.strip()) == 0:
                         config.remove(item)
+                        removed_options.add(config_path + (no,))
 
-        _normalize_config(raw_config)
+        _normalize_config(raw_config, tuple())
 
         run = True
-        invalid_options = []
+        invalid_options: Set[Tuple[Union[str, int], ...]] = set()
         while run:
             try:
                 WokeConfig.fromdict(
@@ -540,7 +546,7 @@ class LspServer:
                 run = False
             except ValidationError as e:
                 for error in e.errors():
-                    invalid_options.append(error["loc"])
+                    invalid_options.add(error["loc"])
                     invalid_option = raw_config
                     for segment in error["loc"][:-1]:
                         invalid_option = invalid_option[segment]
@@ -555,7 +561,8 @@ class LspServer:
             message = (
                 "Failed to parse the following config options, using defaults:\n"
                 + "\n".join(
-                    f"    woke -> {' -> '.join(option)}" for option in invalid_options
+                    f"    woke -> {' -> '.join(str(segment) for segment in option)}"
+                    for option in invalid_options
                 )
             )
             await self.log_message(message, MessageType.WARNING)
@@ -568,7 +575,9 @@ class LspServer:
             )
             return False
         else:
-            return self.__workspace_config.update(raw_config, invalid_options)
+            return self.__workspace_config.update(
+                raw_config, invalid_options.union(removed_options)
+            )
 
     async def _initialized(self, params: InitializedParams) -> None:
         async def _post_initialized():
