@@ -202,6 +202,14 @@ class LspCompiler:
         elif isinstance(change, DidOpenTextDocumentParams):
             path = uri_to_path(change.text_document.uri).resolve()
             self.__opened_files[path] = change.text_document.text
+            if (
+                path not in self.__discovered_files
+                and not ({"node_modules", ".woke-build"} & set(path.parts))
+                and path.is_file()
+                and path.suffix == ".sol"
+            ):
+                self.__discovered_files.add(path)
+                self.__force_compile_files.add(path)
         elif isinstance(change, DidCloseTextDocumentParams):
             path = uri_to_path(change.text_document.uri).resolve()
             self.__opened_files.pop(path)
