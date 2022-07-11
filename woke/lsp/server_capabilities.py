@@ -4,6 +4,7 @@ from typing import Any, List, Optional, Union
 from woke.lsp.common_structures import WorkspaceSymbolOptions
 from woke.lsp.document_sync import TextDocumentSyncKind, TextDocumentSyncOptions
 
+from .features.code_lens import CodeLensOptions
 from .features.definition import DefinitionOptions
 from .features.document_link import DocumentLinkOptions
 from .features.document_symbol import DocumentSymbolOptions
@@ -91,6 +92,7 @@ class ServerCapabilities(LspModel):
     type_definition_provider: Optional[
         Union[bool, TypeDefinitionOptions, TypeDefinitionRegistrationOptions]
     ] = None
+    code_lens_provider: Optional[CodeLensOptions] = None
     """
     completion_provider: Optional[CompletionOptions]
     hover_provider: Optional[Union[bool, HoverOptions]]
@@ -99,7 +101,6 @@ class ServerCapabilities(LspModel):
     implementation_provider: Optional[Union[bool, ImplementationOptions, ImplementationRegistrationOptions]]
     document_highlight_provider: Optional[Union[bool, ReferenceOptions]]
     code_action_provider: Optional[Union[bool, CodeActionOptions]]
-    code_lens_provider: Optional[CodeLensOptions]
     color_provider: Optional[Union[bool, DocumentColorOptions, DocumentColorRegistrationOptions]]
     document_formatting_provider: Optional[Union[bool, DocumentFormattingOptions]]
     document_range_formatting_provider: Optional[Union[bool, DocumentRangeFormattingOptions]]
