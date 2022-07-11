@@ -45,11 +45,14 @@ class UserDefinedTypeName(TypeNameAbc):
         self._reference_resolver.register_post_process_callback(self.__post_process)
 
     def __post_process(self, callback_params: CallbackParams):
-        referenced_declaration = self.referenced_declaration
-        referenced_declaration.register_reference(self)
-        self._reference_resolver.register_destroy_callback(
-            self.file, partial(self.__destroy, referenced_declaration)
-        )
+        if self.path_node is not None:
+            assert self.referenced_declaration == self.path_node.referenced_declaration
+        else:
+            referenced_declaration = self.referenced_declaration
+            referenced_declaration.register_reference(self)
+            self._reference_resolver.register_destroy_callback(
+                self.file, partial(self.__destroy, referenced_declaration)
+            )
 
     def __destroy(self, referenced_declaration: DeclarationAbc) -> None:
         referenced_declaration.unregister_reference(self)
