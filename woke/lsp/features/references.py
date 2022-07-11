@@ -24,7 +24,7 @@ from woke.lsp.common_structures import (
 )
 from woke.lsp.context import LspContext
 from woke.lsp.lsp_data_model import LspModel
-from woke.lsp.utils.uri import path_to_uri, uri_to_path
+from woke.lsp.utils import path_to_uri, position_within_range, uri_to_path
 
 logger = logging.getLogger(__name__)
 
@@ -111,6 +111,13 @@ async def references(
 
         node = max(nodes, key=lambda n: n.ast_tree_depth)
         logger.debug(f"Found node {node}")
+
+        if isinstance(node, DeclarationAbc):
+            name_location_range = context.compiler.get_range_from_byte_offsets(
+                node.file, node.name_location
+            )
+            if not position_within_range(params.position, name_location_range):
+                return None
 
         if isinstance(
             node, (Identifier, IdentifierPath, UserDefinedTypeName, MemberAccess)
