@@ -50,6 +50,7 @@ from .document_sync import (
     WillSaveTextDocumentParams,
 )
 from .exceptions import LspError
+from .features.code_lens import CodeLensOptions, CodeLensParams, code_lens
 from .features.definition import DefinitionParams, definition
 from .features.diagnostic import diagnostics_loop
 from .features.document_link import (
@@ -159,6 +160,10 @@ class LspServer:
             RequestMethodEnum.TYPE_DEFINITION: (
                 partial(type_definition, self.__context),
                 TypeDefinitionParams,
+            ),
+            RequestMethodEnum.CODE_LENS: (
+                partial(code_lens, self.__context),
+                CodeLensParams,
             ),
         }
 
@@ -482,6 +487,9 @@ class LspServer:
             document_symbol_provider=True,
             definition_provider=True,
             type_definition_provider=True,
+            code_lens_provider=CodeLensOptions(
+                resolve_provider=False,
+            ),
         )
         return InitializeResult(capabilities=server_capabilities, server_info=None)
 
