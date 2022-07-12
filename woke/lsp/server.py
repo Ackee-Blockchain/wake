@@ -59,6 +59,7 @@ from .features.document_link import (
     document_link,
 )
 from .features.document_symbol import DocumentSymbolParams, document_symbol
+from .features.implementation import ImplementationParams, implementation
 from .features.references import ReferenceParams, references
 from .features.type_definition import TypeDefinitionParams, type_definition
 from .features.type_hierarchy import (
@@ -160,6 +161,10 @@ class LspServer:
             RequestMethodEnum.TYPE_DEFINITION: (
                 partial(type_definition, self.__context),
                 TypeDefinitionParams,
+            ),
+            RequestMethodEnum.IMPLEMENTATION: (
+                partial(implementation, self.__context),
+                ImplementationParams,
             ),
             RequestMethodEnum.CODE_LENS: (
                 partial(code_lens, self.__context),
@@ -487,6 +492,7 @@ class LspServer:
             document_symbol_provider=True,
             definition_provider=True,
             type_definition_provider=True,
+            implementation_provider=True,
             code_lens_provider=CodeLensOptions(
                 resolve_provider=False,
             ),
