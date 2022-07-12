@@ -33,7 +33,15 @@ from woke.lsp.document_sync import (
 from woke.lsp.utils.uri import uri_to_path
 
 from ..svm import SolcVersionManager
-from .common_structures import MessageType, Position, Range
+from .common_structures import (
+    CreateFilesParams,
+    DeleteFile,
+    DeleteFilesParams,
+    MessageType,
+    Position,
+    Range,
+    RenameFilesParams,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +83,7 @@ class LspCompiler:
     __file_changes_queue: asyncio.Queue
     __diagnostic_queue: asyncio.Queue
     __discovered_files: Set[Path]
-
+    __deleted_files: Set[Path]
     __opened_files: Dict[Path, str]
     __modified_files: Set[Path]
     __force_compile_files: Set[Path]
@@ -95,6 +103,7 @@ class LspCompiler:
         self.__diagnostic_queue = diagnostic_queue
         self.__stop_event = threading.Event()
         self.__discovered_files = set()
+        self.__deleted_files = set()
         self.__opened_files = {}
         self.__modified_files = set()
         self.__force_compile_files = set()
@@ -134,10 +143,14 @@ class LspCompiler:
             DidOpenTextDocumentParams,
             DidChangeTextDocumentParams,
             DidCloseTextDocumentParams,
+            CreateFilesParams,
+            RenameFilesParams,
+            DeleteFilesParams,
         ],
     ) -> None:
         if not isinstance(
-            change, (DidOpenTextDocumentParams, DidCloseTextDocumentParams)
+            change,
+            (CreateFilesParams, DidOpenTextDocumentParams, DidCloseTextDocumentParams),
         ):
             self.output_ready.clear()
 
@@ -199,6 +212,37 @@ class LspCompiler:
     ) -> None:
         if change is None:
             self.__force_compile_files.update(self.__discovered_files)
+        elif isinstance(change, CreateFilesParams):
+            for file in change.files:
+                path = uri_to_path(file.uri)
+                if (
+                    path not in self.__discovered_files
+                    and not ({"node_modules", ".woke-build"} & set(path.parts))
+                    and path.is_file()
+                    and path.suffix == ".sol"
+                ):
+                    self.__discovered_files.add(path)
+                    self.__force_compile_files.add(path)
+        elif isinstance(change, RenameFilesParams):
+            for rename in change.files:
+                old_path = uri_to_path(rename.old_uri)
+                self.__deleted_files.add(old_path)
+                self.__discovered_files.discard(old_path)
+
+                new_path = uri_to_path(rename.new_uri)
+                if (
+                    new_path not in self.__discovered_files
+                    and not ({"node_modules", ".woke-build"} & set(new_path.parts))
+                    and new_path.is_file()
+                    and new_path.suffix == ".sol"
+                ):
+                    self.__discovered_files.add(new_path)
+                    self.__force_compile_files.add(new_path)
+        elif isinstance(change, DeleteFilesParams):
+            for delete in change.files:
+                path = uri_to_path(delete.uri)
+                self.__deleted_files.add(path)
+                self.__discovered_files.discard(path)
         elif isinstance(change, DidOpenTextDocumentParams):
             path = uri_to_path(change.text_document.uri).resolve()
             self.__opened_files[path] = change.text_document.text
@@ -280,7 +324,10 @@ class LspCompiler:
 
         # filter out only compilation units that need to be compiled
         compilation_units = [
-            cu for cu in compilation_units if cu.files & files_to_compile
+            cu
+            for cu in compilation_units
+            if (cu.files & files_to_compile)
+            or cu.contains_unresolved_file(self.__deleted_files, self.__config)
         ]
         build_settings = self.__compiler.create_build_settings(
             [SolcOutputSelectionEnum.AST]
@@ -377,6 +424,12 @@ class LspCompiler:
         errors_without_location: Set[SolcOutputError] = set()
         files_to_recompile = set(files_to_compile)
         processed_files: Set[Path] = set()
+
+        for deleted_file in self.__deleted_files:
+            await self.__diagnostic_queue.put((deleted_file, []))
+            if deleted_file in self.__source_units:
+                self.__ir_reference_resolver.run_destroy_callbacks(deleted_file)
+                self.__source_units.pop(deleted_file)
 
         for cu_index, (cu, solc_output) in enumerate(zip(compilation_units, ret)):
             for file in cu.files:
@@ -504,13 +557,18 @@ class LspCompiler:
                     break
 
             # run the compilation
-            if len(self.__force_compile_files) > 0 or len(self.__modified_files) > 0:
+            if (
+                len(self.__force_compile_files) > 0
+                or len(self.__modified_files) > 0
+                or len(self.__deleted_files) > 0
+            ):
                 await self.__compile(
                     self.__force_compile_files.union(self.__modified_files)
                 )
 
                 self.__force_compile_files.clear()
                 self.__modified_files.clear()
+                self.__deleted_files.clear()
 
                 if self.__file_changes_queue.empty():
                     self.output_ready.set()

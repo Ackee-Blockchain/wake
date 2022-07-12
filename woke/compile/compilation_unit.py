@@ -1,9 +1,11 @@
 from pathlib import Path
-from typing import Dict, FrozenSet
+from typing import Dict, FrozenSet, Iterable, Set
 
 import networkx as nx
 from Cryptodome.Hash import BLAKE2b
 
+from woke.compile.source_path_resolver import SourcePathResolver
+from woke.config import WokeConfig
 from woke.core.solidity_version import SolidityVersionRanges
 
 
@@ -46,6 +48,23 @@ class CompilationUnit:
 
     def source_unit_name_to_path(self, source_unit_name: str) -> Path:
         return self.__source_unit_names_to_paths[source_unit_name]
+
+    def contains_unresolved_file(
+        self, files: Iterable[Path], config: WokeConfig
+    ) -> bool:
+        unresolved_imports: Set[str] = set()
+        for node in self.__unit_graph.nodes:
+            unresolved_imports.update(
+                self.__unit_graph.nodes[node]["unresolved_imports"]
+            )
+
+        source_path_resolver = SourcePathResolver(config)
+
+        for unresolved_import in unresolved_imports:
+            for file in files:
+                if source_path_resolver.matches(unresolved_import, file):
+                    return True
+        return False
 
     @property
     def files(self) -> FrozenSet[Path]:

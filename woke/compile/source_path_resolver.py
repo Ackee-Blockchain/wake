@@ -39,3 +39,15 @@ class SourcePathResolver:
                 err += f"\n{matching_path}"
             raise CompilationResolveError(err)
         return matching_paths[0]
+
+    def matches(self, source_unit_name: str, file: Path) -> bool:
+        """
+        Return True if the given source unit name matches the given file path.
+        """
+        for include_path in itertools.chain(
+            [self.__config.project_root_path], self.__config.compiler.solc.include_paths
+        ):
+            path = include_path / Path(source_unit_name)
+            if path == file:
+                return True
+        return False

@@ -31,8 +31,8 @@ class PositionEncodingKind(str, Enum):
 
 
 class WorkspaceFoldersServerCapabilities(LspModel):
-    supported: Optional[bool]
-    change_notifications: Optional[Union[str, bool]]
+    supported: Optional[bool] = None
+    change_notifications: Optional[Union[str, bool]] = None
 
 
 class FileOperationPatternKind(Enum):
@@ -46,17 +46,47 @@ class FileOperationPatternOptions(LspModel):
 
 class FileOperationPattern(LspModel):
     glob: str
-    matches: Optional[FileOperationPatternKind]
-    options: Optional[FileOperationPatternOptions]
+    """
+    The glob pattern to match. Glob patterns can have the following syntax:
+    - `*` to match one or more characters in a path segment
+    - `?` to match one character in a path segment
+    - `**` to match one or more characters in a path segment, including none
+    - `{}` to group sub patterns into an OR expression. (e.g. `**/*.{ts,js}`
+        matches all TypeScript and JavaScript files)
+    - `[]` to declare a range of characters to match in a path segment
+        (e.g., `example.[0-9]` to match `example.0`, `example.1`, …)
+    - `[!...]` to negate a range of characters to match in a path segment
+        (e.g., `example.[!0-9]` to match `example.a`, `example.b`, but
+        not `example.0`)
+    """
+    matches: Optional[FileOperationPatternKind] = None
+    """
+    Whether to match files or folders with this pattern.
+
+    Matches both if undefined.
+    """
+    options: Optional[FileOperationPatternOptions] = None
+    """
+    Additional options used during matching.
+    """
 
 
 class FileOperationFilter(LspModel):
-    scheme: Optional[str]
+    scheme: Optional[str] = None
+    """
+    A Uri like `file` or `untitled`.
+    """
     pattern: FileOperationPattern
+    """
+    The actual file operation pattern.
+    """
 
 
 class FileOperationRegistrationOptions(LspModel):
     filters: List[FileOperationFilter]
+    """
+    The actual filters.
+    """
 
 
 class ServerCapabilitiesWorkspaceFileOperations(LspModel):
@@ -64,12 +94,12 @@ class ServerCapabilitiesWorkspaceFileOperations(LspModel):
     ServerCapabilities subsubClass
     """
 
-    did_create: Optional[FileOperationRegistrationOptions]
-    will_create: Optional[FileOperationRegistrationOptions]
-    did_rename: Optional[FileOperationRegistrationOptions]
-    will_rename: Optional[FileOperationRegistrationOptions]
-    did_delete: Optional[FileOperationRegistrationOptions]
-    will_delete: Optional[FileOperationRegistrationOptions]
+    did_create: Optional[FileOperationRegistrationOptions] = None
+    will_create: Optional[FileOperationRegistrationOptions] = None
+    did_rename: Optional[FileOperationRegistrationOptions] = None
+    will_rename: Optional[FileOperationRegistrationOptions] = None
+    did_delete: Optional[FileOperationRegistrationOptions] = None
+    will_delete: Optional[FileOperationRegistrationOptions] = None
 
 
 class ServerCapabilitiesWorkspace(LspModel):
@@ -77,8 +107,8 @@ class ServerCapabilitiesWorkspace(LspModel):
     ServerCapabilities subClass
     """
 
-    workspace_folders: Optional[WorkspaceFoldersServerCapabilities]
-    file_operations: Optional[ServerCapabilitiesWorkspaceFileOperations]
+    workspace_folders: Optional[WorkspaceFoldersServerCapabilities] = None
+    file_operations: Optional[ServerCapabilitiesWorkspaceFileOperations] = None
 
 
 class ServerCapabilities(LspModel):
