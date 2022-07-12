@@ -8,6 +8,10 @@ from .features.code_lens import CodeLensOptions
 from .features.definition import DefinitionOptions
 from .features.document_link import DocumentLinkOptions
 from .features.document_symbol import DocumentSymbolOptions
+from .features.implementation import (
+    ImplementationOptions,
+    ImplementationRegistrationOptions,
+)
 from .features.references import ReferenceOptions
 from .features.type_definition import (
     TypeDefinitionOptions,
@@ -89,6 +93,9 @@ class ServerCapabilities(LspModel):
     references_provider: Optional[Union[bool, ReferenceOptions]] = None
     document_symbol_provider: Optional[Union[bool, DocumentSymbolOptions]] = None
     definition_provider: Optional[Union[bool, DefinitionOptions]] = None
+    implementation_provider: Optional[
+        Union[bool, ImplementationOptions, ImplementationRegistrationOptions]
+    ] = None
     type_definition_provider: Optional[
         Union[bool, TypeDefinitionOptions, TypeDefinitionRegistrationOptions]
     ] = None
@@ -98,7 +105,6 @@ class ServerCapabilities(LspModel):
     hover_provider: Optional[Union[bool, HoverOptions]]
     signature_help_provider: Optional[SignatureHelpOptions]
     declaration_provider: Optional[Union[bool, DeclarationOptions, DeclarationRegistrationOptions]]
-    implementation_provider: Optional[Union[bool, ImplementationOptions, ImplementationRegistrationOptions]]
     document_highlight_provider: Optional[Union[bool, ReferenceOptions]]
     code_action_provider: Optional[Union[bool, CodeActionOptions]]
     color_provider: Optional[Union[bool, DocumentColorOptions, DocumentColorRegistrationOptions]]
