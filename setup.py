@@ -11,14 +11,16 @@ install_requires = [
     "click >= 8, < 9",
     "rich >= 10.16",
     "pathvalidate >= 2.5.0, < 3",
-    "eth-brownie >= 1.16",
-    "tblib >= 1.7.0, < 2",
-    "ipdb",
     "intervaltree >= 3.1",
 ]
 
 # Also: [pyright](https://github.com/microsoft/pyright/) (distributed through npm)
 extras_require = dict(
+    fuzzer=[
+        "eth-brownie >= 1.16",
+        "tblib >= 1.7.0, < 2",
+        "ipdb",
+    ],
     tests=[
         "pytest >= 6.2.5, < 7.0",
         "pytest-asyncio >= 0.17, < 1",
