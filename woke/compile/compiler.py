@@ -5,7 +5,7 @@ import time
 from collections import deque
 from itertools import chain
 from pathlib import Path
-from typing import Collection, Dict, Iterable, List, Mapping, Optional, Tuple
+from typing import Collection, Dict, Iterable, List, Mapping, Optional, Set, Tuple
 
 import aiofiles
 import networkx as nx
@@ -102,6 +102,7 @@ class SolidityCompiler:
                 versions=versions,
                 hash=h,
                 content=content,
+                unresolved_imports=set(),
             )
             source_units[source_unit_name] = path
 
@@ -115,6 +116,7 @@ class SolidityCompiler:
                     ).resolve(strict=True)
                 except (FileNotFoundError, CompilationResolveError):
                     if ignore_errors:
+                        graph.nodes[path]["unresolved_imports"].add(import_unit_name)
                         continue
                     raise
 

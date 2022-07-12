@@ -23,6 +23,8 @@ from ..config import WokeConfig
 from .common_structures import (
     ConfigurationItem,
     ConfigurationParams,
+    CreateFilesParams,
+    DeleteFilesParams,
     DidChangeConfigurationParams,
     DocumentFilter,
     InitializedParams,
@@ -32,6 +34,7 @@ from .common_structures import (
     LogTraceParams,
     MessageType,
     ProgressParams,
+    RenameFilesParams,
     SetTraceParams,
     ShowMessageParams,
     WorkDoneProgressBegin,
@@ -82,9 +85,15 @@ from .protocol_structures import (
 )
 from .rpc_protocol import RpcProtocol
 from .server_capabilities import (
+    FileOperationFilter,
+    FileOperationPattern,
+    FileOperationPatternKind,
+    FileOperationRegistrationOptions,
     InitializeResult,
     PositionEncodingKind,
     ServerCapabilities,
+    ServerCapabilitiesWorkspace,
+    ServerCapabilitiesWorkspaceFileOperations,
 )
 from .utils.uri import uri_to_path
 
@@ -201,6 +210,18 @@ class LspServer:
             RequestMethodEnum.WORKSPACE_DID_CHANGE_CONFIGURATION: (
                 self._workspace_did_change_configuration,
                 DidChangeConfigurationParams,
+            ),
+            RequestMethodEnum.WORKSPACE_DID_CREATE_FILES: (
+                self._workspace_did_create_files,
+                CreateFilesParams,
+            ),
+            RequestMethodEnum.WORKSPACE_DID_RENAME_FILES: (
+                self._workspace_did_rename_files,
+                RenameFilesParams,
+            ),
+            RequestMethodEnum.WORKSPACE_DID_DELETE_FILES: (
+                self._workspace_did_delete_files,
+                DeleteFilesParams,
             ),
         }
 
@@ -479,6 +500,17 @@ class LspServer:
         self.__initialized = True
         self.__workspace_path = path
 
+        solidity_registration = FileOperationRegistrationOptions(
+            filters=[
+                FileOperationFilter(
+                    pattern=FileOperationPattern(
+                        glob="**/*.sol",
+                        matches=FileOperationPatternKind.FILE,
+                    )
+                )
+            ]
+        )
+
         server_capabilities = ServerCapabilities(
             position_encoding=PositionEncodingKind.UTF16,
             text_document_sync=TextDocumentSyncOptions(
@@ -490,6 +522,13 @@ class LspServer:
             type_hierarchy_provider=True,
             references_provider=True,
             document_symbol_provider=True,
+            workspace=ServerCapabilitiesWorkspace(
+                file_operations=ServerCapabilitiesWorkspaceFileOperations(
+                    did_create=solidity_registration,
+                    did_rename=solidity_registration,
+                    did_delete=solidity_registration,
+                )
+            ),
             definition_provider=True,
             type_definition_provider=True,
             implementation_provider=True,
@@ -630,6 +669,15 @@ class LspServer:
     async def _text_document_did_close(
         self, params: DidCloseTextDocumentParams
     ) -> None:
+        await self.__context.compiler.add_change(params)
+
+    async def _workspace_did_create_files(self, params: CreateFilesParams) -> None:
+        await self.__context.compiler.add_change(params)
+
+    async def _workspace_did_rename_files(self, params: RenameFilesParams) -> None:
+        await self.__context.compiler.add_change(params)
+
+    async def _workspace_did_delete_files(self, params: DeleteFilesParams) -> None:
         await self.__context.compiler.add_change(params)
 
     async def get_configuration(self) -> None:
