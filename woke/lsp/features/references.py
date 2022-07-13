@@ -10,6 +10,7 @@ from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
 from woke.ast.ir.expression.identifier import Identifier
 from woke.ast.ir.expression.member_access import MemberAccess
 from woke.ast.ir.meta.identifier_path import IdentifierPath
+from woke.ast.ir.statement.inline_assembly import ExternalReference, InlineAssembly
 from woke.ast.ir.type_name.user_defined_type_name import UserDefinedTypeName
 from woke.lsp.common_structures import (
     DocumentUri,
@@ -49,7 +50,13 @@ class ReferenceParams(
 
 def _generate_references(
     node_references: Iterable[
-        Union[Identifier, IdentifierPath, MemberAccess, UserDefinedTypeName]
+        Union[
+            Identifier,
+            IdentifierPath,
+            MemberAccess,
+            UserDefinedTypeName,
+            ExternalReference,
+        ]
     ],
     context: LspContext,
 ) -> List[Location]:
@@ -136,6 +143,12 @@ async def references(
                 return None
             else:
                 node = referenced_declaration
+        elif isinstance(node, InlineAssembly):
+            external_references = node.external_references_at(byte_offset)
+            assert len(external_references) <= 1
+            if len(external_references) == 0:
+                return None
+            node = external_references[0].referenced_declaration
 
         if not isinstance(node, DeclarationAbc):
             return None

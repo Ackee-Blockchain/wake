@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from ..meta.identifier_path import IdentifierPath
     from ..expression.member_access import MemberAccess
     from ..type_name.user_defined_type_name import UserDefinedTypeName
+    from ..statement.inline_assembly import ExternalReference
 
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.utils import IrInitTuple
@@ -43,6 +44,7 @@ if TYPE_CHECKING:
         IdentifierPath,
         MemberAccess,
         UserDefinedTypeName,
+        ExternalReference,
     ]
 
 

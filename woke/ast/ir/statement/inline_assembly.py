@@ -1,10 +1,90 @@
-from typing import Optional
+from functools import partial
+from pathlib import Path
+from typing import List, Optional, Tuple
 
-from woke.ast.enums import InlineAssemblyEvmVersion
+from woke.ast.enums import InlineAssemblyEvmVersion, InlineAssemblySuffix
 from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.declaration.abc import DeclarationAbc
+from woke.ast.ir.reference_resolver import CallbackParams, ReferenceResolver
 from woke.ast.ir.statement.abc import StatementAbc
 from woke.ast.ir.utils import IrInitTuple
-from woke.ast.nodes import SolcInlineAssembly
+from woke.ast.nodes import AstNodeId, ExternalReferenceModel, SolcInlineAssembly
+
+
+class ExternalReference:
+    __external_reference_model: ExternalReferenceModel
+    __reference_resolver: ReferenceResolver
+    __cu_hash: bytes
+    __file: Path
+
+    __referenced_declaration_id: AstNodeId
+    __is_offset: bool
+    __is_slot: bool
+    __value_size: int
+    __suffix: Optional[InlineAssemblySuffix]
+
+    def __init__(
+        self, init: IrInitTuple, external_reference_model: ExternalReferenceModel
+    ):
+        self.__external_reference_model = external_reference_model
+        self.__reference_resolver = init.reference_resolver
+        self.__cu_hash = init.cu.blake2b_digest
+        self.__file = init.file
+
+        self.__referenced_declaration_id = external_reference_model.declaration
+        assert self.__referenced_declaration_id >= 0
+        self.__is_offset = external_reference_model.is_offset
+        self.__is_slot = external_reference_model.is_slot
+        self.__value_size = external_reference_model.value_size
+        self.__suffix = external_reference_model.suffix
+
+        self.__reference_resolver.register_post_process_callback(self.__post_process)
+
+    def __post_process(self, callback_params: CallbackParams):
+        referenced_declaration = self.referenced_declaration
+        referenced_declaration.register_reference(self)
+        self.__reference_resolver.register_destroy_callback(
+            self.__file, partial(self.__destroy, referenced_declaration)
+        )
+
+    def __destroy(self, referenced_declaration: DeclarationAbc) -> None:
+        referenced_declaration.unregister_reference(self)
+
+    @property
+    def file(self) -> Path:
+        return self.__file
+
+    @property
+    def byte_location(self) -> Tuple[int, int]:
+        return (
+            self.__external_reference_model.src.byte_offset,
+            self.__external_reference_model.src.byte_offset
+            + self.__external_reference_model.src.byte_length,
+        )
+
+    @property
+    def referenced_declaration(self) -> DeclarationAbc:
+        node = self.__reference_resolver.resolve_node(
+            self.__referenced_declaration_id, self.__cu_hash
+        )
+        assert isinstance(node, DeclarationAbc)
+        return node
+
+    @property
+    def is_offset(self) -> bool:
+        return self.__is_offset
+
+    @property
+    def is_slot(self) -> bool:
+        return self.__is_slot
+
+    @property
+    def value_size(self) -> int:
+        return self.__value_size
+
+    @property
+    def suffix(self) -> Optional[InlineAssemblySuffix]:
+        return self.__suffix
 
 
 class InlineAssembly(StatementAbc):
@@ -13,7 +93,7 @@ class InlineAssembly(StatementAbc):
 
     # __ast: TODO
     __evm_version: InlineAssemblyEvmVersion
-    # __external_references TODO
+    __external_references: List[ExternalReference]
     __documentation: Optional[str]
 
     def __init__(
@@ -22,6 +102,10 @@ class InlineAssembly(StatementAbc):
         super().__init__(init, inline_assembly, parent)
         self.__evm_version = inline_assembly.evm_version
         self.__documentation = inline_assembly.documentation
+        self.__external_references = [
+            ExternalReference(init, external_reference)
+            for external_reference in inline_assembly.external_references
+        ]
 
     @property
     def parent(self) -> IrAbc:
@@ -34,3 +118,7 @@ class InlineAssembly(StatementAbc):
     @property
     def documentation(self) -> Optional[str]:
         return self.__documentation
+
+    @property
+    def external_references(self) -> Tuple[ExternalReference]:
+        return tuple(self.__external_references)
