@@ -309,7 +309,7 @@ class ExternalReferenceModel(AstModel):  # helper class
     declaration: AstNodeId
     is_offset: StrictBool
     is_slot: StrictBool
-    src: StrictStr
+    src: Src
     value_size: StrictInt
     suffix: Optional[InlineAssemblySuffix]
 
