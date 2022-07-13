@@ -2,6 +2,8 @@ from functools import partial
 from pathlib import Path
 from typing import List, Optional, Tuple
 
+from intervaltree import IntervalTree
+
 from woke.ast.enums import InlineAssemblyEvmVersion, InlineAssemblySuffix
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.declaration.abc import DeclarationAbc
@@ -93,7 +95,7 @@ class InlineAssembly(StatementAbc):
 
     # __ast: TODO
     __evm_version: InlineAssemblyEvmVersion
-    __external_references: List[ExternalReference]
+    __external_references: IntervalTree
     __documentation: Optional[str]
 
     def __init__(
@@ -102,10 +104,13 @@ class InlineAssembly(StatementAbc):
         super().__init__(init, inline_assembly, parent)
         self.__evm_version = inline_assembly.evm_version
         self.__documentation = inline_assembly.documentation
-        self.__external_references = [
-            ExternalReference(init, external_reference)
-            for external_reference in inline_assembly.external_references
-        ]
+        self.__external_references = IntervalTree()
+        for external_reference in inline_assembly.external_references:
+            start = external_reference.src.byte_offset
+            end = start + external_reference.src.byte_length
+            self.__external_references[start:end] = ExternalReference(
+                init, external_reference
+            )
 
     @property
     def parent(self) -> IrAbc:
@@ -121,4 +126,9 @@ class InlineAssembly(StatementAbc):
 
     @property
     def external_references(self) -> Tuple[ExternalReference]:
-        return tuple(self.__external_references)
+        return tuple(interval.data for interval in self.__external_references)
+
+    def external_references_at(self, byte_offset: int) -> Tuple[ExternalReference]:
+        return tuple(
+            interval.data for interval in self.__external_references.at(byte_offset)
+        )
