@@ -10,6 +10,7 @@ from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
 from woke.ast.ir.expression.identifier import Identifier
 from woke.ast.ir.expression.member_access import MemberAccess
 from woke.ast.ir.meta.identifier_path import IdentifierPath
+from woke.ast.ir.statement.inline_assembly import InlineAssembly
 from woke.ast.ir.type_name.user_defined_type_name import UserDefinedTypeName
 from woke.lsp.common_structures import (
     DocumentUri,
@@ -91,6 +92,12 @@ async def definition(
         node = node.referenced_declaration
         if node is None:
             return None
+    elif isinstance(node, InlineAssembly):
+        external_references = node.external_references_at(byte_offset)
+        assert len(external_references) <= 1
+        if len(external_references) == 0:
+            return None
+        node = external_references[0].referenced_declaration
 
     if not isinstance(node, DeclarationAbc):
         return None
