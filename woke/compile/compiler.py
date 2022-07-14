@@ -394,16 +394,60 @@ class SolidityCompiler:
             for task in tasks:
                 task.cancel()
             raise
-        # ZDE prejmenovat a smazat
         if write_artifacts:
             if build_path is None:
                 # should not really happen (it is present here just to silence the linter)
                 raise ValueError("Build path is not set.")
+            self.__rename_and_remove_artifacts(build_path)
             self.__write_global_artifacts(
                 build_path, build_settings, ret, compilation_units
             )
 
         return [(cu, out) for cu, out in zip(compilation_units, ret)]
+
+    """
+    When this func is called .woke-build/ should the following contents:
+      .woke-build/old-artifact-0,...,.woke-build/old-artifact-n      <- old artifacts
+      .woke-build/tmp                                                <- tmp_dir with new artifacts
+      .woke-build/build.json                                         <- old build info
+    This func manages removal of the old artifacts and also moves the new ones out
+    of the tmp/ directory.
+    This is neccesary because old artifacts can't be removed before new ones are
+    created and because we want to limit the amount of stored artifacts.
+    """
+    def __rename_and_remove_artifacts(
+            self,
+            build_path: Path
+    ):
+        for fl in build_path.iterdir():
+            if fl.stem != "tmp" and fl.stem != "build.json":
+                if fl.is_dir():
+                    self.__remove_artifact_dir(fl)
+                else:
+                    fl.unlink()
+        if build_path / "tmp" is None:
+                raise ValueError("New artificats do not exist.")
+        for fl in (build_path / "tmp").iterdir():
+            p = Path(fl).absolute()
+            parent_dir = p.parents[1]
+            p.rename(parent_dir / p.name)
+        (build_path / "tmp").rmdir()
+
+
+    """
+    Removes given artifacts directory. If another directory is contained in the path, the func
+    calls recursively itself.
+    """
+    def __remove_artifact_dir(
+            self,
+            path: Path
+    ):
+        for fl in path.iterdir():
+            if fl.is_dir():
+                self.__remove_artifact_dir(fl)
+                fl.rmdir()
+            else:
+                fl.unlink()
 
     async def __compile_unit(
         self,
@@ -413,7 +457,6 @@ class SolidityCompiler:
         build_path: Optional[Path],
         latest_build_info: Optional[ProjectBuildInfo],
     ) -> SolcOutput:
-        print(f"build path: {build_path}")
         # try to reuse the latest build artifacts
         if (
             latest_build_info is not None
@@ -436,11 +479,10 @@ class SolidityCompiler:
                 try:
                     logger.info("Reusing the latest build artifacts.")
                     latest_build_path = (
-                        self.__config.project_root_path / ".woke-build" / "latest"
+                        self.__config.project_root_path / ".woke-build" 
                     )
                     sources = {}
                     for source, path in latest_unit_info.sources.items():
-                        print(f"the path is: {path}")
                         sources[source] = SolcOutputSourceInfo.parse_file(
                             latest_build_path / path
                         )
@@ -490,8 +532,9 @@ class SolidityCompiler:
 
         # write build artifacts
         if build_path is not None:
-            build_path.mkdir(parents=False, exist_ok=False)
-            await self.__write_artifacts(out, build_path)
+            tmp_path = build_path.parent / "tmp" / build_path.stem
+            tmp_path.mkdir(parents=True, exist_ok=False)
+            await self.__write_artifacts(out, tmp_path)
 
         return out
 
