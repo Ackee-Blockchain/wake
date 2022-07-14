@@ -309,17 +309,17 @@ class SolidityCompiler:
 
         # sort compilation units by their BLAKE2b hexdigest
         compilation_units.sort(key=lambda u: u.blake2b_hexdigest)
-
         if write_artifacts:
             # prepare build dir
             build_path = (
-                self.__config.project_root_path / ".woke-build" / str(int(time.time()))
+                self.__config.project_root_path / ".woke-build" 
             )
-            build_path.mkdir(parents=True, exist_ok=False)
+            if not build_path.is_dir():
+                build_path.mkdir(parents=True, exist_ok=False)
         else:
             build_path = None
 
-        latest_build_path = self.__config.project_root_path / ".woke-build" / "latest"
+        latest_build_path = self.__config.project_root_path / ".woke-build" 
         if reuse_latest_artifacts:
             try:
                 latest_build_info = ProjectBuildInfo.parse_file(
@@ -394,7 +394,7 @@ class SolidityCompiler:
             for task in tasks:
                 task.cancel()
             raise
-
+        # ZDE prejmenovat a smazat
         if write_artifacts:
             if build_path is None:
                 # should not really happen (it is present here just to silence the linter)
@@ -403,11 +403,6 @@ class SolidityCompiler:
                 build_path, build_settings, ret, compilation_units
             )
 
-            # create `latest` symlink pointing to the just created build directory
-            if platform.system() != "Windows":
-                if latest_build_path.is_symlink():
-                    latest_build_path.unlink()
-                latest_build_path.symlink_to(build_path, target_is_directory=True)
         return [(cu, out) for cu, out in zip(compilation_units, ret)]
 
     async def __compile_unit(
@@ -418,6 +413,7 @@ class SolidityCompiler:
         build_path: Optional[Path],
         latest_build_info: Optional[ProjectBuildInfo],
     ) -> SolcOutput:
+        print(f"build path: {build_path}")
         # try to reuse the latest build artifacts
         if (
             latest_build_info is not None
@@ -444,6 +440,7 @@ class SolidityCompiler:
                     )
                     sources = {}
                     for source, path in latest_unit_info.sources.items():
+                        print(f"the path is: {path}")
                         sources[source] = SolcOutputSourceInfo.parse_file(
                             latest_build_path / path
                         )
