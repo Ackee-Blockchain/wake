@@ -5,7 +5,7 @@ import shutil
 import time
 from collections import deque
 from itertools import chain
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import Collection, Dict, Iterable, List, Mapping, Optional, Set, Tuple
 
 import aiofiles
@@ -61,8 +61,8 @@ class SolidityCompiler:
         ignore_errors: bool = False,
     ) -> nx.DiGraph:
         # source unit name, full path, file content
-        source_units_queue: deque[Tuple[str, Path, Optional[str]]] = deque()
-        source_units: Dict[str, Path] = {}
+        source_units_queue: deque[Tuple[PurePath, Path, Optional[str]]] = deque()
+        source_units: Dict[PurePath, Path] = {}
 
         # for every source file resolve a source unit name
         for file in files:
@@ -270,7 +270,9 @@ class SolidityCompiler:
                 sources=sources,
                 contracts=contracts,
                 errors=out.errors,
-                source_units=sorted(unit.source_unit_names),
+                source_units=sorted(
+                    str(source_unit_name) for source_unit_name in unit.source_unit_names
+                ),
                 allow_paths=sorted(self.__config.compiler.solc.allow_paths),
                 include_paths=sorted(self.__config.compiler.solc.include_paths),
                 settings=build_settings,
@@ -522,9 +524,9 @@ class SolidityCompiler:
         target_version: SolidityVersion,
         build_settings: SolcInputSettings,
     ) -> SolcOutput:
-        # Dict[source_unit_name: str, path: Path]
+        # Dict[source_unit_name: PurePath, path: Path]
         files = {}
-        # Dict[source_unit_name: str, content: str]
+        # Dict[source_unit_name: PurePath, content: str]
         sources = {}
         for node, data in compilation_unit.graph.nodes.items():
             source_unit_name = data["source_unit_name"]
