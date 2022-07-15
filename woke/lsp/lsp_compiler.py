@@ -5,7 +5,7 @@ import logging
 import re
 import threading
 from collections import deque
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import TYPE_CHECKING, AbstractSet, Dict, Iterable, List, Set, Tuple, Union
 
 from woke.compile.exceptions import CompilationError
@@ -446,7 +446,9 @@ class LspCompiler:
 
             for error in solc_output.errors:
                 if error.source_location is not None:
-                    path = cu.source_unit_name_to_path(error.source_location.file)
+                    path = cu.source_unit_name_to_path(
+                        PurePath(error.source_location.file)
+                    )
                     errors_per_file[path].append(error)
 
                     if error.severity == SolcOutputErrorSeverityEnum.ERROR:
@@ -472,7 +474,7 @@ class LspCompiler:
 
             if len(errored_files) == 0:
                 for source_unit_name, raw_ast in solc_output.sources.items():
-                    path = cu.source_unit_name_to_path(source_unit_name)
+                    path = cu.source_unit_name_to_path(PurePath(source_unit_name))
                     if path in errored_files or raw_ast.ast is None:
                         continue
                     ast = AstSolc.parse_obj(raw_ast.ast)

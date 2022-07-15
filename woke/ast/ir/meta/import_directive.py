@@ -5,7 +5,7 @@ import re
 from collections import deque
 from dataclasses import dataclass
 from functools import lru_cache
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import TYPE_CHECKING, Deque, List, Optional, Set, Tuple
 
 from ..expression.identifier import Identifier
@@ -56,7 +56,7 @@ class ImportDirective(IrAbc):
     _ast_node: SolcImportDirective
     _parent: SourceUnit
 
-    __source_unit_name: str
+    __source_unit_name: PurePath
     __import_string: str
     __imported_file: Path
     __symbol_aliases: List[SymbolAlias]
@@ -65,7 +65,7 @@ class ImportDirective(IrAbc):
         self, init: IrInitTuple, import_directive: SolcImportDirective, parent: IrAbc
     ):
         super().__init__(init, import_directive, parent)
-        self.__source_unit_name = import_directive.absolute_path
+        self.__source_unit_name = PurePath(import_directive.absolute_path)
         self.__import_string = import_directive.file
         self.__imported_file = init.cu.source_unit_name_to_path(self.__source_unit_name)
         self.__symbol_aliases = []
@@ -121,7 +121,7 @@ class ImportDirective(IrAbc):
         return self._parent
 
     @property
-    def source_unit_name(self) -> str:
+    def source_unit_name(self) -> PurePath:
         """
         The source unit name of the file that is imported.
         """
