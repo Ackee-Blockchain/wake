@@ -28,10 +28,12 @@ class RpcProtocol:
     __port: int
     __reader: asyncio.StreamReader
     __writer: asyncio.StreamWriter
+    __lock: asyncio.Lock
 
     def __init__(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         self.__reader = reader
         self.__writer = writer
+        self.__lock = asyncio.Lock()
 
     async def _read_message(self) -> dict:
         line = (await self.__reader.readline()).decode(ENCODING)
@@ -61,8 +63,9 @@ class RpcProtocol:
     async def _send(self, message: str) -> None:
         content_length = len(message)
         response = f"Content-Length: {content_length}\r\nContent-Type: application/vscode-jsonrpc; charset={ENCODING}\r\n\r\n{message}"
-        self.__writer.write(response.encode(ENCODING))
-        await self.__writer.drain()
+        async with self.__lock:
+            self.__writer.write(response.encode(ENCODING))
+            await self.__writer.drain()
 
     async def send(
         self,
