@@ -31,6 +31,9 @@ def _setup(port: int, network_id: str) -> None:
     brownie.reverts = RevertContextManager
     active_network = CONFIG.set_active_network(network_id)
 
+    # Disables color formatting for brownie output
+    CONFIG.settings["console"]["show_colors"] = False
+
     web3.connect(f"{active_network['host']}:{port}")
 
     cmd_settings = active_network["cmd_settings"]
