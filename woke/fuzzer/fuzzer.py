@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Callable, Iterable
 
 import brownie
+import rich.progress
 from brownie import rpc, web3
 from brownie._config import CONFIG
 from brownie.test.managers.runner import RevertContextManager
@@ -197,42 +198,64 @@ def fuzz(
         processes[i] = (p, finished_event, parent_conn, child_conn)
         p.start()
 
-    while len(processes):
-        to_be_removed = []
-        for i, (p, e, parent_conn, child_conn) in processes.items():
-            finished = e.wait(0.125)
-            if finished:
-                to_be_removed.append(i)
+    with rich.progress.Progress(
+        rich.progress.SpinnerColumn(finished_text="[green]⠿"),
+        "[progress.description][yellow]{task.description}, "
+        "[green]{task.fields[thr_rem]}[yellow] "
+        "processes remaining",
+    ) as progress:
+        if passive:
+            progress.stop()
+        task = progress.add_task("Fuzzing", thr_rem=len(processes), total=1)
 
-                exception_info = parent_conn.recv()
-                if exception_info is not None:
-                    exception_info = pickle.loads(exception_info)
+        while len(processes):
+            to_be_removed = []
+            for i, (p, e, parent_conn, child_conn) in processes.items():
+                finished = e.wait(0.125)
+                if finished:
+                    to_be_removed.append(i)
 
-                if exception_info is not None:
-                    if not passive or i == 0:
-                        tb = Traceback.from_exception(
-                            exception_info[0], exception_info[1], exception_info[2]
-                        )
-                        console.print(tb)
-                        console.print(f"Process #{i} failed with an exception above.")
+                    exception_info = parent_conn.recv()
+                    if exception_info is not None:
+                        exception_info = pickle.loads(exception_info)
 
-                        attach = None
-                        while attach is None:
-                            response = input(
-                                "Would you like to attach the debugger? [y/n] "
+                    if exception_info is not None:
+                        if not passive or i == 0:
+                            tb = Traceback.from_exception(
+                                exception_info[0], exception_info[1], exception_info[2]
                             )
-                            if response == "y":
-                                attach = True
-                            elif response == "n":
-                                attach = False
-                    else:
-                        attach = False
 
-                    e.clear()
-                    parent_conn.send(attach)
-                    e.wait()
-                else:
-                    if not passive or i == 0:
-                        console.print(f"Process #{i} finished without issues.")
-        for i in to_be_removed:
-            processes.pop(i)
+                            if not passive:
+                                progress.stop()
+
+                            console.print(tb)
+                            console.print(
+                                f"Process #{i} failed with an exception above."
+                            )
+
+                            attach = None
+                            while attach is None:
+                                response = input(
+                                    "Would you like to attach the debugger? [y/n] "
+                                )
+                                if response == "y":
+                                    attach = True
+                                elif response == "n":
+                                    attach = False
+                        else:
+                            attach = False
+
+                        e.clear()
+                        parent_conn.send(attach)
+                        e.wait()
+                        if not passive:
+                            progress.start()
+
+                    progress.update(
+                        task, thr_rem=len(processes) - len(to_be_removed)
+                    )
+                    if i == 0:
+                        progress.start()
+            for i in to_be_removed:
+                processes.pop(i)
+        progress.update(task, description="Finished", completed=1)
