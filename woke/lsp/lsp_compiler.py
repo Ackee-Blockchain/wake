@@ -30,7 +30,7 @@ from woke.lsp.document_sync import (
     DidCloseTextDocumentParams,
     DidOpenTextDocumentParams,
 )
-from woke.lsp.utils.uri import uri_to_path
+from woke.lsp.utils.uri import path_to_uri, uri_to_path
 
 from ..svm import SolcVersionManager
 from .common_structures import (
@@ -343,7 +343,7 @@ class LspCompiler:
             ):
                 await self.__server.log_message(
                     f"Unable to compile the following files with solc version `{target_version}` set in config:\n"
-                    + "\n".join(str(path) for path in compilation_unit.files),
+                    + "\n".join(path_to_uri(path) for path in compilation_unit.files),
                     MessageType.ERROR,
                 )
                 skipped_compilation_units.append(compilation_unit)
@@ -359,7 +359,9 @@ class LspCompiler:
                 except StopIteration:
                     await self.__server.log_message(
                         f"Unable to find a matching solc version for the following files:\n"
-                        + "\n".join(str(path) for path in compilation_unit.files),
+                        + "\n".join(
+                            path_to_uri(path) for path in compilation_unit.files
+                        ),
                         MessageType.ERROR,
                     )
                     skipped_compilation_units.append(compilation_unit)
@@ -367,7 +369,7 @@ class LspCompiler:
             if target_version < "0.6.0":
                 await self.__server.log_message(
                     "The minimum supported solc version is 0.6.0, unable to compile the following files:\n"
-                    + "\n".join(str(path) for path in compilation_unit.files),
+                    + "\n".join(path_to_uri(path) for path in compilation_unit.files),
                     MessageType.ERROR,
                 )
                 skipped_compilation_units.append(compilation_unit)

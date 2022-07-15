@@ -168,12 +168,6 @@ class SolidityCompiler:
                     if _from not in nodes_subset:
                         nodes_queue.append(_from)
 
-            if len(versions) == 0:
-                raise CompilationError(
-                    "Unable to find any solc version to compile the following files:\n"
-                    + "\n".join(str(path) for path in nodes_subset)
-                )
-
             subgraph = graph.subgraph(nodes_subset).copy()
             return CompilationUnit(subgraph, versions)
 
