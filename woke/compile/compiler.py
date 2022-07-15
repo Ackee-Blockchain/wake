@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import platform
+import shutil
 import time
 from collections import deque
 from itertools import chain
@@ -315,6 +316,11 @@ class SolidityCompiler:
             build_path = self.__config.project_root_path / ".woke-build"
             if not build_path.is_dir():
                 build_path.mkdir(parents=True, exist_ok=False)
+            tmp_path = build_path / "tmp"
+            if tmp_path.is_file():
+                tmp_path.unlink()
+            elif tmp_path.is_dir():
+                shutil.rmtree(tmp_path)
         else:
             build_path = None
 
@@ -404,44 +410,31 @@ class SolidityCompiler:
 
         return [(cu, out) for cu, out in zip(compilation_units, ret)]
 
-    """
-    When this func is called .woke-build/ should the following contents:
-      .woke-build/old-artifact-0,...,.woke-build/old-artifact-n      <- old artifacts
-      .woke-build/tmp                                                <- tmp_dir with new artifacts
-      .woke-build/build.json                                         <- old build info
-    This func manages removal of the old artifacts and also moves the new ones out
-    of the tmp/ directory.
-    This is neccesary because old artifacts can't be removed before new ones are
-    created and because we want to limit the amount of stored artifacts.
-    """
-
-    def __rename_and_remove_artifacts(self, build_path: Path):
+    @staticmethod
+    def __rename_and_remove_artifacts(build_path: Path):
+        """
+        When this func is called .woke-build/ should the following contents:
+          .woke-build/old-artifact-0,...,.woke-build/old-artifact-n      <- old artifacts
+          .woke-build/tmp                                                <- tmp_dir with new artifacts
+          .woke-build/build.json                                         <- old build info
+        This func manages removal of the old artifacts and also moves the new ones out
+        of the tmp/ directory.
+        This is neccesary because old artifacts can't be removed before new ones are
+        created and because we want to limit the amount of stored artifacts.
+        """
         for fl in build_path.iterdir():
             if fl.stem != "tmp" and fl.stem != "build.json":
                 if fl.is_dir():
-                    self.__remove_artifact_dir(fl)
+                    shutil.rmtree(fl)
                 else:
                     fl.unlink()
-        if build_path / "tmp" is None:
+        if not (build_path / "tmp").exists():
             raise ValueError("New artificats do not exist.")
         for fl in (build_path / "tmp").iterdir():
             p = Path(fl).absolute()
             parent_dir = p.parents[1]
             p.rename(parent_dir / p.name)
         (build_path / "tmp").rmdir()
-
-    """
-    Removes given artifacts directory. If another directory is contained in the path, the func
-    calls recursively itself.
-    """
-
-    def __remove_artifact_dir(self, path: Path):
-        for fl in path.iterdir():
-            if fl.is_dir():
-                self.__remove_artifact_dir(fl)
-                fl.rmdir()
-            else:
-                fl.unlink()
 
     async def __compile_unit(
         self,
