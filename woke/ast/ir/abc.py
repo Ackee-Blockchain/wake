@@ -26,7 +26,7 @@ class IrAbc(ABC):
             self._depth = self._parent.ast_tree_depth + 1
         else:
             self._depth = 0
-        self._cu_hash = init.cu.blake2b_digest
+        self._cu_hash = init.cu.hash
 
         self._reference_resolver = init.reference_resolver
         self._reference_resolver.register_node(self, solc_node.id, self._cu_hash)
