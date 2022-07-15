@@ -78,13 +78,13 @@ done
 
 if [ -z ${WOKE_HOOKS_RUN_ALL_TESTS+dummy} ]; then
     # WOKE_HOOKS_RUN_ALL_TESTS is unset
-    echo "running \`pytest . -m \"not slow\"\`"
-    pytest . -m "not slow";
+    echo "running \`pytest tests -m \"not slow\"\`"
+    pytest tests -m "not slow";
     check_last_command;
 else
     # WOKE_HOOKS_RUN_ALL_TESTS is set
-    echo "running \`pytest .\`"
-    pytest .;
+    echo "running \`pytest tests\`"
+    pytest tests;
     check_last_command;
 fi
 
