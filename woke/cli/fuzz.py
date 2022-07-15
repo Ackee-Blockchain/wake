@@ -36,6 +36,12 @@ def _get_module_name(path: Path, root: Path) -> str:
     default=False,
     help="Print one process output into console, run other in background.",
 )
+@click.option(
+    "--network",
+    type=str,
+    default="development",
+    help="Choose brownie dev chain. Default is 'development' for ganache",
+)
 @click.pass_context
 def run_fuzz(
     ctx: click.Context,
@@ -43,6 +49,7 @@ def run_fuzz(
     process_count: int,
     seeds: Tuple[str],
     passive: bool,
+    network: str,
 ) -> None:
     """Run Woke fuzzer."""
     config = WokeConfig(woke_root_path=ctx.obj["woke_root_path"])
@@ -102,4 +109,4 @@ def run_fuzz(
     for func in fuzz_functions:
         console.print("\n\n")
         console.print(f"Fuzzing '{func.__name__}' in '{func.__module__}'.")
-        fuzz(config, func, process_count, random_seeds, logs_dir, passive)
+        fuzz(config, func, process_count, random_seeds, logs_dir, passive, network)

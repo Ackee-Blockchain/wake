@@ -27,16 +27,16 @@ from woke.cli.console import console
 from woke.config import WokeConfig
 
 
-def _setup(port: int) -> None:
+def _setup(port: int, network_id: str) -> None:
     brownie.reverts = RevertContextManager
-    active_network = CONFIG.set_active_network("development")
+    active_network = CONFIG.set_active_network(network_id)
 
-    web3.connect(f"http://localhost:{port}")
-    cmd = "ganache-cli"
+    web3.connect(f"{active_network['host']}:{port}")
+
     cmd_settings = active_network["cmd_settings"]
     cmd_settings["port"] = port
 
-    rpc.launch(cmd, **cmd_settings)
+    rpc.launch(active_network["cmd"], **cmd_settings)
 
 
 def _attach_debugger() -> None:
@@ -60,9 +60,10 @@ def _run_core(
     random_seed: bytes,
     finished_event: multiprocessing.synchronize.Event,
     child_conn: multiprocessing.connection.Connection,
+    network_id: str,
 ):
     print(f"Using seed '{random_seed.hex()}' for process #{index}")
-    _setup(port)
+    _setup(port, network_id)
 
     project = brownie.project.load()
 
@@ -105,6 +106,7 @@ def _run(
     tee: bool,
     finished_event: multiprocessing.synchronize.Event,
     child_conn: multiprocessing.connection.Connection,
+    network_id: str,
 ):
     pickling_support.install()
     random.seed(random_seed)
@@ -116,12 +118,24 @@ def _run(
         if tee:
             with closing(Tee(log_file)):
                 _run_core(
-                    fuzz_test, index, port, random_seed, finished_event, child_conn
+                    fuzz_test,
+                    index,
+                    port,
+                    random_seed,
+                    finished_event,
+                    child_conn,
+                    network_id,
                 )
         else:
             with log_file.open("w") as f, redirect_stdout(f), redirect_stderr(f):
                 _run_core(
-                    fuzz_test, index, port, random_seed, finished_event, child_conn
+                    fuzz_test,
+                    index,
+                    port,
+                    random_seed,
+                    finished_event,
+                    child_conn,
+                    network_id,
                 )
     except Exception:
         child_conn.send(pickle.dumps(sys.exc_info()))
@@ -146,6 +160,7 @@ def fuzz(
     seeds: Iterable[bytes],
     logs_dir: Path,
     passive: bool,
+    network_id: str,
 ):
     random_seeds = list(seeds)
     if len(random_seeds) < process_count:
@@ -173,6 +188,7 @@ def fuzz(
                 passive and i == 0,
                 finished_event,
                 child_conn,
+                network_id,
             ),
         )
         processes[i] = (p, finished_event, parent_conn, child_conn)
