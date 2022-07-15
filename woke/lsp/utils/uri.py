@@ -1,11 +1,17 @@
+import os
 from pathlib import Path
 from urllib.parse import quote, unquote, urlparse
+from urllib.request import pathname2url, url2pathname
 
 
 def uri_to_path(uri: str) -> Path:
-    p = urlparse(unquote(uri))
-    return Path(p.path)
+    path = urlparse(unquote(uri)).path
+    path = url2pathname(path)
+    return Path(path)
 
 
 def path_to_uri(path: Path) -> str:
-    return "file://" + quote(str(path.resolve()))
+    if os.name == "nt":
+        return "file:" + pathname2url(str(path.resolve()))
+    else:
+        return "file://" + pathname2url(str(path.resolve()))
