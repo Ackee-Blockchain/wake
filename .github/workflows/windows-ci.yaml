@@ -23,5 +23,5 @@ jobs:
         python -m pip install -e ".[tests,dev,fuzzer]"
     - name: Test platform-dependent with pytest
       run: |
-        pytest . -m platform_dependent
+        pytest tests -m platform_dependent
 

@@ -3,6 +3,7 @@ target-version = ["py37"]
 
 [tool.pyright]
 include = ["**/*.py"]
+exclude = ["woke/examples"]
 pythonVersion = "3.7"
 pythonPlatform = "All"
 
