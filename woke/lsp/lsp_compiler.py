@@ -475,9 +475,7 @@ class LspCompiler:
                         continue
                     ast = AstSolc.parse_obj(raw_ast.ast)
 
-                    self.__ir_reference_resolver.index_nodes(
-                        ast, path, cu.blake2b_digest
-                    )
+                    self.__ir_reference_resolver.index_nodes(ast, path, cu.hash)
 
                     files_to_recompile.discard(path)
                     if (

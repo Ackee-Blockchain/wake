@@ -12,7 +12,7 @@ from woke.core.solidity_version import SolidityVersionRanges
 class CompilationUnit:
     __unit_graph: nx.DiGraph
     __version_ranges: SolidityVersionRanges
-    __blake2b_digest: bytes
+    __hash: bytes
     __source_unit_names_to_paths: Dict[str, Path]
 
     def __init__(self, unit_graph: nx.DiGraph, version_ranges: SolidityVersionRanges):
@@ -20,17 +20,14 @@ class CompilationUnit:
         self.__version_ranges = version_ranges
         self.__source_unit_names_to_paths = {}
 
-        sorted_nodes = sorted(
-            unit_graph, key=(lambda node: unit_graph.nodes[node]["source_unit_name"])
-        )
-        blake2 = BLAKE2b.new(digest_bits=256)
-
-        for node in sorted_nodes:
-            blake2.update(unit_graph.nodes[node]["hash"])
+        self.__hash = bytes([0] * 32)
+        for node in unit_graph.nodes:
+            self.__hash = bytes(
+                a ^ b for a, b in zip(self.__hash, unit_graph.nodes[node]["hash"])
+            )
             self.__source_unit_names_to_paths[
                 unit_graph.nodes[node]["source_unit_name"]
             ] = node
-        self.__blake2b_digest = blake2.digest()
 
     def __len__(self):
         return len(self.__unit_graph.nodes)
@@ -82,12 +79,8 @@ class CompilationUnit:
         return self.__version_ranges
 
     @property
-    def blake2b_digest(self) -> bytes:
-        return self.__blake2b_digest
-
-    @property
-    def blake2b_hexdigest(self) -> str:
-        return self.blake2b_digest.hex()
+    def hash(self) -> bytes:
+        return self.__hash
 
     @property
     def graph(self) -> nx.DiGraph:

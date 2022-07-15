@@ -280,7 +280,7 @@ class SolidityCompiler:
                 include_paths=sorted(self.__config.compiler.solc.include_paths),
                 settings=build_settings,
             )
-            units_info[unit.blake2b_hexdigest] = info
+            units_info[unit.hash.hex()] = info
 
         build_info = ProjectBuildInfo(compilation_units=units_info)
         with (build_path / "build.json").open("w") as f:
@@ -307,19 +307,18 @@ class SolidityCompiler:
             compilation_units = self.build_compilation_units_minimize(graph)
         build_settings = self.create_build_settings(output_types)
 
-        # sort compilation units by their BLAKE2b hexdigest
-        compilation_units.sort(key=lambda u: u.blake2b_hexdigest)
+        # sort compilation units by their hash
+        compilation_units.sort(key=lambda u: u.hash.hex())
+
         if write_artifacts:
             # prepare build dir
-            build_path = (
-                self.__config.project_root_path / ".woke-build" 
-            )
+            build_path = self.__config.project_root_path / ".woke-build"
             if not build_path.is_dir():
                 build_path.mkdir(parents=True, exist_ok=False)
         else:
             build_path = None
 
-        latest_build_path = self.__config.project_root_path / ".woke-build" 
+        latest_build_path = self.__config.project_root_path / ".woke-build"
         if reuse_latest_artifacts:
             try:
                 latest_build_info = ProjectBuildInfo.parse_file(
@@ -415,10 +414,8 @@ class SolidityCompiler:
     This is neccesary because old artifacts can't be removed before new ones are
     created and because we want to limit the amount of stored artifacts.
     """
-    def __rename_and_remove_artifacts(
-            self,
-            build_path: Path
-    ):
+
+    def __rename_and_remove_artifacts(self, build_path: Path):
         for fl in build_path.iterdir():
             if fl.stem != "tmp" and fl.stem != "build.json":
                 if fl.is_dir():
@@ -426,22 +423,19 @@ class SolidityCompiler:
                 else:
                     fl.unlink()
         if build_path / "tmp" is None:
-                raise ValueError("New artificats do not exist.")
+            raise ValueError("New artificats do not exist.")
         for fl in (build_path / "tmp").iterdir():
             p = Path(fl).absolute()
             parent_dir = p.parents[1]
             p.rename(parent_dir / p.name)
         (build_path / "tmp").rmdir()
 
-
     """
     Removes given artifacts directory. If another directory is contained in the path, the func
     calls recursively itself.
     """
-    def __remove_artifact_dir(
-            self,
-            path: Path
-    ):
+
+    def __remove_artifact_dir(self, path: Path):
         for fl in path.iterdir():
             if fl.is_dir():
                 self.__remove_artifact_dir(fl)
@@ -460,11 +454,10 @@ class SolidityCompiler:
         # try to reuse the latest build artifacts
         if (
             latest_build_info is not None
-            and compilation_unit.blake2b_hexdigest
-            in latest_build_info.compilation_units
+            and compilation_unit.hash.hex() in latest_build_info.compilation_units
         ):
             latest_unit_info = latest_build_info.compilation_units[
-                compilation_unit.blake2b_hexdigest
+                compilation_unit.hash.hex()
             ]
 
             if (
@@ -478,9 +471,7 @@ class SolidityCompiler:
             ):
                 try:
                     logger.info("Reusing the latest build artifacts.")
-                    latest_build_path = (
-                        self.__config.project_root_path / ".woke-build" 
-                    )
+                    latest_build_path = self.__config.project_root_path / ".woke-build"
                     sources = {}
                     for source, path in latest_unit_info.sources.items():
                         sources[source] = SolcOutputSourceInfo.parse_file(

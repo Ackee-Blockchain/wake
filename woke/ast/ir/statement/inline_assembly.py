@@ -30,7 +30,7 @@ class ExternalReference:
     ):
         self.__external_reference_model = external_reference_model
         self.__reference_resolver = init.reference_resolver
-        self.__cu_hash = init.cu.blake2b_digest
+        self.__cu_hash = init.cu.hash
         self.__file = init.file
 
         self.__referenced_declaration_id = external_reference_model.declaration
