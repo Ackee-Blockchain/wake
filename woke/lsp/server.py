@@ -625,21 +625,18 @@ class LspServer:
             )
 
     async def _initialized(self, params: InitializedParams) -> None:
-        async def _post_initialized():
-            code_config = await self.get_configuration()
-            assert isinstance(code_config, list)
-            assert len(code_config) == 1
-            assert isinstance(code_config[0], dict)
+        code_config = await self.get_configuration()
+        assert isinstance(code_config, list)
+        assert len(code_config) == 1
+        assert isinstance(code_config[0], dict)
 
-            await self._handle_config_change(code_config[0])
-            assert self.__workspace_config is not None
+        await self._handle_config_change(code_config[0])
+        assert self.__workspace_config is not None
 
-            self.create_task(self.__context.compiler.run(self.__workspace_config))
-            self.create_task(
-                diagnostics_loop(self, self.__context, self.__diagnostics_queue)
-            )
-
-        self.create_task(_post_initialized())
+        self.create_task(self.__context.compiler.run(self.__workspace_config))
+        self.create_task(
+            diagnostics_loop(self, self.__context, self.__diagnostics_queue)
+        )
 
     async def _workspace_did_change_configuration(
         self, params: DidChangeConfigurationParams
