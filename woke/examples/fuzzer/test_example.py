@@ -1,7 +1,21 @@
 import IPython
-from woke import Campaign
-from woke.fuzzer.decorators import flow, invariant, precondition, weight, ignore, max_times
-from woke.fuzzer.random import random_string, random_account, random_int, random_bool, random_bytes
+
+from woke.fuzzer import Campaign
+from woke.fuzzer.decorators import (
+    flow,
+    ignore,
+    invariant,
+    max_times,
+    precondition,
+    weight,
+)
+from woke.fuzzer.random import (
+    random_account,
+    random_bool,
+    random_bytes,
+    random_int,
+    random_string,
+)
 
 
 class TestingSequence:
