@@ -39,7 +39,7 @@ extras_require = dict(
 )
 
 setup(
-    name="woke",
+    name="abch-woke",
     description="Woke is a static analyzer and symbolic execution engine for Solidity.",
     url="https://github.com/Ackee-Blockchain/woke",
     author="Ackee Blockchain",
