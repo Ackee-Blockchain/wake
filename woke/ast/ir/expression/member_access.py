@@ -1,5 +1,6 @@
-from functools import partial
-from typing import Optional
+import re
+from functools import lru_cache, partial
+from typing import Optional, Tuple
 
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.declaration.abc import DeclarationAbc
@@ -9,6 +10,8 @@ from woke.ast.ir.expression.identifier import Identifier
 from woke.ast.ir.reference_resolver import CallbackParams
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import AstNodeId, SolcMemberAccess
+
+MEMBER_RE = re.compile(r"\s*.\s*(?P<member>.+)".encode("utf-8"))
 
 
 class MemberAccess(ExpressionAbc):
@@ -24,6 +27,9 @@ class MemberAccess(ExpressionAbc):
     ):
         super().__init__(init, member_access, parent)
         self.__expression = ExpressionAbc.from_ast(init, member_access.expression, self)
+        assert self.__expression.byte_location[0] == self.byte_location[0]
+        assert self.__expression.byte_location[1] < self.byte_location[1]
+
         self.__member_name = member_access.member_name
         self.__referenced_declaration_id = member_access.referenced_declaration
 
@@ -75,6 +81,18 @@ class MemberAccess(ExpressionAbc):
     @property
     def member_name(self) -> str:
         return self.__member_name
+
+    @property
+    @lru_cache(maxsize=None)
+    def member_byte_location(self) -> Tuple[int, int]:
+        relative_expression_end = (
+            self.__expression.byte_location[1] - self.byte_location[0]
+        )
+        match = MEMBER_RE.match(self._source[relative_expression_end:])
+        assert match
+        return self.__expression.byte_location[1] + match.start(
+            "member"
+        ), self.__expression.byte_location[1] + match.end("member")
 
     @property
     def referenced_declaration(self) -> Optional[DeclarationAbc]:

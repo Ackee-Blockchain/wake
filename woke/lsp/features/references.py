@@ -67,7 +67,10 @@ def _generate_references(
             Location(
                 uri=DocumentUri(path_to_uri(path)),
                 range=context.compiler.get_range_from_byte_offsets(
-                    path, reference.byte_location
+                    path,
+                    reference.member_byte_location
+                    if isinstance(reference, MemberAccess)
+                    else reference.byte_location,
                 ),
             )
         )
