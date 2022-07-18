@@ -254,6 +254,8 @@ class LspCompiler:
             ):
                 self.__discovered_files.add(path)
                 self.__force_compile_files.add(path)
+            elif change.text_document.text != self.get_file_content(path):
+                self.__force_compile_files.add(path)
         elif isinstance(change, DidCloseTextDocumentParams):
             path = uri_to_path(change.text_document.uri).resolve()
             self.__opened_files.pop(path)
