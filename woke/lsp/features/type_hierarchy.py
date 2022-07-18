@@ -11,6 +11,7 @@ from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
 from woke.ast.ir.expression.identifier import Identifier
 from woke.ast.ir.expression.member_access import MemberAccess
 from woke.ast.ir.meta.identifier_path import IdentifierPath
+from woke.ast.ir.statement.inline_assembly import InlineAssembly
 from woke.ast.ir.type_name.user_defined_type_name import UserDefinedTypeName
 from woke.ast.nodes import AstNodeId
 from woke.lsp.common_structures import (
@@ -162,11 +163,19 @@ async def prepare_type_hierarchy(
         if not position_within_range(params.position, name_location_range):
             return None
 
-    if isinstance(
-        node, (Identifier, IdentifierPath, MemberAccess, UserDefinedTypeName)
-    ):
+    if isinstance(node, (Identifier, MemberAccess)):
         node = node.referenced_declaration
-        logger.debug(f"Found referenced declaration {node}")
+    elif isinstance(node, (IdentifierPath, UserDefinedTypeName)):
+        part = node.identifier_path_part_at(byte_offset)
+        if part is None:
+            return None
+        node = part.referenced_declaration
+    elif isinstance(node, InlineAssembly):
+        external_references = node.external_references_at(byte_offset)
+        assert len(external_references) <= 1
+        if len(external_references) == 0:
+            return None
+        node = external_references[0].referenced_declaration
 
     if isinstance(
         node, (ContractDefinition, FunctionDefinition, ModifierDefinition)

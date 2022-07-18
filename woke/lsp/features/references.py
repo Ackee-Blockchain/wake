@@ -9,7 +9,7 @@ from woke.ast.ir.declaration.modifier_definition import ModifierDefinition
 from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
 from woke.ast.ir.expression.identifier import Identifier
 from woke.ast.ir.expression.member_access import MemberAccess
-from woke.ast.ir.meta.identifier_path import IdentifierPath
+from woke.ast.ir.meta.identifier_path import IdentifierPath, IdentifierPathPart
 from woke.ast.ir.statement.inline_assembly import ExternalReference, InlineAssembly
 from woke.ast.ir.type_name.user_defined_type_name import UserDefinedTypeName
 from woke.lsp.common_structures import (
@@ -52,9 +52,8 @@ def _generate_references(
     node_references: Iterable[
         Union[
             Identifier,
-            IdentifierPath,
+            IdentifierPathPart,
             MemberAccess,
-            UserDefinedTypeName,
             ExternalReference,
         ]
     ],
@@ -129,9 +128,7 @@ async def references(
             if not position_within_range(params.position, name_location_range):
                 return None
 
-        if isinstance(
-            node, (Identifier, IdentifierPath, UserDefinedTypeName, MemberAccess)
-        ):
+        if isinstance(node, (Identifier, MemberAccess)):
             referenced_declaration = node.referenced_declaration
             if referenced_declaration is None:
                 return None
@@ -146,6 +143,11 @@ async def references(
                 return None
             else:
                 node = referenced_declaration
+        elif isinstance(node, (IdentifierPath, UserDefinedTypeName)):
+            part = node.identifier_path_part_at(byte_offset)
+            if part is None:
+                return None
+            node = part.referenced_declaration
         elif isinstance(node, InlineAssembly):
             external_references = node.external_references_at(byte_offset)
             assert len(external_references) <= 1

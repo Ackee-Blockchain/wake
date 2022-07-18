@@ -5,9 +5,8 @@ from typing import TYPE_CHECKING, FrozenSet, Optional, Set, Tuple, Union
 
 if TYPE_CHECKING:
     from ..expression.identifier import Identifier
-    from ..meta.identifier_path import IdentifierPath
+    from ..meta.identifier_path import IdentifierPathPart
     from ..expression.member_access import MemberAccess
-    from ..type_name.user_defined_type_name import UserDefinedTypeName
     from ..statement.inline_assembly import ExternalReference
 
 from woke.ast.ir.abc import IrAbc
@@ -41,9 +40,8 @@ SolcDeclarationUnion = Union[
 if TYPE_CHECKING:
     ReferencingNodesUnion = Union[
         Identifier,
-        IdentifierPath,
+        IdentifierPathPart,
         MemberAccess,
-        UserDefinedTypeName,
         ExternalReference,
     ]
 
