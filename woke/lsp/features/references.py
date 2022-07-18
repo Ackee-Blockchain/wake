@@ -153,11 +153,10 @@ async def references(
                 return None
             node = part.referenced_declaration
         elif isinstance(node, InlineAssembly):
-            external_references = node.external_references_at(byte_offset)
-            assert len(external_references) <= 1
-            if len(external_references) == 0:
+            external_reference = node.external_reference_at(byte_offset)
+            if external_reference is None:
                 return None
-            node = external_references[0].referenced_declaration
+            node = external_reference.referenced_declaration
 
         if not isinstance(node, DeclarationAbc):
             return None
