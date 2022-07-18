@@ -38,14 +38,10 @@ class MemberAccess(ExpressionAbc):
     def __post_process(self, callback_params: CallbackParams):
         # workaround for enum value bug in Solidity versions prior to 0.8.2
         if (
-            isinstance(self.__expression, Identifier)
+            isinstance(self.__expression, (Identifier, MemberAccess))
             and self.__referenced_declaration_id is None
-            and self.__expression._referenced_declaration_id is not None
-            and self.__expression._referenced_declaration_id >= 0
         ):
-            referenced_declaration = self._reference_resolver.resolve_node(
-                self.__expression._referenced_declaration_id, self.__expression.cu_hash
-            )
+            referenced_declaration = self.__expression.referenced_declaration
             if isinstance(referenced_declaration, EnumDefinition):
                 for enum_value in referenced_declaration.values:
                     if enum_value.name == self.__member_name:
