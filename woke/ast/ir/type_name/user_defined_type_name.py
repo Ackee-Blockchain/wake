@@ -1,16 +1,19 @@
 from __future__ import annotations
 
-from functools import partial
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Tuple
 
-from woke.ast.ir.reference_resolver import CallbackParams
+from intervaltree import IntervalTree
 
 if TYPE_CHECKING:
     from woke.ast.ir.declaration.contract_definition import ContractDefinition
 
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.declaration.abc import DeclarationAbc
-from woke.ast.ir.meta.identifier_path import IdentifierPath
+from woke.ast.ir.meta.identifier_path import (
+    IDENTIFIER_RE,
+    IdentifierPath,
+    IdentifierPathPart,
+)
 from woke.ast.ir.type_name.abc import TypeNameAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import AstNodeId, SolcUserDefinedTypeName
@@ -24,6 +27,7 @@ class UserDefinedTypeName(TypeNameAbc):
     __contract_scope_id: Optional[AstNodeId]
     __name: Optional[str]
     __path_node: Optional[IdentifierPath]
+    __parts: Optional[IntervalTree]
 
     def __init__(
         self,
@@ -38,24 +42,27 @@ class UserDefinedTypeName(TypeNameAbc):
         self.__contract_scope_id = user_defined_type_name.contract_scope
         if user_defined_type_name.path_node is None:
             self.__path_node = None
+            matches = list(IDENTIFIER_RE.finditer(self._source))
+            groups_count = len(matches)
+            assert groups_count > 0
+
+            self.__parts = IntervalTree()
+            for i, match in enumerate(matches):
+                name = match.group(0).decode("utf-8")
+                start = self.byte_location[0] + match.start()
+                end = self.byte_location[0] + match.end()
+                self.__parts[start:end] = IdentifierPathPart(
+                    init,
+                    (start, end),
+                    name,
+                    self.__referenced_declaration_id,
+                    groups_count - i - 1,
+                )
         else:
             self.__path_node = IdentifierPath(
                 init, user_defined_type_name.path_node, self
             )
-        self._reference_resolver.register_post_process_callback(self.__post_process)
-
-    def __post_process(self, callback_params: CallbackParams):
-        if self.path_node is not None:
-            assert self.referenced_declaration == self.path_node.referenced_declaration
-        else:
-            referenced_declaration = self.referenced_declaration
-            referenced_declaration.register_reference(self)
-            self._reference_resolver.register_destroy_callback(
-                self.file, partial(self.__destroy, referenced_declaration)
-            )
-
-    def __destroy(self, referenced_declaration: DeclarationAbc) -> None:
-        referenced_declaration.unregister_reference(self)
+            self.__parts = None
 
     @property
     def parent(self) -> IrAbc:
@@ -64,6 +71,25 @@ class UserDefinedTypeName(TypeNameAbc):
     @property
     def name(self) -> Optional[str]:
         return self.__name
+
+    @property
+    def identifier_path_parts(self) -> Tuple[IdentifierPathPart, ...]:
+        if self.__path_node is not None:
+            return self.__path_node.identifier_path_parts
+
+        assert self.__parts is not None
+        return tuple(interval.data for interval in sorted(self.__parts))
+
+    def identifier_path_part_at(self, byte_offset: int) -> Optional[IdentifierPathPart]:
+        if self.__path_node is not None:
+            return self.__path_node.identifier_path_part_at(byte_offset)
+
+        assert self.__parts is not None
+        intervals = self.__parts.at(byte_offset)
+        assert len(intervals) <= 1
+        if len(intervals) == 0:
+            return None
+        return intervals.pop().data
 
     @property
     def referenced_declaration(self) -> DeclarationAbc:
