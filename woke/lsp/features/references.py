@@ -62,15 +62,17 @@ def _generate_references(
     refs = []
     for reference in node_references:
         path = reference.file
+        if isinstance(reference, MemberAccess):
+            location = reference.member_byte_location
+        elif isinstance(reference, ExternalReference):
+            location = reference.identifier_byte_location
+        else:
+            location = reference.byte_location
+
         refs.append(
             Location(
                 uri=DocumentUri(path_to_uri(path)),
-                range=context.compiler.get_range_from_byte_offsets(
-                    path,
-                    reference.member_byte_location
-                    if isinstance(reference, MemberAccess)
-                    else reference.byte_location,
-                ),
+                range=context.compiler.get_range_from_byte_offsets(path, location),
             )
         )
     return refs
