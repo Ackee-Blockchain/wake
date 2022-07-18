@@ -61,7 +61,9 @@ async def type_definition(
     )
     intervals = tree.at(byte_offset)
     nodes: List[IrAbc] = [interval.data for interval in intervals]
-    logger.debug(f"Found {len(nodes)} nodes at byte offset {byte_offset}:\n{nodes}")
+    logger.debug(
+        f"Found {len(nodes)} nodes at byte offset {byte_offset}:\n{sorted(nodes, key=lambda x: x.ast_tree_depth)}"
+    )
     if len(nodes) == 0:
         return None
 
