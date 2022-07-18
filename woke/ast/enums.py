@@ -167,6 +167,8 @@ class InlineAssemblySuffix(str, enum.Enum):
     SLOT = "slot"
     OFFSET = "offset"
     LENGTH = "length"
+    ADDRESS = "address"
+    SELECTOR = "selector"
 
 
 class InlineAssemblyFlag(str, enum.Enum):
