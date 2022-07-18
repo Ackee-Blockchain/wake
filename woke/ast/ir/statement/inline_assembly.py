@@ -1,4 +1,5 @@
-from functools import partial
+import re
+from functools import lru_cache, partial
 from pathlib import Path
 from typing import List, Optional, Tuple
 
@@ -12,12 +13,15 @@ from woke.ast.ir.statement.abc import StatementAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import AstNodeId, ExternalReferenceModel, SolcInlineAssembly
 
+IDENTIFIER_RE = re.compile(r"^[a-zA-Z$_][a-zA-Z0-9$_]*".encode("utf-8"))
+
 
 class ExternalReference:
     __external_reference_model: ExternalReferenceModel
     __reference_resolver: ReferenceResolver
     __cu_hash: bytes
     __file: Path
+    __source: bytes
 
     __referenced_declaration_id: AstNodeId
     __is_offset: bool
@@ -32,6 +36,7 @@ class ExternalReference:
         self.__reference_resolver = init.reference_resolver
         self.__cu_hash = init.cu.hash
         self.__file = init.file
+        self.__source = init.source[self.byte_location[0] : self.byte_location[1]]
 
         self.__referenced_declaration_id = external_reference_model.declaration
         assert self.__referenced_declaration_id >= 0
@@ -63,6 +68,15 @@ class ExternalReference:
             self.__external_reference_model.src.byte_offset
             + self.__external_reference_model.src.byte_length,
         )
+
+    @property
+    @lru_cache(maxsize=None)
+    def identifier_byte_location(self) -> Tuple[int, int]:
+        match = IDENTIFIER_RE.match(self.__source)
+        assert match
+        start = self.byte_location[0] + match.start()
+        end = self.byte_location[0] + match.end()
+        return start, end
 
     @property
     def referenced_declaration(self) -> DeclarationAbc:
