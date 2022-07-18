@@ -142,7 +142,9 @@ class InlineAssembly(StatementAbc):
     def external_references(self) -> Tuple[ExternalReference]:
         return tuple(interval.data for interval in self.__external_references)
 
-    def external_references_at(self, byte_offset: int) -> Tuple[ExternalReference]:
-        return tuple(
-            interval.data for interval in self.__external_references.at(byte_offset)
-        )
+    def external_reference_at(self, byte_offset: int) -> Optional[ExternalReference]:
+        intervals = self.__external_references.at(byte_offset)
+        assert len(intervals) <= 1
+        if len(intervals) == 0:
+            return None
+        return intervals.pop().data
