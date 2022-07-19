@@ -167,7 +167,20 @@ class VariableDeclaration(DeclarationAbc):
         return self.__constant
 
     @property
-    def mutability(self) -> Optional[Mutability]:
+    def mutability(self) -> Mutability:
+        if self.__mutability is None:
+            relative_type_end = (
+                self.__type_name.byte_location[1] - self.byte_location[0]
+            )
+            relative_name_start = self.name_location[0] - self.byte_location[0]
+            keywords_source = self._source[relative_type_end:relative_name_start]
+
+            if b"immutable" in keywords_source:
+                self.__mutability = Mutability.IMMUTABLE
+            elif self.__constant:
+                self.__mutability = Mutability.CONSTANT
+            else:
+                self.__mutability = Mutability.MUTABLE
         return self.__mutability
 
     @property
