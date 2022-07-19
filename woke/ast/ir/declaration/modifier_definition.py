@@ -1,8 +1,19 @@
 from __future__ import annotations
 
 import re
+from collections import deque
 from functools import partial
-from typing import TYPE_CHECKING, FrozenSet, List, Optional, Set, Tuple
+from typing import (
+    TYPE_CHECKING,
+    Deque,
+    FrozenSet,
+    Iterator,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+)
 
 from ..meta.override_specifier import OverrideSpecifier
 from ..reference_resolver import CallbackParams
@@ -10,6 +21,7 @@ from ..statement.block import Block
 from .abc import DeclarationAbc
 
 if TYPE_CHECKING:
+    from .abc import ReferencingNodesUnion
     from .contract_definition import ContractDefinition
 
 from woke.ast.enums import Visibility
@@ -85,6 +97,28 @@ class ModifierDefinition(DeclarationAbc):
         match = MODIFIER_RE.match(self._source)
         assert match
         return byte_start + match.start("name"), byte_start + match.end("name")
+
+    def get_all_references(
+        self, include_declarations: bool
+    ) -> Iterator[Union[DeclarationAbc, ReferencingNodesUnion]]:
+        processed_declarations: Set[ModifierDefinition] = {self}
+        declarations_queue: Deque[ModifierDefinition] = deque([self])
+
+        while declarations_queue:
+            declaration = declarations_queue.pop()
+            if include_declarations:
+                yield self
+            yield from declaration.references
+
+            if declaration.base_modifiers is not None:
+                for base_modifier in declaration.base_modifiers:
+                    if base_modifier not in processed_declarations:
+                        declarations_queue.append(base_modifier)
+                        processed_declarations.add(base_modifier)
+            for child_modifier in declaration.child_modifiers:
+                if child_modifier not in processed_declarations:
+                    declarations_queue.append(child_modifier)
+                    processed_declarations.add(child_modifier)
 
     @property
     def parent(self) -> ContractDefinition:
