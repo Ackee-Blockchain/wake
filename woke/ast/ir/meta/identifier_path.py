@@ -54,7 +54,15 @@ class IdentifierPathPart:
             referenced_declaration = referenced_declaration.parent
         assert isinstance(referenced_declaration, DeclarationAbc)
 
-        self.__referenced_declaration_id = AstNodeId(referenced_declaration.ast_node_id)
+        node_path_order = self.__reference_resolver.get_node_path_order(
+            AstNodeId(referenced_declaration.ast_node_id),
+            referenced_declaration.cu_hash,
+        )
+        this_cu_id = self.__reference_resolver.get_ast_id_from_cu_node_path_order(
+            node_path_order, self.__cu_hash
+        )
+
+        self.__referenced_declaration_id = this_cu_id
         referenced_declaration.register_reference(self)
         self.__reference_resolver.register_destroy_callback(
             self.file, partial(self.__destroy, referenced_declaration)

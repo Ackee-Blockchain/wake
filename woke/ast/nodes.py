@@ -268,7 +268,7 @@ class AstNodeId(int):
         return v
 
     def __repr__(self):
-        return f"AstNodeId({self})"
+        return f"AstNodeId({int(self)})"
 
 
 @dataclass
