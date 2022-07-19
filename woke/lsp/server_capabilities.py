@@ -13,6 +13,7 @@ from .features.implementation import (
     ImplementationRegistrationOptions,
 )
 from .features.references import ReferenceOptions
+from .features.rename import RenameOptions
 from .features.type_definition import (
     TypeDefinitionOptions,
     TypeDefinitionRegistrationOptions,
@@ -130,6 +131,7 @@ class ServerCapabilities(LspModel):
         Union[bool, TypeDefinitionOptions, TypeDefinitionRegistrationOptions]
     ] = None
     code_lens_provider: Optional[CodeLensOptions] = None
+    rename_provider: Optional[Union[bool, RenameOptions]] = None
     """
     completion_provider: Optional[CompletionOptions]
     hover_provider: Optional[Union[bool, HoverOptions]]
@@ -141,7 +143,6 @@ class ServerCapabilities(LspModel):
     document_formatting_provider: Optional[Union[bool, DocumentFormattingOptions]]
     document_range_formatting_provider: Optional[Union[bool, DocumentRangeFormattingOptions]]
     document_on_type_formatting_provider: Optional[DocumentOnTypeFormattingOptions]
-    rename_provider: Optional[Union[bool, RenameOptions]]
     folding_range_provider: Optional[Union[bool, FoldingRangeOptions, FoldingRangeRegistrationOptions]]
     execute_command_rovider: Optional[ExecuteCommandOptions]
     selection_range_provider: Optional[Union[bool, SelectionRangeOptions, SelectionRangeRegistrationOptions]]
