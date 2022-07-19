@@ -6,7 +6,18 @@ import re
 import threading
 from collections import deque
 from pathlib import Path, PurePath
-from typing import TYPE_CHECKING, AbstractSet, Dict, Iterable, List, Set, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    AbstractSet,
+    Dict,
+    Iterable,
+    List,
+    NamedTuple,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+)
 
 from woke.compile.exceptions import CompilationError
 
@@ -76,6 +87,11 @@ def _out_edge_bfs(graph: nx.DiGraph, start: Iterable[Path], out: Set[Path]) -> N
                 queue.append(to)
 
 
+class VersionedFile(NamedTuple):
+    text: str
+    version: Optional[int]
+
+
 class LspCompiler:
     __config: WokeConfig
     __svm: SolcVersionManager
@@ -84,11 +100,11 @@ class LspCompiler:
     __diagnostic_queue: asyncio.Queue
     __discovered_files: Set[Path]
     __deleted_files: Set[Path]
-    __opened_files: Dict[Path, str]
+    __opened_files: Dict[Path, VersionedFile]
     __modified_files: Set[Path]
     __force_compile_files: Set[Path]
     __compiler: SolidityCompiler
-    __output_contents: Dict[Path, str]
+    __output_contents: Dict[Path, VersionedFile]
     __interval_trees: Dict[Path, IntervalTree]
     __source_units: Dict[Path, SourceUnit]
     __line_indexes: Dict[Path, List[Tuple[bytes, int]]]
@@ -148,23 +164,20 @@ class LspCompiler:
             DeleteFilesParams,
         ],
     ) -> None:
-        if not isinstance(
-            change,
-            (CreateFilesParams, DidOpenTextDocumentParams, DidCloseTextDocumentParams),
-        ):
-            self.output_ready.clear()
-
+        self.output_ready.clear()
         await self.__file_changes_queue.put(change)
 
     async def force_recompile(self) -> None:
         self.__output_ready.clear()
         await self.__file_changes_queue.put(None)
 
-    def get_file_content(self, file: Union[Path, str]) -> str:
+    def get_compiled_file(self, file: Union[Path, str]) -> VersionedFile:
         if isinstance(file, str):
             file = uri_to_path(file)
         if file not in self.__output_contents:
-            self.__output_contents[file] = file.read_bytes().decode(encoding="utf-8")
+            self.__output_contents[file] = VersionedFile(
+                file.read_bytes().decode(encoding="utf-8"), None
+            )
         return self.__output_contents[file]
 
     def get_line_pos_from_byte_offset(
@@ -245,7 +258,9 @@ class LspCompiler:
                 self.__discovered_files.discard(path)
         elif isinstance(change, DidOpenTextDocumentParams):
             path = uri_to_path(change.text_document.uri).resolve()
-            self.__opened_files[path] = change.text_document.text
+            self.__opened_files[path] = VersionedFile(
+                change.text_document.text, change.text_document.version
+            )
             if (
                 path not in self.__discovered_files
                 and not ({"node_modules", ".woke-build"} & set(path.parts))
@@ -254,11 +269,13 @@ class LspCompiler:
             ):
                 self.__discovered_files.add(path)
                 self.__force_compile_files.add(path)
-            elif change.text_document.text != self.get_file_content(path):
+            elif change.text_document.text != self.get_compiled_file(path).text:
                 self.__force_compile_files.add(path)
+            else:
+                self.__output_contents[path] = self.__opened_files[path]
+
         elif isinstance(change, DidCloseTextDocumentParams):
-            path = uri_to_path(change.text_document.uri).resolve()
-            self.__opened_files.pop(path)
+            pass
         elif isinstance(change, DidChangeTextDocumentParams):
             path = uri_to_path(change.text_document.uri).resolve()
             self.__modified_files.add(path)
@@ -269,7 +286,7 @@ class LspCompiler:
 
                 # str.splitlines() removes empty lines => cannot be used
                 # str.split() removes separators => cannot be used
-                tmp_lines = re.split(r"(\r?\n)", self.__opened_files[path])
+                tmp_lines = re.split(r"(\r?\n)", self.__opened_files[path].text)
                 tmp_lines2: List[str] = []
                 for line in tmp_lines:
                     if line in {"\r\n", "\n"}:
@@ -298,8 +315,9 @@ class LspCompiler:
                     for i in range(start.line + 1, end.line):
                         lines[i] = bytearray(b"")
 
-                self.__opened_files[path] = "".join(
-                    line.decode(ENCODING) for line in lines
+                self.__opened_files[path] = VersionedFile(
+                    "".join(line.decode(ENCODING) for line in lines),
+                    change.text_document.version,
                 )
         else:
             raise Exception("Unknown change type")
@@ -311,11 +329,15 @@ class LspCompiler:
     ) -> None:
         if full_compile:
             graph = self.__compiler.build_graph(
-                self.__discovered_files, self.__opened_files, True
+                self.__discovered_files,
+                {path: info.text for path, info in self.__opened_files.items()},
+                True,
             )
         else:
             graph = self.__compiler.build_graph(
-                files_to_compile, self.__opened_files, True
+                files_to_compile,
+                {path: info.text for path, info in self.__opened_files.items()},
+                True,
             )
 
         try:
@@ -493,7 +515,7 @@ class LspCompiler:
                     interval_tree = IntervalTree()
                     init = IrInitTuple(
                         path,
-                        self.get_file_content(path).encode("utf-8"),
+                        self.get_compiled_file(path).text.encode("utf-8"),
                         cu,
                         interval_tree,
                         self.__ir_reference_resolver,
@@ -574,11 +596,11 @@ class LspCompiler:
                 self.__modified_files.clear()
                 self.__deleted_files.clear()
 
-                if self.__file_changes_queue.empty():
-                    self.output_ready.set()
+            if self.__file_changes_queue.empty():
+                self.output_ready.set()
 
     def __setup_line_index(self, file: Path):
-        content = self.get_file_content(file)
+        content = self.get_compiled_file(file).text
         tmp_lines = re.split(r"(\r?\n)", content)
         lines: List[str] = []
         for line in tmp_lines:

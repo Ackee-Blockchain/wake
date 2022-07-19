@@ -1,5 +1,5 @@
 from enum import Enum, IntEnum
-from typing import Any, List, NewType, Optional, Union
+from typing import Any, Dict, List, NewType, Optional, Union
 
 from .lsp_data_model import LspModel
 
@@ -196,7 +196,7 @@ class ChangeAnnotation(LspModel):
 class AnnotatedTextEdit(TextEdit):
     annotation_id: ChangeAnnotationIdentifier
     """
-    Thea actual annotation identifier.
+    The actual annotation identifier.
     """
 
 
@@ -360,19 +360,39 @@ class DeleteFile(LspModel):
 
 
 class WorkspaceEdit(LspModel):
+    changes: Optional[Dict[DocumentUri, List[TextEdit]]] = None
     """
-    :param changes: Holds changes to existing resources.
-
-    :param document_changes: Depending on the client capability `workspace.workspaceEdit.resourceOperations`
-        document changes are either an array of `TextDocumentEdit`s to express changes to n different text documents
-        where each text document edit addresses a specific version of a text document.
-        Or it can contain above `TextDocumentEdit`s mixed with create, rename and delete file / folder operations.
-
-    :param change_annotations: A map of change annotations that can be referenced in `AnnotatedTextEdit`s or create,
-        rename and delete file / folder operations.
+    Holds changes to existing resource.
     """
+    document_changes: Optional[
+        List[Union[TextDocumentEdit, CreateFile, RenameFile, DeleteFile]]
+    ] = None
+    """
+    Depending on the client capability
+    `workspace.workspaceEdit.resourceOperations` document changes are either
+    an array of `TextDocumentEdit`s to express changes to n different text
+    documents where each text document edit applies to a specific version of
+    a text document. Or it can contain above `TextDocumentEdit`s mixed with
+    create, rename and delete file / folder operations.
 
-    # TODO
+    Whether a client supports versioned document edits is expressed via
+    `workspace.workspaceEdit.documentChanges` client capability.
+
+    If a client neither supports `documentChanges` nor
+    `workspace.workspaceEdit.resourceOperations` then only plain `TextEdit`s
+    using the `changes` property are supported.
+    """
+    change_annotations: Optional[Dict[str, ChangeAnnotation]] = None
+    """
+    A map of change annotations that can be referenced in
+    `AnnotatedTextEdit`s or create, rename, delete file / folder
+    operations.
+
+    Whether clients honor this property depends on the client capability
+    `workspace.changeAnnotationSupport`.
+
+    @since 3.16.0
+    """
 
 
 class ResourceOperationKind(Enum):

@@ -64,6 +64,13 @@ from .features.document_link import (
 from .features.document_symbol import DocumentSymbolParams, document_symbol
 from .features.implementation import ImplementationParams, implementation
 from .features.references import ReferenceParams, references
+from .features.rename import (
+    PrepareRenameParams,
+    RenameOptions,
+    RenameParams,
+    prepare_rename,
+    rename,
+)
 from .features.type_definition import TypeDefinitionParams, type_definition
 from .features.type_hierarchy import (
     TypeHierarchyPrepareParams,
@@ -178,6 +185,14 @@ class LspServer:
             RequestMethodEnum.CODE_LENS: (
                 partial(code_lens, self.__context),
                 CodeLensParams,
+            ),
+            RequestMethodEnum.PREPARE_RENAME: (
+                partial(prepare_rename, self.__context),
+                PrepareRenameParams,
+            ),
+            RequestMethodEnum.RENAME: (
+                partial(rename, self.__context),
+                RenameParams,
             ),
         }
 
@@ -534,6 +549,9 @@ class LspServer:
             implementation_provider=True,
             code_lens_provider=CodeLensOptions(
                 resolve_provider=False,
+            ),
+            rename_provider=RenameOptions(
+                prepare_provider=True,
             ),
         )
         return InitializeResult(capabilities=server_capabilities, server_info=None)
