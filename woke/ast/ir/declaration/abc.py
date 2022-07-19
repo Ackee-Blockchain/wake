@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import TYPE_CHECKING, FrozenSet, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, FrozenSet, Iterator, Optional, Set, Tuple, Union
 
 if TYPE_CHECKING:
     from ..expression.identifier import Identifier
@@ -71,6 +71,13 @@ class DeclarationAbc(IrAbc):
 
     def unregister_reference(self, reference: ReferencingNodesUnion):
         self._references.remove(reference)
+
+    def get_all_references(
+        self, include_declarations: bool
+    ) -> Iterator[Union[DeclarationAbc, ReferencingNodesUnion]]:
+        if include_declarations:
+            yield self
+        yield from self.references
 
     @abstractmethod
     def _parse_name_location(self) -> Tuple[int, int]:

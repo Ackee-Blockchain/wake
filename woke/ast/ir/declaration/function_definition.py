@@ -2,8 +2,19 @@ from __future__ import annotations
 
 import logging
 import re
+from collections import deque
 from functools import lru_cache, partial
-from typing import TYPE_CHECKING, FrozenSet, List, Optional, Set, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Deque,
+    FrozenSet,
+    Iterator,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+)
 
 from ..meta.modifier_invocation import ModifierInvocation
 from ..meta.override_specifier import OverrideSpecifier
@@ -12,6 +23,7 @@ from ..statement.block import Block
 from .abc import DeclarationAbc
 
 if TYPE_CHECKING:
+    from .abc import ReferencingNodesUnion
     from .contract_definition import ContractDefinition
     from .variable_declaration import VariableDeclaration
     from ..meta.source_unit import SourceUnit
@@ -117,6 +129,38 @@ class FunctionDefinition(DeclarationAbc):
         byte_start = self._ast_node.src.byte_offset
         match = next(match for match in matches if match)
         return byte_start + match.start("name"), byte_start + match.end("name")
+
+    def get_all_references(
+        self, include_declarations: bool
+    ) -> Iterator[Union[DeclarationAbc, ReferencingNodesUnion]]:
+        from .variable_declaration import VariableDeclaration
+
+        processed_declarations: Set[Union[FunctionDefinition, VariableDeclaration]] = {
+            self
+        }
+        declarations_queue: Deque[
+            Union[FunctionDefinition, VariableDeclaration]
+        ] = deque([self])
+
+        while declarations_queue:
+            declaration = declarations_queue.pop()
+            if include_declarations:
+                yield self
+            yield from declaration.references
+
+            if (
+                isinstance(declaration, (FunctionDefinition, VariableDeclaration))
+                and declaration.base_functions is not None
+            ):
+                for base_function in declaration.base_functions:
+                    if base_function not in processed_declarations:
+                        declarations_queue.append(base_function)
+                        processed_declarations.add(base_function)
+            if isinstance(declaration, FunctionDefinition):
+                for child_function in declaration.child_functions:
+                    if child_function not in processed_declarations:
+                        declarations_queue.append(child_function)
+                        processed_declarations.add(child_function)
 
     @property
     def parent(self) -> Union[ContractDefinition, SourceUnit]:
