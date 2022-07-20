@@ -401,7 +401,7 @@ class SolidityCompiler:
                 raise ValueError("Build path is not set.")
             self.__rename_and_remove_artifacts(build_path)
             self.__write_global_artifacts(
-                build_path, build_settings, ret, compilation_units
+                build_path, build_settings, ret, compilation_units  # type: ignore
             )
 
         return [(cu, out) for cu, out in zip(compilation_units, ret)]
