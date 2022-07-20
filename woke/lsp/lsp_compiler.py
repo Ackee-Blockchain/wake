@@ -9,6 +9,7 @@ from pathlib import Path, PurePath
 from typing import (
     TYPE_CHECKING,
     AbstractSet,
+    Deque,
     Dict,
     Iterable,
     List,
@@ -74,17 +75,21 @@ def _binary_search(lines: List[Tuple[bytes, int]], x: int) -> int:
     return l - 1
 
 
-def _out_edge_bfs(graph: nx.DiGraph, start: Iterable[Path], out: Set[Path]) -> None:
-    queue = deque(start)
+def _out_edge_bfs(cu: CompilationUnit, start: Iterable[Path], out: Set[Path]) -> None:
+    processed: Set[PurePath] = set()
+    for path in start:
+        processed.update(cu.path_to_source_unit_names(path))
     out.update(start)
 
+    queue: Deque[PurePath] = deque(processed)
     while len(queue):
         node = queue.pop()
-        for out_edge in graph.out_edges(node):
+        for out_edge in cu.graph.out_edges(node):
             from_, to = out_edge
-            if to not in out:
-                out.add(to)
+            if to not in processed:
+                processed.add(to)
                 queue.append(to)
+                out.add(cu.source_unit_name_to_path(to))
 
 
 class VersionedFile(NamedTuple):
@@ -480,11 +485,11 @@ class LspCompiler:
                 else:
                     errors_without_location.add(error)
 
-            _out_edge_bfs(cu.graph, errored_files, errored_files)
+            _out_edge_bfs(cu, errored_files, errored_files)
 
             # files requested to be compiled and files that import these files (even indirectly)
             recompiled_files: Set[Path] = set()
-            _out_edge_bfs(cu.graph, files_to_compile & cu.files, recompiled_files)
+            _out_edge_bfs(cu, files_to_compile & cu.files, recompiled_files)
 
             for file in errored_files:
                 files_to_recompile.discard(file)
@@ -571,7 +576,9 @@ class LspCompiler:
 
         # perform initial compilation
         await self.__compile(self.__discovered_files)
-        self.output_ready.set()
+
+        if self.__file_changes_queue.empty():
+            self.output_ready.set()
 
         while True:
             change = await self.__file_changes_queue.get()

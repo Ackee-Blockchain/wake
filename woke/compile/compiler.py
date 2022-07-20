@@ -98,8 +98,8 @@ class SolidityCompiler:
                     content, ignore_errors
                 )
             graph.add_node(
-                path,
-                source_unit_name=source_unit_name,
+                source_unit_name,
+                path=path,
                 versions=versions,
                 hash=h,
                 content=content,
@@ -117,7 +117,9 @@ class SolidityCompiler:
                     ).resolve(strict=True)
                 except (FileNotFoundError, CompilationResolveError):
                     if ignore_errors:
-                        graph.nodes[path]["unresolved_imports"].add(import_unit_name)
+                        graph.nodes[source_unit_name]["unresolved_imports"].add(
+                            import_unit_name
+                        )
                         continue
                     raise
 
@@ -127,8 +129,7 @@ class SolidityCompiler:
                         raise ValueError(
                             f"Same source unit name `{import_unit_name}` for multiple source files:\n{import_path}\n{other_path}"
                         )
-
-                if import_path not in graph.nodes:
+                else:
                     source_units_queue.append(
                         (
                             import_unit_name,
@@ -136,8 +137,7 @@ class SolidityCompiler:
                             modified_files.get(import_path, None),
                         )
                     )
-
-                graph.add_edge(import_path, path)
+                graph.add_edge(import_unit_name, source_unit_name)
         return graph
 
     @staticmethod
@@ -147,10 +147,10 @@ class SolidityCompiler:
         """
 
         def __build_compilation_unit(
-            graph: nx.DiGraph, start: Iterable[Path]
+            graph: nx.DiGraph, start: Iterable[PurePath]
         ) -> CompilationUnit:
             nodes_subset = set()
-            nodes_queue: deque[Path] = deque(start)
+            nodes_queue: deque[PurePath] = deque(start)
             versions: SolidityVersionRanges = SolidityVersionRanges(
                 [SolidityVersionRange(None, None, None, None)]
             )
@@ -528,11 +528,11 @@ class SolidityCompiler:
         files = {}
         # Dict[source_unit_name: PurePath, content: str]
         sources = {}
-        for node, data in compilation_unit.graph.nodes.items():
-            source_unit_name = data["source_unit_name"]
+        for source_unit_name, data in compilation_unit.graph.nodes.items():
+            path = data["path"]
             content = data["content"]
             if content is None:
-                files[source_unit_name] = node
+                files[source_unit_name] = path
             else:
                 sources[source_unit_name] = content
 
