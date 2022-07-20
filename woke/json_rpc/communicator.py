@@ -99,3 +99,28 @@ class JsonRpcCommunicator:
         )
         response = JsonRpcResponseEthGetStorageAt.parse_raw(text)
         return response.result
+
+    async def debug_trace_transaction(
+        self,
+        trans_hash: str,
+        disable_storage: bool = False,
+        disable_memory: bool = False,
+        disable_stack: bool = False,
+        tracer: str = "",
+        timeout: int = 5,
+    ) -> JsonRpcTransactionTrace:
+        """Returns the transaction trace object for a given transaction-"""
+        text = await self.__send_request(
+            "debug_traceTransaction",
+            [
+                trans_hash,
+                disable_storage,
+                disable_memory,
+                disable_stack,
+                tracer,
+                timeout,
+            ],
+        )
+
+        response = JsonRpcResponseDebugTraceTransaction.parse_raw(text)
+        return response.result

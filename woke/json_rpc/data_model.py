@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel, Extra, Field, validator
 
@@ -120,3 +120,26 @@ class JsonRpcResponseEthGetCode(JsonRpcResponse):
 
 class JsonRpcResponseEthGetStorageAt(JsonRpcResponse):
     result: str
+
+
+class JsonRpcStructLog(JsonRpcModel):
+    depth: int
+    error: str
+    gas: int
+    gas_cost: int
+    memory: List[str]
+    op: str
+    pc: int
+    stack: List[str]
+    storage: Dict[str, str]
+
+
+class JsonRpcTransactionTrace(JsonRpcModel):
+    gas: int
+    struct_logs: List[JsonRpcStructLog]
+    return_value: Optional[str]
+    storage: Dict[int, str]
+
+
+class JsonRpcResponseDebugTraceTransaction(JsonRpcResponse):
+    result: JsonRpcTransactionTrace
