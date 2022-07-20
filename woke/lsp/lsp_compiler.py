@@ -49,6 +49,8 @@ from .common_structures import (
     CreateFilesParams,
     DeleteFile,
     DeleteFilesParams,
+    Diagnostic,
+    DiagnosticSeverity,
     MessageType,
     Position,
     Range,
@@ -451,7 +453,7 @@ class LspCompiler:
             await self.__server.log_message(str(e), MessageType.ERROR)
             return
 
-        errors_per_file: Dict[Path, List[SolcOutputError]] = {}
+        errors_per_file: Dict[Path, Set[Diagnostic]] = {}
         errors_without_location: Set[SolcOutputError] = set()
         files_to_recompile = set(files_to_compile)
         processed_files: Set[Path] = set()
@@ -465,7 +467,7 @@ class LspCompiler:
         for cu_index, (cu, solc_output) in enumerate(zip(compilation_units, ret)):
             for file in cu.files:
                 if file not in errors_per_file:
-                    errors_per_file[file] = []
+                    errors_per_file[file] = set()
                 if file in self.__line_indexes:
                     self.__line_indexes.pop(file)
                 if file in self.__opened_files:
@@ -478,7 +480,9 @@ class LspCompiler:
                     path = cu.source_unit_name_to_path(
                         PurePath(error.source_location.file)
                     )
-                    errors_per_file[path].append(error)
+                    errors_per_file[path].add(
+                        self.__solc_error_to_diagnostic(error, path)
+                    )
 
                     if error.severity == SolcOutputErrorSeverityEnum.ERROR:
                         errored_files.add(path)
@@ -624,3 +628,31 @@ class LspCompiler:
             encoded_lines.append((encoded_line, prefix_sum))
             prefix_sum += len(encoded_line)
         self.__line_indexes[file] = encoded_lines
+
+    def __solc_error_to_diagnostic(
+        self, error: SolcOutputError, path: Path
+    ) -> Diagnostic:
+        assert error.source_location is not None
+        if error.severity == SolcOutputErrorSeverityEnum.ERROR:
+            severity = DiagnosticSeverity.ERROR
+        elif error.severity == SolcOutputErrorSeverityEnum.WARNING:
+            severity = DiagnosticSeverity.WARNING
+        else:
+            severity = DiagnosticSeverity.INFORMATION
+
+        if error.source_location.start >= 0 and error.source_location.end >= 0:
+            range_ = self.get_range_from_byte_offsets(
+                path, (error.source_location.start, error.source_location.end)
+            )
+        else:
+            range_ = Range(
+                start=Position(line=0, character=0),
+                end=Position(line=0, character=0),
+            )
+
+        return Diagnostic(
+            range=range_,
+            severity=severity,
+            code=error.error_code,
+            message=error.message,
+        )

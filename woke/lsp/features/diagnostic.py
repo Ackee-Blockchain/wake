@@ -46,42 +46,10 @@ async def diagnostics_loop(
     server: LspServer, context: LspContext, queue: asyncio.Queue
 ):
     while True:
-        errors: Tuple[Path, List[SolcOutputError]] = await queue.get()
-
-        diagnostics = []
-        file = errors[0]
-        for error in errors[1]:
-            assert error.source_location is not None
-            if error.source_location.start >= 0 and error.source_location.end >= 0:
-                start = error.source_location.start
-                end = error.source_location.end
-                range_ = context.compiler.get_range_from_byte_offsets(
-                    file, (start, end)
-                )
-            else:
-                range_ = Range(
-                    start=Position(line=0, character=0),
-                    end=Position(line=0, character=0),
-                )
-
-            if error.severity == SolcOutputErrorSeverityEnum.ERROR:
-                severity = DiagnosticSeverity.ERROR
-            elif error.severity == SolcOutputErrorSeverityEnum.WARNING:
-                severity = DiagnosticSeverity.WARNING
-            elif error.severity == SolcOutputErrorSeverityEnum.INFO:
-                severity = DiagnosticSeverity.INFORMATION
-            else:
-                assert False, "Unexpected solc output error severity"
-
-            diagnostic = Diagnostic(
-                range=range_,
-                severity=severity,
-                message=error.message,
-            )
-            diagnostics.append(diagnostic)
+        file, diagnostics = await queue.get()
 
         params = PublishDiagnosticsParams(
             uri=DocumentUri(path_to_uri(file)),
-            diagnostics=diagnostics,
+            diagnostics=list(diagnostics),
         )
         await server.send_notification(RequestMethodEnum.PUBLISH_DIAGNOSTICS, params)
