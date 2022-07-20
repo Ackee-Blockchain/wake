@@ -1,5 +1,5 @@
 from enum import Enum, IntEnum
-from typing import Any, Dict, List, NewType, Optional, Union
+from typing import Any, Dict, List, NewType, Optional, Tuple, Union
 
 from .lsp_data_model import LspModel
 
@@ -31,6 +31,14 @@ class Position(LspModel):
     Character offset on a line in a document (zero-based).between the `character` and `character + 1`.
     """
 
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return (self.line, self.character) == (other.line, other.character)
+        return NotImplemented
+
+    def __hash__(self):
+        return hash((self.line, self.character))
+
 
 class Range(LspModel):
     start: Position
@@ -42,6 +50,14 @@ class Range(LspModel):
     The range's end position.
     """
 
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return (self.start, self.end) == (other.start, other.end)
+        return NotImplemented
+
+    def __hash__(self):
+        return hash((self.start, self.end))
+
 
 class Location(LspModel):
     """
@@ -50,6 +66,14 @@ class Location(LspModel):
 
     uri: DocumentUri
     range: Range
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return (self.uri, self.range) == (other.uri, other.range)
+        return NotImplemented
+
+    def __hash__(self):
+        return hash((self.uri, self.range))
 
 
 class LocationLink(LspModel):
@@ -102,12 +126,28 @@ class DiagnosticRelatedInformation(LspModel):
     The message of this related diagnostic information.
     """
 
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return (self.location, self.message) == (other.location, other.message)
+        return NotImplemented
+
+    def __hash__(self):
+        return hash((self.location, self.message))
+
 
 class CodeDescription(LspModel):
     href: URI
     """
     URI to open with more info.
     """
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.href == other.href
+        return NotImplemented
+
+    def __hash__(self):
+        return hash(self.href)
 
 
 class Diagnostic(LspModel):
@@ -149,6 +189,29 @@ class Diagnostic(LspModel):
     A data entry field that is preserved between
     a `textDocument/publishDiagnostics` notification and `textDocument/codeAction` request.
     """
+
+    def __members(self) -> Tuple:
+        return (
+            self.range,
+            self.severity,
+            self.code,
+            self.code_description,
+            self.source,
+            self.message,
+            frozenset(self.tags) if self.tags is not None else None,
+            frozenset(self.related_information)
+            if self.related_information is not None
+            else None,
+            self.data,
+        )
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.__members() == other.__members()
+        return NotImplemented
+
+    def __hash__(self):
+        return hash(self.__members())
 
 
 class Command(LspModel):
