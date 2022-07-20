@@ -154,21 +154,19 @@ class ContractDefinition(DeclarationAbc):
             ).encode("utf-8")
         )
 
-        byte_start = self._ast_node.src.byte_offset
-        contract_match = CONTRACT_RE.match(self._source)
-        interface_match = INTERFACE_RE.match(self._source)
-        library_match = LIBRARY_RE.match(self._source)
-        assert contract_match or interface_match or library_match
-        if contract_match:
-            return byte_start + contract_match.start(
-                "name"
-            ), byte_start + contract_match.end("name")
-        elif interface_match:
-            return byte_start + interface_match.start(
-                "name"
-            ), byte_start + interface_match.end("name")
+        if self.kind == ContractKind.CONTRACT:
+            match = CONTRACT_RE.match(self._source)
+        elif self.kind == ContractKind.INTERFACE:
+            match = INTERFACE_RE.match(self._source)
+        elif self.kind == ContractKind.LIBRARY:
+            match = LIBRARY_RE.match(self._source)
         else:
-            return byte_start + library_match.start("name"), byte_start + library_match.end("name")  # type: ignore
+            raise ValueError(f"Unknown contract kind: {self.kind}")
+        assert match
+
+        return self.byte_location[0] + match.start("name"), self.byte_location[
+            0
+        ] + match.end("name")
 
     @property
     def parent(self) -> SourceUnit:
