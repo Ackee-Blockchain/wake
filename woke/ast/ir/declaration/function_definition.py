@@ -145,7 +145,7 @@ class FunctionDefinition(DeclarationAbc):
         while declarations_queue:
             declaration = declarations_queue.pop()
             if include_declarations:
-                yield self
+                yield declaration
             yield from declaration.references
 
             if (
