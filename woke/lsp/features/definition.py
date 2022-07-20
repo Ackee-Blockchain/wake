@@ -126,7 +126,7 @@ async def definition(
                     )
         if isinstance(node, FunctionDefinition):
             for child_function in node.child_functions:
-                if isinstance(node, VariableDeclaration):
+                if isinstance(child_function, VariableDeclaration):
                     definitions.append(
                         _create_location(
                             child_function.file,
@@ -134,7 +134,10 @@ async def definition(
                             context.compiler,
                         )
                     )
-                elif isinstance(node, FunctionDefinition) and child_function.implemented:  # type: ignore
+                elif (
+                    isinstance(child_function, FunctionDefinition)
+                    and child_function.implemented
+                ):
                     definitions.append(
                         _create_location(
                             child_function.file,
