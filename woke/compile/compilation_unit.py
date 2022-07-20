@@ -1,8 +1,8 @@
+from collections import defaultdict
 from pathlib import Path, PurePath
-from typing import Dict, FrozenSet, Iterable, Set
+from typing import DefaultDict, FrozenSet, Iterable, Set
 
 import networkx as nx
-from Cryptodome.Hash import BLAKE2b
 
 from woke.compile.source_path_resolver import SourcePathResolver
 from woke.config import WokeConfig
@@ -13,38 +13,40 @@ class CompilationUnit:
     __unit_graph: nx.DiGraph
     __version_ranges: SolidityVersionRanges
     __hash: bytes
-    __source_unit_names_to_paths: Dict[PurePath, Path]
+    __paths_to_source_unit_names: DefaultDict[Path, Set[PurePath]]
 
     def __init__(self, unit_graph: nx.DiGraph, version_ranges: SolidityVersionRanges):
         self.__unit_graph = unit_graph
         self.__version_ranges = version_ranges
-        self.__source_unit_names_to_paths = {}
+        self.__paths_to_source_unit_names = defaultdict(set)
 
         self.__hash = bytes([0] * 32)
         for node in unit_graph.nodes:
             self.__hash = bytes(
                 a ^ b for a, b in zip(self.__hash, unit_graph.nodes[node]["hash"])
             )
-            self.__source_unit_names_to_paths[
-                unit_graph.nodes[node]["source_unit_name"]
-            ] = node
+
+            path = unit_graph.nodes[node]["path"]
+            self.__paths_to_source_unit_names[path].add(node)
 
     def __len__(self):
         return len(self.__unit_graph.nodes)
 
     def __str__(self):
-        return "\n".join(str(path) for path in self.__unit_graph.nodes)
+        return "\n".join(
+            str(self.__unit_graph.nodes[node]["path"])
+            for node in self.__unit_graph.nodes
+        )
 
     def draw(self, path: Path):
-        labels = {
-            node: data["source_unit_name"]
-            for node, data in self.__unit_graph.nodes.items()
-        }
-        relabeled_graph = nx.reverse(nx.relabel_nodes(self.__unit_graph, labels), False)
-        nx.nx_pydot.write_dot(relabeled_graph, path)
+        reversed_graph = nx.reverse(self.__unit_graph, False)
+        nx.nx_pydot.write_dot(reversed_graph, path)
 
     def source_unit_name_to_path(self, source_unit_name: PurePath) -> Path:
-        return self.__source_unit_names_to_paths[source_unit_name]
+        return self.__unit_graph.nodes[source_unit_name]["path"]
+
+    def path_to_source_unit_names(self, path: Path) -> FrozenSet[PurePath]:
+        return frozenset(self.__paths_to_source_unit_names[path])
 
     def contains_unresolved_file(
         self, files: Iterable[Path], config: WokeConfig
@@ -65,14 +67,13 @@ class CompilationUnit:
 
     @property
     def files(self) -> FrozenSet[Path]:
-        return frozenset(self.__unit_graph.nodes)
+        return frozenset(
+            self.__unit_graph.nodes[node]["path"] for node in self.__unit_graph.nodes
+        )
 
     @property
     def source_unit_names(self) -> FrozenSet[PurePath]:
-        return frozenset(
-            self.__unit_graph.nodes[node]["source_unit_name"]
-            for node in self.__unit_graph.nodes
-        )
+        return frozenset(self.__unit_graph.nodes)
 
     @property
     def versions(self) -> SolidityVersionRanges:
