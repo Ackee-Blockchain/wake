@@ -1,7 +1,19 @@
 import logging
 from typing import List, Optional, Union
 
+from woke.ast.enums import ContractKind, Mutability, StateMutability
 from woke.ast.ir.declaration.abc import DeclarationAbc
+from woke.ast.ir.declaration.contract_definition import ContractDefinition
+from woke.ast.ir.declaration.enum_definition import EnumDefinition
+from woke.ast.ir.declaration.error_definition import ErrorDefinition
+from woke.ast.ir.declaration.event_definition import EventDefinition
+from woke.ast.ir.declaration.function_definition import FunctionDefinition
+from woke.ast.ir.declaration.modifier_definition import ModifierDefinition
+from woke.ast.ir.declaration.struct_definition import StructDefinition
+from woke.ast.ir.declaration.user_defined_value_type_definition import (
+    UserDefinedValueTypeDefinition,
+)
+from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
 from woke.lsp.common_structures import (
     DocumentSymbol,
     PartialResultParams,
@@ -43,9 +55,51 @@ class DocumentSymbolParams(WorkDoneProgressParams, PartialResultParams):
 def _declaration_to_symbol(
     declaration: DeclarationAbc, kind: SymbolKind, context: LspContext
 ):
+    detail = ""
+    if isinstance(declaration, ContractDefinition):
+        if declaration.kind == ContractKind.CONTRACT:
+            detail = f"{'abstract ' if declaration.abstract else ''}contract"
+        elif declaration.kind == ContractKind.INTERFACE:
+            detail = "interface"
+        elif declaration.kind == ContractKind.LIBRARY:
+            detail = "library"
+    elif isinstance(declaration, EnumDefinition):
+        detail = "enum"
+    elif isinstance(declaration, ErrorDefinition):
+        detail = "error"
+    elif isinstance(declaration, EventDefinition):
+        detail = "event"
+    elif isinstance(declaration, FunctionDefinition):
+        detail = f"{declaration.visibility} "
+        if declaration.state_mutability != StateMutability.NONPAYABLE:
+            detail += f"{declaration.state_mutability} "
+        if declaration.virtual:
+            detail += "virtual "
+        if declaration.overrides is not None:
+            detail += f"override "
+        detail += f"function"
+    elif isinstance(declaration, ModifierDefinition):
+        if declaration.virtual:
+            detail += "virtual "
+        if declaration.overrides is not None:
+            detail += f"override "
+        detail += f"modifier"
+    elif isinstance(declaration, StructDefinition):
+        detail = "struct"
+    elif isinstance(declaration, UserDefinedValueTypeDefinition):
+        detail = f"is {declaration.underlying_type.name}"
+    elif isinstance(declaration, VariableDeclaration):
+        detail = f"{declaration.visibility} "
+        if declaration.mutability != Mutability.MUTABLE:
+            detail += f"{declaration.mutability} "
+        if declaration.overrides is not None:
+            detail += f"override "
+        detail += f"variable"
+
     file = declaration.file
     return DocumentSymbol(
         name=declaration.name,
+        detail=detail,
         kind=kind,
         range=context.compiler.get_range_from_byte_offsets(
             file, declaration.byte_location
@@ -137,10 +191,20 @@ async def document_symbol(
                     )
                 )
             for declared_variable in contract.declared_variables:
-                contract_symbol.children.append(
-                    _declaration_to_symbol(
-                        declared_variable, SymbolKind.VARIABLE, context
+                if declared_variable.mutability in {
+                    Mutability.IMMUTABLE,
+                    Mutability.CONSTANT,
+                }:
+                    contract_symbol.children.append(
+                        _declaration_to_symbol(
+                            declared_variable, SymbolKind.CONSTANT, context
+                        )
                     )
-                )
+                else:
+                    contract_symbol.children.append(
+                        _declaration_to_symbol(
+                            declared_variable, SymbolKind.VARIABLE, context
+                        )
+                    )
         return symbols
     return None
