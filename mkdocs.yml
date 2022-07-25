@@ -9,6 +9,7 @@ site_author: Ackee Blockchain
 theme:
   name: "material"
   language: en
+  logo: images/logo.png
   features:
     - navigation.instant
     - navigation.tracking
