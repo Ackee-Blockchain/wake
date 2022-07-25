@@ -1,7 +1,14 @@
 site_name: Woke
+site_url: https://ackee-blockchain.github.io/woke
+repo_url: https://github.com/Ackee-Blockchain/woke
+repo_name: Ackee-Blockchain/woke
+edit_uri: edit/main/docs
+site_description: Woke is a Python-based development and testing framework for Solidity developed by Ackee Blockchain.
+site_author: Ackee Blockchain
 
 theme:
   name: "material"
+  language: en
   features:
     - navigation.instant
     - navigation.tracking
