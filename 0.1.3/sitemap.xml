@@ -2,37 +2,37 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://ackee-blockchain.github.io/woke/0.1.3/</loc>
-         <lastmod>2022-07-25</lastmod>
+         <lastmod>2022-07-26</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackee-blockchain.github.io/woke/0.1.3/configuration/</loc>
-         <lastmod>2022-07-25</lastmod>
+         <lastmod>2022-07-26</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackee-blockchain.github.io/woke/0.1.3/contributing/</loc>
-         <lastmod>2022-07-25</lastmod>
+         <lastmod>2022-07-26</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackee-blockchain.github.io/woke/0.1.3/language-server/</loc>
-         <lastmod>2022-07-25</lastmod>
+         <lastmod>2022-07-26</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackee-blockchain.github.io/woke/0.1.3/solc-version-manager/</loc>
-         <lastmod>2022-07-25</lastmod>
+         <lastmod>2022-07-26</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackee-blockchain.github.io/woke/0.1.3/api_reference/</loc>
-         <lastmod>2022-07-25</lastmod>
+         <lastmod>2022-07-26</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackee-blockchain.github.io/woke/0.1.3/api_reference/config/</loc>
-         <lastmod>2022-07-25</lastmod>
+         <lastmod>2022-07-26</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>

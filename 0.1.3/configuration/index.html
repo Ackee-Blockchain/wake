@@ -311,6 +311,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#lspfind_references-namespace" class="md-nav__link">
+    lsp.find_references namespace
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -417,6 +424,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#lspfind_references-namespace" class="md-nav__link">
+    lsp.find_references namespace
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -519,6 +533,24 @@ LSP configuration options are loaded from LSP clients using the <a href="https:/
 <p class="admonition-title">Info</p>
 <p>The <code>include_paths</code> option is the preferred way to handle imports of libraries. Remappings should be used only when <code>include_paths</code> cannot be used (e.g. when the import path differs from the system path of the imported file).</p>
 </div>
+<h3 id="lspfind_references-namespace"><code>lsp.find_references</code> namespace<a class="headerlink" href="#lspfind_references-namespace" title="Permanent link">#</a></h3>
+<p>Configuration options specific to the LSP <code>Find references</code> request.</p>
+<table>
+<thead>
+<tr>
+<th align="left">Option</th>
+<th align="left">Description</th>
+<th align="left">Default value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>include_declarations</code></td>
+<td align="left">Also include declarations in <code>Find references</code> request results.</td>
+<td align="left"><code>false</code></td>
+</tr>
+</tbody>
+</table>
 
               
             </article>
