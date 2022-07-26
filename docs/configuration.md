@@ -51,3 +51,10 @@ The resolution order for each configuration option is:
 
 !!! info
     The `include_paths` option is the preferred way to handle imports of libraries. Remappings should be used only when `include_paths` cannot be used (e.g. when the import path differs from the system path of the imported file).
+
+### `lsp.find_references` namespace
+Configuration options specific to the LSP `Find references` request.
+
+| Option                 | Description                                                     | Default value |
+|:-----------------------|:----------------------------------------------------------------|:--------------|
+| `include_declarations` | Also include declarations in `Find references` request results. | `false`       |
