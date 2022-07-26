@@ -93,7 +93,7 @@ class JsonRpcBlock(JsonRpcModel):
     gas_limit: str
     gas_used: str
     timestamp: str
-    transactions: List[JsonRpcTransaction]
+    transactions: List[Union[JsonRpcTransaction, str]]
     uncles: List
     base_fee_per_gas: Optional[str]
 
