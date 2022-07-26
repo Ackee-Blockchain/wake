@@ -10,7 +10,7 @@ import tomli
 
 from woke.utils import change_cwd
 
-from .data_model import CompilerWokeConfig, TopLevelWokeConfig
+from .data_model import CompilerWokeConfig, LspWokeConfig, TopLevelWokeConfig
 
 logger = logging.getLogger(__name__)
 
@@ -168,7 +168,7 @@ class WokeConfig:
             skip = False
             for segment in deleted_option[:-1]:
                 if segment in conf:
-                    conf = conf[segment]
+                    conf = conf[segment]  # type: ignore
                 else:
                     skip = True
                     break
@@ -236,3 +236,10 @@ class WokeConfig:
         Return compiler-specific config options.
         """
         return self.__config.compiler
+
+    @property
+    def lsp(self) -> LspWokeConfig:
+        """
+        Return LSP-specific config options.
+        """
+        return self.__config.lsp
