@@ -56,11 +56,15 @@ class JsonRpcCommunicator:
         return response.result
 
     async def eth_get_block_by_number(
-        self, block_number: int, full_transactions: bool
+        self, block_number: Union[int, str], full_transactions: bool
     ) -> JsonRpcBlock:
         """Returns information about a block by number."""
         text = await self.__send_request(
-            "eth_getBlockByNumber", [hex(block_number), full_transactions]
+            "eth_getBlockByNumber",
+            [
+                hex(block_number) if type(block_number) is int else block_number,
+                full_transactions,
+            ],
         )
         response = JsonRpcReponseEthGetBlock.parse_raw(text)
         return response.result
