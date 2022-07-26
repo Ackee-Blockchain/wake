@@ -68,13 +68,24 @@ class SolcWokeConfig(WokeConfigModel):
         return SolcRemapping(context=context, prefix=prefix, target=target)
 
 
+class FindReferencesWokeConfig(WokeConfigModel):
+    include_declarations: bool = False
+
+
 class CompilerWokeConfig(WokeConfigModel):
     solc: SolcWokeConfig = Field(default_factory=SolcWokeConfig)
+
+
+class LspWokeConfig(WokeConfigModel):
+    find_references: FindReferencesWokeConfig = Field(
+        default_factory=FindReferencesWokeConfig
+    )
 
 
 class TopLevelWokeConfig(WokeConfigModel):
     subconfigs: List[Path] = []
     compiler: CompilerWokeConfig = Field(default_factory=CompilerWokeConfig)
+    lsp: LspWokeConfig = Field(default_factory=LspWokeConfig)
 
     @validator("subconfigs", pre=True, each_item=True)
     def set_subconfig(cls, v):

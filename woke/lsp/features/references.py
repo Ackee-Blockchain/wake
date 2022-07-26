@@ -136,7 +136,9 @@ async def references(
         return None
 
     refs = []
-    for reference in node.get_all_references(params.context.include_declaration):
+    for reference in node.get_all_references(
+        context.config.lsp.find_references.include_declarations
+    ):
         refs.append(_generate_reference_location(reference, context))
 
     if len(refs) == 0:
