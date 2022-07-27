@@ -1,9 +1,10 @@
 import asyncio
-from pathlib import Path
-from typing import AnyStr, List, Set, Tuple
+from pathlib import Path, PurePath
+from typing import Dict, List, Set, Tuple
 
 import click
 from click.core import Context
+from intervaltree import IntervalTree
 from rich.panel import Panel
 
 from woke.ast.nodes import AstSolc
@@ -11,6 +12,11 @@ from woke.compile import SolcOutput, SolidityCompiler
 from woke.compile.solc_frontend.input_data_model import SolcOutputSelectionEnum
 from woke.config import WokeConfig
 
+from ..ast.ir.meta.source_unit import SourceUnit
+from ..ast.ir.reference_resolver import CallbackParams, ReferenceResolver
+from ..ast.ir.utils import IrInitTuple
+from ..compile.compilation_unit import CompilationUnit
+from ..compile.solc_frontend import SolcOutputErrorSeverityEnum
 from .console import console
 
 
@@ -52,7 +58,7 @@ def run_compile(
 
     compiler = SolidityCompiler(config)
     # TODO Allow choosing build artifacts subset in compile subcommand
-    outputs = asyncio.run(
+    outputs: List[Tuple[CompilationUnit, SolcOutput]] = asyncio.run(
         compiler.compile(
             sol_files,
             [SolcOutputSelectionEnum.ALL],
@@ -62,14 +68,44 @@ def run_compile(
         )
     )
 
+    errored = False
     for _, output in outputs:
         for error in output.errors:
+            if error.severity == SolcOutputErrorSeverityEnum.ERROR:
+                errored = True
             if error.formatted_message is not None:
                 console.print(Panel(error.formatted_message, highlight=True))
             else:
                 console.print(Panel(error.message, highlight=True))
 
-    if parse:
-        for _, output in outputs:
+    if parse and not errored:
+        processed_files: Set[Path] = set()
+        reference_resolver = ReferenceResolver()
+        interval_trees: Dict[Path, IntervalTree] = {}
+        source_units: Dict[Path, SourceUnit] = {}
+
+        for cu, output in outputs:
             for source_unit_name, info in output.sources.items():
-                AstSolc.parse_obj(info.ast)
+                path = cu.source_unit_name_to_path(PurePath(source_unit_name))
+
+                interval_trees[path] = IntervalTree()
+                ast = AstSolc.parse_obj(info.ast)
+
+                reference_resolver.index_nodes(ast, path, cu.hash)
+
+                if path in processed_files:
+                    continue
+                processed_files.add(path)
+
+                init = IrInitTuple(
+                    path,
+                    path.read_bytes(),
+                    cu,
+                    interval_trees[path],
+                    reference_resolver,
+                )
+                source_units[path] = SourceUnit(init, ast)
+
+        reference_resolver.run_post_process_callbacks(
+            CallbackParams(source_units=source_units)
+        )
