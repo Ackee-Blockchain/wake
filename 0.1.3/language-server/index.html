@@ -305,8 +305,8 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#implementations" class="md-nav__link">
-    Implementations
+  <a href="#projects-using-woke-server" class="md-nav__link">
+    Projects using Woke server
   </a>
   
 </li>
@@ -314,6 +314,13 @@
         <li class="md-nav__item">
   <a href="#configuration-options" class="md-nav__link">
     Configuration options
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#supported-commands" class="md-nav__link">
+    Supported commands
   </a>
   
 </li>
@@ -473,8 +480,8 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#implementations" class="md-nav__link">
-    Implementations
+  <a href="#projects-using-woke-server" class="md-nav__link">
+    Projects using Woke server
   </a>
   
 </li>
@@ -482,6 +489,13 @@
         <li class="md-nav__item">
   <a href="#configuration-options" class="md-nav__link">
     Configuration options
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#supported-commands" class="md-nav__link">
+    Supported commands
   </a>
   
 </li>
@@ -606,7 +620,7 @@
 <p class="admonition-title">Info</p>
 <p>Multi-root workspaces are not currently supported.</p>
 </div>
-<h2 id="implementations">Implementations<a class="headerlink" href="#implementations" title="Permanent link">#</a></h2>
+<h2 id="projects-using-woke-server">Projects using Woke server<a class="headerlink" href="#projects-using-woke-server" title="Permanent link">#</a></h2>
 <ul>
 <li>VS Code Extension</li>
 </ul>
@@ -622,12 +636,29 @@
 <li><code>woke.lsp.find_references.include_declarations</code>.</li>
 </ul>
 <p>The semantics of these configuration options are explained in the <a href="../configuration/#compilersolc-namespace">configuration section</a>.</p>
+<h2 id="supported-commands">Supported commands<a class="headerlink" href="#supported-commands" title="Permanent link">#</a></h2>
+<p>Woke LSP server implements the command execution provider as specified by the <a href="https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workspace_executeCommand">LSP specification</a>. The following commands are supported:</p>
+<table>
+<thead>
+<tr>
+<th align="left">Command</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><nobr><code>woke.lsp.force_recompile</code></nobr></td>
+<td align="left">Force recompile the opened project/files. Useful after modifying files outside the IDE (e.g. after installing npm packages).</td>
+</tr>
+</tbody>
+</table>
 <h2 id="features">Features<a class="headerlink" href="#features" title="Permanent link">#</a></h2>
 <h3 id="go-to-definition">Go to definition<a class="headerlink" href="#go-to-definition" title="Permanent link">#</a></h3>
 <p><img alt="Go to definition preview" src="../images/lsp/go-to-definition.gif" /></p>
 <h3 id="go-to-type-definition">Go to type definition<a class="headerlink" href="#go-to-type-definition" title="Permanent link">#</a></h3>
 <p><img alt="Go to type definition preview" src="../images/lsp/go-to-type-definition.gif" /></p>
 <h3 id="go-to-implementation">Go to implementation<a class="headerlink" href="#go-to-implementation" title="Permanent link">#</a></h3>
+<p>Find implementations of an unimplemented function or modifier.</p>
 <p><img alt="Go to implementation preview" src="../images/lsp/go-to-implementation.gif" /></p>
 <h3 id="find-references">Find references<a class="headerlink" href="#find-references" title="Permanent link">#</a></h3>
 <p><img alt="Find references preview" src="../images/lsp/find-references.gif" /></p>
