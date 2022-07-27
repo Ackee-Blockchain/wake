@@ -3,6 +3,7 @@ import logging
 import traceback
 import uuid
 from copy import deepcopy
+from enum import Enum
 from pathlib import Path
 from typing import (
     Any,
@@ -27,6 +28,8 @@ from .common_structures import (
     DeleteFilesParams,
     DidChangeConfigurationParams,
     DocumentFilter,
+    ExecuteCommandOptions,
+    ExecuteCommandParams,
     InitializedParams,
     InitializeError,
     InitializeParams,
@@ -109,6 +112,10 @@ logger = logging.getLogger(__name__)
 ConfigPath = Tuple[Union[str, int], ...]
 
 
+class CommandsEnum(str, Enum):
+    LSP_FORCE_RECOMPILE = "woke.lsp.force_recompile"
+
+
 class LspServer:
     __initialized: bool
     __cli_config: WokeConfig
@@ -184,6 +191,10 @@ class LspServer:
                 PrepareRenameParams,
             ),
             RequestMethodEnum.RENAME: (self._workspace_route, RenameParams),
+            RequestMethodEnum.WORKSPACE_EXECUTE_COMMAND: (
+                self._workspace_execute_command,
+                ExecuteCommandParams,
+            ),
         }
 
         self.__notification_mapping = {
@@ -542,6 +553,9 @@ class LspServer:
             rename_provider=RenameOptions(
                 prepare_provider=True,
             ),
+            execute_command_provider=ExecuteCommandOptions(
+                commands=[command for command in CommandsEnum]
+            ),
         )
         return InitializeResult(capabilities=server_capabilities, server_info=None)
 
@@ -779,6 +793,16 @@ class LspServer:
     async def _workspace_did_delete_files(self, params: DeleteFilesParams) -> None:
         assert self.__main_workspace is not None
         await self.__main_workspace.compiler.add_change(params)
+
+    async def _workspace_execute_command(
+        self, params: ExecuteCommandParams
+    ) -> Optional[Any]:
+        command = params.command
+        if command == CommandsEnum.LSP_FORCE_RECOMPILE:
+            for context in self.__workspaces.values():
+                await context.compiler.force_recompile()
+            return None
+        raise LspError(ErrorCodes.InvalidRequest, f"Unknown command: {command}")
 
     async def get_configuration(self) -> None:
         params = ConfigurationParams(
