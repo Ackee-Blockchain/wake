@@ -83,6 +83,7 @@ class SolcOutputErrorTypeEnum(str, enum.Enum):
     """A warning, which didn’t stop the compilation, but should be addressed if possible."""
     INFO = "Info"
     """Information that the compiler thinks the user might find useful, but is not dangerous and does not necessarily need to be addressed."""
+    YUL_EXCEPTION = "YulException"
 
 
 class SolcOutputErrorSeverityEnum(str, enum.Enum):
