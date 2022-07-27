@@ -10,7 +10,7 @@ import tomli
 
 from woke.utils import change_cwd
 
-from .data_model import CompilerWokeConfig, LspWokeConfig, TopLevelWokeConfig
+from .data_model import CompilerConfig, LspConfig, TopLevelConfig
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ class WokeConfig:
     __project_root_path: Path
     __loaded_files: Set[Path]
     __config_raw: Dict[str, Any]
-    __config: TopLevelWokeConfig
+    __config: TopLevelConfig
 
     def __init__(
         self,
@@ -63,7 +63,7 @@ class WokeConfig:
 
         self.__loaded_files = set()
         with change_cwd(self.__project_root_path):
-            self.__config = TopLevelWokeConfig()
+            self.__config = TopLevelConfig()
         self.__config_raw = self.__config.dict(by_alias=True)
 
     def __str__(self) -> str:
@@ -118,7 +118,7 @@ class WokeConfig:
                     raise ValueError(error)
 
                 # validate the loaded config
-                parsed_config = TopLevelWokeConfig.parse_obj(loaded_config)
+                parsed_config = TopLevelConfig.parse_obj(loaded_config)
 
                 # rebuild the loaded config from the pydantic model
                 # this ensures that all stored paths are absolute
@@ -145,7 +145,7 @@ class WokeConfig:
             project_root_path=project_root_path, woke_root_path=woke_root_path
         )
         with change_cwd(instance.project_root_path):
-            parsed_config = TopLevelWokeConfig.parse_obj(config_dict)
+            parsed_config = TopLevelConfig.parse_obj(config_dict)
         instance.__config_raw = parsed_config.dict(by_alias=True, exclude_unset=True)
         instance.__config = parsed_config
         return instance
@@ -159,7 +159,7 @@ class WokeConfig:
         Update the config with a new dictionary. Return `True` if the config was changed.
         """
         with change_cwd(self.project_root_path):
-            parsed_config = TopLevelWokeConfig.parse_obj(config_dict)
+            parsed_config = TopLevelConfig.parse_obj(config_dict)
         parsed_config_raw = parsed_config.dict(by_alias=True, exclude_unset=True)
         self.__merge_dicts(self.__config_raw, parsed_config_raw)
 
@@ -180,9 +180,9 @@ class WokeConfig:
             elif isinstance(conf, list):
                 conf.remove(deleted_option[-1])
 
-        new_config = TopLevelWokeConfig.parse_obj(self.__config_raw)
+        new_config = TopLevelConfig.parse_obj(self.__config_raw)
         ret = new_config != self.__config
-        self.__config = TopLevelWokeConfig.parse_obj(self.__config_raw)
+        self.__config = TopLevelConfig.parse_obj(self.__config_raw)
         return ret
 
     def load_configs(self) -> None:
@@ -204,7 +204,7 @@ class WokeConfig:
 
         self.__load_file(None, path.resolve(), config_raw_copy, subconfigs_graph)
 
-        config = TopLevelWokeConfig.parse_obj(config_raw_copy)
+        config = TopLevelConfig.parse_obj(config_raw_copy)
         self.__config_raw = config_raw_copy
         self.__config = config
         self.__loaded_files.update(subconfigs_graph.nodes)
@@ -231,14 +231,14 @@ class WokeConfig:
         return self.__project_root_path
 
     @property
-    def compiler(self) -> CompilerWokeConfig:
+    def compiler(self) -> CompilerConfig:
         """
         Return compiler-specific config options.
         """
         return self.__config.compiler
 
     @property
-    def lsp(self) -> LspWokeConfig:
+    def lsp(self) -> LspConfig:
         """
         Return LSP-specific config options.
         """

@@ -32,7 +32,12 @@ class SolcRemapping:
         return f"{self.context or ''}:{self.prefix}={self.target or ''}"
 
 
-class SolcWokeConfig(WokeConfigModel):
+class SolcOptimizerConfig(WokeConfigModel):
+    enabled: Optional[bool] = None
+    runs: int = 200
+
+
+class SolcConfig(WokeConfigModel):
     allow_paths: List[Path] = []
     """Woke should set solc `--allow-paths` automatically. This option allows to specify additional allowed paths."""
     evm_version: Optional[EvmVersionEnum] = None
@@ -40,8 +45,10 @@ class SolcWokeConfig(WokeConfigModel):
     include_paths: List[Path] = Field(
         default_factory=lambda: [Path.cwd() / "node_modules"]
     )
+    optimizer: SolcOptimizerConfig = Field(default_factory=SolcOptimizerConfig)
     remappings: List[SolcRemapping] = []
     target_version: Optional[SolidityVersion] = None
+    via_IR: bool = False
 
     @validator("allow_paths", pre=True, each_item=True)
     def set_allow_path(cls, v):
@@ -68,24 +75,22 @@ class SolcWokeConfig(WokeConfigModel):
         return SolcRemapping(context=context, prefix=prefix, target=target)
 
 
-class FindReferencesWokeConfig(WokeConfigModel):
+class FindReferencesConfig(WokeConfigModel):
     include_declarations: bool = False
 
 
-class CompilerWokeConfig(WokeConfigModel):
-    solc: SolcWokeConfig = Field(default_factory=SolcWokeConfig)
+class CompilerConfig(WokeConfigModel):
+    solc: SolcConfig = Field(default_factory=SolcConfig)
 
 
-class LspWokeConfig(WokeConfigModel):
-    find_references: FindReferencesWokeConfig = Field(
-        default_factory=FindReferencesWokeConfig
-    )
+class LspConfig(WokeConfigModel):
+    find_references: FindReferencesConfig = Field(default_factory=FindReferencesConfig)
 
 
-class TopLevelWokeConfig(WokeConfigModel):
+class TopLevelConfig(WokeConfigModel):
     subconfigs: List[Path] = []
-    compiler: CompilerWokeConfig = Field(default_factory=CompilerWokeConfig)
-    lsp: LspWokeConfig = Field(default_factory=LspWokeConfig)
+    compiler: CompilerConfig = Field(default_factory=CompilerConfig)
+    lsp: LspConfig = Field(default_factory=LspConfig)
 
     @validator("subconfigs", pre=True, each_item=True)
     def set_subconfig(cls, v):

@@ -28,6 +28,7 @@ from .compilation_unit import CompilationUnit
 from .exceptions import CompilationError, CompilationResolveError
 from .solc_frontend import (
     SolcFrontend,
+    SolcInputOptimizerSettings,
     SolcInputSettings,
     SolcOutput,
     SolcOutputContractInfo,
@@ -224,6 +225,12 @@ class SolidityCompiler:
             str(remapping) for remapping in self.__config.compiler.solc.remappings
         ]
         settings.evm_version = self.__config.compiler.solc.evm_version
+        settings.via_IR = self.__config.compiler.solc.via_IR
+        settings.optimizer = SolcInputOptimizerSettings(
+            enabled=self.__config.compiler.solc.optimizer.enabled,
+            runs=self.__config.compiler.solc.optimizer.runs,
+        )
+
         settings.output_selection = {"*": {}}
 
         if SolcOutputSelectionEnum.ALL in output_types:
