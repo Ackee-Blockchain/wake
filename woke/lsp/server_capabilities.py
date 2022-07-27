@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Any, List, Optional, Union
 
-from woke.lsp.common_structures import WorkspaceSymbolOptions
+from woke.lsp.common_structures import ExecuteCommandOptions, WorkspaceSymbolOptions
 from woke.lsp.document_sync import TextDocumentSyncKind, TextDocumentSyncOptions
 
 from .features.code_lens import CodeLensOptions
@@ -132,6 +132,7 @@ class ServerCapabilities(LspModel):
     ] = None
     code_lens_provider: Optional[CodeLensOptions] = None
     rename_provider: Optional[Union[bool, RenameOptions]] = None
+    execute_command_provider: Optional[ExecuteCommandOptions] = None
     """
     completion_provider: Optional[CompletionOptions]
     hover_provider: Optional[Union[bool, HoverOptions]]
@@ -144,7 +145,6 @@ class ServerCapabilities(LspModel):
     document_range_formatting_provider: Optional[Union[bool, DocumentRangeFormattingOptions]]
     document_on_type_formatting_provider: Optional[DocumentOnTypeFormattingOptions]
     folding_range_provider: Optional[Union[bool, FoldingRangeOptions, FoldingRangeRegistrationOptions]]
-    execute_command_rovider: Optional[ExecuteCommandOptions]
     selection_range_provider: Optional[Union[bool, SelectionRangeOptions, SelectionRangeRegistrationOptions]]
     linked_editing_range_provider: Optional[Union[bool, LinkedEditingRangeOptions, LinkedEditingRangeRegistrationOptions]]
     call_hierarchy_provider: Optional[Union[bool, CallHierarchyOptions, CallHierarchyRegistrationOptions]]
