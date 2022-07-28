@@ -312,6 +312,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#compilersolcoptimizer-namespace" class="md-nav__link">
+    compiler.solc.optimizer namespace
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#lspfind_references-namespace" class="md-nav__link">
     lsp.find_references namespace
   </a>
@@ -425,6 +432,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#compilersolcoptimizer-namespace" class="md-nav__link">
+    compiler.solc.optimizer namespace
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#lspfind_references-namespace" class="md-nav__link">
     lsp.find_references namespace
   </a>
@@ -489,6 +503,11 @@ LSP configuration options are loaded from LSP clients using the <a href="https:/
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">include_paths</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s">&quot;node_modules&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;lib&quot;</span><span class="p">]</span><span class="w"></span>
 <a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">remappings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s">&quot;@openzeppelin/=node_modules/@openzeppelin/&quot;</span><span class="p">]</span><span class="w"></span>
 <a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">target_version</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0.8.10&quot;</span><span class="w"></span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="n">via_IR</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w"></span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="k">[compiler.solc.optimizer]</span><span class="w"></span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w"></span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="n">runs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1000</span><span class="w"></span>
 </code></pre></div>
 </details>
 <h3 id="compilersolc-namespace"><code>compiler.solc</code> namespace<a class="headerlink" href="#compilersolc-namespace" title="Permanent link">#</a></h3>
@@ -527,12 +546,39 @@ LSP configuration options are loaded from LSP clients using the <a href="https:/
 <td align="left">Target <code>solc</code> version used to compile the project</td>
 <td align="left"><code>""</code> (use the latest version for each compilation unit)</td>
 </tr>
+<tr>
+<td align="left"><code>via_IR</code></td>
+<td align="left">Compile the code via the Yul intermediate language (see <a href="https://docs.soliditylang.org/en/latest/ir-breaking-changes.html">Solidity docs</a>)</td>
+<td align="left"><code>false</code></td>
+</tr>
 </tbody>
 </table>
 <div class="admonition info">
 <p class="admonition-title">Info</p>
 <p>The <code>include_paths</code> option is the preferred way to handle imports of libraries. Remappings should be used only when <code>include_paths</code> cannot be used (e.g. when the import path differs from the system path of the imported file).</p>
 </div>
+<h3 id="compilersolcoptimizer-namespace"><code>compiler.solc.optimizer</code> namespace<a class="headerlink" href="#compilersolcoptimizer-namespace" title="Permanent link">#</a></h3>
+<table>
+<thead>
+<tr>
+<th align="left">Option</th>
+<th align="left">Description</th>
+<th align="left">Default value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>enabled</code></td>
+<td align="left">Compile the project with solc optimizations enabled. Leaving this unset disables most of the available optimizations. Setting this to <code>false</code> disables all optimizations for Solidity &lt;0.8.6 and has the same behavior as leaving this unset for Solidity &gt;=0.8.6.</td>
+<td align="left"><code>""</code> (unset)</td>
+</tr>
+<tr>
+<td align="left"><code>runs</code></td>
+<td align="left">Configuration of the optimizer specifying how many times the code is intended to be run. Lower values optimize more for initial deployment cost, while higher values optimize more for high-frequency usage.</td>
+<td align="left"><code>200</code></td>
+</tr>
+</tbody>
+</table>
 <h3 id="lspfind_references-namespace"><code>lsp.find_references</code> namespace<a class="headerlink" href="#lspfind_references-namespace" title="Permanent link">#</a></h3>
 <p>Configuration options specific to the LSP <code>Find references</code> request.</p>
 <table>
