@@ -48,7 +48,7 @@ class SolcConfig(WokeConfigModel):
     optimizer: SolcOptimizerConfig = Field(default_factory=SolcOptimizerConfig)
     remappings: List[SolcRemapping] = []
     target_version: Optional[SolidityVersion] = None
-    via_IR: bool = False
+    via_IR: Optional[bool] = None
 
     @validator("allow_paths", pre=True, each_item=True)
     def set_allow_path(cls, v):

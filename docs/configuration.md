@@ -53,7 +53,7 @@ The resolution order for each configuration option is:
 | <nobr>`include_paths`</nobr>  | Paths (along with `{CWD}`) where files from non-relative imports are searched                                                              | `{CWD}/node_modules`                                    |
 | `remappings`                  | Compiler remappings as specified by [Solidity docs](https://docs.soliditylang.org/en/latest/path-resolution.html#import-remapping)         | `[]`                                                    |
 | <nobr>`target_version`</nobr> | Target `solc` version used to compile the project                                                                                          | `""` (use the latest version for each compilation unit) |
-| `via_IR`                      | Compile the code via the Yul intermediate language (see [Solidity docs](https://docs.soliditylang.org/en/latest/ir-breaking-changes.html)) | `false`                                                 |
+| `via_IR`                      | Compile the code via the Yul intermediate language (see [Solidity docs](https://docs.soliditylang.org/en/latest/ir-breaking-changes.html)) | `""` (let the compiler decide)                          |
 
 !!! info
     The `include_paths` option is the preferred way to handle imports of libraries. Remappings should be used only when `include_paths` cannot be used (e.g. when the import path differs from the system path of the imported file).
