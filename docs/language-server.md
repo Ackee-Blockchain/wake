@@ -28,6 +28,9 @@ The following configuration options are supported:
 - `woke.compiler.solc.include_paths`,
 - `woke.compiler.solc.remappings`,
 - `woke.compiler.solc.target_version`,
+- `woke.compiler.solc.via_IR`,
+- `woke.compiler.solc.optimizer.enabled`,
+- `woke.compiler.solc.optimizer.runs`,
 - `woke.lsp.find_references.include_declarations`.
 
 The semantics of these configuration options are explained in the [configuration section](configuration.md#compilersolc-namespace).
