@@ -36,21 +36,34 @@ The resolution order for each configuration option is:
     include_paths = ["node_modules", "lib"]
     remappings = ["@openzeppelin/=node_modules/@openzeppelin/"]
     target_version = "0.8.10"
+    via_IR = true
+
+    [compiler.solc.optimizer]
+    enabled = true
+    runs = 1000
     ```
 
 ### `compiler.solc` namespace
 `{CWD}` in the following table represents the current working directory (i.e. the directory from which the `woke` command is being executed).
 
-| Option                        | Description                                                                                                                        | Default value                                           |
-|:------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------|:--------------------------------------------------------|
-| `allow_paths`                 | Allow paths passed to the `solc` executable                                                                                        | `[]`                                                    |
-| `evm_version`                 | EVM version as specified by [Solidity docs](https://docs.soliditylang.org/en/latest/using-the-compiler.html#target-options)        | `""` (let the compiler decide)                          |
-| <nobr>`include_paths`</nobr>  | Paths (along with `{CWD}`) where files from non-relative imports are searched                                                      | `{CWD}/node_modules`                                    |
-| `remappings`                  | Compiler remappings as specified by [Solidity docs](https://docs.soliditylang.org/en/latest/path-resolution.html#import-remapping) | `[]`                                                    |
-| <nobr>`target_version`</nobr> | Target `solc` version used to compile the project                                                                                  | `""` (use the latest version for each compilation unit) |
+| Option                        | Description                                                                                                                                | Default value                                           |
+|:------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------|:--------------------------------------------------------|
+| `allow_paths`                 | Allow paths passed to the `solc` executable                                                                                                | `[]`                                                    |
+| `evm_version`                 | EVM version as specified by [Solidity docs](https://docs.soliditylang.org/en/latest/using-the-compiler.html#target-options)                | `""` (let the compiler decide)                          |
+| <nobr>`include_paths`</nobr>  | Paths (along with `{CWD}`) where files from non-relative imports are searched                                                              | `{CWD}/node_modules`                                    |
+| `remappings`                  | Compiler remappings as specified by [Solidity docs](https://docs.soliditylang.org/en/latest/path-resolution.html#import-remapping)         | `[]`                                                    |
+| <nobr>`target_version`</nobr> | Target `solc` version used to compile the project                                                                                          | `""` (use the latest version for each compilation unit) |
+| `via_IR`                      | Compile the code via the Yul intermediate language (see [Solidity docs](https://docs.soliditylang.org/en/latest/ir-breaking-changes.html)) | `false`                                                 |
 
 !!! info
     The `include_paths` option is the preferred way to handle imports of libraries. Remappings should be used only when `include_paths` cannot be used (e.g. when the import path differs from the system path of the imported file).
+
+### `compiler.solc.optimizer` namespace
+
+| Option    | Description                                                                                                                                                                                                                                                        | Default value |
+|:----------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:--------------|
+| `enabled` | Compile the project with solc optimizations enabled. Leaving this unset disables most of the available optimizations. Setting this to `false` disables all optimizations for Solidity <0.8.6 and has the same behavior as leaving this unset for Solidity >=0.8.6. | `""` (unset)  |
+| `runs`    | Configuration of the optimizer specifying how many times the code is intended to be run. Lower values optimize more for initial deployment cost, while higher values optimize more for high-frequency usage.                                                       | `200`         |
 
 ### `lsp.find_references` namespace
 Configuration options specific to the LSP `Find references` request.
