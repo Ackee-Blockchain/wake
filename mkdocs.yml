@@ -37,6 +37,7 @@ nav:
   - LSP server: 'language-server.md'
   - Solc Version Manager: 'solc-version-manager.md'
   - Contributing: 'contributing.md'
+  - Fuzzer: 'fuzzer.md'
 
 extra:
   version:
