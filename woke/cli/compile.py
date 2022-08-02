@@ -17,6 +17,7 @@ from ..ast.ir.reference_resolver import CallbackParams, ReferenceResolver
 from ..ast.ir.utils import IrInitTuple
 from ..compile.compilation_unit import CompilationUnit
 from ..compile.solc_frontend import SolcOutputErrorSeverityEnum
+from ..utils.file_utils import is_relative_to
 from .console import console
 
 
@@ -42,19 +43,22 @@ def run_compile(
     config = WokeConfig(woke_root_path=ctx.obj["woke_root_path"])
     config.load_configs()  # load ~/.woke/config.toml and ./woke.toml
 
-    sol_files: List[Path] = []
+    sol_files: Set[Path] = set()
     if len(files) == 0:
-        contracts_path = config.project_root_path / "contracts"
-        sol_files = [path for path in contracts_path.rglob("*.sol") if path.is_file()]
-
-        if len(sol_files) == 0:
-            pass
+        for file in config.project_root_path.rglob("**/*.sol"):
+            if (
+                not any(
+                    is_relative_to(file, p) for p in config.compiler.solc.ignore_paths
+                )
+                and file.is_file()
+            ):
+                sol_files.add(file)
     else:
         for file in files:
             path = Path(file)
             if not path.is_file() or not path.match("*.sol"):
                 raise ValueError(f"Argument `{file}` is not a Solidity file.")
-            sol_files.append(path)
+            sol_files.add(path)
 
     compiler = SolidityCompiler(config)
     # TODO Allow choosing build artifacts subset in compile subcommand

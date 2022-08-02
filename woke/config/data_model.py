@@ -42,6 +42,12 @@ class SolcConfig(WokeConfigModel):
     """Woke should set solc `--allow-paths` automatically. This option allows to specify additional allowed paths."""
     evm_version: Optional[EvmVersionEnum] = None
     """Version of the EVM to compile for. Leave unset to let the solc decide."""
+    ignore_paths: List[Path] = Field(
+        default_factory=lambda: [
+            Path.cwd() / "node_modules",
+            Path.cwd() / ".woke-build",
+        ]
+    )
     include_paths: List[Path] = Field(
         default_factory=lambda: [Path.cwd() / "node_modules"]
     )
@@ -52,6 +58,10 @@ class SolcConfig(WokeConfigModel):
 
     @validator("allow_paths", pre=True, each_item=True)
     def set_allow_path(cls, v):
+        return Path(v).resolve()
+
+    @validator("ignore_paths", pre=True, each_item=True)
+    def set_ignore_paths(cls, v):
         return Path(v).resolve()
 
     @validator("include_paths", pre=True, each_item=True)

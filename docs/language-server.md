@@ -25,6 +25,7 @@ The following configuration options are supported:
 
 - `woke.compiler.solc.allow_paths`,
 - `woke.compiler.solc.evm_version`,
+- `woke.compiler.solc.ignore_paths`,
 - `woke.compiler.solc.include_paths`,
 - `woke.compiler.solc.remappings`,
 - `woke.compiler.solc.target_version`,
