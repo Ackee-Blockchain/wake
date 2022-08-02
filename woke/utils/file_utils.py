@@ -1,5 +1,21 @@
+from __future__ import annotations
+
 import pathlib
 import shutil
+from os import PathLike
+from typing import Union
+
+
+def is_relative_to(path: pathlib.PurePath, *other: Union[str, PathLike[str]]):
+    """
+    Return True if the path is relative to another path or False.
+    Backported from Python 3.9 (https://github.com/python/cpython/blob/75a6441718dcbc65d993c9544e67e25bef120e82/Lib/pathlib.py#L687-L694)
+    """
+    try:
+        path.relative_to(*other)
+        return True
+    except ValueError:
+        return False
 
 
 def copy_dir(

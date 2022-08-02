@@ -17,17 +17,19 @@ class LspContext:
     __compiler: LspCompiler
     __diagnostics_queue: asyncio.Queue
 
-    def __init__(self, server: LspServer, config: WokeConfig) -> None:
+    def __init__(
+        self, server: LspServer, config: WokeConfig, perform_files_discovery: bool
+    ) -> None:
         self.__server = server
         self.__workspace_config = config
         self.__diagnostics_queue = asyncio.Queue()
-        self.__compiler = LspCompiler(server, self.__diagnostics_queue)
-
-    def run(self, perform_files_discovery: bool) -> None:
-        self.__server.create_task(diagnostics_loop(self.__server, self))
-        self.__server.create_task(
-            self.__compiler.run(self.__workspace_config, perform_files_discovery)
+        self.__compiler = LspCompiler(
+            server, self.__diagnostics_queue, perform_files_discovery
         )
+
+    def run(self) -> None:
+        self.__server.create_task(diagnostics_loop(self.__server, self))
+        self.__server.create_task(self.__compiler.run(self.__workspace_config))
 
     @property
     def config(self) -> WokeConfig:

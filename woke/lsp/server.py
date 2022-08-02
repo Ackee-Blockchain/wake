@@ -668,10 +668,10 @@ class LspServer:
     async def _initialized(self, params: InitializedParams) -> None:
         if self.__workspace_path is not None:
             self.__main_workspace = LspContext(
-                self, await self._create_config(self.__workspace_path)
+                self, await self._create_config(self.__workspace_path), True
             )
             self.__workspaces[self.__workspace_path] = self.__main_workspace
-            self.__main_workspace.run(True)
+            self.__main_workspace.run()
 
     async def _workspace_did_change_configuration(
         self, params: DidChangeConfigurationParams
@@ -746,9 +746,9 @@ class LspServer:
                 pass
 
         if len(matching_workspaces) == 0:
-            context = LspContext(self, await self._create_config(path.parent))
+            context = LspContext(self, await self._create_config(path.parent), False)
             self.__workspaces[path.parent] = context
-            context.run(False)
+            context.run()
         else:
             context = min(matching_workspaces, key=lambda x: len(x[1].parts))[0]
 

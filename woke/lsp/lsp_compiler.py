@@ -22,6 +22,8 @@ from typing import (
 
 from woke.compile.exceptions import CompilationError
 
+from ..utils.file_utils import is_relative_to
+
 if TYPE_CHECKING:
     from .server import LspServer
 
@@ -115,12 +117,18 @@ class LspCompiler:
     __interval_trees: Dict[Path, IntervalTree]
     __source_units: Dict[Path, SourceUnit]
     __line_indexes: Dict[Path, List[Tuple[bytes, int]]]
+    __perform_files_discovery: bool
 
     __ir_reference_resolver: ReferenceResolver
 
     __output_ready: asyncio.Event
 
-    def __init__(self, server: LspServer, diagnostic_queue: asyncio.Queue):
+    def __init__(
+        self,
+        server: LspServer,
+        diagnostic_queue: asyncio.Queue,
+        perform_files_discovery: bool,
+    ):
         self.__server = server
         self.__file_changes_queue = asyncio.Queue()
         self.__diagnostic_queue = diagnostic_queue
@@ -135,14 +143,15 @@ class LspCompiler:
         self.__line_indexes = {}
         self.__output_contents = dict()
         self.__output_ready = asyncio.Event()
+        self.__perform_files_discovery = perform_files_discovery
 
         self.__ir_reference_resolver = ReferenceResolver()
 
-    async def run(self, config: WokeConfig, perform_files_discovery: bool):
+    async def run(self, config: WokeConfig):
         self.__config = config
         self.__svm = SolcVersionManager(config)
         self.__compiler = SolidityCompiler(config)
-        await self.__compilation_loop(perform_files_discovery)
+        await self.__compilation_loop()
 
     @property
     def output_ready(self) -> asyncio.Event:
@@ -221,7 +230,7 @@ class LspCompiler:
         line_offset = len(line_bytes.decode("utf-8")[:col].encode("utf-8"))
         return prefix + line_offset
 
-    def _handle_change(
+    async def _handle_change(
         self,
         change: Union[
             DidOpenTextDocumentParams,
@@ -231,13 +240,27 @@ class LspCompiler:
         ],
     ) -> None:
         if change is None:
+            for file in self.__discovered_files:
+                # clear diagnostics
+                await self.__diagnostic_queue.put((file, set()))
+
+            self.__discovered_files.clear()
+            if self.__perform_files_discovery:
+                for file in self.__config.project_root_path.rglob("**/*.sol"):
+                    if not self.__file_ignored(file) and file.is_file():
+                        self.__discovered_files.add(file.resolve())
+
+            for file in self.__opened_files.keys():
+                if not self.__file_ignored(file):
+                    self.__discovered_files.add(file)
+
             self.__force_compile_files.update(self.__discovered_files)
         elif isinstance(change, CreateFilesParams):
             for file in change.files:
                 path = uri_to_path(file.uri)
                 if (
                     path not in self.__discovered_files
-                    and not ({"node_modules", ".woke-build"} & set(path.parts))
+                    and not self.__file_ignored(path)
                     and path.is_file()
                     and path.suffix == ".sol"
                 ):
@@ -252,7 +275,7 @@ class LspCompiler:
                 new_path = uri_to_path(rename.new_uri)
                 if (
                     new_path not in self.__discovered_files
-                    and not ({"node_modules", ".woke-build"} & set(new_path.parts))
+                    and not self.__file_ignored(new_path)
                     and new_path.is_file()
                     and new_path.suffix == ".sol"
                 ):
@@ -270,7 +293,7 @@ class LspCompiler:
             )
             if (
                 path not in self.__discovered_files
-                and not ({"node_modules", ".woke-build"} & set(path.parts))
+                and not self.__file_ignored(path)
                 and path.is_file()
                 and path.suffix == ".sol"
             ):
@@ -567,16 +590,11 @@ class LspCompiler:
             if files_to_recompile != files_to_compile or full_compile:
                 await self.__compile(files_to_recompile, False)
 
-    async def __compilation_loop(self, perform_files_discovery: bool):
-        if perform_files_discovery:
+    async def __compilation_loop(self):
+        if self.__perform_files_discovery:
             # perform Solidity files discovery
-            project_path = self.__config.project_root_path
-
-            for file in project_path.rglob("**/*.sol"):
-                if (
-                    not ({"node_modules", ".woke-build"} & set(file.parts))
-                    and file.is_file()
-                ):
+            for file in self.__config.project_root_path.rglob("**/*.sol"):
+                if not self.__file_ignored(file) and file.is_file():
                     self.__discovered_files.add(file.resolve())
 
             # perform initial compilation
@@ -588,7 +606,7 @@ class LspCompiler:
         while True:
             change = await self.__file_changes_queue.get()
             while True:
-                self._handle_change(change)
+                await self._handle_change(change)
                 try:
                     change = self.__file_changes_queue.get_nowait()
                 except asyncio.QueueEmpty:
@@ -656,4 +674,9 @@ class LspCompiler:
             severity=severity,
             code=error.error_code,
             message=error.message,
+        )
+
+    def __file_ignored(self, path: Path) -> bool:
+        return any(
+            is_relative_to(path, p) for p in self.__config.compiler.solc.ignore_paths
         )
