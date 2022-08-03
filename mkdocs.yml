@@ -35,9 +35,9 @@ nav:
   - Installation: 'index.md'
   - Configuration: 'configuration.md'
   - LSP server: 'language-server.md'
+  - Fuzzer: 'fuzzer.md'
   - Solc Version Manager: 'solc-version-manager.md'
   - Contributing: 'contributing.md'
-  - Fuzzer: 'fuzzer.md'
 
 extra:
   version:
@@ -68,3 +68,10 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - js/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js

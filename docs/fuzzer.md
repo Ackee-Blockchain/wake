@@ -5,39 +5,40 @@ Woke fuzzer is a property-based fuzzer for Solidity smart contracts that allows 
 ## Installation
 
 !!! warning
-    Woke fuzzer uses `brownie` package so be careful with your environment selection.
+    Woke fuzzer uses [eth-brownie](https://eth-brownie.readthedocs.io/en/stable/) package. For this reason, it is recommended to install Woke fuzzer into a [virtual environment](https://docs.python.org/3/library/venv.html).
+    It may be also needed to create a [brownie-config.yaml](https://eth-brownie.readthedocs.io/en/stable/config.html) configuration file so that Brownie can compile the project.
 
 Woke fuzzer is an optional feature of Woke and can be installed with pip:
-```
+```shell
 pip install abch-woke[fuzzer]
 ```
 
 ## Getting started
 
-To get started, run the following command inside your project directory:
-```
+To get started, run the following command inside the project directory:
+```shell
 woke init fuzz
 ```
 
-This command creates `pytypes` directory and generates your smart contract's [Python bindings](#python-bindings) and also copies an [example file](https://github.com/Ackee-Blockchain/woke/blob/main/woke/examples/fuzzer/test_example.py) `test_example.py` into `tests` directory.
+This command creates `pytypes` directory, generates smart contract's [Python bindings](#python-bindings) and also copies an [example file](https://github.com/Ackee-Blockchain/woke/blob/main/woke/examples/fuzzer/test_example.py) `test_example.py` into `tests` directory.
 
 Apart from having useful comments, this example file showcases basic structure of Woke fuzzer's fuzz tests which consists of:
 
-* TestingSequence classes with methods decorated as **[Flows](#flows)** and **[Invariants](#invariants)** that are used for fuzz testing and an `__init__` method which is used for TestingSequence class setup and can also deploy the contract.
-* `test_*` methods that run Woke fuzzer's Campaign with the TestingSequence class
+* `TestingSequence` classes with methods decorated as **[Flows](#flows)** and **[Invariants](#invariants)** that are used for fuzz testing and an `__init__` method which is used for `TestingSequence` class setup and can also deploy contracts,
+* `test_*` methods that run Woke fuzzer's `Campaign` with the `TestingSequence` class.
 
 !!! tip
     All of these can also be separated into multiple files, see more a [verbose directory structure](#recommended-directory-structure).
 
-### TestingSequence and Campaign
+### `TestingSequence` and `Campaign`
 
-TestingSequence is a tester defined class that specifies **[Flows](#flows)** and **[Invariants](#invariants)** that will be later used for fuzz testing and it is also used to set up any prerequisites such as contract deployment or instance attributes later used in tests (contract owner, etc.)
+`TestingSequence` is a tester defined class that specifies **[Flows](#flows)** and **[Invariants](#invariants)** that will be later used for fuzz testing and it is also used to set up any prerequisites such as contract deployment or instance attributes later used in tests (contract owner, etc.)
 
-The Campaign class is a Woke fuzzer class that is responsible for the actual sequence generation and **[Flows](#flows)** and **[Invariants](#invariants)** execution from TestingSequence.
-You can specify how many sequences of how many **[Flows](#flows)** you want to generate and execute using arguments in the `run` functions.
+The `Campaign` class is a Woke fuzzer class that is responsible for the actual sequence generation and **[Flows](#flows)** and **[Invariants](#invariants)** execution from `TestingSequence`.
+The number of generated sequences and **[Flows](#flows)** must be specified as arguments of the `run` function.
 The development chain network gets reverted between the sequences.
 
-In the example below, the contract is deployed and the Campaign is run with 1000 sequences consisting of 400 flows.
+In the example below, the contract is deployed and the `Campaign` is run with 1000 sequences consisting of 400 flows.
 
 ```python
 import brownie
@@ -87,14 +88,14 @@ from woke.fuzzer.random import random_account, random_string
             self.subjects[subject_account] = (subject_name, 0)
 ```
 
-As you already know, a sequence of these **[Flows](#flows)** is generated and executed by the Campaign class. 
+A sequence of these **[Flows](#flows)** is generated and executed by the `Campaign` class.
 
-Notice that you can use `brownie.reverts` when you expect your transaction to be reverted.
+`brownie.reverts` is used when a transaction is expected to revert.
 Should a contract fail to revert the transaction, it will be reported as a bug by the fuzzer.
 
 ### Invariants
 
-Woke fuzzer is a property-based fuzzer and as such it allows testers to define **[Invariant](#invariants)** methods with `@invariant` decorator. These **[Invariant](#invariants)** methods check for correctness of certain properties in deployed fuzzed smart contract after every **[Flow](#flows)** execution. 
+Woke fuzzer is a property-based fuzzer and as such it allows testers to define **[Invariant](#invariants)** methods with `@invariant` decorator. These **[Invariant](#invariants)** methods check for correctness of certain properties in deployed fuzzed smart contracts after every **[Flow](#flows)** execution.
 ```python
 from woke.fuzzer.decorators import invariant
 from woke.fuzzer.random import random_account
@@ -118,22 +119,22 @@ Should any of the asserts in **[Invariant](#invariants)** method fail, it will b
 ### Generating pseudo-random data
 Woke fuzzer has several built-in methods for generating pseudo-random data:
 
-* `random_account` chooses a random account from existing brownie accounts
-* `random_int` generates random integer but with custom (increased) probabilities for `min`, `max` and `0`
-* `random_bool` picks True/False randomly
-* `random_string` can construct a random string of given `min` and `max` length
-* `random_bytes` generates a sequence of random bytes with given `min` and `max` length
+* `random_account` chooses a random account from existing brownie accounts,
+* `random_int` generates random integer but with custom (increased) probabilities for `min`, `max` and `0`,
+* `random_bool` picks True/False randomly,
+* `random_string` can construct a random string of given `min` and `max` length,
+* `random_bytes` generates a sequence of random bytes with given `min` and `max` length.
 
 Some of the methods mentioned above also have other optional parameters such as predicates that can be used to further restrict which values will be generated, see [source code](https://github.com/Ackee-Blockchain/woke/blob/main/woke/fuzzer/random.py) for full specification.
 
 ### Running the fuzzer
-When you've written your **[Flows](#flows)** and **[Invariants](#invariants)** you can let Woke fuzzer find all of the fuzz test files with:
+After writing **[Flows](#flows)** and **[Invariants](#invariants)**, Woke fuzzer can be run with all fuzz test files using:
 ```
 woke fuzz
 ```
-Or specify which fuzz tests you want to run:
+Or with specified fuzz test files:
 ```
-woke fuzz ./tests/token_test.py
+woke fuzz ./tests/test_token.py
 ```
 
 !!! info
@@ -141,28 +142,29 @@ woke fuzz ./tests/token_test.py
 
 ### Checking out the progress
 
-While fuzzing you'll see progress report in the console stating how many processes are still running.
+While fuzzing, the progress is reported in the console stating how many processes are still running.
 More verbose logs are stored in `.woke-logs/fuzz` directory, specifically the `latest` one for the last fuzzing campaign.
 
 !!! tip
-    We recommend using `less -r` to view the logs because they are ANSI code coloured.
+    We recommend using `less -r` to view the log files because they are ANSI code coloured.
 
 ### What to do when Woke fuzzer finds a bug
 
-When Woke fuzzer finds a bug it will print out a standard Python traceback and asks if you want to attach the debugger.
-Should you choose not to attach the debugger the fuzzing process will stop and you can later check out the execution log the same way as if you were [checking out the progress](#checking-out-the-progress).
-If you decide to attach the debugger, you will see an IPython debugger instance which will allow you to explore the state of your fuzzing instance and dev chain. 
+When Woke fuzzer finds a bug it will print out a standard Python traceback and ask if a debugger should be attached.
+With the debugger not being attached, the current process is stopped but the rest of the processes continue fuzzing.
+The bug can be later checked out in execution logs the same way as when [checking out the progress](#checking-out-the-progress).
+With the debugger attached, [IPython debugger](https://github.com/gotcha/ipdb) instance is created which allows exploring the state of the fuzzing instance and development chain.
 
 ## Decorators
 Apart from the `@flow` and `@invariant` that define type of the test method there are also decorators that can be used to tune **[Flow](#flows)** selection in a generated sequence:
 
-* `@weight(x)` - specifies weight that will be used when generating a sequence with default weight being 100. Say flow1 has weight 1 and flow2 has weight 2, flow2 will have ~(2/3) of the executions and flow1 only ~(1/3)
-* `@max_times(x)` - specifies maximum times a **[Flow](#flows)** will be called in one generated sequence
-* `@ignore` - instructs Woke fuzzer to ignore this **[Flow](#flows)**, useful for testing and debugging
+* `@weight(x)` - specifies weight that will be used when generating a sequence with default weight being 100. Say flow1 has weight 100 and flow2 has weight 200, flow2 will have ~$\frac{2}{3}$ of the executions and flow1 only ~$\frac{1}{3}$,
+* `@max_times(x)` - specifies maximum times a **[Flow](#flows)** will be called in one generated sequence,
+* `@ignore` - instructs Woke fuzzer to ignore the decorated **[Flow](#flows)** or **[Invariant](#invariants)**, useful for testing and debugging.
 
 ## Optional CLI arguments
 
-```
+```console
 $ woke fuzz --help
 Usage: woke fuzz [OPTIONS] [PATHS]...
 
@@ -181,30 +183,29 @@ Options:
 
 ### Fuzzing with multiple processes
 
-Woke fuzzer supports fuzzing with multiple processes by default, so the simple commands above will spawn as many processes as you have cores. You can use `-n` to specify number of processes.
+By default, Woke fuzzer performs fuzzing with a number of processes equal to the number of CPU cores. `-n` can be used to specify the number of processes.
 
 ### Development chain
 
-By default, woke fuzzer uses ganache-cli command to spawn a local dev chain for each process. 
+`ganache-cli` is used as a default command to spawn a local dev chain for each process.
 It's important to have ports 8545 to (8545 + # of processes) free and bindable.
 
-Woke fuzzer uses dev chain configuration from brownie so other development chains such as anvil can be selected with `--network` option, but make sure that brownie actually fully supports the dev chain.
-As of now, only ganache seems to be fully supported for fuzzing.
+Woke fuzzer uses dev chain configuration from Brownie so other development chains such as `anvil` or `hardhat` can be selected with `--network` option, but make sure that Brownie actually fully supports the dev chain.
 
-### Seed selection
+### Random seed selection
 
-To make fuzzing reproducible, it's possible to specify a seed used when generating random data with `-s`.
+To make fuzzing reproducible, it's possible to specify a seed used when generating random data with `-s`. With multiple seeds specified, each seed is assigned to a different process and the remaining seeds are generated randomly.
 
 ### Passive mode
 
-If you want to see more verbose output, try using the `--passive` mode that prints one process output into the console while still running other processes in the background.
+For debugging purposes, it's possible to run Woke fuzzer in passive mode using the `--passive` option. In this mode, Woke fuzzer will print out the output of the process `#0` to the console.
 
 ## Python bindings
-To make working with contracts a bit easier, Woke fuzzer generates Python bindings from your smart contract's ABI into the `pytypes` directory of your project.
+To make working with contracts a bit easier, Woke fuzzer generates Python bindings from smart contract's ABI into the `pytypes` directory of the project.
 
 ## Recommended directory structure
 
-For bigger projects, we recommend splitting up contract setup, **[Flow](#flows)** definition and `*_test.py` files.
+For bigger projects, we recommend splitting up contract setup, **[Flow](#flows)** definition and `test_*.py` files.
 ```
 project/
 ├── contracts/
@@ -218,6 +219,6 @@ project/
     │   ├── setup.py
     │   └── flows.py
     ├── __init__.py
-    ├── token_test.py
-    └── amm_test.py
+    ├── test_token.py
+    └── test_amm.py
 ```
