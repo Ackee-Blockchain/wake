@@ -101,7 +101,7 @@ class SoliditySourceParser:
         return list(imports)
 
     @classmethod
-    def strip_comments(cls, source_code: str) -> str:
+    def strip_comments(cls, source_code: str, ignore_errors: bool = False) -> str:
         stop = False
         while not stop:
             # try to find a single-line or multi-line comment (whichever comes first)
@@ -125,6 +125,9 @@ class SoliditySourceParser:
                         source_code, match.end()
                     )
                     if end_match is None:
+                        if ignore_errors:
+                            source_code = source_code[: match.start()]
+                            continue
                         raise ValueError(f"Multi-line comment not closed.")
                     source_code = (
                         source_code[0 : match.start()] + source_code[end_match.end() :]
@@ -152,7 +155,7 @@ class SoliditySourceParser:
         h = BLAKE2b.new(data=raw_content, digest_bits=256)
 
         # strip all comments
-        content = cls.strip_comments(content)
+        content = cls.strip_comments(content, ignore_errors)
 
         return (
             cls.__parse_version_pragma(content, ignore_errors),
@@ -173,7 +176,7 @@ class SoliditySourceParser:
         h = BLAKE2b.new(data=source_code.encode("utf-8"), digest_bits=256)
 
         # strip all comments
-        content = cls.strip_comments(source_code)
+        content = cls.strip_comments(source_code, ignore_errors)
 
         return (
             cls.__parse_version_pragma(content, ignore_errors),
