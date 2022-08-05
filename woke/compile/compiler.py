@@ -303,6 +303,17 @@ class SolidityCompiler:
             modified_files = {}
         if len(files) + len(modified_files) == 0:
             raise CompilationError("No source files provided to compile.")
+        target_version = self.__config.compiler.solc.target_version
+        min_version = self.__config.min_solidity_version
+        max_version = self.__config.max_solidity_version
+        if target_version is not None and target_version < min_version:
+            raise CompilationError(
+                f"Target configured version {target_version} is lower than minimum supported version {min_version}"
+            )
+        if target_version is not None and target_version > max_version:
+            raise CompilationError(
+                f"Target configured version {target_version} is higher than maximum supported version {max_version}"
+            )
 
         graph = self.build_graph(files, modified_files)
         if maximize_compilation_units:
@@ -358,12 +369,35 @@ class SolidityCompiler:
                     )
             else:
                 # use the latest matching version
-                # TODO Do not use the latest matching version in Woke compiler
-                target_version = next(
+                matching_versions = [
                     version
                     for version in reversed(self.__svm.list_all())
                     if version in compilation_unit.versions
-                )
+                ]
+                if len(matching_versions) == 0:
+                    files_str = "\n".join(str(path) for path in compilation_unit.files)
+                    raise CompilationError(
+                        f"Unable to compile following files with any solc version:\n"
+                        + files_str
+                    )
+                try:
+                    target_version = next(
+                        version
+                        for version in matching_versions
+                        if version <= max_version
+                    )
+                except StopIteration:
+                    files_str = "\n".join(str(path) for path in compilation_unit.files)
+                    raise CompilationError(
+                        f"The maximum supported version of Solidity is {max_version}, unable to compile the following files:\n"
+                        + files_str,
+                    )
+                if target_version < min_version:
+                    files_str = "\n".join(str(path) for path in compilation_unit.files)
+                    raise CompilationError(
+                        f"The minimum supported version of Solidity is {min_version}, unable to compile the following files:\n"
+                        + files_str,
+                    )
             target_versions.append(target_version)
 
             if not self.__svm.get_path(target_version).is_file():

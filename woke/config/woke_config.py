@@ -10,6 +10,7 @@ import tomli
 
 from woke.utils import change_cwd
 
+from ..core.solidity_version import SolidityVersion
 from .data_model import CompilerConfig, LspConfig, TopLevelConfig
 
 logger = logging.getLogger(__name__)
@@ -229,6 +230,14 @@ class WokeConfig:
         Return the system path of the currently open project.
         """
         return self.__project_root_path
+
+    @property
+    def min_solidity_version(self) -> SolidityVersion:
+        return SolidityVersion.fromstring("0.6.0")
+
+    @property
+    def max_solidity_version(self) -> SolidityVersion:
+        return SolidityVersion.fromstring("0.8.15")
 
     @property
     def compiler(self) -> CompilerConfig:
