@@ -357,6 +357,28 @@ class LspCompiler:
         files_to_compile: AbstractSet[Path],
         full_compile: bool = True,
     ) -> None:
+        target_version = self.__config.compiler.solc.target_version
+        min_version = self.__config.min_solidity_version
+        max_version = self.__config.max_solidity_version
+        if target_version is not None and target_version < min_version:
+            await self.__server.log_message(
+                f"The minimum supported version of Solidity is {min_version}. Version {target_version} is selected in settings.",
+                MessageType.ERROR,
+            )
+            for file in self.__discovered_files:
+                # clear diagnostics
+                await self.__diagnostic_queue.put((file, set()))
+            return
+        if target_version is not None and target_version > max_version:
+            await self.__server.log_message(
+                f"The maximum supported version of Solidity is {max_version}. Version {target_version} is selected in settings.",
+                MessageType.ERROR,
+            )
+            for file in self.__discovered_files:
+                # clear diagnostics
+                await self.__diagnostic_queue.put((file, set()))
+            return
+
         try:
             if full_compile:
                 graph = self.__compiler.build_graph(
@@ -410,15 +432,14 @@ class LspCompiler:
                 continue
             else:
                 # use the latest matching version
-                try:
-                    target_version = next(
-                        version
-                        for version in reversed(self.__svm.list_all())
-                        if version in compilation_unit.versions
-                    )
-                except StopIteration:
+                matching_versions = [
+                    version
+                    for version in reversed(self.__svm.list_all())
+                    if version in compilation_unit.versions
+                ]
+                if len(matching_versions) == 0:
                     await self.__server.log_message(
-                        f"Unable to find a matching solc version for the following files:\n"
+                        f"Unable to find a matching version of Solidity for the following files:\n"
                         + "\n".join(
                             path_to_uri(path) for path in compilation_unit.files
                         ),
@@ -429,17 +450,39 @@ class LspCompiler:
                         await self.__diagnostic_queue.put((file, set()))
                     skipped_compilation_units.append(compilation_unit)
                     continue
-            if target_version < "0.6.0":
-                await self.__server.log_message(
-                    "The minimum supported solc version is 0.6.0, unable to compile the following files:\n"
-                    + "\n".join(path_to_uri(path) for path in compilation_unit.files),
-                    MessageType.ERROR,
-                )
-                for file in compilation_unit.files:
-                    # clear diagnostics
-                    await self.__diagnostic_queue.put((file, set()))
-                skipped_compilation_units.append(compilation_unit)
-                continue
+                try:
+                    target_version = next(
+                        version
+                        for version in matching_versions
+                        if version <= max_version
+                    )
+                except StopIteration:
+                    await self.__server.log_message(
+                        f"The maximum supported version of Solidity is {max_version}, unable to compile the following files:\n"
+                        + "\n".join(
+                            path_to_uri(path) for path in compilation_unit.files
+                        ),
+                        MessageType.ERROR,
+                    )
+                    for file in compilation_unit.files:
+                        # clear diagnostics
+                        await self.__diagnostic_queue.put((file, set()))
+                    skipped_compilation_units.append(compilation_unit)
+                    continue
+
+                if target_version < min_version:
+                    await self.__server.log_message(
+                        f"The minimum supported version of Solidity is {min_version}, unable to compile the following files:\n"
+                        + "\n".join(
+                            path_to_uri(path) for path in compilation_unit.files
+                        ),
+                        MessageType.ERROR,
+                    )
+                    for file in compilation_unit.files:
+                        # clear diagnostics
+                        await self.__diagnostic_queue.put((file, set()))
+                    skipped_compilation_units.append(compilation_unit)
+                    continue
             target_versions.append(target_version)
 
             if not self.__svm.get_path(target_version).is_file():
