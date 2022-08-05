@@ -357,24 +357,27 @@ class LspCompiler:
         files_to_compile: AbstractSet[Path],
         full_compile: bool = True,
     ) -> None:
-        if full_compile:
-            graph = self.__compiler.build_graph(
-                self.__discovered_files,
-                {path: info.text for path, info in self.__opened_files.items()},
-                True,
-            )
-        else:
-            graph = self.__compiler.build_graph(
-                files_to_compile,
-                {path: info.text for path, info in self.__opened_files.items()},
-                True,
-            )
-
         try:
-            compilation_units = self.__compiler.build_compilation_units_maximize(graph)
+            if full_compile:
+                graph = self.__compiler.build_graph(
+                    self.__discovered_files,
+                    {path: info.text for path, info in self.__opened_files.items()},
+                    True,
+                )
+            else:
+                graph = self.__compiler.build_graph(
+                    files_to_compile,
+                    {path: info.text for path, info in self.__opened_files.items()},
+                    True,
+                )
         except CompilationError as e:
             await self.__server.log_message(str(e), MessageType.ERROR)
+            for file in self.__discovered_files:
+                # clear diagnostics
+                await self.__diagnostic_queue.put((file, set()))
             return
+
+        compilation_units = self.__compiler.build_compilation_units_maximize(graph)
 
         # filter out only compilation units that need to be compiled
         compilation_units = [
@@ -400,6 +403,9 @@ class LspCompiler:
                     + "\n".join(path_to_uri(path) for path in compilation_unit.files),
                     MessageType.ERROR,
                 )
+                for file in compilation_unit.files:
+                    # clear diagnostics
+                    await self.__diagnostic_queue.put((file, set()))
                 skipped_compilation_units.append(compilation_unit)
                 continue
             else:
@@ -418,6 +424,9 @@ class LspCompiler:
                         ),
                         MessageType.ERROR,
                     )
+                    for file in compilation_unit.files:
+                        # clear diagnostics
+                        await self.__diagnostic_queue.put((file, set()))
                     skipped_compilation_units.append(compilation_unit)
                     continue
             if target_version < "0.6.0":
@@ -426,6 +435,9 @@ class LspCompiler:
                     + "\n".join(path_to_uri(path) for path in compilation_unit.files),
                     MessageType.ERROR,
                 )
+                for file in compilation_unit.files:
+                    # clear diagnostics
+                    await self.__diagnostic_queue.put((file, set()))
                 skipped_compilation_units.append(compilation_unit)
                 continue
             target_versions.append(target_version)
