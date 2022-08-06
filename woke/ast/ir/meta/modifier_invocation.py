@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING, Iterator, List, Optional, Union
 
 from ..expression.abc import ExpressionAbc
 from ..expression.identifier import Identifier
@@ -44,6 +44,13 @@ class ModifierInvocation(IrAbc):
                 ExpressionAbc.from_ast(init, argument, self)
                 for argument in modifier_invocation.arguments
             ]
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        yield from self.__modifier_name
+        if self.__arguments is not None:
+            for argument in self.__arguments:
+                yield from argument
 
     @property
     def parent(self) -> FunctionDefinition:

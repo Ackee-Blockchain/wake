@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import re
 from functools import lru_cache, partial
-from typing import TYPE_CHECKING, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
 
 from woke.ast.enums import DataLocation, Mutability, Visibility
 from woke.ast.ir.abc import IrAbc
@@ -104,6 +104,16 @@ class VariableDeclaration(DeclarationAbc):
             else None
         )
         self._reference_resolver.register_post_process_callback(self.__post_process)
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        if self.__documentation is not None:
+            yield from self.__documentation
+        if self.__overrides is not None:
+            yield from self.__overrides
+        yield from self.__type_name
+        if self.__value is not None:
+            yield from self.__value
 
     def __post_process(self, callback_params: CallbackParams):
         if self.base_functions is not None:

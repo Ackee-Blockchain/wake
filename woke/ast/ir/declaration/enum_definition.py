@@ -35,6 +35,11 @@ class EnumDefinition(DeclarationAbc):
         for value in enum.members:
             self.__values.append(EnumValue(init, value, self))
 
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        for value in self.__values:
+            yield from value
+
     def _parse_name_location(self) -> Tuple[int, int]:
         IDENTIFIER = r"[a-zA-Z$_][a-zA-Z0-9$_]*"
         ENUM_RE = re.compile(

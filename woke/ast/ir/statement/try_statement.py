@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import Iterator, List, Optional, Tuple
 
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.expression.function_call import FunctionCall
@@ -25,6 +25,12 @@ class TryStatement(StatementAbc):
         ]
         self.__external_call = FunctionCall(init, try_statement.external_call, self)
         self.__documentation = try_statement.documentation
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        for clause in self.__clauses:
+            yield from clause
+        yield from self.__external_call
 
     @property
     def parent(self) -> IrAbc:

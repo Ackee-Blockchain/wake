@@ -1,3 +1,5 @@
+from typing import Iterator
+
 from woke.ast.enums import UnaryOpOperator
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
@@ -22,6 +24,10 @@ class UnaryOperation(ExpressionAbc):
         self.__sub_expression = ExpressionAbc.from_ast(
             init, unary_operation.sub_expression, self
         )
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        yield from self.__sub_expression
 
     @property
     def parent(self) -> IrAbc:

@@ -97,6 +97,29 @@ class SourceUnit(IrAbc):
             else:
                 assert False, f"Unknown node type: {node}"
 
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        for pragma in self.__pragmas:
+            yield from pragma
+        for import_directive in self.__imports:
+            yield from import_directive
+        for variable_declaration in self.__declared_variables:
+            yield from variable_declaration
+        for enum in self.__enums:
+            yield from enum
+        for function in self.__functions:
+            yield from function
+        for struct in self.__structs:
+            yield from struct
+        for error in self.__errors:
+            yield from error
+        for user_defined_value_type in self.__user_defined_value_types:
+            yield from user_defined_value_type
+        for contract in self.__contracts:
+            yield from contract
+        for using_for_directive in self.__using_for_directives:
+            yield from using_for_directive
+
     @property
     def parent(self) -> None:
         return None

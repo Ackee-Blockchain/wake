@@ -1,6 +1,6 @@
 import re
 from functools import lru_cache, partial
-from typing import Optional, Tuple
+from typing import Iterator, Optional, Tuple
 
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.declaration.abc import DeclarationAbc
@@ -34,6 +34,10 @@ class MemberAccess(ExpressionAbc):
         self.__referenced_declaration_id = member_access.referenced_declaration
 
         self._reference_resolver.register_post_process_callback(self.__post_process)
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        yield from self.__expression
 
     def __post_process(self, callback_params: CallbackParams):
         # workaround for enum value bug in Solidity versions prior to 0.8.2

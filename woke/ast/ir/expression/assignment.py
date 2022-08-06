@@ -1,3 +1,5 @@
+from typing import Iterator
+
 from woke.ast.enums import AssignmentOperator
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.utils import IrInitTuple
@@ -23,6 +25,11 @@ class Assignment(ExpressionAbc):
         self.__right_expression = ExpressionAbc.from_ast(
             init, assignment.right_hand_side, self
         )
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        yield from self.__left_expression
+        yield from self.__right_expression
 
     @property
     def parent(self) -> IrAbc:

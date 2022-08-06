@@ -1,3 +1,5 @@
+from typing import Iterator
+
 from woke.ast.enums import StateMutability, Visibility
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.meta.parameter_list import ParameterList
@@ -27,6 +29,11 @@ class FunctionTypeName(TypeNameAbc):
         )
         self.__state_mutability = function_type_name.state_mutability
         self.__visibility = function_type_name.visibility
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        yield from self.__parameter_types
+        yield from self.__return_parameter_types
 
     @property
     def parent(self) -> IrAbc:

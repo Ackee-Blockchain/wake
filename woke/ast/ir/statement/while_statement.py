@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Iterator, Optional
 
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
@@ -22,6 +22,11 @@ class WhileStatement(StatementAbc):
         self.__body = StatementAbc.from_ast(init, while_statement.body, self)
         self.__condition = ExpressionAbc.from_ast(init, while_statement.condition, self)
         self.__documentation = while_statement.documentation
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        yield from self.__body
+        yield from self.__condition
 
     @property
     def parent(self) -> IrAbc:

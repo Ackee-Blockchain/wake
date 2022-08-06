@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import Iterator, List, Optional, Tuple
 
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.statement.abc import StatementAbc
@@ -22,6 +22,11 @@ class UncheckedBlock(StatementAbc):
             for statement in unchecked_block.statements
         ]
         self.__documentation = unchecked_block.documentation
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        for statement in self.__statements:
+            yield from statement
 
     @property
     def parent(self) -> IrAbc:
