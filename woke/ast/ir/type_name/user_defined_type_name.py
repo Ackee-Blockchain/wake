@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Tuple
+from typing import TYPE_CHECKING, Iterator, Optional, Tuple
 
 from intervaltree import IntervalTree
 
@@ -63,6 +63,11 @@ class UserDefinedTypeName(TypeNameAbc):
                 init, user_defined_type_name.path_node, self
             )
             self.__parts = None
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        if self.__path_node is not None:
+            yield from self.__path_node
 
     @property
     def parent(self) -> IrAbc:

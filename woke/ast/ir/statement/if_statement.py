@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Iterator, Optional
 
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
@@ -26,6 +26,13 @@ class IfStatement(StatementAbc):
             else StatementAbc.from_ast(init, if_statement.false_body, self)
         )
         self.__documentation = if_statement.documentation
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        yield from self.__condition
+        yield from self.__true_body
+        if self.__false_body is not None:
+            yield from self.__false_body
 
     @property
     def parent(self) -> IrAbc:

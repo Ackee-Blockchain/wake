@@ -1,3 +1,5 @@
+from typing import Iterator
+
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcConditional
@@ -22,6 +24,12 @@ class Conditional(ExpressionAbc):
         self.__true_expression = ExpressionAbc.from_ast(
             init, conditional.true_expression, self
         )
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        yield from self.__condition
+        yield from self.__false_expression
+        yield from self.__true_expression
 
     @property
     def parent(self) -> IrAbc:

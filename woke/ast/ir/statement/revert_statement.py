@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Iterator, Optional
 
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.expression.function_call import FunctionCall
@@ -18,6 +18,10 @@ class RevertStatement(StatementAbc):
         super().__init__(init, revert, parent)
         self.__error_call = FunctionCall(init, revert.error_call, self)
         self.__documentation = revert.documentation
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        yield from self.__error_call
 
     @property
     def parent(self) -> IrAbc:

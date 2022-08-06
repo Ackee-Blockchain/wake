@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Iterator, Optional
 
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
@@ -25,6 +25,12 @@ class IndexAccess(ExpressionAbc):
             self.__index_expression = ExpressionAbc.from_ast(
                 init, index_access.index_expression, self
             )
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        yield from self.__base_expression
+        if self.__index_expression is not None:
+            yield from self.__index_expression
 
     @property
     def parent(self) -> IrAbc:

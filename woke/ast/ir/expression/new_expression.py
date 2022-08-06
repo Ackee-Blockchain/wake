@@ -1,3 +1,5 @@
+from typing import Iterator
+
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.type_name.abc import TypeNameAbc
@@ -16,6 +18,10 @@ class NewExpression(ExpressionAbc):
     ):
         super().__init__(init, new_expression, parent)
         self.__type_name = TypeNameAbc.from_ast(init, new_expression.type_name, self)
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        yield from self.__type_name
 
     @property
     def parent(self) -> IrAbc:

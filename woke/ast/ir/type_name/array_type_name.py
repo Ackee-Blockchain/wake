@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Iterator, Optional, Union
 
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
@@ -24,6 +24,12 @@ class ArrayTypeName(TypeNameAbc):
             if array_type_name.length
             else None
         )
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        yield from self.__base_type
+        if self.__length is not None:
+            yield from self.__length
 
     @property
     def parent(self) -> IrAbc:

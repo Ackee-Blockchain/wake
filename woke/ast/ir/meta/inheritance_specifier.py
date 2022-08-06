@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING, Iterator, List, Optional, Union
 
 from ..expression.abc import ExpressionAbc
 from ..type_name.user_defined_type_name import UserDefinedTypeName
@@ -48,6 +48,13 @@ class InheritanceSpecifier(IrAbc):
             self.__arguments = []
             for argument in inheritance_specifier.arguments:
                 self.__arguments.append(ExpressionAbc.from_ast(init, argument, self))
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        yield from self.__base_name
+        if self.__arguments is not None:
+            for argument in self.__arguments:
+                yield from argument
 
     @property
     def parent(self) -> ContractDefinition:

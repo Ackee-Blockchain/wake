@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Iterator, Optional
 
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
@@ -25,6 +25,10 @@ class ExpressionStatement(StatementAbc):
             init, expression_statement.expression, self
         )
         self.__documentation = expression_statement.documentation
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        yield from self.__expression
 
     @property
     def parent(self) -> IrAbc:

@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Iterator, Optional, Union
 
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
@@ -57,6 +57,16 @@ class ForStatement(StatementAbc):
             if for_.loop_expression
             else None
         )
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        yield from self.__body
+        if self.__condition is not None:
+            yield from self.__condition
+        if self.__initialization_expression is not None:
+            yield from self.__initialization_expression
+        if self.__loop_expression is not None:
+            yield from self.__loop_expression
 
     @property
     def parent(self) -> IrAbc:

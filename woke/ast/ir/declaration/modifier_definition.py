@@ -83,6 +83,16 @@ class ModifierDefinition(DeclarationAbc):
         )
         self._reference_resolver.register_post_process_callback(self.__post_process)
 
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        if self.__body is not None:
+            yield from self.__body
+        yield from self.__parameters
+        if isinstance(self.__documentation, StructuredDocumentation):
+            yield from self.__documentation
+        if self.__overrides is not None:
+            yield from self.__overrides
+
     def __post_process(self, callback_params: CallbackParams):
         if self.base_modifiers is not None:
             base_modifiers = self.base_modifiers

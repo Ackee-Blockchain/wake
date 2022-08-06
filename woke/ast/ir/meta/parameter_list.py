@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, List, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, List, Tuple, Union
 
 if TYPE_CHECKING:
     from ..declaration.error_definition import ErrorDefinition
@@ -40,6 +40,11 @@ class ParameterList(IrAbc):
         self.__parameters = []
         for parameter in parameter_list.parameters:
             self.__parameters.append(VariableDeclaration(init, parameter, self))
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        for parameter in self.__parameters:
+            yield from parameter
 
     @property
     def parent(
