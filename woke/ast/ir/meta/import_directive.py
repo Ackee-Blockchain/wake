@@ -6,7 +6,7 @@ from collections import deque
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path, PurePath
-from typing import TYPE_CHECKING, Deque, List, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Deque, Iterator, List, Optional, Set, Tuple
 
 from ..expression.identifier import Identifier
 from ..reference_resolver import CallbackParams
@@ -77,6 +77,11 @@ class ImportDirective(IrAbc):
         self._reference_resolver.register_post_process_callback(
             self.__post_process, priority=-1
         )
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        for symbol_alias in self.__symbol_aliases:
+            yield from symbol_alias.foreign
 
     def __post_process(self, callback_params: CallbackParams):
         # referenced declaration ID is missing (for whatever reason) in import directive symbol aliases

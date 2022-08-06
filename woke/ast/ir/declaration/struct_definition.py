@@ -37,6 +37,11 @@ class StructDefinition(DeclarationAbc):
         for member in struct_definition.members:
             self.__members.append(VariableDeclaration(init, member, self))
 
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        for member in self.__members:
+            yield from member
+
     def _parse_name_location(self) -> Tuple[int, int]:
         IDENTIFIER = r"[a-zA-Z$_][a-zA-Z0-9$_]*"
         STRUCT_RE = re.compile(

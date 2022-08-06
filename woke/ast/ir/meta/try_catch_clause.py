@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Iterator, Optional
 
 from ..statement.block import Block
 from ..utils import IrInitTuple
@@ -35,6 +35,12 @@ class TryCatchClause(IrAbc):
             self.__parameters = None
         else:
             self.__parameters = ParameterList(init, try_catch_clause.parameters, self)
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        yield from self.__block
+        if self.__parameters is not None:
+            yield from self.__parameters
 
     @property
     def parent(self) -> TryStatement:

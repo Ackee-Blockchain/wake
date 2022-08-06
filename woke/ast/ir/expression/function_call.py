@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import Iterator, List, Tuple
 
 from woke.ast.enums import FunctionCallKind
 from woke.ast.ir.abc import IrAbc
@@ -30,6 +30,12 @@ class FunctionCall(ExpressionAbc):
             ExpressionAbc.from_ast(init, argument, self)
             for argument in function_call.arguments
         ]
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        for argument in self.__arguments:
+            yield from argument
+        yield from self.__expression
 
     @property
     def parent(self) -> IrAbc:

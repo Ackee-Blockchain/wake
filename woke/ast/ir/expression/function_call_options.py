@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import Iterator, List, Tuple
 
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
@@ -29,6 +29,12 @@ class FunctionCallOptions(ExpressionAbc):
             ExpressionAbc.from_ast(init, option, self)
             for option in function_call_options.options
         ]
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        yield from self.__expression
+        for option in self.__options:
+            yield from option
 
     @property
     def parent(self) -> IrAbc:

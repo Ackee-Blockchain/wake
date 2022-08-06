@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 from functools import lru_cache
-from typing import TYPE_CHECKING, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, Tuple, Union
 
 from ..type_name.elementary_type_name import ElementaryTypeName
 from .abc import DeclarationAbc
@@ -32,6 +32,10 @@ class UserDefinedValueTypeDefinition(DeclarationAbc):
         self.__underlying_type = ElementaryTypeName(
             init, user_defined_value_type_definition.underlying_type, self
         )
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        yield from self.__underlying_type
 
     def _parse_name_location(self) -> Tuple[int, int]:
         IDENTIFIER = r"[a-zA-Z$_][a-zA-Z0-9$_]*"

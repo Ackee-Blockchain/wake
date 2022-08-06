@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Optional, Tuple
+from typing import Iterator, List, Optional, Tuple
 
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.statement.abc import StatementAbc
@@ -25,6 +25,12 @@ class Block(StatementAbc):
             self.__statements = []
             for statement in block.statements:
                 self.__statements.append(StatementAbc.from_ast(init, statement, self))
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        if self.__statements is not None:
+            for statement in self.__statements:
+                yield from statement
 
     @property
     def parent(self) -> IrAbc:

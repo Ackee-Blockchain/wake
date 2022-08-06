@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
 
 from woke.ast.ir.meta.identifier_path import IdentifierPath
 from woke.ast.ir.type_name.abc import TypeNameAbc
@@ -60,6 +60,16 @@ class UsingForDirective(IrAbc):
             self.__type_name = TypeNameAbc.from_ast(
                 init, using_for_directive.type_name, self
             )
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        if self.__functions is not None:
+            for function in self.__functions:
+                yield from function
+        if self.__library_name is not None:
+            yield from self.__library_name
+        if self.__type_name is not None:
+            yield from self.__type_name
 
     @property
     def parent(self) -> Union[ContractDefinition, SourceUnit]:

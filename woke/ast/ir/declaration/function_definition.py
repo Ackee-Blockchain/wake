@@ -109,6 +109,19 @@ class FunctionDefinition(DeclarationAbc):
         )
         self._reference_resolver.register_post_process_callback(self.__post_process)
 
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        for modifier in self.__modifiers:
+            yield from modifier
+        yield from self.__parameters
+        yield from self.__return_parameters
+        if isinstance(self.__documentation, StructuredDocumentation):
+            yield from self.__documentation
+        if self.__body is not None:
+            yield from self.__body
+        if self.__overrides is not None:
+            yield from self.__overrides
+
     def __post_process(self, callback_params: CallbackParams):
         if self.base_functions is not None:
             base_functions = self.base_functions

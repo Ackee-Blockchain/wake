@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, List, Tuple, Union
 
 from ..type_name.user_defined_type_name import UserDefinedTypeName
 from .identifier_path import IdentifierPath
@@ -39,6 +39,11 @@ class OverrideSpecifier(IrAbc):
                 self.__overrides.append(IdentifierPath(init, override, self))
             elif isinstance(override, SolcUserDefinedTypeName):
                 self.__overrides.append(UserDefinedTypeName(init, override, self))
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        for override in self.__overrides:
+            yield from override
 
     @property
     def parent(
