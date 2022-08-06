@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import Iterator, List, Optional, Tuple
 
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
@@ -25,6 +25,12 @@ class TupleExpression(ExpressionAbc):
                 self.__components.append(None)
             else:
                 self.__components.append(ExpressionAbc.from_ast(init, component, self))
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        for component in self.__components:
+            if component is not None:
+                yield from component
 
     @property
     def parent(self) -> IrAbc:

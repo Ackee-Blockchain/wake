@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Iterator, Optional, Tuple
 
 from woke.ast.ir.reference_resolver import ReferenceResolver
 from woke.ast.ir.utils.init_tuple import IrInitTuple
@@ -36,6 +36,9 @@ class IrAbc(ABC):
         self._source = init.source[source_start:source_end]
         if source_start != source_end:
             init.interval_tree[source_start:source_end] = self
+
+    def __iter__(self) -> Iterator["IrAbc"]:
+        yield self
 
     @property
     @abstractmethod

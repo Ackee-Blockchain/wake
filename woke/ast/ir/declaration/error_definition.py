@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import TYPE_CHECKING, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
 
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.utils import IrInitTuple
@@ -31,6 +31,12 @@ class ErrorDefinition(DeclarationAbc):
             if error.documentation
             else None
         )
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        yield from self.__parameters
+        if self.__documentation is not None:
+            yield from self.__documentation
 
     def _parse_name_location(self) -> Tuple[int, int]:
         # SolcErrorDefinition node always contains name_location attribute

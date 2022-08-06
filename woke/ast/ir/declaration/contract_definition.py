@@ -4,6 +4,7 @@ import re
 from functools import lru_cache, partial
 from typing import TYPE_CHECKING, FrozenSet, Iterator, List, Optional, Set, Tuple, Union
 
+from ..abc import IrAbc
 from ..meta.inheritance_specifier import InheritanceSpecifier
 from ..meta.using_for_directive import UsingForDirective
 from ..reference_resolver import CallbackParams
@@ -128,6 +129,31 @@ class ContractDefinition(DeclarationAbc):
                 self.__declared_variables.append(VariableDeclaration(init, node, self))
 
         init.reference_resolver.register_post_process_callback(self.__post_process)
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        for base_contract in self.__base_contracts:
+            yield from base_contract
+        if isinstance(self.__documentation, StructuredDocumentation):
+            yield from self.__documentation
+        for enum in self.__enums:
+            yield from enum
+        for error in self.__errors:
+            yield from error
+        for event in self.__events:
+            yield from event
+        for function in self.__functions:
+            yield from function
+        for modifier in self.__modifiers:
+            yield from modifier
+        for struct in self.__structs:
+            yield from struct
+        for user_defined_value_type in self.__user_defined_value_types:
+            yield from user_defined_value_type
+        for using_for_directive in self.__using_for_directives:
+            yield from using_for_directive
+        for declared_variable in self.__declared_variables:
+            yield from declared_variable
 
     def __post_process(self, callback_params: CallbackParams):
         base_contracts = []

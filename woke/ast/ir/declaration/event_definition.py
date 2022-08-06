@@ -43,6 +43,12 @@ class EventDefinition(DeclarationAbc):
             )
         # TODO event selector?
 
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        yield from self.__parameters
+        if isinstance(self.__documentation, StructuredDocumentation):
+            yield from self.__documentation
+
     def _parse_name_location(self) -> Tuple[int, int]:
         IDENTIFIER = r"[a-zA-Z$_][a-zA-Z0-9$_]*"
         EVENT_RE = re.compile(

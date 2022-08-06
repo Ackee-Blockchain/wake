@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import Iterator, List, Optional, Tuple
 
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
@@ -41,6 +41,14 @@ class VariableDeclarationStatement(StatementAbc):
             self.__initial_value = ExpressionAbc.from_ast(
                 init, variable_declaration_statement.initial_value, self
             )
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        for declaration in self.__declarations:
+            if declaration is not None:
+                yield from declaration
+        if self.__initial_value is not None:
+            yield from self.__initial_value
 
     @property
     def parent(self) -> IrAbc:

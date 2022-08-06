@@ -1,3 +1,5 @@
+from typing import Iterator
+
 from woke.ast.enums import BinaryOpOperator
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.utils import IrInitTuple
@@ -25,6 +27,11 @@ class BinaryOperation(ExpressionAbc):
         self.__right_expression = ExpressionAbc.from_ast(
             init, binary_operation.right_expression, self
         )
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        yield from self.__left_expression
+        yield from self.__right_expression
 
     @property
     def parent(self) -> IrAbc:

@@ -1,3 +1,5 @@
+from typing import Iterator
+
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.type_name.abc import TypeNameAbc
 from woke.ast.ir.utils import IrInitTuple
@@ -15,6 +17,11 @@ class Mapping(TypeNameAbc):
         super().__init__(init, mapping, parent)
         self.__key_type = TypeNameAbc.from_ast(init, mapping.key_type, self)
         self.__value_type = TypeNameAbc.from_ast(init, mapping.value_type, self)
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        yield from self.__key_type
+        yield from self.__value_type
 
     @property
     def parent(self) -> IrAbc:

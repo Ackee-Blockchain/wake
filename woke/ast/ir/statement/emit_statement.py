@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Iterator, Optional
 
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.expression.function_call import FunctionCall
@@ -18,6 +18,10 @@ class EmitStatement(StatementAbc):
         super().__init__(init, emit, parent)
         self.__event_call = FunctionCall(init, emit.event_call, self)
         self.__documentation = emit.documentation
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        yield from self.__event_call
 
     @property
     def parent(self) -> IrAbc:

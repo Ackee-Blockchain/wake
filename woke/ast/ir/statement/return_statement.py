@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Iterator, Optional
 
 from woke.ast.ir.expression.abc import ExpressionAbc
 
@@ -31,6 +31,11 @@ class Return(StatementAbc):
             if return_.expression
             else None
         )
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        if self.__expression is not None:
+            yield from self.__expression
 
     @property
     def parent(self) -> IrAbc:
