@@ -22,7 +22,7 @@ install_requires = [
 # Also: [pyright](https://github.com/microsoft/pyright/) (distributed through npm)
 extras_require = dict(
     fuzzer=[
-        "eth-brownie >= 1.16",
+        "web3 >= 6.0.0b4",
         "tblib >= 1.7.0, < 2",
         "ipdb",
     ],
