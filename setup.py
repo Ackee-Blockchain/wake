@@ -43,7 +43,7 @@ setup(
     description="Woke is a static analyzer and symbolic execution engine for Solidity.",
     url="https://github.com/Ackee-Blockchain/woke",
     author="Ackee Blockchain",
-    version="0.1.3-rc2",
+    version="0.1.3-rc3",
     packages=find_packages(),
     python_requires=">=3.7",
     install_requires=install_requires,
