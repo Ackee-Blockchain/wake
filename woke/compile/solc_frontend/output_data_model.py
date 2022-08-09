@@ -35,9 +35,9 @@ class SolcOutputErrorSourceLocation(SolcOutputModel):
 
 
 class SolcOutputErrorSecondarySourceLocation(SolcOutputModel):
-    file: str
-    start: int
-    end: int
+    file: Optional[str]
+    start: Optional[int]
+    end: Optional[int]
     message: str
 
     def __members(self) -> Tuple:
