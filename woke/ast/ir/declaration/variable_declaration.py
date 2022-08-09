@@ -5,7 +5,7 @@ import re
 from functools import lru_cache, partial
 from typing import TYPE_CHECKING, List, Optional, Tuple, Union
 
-from woke.ast.enums import Mutability, StorageLocation, Visibility
+from woke.ast.enums import DataLocation, Mutability, Visibility
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.declaration.abc import DeclarationAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
@@ -43,7 +43,7 @@ class VariableDeclaration(DeclarationAbc):
     # __scope
     __mutability: Optional[Mutability]
     __state_variable: bool
-    __storage_location: StorageLocation
+    __data_location: DataLocation
     __visibility: Visibility
     __base_functions: Optional[List[AstNodeId]]
     __documentation: Optional[StructuredDocumentation]
@@ -64,7 +64,7 @@ class VariableDeclaration(DeclarationAbc):
         self.__mutability = variable_declaration.mutability
         # TODO scope
         self.__state_variable = variable_declaration.state_variable
-        self.__storage_location = variable_declaration.storage_location
+        self.__data_location = variable_declaration.storage_location
         # TODO type descriptions?
         self.__visibility = variable_declaration.visibility
         self.__base_functions = (
@@ -188,8 +188,8 @@ class VariableDeclaration(DeclarationAbc):
         return self.__state_variable
 
     @property
-    def storage_location(self) -> StorageLocation:
-        return self.__storage_location
+    def data_location(self) -> DataLocation:
+        return self.__data_location
 
     @property
     def visibility(self) -> Visibility:
