@@ -390,7 +390,7 @@ class SolcVariableDeclaration(SolcNode):
     constant: StrictBool
     scope: AstNodeId
     state_variable: StrictBool
-    storage_location: StorageLocation
+    storage_location: DataLocation
     type_descriptions: "TypeDescriptionsModel"
     visibility: Visibility
     # optional

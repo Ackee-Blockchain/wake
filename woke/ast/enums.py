@@ -97,7 +97,7 @@ class FunctionCallKind(str, enum.Enum):
 
 
 # Compound types
-class StorageLocation(str, enum.Enum):
+class DataLocation(str, enum.Enum):
     CALLDATA = "calldata"
     DEFAULT = "default"
     MEMORY = "memory"
