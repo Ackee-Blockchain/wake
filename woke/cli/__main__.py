@@ -17,12 +17,12 @@ from woke.svm import SolcVersionManager
 from .compile import run_compile
 from .console import console
 from .detect import run_detect
+from .init import run_init
 from .lsp import run_lsp
 from .svm import run_svm
 
 try:
     from .fuzz import run_fuzz
-    from .init import run_init
 
     FUZZER_AVAILABLE = True
 except ImportError:
@@ -64,11 +64,11 @@ def main(ctx: Context, woke_root_path: Optional[str], debug: bool) -> None:
 
 main.add_command(run_compile)
 main.add_command(run_detect)
+main.add_command(run_init)
 main.add_command(run_lsp)
 main.add_command(run_svm)
 
 if FUZZER_AVAILABLE:
-    main.add_command(run_init)  # type: ignore
     main.add_command(run_fuzz)  # type: ignore
 
 
