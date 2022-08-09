@@ -70,9 +70,12 @@ class SolidityCompiler:
             try:
                 file = file.resolve(strict=True)
             except FileNotFoundError:
-                if ignore_errors:
+                if file in modified_files:
+                    pass
+                elif ignore_errors:
                     continue
-                raise
+                else:
+                    raise
 
             source_unit_name = self.__source_unit_name_resolver.resolve_cmdline_arg(
                 str(file)
