@@ -127,6 +127,6 @@ class SourceUnitNameResolver:
         """
         Return a source unit name of the file provided as a command-line argument.
         """
-        path = Path(arg).resolve(strict=True)
+        path = Path(arg).resolve()
         pure_path = PurePath(path)
         return pure_path.relative_to(self.__config.project_root_path)
