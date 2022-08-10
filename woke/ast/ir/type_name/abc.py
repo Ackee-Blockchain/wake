@@ -1,5 +1,7 @@
-from typing import Optional
+import logging
+from functools import lru_cache
 
+from woke.ast.expression_types import ExpressionTypeAbc
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import (
@@ -9,17 +11,19 @@ from woke.ast.nodes import (
     SolcMapping,
     SolcTypeNameUnion,
     SolcUserDefinedTypeName,
+    TypeDescriptionsModel,
 )
+from woke.utils.string import StringReader
+
+logger = logging.getLogger(__name__)
 
 
 class TypeNameAbc(IrAbc):
-    _type_identifier: Optional[str]
-    _type_string: Optional[str]
+    _type_descriptions: TypeDescriptionsModel
 
     def __init__(self, init: IrInitTuple, type_name: SolcTypeNameUnion, parent: IrAbc):
         super().__init__(init, type_name, parent)
-        self._type_identifier = type_name.type_descriptions.type_identifier
-        self._type_string = type_name.type_descriptions.type_string
+        self._type_descriptions = type_name.type_descriptions
 
     @staticmethod
     def from_ast(
@@ -43,9 +47,20 @@ class TypeNameAbc(IrAbc):
             return UserDefinedTypeName(init, type_name, parent)
 
     @property
-    def type_identifier(self) -> Optional[str]:
-        return self._type_identifier
+    @lru_cache(maxsize=None)
+    def type(self) -> ExpressionTypeAbc:
+        assert self._type_descriptions.type_identifier is not None
+
+        type_identifier = StringReader(self._type_descriptions.type_identifier)
+        ret = ExpressionTypeAbc.from_type_identifier(
+            type_identifier, self._reference_resolver, self.cu_hash
+        )
+        assert (
+            len(type_identifier) == 0 and ret is not None
+        ), f"Failed to parse type identifier: {self._type_descriptions.type_identifier}"
+        return ret
 
     @property
-    def type_string(self) -> Optional[str]:
-        return self._type_string
+    def type_string(self) -> str:
+        assert self._type_descriptions.type_string is not None
+        return self._type_descriptions.type_string

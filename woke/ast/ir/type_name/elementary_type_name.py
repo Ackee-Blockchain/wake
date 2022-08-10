@@ -24,6 +24,16 @@ class ElementaryTypeName(TypeNameAbc):
         self.__name = elementary_type_name.name
         self.__state_mutability = elementary_type_name.state_mutability
 
+        from woke.ast.ir.expression.elementary_type_name_expression import (
+            ElementaryTypeNameExpression,
+        )
+
+        # fix missing type descriptions in AST
+        if self._type_descriptions.type_identifier is None and isinstance(
+            parent, ElementaryTypeNameExpression
+        ):
+            self._type_descriptions = parent._type_descriptions
+
     @property
     def parent(self) -> IrAbc:
         return self._parent
