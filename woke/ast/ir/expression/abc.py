@@ -1,3 +1,8 @@
+import logging
+from functools import lru_cache
+from typing import Optional
+
+from woke.ast.expression_types import ExpressionTypeAbc
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import (
@@ -16,7 +21,11 @@ from woke.ast.nodes import (
     SolcNewExpression,
     SolcTupleExpression,
     SolcUnaryOperation,
+    TypeDescriptionsModel,
 )
+from woke.utils.string import StringReader
+
+logger = logging.getLogger(__name__)
 
 
 class ExpressionAbc(IrAbc):
@@ -24,10 +33,13 @@ class ExpressionAbc(IrAbc):
     Something that has a value.
     """
 
+    _type_descriptions: TypeDescriptionsModel
+
     def __init__(
         self, init: IrInitTuple, expression: SolcExpressionUnion, parent: IrAbc
     ):
         super().__init__(init, expression, parent)
+        self._type_descriptions = expression.type_descriptions
 
     @staticmethod
     def from_ast(
@@ -76,3 +88,28 @@ class ExpressionAbc(IrAbc):
             return TupleExpression(init, expression, parent)
         elif isinstance(expression, SolcUnaryOperation):
             return UnaryOperation(init, expression, parent)
+
+    @property
+    @lru_cache(maxsize=None)
+    def type(self) -> Optional[ExpressionTypeAbc]:
+        """
+        Can be None for Identifier in import statements.
+        """
+        if self._type_descriptions.type_identifier is None:
+            return None
+
+        type_identifier = StringReader(self._type_descriptions.type_identifier)
+        ret = ExpressionTypeAbc.from_type_identifier(
+            type_identifier, self._reference_resolver, self.cu_hash
+        )
+        assert (
+            len(type_identifier) == 0
+        ), f"Failed to parse type_identifier: {self._type_descriptions.type_identifier}"
+        return ret
+
+    @property
+    def type_string(self) -> Optional[str]:
+        """
+        Can be None for Identifier in import statements.
+        """
+        return self._type_descriptions.type_string

@@ -12,8 +12,10 @@ from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.meta.structured_documentation import StructuredDocumentation
 from woke.ast.ir.type_name.abc import TypeNameAbc
 from woke.ast.ir.utils import IrInitTuple
-from woke.ast.nodes import AstNodeId, SolcVariableDeclaration
+from woke.ast.nodes import AstNodeId, SolcVariableDeclaration, TypeDescriptionsModel
+from woke.utils.string import StringReader
 
+from ...expression_types import ExpressionTypeAbc
 from ..meta.override_specifier import OverrideSpecifier
 from ..reference_resolver import CallbackParams
 
@@ -52,6 +54,7 @@ class VariableDeclaration(DeclarationAbc):
     __overrides: Optional[OverrideSpecifier]
     __type_name: TypeNameAbc
     __value: Optional[ExpressionAbc]
+    __type_descriptions: TypeDescriptionsModel
 
     def __init__(
         self,
@@ -103,6 +106,7 @@ class VariableDeclaration(DeclarationAbc):
             if variable_declaration.value is not None
             else None
         )
+        self.__type_descriptions = variable_declaration.type_descriptions
         self._reference_resolver.register_post_process_callback(self.__post_process)
 
     def __iter__(self) -> Iterator[IrAbc]:
@@ -278,3 +282,22 @@ class VariableDeclaration(DeclarationAbc):
     @property
     def value(self) -> Optional[ExpressionAbc]:
         return self.__value
+
+    @property
+    @lru_cache(maxsize=None)
+    def type(self) -> ExpressionTypeAbc:
+        assert self.__type_descriptions.type_identifier is not None
+
+        type_identifier = StringReader(self.__type_descriptions.type_identifier)
+        ret = ExpressionTypeAbc.from_type_identifier(
+            type_identifier, self._reference_resolver, self.cu_hash
+        )
+        assert (
+            len(type_identifier) == 0 and ret is not None
+        ), f"Failed to parse type identifier: {self.__type_descriptions.type_identifier}"
+        return ret
+
+    @property
+    def type_string(self) -> str:
+        assert self.__type_descriptions.type_string is not None
+        return self.__type_descriptions.type_string
