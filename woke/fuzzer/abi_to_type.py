@@ -1,6 +1,8 @@
 import asyncio
 from distutils.command.clean import clean
+from genericpath import exists
 from pathlib import Path, PurePath
+from re import A
 import shutil
 import string
 from pathlib import Path, PurePath
@@ -32,7 +34,6 @@ TAB_WIDTH = 4
 
 class TypeGenerator():
     __config: WokeConfig
-    __indentation: int
     #generated types for the given source unit
     __unit_types: str
     __source_units: Dict[Path, SourceUnit]
@@ -42,7 +43,6 @@ class TypeGenerator():
     def __init__(
         self, config: WokeConfig):
         self.__config = config
-        self.__indentation = 0
         self.__unit_types = ""
         self.__source_units = {}
         self.__pytypes_dir = config.project_root_path / "pytypes"
@@ -118,39 +118,59 @@ class TypeGenerator():
     )
 
 
-            
-
     def write_unit_types_to_file(self, unit_name: str):
         self.__pytypes_dir.mkdir(exist_ok=True)
-        unit_path = self.__pytypes_dir / unit_name
-        if any(unit_path.iterdir()):
-            raise ValueError(f"'{unit_name}' directory is not empty.")
+        unit_path = (self.__pytypes_dir / unit_name).with_suffix(".py")
+        unit_path_parent = unit_path.parent
+        #TODO validate whether project root can become paraent
+        unit_path_parent.mkdir(parents=True,exist_ok=True)
+        unit_path.touch()
         unit_path.write_text(self.__unit_types)
 
 
-    def add_str_to_unit_types(self, string: str): 
-        self.__unit_types += self.__indentation * ' ' + str
+    def add_str_to_unit_types(self, num_of_indentation: int, string: str, num_of_newlines: int): 
+        self.__unit_types += num_of_indentation * TAB_WIDTH * ' ' + string + num_of_newlines * '\n'
 
+    #TODO add generating python imports
+    def generate_imports(self):
+        pass
 
     def generate_contract_template(self, contract: ContractDefinition):
-        self.add_str_to_unit_types("class " + contract.name + "(Contract:)")
-        self.__indentation = 1 * TAB_WIDTH
+        self.add_str_to_unit_types(0, "class " + contract.name + "(Contract):", 1)
         #TODO add abi
-        self.add_str_to_unit_types("abi = json.loads(TODO)")
+        self.add_str_to_unit_types(1, "abi = json.loads(TODO)", 1)
         #TODO add bytecode
-        self.add_str_to_unit_types("bytecode = TODO")
-        self.add_str_to_unit_types('\n')
+        self.add_str_to_unit_types(1, "bytecode = TODO", 1)
+        self.add_str_to_unit_types(0, "", 1)
 
 
-    def generate_types_contract(self, contract: ContractDefinition) -> string:
-        self.__indentation = 1 * TAB_WIDTH
+    def generate_types_enum(self, contract: ContractDefinition) -> None:
+        enums = contract.enums
+
+    def generate_types_struct(self, contract: ContractDefinition) -> None:
+        structs = contract.structs
+        for struct in structs:
+            self.add_str_to_unit_types(1, "@dataclass", 1)
+            self.add_str_to_unit_types(1, f"class {struct.name}:", 1)
+            for member in struct.members:
+                pass
+            self.add_str_to_unit_types(0, "", 3)
+
+    def generate_types_contract(self, contract: ContractDefinition) -> None:
         self.generate_contract_template(contract)
 
+        if contract.enums:
+            self.generate_types_enum(contract)
+
+        if contract.structs:
+            self.generate_types_struct(contract)
+
         for fn in contract.functions:
-            pass
+            if fn.function_selector:
+                self.add_str_to_unit_types(1, f"def {fn.name}(self, TODO) -> TODO:", 1)
+                self.add_str_to_unit_types(2, f"return self.transact(\"{fn.function_selector}\", [TODO], params)", 3)
 
         for variable in contract.declared_variables:
-            print("variable value: ", variable)
             if isinstance(variable.type_name, Mapping):
                 variable.type
 
@@ -169,7 +189,7 @@ class TypeGenerator():
         instead of recursive removal of type files inside pytypes dir
         remove the root and recreate it
         """
-        if self.__pytypes_dir.exists:
+        if self.__pytypes_dir.exists():
             shutil.rmtree(self.__pytypes_dir)
         self.__pytypes_dir.mkdir(exist_ok=True)
 
