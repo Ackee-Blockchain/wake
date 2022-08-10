@@ -749,6 +749,7 @@ class LspCompiler:
                         cu,
                         interval_tree,
                         self.__ir_reference_resolver,
+                        None,
                     )
                     self.__ir_reference_resolver.run_destroy_callbacks(path)
                     self.__source_units[path] = SourceUnit(init, ast)

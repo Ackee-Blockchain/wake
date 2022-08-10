@@ -4,6 +4,8 @@ import re
 from functools import lru_cache, partial
 from typing import TYPE_CHECKING, FrozenSet, Iterator, List, Optional, Set, Tuple, Union
 
+from woke.compile import SolcOutputContractInfo
+
 from ..abc import IrAbc
 from ..meta.inheritance_specifier import InheritanceSpecifier
 from ..meta.using_for_directive import UsingForDirective
@@ -80,6 +82,7 @@ class ContractDefinition(DeclarationAbc):
     _linearized_base_contracts: List[AstNodeId]
     # __scope
     _documentation: Optional[Union[StructuredDocumentation, str]]
+    _compilation_info: Optional[SolcOutputContractInfo]
     # __used_errors
     _enums: List[EnumDefinition]
     _errors: List[ErrorDefinition]
@@ -114,6 +117,10 @@ class ContractDefinition(DeclarationAbc):
             raise TypeError(
                 f"Unknown type of documentation: {type(contract.documentation)}"
             )
+        if init.contracts_info is not None and self.name in init.contracts_info:
+            self._compilation_info = init.contracts_info[self.name]
+        else:
+            self._compilation_info = None
 
         self._base_contracts = []
         for base_contract in contract.base_contracts:
@@ -342,6 +349,10 @@ class ContractDefinition(DeclarationAbc):
             [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation of this contract, if any.
         """
         return self._documentation
+
+    @property
+    def compilation_info(self) -> Optional[SolcOutputContractInfo]:
+        return self._compilation_info
 
     @property
     def enums(self) -> Tuple[EnumDefinition]:

@@ -119,6 +119,9 @@ def run_compile(
                     cu,
                     interval_trees[path],
                     reference_resolver,
+                    output.contracts[source_unit_name]
+                    if source_unit_name in output.contracts
+                    else None,
                 )
                 source_units[path] = SourceUnit(init, ast)
 
