@@ -1,3 +1,4 @@
+from abc import ABC
 import asyncio
 from distutils.command.clean import clean
 from genericpath import exists
@@ -24,6 +25,11 @@ from ..ast.ir.meta.source_unit import SourceUnit
 from ..ast.ir.reference_resolver import CallbackParams, ReferenceResolver
 from ..ast.ir.utils import IrInitTuple
 from ..cli.console import console
+from woke.ast.enums import *
+from woke.utils.string import StringReader
+
+import woke.ast.expression_types as expr_types
+from ..ast.ir.declaration.function_definition import FunctionDefinition
 from ..compile.compilation_unit import CompilationUnit
 from ..compile.solc_frontend import SolcOutputErrorSeverityEnum
 from ..utils.file_utils import is_relative_to
@@ -32,12 +38,26 @@ from ..utils.file_utils import is_relative_to
 #tab space width for indentation
 TAB_WIDTH = 4
 
+DEFAULT_IMPORTS: str = """
+import random 
+from dataclasses import dataclass 
+from typing import List, NewType, Optional
+
+from woke.fuzzer.contract import Contract
+
+from eth_typing import AnyAddress, HexStr
+from web3 import Web3, WebsocketProvider, HTTPProvider
+from web3.method import Method
+from web3.types import TxParams, Address, RPCEndpoint
+"""
+
 class TypeGenerator():
     __config: WokeConfig
     #generated types for the given source unit
     __unit_types: str
     __source_units: Dict[Path, SourceUnit]
     __pytypes_dir: Path
+    __sol_to_py_lookup: Dict[type, str]
 
 
     def __init__(
@@ -46,6 +66,16 @@ class TypeGenerator():
         self.__unit_types = ""
         self.__source_units = {}
         self.__pytypes_dir = config.project_root_path / "pytypes"
+        self.__sol_to_py_lookup = {}
+        self.__init_sol_to_py_types()
+
+
+    def __init_sol_to_py_types(self):
+        self.__sol_to_py_lookup[expr_types.Address.__name__] = "AnyAddress"
+        self.__sol_to_py_lookup[expr_types.String.__name__] = "str"
+        #print("the keys are: ")
+        #for i in self.__sol_to_py_lookup.keys():
+        #    print(i)
 
 
     def run_compile(self, parse=True
@@ -136,6 +166,7 @@ class TypeGenerator():
         pass
 
     def generate_contract_template(self, contract: ContractDefinition):
+        self.add_str_to_unit_types(0, DEFAULT_IMPORTS, 2)
         self.add_str_to_unit_types(0, "class " + contract.name + "(Contract):", 1)
         #TODO add abi
         self.add_str_to_unit_types(1, "abi = json.loads(TODO)", 1)
@@ -156,6 +187,14 @@ class TypeGenerator():
                 pass
             self.add_str_to_unit_types(0, "", 3)
 
+
+    def generate_func_params(self, fn: FunctionDefinition) -> str:
+        params: str = ""
+        for arg in fn.parameters.parameters:
+            params += ", " + arg.name + ": " + self.__sol_to_py_lookup[arg.type.__class__.__name__]
+        return params
+
+
     def generate_types_contract(self, contract: ContractDefinition) -> None:
         self.generate_contract_template(contract)
 
@@ -167,7 +206,7 @@ class TypeGenerator():
 
         for fn in contract.functions:
             if fn.function_selector:
-                self.add_str_to_unit_types(1, f"def {fn.name}(self, TODO) -> TODO:", 1)
+                self.add_str_to_unit_types(1, f"def {fn.name}(self{self.generate_func_params(fn)}) -> TODO:", 1)
                 self.add_str_to_unit_types(2, f"return self.transact(\"{fn.function_selector}\", [TODO], params)", 3)
 
         for variable in contract.declared_variables:

@@ -4,8 +4,8 @@ import click
 from click.core import Context
 
 from woke.config import WokeConfig
-from woke.fuzzer.abi_to_type import generate_types
 from woke.utils import file_utils
+from ..fuzzer.abi_to_type import TypeGenerator
 
 
 @click.group(name="init")
@@ -28,7 +28,8 @@ def run_init(ctx: Context):
 def init_types(ctx: Context, force: bool) -> None:
     """Generate Python contract types from Solidity ABI."""
     config: WokeConfig = ctx.obj["config"]
-    generate_types(config, force)
+    type_generator = TypeGenerator(config)
+    type_generator.generate_types(True)
 
 
 @run_init.command(name="fuzz")
