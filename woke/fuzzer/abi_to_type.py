@@ -1,4 +1,5 @@
 from abc import ABC
+from ast import parse
 import asyncio
 from distutils.command.clean import clean
 from genericpath import exists
@@ -8,6 +9,7 @@ import shutil
 import string
 from pathlib import Path, PurePath
 from typing import Dict, List, Mapping, Set, Tuple
+from unicodedata import name
 
 import click
 from click.core import Context
@@ -21,6 +23,8 @@ from woke.compile.solc_frontend.input_data_model import SolcOutputSelectionEnum
 from woke.config import WokeConfig
 
 from ..ast.ir.declaration.contract_definition import ContractDefinition
+from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
+from woke.ast.ir.declaration.struct_definition import StructDefinition
 from ..ast.ir.meta.source_unit import SourceUnit
 from ..ast.ir.reference_resolver import CallbackParams, ReferenceResolver
 from ..ast.ir.utils import IrInitTuple
@@ -34,6 +38,15 @@ from ..compile.compilation_unit import CompilationUnit
 from ..compile.solc_frontend import SolcOutputErrorSeverityEnum
 from ..utils.file_utils import is_relative_to
 
+
+class A:
+    pass
+
+class B:
+    pass
+
+class C:
+    pass
 
 #tab space width for indentation
 TAB_WIDTH = 4
@@ -73,9 +86,10 @@ class TypeGenerator():
     def __init_sol_to_py_types(self):
         self.__sol_to_py_lookup[expr_types.Address.__name__] = "AnyAddress"
         self.__sol_to_py_lookup[expr_types.String.__name__] = "str"
-        #print("the keys are: ")
-        #for i in self.__sol_to_py_lookup.keys():
-        #    print(i)
+        self.__sol_to_py_lookup[expr_types.Array.__name__] = "arr"
+        self.__sol_to_py_lookup[expr_types.Struct.__name__] = "struct"
+        self.__sol_to_py_lookup[expr_types.UInt.__name__] = "uint"
+        self.__sol_to_py_lookup[expr_types.Bool.__name__] = "bool"
 
 
     def run_compile(self, parse=True
@@ -165,9 +179,9 @@ class TypeGenerator():
     def generate_imports(self):
         pass
 
-    def generate_contract_template(self, contract: ContractDefinition):
+    def generate_contract_template(self, contract: ContractDefinition, base_names: str):
         self.add_str_to_unit_types(0, DEFAULT_IMPORTS, 2)
-        self.add_str_to_unit_types(0, "class " + contract.name + "(Contract):", 1)
+        self.add_str_to_unit_types(0, "class " + contract.name + "(" + base_names + "):", 1)
         #TODO add abi
         self.add_str_to_unit_types(1, "abi = json.loads(TODO)", 1)
         #TODO add bytecode
@@ -178,46 +192,112 @@ class TypeGenerator():
     def generate_types_enum(self, contract: ContractDefinition) -> None:
         enums = contract.enums
 
-    def generate_types_struct(self, contract: ContractDefinition) -> None:
-        structs = contract.structs
+    def generate_types_struct(self, structs: List[StructDefinition]) -> None:
+        print("number of structs is: ", len(structs))
         for struct in structs:
             self.add_str_to_unit_types(1, "@dataclass", 1)
             self.add_str_to_unit_types(1, f"class {struct.name}:", 1)
             for member in struct.members:
-                pass
-            self.add_str_to_unit_types(0, "", 3)
+                self.add_str_to_unit_types(2, member.canonical_name.split('.')[-1] + ": " + self.parse_var_declaration(member), 1)
+            self.add_str_to_unit_types(0, "", 2)
 
 
-    def generate_func_params(self, fn: FunctionDefinition) -> str:
+    def parse_var_declaration(self, decl: VariableDeclaration) -> str:
+        name = decl.type.__class__.__name__
+        parsed: str = ""
+        if name == "Struct":
+            parsed += decl.type.name
+        elif name == "Array":
+            #TODO implement nested arrays
+            parsed = "List[" + decl.type.base_type.__class__.__name__ + "]"
+        else:
+            parsed = self.__sol_to_py_lookup[name]
+        return parsed
+
+
+    def generate_func_params(self, fn: FunctionDefinition) -> Tuple[str, str]:
         params: str = ""
-        for arg in fn.parameters.parameters:
-            params += ", " + arg.name + ": " + self.__sol_to_py_lookup[arg.type.__class__.__name__]
-        return params
+        #params_names are later inserted as an argument to the self.transact call
+        params_names: str = ""
+        for par in fn.parameters.parameters:
+            params_names += par.name + ", "
+            params += ", " + par.name + ": " + self.parse_var_declaration(par)
+        params += ", params: Optional[TxParams] = None"
+        if params_names:
+            return params_names[:-2], params
+        return params_names, params
 
 
-    def generate_types_contract(self, contract: ContractDefinition) -> None:
-        self.generate_contract_template(contract)
+    def generate_func_returns(self, fn: FunctionDefinition) -> str:
+        return_params: str = ""
+        for ret in fn.return_parameters.parameters:
+            return_params += self.parse_var_declaration(ret) + ", "
+        if return_params:
+            return return_params[:-2]
+        else:
+            return return_params + "None"
+
+
+    def generate_types_interface(self, interface: ContractDefinition, generate_template: bool) -> None:
+        pass
+
+    def generate_types_abstract_contract(self, abstract_contract: ContractDefinition, generate_template: bool) -> None:
+        pass
+
+    def generate_types_contract(self, contract: ContractDefinition, generate_template: bool) -> None:
+        inhertits_contract: bool = True
+        base_names: str = ""
+
+        #TODO needed to inherit from the base contracts
+        for base in contract.base_contracts:
+            parent_contract = base.base_name.referenced_declaration
+            if parent_contract.kind == ContractKind.CONTRACT and not parent_contract.abstract:
+                inhertits_contract = False
+                #TODO can be in different src unit?
+                #TODO might be needed to store in a different path
+                self.generate_types_contract(parent_contract, True)
+            elif parent_contract.kind == ContractKind.INTERFACE and parent_contract.structs:
+                #TODO will nevever inherit from Contract, will probably not need template (aka imports)
+                #will only be generated to contain the user defined types
+                self.generate_types_interface(parent_contract, False)
+            elif parent_contract.kind == ContractKind.CONTRACT and parent_contract.abstract:
+                self.generate_types_abstract_contract(parent_contract, False)
+
+            #print("source unit: ", base.base_name.referenced_declaration.parent.source_unit_name)
+            #print("source unit: ", base.base_name.referenced_declaration.kind)
+            #print("source unit: ", base.base_parent.source_unit_name)
+            #print("is abstract: ", base.base_parent.referenced_declaration.abstract)
+            #print("kind: ", base.parent.kind)
+
+        if generate_template:
+            print("inside generate template")
+            if inhertits_contract:
+                base_names = "Contract, " + base_names if base_names else "Contract"
+
+            self.generate_contract_template(contract, base_names)
 
         if contract.enums:
             self.generate_types_enum(contract)
 
         if contract.structs:
-            self.generate_types_struct(contract)
+            self.generate_types_struct(contract.structs)
 
-        for fn in contract.functions:
-            if fn.function_selector:
-                self.add_str_to_unit_types(1, f"def {fn.name}(self{self.generate_func_params(fn)}) -> TODO:", 1)
-                self.add_str_to_unit_types(2, f"return self.transact(\"{fn.function_selector}\", [TODO], params)", 3)
+        if contract.kind == ContractKind.CONTRACT and not contract.abstract or contract.kind == ContractKind.LIBRARY:
+            for fn in contract.functions:
+                if fn.function_selector:
+                    params_names, params = self.generate_func_params(fn)
+                    self.add_str_to_unit_types(1, f"def {fn.name}(self{params}) -> {self.generate_func_returns(fn)}:", 1)
+                    self.add_str_to_unit_types(2, f"return self.transact(\"{fn.function_selector}\", [{params_names}], params)", 3)
 
-        for variable in contract.declared_variables:
-            if isinstance(variable.type_name, Mapping):
-                variable.type
+            for variable in contract.declared_variables:
+                if isinstance(variable.type_name, Mapping):
+                    variable.type
 
 
     def generate_types_source_unit(self, unit: SourceUnit) -> None:
         for contract in unit.contracts:
             if contract.kind == ContractKind.CONTRACT and not contract.abstract:
-                self.generate_types_contract(contract)
+                self.generate_types_contract(contract, True)
             elif contract.kind == ContractKind.LIBRARY:
                 continue
         self.write_unit_types_to_file(unit.source_unit_name)
