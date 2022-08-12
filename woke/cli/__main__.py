@@ -95,7 +95,7 @@ def woke_solc() -> None:
     version = SolidityVersion.fromstring(version_file_path.read_text())
     solc_path = svm.get_path(version)
 
-    if not solc_path.is_file():
+    if not svm.installed(version):
         console.print(f"solc version {version} is not installed.")
         sys.exit(1)
 

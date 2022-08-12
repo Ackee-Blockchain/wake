@@ -42,7 +42,7 @@ async def run_solc_install(
     version = next(
         version for version in reversed(svm.list_all()) if version in version_expr
     )
-    if not force and svm.get_path(version).is_file():
+    if not force and svm.installed(version):
         console.print(f"Version {version} is already installed.")
         return
 
@@ -69,7 +69,7 @@ def svm_switch(ctx: Context, version: str) -> None:
     svm = SolcVersionManager(config)
     parsed_version = SolidityVersion.fromstring(version)
 
-    if not svm.get_path(parsed_version).is_file():
+    if not svm.installed(parsed_version):
         raise ValueError(f"solc version {parsed_version} is not installed.")
 
     (config.woke_root_path / ".woke_solc_version").write_text(str(parsed_version))
@@ -91,7 +91,7 @@ def svm_use(ctx: Context, version_range: Tuple[str], force: bool) -> None:
         version for version in reversed(svm.list_all()) if version in version_expr
     )
 
-    if not svm.get_path(version).is_file():
+    if not svm.installed(version):
         asyncio.run(run_solc_install(svm, SolidityVersionExpr(str(version)), force))
 
     (config.woke_root_path / ".woke_solc_version").write_text(str(version))

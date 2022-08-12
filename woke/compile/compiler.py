@@ -400,7 +400,7 @@ class SolidityCompiler:
                     )
             target_versions.append(target_version)
 
-            if not self.__svm.get_path(target_version).is_file():
+            if not self.__svm.installed(target_version):
                 with Progress() as progress:
                     task = progress.add_task(
                         f"[green]Downloading solc {target_version}", total=1
