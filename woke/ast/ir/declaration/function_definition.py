@@ -56,7 +56,7 @@ class FunctionDefinition(DeclarationAbc):
     __visibility: Visibility
     __base_functions: Optional[List[AstNodeId]]
     __documentation: Optional[Union[StructuredDocumentation, str]]
-    __function_selector: Optional[str]
+    __function_selector: Optional[bytes]
     __body: Optional[Block]
     __overrides: Optional[OverrideSpecifier]
 
@@ -100,7 +100,18 @@ class FunctionDefinition(DeclarationAbc):
             raise TypeError(
                 f"Unknown type of documentation: {type(function.documentation)}"
             )
-        self.__function_selector = function.function_selector
+        self.__function_selector = (
+            bytes.fromhex(function.function_selector)
+            if function.function_selector
+            else None
+        )
+
+        if (
+            self.__visibility in {Visibility.PUBLIC, Visibility.EXTERNAL}
+            and self.__kind == FunctionKind.FUNCTION
+        ):
+            assert self.__function_selector is not None
+
         self.__body = Block(init, function.body, self) if function.body else None
         self.__overrides = (
             OverrideSpecifier(init, function.overrides, self)
@@ -323,7 +334,7 @@ class FunctionDefinition(DeclarationAbc):
         return self.__documentation
 
     @property
-    def function_selector(self) -> Optional[str]:
+    def function_selector(self) -> Optional[bytes]:
         return self.__function_selector
 
     @property

@@ -23,6 +23,7 @@ class EventDefinition(DeclarationAbc):
     __anonymous: bool
     __parameters: ParameterList
     __documentation: Optional[Union[StructuredDocumentation, str]]
+    __event_selector: Optional[bytes]
 
     def __init__(
         self, init: IrInitTuple, event: SolcEventDefinition, parent: SolidityAbc
@@ -43,7 +44,9 @@ class EventDefinition(DeclarationAbc):
             raise TypeError(
                 f"Unknown type of documentation: {type(event.documentation)}"
             )
-        # TODO event selector?
+        self.__event_selector = (
+            bytes.fromhex(event.event_selector) if event.event_selector else None
+        )
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
@@ -110,3 +113,7 @@ class EventDefinition(DeclarationAbc):
     @property
     def documentation(self) -> Optional[Union[StructuredDocumentation, str]]:
         return self.__documentation
+
+    @property
+    def event_selector(self) -> Optional[bytes]:
+        return self.__event_selector

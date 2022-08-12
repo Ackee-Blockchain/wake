@@ -22,6 +22,7 @@ class ErrorDefinition(DeclarationAbc):
 
     __parameters: ParameterList
     __documentation: Optional[StructuredDocumentation]
+    __error_selector: Optional[bytes]
 
     def __init__(
         self, init: IrInitTuple, error: SolcErrorDefinition, parent: SolidityAbc
@@ -32,6 +33,9 @@ class ErrorDefinition(DeclarationAbc):
             StructuredDocumentation(init, error.documentation, self)
             if error.documentation
             else None
+        )
+        self.__error_selector = (
+            bytes.fromhex(error.error_selector) if error.error_selector else None
         )
 
     def __iter__(self) -> Iterator[IrAbc]:
@@ -86,3 +90,7 @@ class ErrorDefinition(DeclarationAbc):
     @property
     def documentation(self) -> Optional[StructuredDocumentation]:
         return self.__documentation
+
+    @property
+    def error_selector(self) -> Optional[bytes]:
+        return self.__error_selector
