@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import subprocess
 import sys
@@ -55,6 +56,9 @@ def main(ctx: Context, woke_root_path: Optional[str], debug: bool) -> None:
     ctx.ensure_object(dict)
     ctx.obj["debug"] = debug
     ctx.obj["woke_root_path"] = root_path
+
+    if "win32" in sys.platform:
+        asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
 
 main.add_command(run_compile)
