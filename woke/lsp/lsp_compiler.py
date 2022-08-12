@@ -485,7 +485,7 @@ class LspCompiler:
                     continue
             target_versions.append(target_version)
 
-            if not self.__svm.get_path(target_version).is_file():
+            if not self.__svm.installed(target_version):
                 progress_token = await self.__server.progress_begin(
                     "Downloading", f"solc {target_version}", 0
                 )

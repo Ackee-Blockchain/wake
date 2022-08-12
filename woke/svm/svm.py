@@ -73,6 +73,24 @@ class SolcVersionManager(CompilerVersionManagerAbc):
 
         self.__compilers_path.mkdir(parents=True, exist_ok=True)
 
+    def installed(self, version: Union[SolidityVersion, str]) -> bool:
+        self.__fetch_list_file()
+        if self.__solc_builds is None:
+            raise RuntimeError(
+                f"Unable to fetch or correctly parse '{self.__solc_list_url}'."
+            )
+
+        if isinstance(version, str):
+            version = SolidityVersion.fromstring(version)
+
+        path = self.get_path(version)
+        if not path.is_file():
+            return False
+
+        if not self.__verify_checksums(version):
+            return False
+        return True
+
     async def install(
         self,
         version: Union[SolidityVersion, str],
@@ -101,7 +119,6 @@ class SolcVersionManager(CompilerVersionManagerAbc):
             return
 
         filename = self.__solc_builds.releases[version]
-        build_info = next(b for b in self.__solc_builds.builds if b.version == version)
         download_url = f"{self.BINARIES_URL}/{self.__platform}/{filename}"
         local_path = self.get_path(version).parent / filename
 
@@ -113,23 +130,10 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         else:
             await self.__download_file(download_url, local_path, http_session, progress)
 
-        sha256 = build_info.sha256
-        if sha256.startswith("0x"):
-            sha256 = sha256[2:]
-
-        keccak256 = build_info.keccak256
-        if keccak256.startswith("0x"):
-            keccak256 = keccak256[2:]
-
-        if not self.__verify_sha256(local_path, sha256):
+        if not self.__verify_checksums(version):
             local_path.unlink()
             raise ChecksumError(
-                f"Failed to verify SHA256 checksum of '{filename}' file."
-            )
-        if not self.__verify_keccak256(local_path, keccak256):
-            local_path.unlink()
-            raise ChecksumError(
-                f"Failed to verify KECCAK256 checksum of '{filename}' file."
+                f"Checksum of the downloaded solc version `{version}` does not match the expected value."
             )
 
         # unzip older Windows solc binary zipped together with DLLs
@@ -250,6 +254,31 @@ class SolcVersionManager(CompilerVersionManagerAbc):
                 self.__solc_builds = SolcBuilds.parse_file(self.__solc_list_path)
             else:
                 raise
+
+    def __verify_checksums(self, version: SolidityVersion) -> bool:
+        assert self.__solc_builds is not None
+        build_info = next(b for b in self.__solc_builds.builds if b.version == version)
+        local_path = self.get_path(version)
+
+        filename = self.__solc_builds.releases[version]
+        if filename.endswith(".zip"):
+            local_path = local_path.parent / filename
+            if not local_path.is_file():
+                return True
+
+        sha256 = build_info.sha256
+        if sha256.startswith("0x"):
+            sha256 = sha256[2:]
+
+        keccak256 = build_info.keccak256
+        if keccak256.startswith("0x"):
+            keccak256 = keccak256[2:]
+
+        if not self.__verify_sha256(local_path, sha256):
+            return False
+        if not self.__verify_keccak256(local_path, keccak256):
+            return False
+        return True
 
     def __verify_sha256(self, path: Path, expected: str) -> bool:
         """

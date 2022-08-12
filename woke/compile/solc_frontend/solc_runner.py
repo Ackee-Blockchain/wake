@@ -61,7 +61,7 @@ class SolcFrontend:
         self, target_version: SolidityVersion, standard_input: SolcInput
     ) -> SolcOutput:
         path = self.__svm.get_path(target_version)
-        if not path.is_file():
+        if not self.__svm.installed(target_version):
             raise SolcCompilationError(
                 f"solc version `{target_version}` is not installed."
             )

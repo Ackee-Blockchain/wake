@@ -11,6 +11,14 @@ class CompilerVersionManagerAbc(ABC):
     """
 
     @abstractmethod
+    def installed(self, version: Union[VersionAbc, str]) -> bool:
+        """
+        Check if a compiler version is installed.
+        :param version: compiler version to check
+        :return: True if installed, False otherwise
+        """
+
+    @abstractmethod
     async def install(
         self, version: Union[VersionAbc, str], force_reinstall: bool = False
     ) -> None:
@@ -46,8 +54,4 @@ class CompilerVersionManagerAbc(ABC):
         Return a set of installed compiler versions.
         :return: set of installed compiler versions
         """
-        installed = []
-        for version in self.list_all():
-            if self.get_path(version).is_file():
-                installed.append(version)
-        return tuple(installed)
+        return tuple(version for version in self.list_all() if self.installed(version))
