@@ -51,6 +51,10 @@ class IrAbc(ABC):
         return self._ast_node.id
 
     @property
+    def ast_node(self) -> SolcNode:
+        return self._ast_node
+
+    @property
     def cu_hash(self) -> bytes:
         return self._cu_hash
 
