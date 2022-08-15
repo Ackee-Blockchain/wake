@@ -751,6 +751,8 @@ class Contract(ExpressionTypeAbc):
 
     @property
     def ir_node(self) -> ContractDefinition:
+        from woke.ast.ir.declaration.contract_definition import ContractDefinition
+
         node = self.__reference_resolver.resolve_node(self.__ast_id, self.__cu_hash)
         assert isinstance(node, ContractDefinition)
         return node
@@ -813,6 +815,8 @@ class Struct(ExpressionTypeAbc):
 
     @property
     def ir_node(self) -> StructDefinition:
+        from woke.ast.ir.declaration.struct_definition import StructDefinition
+
         node = self.__reference_resolver.resolve_node(self.__ast_id, self.__cu_hash)
         assert isinstance(node, StructDefinition)
         return node
@@ -847,6 +851,8 @@ class Enum(ExpressionTypeAbc):
 
     @property
     def ir_node(self) -> EnumDefinition:
+        from woke.ast.ir.declaration.enum_definition import EnumDefinition
+
         node = self.__reference_resolver.resolve_node(self.__ast_id, self.__cu_hash)
         assert isinstance(node, EnumDefinition)
         return node
@@ -932,6 +938,10 @@ class UserDefinedValueType(ExpressionTypeAbc):
 
     @property
     def ir_node(self) -> UserDefinedValueTypeDefinition:
+        from woke.ast.ir.declaration.user_defined_value_type_definition import (
+            UserDefinedValueTypeDefinition,
+        )
+
         node = self.__reference_resolver.resolve_node(self.__ast_id, self.__cu_hash)
         assert isinstance(node, UserDefinedValueTypeDefinition)
         return node
