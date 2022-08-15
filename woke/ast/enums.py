@@ -25,6 +25,61 @@ class GlobalSymbolsEnum(enum.IntEnum):
     TYPE = -27
     THIS = -28
 
+    BLOCK_BASEFEE = -100
+    BLOCK_CHAINID = -101
+    BLOCK_COINBASE = -102
+    BLOCK_DIFFICULTY = -103
+    BLOCK_GASLIMIT = -104
+    BLOCK_NUMBER = -105
+    BLOCK_TIMESTAMP = -106
+
+    MSG_DATA = -200
+    MSG_SENDER = -201
+    MSG_SIG = -202
+    MSG_VALUE = -203
+
+    TX_GASPRICE = -300
+    TX_ORIGIN = -301
+
+    ABI_DECODE = -400
+    ABI_ENCODE = -401
+    ABI_ENCODE_PACKED = -402
+    ABI_ENCODE_WITH_SELECTOR = -403
+    ABI_ENCODE_WITH_SIGNATURE = -404
+    ABI_ENCODE_CALL = -405
+
+    BYTES_CONCAT = -500
+    BYTES_LENGTH = -501
+
+    STRING_CONCAT = -600
+
+    ADDRESS_BALANCE = -700
+    ADDRESS_CODE = -701
+    ADDRESS_CODEHASH = -702
+    ADDRESS_TRANSFER = -703
+    ADDRESS_SEND = -704
+    ADDRESS_CALL = -705
+    ADDRESS_DELEGATECALL = -706
+    ADDRESS_STATICCALL = -707
+
+    # available for contracts and interfaces
+    TYPE_NAME = -800
+    TYPE_CREATION_CODE = -801
+    TYPE_RUNTIME_CODE = -802
+    # available for interfaces only
+    TYPE_INTERFACE_ID = -803
+    # available for integers
+    TYPE_MIN = -804
+    TYPE_MAX = -805
+
+    ARRAY_LENGTH = -900
+    ARRAY_PUSH = -901
+    ARRAY_POP = -902
+
+    FUNCTION_SELECTOR = -1000
+    FUNCTION_VALUE = -1001
+    FUNCTION_GAS = -1002
+
 
 # Contracts
 class ContractKind(str, enum.Enum):
