@@ -1,10 +1,23 @@
-from typing import Iterator, List, Tuple
+import logging
+from functools import lru_cache
+from typing import Iterator, List, Optional, Tuple, Union
 
-from woke.ast.enums import FunctionCallKind
+from woke.ast.enums import FunctionCallKind, GlobalSymbolsEnum
 from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.declaration.error_definition import ErrorDefinition
+from woke.ast.ir.declaration.event_definition import EventDefinition
+from woke.ast.ir.declaration.function_definition import FunctionDefinition
+from woke.ast.ir.declaration.struct_definition import StructDefinition
+from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
 from woke.ast.ir.expression.abc import ExpressionAbc
+from woke.ast.ir.expression.function_call_options import FunctionCallOptions
+from woke.ast.ir.expression.identifier import Identifier
+from woke.ast.ir.expression.member_access import MemberAccess
+from woke.ast.ir.expression.new_expression import NewExpression
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcFunctionCall
+
+logger = logging.getLogger(__name__)
 
 
 class FunctionCall(ExpressionAbc):
@@ -60,3 +73,74 @@ class FunctionCall(ExpressionAbc):
     @property
     def arguments(self) -> Tuple[ExpressionAbc]:
         return tuple(self.__arguments)
+
+    @property
+    @lru_cache(maxsize=None)
+    def function_called(
+        self,
+    ) -> Optional[
+        Union[
+            EventDefinition,
+            ErrorDefinition,
+            FunctionDefinition,
+            GlobalSymbolsEnum,
+            StructDefinition,
+            VariableDeclaration,
+        ]
+    ]:
+        if self.kind == FunctionCallKind.TYPE_CONVERSION:
+            return None
+
+        node = self.expression
+        while True:
+            if isinstance(node, Identifier):
+                referenced_declaration = node.referenced_declaration
+                if isinstance(
+                    referenced_declaration,
+                    (
+                        EventDefinition,
+                        ErrorDefinition,
+                        FunctionDefinition,
+                        GlobalSymbolsEnum,
+                        StructDefinition,
+                        VariableDeclaration,
+                    ),
+                ):
+                    return referenced_declaration
+                else:
+                    assert (
+                        False
+                    ), f"Unexpected function call referenced declaration type: {referenced_declaration}"
+            elif isinstance(node, MemberAccess):
+                referenced_declaration = node.referenced_declaration
+                if isinstance(
+                    referenced_declaration,
+                    (
+                        EventDefinition,
+                        ErrorDefinition,
+                        FunctionDefinition,
+                        GlobalSymbolsEnum,
+                        StructDefinition,
+                        VariableDeclaration,
+                    ),
+                ):
+                    return referenced_declaration
+                else:
+                    assert (
+                        False
+                    ), f"Unexpected function call referenced declaration type: {referenced_declaration}"
+            elif isinstance(node, FunctionCall):
+                node = node.expression
+                while isinstance(
+                    node, MemberAccess
+                ) and node.referenced_declaration in {
+                    GlobalSymbolsEnum.FUNCTION_VALUE,
+                    GlobalSymbolsEnum.FUNCTION_GAS,
+                }:
+                    node = node.expression
+            elif isinstance(node, FunctionCallOptions):
+                node = node.expression
+            elif isinstance(node, NewExpression):
+                return None
+            else:
+                assert False, f"Unexpected function call child node: {node}"
