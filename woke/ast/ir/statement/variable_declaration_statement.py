@@ -51,6 +51,18 @@ class VariableDeclarationStatement(StatementAbc):
         return tuple(self.__declarations)
 
     @property
+    def assignments(self) -> Tuple[Optional[VariableDeclaration]]:
+        ret = []
+        for assignment in self.__assignments:
+            if assignment is None:
+                ret.append(None)
+            else:
+                node = self._reference_resolver.resolve_node(assignment, self.cu_hash)
+                assert isinstance(node, VariableDeclaration)
+                ret.append(node)
+        return tuple(ret)
+
+    @property
     def documentation(self) -> Optional[str]:
         return self.__documentation
 

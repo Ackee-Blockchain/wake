@@ -45,3 +45,7 @@ class Return(StatementAbc):
         )
         assert isinstance(node, ParameterList)
         return node
+
+    @property
+    def expression(self) -> Optional[ExpressionAbc]:
+        return self.__expression
