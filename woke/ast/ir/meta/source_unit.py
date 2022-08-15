@@ -37,6 +37,7 @@ logger = logging.getLogger(__name__)
 class SourceUnit(IrAbc):
     _ast_node: SolcSourceUnit
 
+    __file_source: bytes
     __license: Optional[str]
     __source_unit_name: str
     __pragmas: List[PragmaDirective]
@@ -56,6 +57,7 @@ class SourceUnit(IrAbc):
         source_unit: SolcSourceUnit,
     ):
         super().__init__(init, source_unit, None)
+        self.__file_source = init.source
         self.__license = source_unit.license
         self.__source_unit_name = source_unit.absolute_path
 
@@ -98,6 +100,13 @@ class SourceUnit(IrAbc):
     @property
     def parent(self) -> None:
         return None
+
+    @property
+    def file_source(self) -> bytes:
+        """
+        Source code of the file including trailing newlines and license string.
+        """
+        return self.__file_source
 
     @property
     def license(self) -> Optional[str]:
