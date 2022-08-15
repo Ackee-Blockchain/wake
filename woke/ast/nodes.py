@@ -1132,9 +1132,9 @@ class YulFunctionDefinition(YulNode):
     # required
     body: "YulBlock"
     name: StrictStr
-    parameters: List["YulTypedName"]
-    return_variables: List["YulTypedName"]
     # optional
+    parameters: Optional[List["YulTypedName"]]
+    return_variables: Optional[List["YulTypedName"]]
 
 
 class YulIf(YulNode):
