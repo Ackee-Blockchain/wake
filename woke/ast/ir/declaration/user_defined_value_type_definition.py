@@ -60,5 +60,10 @@ class UserDefinedValueTypeDefinition(DeclarationAbc):
         return self._name
 
     @property
+    @lru_cache(maxsize=None)
+    def declaration_string(self) -> str:
+        return f"type {self.name} is {self.__underlying_type.source}"
+
+    @property
     def underlying_type(self) -> ElementaryTypeName:
         return self.__underlying_type

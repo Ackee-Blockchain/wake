@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from functools import lru_cache
 from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
 
 from .abc import DeclarationAbc
@@ -62,6 +63,33 @@ class EventDefinition(DeclarationAbc):
     @property
     def canonical_name(self) -> str:
         return f"{self._parent.canonical_name}.{self._name}"
+
+    @property
+    @lru_cache(maxsize=None)
+    def declaration_string(self) -> str:
+        ret = (
+            f"event {self._name}("
+            + ", ".join(
+                param.declaration_string for param in self.parameters.parameters
+            )
+            + f"){' anonymous' if self.anonymous else ''}"
+        )
+        if isinstance(self.documentation, StructuredDocumentation):
+            return (
+                "/// "
+                + "\n///".join(line for line in self.documentation.text.splitlines())
+                + "\n"
+                + ret
+            )
+        elif isinstance(self.documentation, str):
+            return (
+                "/// "
+                + "\n///".join(line for line in self.documentation.splitlines())
+                + "\n"
+                + ret
+            )
+        else:
+            return ret
 
     @property
     def anonymous(self) -> bool:
