@@ -29,7 +29,11 @@ from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.meta.parameter_list import ParameterList
 from woke.ast.ir.meta.structured_documentation import StructuredDocumentation
 from woke.ast.ir.utils import IrInitTuple
-from woke.ast.nodes import AstNodeId, SolcModifierDefinition
+from woke.ast.nodes import (
+    AstNodeId,
+    SolcModifierDefinition,
+    SolcStructuredDocumentation,
+)
 
 
 class ModifierDefinition(DeclarationAbc):
@@ -43,7 +47,7 @@ class ModifierDefinition(DeclarationAbc):
     __virtual: bool
     __visibility: Visibility
     __base_modifiers: Optional[List[AstNodeId]]
-    __documentation: Optional[StructuredDocumentation]
+    __documentation: Optional[Union[StructuredDocumentation, str]]
     __overrides: Optional[OverrideSpecifier]
 
     def __init__(
@@ -60,11 +64,18 @@ class ModifierDefinition(DeclarationAbc):
         self.__base_modifiers = (
             list(modifier.base_modifiers) if modifier.base_modifiers else None
         )
-        self.__documentation = (
-            StructuredDocumentation(init, modifier.documentation, self)
-            if modifier.documentation
-            else None
-        )
+        if modifier.documentation is None:
+            self.__documentation = None
+        elif isinstance(modifier.documentation, SolcStructuredDocumentation):
+            self.__documentation = StructuredDocumentation(
+                init, modifier.documentation, self
+            )
+        elif isinstance(modifier.documentation, str):
+            self.__documentation = modifier.documentation
+        else:
+            raise TypeError(
+                f"Unknown type of documentation: {type(modifier.documentation)}"
+            )
         self.__overrides = (
             OverrideSpecifier(init, modifier.overrides, self)
             if modifier.overrides
@@ -166,7 +177,7 @@ class ModifierDefinition(DeclarationAbc):
         return frozenset(self._child_modifiers)
 
     @property
-    def documentation(self) -> Optional[StructuredDocumentation]:
+    def documentation(self) -> Optional[Union[StructuredDocumentation, str]]:
         return self.__documentation
 
     @property
