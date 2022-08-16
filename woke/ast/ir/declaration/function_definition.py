@@ -33,7 +33,11 @@ from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.meta.parameter_list import ParameterList
 from woke.ast.ir.meta.structured_documentation import StructuredDocumentation
 from woke.ast.ir.utils import IrInitTuple
-from woke.ast.nodes import AstNodeId, SolcFunctionDefinition
+from woke.ast.nodes import (
+    AstNodeId,
+    SolcFunctionDefinition,
+    SolcStructuredDocumentation,
+)
 
 
 class FunctionDefinition(DeclarationAbc):
@@ -51,7 +55,7 @@ class FunctionDefinition(DeclarationAbc):
     __virtual: bool
     __visibility: Visibility
     __base_functions: Optional[List[AstNodeId]]
-    __documentation: Optional[StructuredDocumentation]
+    __documentation: Optional[Union[StructuredDocumentation, str]]
     __function_selector: Optional[str]
     __body: Optional[Block]
     __overrides: Optional[OverrideSpecifier]
@@ -84,11 +88,18 @@ class FunctionDefinition(DeclarationAbc):
         self.__base_functions = (
             list(function.base_functions) if function.base_functions else None
         )
-        self.__documentation = (
-            StructuredDocumentation(init, function.documentation, self)
-            if function.documentation
-            else None
-        )
+        if function.documentation is None:
+            self.__documentation = None
+        elif isinstance(function.documentation, SolcStructuredDocumentation):
+            self.__documentation = StructuredDocumentation(
+                init, function.documentation, self
+            )
+        elif isinstance(function.documentation, str):
+            self.__documentation = function.documentation
+        else:
+            raise TypeError(
+                f"Unknown type of documentation: {type(function.documentation)}"
+            )
         self.__function_selector = function.function_selector
         self.__body = Block(init, function.body, self) if function.body else None
         self.__overrides = (
@@ -227,7 +238,7 @@ class FunctionDefinition(DeclarationAbc):
         return frozenset(self._child_functions)
 
     @property
-    def documentation(self) -> Optional[StructuredDocumentation]:
+    def documentation(self) -> Optional[Union[StructuredDocumentation, str]]:
         return self.__documentation
 
     @property

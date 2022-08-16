@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 from functools import partial
-from typing import TYPE_CHECKING, FrozenSet, Iterator, List, Optional, Set, Tuple
+from typing import TYPE_CHECKING, FrozenSet, Iterator, List, Optional, Set, Tuple, Union
 
 from ..meta.inheritance_specifier import InheritanceSpecifier
 from ..meta.using_for_directive import UsingForDirective
@@ -34,6 +34,7 @@ from woke.ast.nodes import (
     SolcFunctionDefinition,
     SolcModifierDefinition,
     SolcStructDefinition,
+    SolcStructuredDocumentation,
     SolcUserDefinedValueTypeDefinition,
     SolcUsingForDirective,
     SolcVariableDeclaration,
@@ -51,8 +52,8 @@ class ContractDefinition(DeclarationAbc):
     __fully_implemented: Optional[bool]
     __linearized_base_contracts: List[AstNodeId]
     # __scope
-    __documentation: Optional[StructuredDocumentation]
-    # __user_errors
+    __documentation: Optional[Union[StructuredDocumentation, str]]
+    # __used_errors
     __enums: List[EnumDefinition]
     __errors: List[ErrorDefinition]
     __events: List[EventDefinition]
@@ -73,11 +74,19 @@ class ContractDefinition(DeclarationAbc):
         self.__kind = contract.contract_kind
         self.__fully_implemented = contract.fully_implemented
         self.__linearized_base_contracts = list(contract.linearized_base_contracts)
-        self.__documentation = (
-            StructuredDocumentation(init, contract.documentation, self)
-            if contract.documentation
-            else None
-        )
+
+        if contract.documentation is None:
+            self.__documentation = None
+        elif isinstance(contract.documentation, SolcStructuredDocumentation):
+            self.__documentation = StructuredDocumentation(
+                init, contract.documentation, self
+            )
+        elif isinstance(contract.documentation, str):
+            self.__documentation = contract.documentation
+        else:
+            raise TypeError(
+                f"Unknown type of documentation: {type(contract.documentation)}"
+            )
 
         self.__base_contracts = []
         for base_contract in contract.base_contracts:
@@ -206,7 +215,7 @@ class ContractDefinition(DeclarationAbc):
         return tuple(base_contracts)
 
     @property
-    def documentation(self) -> Optional[StructuredDocumentation]:
+    def documentation(self) -> Optional[Union[StructuredDocumentation, str]]:
         return self.__documentation
 
     @property

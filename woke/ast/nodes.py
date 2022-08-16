@@ -400,7 +400,9 @@ class SolcVariableDeclaration(SolcNode):
     # constant variables were distinguished by `constant` field in versions <= 0.6.5 (this field is still present in newer versions)
     mutability: Optional[Mutability]
     base_functions: Optional[List[AstNodeId]]
-    documentation: Optional["SolcStructuredDocumentation"]
+    documentation: Optional[
+        "SolcStructuredDocumentation"
+    ]  # added in 0.6.9 for state variables
     function_selector: Optional[StrictStr]
     indexed: Optional[StrictBool]
     overrides: Optional["SolcOverrideSpecifier"]
@@ -436,7 +438,7 @@ class SolcFunctionDefinition(SolcNode):
     # optional
     name_location: Optional[Src]  # new in 0.8.2
     base_functions: Optional[List[AstNodeId]]
-    documentation: Optional["SolcStructuredDocumentation"]
+    documentation: Optional[Union["SolcStructuredDocumentation", str]]
     function_selector: Optional[StrictStr]
     body: Optional["SolcBlock"]
     overrides: Optional["SolcOverrideSpecifier"]
@@ -502,7 +504,7 @@ class SolcContractDefinition(SolcNode):
     fully_implemented: Optional[
         StrictBool
     ]  # missing when a file that imports the contract cannot be compiled
-    documentation: Optional["SolcStructuredDocumentation"]
+    documentation: Optional[Union["SolcStructuredDocumentation", str]]
     used_errors: Optional[List[AstNodeId]]  # new in 0.8.4
 
 
@@ -515,7 +517,7 @@ class SolcEventDefinition(SolcNode):
     parameters: "SolcParameterList"
     # optional
     name_location: Optional[Src]  # new in 0.8.2
-    documentation: Optional["SolcStructuredDocumentation"]
+    documentation: Optional[Union["SolcStructuredDocumentation", str]]
     event_selector: Optional[
         StrictStr
     ]  # an example: "0d3648bd0f6ba80134a33ba9275ac585d9d315f0ad8355cddefde31afa28d0e9"
@@ -533,7 +535,7 @@ class SolcModifierDefinition(SolcNode):
     body: Optional["SolcBlock"]
     name_location: Optional[Src]  # new in 0.8.2
     base_modifiers: Optional[List[AstNodeId]]
-    documentation: Optional["SolcStructuredDocumentation"]
+    documentation: Optional[Union["SolcStructuredDocumentation", str]]
     overrides: Optional["SolcOverrideSpecifier"]
 
 
