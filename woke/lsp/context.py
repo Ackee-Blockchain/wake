@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from ..config import WokeConfig
+from ..core.solidity_version import SemanticVersion
+from ..utils.openzeppelin import get_contracts_package_version
 from .features.diagnostic import diagnostics_loop
 from .lsp_compiler import LspCompiler
 
@@ -16,6 +18,7 @@ class LspContext:
     __workspace_config: WokeConfig
     __compiler: LspCompiler
     __diagnostics_queue: asyncio.Queue
+    __openzeppelin_contracts_version: Optional[SemanticVersion]
 
     def __init__(
         self, server: LspServer, config: WokeConfig, perform_files_discovery: bool
@@ -26,6 +29,7 @@ class LspContext:
         self.__compiler = LspCompiler(
             server, self.__diagnostics_queue, perform_files_discovery
         )
+        self.__openzeppelin_contracts_version = get_contracts_package_version(config)
 
     def run(self) -> None:
         self.__server.create_task(diagnostics_loop(self.__server, self))
@@ -42,3 +46,7 @@ class LspContext:
     @property
     def diagnostics_queue(self) -> asyncio.Queue:
         return self.__diagnostics_queue
+
+    @property
+    def openzeppelin_contracts_version(self) -> Optional[SemanticVersion]:
+        return self.__openzeppelin_contracts_version

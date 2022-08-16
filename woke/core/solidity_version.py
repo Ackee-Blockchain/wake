@@ -1,7 +1,7 @@
 import itertools
 import re
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Iterable, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, Optional, Tuple, Type, TypeVar, Union
 
 """
 This module implements semantic version (and `npm` semantic version range) parsing as described
@@ -62,7 +62,10 @@ class VersionAbc(ABC):
         yield cls.validate
 
 
-class SolidityVersion(VersionAbc):
+T = TypeVar("T", bound="SemanticVersion")
+
+
+class SemanticVersion(VersionAbc):
     """
     A class representing a single Solidity version (not a range of versions).
     Prerelease and build tags are parsed but ignored (even in comparison). As of `solc` version 0.8.11 there is no use for them.
@@ -156,7 +159,7 @@ class SolidityVersion(VersionAbc):
         return not lt
 
     @classmethod
-    def fromstring(cls, version_str: str) -> "SolidityVersion":
+    def fromstring(cls: Type[T], version_str: str) -> T:
         match = cls.RE.match(version_str)
         if not match:
             raise ValueError(f"Invalid Solidity version: `{version_str}`")
@@ -166,7 +169,7 @@ class SolidityVersion(VersionAbc):
         patch = int(groups["patch"])
         prerelease = groups["prerelease"]
         build = groups["build"]
-        return SolidityVersion(major, minor, patch, prerelease, build)
+        return cls(major, minor, patch, prerelease, build)
 
     @property
     def major(self) -> int:
@@ -187,6 +190,10 @@ class SolidityVersion(VersionAbc):
     @property
     def build(self) -> Optional[str]:
         return self.__build
+
+
+class SolidityVersion(SemanticVersion):
+    pass
 
 
 class SolidityVersionRange:
