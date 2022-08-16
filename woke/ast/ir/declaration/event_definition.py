@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING, Optional, Tuple
+from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
 
 from .abc import DeclarationAbc
 
@@ -12,7 +12,7 @@ from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.meta.parameter_list import ParameterList
 from woke.ast.ir.meta.structured_documentation import StructuredDocumentation
 from woke.ast.ir.utils import IrInitTuple
-from woke.ast.nodes import SolcEventDefinition
+from woke.ast.nodes import SolcEventDefinition, SolcStructuredDocumentation
 
 
 class EventDefinition(DeclarationAbc):
@@ -21,17 +21,25 @@ class EventDefinition(DeclarationAbc):
 
     __anonymous: bool
     __parameters: ParameterList
-    __documentation: Optional[StructuredDocumentation]
+    __documentation: Optional[Union[StructuredDocumentation, str]]
 
     def __init__(self, init: IrInitTuple, event: SolcEventDefinition, parent: IrAbc):
         super().__init__(init, event, parent)
         self.__anonymous = event.anonymous
         self.__parameters = ParameterList(init, event.parameters, self)
-        self.__documentation = (
-            StructuredDocumentation(init, event.documentation, self)
-            if event.documentation
-            else None
-        )
+
+        if event.documentation is None:
+            self.__documentation = None
+        elif isinstance(event.documentation, SolcStructuredDocumentation):
+            self.__documentation = StructuredDocumentation(
+                init, event.documentation, self
+            )
+        elif isinstance(event.documentation, str):
+            self.__documentation = event.documentation
+        else:
+            raise TypeError(
+                f"Unknown type of documentation: {type(event.documentation)}"
+            )
         # TODO event selector?
 
     def _parse_name_location(self) -> Tuple[int, int]:
@@ -64,5 +72,5 @@ class EventDefinition(DeclarationAbc):
         return self.__parameters
 
     @property
-    def documentation(self) -> Optional[StructuredDocumentation]:
+    def documentation(self) -> Optional[Union[StructuredDocumentation, str]]:
         return self.__documentation
