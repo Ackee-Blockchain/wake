@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import TYPE_CHECKING, List, Tuple, Union
+from functools import lru_cache
+from typing import TYPE_CHECKING, Iterator, List, Tuple, Union
 
 from woke.ast.nodes import SolcEnumDefinition
 
@@ -54,6 +55,16 @@ class EnumDefinition(DeclarationAbc):
     @property
     def canonical_name(self) -> str:
         return self.__canonical_name
+
+    @property
+    @lru_cache(maxsize=None)
+    def declaration_string(self) -> str:
+        return (
+            f"enum {self.name}"
+            + " {\n"
+            + ",\n".join(f"    {value.name}" for value in self.__values)
+            + "\n}"
+        )
 
     @property
     def values(self) -> Tuple[EnumValue]:

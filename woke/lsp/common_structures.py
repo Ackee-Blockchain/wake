@@ -582,7 +582,7 @@ class TextDocumentRegistrationOptions(LspModel):
     """
 
 
-class MarkupKind(Enum):
+class MarkupKind(str, Enum):
     PLAIN_TEXT = "plaintext"
     MARKDOWN = "markdown"
 

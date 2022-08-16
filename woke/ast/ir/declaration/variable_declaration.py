@@ -163,6 +163,41 @@ class VariableDeclaration(DeclarationAbc):
         return f"{node.canonical_name}.{self.name}"
 
     @property
+    @lru_cache(maxsize=None)
+    def declaration_string(self) -> str:
+        ret = self.type_name.source
+        ret += f" {self.visibility}" if self.is_state_variable else ""
+        ret += f" {self.mutability}" if self.mutability != Mutability.MUTABLE else ""
+        ret += (
+            f" {self.data_location}"
+            if self.data_location != DataLocation.DEFAULT
+            else ""
+        )
+        ret += (
+            (
+                f" override"
+                + ", ".join(override.source for override in self.overrides.overrides)
+            )
+            if self.overrides is not None
+            else ""
+        )
+        ret += f" {self.name}" if len(self.name) > 0 else ""
+        ret += (
+            f" = {self.value.source}"
+            if self.value is not None and self.mutability == Mutability.CONSTANT
+            else ""
+        )
+
+        if self.documentation is not None:
+            return (
+                "/// "
+                + "\n///".join(line for line in self.documentation.text.splitlines())
+                + "\n"
+                + ret
+            )
+        return ret
+
+    @property
     def constant(self) -> bool:
         return self.__constant
 

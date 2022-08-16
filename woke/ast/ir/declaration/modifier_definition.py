@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 from collections import deque
-from functools import partial
+from functools import lru_cache, partial
 from typing import (
     TYPE_CHECKING,
     Deque,
@@ -138,6 +138,50 @@ class ModifierDefinition(DeclarationAbc):
     @property
     def canonical_name(self) -> str:
         return f"{self._parent.canonical_name}.{self._name}"
+
+    @property
+    @lru_cache(maxsize=None)
+    def declaration_string(self) -> str:
+        ret = f"modifier {self._name}"
+        ret += (
+            f"({', '.join(param.declaration_string for param in self.parameters.parameters)})"
+            if len(self.parameters.parameters) > 0
+            else ""
+        )
+        ret += " virtual" if self.virtual else ""
+        ret += (
+            (
+                f" override"
+                + (
+                    "("
+                    + ", ".join(
+                        override.source for override in self.overrides.overrides
+                    )
+                    + ")"
+                    if len(self.overrides.overrides) > 0
+                    else ""
+                )
+            )
+            if self.overrides is not None
+            else ""
+        )
+
+        if isinstance(self.documentation, StructuredDocumentation):
+            return (
+                "/// "
+                + "\n///".join(line for line in self.documentation.text.splitlines())
+                + "\n"
+                + ret
+            )
+        elif isinstance(self.documentation, str):
+            return (
+                "/// "
+                + "\n///".join(line for line in self.documentation.splitlines())
+                + "\n"
+                + ret
+            )
+        else:
+            return ret
 
     @property
     def body(self) -> Optional[Block]:

@@ -33,3 +33,7 @@ class EnumValue(DeclarationAbc):
     @property
     def canonical_name(self) -> str:
         return f"{self._parent.canonical_name}.{self._name}"
+
+    @property
+    def declaration_string(self) -> str:
+        return self.name

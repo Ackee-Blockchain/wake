@@ -64,6 +64,7 @@ from .features.document_link import (
     document_link,
 )
 from .features.document_symbol import DocumentSymbolParams, document_symbol
+from .features.hover import HoverParams, hover
 from .features.implementation import ImplementationParams, implementation
 from .features.references import ReferenceParams, references
 from .features.rename import (
@@ -195,6 +196,7 @@ class LspServer:
                 self._workspace_execute_command,
                 ExecuteCommandParams,
             ),
+            RequestMethodEnum.HOVER: (self._workspace_route, HoverParams),
         }
 
         self.__notification_mapping = {
@@ -556,6 +558,7 @@ class LspServer:
             execute_command_provider=ExecuteCommandOptions(
                 commands=[command for command in CommandsEnum]
             ),
+            hover_provider=True,
         )
         return InitializeResult(capabilities=server_capabilities, server_info=None)
 
@@ -731,6 +734,8 @@ class LspServer:
             return await self._text_document_did_save(context, params)
         elif isinstance(params, DidCloseTextDocumentParams):
             return await self._text_document_did_close(context, params)
+        elif isinstance(params, HoverParams):
+            return await hover(context, params)
         else:
             raise NotImplementedError(f"Unhandled request: {type(params)}")
 

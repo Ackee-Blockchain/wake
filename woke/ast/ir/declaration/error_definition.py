@@ -53,6 +53,25 @@ class ErrorDefinition(DeclarationAbc):
         return self._name
 
     @property
+    @lru_cache(maxsize=None)
+    def declaration_string(self) -> str:
+        ret = (
+            f"error {self._name}("
+            + ", ".join(
+                param.declaration_string for param in self.parameters.parameters
+            )
+            + ")"
+        )
+        if self.documentation is not None:
+            return (
+                "/// "
+                + "\n///".join(line for line in self.documentation.text.splitlines())
+                + "\n"
+                + ret
+            )
+        return ret
+
+    @property
     def parameters(self) -> ParameterList:
         return self.__parameters
 
