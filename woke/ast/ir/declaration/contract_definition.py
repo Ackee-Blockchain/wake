@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from functools import partial
+from functools import lru_cache, partial
 from typing import TYPE_CHECKING, FrozenSet, Iterator, List, Optional, Set, Tuple, Union
 
 from ..meta.inheritance_specifier import InheritanceSpecifier
@@ -184,6 +184,32 @@ class ContractDefinition(DeclarationAbc):
     @property
     def canonical_name(self) -> str:
         return self._name
+
+    @property
+    @lru_cache(maxsize=None)
+    def declaration_string(self) -> str:
+        ret = f"{'abstract ' if self.abstract else ''}{self.kind} {self.name}"
+        ret += (
+            " is " + ", ".join(spec.source for spec in self.base_contracts)
+            if len(self.base_contracts) > 0
+            else ""
+        )
+        if isinstance(self.documentation, StructuredDocumentation):
+            return (
+                "/// "
+                + "\n///".join(line for line in self.documentation.text.splitlines())
+                + "\n"
+                + ret
+            )
+        elif isinstance(self.documentation, str):
+            return (
+                "/// "
+                + "\n///".join(line for line in self.documentation.splitlines())
+                + "\n"
+                + ret
+            )
+        else:
+            return ret
 
     @property
     def abstract(self) -> bool:

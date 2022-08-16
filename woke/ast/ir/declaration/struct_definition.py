@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING, List, Tuple, Union
+from functools import lru_cache
+from typing import TYPE_CHECKING, Iterator, List, Tuple, Union
 
 from .abc import DeclarationAbc
 
@@ -56,6 +57,18 @@ class StructDefinition(DeclarationAbc):
     @property
     def canonical_name(self) -> str:
         return self.__canonical_name
+
+    @property
+    @lru_cache(maxsize=None)
+    def declaration_string(self) -> str:
+        return (
+            f"struct {self.name}"
+            + " {\n"
+            + ";\n".join(
+                f"    {member.declaration_string}" for member in self.__members
+            )
+            + ";\n}"
+        )
 
     @property
     def members(self) -> Tuple[VariableDeclaration]:

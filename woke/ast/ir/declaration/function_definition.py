@@ -187,6 +187,74 @@ class FunctionDefinition(DeclarationAbc):
         return self.name
 
     @property
+    @lru_cache(maxsize=None)
+    def declaration_string(self) -> str:
+        if self.kind == FunctionKind.CONSTRUCTOR:
+            ret = "constructor"
+        elif self.kind == FunctionKind.FALLBACK:
+            ret = "fallback"
+        elif self.kind == FunctionKind.RECEIVE:
+            ret = "receive"
+        else:
+            ret = f"function {self.name}"
+        ret += f"({', '.join(parameter.declaration_string for parameter in self.parameters.parameters)})"
+        ret += f" {self.visibility}"
+        ret += (
+            f" {self.state_mutability}"
+            if self.state_mutability != StateMutability.NONPAYABLE
+            else ""
+        )
+        ret += f" virtual" if self.virtual else ""
+        ret += (
+            (
+                f" override"
+                + (
+                    "("
+                    + ", ".join(
+                        override.source for override in self.overrides.overrides
+                    )
+                    + ")"
+                    if len(self.overrides.overrides) > 0
+                    else ""
+                )
+            )
+            if self.overrides is not None
+            else ""
+        )
+        ret += (
+            (" " + " ".join(modifier.source for modifier in self.modifiers))
+            if len(self.modifiers) > 0
+            else ""
+        )
+        ret += (
+            " returns ("
+            + ", ".join(
+                parameter.declaration_string
+                for parameter in self.return_parameters.parameters
+            )
+            + ")"
+            if len(self.return_parameters.parameters) > 0
+            else ""
+        )
+
+        if isinstance(self.documentation, StructuredDocumentation):
+            return (
+                "/// "
+                + "\n///".join(line for line in self.documentation.text.splitlines())
+                + "\n"
+                + ret
+            )
+        elif isinstance(self.documentation, str):
+            return (
+                "/// "
+                + "\n///".join(line for line in self.documentation.splitlines())
+                + "\n"
+                + ret
+            )
+        else:
+            return ret
+
+    @property
     def implemented(self) -> bool:
         return self.__implemented
 

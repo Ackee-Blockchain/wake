@@ -93,6 +93,11 @@ class DeclarationAbc(IrAbc):
         ...
 
     @property
+    @abstractmethod
+    def declaration_string(self) -> str:
+        ...
+
+    @property
     def name_location(self) -> Tuple[int, int]:
         if self._name_location is None:
             self._name_location = self._parse_name_location()

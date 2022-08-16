@@ -8,6 +8,7 @@ from .features.code_lens import CodeLensOptions
 from .features.definition import DefinitionOptions
 from .features.document_link import DocumentLinkOptions
 from .features.document_symbol import DocumentSymbolOptions
+from .features.hover import HoverOptions
 from .features.implementation import (
     ImplementationOptions,
     ImplementationRegistrationOptions,
@@ -133,9 +134,9 @@ class ServerCapabilities(LspModel):
     code_lens_provider: Optional[CodeLensOptions] = None
     rename_provider: Optional[Union[bool, RenameOptions]] = None
     execute_command_provider: Optional[ExecuteCommandOptions] = None
+    hover_provider: Optional[Union[bool, HoverOptions]] = None
     """
     completion_provider: Optional[CompletionOptions]
-    hover_provider: Optional[Union[bool, HoverOptions]]
     signature_help_provider: Optional[SignatureHelpOptions]
     declaration_provider: Optional[Union[bool, DeclarationOptions, DeclarationRegistrationOptions]]
     document_highlight_provider: Optional[Union[bool, ReferenceOptions]]

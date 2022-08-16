@@ -68,3 +68,7 @@ class IrAbc(ABC):
             self._ast_node.src.byte_offset,
             self._ast_node.src.byte_offset + self._ast_node.src.byte_length,
         )
+
+    @property
+    def source(self) -> str:
+        return self._source.decode("utf-8")
