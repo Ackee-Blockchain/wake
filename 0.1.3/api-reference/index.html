@@ -12,14 +12,14 @@
         <meta name="author" content="Ackee Blockchain">
       
       
-        <link rel="canonical" href="https://ackee-blockchain.github.io/woke/0.1.3/language-server/">
+        <link rel="canonical" href="https://ackee-blockchain.github.io/woke/0.1.3/api-reference/">
       
       <link rel="icon" href="../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.3.0, mkdocs-material-8.3.9">
     
     
       
-        <title>LSP server - Woke</title>
+        <title>API reference - Woke</title>
       
     
     
@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#solidity-lsp-server" class="md-skip">
+        <a href="#api-reference" class="md-skip">
           Skip to content
         </a>
       
@@ -110,7 +110,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              LSP server
+              API reference
             
           </span>
         </div>
@@ -269,163 +269,11 @@
 
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          LSP server
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../language-server/" class="md-nav__link">
         LSP server
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#projects-using-woke-server" class="md-nav__link">
-    Projects using Woke server
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#configuration-options" class="md-nav__link">
-    Configuration options
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#supported-commands" class="md-nav__link">
-    Supported commands
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#features" class="md-nav__link">
-    Features
-  </a>
-  
-    <nav class="md-nav" aria-label="Features">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#go-to-definition" class="md-nav__link">
-    Go to definition
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#go-to-type-definition" class="md-nav__link">
-    Go to type definition
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#go-to-implementation" class="md-nav__link">
-    Go to implementation
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#find-references" class="md-nav__link">
-    Find references
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#type-hierarchy" class="md-nav__link">
-    Type hierarchy
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#document-links" class="md-nav__link">
-    Document links
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#hover" class="md-nav__link">
-    Hover
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#code-lens" class="md-nav__link">
-    Code lens
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#document-symbols" class="md-nav__link">
-    Document symbols
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#diagnostics" class="md-nav__link">
-    Diagnostics
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rename" class="md-nav__link">
-    Rename
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#debugging" class="md-nav__link">
-    Debugging
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -502,119 +350,8 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#projects-using-woke-server" class="md-nav__link">
-    Projects using Woke server
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#configuration-options" class="md-nav__link">
-    Configuration options
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#supported-commands" class="md-nav__link">
-    Supported commands
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#features" class="md-nav__link">
-    Features
-  </a>
-  
-    <nav class="md-nav" aria-label="Features">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#go-to-definition" class="md-nav__link">
-    Go to definition
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#go-to-type-definition" class="md-nav__link">
-    Go to type definition
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#go-to-implementation" class="md-nav__link">
-    Go to implementation
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#find-references" class="md-nav__link">
-    Find references
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#type-hierarchy" class="md-nav__link">
-    Type hierarchy
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#document-links" class="md-nav__link">
-    Document links
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#hover" class="md-nav__link">
-    Hover
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#code-lens" class="md-nav__link">
-    Code lens
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#document-symbols" class="md-nav__link">
-    Document symbols
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#diagnostics" class="md-nav__link">
-    Diagnostics
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rename" class="md-nav__link">
-    Rename
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#debugging" class="md-nav__link">
-    Debugging
+  <a href="#woke" class="md-nav__link">
+    woke
   </a>
   
 </li>
@@ -631,93 +368,40 @@
             <article class="md-content__inner md-typeset">
               
                 
-  <a href="https://github.com/Ackee-Blockchain/woke/edit/main/docs/language-server.md" title="Edit this page" class="md-content__button md-icon">
+  <a href="https://github.com/Ackee-Blockchain/woke/edit/main/docs/api-reference/index.md" title="Edit this page" class="md-content__button md-icon">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
   </a>
 
 
 
-<h1 id="solidity-lsp-server">Solidity LSP server<a class="headerlink" href="#solidity-lsp-server" title="Permanent link">#</a></h1>
-<p>Woke implements a <a href="https://microsoft.github.io/language-server-protocol/">LSP</a> server for Solidity. The only currently supported communication channel is TCP.</p>
-<p>Woke LSP server can be run using:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>woke lsp
-</code></pre></div></p>
-<p>Or with an optional <code>--port</code> argument:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>woke lsp --port <span class="m">1234</span>
-</code></pre></div></p>
-<div class="admonition info">
-<p class="admonition-title">Info</p>
-<p>Multi-root workspaces are not currently supported.</p>
+<h1 id="api-reference">API reference<a class="headerlink" href="#api-reference" title="Permanent link">#</a></h1>
+
+
+<div class="doc doc-object doc-module">
+
+
+<a id="woke"></a>
+  <div class="doc doc-contents first">
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
 </div>
-<h2 id="projects-using-woke-server">Projects using Woke server<a class="headerlink" href="#projects-using-woke-server" title="Permanent link">#</a></h2>
-<ul>
-<li>VS Code Extension</li>
-</ul>
-<h2 id="configuration-options">Configuration options<a class="headerlink" href="#configuration-options" title="Permanent link">#</a></h2>
-<p>Server configuration options are loaded using the <a href="https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workspace_configuration">standard interface</a> from LSP clients. The process of setting the configuration options is client specific. Configuration changes are handled by the server, and the project is recompiled if the compilation options change.</p>
-<p>The following configuration options are supported:</p>
-<ul>
-<li><code>woke.compiler.solc.allow_paths</code>,</li>
-<li><code>woke.compiler.solc.evm_version</code>,</li>
-<li><code>woke.compiler.solc.ignore_paths</code>,</li>
-<li><code>woke.compiler.solc.include_paths</code>,</li>
-<li><code>woke.compiler.solc.remappings</code>,</li>
-<li><code>woke.compiler.solc.target_version</code>,</li>
-<li><code>woke.compiler.solc.via_IR</code>,</li>
-<li><code>woke.compiler.solc.optimizer.enabled</code>,</li>
-<li><code>woke.compiler.solc.optimizer.runs</code>,</li>
-<li><code>woke.lsp.find_references.include_declarations</code>.</li>
-</ul>
-<p>The semantics of these configuration options are explained in the <a href="../configuration/#compilersolc-namespace">configuration section</a>.</p>
-<h2 id="supported-commands">Supported commands<a class="headerlink" href="#supported-commands" title="Permanent link">#</a></h2>
-<p>Woke LSP server implements the command execution provider as specified by the <a href="https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workspace_executeCommand">LSP specification</a>. The following commands are supported:</p>
-<table>
-<thead>
-<tr>
-<th align="left">Command</th>
-<th align="left">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td align="left"><nobr><code>woke.lsp.force_recompile</code></nobr></td>
-<td align="left">Force recompile the opened project/files. Useful after modifying files outside the IDE (e.g. after installing npm packages).</td>
-</tr>
-</tbody>
-</table>
-<h2 id="features">Features<a class="headerlink" href="#features" title="Permanent link">#</a></h2>
-<h3 id="go-to-definition">Go to definition<a class="headerlink" href="#go-to-definition" title="Permanent link">#</a></h3>
-<p><img alt="Go to definition preview" src="../images/lsp/go-to-definition.gif" /></p>
-<h3 id="go-to-type-definition">Go to type definition<a class="headerlink" href="#go-to-type-definition" title="Permanent link">#</a></h3>
-<p><img alt="Go to type definition preview" src="../images/lsp/go-to-type-definition.gif" /></p>
-<h3 id="go-to-implementation">Go to implementation<a class="headerlink" href="#go-to-implementation" title="Permanent link">#</a></h3>
-<p>Find implementations of an unimplemented function or modifier.</p>
-<p><img alt="Go to implementation preview" src="../images/lsp/go-to-implementation.gif" /></p>
-<h3 id="find-references">Find references<a class="headerlink" href="#find-references" title="Permanent link">#</a></h3>
-<p><img alt="Find references preview" src="../images/lsp/find-references.gif" /></p>
-<h3 id="type-hierarchy">Type hierarchy<a class="headerlink" href="#type-hierarchy" title="Permanent link">#</a></h3>
-<p><img alt="Contract type hierarchy preview" src="../images/lsp/contract-type-hierarchy.gif" /></p>
-<p>Also works for virtual functions.</p>
-<p><img alt="Function type hierarchy preview" src="../images/lsp/function-type-hierarchy.gif" /></p>
-<h3 id="document-links">Document links<a class="headerlink" href="#document-links" title="Permanent link">#</a></h3>
-<p><img alt="Document links preview" src="../images/lsp/document-links.gif" /></p>
-<h3 id="hover">Hover<a class="headerlink" href="#hover" title="Permanent link">#</a></h3>
-<p>Includes links to documentation for OpenZeppelin contracts.</p>
-<p><img alt="Hover preview" src="../images/lsp/hover.gif" /></p>
-<h3 id="code-lens">Code lens<a class="headerlink" href="#code-lens" title="Permanent link">#</a></h3>
-<p>Number of references is shown above each declaration.</p>
-<p><img alt="Code lens preview" src="../images/lsp/code-lens.png" /></p>
-<h3 id="document-symbols">Document symbols<a class="headerlink" href="#document-symbols" title="Permanent link">#</a></h3>
-<p><img alt="Document symbols preview" src="../images/lsp/document-symbols.png" /></p>
-<h3 id="diagnostics">Diagnostics<a class="headerlink" href="#diagnostics" title="Permanent link">#</a></h3>
-<p><img alt="Diagnostics preview" src="../images/lsp/diagnostics-1.gif" /></p>
-<p><img alt="Diagnostics preview" src="../images/lsp/diagnostics-2.png" /></p>
-<h3 id="rename">Rename<a class="headerlink" href="#rename" title="Permanent link">#</a></h3>
-<p><img alt="Rename preview" src="../images/lsp/rename.gif" /></p>
-<h2 id="debugging">Debugging<a class="headerlink" href="#debugging" title="Permanent link">#</a></h2>
-<p>Woke LSP server can be debugged using:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>woke --debug lsp
-</code></pre></div></p>
 
               
             </article>
@@ -733,42 +417,6 @@
       </main>
       
         <footer class="md-footer">
-  
-    
-    <nav class="md-footer__inner md-grid" aria-label="Footer" >
-      
-        
-        <a href="../configuration/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Configuration" rel="prev">
-          <div class="md-footer__button md-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
-          </div>
-          <div class="md-footer__title">
-            <div class="md-ellipsis">
-              <span class="md-footer__direction">
-                Previous
-              </span>
-              Configuration
-            </div>
-          </div>
-        </a>
-      
-      
-        
-        <a href="../fuzzer/" class="md-footer__link md-footer__link--next" aria-label="Next: Fuzzer" rel="next">
-          <div class="md-footer__title">
-            <div class="md-ellipsis">
-              <span class="md-footer__direction">
-                Next
-              </span>
-              Fuzzer
-            </div>
-          </div>
-          <div class="md-footer__button md-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
-          </div>
-        </a>
-      
-    </nav>
   
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
