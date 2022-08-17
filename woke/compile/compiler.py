@@ -277,11 +277,9 @@ class SolidityCompiler:
                 sources=sources,
                 contracts=contracts,
                 errors=out.errors,
-                source_units=sorted(
-                    str(source_unit_name) for source_unit_name in unit.source_unit_names
-                ),
-                allow_paths=sorted(self.__config.compiler.solc.allow_paths),
-                include_paths=sorted(self.__config.compiler.solc.include_paths),
+                source_units=unit.source_unit_names,
+                allow_paths=self.__config.compiler.solc.allow_paths,
+                include_paths=self.__config.compiler.solc.include_paths,
                 settings=build_settings,
             )
             units_info[unit.hash.hex()] = info
@@ -491,12 +489,11 @@ class SolidityCompiler:
             ]
 
             if (
-                latest_unit_info.source_units
-                == sorted(compilation_unit.source_unit_names)
+                latest_unit_info.source_units == compilation_unit.source_unit_names
                 and latest_unit_info.allow_paths
-                == sorted(self.__config.compiler.solc.allow_paths)
+                == self.__config.compiler.solc.allow_paths
                 and latest_unit_info.include_paths
-                == sorted(self.__config.compiler.solc.include_paths)
+                == self.__config.compiler.solc.include_paths
                 and latest_unit_info.settings == build_settings
             ):
                 try:

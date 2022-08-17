@@ -1,7 +1,7 @@
 import re
 from dataclasses import astuple
 from pathlib import Path
-from typing import List, Optional
+from typing import FrozenSet, List, Optional
 
 from pydantic import BaseModel, Extra, Field, validator
 from pydantic.dataclasses import dataclass
@@ -38,18 +38,20 @@ class SolcOptimizerConfig(WokeConfigModel):
 
 
 class SolcConfig(WokeConfigModel):
-    allow_paths: List[Path] = []
+    allow_paths: FrozenSet[Path] = frozenset()
     """Woke should set solc `--allow-paths` automatically. This option allows to specify additional allowed paths."""
     evm_version: Optional[EvmVersionEnum] = None
     """Version of the EVM to compile for. Leave unset to let the solc decide."""
-    ignore_paths: List[Path] = Field(
-        default_factory=lambda: [
-            Path.cwd() / "node_modules",
-            Path.cwd() / ".woke-build",
-        ]
+    ignore_paths: FrozenSet[Path] = Field(
+        default_factory=lambda: frozenset(
+            [
+                Path.cwd() / "node_modules",
+                Path.cwd() / ".woke-build",
+            ]
+        )
     )
-    include_paths: List[Path] = Field(
-        default_factory=lambda: [Path.cwd() / "node_modules"]
+    include_paths: FrozenSet[Path] = Field(
+        default_factory=lambda: frozenset([Path.cwd() / "node_modules"])
     )
     optimizer: SolcOptimizerConfig = Field(default_factory=SolcOptimizerConfig)
     remappings: List[SolcRemapping] = []
