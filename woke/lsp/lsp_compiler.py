@@ -368,6 +368,8 @@ class LspCompiler:
             for file in self.__discovered_files:
                 # clear diagnostics
                 await self.__diagnostic_queue.put((file, set()))
+            self.__interval_trees.clear()
+            self.__source_units.clear()
             return
         if target_version is not None and target_version > max_version:
             await self.__server.log_message(
@@ -377,6 +379,8 @@ class LspCompiler:
             for file in self.__discovered_files:
                 # clear diagnostics
                 await self.__diagnostic_queue.put((file, set()))
+            self.__interval_trees.clear()
+            self.__source_units.clear()
             return
 
         try:
@@ -397,6 +401,8 @@ class LspCompiler:
             for file in self.__discovered_files:
                 # clear diagnostics
                 await self.__diagnostic_queue.put((file, set()))
+            self.__interval_trees.clear()
+            self.__source_units.clear()
             return
 
         compilation_units = self.__compiler.build_compilation_units_maximize(graph)
@@ -425,9 +431,6 @@ class LspCompiler:
                     + "\n".join(path_to_uri(path) for path in compilation_unit.files),
                     MessageType.ERROR,
                 )
-                for file in compilation_unit.files:
-                    # clear diagnostics
-                    await self.__diagnostic_queue.put((file, set()))
                 skipped_compilation_units.append(compilation_unit)
                 continue
             else:
@@ -445,9 +448,6 @@ class LspCompiler:
                         ),
                         MessageType.ERROR,
                     )
-                    for file in compilation_unit.files:
-                        # clear diagnostics
-                        await self.__diagnostic_queue.put((file, set()))
                     skipped_compilation_units.append(compilation_unit)
                     continue
                 try:
@@ -464,9 +464,6 @@ class LspCompiler:
                         ),
                         MessageType.ERROR,
                     )
-                    for file in compilation_unit.files:
-                        # clear diagnostics
-                        await self.__diagnostic_queue.put((file, set()))
                     skipped_compilation_units.append(compilation_unit)
                     continue
 
@@ -478,9 +475,6 @@ class LspCompiler:
                         ),
                         MessageType.ERROR,
                     )
-                    for file in compilation_unit.files:
-                        # clear diagnostics
-                        await self.__diagnostic_queue.put((file, set()))
                     skipped_compilation_units.append(compilation_unit)
                     continue
             target_versions.append(target_version)
@@ -506,6 +500,11 @@ class LspCompiler:
                     await self.__svm.install(version)
 
         for compilation_unit in skipped_compilation_units:
+            for file in compilation_unit.files:
+                # clear diagnostics
+                await self.__diagnostic_queue.put((file, set()))
+                self.__interval_trees.pop(file, None)
+                self.__source_units.pop(file, None)
             compilation_units.remove(compilation_unit)
 
         progress_token = await self.__server.progress_begin(
@@ -530,6 +529,8 @@ class LspCompiler:
             for task in tasks:
                 task.cancel()
             await self.__server.log_message(str(e), MessageType.ERROR)
+            self.__interval_trees.clear()
+            self.__source_units.clear()
             return
 
         errors_per_file: Dict[Path, Set[Diagnostic]] = {}
