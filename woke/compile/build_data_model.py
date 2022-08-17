@@ -1,7 +1,7 @@
-from pathlib import Path
-from typing import Dict, List
+from pathlib import Path, PurePath, PurePosixPath, PureWindowsPath
+from typing import Dict, FrozenSet, List
 
-from pydantic import BaseModel, Extra
+from pydantic import BaseModel, Extra, validator
 
 from woke.compile.solc_frontend import SolcInputSettings, SolcOutputError
 
@@ -10,6 +10,8 @@ class BuildInfoModel(BaseModel):
     class Config:
         extra = Extra.allow
         allow_mutation = False
+        arbitrary_types_allowed = True
+        json_encoders = {PurePosixPath: str, PureWindowsPath: str}
 
 
 class CompilationUnitBuildInfo(BuildInfoModel):
@@ -17,10 +19,14 @@ class CompilationUnitBuildInfo(BuildInfoModel):
     sources: Dict[str, Path]
     contracts: Dict[str, Dict[str, Path]]
     errors: List[SolcOutputError]
-    source_units: List[str]
-    allow_paths: List[Path]
-    include_paths: List[Path]
+    source_units: FrozenSet[PurePath]
+    allow_paths: FrozenSet[Path]
+    include_paths: FrozenSet[Path]
     settings: SolcInputSettings
+
+    @validator("source_units", pre=True, each_item=True)
+    def set_source_units(cls, v):
+        return PurePath(v)
 
 
 class ProjectBuildInfo(BuildInfoModel):
