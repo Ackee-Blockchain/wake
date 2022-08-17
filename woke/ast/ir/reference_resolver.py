@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Callable, DefaultDict, Dict, List, Tuple, Unio
 from woke.ast.enums import GlobalSymbolsEnum
 
 if TYPE_CHECKING:
-    from woke.ast.ir.abc import IrAbc
+    from woke.ast.ir.abc import SolidityAbc
     from woke.ast.ir.expression.identifier import Identifier
     from woke.ast.ir.expression.member_access import MemberAccess
     from woke.ast.ir.meta.source_unit import SourceUnit
@@ -33,7 +33,7 @@ class PostProcessQueueItem:
 
 class ReferenceResolver:
     __ordered_nodes: Dict[bytes, Dict[AstNodeId, Tuple[Path, int]]]
-    __registered_nodes: Dict[Tuple[Path, int], IrAbc]
+    __registered_nodes: Dict[Tuple[Path, int], SolidityAbc]
     __post_process_callbacks: PriorityQueue[PostProcessQueueItem]
     __destroy_callbacks: DefaultDict[Path, List[Callable[[], None]]]
     __global_symbol_references: DefaultDict[
@@ -67,13 +67,13 @@ class ReferenceResolver:
             f"No node found for path order {node_path_order} cu hash {cu_hash.hex()}"
         )
 
-    def register_node(self, node: IrAbc, node_id: AstNodeId, cu_hash: bytes):
+    def register_node(self, node: SolidityAbc, node_id: AstNodeId, cu_hash: bytes):
         assert cu_hash in self.__ordered_nodes
         assert node_id in self.__ordered_nodes[cu_hash]
         node_path_order = self.__ordered_nodes[cu_hash][node_id]
         self.__registered_nodes[node_path_order] = node
 
-    def resolve_node(self, node_id: AstNodeId, cu_hash: bytes) -> IrAbc:
+    def resolve_node(self, node_id: AstNodeId, cu_hash: bytes) -> SolidityAbc:
         node_path_order = self.__ordered_nodes[cu_hash][node_id]
         return self.__registered_nodes[node_path_order]
 

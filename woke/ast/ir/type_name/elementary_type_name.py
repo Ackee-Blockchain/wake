@@ -1,7 +1,7 @@
 from typing import Optional
 
 from woke.ast.enums import StateMutability
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.type_name.abc import TypeNameAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcElementaryTypeName
@@ -9,7 +9,7 @@ from woke.ast.nodes import SolcElementaryTypeName
 
 class ElementaryTypeName(TypeNameAbc):
     _ast_node: SolcElementaryTypeName
-    _parent: IrAbc  # TODO: make this more specific
+    _parent: SolidityAbc  # TODO: make this more specific
 
     __name: str
     __state_mutability: Optional[StateMutability]
@@ -18,7 +18,7 @@ class ElementaryTypeName(TypeNameAbc):
         self,
         init: IrInitTuple,
         elementary_type_name: SolcElementaryTypeName,
-        parent: IrAbc,
+        parent: SolidityAbc,
     ):
         super().__init__(init, elementary_type_name, parent)
         self.__name = elementary_type_name.name
@@ -35,7 +35,7 @@ class ElementaryTypeName(TypeNameAbc):
             self._type_descriptions = parent._type_descriptions
 
     @property
-    def parent(self) -> IrAbc:
+    def parent(self) -> SolidityAbc:
         return self._parent
 
     @property

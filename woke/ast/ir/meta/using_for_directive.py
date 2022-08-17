@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from woke.ast.ir.declaration.contract_definition import ContractDefinition
     from .source_unit import SourceUnit
 
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.nodes import (
     SolcIdentifierPath,
     SolcUserDefinedTypeName,
@@ -19,7 +19,7 @@ from woke.ast.nodes import (
 )
 
 
-class UsingForDirective(IrAbc):
+class UsingForDirective(SolidityAbc):
     _ast_node: SolcUsingForDirective
     _parent: Union[ContractDefinition, SourceUnit]
 

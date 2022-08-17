@@ -1,8 +1,9 @@
 import logging
+from abc import ABC
 from functools import lru_cache
 
 from woke.ast.expression_types import ExpressionTypeAbc
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import SolidityAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import (
     SolcArrayTypeName,
@@ -18,16 +19,18 @@ from woke.utils.string import StringReader
 logger = logging.getLogger(__name__)
 
 
-class TypeNameAbc(IrAbc):
+class TypeNameAbc(SolidityAbc, ABC):
     _type_descriptions: TypeDescriptionsModel
 
-    def __init__(self, init: IrInitTuple, type_name: SolcTypeNameUnion, parent: IrAbc):
+    def __init__(
+        self, init: IrInitTuple, type_name: SolcTypeNameUnion, parent: SolidityAbc
+    ):
         super().__init__(init, type_name, parent)
         self._type_descriptions = type_name.type_descriptions
 
     @staticmethod
     def from_ast(
-        init: IrInitTuple, type_name: SolcTypeNameUnion, parent: IrAbc
+        init: IrInitTuple, type_name: SolcTypeNameUnion, parent: SolidityAbc
     ) -> "TypeNameAbc":
         from .array_type_name import ArrayTypeName
         from .elementary_type_name import ElementaryTypeName

@@ -1,7 +1,7 @@
 from typing import Optional
 
 from woke.ast.enums import LiteralKind
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import SolidityAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcLiteral
@@ -9,14 +9,14 @@ from woke.ast.nodes import SolcLiteral
 
 class Literal(ExpressionAbc):
     _ast_node: SolcLiteral
-    _parent: IrAbc  # TODO: make this more specific
+    _parent: SolidityAbc  # TODO: make this more specific
 
     __hex_value: str
     __kind: LiteralKind
     __subdenomination: Optional[str]
     __value: Optional[str]
 
-    def __init__(self, init: IrInitTuple, literal: SolcLiteral, parent: IrAbc):
+    def __init__(self, init: IrInitTuple, literal: SolcLiteral, parent: SolidityAbc):
         super().__init__(init, literal, parent)
         self.__hex_value = literal.hex_value
         self.__kind = literal.kind
@@ -24,7 +24,7 @@ class Literal(ExpressionAbc):
         self.__value = literal.value
 
     @property
-    def parent(self) -> IrAbc:
+    def parent(self) -> SolidityAbc:
         return self._parent
 
     @property

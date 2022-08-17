@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 from woke.ast.nodes import AstNodeId, SolcImportDirective
 
-from ..abc import IrAbc
+from ..abc import IrAbc, SolidityAbc
 from ..utils import IrInitTuple
 
 logger = logging.getLogger(__name__)
@@ -52,7 +52,7 @@ class SymbolAlias:
     local: Optional[str]
 
 
-class ImportDirective(IrAbc):
+class ImportDirective(SolidityAbc):
     _ast_node: SolcImportDirective
     _parent: SourceUnit
 
@@ -62,7 +62,10 @@ class ImportDirective(IrAbc):
     __symbol_aliases: List[SymbolAlias]
 
     def __init__(
-        self, init: IrInitTuple, import_directive: SolcImportDirective, parent: IrAbc
+        self,
+        init: IrInitTuple,
+        import_directive: SolcImportDirective,
+        parent: SolidityAbc,
     ):
         super().__init__(init, import_directive, parent)
         self.__source_unit_name = PurePath(import_directive.absolute_path)

@@ -5,7 +5,7 @@ from typing import Optional, Tuple
 
 from intervaltree import IntervalTree
 
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import SolidityAbc
 from woke.ast.ir.declaration.abc import DeclarationAbc
 from woke.ast.ir.reference_resolver import CallbackParams, ReferenceResolver
 from woke.ast.ir.utils import IrInitTuple
@@ -93,16 +93,19 @@ class IdentifierPathPart:
         return node
 
 
-class IdentifierPath(IrAbc):
+class IdentifierPath(SolidityAbc):
     _ast_node: SolcIdentifierPath
-    _parent: IrAbc  # TODO: make this more specific
+    _parent: SolidityAbc  # TODO: make this more specific
 
     __name: str
     __referenced_declaration_id: AstNodeId
     __parts: IntervalTree
 
     def __init__(
-        self, init: IrInitTuple, identifier_path: SolcIdentifierPath, parent: IrAbc
+        self,
+        init: IrInitTuple,
+        identifier_path: SolcIdentifierPath,
+        parent: SolidityAbc,
     ):
         super().__init__(init, identifier_path, parent)
         self.__name = identifier_path.name
@@ -127,7 +130,7 @@ class IdentifierPath(IrAbc):
             )
 
     @property
-    def parent(self) -> IrAbc:
+    def parent(self) -> SolidityAbc:
         return self._parent
 
     @property

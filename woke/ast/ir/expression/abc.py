@@ -1,9 +1,10 @@
 import logging
+from abc import ABC
 from functools import lru_cache
 from typing import Optional
 
 from woke.ast.expression_types import ExpressionTypeAbc
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import SolidityAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import (
     SolcAssignment,
@@ -28,7 +29,7 @@ from woke.utils.string import StringReader
 logger = logging.getLogger(__name__)
 
 
-class ExpressionAbc(IrAbc):
+class ExpressionAbc(SolidityAbc, ABC):
     """
     Something that has a value.
     """
@@ -36,14 +37,14 @@ class ExpressionAbc(IrAbc):
     _type_descriptions: TypeDescriptionsModel
 
     def __init__(
-        self, init: IrInitTuple, expression: SolcExpressionUnion, parent: IrAbc
+        self, init: IrInitTuple, expression: SolcExpressionUnion, parent: SolidityAbc
     ):
         super().__init__(init, expression, parent)
         self._type_descriptions = expression.type_descriptions
 
     @staticmethod
     def from_ast(
-        init: IrInitTuple, expression: SolcExpressionUnion, parent: IrAbc
+        init: IrInitTuple, expression: SolcExpressionUnion, parent: SolidityAbc
     ) -> "ExpressionAbc":
         from .assignment import Assignment
         from .binary_operation import BinaryOperation

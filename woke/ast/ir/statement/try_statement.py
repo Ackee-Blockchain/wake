@@ -1,6 +1,6 @@
 from typing import Iterator, List, Optional, Tuple
 
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.expression.function_call import FunctionCall
 from woke.ast.ir.meta.try_catch_clause import TryCatchClause
 from woke.ast.ir.statement.abc import StatementAbc
@@ -10,14 +10,14 @@ from woke.ast.nodes import SolcTryStatement
 
 class TryStatement(StatementAbc):
     _ast_node: SolcTryStatement
-    _parent: IrAbc  # TODO: make this more specific
+    _parent: SolidityAbc  # TODO: make this more specific
 
     __clauses: List[TryCatchClause]
     __external_call: FunctionCall
     __documentation: Optional[str]
 
     def __init__(
-        self, init: IrInitTuple, try_statement: SolcTryStatement, parent: IrAbc
+        self, init: IrInitTuple, try_statement: SolcTryStatement, parent: SolidityAbc
     ):
         super().__init__(init, try_statement, parent)
         self.__clauses = [
@@ -33,7 +33,7 @@ class TryStatement(StatementAbc):
         yield from self.__external_call
 
     @property
-    def parent(self) -> IrAbc:
+    def parent(self) -> SolidityAbc:
         return self._parent
 
     @property

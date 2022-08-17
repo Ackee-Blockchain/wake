@@ -1,7 +1,7 @@
 import logging
 from typing import Iterator, List, Optional, Tuple
 
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.nodes import (
     SolcContractDefinition,
     SolcEnumDefinition,
@@ -34,7 +34,7 @@ from .using_for_directive import UsingForDirective
 logger = logging.getLogger(__name__)
 
 
-class SourceUnit(IrAbc):
+class SourceUnit(SolidityAbc):
     _ast_node: SolcSourceUnit
 
     __file_source: bytes

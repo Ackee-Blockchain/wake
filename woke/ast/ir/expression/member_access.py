@@ -15,7 +15,7 @@ from woke.ast.expression_types import (
     String,
     Type,
 )
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.declaration.abc import DeclarationAbc
 from woke.ast.ir.declaration.enum_definition import EnumDefinition
 from woke.ast.ir.expression.abc import ExpressionAbc
@@ -32,14 +32,14 @@ logger = logging.getLogger(__name__)
 
 class MemberAccess(ExpressionAbc):
     _ast_node: SolcMemberAccess
-    _parent: IrAbc  # TODO: make this more specific
+    _parent: SolidityAbc  # TODO: make this more specific
 
     __expression: ExpressionAbc
     __member_name: str
     __referenced_declaration_id: Optional[AstNodeId]
 
     def __init__(
-        self, init: IrInitTuple, member_access: SolcMemberAccess, parent: IrAbc
+        self, init: IrInitTuple, member_access: SolcMemberAccess, parent: SolidityAbc
     ):
         super().__init__(init, member_access, parent)
         self.__expression = ExpressionAbc.from_ast(init, member_access.expression, self)
@@ -316,7 +316,7 @@ class MemberAccess(ExpressionAbc):
             raise TypeError(f"Unexpected type: {type(referenced_declaration)}")
 
     @property
-    def parent(self) -> IrAbc:
+    def parent(self) -> SolidityAbc:
         return self._parent
 
     @property

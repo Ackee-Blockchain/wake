@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from .contract_definition import ContractDefinition
 
 from woke.ast.enums import Visibility
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.meta.parameter_list import ParameterList
 from woke.ast.ir.meta.structured_documentation import StructuredDocumentation
 from woke.ast.ir.utils import IrInitTuple
@@ -51,7 +51,7 @@ class ModifierDefinition(DeclarationAbc):
     __overrides: Optional[OverrideSpecifier]
 
     def __init__(
-        self, init: IrInitTuple, modifier: SolcModifierDefinition, parent: IrAbc
+        self, init: IrInitTuple, modifier: SolcModifierDefinition, parent: SolidityAbc
     ):
         super().__init__(init, modifier, parent)
         self._child_modifiers = set()

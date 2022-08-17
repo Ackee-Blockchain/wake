@@ -1,6 +1,6 @@
 from typing import Iterator, Optional
 
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcIndexRangeAccess
@@ -8,14 +8,17 @@ from woke.ast.nodes import SolcIndexRangeAccess
 
 class IndexRangeAccess(ExpressionAbc):
     _ast_node: SolcIndexRangeAccess
-    _parent: IrAbc  # TODO: make this more specific
+    _parent: SolidityAbc  # TODO: make this more specific
 
     __base_expression: ExpressionAbc
     __start_expression: Optional[ExpressionAbc]
     __end_expression: Optional[ExpressionAbc]
 
     def __init__(
-        self, init: IrInitTuple, index_range_access: SolcIndexRangeAccess, parent: IrAbc
+        self,
+        init: IrInitTuple,
+        index_range_access: SolcIndexRangeAccess,
+        parent: SolidityAbc,
     ):
         super().__init__(init, index_range_access, parent)
         self.__base_expression = ExpressionAbc.from_ast(
@@ -45,7 +48,7 @@ class IndexRangeAccess(ExpressionAbc):
             yield from self.__end_expression
 
     @property
-    def parent(self) -> IrAbc:
+    def parent(self) -> SolidityAbc:
         return self._parent
 
     @property
