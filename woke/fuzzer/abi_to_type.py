@@ -35,6 +35,7 @@ from woke.ast.enums import *
 from woke.utils.string import StringReader
 
 import woke.ast.expression_types as expr_types
+from woke.ast.expression_types import ExpressionTypeAbc
 from ..ast.ir.declaration.function_definition import FunctionDefinition
 from ..compile.compilation_unit import CompilationUnit
 from ..compile.solc_frontend import SolcOutputErrorSeverityEnum
@@ -91,7 +92,9 @@ class TypeGenerator():
         self.__sol_to_py_lookup[expr_types.Bool.__name__] = "bool"
         self.__sol_to_py_lookup[expr_types.Int.__name__] = "int"
         self.__sol_to_py_lookup[expr_types.FixedBytes.__name__] = "fixed_bytes"
+        self.__sol_to_py_lookup[expr_types.Bytes.__name__] = "bytes"
         self.__sol_to_py_lookup[expr_types.Contract.__name__] = "contract"
+        self.__sol_to_py_lookup[expr_types.Mapping.__name__] = "mapping"
         i: int = 8
         while i <= 256:
             #print("uint" + str(i) + " = NewType(\"uint" + str(i) + "\", int)")
@@ -209,23 +212,24 @@ class TypeGenerator():
             self.add_str_to_contract_types(1, "@dataclass", 1)
             self.add_str_to_contract_types(1, f"class {struct.name}:", 1)
             for member in struct.members:
-                self.add_str_to_contract_types(2, member.canonical_name.split('.')[-1] + ": " + self.parse_var_declaration(member), 1)
+                self.add_str_to_contract_types(2, member.canonical_name.split('.')[-1] + ": " + self.parse_type(member.type), 1)
             self.add_str_to_contract_types(0, "", 2)
 
 
-    def parse_var_declaration(self, decl: VariableDeclaration) -> str:
-        name = decl.type.__class__.__name__
+    def parse_type(self, var_type: ExpressionTypeAbc) -> str:
+        name = var_type.__class__.__name__
         parsed: str = ""
         if name == "Struct":
-            parsed = decl.type.name
+            parsed += var_type.name
         elif name == "Array":
             #TODO implement nested arrays
-            parsed = "List[" + decl.type.base_type.__class__.__name__ + "]"
-        if name == "UInt":
-            self.__used_primitive_types.add(self.__sol_to_py_lookup[name + str(decl.type.bits_count)])
-            parsed = self.__sol_to_py_lookup[name + str(decl.type.bits_count)]
+            #parsed = "List[" + var_type.base_type.__class__.__name__ + "]"
+            parsed += "List[" + self.parse_type(var_type.base_type) + "]"
+        elif name == "UInt":
+            self.__used_primitive_types.add(self.__sol_to_py_lookup[name + str(var_type.bits_count)])
+            parsed += self.__sol_to_py_lookup[name + str(var_type.bits_count)]
         else:
-            parsed = self.__sol_to_py_lookup[name]
+            parsed += self.__sol_to_py_lookup[name]
         return parsed
 
 
@@ -235,7 +239,7 @@ class TypeGenerator():
         params_names: str = ""
         for par in fn.parameters.parameters:
             params_names += par.name + ", "
-            params += ", " + par.name + ": " + self.parse_var_declaration(par)
+            params += ", " + par.name + ": " + self.parse_type(par.type)
         params += ", params: Optional[TxParams] = None"
         if params_names:
             return params_names[:-2], params
@@ -245,7 +249,7 @@ class TypeGenerator():
     def generate_func_returns(self, fn: FunctionDefinition) -> str:
         return_params: str = ""
         for ret in fn.return_parameters.parameters:
-            return_params += self.parse_var_declaration(ret) + ", "
+            return_params += self.parse_type(ret.type) + ", "
         if return_params:
             return return_params[:-2]
         else:
@@ -274,17 +278,74 @@ class TypeGenerator():
 
     def generate_primitive_imports(self):
         for p_type in self.__used_primitive_types:
-            print("val of p_type: ", p_type)
             self.add_str_to_contract_imports(0, "from woke.fuzzer.primitive_types import " + p_type, 1)
         
         self.add_str_to_contract_imports(0,"", 1) 
-        print("------------------------------------------------")
 
 
+    #clean the variables that hold types for contract that was already generated so that a new contract
+    #can be generated
     def contract_types_cleanup(self):
         self.__contract_types = ""
         self.__contract_imports = ""
         self.__used_primitive_types = set()
+
+
+    def is_compound_type(self, var_type: ExpressionTypeAbc):
+        name = var_type.__class__.__name__
+        return name ==  "Array" or name == "Mapping"
+
+
+    def generate_func_from_instance_var(self, decl: VariableDeclaration):
+        returns: str = ""
+        param_names: str = ""
+        #if the type is compound we need to use the type as an index, for primitive types we use the
+        #the type only for the return
+        def generate_function(var_type: ExpressionTypeAbc, use_parse: bool, depth: int) -> str:
+            nonlocal returns
+            nonlocal param_names
+            name = var_type.__class__.__name__
+            parsed: str = ""
+            if name == "Struct":
+                parsed += var_type.name
+            elif name == "Array":
+                #parsed += "List[" + generate_function(var_type.base_type, True) + "]"
+                param_names += "index" + str(depth) + ", "
+                if self.is_compound_type(var_type.base_type):
+                    parsed += "index" + str(depth) + ": uint256" + ", " + generate_function(var_type.base_type, True, depth + 1)
+                else:
+                    parsed += "index" + str(depth) + ": uint256"
+                    #ignores the parsed return, only called for the side-effect of changing the returns var to value_type
+                    _ = generate_function(var_type.base_type, False, depth + 1)
+            elif name == "Mapping":
+                #parse key
+                param_names += "key" + str(depth) + ", "
+                parsed += "key" + str(depth) + ": " + generate_function(var_type.key_type, True, depth + 1)
+                if self.is_compound_type(var_type.value_type):
+                    parsed += ", " + generate_function(var_type.value_type, True, depth + 1)
+                else:
+                    #ignores the parsed return, only called for the side-effect of changing the returns var to value_type
+                    _ = generate_function(var_type.value_type, True, depth + 1)
+            elif name == "UInt":
+                self.__used_primitive_types.add(self.__sol_to_py_lookup[name + str(var_type.bits_count)])
+                returns =  self.__sol_to_py_lookup[name + str(var_type.bits_count)]
+            else:
+                if use_parse:
+                    parsed += self.__sol_to_py_lookup[name]
+                else:
+                    parsed += ""
+                returns = self.__sol_to_py_lookup[name]
+
+            return parsed
+
+        getter_params =  "self, " + generate_function(decl.type, False, 0)
+        getter_params += ", params: Optional[TxParams] = None" if len(getter_params) > len("self, ") else "params: Optional[TxParams] = None"
+        self.add_str_to_contract_types(1, "def " + decl.name + '(' + getter_params + ") -> " + (returns if returns else "None") + ':', 1)
+        if param_names:
+            param_names = param_names[:-2]
+        #self.add_str_to_contract_types(2, "pass" + " " + param_names, 2) 
+        #print(decl.function_selector[3:].decode("utf-8"))
+        self.add_str_to_contract_types(2, "return self.transact(\"" + decl.function_selector.hex() + '\", [' + param_names + ']' + ", params)", 2)
 
 
     def generate_types_contract(self, contract: ContractDefinition, generate_template: bool) -> None:
@@ -333,6 +394,10 @@ class TypeGenerator():
             self.generate_types_struct(contract.structs)
 
         if contract.kind == ContractKind.CONTRACT and not contract.abstract or contract.kind == ContractKind.LIBRARY:
+            for var in contract.declared_variables:
+                if var.visibility == Visibility.EXTERNAL or var.visibility == Visibility.PUBLIC:
+                    self.generate_func_from_instance_var(var)
+            
             for fn in contract.functions:
                 if fn.function_selector:
                     params_names, params = self.generate_func_params(fn)
