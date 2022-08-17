@@ -398,17 +398,19 @@ class SolidityCompiler:
                     )
             target_versions.append(target_version)
 
-            if not self.__svm.installed(target_version):
+        for version in set(target_versions):
+            start = time.perf_counter()
+            if not self.__svm.installed(version):
                 with Progress() as progress:
                     task = progress.add_task(
-                        f"[green]Downloading solc {target_version}", total=1
+                        f"[green]Downloading solc {version}", total=1
                     )
 
                     async def on_progress(downloaded: int, total: int) -> None:
                         progress.update(task, completed=downloaded, total=total)  # type: ignore
 
                     await self.__svm.install(
-                        target_version,
+                        version,
                         progress=on_progress,
                     )
 
