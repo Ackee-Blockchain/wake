@@ -8,7 +8,7 @@ from .abc import DeclarationAbc
 if TYPE_CHECKING:
     from .enum_definition import EnumDefinition
 
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import SolidityAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcEnumValue
 
@@ -19,7 +19,7 @@ class EnumValue(DeclarationAbc):
     _ast_node: SolcEnumValue
     _parent: EnumDefinition
 
-    def __init__(self, init: IrInitTuple, value: SolcEnumValue, parent: IrAbc):
+    def __init__(self, init: IrInitTuple, value: SolcEnumValue, parent: SolidityAbc):
         super().__init__(init, value, parent)
 
     def _parse_name_location(self) -> Tuple[int, int]:

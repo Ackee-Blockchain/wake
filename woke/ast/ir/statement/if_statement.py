@@ -1,6 +1,6 @@
 from typing import Iterator, Optional
 
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.statement.abc import StatementAbc
 from woke.ast.ir.utils import IrInitTuple
@@ -9,14 +9,16 @@ from woke.ast.nodes import SolcIfStatement
 
 class IfStatement(StatementAbc):
     _ast_node: SolcIfStatement
-    _parent: IrAbc  # TODO: make this more specific
+    _parent: SolidityAbc  # TODO: make this more specific
 
     __condition: ExpressionAbc
     __true_body: StatementAbc
     __documentation: Optional[str]
     __false_body: Optional[StatementAbc]
 
-    def __init__(self, init: IrInitTuple, if_statement: SolcIfStatement, parent: IrAbc):
+    def __init__(
+        self, init: IrInitTuple, if_statement: SolcIfStatement, parent: SolidityAbc
+    ):
         super().__init__(init, if_statement, parent)
         self.__condition = ExpressionAbc.from_ast(init, if_statement.condition, self)
         self.__true_body = StatementAbc.from_ast(init, if_statement.true_body, self)
@@ -35,7 +37,7 @@ class IfStatement(StatementAbc):
             yield from self.__false_body
 
     @property
-    def parent(self) -> IrAbc:
+    def parent(self) -> SolidityAbc:
         return self._parent
 
     @property

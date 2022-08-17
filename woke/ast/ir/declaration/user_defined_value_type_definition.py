@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from .contract_definition import ContractDefinition
     from ..meta.source_unit import SourceUnit
 
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcUserDefinedValueTypeDefinition
 
@@ -26,7 +26,7 @@ class UserDefinedValueTypeDefinition(DeclarationAbc):
         self,
         init: IrInitTuple,
         user_defined_value_type_definition: SolcUserDefinedValueTypeDefinition,
-        parent: IrAbc,
+        parent: SolidityAbc,
     ):
         super().__init__(init, user_defined_value_type_definition, parent)
         self.__underlying_type = ElementaryTypeName(

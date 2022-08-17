@@ -1,0 +1,16 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from .abc import YulAbc
+
+if TYPE_CHECKING:
+    from .block import Block
+
+
+class Leave(YulAbc):
+    _parent: Block
+
+    @property
+    def parent(self) -> Block:
+        return self._parent

@@ -1,7 +1,7 @@
 from typing import Iterator
 
 from woke.ast.enums import UnaryOpOperator
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcUnaryOperation
@@ -9,14 +9,17 @@ from woke.ast.nodes import SolcUnaryOperation
 
 class UnaryOperation(ExpressionAbc):
     _ast_node: SolcUnaryOperation
-    _parent: IrAbc
+    _parent: SolidityAbc
 
     __operator: UnaryOpOperator
     __prefix: bool
     __sub_expression: ExpressionAbc
 
     def __init__(
-        self, init: IrInitTuple, unary_operation: SolcUnaryOperation, parent: IrAbc
+        self,
+        init: IrInitTuple,
+        unary_operation: SolcUnaryOperation,
+        parent: SolidityAbc,
     ):
         super().__init__(init, unary_operation, parent)
         self.__operator = unary_operation.operator
@@ -30,7 +33,7 @@ class UnaryOperation(ExpressionAbc):
         yield from self.__sub_expression
 
     @property
-    def parent(self) -> IrAbc:
+    def parent(self) -> SolidityAbc:
         return self._parent
 
     @property

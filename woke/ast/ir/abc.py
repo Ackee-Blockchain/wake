@@ -4,20 +4,20 @@ from typing import Iterator, Optional, Tuple
 
 from woke.ast.ir.reference_resolver import ReferenceResolver
 from woke.ast.ir.utils.init_tuple import IrInitTuple
-from woke.ast.nodes import SolcNode
+from woke.ast.nodes import SolcNode, SolcOrYulNode
 
 
 class IrAbc(ABC):
     _file: Path
     _source: bytes
-    _ast_node: SolcNode
+    _ast_node: SolcOrYulNode
     _parent: Optional["IrAbc"]
     _depth: int
     _cu_hash: bytes
     _reference_resolver: ReferenceResolver
 
     def __init__(
-        self, init: IrInitTuple, solc_node: SolcNode, parent: Optional["IrAbc"]
+        self, init: IrInitTuple, solc_node: SolcOrYulNode, parent: Optional["IrAbc"]
     ):
         self._file = init.file
         self._ast_node = solc_node
@@ -29,7 +29,6 @@ class IrAbc(ABC):
         self._cu_hash = init.cu.hash
 
         self._reference_resolver = init.reference_resolver
-        self._reference_resolver.register_node(self, solc_node.id, self._cu_hash)
 
         source_start = solc_node.src.byte_offset
         source_end = source_start + solc_node.src.byte_length
@@ -50,12 +49,9 @@ class IrAbc(ABC):
         return self._file
 
     @property
-    def ast_node_id(self) -> int:
-        return self._ast_node.id
-
-    @property
-    def ast_node(self) -> SolcNode:
-        return self._ast_node
+    @abstractmethod
+    def ast_node(self) -> SolcOrYulNode:
+        ...
 
     @property
     def cu_hash(self) -> bytes:
@@ -75,3 +71,21 @@ class IrAbc(ABC):
     @property
     def source(self) -> str:
         return self._source.decode("utf-8")
+
+
+class SolidityAbc(IrAbc, ABC):
+    _ast_node: SolcNode
+
+    def __init__(
+        self, init: IrInitTuple, solc_node: SolcNode, parent: Optional["SolidityAbc"]
+    ):
+        super().__init__(init, solc_node, parent)
+        self._reference_resolver.register_node(self, solc_node.id, self._cu_hash)
+
+    @property
+    def ast_node(self) -> SolcNode:
+        return self._ast_node
+
+    @property
+    def ast_node_id(self) -> int:
+        return self._ast_node.id

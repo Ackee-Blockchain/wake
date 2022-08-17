@@ -7,7 +7,7 @@ from intervaltree import IntervalTree
 if TYPE_CHECKING:
     from woke.ast.ir.declaration.contract_definition import ContractDefinition
 
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.declaration.abc import DeclarationAbc
 from woke.ast.ir.meta.identifier_path import (
     IDENTIFIER_RE,
@@ -21,7 +21,7 @@ from woke.ast.nodes import AstNodeId, SolcUserDefinedTypeName
 
 class UserDefinedTypeName(TypeNameAbc):
     _ast_node: SolcUserDefinedTypeName
-    _parent: IrAbc  # TODO: make this more specific
+    _parent: SolidityAbc  # TODO: make this more specific
 
     __referenced_declaration_id: AstNodeId
     __contract_scope_id: Optional[AstNodeId]
@@ -33,7 +33,7 @@ class UserDefinedTypeName(TypeNameAbc):
         self,
         init: IrInitTuple,
         user_defined_type_name: SolcUserDefinedTypeName,
-        parent: IrAbc,
+        parent: SolidityAbc,
     ):
         super().__init__(init, user_defined_type_name, parent)
         self.__name = user_defined_type_name.name
@@ -70,7 +70,7 @@ class UserDefinedTypeName(TypeNameAbc):
             yield from self.__path_node
 
     @property
-    def parent(self) -> IrAbc:
+    def parent(self) -> SolidityAbc:
         return self._parent
 
     @property

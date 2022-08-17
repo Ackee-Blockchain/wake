@@ -1,4 +1,6 @@
-from woke.ast.ir.abc import IrAbc
+from abc import ABC
+
+from woke.ast.ir.abc import SolidityAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import (
     SolcBlock,
@@ -21,13 +23,15 @@ from woke.ast.nodes import (
 )
 
 
-class StatementAbc(IrAbc):
-    def __init__(self, init: IrInitTuple, statement: SolcStatementUnion, parent: IrAbc):
+class StatementAbc(SolidityAbc, ABC):
+    def __init__(
+        self, init: IrInitTuple, statement: SolcStatementUnion, parent: SolidityAbc
+    ):
         super().__init__(init, statement, parent)
 
     @staticmethod
     def from_ast(
-        init: IrInitTuple, statement: SolcStatementUnion, parent: IrAbc
+        init: IrInitTuple, statement: SolcStatementUnion, parent: SolidityAbc
     ) -> "StatementAbc":
         from .block import Block
         from .break_statement import Break

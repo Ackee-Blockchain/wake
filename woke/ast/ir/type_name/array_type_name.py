@@ -1,6 +1,6 @@
 from typing import Iterator, Optional, Union
 
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.type_name.abc import TypeNameAbc
 from woke.ast.ir.utils import IrInitTuple
@@ -9,13 +9,13 @@ from woke.ast.nodes import SolcArrayTypeName
 
 class ArrayTypeName(TypeNameAbc):
     _ast_node: SolcArrayTypeName
-    _parent: IrAbc  # TODO: make this more specific
+    _parent: SolidityAbc  # TODO: make this more specific
 
     __base_type: TypeNameAbc
     __length: Optional[ExpressionAbc]
 
     def __init__(
-        self, init: IrInitTuple, array_type_name: SolcArrayTypeName, parent: IrAbc
+        self, init: IrInitTuple, array_type_name: SolcArrayTypeName, parent: SolidityAbc
     ):
         super().__init__(init, array_type_name, parent)
         self.__base_type = TypeNameAbc.from_ast(init, array_type_name.base_type, self)
@@ -32,7 +32,7 @@ class ArrayTypeName(TypeNameAbc):
             yield from self.__length
 
     @property
-    def parent(self) -> IrAbc:
+    def parent(self) -> SolidityAbc:
         return self._parent
 
     @property
