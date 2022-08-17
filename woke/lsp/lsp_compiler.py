@@ -485,9 +485,10 @@ class LspCompiler:
                     continue
             target_versions.append(target_version)
 
-            if not self.__svm.installed(target_version):
+        for version in set(target_versions):
+            if not self.__svm.installed(version):
                 progress_token = await self.__server.progress_begin(
-                    "Downloading", f"solc {target_version}", 0
+                    "Downloading", f"solc {version}", 0
                 )
                 if progress_token is not None:
 
@@ -495,14 +496,14 @@ class LspCompiler:
                         assert progress_token is not None
                         await self.__server.progress_report(
                             progress_token,
-                            f"solc {target_version}",
+                            f"solc {version}",
                             (100 * downloaded) // total,
                         )
 
-                    await self.__svm.install(target_version, progress=on_progress)
+                    await self.__svm.install(version, progress=on_progress)
                     await self.__server.progress_end(progress_token)
                 else:
-                    await self.__svm.install(target_version)
+                    await self.__svm.install(version)
 
         for compilation_unit in skipped_compilation_units:
             compilation_units.remove(compilation_unit)
