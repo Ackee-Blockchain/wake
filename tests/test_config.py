@@ -45,9 +45,9 @@ def test_config_simple():
     )
     assert str(config.compiler.solc.remappings[0]) == ":xyz="
     assert len(config.compiler.solc.include_paths) == 1
-    assert config.compiler.solc.include_paths[0] == sources_path
+    assert sources_path in config.compiler.solc.include_paths
     assert len(config.compiler.solc.allow_paths) == 1
-    assert config.compiler.solc.allow_paths[0] == (sources_path / "../").resolve()
+    assert (sources_path / "../").resolve() in config.compiler.solc.allow_paths
 
 
 def test_config_from_dict():
@@ -69,12 +69,10 @@ def test_config_from_dict():
     )
 
     assert len(config.compiler.solc.allow_paths) == 1
-    assert (
-        config.compiler.solc.allow_paths[0] == sources_path / "containing_global_conf"
-    )
+    assert sources_path / "containing_global_conf" in config.compiler.solc.allow_paths
     assert config.compiler.solc.evm_version == EvmVersionEnum.LONDON
     assert len(config.compiler.solc.include_paths) == 1
-    assert config.compiler.solc.include_paths[0] == sources_path
+    assert sources_path in config.compiler.solc.include_paths
     assert len(config.compiler.solc.remappings) == 1
     assert config.compiler.solc.remappings[0] == SolcRemapping(
         context=None, prefix="hardhat/", target="node_modules/hardhat/"
@@ -145,7 +143,7 @@ def test_config_import_abs_path():
         context=None, prefix="xyz", target=None
     )
     assert len(config.compiler.solc.include_paths) == 1
-    assert config.compiler.solc.include_paths[0] == sources_path
+    assert sources_path in config.compiler.solc.include_paths
 
     tmp_file.unlink()
 
