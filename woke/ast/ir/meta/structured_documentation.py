@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Union
 
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import SolidityAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcStructuredDocumentation
 
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from ..declaration.variable_declaration import VariableDeclaration
 
 
-class StructuredDocumentation(IrAbc):
+class StructuredDocumentation(SolidityAbc):
     _ast_node: SolcStructuredDocumentation
     _parent: Union[
         ContractDefinition,
@@ -32,7 +32,7 @@ class StructuredDocumentation(IrAbc):
         self,
         init: IrInitTuple,
         structured_documentation: SolcStructuredDocumentation,
-        parent: IrAbc,
+        parent: SolidityAbc,
     ):
         super().__init__(init, structured_documentation, parent)
         self.__text = structured_documentation.text

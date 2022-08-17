@@ -9,12 +9,12 @@ from .identifier_path import IdentifierPath
 if TYPE_CHECKING:
     from ..declaration.function_definition import FunctionDefinition
 
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcIdentifier, SolcIdentifierPath, SolcModifierInvocation
 
 
-class ModifierInvocation(IrAbc):
+class ModifierInvocation(SolidityAbc):
     _ast_node: SolcModifierInvocation
     _parent: FunctionDefinition
 
@@ -25,7 +25,7 @@ class ModifierInvocation(IrAbc):
         self,
         init: IrInitTuple,
         modifier_invocation: SolcModifierInvocation,
-        parent: IrAbc,
+        parent: SolidityAbc,
     ):
         super().__init__(init, modifier_invocation, parent)
         if isinstance(modifier_invocation.modifier_name, SolcIdentifier):

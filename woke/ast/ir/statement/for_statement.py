@@ -1,6 +1,6 @@
 from typing import Iterator, Optional, Union
 
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.statement.abc import StatementAbc
 from woke.ast.ir.statement.expression_statement import ExpressionStatement
@@ -17,7 +17,7 @@ from woke.ast.nodes import (
 
 class ForStatement(StatementAbc):
     _ast_node: SolcForStatement
-    _parent: IrAbc  # TODO: make this more specific
+    _parent: SolidityAbc  # TODO: make this more specific
 
     __body: StatementAbc
     __documentation: Optional[str]
@@ -27,7 +27,7 @@ class ForStatement(StatementAbc):
     ]
     __loop_expression: Optional[ExpressionStatement]
 
-    def __init__(self, init: IrInitTuple, for_: SolcForStatement, parent: IrAbc):
+    def __init__(self, init: IrInitTuple, for_: SolcForStatement, parent: SolidityAbc):
         super().__init__(init, for_, parent)
         self.__body = StatementAbc.from_ast(init, for_.body, self)
         self.__documentation = for_.documentation
@@ -69,7 +69,7 @@ class ForStatement(StatementAbc):
             yield from self.__loop_expression
 
     @property
-    def parent(self) -> IrAbc:
+    def parent(self) -> SolidityAbc:
         return self._parent
 
     @property

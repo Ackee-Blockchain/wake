@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from ..meta.source_unit import SourceUnit
 
 from woke.ast.enums import FunctionKind, StateMutability, Visibility
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.meta.parameter_list import ParameterList
 from woke.ast.ir.meta.structured_documentation import StructuredDocumentation
 from woke.ast.ir.utils import IrInitTuple
@@ -61,7 +61,7 @@ class FunctionDefinition(DeclarationAbc):
     __overrides: Optional[OverrideSpecifier]
 
     def __init__(
-        self, init: IrInitTuple, function: SolcFunctionDefinition, parent: IrAbc
+        self, init: IrInitTuple, function: SolcFunctionDefinition, parent: SolidityAbc
     ):
         super().__init__(init, function, parent)
         self._child_functions = set()

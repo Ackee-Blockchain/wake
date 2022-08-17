@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from ..meta.source_unit import SourceUnit
 
 from woke.ast.enums import Visibility
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcStructDefinition
@@ -26,7 +26,10 @@ class StructDefinition(DeclarationAbc):
     __visibility: Visibility
 
     def __init__(
-        self, init: IrInitTuple, struct_definition: SolcStructDefinition, parent: IrAbc
+        self,
+        init: IrInitTuple,
+        struct_definition: SolcStructDefinition,
+        parent: SolidityAbc,
     ):
         super().__init__(init, struct_definition, parent)
         self.__canonical_name = struct_definition.canonical_name

@@ -1,6 +1,6 @@
 from typing import Iterator, List, Optional, Tuple
 
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.statement.abc import StatementAbc
@@ -10,7 +10,7 @@ from woke.ast.nodes import AstNodeId, SolcVariableDeclarationStatement
 
 class VariableDeclarationStatement(StatementAbc):
     _ast_node: SolcVariableDeclarationStatement
-    _parent: IrAbc  # TODO: make this more specific
+    _parent: SolidityAbc  # TODO: make this more specific
 
     __assignments: List[Optional[AstNodeId]]
     __declarations: List[Optional[VariableDeclaration]]
@@ -21,7 +21,7 @@ class VariableDeclarationStatement(StatementAbc):
         self,
         init: IrInitTuple,
         variable_declaration_statement: SolcVariableDeclarationStatement,
-        parent: IrAbc,
+        parent: SolidityAbc,
     ):
         super().__init__(init, variable_declaration_statement, parent)
         # TODO assignments are just AST IDs of the variable declarations ?
@@ -51,7 +51,7 @@ class VariableDeclarationStatement(StatementAbc):
             yield from self.__initial_value
 
     @property
-    def parent(self) -> IrAbc:
+    def parent(self) -> SolidityAbc:
         return self._parent
 
     @property

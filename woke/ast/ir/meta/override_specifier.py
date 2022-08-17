@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from ..declaration.modifier_definition import ModifierDefinition
     from ..declaration.variable_declaration import VariableDeclaration
 
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import (
     SolcIdentifierPath,
@@ -19,7 +19,7 @@ from woke.ast.nodes import (
 )
 
 
-class OverrideSpecifier(IrAbc):
+class OverrideSpecifier(SolidityAbc):
     _ast_node: SolcOverrideSpecifier
     _parent: Union[FunctionDefinition, ModifierDefinition, VariableDeclaration]
 
@@ -29,7 +29,7 @@ class OverrideSpecifier(IrAbc):
         self,
         init: IrInitTuple,
         override_specifier: SolcOverrideSpecifier,
-        parent: IrAbc,
+        parent: SolidityAbc,
     ):
         super().__init__(init, override_specifier, parent)
         self.__overrides = []

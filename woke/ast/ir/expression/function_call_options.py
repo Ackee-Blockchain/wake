@@ -1,6 +1,6 @@
 from typing import Iterator, List, Tuple
 
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcFunctionCallOptions
@@ -8,7 +8,7 @@ from woke.ast.nodes import SolcFunctionCallOptions
 
 class FunctionCallOptions(ExpressionAbc):
     _ast_node: SolcFunctionCallOptions
-    _parent: IrAbc  # TODO: make this more specific
+    _parent: SolidityAbc  # TODO: make this more specific
 
     __expression: ExpressionAbc
     __names: List[str]
@@ -18,7 +18,7 @@ class FunctionCallOptions(ExpressionAbc):
         self,
         init: IrInitTuple,
         function_call_options: SolcFunctionCallOptions,
-        parent: IrAbc,
+        parent: SolidityAbc,
     ):
         super().__init__(init, function_call_options, parent)
         self.__expression = ExpressionAbc.from_ast(
@@ -37,7 +37,7 @@ class FunctionCallOptions(ExpressionAbc):
             yield from option
 
     @property
-    def parent(self) -> IrAbc:
+    def parent(self) -> SolidityAbc:
         return self._parent
 
     @property

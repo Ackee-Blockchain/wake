@@ -8,19 +8,21 @@ if TYPE_CHECKING:
 
 from woke.ast.nodes import SolcPragmaDirective
 
-from ..abc import IrAbc
+from ..abc import SolidityAbc
 from ..utils import IrInitTuple
 
 logger = logging.getLogger(__name__)
 
 
-class PragmaDirective(IrAbc):
+class PragmaDirective(SolidityAbc):
     _ast_node: SolcPragmaDirective
     _parent: SourceUnit
 
     __literals: List[str]
 
-    def __init__(self, init: IrInitTuple, pragma: SolcPragmaDirective, parent: IrAbc):
+    def __init__(
+        self, init: IrInitTuple, pragma: SolcPragmaDirective, parent: SolidityAbc
+    ):
         super().__init__(init, pragma, parent)
         self.__literals = list(pragma.literals)
 

@@ -3,14 +3,14 @@ from typing import Iterator
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcElementaryTypeNameExpression
 
-from ..abc import IrAbc
+from ..abc import IrAbc, SolidityAbc
 from ..type_name.elementary_type_name import ElementaryTypeName
 from .abc import ExpressionAbc
 
 
 class ElementaryTypeNameExpression(ExpressionAbc):
     _ast_node: SolcElementaryTypeNameExpression
-    _parent: IrAbc  # TODO: make this more specific
+    _parent: SolidityAbc  # TODO: make this more specific
 
     __type_name: ElementaryTypeName
 
@@ -18,7 +18,7 @@ class ElementaryTypeNameExpression(ExpressionAbc):
         self,
         init: IrInitTuple,
         elementary_type_name_expression: SolcElementaryTypeNameExpression,
-        parent: IrAbc,
+        parent: SolidityAbc,
     ):
         super().__init__(init, elementary_type_name_expression, parent)
         self.__type_name = ElementaryTypeName(
@@ -30,7 +30,7 @@ class ElementaryTypeNameExpression(ExpressionAbc):
         yield from self.__type_name
 
     @property
-    def parent(self) -> IrAbc:
+    def parent(self) -> SolidityAbc:
         return self._parent
 
     @property

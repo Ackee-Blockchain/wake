@@ -9,11 +9,11 @@ from .parameter_list import ParameterList
 if TYPE_CHECKING:
     from ..statement.try_statement import TryStatement
 
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.nodes import SolcTryCatchClause
 
 
-class TryCatchClause(IrAbc):
+class TryCatchClause(SolidityAbc):
     _ast_node: SolcTryCatchClause
     _parent: TryStatement
 

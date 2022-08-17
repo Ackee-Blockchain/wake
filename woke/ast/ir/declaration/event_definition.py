@@ -9,7 +9,7 @@ from .abc import DeclarationAbc
 if TYPE_CHECKING:
     from .contract_definition import ContractDefinition
 
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.meta.parameter_list import ParameterList
 from woke.ast.ir.meta.structured_documentation import StructuredDocumentation
 from woke.ast.ir.utils import IrInitTuple
@@ -24,7 +24,9 @@ class EventDefinition(DeclarationAbc):
     __parameters: ParameterList
     __documentation: Optional[Union[StructuredDocumentation, str]]
 
-    def __init__(self, init: IrInitTuple, event: SolcEventDefinition, parent: IrAbc):
+    def __init__(
+        self, init: IrInitTuple, event: SolcEventDefinition, parent: SolidityAbc
+    ):
         super().__init__(init, event, parent)
         self.__anonymous = event.anonymous
         self.__parameters = ParameterList(init, event.parameters, self)

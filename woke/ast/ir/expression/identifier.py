@@ -2,7 +2,7 @@ from functools import partial
 from typing import List, Optional, Tuple, Union
 
 from woke.ast.enums import GlobalSymbolsEnum
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import SolidityAbc
 from woke.ast.ir.declaration.abc import DeclarationAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.reference_resolver import CallbackParams
@@ -12,13 +12,15 @@ from woke.ast.nodes import AstNodeId, SolcIdentifier
 
 class Identifier(ExpressionAbc):
     _ast_node: SolcIdentifier
-    _parent: IrAbc  # TODO: make this more specific
+    _parent: SolidityAbc  # TODO: make this more specific
 
     __name: str
     __overloaded_declarations: List[AstNodeId]
     _referenced_declaration_id: Optional[AstNodeId]
 
-    def __init__(self, init: IrInitTuple, identifier: SolcIdentifier, parent: IrAbc):
+    def __init__(
+        self, init: IrInitTuple, identifier: SolcIdentifier, parent: SolidityAbc
+    ):
         from woke.ast.ir.meta.import_directive import ImportDirective
 
         super().__init__(init, identifier, parent)
@@ -60,7 +62,7 @@ class Identifier(ExpressionAbc):
             raise TypeError(f"Unexpected type: {type(referenced_declaration)}")
 
     @property
-    def parent(self) -> IrAbc:
+    def parent(self) -> SolidityAbc:
         return self._parent
 
     @property
