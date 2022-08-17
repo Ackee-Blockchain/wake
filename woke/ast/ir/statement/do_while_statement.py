@@ -1,6 +1,6 @@
 from typing import Iterator, Optional
 
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.statement.abc import StatementAbc
 from woke.ast.ir.utils import IrInitTuple
@@ -9,14 +9,14 @@ from woke.ast.nodes import SolcDoWhileStatement
 
 class DoWhileStatement(StatementAbc):
     _ast_node: SolcDoWhileStatement
-    _parent: IrAbc  # TODO: make this more specific
+    _parent: SolidityAbc  # TODO: make this more specific
 
     __body: StatementAbc
     __condition: ExpressionAbc
     __documentation: Optional[str]
 
     def __init__(
-        self, init: IrInitTuple, do_while: SolcDoWhileStatement, parent: IrAbc
+        self, init: IrInitTuple, do_while: SolcDoWhileStatement, parent: SolidityAbc
     ):
         super().__init__(init, do_while, parent)
         self.__body = StatementAbc.from_ast(init, do_while.body, self)
@@ -29,7 +29,7 @@ class DoWhileStatement(StatementAbc):
         yield from self.__condition
 
     @property
-    def parent(self) -> IrAbc:
+    def parent(self) -> SolidityAbc:
         return self._parent
 
     @property

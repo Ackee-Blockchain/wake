@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Iterator, List, Tuple, Union
 
 from woke.ast.nodes import SolcEnumDefinition
 
-from ..abc import IrAbc
+from ..abc import IrAbc, SolidityAbc
 from ..utils import IrInitTuple
 from .abc import DeclarationAbc
 from .enum_value import EnumValue
@@ -27,7 +27,9 @@ class EnumDefinition(DeclarationAbc):
     __canonical_name: str
     __values: List[EnumValue]
 
-    def __init__(self, init: IrInitTuple, enum: SolcEnumDefinition, parent: IrAbc):
+    def __init__(
+        self, init: IrInitTuple, enum: SolcEnumDefinition, parent: SolidityAbc
+    ):
         super().__init__(init, enum, parent)
         self.__canonical_name = enum.canonical_name
 

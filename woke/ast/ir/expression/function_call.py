@@ -3,7 +3,7 @@ from functools import lru_cache
 from typing import Iterator, List, Optional, Tuple, Union
 
 from woke.ast.enums import FunctionCallKind, GlobalSymbolsEnum
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.declaration.error_definition import ErrorDefinition
 from woke.ast.ir.declaration.event_definition import EventDefinition
 from woke.ast.ir.declaration.function_definition import FunctionDefinition
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 class FunctionCall(ExpressionAbc):
     _ast_node: SolcFunctionCall
-    _parent: IrAbc  # TODO: make this more specific
+    _parent: SolidityAbc  # TODO: make this more specific
 
     __arguments: List[ExpressionAbc]
     __expression: ExpressionAbc
@@ -31,7 +31,7 @@ class FunctionCall(ExpressionAbc):
     __try_call: bool
 
     def __init__(
-        self, init: IrInitTuple, function_call: SolcFunctionCall, parent: IrAbc
+        self, init: IrInitTuple, function_call: SolcFunctionCall, parent: SolidityAbc
     ):
         super().__init__(init, function_call, parent)
         self.__kind = function_call.kind
@@ -51,7 +51,7 @@ class FunctionCall(ExpressionAbc):
         yield from self.__expression
 
     @property
-    def parent(self) -> IrAbc:
+    def parent(self) -> SolidityAbc:
         return self._parent
 
     @property

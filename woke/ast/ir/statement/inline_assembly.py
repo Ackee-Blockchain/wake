@@ -6,11 +6,12 @@ from typing import List, Optional, Tuple
 from intervaltree import IntervalTree
 
 from woke.ast.enums import InlineAssemblyEvmVersion, InlineAssemblySuffix
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import SolidityAbc
 from woke.ast.ir.declaration.abc import DeclarationAbc
 from woke.ast.ir.reference_resolver import CallbackParams, ReferenceResolver
 from woke.ast.ir.statement.abc import StatementAbc
 from woke.ast.ir.utils import IrInitTuple
+from woke.ast.ir.yul.block import Block
 from woke.ast.nodes import AstNodeId, ExternalReferenceModel, SolcInlineAssembly
 
 IDENTIFIER_RE = re.compile(r"^[a-zA-Z$_][a-zA-Z0-9$_]*".encode("utf-8"))
@@ -105,17 +106,21 @@ class ExternalReference:
 
 class InlineAssembly(StatementAbc):
     _ast_node: SolcInlineAssembly
-    _parent: IrAbc  # TODO: make this more specific
+    _parent: SolidityAbc  # TODO: make this more specific
 
-    # __ast: TODO
+    __yul_block: Block
     __evm_version: InlineAssemblyEvmVersion
     __external_references: IntervalTree
     __documentation: Optional[str]
 
     def __init__(
-        self, init: IrInitTuple, inline_assembly: SolcInlineAssembly, parent: IrAbc
+        self,
+        init: IrInitTuple,
+        inline_assembly: SolcInlineAssembly,
+        parent: SolidityAbc,
     ):
         super().__init__(init, inline_assembly, parent)
+        self.__yul_block = Block(init, inline_assembly.ast, self)
         self.__evm_version = inline_assembly.evm_version
         self.__documentation = inline_assembly.documentation
         self.__external_references = IntervalTree()
@@ -127,8 +132,12 @@ class InlineAssembly(StatementAbc):
             )
 
     @property
-    def parent(self) -> IrAbc:
+    def parent(self) -> SolidityAbc:
         return self._parent
+
+    @property
+    def yul_block(self) -> Block:
+        return self.__yul_block
 
     @property
     def evm_version(self) -> InlineAssemblyEvmVersion:

@@ -1,6 +1,6 @@
 from typing import Iterator
 
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.type_name.abc import TypeNameAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcMapping
@@ -8,12 +8,12 @@ from woke.ast.nodes import SolcMapping
 
 class Mapping(TypeNameAbc):
     _ast_node: SolcMapping
-    _parent: IrAbc  # TODO: make this more specific
+    _parent: SolidityAbc  # TODO: make this more specific
 
     __key_type: TypeNameAbc
     __value_type: TypeNameAbc
 
-    def __init__(self, init: IrInitTuple, mapping: SolcMapping, parent: IrAbc):
+    def __init__(self, init: IrInitTuple, mapping: SolcMapping, parent: SolidityAbc):
         super().__init__(init, mapping, parent)
         self.__key_type = TypeNameAbc.from_ast(init, mapping.key_type, self)
         self.__value_type = TypeNameAbc.from_ast(init, mapping.value_type, self)
@@ -24,7 +24,7 @@ class Mapping(TypeNameAbc):
         yield from self.__value_type
 
     @property
-    def parent(self) -> IrAbc:
+    def parent(self) -> SolidityAbc:
         return self._parent
 
     @property

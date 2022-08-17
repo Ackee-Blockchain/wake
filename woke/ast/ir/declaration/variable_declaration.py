@@ -6,7 +6,7 @@ from functools import lru_cache, partial
 from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
 
 from woke.ast.enums import DataLocation, Mutability, Visibility
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.declaration.abc import DeclarationAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.meta.structured_documentation import StructuredDocumentation
@@ -60,7 +60,7 @@ class VariableDeclaration(DeclarationAbc):
         self,
         init: IrInitTuple,
         variable_declaration: SolcVariableDeclaration,
-        parent: IrAbc,
+        parent: SolidityAbc,
     ):
         super().__init__(init, variable_declaration, parent)
         self.__constant = variable_declaration.constant

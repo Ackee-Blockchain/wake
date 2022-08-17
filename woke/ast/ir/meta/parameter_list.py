@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from ..type_name.function_type_name import FunctionTypeName
     from .try_catch_clause import TryCatchClause
 
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcParameterList
@@ -19,7 +19,7 @@ from woke.ast.nodes import SolcParameterList
 logger = logging.getLogger(__name__)
 
 
-class ParameterList(IrAbc):
+class ParameterList(SolidityAbc):
     _ast_node: SolcParameterList
     _parent: Union[
         ErrorDefinition,
@@ -33,7 +33,7 @@ class ParameterList(IrAbc):
     __parameters: List[VariableDeclaration]
 
     def __init__(
-        self, init: IrInitTuple, parameter_list: SolcParameterList, parent: IrAbc
+        self, init: IrInitTuple, parameter_list: SolcParameterList, parent: SolidityAbc
     ):
         super().__init__(init, parameter_list, parent)
 

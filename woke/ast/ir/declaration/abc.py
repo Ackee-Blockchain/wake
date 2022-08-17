@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, FrozenSet, Iterator, Optional, Set, Tuple, Union
 
 if TYPE_CHECKING:
@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from ..expression.member_access import MemberAccess
     from ..statement.inline_assembly import ExternalReference
 
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import SolidityAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import (
     SolcContractDefinition,
@@ -46,13 +46,13 @@ if TYPE_CHECKING:
     ]
 
 
-class DeclarationAbc(IrAbc):
+class DeclarationAbc(SolidityAbc, ABC):
     _name: str
     _name_location: Optional[Tuple[int, int]]
     _references: Set[ReferencingNodesUnion]
 
     def __init__(
-        self, init: IrInitTuple, solc_node: SolcDeclarationUnion, parent: IrAbc
+        self, init: IrInitTuple, solc_node: SolcDeclarationUnion, parent: SolidityAbc
     ):
         super().__init__(init, solc_node, parent)
         self._name = solc_node.name

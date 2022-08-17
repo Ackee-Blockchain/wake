@@ -10,7 +10,7 @@ from .identifier_path import IdentifierPath
 if TYPE_CHECKING:
     from ..declaration.contract_definition import ContractDefinition
 
-from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.nodes import (
     SolcIdentifierPath,
     SolcInheritanceSpecifier,
@@ -18,7 +18,7 @@ from woke.ast.nodes import (
 )
 
 
-class InheritanceSpecifier(IrAbc):
+class InheritanceSpecifier(SolidityAbc):
     _ast_node: SolcInheritanceSpecifier
     _parent: ContractDefinition
 
