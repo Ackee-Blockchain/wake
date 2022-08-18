@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, List, Tuple, Union
 
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import (
@@ -94,6 +94,11 @@ class Block(YulAbc):
                 self.__statements.append(VariableDeclaration(init, statement, self))
             else:
                 assert False, f"Unexpected type: {type(statement)}"
+
+    def __iter__(self) -> Iterator[YulAbc]:
+        yield self
+        for statement in self.__statements:
+            yield from statement
 
     @property
     def parent(

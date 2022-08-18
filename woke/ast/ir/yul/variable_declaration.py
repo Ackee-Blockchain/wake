@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
 
 from ...nodes import YulFunctionCall, YulIdentifier, YulLiteral, YulVariableDeclaration
 from ..utils import IrInitTuple
@@ -40,6 +40,13 @@ class VariableDeclaration(YulAbc):
             self.__value = Literal(init, variable_declaration.value, self)
         else:
             assert False, f"Unexpected type: {type(variable_declaration.value)}"
+
+    def __iter__(self) -> Iterator[YulAbc]:
+        yield self
+        for variable in self.__variables:
+            yield from variable
+        if self.__value is not None:
+            yield from self.__value
 
     @property
     def parent(self) -> Block:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, List, Tuple, Union
 
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import YulAssignment, YulFunctionCall, YulIdentifier, YulLiteral
@@ -33,6 +33,12 @@ class Assignment(YulAbc):
             Identifier(init, variable_name, self)
             for variable_name in assignment.variable_names
         ]
+
+    def __iter__(self) -> Iterator[YulAbc]:
+        yield self
+        yield from self.__value
+        for variable_name in self.__variable_names:
+            yield from variable_name
 
     @property
     def parent(self) -> Block:

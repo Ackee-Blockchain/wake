@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Iterator, Union
 
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import (
@@ -40,6 +40,10 @@ class ExpressionStatement(YulAbc):
             self.__expression = Literal(init, expression_statement.expression, self)
         else:
             assert False, f"Unexpected type: {type(expression_statement.expression)}"
+
+    def __iter__(self) -> Iterator[YulAbc]:
+        yield self
+        yield from self.__expression
 
     @property
     def parent(self) -> Block:

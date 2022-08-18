@@ -1,12 +1,12 @@
 import re
 from functools import lru_cache, partial
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Iterator, List, Optional, Tuple
 
 from intervaltree import IntervalTree
 
 from woke.ast.enums import InlineAssemblyEvmVersion, InlineAssemblySuffix
-from woke.ast.ir.abc import SolidityAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.declaration.abc import DeclarationAbc
 from woke.ast.ir.reference_resolver import CallbackParams, ReferenceResolver
 from woke.ast.ir.statement.abc import StatementAbc
@@ -130,6 +130,10 @@ class InlineAssembly(StatementAbc):
             self.__external_references[start:end] = ExternalReference(
                 init, external_reference
             )
+
+    def __iter__(self) -> Iterator[IrAbc]:
+        yield self
+        yield from self.__yul_block
 
     @property
     def parent(self) -> SolidityAbc:
