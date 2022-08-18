@@ -197,26 +197,26 @@ class TypeGenerator():
             unit_path.write_text(self.__source_unit_types)
 
 
-    def add_str_to_contract_types(self, num_of_indentation: int, string: str, num_of_newlines: int): 
+    def add_str_to_types(self, num_of_indentation: int, string: str, num_of_newlines: int): 
         self.__source_unit_types += num_of_indentation * TAB_WIDTH * ' ' + string + num_of_newlines * '\n'
 
 
-    def add_str_to_contract_imports(self, num_of_indentation: int, string: str, num_of_newlines: int): 
+    def add_str_to_imports(self, num_of_indentation: int, string: str, num_of_newlines: int): 
         self.__source_unit_imports += num_of_indentation * TAB_WIDTH * ' ' + string + num_of_newlines * '\n'
 
 
     def generate_contract_template(self, contract: ContractDefinition, base_names: str, base_imports: str):
         if not self.__default_imports_generated:
-            self.add_str_to_contract_imports(0, DEFAULT_IMPORTS, 1)
+            self.add_str_to_imports(0, DEFAULT_IMPORTS, 1)
         self.__default_imports_generated = True
-        self.add_str_to_contract_imports(0, base_imports, 2)
+        self.add_str_to_imports(0, base_imports, 2)
 
-        self.add_str_to_contract_types(0, "class " + contract.name + "(" + base_names + "):", 1)
+        self.add_str_to_types(0, "class " + contract.name + "(" + base_names + "):", 1)
         #TODO add abi
-        self.add_str_to_contract_types(1, "abi = json.loads(TODO)", 1)
+        self.add_str_to_types(1, "abi = json.loads(TODO)", 1)
         #TODO add bytecode
-        self.add_str_to_contract_types(1, "bytecode = TODO", 1)
-        self.add_str_to_contract_types(0, "", 1)
+        self.add_str_to_types(1, "bytecode = TODO", 1)
+        self.add_str_to_types(0, "", 1)
 
 
     def generate_types_enum(self, contract: ContractDefinition) -> None:
@@ -225,11 +225,12 @@ class TypeGenerator():
 
     def generate_types_struct(self, structs: List[StructDefinition]) -> None:
         for struct in structs:
-            self.add_str_to_contract_types(1, "@dataclass", 1)
-            self.add_str_to_contract_types(1, f"class {struct.name}:", 1)
+            self.add_str_to_types(1, "@dataclass", 1)
+            self.add_str_to_types(1, f"class {struct.name}:", 1)
             for member in struct.members:
-                self.add_str_to_contract_types(2, member.canonical_name.split('.')[-1] + ": " + self.parse_type(member.type), 1)
-            self.add_str_to_contract_types(0, "", 2)
+                #TODO use name instaed of split
+                self.add_str_to_types(2, member.canonical_name.split('.')[-1] + ": " + self.parse_type(member.type), 1)
+            self.add_str_to_types(0, "", 2)
 
 
     def parse_type(self, var_type: ExpressionTypeAbc) -> str:
@@ -246,6 +247,10 @@ class TypeGenerator():
             parsed += self.__sol_to_py_lookup[name + str(var_type.bits_count)]
         elif name == "FixedBytes":
             self.__used_primitive_types.add(self.__sol_to_py_lookup[name + str(var_type.bytes_count)])
+            parsed += self.__sol_to_py_lookup[name + str(var_type.bytes_count)]
+
+        elif name == "Contract":
+            parsed += var_type.name
         else:
             parsed += self.__sol_to_py_lookup[name]
         return parsed
@@ -275,12 +280,12 @@ class TypeGenerator():
 
 
     #generates undeployable contract - interafaces and abstract contracts
-    def generate_types_interface(self, contract: ContractDefinition, generate_template: bool) -> None:
-        self.add_str_to_contract_types(0, "from dataclasses import dataclass", 2)
-        self.add_str_to_contract_types(0, "class " + contract.name + "():", 1)
-        self.generate_types_struct(contract.structs)  
-        self.write_contract_types_to_file(contract.parent.source_unit_name)
-        self.__source_unit_types = ""
+    def generate_types_interface(self, contract: ContractDefinition) -> None:
+        if contract.structs:
+            self.add_str_to_imports(0, "from dataclasses import dataclass", 2)
+        self.add_str_to_types(0, "class " + contract.name + "():", 1)
+        if not contract.structs:
+            self.add_str_to_types(1, "pass" , 1)
 
 
     #TODO ensure that stripping the path wont create collisions
@@ -297,9 +302,9 @@ class TypeGenerator():
     def generate_primitive_imports(self):
         for p_type in self.__used_primitive_types:
             #print(self.__source_unit_imports)
-            self.add_str_to_contract_imports(0, "from woke.fuzzer.primitive_types import " + p_type, 1)
+            self.add_str_to_imports(0, "from woke.fuzzer.primitive_types import " + p_type, 1)
         
-        self.add_str_to_contract_imports(0,"", 1) 
+        self.add_str_to_imports(0,"", 1) 
 
 
     def is_compound_type(self, var_type: ExpressionTypeAbc):
@@ -321,6 +326,7 @@ class TypeGenerator():
                 parsed += var_type.name
             elif name == "Array":
                 #parsed += "List[" + generate_function(var_type.base_type, True) + "]"
+                use_parse = True
                 param_names += "index" + str(depth) + ", "
                 if self.is_compound_type(var_type.base_type):
                     parsed += "index" + str(depth) + ": uint256" + ", " + generate_function(var_type.base_type, True, depth + 1)
@@ -330,6 +336,7 @@ class TypeGenerator():
                     _ = generate_function(var_type.base_type, False, depth + 1)
             elif name == "Mapping":
                 #parse key
+                use_parse = True
                 param_names += "key" + str(depth) + ", "
                 parsed += "key" + str(depth) + ": " + generate_function(var_type.key_type, True, depth + 1)
                 if self.is_compound_type(var_type.value_type):
@@ -339,33 +346,35 @@ class TypeGenerator():
                     _ = generate_function(var_type.value_type, True, depth + 1)
             elif name == "UInt":
                 self.__used_primitive_types.add(self.__sol_to_py_lookup[name + str(var_type.bits_count)])
+                parsed += self.__sol_to_py_lookup[name + str(var_type.bits_count)]
                 returns =  self.__sol_to_py_lookup[name + str(var_type.bits_count)]
             elif name == "FixedBytes":
                 self.__used_primitive_types.add(self.__sol_to_py_lookup[name + str(var_type.bytes_count)])
+                parsed +=  self.__sol_to_py_lookup[name + str(var_type.bytes_count)]
                 returns =  self.__sol_to_py_lookup[name + str(var_type.bytes_count)]
+            elif name == "Contract":
+                #TODO might be necessary to add the contract to the imports
+                returns =  var_type.name
             else:
-                if use_parse:
-                    parsed += self.__sol_to_py_lookup[name]
-                else:
-                    parsed += ""
+                parsed += self.__sol_to_py_lookup[name]
                 returns = self.__sol_to_py_lookup[name]
 
-            return parsed
+            return parsed if use_parse else ""
 
         getter_params =  "self, " + generate_function(decl.type, False, 0)
         getter_params += ", params: Optional[TxParams] = None" if len(getter_params) > len("self, ") else "params: Optional[TxParams] = None"
-        self.add_str_to_contract_types(1, "def " + decl.name + '(' + getter_params + ") -> " + (returns if returns else "None") + ':', 1)
+        self.add_str_to_types(1, "def " + decl.name + '(' + getter_params + ") -> " + (returns if returns else "None") + ':', 1)
         if param_names:
             param_names = param_names[:-2]
         #self.add_str_to_contract_types(2, "pass" + " " + param_names, 2) 
         #print(decl.function_selector[3:].decode("utf-8"))
-        self.add_str_to_contract_types(2, "return self.transact(\"" + decl.function_selector.hex() + '\", [' + param_names + ']' + ", params)", 2)
+        self.add_str_to_types(2, "return self.transact(\"" + decl.function_selector.hex() + '\", [' + param_names + ']' + ", params)", 2)
         #print(self.__contract_types)
 
 
     def generate_types_contract(self, contract: ContractDefinition, generate_template: bool) -> None:
         #bool indicating whether the given contract should inherit from Contract class
-        inhertits_contract: bool = True
+        inhertits_contract: bool = contract.kind == ContractKind.CONTRACT and not contract.abstract
         base_names: str = ""
         base_imports: str = ""
 
@@ -390,7 +399,6 @@ class TypeGenerator():
             if parent_contract.kind == ContractKind.CONTRACT and not parent_contract.abstract:
                 inhertits_contract = False
 
-
         if base_names:
             #remove trailing ", "
             base_names = base_names[:-2] 
@@ -400,7 +408,10 @@ class TypeGenerator():
         #TODO generate template only if the given contract file (as specified by its canonical name)
         #doesn't contain anything - some other contract might have been already stored to that file
         #TODO add imports of inherited contracts
-        self.generate_contract_template(contract, base_names, base_imports)
+        if generate_template:
+            self.generate_contract_template(contract, base_names, base_imports)
+        if contract.kind == ContractKind.INTERFACE:
+            self.generate_types_interface(contract)
 
         if contract.enums:
             self.generate_types_enum(contract)
@@ -415,8 +426,8 @@ class TypeGenerator():
             for fn in contract.functions:
                 if fn.function_selector:
                     params_names, params = self.generate_func_params(fn)
-                    self.add_str_to_contract_types(1, f"def {fn.name}(self{params}) -> {self.generate_func_returns(fn)}:", 1)
-                    self.add_str_to_contract_types(2, f"return self.transact(\"{fn.function_selector.hex()}\", [{params_names}], params)", 3)
+                    self.add_str_to_types(1, f"def {fn.name}(self{params}) -> {self.generate_func_returns(fn)}:", 1)
+                    self.add_str_to_types(2, f"return self.transact(\"{fn.function_selector.hex()}\", [{params_names}], params)", 3)
 
             for variable in contract.declared_variables:
                 if isinstance(variable.type_name, Mapping):
@@ -429,6 +440,8 @@ class TypeGenerator():
                 self.generate_types_contract(contract, True)
             elif contract.kind == ContractKind.LIBRARY:
                 continue
+            elif contract.kind == ContractKind.INTERFACE:
+                self.generate_types_contract(contract, False)
         self.generate_primitive_imports()
 
 
