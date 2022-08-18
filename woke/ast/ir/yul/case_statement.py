@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Iterator, Union
 
 import typing_extensions
 
@@ -26,6 +26,12 @@ class Case(YulAbc):
             self.__value = "default"
         else:
             self.__value = Literal(init, case_.value, self)
+
+    def __iter__(self) -> Iterator[YulAbc]:
+        yield self
+        yield from self.__body
+        if self.__value != "default":
+            yield from self.__value
 
     @property
     def parent(self) -> Switch:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, List, Tuple, Union
 
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.ir.yul.abc import YulAbc
@@ -30,6 +30,12 @@ class Switch(YulAbc):
         else:
             assert False, f"Unexpected type: {type(switch.expression)}"
         self.__cases = [Case(init, case, self) for case in switch.cases]
+
+    def __iter__(self) -> Iterator[YulAbc]:
+        yield self
+        yield from self.__expression
+        for case_ in self.__cases:
+            yield from case_
 
     @property
     def parent(self) -> Block:
