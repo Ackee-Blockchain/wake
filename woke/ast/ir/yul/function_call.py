@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, List, Tuple, Union
 
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import YulFunctionCall, YulIdentifier, YulLiteral
@@ -46,6 +46,12 @@ class FunctionCall(YulAbc):
                 self.__arguments.append(Literal(init, argument, self))
             else:
                 assert False, f"Unexpected type: {type(argument)}"
+
+    def __iter__(self) -> Iterator[YulAbc]:
+        yield self
+        yield from self.__function_name
+        for argument in self.__arguments:
+            yield from argument
 
     @property
     def parent(

@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Iterator, Union
 
 from ...nodes import YulForLoop, YulFunctionCall, YulIdentifier, YulLiteral
 from ..utils import IrInitTuple
@@ -29,6 +29,13 @@ class ForLoop(YulAbc):
             assert False, f"Unexpected type: {type(for_loop.condition)}"
         self.__post = Block(init, for_loop.post, self)
         self.__pre = Block(init, for_loop.pre, self)
+
+    def __iter__(self) -> Iterator[YulAbc]:
+        yield self
+        yield from self.__pre
+        yield from self.__condition
+        yield from self.__body
+        yield from self.__post
 
     @property
     def parent(self) -> Block:
