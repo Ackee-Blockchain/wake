@@ -18,6 +18,8 @@ from click.core import Context
 from intervaltree import IntervalTree
 from rich.panel import Panel
 
+import json
+
 from woke.ast.enums import *
 from woke.ast.nodes import AstSolc
 from woke.compile import SolcOutput, SolidityCompiler
@@ -212,10 +214,14 @@ class TypeGenerator():
         self.add_str_to_imports(0, base_imports, 2)
 
         self.add_str_to_types(0, "class " + contract.name + "(" + base_names + "):", 1)
+        compilation_info = contract.compilation_info
         #TODO add abi
-        self.add_str_to_types(1, "abi = json.loads(TODO)", 1)
+        if compilation_info.abi:
+            self.add_str_to_types(1, f"abi = {compilation_info.abi})", 1)
+        if compilation_info.abi and compilation_info.evm.bytecode.opcodes: 
+            self.add_str_to_types(1, f"bytecode = \"{compilation_info.evm.bytecode.opcodes}\"", 1)
         #TODO add bytecode
-        self.add_str_to_types(1, "bytecode = TODO", 1)
+        #if compilation_info.
         self.add_str_to_types(0, "", 1)
 
 
@@ -230,7 +236,7 @@ class TypeGenerator():
             for member in struct.members:
                 #TODO use name instaed of split
                 self.add_str_to_types(2, member.canonical_name.split('.')[-1] + ": " + self.parse_type(member.type), 1)
-            self.add_str_to_types(0, "", 2)
+            self.add_str_to_types(0, "", 2) 
 
 
     def parse_type(self, var_type: ExpressionTypeAbc) -> str:
