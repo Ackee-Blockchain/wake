@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import Iterator, List, Optional, Tuple
 
 from ...nodes import YulFunctionDefinition
 from ..utils import IrInitTuple
@@ -37,6 +37,16 @@ class FunctionDefinition(YulAbc):
                 TypedName(init, return_variable, self)
                 for return_variable in function_definition.return_variables
             ]
+
+    def __iter__(self) -> Iterator[YulAbc]:
+        yield self
+        yield from self.__body
+        if self.__parameters is not None:
+            for parameter in self.__parameters:
+                yield from parameter
+        if self.__return_variables is not None:
+            for return_variable in self.__return_variables:
+                yield from return_variable
 
     @property
     def parent(self) -> Block:

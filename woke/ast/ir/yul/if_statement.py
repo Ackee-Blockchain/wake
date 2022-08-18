@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Iterator, Union
 
 from ...nodes import YulFunctionCall, YulIdentifier, YulIf, YulLiteral
 from ..utils import IrInitTuple
@@ -25,6 +25,11 @@ class If(YulAbc):
             self.__condition = Literal(init, if_statement.condition, self)
         else:
             assert False, f"Unexpected type: {type(if_statement.condition)}"
+
+    def __iter__(self) -> Iterator[YulAbc]:
+        yield self
+        yield from self.__condition
+        yield from self.__body
 
     @property
     def parent(self) -> Block:
