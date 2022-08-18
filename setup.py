@@ -40,11 +40,23 @@ extras_require = dict(
 
 setup(
     name="abch-woke",
-    description="Woke is a static analyzer and symbolic execution engine for Solidity.",
+    description="Woke is a Python-based development and testing framework for Solidity.",
     url="https://github.com/Ackee-Blockchain/woke",
     author="Ackee Blockchain",
     version="0.1.3-rc4",
     packages=find_packages(exclude=("tests",)),
+    author_email="hello@ackeeblockchain.com",
+    keywords=[
+        "solidity",
+        "ethereum",
+        "blockchain",
+        "review",
+        "audit",
+        "security",
+        "compiler",
+        "solidity audit",
+        "solidity security"
+      ],
     python_requires=">=3.7",
     install_requires=install_requires,
     extras_require=extras_require,
