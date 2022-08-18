@@ -92,7 +92,7 @@ class TypeGenerator():
         self.__sol_to_py_lookup[expr_types.Struct.__name__] = "struct"
         self.__sol_to_py_lookup[expr_types.Bool.__name__] = "bool"
         self.__sol_to_py_lookup[expr_types.Int.__name__] = "int"
-        self.__sol_to_py_lookup[expr_types.FixedBytes.__name__] = "fixed_bytes"
+        #self.__sol_to_py_lookup[expr_types.FixedBytes.__name__] = "fixed_bytes"
         self.__sol_to_py_lookup[expr_types.Bytes.__name__] = "bytes"
         self.__sol_to_py_lookup[expr_types.Contract.__name__] = "contract"
         self.__sol_to_py_lookup[expr_types.Mapping.__name__] = "mapping"
@@ -101,9 +101,15 @@ class TypeGenerator():
         self.__sol_to_py_lookup[expr_types.Function.__name__] = "function"
         i: int = 8
         while i <= 256:
-            #print("uint" + str(i) + " = NewType(\"uint" + str(i) + "\", int)")
+            #print("bytes" + str(i) + " = NewType(\"uint" + str(i) + "\", int)")
             self.__sol_to_py_lookup[expr_types.UInt.__name__ + str(i)] = "uint" + str(i)
             i += 8
+        i = 1
+        while i <= 32:
+            #print("bytes" + str(i) + " = NewType(\"bytes" + str(i) + "\", bytearray)")
+            self.__sol_to_py_lookup[expr_types.FixedBytes.__name__ + str(i)] = "bytes" + str(i)
+            i += 1
+
 
 
     def run_compile(self, parse=True
@@ -201,7 +207,6 @@ class TypeGenerator():
 
     def generate_contract_template(self, contract: ContractDefinition, base_names: str, base_imports: str):
         if not self.__default_imports_generated:
-            print("adding default imports")
             self.add_str_to_contract_imports(0, DEFAULT_IMPORTS, 1)
         self.__default_imports_generated = True
         self.add_str_to_contract_imports(0, base_imports, 2)
@@ -239,6 +244,8 @@ class TypeGenerator():
         elif name == "UInt":
             self.__used_primitive_types.add(self.__sol_to_py_lookup[name + str(var_type.bits_count)])
             parsed += self.__sol_to_py_lookup[name + str(var_type.bits_count)]
+        elif name == "FixedBytes":
+            self.__used_primitive_types.add(self.__sol_to_py_lookup[name + str(var_type.bytes_count)])
         else:
             parsed += self.__sol_to_py_lookup[name]
         return parsed
@@ -289,7 +296,7 @@ class TypeGenerator():
 
     def generate_primitive_imports(self):
         for p_type in self.__used_primitive_types:
-            print(self.__source_unit_imports)
+            #print(self.__source_unit_imports)
             self.add_str_to_contract_imports(0, "from woke.fuzzer.primitive_types import " + p_type, 1)
         
         self.add_str_to_contract_imports(0,"", 1) 
@@ -333,6 +340,9 @@ class TypeGenerator():
             elif name == "UInt":
                 self.__used_primitive_types.add(self.__sol_to_py_lookup[name + str(var_type.bits_count)])
                 returns =  self.__sol_to_py_lookup[name + str(var_type.bits_count)]
+            elif name == "FixedBytes":
+                self.__used_primitive_types.add(self.__sol_to_py_lookup[name + str(var_type.bytes_count)])
+                returns =  self.__sol_to_py_lookup[name + str(var_type.bytes_count)]
             else:
                 if use_parse:
                     parsed += self.__sol_to_py_lookup[name]
