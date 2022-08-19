@@ -210,20 +210,13 @@ class TypeGenerator():
 
 
     #TODO rename to reflect that only structs in a given contract are generated
-    def generate_types_struct(self, structs: List[StructDefinition], unit: SourceUnit) -> None:
+    def generate_types_struct(self, structs: List[StructDefinition], indent: int) -> None:
         for struct in structs:
-            self.add_str_to_types(1, "@dataclass", 1)
-            self.add_str_to_types(1, f"class {struct.name}:", 1)
+            self.add_str_to_types(indent, "@dataclass", 1)
+            self.add_str_to_types(indent, f"class {struct.name}:", 1)
             for member in struct.members:
-                self.add_str_to_types(2, member.name + ": " + self.parse_type(member.type), 1)
+                self.add_str_to_types(indent + 1, member.name + ": " + self.parse_type(member.type), 1)
             self.add_str_to_types(0, "", 2) 
-            #if the struct is from a different source unit then import it
-            if struct.parent.parent.source_unit_name != unit:
-                print(f"struct.parent.canonical_name: {struct.parent.canonical_name}, unit: {unit}")
-                struct_import = self.generate_import(struct.name, struct.parent.canonical_name)
-                self.add_str_to_imports(0, struct_import, 1)
-
-                # base_imports += self.generate_import(parent_contract.name, parent_contract.parent.source_unit_name)
                 
 
     #TODO has side effects - generating of struct and contract imports - rename the func to reflect the side effect
@@ -403,7 +396,7 @@ class TypeGenerator():
             self.generate_types_enum(contract)
 
         if contract.structs:
-            self.generate_types_struct(contract.structs, contract.parent.source_unit_name)
+            self.generate_types_struct(contract.structs, 1)
 
         if contract.kind == ContractKind.CONTRACT and not contract.abstract or contract.kind == ContractKind.LIBRARY:
             for var in contract.declared_variables:
@@ -421,8 +414,7 @@ class TypeGenerator():
 
 
     def generate_types_source_unit(self, unit: SourceUnit) -> None:
-        #TODO generate structs that are on the level of the src unit
-        #for struct in unit.structs:
+        self.generate_types_struct(unit.structs, 0)
         for contract in unit.contracts:
             if contract.kind == ContractKind.CONTRACT and not contract.abstract:
                 self.generate_types_contract(contract, True)
