@@ -1,5 +1,8 @@
+from functools import lru_cache, reduce
+from operator import or_
 from typing import Iterator, List, Tuple
 
+from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.utils import IrInitTuple
@@ -55,3 +58,15 @@ class FunctionCallOptions(ExpressionAbc):
     @property
     def is_ref_to_state_variable(self) -> bool:
         return False
+
+    @property
+    @lru_cache(maxsize=None)
+    def modifies_state(self) -> ModifiesStateFlag:
+        ret = self.expression.modifies_state | reduce(
+            or_,
+            (option.modifies_state for option in self.options),
+            ModifiesStateFlag(0),
+        )
+        if "value" in self.names:
+            ret |= ModifiesStateFlag.SENDS_ETHER
+        return ret

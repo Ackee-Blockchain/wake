@@ -1,6 +1,7 @@
+from functools import lru_cache
 from typing import Iterator
 
-from woke.ast.enums import UnaryOpOperator
+from woke.ast.enums import ModifiesStateFlag, UnaryOpOperator
 from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.utils import IrInitTuple
@@ -51,3 +52,20 @@ class UnaryOperation(ExpressionAbc):
     @property
     def is_ref_to_state_variable(self) -> bool:
         return False
+
+    @property
+    @lru_cache(maxsize=None)
+    def modifies_state(self) -> ModifiesStateFlag:
+        ret = self.sub_expression.modifies_state
+
+        if (
+            self.operator
+            in {
+                UnaryOpOperator.PLUS_PLUS,
+                UnaryOpOperator.MINUS_MINUS,
+                UnaryOpOperator.DELETE,
+            }
+            and self.sub_expression.is_ref_to_state_variable
+        ):
+            ret |= ModifiesStateFlag.MODIFIES_STATE_VAR
+        return ret

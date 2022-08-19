@@ -228,3 +228,11 @@ class InlineAssemblySuffix(str, enum.Enum):
 
 class InlineAssemblyFlag(str, enum.Enum):
     MEMORY_SAFE = "memory-safe"
+
+
+class ModifiesStateFlag(enum.IntFlag):
+    MODIFIES_STATE_VAR = 1
+    EMITS = 2
+    SENDS_ETHER = 4
+    DEPLOYS_CONTRACT = 8
+    SELFDESTRUCTS = 16

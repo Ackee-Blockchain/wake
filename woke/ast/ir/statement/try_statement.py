@@ -1,5 +1,8 @@
+from functools import lru_cache, reduce
+from operator import or_
 from typing import Iterator, List, Optional, Tuple
 
+from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.expression.function_call import FunctionCall
 from woke.ast.ir.meta.try_catch_clause import TryCatchClause
@@ -47,3 +50,15 @@ class TryStatement(StatementAbc):
     @property
     def documentation(self) -> Optional[str]:
         return self.__documentation
+
+    @property
+    @lru_cache(maxsize=None)
+    def modifies_state(self) -> ModifiesStateFlag:
+        return (
+            reduce(
+                or_,
+                (clause.block.modifies_state for clause in self.__clauses),
+                ModifiesStateFlag(0),
+            )
+            | self.external_call.modifies_state
+        )

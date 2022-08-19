@@ -1,5 +1,8 @@
+from functools import lru_cache, reduce
+from operator import or_
 from typing import Iterator, List, Optional, Tuple
 
+from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.statement.abc import StatementAbc
 from woke.ast.ir.utils import IrInitTuple
@@ -42,3 +45,12 @@ class UncheckedBlock(StatementAbc):
     @property
     def documentation(self) -> Optional[str]:
         return self.__documentation
+
+    @property
+    @lru_cache(maxsize=None)
+    def modifies_state(self) -> ModifiesStateFlag:
+        return reduce(
+            or_,
+            (statement.modifies_state for statement in self.__statements),
+            ModifiesStateFlag(0),
+        )

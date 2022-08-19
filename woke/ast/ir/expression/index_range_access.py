@@ -1,5 +1,7 @@
+from functools import lru_cache
 from typing import Iterator, Optional
 
+from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.utils import IrInitTuple
@@ -67,3 +69,13 @@ class IndexRangeAccess(ExpressionAbc):
     def is_ref_to_state_variable(self) -> bool:
         # index range access in only supported for dynamic calldata arrays
         return False
+
+    @property
+    @lru_cache(maxsize=None)
+    def modifies_state(self) -> ModifiesStateFlag:
+        ret = self.base_expression.modifies_state
+        if self.start_expression is not None:
+            ret |= self.start_expression.modifies_state
+        if self.end_expression is not None:
+            ret |= self.end_expression.modifies_state
+        return ret

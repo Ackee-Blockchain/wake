@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Iterator
 
-from woke.ast.enums import BinaryOpOperator
+from woke.ast.enums import BinaryOpOperator, ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcBinaryOperation
@@ -56,3 +56,10 @@ class BinaryOperation(ExpressionAbc):
     @property
     def is_ref_to_state_variable(self) -> bool:
         return False
+
+    @property
+    @lru_cache(maxsize=None)
+    def modifies_state(self) -> ModifiesStateFlag:
+        return (
+            self.left_expression.modifies_state | self.right_expression.modifies_state
+        )

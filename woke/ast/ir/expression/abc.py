@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from functools import lru_cache
 from typing import Optional
 
+from woke.ast.enums import ModifiesStateFlag
 from woke.ast.expression_types import ExpressionTypeAbc
 from woke.ast.ir.abc import SolidityAbc
 from woke.ast.ir.utils import IrInitTuple
@@ -121,3 +122,8 @@ class ExpressionAbc(SolidityAbc, ABC):
         """
         Returns True if the expression (possibly) is a reference to a state variable.
         """
+
+    @property
+    @abstractmethod
+    def modifies_state(self) -> ModifiesStateFlag:
+        ...
