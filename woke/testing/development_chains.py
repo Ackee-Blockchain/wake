@@ -19,8 +19,15 @@ class DevChainABC(ABC):
     def accounts(self) -> List[str]:
         return self._communicator.eth_accounts()
 
-    def get_block(self, block_identifier: Union[int, str]) -> Dict[str, Any]:
-        return self._communicator.eth_get_block_by_number(block_identifier, False)
+    def get_block(
+        self, block_identifier: Union[int, str], include_transactions: bool = False
+    ) -> Dict[str, Any]:
+        return self._communicator.eth_get_block_by_number(
+            block_identifier, include_transactions
+        )
+
+    def get_block_number(self) -> int:
+        return self._communicator.eth_block_number()
 
     def get_transaction(self, tx_hash: str) -> Dict[str, Any]:
         return self._communicator.eth_get_transaction_by_hash(tx_hash)
