@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from functools import lru_cache, reduce
+from operator import or_
 from typing import Iterator, List, Optional, Tuple
 
+from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.statement.abc import StatementAbc
 from woke.ast.ir.utils import IrInitTuple
@@ -45,3 +48,14 @@ class Block(StatementAbc):
         if self.__statements is None:
             return None
         return tuple(self.__statements)
+
+    @property
+    @lru_cache(maxsize=None)
+    def modifies_state(self) -> ModifiesStateFlag:
+        if self.statements is None:
+            return ModifiesStateFlag(0)
+        return reduce(
+            or_,
+            (statement.modifies_state for statement in self.statements),
+            ModifiesStateFlag(0),
+        )

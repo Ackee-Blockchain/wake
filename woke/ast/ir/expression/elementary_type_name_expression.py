@@ -3,6 +3,7 @@ from typing import Iterator
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcElementaryTypeNameExpression
 
+from ...enums import ModifiesStateFlag
 from ..abc import IrAbc, SolidityAbc
 from ..type_name.elementary_type_name import ElementaryTypeName
 from .abc import ExpressionAbc
@@ -40,3 +41,7 @@ class ElementaryTypeNameExpression(ExpressionAbc):
     @property
     def is_ref_to_state_variable(self) -> bool:
         return False
+
+    @property
+    def modifies_state(self) -> ModifiesStateFlag:
+        return ModifiesStateFlag(0)

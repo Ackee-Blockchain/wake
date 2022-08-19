@@ -1,6 +1,6 @@
 from typing import Optional
 
-from woke.ast.enums import LiteralKind
+from woke.ast.enums import LiteralKind, ModifiesStateFlag
 from woke.ast.ir.abc import SolidityAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.utils import IrInitTuple
@@ -46,3 +46,7 @@ class Literal(ExpressionAbc):
     @property
     def is_ref_to_state_variable(self) -> bool:
         return False
+
+    @property
+    def modifies_state(self) -> ModifiesStateFlag:
+        return ModifiesStateFlag(0)

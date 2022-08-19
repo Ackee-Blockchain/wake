@@ -1,6 +1,8 @@
-from functools import lru_cache
+from functools import lru_cache, reduce
+from operator import or_
 from typing import Iterator, List, Optional, Tuple
 
+from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.utils import IrInitTuple
@@ -55,4 +57,17 @@ class TupleExpression(ExpressionAbc):
             component.is_ref_to_state_variable
             for component in self.__components
             if component is not None
+        )
+
+    @property
+    @lru_cache(maxsize=None)
+    def modifies_state(self) -> ModifiesStateFlag:
+        return reduce(
+            or_,
+            (
+                component.modifies_state
+                for component in self.__components
+                if component is not None
+            ),
+            ModifiesStateFlag(0),
         )

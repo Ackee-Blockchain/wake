@@ -1,5 +1,6 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 
+from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import SolidityAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import (
@@ -83,3 +84,8 @@ class StatementAbc(SolidityAbc, ABC):
         elif isinstance(statement, SolcWhileStatement):
             return WhileStatement(init, statement, parent)
         assert False, f"Unknown statement type: {type(statement)}"
+
+    @property
+    @abstractmethod
+    def modifies_state(self) -> ModifiesStateFlag:
+        ...
