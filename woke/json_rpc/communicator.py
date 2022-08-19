@@ -11,17 +11,23 @@ logger.setLevel(logging.INFO)
 
 class JsonRpcCommunicator:
     __client_session: Optional[ClientSession]
-    __port: int
+    __port: Optional[int]
     __request_id: int
     __url: str
 
     def __init__(
-        self, port: int = 8545, client_session: Optional[ClientSession] = None
+        self,
+        url: str = "http://localhost",
+        port: Optional[int] = None,
+        client_session: Optional[ClientSession] = None,
     ):
         self.__client_session = client_session
         self.__port = port
         self.__request_id = 0
-        self.__url = f"http://localhost:{port}"
+        if port is None:
+            self.__url = url
+        else:
+            self.__url = f"{url}:{port}"
 
     async def __send_request(
         self, method_name: str, params: Optional[List] = None

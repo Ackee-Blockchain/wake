@@ -1,10 +1,13 @@
+import asyncio
 import logging
+import multiprocessing.connection
 import random
 from datetime import datetime, timedelta
 from typing import Callable, Counter, List, Optional, Tuple
 
 import brownie
-import IPython
+
+from woke.fuzzer.coverage import Coverage
 
 from .utils import partition
 
@@ -25,12 +28,16 @@ class Campaign:
         self,
         sequences_count: int,
         flows_count: int,
+        coverage: Coverage,
+        coverage_conn: multiprocessing.connection.Connection,
         run_for_seconds: Optional[int] = None,
         dry_run: bool = False,
     ):
         init_timestamp = datetime.now()
         brownie.chain.snapshot()
 
+        coverage_block = brownie.chain.height
+        logger.debug(f"Starting block {coverage_block}")
         for i in range(sequences_count):
             if (
                 run_for_seconds is not None
@@ -101,12 +108,24 @@ class Campaign:
                         inv[0]()
                         del inv
 
+                if j % 20 == 0 or j == sequences_count - 1:
+                    asyncio.run(
+                        coverage.update_coverage(
+                            {seq.contract.address.lower(): seq.contract._name}
+                        )
+                    )
+                    if coverage_conn:
+                        coverage_conn.send(
+                            coverage.get_contract_coverage(seq.contract._name)
+                        )
+
             del invs, flows
             # point_coverage += seq.point_coverage
             # logger.info(self.__format_heading("Sequence point coverage:"))
             # self.__log_point_coverage(seq.point_coverage)
             # logger.info(self.__format_heading("Campaign point coverage:"))
             # self.__log_point_coverage(point_coverage)
+
             del seq
         logger.info(f"\nRan {flows_count} flows. All flows and invariants passed.")
 
