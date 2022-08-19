@@ -1,10 +1,12 @@
 import logging
+import multiprocessing.connection
 import random
 from datetime import datetime, timedelta
 from typing import Callable, Counter, Iterable, List, Optional, Tuple
 
 from woke.testing.core import ChainInterface, default_chain
 
+from .coverage import Coverage
 from .utils import partition
 
 Methods = List[Tuple[Callable, str]]
@@ -91,6 +93,9 @@ class Campaign:
         flows_count: int,
         run_for_seconds: Optional[int] = None,
         dry_run: bool = False,
+        coverage: Optional[
+            Tuple[Coverage, multiprocessing.connection.Connection]
+        ] = None,
     ):
         init_timestamp = datetime.now()
 
@@ -129,6 +134,11 @@ class Campaign:
                             logger.info(f'{"inv...":<33}{inv[1]}')
                             inv[0]()
                             del inv
+
+                    if j % 20 == 0 or j == len(generated_flows) - 1:
+                        if coverage is not None:
+                            coverage[0].update_coverage()
+                            coverage[1].send(coverage[0].get_coverage())
 
                 del invs, flows
                 # point_coverage += seq.point_coverage

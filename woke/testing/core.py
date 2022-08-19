@@ -175,6 +175,45 @@ def _check_connected(f):
     return wrapper
 
 
+def get_fqn_from_bytecode(bytecode: bytes) -> str:
+    for bytecode_segments, fqn in bytecode_index:
+
+        length, h = bytecode_segments[0]
+        if length > len(bytecode):
+            continue
+        segment_h = BLAKE2b.new(data=bytecode[:length], digest_bits=256).digest()
+        if segment_h != h:
+            continue
+
+        bytecode = bytecode[length:]
+        found = True
+
+        for length, h in bytecode_segments[1:]:
+            if length + 20 > len(bytecode):
+                found = False
+                break
+            bytecode = bytecode[20:]
+            segment_h = BLAKE2b.new(data=bytecode[:length], digest_bits=256).digest()
+            if segment_h != h:
+                found = False
+                break
+            bytecode = bytecode[length:]
+
+        if found:
+            return fqn
+
+    raise ValueError("Could not find contract definition from bytecode")
+
+
+def get_fqn_from_address(addr: Address, chain: ChainInterface) -> Optional[str]:
+    code = chain.dev_chain.get_code(str(addr))
+    metadata = code[-53:]
+    if metadata in contracts_by_metadata:
+        return contracts_by_metadata[metadata]
+    else:
+        return None
+
+
 class ChainInterface:
     _connected: bool
     _dev_chain: DevChainABC
@@ -690,46 +729,6 @@ class ChainInterface:
                     )
         return console_logs
 
-    @staticmethod
-    def _get_fqn_from_bytecode(bytecode: bytes) -> str:
-        for bytecode_segments, fqn in bytecode_index:
-
-            length, h = bytecode_segments[0]
-            if length > len(bytecode):
-                continue
-            segment_h = BLAKE2b.new(data=bytecode[:length], digest_bits=256).digest()
-            if segment_h != h:
-                continue
-
-            bytecode = bytecode[length:]
-            found = True
-
-            for length, h in bytecode_segments[1:]:
-                if length + 20 > len(bytecode):
-                    found = False
-                    break
-                bytecode = bytecode[20:]
-                segment_h = BLAKE2b.new(
-                    data=bytecode[:length], digest_bits=256
-                ).digest()
-                if segment_h != h:
-                    found = False
-                    break
-                bytecode = bytecode[length:]
-
-            if found:
-                return fqn
-
-        raise ValueError("Could not find contract definition from bytecode")
-
-    def _get_fqn_from_address(self, addr: Address) -> Optional[str]:
-        code = self._dev_chain.get_code(str(addr))
-        metadata = code[-53:]
-        if metadata in contracts_by_metadata:
-            return contracts_by_metadata[metadata]
-        else:
-            return None
-
     @_check_connected
     def deploy(
         self,
@@ -762,7 +761,7 @@ class ChainInterface:
                     raise e
             self._nonces[sender.address] += 1
 
-        deployed_contract_fqn = self._get_fqn_from_bytecode(bytecode)
+        deployed_contract_fqn = get_fqn_from_bytecode(bytecode)
 
         from .transactions import LegacyTransaction
 
@@ -854,7 +853,7 @@ class ChainInterface:
                         bytecode += bytes.fromhex(trace["memory"][i])
                     bytecode += bytes.fromhex(trace["memory"][end_block])[:end_offset]
 
-                fqn = self._get_fqn_from_bytecode(bytecode)
+                fqn = get_fqn_from_bytecode(bytecode)
                 addresses.append(fqn)
             elif trace["op"] in {"RETURN", "REVERT", "STOP"}:
                 addresses.pop()
@@ -870,7 +869,7 @@ class ChainInterface:
                         event_fqns.append((selector, None))
                         continue
 
-                    address_fqn = self._get_fqn_from_address(addresses[-1])
+                    address_fqn = get_fqn_from_address(addresses[-1], self)
                     if address_fqn is None:
                         raise ValueError(
                             f"Could not find contract with address {addresses[-1]}"
@@ -912,13 +911,13 @@ class ChainInterface:
                         bytecode += bytes.fromhex(trace["memory"][i])
                     bytecode += bytes.fromhex(trace["memory"][end_block])[:end_offset]
 
-                fqn = self._get_fqn_from_bytecode(bytecode)
+                fqn = get_fqn_from_bytecode(bytecode)
                 addresses.append(fqn)
             elif trace["op"] in {"RETURN", "REVERT", "STOP"}:
                 last_popped = addresses.pop()
 
         if isinstance(last_popped, Address):
-            last_popped = self._get_fqn_from_address(last_popped)
+            last_popped = get_fqn_from_address(last_popped, self)
             assert (
                 last_popped is not None
             ), f"Could not find contract with address {last_popped}"
@@ -953,7 +952,7 @@ class ChainInterface:
             self._nonces[sender.address] += 1
 
         assert "to" in tx_params
-        recipient_fqn = self._get_fqn_from_address(Address(tx_params["to"]))
+        recipient_fqn = get_fqn_from_address(Address(tx_params["to"]), self)
 
         from .transactions import LegacyTransaction
 
