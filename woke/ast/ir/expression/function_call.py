@@ -144,3 +144,10 @@ class FunctionCall(ExpressionAbc):
                 return None
             else:
                 assert False, f"Unexpected function call child node: {node}"
+
+    @property
+    @lru_cache(maxsize=None)
+    def is_ref_to_state_variable(self) -> bool:
+        if self.kind == FunctionCallKind.TYPE_CONVERSION:
+            return self.expression.is_ref_to_state_variable
+        return False

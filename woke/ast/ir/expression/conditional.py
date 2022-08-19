@@ -1,3 +1,4 @@
+from functools import lru_cache
 from typing import Iterator
 
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -48,3 +49,11 @@ class Conditional(ExpressionAbc):
     @property
     def true_expression(self) -> ExpressionAbc:
         return self.__true_expression
+
+    @property
+    @lru_cache(maxsize=None)
+    def is_ref_to_state_variable(self) -> bool:
+        return (
+            self.true_expression.is_ref_to_state_variable
+            or self.false_expression.is_ref_to_state_variable
+        )

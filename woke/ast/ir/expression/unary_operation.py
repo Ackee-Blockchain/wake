@@ -47,3 +47,7 @@ class UnaryOperation(ExpressionAbc):
     @property
     def sub_expression(self) -> ExpressionAbc:
         return self.__sub_expression
+
+    @property
+    def is_ref_to_state_variable(self) -> bool:
+        return False

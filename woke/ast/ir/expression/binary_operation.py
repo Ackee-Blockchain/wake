@@ -1,3 +1,4 @@
+from functools import lru_cache
 from typing import Iterator
 
 from woke.ast.enums import BinaryOpOperator
@@ -51,3 +52,7 @@ class BinaryOperation(ExpressionAbc):
     @property
     def right_expression(self) -> ExpressionAbc:
         return self.__right_expression
+
+    @property
+    def is_ref_to_state_variable(self) -> bool:
+        return False
