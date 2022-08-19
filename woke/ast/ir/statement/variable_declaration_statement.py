@@ -1,5 +1,7 @@
+from functools import lru_cache
 from typing import Iterator, List, Optional, Tuple
 
+from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
 from woke.ast.ir.expression.abc import ExpressionAbc
@@ -75,5 +77,19 @@ class VariableDeclarationStatement(StatementAbc):
         return self.__documentation
 
     @property
-    def initial_values(self) -> Optional[ExpressionAbc]:
+    def initial_value(self) -> Optional[ExpressionAbc]:
         return self.__initial_value
+
+    @property
+    @lru_cache(maxsize=None)
+    def modifies_state(self) -> ModifiesStateFlag:
+        ret = ModifiesStateFlag(0)
+        if self.initial_value is not None:
+            ret |= self.initial_value.modifies_state
+            if any(
+                declaration.is_state_variable
+                for declaration in self.declarations
+                if declaration is not None
+            ):
+                ret |= ModifiesStateFlag.MODIFIES_STATE_VAR
+        return ret

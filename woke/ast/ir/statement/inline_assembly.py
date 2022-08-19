@@ -5,7 +5,11 @@ from typing import Iterator, List, Optional, Tuple
 
 from intervaltree import IntervalTree
 
-from woke.ast.enums import InlineAssemblyEvmVersion, InlineAssemblySuffix
+from woke.ast.enums import (
+    InlineAssemblyEvmVersion,
+    InlineAssemblySuffix,
+    ModifiesStateFlag,
+)
 from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.declaration.abc import DeclarationAbc
 from woke.ast.ir.reference_resolver import CallbackParams, ReferenceResolver
@@ -161,3 +165,8 @@ class InlineAssembly(StatementAbc):
         if len(intervals) == 0:
             return None
         return intervals.pop().data
+
+    @property
+    @lru_cache(maxsize=None)
+    def modifies_state(self) -> ModifiesStateFlag:
+        return self.yul_block.modifies_state

@@ -1,5 +1,7 @@
 from typing import Iterator
 
+from woke.ast.enums import ModifiesStateFlag
+from woke.ast.expression_types import Contract
 from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.type_name.abc import TypeNameAbc
@@ -34,3 +36,10 @@ class NewExpression(ExpressionAbc):
     @property
     def is_ref_to_state_variable(self) -> bool:
         return False
+
+    @property
+    def modifies_state(self) -> ModifiesStateFlag:
+        if isinstance(self.type, Contract):
+            return ModifiesStateFlag.DEPLOYS_CONTRACT
+        else:
+            return ModifiesStateFlag(0)

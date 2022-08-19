@@ -1,7 +1,7 @@
 from functools import lru_cache, partial
 from typing import List, Optional, Tuple, Union
 
-from woke.ast.enums import GlobalSymbolsEnum
+from woke.ast.enums import GlobalSymbolsEnum, ModifiesStateFlag
 from woke.ast.ir.abc import SolidityAbc
 from woke.ast.ir.declaration.abc import DeclarationAbc
 from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
@@ -104,3 +104,7 @@ class Identifier(ExpressionAbc):
             isinstance(referenced_declaration, VariableDeclaration)
             and referenced_declaration.is_state_variable
         )
+
+    @property
+    def modifies_state(self) -> ModifiesStateFlag:
+        return ModifiesStateFlag(0)
