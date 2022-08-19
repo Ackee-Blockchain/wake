@@ -70,6 +70,8 @@ class TypeGenerator():
     __used_primitive_types: Set[str]
     #holds all imports for the given source unit
     __source_unit_imports: Set[str]
+    __source_unit_struct_imports: Set[str]
+    __current_source_unit: str
     __pytypes_dir: Path
     __sol_to_py_lookup: Dict[type, str]
     __default_imports_generated: bool
@@ -80,6 +82,8 @@ class TypeGenerator():
         self.__source_unit_types = ""
         self.__source_units = {}
         self.__used_primitive_types = set()
+        self.__source_unit_struct_imports = set()
+        self.__current_source_unit = ""
         self.__source_unit_imports = ""
         self.__pytypes_dir = config.project_root_path / "pytypes"
         self.__sol_to_py_lookup = {}
@@ -184,21 +188,6 @@ class TypeGenerator():
     )
 
 
-    def write_contract_types_to_file(self, contract_name: str):
-        self.__pytypes_dir.mkdir(exist_ok=True)
-        contract_name = self.make_path_alphanum(contract_name[:-3])
-        unit_path = (self.__pytypes_dir / contract_name).with_suffix(".py")
-        unit_path_parent = unit_path.parent
-        #TODO validate whether project root can become paraent
-        unit_path_parent.mkdir(parents=True,exist_ok=True)
-        if unit_path.exists():
-            with unit_path.open('a') as f:
-                f.write(self.__source_unit_types)
-        else:
-            unit_path.touch()
-            unit_path.write_text(self.__source_unit_types)
-
-
     def add_str_to_types(self, num_of_indentation: int, string: str, num_of_newlines: int): 
         self.__source_unit_types += num_of_indentation * TAB_WIDTH * ' ' + string + num_of_newlines * '\n'
 
@@ -215,12 +204,10 @@ class TypeGenerator():
 
         self.add_str_to_types(0, "class " + contract.name + "(" + base_names + "):", 1)
         compilation_info = contract.compilation_info
-        #TODO add abi
         if compilation_info.abi:
-            self.add_str_to_types(1, f"abi = {compilation_info.abi})", 1)
+            self.add_str_to_types(1, f"abi = {compilation_info.abi}", 1)
         if compilation_info.abi and compilation_info.evm.bytecode.opcodes: 
-            self.add_str_to_types(1, f"bytecode = \"{compilation_info.evm.bytecode.opcodes}\"", 1)
-        #TODO add bytecode
+            self.add_str_to_types(1, f"bytecode = \"{compilation_info.evm.bytecode.object}\"", 1)
         #if compilation_info.
         self.add_str_to_types(0, "", 1)
 
@@ -229,14 +216,37 @@ class TypeGenerator():
         enums = contract.enums
 
 
-    def generate_types_struct(self, structs: List[StructDefinition]) -> None:
+    def generate_types_struct(self, structs: List[StructDefinition], unit: SourceUnit) -> None:
         for struct in structs:
             self.add_str_to_types(1, "@dataclass", 1)
             self.add_str_to_types(1, f"class {struct.name}:", 1)
             for member in struct.members:
-                #TODO use name instaed of split
-                self.add_str_to_types(2, member.canonical_name.split('.')[-1] + ": " + self.parse_type(member.type), 1)
+                self.add_str_to_types(2, member.name + ": " + self.parse_type(member.type), 1)
             self.add_str_to_types(0, "", 2) 
+            #if the struct is from a different source unit then import it
+            if struct.parent.parent.source_unit_name != unit:
+                print(f"struct.parent.canonical_name: {struct.parent.canonical_name}, unit: {unit}")
+                struct_import = self.generate_import(struct.name, struct.parent.canonical_name)
+                self.add_str_to_imports(0, struct_import, 1)
+
+                # base_imports += self.generate_import(parent_contract.name, parent_contract.parent.source_unit_name)
+                
+    #TODO ensure that each of the imports is unique - a set might be useful
+    def generate_struct_import(self, expr: ExpressionTypeAbc):
+        node  = expr.ir_node
+        if isinstance(node.parent, ContractDefinition):
+            source_unit = node.parent.parent
+        else:
+            source_unit = node.parent
+        #only those structs that are defined in a different source unit should be imported
+        if source_unit.source_unit_name == self.__current_source_unit:
+            return 
+        struct_import = self.generate_import(expr.name, source_unit.source_unit_name)
+
+        if struct_import not in self.__source_unit_struct_imports:
+            print(f"{struct_import} not in struct imports")
+            self.add_str_to_imports(0, struct_import, 1) 
+            self.__source_unit_struct_imports.add(struct_import)
 
 
     def parse_type(self, var_type: ExpressionTypeAbc) -> str:
@@ -244,6 +254,7 @@ class TypeGenerator():
         parsed: str = ""
         if name == "Struct":
             parsed += var_type.name
+            self.generate_struct_import(var_type)
         elif name == "Array":
             #TODO implement nested arrays
             #parsed = "List[" + var_type.base_type.__class__.__name__ + "]"
@@ -330,6 +341,7 @@ class TypeGenerator():
             parsed: str = ""
             if name == "Struct":
                 parsed += var_type.name
+                self.generate_struct_import(var_type)
             elif name == "Array":
                 #parsed += "List[" + generate_function(var_type.base_type, True) + "]"
                 use_parse = True
@@ -359,7 +371,8 @@ class TypeGenerator():
                 parsed +=  self.__sol_to_py_lookup[name + str(var_type.bytes_count)]
                 returns =  self.__sol_to_py_lookup[name + str(var_type.bytes_count)]
             elif name == "Contract":
-                #TODO might be necessary to add the contract to the imports
+                #TODO might be necessary to add the contract to the imports, ie it can be from a different src unit
+                #and also not already imported
                 returns =  var_type.name
             else:
                 parsed += self.__sol_to_py_lookup[name]
@@ -423,7 +436,7 @@ class TypeGenerator():
             self.generate_types_enum(contract)
 
         if contract.structs:
-            self.generate_types_struct(contract.structs)
+            self.generate_types_struct(contract.structs, contract.parent.source_unit_name)
 
         if contract.kind == ContractKind.CONTRACT and not contract.abstract or contract.kind == ContractKind.LIBRARY:
             for var in contract.declared_variables:
@@ -441,6 +454,8 @@ class TypeGenerator():
 
 
     def generate_types_source_unit(self, unit: SourceUnit) -> None:
+        #TODO generate structs that are on the level of the src unit
+        #for struct in unit.structs:
         for contract in unit.contracts:
             if contract.kind == ContractKind.CONTRACT and not contract.abstract:
                 self.generate_types_contract(contract, True)
@@ -482,6 +497,7 @@ class TypeGenerator():
         self.__used_primitive_types = set()
         self.__source_unit_imports = ""
         self.__default_imports_generated = False
+        self.__source_unit_struct_imports = set()
 
 
     def generate_types(self, overwrite: bool = False) -> None:
@@ -490,6 +506,7 @@ class TypeGenerator():
         self.run_compile() 
         self.clean_type_dir()
         for _, unit in self.__source_units.items():
+            self.__current_source_unit = unit.source_unit_name
             self.generate_types_source_unit(unit)
             self.write_source_unit_to_file(unit.source_unit_name)
             self.cleanup_source_unit()
