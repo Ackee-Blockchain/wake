@@ -5,6 +5,7 @@ from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcConditional
 
+from ...enums import ModifiesStateFlag
 from .abc import ExpressionAbc
 
 
@@ -56,4 +57,13 @@ class Conditional(ExpressionAbc):
         return (
             self.true_expression.is_ref_to_state_variable
             or self.false_expression.is_ref_to_state_variable
+        )
+
+    @property
+    @lru_cache(maxsize=None)
+    def modifies_state(self) -> ModifiesStateFlag:
+        return (
+            self.condition.modifies_state
+            | self.true_expression.modifies_state
+            | self.false_expression.modifies_state
         )

@@ -1,6 +1,7 @@
 from functools import lru_cache
 from typing import Iterator, Optional
 
+from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.utils import IrInitTuple
@@ -51,3 +52,11 @@ class IndexAccess(ExpressionAbc):
     @lru_cache(maxsize=None)
     def is_ref_to_state_variable(self) -> bool:
         return self.base_expression.is_ref_to_state_variable
+
+    @property
+    @lru_cache(maxsize=None)
+    def modifies_state(self) -> ModifiesStateFlag:
+        ret = self.base_expression.modifies_state
+        if self.index_expression is not None:
+            ret |= self.index_expression.modifies_state
+        return ret

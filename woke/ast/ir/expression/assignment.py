@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Iterator
 
-from woke.ast.enums import AssignmentOperator
+from woke.ast.enums import AssignmentOperator, ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcAssignment
@@ -54,3 +54,11 @@ class Assignment(ExpressionAbc):
     @lru_cache(maxsize=None)
     def is_ref_to_state_variable(self) -> bool:
         return self.left_expression.is_ref_to_state_variable
+
+    @property
+    @lru_cache(maxsize=None)
+    def modifies_state(self) -> ModifiesStateFlag:
+        ret = self.left_expression.modifies_state | self.right_expression.modifies_state
+        if self.left_expression.is_ref_to_state_variable:
+            ret |= ModifiesStateFlag.MODIFIES_STATE_VAR
+        return ret

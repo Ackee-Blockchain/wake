@@ -1,5 +1,7 @@
+from functools import lru_cache
 from typing import Iterator, Optional, Union
 
+from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.statement.abc import StatementAbc
@@ -93,3 +95,15 @@ class ForStatement(StatementAbc):
     @property
     def loop_expression(self) -> Optional[ExpressionStatement]:
         return self.__loop_expression
+
+    @property
+    @lru_cache(maxsize=None)
+    def modifies_state(self) -> ModifiesStateFlag:
+        ret = ModifiesStateFlag(0)
+        if self.initialization_expression is not None:
+            ret |= self.initialization_expression.modifies_state
+        if self.condition is not None:
+            ret |= self.condition.modifies_state
+        if self.loop_expression is not None:
+            ret |= self.loop_expression.modifies_state
+        return ret

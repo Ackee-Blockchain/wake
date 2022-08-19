@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from functools import lru_cache
 from typing import TYPE_CHECKING, Iterator, Optional
 
 from woke.ast.ir.expression.abc import ExpressionAbc
 
+from ...enums import ModifiesStateFlag
 from .abc import StatementAbc
 
 if TYPE_CHECKING:
@@ -56,3 +58,10 @@ class Return(StatementAbc):
     @property
     def expression(self) -> Optional[ExpressionAbc]:
         return self.__expression
+
+    @property
+    @lru_cache(maxsize=None)
+    def modifies_state(self) -> ModifiesStateFlag:
+        if self.__expression is None:
+            return ModifiesStateFlag(0)
+        return self.__expression.modifies_state

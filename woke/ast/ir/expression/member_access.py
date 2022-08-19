@@ -3,7 +3,7 @@ import re
 from functools import lru_cache, partial
 from typing import Iterator, Optional, Tuple, Union
 
-from woke.ast.enums import GlobalSymbolsEnum
+from woke.ast.enums import GlobalSymbolsEnum, ModifiesStateFlag
 from woke.ast.expression_types import (
     Address,
     Array,
@@ -361,3 +361,8 @@ class MemberAccess(ExpressionAbc):
             and referenced_declaration.is_state_variable
             or self.expression.is_ref_to_state_variable
         )
+
+    @property
+    @lru_cache(maxsize=None)
+    def modifies_state(self) -> ModifiesStateFlag:
+        return self.expression.modifies_state

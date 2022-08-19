@@ -1,5 +1,7 @@
+from functools import lru_cache
 from typing import Iterator, Optional
 
+from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.statement.abc import StatementAbc
@@ -46,3 +48,8 @@ class WhileStatement(StatementAbc):
     @property
     def documentation(self) -> Optional[str]:
         return self.__documentation
+
+    @property
+    @lru_cache(maxsize=None)
+    def modifies_state(self) -> ModifiesStateFlag:
+        return self.body.modifies_state or self.condition.modifies_state
