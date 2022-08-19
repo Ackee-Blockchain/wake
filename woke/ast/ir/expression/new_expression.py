@@ -30,3 +30,7 @@ class NewExpression(ExpressionAbc):
     @property
     def type_name(self) -> TypeNameAbc:
         return self.__type_name
+
+    @property
+    def is_ref_to_state_variable(self) -> bool:
+        return False

@@ -1,3 +1,4 @@
+from functools import lru_cache
 from typing import Iterator, Optional
 
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -45,3 +46,8 @@ class IndexAccess(ExpressionAbc):
     @property
     def index_expression(self) -> Optional[ExpressionAbc]:
         return self.__index_expression
+
+    @property
+    @lru_cache(maxsize=None)
+    def is_ref_to_state_variable(self) -> bool:
+        return self.base_expression.is_ref_to_state_variable

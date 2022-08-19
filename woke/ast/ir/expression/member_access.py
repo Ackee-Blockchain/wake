@@ -18,6 +18,7 @@ from woke.ast.expression_types import (
 from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.declaration.abc import DeclarationAbc
 from woke.ast.ir.declaration.enum_definition import EnumDefinition
+from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.expression.identifier import Identifier
 from woke.ast.ir.reference_resolver import CallbackParams
@@ -350,3 +351,13 @@ class MemberAccess(ExpressionAbc):
         )
         assert isinstance(node, DeclarationAbc)
         return node
+
+    @property
+    @lru_cache(maxsize=None)
+    def is_ref_to_state_variable(self) -> bool:
+        referenced_declaration = self.referenced_declaration
+        return (
+            isinstance(referenced_declaration, VariableDeclaration)
+            and referenced_declaration.is_state_variable
+            or self.expression.is_ref_to_state_variable
+        )

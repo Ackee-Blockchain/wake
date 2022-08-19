@@ -1,9 +1,10 @@
-from functools import partial
+from functools import lru_cache, partial
 from typing import List, Optional, Tuple, Union
 
 from woke.ast.enums import GlobalSymbolsEnum
 from woke.ast.ir.abc import SolidityAbc
 from woke.ast.ir.declaration.abc import DeclarationAbc
+from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.reference_resolver import CallbackParams
 from woke.ast.ir.utils import IrInitTuple
@@ -94,3 +95,12 @@ class Identifier(ExpressionAbc):
         )
         assert isinstance(node, DeclarationAbc)
         return node
+
+    @property
+    @lru_cache(maxsize=None)
+    def is_ref_to_state_variable(self) -> bool:
+        referenced_declaration = self.referenced_declaration
+        return (
+            isinstance(referenced_declaration, VariableDeclaration)
+            and referenced_declaration.is_state_variable
+        )

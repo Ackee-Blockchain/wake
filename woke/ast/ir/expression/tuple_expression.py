@@ -1,3 +1,4 @@
+from functools import lru_cache
 from typing import Iterator, List, Optional, Tuple
 
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -46,3 +47,12 @@ class TupleExpression(ExpressionAbc):
     @property
     def components(self) -> Tuple[Optional[ExpressionAbc]]:
         return tuple(self.__components)
+
+    @property
+    @lru_cache(maxsize=None)
+    def is_ref_to_state_variable(self) -> bool:
+        return any(
+            component.is_ref_to_state_variable
+            for component in self.__components
+            if component is not None
+        )
