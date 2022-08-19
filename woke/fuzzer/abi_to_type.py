@@ -246,6 +246,7 @@ class TypeGenerator():
 
         elif name == "Contract":
             parsed += var_type.name
+            self.__imports.generate_contract_import_expr(var_type)
         else:
             parsed += self.__sol_to_py_lookup[name]
         return parsed
@@ -338,6 +339,7 @@ class TypeGenerator():
             elif name == "Contract":
                 #TODO might be necessary to add the contract to the imports, ie it can be from a different src unit
                 #and also not already imported
+                self.__imports.generate_contract_import_expr(var_type)
                 returns =  var_type.name
             else:
                 parsed += self.__sol_to_py_lookup[name]
@@ -510,16 +512,26 @@ class SourceUnitImports():
         for python_import in self.__python_imports:
             self.add_str_to_imports(0, python_import, 1)
 
+        if self.__python_imports:
+            self.add_str_to_imports(0,"", 1) 
+
         for contract in self.__contract_imports:
             self.add_str_to_imports(0, contract, 1)
+
+        if self.__contract_imports:
+            self.add_str_to_imports(0,"", 1) 
 
         for struct in self.__struct_imports:
             self.add_str_to_imports(0, struct, 1)
 
+        if self.__struct_imports:
+            self.add_str_to_imports(0,"", 1) 
+
         for p_type in self.__used_primitive_types:
             self.add_str_to_imports(0, "from woke.fuzzer.primitive_types import " + p_type, 1)
         
-        self.add_str_to_imports(0,"", 1) 
+        if self.generate_default_imports or self.__python_imports or self.__contract_imports or self.__struct_imports or self.__used_primitive_types:
+            self.add_str_to_imports(0,"", 2) 
 
         return self.__all_imports
 
@@ -535,7 +547,7 @@ class SourceUnitImports():
     #TODO rename to better represent the functionality
     def generate_import(self, name: str, source_unit_name: str) -> str:
         source_unit_name = self.make_path_alphanum(source_unit_name)
-        return  "from pytypes." + source_unit_name[:-3].replace('/', '.') + " import " + name + "\n"
+        return  "from pytypes." + source_unit_name[:-3].replace('/', '.') + " import " + name
 
 
     def add_str_to_imports(self, num_of_indentation: int, string: str, num_of_newlines: int): 
@@ -563,7 +575,7 @@ class SourceUnitImports():
         node: ContractDefinition  = expr.ir_node
         source_unit = node.parent
         #only those contracts that are defined in a different source unit should be imported
-        if source_unit.source_unit_name == self.__type_gen.__current_source_unit:
+        if source_unit.source_unit_name == self.__type_gen.current_source_unit:
             return 
 
         contract_import = self.generate_import(expr.name, source_unit.source_unit_name)
