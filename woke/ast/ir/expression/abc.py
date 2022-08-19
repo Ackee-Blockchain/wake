@@ -1,5 +1,5 @@
 import logging
-from abc import ABC
+from abc import ABC, abstractmethod
 from functools import lru_cache
 from typing import Optional
 
@@ -114,3 +114,10 @@ class ExpressionAbc(SolidityAbc, ABC):
         Can be None for Identifier in import statements.
         """
         return self._type_descriptions.type_string
+
+    @property
+    @abstractmethod
+    def is_ref_to_state_variable(self) -> bool:
+        """
+        Returns True if the expression (possibly) is a reference to a state variable.
+        """

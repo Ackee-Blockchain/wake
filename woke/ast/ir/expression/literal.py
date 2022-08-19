@@ -42,3 +42,7 @@ class Literal(ExpressionAbc):
     @property
     def value(self) -> Optional[str]:
         return self.__value
+
+    @property
+    def is_ref_to_state_variable(self) -> bool:
+        return False

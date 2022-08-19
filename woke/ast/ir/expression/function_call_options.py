@@ -51,3 +51,7 @@ class FunctionCallOptions(ExpressionAbc):
     @property
     def options(self) -> Tuple[ExpressionAbc]:
         return tuple(self.__options)
+
+    @property
+    def is_ref_to_state_variable(self) -> bool:
+        return False

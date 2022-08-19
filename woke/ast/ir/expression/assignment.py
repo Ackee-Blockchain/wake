@@ -1,3 +1,4 @@
+from functools import lru_cache
 from typing import Iterator
 
 from woke.ast.enums import AssignmentOperator
@@ -48,3 +49,8 @@ class Assignment(ExpressionAbc):
     @property
     def operator(self) -> AssignmentOperator:
         return self.__operator
+
+    @property
+    @lru_cache(maxsize=None)
+    def is_ref_to_state_variable(self) -> bool:
+        return self.left_expression.is_ref_to_state_variable

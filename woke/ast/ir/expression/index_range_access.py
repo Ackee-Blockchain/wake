@@ -62,3 +62,8 @@ class IndexRangeAccess(ExpressionAbc):
     @property
     def end_expression(self) -> Optional[ExpressionAbc]:
         return self.__end_expression
+
+    @property
+    def is_ref_to_state_variable(self) -> bool:
+        # index range access in only supported for dynamic calldata arrays
+        return False
