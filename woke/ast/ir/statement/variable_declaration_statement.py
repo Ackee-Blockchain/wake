@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from functools import lru_cache
-from typing import Iterator, List, Optional, Tuple
+from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
 
 from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -9,10 +11,25 @@ from woke.ast.ir.statement.abc import StatementAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import AstNodeId, SolcVariableDeclarationStatement
 
+if TYPE_CHECKING:
+    from .block import Block
+    from .do_while_statement import DoWhileStatement
+    from .for_statement import ForStatement
+    from .if_statement import IfStatement
+    from .unchecked_block import UncheckedBlock
+    from .while_statement import WhileStatement
+
 
 class VariableDeclarationStatement(StatementAbc):
     _ast_node: SolcVariableDeclarationStatement
-    _parent: SolidityAbc  # TODO: make this more specific
+    _parent: Union[
+        Block,
+        DoWhileStatement,
+        ForStatement,
+        IfStatement,
+        UncheckedBlock,
+        WhileStatement,
+    ]
 
     __assignments: List[Optional[AstNodeId]]
     __declarations: List[Optional[VariableDeclaration]]
@@ -53,7 +70,16 @@ class VariableDeclarationStatement(StatementAbc):
             yield from self.__initial_value
 
     @property
-    def parent(self) -> SolidityAbc:
+    def parent(
+        self,
+    ) -> Union[
+        Block,
+        DoWhileStatement,
+        ForStatement,
+        IfStatement,
+        UncheckedBlock,
+        WhileStatement,
+    ]:
         return self._parent
 
     @property

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from functools import lru_cache, reduce
 from operator import or_
-from typing import Iterator, List, Optional, Tuple
+from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
 
 from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -10,10 +10,30 @@ from woke.ast.ir.statement.abc import StatementAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcBlock
 
+if TYPE_CHECKING:
+    from ..declaration.function_definition import FunctionDefinition
+    from ..declaration.modifier_definition import ModifierDefinition
+    from ..meta.try_catch_clause import TryCatchClause
+    from .do_while_statement import DoWhileStatement
+    from .for_statement import ForStatement
+    from .if_statement import IfStatement
+    from .unchecked_block import UncheckedBlock
+    from .while_statement import WhileStatement
+
 
 class Block(StatementAbc):
     _ast_node: SolcBlock
-    _parent: SolidityAbc  # TODO: make this more specific
+    _parent: Union[
+        Block,
+        DoWhileStatement,
+        ForStatement,
+        IfStatement,
+        UncheckedBlock,
+        WhileStatement,  # statements
+        FunctionDefinition,
+        ModifierDefinition,  # declarations
+        TryCatchClause,  # meta
+    ]
 
     __documentation: Optional[str]
     __statements: Optional[List[StatementAbc]]
@@ -36,7 +56,19 @@ class Block(StatementAbc):
                 yield from statement
 
     @property
-    def parent(self) -> SolidityAbc:
+    def parent(
+        self,
+    ) -> Union[
+        Block,
+        DoWhileStatement,
+        ForStatement,
+        IfStatement,
+        UncheckedBlock,
+        WhileStatement,
+        FunctionDefinition,
+        ModifierDefinition,
+        TryCatchClause,
+    ]:
         return self._parent
 
     @property

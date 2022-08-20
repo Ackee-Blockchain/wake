@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 from functools import lru_cache, reduce
 from operator import or_
-from typing import Iterator, List, Optional, Tuple
+from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
 
 from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -8,10 +10,17 @@ from woke.ast.ir.statement.abc import StatementAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcUncheckedBlock
 
+if TYPE_CHECKING:
+    from .block import Block
+    from .do_while_statement import DoWhileStatement
+    from .for_statement import ForStatement
+    from .if_statement import IfStatement
+    from .while_statement import WhileStatement
+
 
 class UncheckedBlock(StatementAbc):
     _ast_node: SolcUncheckedBlock
-    _parent: SolidityAbc  # TODO: make this more specific
+    _parent: Union[Block, DoWhileStatement, ForStatement, IfStatement, WhileStatement]
 
     __statements: List[StatementAbc]
     __documentation: Optional[str]
@@ -35,7 +44,9 @@ class UncheckedBlock(StatementAbc):
             yield from statement
 
     @property
-    def parent(self) -> SolidityAbc:
+    def parent(
+        self,
+    ) -> Union[Block, DoWhileStatement, ForStatement, IfStatement, WhileStatement]:
         return self._parent
 
     @property
