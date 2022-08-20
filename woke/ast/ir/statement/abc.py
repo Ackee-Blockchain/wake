@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING, Union
 
 from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import SolidityAbc
@@ -22,6 +25,17 @@ from woke.ast.nodes import (
     SolcVariableDeclarationStatement,
     SolcWhileStatement,
 )
+
+if TYPE_CHECKING:
+    from ..declaration.function_definition import FunctionDefinition
+    from ..declaration.modifier_definition import ModifierDefinition
+    from ..meta.try_catch_clause import TryCatchClause
+    from .block import Block
+    from .do_while_statement import DoWhileStatement
+    from .for_statement import ForStatement
+    from .if_statement import IfStatement
+    from .unchecked_block import UncheckedBlock
+    from .while_statement import WhileStatement
 
 
 class StatementAbc(SolidityAbc, ABC):
@@ -84,6 +98,23 @@ class StatementAbc(SolidityAbc, ABC):
         elif isinstance(statement, SolcWhileStatement):
             return WhileStatement(init, statement, parent)
         assert False, f"Unknown statement type: {type(statement)}"
+
+    @property
+    @abstractmethod
+    def parent(
+        self,
+    ) -> Union[
+        Block,
+        DoWhileStatement,
+        ForStatement,
+        IfStatement,
+        UncheckedBlock,
+        WhileStatement,
+        FunctionDefinition,
+        ModifierDefinition,
+        TryCatchClause,
+    ]:
+        ...
 
     @property
     @abstractmethod

@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import re
 from functools import lru_cache, partial
 from pathlib import Path
-from typing import Iterator, List, Optional, Tuple
+from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
 
 from intervaltree import IntervalTree
 
@@ -15,8 +17,17 @@ from woke.ast.ir.declaration.abc import DeclarationAbc
 from woke.ast.ir.reference_resolver import CallbackParams, ReferenceResolver
 from woke.ast.ir.statement.abc import StatementAbc
 from woke.ast.ir.utils import IrInitTuple
-from woke.ast.ir.yul.block import Block
+from woke.ast.ir.yul.block import Block as YulBlock
 from woke.ast.nodes import AstNodeId, ExternalReferenceModel, SolcInlineAssembly
+
+if TYPE_CHECKING:
+    from .block import Block
+    from .do_while_statement import DoWhileStatement
+    from .for_statement import ForStatement
+    from .if_statement import IfStatement
+    from .unchecked_block import UncheckedBlock
+    from .while_statement import WhileStatement
+
 
 IDENTIFIER_RE = re.compile(r"^[a-zA-Z$_][a-zA-Z0-9$_]*".encode("utf-8"))
 
@@ -110,9 +121,16 @@ class ExternalReference:
 
 class InlineAssembly(StatementAbc):
     _ast_node: SolcInlineAssembly
-    _parent: SolidityAbc  # TODO: make this more specific
+    _parent: Union[
+        Block,
+        DoWhileStatement,
+        ForStatement,
+        IfStatement,
+        UncheckedBlock,
+        WhileStatement,
+    ]
 
-    __yul_block: Block
+    __yul_block: YulBlock
     __evm_version: InlineAssemblyEvmVersion
     __external_references: IntervalTree
     __documentation: Optional[str]
@@ -124,7 +142,7 @@ class InlineAssembly(StatementAbc):
         parent: SolidityAbc,
     ):
         super().__init__(init, inline_assembly, parent)
-        self.__yul_block = Block(init, inline_assembly.ast, self)
+        self.__yul_block = YulBlock(init, inline_assembly.ast, self)
         self.__evm_version = inline_assembly.evm_version
         self.__documentation = inline_assembly.documentation
         self.__external_references = IntervalTree()
@@ -140,11 +158,20 @@ class InlineAssembly(StatementAbc):
         yield from self.__yul_block
 
     @property
-    def parent(self) -> SolidityAbc:
+    def parent(
+        self,
+    ) -> Union[
+        Block,
+        DoWhileStatement,
+        ForStatement,
+        IfStatement,
+        UncheckedBlock,
+        WhileStatement,
+    ]:
         return self._parent
 
     @property
-    def yul_block(self) -> Block:
+    def yul_block(self) -> YulBlock:
         return self.__yul_block
 
     @property
