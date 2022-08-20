@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import TYPE_CHECKING, Iterator, Optional
+from typing import TYPE_CHECKING, Iterator, Optional, Union
 
 from woke.ast.ir.expression.abc import ExpressionAbc
 
@@ -15,10 +15,25 @@ from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import AstNodeId, SolcReturn
 
+if TYPE_CHECKING:
+    from .block import Block
+    from .do_while_statement import DoWhileStatement
+    from .for_statement import ForStatement
+    from .if_statement import IfStatement
+    from .unchecked_block import UncheckedBlock
+    from .while_statement import WhileStatement
+
 
 class Return(StatementAbc):
     _ast_node: SolcReturn
-    _parent: SolidityAbc  # TODO: make this more specific
+    _parent: Union[
+        Block,
+        DoWhileStatement,
+        ForStatement,
+        IfStatement,
+        UncheckedBlock,
+        WhileStatement,
+    ]
 
     __function_return_parameters: Optional[AstNodeId]
     __documentation: Optional[str]
@@ -40,7 +55,16 @@ class Return(StatementAbc):
             yield from self.__expression
 
     @property
-    def parent(self) -> SolidityAbc:
+    def parent(
+        self,
+    ) -> Union[
+        Block,
+        DoWhileStatement,
+        ForStatement,
+        IfStatement,
+        UncheckedBlock,
+        WhileStatement,
+    ]:
         return self._parent
 
     @property
