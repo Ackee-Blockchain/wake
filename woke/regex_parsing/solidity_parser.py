@@ -25,7 +25,7 @@ from .solidity_import import SolidityImportExpr
 
 class SoliditySourceParser:
     PRAGMA_SOLIDITY_RE = re.compile(r"pragma\s+solidity\s+(?P<version>[^;]+)\s*;")
-    IMPORT_RE = re.compile(r"import\s*(?P<import>[^;]+)\s*;")
+    IMPORT_RE = re.compile(r"""import\s*(?P<import>[\s"*{][^;]+)\s*;""")
     MULTILINE_COMMENT_END_RE = re.compile(r"\*/")
     ONELINE_COMMENT_OR_MULTILINE_COMMENT_START_RE = re.compile(
         r"(//.*$|/\*)", re.MULTILINE
