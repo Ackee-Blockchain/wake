@@ -27,20 +27,20 @@ FILENAME = r"""(?P<filename>'.*[^\\]'|".*[^\\]")"""
 SYMBOL = r"[_a-zA-Z][_a-zA-Z0-9]*"
 ALIAS = r"\s*{symbol}(?:\s+as\s+{symbol})?\s*".format(symbol=SYMBOL)
 IMPORT_FILENAME_RE = re.compile(
-    r"import\s+{filename}\s*".format(filename=FILENAME).encode(ENCODING)
+    r"import\s*{filename}\s*".format(filename=FILENAME).encode(ENCODING)
 )
 IMPORT_AS_FROM_RE = re.compile(
-    r"import\s+\*\s*as\s+{symbol}\s+from\s*{filename}\s*".format(
+    r"import\s*\*\s*as\s+{symbol}\s+from\s*{filename}\s*".format(
         filename=FILENAME, symbol=SYMBOL
     ).encode(ENCODING)
 )
 IMPORT_AS_RE = re.compile(
-    r"import\s+{filename}\s*as\s+{symbol}\s*".format(
+    r"import\s*{filename}\s*as\s+{symbol}\s*".format(
         filename=FILENAME, symbol=SYMBOL
     ).encode(ENCODING)
 )
 IMPORT_ALIAS_LIST = re.compile(
-    r"import\s+{{{alias}(?:,{alias})*}}\s*from\s*{filename}\s*".format(
+    r"import\s*{{{alias}(?:,{alias})*}}\s*from\s*{filename}\s*".format(
         alias=ALIAS, filename=FILENAME
     ).encode(ENCODING)
 )
