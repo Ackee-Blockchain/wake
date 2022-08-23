@@ -91,3 +91,9 @@ class IfStatement(StatementAbc):
             | self.true_body.modifies_state
             | (self.false_body.modifies_state if self.false_body is not None else set())
         )
+
+    def statements_iter(self) -> Iterator["StatementAbc"]:
+        yield self
+        yield from self.__true_body.statements_iter()
+        if self.__false_body is not None:
+            yield from self.__false_body.statements_iter()

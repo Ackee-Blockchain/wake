@@ -65,3 +65,8 @@ class UncheckedBlock(StatementAbc):
             (statement.modifies_state for statement in self.__statements),
             set(),
         )
+
+    def statements_iter(self) -> Iterator["StatementAbc"]:
+        yield self
+        for statement in self.__statements:
+            yield from statement.statements_iter()

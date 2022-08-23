@@ -91,3 +91,9 @@ class Block(StatementAbc):
             (statement.modifies_state for statement in self.statements),
             set(),
         )
+
+    def statements_iter(self) -> Iterator["StatementAbc"]:
+        yield self
+        if self.__statements is not None:
+            for statement in self.__statements:
+                yield from statement.statements_iter()
