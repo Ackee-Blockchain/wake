@@ -154,12 +154,12 @@ class VariableDeclaration(DeclarationAbc):
     @lru_cache(maxsize=None)
     def canonical_name(self) -> str:
         node = self.parent
-        while not isinstance(node, DeclarationAbc):
-            if node is None:
-                assert (
-                    False
-                ), "Variable declaration must have a parent of type DeclarationAbc"
+        while node is not None:
+            if isinstance(node, DeclarationAbc):
+                break
             node = node.parent
+        if node is None:
+            return self.name
         return f"{node.canonical_name}.{self.name}"
 
     @property
