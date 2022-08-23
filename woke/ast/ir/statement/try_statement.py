@@ -88,3 +88,8 @@ class TryStatement(StatementAbc):
             )
             | self.external_call.modifies_state
         )
+
+    def statements_iter(self) -> Iterator["StatementAbc"]:
+        yield self
+        for clause in self.__clauses:
+            yield from clause.block.statements_iter()

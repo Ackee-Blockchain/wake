@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Set, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, Set, Tuple, Union
 
 from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -120,3 +120,6 @@ class StatementAbc(SolidityAbc, ABC):
     @abstractmethod
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         ...
+
+    def statements_iter(self) -> Iterator["StatementAbc"]:
+        yield self
