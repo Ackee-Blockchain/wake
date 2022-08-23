@@ -132,3 +132,11 @@ class ForStatement(StatementAbc):
         if self.loop_expression is not None:
             ret |= self.loop_expression.modifies_state
         return ret
+
+    def statements_iter(self) -> Iterator["StatementAbc"]:
+        yield self
+        yield from self.__body.statements_iter()
+        if self.__initialization_expression is not None:
+            yield from self.__initialization_expression.statements_iter()
+        if self.__loop_expression is not None:
+            yield from self.__loop_expression.statements_iter()

@@ -78,3 +78,7 @@ class WhileStatement(StatementAbc):
     @lru_cache(maxsize=None)
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         return self.body.modifies_state | self.condition.modifies_state
+
+    def statements_iter(self) -> Iterator["StatementAbc"]:
+        yield self
+        yield from self.__body.statements_iter()
