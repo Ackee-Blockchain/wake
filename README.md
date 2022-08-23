@@ -2,81 +2,60 @@
 
 Woke is a Python-based development and testing framework for Solidity.
 
-## Features
+Features: 
 
-### Go to definition
+- **LSP server**
 
-![Go to definition preview](images/go-to-definition.gif)
+- **Fuzzer** - a property-based fuzzer for Solidity smart contracts that allows testers to write their fuzz tests in Python.
 
-### Go to type definition
+## Dependencies
 
-![Go to type definition preview](images/go-to-type-definition.gif)
+- [Python](https://www.python.org/downloads/release/python-3910/) (version 3.7 or higher)
 
-### Go to implementation
+## Installation
 
-Find implementations of an unimplemented function or modifier.
+via `pip`
 
-![Go to implementation preview](images/go-to-implementation.gif)
+```shell
+pip3 install abch-woke
+```
 
-### Find references
+## Features 
 
-![Find references preview](images/find-references.gif)
+### LSP server
 
-### Type hierarchy
+Woke implements an [LSP](https://microsoft.github.io/language-server-protocol/) server for Solidity. The only currently supported communication channel is TCP.
 
-![Contract type hierarchy preview](images/contract-type-hierarchy.gif)
+Woke LSP server can be run using:
 
-Also works for virtual functions.
+```shell
+woke lsp
+```
 
-![Function type hierarchy preview](images/function-type-hierarchy.gif)
+Or with an optional --port argument:
 
-### Document links
+```shell
+woke lsp --port 1234
+```
 
-![Document links preview](images/document-links.gif)
+All LSP server features can be found in the [documentation](https://ackee-blockchain.github.io/woke/latest/language-server/).
 
-### Code lens
+### Fuzzer 
 
-Number of references is shown above each declaration.
+The property-based fuzzer can be installed as an extra dependency. Due to the dependency on [eth-brownie](https://eth-brownie.readthedocs.io/en/stable/), it is recommended to install it into a [virtual environment](https://docs.python.org/3/library/venv.html).
 
-![Code lens preview](images/code-lens.png)
+```shell
+pip3 install abch-woke[fuzzer]
+```
 
-### Document symbols
+## Documentation & Contribution
 
-![Document symbols preview](images/document-symbols.png)
+Woke documentation can be found [here](https://ackee-blockchain.github.io/woke/latest/). 
 
-### Diagnostics
+If you find a problem, open an issue or make a pull request if you've solved one.
 
-![Diagnostics preview](images/diagnostics-1.gif)
+[](https://ackee-blockchain.github.io/woke/latest/contributing/)
 
-![Diagnostics preview](images/diagnostics-2.png)
+## License
 
-### Rename
-
-![Rename preview](images/rename.gif)
-
-## Requirements
-
-This extension uses the PyPi package [abch-woke](https://pypi.org/project/abch-woke/) which requires Python 3.7 or higher.
-The package [abch-woke](https://pypi.org/project/abch-woke/) is installed automatically when this extension is activated. Alternatively, it can be installed manually using `python3 -m pip install abch-woke`.
-
-## Supported commands
-
-- Woke: Force Recompile Project (`woke.lsp.force_recompile`): Force recompile the opened project/files.
-
-## Known Issues
-
-### Files created/modified/deleted outside of VS Code are not properly analysed
-
-The extension currently does not handle changes external to VS Code. This especially means that files installed into `node_modules` are not detected. Please run the `Woke: Force Recompile Project` command after installing node packages as a workaround.
-
-### `Go to references`, number of references and other features do not work correctly with no workspace open
-
-It is always recommended to open a project as a folder (`File -> Open folder`). `Open file` should only be used when opening a single file or several files inside the same folder.
-
-### Analysis does not work when the workspace contains compilation errors
-
-The extension relies on the `solc` compiler. For this reason, files containing compilation errors and files importing these files cannot be analysed.
-
-## Acknowledgements
-
-Base of our Solidity grammar: [juanfranblanco/vscode-solidity](https://github.com/juanfranblanco/vscode-solidity/blob/master/syntaxes/solidity.json)
+This project is licensed under the [ISC license](https://github.com/Ackee-Blockchain/woke/blob/main/LICENSE). 
