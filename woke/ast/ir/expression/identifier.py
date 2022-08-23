@@ -1,8 +1,8 @@
 from functools import lru_cache, partial
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Set, Tuple, Union
 
 from woke.ast.enums import GlobalSymbolsEnum, ModifiesStateFlag
-from woke.ast.ir.abc import SolidityAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.declaration.abc import DeclarationAbc
 from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
 from woke.ast.ir.expression.abc import ExpressionAbc
@@ -106,5 +106,5 @@ class Identifier(ExpressionAbc):
         )
 
     @property
-    def modifies_state(self) -> ModifiesStateFlag:
-        return ModifiesStateFlag(0)
+    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
+        return set()

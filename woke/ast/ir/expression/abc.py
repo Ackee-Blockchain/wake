@@ -1,11 +1,11 @@
 import logging
 from abc import ABC, abstractmethod
 from functools import lru_cache
-from typing import Optional
+from typing import Optional, Set, Tuple
 
 from woke.ast.enums import ModifiesStateFlag
 from woke.ast.expression_types import ExpressionTypeAbc
-from woke.ast.ir.abc import SolidityAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import (
     SolcAssignment,
@@ -125,5 +125,5 @@ class ExpressionAbc(SolidityAbc, ABC):
 
     @property
     @abstractmethod
-    def modifies_state(self) -> ModifiesStateFlag:
+    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         ...

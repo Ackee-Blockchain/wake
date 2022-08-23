@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import TYPE_CHECKING, Iterator, Optional, Union
+from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
 
 from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -67,5 +67,5 @@ class RevertStatement(StatementAbc):
 
     @property
     @lru_cache(maxsize=None)
-    def modifies_state(self) -> ModifiesStateFlag:
+    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         return self.error_call.modifies_state

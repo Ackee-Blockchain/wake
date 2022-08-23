@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Optional, Set, Tuple, Union
 
 from woke.ast.enums import ModifiesStateFlag
-from woke.ast.ir.abc import SolidityAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.statement.abc import StatementAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcBreak
@@ -52,5 +52,5 @@ class Break(StatementAbc):
         return self.__documentation
 
     @property
-    def modifies_state(self) -> ModifiesStateFlag:
-        return ModifiesStateFlag(0)
+    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
+        return set()

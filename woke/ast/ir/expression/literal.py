@@ -1,7 +1,7 @@
-from typing import Optional
+from typing import Optional, Set, Tuple
 
 from woke.ast.enums import LiteralKind, ModifiesStateFlag
-from woke.ast.ir.abc import SolidityAbc
+from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcLiteral
@@ -48,5 +48,5 @@ class Literal(ExpressionAbc):
         return False
 
     @property
-    def modifies_state(self) -> ModifiesStateFlag:
-        return ModifiesStateFlag(0)
+    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
+        return set()

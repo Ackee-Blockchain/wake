@@ -1,6 +1,6 @@
 from functools import lru_cache, reduce
 from operator import or_
-from typing import Iterator, List, Optional, Tuple
+from typing import Iterator, List, Optional, Set, Tuple
 
 from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -61,7 +61,7 @@ class TupleExpression(ExpressionAbc):
 
     @property
     @lru_cache(maxsize=None)
-    def modifies_state(self) -> ModifiesStateFlag:
+    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         return reduce(
             or_,
             (
@@ -69,5 +69,5 @@ class TupleExpression(ExpressionAbc):
                 for component in self.__components
                 if component is not None
             ),
-            ModifiesStateFlag(0),
+            set(),
         )

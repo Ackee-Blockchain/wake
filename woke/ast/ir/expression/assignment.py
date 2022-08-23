@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import Iterator
+from typing import Iterator, Set, Tuple
 
 from woke.ast.enums import AssignmentOperator, ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -57,8 +57,8 @@ class Assignment(ExpressionAbc):
 
     @property
     @lru_cache(maxsize=None)
-    def modifies_state(self) -> ModifiesStateFlag:
+    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         ret = self.left_expression.modifies_state | self.right_expression.modifies_state
         if self.left_expression.is_ref_to_state_variable:
-            ret |= ModifiesStateFlag.MODIFIES_STATE_VAR
+            ret |= {(self, ModifiesStateFlag.MODIFIES_STATE_VAR)}
         return ret

@@ -1,7 +1,7 @@
 import logging
 import re
 from functools import lru_cache, partial
-from typing import Iterator, Optional, Tuple, Union
+from typing import Iterator, Optional, Set, Tuple, Union
 
 from woke.ast.enums import GlobalSymbolsEnum, ModifiesStateFlag
 from woke.ast.expression_types import (
@@ -364,5 +364,5 @@ class MemberAccess(ExpressionAbc):
 
     @property
     @lru_cache(maxsize=None)
-    def modifies_state(self) -> ModifiesStateFlag:
+    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         return self.expression.modifies_state
