@@ -856,6 +856,7 @@ class SolcFunctionCall(SolcNode):
     try_call: StrictBool
     # optional
     argument_types: Optional[List[TypeDescriptionsModel]]
+    name_locations: Optional[List[Src]]  # added in 0.8.16
 
 
 class SolcFunctionCallOptions(SolcNode):
@@ -951,6 +952,7 @@ class SolcMemberAccess(SolcNode):
     referenced_declaration: Optional[
         AstNodeId
     ]  # because of a bug this is None for enum value access in versions prior to 0.8.2
+    member_location: Optional[Src]  # added in 0.8.16
 
 
 class SolcNewExpression(SolcNode):
@@ -1013,6 +1015,7 @@ class SolcIdentifierPath(SolcNode):
     name: StrictStr
     referenced_declaration: AstNodeId
     # optional
+    name_locations: Optional[List[Src]]  # added in 0.8.16
 
 
 class SolcParameterList(SolcNode):
