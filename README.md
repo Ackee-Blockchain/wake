@@ -52,9 +52,7 @@ pip3 install abch-woke[fuzzer]
 
 Woke documentation can be found [here](https://ackee-blockchain.github.io/woke/latest/). 
 
-If you find a problem, open an issue or make a pull request if you've solved one.
-
-[](https://ackee-blockchain.github.io/woke/latest/contributing/)
+There you can also find a section on [contributing](https://ackee-blockchain.github.io/woke/latest/contributing/).
 
 ## License
 
