@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, List, Optional, Set, Tuple, Union
 
 from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -108,8 +108,8 @@ class VariableDeclarationStatement(StatementAbc):
 
     @property
     @lru_cache(maxsize=None)
-    def modifies_state(self) -> ModifiesStateFlag:
-        ret = ModifiesStateFlag(0)
+    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
+        ret = set()
         if self.initial_value is not None:
             ret |= self.initial_value.modifies_state
             if any(
@@ -117,5 +117,5 @@ class VariableDeclarationStatement(StatementAbc):
                 for declaration in self.declarations
                 if declaration is not None
             ):
-                ret |= ModifiesStateFlag.MODIFIES_STATE_VAR
+                ret |= {(self, ModifiesStateFlag.MODIFIES_STATE_VAR)}
         return ret

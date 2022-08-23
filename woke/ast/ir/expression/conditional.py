@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import Iterator
+from typing import Iterator, Set, Tuple
 
 from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.utils import IrInitTuple
@@ -61,7 +61,7 @@ class Conditional(ExpressionAbc):
 
     @property
     @lru_cache(maxsize=None)
-    def modifies_state(self) -> ModifiesStateFlag:
+    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         return (
             self.condition.modifies_state
             | self.true_expression.modifies_state

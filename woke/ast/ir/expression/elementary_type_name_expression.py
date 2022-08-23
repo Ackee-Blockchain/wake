@@ -1,4 +1,4 @@
-from typing import Iterator
+from typing import Iterator, Set, Tuple
 
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcElementaryTypeNameExpression
@@ -43,5 +43,5 @@ class ElementaryTypeNameExpression(ExpressionAbc):
         return False
 
     @property
-    def modifies_state(self) -> ModifiesStateFlag:
-        return ModifiesStateFlag(0)
+    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
+        return set()
