@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import Iterator, Optional
+from typing import Iterator, Optional, Set, Tuple
 
 from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -55,7 +55,7 @@ class IndexAccess(ExpressionAbc):
 
     @property
     @lru_cache(maxsize=None)
-    def modifies_state(self) -> ModifiesStateFlag:
+    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         ret = self.base_expression.modifies_state
         if self.index_expression is not None:
             ret |= self.index_expression.modifies_state

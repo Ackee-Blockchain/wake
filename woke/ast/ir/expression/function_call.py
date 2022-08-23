@@ -1,7 +1,7 @@
 import logging
 from functools import lru_cache, reduce
 from operator import or_
-from typing import Iterator, List, Optional, Tuple, Union
+from typing import Iterator, List, Optional, Set, Tuple, Union
 
 from woke.ast.enums import (
     FunctionCallKind,
@@ -164,12 +164,12 @@ class FunctionCall(ExpressionAbc):
 
     @property
     @lru_cache(maxsize=None)
-    def modifies_state(self) -> ModifiesStateFlag:
+    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         if self.__recursion_lock:
-            return ModifiesStateFlag(0)
+            return set()
         self.__recursion_lock = True
         ret = self.expression.modifies_state | reduce(
-            or_, (arg.modifies_state for arg in self.arguments), ModifiesStateFlag(0)
+            or_, (arg.modifies_state for arg in self.arguments), set()
         )
 
         if self.kind == FunctionCallKind.FUNCTION_CALL:
@@ -178,25 +178,25 @@ class FunctionCall(ExpressionAbc):
                 GlobalSymbolsEnum.SELFDESTRUCT,
                 GlobalSymbolsEnum.SUICIDE,
             }:
-                ret |= ModifiesStateFlag.SELFDESTRUCTS
+                ret |= {(self, ModifiesStateFlag.SELFDESTRUCTS)}
             elif called_function in {
                 GlobalSymbolsEnum.ADDRESS_TRANSFER,
                 GlobalSymbolsEnum.ADDRESS_SEND,
             }:
-                ret |= ModifiesStateFlag.SENDS_ETHER
+                ret |= {(self, ModifiesStateFlag.SENDS_ETHER)}
             elif called_function in {
                 GlobalSymbolsEnum.ADDRESS_CALL,
                 GlobalSymbolsEnum.ADDRESS_DELEGATECALL,
             }:
-                ret |= reduce(or_, (flag for flag in ModifiesStateFlag))
+                ret |= {(self, reduce(or_, (flag for flag in ModifiesStateFlag)))}
             elif (
                 called_function
                 in {GlobalSymbolsEnum.ARRAY_PUSH, GlobalSymbolsEnum.ARRAY_POP}
                 and self.expression.is_ref_to_state_variable
             ):
-                ret |= ModifiesStateFlag.MODIFIES_STATE_VAR
+                ret |= {(self, ModifiesStateFlag.MODIFIES_STATE_VAR)}
             elif called_function == GlobalSymbolsEnum.FUNCTION_VALUE:
-                ret |= ModifiesStateFlag.SENDS_ETHER
+                ret |= {(self, ModifiesStateFlag.SENDS_ETHER)}
             elif isinstance(called_function, FunctionDefinition):
                 if called_function.state_mutability in {
                     StateMutability.PURE,
@@ -211,16 +211,21 @@ class FunctionCall(ExpressionAbc):
                         if modifier_def.body is not None:
                             ret |= modifier_def.body.modifies_state
                 elif called_function.state_mutability == StateMutability.NONPAYABLE:
-                    ret |= reduce(
-                        or_,
+                    ret |= {
                         (
-                            flag
-                            for flag in ModifiesStateFlag
-                            if flag != ModifiesStateFlag.SENDS_ETHER
-                        ),
-                    )
+                            self,
+                            reduce(
+                                or_,
+                                (
+                                    flag
+                                    for flag in ModifiesStateFlag
+                                    if flag != ModifiesStateFlag.SENDS_ETHER
+                                ),
+                            ),
+                        )
+                    }
                 elif called_function.state_mutability == StateMutability.PAYABLE:
-                    ret |= reduce(or_, (flag for flag in ModifiesStateFlag))
+                    ret |= {(self, reduce(or_, (flag for flag in ModifiesStateFlag)))}
                 else:
                     assert False
         self.__recursion_lock = False

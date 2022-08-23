@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import TYPE_CHECKING, Iterator, Optional, Union
+from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
 
 from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -76,5 +76,5 @@ class WhileStatement(StatementAbc):
 
     @property
     @lru_cache(maxsize=None)
-    def modifies_state(self) -> ModifiesStateFlag:
-        return self.body.modifies_state or self.condition.modifies_state
+    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
+        return self.body.modifies_state | self.condition.modifies_state

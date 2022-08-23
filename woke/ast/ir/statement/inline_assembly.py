@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from functools import lru_cache, partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, List, Optional, Set, Tuple, Union
 
 from intervaltree import IntervalTree
 
@@ -195,5 +195,5 @@ class InlineAssembly(StatementAbc):
 
     @property
     @lru_cache(maxsize=None)
-    def modifies_state(self) -> ModifiesStateFlag:
+    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         return self.yul_block.modifies_state

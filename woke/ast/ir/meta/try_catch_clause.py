@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Iterator, Optional
+from functools import lru_cache
+from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple
 
+from ...enums import ModifiesStateFlag
 from ..statement.block import Block
 from ..utils import IrInitTuple
 from .parameter_list import ParameterList
@@ -57,3 +59,8 @@ class TryCatchClause(SolidityAbc):
     @property
     def parameters(self) -> Optional[ParameterList]:
         return self.__parameters
+
+    @property
+    @lru_cache(maxsize=None)
+    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
+        return self.block.modifies_state
