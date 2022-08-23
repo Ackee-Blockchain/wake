@@ -1,6 +1,6 @@
 from functools import lru_cache, reduce
 from operator import or_
-from typing import Iterator, List, Tuple
+from typing import Iterator, List, Set, Tuple
 
 from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -61,12 +61,12 @@ class FunctionCallOptions(ExpressionAbc):
 
     @property
     @lru_cache(maxsize=None)
-    def modifies_state(self) -> ModifiesStateFlag:
+    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         ret = self.expression.modifies_state | reduce(
             or_,
             (option.modifies_state for option in self.options),
-            ModifiesStateFlag(0),
+            set(),
         )
         if "value" in self.names:
-            ret |= ModifiesStateFlag.SENDS_ETHER
+            ret |= {(self, ModifiesStateFlag.SENDS_ETHER)}
         return ret

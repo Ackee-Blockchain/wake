@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from functools import lru_cache, reduce
 from operator import or_
-from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, List, Optional, Set, Tuple, Union
 
 from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -83,11 +83,11 @@ class Block(StatementAbc):
 
     @property
     @lru_cache(maxsize=None)
-    def modifies_state(self) -> ModifiesStateFlag:
+    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         if self.statements is None:
-            return ModifiesStateFlag(0)
+            return set()
         return reduce(
             or_,
             (statement.modifies_state for statement in self.statements),
-            ModifiesStateFlag(0),
+            set(),
         )

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from functools import lru_cache, reduce
 from operator import or_
-from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, List, Optional, Set, Tuple, Union
 
 from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -79,12 +79,12 @@ class TryStatement(StatementAbc):
 
     @property
     @lru_cache(maxsize=None)
-    def modifies_state(self) -> ModifiesStateFlag:
+    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         return (
             reduce(
                 or_,
-                (clause.block.modifies_state for clause in self.__clauses),
-                ModifiesStateFlag(0),
+                (clause.modifies_state for clause in self.__clauses),
+                set(),
             )
             | self.external_call.modifies_state
         )

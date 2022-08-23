@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC
-from typing import Iterator
+from typing import Iterator, Set, Tuple
 
 from woke.ast.nodes import YulNode
 
@@ -21,5 +21,5 @@ class YulAbc(IrAbc, ABC):
 
     @property
     # @abstractmethod
-    def modifies_state(self) -> ModifiesStateFlag:
-        return ModifiesStateFlag(0)
+    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
+        return set()

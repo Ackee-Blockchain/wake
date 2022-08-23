@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import Iterator
+from typing import Iterator, Set, Tuple
 
 from woke.ast.enums import ModifiesStateFlag, UnaryOpOperator
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -55,7 +55,7 @@ class UnaryOperation(ExpressionAbc):
 
     @property
     @lru_cache(maxsize=None)
-    def modifies_state(self) -> ModifiesStateFlag:
+    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         ret = self.sub_expression.modifies_state
 
         if (
@@ -67,5 +67,5 @@ class UnaryOperation(ExpressionAbc):
             }
             and self.sub_expression.is_ref_to_state_variable
         ):
-            ret |= ModifiesStateFlag.MODIFIES_STATE_VAR
+            ret |= {(self, ModifiesStateFlag.MODIFIES_STATE_VAR)}
         return ret

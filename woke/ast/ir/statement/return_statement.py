@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import TYPE_CHECKING, Iterator, Optional, Union
+from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
 
 from woke.ast.ir.expression.abc import ExpressionAbc
 
@@ -85,7 +85,7 @@ class Return(StatementAbc):
 
     @property
     @lru_cache(maxsize=None)
-    def modifies_state(self) -> ModifiesStateFlag:
+    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         if self.__expression is None:
-            return ModifiesStateFlag(0)
+            return set()
         return self.__expression.modifies_state

@@ -1,4 +1,4 @@
-from typing import Iterator
+from typing import Iterator, Set, Tuple
 
 from woke.ast.enums import ModifiesStateFlag
 from woke.ast.expression_types import Contract
@@ -38,8 +38,8 @@ class NewExpression(ExpressionAbc):
         return False
 
     @property
-    def modifies_state(self) -> ModifiesStateFlag:
+    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         if isinstance(self.type, Contract):
-            return ModifiesStateFlag.DEPLOYS_CONTRACT
+            return {(self, ModifiesStateFlag.DEPLOYS_CONTRACT)}
         else:
-            return ModifiesStateFlag(0)
+            return set()
