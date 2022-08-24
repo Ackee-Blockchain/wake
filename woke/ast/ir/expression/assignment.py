@@ -1,12 +1,22 @@
 from functools import lru_cache
-from typing import Iterator, Set, Tuple
+from typing import Iterator, Optional, Set, Tuple, Union
+
+from typing_extensions import Literal
 
 from woke.ast.enums import AssignmentOperator, ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcAssignment
 
+from ..declaration.abc import DeclarationAbc
 from .abc import ExpressionAbc
+from .conditional import Conditional
+from .identifier import Identifier
+from .index_access import IndexAccess
+from .member_access import MemberAccess
+from .tuple_expression import TupleExpression
+
+AssignedVariablePath = Tuple[Union[DeclarationAbc, Literal["IndexAccess"]], ...]
 
 
 class Assignment(ExpressionAbc):
@@ -62,3 +72,39 @@ class Assignment(ExpressionAbc):
         if self.left_expression.is_ref_to_state_variable:
             ret |= {(self, ModifiesStateFlag.MODIFIES_STATE_VAR)}
         return ret
+
+    @property
+    @lru_cache(maxsize=None)
+    def assigned_variables(self) -> Tuple[Optional[Set[AssignedVariablePath]], ...]:
+        def resolve_node(node: ExpressionAbc) -> Set[AssignedVariablePath]:
+            if isinstance(node, Conditional):
+                return resolve_node(node.true_expression) | resolve_node(
+                    node.false_expression
+                )
+            elif isinstance(node, Identifier):
+                referenced_declaration = node.referenced_declaration
+                assert isinstance(referenced_declaration, DeclarationAbc)
+                return {(referenced_declaration,)}
+            elif isinstance(node, IndexAccess):
+                return {
+                    path + ("IndexAccess",)
+                    for path in resolve_node(node.base_expression)
+                }
+            elif isinstance(node, MemberAccess):
+                referenced_declaration = node.referenced_declaration
+                assert isinstance(referenced_declaration, DeclarationAbc)
+                return {
+                    path + (referenced_declaration,)
+                    for path in resolve_node(node.expression)
+                }
+            else:
+                assert False, f"Unexpected node type: {type(node)}\n{self.source}"
+
+        node = self.left_expression
+        if isinstance(node, TupleExpression):
+            return tuple(
+                resolve_node(expression) if expression is not None else None
+                for expression in node.components
+            )
+        else:
+            return (resolve_node(node),)
