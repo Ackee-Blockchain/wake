@@ -4,6 +4,7 @@ from typing import Dict, FrozenSet, List
 from pydantic import BaseModel, Extra, validator
 
 from woke.compile.solc_frontend import SolcInputSettings, SolcOutputError
+from woke.core.solidity_version import SolidityVersion
 
 
 class BuildInfoModel(BaseModel):
@@ -11,7 +12,7 @@ class BuildInfoModel(BaseModel):
         extra = Extra.allow
         allow_mutation = False
         arbitrary_types_allowed = True
-        json_encoders = {PurePosixPath: str, PureWindowsPath: str}
+        json_encoders = {PurePosixPath: str, PureWindowsPath: str, SolidityVersion: str}
 
 
 class CompilationUnitBuildInfo(BuildInfoModel):
@@ -23,6 +24,7 @@ class CompilationUnitBuildInfo(BuildInfoModel):
     allow_paths: FrozenSet[Path]
     include_paths: FrozenSet[Path]
     settings: SolcInputSettings
+    compiler_version: SolidityVersion
 
     @validator("source_units", pre=True, each_item=True)
     def set_source_units(cls, v):
