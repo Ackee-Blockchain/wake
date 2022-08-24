@@ -236,3 +236,15 @@ class ModifiesStateFlag(enum.IntFlag):
     SENDS_ETHER = 4
     DEPLOYS_CONTRACT = 8
     SELFDESTRUCTS = 16
+    PERFORMS_CALL = 32
+    PERFORMS_DELEGATECALL = 64
+    CALLS_UNIMPLEMENTED_NONPAYABLE_FUNCTION = 128
+    CALLS_UNIMPLEMENTED_PAYABLE_FUNCTION = 256
+
+    def __repr__(self):
+        if self.value == 0:
+            return f"{self.__class__.__name__}(0)"
+        flags = [f for f in self.__class__ if f in self]
+        return " | ".join(f.name or "" for f in flags)
+
+    __str__ = __repr__
