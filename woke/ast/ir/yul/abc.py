@@ -22,4 +22,4 @@ class YulAbc(IrAbc, ABC):
     @property
     # @abstractmethod
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
-        return set()
+        return set()  # TODO
