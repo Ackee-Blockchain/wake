@@ -21,6 +21,7 @@ from woke.ast.ir.expression.function_call_options import FunctionCallOptions
 from woke.ast.ir.expression.identifier import Identifier
 from woke.ast.ir.expression.member_access import MemberAccess
 from woke.ast.ir.expression.new_expression import NewExpression
+from woke.ast.ir.expression.tuple_expression import TupleExpression
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcFunctionCall
 
@@ -152,8 +153,16 @@ class FunctionCall(ExpressionAbc):
                 node = node.expression
             elif isinstance(node, NewExpression):
                 return None
+            elif isinstance(node, TupleExpression):
+                if len(node.components) != 1:
+                    assert (
+                        False
+                    ), f"Unexpected function call child node: {node}\n{self.source}"
+                node = node.components[0]
             else:
-                assert False, f"Unexpected function call child node: {node}"
+                assert (
+                    False
+                ), f"Unexpected function call child node: {node}\n{self.source}"
 
     @property
     @lru_cache(maxsize=None)
