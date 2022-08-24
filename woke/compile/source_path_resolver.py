@@ -1,5 +1,6 @@
 import itertools
 from pathlib import Path, PurePath
+from typing import AbstractSet
 
 from woke.config import WokeConfig
 
@@ -12,7 +13,9 @@ class SourcePathResolver:
     def __init__(self, woke_config: WokeConfig):
         self.__config = woke_config
 
-    def resolve(self, source_unit_name: PurePath) -> Path:
+    def resolve(
+        self, source_unit_name: PurePath, virtual_files: AbstractSet[Path]
+    ) -> Path:
         """
         Return a system path for the given source unit name. Currently, this is done in a single step:
         - Try to find a source file in the Woke project directory or directories provided in the `include_paths` config option.
@@ -26,6 +29,8 @@ class SourcePathResolver:
         ):
             path = include_path / source_unit_name
             if path.is_file():
+                matching_paths.append(path)
+            elif path in virtual_files:
                 matching_paths.append(path)
 
         if len(matching_paths) == 0:
