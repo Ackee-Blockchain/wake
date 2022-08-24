@@ -72,3 +72,10 @@ Configuration options specific to the LSP `Find references` request.
 | Option                 | Description                                                     | Default value |
 |:-----------------------|:----------------------------------------------------------------|:--------------|
 | `include_declarations` | Also include declarations in `Find references` request results. | `false`       |
+
+### `api_keys` namespace
+API keys to various services.
+
+| Option      | Description                                             | Default value |
+|:------------|:--------------------------------------------------------|:--------------|
+| `etherscan` | API key to [https://etherscan.io](https://etherscan.io) | `""` (unset)  |

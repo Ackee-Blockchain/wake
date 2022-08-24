@@ -11,7 +11,7 @@ import tomli
 from woke.utils import change_cwd
 
 from ..core.solidity_version import SolidityVersion
-from .data_model import CompilerConfig, LspConfig, TopLevelConfig
+from .data_model import ApiKeyConfig, CompilerConfig, LspConfig, TopLevelConfig
 
 logger = logging.getLogger(__name__)
 
@@ -252,3 +252,10 @@ class WokeConfig:
         Return LSP-specific config options.
         """
         return self.__config.lsp
+
+    @property
+    def api_keys(self) -> ApiKeyConfig:
+        """
+        Return API keys config options.
+        """
+        return self.__config.api_keys

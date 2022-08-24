@@ -99,10 +99,15 @@ class LspConfig(WokeConfigModel):
     find_references: FindReferencesConfig = Field(default_factory=FindReferencesConfig)
 
 
+class ApiKeyConfig(WokeConfigModel):
+    etherscan: str = Field(default_factory=lambda: "")
+
+
 class TopLevelConfig(WokeConfigModel):
     subconfigs: List[Path] = []
     compiler: CompilerConfig = Field(default_factory=CompilerConfig)
     lsp: LspConfig = Field(default_factory=LspConfig)
+    api_keys: ApiKeyConfig = Field(default_factory=ApiKeyConfig)
 
     @validator("subconfigs", pre=True, each_item=True)
     def set_subconfig(cls, v):
