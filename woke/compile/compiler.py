@@ -5,6 +5,7 @@ import shutil
 import time
 from collections import deque
 from itertools import chain
+from json import JSONDecodeError
 from pathlib import Path, PurePath
 from typing import Collection, Dict, Iterable, List, Mapping, Optional, Set, Tuple
 
@@ -249,11 +250,14 @@ class SolidityCompiler:
         build_settings: SolcInputSettings,
         output: Tuple[SolcOutput, ...],
         compilation_units: List[CompilationUnit],
+        target_versions: List[SolidityVersion],
     ) -> None:
         units_info = {}
 
         # units are already sorted
-        for index, (unit, out) in enumerate(zip(compilation_units, output)):
+        for index, (unit, target_version, out) in enumerate(
+            zip(compilation_units, target_versions, output)
+        ):
             sources = {}
             for source_unit_name in out.sources.keys():
                 sources[source_unit_name] = (
@@ -281,6 +285,7 @@ class SolidityCompiler:
                 allow_paths=self.__config.compiler.solc.allow_paths,
                 include_paths=self.__config.compiler.solc.include_paths,
                 settings=build_settings,
+                compiler_version=target_version,
             )
             units_info[unit.hash.hex()] = info
 
@@ -342,7 +347,7 @@ class SolidityCompiler:
                 latest_build_info = ProjectBuildInfo.parse_file(
                     latest_build_path / "build.json"
                 )
-            except ValidationError:
+            except (ValidationError, JSONDecodeError):
                 logger.warning(
                     f"Failed to parse '{latest_build_path / 'build.json'}' file while trying to reuse the latest build artifacts."
                 )
@@ -399,7 +404,6 @@ class SolidityCompiler:
             target_versions.append(target_version)
 
         for version in set(target_versions):
-            start = time.perf_counter()
             if not self.__svm.installed(version):
                 with Progress() as progress:
                     task = progress.add_task(
@@ -442,7 +446,7 @@ class SolidityCompiler:
                 raise ValueError("Build path is not set.")
             self.__rename_and_remove_artifacts(build_path)
             self.__write_global_artifacts(
-                build_path, build_settings, ret, compilation_units  # type: ignore
+                build_path, build_settings, ret, compilation_units, target_versions  # type: ignore
             )
 
         return [(cu, out) for cu, out in zip(compilation_units, ret)]
@@ -497,6 +501,7 @@ class SolidityCompiler:
                 and latest_unit_info.include_paths
                 == self.__config.compiler.solc.include_paths
                 and latest_unit_info.settings == build_settings
+                and latest_unit_info.compiler_version == target_version
             ):
                 try:
                     logger.info("Reusing the latest build artifacts.")
@@ -524,7 +529,7 @@ class SolidityCompiler:
                         sources=sources,
                         contracts=contracts,
                     )
-                except ValidationError:
+                except (ValidationError, JSONDecodeError):
                     logger.warning(
                         "Failed to parse the latest build artifacts, falling back to solc compilation."
                     )
