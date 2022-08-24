@@ -184,11 +184,10 @@ class FunctionCall(ExpressionAbc):
                 GlobalSymbolsEnum.ADDRESS_SEND,
             }:
                 ret |= {(self, ModifiesStateFlag.SENDS_ETHER)}
-            elif called_function in {
-                GlobalSymbolsEnum.ADDRESS_CALL,
-                GlobalSymbolsEnum.ADDRESS_DELEGATECALL,
-            }:
-                ret |= {(self, reduce(or_, (flag for flag in ModifiesStateFlag)))}
+            elif called_function == GlobalSymbolsEnum.ADDRESS_CALL:
+                ret |= {(self, ModifiesStateFlag.PERFORMS_CALL)}
+            elif called_function == GlobalSymbolsEnum.ADDRESS_DELEGATECALL:
+                ret |= {(self, ModifiesStateFlag.PERFORMS_DELEGATECALL)}
             elif (
                 called_function
                 in {GlobalSymbolsEnum.ARRAY_PUSH, GlobalSymbolsEnum.ARRAY_POP}
@@ -214,18 +213,13 @@ class FunctionCall(ExpressionAbc):
                     ret |= {
                         (
                             self,
-                            reduce(
-                                or_,
-                                (
-                                    flag
-                                    for flag in ModifiesStateFlag
-                                    if flag != ModifiesStateFlag.SENDS_ETHER
-                                ),
-                            ),
+                            ModifiesStateFlag.CALLS_UNIMPLEMENTED_NONPAYABLE_FUNCTION,
                         )
                     }
                 elif called_function.state_mutability == StateMutability.PAYABLE:
-                    ret |= {(self, reduce(or_, (flag for flag in ModifiesStateFlag)))}
+                    ret |= {
+                        (self, ModifiesStateFlag.CALLS_UNIMPLEMENTED_PAYABLE_FUNCTION)
+                    }
                 else:
                     assert False
         self.__recursion_lock = False
