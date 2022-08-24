@@ -422,17 +422,17 @@ class LspCompiler:
         skipped_compilation_units = []
         for compilation_unit in compilation_units:
             target_version = self.__config.compiler.solc.target_version
-            if (
-                target_version is not None
-                and target_version not in compilation_unit.versions
-            ):
-                await self.__server.log_message(
-                    f"Unable to compile the following files with solc version `{target_version}` set in config:\n"
-                    + "\n".join(path_to_uri(path) for path in compilation_unit.files),
-                    MessageType.ERROR,
-                )
-                skipped_compilation_units.append(compilation_unit)
-                continue
+            if target_version is not None:
+                if target_version not in compilation_unit.versions:
+                    await self.__server.log_message(
+                        f"Unable to compile the following files with solc version `{target_version}` set in config:\n"
+                        + "\n".join(
+                            path_to_uri(path) for path in compilation_unit.files
+                        ),
+                        MessageType.ERROR,
+                    )
+                    skipped_compilation_units.append(compilation_unit)
+                    continue
             else:
                 # use the latest matching version
                 matching_versions = [
