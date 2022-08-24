@@ -42,6 +42,10 @@ class BinaryOperation(ExpressionAbc):
         return self._parent
 
     @property
+    def operator(self) -> BinaryOpOperator:
+        return self.__operator
+
+    @property
     def left_expression(self) -> ExpressionAbc:
         return self.__left_expression
 
