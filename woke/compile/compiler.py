@@ -123,8 +123,8 @@ class SolidityCompiler:
                 )
                 try:
                     import_path = self.__source_path_resolver.resolve(
-                        import_unit_name
-                    ).resolve(strict=True)
+                        import_unit_name, modified_files.keys()
+                    ).resolve()
                 except (FileNotFoundError, CompilationResolveError):
                     if ignore_errors:
                         graph.nodes[source_unit_name]["unresolved_imports"].add(
