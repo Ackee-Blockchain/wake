@@ -38,6 +38,8 @@ nav:
   - Fuzzer: 'fuzzer.md'
   - Solc Version Manager: 'solc-version-manager.md'
   - Contributing: 'contributing.md'
+  - API reference:
+      - Example: 'api-reference/example.md'
 
 extra:
   version:
