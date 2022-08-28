@@ -68,7 +68,6 @@ class VariableDeclaration(DeclarationAbc):
         # TODO scope
         self.__state_variable = variable_declaration.state_variable
         self.__data_location = variable_declaration.storage_location
-        # TODO type descriptions?
         self.__visibility = variable_declaration.visibility
         self.__base_functions = (
             list(variable_declaration.base_functions)
@@ -210,10 +209,6 @@ class VariableDeclaration(DeclarationAbc):
                 + ret
             )
         return ret
-
-    @property
-    def constant(self) -> bool:
-        return self.__constant
 
     @property
     def mutability(self) -> Mutability:
