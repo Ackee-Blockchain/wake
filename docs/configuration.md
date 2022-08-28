@@ -66,6 +66,12 @@ The resolution order for each configuration option is:
 | `enabled` | Compile the project with solc optimizations enabled. Leaving this unset disables most of the available optimizations. Setting this to `false` disables all optimizations for Solidity <0.8.6 and has the same behavior as leaving this unset for Solidity >=0.8.6. | `""` (unset)  |
 | `runs`    | Configuration of the optimizer specifying how many times the code is intended to be run. Lower values optimize more for initial deployment cost, while higher values optimize more for high-frequency usage.                                                       | `200`         |
 
+### `lsp.code_lens` namespace
+
+| Option   | Description                            | Default value |
+|:---------|:---------------------------------------|:--------------|
+| `enable` | Enable LSP code lens language feature. | `false`       |
+
 ### `lsp.find_references` namespace
 Configuration options specific to the LSP `Find references` request.
 
