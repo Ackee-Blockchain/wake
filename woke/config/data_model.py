@@ -91,11 +91,16 @@ class FindReferencesConfig(WokeConfigModel):
     include_declarations: bool = False
 
 
+class CodeLensConfig(WokeConfigModel):
+    enable: bool = False
+
+
 class CompilerConfig(WokeConfigModel):
     solc: SolcConfig = Field(default_factory=SolcConfig)
 
 
 class LspConfig(WokeConfigModel):
+    code_lens: CodeLensConfig = Field(default_factory=CodeLensConfig)
     find_references: FindReferencesConfig = Field(default_factory=FindReferencesConfig)
 
 
