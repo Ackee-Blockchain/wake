@@ -241,6 +241,9 @@ class TypeGenerator():
             parsed += var_type.name
             self.__imports.generate_contract_import_expr(var_type)
         #TODO add parsing of a mapping (needed for struct definitions which can contain mappings)
+        elif name == "Mapping":
+            self.__imports.add_python_import("from typing import Dict")
+            parsed += f"Dict[{self.parse_type(var_type.key_type)}, {self.parse_type(var_type.value_type)}]"
         else:
             parsed += self.__sol_to_py_lookup[name]
         return parsed
@@ -538,6 +541,7 @@ class SourceUnitImports():
         if self.__struct_imports:
             self.add_str_to_imports(0,"", 1) 
 
+        #TODO add to one import statement to avoid having multiple lines of imports from the same file
         for p_type in self.__used_primitive_types:
             self.add_str_to_imports(0, "from woke.fuzzer.primitive_types import " + p_type, 1)
         
