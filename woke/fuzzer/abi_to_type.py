@@ -32,6 +32,7 @@ from woke.config import WokeConfig
 from ..ast.ir.declaration.contract_definition import ContractDefinition
 from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
 from woke.ast.ir.declaration.struct_definition import StructDefinition
+from woke.ast.ir.declaration.enum_definition import EnumDefinition
 from ..ast.ir.meta.source_unit import SourceUnit
 from ..ast.ir.reference_resolver import CallbackParams, ReferenceResolver
 from ..ast.ir.utils import IrInitTuple
@@ -201,7 +202,19 @@ class TypeGenerator():
             for member in struct.members:
                 self.add_str_to_types(indent + 1, self.get_name(member.name) + ": " + self.parse_type_and_import(member.type), 1)
             self.add_str_to_types(0, "", 2) 
-                
+
+
+    #TODO very similar to generate_types_struct -> refactor
+    def generate_types_enum(self, enums: List[EnumDefinition], indent: int) -> None:
+        self.__imports.add_python_import("from enum import Enum")
+        for enum in enums:
+            self.add_str_to_types(indent, f"class {self.get_name(enum.name)}(Enum):", 1)
+            num = 0
+            for member in enum.values:
+                self.add_str_to_types(indent + 1, self.get_name(member.name) + " = " + str(num), 1)
+                num += 1
+            self.add_str_to_types(0, "", 2) 
+
 
     #parses the expr to string
     #optionaly generates an import
@@ -225,6 +238,9 @@ class TypeGenerator():
         elif name == "Mapping":
             self.__imports.add_python_import("from typing import Dict")
             parsed += f"Dict[{self.parse_type_and_import(expr.key_type)}, {self.parse_type_and_import(expr.value_type)}]"
+        elif name == "Enum":
+            parsed += self.get_name(expr.name)
+            self.__imports.generate_enum_import(expr)
         else:
             parsed += self.__sol_to_py_lookup[name]
         return parsed
@@ -395,7 +411,7 @@ class TypeGenerator():
             self.generate_types_interface(contract)
 
         if contract.enums:
-            self.generate_types_enum(contract)
+            self.generate_types_enum(contract.enums, 1)
 
         if contract.structs:
             self.generate_types_struct(contract.structs, 1)
@@ -417,6 +433,7 @@ class TypeGenerator():
 
     def generate_types_source_unit(self, unit: SourceUnit) -> None:
         self.generate_types_struct(unit.structs, 0)
+        self.generate_types_enum(unit.enums, 0)
         for contract in unit.contracts:
             if contract.kind == ContractKind.CONTRACT and not contract.abstract:
                 self.generate_types_contract(contract, True)
@@ -473,6 +490,7 @@ class SourceUnitImports():
     __used_primitive_types: Set[str]
     __all_imports: str
     __struct_imports: Set[str]
+    __enum_imports: Set[str]
     __contract_imports: Set[str]
     __python_imports: Set[str]
     __generate_default_imports: bool
@@ -481,6 +499,7 @@ class SourceUnitImports():
 
     def __init__(self, outer: TypeGenerator):
         self.__struct_imports = set()
+        self.__enum_imports = set()
         self.__used_primitive_types = set()
         self.__all_imports = ""
         self.__contract_imports = set()
@@ -532,6 +551,7 @@ class SourceUnitImports():
 
     def cleanup_imports(self) -> None:
         self.__struct_imports = set()
+        self.__enum_imports = set()
         self.__contract_imports = set()
         self.__used_primitive_types = set()
         self.__python_imports = set()
@@ -562,6 +582,23 @@ class SourceUnitImports():
         if struct_import not in self.__struct_imports:
             #self.add_str_to_imports(0, struct_import, 1) 
             self.__struct_imports.add(struct_import)
+
+
+    #TODO impl of this func is basicaly the same as generate_struct_import -> refactor and remove duplication
+    def generate_enum_import(self, expr: ExpressionTypeAbc):
+        node  = expr.ir_node
+        if isinstance(node.parent, ContractDefinition):
+            source_unit = node.parent.parent
+        else:
+            source_unit = node.parent
+        #only those structs that are defined in a different source unit should be imported
+        if source_unit.source_unit_name == self.__type_gen.current_source_unit:
+            return 
+        enum_import = self.generate_import(expr.name, source_unit.source_unit_name)
+
+        if enum_import not in self.__enum_imports:
+            #self.add_str_to_imports(0, struct_import, 1) 
+            self.__struct_imports.add(enum_import)
 
 
     #TODO impl of this func is basicaly the same as generate_struct_import -> refactor and remove duplication
