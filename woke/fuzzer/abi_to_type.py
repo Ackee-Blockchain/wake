@@ -53,6 +53,9 @@ class TypeGenerator():
     __config: WokeConfig
     #generated types for the given source unit
     __source_unit_types: str
+    #set of contracts that were already generated in the given source unit
+    #used to avoid generating the same contract multiple times, eg. when multiple contracts inherit from it
+    __already_generated_contracts: Set[str]
     __source_units: Dict[Path, SourceUnit]
     #list of primitive types that the currently generated contract imports
     __imports: SourceUnitImports
@@ -65,6 +68,7 @@ class TypeGenerator():
         self, config: WokeConfig):
         self.__config = config
         self.__source_unit_types = ""
+        self.__already_generated_contracts = set()
         self.__source_units = {}
         self.__imports = SourceUnitImports(self)
         self.__name_sanitizer = NameSanitizer()
@@ -206,9 +210,9 @@ class TypeGenerator():
 
     #TODO very similar to generate_types_struct -> refactor
     def generate_types_enum(self, enums: List[EnumDefinition], indent: int) -> None:
-        self.__imports.add_python_import("from enum import Enum")
+        self.__imports.add_python_import("from enum import IntEnum")
         for enum in enums:
-            self.add_str_to_types(indent, f"class {self.get_name(enum.name)}(Enum):", 1)
+            self.add_str_to_types(indent, f"class {self.get_name(enum.name)}(IntEnum):", 1)
             num = 0
             for member in enum.values:
                 self.add_str_to_types(indent + 1, self.get_name(member.name) + " = " + str(num), 1)
@@ -351,7 +355,7 @@ class TypeGenerator():
                 returns =  self.__sol_to_py_lookup[name + str(var_type.bytes_count)]
             elif name == "Contract":
                 self.__imports.generate_contract_import_expr(var_type)
-                returns =  self.name(var_type.name)
+                returns =  self.get_name(var_type.name)
             else:
                 parsed += self.__sol_to_py_lookup[name]
                 returns = self.__sol_to_py_lookup[name]
@@ -370,25 +374,29 @@ class TypeGenerator():
 
 
     def generate_types_contract(self, contract: ContractDefinition, generate_template: bool) -> None:
+        if contract.name in self.__already_generated_contracts:
+            return
+        else:
+            self.__already_generated_contracts.add(contract.name)
         #bool indicating whether the given contract should inherit from Contract class
         inhertits_contract: bool = contract.kind == ContractKind.CONTRACT and not contract.abstract
         base_names: str = ""
 
-        #TODO needed to inherit from the base contracts
         for base in contract.base_contracts:
             parent_contract: ContractDefinition = base.base_name.referenced_declaration
+            #only the types for contracts in the same source_unit are generated
             if parent_contract.parent.source_unit_name == contract.parent.source_unit_name:
                 if parent_contract.kind == ContractKind.CONTRACT and not parent_contract.abstract:
                     inhertits_contract = False
-                    #TODO can be in different src unit?
-                    #TODO might be needed to store in a different path
                     self.generate_types_contract(parent_contract, True)
+                    base_names += self.get_name(parent_contract.name) + ", "
                 elif parent_contract.kind == ContractKind.INTERFACE and parent_contract.structs:
                     #TODO will nevever inherit from Contract, will probably not need template (aka imports)
                     #will only be generated to contain the user defined types
                     self.generate_types_interface(parent_contract, False)
                 elif parent_contract.kind == ContractKind.CONTRACT and parent_contract.abstract and parent_contract.structs:
                     self.generate_types_undeployable_contract(parent_contract, False)
+                    base_names += self.get_name(parent_contract.name) + ", "
             else:
                 base_names += self.get_name(parent_contract.name) + ", "
                 self.__imports.generate_contract_import_name(parent_contract.name, parent_contract.parent.source_unit_name)
@@ -472,6 +480,7 @@ class TypeGenerator():
     def cleanup_source_unit(self):
         self.__source_unit_types = ""
         self.__imports.cleanup_imports()
+        self.__already_generated_contracts = set()
 
 
     def generate_types(self, overwrite: bool = False) -> None:
@@ -643,7 +652,7 @@ class NameSanitizer():
 
     def __init__(self):
         #TODO add names
-        self.__black_listed = {"Dict", "List", "Mapping", "Set", "Tuple", "Union", "Path", "bytearray", "bytes","__str__", "__call__", "__init__", "transact"}
+        self.__black_listed = {"Dict", "List", "Mapping", "Set", "Tuple", "Union", "Path", "bytearray", "bytes", "map", "__str__", "__call__", "__init__", "transact"}
         self.__used_names = set()
         self.__renamed = {}
 
