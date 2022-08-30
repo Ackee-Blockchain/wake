@@ -601,13 +601,26 @@ class SourceUnitImports():
 
 class NameSanitizer():
     __black_listed: Set[str]
+    __used_names: Set[str]
+    __renamed: Dict[str, str]
 
     def __init__(self):
         #TODO add names
-        self.__black_listed = {"Dict", "List", "Mapping", "Set", "Tuple", "Union", "Path", "bytearray", "bytes"}
+        self.__black_listed = {"Dict", "List", "Mapping", "Set", "Tuple", "Union", "Path", "bytearray", "bytes","__str__", "__call__", "__init__", "transact"}
+        self.__used_names = set()
+        self.__renamed = {}
+
+
+    def clean_names(self) -> None:
+        self.__used_names = set()
+
 
     def sanitize_name(self, name: str) -> str:
-        if name in self.__black_listed or keyword.iskeyword(name):
-            print(f"{name} passed")
-            name = name + '_'
-        return name
+        if name in self.__renamed:
+            return self.__renamed[name]
+        renamed = name
+        while renamed in self.__black_listed or renamed in self.__used_names or keyword.iskeyword(renamed):
+            renamed = renamed + '_'
+        self.__used_names.add(renamed)
+        self.__renamed[name] = renamed
+        return renamed
