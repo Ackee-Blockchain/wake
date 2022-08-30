@@ -1,0 +1,17 @@
+:root>* {
+    --md-primary-fg-color: #0000FF;
+    --md-typeset-a-color: #FF00FF;
+    --md-default-fg-color--light: #FF00FF;
+}
+
+/* a {
+    color: #FF00FF !important;
+} */
+
+.md-header__source a {
+    color: #FFFFFF !important;
+}
+
+.doc-heading .highlight {
+    --md-code-bg-color: #ff00ff24;
+}
