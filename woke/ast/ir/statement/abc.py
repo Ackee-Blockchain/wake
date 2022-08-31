@@ -39,6 +39,9 @@ if TYPE_CHECKING:
 
 
 class StatementAbc(SolidityAbc, ABC):
+    """
+    Abstract base class for all Solidity statements.
+    """
     def __init__(
         self, init: IrInitTuple, statement: SolcStatementUnion, parent: SolidityAbc
     ):
@@ -114,12 +117,24 @@ class StatementAbc(SolidityAbc, ABC):
         ModifierDefinition,
         TryCatchClause,
     ]:
+        """
+        Returns:
+            Parent node of the statement.
+        """
         ...
 
     @property
     @abstractmethod
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
+        """
+        Returns:
+            Set of child IR nodes (including `self`) that modify the blockchain state and flags describing how the state is modified.
+        """
         ...
 
-    def statements_iter(self) -> Iterator["StatementAbc"]:
+    def statements_iter(self) -> Iterator[StatementAbc]:
+        """
+        Yields:
+            Child statements of the statement including `self`.
+        """
         yield self
