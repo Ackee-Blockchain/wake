@@ -24,10 +24,8 @@ theme:
         name: Switch to light mode
 
   features:
-    - navigation.instant
     - navigation.tracking
     - navigation.sections
-    - navigation.expand
     - navigation.indexes
     - navigation.top
 
@@ -53,6 +51,8 @@ plugins:
         import:
           - https://docs.python.org/3/objects.inv
           - https://networkx.org/documentation/stable/objects.inv
+        options:
+          show_root_heading: true
 - mike
 
 markdown_extensions:
