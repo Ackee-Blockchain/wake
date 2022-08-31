@@ -20,6 +20,9 @@ logger = logging.getLogger(__name__)
 
 
 class TypeNameAbc(SolidityAbc, ABC):
+    """
+    Abstract base class for all IR type name nodes.
+    """
     _type_descriptions: TypeDescriptionsModel
 
     def __init__(
@@ -52,6 +55,10 @@ class TypeNameAbc(SolidityAbc, ABC):
     @property
     @lru_cache(maxsize=None)
     def type(self) -> ExpressionTypeAbc:
+        """
+        Returns:
+            Type of the type name.
+        """
         assert self._type_descriptions.type_identifier is not None
 
         type_identifier = StringReader(self._type_descriptions.type_identifier)
@@ -65,5 +72,15 @@ class TypeNameAbc(SolidityAbc, ABC):
 
     @property
     def type_string(self) -> str:
+        """
+        !!! example
+            `:::solidity mapping(uint256 => int24[])` in the case of the `:::solidity mapping(uint => int24[])` type name in the following declaration:
+            ```solidity
+            mapping(uint => int24[]) map;
+            ```
+
+        Returns:
+            User-friendly string describing the type name type.
+        """
         assert self._type_descriptions.type_string is not None
         return self._type_descriptions.type_string

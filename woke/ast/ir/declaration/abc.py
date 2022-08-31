@@ -37,19 +37,14 @@ SolcDeclarationUnion = Union[
     SolcVariableDeclaration,
 ]
 
-if TYPE_CHECKING:
-    ReferencingNodesUnion = Union[
-        Identifier,
-        IdentifierPathPart,
-        MemberAccess,
-        ExternalReference,
-    ]
-
 
 class DeclarationAbc(SolidityAbc, ABC):
+    """
+    Abstract base class for all Solidity declarations.
+    """
     _name: str
     _name_location: Optional[Tuple[int, int]]
-    _references: Set[ReferencingNodesUnion]
+    _references: Set[Union[Identifier, IdentifierPathPart, MemberAccess, ExternalReference]]
 
     def __init__(
         self, init: IrInitTuple, solc_node: SolcDeclarationUnion, parent: SolidityAbc
@@ -66,15 +61,15 @@ class DeclarationAbc(SolidityAbc, ABC):
             )
         self._references = set()
 
-    def register_reference(self, reference: ReferencingNodesUnion):
+    def register_reference(self, reference: Union[Identifier, IdentifierPathPart, MemberAccess, ExternalReference]):
         self._references.add(reference)
 
-    def unregister_reference(self, reference: ReferencingNodesUnion):
+    def unregister_reference(self, reference: Union[Identifier, IdentifierPathPart, MemberAccess, ExternalReference]):
         self._references.remove(reference)
 
     def get_all_references(
         self, include_declarations: bool
-    ) -> Iterator[Union[DeclarationAbc, ReferencingNodesUnion]]:
+    ) -> Iterator[Union[DeclarationAbc, Union[Identifier, IdentifierPathPart, MemberAccess, ExternalReference]]]:
         if include_declarations:
             yield self
         yield from self.references
@@ -85,24 +80,63 @@ class DeclarationAbc(SolidityAbc, ABC):
 
     @property
     def name(self) -> str:
+        """
+        Returns:
+            User-defined name of the declared object.
+        """
         return self._name
 
     @property
     @abstractmethod
     def canonical_name(self) -> str:
+        """
+        !!! example
+            `ContractName.StructName.FieldName` in the case of the `FieldName` [VariableDeclaration][woke.ast.ir.declaration.variable_declaration.VariableDeclaration] declaration in the following example:
+            ```solidity
+            contract ContractName {
+                struct StructName {
+                    uint FieldName;
+                }
+            }
+            ```
+        Returns:
+            Canonical name of the declared object.
+        """
         ...
 
     @property
     @abstractmethod
     def declaration_string(self) -> str:
+        """
+        Declaration string that can be used for example in LSP hover. Does not include the declaration body, if any.
+        Does not need to match the actual declaration string in the source code (may use a different order of keywords, for example).
+        !!! example
+            `:::solidity function foo(uint a, uint b) public payable virtual onlyOwner returns (uint)` of the [FunctionDefinition][woke.ast.ir.declaration.function_definition.FunctionDefinition] declaration in the following example:
+            ```solidity
+            function foo(uint a, uint b) public onlyOwner virtual payable returns( uint ) {
+                return a + b;
+            }
+            ```
+        Returns:
+            String representation of the declaration.
+        """
         ...
 
     @property
     def name_location(self) -> Tuple[int, int]:
+        """
+        Similar to [byte_location][woke.ast.ir.abc.IrAbc.byte_location], but returns the location of the declaration name in the source code.
+        Returns:
+            Tuple of the start and end byte offsets of the declaration name in the source code.
+        """
         if self._name_location is None:
             self._name_location = self._parse_name_location()
         return self._name_location
 
     @property
-    def references(self) -> FrozenSet[ReferencingNodesUnion]:
+    def references(self) -> FrozenSet[Union[Identifier, IdentifierPathPart, MemberAccess, ExternalReference]]:
+        """
+        Returns:
+            Set of all IR nodes referencing to this declaration.
+        """
         return frozenset(self._references)
