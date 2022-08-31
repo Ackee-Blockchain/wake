@@ -1,0 +1,63 @@
+{{ log.debug("Rendering " + module.path) }}
+
+<div class="doc doc-object doc-module">
+{% with html_id = module.path %}
+
+  {% if root %}
+    {% set show_full_path = config.show_root_full_path %}
+    {% set root_members = True %}
+  {% elif root_members %}
+    {% set show_full_path = config.show_root_members_full_path or config.show_object_full_path %}
+    {% set root_members = False %}
+  {% else %}
+    {% set show_full_path = config.show_object_full_path %}
+  {% endif %}
+
+  {% if not root or config.show_root_heading %}
+
+    {% filter heading(heading_level,
+        role="module",
+        id=html_id,
+        class="doc doc-heading",
+        toc_label=module.name) %}
+
+      {% with module_name = module.path if show_full_path else module.name %}
+        {% if config.separate_signature %}
+          <span class="doc doc-object-name doc-module-name">{{ module_name }}</span>
+        {% else %}
+          <code>{{ module_name }}</code>
+        {% endif %}
+      {% endwith %}
+
+      {% with labels = ["module"] %}
+        {% include "labels.html" with context %}
+      {% endwith %}
+
+    {% endfilter %}
+
+  {% else %}
+    {% if config.show_root_toc_entry %}
+      {% filter heading(heading_level,
+          role="module",
+          id=html_id,
+          toc_label=module.path if config.show_root_full_path else module.name,
+          hidden=True) %}
+      {% endfilter %}
+    {% endif %}
+    {% set heading_level = heading_level - 1 %}
+  {% endif %}
+
+  <div class="doc doc-contents {% if root %}first{% endif %}">
+    {% with docstring_sections = module.docstring.parsed %}
+      {% include "docstring.html" with context %}
+    {% endwith %}
+
+    {% with obj = module %}
+      {% set root = False %}
+      {% set heading_level = heading_level + 1 %}
+      {% include "children.html" with context %}
+    {% endwith %}
+  </div>
+
+{% endwith %}
+</div>
