@@ -32,7 +32,8 @@ logger = logging.getLogger(__name__)
 
 class ExpressionAbc(SolidityAbc, ABC):
     """
-    Something that has a value.
+    Abstract base class for all IR expression nodes.
+    > Something that has a value.
     """
 
     _type_descriptions: TypeDescriptionsModel
@@ -95,7 +96,14 @@ class ExpressionAbc(SolidityAbc, ABC):
     @lru_cache(maxsize=None)
     def type(self) -> Optional[ExpressionTypeAbc]:
         """
-        Can be None for Identifier in import statements.
+        Can be `None` in case of an [Identifier][woke.ast.ir.expression.identifier.Identifier] in an [ImportDirective][woke.ast.ir.meta.import_directive.ImportDirective].
+        !!! example
+            `Ownable` in the following example has no type information:
+            ```solidity
+            import { Ownable } from './Ownable.sol';
+            ```
+        Returns:
+            Type of the expression.
         """
         if self._type_descriptions.type_identifier is None:
             return None
@@ -112,7 +120,22 @@ class ExpressionAbc(SolidityAbc, ABC):
     @property
     def type_string(self) -> Optional[str]:
         """
-        Can be None for Identifier in import statements.
+        !!! example
+            `:::solidity function (uint256,uint256) returns (uint256)` in the case of the `foo` [Identifier][woke.ast.ir.expression.identifier.Identifier] in the `:::solidity foo(1, 2)` expression for the following function:
+            ```solidity
+            function foo(uint a, uint b) public onlyOwner payable virtual onlyOwner returns(uint) {
+                return a + b;
+            }
+            ```
+
+        Can be `None` in case of an [Identifier][woke.ast.ir.expression.identifier.Identifier] in an [ImportDirective][woke.ast.ir.meta.import_directive.ImportDirective].
+        !!! example
+            `Ownable` in the following example has no type information:
+            ```solidity
+            import { Ownable } from './Ownable.sol';
+            ```
+        Returns:
+            User-friendly string describing the expression type.
         """
         return self._type_descriptions.type_string
 
@@ -120,10 +143,18 @@ class ExpressionAbc(SolidityAbc, ABC):
     @abstractmethod
     def is_ref_to_state_variable(self) -> bool:
         """
-        Returns True if the expression (possibly) is a reference to a state variable.
+        In many cases it may be useful to know if an [Assignment][woke.ast.ir.expression.assignment.Assignment] to an expression modifies a state variable or not.
+        This may not be straightforward to determine, e.g. if the expression is a [MemberAccess][woke.ast.ir.expression.member_access.MemberAccess] or [IndexAccess][woke.ast.ir.expression.index_access.IndexAccess] to a state variable.
+        Returns:
+            `True` if the expression (possibly) is a reference to a state variable.
         """
+        ...
 
     @property
     @abstractmethod
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
+        """
+        Returns:
+            Set of child IR nodes (including `self`) that modify the blockchain state and flags describing how the state is modified.
+        """
         ...
