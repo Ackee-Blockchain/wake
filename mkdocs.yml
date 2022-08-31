@@ -129,6 +129,7 @@ plugins:
 - mkdocstrings:
     watch:
       - woke
+    custom_templates: docs/templates
     handlers:
       python:
         import:
