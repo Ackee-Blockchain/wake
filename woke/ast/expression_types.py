@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import enum
 import re
 from abc import ABC
 from typing import TYPE_CHECKING, Optional, Tuple
@@ -13,7 +12,7 @@ if TYPE_CHECKING:
         UserDefinedValueTypeDefinition,
     )
 
-from woke.ast.enums import DataLocation, StateMutability
+from woke.ast.enums import DataLocation, StateMutability, FunctionExpressionKind, MagicExpressionKind
 from woke.ast.ir.reference_resolver import ReferenceResolver
 from woke.ast.nodes import AstNodeId
 from woke.utils.string import StringReader
@@ -363,50 +362,6 @@ class FixedBytes(ExpressionTypeAbc):
     @property
     def bytes_count(self) -> int:
         return self.__bytes_count
-
-
-class FunctionExpressionKind(str, enum.Enum):
-    DECLARATION = "declaration"
-    INTERNAL = "internal"
-    EXTERNAL = "external"
-    DELEGATE_CALL = "delegatecall"
-    BARE_CALL = "barecall"
-    BARE_CALL_CODE = "barecallcode"
-    BARE_DELEGATE_CALL = "baredelegatecall"
-    BARE_STATIC_CALL = "barestaticcall"
-    CREATION = "creation"
-    SEND = "send"
-    TRANSFER = "transfer"
-    KECCAK256 = "keccak256"
-    SELFDESCTRUCT = "selfdestruct"
-    REVERT = "revert"
-    EC_RECOVER = "ecrecover"
-    SHA256 = "sha256"
-    RIPEMD160 = "ripemd160"
-    GAS_LEFT = "gasleft"
-    EVENT = "event"
-    ERROR = "error"
-    WRAP = "wrap"
-    UNWRAP = "unwrap"
-    SET_GAS = "setgas"
-    SET_VALUE = "setvalue"
-    BLOCK_HASH = "blockhash"
-    ADD_MOD = "addmod"
-    MUL_MOD = "mulmod"
-    ARRAY_PUSH = "arraypush"
-    ARRAY_POP = "arraypop"
-    BYTES_CONCAT = "bytesconcat"
-    STRING_CONCAT = "stringconcat"
-    OBJECT_CREATION = "objectcreation"
-    ASSERT = "assert"
-    REQUIRE = "require"
-    ABI_ENCODE = "abiencode"
-    ABI_ENCODE_PACKED = "abiencodepacked"
-    ABI_ENCODE_WITH_SELECTOR = "abiencodewithselector"
-    ABI_ENCODE_CALL = "abiencodecall"
-    ABI_ENCODE_WITH_SIGNATURE = "abiencodewithsignature"
-    ABI_DECODE = "abidecode"
-    META_TYPE = "metatype"
 
 
 class Function(ExpressionTypeAbc):
@@ -856,14 +811,6 @@ class Enum(ExpressionTypeAbc):
         node = self.__reference_resolver.resolve_node(self.__ast_id, self.__cu_hash)
         assert isinstance(node, EnumDefinition)
         return node
-
-
-class MagicExpressionKind(str, enum.Enum):
-    BLOCK = "block"
-    MESSAGE = "message"
-    TRANSACTION = "transaction"
-    ABI = "abi"
-    META_TYPE = "meta_type"
 
 
 class Magic(ExpressionTypeAbc):
