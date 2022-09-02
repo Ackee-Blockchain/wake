@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import re
+import typing as typ
 from abc import ABC
-from typing import TYPE_CHECKING, Optional, Tuple
 
-if TYPE_CHECKING:
+if typ.TYPE_CHECKING:
     from woke.ast.ir.declaration.contract_definition import ContractDefinition
     from woke.ast.ir.declaration.enum_definition import EnumDefinition
     from woke.ast.ir.declaration.struct_definition import StructDefinition
@@ -23,13 +23,17 @@ IDENTIFIER_RE = re.compile(r"^\$_(?P<identifier>[a-zA-Z\$_][a-zA-Z0-9\$_]*)_\$")
 
 
 class ExpressionTypeAbc(ABC):
+    """
+    Abstract base class for all expression types.
+    """
+
     @classmethod
     def from_type_identifier(
         cls,
         type_identifier: StringReader,
         reference_resolver: ReferenceResolver,
         cu_hash: bytes,
-    ) -> Optional["ExpressionTypeAbc"]:
+    ) -> typ.Optional["ExpressionTypeAbc"]:
         if type_identifier.startswith("t_address"):
             return Address(type_identifier)
         elif type_identifier.startswith("t_bool"):
@@ -50,7 +54,7 @@ class ExpressionTypeAbc(ABC):
         elif type_identifier.startswith("t_function"):
             return Function(type_identifier, reference_resolver, cu_hash)
         elif type_identifier.startswith("t_tuple"):
-            return Tuple_(type_identifier, reference_resolver, cu_hash)
+            return Tuple(type_identifier, reference_resolver, cu_hash)
         elif type_identifier.startswith("t_type"):
             return Type(type_identifier, reference_resolver, cu_hash)
         elif type_identifier.startswith("t_rational"):
@@ -85,7 +89,7 @@ class ExpressionTypeAbc(ABC):
 
 def _parse_list(
     type_identifier: StringReader, reference_resolver: ReferenceResolver, cu_hash: bytes
-) -> Tuple[Optional[ExpressionTypeAbc], ...]:
+) -> typ.Tuple[typ.Optional[ExpressionTypeAbc], ...]:
     type_identifier.read("$_")
     # handle empty list
     if not type_identifier.startswith("_$_") and type_identifier.startswith("_$"):
@@ -123,6 +127,9 @@ def _parse_user_identifier(type_identifier: StringReader) -> str:
 
 
 class Address(ExpressionTypeAbc):
+    """
+    Address expression type.
+    """
     __is_payable: bool
 
     def __init__(self, type_identifier: StringReader):
@@ -136,20 +143,41 @@ class Address(ExpressionTypeAbc):
 
     @property
     def is_payable(self) -> bool:
+        """
+        Returns:
+            `True` if the address is payable, `False` otherwise.
+        """
         return self.__is_payable
 
 
 class Bool(ExpressionTypeAbc):
+    """
+    Boolean expression type.
+    """
     def __init__(self, type_identifier: StringReader):
         type_identifier.read("t_bool")
 
 
 class IntAbc(ExpressionTypeAbc):
-    pass
+    """
+    Base class for [Int][woke.ast.expression_types.Int] and [UInt][woke.ast.expression_types.UInt] expression types.
+    """
+    _bits_count: int
+
+    @property
+    def bits_count(self) -> int:
+        """
+        Can only be a multiple of 8, with a minimum of 8 and a maximum of 256.
+        Returns:
+            Number of bits used to represent this integer.
+        """
+        return self._bits_count
 
 
 class Int(IntAbc):
-    __bits_count: int
+    """
+    Signed integer expression type.
+    """
 
     def __init__(self, type_identifier: StringReader):
         type_identifier.read("t_int")
@@ -157,15 +185,13 @@ class Int(IntAbc):
         assert match is not None
         number = match.group("number")
         type_identifier.read(number)
-        self.__bits_count = int(number)
-
-    @property
-    def bits_count(self) -> int:
-        return self.__bits_count
+        self._bits_count = int(number)
 
 
 class UInt(IntAbc):
-    __bits_count: int
+    """
+    Unsigned integer expression type.
+    """
 
     def __init__(self, type_identifier: StringReader):
         type_identifier.read("t_uint")
@@ -173,28 +199,48 @@ class UInt(IntAbc):
         assert match is not None
         number = match.group("number")
         type_identifier.read(number)
-        self.__bits_count = int(number)
-
-    @property
-    def bits_count(self) -> int:
-        return self.__bits_count
+        self._bits_count = int(number)
 
 
 class FixedAbc(ExpressionTypeAbc):
-    pass
+    """
+    Base class for [Fixed][woke.ast.expression_types.Fixed] and [UFixed][woke.ast.expression_types.UFixed] expression types.
+    !!! info
+        Currently not fully implemented in Solidity.
+    """
+    _total_bits: int
+    _fractional_digits: int
+
+    @property
+    def total_bits(self) -> int:
+        """
+        Returns:
+            Total number of bits used to represent this fixed point number.
+        """
+        return self._total_bits
+
+    @property
+    def fractional_digits(self) -> int:
+        """
+        Returns:
+            Number of decimal places available.
+        """
+        return self._fractional_digits
 
 
 class Fixed(FixedAbc):
-    __total_bits: int
-    __fractional_digits: int
-
+    """
+    Signed fixed-point number expression type as specified by the [Solidity docs](https://docs.soliditylang.org/en/latest/types.html?highlight=fixed#fixed-point-numbers).
+    !!! info
+        Currently not fully implemented in Solidity.
+    """
     def __init__(self, type_identifier: StringReader):
         type_identifier.read("t_fixed")
         match = NUMBER_RE.match(type_identifier.data)
         assert match is not None
         total_bits = match.group("number")
         type_identifier.read(total_bits)
-        self.__total_bits = int(total_bits)
+        self._total_bits = int(total_bits)
 
         type_identifier.read("x")
 
@@ -202,28 +248,22 @@ class Fixed(FixedAbc):
         assert match is not None
         fractional_digits = match.group("number")
         type_identifier.read(fractional_digits)
-        self.__fractional_digits = int(fractional_digits)
-
-    @property
-    def total_bits(self) -> int:
-        return self.__total_bits
-
-    @property
-    def fractional_digits(self) -> int:
-        return self.__fractional_digits
+        self._fractional_digits = int(fractional_digits)
 
 
 class UFixed(FixedAbc):
-    __total_bits: int
-    __fractional_digits: int
-
+    """
+    Unsigned fixed point number expression type as specified by the [Solidity docs](https://docs.soliditylang.org/en/latest/types.html?highlight=ufixed#fixed-point-numbers).
+    !!! info
+        Currently not fully implemented in Solidity.
+    """
     def __init__(self, type_identifier: StringReader):
         type_identifier.read("t_ufixed")
         match = NUMBER_RE.match(type_identifier.data)
         assert match is not None
         total_bits = match.group("number")
         type_identifier.read(total_bits)
-        self.__total_bits = int(total_bits)
+        self._total_bits = int(total_bits)
 
         type_identifier.read("x")
 
@@ -231,18 +271,23 @@ class UFixed(FixedAbc):
         assert match is not None
         fractional_digits = match.group("number")
         type_identifier.read(fractional_digits)
-        self.__fractional_digits = int(fractional_digits)
-
-    @property
-    def total_bits(self) -> int:
-        return self.__total_bits
-
-    @property
-    def fractional_digits(self) -> int:
-        return self.__fractional_digits
+        self._fractional_digits = int(fractional_digits)
 
 
 class StringLiteral(ExpressionTypeAbc):
+    """
+    String literal expression type.
+    !!! warning
+        This expression is of the [StringLiteral][woke.ast.expression_types.StringLiteral] type:
+        ```solidity
+        "Hello, world!"
+        ```
+
+        However, this expression is of the [String][woke.ast.expression_types.String] type and contains a child expression of the [StringLiteral][woke.ast.expression_types.StringLiteral] type:
+        ```solidity
+        string("Hello, world!")
+        ```
+    """
     __keccak256_hash: bytes
 
     def __init__(self, type_identifier: StringReader):
@@ -255,10 +300,17 @@ class StringLiteral(ExpressionTypeAbc):
 
     @property
     def keccak256_hash(self) -> bytes:
+        """
+        Returns:
+            Keccak256 hash of the string literal.
+        """
         return self.__keccak256_hash
 
 
 class String(ExpressionTypeAbc):
+    """
+    String expression type.
+    """
     __data_location: DataLocation
     __is_pointer: bool
     __is_slice: bool
@@ -291,19 +343,48 @@ class String(ExpressionTypeAbc):
 
     @property
     def data_location(self) -> DataLocation:
-        """Can be either STORAGE, MEMORY, or CALLDATA"""
+        """
+        Can be either [CALLDATA][woke.ast.enums.DataLocation.CALLDATA], [MEMORY][woke.ast.enums.DataLocation.MEMORY] or [STORAGE][woke.ast.enums.DataLocation.STORAGE]
+        Returns:
+            Data location of the string expression.
+        """
         return self.__data_location
 
     @property
     def is_pointer(self) -> bool:
+        """
+        Storage references can be pointers or bound references. In general, local variables are of
+        pointer type, state variables are bound references. Assignments to pointers or deleting
+        them will not modify storage (that will only change the pointer). Assignment from
+        non-storage objects to a variable of storage pointer type is not possible.
+
+        For anything other than [STORAGE][woke.ast.enums.DataLocation.STORAGE], this always returns `True` because assignments
+        never change the contents of the original value.
+
+        Returns:
+            Whether the string expression is a pointer to storage.
+        """
         return self.__is_pointer
 
     @property
     def is_slice(self) -> bool:
+        """
+        !!! example
+            ```solidity
+            function foo(string calldata s) public pure {
+                s[0:5]; // s[0:5] is a string slice
+            }
+            ```
+        Returns:
+            Whether this is a slice of a string expression.
+        """
         return self.__is_slice
 
 
 class Bytes(ExpressionTypeAbc):
+    """
+    Bytes expression type.
+    """
     __data_location: DataLocation
     __is_pointer: bool
     __is_slice: bool
@@ -336,19 +417,48 @@ class Bytes(ExpressionTypeAbc):
 
     @property
     def data_location(self) -> DataLocation:
-        """Can be either STORAGE, MEMORY, or CALLDATA"""
+        """
+        Can be either [CALLDATA][woke.ast.enums.DataLocation.CALLDATA], [MEMORY][woke.ast.enums.DataLocation.MEMORY] or [STORAGE][woke.ast.enums.DataLocation.STORAGE]
+        Returns:
+            Data location of the bytes expression.
+        """
         return self.__data_location
 
     @property
     def is_pointer(self) -> bool:
+        """
+        Storage references can be pointers or bound references. In general, local variables are of
+        pointer type, state variables are bound references. Assignments to pointers or deleting
+        them will not modify storage (that will only change the pointer). Assignment from
+        non-storage objects to a variable of storage pointer type is not possible.
+
+        For anything other than [STORAGE][woke.ast.enums.DataLocation.STORAGE], this always returns `True` because assignments
+        never change the contents of the original value.
+
+        Returns:
+            Whether the bytes expression is a pointer to storage.
+        """
         return self.__is_pointer
 
     @property
     def is_slice(self) -> bool:
+        """
+        !!! example
+            ```solidity
+            function foo(bytes calldata b) public pure {
+                b[0:5]; // s[0:5] is a bytes slice
+            }
+            ```
+        Returns:
+            Whether this is a slice of a bytes expression.
+        """
         return self.__is_slice
 
 
 class FixedBytes(ExpressionTypeAbc):
+    """
+    Fixed-size byte array expression type.
+    """
     __bytes_count: int
 
     def __init__(self, type_identifier: StringReader):
@@ -361,18 +471,40 @@ class FixedBytes(ExpressionTypeAbc):
 
     @property
     def bytes_count(self) -> int:
+        """
+        Is at least 1 and at most 32.
+        Returns:
+            Number of bytes used to represent this fixed-size byte array.
+        """
         return self.__bytes_count
 
 
 class Function(ExpressionTypeAbc):
+    """
+    Function expression type.
+
+    !!! warning
+        Given the following function:
+        ```solidity
+        function foo(uint a, uint b) public pure returns(uint, uint) {
+            return (a + b, a - b);
+        }
+        ```
+        and the following call:
+        ```solidity
+        foo(1, 2);
+        ```
+        the type of `foo` is [Function][woke.ast.expression_types.Function], but the type of `:::solidity foo(1, 2)` is [Tuple][woke.ast.expression_types.Tuple].
+
+    """
     __kind: FunctionExpressionKind
     __state_mutability: StateMutability
-    __parameters: Tuple[ExpressionTypeAbc, ...]
-    __return_parameters: Tuple[ExpressionTypeAbc, ...]
+    __parameters: typ.Tuple[ExpressionTypeAbc, ...]
+    __return_parameters: typ.Tuple[ExpressionTypeAbc, ...]
     __gas_set: bool
     __value_set: bool
     __salt_set: bool
-    __bound_to: Optional[Tuple[ExpressionTypeAbc, ...]]
+    __bound_to: typ.Optional[typ.Tuple[ExpressionTypeAbc, ...]]
 
     def __init__(
         self,
@@ -442,39 +574,121 @@ class Function(ExpressionTypeAbc):
 
     @property
     def kind(self) -> FunctionExpressionKind:
+        """
+        Returns:
+            Kind of the function expression type.
+        """
         return self.__kind
 
     @property
     def state_mutability(self) -> StateMutability:
+        """
+        Returns:
+            State mutability of the function expression type.
+        """
         return self.__state_mutability
 
     @property
-    def parameters(self) -> Tuple[ExpressionTypeAbc, ...]:
+    def parameters(self) -> typ.Tuple[ExpressionTypeAbc, ...]:
+        """
+        Returns:
+            Expression types of the parameters of the function expression type.
+        """
         return self.__parameters
 
     @property
-    def return_parameters(self) -> Tuple[ExpressionTypeAbc, ...]:
+    def return_parameters(self) -> typ.Tuple[ExpressionTypeAbc, ...]:
+        """
+        Returns:
+            Expression types of the return parameters of the function expression type.
+        """
         return self.__return_parameters
 
     @property
     def gas_set(self) -> bool:
+        """
+        !!! example
+            In the case of the old syntax (deprecated), the `gas` [MemberAccess][woke.ast.ir.expression.member_access.MemberAccess] expression is of the [Function][woke.ast.expression_types.Function] type which returns a [Function][woke.ast.expression_types.Function] with `gas_set` set to `True`.
+            ```solidity
+            foo.gas(10)(1, 2);
+            ```
+
+            In the case of the new syntax, the `{gas: 10}` [FunctionCallOptions][woke.ast.ir.expression.function_call_options.FunctionCallOptions] expression is of the [Function][woke.ast.expression_types.Function] type with `gas_set` set to `True`.
+            ```solidity
+            foo{gas: 10}(1, 2);
+            ```
+        Returns:
+            `True` if the gas is set in the function expression type.
+        """
         return self.__gas_set
 
     @property
     def value_set(self) -> bool:
+        """
+        !!! example
+            In the case of the old syntax (deprecated), the `value` [MemberAccess][woke.ast.ir.expression.member_access.MemberAccess] expression is of the [Function][woke.ast.expression_types.Function] type which returns a [Function][woke.ast.expression_types.Function] with `value_set` set to `True`.
+            ```solidity
+            foo.value(1)(1, 2);
+            ```
+
+            In the case of the new syntax, the `{value: 1}` [FunctionCallOptions][woke.ast.ir.expression.function_call_options.FunctionCallOptions] expression is of the [Function][woke.ast.expression_types.Function] type with `value_set` set to `True`.
+            ```solidity
+            foo{value: 1}(1, 2);
+            ```
+        Returns:
+            `True` if the value is set in the function expression type.
+        """
         return self.__value_set
 
     @property
     def salt_set(self) -> bool:
+        """
+        !!! example
+            In the following example, the `{salt: salt}` [FunctionCallOptions][woke.ast.ir.expression.function_call_options.FunctionCallOptions] expression is of the [Function][woke.ast.expression_types.Function] type with `salt_set` set to `True`.
+            ```solidity
+            new Foo{salt: salt}();
+            ```
+        Returns:
+            `True` if the salt is set in the function expression.
+        """
         return self.__salt_set
 
     @property
-    def bound_to(self) -> Optional[Tuple[ExpressionTypeAbc, ...]]:
+    def bound_to(self) -> typ.Optional[typ.Tuple[ExpressionTypeAbc, ...]]:
+        """
+        A function type can be bound to a type using the [UsingForDirective][woke.ast.ir.meta.using_for_directive.UsingForDirective] or internally in the case of a Solidity global symbol.
+        !!! example
+            In the following example, the `add` [MemberAccess][woke.ast.ir.expression.member_access.MemberAccess] expression on line 9 is of the [Function][woke.ast.expression_types.Function] type and is bound to the [UInt][woke.ast.expression_types.UInt] type.
+            ```solidity linenums="1"
+            function add(uint a, uint b) pure returns (uint) {
+                return a + b;
+            }
+
+            using {add} for uint;
+
+            contract Foo {
+                function bar(uint x) public pure returns(uint) {
+                    return x.add(1);
+                }
+            }
+            ```
+
+            In this example, the `push` [MemberAccess][woke.ast.ir.expression.member_access.MemberAccess] expression on line 9 is of the [Function][woke.ast.expression_types.Function] type and is bound to the [Array][woke.ast.expression_types.Array] type.
+            ```solidity
+            arr.push(1);
+            ```
+
+        Returns:
+            Type to which the function is bound to.
+        """
         return self.__bound_to
 
 
-class Tuple_(ExpressionTypeAbc):
-    __components: Tuple[Optional[ExpressionTypeAbc], ...]
+class Tuple(ExpressionTypeAbc):
+    """
+    Tuple expression type.
+    """
+    __components: typ.Tuple[typ.Optional[ExpressionTypeAbc], ...]
 
     def __init__(
         self,
@@ -486,11 +700,26 @@ class Tuple_(ExpressionTypeAbc):
         self.__components = _parse_list(type_identifier, reference_resolver, cu_hash)
 
     @property
-    def components(self) -> Tuple[Optional[ExpressionTypeAbc], ...]:
+    def components(self) -> typ.Tuple[typ.Optional[ExpressionTypeAbc], ...]:
+        """
+        A component type can be `None` in the case of a tuple with a missing component.
+        !!! example
+            In the following example, the `(success, )` expression is of the [Tuple][woke.ast.expression_types.Tuple] type with the components of the type [Bool][woke.ast.expression_types.Bool] and `None`.
+            ```solidity
+            bool success;
+            (success, ) = address(addr).call{value: 1}("");
+            ```
+
+        Returns:
+            Expression types of the components of the tuple expression type.
+        """
         return self.__components
 
 
 class Type(ExpressionTypeAbc):
+    """
+    Type expression type. As opposed to other expression types, this expression type describes the type of a type, not the type of an instance of a type.
+    """
     __actual_type: ExpressionTypeAbc
 
     def __init__(
@@ -506,10 +735,45 @@ class Type(ExpressionTypeAbc):
 
     @property
     def actual_type(self) -> ExpressionTypeAbc:
+        """
+        !!! example
+            `payable` in the following example is of the [Type][woke.ast.expression_types.Type] type with the [Address][woke.ast.expression_types.Address] actual type.
+            ```solidity
+            payable(addr);
+            ```
+
+            `super` in the following example is of the [Type][woke.ast.expression_types.Type] type with the [Contract][woke.ast.expression_types.Contract] actual type.
+            ```solidity
+            super.foo();
+            ```
+
+            `string` in the following example is of the [Type][woke.ast.expression_types.Type] type with the [String][woke.ast.expression_types.String] actual type.
+            ```solidity
+            string.concat("foo", "bar");
+            ```
+
+            `Foo` in the following example on line 4 is of the [Type][woke.ast.expression_types.Type] type with the [Enum][woke.ast.expression_types.Enum] actual type.
+            ```solidity linenums="1"
+            enum Foo { A, B }
+
+            function bar() pure returns (Foo) {
+                return Foo.A;
+            }
+            ```
+
+        Returns:
+            Actual type of the type expression type.
+        """
         return self.__actual_type
 
 
 class Rational(ExpressionTypeAbc):
+    """
+    Rational expression type. Represents the type of constants or expressions with constants.
+
+    !!! example
+        `:::solidity 1`, `:::solidity 0x1234`, `:::solidity 1e18`, `:::solidity 1 * 2 / 3` are all of the [Rational][woke.ast.expression_types.Rational] type.
+    """
     __numerator: int
     __denominator: int
 
@@ -538,15 +802,27 @@ class Rational(ExpressionTypeAbc):
 
     @property
     def numerator(self) -> int:
+        """
+        If the rational is negative, the numerator will be negative.
+        Returns:
+            Numerator of the rational number.
+        """
         return self.__numerator
 
     @property
     def denominator(self) -> int:
+        """
+        Returns:
+            Denominator of the rational number.
+        """
         return self.__denominator
 
 
 class Modifier(ExpressionTypeAbc):
-    __parameters: Tuple[ExpressionTypeAbc, ...]
+    """
+    Modifier expression type.
+    """
+    __parameters: typ.Tuple[ExpressionTypeAbc, ...]
 
     def __init__(
         self,
@@ -560,13 +836,20 @@ class Modifier(ExpressionTypeAbc):
         self.__parameters = parameters  # type: ignore
 
     @property
-    def parameters(self) -> Tuple[ExpressionTypeAbc, ...]:
+    def parameters(self) -> typ.Tuple[ExpressionTypeAbc, ...]:
+        """
+        Returns:
+            Expression types of the parameters of the modifier.
+        """
         return self.__parameters
 
 
 class Array(ExpressionTypeAbc):
+    """
+    Array expression type.
+    """
     __base_type: ExpressionTypeAbc
-    __length: Optional[int]
+    __length: typ.Optional[int]
     __data_location: DataLocation
     __is_pointer: bool
     __is_slice: bool
@@ -619,26 +902,63 @@ class Array(ExpressionTypeAbc):
 
     @property
     def base_type(self) -> ExpressionTypeAbc:
+        """
+        Returns:
+            Base type of the array.
+        """
         return self.__base_type
 
     @property
-    def length(self) -> Optional[int]:
+    def length(self) -> typ.Optional[int]:
+        """
+        Returns:
+            Length of the array. `None` if the array is dynamic (not fixed size).
+        """
         return self.__length
 
     @property
     def data_location(self) -> DataLocation:
+        """
+        Returns:
+            Data location of the array.
+        """
         return self.__data_location
 
     @property
     def is_pointer(self) -> bool:
+        """
+        Storage references can be pointers or bound references. In general, local variables are of
+        pointer type, state variables are bound references. Assignments to pointers or deleting
+        them will not modify storage (that will only change the pointer). Assignment from
+        non-storage objects to a variable of storage pointer type is not possible.
+
+        For anything other than [STORAGE][woke.ast.enums.DataLocation.STORAGE], this always returns `True` because assignments
+        never change the contents of the original value.
+
+        Returns:
+            Whether the array expression is a pointer to storage.
+        """
         return self.__is_pointer
 
     @property
     def is_slice(self) -> bool:
+        """
+        !!! example
+            ```solidity
+            function foo(uint[] calldata arr) public pure {
+                arr[0:5]; // arr[0:5] is an array slice
+            }
+            ```
+        Returns:
+            Whether this is a slice of an array expression.
+        """
         return self.__is_slice
 
 
 class Mapping(ExpressionTypeAbc):
+    """
+    Mapping expression type.
+    """
     __key_type: ExpressionTypeAbc
     __value_type: ExpressionTypeAbc
 
@@ -658,10 +978,18 @@ class Mapping(ExpressionTypeAbc):
 
     @property
     def key_type(self) -> ExpressionTypeAbc:
+        """
+        Returns:
+            Key type of the mapping.
+        """
         return self.__key_type
 
     @property
     def value_type(self) -> ExpressionTypeAbc:
+        """
+        Returns:
+            Value type of the mapping.
+        """
         return self.__value_type
 
 
@@ -698,14 +1026,43 @@ class Contract(ExpressionTypeAbc):
 
     @property
     def is_super(self) -> bool:
+        """
+        !!! warning
+            Until 0.7.6, the `super` keyword ([Identifier][woke.ast.ir.expression.identifier.Identifier]) was of the [Contract][woke.ast.expression_types.Contract] type with `is_super` set to `True`.
+            Since 0.8.0, the `super` keyword is of the [Type][woke.ast.expression_types.Type] type with [Contract][woke.ast.expression_types.Contract] as the `actual_type` and `is_super` set to `True`.
+
+        !!! warning
+            When this is `True`, the `name` and `ir_node` properties refer to the current contract, not the base contract.
+
+        !!! example
+            The `name` and `ir_node` properties of the [Contract][woke.ast.expression_types.Contract] type of the `super` expression in the following example refer to the `Foo` contract, not the `Bar` contract.
+            ```solidity
+            contract Foo is Bar {
+                function foo() public {
+                    super.foo();
+                }
+            }
+            ```
+
+        Returns:
+            `True` if the expression is the `super` keyword.
+        """
         return self.__is_super
 
     @property
     def name(self) -> str:
+        """
+        Returns:
+            Name of the contract.
+        """
         return self.__name
 
     @property
     def ir_node(self) -> ContractDefinition:
+        """
+        Returns:
+            Contract definition IR node.
+        """
         from woke.ast.ir.declaration.contract_definition import ContractDefinition
 
         node = self.__reference_resolver.resolve_node(self.__ast_id, self.__cu_hash)
@@ -714,6 +1071,9 @@ class Contract(ExpressionTypeAbc):
 
 
 class Struct(ExpressionTypeAbc):
+    """
+    Struct expression type.
+    """
     __name: str
     __ast_id: AstNodeId
     __data_location: DataLocation
@@ -758,18 +1118,42 @@ class Struct(ExpressionTypeAbc):
 
     @property
     def name(self) -> str:
+        """
+        Returns:
+            Name of the struct.
+        """
         return self.__name
 
     @property
     def data_location(self) -> DataLocation:
+        """
+        Returns:
+            Data location of the struct.
+        """
         return self.__data_location
 
     @property
     def is_pointer(self) -> bool:
+        """
+        Storage references can be pointers or bound references. In general, local variables are of
+        pointer type, state variables are bound references. Assignments to pointers or deleting
+        them will not modify storage (that will only change the pointer). Assignment from
+        non-storage objects to a variable of storage pointer type is not possible.
+
+        For anything other than [STORAGE][woke.ast.enums.DataLocation.STORAGE], this always returns `True` because assignments
+        never change the contents of the original value.
+
+        Returns:
+            Whether the struct expression is a pointer to storage.
+        """
         return self.__is_pointer
 
     @property
     def ir_node(self) -> StructDefinition:
+        """
+        Returns:
+            Struct definition IR node.
+        """
         from woke.ast.ir.declaration.struct_definition import StructDefinition
 
         node = self.__reference_resolver.resolve_node(self.__ast_id, self.__cu_hash)
@@ -778,6 +1162,12 @@ class Struct(ExpressionTypeAbc):
 
 
 class Enum(ExpressionTypeAbc):
+    """
+    Enum expression type.
+
+    !!! warning
+        Enum values are of the [Enum][woke.ast.expression_types.Enum] type and enums are of the [Type][woke.ast.expression_types.Type] type with [Enum][woke.ast.expression_types.Enum] as the [actual_type][woke.ast.expression_types.Type.actual_type].
+    """
     __name: str
     __ast_id: AstNodeId
     __reference_resolver: ReferenceResolver
@@ -802,10 +1192,18 @@ class Enum(ExpressionTypeAbc):
 
     @property
     def name(self) -> str:
+        """
+        Returns:
+            Name of the enum.
+        """
         return self.__name
 
     @property
     def ir_node(self) -> EnumDefinition:
+        """
+        Returns:
+            Enum definition IR node.
+        """
         from woke.ast.ir.declaration.enum_definition import EnumDefinition
 
         node = self.__reference_resolver.resolve_node(self.__ast_id, self.__cu_hash)
@@ -814,8 +1212,11 @@ class Enum(ExpressionTypeAbc):
 
 
 class Magic(ExpressionTypeAbc):
+    """
+    Magic expression type represents Solidity language built-in objects.
+    """
     __kind: MagicExpressionKind
-    __meta_argument_type: Optional[ExpressionTypeAbc]
+    __meta_argument_type: typ.Optional[ExpressionTypeAbc]
 
     def __init__(
         self,
@@ -846,12 +1247,21 @@ class Magic(ExpressionTypeAbc):
 
     @property
     def kind(self) -> MagicExpressionKind:
+        """
+        Returns:
+            Kind of the magic expression.
+        """
         return self.__kind
 
     @property
-    def meta_argument_type(self) -> Optional[ExpressionTypeAbc]:
+    def meta_argument_type(self) -> typ.Optional[ExpressionTypeAbc]:
         """
-        Is set if the magic expression is a meta type.
+        Is only set for [MagicExpressionKind.META_TYPE][woke.ast.enums.MagicExpressionKind.META_TYPE] kind.
+        !!! example
+            [Contract][woke.ast.expression_types.Contract] in `:::solidity type(IERC20)`, [UInt][woke.ast.expression_types.UInt] in `:::solidity type(uint)`.
+
+        Returns:
+            Type of the meta expression argument.
         """
         return self.__meta_argument_type
 
@@ -881,10 +1291,18 @@ class UserDefinedValueType(ExpressionTypeAbc):
 
     @property
     def name(self) -> str:
+        """
+        Returns:
+            Name of the user defined value type.
+        """
         return self.__name
 
     @property
     def ir_node(self) -> UserDefinedValueTypeDefinition:
+        """
+        Returns:
+            User defined value type definition IR node.
+        """
         from woke.ast.ir.declaration.user_defined_value_type_definition import (
             UserDefinedValueTypeDefinition,
         )
@@ -895,6 +1313,11 @@ class UserDefinedValueType(ExpressionTypeAbc):
 
 
 class Module(ExpressionTypeAbc):
+    """
+    Module expression type.
+    !!! note
+        It is probably currently not possible to create an expression of this type.
+    """
     __source_unit_id: int
 
     def __init__(self, type_identifier: StringReader):
