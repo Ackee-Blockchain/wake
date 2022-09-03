@@ -47,7 +47,7 @@ class VariableDeclaration(DeclarationAbc):
     __state_variable: bool
     __data_location: DataLocation
     __visibility: Visibility
-    __base_functions: Optional[List[AstNodeId]]
+    __base_functions: List[AstNodeId]
     __documentation: Optional[StructuredDocumentation]
     __function_selector: Optional[bytes]
     __indexed: bool
@@ -71,8 +71,8 @@ class VariableDeclaration(DeclarationAbc):
         self.__visibility = variable_declaration.visibility
         self.__base_functions = (
             list(variable_declaration.base_functions)
-            if variable_declaration.base_functions
-            else None
+            if variable_declaration.base_functions is not None
+            else []
         )
         self.__documentation = (
             StructuredDocumentation(init, variable_declaration.documentation, self)
@@ -119,13 +119,12 @@ class VariableDeclaration(DeclarationAbc):
             yield from self.__value
 
     def __post_process(self, callback_params: CallbackParams):
-        if self.base_functions is not None:
-            base_functions = self.base_functions
-            for base_function in base_functions:
-                base_function._child_functions.add(self)
-            self._reference_resolver.register_destroy_callback(
-                self.file, partial(self.__destroy, base_functions)
-            )
+        base_functions = self.base_functions
+        for base_function in base_functions:
+            base_function._child_functions.add(self)
+        self._reference_resolver.register_destroy_callback(
+            self.file, partial(self.__destroy, base_functions)
+        )
 
     def __destroy(self, base_functions: Tuple[FunctionDefinition]) -> None:
         for base_function in base_functions:
@@ -240,11 +239,9 @@ class VariableDeclaration(DeclarationAbc):
         return self.__visibility
 
     @property
-    def base_functions(self) -> Optional[Tuple[FunctionDefinition]]:
+    def base_functions(self) -> Tuple[FunctionDefinition]:
         from ..declaration.function_definition import FunctionDefinition
 
-        if self.__base_functions is None:
-            return None
         base_functions = []
         for base_function_id in self.__base_functions:
             base_function = self._reference_resolver.resolve_node(

@@ -75,19 +75,16 @@ def _resolve_declaration(declaration: DeclarationAbc, context: LspContext) -> in
     refs_count = len(declaration.references)
 
     if isinstance(declaration, VariableDeclaration):
-        if declaration.base_functions is not None:
-            for base_function in declaration.base_functions:
-                refs_count += len(base_function.references)
+        for base_function in declaration.base_functions:
+            refs_count += len(base_function.references)
     elif isinstance(declaration, FunctionDefinition):
-        if declaration.base_functions is not None:
-            for base_function in declaration.base_functions:
-                refs_count += len(base_function.references)
+        for base_function in declaration.base_functions:
+            refs_count += len(base_function.references)
         for child_function in declaration.child_functions:
             refs_count += len(child_function.references)
     elif isinstance(declaration, ModifierDefinition):
-        if declaration.base_modifiers is not None:
-            for base_modifier in declaration.base_modifiers:
-                refs_count += len(base_modifier.references)
+        for base_modifier in declaration.base_modifiers:
+            refs_count += len(base_modifier.references)
         for child_modifier in declaration.child_modifiers:
             refs_count += len(child_modifier.references)
     return refs_count
