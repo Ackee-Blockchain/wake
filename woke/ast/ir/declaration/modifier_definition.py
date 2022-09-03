@@ -21,8 +21,11 @@ from ..statement.block import Block
 from .abc import DeclarationAbc
 
 if TYPE_CHECKING:
-    from .abc import ReferencingNodesUnion
     from .contract_definition import ContractDefinition
+    from ..expression.identifier import Identifier
+    from ..expression.member_access import MemberAccess
+    from ..meta.identifier_path import IdentifierPathPart
+    from ..statement.inline_assembly import ExternalReference
 
 from woke.ast.enums import Visibility
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -46,7 +49,7 @@ class ModifierDefinition(DeclarationAbc):
     __parameters: ParameterList
     __virtual: bool
     __visibility: Visibility
-    __base_modifiers: Optional[List[AstNodeId]]
+    __base_modifiers: List[AstNodeId]
     __documentation: Optional[Union[StructuredDocumentation, str]]
     __overrides: Optional[OverrideSpecifier]
 
@@ -62,7 +65,7 @@ class ModifierDefinition(DeclarationAbc):
         self.__virtual = modifier.virtual
         self.__visibility = modifier.visibility
         self.__base_modifiers = (
-            list(modifier.base_modifiers) if modifier.base_modifiers else None
+            list(modifier.base_modifiers) if modifier.base_modifiers is not None else []
         )
         if modifier.documentation is None:
             self.__documentation = None
@@ -94,13 +97,12 @@ class ModifierDefinition(DeclarationAbc):
             yield from self.__overrides
 
     def __post_process(self, callback_params: CallbackParams):
-        if self.base_modifiers is not None:
-            base_modifiers = self.base_modifiers
-            for base_modifier in base_modifiers:
-                base_modifier._child_modifiers.add(self)
-            self._reference_resolver.register_destroy_callback(
-                self.file, partial(self.__destroy, base_modifiers)
-            )
+        base_modifiers = self.base_modifiers
+        for base_modifier in base_modifiers:
+            base_modifier._child_modifiers.add(self)
+        self._reference_resolver.register_destroy_callback(
+            self.file, partial(self.__destroy, base_modifiers)
+        )
 
     def __destroy(self, base_modifiers: Tuple[ModifierDefinition]) -> None:
         for base_modifier in base_modifiers:
@@ -121,7 +123,7 @@ class ModifierDefinition(DeclarationAbc):
 
     def get_all_references(
         self, include_declarations: bool
-    ) -> Iterator[Union[DeclarationAbc, ReferencingNodesUnion]]:
+    ) -> Iterator[Union[DeclarationAbc, Identifier, IdentifierPathPart, MemberAccess, ExternalReference]]:
         processed_declarations: Set[ModifierDefinition] = {self}
         declarations_queue: Deque[ModifierDefinition] = deque([self])
 
@@ -131,11 +133,10 @@ class ModifierDefinition(DeclarationAbc):
                 yield declaration
             yield from declaration.references
 
-            if declaration.base_modifiers is not None:
-                for base_modifier in declaration.base_modifiers:
-                    if base_modifier not in processed_declarations:
-                        declarations_queue.append(base_modifier)
-                        processed_declarations.add(base_modifier)
+            for base_modifier in declaration.base_modifiers:
+                if base_modifier not in processed_declarations:
+                    declarations_queue.append(base_modifier)
+                    processed_declarations.add(base_modifier)
             for child_modifier in declaration.child_modifiers:
                 if child_modifier not in processed_declarations:
                     declarations_queue.append(child_modifier)
@@ -214,9 +215,7 @@ class ModifierDefinition(DeclarationAbc):
         return self.__visibility
 
     @property
-    def base_modifiers(self) -> Optional[Tuple[ModifierDefinition]]:
-        if self.__base_modifiers is None:
-            return None
+    def base_modifiers(self) -> Tuple[ModifierDefinition]:
         base_modifiers = []
         for base_modifier_id in self.__base_modifiers:
             base_modifier = self._reference_resolver.resolve_node(

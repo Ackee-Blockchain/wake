@@ -239,13 +239,10 @@ async def supertypes(
             contract = base_contract.base_name.referenced_declaration
             assert isinstance(contract, ContractDefinition)
             nodes.append(contract)
-    elif (
-        isinstance(node, (FunctionDefinition, VariableDeclaration))
-        and node.base_functions is not None
-    ):
+    elif isinstance(node, (FunctionDefinition, VariableDeclaration)):
         for base_function in node.base_functions:
             nodes.append(base_function)
-    elif isinstance(node, ModifierDefinition) and node.base_modifiers is not None:
+    elif isinstance(node, ModifierDefinition):
         for base_modifier in node.base_modifiers:
             nodes.append(base_modifier)
 
