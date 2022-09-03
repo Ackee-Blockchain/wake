@@ -331,7 +331,7 @@ class FunctionExpressionKind(str, enum.Enum):
     SEND = "send"
     TRANSFER = "transfer"
     KECCAK256 = "keccak256"
-    SELFDESCTRUCT = "selfdestruct"
+    SELFDESTRUCT = "selfdestruct"
     REVERT = "revert"
     EC_RECOVER = "ecrecover"
     SHA256 = "sha256"
