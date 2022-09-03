@@ -106,7 +106,7 @@ async def code_lens(
     code_lens = []
     source_unit = context.compiler.source_units[path]
 
-    for declaration in source_unit.declarations:
+    for declaration in source_unit.declarations_iter():
         refs_count = _resolve_declaration(declaration, context)
         code_lens.append(
             CodeLens(

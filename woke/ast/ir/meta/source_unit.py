@@ -215,8 +215,7 @@ class SourceUnit(SolidityAbc):
         """
         return tuple(self.__using_for_directives)
 
-    @property
-    def declarations(self) -> Iterator[DeclarationAbc]:
+    def declarations_iter(self) -> Iterator[DeclarationAbc]:
         yield from self.declared_variables
         yield from self.enums
         for enum in self.enums:
@@ -227,4 +226,4 @@ class SourceUnit(SolidityAbc):
         yield from self.user_defined_value_types
         yield from self.contracts
         for contract in self.contracts:
-            yield from contract.declarations
+            yield from contract.declarations_iter()
