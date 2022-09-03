@@ -306,8 +306,7 @@ class ContractDefinition(DeclarationAbc):
     def declared_variables(self) -> Tuple[VariableDeclaration]:
         return tuple(self.__declared_variables)
 
-    @property
-    def declarations(self) -> Iterator[DeclarationAbc]:
+    def declarations_iter(self) -> Iterator[DeclarationAbc]:
         yield from self.enums
         for enum in self.enums:
             yield from enum.values
