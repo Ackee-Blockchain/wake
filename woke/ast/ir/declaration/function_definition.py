@@ -23,10 +23,13 @@ from ..statement.block import Block
 from .abc import DeclarationAbc
 
 if TYPE_CHECKING:
-    from .abc import ReferencingNodesUnion
     from .contract_definition import ContractDefinition
     from .variable_declaration import VariableDeclaration
+    from ..expression.identifier import Identifier
+    from ..expression.member_access import MemberAccess
+    from ..meta.identifier_path import IdentifierPathPart
     from ..meta.source_unit import SourceUnit
+    from ..statement.inline_assembly import ExternalReference
 
 from woke.ast.enums import FunctionKind, StateMutability, Visibility
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -54,7 +57,7 @@ class FunctionDefinition(DeclarationAbc):
     __state_mutability: StateMutability
     __virtual: bool
     __visibility: Visibility
-    __base_functions: Optional[List[AstNodeId]]
+    __base_functions: List[AstNodeId]
     __documentation: Optional[Union[StructuredDocumentation, str]]
     __function_selector: Optional[bytes]
     __body: Optional[Block]
@@ -86,7 +89,7 @@ class FunctionDefinition(DeclarationAbc):
         self.__virtual = function.virtual
         self.__visibility = function.visibility
         self.__base_functions = (
-            list(function.base_functions) if function.base_functions else None
+            list(function.base_functions) if function.base_functions is not None else []
         )
         if function.documentation is None:
             self.__documentation = None
@@ -134,13 +137,12 @@ class FunctionDefinition(DeclarationAbc):
             yield from self.__overrides
 
     def __post_process(self, callback_params: CallbackParams):
-        if self.base_functions is not None:
-            base_functions = self.base_functions
-            for base_function in base_functions:
-                base_function._child_functions.add(self)
-            self._reference_resolver.register_destroy_callback(
-                self.file, partial(self.__destroy, base_functions)
-            )
+        base_functions = self.base_functions
+        for base_function in base_functions:
+            base_function._child_functions.add(self)
+        self._reference_resolver.register_destroy_callback(
+            self.file, partial(self.__destroy, base_functions)
+        )
 
     def __destroy(self, base_functions: Tuple[FunctionDefinition]) -> None:
         for base_function in base_functions:
@@ -167,7 +169,7 @@ class FunctionDefinition(DeclarationAbc):
 
     def get_all_references(
         self, include_declarations: bool
-    ) -> Iterator[Union[DeclarationAbc, ReferencingNodesUnion]]:
+    ) -> Iterator[Union[DeclarationAbc, Identifier, IdentifierPathPart, MemberAccess, ExternalReference]]:
         from .variable_declaration import VariableDeclaration
 
         processed_declarations: Set[Union[FunctionDefinition, VariableDeclaration]] = {
@@ -183,10 +185,7 @@ class FunctionDefinition(DeclarationAbc):
                 yield declaration
             yield from declaration.references
 
-            if (
-                isinstance(declaration, (FunctionDefinition, VariableDeclaration))
-                and declaration.base_functions is not None
-            ):
+            if isinstance(declaration, (FunctionDefinition, VariableDeclaration)):
                 for base_function in declaration.base_functions:
                     if base_function not in processed_declarations:
                         declarations_queue.append(base_function)
@@ -311,9 +310,7 @@ class FunctionDefinition(DeclarationAbc):
         return self.__visibility
 
     @property
-    def base_functions(self) -> Optional[Tuple[FunctionDefinition]]:
-        if self.__base_functions is None:
-            return None
+    def base_functions(self) -> Tuple[FunctionDefinition]:
         base_functions = []
         for base_function_id in self.__base_functions:
             base_function = self._reference_resolver.resolve_node(

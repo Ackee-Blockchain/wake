@@ -114,16 +114,15 @@ async def definition(
                 _create_location(node.file, node.name_location, context.compiler)
             )
 
-        if node.base_functions is not None:
-            for base_function in node.base_functions:
-                if base_function.implemented:
-                    definitions.append(
-                        _create_location(
-                            base_function.file,
-                            base_function.name_location,
-                            context.compiler,
-                        )
+        for base_function in node.base_functions:
+            if base_function.implemented:
+                definitions.append(
+                    _create_location(
+                        base_function.file,
+                        base_function.name_location,
+                        context.compiler,
                     )
+                )
         if isinstance(node, FunctionDefinition):
             for child_function in node.child_functions:
                 if isinstance(child_function, VariableDeclaration):
@@ -150,16 +149,15 @@ async def definition(
             definitions.append(
                 _create_location(node.file, node.name_location, context.compiler)
             )
-        if node.base_modifiers is not None:
-            for base_modifier in node.base_modifiers:
-                if base_modifier.implemented:
-                    definitions.append(
-                        _create_location(
-                            base_modifier.file,
-                            base_modifier.name_location,
-                            context.compiler,
-                        )
+        for base_modifier in node.base_modifiers:
+            if base_modifier.implemented:
+                definitions.append(
+                    _create_location(
+                        base_modifier.file,
+                        base_modifier.name_location,
+                        context.compiler,
                     )
+                )
         for child_modifier in node.child_modifiers:
             if child_modifier.implemented:
                 definitions.append(
