@@ -100,7 +100,7 @@ class ImportDirective(SolidityAbc):
             while source_units_queue and referenced_declaration is None:
                 imported_source_unit = source_units_queue.pop()
 
-                for declaration in imported_source_unit.declarations:
+                for declaration in imported_source_unit.declarations_iter():
                     if declaration.canonical_name == symbol_alias.foreign.name:
                         referenced_declaration = declaration
                         break
