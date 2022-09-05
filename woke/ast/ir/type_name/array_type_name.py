@@ -1,4 +1,14 @@
-from typing import Iterator, Optional, Union
+from __future__ import annotations
+
+from typing import Iterator, Optional, Union, TYPE_CHECKING
+
+from ...expression_types import Array
+
+if TYPE_CHECKING:
+    from ..declaration.variable_declaration import VariableDeclaration
+    from ..expression.new_expression import NewExpression
+    from ..meta.using_for_directive import UsingForDirective
+    from .mapping import Mapping
 
 from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
@@ -9,7 +19,7 @@ from woke.ast.nodes import SolcArrayTypeName
 
 class ArrayTypeName(TypeNameAbc):
     _ast_node: SolcArrayTypeName
-    _parent: SolidityAbc  # TODO: make this more specific
+    _parent: Union[VariableDeclaration, NewExpression, UsingForDirective, ArrayTypeName, Mapping]
 
     __base_type: TypeNameAbc
     __length: Optional[ExpressionAbc]
@@ -32,8 +42,14 @@ class ArrayTypeName(TypeNameAbc):
             yield from self.__length
 
     @property
-    def parent(self) -> SolidityAbc:
+    def parent(self) -> Union[VariableDeclaration, NewExpression, UsingForDirective, ArrayTypeName, Mapping]:
         return self._parent
+
+    @property
+    def type(self) -> Array:
+        t = super().type
+        assert isinstance(t, Array)
+        return t
 
     @property
     def base_type(self) -> TypeNameAbc:

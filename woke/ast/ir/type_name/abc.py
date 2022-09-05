@@ -1,8 +1,20 @@
-import logging
-from abc import ABC
-from functools import lru_cache
+from __future__ import annotations
 
-from woke.ast.expression_types import ExpressionTypeAbc
+import logging
+from abc import ABC, abstractmethod
+from functools import lru_cache
+from typing import Union, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..declaration.variable_declaration import VariableDeclaration
+    from ..declaration.user_defined_value_type_definition import UserDefinedValueTypeDefinition
+    from ..expression.elementary_type_name_expression import ElementaryTypeNameExpression
+    from ..expression.new_expression import NewExpression
+    from ..meta.using_for_directive import UsingForDirective
+    from .array_type_name import ArrayTypeName
+
+from woke.ast.expression_types import ExpressionTypeAbc, Array, Address, Bool, Int, UInt, Fixed, UFixed, String, Bytes, \
+    FixedBytes, Type, Function, Mapping, Struct, Enum, Contract
 from woke.ast.ir.abc import SolidityAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import (
@@ -34,7 +46,7 @@ class TypeNameAbc(SolidityAbc, ABC):
     @staticmethod
     def from_ast(
         init: IrInitTuple, type_name: SolcTypeNameUnion, parent: SolidityAbc
-    ) -> "TypeNameAbc":
+    ) -> TypeNameAbc:
         from .array_type_name import ArrayTypeName
         from .elementary_type_name import ElementaryTypeName
         from .function_type_name import FunctionTypeName
@@ -53,8 +65,19 @@ class TypeNameAbc(SolidityAbc, ABC):
             return UserDefinedTypeName(init, type_name, parent)
 
     @property
+    @abstractmethod
+    def parent(
+            self,
+    ) -> Union[VariableDeclaration, UserDefinedValueTypeDefinition, ElementaryTypeNameExpression, NewExpression, UsingForDirective, ArrayTypeName, Mapping]:
+        """
+        Returns:
+            Parent node of the type name.
+        """
+        ...
+
+    @property
     @lru_cache(maxsize=None)
-    def type(self) -> ExpressionTypeAbc:
+    def type(self) -> Union[Array, Address, Bool, Int, UInt, Fixed, UFixed, String, Bytes, FixedBytes, Type, Function, Mapping, Struct, Enum, Contract]:
         """
         Returns:
             Type of the type name.
@@ -68,6 +91,7 @@ class TypeNameAbc(SolidityAbc, ABC):
         assert (
             len(type_identifier) == 0 and ret is not None
         ), f"Failed to parse type identifier: {self._type_descriptions.type_identifier}"
+        assert isinstance(ret, (Array, Address, Bool, Int, UInt, Fixed, UFixed, String, Bytes, FixedBytes, Type, Function, Mapping, Struct, Enum, Contract))
         return ret
 
     @property
