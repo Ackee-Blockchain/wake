@@ -16,6 +16,15 @@ logger = logging.getLogger(__name__)
 
 
 class EnumValue(DeclarationAbc):
+    """
+    Definition of an enum value inside an enum definition.
+
+    !!! example
+        `GoLeft`, `GoRight`, `GoStraight`, `SitStill` in the following enum definition:
+        ```solidity
+        enum ActionChoices { GoLeft, GoRight, GoStraight, SitStill }
+        ```
+    """
     _ast_node: SolcEnumValue
     _parent: EnumDefinition
 
@@ -28,6 +37,10 @@ class EnumValue(DeclarationAbc):
 
     @property
     def parent(self) -> EnumDefinition:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property

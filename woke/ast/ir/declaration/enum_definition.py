@@ -21,6 +21,14 @@ logger = logging.getLogger(__name__)
 
 
 class EnumDefinition(DeclarationAbc):
+    """
+    Definition of an enum.
+
+    !!! example
+        ```solidity
+        enum ActionChoices { GoLeft, GoRight, GoStraight, SitStill }
+        ```
+    """
     _ast_node: SolcEnumDefinition
     _parent: Union[ContractDefinition, SourceUnit]
 
@@ -57,6 +65,10 @@ class EnumDefinition(DeclarationAbc):
 
     @property
     def parent(self) -> Union[SourceUnit, ContractDefinition]:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
@@ -75,4 +87,8 @@ class EnumDefinition(DeclarationAbc):
 
     @property
     def values(self) -> Tuple[EnumValue]:
+        """
+        Returns:
+            Enum values defined in this enum.
+        """
         return tuple(self.__values)

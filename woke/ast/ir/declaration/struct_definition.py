@@ -18,6 +18,17 @@ from woke.ast.nodes import SolcStructDefinition
 
 
 class StructDefinition(DeclarationAbc):
+    """
+    Definition of a struct.
+
+    !!! example
+        ```solidity
+        struct S {
+            uint a;
+            uint b;
+        }
+        ```
+    """
     _ast_node: SolcStructDefinition
     _parent: Union[ContractDefinition, SourceUnit]
 
@@ -60,6 +71,10 @@ class StructDefinition(DeclarationAbc):
 
     @property
     def parent(self) -> Union[ContractDefinition, SourceUnit]:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
@@ -80,4 +95,8 @@ class StructDefinition(DeclarationAbc):
 
     @property
     def members(self) -> Tuple[VariableDeclaration]:
+        """
+        Returns:
+            Tuple of member variable declarations.
+        """
         return tuple(self.__members)

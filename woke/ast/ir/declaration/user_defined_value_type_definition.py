@@ -17,6 +17,14 @@ from woke.ast.nodes import SolcUserDefinedValueTypeDefinition
 
 
 class UserDefinedValueTypeDefinition(DeclarationAbc):
+    """
+    Definition of a user defined value type.
+
+    !!! example
+        ```solidity
+        type MyInt is uint;
+        ```
+    """
     _ast_node: SolcUserDefinedValueTypeDefinition
     _parent: Union[ContractDefinition, SourceUnit]
 
@@ -52,6 +60,10 @@ class UserDefinedValueTypeDefinition(DeclarationAbc):
 
     @property
     def parent(self) -> Union[ContractDefinition, SourceUnit]:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
@@ -70,4 +82,8 @@ class UserDefinedValueTypeDefinition(DeclarationAbc):
 
     @property
     def underlying_type(self) -> ElementaryTypeName:
+        """
+        Returns:
+            Underlying type of the user defined value type.
+        """
         return self.__underlying_type

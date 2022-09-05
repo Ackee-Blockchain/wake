@@ -17,6 +17,14 @@ if TYPE_CHECKING:
 
 
 class ErrorDefinition(DeclarationAbc):
+    """
+    Definition of an error.
+
+    !!! example
+        ```solidity
+        error InsufficientBalance(uint256 available, uint256 required);
+        ```
+    """
     _ast_node: SolcErrorDefinition
     _parent: Union[ContractDefinition, SourceUnit]
 
@@ -53,6 +61,10 @@ class ErrorDefinition(DeclarationAbc):
 
     @property
     def parent(self) -> Union[ContractDefinition, SourceUnit]:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
@@ -85,12 +97,25 @@ class ErrorDefinition(DeclarationAbc):
 
     @property
     def parameters(self) -> ParameterList:
+        """
+        Returns:
+            Parameter list describing parameters of the error.
+        """
         return self.__parameters
 
     @property
     def documentation(self) -> Optional[StructuredDocumentation]:
+        """
+        Returns:
+            [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation string, if any.
+        """
         return self.__documentation
 
     @property
     def error_selector(self) -> Optional[bytes]:
+        """
+        Available since Solidity 0.8.13 (errors were introduced in 0.8.4).
+        Returns:
+            Selector of the error.
+        """
         return self.__error_selector
