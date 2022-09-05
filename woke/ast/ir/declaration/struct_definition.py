@@ -81,7 +81,3 @@ class StructDefinition(DeclarationAbc):
     @property
     def members(self) -> Tuple[VariableDeclaration]:
         return tuple(self.__members)
-
-    @property
-    def visibility(self) -> Visibility:
-        return self.__visibility
