@@ -1,4 +1,4 @@
-from typing import Any, Iterable, Optional, Type
+from typing import Any, Iterable, Optional, Type, overload
 from enum import IntEnum
 
 import eth_abi
@@ -11,6 +11,8 @@ from web3.method import Method
 
 import time
 
+from woke.fuzzer.development_chains import DevChainABC, AnvilDevChain, HardhatDevChain, RequestKind
+
 class NetworkKind(IntEnum):
     ANVIL = 0,
     HARDHAT = 1,
@@ -20,7 +22,8 @@ class NetworkKind(IntEnum):
 
 #global interface for communicating with the devchain
 class DevchainInterface:
-    __network: NetworkKind
+    #__network: NetworkKind
+    __dev_chain: DevChainABC
     __port: int
     __w3: Web3
 
@@ -37,20 +40,19 @@ class DevchainInterface:
         client_version: str = self.__w3.clientVersion.lower()
         print(f"client version: {client_version}")
         if "anvil" in client_version:
-            self.__network = NetworkKind.ANVIL
+            self.__dev_chain = AnvilDevChain(self.__w3)
         elif "hardhat" in client_version:
-            self.__network = NetworkKind.HARDHAT
-        elif "ethereumjs" in client_version:
-            self.__network = NetworkKind.GANACHE
-        else:
-            self.__network = NetworkKind.GETH
+            self.__dev_chain = HardhatDevChain(self.__w3)
+        #elif "ethereumjs" in client_version:
+        #    self.__network = NetworkKind.GANACHE
+        #else:
+        #    self.__network = NetworkKind.GETH
         
 
+    @property
+    def dev_chain(self):
+        return self.__dev_chain
 
-
-    #property
-    #def web3(self):
-    #    return self.__w3
 
     def deploy(self, abi, bytecode, params: Optional[TxParams] = None) -> web3.contract.Contract:
         factory = self.__w3.eth.contract(abi=abi, bytecode=bytecode)
@@ -69,8 +71,6 @@ class DevchainInterface:
         func = contract.get_function_by_selector(selector)(*arguments)
         output_abi = get_abi_output_types(func.abi)
 
-        #test of basic call with no creation
-        #print(time.time() - start_time)
         # priorities:
         # 1. anvil_enableTraces
         # 2. trace_transaction
@@ -79,26 +79,9 @@ class DevchainInterface:
 
         #start_time = time.time()
         tx_hash = func.transact(params)
-        #print(time.time() - start_time)
-
-        #start_time = time.time()
-        output = None
-        if self.__network == NetworkKind.ANVIL:
-            output = self.__w3.eth.trace_transaction(HexStr(tx_hash.hex())) # type: ignore
-            while not output:
-                output = self.__w3.eth.trace_transaction(HexStr(tx_hash.hex())) # type: ignore
-            output = output[0].result.output[2:]
-
-        #print(self.__w3.eth.trace_transaction(HexStr(tx_hash.hex())))  # type: ignore
-        elif self.__network == NetworkKind.HARDHAT:
-            #output = self.__w3.eth.debug_trace_transaction(HexStr(tx_hash.hex()), {'disableMemory': True, 'disableStack': True, 'disableStorage': True }) # type: ignore
-            output = self.__w3.eth.debug_trace_transaction(HexStr(tx_hash.hex()))
-            while not output:
-                #output = self.__w3.eth.debug_trace_transaction(HexStr(tx_hash.hex()), {'disableMemory': True, 'disableStack': True, 'disableStorage': True }) # type: ignore
-                output = self.__w3.eth.debug_trace_transaction(HexStr(tx_hash.hex()))
-                #output = self.__w3.eth.trace_transaction(HexStr(tx_hash.hex()))
-            output = output.returnValue
-        #print(time.time() - start_time)
+        
+        method = RequestKind.TRACE_TRANSACTION
+        output = self.dev_chain.process_transaction(method, [], tx_hash)
         return eth_abi.abi.decode(output_abi, bytes.fromhex(output))  # type: ignore
 
 
@@ -118,9 +101,8 @@ class Contract:
     def deploy(
         cls, params: Optional[TxParams] = None
     ) -> web3.contract.Contract:
-        return cls(dev_interface.deploy(cls.abi, cls.bytecode))  # type: ignore
+        return cls(dev_interface.deploy(cls.abi, cls.bytecode)) 
 
 
     def transact(self, selector: HexStr, arguments: Iterable, params: TxParams) -> Any:
-        #print(dev_interface.call_test(self._contract, selector, arguments, params))
         return dev_interface.transact(self._contract, selector, arguments, params)
