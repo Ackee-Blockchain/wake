@@ -44,6 +44,50 @@ from woke.ast.nodes import (
 
 
 class FunctionDefinition(DeclarationAbc):
+    """
+    Definition of a function.
+
+    !!! example
+        Free function (= outside of a contract):
+        ```solidity linenums="1"
+        function f(uint a, uint b) pure returns (uint) {
+            return a + b;
+        }
+        ```
+
+        Function inside a contract (lines 2-4):
+        ```solidity linenums="1"
+        contract C {
+            function f(uint a, uint b) public pure returns (uint) {
+                return a + b;
+            }
+        }
+        ```
+
+        Constructor (lines 3-5):
+        ```solidity linenums="1"
+        contract C {
+            uint public x;
+            constructor(uint a) public {
+                x = a;
+            }
+        }
+        ```
+
+        Fallback function (line 2):
+        ```solidity linenums="1"
+        contract C {
+            fallback() external payable {}
+        }
+        ```
+
+        Receive function (line 2):
+        ```solidity linenums="1"
+        contract C {
+            receive() external payable {}
+        }
+        ```
+    """
     _ast_node: SolcFunctionDefinition
     _parent: Union[ContractDefinition, SourceUnit]
     _child_functions: Set[Union[FunctionDefinition, VariableDeclaration]]
@@ -114,8 +158,11 @@ class FunctionDefinition(DeclarationAbc):
             and self.__kind == FunctionKind.FUNCTION
         ):
             assert self.__function_selector is not None
+        else:
+            assert self.__function_selector is None
 
         self.__body = Block(init, function.body, self) if function.body else None
+        assert (self.__body is not None) == self.__implemented
         self.__overrides = (
             OverrideSpecifier(init, function.overrides, self)
             if function.overrides
@@ -198,6 +245,10 @@ class FunctionDefinition(DeclarationAbc):
 
     @property
     def parent(self) -> Union[ContractDefinition, SourceUnit]:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
@@ -279,38 +330,134 @@ class FunctionDefinition(DeclarationAbc):
 
     @property
     def implemented(self) -> bool:
+        """
+        Returns:
+            `True` if the function [body][woke.ast.ir.declaration.function_definition.FunctionDefinition.body] is not `None`, `False` otherwise.
+        """
         return self.__implemented
 
     @property
     def kind(self) -> FunctionKind:
+        """
+        Returns:
+            Kind of the function.
+        """
         return self.__kind
 
     @property
     def modifiers(self) -> Tuple[ModifierInvocation]:
+        """
+        Also includes base constructor invocations.
+        !!! example
+            Both `:::solidity ERC20Token("My Token", "MTK", msg.sender, 10 ** 18)` and `initializer` are listed by this property.
+            ```solidity
+            contract MyToken is ERC20Token {
+                constructor() ERC20Token("My Token", "MTK", msg.sender, 10 ** 18) initializer {}
+            }
+            ```
+
+        Returns:
+            List of modifiers applied to the function.
+        """
         return tuple(self.__modifiers)
 
     @property
     def parameters(self) -> ParameterList:
+        """
+        Returns:
+            Parameter list describing the function parameters.
+        """
         return self.__parameters
 
     @property
     def return_parameters(self) -> ParameterList:
+        """
+        Returns:
+            Parameter list describing the function return parameters.
+        """
         return self.__return_parameters
 
     @property
     def state_mutability(self) -> StateMutability:
+        """
+        Returns:
+            State mutability of the function.
+        """
         return self.__state_mutability
 
     @property
     def virtual(self) -> bool:
+        """
+        Returns:
+            `True` if the function is virtual, `False` otherwise.
+        """
         return self.__virtual
 
     @property
     def visibility(self) -> Visibility:
+        """
+        Returns:
+            Visibility of the function.
+        """
         return self.__visibility
 
     @property
     def base_functions(self) -> Tuple[FunctionDefinition]:
+        """
+        !!! example
+            `A.foo` on lines 6-8 lists `I.foo` on line 2 as a base function.
+
+            `B.foo` on lines 12-14 lists only `A.foo` on lines 6-8 as a base function.
+            ```solidity linenums="1"
+            interface I {
+                function foo() external returns(uint);
+            }
+
+            contract A is I {
+                function foo() external pure virtual override returns(uint) {
+                    return 1;
+                }
+            }
+
+            contract B is A {
+                function foo() external pure override returns(uint) {
+                    return 2;
+                }
+            }
+            ```
+
+        !!! example
+            `A1.foo` on lines 6-8 lists `I.foo` on line 2 as a base function.
+
+            `A2.foo` on lines 12-14 lists `I.foo` on line 2 as a base function.
+
+            `B.foo` on lines 18-20 lists `A1.foo` on lines 6-8 and `A2.foo` on lines 12-14 as base functions.
+            ```solidity linenums="1"
+            interface I {
+                function foo() external returns(uint);
+            }
+
+            contract A1 is I {
+                function foo() external pure virtual override returns(uint) {
+                    return 1;
+                }
+            }
+
+            contract A2 is I {
+                function foo() external pure virtual override returns(uint) {
+                    return 2;
+                }
+            }
+
+            contract B is A1, A2 {
+                function foo() external pure override(A1, A2) returns(uint) {
+                    return 3;
+                }
+            }
+            ```
+        Returns:
+            List of base functions overridden by this function.
+        """
         base_functions = []
         for base_function_id in self.__base_functions:
             base_function = self._reference_resolver.resolve_node(
@@ -324,20 +471,67 @@ class FunctionDefinition(DeclarationAbc):
     def child_functions(
         self,
     ) -> FrozenSet[Union[FunctionDefinition, VariableDeclaration]]:
+        """
+        Returns:
+            Functions and state variables that override this function.
+        """
         return frozenset(self._child_functions)
 
     @property
     def documentation(self) -> Optional[Union[StructuredDocumentation, str]]:
+        """
+        Of [StructuredDocumentation][woke.ast.ir.meta.structured_documentation.StructuredDocumentation] type since Solidity 0.6.3.
+        Returns:
+            [NatSpec](https://solidity.readthedocs.io/en/latest/natspec-format.html) documentation string, if any.
+        """
         return self.__documentation
 
     @property
     def function_selector(self) -> Optional[bytes]:
+        """
+        Is only set for [Visibility.PUBLIC][woke.ast.enums.Visibility.PUBLIC] and [Visibility.EXTERNAL][woke.ast.enums.Visibility.EXTERNAL] functions of the [FunctionKind.FUNCTION][woke.ast.enums.FunctionKind.FUNCTION] kind.
+        Returns:
+            Selector of the function.
+        """
         return self.__function_selector
 
     @property
     def body(self) -> Optional[Block]:
+        """
+        Returns:
+            Body of the function, if any.
+        """
         return self.__body
 
     @property
     def overrides(self) -> Optional[OverrideSpecifier]:
+        """
+        Returns override specifier as present in the source code.
+        !!! example
+            `I.foo` on line 2 does not have an override specifier.
+
+            `A.foo` on lines 6-8 has an override specifier with the [overrides][woke.ast.ir.meta.override_specifier.OverrideSpecifier.overrides] property empty.
+
+            `B.foo` on lines 12-14 has an override specifier with the [overrides][woke.ast.ir.meta.override_specifier.OverrideSpecifier.overrides] property containg one item referencing the contract `A` ([ContractDefinition][woke.ast.ir.declaration.contract_definition.ContractDefinition]).
+            ```solidity linenums="1"
+            interface I {
+                function foo() external returns(uint);
+            }
+
+            contract A is I {
+                function foo() external pure virtual override returns(uint) {
+                    return 1;
+                }
+            }
+
+            contract B is A {
+                function foo() external pure override(A) returns(uint) {
+                    return 2;
+                }
+            }
+            ```
+
+        Returns:
+            Override specifier, if any.
+        """
         return self.__overrides
