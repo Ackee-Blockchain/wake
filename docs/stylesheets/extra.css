@@ -1,0 +1,46 @@
+[data-md-color-scheme="default"] {
+    --md-primary-fg-color: #0000FF;
+    --md-code-hl-name-color: #0f1112;
+    --md-code-fg-color: #1f2528;
+}
+
+[data-md-color-scheme="slate"] {
+    --md-primary-fg-color: #00FFFF;
+}
+
+.md-header {
+    background-color: #0000FF;
+}
+
+.doc-attribute > .doc-heading {
+    margin: 0.3em 0;
+}
+
+[data-md-color-scheme="default"]
+.md-typeset h1, .md-typeset h2, .md-typeset h3, .md-typeset h4, .md-typeset h5, .md-typeset h6 {
+    color: #0000FF;
+}
+
+[data-md-color-scheme="slate"]
+.md-typeset h1 {
+    color: #00FFFF;
+}
+
+h2.doc-heading > code,
+h3.doc-heading > code,
+h2.doc-heading .doc-label > code,
+h3.doc-heading .doc-label > code
+{
+    color: #FFF !important;
+    padding-top: 0.2em !important;
+    padding-bottom: 0.3em !important;
+    background-color: #0000FF;
+}
+
+h2.doc-heading > code span,
+h3.doc-heading > code span,
+h2.doc-heading .doc-label > code span,
+h3.doc-heading .doc-label > code span
+{
+    color: #FFF !important;
+}
