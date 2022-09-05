@@ -190,7 +190,12 @@ class TypeGenerator():
         if compilation_info.abi:
             self.add_str_to_types(1, f"abi = {compilation_info.abi}", 1)
         if compilation_info.abi and compilation_info.evm.bytecode.opcodes: 
-            self.add_str_to_types(1, f"bytecode = \"{compilation_info.evm.bytecode.object}\"", 1)
+            self.add_str_to_types(1, f"bytecode = \"{compilation_info.evm.bytecode.object}\"", 2)
+
+        self.__imports.add_python_import("from __future__ import annotations")
+        self.add_str_to_types(1, "@classmethod", 1)
+        self.add_str_to_types(1, f"def deploy(cls, params: Optional[TxParams] = None) -> {contract.name}:", 1)
+        self.add_str_to_types(2, "return super().deploy(params)", 1)
         #if compilation_info.
         self.add_str_to_types(0, "", 1)
 
@@ -527,6 +532,11 @@ class SourceUnitImports():
 
 
     def __str__(self) -> str:
+        #__future__ has to be at the beginning of the file
+        if "from __future__ import annotations" in self.__python_imports:
+            self.add_str_to_imports(0, "from __future__ import annotations", 1)
+            self.__python_imports.remove("from __future__ import annotations")
+
         if self.__generate_default_imports:
             self.add_str_to_imports(0, DEFAULT_IMPORTS, 1)
 
@@ -652,7 +662,7 @@ class NameSanitizer():
 
     def __init__(self):
         #TODO add names
-        self.__black_listed = {"Dict", "List", "Mapping", "Set", "Tuple", "Union", "Path", "bytearray", "bytes", "map", "__str__", "__call__", "__init__", "transact"}
+        self.__black_listed = {"Dict", "List", "Mapping", "Set", "Tuple", "Union", "Path", "bytearray", "deploy", "IntEnum", "dataclass", "Contract", "bytes", "map", "__str__", "__call__", "__init__", "transact"}
         self.__used_names = set()
         self.__renamed = {}
 
