@@ -32,6 +32,76 @@ logger = logging.getLogger(__name__)
 
 
 class VariableDeclaration(DeclarationAbc):
+    """
+    A variable can be declared:
+
+    - inside a [ContractDefinition][woke.ast.ir.declaration.contract_definition.ContractDefinition] as a state variable:
+        - `:::solidity uint public stateVar` in line 4,
+    - inside a [ParameterList][woke.ast.ir.meta.parameter_list.ParameterList]:
+        - in an [ErrorDefinition][woke.ast.ir.declaration.error_definition.ErrorDefinition] parameters:
+            - `:::solidity uint errorArg` in line 5,
+        - in an [EventDefinition][woke.ast.ir.declaration.event_definition.EventDefinition] parameters:
+            - `:::solidity uint indexed eventArg` in line 6,
+        - in a [FunctionDefinition][woke.ast.ir.declaration.function_definition.FunctionDefinition] parameters or return parameters:
+            - `:::solidity uint funcReturnArg` in line 16
+            - `:::solidity uint x` and `:::solidity uint` in line 20
+            - `:::solidity uint` in line 30
+            - `:::solidity function (uint) pure returns(uint) h` and the third occurrence `:::solidity uint` in line 34,
+        - in a [ModifierDefinition][woke.ast.ir.declaration.modifier_definition.ModifierDefinition] parameters:
+            - `:::solidity uint modifierArg` in line 12,
+        - in a [FunctionTypeName][woke.ast.ir.type_name.function_type_name.FunctionTypeName] parameters or return parameters:
+            - the first two occurrences of `:::solidity uint` in line 34,
+        - in a [TryCatchClause][woke.ast.ir.meta.try_catch_clause.TryCatchClause]:
+            - `:::solidity uint z` in line 22
+            - `:::solidity string memory reason` in line 24,
+    - inside a [SourceUnit][woke.ast.ir.meta.source_unit.SourceUnit] only as a constant variable:
+        - `:::solidity uint constant CONST = 10` in line 1,
+    - inside a [StructDefinition][woke.ast.ir.declaration.struct_definition.StructDefinition] as a member variable:
+        - `:::solidity uint structMember` in line 9,
+    - inside a [VariableDeclarationStatement][woke.ast.ir.statement.variable_declaration_statement.VariableDeclarationStatement] in a [FunctionDefinition.body][woke.ast.ir.declaration.function_definition.FunctionDefinition.body] as a local variable:
+        - `:::solidity uint y = x` in line 21.
+
+    !!! example
+        ```solidity linenums="1"
+        uint constant CONST = 10;
+
+        contract C {
+            uint public stateVar;
+            error E(uint errorArg);
+            event F(uint indexed eventArg);
+
+            struct S {
+                uint structMember;
+            }
+
+            modifier M(uint modifierArg) {
+                _;
+            }
+
+            function foo() public pure returns (uint funcReturnArg) {
+                funcReturnArg = 7;
+            }
+
+            function f(uint x) public view returns (uint) {
+                uint y = x;
+                try this.tmp() returns (uint z) {
+                    y = z;
+                } catch Error(string memory reason) {
+                    revert(reason);
+                }
+                return y;
+            }
+
+            function tmp() external pure returns(uint) {
+                return CONST;
+            }
+
+            function g(function (uint) pure returns(uint) h) internal pure returns (uint) {
+                return h(7);
+            }
+        }
+        ```
+    """
     _ast_node: SolcVariableDeclaration
     _parent: Union[
         ContractDefinition,
@@ -84,7 +154,6 @@ class VariableDeclaration(DeclarationAbc):
             if variable_declaration.function_selector
             else None
         )
-        # TODO function selector?
         self.__indexed = variable_declaration.indexed or False
         self.__overrides = (
             OverrideSpecifier(init, variable_declaration.overrides, self)
@@ -160,6 +229,10 @@ class VariableDeclaration(DeclarationAbc):
         StructDefinition,
         VariableDeclarationStatement,
     ]:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
@@ -211,6 +284,10 @@ class VariableDeclaration(DeclarationAbc):
 
     @property
     def mutability(self) -> Mutability:
+        """
+        Returns:
+            Mutability of the variable.
+        """
         if self.__mutability is None:
             relative_type_end = (
                 self.__type_name.byte_location[1] - self.byte_location[0]
@@ -228,18 +305,67 @@ class VariableDeclaration(DeclarationAbc):
 
     @property
     def is_state_variable(self) -> bool:
+        """
+        Returns:
+            `True` if the variable is a state variable, `False` otherwise.
+        """
         return self.__state_variable
 
     @property
     def data_location(self) -> DataLocation:
+        """
+        [DataLocation.DEFAULT][woke.ast.enums.DataLocation.DEFAULT] is returned if the data location is not specified in the source code.
+        Returns:
+            Data location of the variable.
+        """
         return self.__data_location
 
     @property
     def visibility(self) -> Visibility:
+        """
+        Returns:
+            Visibility of the variable.
+        """
         return self.__visibility
 
     @property
     def base_functions(self) -> Tuple[FunctionDefinition]:
+        """
+        !!! example
+            `C.foo` in line 6 lists `I.foo` in line 2 as a base function.
+            ```solidity linenums="1"
+            interface I {
+                function foo(uint, bool) external returns(uint);
+            }
+
+            contract C is I {
+                mapping(uint => mapping(bool => uint)) public override foo;
+            }
+            ```
+
+        !!! example
+            `B.foo` in line 14 lists `A1.foo` in lines 2-4 and `A2.foo` in lines 8-10 as base functions.
+            ```solidity linenums="1"
+            contract A1 {
+                function foo(uint, bool) external virtual returns(uint) {
+                    return 1;
+                }
+            }
+
+            contract A2 {
+                function foo(uint, bool) external virtual returns(uint) {
+                    return 2;
+                }
+            }
+
+            contract B is A1, A2 {
+                mapping(uint => mapping(bool => uint)) public override(A1, A2) foo;
+            }
+            ```
+
+        Returns:
+            List of base functions overridden by this function.
+        """
         from ..declaration.function_definition import FunctionDefinition
 
         base_functions = []
@@ -253,31 +379,86 @@ class VariableDeclaration(DeclarationAbc):
 
     @property
     def documentation(self) -> Optional[StructuredDocumentation]:
+        """
+        Returns:
+            [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation string, if any.
+        """
         return self.__documentation
 
     @property
     def function_selector(self) -> Optional[bytes]:
+        """
+        Is only set for public state variables.
+        Returns:
+            Function selector of the getter function generated for this variable, if any.
+        """
         return self.__function_selector
 
     @property
     def indexed(self) -> bool:
+        """
+        Returns:
+            `True` if the variable is indexed, `False` otherwise.
+        """
         return self.__indexed
 
     @property
     def overrides(self) -> Optional[OverrideSpecifier]:
+        """
+        Returns override specified as specified in the source code.
+
+        !!! example
+            `A1.foo` in lines 2-4 and `A2.foo` in lines 8-10 do not have an override specifier.
+
+            `B.foo` in line 14 has an override specifier with the [overrides][woke.ast.ir.meta.override_specifier.OverrideSpecifier.overrides] property containing two items referencing the contracts `A1` and `A2` ([ContractDefinition][woke.ast.ir.declaration.contract_definition.ContractDefinition]).
+            ```solidity linenums="1"
+            contract A1 {
+                function foo(uint, bool) external virtual returns(uint) {
+                    return 1;
+                }
+            }
+
+            contract A2 {
+                function foo(uint, bool) external virtual returns(uint) {
+                    return 2;
+                }
+            }
+
+            contract B is A1, A2 {
+                mapping(uint => mapping(bool => uint)) public override(A1, A2) foo;
+            }
+            ```
+
+        Returns:
+            Override specifier, if any.
+        """
         return self.__overrides
 
     @property
     def type_name(self) -> TypeNameAbc:
+        """
+        Returns:
+            Type name IR node as present in the source code.
+        """
         return self.__type_name
 
     @property
     def value(self) -> Optional[ExpressionAbc]:
+        """
+        Is not set if the parent is a [VariableDeclarationStatement][woke.ast.ir.statement.variable_declaration_statement.VariableDeclarationStatement].
+        In this case, the initial value (if any) is set in the [VariableDeclarationStatement.initial_value][woke.ast.ir.statement.variable_declaration_statement.VariableDeclarationStatement.initial_value] property.
+        Returns:
+            Initial value expression assigned to the variable in this declaration, if any.
+        """
         return self.__value
 
     @property
     @lru_cache(maxsize=None)
     def type(self) -> ExpressionTypeAbc:
+        """
+        Returns:
+            Type of the variable.
+        """
         assert self.__type_descriptions.type_identifier is not None
 
         type_identifier = StringReader(self.__type_descriptions.type_identifier)
@@ -291,5 +472,9 @@ class VariableDeclaration(DeclarationAbc):
 
     @property
     def type_string(self) -> str:
+        """
+        Returns:
+            User-friendly string describing the variable type.
+        """
         assert self.__type_descriptions.type_string is not None
         return self.__type_descriptions.type_string

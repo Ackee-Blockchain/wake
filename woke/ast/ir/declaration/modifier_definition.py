@@ -40,6 +40,17 @@ from woke.ast.nodes import (
 
 
 class ModifierDefinition(DeclarationAbc):
+    """
+    Definition of a modifier.
+
+    !!! example
+        ```solidity
+        modifier onlyOwner {
+            require(msg.sender == owner);
+            _;
+        }
+        ```
+    """
     _ast_node: SolcModifierDefinition
     _parent: ContractDefinition
     _child_modifiers: Set[ModifierDefinition]
@@ -144,6 +155,10 @@ class ModifierDefinition(DeclarationAbc):
 
     @property
     def parent(self) -> ContractDefinition:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
@@ -196,26 +211,101 @@ class ModifierDefinition(DeclarationAbc):
 
     @property
     def body(self) -> Optional[Block]:
+        """
+        Returns:
+            Body of the modifier, if any.
+        """
         return self.__body
 
     @property
     def implemented(self) -> bool:
+        """
+        Returns:
+            `True` if the modifier [body][woke.ast.ir.declaration.modifier_definition.ModifierDefinition.body] is not `None`, `False` otherwise.
+        """
         return self.__implemented
 
     @property
     def parameters(self) -> ParameterList:
+        """
+        Returns:
+            Parameter list describing the modifier parameters.
+        """
         return self.__parameters
 
     @property
     def virtual(self) -> bool:
+        """
+        Returns:
+            `True` if the modifier is virtual, `False` otherwise.
+        """
         return self.__virtual
 
     @property
     def visibility(self) -> Visibility:
+        """
+        Returns:
+            Visibility of the modifier.
+        """
         return self.__visibility
 
     @property
     def base_modifiers(self) -> Tuple[ModifierDefinition]:
+        """
+        !!! example
+            `B.mod` on lines 6-8 lists `A.mod` on line 2 as a base modifier.
+
+            `C.mod` on lines 12-14 lists only `B.mod` on lines 6-8 as a base modifier.
+            ```solidity linenums="1"
+            abstract contract A {
+                modifier mod virtual;
+            }
+
+            contract B is A {
+                modifier mod virtual override {
+                    _;
+                }
+            }
+
+            contract C is B {
+                modifier mod override {
+                    _;
+                }
+            }
+            ```
+
+        !!! example
+            `B1.mod` on lines 6-8 lists `A.mod` on line 2 as a base modifier.
+
+            `B2.mod` on lines 12-14 lists `A.mod` on line 2 as a base modifier.
+
+            `C.mod` on lines 18-20 lists `B1.mod` on lines 6-8 and `B2.mod` on lines 12-14 as base modifiers.
+            ```solidity linenums="1"
+            abstract contract A {
+                modifier mod virtual;
+            }
+
+            contract B1 is A {
+                modifier mod virtual override {
+                    _;
+                }
+            }
+
+            contract B2 is A {
+                modifier mod virtual override {
+                    _;
+                }
+            }
+
+            contract C is B1, B2 {
+                modifier mod override(B1, B2) {
+                    _;
+                }
+            }
+            ```
+        Returns:
+            List of base modifiers overridden by this modifier.
+        """
         base_modifiers = []
         for base_modifier_id in self.__base_modifiers:
             base_modifier = self._reference_resolver.resolve_node(
@@ -227,12 +317,58 @@ class ModifierDefinition(DeclarationAbc):
 
     @property
     def child_modifiers(self) -> FrozenSet[ModifierDefinition]:
+        """
+        Returns:
+            Modifiers that override this modifier.
+        """
         return frozenset(self._child_modifiers)
 
     @property
     def documentation(self) -> Optional[Union[StructuredDocumentation, str]]:
+        """
+        Of [StructuredDocumentation][woke.ast.ir.meta.structured_documentation.StructuredDocumentation] type since Solidity 0.6.3.
+        Returns:
+            [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation string, if any.
+        """
         return self.__documentation
 
     @property
     def overrides(self) -> Optional[OverrideSpecifier]:
+        """
+        Returns override specifier as present in the source code.
+        !!! example
+            `A.mod` on line 2 does not have an override specifier.
+
+            `B1.mod` on lines 6-8 has an override specifier with the [overrides][woke.ast.ir.meta.override_specifier.OverrideSpecifier.overrides] property empty.
+
+            `B2.mod` on lines 12-14 has an override specifier with the [overrides][woke.ast.ir.meta.override_specifier.OverrideSpecifier.overrides] property empty.
+
+            `C.mod` on lines 18-20 has an override specifier with the [overrides][woke.ast.ir.meta.override_specifier.OverrideSpecifier.overrides] property containg two items referencing the contracts `B1` and `B2` ([ContractDefinition][woke.ast.ir.declaration.contract_definition.ContractDefinition]).
+            ```solidity linenums="1"
+            abstract contract A {
+                modifier mod virtual;
+            }
+
+            contract B1 is A {
+                modifier mod virtual override {
+                    _;
+                }
+            }
+
+            contract B2 is A {
+                modifier mod virtual override {
+                    _;
+                }
+            }
+
+            contract C is B1, B2 {
+                modifier mod override(B1, B2) {
+                    _;
+                }
+            }
+            ```
+
+        Returns:
+            Override specifier, if any.
+        """
         return self.__overrides

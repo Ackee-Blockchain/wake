@@ -17,6 +17,13 @@ from woke.ast.nodes import SolcEventDefinition, SolcStructuredDocumentation
 
 
 class EventDefinition(DeclarationAbc):
+    """
+    Definition of an event.
+    !!! example
+        ```solidity
+        event Transfer(address indexed from, address indexed to, uint256 value);
+        ```
+    """
     _ast_node: SolcEventDefinition
     _parent: ContractDefinition
 
@@ -69,6 +76,10 @@ class EventDefinition(DeclarationAbc):
 
     @property
     def parent(self) -> ContractDefinition:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
@@ -104,16 +115,38 @@ class EventDefinition(DeclarationAbc):
 
     @property
     def anonymous(self) -> bool:
+        """
+        !!! example
+            ```solidity
+            event Transfer(address indexed from, address indexed to, uint256 value) anonymous;
+            ```
+        Returns:
+            `True` if the event is anonymous, `False` otherwise.
+        """
         return self.__anonymous
 
     @property
     def parameters(self) -> ParameterList:
+        """
+        Returns:
+            Parameter list describing parameters of the event.
+        """
         return self.__parameters
 
     @property
     def documentation(self) -> Optional[Union[StructuredDocumentation, str]]:
+        """
+        Of [StructuredDocumentation][woke.ast.ir.meta.structured_documentation.StructuredDocumentation] type since Solidity 0.6.3.
+        Returns:
+            [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation string, if any.
+        """
         return self.__documentation
 
     @property
     def event_selector(self) -> Optional[bytes]:
+        """
+        Available since Solidity 0.8.13.
+        Returns:
+            Selector of the event.
+        """
         return self.__event_selector

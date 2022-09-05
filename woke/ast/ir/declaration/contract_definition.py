@@ -43,6 +43,32 @@ from woke.ast.nodes import (
 
 
 class ContractDefinition(DeclarationAbc):
+    """
+    Definition of a contract, library or interface. [byte_location][woke.ast.ir.abc.IrAbc.byte_location] also includes the contract body.
+
+    !!! example
+        ```solidity
+        contract C {
+            uint x;
+            function f() public {}
+        }
+        ```
+
+        ```solidity
+        interface I {
+            function f() external;
+        }
+        ```
+
+        ```solidity
+        library L {
+            function f() internal pure returns (uint) {
+                return 7;
+            }
+        }
+        ```
+    """
+
     _ast_node: SolcContractDefinition
     _parent: SourceUnit
 
@@ -205,6 +231,10 @@ class ContractDefinition(DeclarationAbc):
 
     @property
     def parent(self) -> SourceUnit:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
@@ -239,26 +269,54 @@ class ContractDefinition(DeclarationAbc):
 
     @property
     def abstract(self) -> bool:
+        """
+        Is `False` if the [kind][woke.ast.ir.declaration.contract_definition.ContractDefinition.kind] is [ContractKind.LIBRARY][woke.ast.enums.ContractKind.LIBRARY] or [ContractKind.INTERFACE][woke.ast.enums.ContractKind.INTERFACE].
+
+        Returns:
+            `True` if the contract is abstract, `False` otherwise.
+        """
         return self.__abstract
 
     @property
     def base_contracts(self) -> Tuple[InheritanceSpecifier]:
+        """
+        Returns base contracts as specified in the source code. Does not return all base contracts (recursively).
+        Returns:
+            Base contracts of this contract.
+        """
         return tuple(self.__base_contracts)
 
     @property
     def child_contracts(self) -> FrozenSet[ContractDefinition]:
+        """
+        Returns:
+            Contracts that inherit from this contract.
+        """
         return frozenset(self.__child_contracts)
 
     @property
     def kind(self) -> ContractKind:
+        """
+        Returns:
+            Contract kind.
+        """
         return self.__kind
 
     @property
     def fully_implemented(self) -> Optional[bool]:
+        """
+        Is `None` when a file that imports this contract cannot be compiled. This may happen in the LSP server where partial project analysis is supported.
+        Returns:
+            `True` if all functions and modifiers of the contract are implemented, `False` otherwise.
+        """
         return self.__fully_implemented
 
     @property
     def linearized_base_contracts(self) -> Tuple[ContractDefinition]:
+        """
+        Returns:
+            C3 linearized list of all base contracts.
+        """
         base_contracts = []
         for base_contract in self.__linearized_base_contracts:
             node = self._reference_resolver.resolve_node(base_contract, self._cu_hash)
@@ -268,45 +326,90 @@ class ContractDefinition(DeclarationAbc):
 
     @property
     def documentation(self) -> Optional[Union[StructuredDocumentation, str]]:
+        """
+        Of [StructuredDocumentation][woke.ast.ir.meta.structured_documentation.StructuredDocumentation] type since Solidity 0.6.3.
+        Returns:
+            [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation of this contract, if any.
+        """
         return self.__documentation
 
     @property
     def enums(self) -> Tuple[EnumDefinition]:
+        """
+        Returns:
+            Enum definitions contained in this contract.
+        """
         return tuple(self.__enums)
 
     @property
     def errors(self) -> Tuple[ErrorDefinition]:
+        """
+        Returns:
+            Error definitions contained in this contract.
+        """
         return tuple(self.__errors)
 
     @property
     def events(self) -> Tuple[EventDefinition]:
+        """
+        Returns:
+            Event definitions contained in this contract.
+        """
         return tuple(self.__events)
 
     @property
     def functions(self) -> Tuple[FunctionDefinition]:
+        """
+        Returns:
+            Function definitions contained in this contract.
+        """
         return tuple(self.__functions)
 
     @property
     def modifiers(self) -> Tuple[ModifierDefinition]:
+        """
+        Returns:
+            Modifier definitions contained in this contract.
+        """
         return tuple(self.__modifiers)
 
     @property
     def structs(self) -> Tuple[StructDefinition]:
+        """
+        Returns:
+            Struct definitions contained in this contract.
+        """
         return tuple(self.__structs)
 
     @property
     def user_defined_value_types(self) -> Tuple[UserDefinedValueTypeDefinition]:
+        """
+        Returns:
+            User defined value type definitions contained in this contract.
+        """
         return tuple(self.__user_defined_value_types)
 
     @property
     def using_for_directives(self) -> Tuple[UsingForDirective]:
+        """
+        Returns:
+            Using for directives contained in this contract.
+        """
         return tuple(self.__using_for_directives)
 
     @property
     def declared_variables(self) -> Tuple[VariableDeclaration]:
+        """
+        Returns:
+            Variable declarations contained in this contract.
+        """
         return tuple(self.__declared_variables)
 
     def declarations_iter(self) -> Iterator[DeclarationAbc]:
+        """
+        Yields:
+            All declarations contained in this contract.
+        """
         yield from self.enums
         for enum in self.enums:
             yield from enum.values
