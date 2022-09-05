@@ -1,11 +1,18 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Iterator, Optional, Tuple
+from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
 
 from intervaltree import IntervalTree
 
+from ...expression_types import Contract, Struct, Enum, UserDefinedValueType
+
 if TYPE_CHECKING:
-    from woke.ast.ir.declaration.contract_definition import ContractDefinition
+    from ..declaration.contract_definition import ContractDefinition
+    from ..declaration.variable_declaration import VariableDeclaration
+    from ..expression.new_expression import NewExpression
+    from ..meta.using_for_directive import UsingForDirective
+    from ..type_name.array_type_name import ArrayTypeName
+    from ..type_name.mapping import Mapping
 
 from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.declaration.abc import DeclarationAbc
@@ -21,7 +28,7 @@ from woke.ast.nodes import AstNodeId, SolcUserDefinedTypeName
 
 class UserDefinedTypeName(TypeNameAbc):
     _ast_node: SolcUserDefinedTypeName
-    _parent: SolidityAbc  # TODO: make this more specific
+    _parent: Union[VariableDeclaration, NewExpression, UsingForDirective, ArrayTypeName, Mapping]
 
     __referenced_declaration_id: AstNodeId
     __contract_scope_id: Optional[AstNodeId]
@@ -70,8 +77,14 @@ class UserDefinedTypeName(TypeNameAbc):
             yield from self.__path_node
 
     @property
-    def parent(self) -> SolidityAbc:
+    def parent(self) -> Union[VariableDeclaration, NewExpression, UsingForDirective, ArrayTypeName, Mapping]:
         return self._parent
+
+    @property
+    def type(self) -> Union[Contract, Struct, Enum, UserDefinedValueType]:
+        t = super().type
+        assert isinstance(t, (Contract, Struct, Enum, UserDefinedValueType))
+        return t
 
     @property
     def name(self) -> Optional[str]:

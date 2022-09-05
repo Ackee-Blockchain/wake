@@ -1,5 +1,13 @@
-from typing import Iterator
+from __future__ import annotations
 
+from typing import Iterator, Union, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..declaration.variable_declaration import VariableDeclaration
+    from ..meta.using_for_directive import UsingForDirective
+    from .array_type_name import ArrayTypeName
+
+import woke.ast.expression_types as expr
 from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.type_name.abc import TypeNameAbc
 from woke.ast.ir.utils import IrInitTuple
@@ -8,7 +16,7 @@ from woke.ast.nodes import SolcMapping
 
 class Mapping(TypeNameAbc):
     _ast_node: SolcMapping
-    _parent: SolidityAbc  # TODO: make this more specific
+    _parent: Union[VariableDeclaration, UsingForDirective, ArrayTypeName, Mapping]
 
     __key_type: TypeNameAbc
     __value_type: TypeNameAbc
@@ -24,8 +32,14 @@ class Mapping(TypeNameAbc):
         yield from self.__value_type
 
     @property
-    def parent(self) -> SolidityAbc:
+    def parent(self) -> Union[VariableDeclaration, UsingForDirective, ArrayTypeName, Mapping]:
         return self._parent
+
+    @property
+    def type(self) -> expr.Mapping:
+        t = super().type
+        assert isinstance(t, expr.Mapping)
+        return t
 
     @property
     def key_type(self) -> TypeNameAbc:

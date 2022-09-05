@@ -1,4 +1,14 @@
-from typing import Iterator
+from __future__ import annotations
+
+from typing import Iterator, Union, TYPE_CHECKING
+
+from ...expression_types import Function
+
+if TYPE_CHECKING:
+    from ..declaration.variable_declaration import VariableDeclaration
+    from ..meta.using_for_directive import UsingForDirective
+    from .array_type_name import ArrayTypeName
+    from .mapping import Mapping
 
 from woke.ast.enums import StateMutability, Visibility
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -10,7 +20,7 @@ from woke.ast.nodes import SolcFunctionTypeName
 
 class FunctionTypeName(TypeNameAbc):
     _ast_node: SolcFunctionTypeName
-    _parent: SolidityAbc  # TODO: make this more specific
+    _parent: Union[VariableDeclaration, UsingForDirective, ArrayTypeName, Mapping]
 
     __parameter_types: ParameterList
     __return_parameter_types: ParameterList
@@ -39,8 +49,14 @@ class FunctionTypeName(TypeNameAbc):
         yield from self.__return_parameter_types
 
     @property
-    def parent(self) -> SolidityAbc:
+    def parent(self) -> Union[VariableDeclaration, UsingForDirective, ArrayTypeName, Mapping]:
         return self._parent
+
+    @property
+    def type(self) -> Function:
+        t = super().type
+        assert isinstance(t, Function)
+        return t
 
     @property
     def parameter_types(self) -> ParameterList:
