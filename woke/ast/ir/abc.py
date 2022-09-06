@@ -7,6 +7,7 @@ from typing import Iterator, Optional, Tuple
 from woke.ast.ir.reference_resolver import ReferenceResolver
 from woke.ast.ir.utils.init_tuple import IrInitTuple
 from woke.ast.nodes import SolcNode, SolcOrYulNode
+from woke.core.solidity_version import SolidityVersionRanges
 
 
 class IrAbc(ABC):
@@ -25,6 +26,7 @@ class IrAbc(ABC):
     _file: Path
     _source: bytes
     _ast_node: SolcOrYulNode
+    _version_ranges: SolidityVersionRanges
     _parent: Optional[IrAbc]
     _depth: int
     _cu_hash: bytes
@@ -35,6 +37,7 @@ class IrAbc(ABC):
     ):
         self._file = init.file
         self._ast_node = solc_node
+        self._version_ranges = init.cu.versions
         self._parent = parent
         if self._parent is not None:
             self._depth = self._parent.ast_tree_depth + 1
@@ -85,6 +88,19 @@ class IrAbc(ABC):
     @property
     def cu_hash(self) -> bytes:
         return self._cu_hash
+
+    @property
+    def version_ranges(self) -> SolidityVersionRanges:
+        """
+        !!! example
+            ```python
+            if "0.8.0" in node.version_ranges:
+                print("The given file can be compiled with solc 0.8.0")
+            ```
+        Returns:
+            Object listing all `solc` versions that can be used to compile the file containing this node.
+        """
+        return self._version_ranges
 
     @property
     def ast_tree_depth(self) -> int:
