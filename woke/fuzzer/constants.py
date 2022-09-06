@@ -5,7 +5,7 @@ TAB_WIDTH = 4
 DEFAULT_IMPORTS: str = """
 import random 
 from dataclasses import dataclass 
-from typing import List, NewType, Optional
+from typing import List, NewType, Optional, overload, Union
 
 from woke.fuzzer.contract import Contract
 

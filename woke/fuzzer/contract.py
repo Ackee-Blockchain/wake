@@ -77,11 +77,15 @@ class DevchainInterface:
         # 3. call
         # 4. debug_traceTransaction
 
-        #start_time = time.time()
+        start = time.time()
         tx_hash = func.transact(params)
+        print(f"transact: {time.time()-start}")
         
+        #method = RequestKind.DEBUG_TRACE_TRANSACTION
         method = RequestKind.TRACE_TRANSACTION
-        output = self.dev_chain.process_transaction(method, [], tx_hash)
+        #start = time.time()
+        output = self.dev_chain.retrieve_transaction(method, [], tx_hash)
+        #print(f"trace: {time.time()-start}")
         return eth_abi.abi.decode(output_abi, bytes.fromhex(output))  # type: ignore
 
 
@@ -106,3 +110,12 @@ class Contract:
 
     def transact(self, selector: HexStr, arguments: Iterable, params: TxParams) -> Any:
         return dev_interface.transact(self._contract, selector, arguments, params)
+
+
+    def call(self, selector: HexStr, arguments: Iterable, params: TxParams) -> Any:
+        start = time.time()
+        output = dev_interface.call_test(self._contract, selector, arguments, params)
+        print(f"call val: {output}")
+        print(f"call: {time.time()-start}")
+        return dev_interface.call_test(self._contract, selector, arguments, params)
+

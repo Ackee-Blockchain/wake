@@ -13,7 +13,7 @@ import shutil
 from pathlib import Path, PurePath
 import struct
 from typing import Dict, List, Mapping, Set, Tuple, Union
-from unicodedata import name
+from enum import Enum
 
 import click
 from click.core import Context
@@ -47,6 +47,13 @@ from ..compile.solc_frontend import SolcOutputErrorSeverityEnum
 from ..utils.file_utils import is_relative_to
 
 from .constants import TAB_WIDTH, DEFAULT_IMPORTS
+
+
+class RequestType(Enum):
+  CALL = 'call'
+  DEBUG = 'debug'
+  TRACE = 'trace'
+  DEFAULT = 'default' #default request type for the given network
 
 
 class TypeGenerator():
@@ -261,8 +268,8 @@ class TypeGenerator():
         params_names: str = ""
         for par in fn.parameters.parameters:
             params_names += self.get_name(par.name) + ", "
-            params += ", " + self.get_name(par.name) + ": " + self.parse_type_and_import(par.type)
-        params += ", params: Optional[TxParams] = None"
+            params += self.get_name(par.name) + ": " + self.parse_type_and_import(par.type) + ", "
+        params += "params: Optional[TxParams] = None"
         if params_names:
             return params_names[:-2], params
         return params_names, params
@@ -273,6 +280,7 @@ class TypeGenerator():
         for ret in fn.return_parameters.parameters:
             return_params += self.parse_type_and_import(ret.type) + ", "
         if return_params:
+            #return and remove the trailing comma ", "
             return return_params[:-2]
         else:
             return return_params + "None"
@@ -367,15 +375,46 @@ class TypeGenerator():
 
             return parsed if use_parse else ""
 
-        getter_params =  "self, " + generate_getter_helper(decl.type, False, 0)
-        getter_params += ", params: Optional[TxParams] = None" if len(getter_params) > len("self, ") else "params: Optional[TxParams] = None"
-        self.add_str_to_types(1, "def " + self.get_name(decl.name) + '(' + getter_params + ") -> " + (returns if returns else "None") + ':', 1)
+        generated_params = generate_getter_helper(decl.type, False, 0)
+        generated_params = generated_params + ", params: Optional[TxParams] = None" if generated_params else "params: Optional[TxParams] = None"
+
+        self.generate_type_hint_stub_func(decl.name, generated_params, returns, False)
+        self.generate_type_hint_stub_func(decl.name, generated_params, "TransactionObject", True)
+
+        #getters never modify the state - passing VIEW is ok
+        self.generate_func_implementation(StateMutability.VIEW, decl.name, decl.function_selector.hex(), generated_params, param_names, returns)
+
         if param_names:
             param_names = param_names[:-2]
+        #self.add_str_to_types(1, f"def {self.get_name(decl.name)}({generated_params}) -> {returns if returns else 'None'}:", 1)
         #self.add_str_to_contract_types(2, "pass" + " " + param_names, 2) 
         #print(decl.function_selector[3:].decode("utf-8"))
-        self.add_str_to_types(2, "return self.transact(\"" + decl.function_selector.hex() + '\", [' + param_names + ']' + ", params)", 2)
+        #self.add_str_to_types(2, "return self.transact(\"" + decl.function_selector.hex() + '\", [' + param_names + ']' + ", params)", 2)
         #print(self.__contract_types)
+
+    def generate_func_implementation(self, state_mutability: StateMutability, fn_name: str, fn_selector: str, params: str, param_names: str, returns: str):
+        #default value whether to return tx or the return data - if the function is pure/view the default is to make only a call and return the return data
+        is_view_or_pure: bool = state_mutability == StateMutability.VIEW or state_mutability == StateMutability.PURE
+        self.add_str_to_types(1, f"def {self.get_name(fn_name)}(self, {params}, return_tx: bool=False, request_type: RequestType='{'call' if is_view_or_pure else 'default'}') -> Union[{returns}, TransactionObject]:", 1)
+        self.add_str_to_types(2, f"return self.transact(\"{fn_selector}\", [{param_names}], params, return_tx, request_type) if not return_tx == 'call' else self.call(\"{fn_selector}\", [{param_names}], params, return_tx)", 2)
+
+
+    def generate_type_hint_stub_func(self, fn_name: str, params: str, returns: str, return_tx: bool):
+        self.add_str_to_types(1, "@overload", 1)
+        self.add_str_to_types(1, f"def {self.get_name(fn_name)}(self, {params}, return_tx: bool={return_tx}, request_type: RequestType='default') -> {returns}:", 1)
+        self.add_str_to_types(2, "...", 2)
+
+
+    def generate_types_function(self, fn: FunctionDefinition):
+        params_names, params = self.generate_func_params(fn)
+        returns = self.generate_func_returns(fn)
+        self.generate_type_hint_stub_func(fn.name, params, returns, False)
+        self.generate_type_hint_stub_func(fn.name, params, "TransactionObject", True)
+
+        self.generate_func_implementation(fn.state_mutability, fn.name, fn.function_selector.hex(), params, params_names, returns)
+        #gs_view_or_pure: bool = fn.state_mutability == StateMutability.VIEW or fn.state_mutability == StateMutability.PURE
+        #gelf.add_str_to_types(1, f"def {self.get_name(fn.name)}(self{params}, return_tx: bool={True if is_view_or_pure else False}) -> Union[{returns}, TransactionObject]:", 1)
+        #self.add_str_to_types(2, f"return self.transact(\"{fn.function_selector.hex()}\", [{params_names}], params) if return_tx else self.call(\"{fn.function_selector.hex()}\", [{params_names}], params)", 3)
 
 
     def generate_types_contract(self, contract: ContractDefinition, generate_template: bool) -> None:
@@ -435,10 +474,8 @@ class TypeGenerator():
                     self.generate_getter_for_state_var(var)
             for fn in contract.functions:
                 if fn.function_selector:
-                    params_names, params = self.generate_func_params(fn)
-                    self.add_str_to_types(1, f"def {self.get_name(fn.name)}(self{params}) -> {self.generate_func_returns(fn)}:", 1)
-                    self.add_str_to_types(2, f"return self.transact(\"{fn.function_selector.hex()}\", [{params_names}], params)", 3)
-
+                    self.generate_types_function(fn)
+                    
             for variable in contract.declared_variables:
                 if isinstance(variable.type_name, Mapping):
                     variable.type
@@ -487,6 +524,12 @@ class TypeGenerator():
         self.__imports.cleanup_imports()
         self.__already_generated_contracts = set()
 
+
+    def mark_funcs_to_be_overloaded(self):
+        #set containing canonical names of functions to be overloaded
+        to_overload: Set[str] = set()
+        for _, unit in self.__source_units.items():
+            pass
 
     def generate_types(self, overwrite: bool = False) -> None:
         #compile proj and generate ir
