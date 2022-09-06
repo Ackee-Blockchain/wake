@@ -7,7 +7,6 @@ from intervaltree import IntervalTree
 from ...types import Contract, Struct, Enum, UserDefinedValueType
 
 if TYPE_CHECKING:
-    from ..declaration.contract_definition import ContractDefinition
     from ..declaration.variable_declaration import VariableDeclaration
     from ..expression.new_expression import NewExpression
     from ..meta.using_for_directive import UsingForDirective
@@ -115,16 +114,6 @@ class UserDefinedTypeName(TypeNameAbc):
             self.__referenced_declaration_id, self._cu_hash
         )
         assert isinstance(node, DeclarationAbc)
-        return node
-
-    @property
-    def contract_scope(self) -> Optional[ContractDefinition]:
-        if self.__contract_scope_id is None:
-            return None
-        node = self._reference_resolver.resolve_node(
-            self.__contract_scope_id, self._cu_hash
-        )
-        assert isinstance(node, ContractDefinition)
         return node
 
     @property
