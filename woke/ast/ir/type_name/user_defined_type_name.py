@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
 
 from intervaltree import IntervalTree
 
-from ...expression_types import Contract, Struct, Enum, UserDefinedValueType
+from ...types import Contract, Struct, Enum, UserDefinedValueType
 
 if TYPE_CHECKING:
     from ..declaration.contract_definition import ContractDefinition

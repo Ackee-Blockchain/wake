@@ -40,7 +40,7 @@ nav:
       - IR model:
           - Base classes: 'api-reference/ir/abc.md'
           - Enums: 'api-reference/ir/enums.md'
-          - Expression types: 'api-reference/ir/expression-types.md'
+          - Types: 'api-reference/ir/types.md'
           - Declarations:
               - Contract definition: 'api-reference/ir/declarations/contract-definition.md'
               - Enum definition: 'api-reference/ir/declarations/enum-definition.md'

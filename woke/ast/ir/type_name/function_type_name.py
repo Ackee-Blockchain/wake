@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Iterator, Union, TYPE_CHECKING
 
-from ...expression_types import Function
+from ...types import Function
 
 if TYPE_CHECKING:
     from ..declaration.variable_declaration import VariableDeclaration
