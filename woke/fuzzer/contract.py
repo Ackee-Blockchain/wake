@@ -9,9 +9,11 @@ from web3._utils.abi import get_abi_output_types
 from web3.types import TxParams, RPCEndpoint
 from web3.method import Method
 
+from woke.fuzzer.abi_to_type import RequestType
+
 import time
 
-from woke.fuzzer.development_chains import DevChainABC, AnvilDevChain, HardhatDevChain, RequestKind
+from woke.fuzzer.development_chains import DevChainABC, AnvilDevChain, HardhatDevChain
 
 class NetworkKind(IntEnum):
     ANVIL = 0,
@@ -66,7 +68,7 @@ class DevchainInterface:
         return func.call(params)
 
 
-    def transact(self, contract, selector: HexStr, arguments: Iterable, params: TxParams) -> Any:
+    def transact(self, contract, selector: HexStr, arguments: Iterable, params: TxParams, return_tx, request_type) -> Any:
         #start_time = time.time()
         func = contract.get_function_by_selector(selector)(*arguments)
         output_abi = get_abi_output_types(func.abi)
@@ -82,9 +84,8 @@ class DevchainInterface:
         print(f"transact: {time.time()-start}")
         
         #method = RequestKind.DEBUG_TRACE_TRANSACTION
-        method = RequestKind.TRACE_TRANSACTION
         #start = time.time()
-        output = self.dev_chain.retrieve_transaction(method, [], tx_hash)
+        output = self.dev_chain.retrieve_transaction([], tx_hash, request_type)
         #print(f"trace: {time.time()-start}")
         return eth_abi.abi.decode(output_abi, bytes.fromhex(output))  # type: ignore
 
@@ -108,14 +109,16 @@ class Contract:
         return cls(dev_interface.deploy(cls.abi, cls.bytecode)) 
 
 
-    def transact(self, selector: HexStr, arguments: Iterable, params: TxParams) -> Any:
-        return dev_interface.transact(self._contract, selector, arguments, params)
+    def transact(self, selector: HexStr, arguments: Iterable, params: TxParams, return_tx: bool, request_type: RequestType) -> Any:
+        print("making a transaction")
+        return dev_interface.transact(self._contract, selector, arguments, params, return_tx, request_type)
 
 
-    def call(self, selector: HexStr, arguments: Iterable, params: TxParams) -> Any:
+    #TODO throw if return_tx == True
+    def call(self, selector: HexStr, arguments: Iterable, params: TxParams, return_tx: bool) -> Any:
+        print("making a call")
         start = time.time()
         output = dev_interface.call_test(self._contract, selector, arguments, params)
         print(f"call val: {output}")
-        print(f"call: {time.time()-start}")
-        return dev_interface.call_test(self._contract, selector, arguments, params)
-
+        #print(f"call: {time.time()-start}")
+        return output
