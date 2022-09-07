@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Set, Tuple, Union
 
 from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -20,8 +20,6 @@ class PlaceholderStatement(StatementAbc):
     _ast_node: SolcPlaceholderStatement
     _parent: Union[Block, DoWhileStatement, ForStatement, IfStatement, WhileStatement]
 
-    __documentation: Optional[str]
-
     def __init__(
         self,
         init: IrInitTuple,
@@ -29,17 +27,12 @@ class PlaceholderStatement(StatementAbc):
         parent: SolidityAbc,
     ):
         super().__init__(init, placeholder_statement, parent)
-        self.__documentation = placeholder_statement.documentation
 
     @property
     def parent(
         self,
     ) -> Union[Block, DoWhileStatement, ForStatement, IfStatement, WhileStatement]:
         return self._parent
-
-    @property
-    def documentation(self) -> Optional[str]:
-        return self.__documentation
 
     @property
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Set, Tuple, Union
 
 from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -28,11 +28,8 @@ class Break(StatementAbc):
         WhileStatement,
     ]
 
-    __documentation: Optional[str]
-
     def __init__(self, init: IrInitTuple, break_: SolcBreak, parent: SolidityAbc):
         super().__init__(init, break_, parent)
-        self.__documentation = break_.documentation
 
     @property
     def parent(
@@ -46,10 +43,6 @@ class Break(StatementAbc):
         WhileStatement,
     ]:
         return self._parent
-
-    @property
-    def documentation(self) -> Optional[str]:
-        return self.__documentation
 
     @property
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
