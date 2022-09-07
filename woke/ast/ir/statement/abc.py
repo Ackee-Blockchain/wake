@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Iterator, Set, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, Set, Tuple, Union, Optional
 
 from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -42,10 +42,13 @@ class StatementAbc(SolidityAbc, ABC):
     """
     Abstract base class for all Solidity statements.
     """
+    _documentation: Optional[str]
+
     def __init__(
         self, init: IrInitTuple, statement: SolcStatementUnion, parent: SolidityAbc
     ):
         super().__init__(init, statement, parent)
+        self._documentation = statement.documentation
 
     @staticmethod
     def from_ast(
@@ -138,3 +141,12 @@ class StatementAbc(SolidityAbc, ABC):
             Child statements of the statement including `self`.
         """
         yield self
+
+    @property
+    def documentation(self) -> Optional[str]:
+        """
+        Statement documentation strings should be placed above the statement.
+        Returns:
+            [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation string, if any.
+        """
+        return self._documentation

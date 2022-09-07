@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from functools import lru_cache, reduce
 from operator import or_
-from typing import TYPE_CHECKING, Iterator, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, List, Set, Tuple, Union
 
 from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -34,7 +34,6 @@ class TryStatement(StatementAbc):
 
     __clauses: List[TryCatchClause]
     __external_call: FunctionCall
-    __documentation: Optional[str]
 
     def __init__(
         self, init: IrInitTuple, try_statement: SolcTryStatement, parent: SolidityAbc
@@ -44,7 +43,6 @@ class TryStatement(StatementAbc):
             TryCatchClause(init, clause, self) for clause in try_statement.clauses
         ]
         self.__external_call = FunctionCall(init, try_statement.external_call, self)
-        self.__documentation = try_statement.documentation
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
@@ -72,10 +70,6 @@ class TryStatement(StatementAbc):
     @property
     def external_call(self) -> FunctionCall:
         return self.__external_call
-
-    @property
-    def documentation(self) -> Optional[str]:
-        return self.__documentation
 
     @property
     @lru_cache(maxsize=None)

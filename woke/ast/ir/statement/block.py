@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from functools import lru_cache, reduce
 from operator import or_
-from typing import TYPE_CHECKING, Iterator, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, List, Set, Tuple, Union
 
 from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -35,12 +35,10 @@ class Block(StatementAbc):
         TryCatchClause,  # meta
     ]
 
-    __documentation: Optional[str]
     __statements: List[StatementAbc]
 
     def __init__(self, init: IrInitTuple, block: SolcBlock, parent: SolidityAbc):
         super().__init__(init, block, parent)
-        self.__documentation = block.documentation
         self.__statements = [
             StatementAbc.from_ast(init, statement, self)
             for statement in block.statements
@@ -67,10 +65,6 @@ class Block(StatementAbc):
         TryCatchClause,
     ]:
         return self._parent
-
-    @property
-    def documentation(self) -> Optional[str]:
-        return self.__documentation
 
     @property
     def statements(self) -> Tuple[StatementAbc]:

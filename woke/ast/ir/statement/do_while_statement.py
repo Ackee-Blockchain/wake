@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, Set, Tuple, Union
 
 from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -31,7 +31,6 @@ class DoWhileStatement(StatementAbc):
 
     __body: StatementAbc
     __condition: ExpressionAbc
-    __documentation: Optional[str]
 
     def __init__(
         self, init: IrInitTuple, do_while: SolcDoWhileStatement, parent: SolidityAbc
@@ -39,7 +38,6 @@ class DoWhileStatement(StatementAbc):
         super().__init__(init, do_while, parent)
         self.__body = StatementAbc.from_ast(init, do_while.body, self)
         self.__condition = ExpressionAbc.from_ast(init, do_while.condition, self)
-        self.__documentation = do_while.documentation
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
@@ -66,10 +64,6 @@ class DoWhileStatement(StatementAbc):
     @property
     def condition(self) -> ExpressionAbc:
         return self.__condition
-
-    @property
-    def documentation(self) -> Optional[str]:
-        return self.__documentation
 
     @property
     @lru_cache(maxsize=None)
