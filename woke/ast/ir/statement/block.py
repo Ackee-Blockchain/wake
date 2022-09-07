@@ -36,18 +36,15 @@ class Block(StatementAbc):
     ]
 
     __documentation: Optional[str]
-    __statements: Optional[List[StatementAbc]]
+    __statements: List[StatementAbc]
 
     def __init__(self, init: IrInitTuple, block: SolcBlock, parent: SolidityAbc):
         super().__init__(init, block, parent)
         self.__documentation = block.documentation
-
-        if block.statements is None:
-            self.__statements = None
-        else:
-            self.__statements = []
-            for statement in block.statements:
-                self.__statements.append(StatementAbc.from_ast(init, statement, self))
+        self.__statements = [
+            StatementAbc.from_ast(init, statement, self)
+            for statement in block.statements
+        ]
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
@@ -76,9 +73,7 @@ class Block(StatementAbc):
         return self.__documentation
 
     @property
-    def statements(self) -> Optional[Tuple[StatementAbc]]:
-        if self.__statements is None:
-            return None
+    def statements(self) -> Tuple[StatementAbc]:
         return tuple(self.__statements)
 
     @property
