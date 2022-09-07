@@ -49,7 +49,7 @@ from ..utils.file_utils import is_relative_to
 from .constants import TAB_WIDTH, DEFAULT_IMPORTS
 
 
-class RequestType(Enum):
+class RequestType(str, Enum):
   CALL = 'call'
   DEBUG = 'debug'
   TRACE = 'trace'
@@ -395,19 +395,21 @@ class TypeGenerator():
     def generate_func_implementation(self, state_mutability: StateMutability, fn_name: str, fn_selector: str, params: str, param_names: str, returns: str):
         #default value whether to return tx or the return data - if the function is pure/view the default is to make only a call and return the return data
         is_view_or_pure: bool = state_mutability == StateMutability.VIEW or state_mutability == StateMutability.PURE
-        self.add_str_to_types(1, f"def {self.get_name(fn_name)}(self, {params}, return_tx: bool=False, request_type: RequestType='{'call' if is_view_or_pure else 'default'}') -> Union[{returns}, TransactionObject]:", 1)
-        self.add_str_to_types(2, f"return self.transact(\"{fn_selector}\", [{param_names}], params, return_tx, request_type) if not return_tx == 'call' else self.call(\"{fn_selector}\", [{param_names}], params, return_tx)", 2)
+        self.add_str_to_types(1, f"def {self.get_name(fn_name)}(self, {params}, *, return_tx: bool=False, request_type: RequestType='{'call' if is_view_or_pure else 'default'}') -> Union[{returns}, TransactionObject]:", 1)
+        self.add_str_to_types(2, f"return self.transact(\"{fn_selector}\", [{param_names}], params, return_tx, request_type) if not request_type == 'call' else self.call(\"{fn_selector}\", [{param_names}], params, return_tx)", 2)
 
 
     def generate_type_hint_stub_func(self, fn_name: str, params: str, returns: str, return_tx: bool):
         self.add_str_to_types(1, "@overload", 1)
-        self.add_str_to_types(1, f"def {self.get_name(fn_name)}(self, {params}, return_tx: bool={return_tx}, request_type: RequestType='default') -> {returns}:", 1)
+        self.add_str_to_types(1, f"def {self.get_name(fn_name)}(self, {params}, *, return_tx: bool={return_tx}, request_type: RequestType='default') -> {returns}:", 1)
         self.add_str_to_types(2, "...", 2)
 
 
     def generate_types_function(self, fn: FunctionDefinition):
         params_names, params = self.generate_func_params(fn)
         returns = self.generate_func_returns(fn)
+        #the generated functions have parameter of type RequestType, which is an enum and must be imported
+        self.__imports.add_python_import("from woke.fuzzer.abi_to_type import RequestType")
         self.generate_type_hint_stub_func(fn.name, params, returns, False)
         self.generate_type_hint_stub_func(fn.name, params, "TransactionObject", True)
 
@@ -415,6 +417,7 @@ class TypeGenerator():
         #gs_view_or_pure: bool = fn.state_mutability == StateMutability.VIEW or fn.state_mutability == StateMutability.PURE
         #gelf.add_str_to_types(1, f"def {self.get_name(fn.name)}(self{params}, return_tx: bool={True if is_view_or_pure else False}) -> Union[{returns}, TransactionObject]:", 1)
         #self.add_str_to_types(2, f"return self.transact(\"{fn.function_selector.hex()}\", [{params_names}], params) if return_tx else self.call(\"{fn.function_selector.hex()}\", [{params_names}], params)", 3)
+
 
 
     def generate_types_contract(self, contract: ContractDefinition, generate_template: bool) -> None:
