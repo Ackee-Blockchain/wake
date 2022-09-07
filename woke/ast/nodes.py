@@ -614,10 +614,9 @@ class SolcUserDefinedTypeName(SolcNode):
     type_descriptions: TypeDescriptionsModel
     referenced_declaration: AstNodeId
     # optional
-    # TODO:
-    contract_scope: Optional[AstNodeId]
-    name: Optional[StrictStr]
-    path_node: Optional["SolcIdentifierPath"]
+    contract_scope: Optional[AstNodeId]  # removed in 0.8.0
+    name: Optional[StrictStr]  # removed in 0.8.0 in favor of path_node
+    path_node: Optional["SolcIdentifierPath"]  # added in 0.8.0
 
 
 class SolcBlock(SolcNode):

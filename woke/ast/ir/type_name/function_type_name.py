@@ -19,6 +19,37 @@ from woke.ast.nodes import SolcFunctionTypeName
 
 
 class FunctionTypeName(TypeNameAbc):
+    """
+    Function type name.
+
+    !!! example
+        A function type name (`:::solidity function (uint) returns(uint)`) can be used:
+
+        - inside a [VariableDeclaration][woke.ast.ir.declaration.variable_declaration.VariableDeclaration] (lines 1 and 8),
+        - inside a [UsingForDirective][woke.ast.ir.meta.using_for_directive.UsingForDirective] (line 5),
+        - inside a [ArrayTypeName][woke.ast.ir.type_name.array_type_name.ArrayTypeName] (line 9),
+        - inside a [Mapping][woke.ast.ir.type_name.mapping.Mapping] (line 11).
+
+        ```solidity linenums="1"
+        function test(function (uint) returns(uint) f) {
+            f(10);
+        }
+
+        using {test} for function (uint) returns(uint);
+
+        contract X {
+            function (uint) returns(uint) x;
+            function (uint) returns(uint)[] y;
+
+            mapping(uint => function (uint) returns(uint)) map;
+
+            function foo(uint a) public returns(uint){
+                x = foo;
+                y.push(foo);
+            }
+        }
+        ```
+    """
     _ast_node: SolcFunctionTypeName
     _parent: Union[VariableDeclaration, UsingForDirective, ArrayTypeName, Mapping]
 
@@ -50,26 +81,50 @@ class FunctionTypeName(TypeNameAbc):
 
     @property
     def parent(self) -> Union[VariableDeclaration, UsingForDirective, ArrayTypeName, Mapping]:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
     def type(self) -> Function:
+        """
+        Returns:
+            Type description.
+        """
         t = super().type
         assert isinstance(t, Function)
         return t
 
     @property
     def parameter_types(self) -> ParameterList:
+        """
+        Returns:
+            Parameter list describing the function type name parameters.
+        """
         return self.__parameter_types
 
     @property
     def return_parameter_types(self) -> ParameterList:
+        """
+        Returns:
+            Parameter list describing the function type name return parameters.
+        """
         return self.__return_parameter_types
 
     @property
     def state_mutability(self) -> StateMutability:
+        """
+        Returns:
+            State mutability of the function type name.
+        """
         return self.__state_mutability
 
     @property
     def visibility(self) -> Visibility:
+        """
+        Returns:
+            Visibility of the function type name.
+        """
         return self.__visibility
