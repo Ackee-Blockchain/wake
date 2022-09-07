@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, Set, Tuple, Union
 
 from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -31,12 +31,10 @@ class EmitStatement(StatementAbc):
     ]
 
     __event_call: FunctionCall
-    __documentation: Optional[str]
 
     def __init__(self, init: IrInitTuple, emit: SolcEmitStatement, parent: SolidityAbc):
         super().__init__(init, emit, parent)
         self.__event_call = FunctionCall(init, emit.event_call, self)
-        self.__documentation = emit.documentation
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
@@ -58,10 +56,6 @@ class EmitStatement(StatementAbc):
     @property
     def event_call(self) -> FunctionCall:
         return self.__event_call
-
-    @property
-    def documentation(self) -> Optional[str]:
-        return self.__documentation
 
     @property
     @lru_cache(maxsize=None)

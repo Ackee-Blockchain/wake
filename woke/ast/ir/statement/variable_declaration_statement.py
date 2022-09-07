@@ -33,7 +33,6 @@ class VariableDeclarationStatement(StatementAbc):
 
     __assignments: List[Optional[AstNodeId]]
     __declarations: List[Optional[VariableDeclaration]]
-    __documentation: Optional[str]
     __initial_value: Optional[ExpressionAbc]
 
     def __init__(
@@ -53,7 +52,6 @@ class VariableDeclarationStatement(StatementAbc):
             else:
                 self.__declarations.append(VariableDeclaration(init, declaration, self))
 
-        self.__documentation = variable_declaration_statement.documentation
         if variable_declaration_statement.initial_value is None:
             self.__initial_value = None
         else:
@@ -97,10 +95,6 @@ class VariableDeclarationStatement(StatementAbc):
                 assert isinstance(node, VariableDeclaration)
                 ret.append(node)
         return tuple(ret)
-
-    @property
-    def documentation(self) -> Optional[str]:
-        return self.__documentation
 
     @property
     def initial_value(self) -> Optional[ExpressionAbc]:

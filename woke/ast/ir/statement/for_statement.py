@@ -38,7 +38,6 @@ class ForStatement(StatementAbc):
     ]
 
     __body: StatementAbc
-    __documentation: Optional[str]
     __condition: Optional[ExpressionAbc]
     __initialization_expression: Optional[
         Union[ExpressionStatement, VariableDeclarationStatement]
@@ -48,7 +47,6 @@ class ForStatement(StatementAbc):
     def __init__(self, init: IrInitTuple, for_: SolcForStatement, parent: SolidityAbc):
         super().__init__(init, for_, parent)
         self.__body = StatementAbc.from_ast(init, for_.body, self)
-        self.__documentation = for_.documentation
 
         self.__condition = (
             ExpressionAbc.from_ast(init, for_.condition, self)
@@ -102,10 +100,6 @@ class ForStatement(StatementAbc):
     @property
     def body(self) -> StatementAbc:
         return self.__body
-
-    @property
-    def documentation(self) -> Optional[str]:
-        return self.__documentation
 
     @property
     def condition(self) -> Optional[ExpressionAbc]:

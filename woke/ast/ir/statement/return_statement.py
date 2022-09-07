@@ -36,13 +36,11 @@ class Return(StatementAbc):
     ]
 
     __function_return_parameters: Optional[AstNodeId]
-    __documentation: Optional[str]
     __expression: Optional[ExpressionAbc]
 
     def __init__(self, init: IrInitTuple, return_: SolcReturn, parent: SolidityAbc):
         super().__init__(init, return_, parent)
         self.__function_return_parameters = return_.function_return_parameters
-        self.__documentation = return_.documentation
         self.__expression = (
             ExpressionAbc.from_ast(init, return_.expression, self)
             if return_.expression

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, Set, Tuple, Union
 
 from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -31,7 +31,6 @@ class WhileStatement(StatementAbc):
 
     __body: StatementAbc
     __condition: ExpressionAbc
-    __documentation: Optional[str]
 
     def __init__(
         self,
@@ -42,7 +41,6 @@ class WhileStatement(StatementAbc):
         super().__init__(init, while_statement, parent)
         self.__body = StatementAbc.from_ast(init, while_statement.body, self)
         self.__condition = ExpressionAbc.from_ast(init, while_statement.condition, self)
-        self.__documentation = while_statement.documentation
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
@@ -69,10 +67,6 @@ class WhileStatement(StatementAbc):
     @property
     def condition(self) -> ExpressionAbc:
         return self.__condition
-
-    @property
-    def documentation(self) -> Optional[str]:
-        return self.__documentation
 
     @property
     @lru_cache(maxsize=None)
