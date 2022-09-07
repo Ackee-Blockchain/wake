@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, Set, Tuple, Union
 
 from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -31,14 +31,12 @@ class RevertStatement(StatementAbc):
     ]
 
     __error_call: FunctionCall
-    __documentation: Optional[str]
 
     def __init__(
         self, init: IrInitTuple, revert: SolcRevertStatement, parent: SolidityAbc
     ):
         super().__init__(init, revert, parent)
         self.__error_call = FunctionCall(init, revert.error_call, self)
-        self.__documentation = revert.documentation
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
@@ -60,10 +58,6 @@ class RevertStatement(StatementAbc):
     @property
     def error_call(self) -> FunctionCall:
         return self.__error_call
-
-    @property
-    def documentation(self) -> Optional[str]:
-        return self.__documentation
 
     @property
     @lru_cache(maxsize=None)

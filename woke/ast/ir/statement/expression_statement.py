@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, Set, Tuple, Union
 
 from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -31,7 +31,6 @@ class ExpressionStatement(StatementAbc):
     ]
 
     __expression: ExpressionAbc
-    __documentation: Optional[str]
 
     def __init__(
         self,
@@ -43,7 +42,6 @@ class ExpressionStatement(StatementAbc):
         self.__expression = ExpressionAbc.from_ast(
             init, expression_statement.expression, self
         )
-        self.__documentation = expression_statement.documentation
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
@@ -65,10 +63,6 @@ class ExpressionStatement(StatementAbc):
     @property
     def expression(self) -> ExpressionAbc:
         return self.__expression
-
-    @property
-    def documentation(self) -> Optional[str]:
-        return self.__documentation
 
     @property
     @lru_cache(maxsize=None)

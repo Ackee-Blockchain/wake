@@ -31,7 +31,6 @@ class IfStatement(StatementAbc):
 
     __condition: ExpressionAbc
     __true_body: StatementAbc
-    __documentation: Optional[str]
     __false_body: Optional[StatementAbc]
 
     def __init__(
@@ -45,7 +44,6 @@ class IfStatement(StatementAbc):
             if if_statement.false_body is None
             else StatementAbc.from_ast(init, if_statement.false_body, self)
         )
-        self.__documentation = if_statement.documentation
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
@@ -78,10 +76,6 @@ class IfStatement(StatementAbc):
     @property
     def false_body(self) -> Optional[StatementAbc]:
         return self.__false_body
-
-    @property
-    def documentation(self) -> Optional[str]:
-        return self.__documentation
 
     @property
     @lru_cache(maxsize=None)

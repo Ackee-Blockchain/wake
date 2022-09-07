@@ -133,7 +133,6 @@ class InlineAssembly(StatementAbc):
     __yul_block: YulBlock
     __evm_version: InlineAssemblyEvmVersion
     __external_references: IntervalTree
-    __documentation: Optional[str]
 
     def __init__(
         self,
@@ -144,7 +143,6 @@ class InlineAssembly(StatementAbc):
         super().__init__(init, inline_assembly, parent)
         self.__yul_block = YulBlock(init, inline_assembly.ast, self)
         self.__evm_version = inline_assembly.evm_version
-        self.__documentation = inline_assembly.documentation
         self.__external_references = IntervalTree()
         for external_reference in inline_assembly.external_references:
             start = external_reference.src.byte_offset
@@ -177,10 +175,6 @@ class InlineAssembly(StatementAbc):
     @property
     def evm_version(self) -> InlineAssemblyEvmVersion:
         return self.__evm_version
-
-    @property
-    def documentation(self) -> Optional[str]:
-        return self.__documentation
 
     @property
     def external_references(self) -> Tuple[ExternalReference]:
