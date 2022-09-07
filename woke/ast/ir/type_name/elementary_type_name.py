@@ -21,6 +21,50 @@ from woke.ast.nodes import SolcElementaryTypeName
 
 
 class ElementaryTypeName(TypeNameAbc):
+    """
+    Elementary type name.
+
+    !!! example
+        An elementary type name can be used:
+
+        - inside a [VariableDeclaration][woke.ast.ir.declaration.variable_declaration.VariableDeclaration]:
+            - both occurrences of `:::solidity uint` in line 1,
+            - `:::solidity int` in line 1,
+            - `:::solidity string` in line 10,
+            - the first occurrence of `:::solidity bytes` in line 15,
+        - inside a [UserDefinedValueTypeDefinition][woke.ast.ir.declaration.user_defined_value_type_definition.UserDefinedValueTypeDefinition]:
+            - `:::solidity int` in line 7,
+        - inside an [ElementaryTypeNameExpression][woke.ast.ir.expression.elementary_type_name_expression.ElementaryTypeNameExpression]:
+            - `:::solidity int` in line 2,
+        - inside a [NewExpression][woke.ast.ir.expression.new_expression.NewExpression]:
+            - the second occurrence of `:::solidity bytes` in line 15,
+        - inside a [UsingForDirective][woke.ast.ir.meta.using_for_directive.UsingForDirective]:
+            - `:::solidity uint` in line 5,
+        - inside an [ArrayTypeName][woke.ast.ir.type_name.array_type_name.ArrayTypeName]:
+            - `:::solidity uint` in line 11,
+        - inside a [Mapping][woke.ast.ir.type_name.mapping.Mapping]:
+            - `:::solidity address` in line 12.
+
+        ```solidity linenums="1"
+        function add(uint a, uint b) pure returns(int) {
+            return int(a + b);
+        }
+
+        using {add} for uint;
+
+        type MyInt is int;
+
+        contract C {
+            string public str;
+            uint[10] arr;
+            mapping(address => MyInt) map;
+
+            function foo() public pure {
+                bytes memory b = new bytes(10);
+            }
+        }
+        ```
+    """
     _ast_node: SolcElementaryTypeName
     _parent: Union[VariableDeclaration, UserDefinedValueTypeDefinition, ElementaryTypeNameExpression, NewExpression, UsingForDirective, ArrayTypeName, Mapping]
 
@@ -49,10 +93,20 @@ class ElementaryTypeName(TypeNameAbc):
 
     @property
     def parent(self) -> Union[VariableDeclaration, UserDefinedValueTypeDefinition, ElementaryTypeNameExpression, NewExpression, UsingForDirective, ArrayTypeName, Mapping]:
+        """
+        When the parent is a [NewExpression][woke.ast.ir.expression.new_expression.NewExpression], this can only be `bytes` or `string`.
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
     def type(self) -> Union[Address, Bool, Int, UInt, Fixed, UFixed, String, Bytes, FixedBytes, Type]:
+        """
+        Returns either the generic [Type][woke.ast.types.Type] expression type (this is the case of a type conversion, for example `:::solidity address(0)`) or directly one of the elementary expression types.
+        Returns:
+            Type description.
+        """
         t = super().type
         if not isinstance(t, (Address, Bool, Int, UInt, Fixed, UFixed, String, Bytes, FixedBytes, Type)):
             raise TypeError(f"Unexpected type {t} {self.source}")
@@ -61,8 +115,22 @@ class ElementaryTypeName(TypeNameAbc):
 
     @property
     def name(self) -> str:
+        """
+        !!! example
+            For example `uint256`, `bool`, `string`, `bytes1` or `address`.
+
+        !!! tip
+            Instead of working with the name, it may be better to use the [type][woke.ast.ir.type_name.elementary_type_name.ElementaryTypeName.type] property.
+        Returns:
+            Name of the elementary type.
+        """
         return self.__name
 
     @property
     def state_mutability(self) -> Optional[StateMutability]:
+        """
+        Is only set for `address` as either [StateMutability.PAYABLE][woke.ast.enums.StateMutability.PAYABLE] or [StateMutability.NONPAYABLE][woke.ast.enums.StateMutability.NONPAYABLE].
+        Returns:
+            State mutability of the `address` type.
+        """
         return self.__state_mutability
