@@ -1,3 +1,4 @@
+from multiprocessing.sharedctypes import Value
 from typing import Any, Iterable, Optional, Type, overload
 from enum import IntEnum
 
@@ -31,8 +32,8 @@ class DevchainInterface:
 
     def __init__(self, port: int):
         self.__port = port
-        #self.__w3 = Web3(Web3.WebsocketProvider(f"ws://127.0.0.1:{str(port)}", websocket_timeout=60))
-        self.__w3 = Web3(Web3.HTTPProvider(f"http://127.0.0.1:{str(port)}"))
+        self.__w3 = Web3(Web3.WebsocketProvider(f"ws://127.0.0.1:{str(port)}", websocket_timeout=60))
+        #self.__w3 = Web3(Web3.HTTPProvider(f"http://127.0.0.1:{str(port)}"))
         self.__w3.eth.attach_methods({
             "trace_transaction": Method(RPCEndpoint("trace_transaction")),
             # TODO call
@@ -79,13 +80,13 @@ class DevchainInterface:
         # 3. call
         # 4. debug_traceTransaction
 
-        start = time.time()
+        #start = time.time()
         tx_hash = func.transact(params)
-        print(f"transact: {time.time()-start}")
+        #print(f"transact: {time.time()-start}")
         
         #method = RequestKind.DEBUG_TRACE_TRANSACTION
         #start = time.time()
-        output = self.dev_chain.retrieve_transaction([], tx_hash, request_type)
+        output = self.dev_chain.retrieve_transaction_data([], tx_hash, request_type)
         #print(f"trace: {time.time()-start}")
         return eth_abi.abi.decode(output_abi, bytes.fromhex(output))  # type: ignore
 
@@ -110,15 +111,20 @@ class Contract:
 
 
     def transact(self, selector: HexStr, arguments: Iterable, params: TxParams, return_tx: bool, request_type: RequestType) -> Any:
-        print("making a transaction")
+        #print("making a transaction")
+        if return_tx:
+            raise NotImplementedError("returning a transaction is not implemented")
+
         return dev_interface.transact(self._contract, selector, arguments, params, return_tx, request_type)
 
 
     #TODO throw if return_tx == True
     def call(self, selector: HexStr, arguments: Iterable, params: TxParams, return_tx: bool) -> Any:
-        print("making a call")
-        start = time.time()
+        if return_tx:
+            raise ValueError("transaction can't be returned from a call")
+        #print("making a call")
+        #start = time.time()
         output = dev_interface.call_test(self._contract, selector, arguments, params)
-        print(f"call val: {output}")
+        #print(f"call val: {output}")
         #print(f"call: {time.time()-start}")
         return output

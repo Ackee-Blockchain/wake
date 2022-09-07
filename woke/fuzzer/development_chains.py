@@ -17,7 +17,7 @@ class DevChainABC(ABC):
         self.w3 = w3
 
     @abstractmethod
-    def retrieve_transaction(self, params: List, tx_hash: Any, request_type: RequestType) -> Dict:
+    def retrieve_transaction_data(self, params: List, tx_hash: Any, request_type: RequestType) -> Dict:
         raise NotImplementedError
 
 
@@ -25,7 +25,7 @@ class HardhatDevChain(DevChainABC):
     def __init__(self, w3: Web3):
         DevChainABC.__init__(self, w3)
 
-    def retrieve_transaction(self, params: List, tx_hash: Any, request_type: RequestType) -> Dict:
+    def retrieve_transaction_data(self, params: List, tx_hash: Any, request_type: RequestType) -> Dict:
         output = None
         if request_type == RequestType.DEFAULT:
             #output = self.w3.eth.debug_trace_transaction(HexStr(tx_hash.hex()))
@@ -44,7 +44,7 @@ class AnvilDevChain(DevChainABC):
     def __init__(self, w3: Web3):
         DevChainABC.__init__(self, w3)
 
-    def retrieve_transaction(self, params: List, tx_hash: Any, request_type: RequestType) -> Dict:
+    def retrieve_transaction_data(self, params: List, tx_hash: Any, request_type: RequestType) -> Dict:
         output = None
         if request_type == RequestType.DEFAULT:
             output = self.w3.eth.trace_transaction(HexStr(tx_hash.hex())) # type: ignore
