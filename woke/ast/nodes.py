@@ -622,10 +622,10 @@ class SolcUserDefinedTypeName(SolcNode):
 class SolcBlock(SolcNode):
     # override alias
     node_type: Literal["Block"] = Field(alias="nodeType")
+    statements: List[SolcStatementUnion]
     # required
     # optional
     documentation: Optional[StrictStr]
-    statements: Optional[List[SolcStatementUnion]]
 
 
 class SolcBreak(SolcNode):
