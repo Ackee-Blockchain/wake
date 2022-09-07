@@ -92,9 +92,15 @@ def _parse_list(
 ) -> typ.Tuple[typ.Optional[TypeAbc], ...]:
     type_identifier.read("$_")
     # handle empty list
-    if not type_identifier.startswith("_$_") and type_identifier.startswith("_$"):
-        type_identifier.read("_$")
-        return tuple()
+    # either a comma or a closing bracket
+    if type_identifier.startswith("_$"):
+        index = 0
+        while index + 2 <= len(type_identifier.data) and type_identifier.data[index:index + 2] == "_$":
+            index += 2
+        # if we have a closing bracket, there should not be a trailing underscore
+        if index >= len(type_identifier.data) or type_identifier.data[index] != "_":
+            type_identifier.read("_$")
+            return tuple()
 
     items = [
         TypeAbc.from_type_identifier(
