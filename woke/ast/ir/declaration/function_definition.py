@@ -473,7 +473,7 @@ class FunctionDefinition(DeclarationAbc):
     ) -> FrozenSet[Union[FunctionDefinition, VariableDeclaration]]:
         """
         Returns:
-            Functions and state variables that override this function.
+            Functions that list this function in their [base_functions][woke.ast.ir.declaration.function_definition.FunctionDefinition.base_functions] property.
         """
         return frozenset(self._child_functions)
 
