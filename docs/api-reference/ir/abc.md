@@ -2,6 +2,8 @@
 
 ::: woke.ast.ir.abc.SolidityAbc
 
+::: woke.ast.ir.yul.abc.YulAbc
+
 ::: woke.ast.ir.declaration.abc.DeclarationAbc
 
 ::: woke.ast.ir.expression.abc.ExpressionAbc
