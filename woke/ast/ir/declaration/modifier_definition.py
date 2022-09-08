@@ -319,7 +319,7 @@ class ModifierDefinition(DeclarationAbc):
     def child_modifiers(self) -> FrozenSet[ModifierDefinition]:
         """
         Returns:
-            Modifiers that override this modifier.
+            Modifiers that list this modifier in their [base_modifiers][woke.ast.ir.declaration.modifier_definition.ModifierDefinition.base_modifiers] property.
         """
         return frozenset(self._child_modifiers)
 
