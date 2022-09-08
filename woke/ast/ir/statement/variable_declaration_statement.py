@@ -42,7 +42,6 @@ class VariableDeclarationStatement(StatementAbc):
         parent: SolidityAbc,
     ):
         super().__init__(init, variable_declaration_statement, parent)
-        # TODO assignments are just AST IDs of the variable declarations ?
         self.__assignments = list(variable_declaration_statement.assignments)
 
         self.__declarations = []
@@ -83,18 +82,6 @@ class VariableDeclarationStatement(StatementAbc):
     @property
     def declarations(self) -> Tuple[Optional[VariableDeclaration]]:
         return tuple(self.__declarations)
-
-    @property
-    def assignments(self) -> Tuple[Optional[VariableDeclaration]]:
-        ret = []
-        for assignment in self.__assignments:
-            if assignment is None:
-                ret.append(None)
-            else:
-                node = self._reference_resolver.resolve_node(assignment, self.cu_hash)
-                assert isinstance(node, VariableDeclaration)
-                ret.append(node)
-        return tuple(ret)
 
     @property
     def initial_value(self) -> Optional[ExpressionAbc]:
