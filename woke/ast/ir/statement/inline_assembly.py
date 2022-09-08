@@ -40,8 +40,6 @@ class ExternalReference:
     __source: bytes
 
     __referenced_declaration_id: AstNodeId
-    __is_offset: bool
-    __is_slot: bool
     __value_size: int
     __suffix: Optional[InlineAssemblySuffix]
 
@@ -56,10 +54,13 @@ class ExternalReference:
 
         self.__referenced_declaration_id = external_reference_model.declaration
         assert self.__referenced_declaration_id >= 0
-        self.__is_offset = external_reference_model.is_offset
-        self.__is_slot = external_reference_model.is_slot
         self.__value_size = external_reference_model.value_size
         self.__suffix = external_reference_model.suffix
+
+        if external_reference_model.is_offset:
+            self.__suffix = InlineAssemblySuffix.OFFSET
+        elif external_reference_model.is_slot:
+            self.__suffix = InlineAssemblySuffix.SLOT
 
         self.__reference_resolver.register_post_process_callback(self.__post_process)
 
@@ -101,14 +102,6 @@ class ExternalReference:
         )
         assert isinstance(node, DeclarationAbc)
         return node
-
-    @property
-    def is_offset(self) -> bool:
-        return self.__is_offset
-
-    @property
-    def is_slot(self) -> bool:
-        return self.__is_slot
 
     @property
     def value_size(self) -> int:
