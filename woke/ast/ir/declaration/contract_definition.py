@@ -281,6 +281,18 @@ class ContractDefinition(DeclarationAbc):
     def base_contracts(self) -> Tuple[InheritanceSpecifier]:
         """
         Returns base contracts as specified in the source code. Does not return all base contracts (recursively).
+        !!! example
+            `A1` lists the interface `I` as a base contract.
+
+            `A2` lists the interface `I` as a base contract.
+
+            `B` lists the contracts `A1` and `A2` as base contracts.
+            ```solidity
+            interface I {}
+            contract A1 is I {}
+            contract A2 is I {}
+            contract B is A1, A2 {}
+            ```
         Returns:
             Base contracts of this contract.
         """
@@ -290,7 +302,7 @@ class ContractDefinition(DeclarationAbc):
     def child_contracts(self) -> FrozenSet[ContractDefinition]:
         """
         Returns:
-            Contracts that inherit from this contract.
+            Contracts that list this contract in their [base_contracts][woke.ast.ir.declaration.contract_definition.ContractDefinition.base_contracts] property.
         """
         return frozenset(self.__child_contracts)
 
