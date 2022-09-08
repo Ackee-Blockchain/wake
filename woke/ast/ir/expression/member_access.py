@@ -13,7 +13,7 @@ from woke.ast.types import (
     Magic,
     MagicTypeKind,
     String,
-    Type,
+    Type, UserDefinedValueType,
 )
 from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.declaration.abc import DeclarationAbc
@@ -276,13 +276,28 @@ class MemberAccess(ExpressionAbc):
                         self.__referenced_declaration_id = AstNodeId(
                             GlobalSymbolsEnum.BYTES_CONCAT
                         )
+                    else:
+                        assert False, f"Unknown bytes member {self.member_name}"
                 elif isinstance(expr_type.actual_type, String):
                     if self.member_name == "concat":
                         self.__referenced_declaration_id = AstNodeId(
                             GlobalSymbolsEnum.STRING_CONCAT
                         )
+                    else:
+                        assert False, f"Unknown string member {self.member_name}"
+                elif isinstance(expr_type.actual_type, UserDefinedValueType):
+                    if self.member_name == "wrap":
+                        self.__referenced_declaration_id = AstNodeId(
+                            GlobalSymbolsEnum.USER_DEFINED_VALUE_TYPE_WRAP
+                        )
+                    elif self.member_name == "unwrap":
+                        self.__referenced_declaration_id = AstNodeId(
+                            GlobalSymbolsEnum.USER_DEFINED_VALUE_TYPE_UNWRAP
+                        )
+                    else:
+                        assert False, f"Unknown user defined value type member {self.member_name}"
                 else:
-                    assert False, f"Unknown type member {self.member_name}"
+                    assert False, f"Unknown type member {self.member_name} {expr_type.actual_type}"
 
         assert (
             self.__referenced_declaration_id is not None
