@@ -3,12 +3,13 @@ from __future__ import annotations
 import re
 from functools import lru_cache, partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterator, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union, FrozenSet
 
 from intervaltree import IntervalTree
 
 from woke.ast.enums import (
     InlineAssemblyEvmVersion,
+    InlineAssemblyFlag,
     InlineAssemblySuffix,
     ModifiesStateFlag,
 )
@@ -126,6 +127,7 @@ class InlineAssembly(StatementAbc):
     __yul_block: YulBlock
     __evm_version: InlineAssemblyEvmVersion
     __external_references: IntervalTree
+    __flags: Set[InlineAssemblyFlag]
 
     def __init__(
         self,
@@ -137,6 +139,10 @@ class InlineAssembly(StatementAbc):
         self.__yul_block = YulBlock(init, inline_assembly.ast, self)
         self.__evm_version = inline_assembly.evm_version
         self.__external_references = IntervalTree()
+        self.__flags = set()
+        if inline_assembly.flags is not None:
+            for flag in inline_assembly.flags:
+                self.__flags.add(InlineAssemblyFlag(flag))
         for external_reference in inline_assembly.external_references:
             start = external_reference.src.byte_offset
             end = start + external_reference.src.byte_length
@@ -168,6 +174,10 @@ class InlineAssembly(StatementAbc):
     @property
     def evm_version(self) -> InlineAssemblyEvmVersion:
         return self.__evm_version
+
+    @property
+    def flags(self) -> FrozenSet[InlineAssemblyFlag]:
+        return frozenset(self.__flags)
 
     @property
     def external_references(self) -> Tuple[ExternalReference]:
