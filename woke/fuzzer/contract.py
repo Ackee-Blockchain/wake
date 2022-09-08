@@ -69,11 +69,12 @@ class DevchainInterface:
         return func.call(params)
 
 
-    def transact(self, contract, selector: HexStr, arguments: Iterable, params: TxParams, return_tx, request_type) -> Any:
+    def transact(self, contract: web3.contract.Contract, selector: HexStr, arguments: Iterable, params: TxParams, return_tx, request_type) -> Any:
+        print("making a transaction")
         #start_time = time.time()
         func = contract.get_function_by_selector(selector)(*arguments)
         output_abi = get_abi_output_types(func.abi)
-
+        #contract.fallback().transact(params)
         # priorities:
         # 1. anvil_enableTraces
         # 2. trace_transaction
@@ -118,7 +119,16 @@ class Contract:
         return dev_interface.transact(self._contract, selector, arguments, params, return_tx, request_type)
 
 
-    #TODO throw if return_tx == True
+    #TODO handle return data
+    def fallback_handler(self, arguments: Iterable, params: TxParams, return_tx: bool, request_type: RequestType) -> Any:
+        print("making a fallback transaction")
+        print(self._contract.fallback.abi.get("inputs"))
+        print(self._contract.fallback.abi)
+        return self._contract.fallback().transact({'data': eth_abi.encode(['uint256'], [1])})# if not request_type == 'call' else self._contract_fallback(*arguments).call(params)
+        #return self._contract.fallback(eth_abi.encode(['uint256'], [1])).transact(params)# if not request_type == 'call' else self._contract_fallback(*arguments).call(params)
+        #return self._contract.fallback(*arguments).transact(params)# if not request_type == 'call' else self._contract_fallback(*arguments).call(params)
+
+
     def call(self, selector: HexStr, arguments: Iterable, params: TxParams, return_tx: bool) -> Any:
         if return_tx:
             raise ValueError("transaction can't be returned from a call")
