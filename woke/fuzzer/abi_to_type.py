@@ -529,33 +529,44 @@ class TypeGenerator():
         self.__imports.cleanup_imports()
         self.__already_generated_contracts = set()
 
-    def funcs_have_same_params(self, fn1: FunctionDefinition, fn2: FunctionDefinition) -> bool:
-        for i in range(len(fn1.parameters.parameters)):
-            if fn1.parameters.parameters[i].type_name != fn2.parameters.parameters[i].type_name:
-                return False
-        return True
 
-
-    def add_func_to_overloaded_if_match(self, fn: FunctionDefinition, contract: ContractDefinition) -> None:
+    def add_func_overload_if_match(self, fn: FunctionDefinition, contract: ContractDefinition):
         for function in contract.functions:
-            if fn.name == function.name and len(fn.parameters.parameters) == len(function.parameters.parameters):
-                if self.funcs_have_same_params(fn, function):
-                   self.__func_to_overload.add(fn.canonical_name)
-                   self.__func_to_overload.add(fn.canonical_name)
-        for base in contract.base_contracts:
-            self.add_func_to_overloaded_if_match(fn, base.base_name.referenced_declaration) 
+            if fn.name == function.name: #and len(fn.parameters.parameters) == len(function.parameters.parameters):
+                self.__func_to_overload.add(fn.canonical_name)
+                self.__func_to_overload.add(function.canonical_name)
+
+    def traverse_funcs_in_child_contracts(self, fn: FunctionDefinition, contract: ContractDefinition):
+        for child in contract.child_contracts:
+           self.add_func_overload_if_match(fn, child)
+            
+        for child in contract.child_contracts:
+           self.traverse_funcs_in_child_contracts(fn, child)
+
+
+    def traverse_funcs_in_parent_contracts(self, fn: FunctionDefinition, contract: ContractDefinition):
+        for inh_spec in contract.base_contracts:
+            if not inh_spec.parent.kind == ContractKind.INTERFACE:
+                self.add_func_overload_if_match(fn, inh_spec.base_name.referenced_declaration)
+        for inh_spec in contract.base_contracts:
+            if not inh_spec.parent.kind == ContractKind.INTERFACE:
+                self.traverse_funcs_in_parent_contracts(fn, inh_spec.base_name.referenced_declaration)
 
 
     def traverse_funcs_to_check_overload(self):
         #set containing canonical names of functions to be overloaded
-        to_overload: Set[str] = set()
         for _, unit in self.__source_units.items():
             for contract in unit.contracts:
-                for fn in contract.functions:
-                    if not fn.canonical_name in self.__func_to_overload:
-                        if fn.function_selector:
+                #interface function can't have implementation and thus can't be overloaded
+                if contract.kind != ContractKind.INTERFACE:
+                    for fn in contract.functions:
+                        if not fn.canonical_name in self.__func_to_overload and fn.implemented and fn.function_selector:
+                            #we create pytypes only for functions that are publicly accessible
                             if fn.visibility == Visibility.PUBLIC or fn.visibility == Visibility.EXTERNAL:
-                                self.add_func_to_overloaded_if_match(fn, contract)
+                                self.add_func_overload_if_match(fn, contract)
+                                self.traverse_funcs_in_parent_contracts(fn, contract)
+                                self.traverse_funcs_in_child_contracts(fn, contract)
+
 
     def generate_types(self, overwrite: bool = False) -> None:
         #compile proj and generate ir
@@ -565,6 +576,7 @@ class TypeGenerator():
         self.traverse_funcs_to_check_overload()
         print(self.__func_to_overload)
         for _, unit in self.__source_units.items():
+            print(f"source unit: {unit.source_unit_name}")
             self.__current_source_unit = unit.source_unit_name
             self.generate_types_source_unit(unit)
             self.write_source_unit_to_file(unit.source_unit_name)
