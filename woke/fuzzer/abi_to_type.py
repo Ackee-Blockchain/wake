@@ -193,6 +193,19 @@ class TypeGenerator():
     def get_name(self, name: str) -> str:
         return self.__name_sanitizer.sanitize_name(name)
 
+
+    def generate_deploy_func(self, contract: ContractDefinition):
+        param_names = ''
+        params = ''
+        for fn in contract.functions:
+            if fn.name == "constructor":
+                param_names, params = self.generate_func_params(fn)
+                break
+        self.add_str_to_types(1, "@classmethod", 1)
+        self.add_str_to_types(1, f"def deploy(cls, {params}) -> {contract.name}:", 1)
+        self.add_str_to_types(2, f"return super().deploy([{param_names}], params)", 1)
+
+
     def generate_contract_template(self, contract: ContractDefinition, base_names: str) -> None:
         self.add_str_to_types(0, "class " + self.get_name(contract.name) + "(" + base_names + "):", 1)
         compilation_info = contract.compilation_info
@@ -202,10 +215,7 @@ class TypeGenerator():
             self.add_str_to_types(1, f"bytecode = \"{compilation_info.evm.bytecode.object}\"", 2)
 
         self.__imports.add_python_import("from __future__ import annotations")
-        self.add_str_to_types(1, "@classmethod", 1)
-        self.add_str_to_types(1, f"def deploy(cls, params: Optional[TxParams] = None) -> {contract.name}:", 1)
-        self.add_str_to_types(2, "return super().deploy(params)", 1)
-        #if compilation_info.
+        self.generate_deploy_func(contract)
         self.add_str_to_types(0, "", 1)
 
 
@@ -263,7 +273,7 @@ class TypeGenerator():
             parsed += self.__sol_to_py_lookup[name]
         return parsed
 
-
+ 
     def generate_func_params(self, fn: FunctionDefinition) -> Tuple[str, str]:
         params: str = ""
         #params_names are later inserted as an argument to the self.transact call

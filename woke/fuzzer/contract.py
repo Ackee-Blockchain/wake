@@ -57,9 +57,9 @@ class DevchainInterface:
         return self.__dev_chain
 
 
-    def deploy(self, abi, bytecode, params: Optional[TxParams] = None) -> web3.contract.Contract:
+    def deploy(self, abi, bytecode, arguments: Iterable, params: Optional[TxParams] = None) -> web3.contract.Contract:
         factory = self.__w3.eth.contract(abi=abi, bytecode=bytecode)
-        tx_hash = factory.constructor().transact(params)
+        tx_hash = factory.constructor(*arguments).transact(params)
         tx_receipt = self.__w3.eth.wait_for_transaction_receipt(tx_hash)
         return self.__w3.eth.contract(address=tx_receipt["contractAddress"], abi=abi)  # type: ignore
 
@@ -105,9 +105,9 @@ class Contract:
     @classmethod
     #TODO add option to deploy using a different instance of web3
     def deploy(
-        cls, params: Optional[TxParams] = None
+        cls, arguments: Iterable, params: Optional[TxParams] = None
     ) -> web3.contract.Contract:
-        return cls(dev_interface.deploy(cls.abi, cls.bytecode)) 
+        return cls(dev_interface.deploy(cls.abi, cls.bytecode, arguments)) 
 
 
     def transact(self, selector: HexStr, arguments: Iterable, params: TxParams, return_tx: bool, request_type: RequestType) -> Any:
