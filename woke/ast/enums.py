@@ -85,6 +85,9 @@ class GlobalSymbolsEnum(enum.IntEnum):
     FUNCTION_VALUE = -1001
     FUNCTION_GAS = -1002
 
+    USER_DEFINED_VALUE_TYPE_WRAP = -1100
+    USER_DEFINED_VALUE_TYPE_UNWRAP = -1101
+
 
 # Contracts
 class ContractKind(str, enum.Enum):
