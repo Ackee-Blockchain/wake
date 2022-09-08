@@ -10,6 +10,9 @@ from ..abc import IrAbc
 
 
 class YulAbc(IrAbc, ABC):
+    """
+    Abstract base class for all Yul IR nodes.
+    """
     _ast_node: YulNode
 
     def __iter__(self) -> Iterator[YulAbc]:
