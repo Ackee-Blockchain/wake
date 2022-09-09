@@ -21,6 +21,17 @@ if TYPE_CHECKING:
 
 
 class VariableDeclarationStatement(StatementAbc):
+    """
+    !!! example
+        `:::solidity (uint a, uint b) = (1, 2)` in the following code:
+        ```solidity
+        contract C {
+            function f() public {
+                (uint a, uint b) = (1, 2);
+            }
+        }
+        ```
+    """
     _ast_node: SolcVariableDeclarationStatement
     _parent: Union[
         Block,
@@ -77,14 +88,34 @@ class VariableDeclarationStatement(StatementAbc):
         UncheckedBlock,
         WhileStatement,
     ]:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
     def declarations(self) -> Tuple[Optional[VariableDeclaration]]:
+        """
+        !!! example
+            Some declarations may be `None`, e.g. in the following code:
+            ```solidity
+            (bool success, ) = address(this).call{value: 1}("");
+            ```
+
+        Returns:
+            Tuple of variable declarations in this statement.
+        """
         return tuple(self.__declarations)
 
     @property
     def initial_value(self) -> Optional[ExpressionAbc]:
+        """
+        Does not need to be a [TupleExpression][woke.ast.ir.expression.tuple_expression.TupleExpression] when there is more than one variable declared.
+        Can also be a [FunctionCall][woke.ast.ir.expression.function_call.FunctionCall] returning a tuple.
+        Returns:
+            Initial value assigned to the declared variables (if any).
+        """
         return self.__initial_value
 
     @property

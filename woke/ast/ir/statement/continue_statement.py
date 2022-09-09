@@ -18,6 +18,18 @@ if TYPE_CHECKING:
 
 
 class Continue(StatementAbc):
+    """
+    !!! example
+        `:::solidity continue` in the following code:
+        ```solidity
+        function foo() public {
+            for (uint i = 0; i < 10; i++) {
+                if (i == 5)
+                    continue;
+            }
+        }
+        ```
+    """
     _ast_node: SolcContinue
     _parent: Union[
         Block,
@@ -42,6 +54,10 @@ class Continue(StatementAbc):
         UncheckedBlock,
         WhileStatement,
     ]:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property

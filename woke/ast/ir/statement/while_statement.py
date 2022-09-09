@@ -19,6 +19,16 @@ if TYPE_CHECKING:
 
 
 class WhileStatement(StatementAbc):
+    """
+    !!! example
+        Lines 2-3 in the following code:
+        ```solidity linenums="1"
+        function foo(uint x) public pure {
+            while (x % 2 == 0)
+                x /= 2;
+        }
+        ```
+    """
     _ast_node: SolcWhileStatement
     _parent: Union[
         Block,
@@ -58,14 +68,26 @@ class WhileStatement(StatementAbc):
         UncheckedBlock,
         WhileStatement,
     ]:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
     def body(self) -> StatementAbc:
+        """
+        Returns:
+            Body of the while statement.
+        """
         return self.__body
 
     @property
     def condition(self) -> ExpressionAbc:
+        """
+        Returns:
+            Condition of the while statement.
+        """
         return self.__condition
 
     @property

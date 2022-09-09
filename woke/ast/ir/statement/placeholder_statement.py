@@ -17,6 +17,17 @@ if TYPE_CHECKING:
 
 
 class PlaceholderStatement(StatementAbc):
+    """
+    Placeholder statements represent `_` (underscore) in a modifier body.
+    !!! example
+        `:::solidity _` in the following code:
+        ```solidity linenums="1"
+        modifier foo() {
+            require(msg.sender == owner, "Not owner");
+            _;
+        }
+        ```
+    """
     _ast_node: SolcPlaceholderStatement
     _parent: Union[Block, DoWhileStatement, ForStatement, IfStatement, WhileStatement]
 
@@ -32,6 +43,10 @@ class PlaceholderStatement(StatementAbc):
     def parent(
         self,
     ) -> Union[Block, DoWhileStatement, ForStatement, IfStatement, WhileStatement]:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property

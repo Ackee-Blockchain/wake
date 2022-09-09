@@ -25,6 +25,15 @@ if TYPE_CHECKING:
 
 
 class Return(StatementAbc):
+    """
+    !!! example
+        `:::solidity return 1` in the following code:
+        ```solidity
+        function f() public pure returns(uint) {
+            return 1;
+        }
+        ```
+    """
     _ast_node: SolcReturn
     _parent: Union[
         Block,
@@ -63,10 +72,29 @@ class Return(StatementAbc):
         UncheckedBlock,
         WhileStatement,
     ]:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
     def function_return_parameters(self) -> Optional[ParameterList]:
+        """
+        !!! example
+            Can be `None` if the function does not return anything.
+            ```solidity
+            function f(uint x) public {
+                if (x > 0) {
+                    return;
+                }
+                doSomething(x);
+            }
+            ```
+
+        Returns:
+            Parameter list describing the return parameters of the function (if any).
+        """
         from ..meta.parameter_list import ParameterList
 
         if self.__function_return_parameters is None:
@@ -79,6 +107,10 @@ class Return(StatementAbc):
 
     @property
     def expression(self) -> Optional[ExpressionAbc]:
+        """
+        Returns:
+            Expression returned by the return statement, if any.
+        """
         return self.__expression
 
     @property

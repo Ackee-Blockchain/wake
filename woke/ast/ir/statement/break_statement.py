@@ -18,6 +18,18 @@ if TYPE_CHECKING:
 
 
 class Break(StatementAbc):
+    """
+    !!! example
+        `:::solidity break` in the following code:
+        ```solidity
+        function foo() public {
+            for (uint i = 0; i < 10; i++) {
+                if (i == 5)
+                    break;
+            }
+        }
+        ```
+    """
     _ast_node: SolcBreak
     _parent: Union[
         Block,
@@ -42,6 +54,10 @@ class Break(StatementAbc):
         UncheckedBlock,
         WhileStatement,
     ]:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
