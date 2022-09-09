@@ -13,6 +13,7 @@ from ..expression.assignment import Assignment
 from ..expression.binary_operation import BinaryOperation
 from ..expression.conditional import Conditional
 from ..expression.function_call import FunctionCall
+from ..expression.function_call_options import FunctionCallOptions
 from ..expression.identifier import Identifier
 from ..expression.index_access import IndexAccess
 from ..expression.index_range_access import IndexRangeAccess
@@ -43,6 +44,8 @@ class ExpressionStatement(StatementAbc):
             - `:::solidity arr[i] >= arr[i - 1] ? x++ : x--` in line 7,
         - a [FunctionCall][woke.ast.ir.expression.function_call.FunctionCall]:
             - `:::solidity require(arr.length > 1)` in line 3,
+        - a [FunctionCallOptions][woke.ast.ir.expression.function_call_options.FunctionCallOptions]:
+            - `:::solidity payable(msg.sender).call{value: 1}` in line 16,
         - an [Identifier][woke.ast.ir.expression.identifier.Identifier]:
             - `:::solidity this` in line 15,
         - an [IndexAccess][woke.ast.ir.expression.index_access.IndexAccess]:
@@ -74,6 +77,7 @@ class ExpressionStatement(StatementAbc):
                 arr.length;
                 (arr);
                 this; // silence state mutability warning without generating bytecode
+                payable(msg.sender).call{value: 1};
             }
         }
         ```
@@ -88,7 +92,7 @@ class ExpressionStatement(StatementAbc):
         WhileStatement,
     ]
 
-    __expression: Union[Assignment, BinaryOperation, Conditional, FunctionCall, Identifier, IndexAccess, IndexRangeAccess, Literal, MemberAccess, TupleExpression, UnaryOperation]
+    __expression: Union[Assignment, BinaryOperation, Conditional, FunctionCall, FunctionCallOptions, Identifier, IndexAccess, IndexRangeAccess, Literal, MemberAccess, TupleExpression, UnaryOperation]
 
     def __init__(
         self,
@@ -98,7 +102,7 @@ class ExpressionStatement(StatementAbc):
     ):
         super().__init__(init, expression_statement, parent)
         expr = ExpressionAbc.from_ast(init, expression_statement.expression, self)
-        assert isinstance(expr, (Assignment, BinaryOperation, Conditional, FunctionCall, Identifier, IndexAccess, IndexRangeAccess, Literal, MemberAccess, TupleExpression, UnaryOperation))
+        assert isinstance(expr, (Assignment, BinaryOperation, Conditional, FunctionCall, FunctionCallOptions, Identifier, IndexAccess, IndexRangeAccess, Literal, MemberAccess, TupleExpression, UnaryOperation))
         self.__expression = expr
 
     def __iter__(self) -> Iterator[IrAbc]:
@@ -123,7 +127,7 @@ class ExpressionStatement(StatementAbc):
         return self._parent
 
     @property
-    def expression(self) -> Union[Assignment, BinaryOperation, Conditional, FunctionCall, Identifier, IndexAccess, IndexRangeAccess, Literal, MemberAccess, TupleExpression, UnaryOperation]:
+    def expression(self) -> Union[Assignment, BinaryOperation, Conditional, FunctionCall, FunctionCallOptions, Identifier, IndexAccess, IndexRangeAccess, Literal, MemberAccess, TupleExpression, UnaryOperation]:
         """
         Returns:
             Expression of the expression statement.
