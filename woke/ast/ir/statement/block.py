@@ -22,6 +22,20 @@ if TYPE_CHECKING:
 
 
 class Block(StatementAbc):
+    """
+    Block statements group multiple statements into a single block.
+
+    !!! example
+        Lines 3-5 in the following code:
+        ```solidity linenums="1"
+        contract Foo {
+            function bar(uint a, uint b) public pure returns(uint)
+            {
+                return a + b;
+            }
+        }
+        ```
+    """
     _ast_node: SolcBlock
     _parent: Union[
         Block,
@@ -64,10 +78,19 @@ class Block(StatementAbc):
         ModifierDefinition,
         TryCatchClause,
     ]:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
     def statements(self) -> Tuple[StatementAbc]:
+        """
+        Can be empty.
+        Returns:
+            Statements in the block.
+        """
         return tuple(self.__statements)
 
     @property

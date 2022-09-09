@@ -19,6 +19,18 @@ if TYPE_CHECKING:
 
 
 class UncheckedBlock(StatementAbc):
+    """
+    !!! example
+        Lines 2-4 in the following code:
+        ```solidity linenums="1"
+        function inc(uint x) public pure returns(uint) {
+            unchecked {
+                x += 1;
+            }
+            return x;
+        }
+        ```
+    """
     _ast_node: SolcUncheckedBlock
     _parent: Union[Block, DoWhileStatement, ForStatement, IfStatement, WhileStatement]
 
@@ -45,10 +57,19 @@ class UncheckedBlock(StatementAbc):
     def parent(
         self,
     ) -> Union[Block, DoWhileStatement, ForStatement, IfStatement, WhileStatement]:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
     def statements(self) -> Tuple[StatementAbc]:
+        """
+        Can be empty.
+        Returns:
+            Statements in the block.
+        """
         return tuple(self.__statements)
 
     @property

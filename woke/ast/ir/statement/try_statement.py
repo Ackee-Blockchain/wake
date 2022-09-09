@@ -22,6 +22,18 @@ if TYPE_CHECKING:
 
 
 class TryStatement(StatementAbc):
+    """
+    !!! example
+        ```solidity
+        try this.f() returns (uint256) {
+            // ...
+        } catch Error(string memory reason) {
+            // ...
+        } catch (bytes memory lowLevelData) {
+            // ...
+        }
+        ```
+    """
     _ast_node: SolcTryStatement
     _parent: Union[
         Block,
@@ -61,14 +73,26 @@ class TryStatement(StatementAbc):
         UncheckedBlock,
         WhileStatement,
     ]:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
     def clauses(self) -> Tuple[TryCatchClause]:
+        """
+        Returns:
+            Try/catch clauses.
+        """
         return tuple(self.__clauses)
 
     @property
     def external_call(self) -> FunctionCall:
+        """
+        Returns:
+            External call executed in the try statement.
+        """
         return self.__external_call
 
     @property

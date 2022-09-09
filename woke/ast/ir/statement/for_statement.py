@@ -27,6 +27,17 @@ if TYPE_CHECKING:
 
 
 class ForStatement(StatementAbc):
+    """
+    !!! example
+        Lines 2-4 in the following code:
+        ```solidity linenums="1"
+        function foo(uint x) public pure {
+            for (uint i = 0; i < 10; i++) {
+                x += 1;
+            }
+        }
+        ```
+    """
     _ast_node: SolcForStatement
     _parent: Union[
         Block,
@@ -95,24 +106,68 @@ class ForStatement(StatementAbc):
         UncheckedBlock,
         WhileStatement,
     ]:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
     def body(self) -> StatementAbc:
+        """
+        Returns:
+            Body of the for loop.
+        """
         return self.__body
 
     @property
     def condition(self) -> Optional[ExpressionAbc]:
+        """
+        !!! example
+            ```solidity
+            i < 10
+            ```
+            in the following for loop:
+            ```solidity
+            for (uint i = 0; i < 10; i++) {}
+            ```
+        Returns:
+            Condition of the for loop, if any.
+        """
         return self.__condition
 
     @property
     def initialization_expression(
         self,
     ) -> Optional[Union[ExpressionStatement, VariableDeclarationStatement]]:
+        """
+        !!! example
+            ```solidity
+            uint i = 0
+            ```
+            in the following for loop:
+            ```solidity
+            for (uint i = 0; i < 10; i++) {}
+            ```
+        Returns:
+            Initialization expression of the for loop, if any.
+        """
         return self.__initialization_expression
 
     @property
     def loop_expression(self) -> Optional[ExpressionStatement]:
+        """
+        !!! example
+            ```solidity
+            i++
+            ```
+            in the following for loop:
+            ```solidity
+            for (uint i = 0; i < 10; i++) {}
+            ```
+        Returns:
+            Loop expression of the for loop, if any.
+        """
         return self.__loop_expression
 
     @property
