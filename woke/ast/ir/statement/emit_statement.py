@@ -20,6 +20,15 @@ if TYPE_CHECKING:
 
 
 class EmitStatement(StatementAbc):
+    """
+    !!! example
+        `:::solidity emit Transfer(msg.sender, to, amount)` in the following code:
+        ```solidity
+        function transfer(address to, uint amount) public {
+            emit Transfer(msg.sender, to, amount);
+        }
+        ```
+    """
     _ast_node: SolcEmitStatement
     _parent: Union[
         Block,
@@ -51,10 +60,26 @@ class EmitStatement(StatementAbc):
         UncheckedBlock,
         WhileStatement,
     ]:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
     def event_call(self) -> FunctionCall:
+        """
+        !!! example
+            ```solidity
+            Transfer(msg.sender, to, amount)
+            ```
+            in the following emit statement:
+            ```solidity
+            emit Transfer(msg.sender, to, amount)
+            ```
+        Returns:
+            Expression representing the event call.
+        """
         return self.__event_call
 
     @property

@@ -138,7 +138,7 @@ class StatementAbc(SolidityAbc, ABC):
     def statements_iter(self) -> Iterator[StatementAbc]:
         """
         Yields:
-            Child statements of the statement including `self`.
+            Child statements of the statement (recursively) including `self`.
         """
         yield self
 

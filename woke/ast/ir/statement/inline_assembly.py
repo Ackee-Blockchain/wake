@@ -34,6 +34,12 @@ IDENTIFIER_RE = re.compile(r"^[a-zA-Z$_][a-zA-Z0-9$_]*".encode("utf-8"))
 
 
 class ExternalReference:
+    """
+    Reference from an inline assembly block to a Solidity declaration.
+    !!! warning
+        This is not an IR node, but a helper class for [InlineAssembly][woke.ast.ir.statement.inline_assembly.InlineAssembly].
+        Since this is not an IR node, there must still be a Yul IR node (e.g. Yul [Identifier][woke.ast.ir.yul.identifier.Identifier]) in the source code that represents the identifier.
+    """
     __external_reference_model: ExternalReferenceModel
     __reference_resolver: ReferenceResolver
     __cu_hash: bytes
@@ -77,10 +83,18 @@ class ExternalReference:
 
     @property
     def file(self) -> Path:
+        """
+        Returns:
+            Absolute path to the file containing the inline assembly block.
+        """
         return self.__file
 
     @property
     def byte_location(self) -> Tuple[int, int]:
+        """
+        Returns:
+            Byte offsets (start and end) of the external reference in the source file.
+        """
         return (
             self.__external_reference_model.src.byte_offset,
             self.__external_reference_model.src.byte_offset
@@ -90,6 +104,23 @@ class ExternalReference:
     @property
     @lru_cache(maxsize=None)
     def identifier_byte_location(self) -> Tuple[int, int]:
+        """
+        !!! example
+            Returns the byte location of `stateVar` in line 6, not `stateVar.slot`:
+            ```solidity linenums="1"
+            contract Foo {
+                uint stateVar;
+
+                function f() public pure {
+                    assembly {
+                        let x := stateVar.slot
+                    }
+                }
+            }
+            ```
+        Returns:
+            Byte offsets (start and end) of the identifier representing the external reference in the source file.
+        """
         match = IDENTIFIER_RE.match(self.__source)
         assert match
         start = self.byte_location[0] + match.start()
@@ -98,6 +129,10 @@ class ExternalReference:
 
     @property
     def referenced_declaration(self) -> DeclarationAbc:
+        """
+        Returns:
+            Solidity declaration referenced by this external reference.
+        """
         node = self.__reference_resolver.resolve_node(
             self.__referenced_declaration_id, self.__cu_hash
         )
@@ -106,14 +141,32 @@ class ExternalReference:
 
     @property
     def value_size(self) -> int:
+        # TODO document this?
         return self.__value_size
 
     @property
     def suffix(self) -> Optional[InlineAssemblySuffix]:
+        """
+        Returns:
+            Suffix of the external reference, if any.
+        """
         return self.__suffix
 
 
 class InlineAssembly(StatementAbc):
+    """
+    Inline assembly block in Solidity.
+    !!! example
+        ```solidity
+        function f() public pure {
+            assembly {
+                let x := 1
+                let y := 2
+                let z := add(x, y)
+            }
+        }
+        ```
+    """
     _ast_node: SolcInlineAssembly
     _parent: Union[
         Block,
@@ -165,25 +218,62 @@ class InlineAssembly(StatementAbc):
         UncheckedBlock,
         WhileStatement,
     ]:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
     def yul_block(self) -> YulBlock:
+        """
+        Returns:
+            Yul block containing Yul IR nodes ([YulAbc][woke.ast.ir.yul.abc.YulAbc]).
+        """
         return self.__yul_block
 
     @property
     def evm_version(self) -> InlineAssemblyEvmVersion:
+        """
+        Depends on the version of the `solc` compiler used to compile the contract.
+        Returns:
+            EVM version used for the inline assembly block.
+        """
         return self.__evm_version
 
     @property
     def flags(self) -> FrozenSet[InlineAssemblyFlag]:
+        """
+        !!! example
+            ```solidity
+            function f() public pure {
+                assembly ("memory-safe") {
+                    let x := 1
+                    let y := 2
+                    let z := add(x, y)
+                }
+            }
+            ```
+        Returns:
+            Flags decorating the inline assembly block.
+        """
         return frozenset(self.__flags)
 
     @property
     def external_references(self) -> Tuple[ExternalReference]:
+        """
+        Returns:
+            External references in the inline assembly block.
+        """
         return tuple(interval.data for interval in self.__external_references)
 
     def external_reference_at(self, byte_offset: int) -> Optional[ExternalReference]:
+        """
+        Args:
+            byte_offset: Byte offset in the source file.
+        Returns:
+            External reference at the given byte offset, if any.
+        """
         intervals = self.__external_references.at(byte_offset)
         assert len(intervals) <= 1
         if len(intervals) == 0:

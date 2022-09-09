@@ -20,6 +20,17 @@ if TYPE_CHECKING:
 
 
 class RevertStatement(StatementAbc):
+    """
+    !!! warning
+        Only matches reverts with user-defined errors:
+        ```solidity
+        revert InsufficientBalance(want, have);
+        ```
+        This is an [ExpressionStatement][woke.ast.ir.statement.expression_statement.ExpressionStatement] with a [FunctionCall][woke.ast.ir.expression.function_call.FunctionCall] expression:
+        ```solidity
+        revert("Insufficient balance");
+        ```
+    """
     _ast_node: SolcRevertStatement
     _parent: Union[
         Block,
@@ -53,10 +64,27 @@ class RevertStatement(StatementAbc):
         UncheckedBlock,
         WhileStatement,
     ]:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
     def error_call(self) -> FunctionCall:
+        """
+        !!! example
+            ```solidity
+            InsufficientBalance(want, have)
+            ```
+            in the following revert statement:
+            ```solidity
+            revert InsufficientBalance(want, have)
+            ```
+
+        Returns:
+            Expression representing the error call.
+        """
         return self.__error_call
 
     @property
