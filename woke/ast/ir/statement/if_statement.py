@@ -19,6 +19,19 @@ if TYPE_CHECKING:
 
 
 class IfStatement(StatementAbc):
+    """
+    !!! example
+        Lines 2-6 in the following code:
+        ```solidity linenums="1"
+        function foo(int x) public pure returns(uint) {
+            if (x < 0) {
+                return 0;
+            } else {
+                return uint(x);
+            }
+        }
+        ```
+    """
     _ast_node: SolcIfStatement
     _parent: Union[
         Block,
@@ -63,18 +76,34 @@ class IfStatement(StatementAbc):
         UncheckedBlock,
         WhileStatement,
     ]:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
     def condition(self) -> ExpressionAbc:
+        """
+        Returns:
+            Condition of the if statement.
+        """
         return self.__condition
 
     @property
     def true_body(self) -> StatementAbc:
+        """
+        Returns:
+            Statement executed if the condition is true.
+        """
         return self.__true_body
 
     @property
     def false_body(self) -> Optional[StatementAbc]:
+        """
+        Returns:
+            Statement executed if the condition is false (if any).
+        """
         return self.__false_body
 
     @property

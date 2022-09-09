@@ -19,6 +19,17 @@ if TYPE_CHECKING:
 
 
 class DoWhileStatement(StatementAbc):
+    """
+    !!! example
+        Lines 2-4 in the following code:
+        ```solidity linenums="1"
+        function foo(uint x) public {
+            do {
+                x += 1;
+            } while (x < 10);
+        }
+        ```
+    """
     _ast_node: SolcDoWhileStatement
     _parent: Union[
         Block,
@@ -55,14 +66,26 @@ class DoWhileStatement(StatementAbc):
         UncheckedBlock,
         WhileStatement,
     ]:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
     def body(self) -> StatementAbc:
+        """
+        Returns:
+            Body of the do-while statement.
+        """
         return self.__body
 
     @property
     def condition(self) -> ExpressionAbc:
+        """
+        Returns:
+            Condition of the do-while statement.
+        """
         return self.__condition
 
     @property
