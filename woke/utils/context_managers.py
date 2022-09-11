@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 from os import chdir
 from pathlib import Path
-from typing import Union
+from typing import Union, Set
 
 
 @contextmanager
@@ -15,3 +15,12 @@ def change_cwd(path: Union[str, Path]):
         yield
     finally:
         chdir(orig_cwd)
+
+
+@contextmanager
+def recursion_guard(guard: Set, *args):
+    try:
+        guard.add(args)
+        yield
+    finally:
+        guard.remove(args)
