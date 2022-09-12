@@ -1,4 +1,8 @@
 from setuptools import setup, find_packages
+from pathlib import Path
+
+this_directory = Path(__file__).parent
+long_description = (this_directory / "README.md").read_text()
 
 install_requires = [
     "pydantic >= 1.9.1",
@@ -41,6 +45,8 @@ extras_require = dict(
 setup(
     name="abch-woke",
     description="Woke is a Python-based development and testing framework for Solidity.",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     url="https://github.com/Ackee-Blockchain/woke",
     author="Ackee Blockchain",
     version="0.1.3-rc4",
