@@ -2,7 +2,7 @@
 
 Woke is a Python-based development and testing framework for Solidity.
 
-Features: 
+Features:
 
 - **LSP server**
 
@@ -20,7 +20,7 @@ via `pip`
 pip3 install abch-woke
 ```
 
-## Features 
+## Features
 
 ### LSP server
 
@@ -40,7 +40,7 @@ woke lsp --port 1234
 
 All LSP server features can be found in the [documentation](https://ackee-blockchain.github.io/woke/latest/language-server/).
 
-### Fuzzer 
+### Fuzzer
 
 The property-based fuzzer can be installed as an extra dependency. Due to the dependency on [eth-brownie](https://eth-brownie.readthedocs.io/en/stable/), it is recommended to install it into a [virtual environment](https://docs.python.org/3/library/venv.html).
 
@@ -50,10 +50,10 @@ pip3 install abch-woke[fuzzer]
 
 ## Documentation & Contribution
 
-Woke documentation can be found [here](https://ackee-blockchain.github.io/woke/latest/). 
+Woke documentation can be found [here](https://ackee-blockchain.github.io/woke/latest/).
 
 There you can also find a section on [contributing](https://ackee-blockchain.github.io/woke/latest/contributing/).
 
 ## License
 
-This project is licensed under the [ISC license](https://github.com/Ackee-Blockchain/woke/blob/main/LICENSE). 
+This project is licensed under the [ISC license](https://github.com/Ackee-Blockchain/woke/blob/main/LICENSE).
