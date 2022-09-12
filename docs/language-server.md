@@ -1,5 +1,5 @@
 # Solidity LSP server
-Woke implements a [LSP](https://microsoft.github.io/language-server-protocol/) server for Solidity. The only currently supported communication channel is TCP.
+Woke implements an [LSP](https://microsoft.github.io/language-server-protocol/) server for Solidity. The only currently supported communication channel is TCP.
 
 Woke LSP server can be run using:
 ```shell
@@ -56,7 +56,7 @@ Woke LSP server implements the command execution provider as specified by the [L
 
 ### Go to implementation
 
-Find implementations of an unimplemented function or modifier.
+Finds implementations of an unimplemented function or modifier.
 
 ![Go to implementation preview](images/lsp/go-to-implementation.gif)
 
