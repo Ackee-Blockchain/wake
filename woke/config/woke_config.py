@@ -237,7 +237,7 @@ class WokeConfig:
 
     @property
     def max_solidity_version(self) -> SolidityVersion:
-        return SolidityVersion.fromstring("0.8.16")
+        return SolidityVersion.fromstring("0.8.17")
 
     @property
     def compiler(self) -> CompilerConfig:
