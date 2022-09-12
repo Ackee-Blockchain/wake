@@ -28,7 +28,7 @@ Apart from having useful comments, this example file showcases basic structure o
 * `test_*` methods that run Woke fuzzer's `Campaign` with the `TestingSequence` class.
 
 !!! tip
-    All of these can also be separated into multiple files, see more a [verbose directory structure](#recommended-directory-structure).
+    All of these can also be separated into multiple files, see a [verbose directory structure](#recommended-directory-structure).
 
 ### `TestingSequence` and `Campaign`
 
@@ -95,7 +95,7 @@ Should a contract fail to revert the transaction, it will be reported as a bug b
 
 ### Invariants
 
-Woke fuzzer is a property-based fuzzer and as such it allows testers to define **[Invariant](#invariants)** methods with `@invariant` decorator. These **[Invariant](#invariants)** methods check for correctness of certain properties in deployed fuzzed smart contracts after every **[Flow](#flows)** execution.
+Woke fuzzer is a property-based fuzzer, and as such, it allows testers to define **[Invariant](#invariants)** methods with `@invariant` decorator. These **[Invariant](#invariants)** methods check for correctness of certain properties in deployed fuzzed smart contracts after every **[Flow](#flows)** execution.
 ```python
 from woke.fuzzer.decorators import invariant
 from woke.fuzzer.random import random_account
@@ -150,7 +150,7 @@ More verbose logs are stored in `.woke-logs/fuzz` directory, specifically the `l
 
 ### What to do when Woke fuzzer finds a bug
 
-When Woke fuzzer finds a bug it will print out a standard Python traceback and ask if a debugger should be attached.
+When Woke fuzzer finds a bug, it will print out a standard Python traceback and ask if a debugger should be attached.
 With the debugger not being attached, the current process is stopped but the rest of the processes continue fuzzing.
 The bug can be later checked out in execution logs the same way as when [checking out the progress](#checking-out-the-progress).
 With the debugger attached, [IPython debugger](https://github.com/gotcha/ipdb) instance is created which allows exploring the state of the fuzzing instance and development chain.
