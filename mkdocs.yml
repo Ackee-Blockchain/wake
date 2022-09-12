@@ -10,6 +10,7 @@ theme:
   name: "material"
   language: en
   logo: images/logo.png
+  custom_dir: docs/overrides
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
@@ -38,6 +39,7 @@ nav:
   - Contributing: 'contributing.md'
 
 extra:
+  generator: false
   version:
     provider: mike
 
