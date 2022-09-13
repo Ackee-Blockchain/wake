@@ -48,18 +48,48 @@ IMPORT_ALIAS_LIST = re.compile(
 
 @dataclass
 class SymbolAlias:
+    """
+    Helper class representing a symbol alias in an import directive of the`:::solidity import {symbol as alias} from "file.sol";` form.
+
+    !!! example
+        `symbol` is the `foreign` attribute and `alias` is the `local` attribute in the following example:
+        ```solidity
+        import {symbol as alias} from "file.sol";
+        ```
+
+    Attributes:
+        foreign (Identifier): Identifier referencing the symbol in the imported file.
+        local (Optional[str]): Alias name of the imported symbol (if any).
+    """
     foreign: Identifier
     local: Optional[str]
 
 
 class ImportDirective(SolidityAbc):
+    """
+    !!! example
+        ```solidity
+        import "SafeLib.sol";
+        ```
+        ```solidity
+        import "SafeLib.sol" as SafeLib;
+        ```
+        ```solidity
+        import * as SafeLib from "SafeLib.sol";
+        ```
+        ```solidity
+        import { SafeType as CustomSafeType } from "SafeLib.sol";
+        ```
+    """
     _ast_node: SolcImportDirective
     _parent: SourceUnit
 
     __source_unit_name: PurePath
     __import_string: str
     __imported_file: Path
+    __source_unit_id: AstNodeId
     __symbol_aliases: List[SymbolAlias]
+    __unit_alias: Optional[str]
 
     def __init__(
         self,
@@ -71,7 +101,12 @@ class ImportDirective(SolidityAbc):
         self.__source_unit_name = PurePath(import_directive.absolute_path)
         self.__import_string = import_directive.file
         self.__imported_file = init.cu.source_unit_name_to_path(self.__source_unit_name)
+        self.__source_unit_id = import_directive.source_unit
         self.__symbol_aliases = []
+        if len(import_directive.unit_alias) > 0:
+            self.__unit_alias = import_directive.unit_alias
+        else:
+            self.__unit_alias = None
 
         for alias in import_directive.symbol_aliases:
             self.__symbol_aliases.append(
@@ -126,41 +161,88 @@ class ImportDirective(SolidityAbc):
 
     @property
     def parent(self) -> SourceUnit:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
     def source_unit_name(self) -> PurePath:
         """
-        The source unit name of the file that is imported.
+        Returns:
+            Source unit name of the imported file.
         """
         return self.__source_unit_name
 
     @property
     def imported_file(self) -> Path:
         """
-        The path of the file that is imported.
+        Returns:
+            Absolute path of the imported file.
         """
         return self.__imported_file
 
     @property
     def import_string(self) -> str:
         """
-        The import string as it appears in the source code.
+        Returns:
+            Import string as it appears in the source code.
         """
         return self.__import_string
 
     @property
+    def source_unit(self) -> SourceUnit:
+        """
+        Returns:
+            Source unit imported by this import directive.
+        """
+        from .source_unit import SourceUnit
+        node = self._reference_resolver.resolve_node(
+            self.__source_unit_id, self._cu_hash
+        )
+        assert isinstance(node, SourceUnit)
+        return node
+
+    @property
     def symbol_aliases(self) -> Tuple[SymbolAlias]:
         """
-        The symbols that are specified (and optionally aliased) in the import directive.
+        Is only set in the case of `:::solidity import { SafeType as CustomSafeType } from "SafeLib.sol";` import directive type.
+        Returns:
+            Symbol aliases present in the import directive.
         """
         return tuple(self.__symbol_aliases)
+
+    @property
+    def unit_alias(self) -> Optional[str]:
+        """
+        !!! example
+            Is `SafeLib` in the case of these import directives:
+            ```solidity
+            import "SafeLib.sol" as SafeLib;
+            ```
+            ```solidity
+            import * as SafeLib from "SafeLib.sol";
+            ```
+
+            Is `None` in the case of these import directives:
+            ```solidity
+            import "SafeLib.sol";
+            ```
+            ```solidity
+            import { SafeType as CustomSafeType } from "SafeLib.sol";
+            ```
+        Returns:
+            Alias for the namespace of the imported source unit.
+        """
+        return self.__unit_alias
 
     @property
     @lru_cache(maxsize=None)
     def import_string_pos(self) -> Tuple[int, int]:
         """
-        The byte position and the byte length of the import string in the source file.
+        Returns:
+            Byte offsets (start, end) of the import string in the source file.
         """
         source_start = self._ast_node.src.byte_offset
 

@@ -16,6 +16,21 @@ if TYPE_CHECKING:
 
 
 class StructuredDocumentation(SolidityAbc):
+    """
+    !!! example
+        Lines 1-4 in the following example:
+        ```solidity linenums="1"
+        /// @title A simulator for trees
+        /// @author John
+        /// @notice You can use this contract for only the most basic simulation
+        /// @dev All function calls are currently implemented without side effects
+        contract Tree {
+            function multiply(uint a) public pure returns(uint) {
+                return a * 7;
+            }
+        }
+        ```
+    """
     _ast_node: SolcStructuredDocumentation
     _parent: Union[
         ContractDefinition,
@@ -48,8 +63,17 @@ class StructuredDocumentation(SolidityAbc):
         ModifierDefinition,
         VariableDeclaration,
     ]:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
     def text(self) -> str:
+        """
+        Does not include the leading `///` or `/**` and trailing `*/`.
+        Returns:
+            [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation string.
+        """
         return self.__text
