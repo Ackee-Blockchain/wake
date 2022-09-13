@@ -15,6 +15,9 @@ if TYPE_CHECKING:
 
 
 class VariableDeclaration(YulAbc):
+    """
+    TBD
+    """
     _parent: Block
     __variables: List[TypedName]
     __value: Optional[Union[FunctionCall, Identifier, Literal]]

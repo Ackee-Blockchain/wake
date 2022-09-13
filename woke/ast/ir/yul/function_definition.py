@@ -8,6 +8,9 @@ from .typed_name import TypedName
 
 
 class FunctionDefinition(YulAbc):
+    """
+    TBD
+    """
     _parent: Block
     __body: Block
     __name: str

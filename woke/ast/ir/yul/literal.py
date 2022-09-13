@@ -20,6 +20,9 @@ if TYPE_CHECKING:
 
 
 class Literal(YulAbc):
+    """
+    TBD
+    """
     _parent: Union[
         Assignment,
         ExpressionStatement,

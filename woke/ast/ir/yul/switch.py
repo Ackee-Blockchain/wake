@@ -15,6 +15,9 @@ if TYPE_CHECKING:
 
 
 class Switch(YulAbc):
+    """
+    TBD
+    """
     _parent: Block
     __cases: List[Case]
     __expression: Union[FunctionCall, Identifier, Literal]
