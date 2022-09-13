@@ -17,6 +17,9 @@ if TYPE_CHECKING:
 
 
 class Identifier(YulAbc):
+    """
+    TBD
+    """
     _parent: Union[
         Assignment,
         ExpressionStatement,

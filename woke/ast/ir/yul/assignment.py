@@ -15,6 +15,9 @@ if TYPE_CHECKING:
 
 
 class Assignment(YulAbc):
+    """
+    TBD
+    """
     _parent: Block
     __value: Union[FunctionCall, Identifier, Literal]
     __variable_names: List[Identifier]

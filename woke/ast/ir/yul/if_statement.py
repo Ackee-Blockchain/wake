@@ -10,6 +10,9 @@ from .literal import Literal
 
 
 class If(YulAbc):
+    """
+    TBD
+    """
     _parent: Block
     __body: Block
     __condition: Union[FunctionCall, Identifier, Literal]

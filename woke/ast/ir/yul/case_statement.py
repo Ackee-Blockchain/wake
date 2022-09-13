@@ -15,6 +15,9 @@ if TYPE_CHECKING:
 
 
 class Case(YulAbc):
+    """
+    TBD
+    """
     _parent: Switch
     __body: Block
     __value: Union[typing_extensions.Literal["default"], Literal]

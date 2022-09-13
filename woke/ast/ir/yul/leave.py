@@ -9,6 +9,9 @@ if TYPE_CHECKING:
 
 
 class Leave(YulAbc):
+    """
+    TBD
+    """
     _parent: Block
 
     @property

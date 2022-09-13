@@ -9,6 +9,9 @@ if TYPE_CHECKING:
 
 
 class Break(YulAbc):
+    """
+    TBD
+    """
     _parent: Block
 
     @property
