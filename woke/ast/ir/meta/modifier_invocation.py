@@ -17,6 +17,24 @@ from woke.ast.nodes import SolcIdentifier, SolcIdentifierPath, SolcModifierInvoc
 
 
 class ModifierInvocation(SolidityAbc):
+    """
+    !!! warning
+        Also represents a base constructor invocation.
+    !!! example
+        - `:::solidity IERC20("MyToken", "MTK")` ([ModifierInvocationKind.BASE_CONSTRUCTOR_SPECIFIER][woke.ast.enums.ModifierInvocationKind.BASE_CONSTRUCTOR_SPECIFIER]),
+        - `:::solidity initializer` ([ModifierInvocationKind.MODIFIER_INVOCATION][woke.ast.enums.ModifierInvocationKind.MODIFIER_INVOCATION])
+
+        in the following code:
+        ```solidity
+        import Initializable from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+
+        contract MyContract is ERC20, Initializable {
+            constructor() ERC20("MyToken", "MTK") initializer {
+                // ...
+            }
+        }
+        ```
+    """
     _ast_node: SolcModifierInvocation
     _parent: FunctionDefinition
 
@@ -72,17 +90,59 @@ class ModifierInvocation(SolidityAbc):
 
     @property
     def parent(self) -> FunctionDefinition:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
     def kind(self) -> ModifierInvocationKind:
+        """
+        Returns:
+            Kind of the modifier invocation.
+        """
         assert self.__kind is not None
         return self.__kind
 
     @property
     def modifier_name(self) -> Union[Identifier, IdentifierPath]:
+        """
+        The returned IR node holds a reference to the [ModifierDefinition][woke.ast.ir.declaration.modifier_definition.ModifierDefinition] declaration of the modifier being invoked in the case of the [ModifierInvocationKind.MODIFIER_INVOCATION][woke.ast.enums.ModifierInvocationKind.MODIFIER_INVOCATION] kind.
+        In the case of the [ModifierInvocationKind.BASE_CONSTRUCTOR_SPECIFIER][woke.ast.enums.ModifierInvocationKind.BASE_CONSTRUCTOR_SPECIFIER] kind, the returned IR node holds a reference to the [ContractDefinition][woke.ast.ir.declaration.contract_definition.ContractDefinition] whose constructor is being invoked.
+        !!! example
+            `ERC20` and `initializer` in the following code:
+            ```solidity
+            constructor() ERC20("MyToken", "MTK") initializer {
+                // ...
+            }
+            ```
+        Returns:
+            IR node representing the name of the modifier.
+        """
         return self.__modifier_name
 
     @property
     def arguments(self) -> Optional[List[ExpressionAbc]]:
+        """
+        !!! warning
+            Is `None` when there are no curly braces after the modifier name.
+            ```solidity
+            constructor() initializer {}
+            ```
+
+            Is an empty list when there are curly braces but no arguments.
+            ```solidity
+            constructor() initializer() {}
+            ```
+        !!! example
+            `:::solidity "MyToken"` and `:::solidity "MTK"` in the following code:
+            ```solidity
+            constructor() ERC20("MyToken", "MTK") initializer {
+                // ...
+            }
+            ```
+        Returns:
+            Arguments of the base constructor or modifier invocation (if any).
+        """
         return self.__arguments

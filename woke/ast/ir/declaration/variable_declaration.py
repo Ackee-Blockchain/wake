@@ -33,35 +33,35 @@ logger = logging.getLogger(__name__)
 
 class VariableDeclaration(DeclarationAbc):
     """
-    A variable can be declared:
-
-    - inside a [ContractDefinition][woke.ast.ir.declaration.contract_definition.ContractDefinition] as a state variable:
-        - `:::solidity uint public stateVar` in line 4,
-    - inside a [ParameterList][woke.ast.ir.meta.parameter_list.ParameterList]:
-        - in an [ErrorDefinition][woke.ast.ir.declaration.error_definition.ErrorDefinition] parameters:
-            - `:::solidity uint errorArg` in line 5,
-        - in an [EventDefinition][woke.ast.ir.declaration.event_definition.EventDefinition] parameters:
-            - `:::solidity uint indexed eventArg` in line 6,
-        - in a [FunctionDefinition][woke.ast.ir.declaration.function_definition.FunctionDefinition] parameters or return parameters:
-            - `:::solidity uint funcReturnArg` in line 16
-            - `:::solidity uint x` and `:::solidity uint` in line 20
-            - `:::solidity uint` in line 30
-            - `:::solidity function (uint) pure returns(uint) h` and the third occurrence `:::solidity uint` in line 34,
-        - in a [ModifierDefinition][woke.ast.ir.declaration.modifier_definition.ModifierDefinition] parameters:
-            - `:::solidity uint modifierArg` in line 12,
-        - in a [FunctionTypeName][woke.ast.ir.type_name.function_type_name.FunctionTypeName] parameters or return parameters:
-            - the first two occurrences of `:::solidity uint` in line 34,
-        - in a [TryCatchClause][woke.ast.ir.meta.try_catch_clause.TryCatchClause]:
-            - `:::solidity uint z` in line 22
-            - `:::solidity string memory reason` in line 24,
-    - inside a [SourceUnit][woke.ast.ir.meta.source_unit.SourceUnit] only as a constant variable:
-        - `:::solidity uint constant CONST = 10` in line 1,
-    - inside a [StructDefinition][woke.ast.ir.declaration.struct_definition.StructDefinition] as a member variable:
-        - `:::solidity uint structMember` in line 9,
-    - inside a [VariableDeclarationStatement][woke.ast.ir.statement.variable_declaration_statement.VariableDeclarationStatement] in a [FunctionDefinition.body][woke.ast.ir.declaration.function_definition.FunctionDefinition.body] as a local variable:
-        - `:::solidity uint y = x` in line 21.
-
     !!! example
+        A variable can be declared:
+
+        - inside a [ContractDefinition][woke.ast.ir.declaration.contract_definition.ContractDefinition] as a state variable:
+            - `:::solidity uint public stateVar` in line 4,
+        - inside a [ParameterList][woke.ast.ir.meta.parameter_list.ParameterList]:
+            - in an [ErrorDefinition][woke.ast.ir.declaration.error_definition.ErrorDefinition] parameters:
+                - `:::solidity uint errorArg` in line 5,
+            - in an [EventDefinition][woke.ast.ir.declaration.event_definition.EventDefinition] parameters:
+                - `:::solidity uint indexed eventArg` in line 6,
+            - in a [FunctionDefinition][woke.ast.ir.declaration.function_definition.FunctionDefinition] parameters or return parameters:
+                - `:::solidity uint funcReturnArg` in line 16
+                - `:::solidity uint x` and `:::solidity uint` in line 20
+                - `:::solidity uint` in line 30
+                - `:::solidity function (uint) pure returns(uint) h` and the third occurrence `:::solidity uint` in line 34,
+            - in a [ModifierDefinition][woke.ast.ir.declaration.modifier_definition.ModifierDefinition] parameters:
+                - `:::solidity uint modifierArg` in line 12,
+            - in a [FunctionTypeName][woke.ast.ir.type_name.function_type_name.FunctionTypeName] parameters or return parameters:
+                - the first two occurrences of `:::solidity uint` in line 34,
+            - in a [TryCatchClause][woke.ast.ir.meta.try_catch_clause.TryCatchClause]:
+                - `:::solidity uint z` in line 22
+                - `:::solidity string memory reason` in line 24,
+        - inside a [SourceUnit][woke.ast.ir.meta.source_unit.SourceUnit] only as a constant variable:
+            - `:::solidity uint constant CONST = 10` in line 1,
+        - inside a [StructDefinition][woke.ast.ir.declaration.struct_definition.StructDefinition] as a member variable:
+            - `:::solidity uint structMember` in line 9,
+        - inside a [VariableDeclarationStatement][woke.ast.ir.statement.variable_declaration_statement.VariableDeclarationStatement] in a [FunctionDefinition.body][woke.ast.ir.declaration.function_definition.FunctionDefinition.body] as a local variable:
+            - `:::solidity uint y = x` in line 21.
+
         ```solidity linenums="1"
         uint constant CONST = 10;
 

@@ -20,6 +20,29 @@ from woke.ast.nodes import (
 
 
 class UsingForDirective(SolidityAbc):
+    """
+    !!! note
+        Either [functions][woke.ast.ir.meta.using_for_directive.UsingForDirective.functions] or [library_name][woke.ast.ir.meta.using_for_directive.UsingForDirective.library_name] must be set.
+    !!! example
+        Lines 13 and 14 in the following example:
+        ```solidity linenums="1"
+        function add(uint a, uint b) pure returns (uint) {
+            return a + b;
+        }
+
+        library SafeMath {
+            function sub(uint a, uint b) pure returns (uint) {
+                require(b <= a);
+                return a - b;
+            }
+        }
+
+        contract C {
+            using SafeMath for uint;
+            using {add as add2} for uint;
+        }
+        ```
+    """
     _ast_node: SolcUsingForDirective
     _parent: Union[ContractDefinition, SourceUnit]
 
@@ -73,18 +96,37 @@ class UsingForDirective(SolidityAbc):
 
     @property
     def parent(self) -> Union[ContractDefinition, SourceUnit]:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
     def functions(self) -> Optional[Tuple[IdentifierPath]]:
+        """
+        Is only set in the case of `:::solidity using {function1, function2} for TypeName;` directive type.
+        Returns:
+            List of functions that are bound to the target type.
+        """
         if self.__functions is None:
             return None
         return tuple(self.__functions)
 
     @property
     def library_name(self) -> Optional[Union[IdentifierPath, UserDefinedTypeName]]:
+        """
+        Is only set in the case of `:::solidity using LibraryName for TypeName;` directive type.
+        Returns:
+            IR node referencing the library ([ContractDefinition][woke.ast.ir.declaration.contract_definition.ContractDefinition] of the [ContractKind.LIBRARY][woke.ast.enums.ContractKind.LIBRARY] kind) that is bound to the target type.
+        """
         return self.__library_name
 
     @property
     def type_name(self) -> Optional[TypeNameAbc]:
+        """
+        Is `None` in the case of `:::solidity using Lib for *;`.
+        Returns:
+            Type name that is bound to the functions or library.
+        """
         return self.__type_name

@@ -35,6 +35,23 @@ logger = logging.getLogger(__name__)
 
 
 class SourceUnit(SolidityAbc):
+    """
+    Source unit is the root node.
+
+    !!! warning
+        Source unit [byte_location][woke.ast.ir.abc.IrAbc.byte_location] does not cover the whole file.
+        Only lines 3-7 are covered by the source unit in the following example:
+        ```solidity linenums="1"
+        // SPDX-License-Identifier: MIT
+
+        pragma solidity ^0.8;
+
+        contract Foo {
+            function bar() public {}
+        }
+        ```
+        Also trailing newlines are not covered by the source unit.
+    """
     _ast_node: SolcSourceUnit
 
     __file_source: bytes
@@ -122,100 +139,129 @@ class SourceUnit(SolidityAbc):
 
     @property
     def parent(self) -> None:
+        """
+        Returns:
+            Does not have a parent.
+        """
         return None
 
     @property
     def file_source(self) -> bytes:
         """
-        Source code of the file including trailing newlines and license string.
+        As opposed to [source][woke.ast.ir.abc.IrAbc.source], this property returns the whole file source.
+        Returns:
+            Source code of the file including trailing newlines and license string.
         """
         return self.__file_source
 
     @property
     def license(self) -> Optional[str]:
         """
-        The license string of the file (if present).
+        !!! example
+            Returns `MIT` for the following license comment:
+            ```solidity
+            // SPDX-License-Identifier: MIT
+            ```
+        Returns:
+            License string of the file, if any.
         """
         return self.__license
 
     @property
     def source_unit_name(self) -> str:
         """
-        The source unit name of the file.
+        Returns:
+            Source unit name of the file.
         """
         return self.__source_unit_name
 
     @property
     def pragmas(self) -> Tuple[PragmaDirective]:
         """
-        A tuple of pragma directives present in the file.
+        Returns:
+            Pragma directives present in the file.
         """
         return tuple(self.__pragmas)
 
     @property
     def imports(self) -> Tuple[ImportDirective]:
         """
-        A tuple of import directives present in the file.
+        Returns:
+            Import directives present in the file.
         """
         return tuple(self.__imports)
 
     @property
     def declared_variables(self) -> Tuple[VariableDeclaration]:
         """
-        A tuple of top level variable declarations present in the file.
+        Should only return constants.
+        Returns:
+            Top-level variable declarations present in the file.
         """
         return tuple(self.__declared_variables)
 
     @property
     def enums(self) -> Tuple[EnumDefinition]:
         """
-        A tuple of top level enum definitions present in the file.
+        Returns:
+            Top-level enum definitions present in the file.
         """
         return tuple(self.__enums)
 
     @property
     def functions(self) -> Tuple[FunctionDefinition]:
         """
-        A tuple of top level function definitions present in the file.
+        Should only return [FunctionDefinitions][woke.ast.ir.declaration.function_definition.FunctionDefinition] of the [FunctionKind.FREE_FUNCTION][woke.ast.enums.FunctionKind.FREE_FUNCTION] kind.
+        Returns:
+            Top-level function definitions present in the file.
         """
         return tuple(self.__functions)
 
     @property
     def structs(self) -> Tuple[StructDefinition]:
         """
-        A tuple of top level struct definitions present in the file.
+        Returns:
+            Top-level struct definitions present in the file.
         """
         return tuple(self.__structs)
 
     @property
     def errors(self) -> Tuple[ErrorDefinition]:
         """
-        A tuple of top level error definitions present in the file.
+        Returns:
+            Top-level error definitions present in the file.
         """
         return tuple(self.__errors)
 
     @property
     def user_defined_value_types(self) -> Tuple[UserDefinedValueTypeDefinition]:
         """
-        A tuple of top level user defined value type definitions present in the file.
+        Returns:
+            Top-level user-defined value type definitions present in the file.
         """
         return tuple(self.__user_defined_value_types)
 
     @property
     def contracts(self) -> Tuple[ContractDefinition]:
         """
-        A tuple of top level contract definitions present in the file.
+        Returns:
+            Contract definitions present in the file.
         """
         return tuple(self.__contracts)
 
     @property
     def using_for_directives(self) -> Tuple[UsingForDirective]:
         """
-        A tuple of top level using for directives present in the file.
+        Returns:
+            Top-level using for directives present in the file.
         """
         return tuple(self.__using_for_directives)
 
     def declarations_iter(self) -> Iterator[DeclarationAbc]:
+        """
+        Yields:
+            All declarations ([DeclarationAbc][woke.ast.ir.declaration.abc.DeclarationAbc]) present in the file (recursively).
+        """
         yield from self.declared_variables
         yield from self.enums
         for enum in self.enums:
