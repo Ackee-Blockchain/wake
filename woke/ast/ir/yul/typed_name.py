@@ -13,6 +13,9 @@ if TYPE_CHECKING:
 
 
 class TypedName(YulAbc):
+    """
+    TBD
+    """
     _parent: Union[FunctionDefinition, VariableDeclaration]
     __name: str
     __type: str

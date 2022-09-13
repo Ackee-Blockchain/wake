@@ -36,6 +36,9 @@ if TYPE_CHECKING:
 
 
 class Block(YulAbc):
+    """
+    TBD
+    """
     _parent: Union[InlineAssembly, Block, ForLoop, FunctionDefinition, If, Case]
     __statements: List[
         Union[

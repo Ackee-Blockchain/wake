@@ -9,6 +9,9 @@ if TYPE_CHECKING:
 
 
 class Continue(YulAbc):
+    """
+    TBD
+    """
     _parent: Block
 
     @property
