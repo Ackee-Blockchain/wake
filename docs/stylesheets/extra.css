@@ -1,6 +1,8 @@
 [data-md-color-scheme="default"] {
     --md-primary-fg-color: #0000FF;
     --md-code-hl-name-color: #0f1112;
+    --md-code-hl-keyword-color: #212ed7;
+    --md-code-hl-variable-color: rgb(0 0 0 / 60%);
     --md-code-fg-color: #1f2528;
 }
 
@@ -34,10 +36,12 @@
     color: #00FFFF;
 }
 
-h2.doc-heading > code,
-h3.doc-heading > code,
-h2.doc-heading .doc-label > code,
-h3.doc-heading .doc-label > code
+:not(.doc-attribute) > h2.doc-heading > code,
+:not(.doc-attribute) > h3.doc-heading > code,
+:not(.doc-attribute) > h4.doc-heading > code,
+:not(.doc-attribute) > h2.doc-heading .doc-label > code,
+:not(.doc-attribute) > h3.doc-heading .doc-label > code,
+:not(.doc-attribute) > h4.doc-heading .doc-label > code
 {
     color: #FFF !important;
     padding-top: 0.2em !important;
@@ -45,10 +49,12 @@ h3.doc-heading .doc-label > code
     background-color: #0000FF;
 }
 
-h2.doc-heading > code span,
-h3.doc-heading > code span,
-h2.doc-heading .doc-label > code span,
-h3.doc-heading .doc-label > code span
+:not(.doc-attribute) > h2.doc-heading > code span,
+:not(.doc-attribute) > h3.doc-heading > code span,
+:not(.doc-attribute) > h4.doc-heading > code span,
+:not(.doc-attribute) > h2.doc-heading .doc-label > code span,
+:not(.doc-attribute) > h3.doc-heading .doc-label > code span,
+:not(.doc-attribute) > h4.doc-heading .doc-label > code span
 {
     color: #FFF !important;
 }
