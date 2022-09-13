@@ -92,7 +92,7 @@ class ModifierDefinition(DeclarationAbc):
             )
         self.__overrides = (
             OverrideSpecifier(init, modifier.overrides, self)
-            if modifier.overrides
+            if modifier.overrides is not None
             else None
         )
         self._reference_resolver.register_post_process_callback(self.__post_process)

@@ -16,6 +16,27 @@ from woke.ast.nodes import SolcTryCatchClause
 
 
 class TryCatchClause(SolidityAbc):
+    """
+    !!! example
+        - `:::solidity returns(uint x) {}`,
+        - `:::solidity catch Error(string memory reason) {}`,
+        - `:::solidity catch Panic(uint errorCode) {}`,
+        - `:::solidity catch (bytes memory lowLevelData) {}` are all try/catch clauses in the following example:
+        ```solidity
+        contract C {
+            function foo() public view {
+                try this.bar(10) returns(uint x) {}
+                catch Error(string memory reason) {}
+                catch Panic(uint errorCode) {}
+                catch (bytes memory lowLevelData) {}
+            }
+
+            function bar(uint x) external pure returns(uint) {
+                return x;
+            }
+        }
+        ```
+    """
     _ast_node: SolcTryCatchClause
     _parent: TryStatement
 
@@ -46,18 +67,77 @@ class TryCatchClause(SolidityAbc):
 
     @property
     def parent(self) -> TryStatement:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
     def block(self) -> Block:
+        """
+        Returns:
+            Body of the try/catch clause.
+        """
         return self.__block
 
     @property
     def error_name(self) -> str:
+        """
+        !!! example
+            For the following snippet:
+            ```solidity
+            try this.f() returns (uint256) {
+                // ...
+            } catch Error(string memory reason) {
+                // ...
+            } catch Panic(uint errorCode) {
+                // ...
+            } catch (bytes memory lowLevelData) {
+                // ...
+            }
+            ```
+
+            - the `error_name` of the first (try) clause is empty,
+            - the `error_name` of the second (catch) clause is `Error`,
+            - the `error_name` of the third (catch) clause is `Panic`,
+            - the `error_name` of the fourth (catch) clause is empty.
+        Returns:
+            Error name of the try/catch clause.
+        """
         return self.__error_name
 
     @property
     def parameters(self) -> Optional[ParameterList]:
+        """
+        Can be `None` if the try clause does not have return parameters or if the catch clause does not accept parameters.
+        !!! example
+            Both clauses in the following example do not have parameters:
+            ```solidity
+            try this.f() {
+                // ...
+            } catch {
+                // ...
+            }
+            ```
+
+        !!! example
+            `:::solidity (uint x)`, `:::solidity (string memory reason)`, `:::solidity (uint errorCode)` and `:::solidity (bytes memory lowLevelData)` are the parameters of the try/catch clauses in the following example:
+            ```solidity
+            try this.f() returns (uint x) {
+                // ...
+            } catch Error(string memory reason) {
+                // ...
+            } catch Panic(uint errorCode) {
+                // ...
+            } catch (bytes memory lowLevelData) {
+                // ...
+            }
+            ```
+
+        Returns:
+            Return parameters in the case of a try clause, or error parameters in the case of a catch clause.
+        """
         return self.__parameters
 
     @property

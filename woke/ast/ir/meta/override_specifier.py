@@ -20,6 +20,42 @@ from woke.ast.nodes import (
 
 
 class OverrideSpecifier(SolidityAbc):
+    """
+    !!! example
+        An override specifier can be used:
+
+        - in a [FunctionDefinition][woke.ast.ir.declaration.function_definition.FunctionDefinition]:
+            - `:::solidity override` in line 19,
+        - in a [ModifierDefinition][woke.ast.ir.declaration.modifier_definition.ModifierDefinition]:
+            - `:::solidity override` in line 12,
+        - in a [VariableDeclaration][woke.ast.ir.declaration.variable_declaration.VariableDeclaration]:
+            - `:::solidity override(IERC20)` in line 17.
+
+        ```solidity linenums="1"
+        interface IERC20 {
+            function transfer(address to, uint256 value) external returns (bool);
+
+            function allowance(address owner, address spender) external view returns (uint256);
+        }
+
+        abstract contract ERC20 is IERC20 {
+            modifier EOA() virtual;
+        }
+
+        contract C is ERC20 {
+            modifier EOA() override {
+                require(msg.sender == tx.origin);
+                _;
+            }
+
+            mapping(address => mapping(address => uint256)) public override(IERC20) allowance;
+
+            function transfer(address to, uint256 value) external override returns (bool) {
+                // ...
+            }
+        }
+        ```
+    """
     _ast_node: SolcOverrideSpecifier
     _parent: Union[FunctionDefinition, ModifierDefinition, VariableDeclaration]
 
@@ -49,8 +85,18 @@ class OverrideSpecifier(SolidityAbc):
     def parent(
         self,
     ) -> Union[FunctionDefinition, ModifierDefinition, VariableDeclaration]:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
     def overrides(self) -> Tuple[Union[IdentifierPath, UserDefinedTypeName]]:
+        """
+        !!! note
+            Is empty when there are no curly braces after the `:::solidity override` keyword.
+        Returns:
+            Tuple of IR nodes referencing the contract or interface whose declaration is being overridden.
+        """
         return tuple(self.__overrides)

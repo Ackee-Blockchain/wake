@@ -28,11 +28,32 @@ class PragmaDirective(SolidityAbc):
 
     @property
     def parent(self) -> SourceUnit:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
     def literals(self) -> Tuple[str]:
         """
-        The literals of the pragma directive.
+        !!! example
+            `:::py ('solidity', '^', '0.8', '||', '0.7', '.1', '-', '0.7', '.6')` for the following pragma:
+            ```solidity
+            pragma solidity ^0.8 || 0.7.1 - 0.7.6;
+            ```
+        !!! example
+            `:::py ('abicoder', 'v2')` for the following pragma:
+            ```solidity
+            pragma abicoder v2;
+            ```
+        !!! example
+            `:::py ('experimental', 'SMTChecker')` for the following pragma:
+            ```solidity
+            pragma experimental SMTChecker;
+            ```
+
+        Returns:
+            Literals of the pragma directive.
         """
         return tuple(self.__literals)
