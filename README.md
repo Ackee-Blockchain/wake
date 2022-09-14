@@ -38,7 +38,7 @@ Or with an optional --port argument:
 woke lsp --port 1234
 ```
 
-All LSP server features can be found in the [documentation](https://ackee-blockchain.github.io/woke/latest/language-server/).
+All LSP server features can be found in the [documentation](https://ackeeblockchain.com/woke/docs/latest/language-server/).
 
 ### Fuzzer
 
@@ -50,9 +50,9 @@ pip3 install abch-woke[fuzzer]
 
 ## Documentation & Contribution
 
-Woke documentation can be found [here](https://ackee-blockchain.github.io/woke/latest/).
+Woke documentation can be found [here](https://ackeeblockchain.com/woke/docs).
 
-There you can also find a section on [contributing](https://ackee-blockchain.github.io/woke/latest/contributing/).
+There you can also find a section on [contributing](https://ackeeblockchain.com/woke/docs/latest/contributing/).
 
 ## License
 
