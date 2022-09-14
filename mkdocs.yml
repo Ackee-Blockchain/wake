@@ -40,6 +40,13 @@ nav:
 
 extra:
   generator: false
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Ackee-Blockchain
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/ackeeblockchain
+    - icon: fontawesome/brands/discord
+      link: https://discord.gg/2HgPXQZVzP
   version:
     provider: mike
 
