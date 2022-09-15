@@ -2,14 +2,14 @@ name: Migrate Pipeline
 on:
   push:
     branches:
-      - gh-pages
+      - documentation
 
 jobs:
   build:
     name: Migrate docs
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout 
+      - name: Checkout
         uses: actions/checkout@v2
 
       - name: Push to ABCH web
@@ -17,7 +17,7 @@ jobs:
         env:
           API_TOKEN_GITHUB: ${{ secrets.ABCH_WEB_TOKEN }}
         with:
-          source-directory: . 
+          source-directory: .
           destination-github-username: 'Ackee-Blockchain'
           destination-repository-name: 'firebase-abch-web'
           target-branch: master
