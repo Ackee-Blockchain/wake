@@ -160,7 +160,11 @@ Apart from the `@flow` and `@invariant` that define type of the test method ther
 
 * `@weight(x)` - specifies weight that will be used when generating a sequence with default weight being 100. Say flow1 has weight 100 and flow2 has weight 200, flow2 will have ~$\frac{2}{3}$ of the executions and flow1 only ~$\frac{1}{3}$,
 * `@max_times(x)` - specifies maximum times a **[Flow](#flows)** will be called in one generated sequence,
+* `@min_times(x)` - specifies minimum times a **[Flow](#flows)** will be called in one generated sequence,
 * `@ignore` - instructs Woke fuzzer to ignore the decorated **[Flow](#flows)** or **[Invariant](#invariants)**, useful for testing and debugging.
+
+!!! warning
+    Make sure that you specify solvable `@max_times` and `@min_times` decorator values, e.g max_times should not be smaller than min_times for one flow, min_times should be lower than number of flows to be generated and so on.
 
 ## Optional CLI arguments
 

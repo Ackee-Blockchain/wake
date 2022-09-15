@@ -63,6 +63,14 @@ def max_times(x: int):
     return decorator
 
 
+def min_times(x: int):
+    def decorator(fn):
+        fn.min_times = x
+        return fn
+
+    return decorator
+
+
 def weight(w: int):
     def decorator(fn):
         fn.weight = w
