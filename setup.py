@@ -49,7 +49,7 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/Ackee-Blockchain/woke",
     author="Ackee Blockchain",
-    version="0.1.3-rc5",
+    version="0.1.3-rc6",
     packages=find_packages(exclude=("tests",)),
     author_email="hello@ackeeblockchain.com",
     keywords=[
