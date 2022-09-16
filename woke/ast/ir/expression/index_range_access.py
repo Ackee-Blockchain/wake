@@ -9,6 +9,10 @@ from woke.ast.nodes import SolcIndexRangeAccess
 
 
 class IndexRangeAccess(ExpressionAbc):
+    """
+    TBD
+    """
+
     _ast_node: SolcIndexRangeAccess
     _parent: SolidityAbc  # TODO: make this more specific
 

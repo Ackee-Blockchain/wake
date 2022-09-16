@@ -12,6 +12,10 @@ from woke.ast.nodes import AstNodeId, SolcIdentifier
 
 
 class Identifier(ExpressionAbc):
+    """
+    TBD
+    """
+
     _ast_node: SolcIdentifier
     _parent: SolidityAbc  # TODO: make this more specific
 

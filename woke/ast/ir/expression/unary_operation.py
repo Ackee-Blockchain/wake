@@ -9,6 +9,10 @@ from woke.ast.nodes import SolcUnaryOperation
 
 
 class UnaryOperation(ExpressionAbc):
+    """
+    TBD
+    """
+
     _ast_node: SolcUnaryOperation
     _parent: SolidityAbc
 
