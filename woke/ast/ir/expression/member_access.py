@@ -4,14 +4,14 @@ from functools import lru_cache, partial
 from typing import Iterator, Optional, Set, Tuple, Union
 
 from woke.ast.enums import GlobalSymbolsEnum, ModifiesStateFlag
-from woke.ast.expression_types import (
+from woke.ast.types import (
     Address,
     Array,
     Bytes,
     FixedBytes,
     Function,
     Magic,
-    MagicExpressionKind,
+    MagicTypeKind,
     String,
     Type,
 )
@@ -155,7 +155,7 @@ class MemberAccess(ExpressionAbc):
                 else:
                     assert False, f"Unknown function member: {self.member_name}"
             elif isinstance(expr_type, Magic):
-                if expr_type.kind == MagicExpressionKind.BLOCK:
+                if expr_type.kind == MagicTypeKind.BLOCK:
                     if self.member_name == "basefee":
                         self.__referenced_declaration_id = AstNodeId(
                             GlobalSymbolsEnum.BLOCK_BASEFEE
@@ -186,7 +186,7 @@ class MemberAccess(ExpressionAbc):
                         )
                     else:
                         assert False, f"Unknown block member {self.member_name}"
-                elif expr_type.kind == MagicExpressionKind.MESSAGE:
+                elif expr_type.kind == MagicTypeKind.MESSAGE:
                     if self.member_name == "data":
                         self.__referenced_declaration_id = AstNodeId(
                             GlobalSymbolsEnum.MSG_DATA
@@ -205,7 +205,7 @@ class MemberAccess(ExpressionAbc):
                         )
                     else:
                         assert False, f"Unknown msg member {self.member_name}"
-                elif expr_type.kind == MagicExpressionKind.TRANSACTION:
+                elif expr_type.kind == MagicTypeKind.TRANSACTION:
                     if self.member_name == "gasprice":
                         self.__referenced_declaration_id = AstNodeId(
                             GlobalSymbolsEnum.TX_GASPRICE
@@ -216,7 +216,7 @@ class MemberAccess(ExpressionAbc):
                         )
                     else:
                         assert False, f"Unknown tx member {self.member_name}"
-                elif expr_type.kind == MagicExpressionKind.ABI:
+                elif expr_type.kind == MagicTypeKind.ABI:
                     if self.member_name == "decode":
                         self.__referenced_declaration_id = AstNodeId(
                             GlobalSymbolsEnum.ABI_DECODE
@@ -243,7 +243,7 @@ class MemberAccess(ExpressionAbc):
                         )
                     else:
                         assert False, f"Unknown abi member {self.member_name}"
-                elif expr_type.kind == MagicExpressionKind.META_TYPE:
+                elif expr_type.kind == MagicTypeKind.META_TYPE:
                     if self.member_name == "name":
                         self.__referenced_declaration_id = AstNodeId(
                             GlobalSymbolsEnum.TYPE_NAME

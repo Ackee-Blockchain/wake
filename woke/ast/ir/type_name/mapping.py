@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from ..meta.using_for_directive import UsingForDirective
     from .array_type_name import ArrayTypeName
 
-import woke.ast.expression_types as expr
+import woke.ast.types as types
 from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.type_name.abc import TypeNameAbc
 from woke.ast.ir.utils import IrInitTuple
@@ -36,9 +36,9 @@ class Mapping(TypeNameAbc):
         return self._parent
 
     @property
-    def type(self) -> expr.Mapping:
+    def type(self) -> types.Mapping:
         t = super().type
-        assert isinstance(t, expr.Mapping)
+        assert isinstance(t, types.Mapping)
         return t
 
     @property
