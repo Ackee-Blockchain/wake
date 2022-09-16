@@ -21,6 +21,7 @@ from ..statement.block import Block
 from .abc import DeclarationAbc
 
 if TYPE_CHECKING:
+    from woke.analysis.cfg import ControlFlowGraph
     from .contract_definition import ContractDefinition
     from ..expression.identifier import Identifier
     from ..expression.member_access import MemberAccess
@@ -372,3 +373,11 @@ class ModifierDefinition(DeclarationAbc):
             Override specifier, if any.
         """
         return self.__overrides
+
+    @property
+    @lru_cache(maxsize=None)
+    def cfg(self) -> Optional[ControlFlowGraph]:
+        from woke.analysis.cfg import ControlFlowGraph
+        if self.body is None:
+            return None
+        return ControlFlowGraph(self)
