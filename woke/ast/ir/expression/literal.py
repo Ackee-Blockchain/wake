@@ -8,6 +8,10 @@ from woke.ast.nodes import SolcLiteral
 
 
 class Literal(ExpressionAbc):
+    """
+    TBD
+    """
+
     _ast_node: SolcLiteral
     _parent: SolidityAbc  # TODO: make this more specific
 

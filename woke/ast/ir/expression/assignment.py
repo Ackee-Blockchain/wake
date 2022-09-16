@@ -20,6 +20,10 @@ AssignedVariablePath = Tuple[Union[DeclarationAbc, Literal["IndexAccess"]], ...]
 
 
 class Assignment(ExpressionAbc):
+    """
+    TBD
+    """
+
     _ast_node: SolcAssignment
     _parent: SolidityAbc  # TODO: make this more specific
 

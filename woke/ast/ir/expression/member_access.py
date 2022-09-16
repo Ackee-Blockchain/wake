@@ -4,17 +4,6 @@ from functools import lru_cache, partial
 from typing import Iterator, Optional, Set, Tuple, Union
 
 from woke.ast.enums import GlobalSymbolsEnum, ModifiesStateFlag
-from woke.ast.types import (
-    Address,
-    Array,
-    Bytes,
-    FixedBytes,
-    Function,
-    Magic,
-    MagicTypeKind,
-    String,
-    Type, UserDefinedValueType,
-)
 from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.declaration.abc import DeclarationAbc
 from woke.ast.ir.declaration.enum_definition import EnumDefinition
@@ -24,6 +13,18 @@ from woke.ast.ir.expression.identifier import Identifier
 from woke.ast.ir.reference_resolver import CallbackParams
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import AstNodeId, SolcMemberAccess
+from woke.ast.types import (
+    Address,
+    Array,
+    Bytes,
+    FixedBytes,
+    Function,
+    Magic,
+    MagicTypeKind,
+    String,
+    Type,
+    UserDefinedValueType,
+)
 
 MEMBER_RE = re.compile(r"\s*.\s*(?P<member>.+)".encode("utf-8"))
 
@@ -32,6 +33,10 @@ logger = logging.getLogger(__name__)
 
 
 class MemberAccess(ExpressionAbc):
+    """
+    TBD
+    """
+
     _ast_node: SolcMemberAccess
     _parent: SolidityAbc  # TODO: make this more specific
 
@@ -295,9 +300,13 @@ class MemberAccess(ExpressionAbc):
                             GlobalSymbolsEnum.USER_DEFINED_VALUE_TYPE_UNWRAP
                         )
                     else:
-                        assert False, f"Unknown user defined value type member {self.member_name}"
+                        assert (
+                            False
+                        ), f"Unknown user defined value type member {self.member_name}"
                 else:
-                    assert False, f"Unknown type member {self.member_name} {expr_type.actual_type}"
+                    assert (
+                        False
+                    ), f"Unknown type member {self.member_name} {expr_type.actual_type}"
 
         assert (
             self.__referenced_declaration_id is not None

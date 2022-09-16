@@ -10,6 +10,10 @@ from .abc import ExpressionAbc
 
 
 class Conditional(ExpressionAbc):
+    """
+    TBD
+    """
+
     _ast_node: SolcConditional
     _parent: SolidityAbc  # TODO: make this more specific
 
