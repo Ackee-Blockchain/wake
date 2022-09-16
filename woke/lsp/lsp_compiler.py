@@ -631,40 +631,41 @@ class LspCompiler:
         if progress_token is not None:
             await self.__server.progress_end(progress_token)
 
-        try:
-            for detection in detect(
-                {path: self.__source_units[path] for path in processed_files}
-            ):
-                file = detection.result.ir_node.file
-                if detection.result.related_info is not None:
-                    related_info = [
-                        DiagnosticRelatedInformation(
-                            location=Location(
-                                uri=DocumentUri(path_to_uri(info.ir_node.file)),
-                                range=self.get_range_from_byte_offsets(
-                                    info.ir_node.file, info.ir_node.byte_location
+        if self.__config.lsp.detectors.enable:
+            try:
+                for detection in detect(
+                    {path: self.__source_units[path] for path in processed_files}
+                ):
+                    file = detection.result.ir_node.file
+                    if detection.result.related_info is not None:
+                        related_info = [
+                            DiagnosticRelatedInformation(
+                                location=Location(
+                                    uri=DocumentUri(path_to_uri(info.ir_node.file)),
+                                    range=self.get_range_from_byte_offsets(
+                                        info.ir_node.file, info.ir_node.byte_location
+                                    ),
                                 ),
-                            ),
-                            message=info.message,
-                        )
-                        for info in detection.result.related_info
-                    ]
-                else:
-                    related_info = None
+                                message=info.message,
+                            )
+                            for info in detection.result.related_info
+                        ]
+                    else:
+                        related_info = None
 
-                errors_per_file[file].add(
-                    Diagnostic(
-                        range=self.get_range_from_byte_offsets(
-                            file, detection.result.ir_node.byte_location
-                        ),
-                        severity=DiagnosticSeverity.WARNING,
-                        message="Woke: " + detection.result.message,
-                        code=detection.code,
-                        related_information=related_info,
+                    errors_per_file[file].add(
+                        Diagnostic(
+                            range=self.get_range_from_byte_offsets(
+                                file, detection.result.ir_node.byte_location
+                            ),
+                            severity=DiagnosticSeverity.WARNING,
+                            message="Woke: " + detection.result.message,
+                            code=detection.code,
+                            related_information=related_info,
+                        )
                     )
-                )
-        except Exception:
-            pass
+            except Exception:
+                pass
 
         for error in errors_without_location:
             if error.severity == SolcOutputErrorSeverityEnum.ERROR:

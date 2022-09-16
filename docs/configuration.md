@@ -72,6 +72,12 @@ The resolution order for each configuration option is:
 |:---------|:---------------------------------------|:--------------|
 | `enable` | Enable LSP code lens language feature. | `false`       |
 
+### `lsp.detectors` namespace
+
+| Option   | Description                                       | Default value |
+|:---------|:--------------------------------------------------|:--------------|
+| `enable` | Enable vulnerability detectors in the LSP server. | `true`        |
+
 ### `lsp.find_references` namespace
 Configuration options specific to the LSP `Find references` request.
 
