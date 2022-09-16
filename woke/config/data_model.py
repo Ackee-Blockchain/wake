@@ -95,12 +95,17 @@ class CodeLensConfig(WokeConfigModel):
     enable: bool = False
 
 
+class DetectorsLspConfig(WokeConfigModel):
+    enable: bool = True
+
+
 class CompilerConfig(WokeConfigModel):
     solc: SolcConfig = Field(default_factory=SolcConfig)
 
 
 class LspConfig(WokeConfigModel):
     code_lens: CodeLensConfig = Field(default_factory=CodeLensConfig)
+    detectors: DetectorsLspConfig = Field(default_factory=DetectorsLspConfig)
     find_references: FindReferencesConfig = Field(default_factory=FindReferencesConfig)
 
 
