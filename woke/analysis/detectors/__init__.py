@@ -1,4 +1,5 @@
 from .api import DetectorResult, detect, detector
+from .balance_state_var import detect_unsafe_address_balance_use
 from .call_options_not_called import (
     detect_function_call_options_not_called,
     detect_old_gas_value_not_called,
