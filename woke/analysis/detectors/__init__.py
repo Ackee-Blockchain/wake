@@ -1,2 +1,3 @@
 from .api import DetectorResult, detect, detector
+from .reentrancy import detect_reentrancy
 from .unchecked_return_value import detect_unchecked_return_value
