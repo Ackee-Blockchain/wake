@@ -10,6 +10,10 @@ from .abc import ExpressionAbc
 
 
 class BinaryOperation(ExpressionAbc):
+    """
+    TBD
+    """
+
     _ast_node: SolcBinaryOperation
     _parent: SolidityAbc  # TODO: make this more specific
 

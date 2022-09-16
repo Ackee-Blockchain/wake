@@ -10,6 +10,10 @@ from .abc import ExpressionAbc
 
 
 class ElementaryTypeNameExpression(ExpressionAbc):
+    """
+    TBD
+    """
+
     _ast_node: SolcElementaryTypeNameExpression
     _parent: SolidityAbc  # TODO: make this more specific
 

@@ -10,6 +10,10 @@ from woke.ast.nodes import SolcTupleExpression
 
 
 class TupleExpression(ExpressionAbc):
+    """
+    TBD
+    """
+
     _ast_node: SolcTupleExpression
     _parent: SolidityAbc  # TODO: make this more specific
 

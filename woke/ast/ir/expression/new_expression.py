@@ -1,15 +1,19 @@
 from typing import Iterator, Set, Tuple
 
 from woke.ast.enums import ModifiesStateFlag
-from woke.ast.types import Contract
 from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.type_name.abc import TypeNameAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcNewExpression
+from woke.ast.types import Contract
 
 
 class NewExpression(ExpressionAbc):
+    """
+    TBD
+    """
+
     _ast_node: SolcNewExpression
     _parent: SolidityAbc  # TODO: make this more specific
 
