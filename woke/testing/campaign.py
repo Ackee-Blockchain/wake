@@ -126,7 +126,7 @@ class Campaign:
             print(f"{key:.<80}{count:.>4}")
 
     def _generate_flows(self, flows: Methods, flows_count: int, seq) -> Methods:
-        weights = []
+        adjusted_weights = []
 
         min_times_sum = 0
         for i, flow in enumerate(flows):
@@ -139,9 +139,9 @@ class Campaign:
                     )
 
             if hasattr(cf, "weight"):
-                weights.append(cf.weight)
+                adjusted_weights.append(cf.weight)
             else:
-                weights.append(100)
+                raise ValueError(f"Flow {flow[1]} doesn't have valid weight")
         if min_times_sum > flows_count:
             raise ValueError("Current min_times can't be satisfied")
         generated_flows = []
@@ -149,15 +149,15 @@ class Campaign:
 
         # weight needed for one flow call to be randomly generated, say a flow has
         # weight == 3 * weight_unit => flow will be 3 times in generated_flows on average
-        weight_unit = sum(weights) / flows_count
+        weight_unit = sum(adjusted_weights) / flows_count
         for i, flow in enumerate(flows):
             cf, fname = flow
             if hasattr(cf, "min_times"):
                 generated_flows += [flow] * cf.min_times
                 generated_cnt[fname] += cf.min_times
                 # this removes weight from a flow that was generated because of min_times
-                weight = weights[i] - (weight_unit * cf.min_times)
-                weights[i] = weight if weight > 0 else 1
+                weight = adjusted_weights[i] - (weight_unit * cf.min_times)
+                adjusted_weights[i] = weight if weight > 0 else 1
 
         indexed_flows = {k: v for k, v in enumerate(flows)}
         for _ in range(flows_count - len(generated_flows)):
@@ -176,7 +176,9 @@ class Campaign:
             if len(indexed_flows_p) == 0:
                 raise ValueError("Conditions for flows could not be met")
             indexed_flow = random.choices(
-                indexed_flows_p, weights=[weights[k] for k, v in indexed_flows_p], k=1
+                indexed_flows_p,
+                weights=[adjusted_weights[k] for k, v in indexed_flows_p],
+                k=1,
             )[0]
             generated_cnt.update((indexed_flow[1][1],))
             generated_flows.append(indexed_flow[1])
