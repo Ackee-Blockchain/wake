@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
 
 from intervaltree import IntervalTree
 
-from ...types import Contract, Struct, Enum, UserDefinedValueType
+from ...types import Contract, Enum, Struct, UserDefinedValueType
 
 if TYPE_CHECKING:
     from ..declaration.variable_declaration import VariableDeclaration
@@ -87,8 +87,17 @@ class UserDefinedTypeName(TypeNameAbc):
         }
         ```
     """
+
     _ast_node: SolcUserDefinedTypeName
-    _parent: Union[VariableDeclaration, NewExpression, InheritanceSpecifier, OverrideSpecifier, UsingForDirective, ArrayTypeName, Mapping]
+    _parent: Union[
+        VariableDeclaration,
+        NewExpression,
+        InheritanceSpecifier,
+        OverrideSpecifier,
+        UsingForDirective,
+        ArrayTypeName,
+        Mapping,
+    ]
 
     __referenced_declaration_id: AstNodeId
     __contract_scope_id: Optional[AstNodeId]
@@ -119,6 +128,7 @@ class UserDefinedTypeName(TypeNameAbc):
                 start = self.byte_location[0] + match.start()
                 end = self.byte_location[0] + match.end()
                 self.__parts[start:end] = IdentifierPathPart(
+                    self,
                     init,
                     (start, end),
                     name,
@@ -137,7 +147,17 @@ class UserDefinedTypeName(TypeNameAbc):
             yield from self.__path_node
 
     @property
-    def parent(self) -> Union[VariableDeclaration, NewExpression, InheritanceSpecifier, OverrideSpecifier, UsingForDirective, ArrayTypeName, Mapping]:
+    def parent(
+        self,
+    ) -> Union[
+        VariableDeclaration,
+        NewExpression,
+        InheritanceSpecifier,
+        OverrideSpecifier,
+        UsingForDirective,
+        ArrayTypeName,
+        Mapping,
+    ]:
         """
         Returns:
             Parent IR node.

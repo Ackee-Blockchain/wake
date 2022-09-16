@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from functools import partial
 from pathlib import Path
-from typing import Optional, Tuple, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Tuple, Union
 
 if TYPE_CHECKING:
     from .inheritance_specifier import InheritanceSpecifier
@@ -27,7 +27,9 @@ class IdentifierPathPart:
     """
     A class representing a part of an identifier path. Is almost the same as [Identifier][woke.ast.ir.expression.identifier.Identifier], but it is not generated in the AST output of the compiler and so it is not an IR node.
     """
+
     __reference_resolver: ReferenceResolver
+    __underlying_node: Union[IdentifierPath, UserDefinedTypeName]
     __path_referenced_declaration_id: AstNodeId
     __path_index: int
     __referenced_declaration_id: Optional[AstNodeId]
@@ -38,12 +40,14 @@ class IdentifierPathPart:
 
     def __init__(
         self,
+        underlying_node: Union[IdentifierPath, UserDefinedTypeName],
         init: IrInitTuple,
         byte_location: Tuple[int, int],
         name: str,
         path_referenced_declaration_id: AstNodeId,
         path_index: int,
     ):
+        self.__underlying_node = underlying_node
         self.__reference_resolver = init.reference_resolver
         self.__path_referenced_declaration_id = path_referenced_declaration_id
         # zero-based index from the end of the path
@@ -81,6 +85,14 @@ class IdentifierPathPart:
 
     def __destroy(self, referenced_declaration: DeclarationAbc) -> None:
         referenced_declaration.unregister_reference(self)
+
+    @property
+    def underlying_node(self) -> Union[IdentifierPath, UserDefinedTypeName]:
+        """
+        Returns:
+            Underlying IR node (parent) of this identifier path part.
+        """
+        return self.__underlying_node
 
     @property
     def file(self) -> Path:
@@ -133,8 +145,15 @@ class IdentifierPath(SolidityAbc):
     Identifier path represents a path name of identifiers separated by dots. It was introduced in Solidity 0.8.0 to replace
     [UserDefinedTypeName][woke.ast.ir.type_name.user_defined_type_name.UserDefinedTypeName] in some cases.
     """
+
     _ast_node: SolcIdentifierPath
-    _parent: Union[InheritanceSpecifier, ModifierInvocation, OverrideSpecifier, UsingForDirective, UserDefinedTypeName]
+    _parent: Union[
+        InheritanceSpecifier,
+        ModifierInvocation,
+        OverrideSpecifier,
+        UsingForDirective,
+        UserDefinedTypeName,
+    ]
 
     __name: str
     __referenced_declaration_id: AstNodeId
@@ -161,6 +180,7 @@ class IdentifierPath(SolidityAbc):
             start = self.byte_location[0] + match.start()
             end = self.byte_location[0] + match.end()
             self.__parts[start:end] = IdentifierPathPart(
+                self,
                 init,
                 (start, end),
                 name,
@@ -169,7 +189,9 @@ class IdentifierPath(SolidityAbc):
             )
 
     @property
-    def parent(self) -> Union[
+    def parent(
+        self,
+    ) -> Union[
         InheritanceSpecifier,
         ModifierInvocation,
         OverrideSpecifier,
