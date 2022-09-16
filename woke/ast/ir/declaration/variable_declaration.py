@@ -15,7 +15,7 @@ from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import AstNodeId, SolcVariableDeclaration, TypeDescriptionsModel
 from woke.utils.string import StringReader
 
-from ...expression_types import ExpressionTypeAbc
+from ...types import TypeAbc
 from ..meta.override_specifier import OverrideSpecifier
 from ..reference_resolver import CallbackParams
 
@@ -454,7 +454,7 @@ class VariableDeclaration(DeclarationAbc):
 
     @property
     @lru_cache(maxsize=None)
-    def type(self) -> ExpressionTypeAbc:
+    def type(self) -> TypeAbc:
         """
         Returns:
             Type of the variable.
@@ -462,7 +462,7 @@ class VariableDeclaration(DeclarationAbc):
         assert self.__type_descriptions.type_identifier is not None
 
         type_identifier = StringReader(self.__type_descriptions.type_identifier)
-        ret = ExpressionTypeAbc.from_type_identifier(
+        ret = TypeAbc.from_type_identifier(
             type_identifier, self._reference_resolver, self.cu_hash
         )
         assert (

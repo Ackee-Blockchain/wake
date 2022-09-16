@@ -1,7 +1,7 @@
 from typing import Iterator, Set, Tuple
 
 from woke.ast.enums import ModifiesStateFlag
-from woke.ast.expression_types import Contract
+from woke.ast.types import Contract
 from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.type_name.abc import TypeNameAbc

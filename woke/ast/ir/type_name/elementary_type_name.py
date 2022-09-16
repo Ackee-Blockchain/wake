@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Optional, Union, TYPE_CHECKING
 
-from ...expression_types import Address, Bool, Int, UInt, String, Bytes, FixedBytes, Type, Fixed, UFixed
+from ...types import Address, Bool, Int, UInt, String, Bytes, FixedBytes, Type, Fixed, UFixed
 
 if TYPE_CHECKING:
     from ..declaration.user_defined_value_type_definition import UserDefinedValueTypeDefinition

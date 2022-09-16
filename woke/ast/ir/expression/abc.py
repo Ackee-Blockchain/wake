@@ -4,7 +4,7 @@ from functools import lru_cache
 from typing import Optional, Set, Tuple
 
 from woke.ast.enums import ModifiesStateFlag
-from woke.ast.expression_types import ExpressionTypeAbc
+from woke.ast.types import TypeAbc
 from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import (
@@ -94,7 +94,7 @@ class ExpressionAbc(SolidityAbc, ABC):
 
     @property
     @lru_cache(maxsize=None)
-    def type(self) -> Optional[ExpressionTypeAbc]:
+    def type(self) -> Optional[TypeAbc]:
         """
         Can be `None` in case of an [Identifier][woke.ast.ir.expression.identifier.Identifier] in an [ImportDirective][woke.ast.ir.meta.import_directive.ImportDirective].
         !!! example
@@ -109,7 +109,7 @@ class ExpressionAbc(SolidityAbc, ABC):
             return None
 
         type_identifier = StringReader(self._type_descriptions.type_identifier)
-        ret = ExpressionTypeAbc.from_type_identifier(
+        ret = TypeAbc.from_type_identifier(
             type_identifier, self._reference_resolver, self.cu_hash
         )
         assert (

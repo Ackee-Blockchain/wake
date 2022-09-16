@@ -138,7 +138,7 @@ class StateMutability(str, enum.Enum):
     """
     State mutability of:
 
-    - [Function][woke.ast.expression_types.Function] expression type,
+    - [Function][woke.ast.types.Function] type,
     - [FunctionDefinition][woke.ast.ir.declaration.function_definition.FunctionDefinition] declaration,
     - [ElementaryTypeName][woke.ast.ir.type_name.elementary_type_name.ElementaryTypeName] and [FunctionTypeName][woke.ast.ir.type_name.function_type_name.FunctionTypeName] type names.
 
@@ -196,12 +196,12 @@ class FunctionCallKind(str, enum.Enum):
 class DataLocation(str, enum.Enum):
     """
     Data location of a [VariableDeclaration][woke.ast.ir.declaration.variable_declaration.VariableDeclaration] node.
-    It also specifies the data location of the following expression types:
+    It also specifies the data location of the following types:
 
-    - [Array][woke.ast.expression_types.Array],
-    - [Bytes][woke.ast.expression_types.Bytes],
-    - [String][woke.ast.expression_types.String],
-    - [Struct][woke.ast.expression_types.Struct].
+    - [Array][woke.ast.types.Array],
+    - [Bytes][woke.ast.types.Bytes],
+    - [String][woke.ast.types.String],
+    - [Struct][woke.ast.types.Struct].
     """
     CALLDATA = "calldata"
     DEFAULT = "default"
@@ -315,9 +315,9 @@ class ModifiesStateFlag(enum.IntFlag):
     __str__ = __repr__
 
 
-class FunctionExpressionKind(str, enum.Enum):
+class FunctionTypeKind(str, enum.Enum):
     """
-    Kind of a [Function][woke.ast.expression_types.Function] expression type.
+    Kind of a [Function][woke.ast.types.Function] type.
     """
     DECLARATION = "declaration"
     INTERNAL = "internal"
@@ -362,9 +362,9 @@ class FunctionExpressionKind(str, enum.Enum):
     META_TYPE = "metatype"
 
 
-class MagicExpressionKind(str, enum.Enum):
+class MagicTypeKind(str, enum.Enum):
     """
-    Kind of a [Magic][woke.ast.expression_types.Magic] expression type.
+    Kind of a [Magic][woke.ast.types.Magic] type.
     """
     BLOCK = "block"
     MESSAGE = "message"
