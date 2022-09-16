@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from ..meta.using_for_directive import UsingForDirective
     from .array_type_name import ArrayTypeName
 
-from woke.ast.expression_types import ExpressionTypeAbc, Array, Address, Bool, Int, UInt, Fixed, UFixed, String, Bytes, \
+from woke.ast.types import TypeAbc, Array, Address, Bool, Int, UInt, Fixed, UFixed, String, Bytes, \
     FixedBytes, Type, Function, Mapping, Struct, Enum, Contract
 from woke.ast.ir.abc import SolidityAbc
 from woke.ast.ir.utils import IrInitTuple
@@ -85,7 +85,7 @@ class TypeNameAbc(SolidityAbc, ABC):
         assert self._type_descriptions.type_identifier is not None
 
         type_identifier = StringReader(self._type_descriptions.type_identifier)
-        ret = ExpressionTypeAbc.from_type_identifier(
+        ret = TypeAbc.from_type_identifier(
             type_identifier, self._reference_resolver, self.cu_hash
         )
         assert (
