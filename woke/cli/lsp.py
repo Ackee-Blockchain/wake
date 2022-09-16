@@ -27,9 +27,12 @@ async def run_server(config: WokeConfig, port: int) -> None:
 
 
 @click.command(name="lsp")
-@click.option("--port", default=65432, type=int)
+@click.option("--port", default=65432, type=int, help="Port to listen on.")
 @click.pass_context
 def run_lsp(context: click.Context, port: int):
+    """
+    Start the LSP server.
+    """
     config = WokeConfig(woke_root_path=context.obj["woke_root_path"])
     config.load_configs()  # load ~/.woke/config.toml and ./woke.toml
 
