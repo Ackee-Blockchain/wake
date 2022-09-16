@@ -39,6 +39,7 @@ def ignore(fn):
 
 def flow(fn):
     fn.flow = True
+    fn.weight = fn.weight if hasattr(fn, "weight") else 100
     return fn
 
 
