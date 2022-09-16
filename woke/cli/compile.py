@@ -22,7 +22,7 @@ from .console import console
 
 
 @click.command(name="compile")
-@click.argument("files", nargs=-1, type=click.Path(exists=True))
+@click.argument("paths", nargs=-1, type=click.Path(exists=True))
 @click.option(
     "--parse", is_flag=True, default=False, help="Also try to parse the generated AST."
 )
@@ -37,14 +37,14 @@ from .console import console
 )
 @click.pass_context
 def run_compile(
-    ctx: Context, files: Tuple[str], parse: bool, no_artifacts: bool, force: bool
+    ctx: Context, paths: Tuple[str], parse: bool, no_artifacts: bool, force: bool
 ) -> None:
     """Compile the project."""
     config = WokeConfig(woke_root_path=ctx.obj["woke_root_path"])
     config.load_configs()  # load ~/.woke/config.toml and ./woke.toml
 
     sol_files: Set[Path] = set()
-    if len(files) == 0:
+    if len(paths) == 0:
         for file in config.project_root_path.rglob("**/*.sol"):
             if (
                 not any(
@@ -54,11 +54,24 @@ def run_compile(
             ):
                 sol_files.add(file)
     else:
-        for file in files:
-            path = Path(file)
-            if not path.is_file() or not path.match("*.sol"):
-                raise ValueError(f"Argument `{file}` is not a Solidity file.")
-            sol_files.add(path)
+        for p in paths:
+            path = Path(p)
+            if path.is_file():
+                if not path.match("*.sol"):
+                    raise ValueError(f"Argument `{p}` is not a Solidity file.")
+                sol_files.add(path)
+            elif path.is_dir():
+                for file in path.rglob("**/*.sol"):
+                    if (
+                        not any(
+                            is_relative_to(file, p)
+                            for p in config.compiler.solc.ignore_paths
+                        )
+                        and file.is_file()
+                    ):
+                        sol_files.add(file)
+            else:
+                raise ValueError(f"Argument `{p}` is not a file or directory.")
 
     compiler = SolidityCompiler(config)
     # TODO Allow choosing build artifacts subset in compile subcommand
