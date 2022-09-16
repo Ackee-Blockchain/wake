@@ -55,10 +55,11 @@ def detect(source_units: Dict[Path, SourceUnit]) -> List[DetectionResult]:
                     )
     ret = []
     for detections_by_type in results.values():
-        for detections_by_source_unit in detections_by_type.values():
+        sorted_files = sorted(detections_by_type.keys())
+        for file in sorted_files:
             ret.extend(
                 sorted(
-                    detections_by_source_unit,
+                    detections_by_type[file],
                     key=lambda d: d.result.ir_node.byte_location[0],
                 )
             )
