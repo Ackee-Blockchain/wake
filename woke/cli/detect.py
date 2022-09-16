@@ -21,18 +21,18 @@ from .console import console
 
 
 @click.command(name="detect")
-@click.argument("files", nargs=-1, type=click.Path(exists=True))
+@click.argument("paths", nargs=-1, type=click.Path(exists=True))
 @click.option(
     "--svg", is_flag=True, default=False, help="Capture the output as an SVG file."
 )
 @click.pass_context
-def run_detect(ctx: click.Context, files: Tuple[str], svg: bool) -> None:
+def run_detect(ctx: click.Context, paths: Tuple[str], svg: bool) -> None:
     """Run vulnerability detectors on the project."""
     config = WokeConfig(woke_root_path=ctx.obj["woke_root_path"])
     config.load_configs()  # load ~/.woke/config.toml and ./woke.toml
 
     sol_files: Set[Path] = set()
-    if len(files) == 0:
+    if len(paths) == 0:
         for file in config.project_root_path.rglob("**/*.sol"):
             if (
                 not any(
@@ -42,11 +42,24 @@ def run_detect(ctx: click.Context, files: Tuple[str], svg: bool) -> None:
             ):
                 sol_files.add(file)
     else:
-        for file in files:
-            path = Path(file)
-            if not path.is_file() or not path.match("*.sol"):
-                raise ValueError(f"Argument `{file}` is not a Solidity file.")
-            sol_files.add(path)
+        for p in paths:
+            path = Path(p)
+            if path.is_file():
+                if not path.match("*.sol"):
+                    raise ValueError(f"Argument `{p}` is not a Solidity file.")
+                sol_files.add(path)
+            elif path.is_dir():
+                for file in path.rglob("**/*.sol"):
+                    if (
+                        not any(
+                            is_relative_to(file, p)
+                            for p in config.compiler.solc.ignore_paths
+                        )
+                        and file.is_file()
+                    ):
+                        sol_files.add(file)
+            else:
+                raise ValueError(f"Argument `{p}` is not a file or directory.")
 
     compiler = SolidityCompiler(config)
     outputs: List[Tuple[CompilationUnit, SolcOutput]] = asyncio.run(
