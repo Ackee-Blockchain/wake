@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 import re
 from collections import deque
 from functools import lru_cache, partial
@@ -23,6 +22,7 @@ from ..statement.block import Block
 from .abc import DeclarationAbc
 
 if TYPE_CHECKING:
+    from woke.analysis.cfg import ControlFlowGraph
     from .contract_definition import ContractDefinition
     from .variable_declaration import VariableDeclaration
     from ..expression.identifier import Identifier
@@ -535,3 +535,11 @@ class FunctionDefinition(DeclarationAbc):
             Override specifier, if any.
         """
         return self.__overrides
+
+    @property
+    @lru_cache(maxsize=None)
+    def cfg(self) -> Optional[ControlFlowGraph]:
+        from woke.analysis.cfg import ControlFlowGraph
+        if self.body is None:
+            return None
+        return ControlFlowGraph(self)
