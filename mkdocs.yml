@@ -33,6 +33,7 @@ theme:
 nav:
   - Installation: 'index.md'
   - Configuration: 'configuration.md'
+  - Detectors: 'detectors.md'
   - LSP server: 'language-server.md'
   - Fuzzer: 'fuzzer.md'
   - Solc Version Manager: 'solc-version-manager.md'

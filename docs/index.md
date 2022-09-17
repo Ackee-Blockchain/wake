@@ -3,6 +3,7 @@
 Woke is a Python-based development and testing framework for Solidity.
 
 ## Features
+- vulnerability detectors
 - LSP server
 - property-based fuzzer
 
