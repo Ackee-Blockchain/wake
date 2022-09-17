@@ -75,6 +75,10 @@ def run_detect(ctx: click.Context, paths: Tuple[str], svg: bool) -> None:
         for error in output.errors:
             if error.severity == SolcOutputErrorSeverityEnum.ERROR:
                 errored = True
+                if error.formatted_message is not None:
+                    console.print(Panel(error.formatted_message, highlight=True))
+                else:
+                    console.print(Panel(error.message, highlight=True))
 
     if errored:
         return
