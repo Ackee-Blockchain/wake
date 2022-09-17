@@ -4,6 +4,8 @@ Woke is a Python-based development and testing framework for Solidity.
 
 Features:
 
+- **Vulnerability detectors**
+
 - **LSP server**
 
 - **Fuzzer** - a property-based fuzzer for Solidity smart contracts that allows testers to write their fuzz tests in Python.
@@ -21,6 +23,13 @@ pip3 install abch-woke
 ```
 
 ## Features
+
+### Vulnerability detectors
+
+Vulnerability detectors can be run using:
+```shell
+woke detect
+```
 
 ### LSP server
 
