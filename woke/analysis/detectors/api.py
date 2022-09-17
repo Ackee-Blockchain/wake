@@ -42,7 +42,7 @@ detectors: Dict[Type[IrAbc], List[Detector]] = defaultdict(list)
 
 
 def detect(source_units: Dict[Path, SourceUnit]) -> List[DetectionResult]:
-    results: DefaultDict[int, DefaultDict[str, List[DetectionResult]]] = defaultdict(
+    results: DefaultDict[str, DefaultDict[str, List[DetectionResult]]] = defaultdict(
         lambda: defaultdict(list)
     )
     for path, source_unit in source_units.items():
@@ -50,16 +50,17 @@ def detect(source_units: Dict[Path, SourceUnit]) -> List[DetectionResult]:
             for d in detectors[type(ir_node)]:
                 result = d.func(ir_node)
                 if result is not None:
-                    results[d.code][source_unit.source_unit_name].append(
+                    results[d.string_id][source_unit.source_unit_name].append(
                         DetectionResult(result, d.code, d.string_id)
                     )
     ret = []
-    for detections_by_type in results.values():
-        sorted_files = sorted(detections_by_type.keys())
+    sorted_detectors = sorted(results.keys())
+    for detector_id in sorted_detectors:
+        sorted_files = sorted(results[detector_id].keys())
         for file in sorted_files:
             ret.extend(
                 sorted(
-                    detections_by_type[file],
+                    results[detector_id][file],
                     key=lambda d: d.result.ir_node.byte_location[0],
                 )
             )
