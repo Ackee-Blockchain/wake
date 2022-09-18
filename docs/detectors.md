@@ -7,5 +7,5 @@ woke detect
 
 Or with specified files and directories:
 ```shell
-woke detect contracts/contracts/MyContract.sol tests
+woke detect contracts/MyContract.sol tests
 ```
