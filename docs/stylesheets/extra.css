@@ -10,6 +10,13 @@
     --md-primary-fg-color: #00FFFF;
 }
 
+@media screen and (max-width: 76.1875em) {
+    .md-nav--primary
+    .md-nav__title[for=__drawer] {
+        background-color: #0000FF;
+    }
+}
+
 .md-header {
     background-color: #0000FF;
 }
