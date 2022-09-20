@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from functools import lru_cache, partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union, FrozenSet
+from typing import TYPE_CHECKING, FrozenSet, Iterator, Optional, Set, Tuple, Union
 
 from intervaltree import IntervalTree
 
@@ -40,6 +40,7 @@ class ExternalReference:
         This is not an IR node, but a helper class for [InlineAssembly][woke.ast.ir.statement.inline_assembly.InlineAssembly].
         Since this is not an IR node, there must still be a Yul IR node (e.g. Yul [Identifier][woke.ast.ir.yul.identifier.Identifier]) in the source code that represents the identifier.
     """
+
     __external_reference_model: ExternalReferenceModel
     __reference_resolver: ReferenceResolver
     __cu_hash: bytes
@@ -102,7 +103,7 @@ class ExternalReference:
         )
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def identifier_byte_location(self) -> Tuple[int, int]:
         """
         !!! example
@@ -167,6 +168,7 @@ class InlineAssembly(StatementAbc):
         }
         ```
     """
+
     _ast_node: SolcInlineAssembly
     _parent: Union[
         Block,
@@ -281,6 +283,6 @@ class InlineAssembly(StatementAbc):
         return intervals.pop().data
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         return self.yul_block.modifies_state

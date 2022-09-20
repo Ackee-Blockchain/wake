@@ -90,7 +90,7 @@ class FunctionCall(ExpressionAbc):
         return tuple(self.__arguments)
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def function_called(
         self,
     ) -> Optional[
@@ -169,14 +169,14 @@ class FunctionCall(ExpressionAbc):
                 ), f"Unexpected function call child node: {node}\n{self.source}"
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def is_ref_to_state_variable(self) -> bool:
         if self.kind == FunctionCallKind.TYPE_CONVERSION:
             return self.expression.is_ref_to_state_variable
         return False
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         if self.__recursion_lock:
             return set()

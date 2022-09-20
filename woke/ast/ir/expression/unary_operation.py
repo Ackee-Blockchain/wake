@@ -58,7 +58,7 @@ class UnaryOperation(ExpressionAbc):
         return False
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         ret = self.sub_expression.modifies_state
 

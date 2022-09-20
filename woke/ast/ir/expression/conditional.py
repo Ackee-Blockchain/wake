@@ -56,7 +56,7 @@ class Conditional(ExpressionAbc):
         return self.__true_expression
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def is_ref_to_state_variable(self) -> bool:
         return (
             self.true_expression.is_ref_to_state_variable
@@ -64,7 +64,7 @@ class Conditional(ExpressionAbc):
         )
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         return (
             self.condition.modifies_state

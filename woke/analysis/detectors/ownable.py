@@ -219,7 +219,7 @@ def statement_is_only_owner(statement: StatementAbc, check_only_eoa: bool) -> bo
 _statement_is_publicly_executable_recursion_guard = set()
 
 
-@lru_cache(maxsize=None)
+@lru_cache(maxsize=2048)
 def statement_is_publicly_executable(
     statement: StatementAbc,
     check_func_visibility: bool = True,

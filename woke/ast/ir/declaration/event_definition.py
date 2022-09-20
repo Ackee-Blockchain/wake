@@ -24,6 +24,7 @@ class EventDefinition(DeclarationAbc):
         event Transfer(address indexed from, address indexed to, uint256 value);
         ```
     """
+
     _ast_node: SolcEventDefinition
     _parent: ContractDefinition
 
@@ -87,7 +88,7 @@ class EventDefinition(DeclarationAbc):
         return f"{self._parent.canonical_name}.{self._name}"
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def declaration_string(self) -> str:
         ret = (
             f"event {self._name}("

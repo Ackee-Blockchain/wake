@@ -65,12 +65,12 @@ class Assignment(ExpressionAbc):
         return self.__operator
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def is_ref_to_state_variable(self) -> bool:
         return self.left_expression.is_ref_to_state_variable
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         ret = self.left_expression.modifies_state | self.right_expression.modifies_state
         if self.left_expression.is_ref_to_state_variable:
@@ -78,7 +78,7 @@ class Assignment(ExpressionAbc):
         return ret
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def assigned_variables(self) -> Tuple[Optional[Set[AssignedVariablePath]], ...]:
         def resolve_node(node: ExpressionAbc) -> Set[AssignedVariablePath]:
             if isinstance(node, Conditional):
