@@ -18,13 +18,13 @@ class PragmaDirective(SolidityAbc):
     _ast_node: SolcPragmaDirective
     _parent: SourceUnit
 
-    __literals: List[str]
+    _literals: List[str]
 
     def __init__(
         self, init: IrInitTuple, pragma: SolcPragmaDirective, parent: SolidityAbc
     ):
         super().__init__(init, pragma, parent)
-        self.__literals = list(pragma.literals)
+        self._literals = list(pragma.literals)
 
     @property
     def parent(self) -> SourceUnit:
@@ -56,4 +56,4 @@ class PragmaDirective(SolidityAbc):
         Returns:
             Literals of the pragma directive.
         """
-        return tuple(self.__literals)
+        return tuple(self._literals)

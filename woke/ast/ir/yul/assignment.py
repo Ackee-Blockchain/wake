@@ -19,28 +19,28 @@ class Assignment(YulAbc):
     TBD
     """
     _parent: Block
-    __value: Union[FunctionCall, Identifier, Literal]
-    __variable_names: List[Identifier]
+    _value: Union[FunctionCall, Identifier, Literal]
+    _variable_names: List[Identifier]
 
     def __init__(self, init: IrInitTuple, assignment: YulAssignment, parent: YulAbc):
         super().__init__(init, assignment, parent)
         if isinstance(assignment.value, YulFunctionCall):
-            self.__value = FunctionCall(init, assignment.value, self)
+            self._value = FunctionCall(init, assignment.value, self)
         elif isinstance(assignment.value, YulIdentifier):
-            self.__value = Identifier(init, assignment.value, self)
+            self._value = Identifier(init, assignment.value, self)
         elif isinstance(assignment.value, YulLiteral):
-            self.__value = Literal(init, assignment.value, self)
+            self._value = Literal(init, assignment.value, self)
         else:
             assert False, f"Unexpected type: {type(assignment.value)}"
-        self.__variable_names = [
+        self._variable_names = [
             Identifier(init, variable_name, self)
             for variable_name in assignment.variable_names
         ]
 
     def __iter__(self) -> Iterator[YulAbc]:
         yield self
-        yield from self.__value
-        for variable_name in self.__variable_names:
+        yield from self._value
+        for variable_name in self._variable_names:
             yield from variable_name
 
     @property
@@ -49,8 +49,8 @@ class Assignment(YulAbc):
 
     @property
     def value(self) -> Union[FunctionCall, Identifier, Literal]:
-        return self.__value
+        return self._value
 
     @property
     def variable_names(self) -> Tuple[Identifier]:
-        return tuple(self.__variable_names)
+        return tuple(self._variable_names)

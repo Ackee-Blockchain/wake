@@ -24,7 +24,7 @@ class ExpressionStatement(YulAbc):
     TBD
     """
     _parent: Block
-    __expression: Union[FunctionCall, Identifier, Literal]
+    _expression: Union[FunctionCall, Identifier, Literal]
 
     def __init__(
         self,
@@ -34,19 +34,17 @@ class ExpressionStatement(YulAbc):
     ):
         super().__init__(init, expression_statement, parent)
         if isinstance(expression_statement.expression, YulFunctionCall):
-            self.__expression = FunctionCall(
-                init, expression_statement.expression, self
-            )
+            self._expression = FunctionCall(init, expression_statement.expression, self)
         elif isinstance(expression_statement.expression, YulIdentifier):
-            self.__expression = Identifier(init, expression_statement.expression, self)
+            self._expression = Identifier(init, expression_statement.expression, self)
         elif isinstance(expression_statement.expression, YulLiteral):
-            self.__expression = Literal(init, expression_statement.expression, self)
+            self._expression = Literal(init, expression_statement.expression, self)
         else:
             assert False, f"Unexpected type: {type(expression_statement.expression)}"
 
     def __iter__(self) -> Iterator[YulAbc]:
         yield self
-        yield from self.__expression
+        yield from self._expression
 
     @property
     def parent(self) -> Block:
@@ -54,4 +52,4 @@ class ExpressionStatement(YulAbc):
 
     @property
     def expression(self) -> Union[FunctionCall, Identifier, Literal]:
-        return self.__expression
+        return self._expression

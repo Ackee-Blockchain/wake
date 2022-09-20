@@ -41,7 +41,7 @@ class StructuredDocumentation(SolidityAbc):
         VariableDeclaration,
     ]
 
-    __text: str
+    _text: str
 
     def __init__(
         self,
@@ -50,7 +50,7 @@ class StructuredDocumentation(SolidityAbc):
         parent: SolidityAbc,
     ):
         super().__init__(init, structured_documentation, parent)
-        self.__text = structured_documentation.text
+        self._text = structured_documentation.text
 
     @property
     def parent(
@@ -76,4 +76,4 @@ class StructuredDocumentation(SolidityAbc):
         Returns:
             [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation string.
         """
-        return self.__text
+        return self._text

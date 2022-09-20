@@ -17,9 +17,9 @@ class FunctionCallOptions(ExpressionAbc):
     _ast_node: SolcFunctionCallOptions
     _parent: SolidityAbc  # TODO: make this more specific
 
-    __expression: ExpressionAbc
-    __names: List[str]
-    __options: List[ExpressionAbc]
+    _expression: ExpressionAbc
+    _names: List[str]
+    _options: List[ExpressionAbc]
 
     def __init__(
         self,
@@ -28,19 +28,19 @@ class FunctionCallOptions(ExpressionAbc):
         parent: SolidityAbc,
     ):
         super().__init__(init, function_call_options, parent)
-        self.__expression = ExpressionAbc.from_ast(
+        self._expression = ExpressionAbc.from_ast(
             init, function_call_options.expression, self
         )
-        self.__names = list(function_call_options.names)
-        self.__options = [
+        self._names = list(function_call_options.names)
+        self._options = [
             ExpressionAbc.from_ast(init, option, self)
             for option in function_call_options.options
         ]
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        yield from self.__expression
-        for option in self.__options:
+        yield from self._expression
+        for option in self._options:
             yield from option
 
     @property
@@ -49,15 +49,15 @@ class FunctionCallOptions(ExpressionAbc):
 
     @property
     def expression(self) -> ExpressionAbc:
-        return self.__expression
+        return self._expression
 
     @property
     def names(self) -> Tuple[str]:
-        return tuple(self.__names)
+        return tuple(self._names)
 
     @property
     def options(self) -> Tuple[ExpressionAbc]:
-        return tuple(self.__options)
+        return tuple(self._options)
 
     @property
     def is_ref_to_state_variable(self) -> bool:

@@ -41,20 +41,20 @@ class DoWhileStatement(StatementAbc):
         WhileStatement,
     ]
 
-    __body: StatementAbc
-    __condition: ExpressionAbc
+    _body: StatementAbc
+    _condition: ExpressionAbc
 
     def __init__(
         self, init: IrInitTuple, do_while: SolcDoWhileStatement, parent: SolidityAbc
     ):
         super().__init__(init, do_while, parent)
-        self.__body = StatementAbc.from_ast(init, do_while.body, self)
-        self.__condition = ExpressionAbc.from_ast(init, do_while.condition, self)
+        self._body = StatementAbc.from_ast(init, do_while.body, self)
+        self._condition = ExpressionAbc.from_ast(init, do_while.condition, self)
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        yield from self.__body
-        yield from self.__condition
+        yield from self._body
+        yield from self._condition
 
     @property
     def parent(
@@ -79,7 +79,7 @@ class DoWhileStatement(StatementAbc):
         Returns:
             Body of the do-while statement.
         """
-        return self.__body
+        return self._body
 
     @property
     def condition(self) -> ExpressionAbc:
@@ -87,7 +87,7 @@ class DoWhileStatement(StatementAbc):
         Returns:
             Condition of the do-while statement.
         """
-        return self.__condition
+        return self._condition
 
     @property
     @lru_cache(maxsize=2048)
@@ -96,4 +96,4 @@ class DoWhileStatement(StatementAbc):
 
     def statements_iter(self) -> Iterator["StatementAbc"]:
         yield self
-        yield from self.__body.statements_iter()
+        yield from self._body.statements_iter()

@@ -86,12 +86,12 @@ class ImportDirective(SolidityAbc):
     _ast_node: SolcImportDirective
     _parent: SourceUnit
 
-    __source_unit_name: PurePath
-    __import_string: str
-    __imported_file: Path
-    __source_unit_id: AstNodeId
-    __symbol_aliases: List[SymbolAlias]
-    __unit_alias: Optional[str]
+    _source_unit_name: PurePath
+    _import_string: str
+    _imported_file: Path
+    _source_unit_id: AstNodeId
+    _symbol_aliases: List[SymbolAlias]
+    _unit_alias: Optional[str]
 
     def __init__(
         self,
@@ -100,38 +100,38 @@ class ImportDirective(SolidityAbc):
         parent: SolidityAbc,
     ):
         super().__init__(init, import_directive, parent)
-        self.__source_unit_name = PurePath(import_directive.absolute_path)
-        self.__import_string = import_directive.file
-        self.__imported_file = init.cu.source_unit_name_to_path(self.__source_unit_name)
-        self.__source_unit_id = import_directive.source_unit
-        self.__symbol_aliases = []
+        self._source_unit_name = PurePath(import_directive.absolute_path)
+        self._import_string = import_directive.file
+        self._imported_file = init.cu.source_unit_name_to_path(self._source_unit_name)
+        self._source_unit_id = import_directive.source_unit
+        self._symbol_aliases = []
         if len(import_directive.unit_alias) > 0:
-            self.__unit_alias = import_directive.unit_alias
+            self._unit_alias = import_directive.unit_alias
         else:
-            self.__unit_alias = None
+            self._unit_alias = None
 
         for alias in import_directive.symbol_aliases:
-            self.__symbol_aliases.append(
+            self._symbol_aliases.append(
                 SymbolAlias(Identifier(init, alias.foreign, self), alias.local)
             )
         self._reference_resolver.register_post_process_callback(
-            self.__post_process, priority=-1
+            self._post_process, priority=-1
         )
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        for symbol_alias in self.__symbol_aliases:
+        for symbol_alias in self._symbol_aliases:
             yield from symbol_alias.foreign
 
-    def __post_process(self, callback_params: CallbackParams):
+    def _post_process(self, callback_params: CallbackParams):
         # referenced declaration ID is missing (for whatever reason) in import directive symbol aliases
         # for example `import { SafeType } from "SafeLib.sol";`
         # fix: find these reference IDs manually
-        for symbol_alias in self.__symbol_aliases:
+        for symbol_alias in self._symbol_aliases:
             source_units_queue: Deque[SourceUnit] = deque(
-                [callback_params.source_units[self.__imported_file]]
+                [callback_params.source_units[self._imported_file]]
             )
-            processed_source_units: Set[Path] = {self.__imported_file}
+            processed_source_units: Set[Path] = {self._imported_file}
             referenced_declaration = None
 
             while source_units_queue and referenced_declaration is None:
@@ -175,7 +175,7 @@ class ImportDirective(SolidityAbc):
         Returns:
             Source unit name of the imported file.
         """
-        return self.__source_unit_name
+        return self._source_unit_name
 
     @property
     def imported_file(self) -> Path:
@@ -183,7 +183,7 @@ class ImportDirective(SolidityAbc):
         Returns:
             Absolute path of the imported file.
         """
-        return self.__imported_file
+        return self._imported_file
 
     @property
     def import_string(self) -> str:
@@ -191,7 +191,7 @@ class ImportDirective(SolidityAbc):
         Returns:
             Import string as it appears in the source code.
         """
-        return self.__import_string
+        return self._import_string
 
     @property
     def source_unit(self) -> SourceUnit:
@@ -202,7 +202,7 @@ class ImportDirective(SolidityAbc):
         from .source_unit import SourceUnit
 
         node = self._reference_resolver.resolve_node(
-            self.__source_unit_id, self._cu_hash
+            self._source_unit_id, self._cu_hash
         )
         assert isinstance(node, SourceUnit)
         return node
@@ -214,7 +214,7 @@ class ImportDirective(SolidityAbc):
         Returns:
             Symbol aliases present in the import directive.
         """
-        return tuple(self.__symbol_aliases)
+        return tuple(self._symbol_aliases)
 
     @property
     def unit_alias(self) -> Optional[str]:
@@ -238,7 +238,7 @@ class ImportDirective(SolidityAbc):
         Returns:
             Alias for the namespace of the imported source unit.
         """
-        return self.__unit_alias
+        return self._unit_alias
 
     @property
     @lru_cache(maxsize=2048)

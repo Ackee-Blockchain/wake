@@ -17,9 +17,9 @@ class BinaryOperation(ExpressionAbc):
     _ast_node: SolcBinaryOperation
     _parent: SolidityAbc  # TODO: make this more specific
 
-    __left_expression: ExpressionAbc
-    __operator: BinaryOpOperator
-    __right_expression: ExpressionAbc
+    _left_expression: ExpressionAbc
+    _operator: BinaryOpOperator
+    _right_expression: ExpressionAbc
 
     def __init__(
         self,
@@ -28,18 +28,18 @@ class BinaryOperation(ExpressionAbc):
         parent: SolidityAbc,
     ):
         super().__init__(init, binary_operation, parent)
-        self.__operator = binary_operation.operator
-        self.__left_expression = ExpressionAbc.from_ast(
+        self._operator = binary_operation.operator
+        self._left_expression = ExpressionAbc.from_ast(
             init, binary_operation.left_expression, self
         )
-        self.__right_expression = ExpressionAbc.from_ast(
+        self._right_expression = ExpressionAbc.from_ast(
             init, binary_operation.right_expression, self
         )
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        yield from self.__left_expression
-        yield from self.__right_expression
+        yield from self._left_expression
+        yield from self._right_expression
 
     @property
     def parent(self) -> SolidityAbc:
@@ -47,15 +47,15 @@ class BinaryOperation(ExpressionAbc):
 
     @property
     def operator(self) -> BinaryOpOperator:
-        return self.__operator
+        return self._operator
 
     @property
     def left_expression(self) -> ExpressionAbc:
-        return self.__left_expression
+        return self._left_expression
 
     @property
     def right_expression(self) -> ExpressionAbc:
-        return self.__right_expression
+        return self._right_expression
 
     @property
     def is_ref_to_state_variable(self) -> bool:

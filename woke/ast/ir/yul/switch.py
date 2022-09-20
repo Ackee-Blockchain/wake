@@ -19,25 +19,25 @@ class Switch(YulAbc):
     TBD
     """
     _parent: Block
-    __cases: List[Case]
-    __expression: Union[FunctionCall, Identifier, Literal]
+    _cases: List[Case]
+    _expression: Union[FunctionCall, Identifier, Literal]
 
     def __init__(self, init: IrInitTuple, switch: YulSwitch, parent: YulAbc):
         super().__init__(init, switch, parent)
         if isinstance(switch.expression, YulFunctionCall):
-            self.__expression = FunctionCall(init, switch.expression, self)
+            self._expression = FunctionCall(init, switch.expression, self)
         elif isinstance(switch.expression, YulIdentifier):
-            self.__expression = Identifier(init, switch.expression, self)
+            self._expression = Identifier(init, switch.expression, self)
         elif isinstance(switch.expression, YulLiteral):
-            self.__expression = Literal(init, switch.expression, self)
+            self._expression = Literal(init, switch.expression, self)
         else:
             assert False, f"Unexpected type: {type(switch.expression)}"
-        self.__cases = [Case(init, case, self) for case in switch.cases]
+        self._cases = [Case(init, case, self) for case in switch.cases]
 
     def __iter__(self) -> Iterator[YulAbc]:
         yield self
-        yield from self.__expression
-        for case_ in self.__cases:
+        yield from self._expression
+        for case_ in self._cases:
             yield from case_
 
     @property
@@ -46,8 +46,8 @@ class Switch(YulAbc):
 
     @property
     def cases(self) -> Tuple[Case]:
-        return tuple(self.__cases)
+        return tuple(self._cases)
 
     @property
     def expression(self) -> Union[FunctionCall, Identifier, Literal]:
-        return self.__expression
+        return self._expression

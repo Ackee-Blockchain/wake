@@ -45,13 +45,13 @@ class Return(StatementAbc):
         WhileStatement,
     ]
 
-    __function_return_parameters: Optional[AstNodeId]
-    __expression: Optional[ExpressionAbc]
+    _function_return_parameters: Optional[AstNodeId]
+    _expression: Optional[ExpressionAbc]
 
     def __init__(self, init: IrInitTuple, return_: SolcReturn, parent: SolidityAbc):
         super().__init__(init, return_, parent)
-        self.__function_return_parameters = return_.function_return_parameters
-        self.__expression = (
+        self._function_return_parameters = return_.function_return_parameters
+        self._expression = (
             ExpressionAbc.from_ast(init, return_.expression, self)
             if return_.expression
             else None
@@ -59,8 +59,8 @@ class Return(StatementAbc):
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        if self.__expression is not None:
-            yield from self.__expression
+        if self._expression is not None:
+            yield from self._expression
 
     @property
     def parent(
@@ -98,10 +98,10 @@ class Return(StatementAbc):
         """
         from ..meta.parameter_list import ParameterList
 
-        if self.__function_return_parameters is None:
+        if self._function_return_parameters is None:
             return None
         node = self._reference_resolver.resolve_node(
-            self.__function_return_parameters, self._cu_hash
+            self._function_return_parameters, self._cu_hash
         )
         assert isinstance(node, ParameterList)
         return node
@@ -112,11 +112,11 @@ class Return(StatementAbc):
         Returns:
             Expression returned by the return statement, if any.
         """
-        return self.__expression
+        return self._expression
 
     @property
     @lru_cache(maxsize=2048)
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
-        if self.__expression is None:
+        if self._expression is None:
             return set()
-        return self.__expression.modifies_state
+        return self._expression.modifies_state

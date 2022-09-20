@@ -68,8 +68,8 @@ class ElementaryTypeName(TypeNameAbc):
     _ast_node: SolcElementaryTypeName
     _parent: Union[VariableDeclaration, UserDefinedValueTypeDefinition, ElementaryTypeNameExpression, NewExpression, UsingForDirective, ArrayTypeName, Mapping]
 
-    __name: str
-    __state_mutability: Optional[StateMutability]
+    _name: str
+    _state_mutability: Optional[StateMutability]
 
     def __init__(
         self,
@@ -78,8 +78,8 @@ class ElementaryTypeName(TypeNameAbc):
         parent: SolidityAbc,
     ):
         super().__init__(init, elementary_type_name, parent)
-        self.__name = elementary_type_name.name
-        self.__state_mutability = elementary_type_name.state_mutability
+        self._name = elementary_type_name.name
+        self._state_mutability = elementary_type_name.state_mutability
 
         from woke.ast.ir.expression.elementary_type_name_expression import (
             ElementaryTypeNameExpression,
@@ -124,7 +124,7 @@ class ElementaryTypeName(TypeNameAbc):
         Returns:
             Name of the elementary type.
         """
-        return self.__name
+        return self._name
 
     @property
     def state_mutability(self) -> Optional[StateMutability]:
@@ -133,4 +133,4 @@ class ElementaryTypeName(TypeNameAbc):
         Returns:
             State mutability of the `address` type.
         """
-        return self.__state_mutability
+        return self._state_mutability

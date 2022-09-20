@@ -42,17 +42,17 @@ class RevertStatement(StatementAbc):
         WhileStatement,
     ]
 
-    __error_call: FunctionCall
+    _error_call: FunctionCall
 
     def __init__(
         self, init: IrInitTuple, revert: SolcRevertStatement, parent: SolidityAbc
     ):
         super().__init__(init, revert, parent)
-        self.__error_call = FunctionCall(init, revert.error_call, self)
+        self._error_call = FunctionCall(init, revert.error_call, self)
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        yield from self.__error_call
+        yield from self._error_call
 
     @property
     def parent(
@@ -86,7 +86,7 @@ class RevertStatement(StatementAbc):
         Returns:
             Expression representing the error call.
         """
-        return self.__error_call
+        return self._error_call
 
     @property
     @lru_cache(maxsize=2048)

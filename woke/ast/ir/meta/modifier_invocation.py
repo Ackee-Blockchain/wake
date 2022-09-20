@@ -38,9 +38,9 @@ class ModifierInvocation(SolidityAbc):
     _ast_node: SolcModifierInvocation
     _parent: FunctionDefinition
 
-    __kind: Optional[ModifierInvocationKind]
-    __modifier_name: Union[Identifier, IdentifierPath]
-    __arguments: Optional[List[ExpressionAbc]]
+    _kind: Optional[ModifierInvocationKind]
+    _modifier_name: Union[Identifier, IdentifierPath]
+    _arguments: Optional[List[ExpressionAbc]]
 
     def __init__(
         self,
@@ -49,43 +49,43 @@ class ModifierInvocation(SolidityAbc):
         parent: SolidityAbc,
     ):
         super().__init__(init, modifier_invocation, parent)
-        self.__kind = None
+        self._kind = None
         if isinstance(modifier_invocation.modifier_name, SolcIdentifier):
-            self.__modifier_name = Identifier(
+            self._modifier_name = Identifier(
                 init, modifier_invocation.modifier_name, self
             )
         elif isinstance(modifier_invocation.modifier_name, SolcIdentifierPath):
-            self.__modifier_name = IdentifierPath(
+            self._modifier_name = IdentifierPath(
                 init, modifier_invocation.modifier_name, self
             )
 
         if modifier_invocation.arguments is None:
-            self.__arguments = None
+            self._arguments = None
         else:
-            self.__arguments = [
+            self._arguments = [
                 ExpressionAbc.from_ast(init, argument, self)
                 for argument in modifier_invocation.arguments
             ]
 
-        self._reference_resolver.register_post_process_callback(self.__post_process)
+        self._reference_resolver.register_post_process_callback(self._post_process)
 
-    def __post_process(self, callback_params: CallbackParams):
+    def _post_process(self, callback_params: CallbackParams):
         from ..declaration.contract_definition import ContractDefinition
         from ..declaration.modifier_definition import ModifierDefinition
 
         referenced_declaration = self.modifier_name.referenced_declaration
         if isinstance(referenced_declaration, ModifierDefinition):
-            self.__kind = ModifierInvocationKind.MODIFIER_INVOCATION
+            self._kind = ModifierInvocationKind.MODIFIER_INVOCATION
         elif isinstance(referenced_declaration, ContractDefinition):
-            self.__kind = ModifierInvocationKind.BASE_CONSTRUCTOR_SPECIFIER
+            self._kind = ModifierInvocationKind.BASE_CONSTRUCTOR_SPECIFIER
         else:
             assert False, f"Unexpected declaration type: {referenced_declaration}"
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        yield from self.__modifier_name
-        if self.__arguments is not None:
-            for argument in self.__arguments:
+        yield from self._modifier_name
+        if self._arguments is not None:
+            for argument in self._arguments:
                 yield from argument
 
     @property
@@ -102,8 +102,8 @@ class ModifierInvocation(SolidityAbc):
         Returns:
             Kind of the modifier invocation.
         """
-        assert self.__kind is not None
-        return self.__kind
+        assert self._kind is not None
+        return self._kind
 
     @property
     def modifier_name(self) -> Union[Identifier, IdentifierPath]:
@@ -120,7 +120,7 @@ class ModifierInvocation(SolidityAbc):
         Returns:
             IR node representing the name of the modifier.
         """
-        return self.__modifier_name
+        return self._modifier_name
 
     @property
     def arguments(self) -> Optional[List[ExpressionAbc]]:
@@ -145,4 +145,4 @@ class ModifierInvocation(SolidityAbc):
         Returns:
             Arguments of the base constructor or modifier invocation (if any).
         """
-        return self.__arguments
+        return self._arguments

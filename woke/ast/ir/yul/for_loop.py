@@ -14,31 +14,31 @@ class ForLoop(YulAbc):
     TBD
     """
     _parent: Block
-    __body: Block
-    __condition: Union[FunctionCall, Identifier, Literal]
-    __post: Block
-    __pre: Block
+    _body: Block
+    _condition: Union[FunctionCall, Identifier, Literal]
+    _post: Block
+    _pre: Block
 
     def __init__(self, init: IrInitTuple, for_loop: YulForLoop, parent: YulAbc):
         super().__init__(init, for_loop, parent)
-        self.__body = Block(init, for_loop.body, self)
+        self._body = Block(init, for_loop.body, self)
         if isinstance(for_loop.condition, YulFunctionCall):
-            self.__condition = FunctionCall(init, for_loop.condition, self)
+            self._condition = FunctionCall(init, for_loop.condition, self)
         elif isinstance(for_loop.condition, YulIdentifier):
-            self.__condition = Identifier(init, for_loop.condition, self)
+            self._condition = Identifier(init, for_loop.condition, self)
         elif isinstance(for_loop.condition, YulLiteral):
-            self.__condition = Literal(init, for_loop.condition, self)
+            self._condition = Literal(init, for_loop.condition, self)
         else:
             assert False, f"Unexpected type: {type(for_loop.condition)}"
-        self.__post = Block(init, for_loop.post, self)
-        self.__pre = Block(init, for_loop.pre, self)
+        self._post = Block(init, for_loop.post, self)
+        self._pre = Block(init, for_loop.pre, self)
 
     def __iter__(self) -> Iterator[YulAbc]:
         yield self
-        yield from self.__pre
-        yield from self.__condition
-        yield from self.__body
-        yield from self.__post
+        yield from self._pre
+        yield from self._condition
+        yield from self._body
+        yield from self._post
 
     @property
     def parent(self) -> Block:
@@ -46,16 +46,16 @@ class ForLoop(YulAbc):
 
     @property
     def body(self) -> Block:
-        return self.__body
+        return self._body
 
     @property
     def condition(self) -> Union[FunctionCall, Identifier, Literal]:
-        return self.__condition
+        return self._condition
 
     @property
     def post(self) -> Block:
-        return self.__post
+        return self._post
 
     @property
     def pre(self) -> Block:
-        return self.__pre
+        return self._pre

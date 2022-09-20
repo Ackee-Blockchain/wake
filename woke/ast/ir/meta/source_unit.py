@@ -52,21 +52,22 @@ class SourceUnit(SolidityAbc):
         ```
         Also trailing newlines are not covered by the source unit.
     """
+
     _ast_node: SolcSourceUnit
 
-    __file_source: bytes
-    __license: Optional[str]
-    __source_unit_name: str
-    __pragmas: List[PragmaDirective]
-    __imports: List[ImportDirective]
-    __declared_variables: List[VariableDeclaration]
-    __enums: List[EnumDefinition]
-    __functions: List[FunctionDefinition]
-    __structs: List[StructDefinition]
-    __errors: List[ErrorDefinition]
-    __user_defined_value_types: List[UserDefinedValueTypeDefinition]
-    __contracts: List[ContractDefinition]
-    __using_for_directives: List[UsingForDirective]
+    _file_source: bytes
+    _license: Optional[str]
+    _source_unit_name: str
+    _pragmas: List[PragmaDirective]
+    _imports: List[ImportDirective]
+    _declared_variables: List[VariableDeclaration]
+    _enums: List[EnumDefinition]
+    _functions: List[FunctionDefinition]
+    _structs: List[StructDefinition]
+    _errors: List[ErrorDefinition]
+    _user_defined_value_types: List[UserDefinedValueTypeDefinition]
+    _contracts: List[ContractDefinition]
+    _using_for_directives: List[UsingForDirective]
 
     def __init__(
         self,
@@ -74,67 +75,67 @@ class SourceUnit(SolidityAbc):
         source_unit: SolcSourceUnit,
     ):
         super().__init__(init, source_unit, None)
-        self.__file_source = init.source
-        self.__license = source_unit.license
-        self.__source_unit_name = source_unit.absolute_path
+        self._file_source = init.source
+        self._license = source_unit.license
+        self._source_unit_name = source_unit.absolute_path
 
-        self.__pragmas = []
-        self.__imports = []
-        self.__declared_variables = []
-        self.__enums = []
-        self.__functions = []
-        self.__structs = []
-        self.__errors = []
-        self.__user_defined_value_types = []
-        self.__contracts = []
-        self.__using_for_directives = []
+        self._pragmas = []
+        self._imports = []
+        self._declared_variables = []
+        self._enums = []
+        self._functions = []
+        self._structs = []
+        self._errors = []
+        self._user_defined_value_types = []
+        self._contracts = []
+        self._using_for_directives = []
         for node in source_unit.nodes:
             if isinstance(node, SolcPragmaDirective):
-                self.__pragmas.append(PragmaDirective(init, node, self))
+                self._pragmas.append(PragmaDirective(init, node, self))
             elif isinstance(node, SolcImportDirective):
-                self.__imports.append(ImportDirective(init, node, self))
+                self._imports.append(ImportDirective(init, node, self))
             elif isinstance(node, SolcVariableDeclaration):
-                self.__declared_variables.append(VariableDeclaration(init, node, self))
+                self._declared_variables.append(VariableDeclaration(init, node, self))
             elif isinstance(node, SolcEnumDefinition):
-                self.__enums.append(EnumDefinition(init, node, self))
+                self._enums.append(EnumDefinition(init, node, self))
             elif isinstance(node, SolcFunctionDefinition):
-                self.__functions.append(FunctionDefinition(init, node, self))
+                self._functions.append(FunctionDefinition(init, node, self))
             elif isinstance(node, SolcStructDefinition):
-                self.__structs.append(StructDefinition(init, node, self))
+                self._structs.append(StructDefinition(init, node, self))
             elif isinstance(node, SolcErrorDefinition):
-                self.__errors.append(ErrorDefinition(init, node, self))
+                self._errors.append(ErrorDefinition(init, node, self))
             elif isinstance(node, SolcUserDefinedValueTypeDefinition):
-                self.__user_defined_value_types.append(
+                self._user_defined_value_types.append(
                     UserDefinedValueTypeDefinition(init, node, self)
                 )
             elif isinstance(node, SolcContractDefinition):
-                self.__contracts.append(ContractDefinition(init, node, self))
+                self._contracts.append(ContractDefinition(init, node, self))
             elif isinstance(node, SolcUsingForDirective):
-                self.__using_for_directives.append(UsingForDirective(init, node, self))
+                self._using_for_directives.append(UsingForDirective(init, node, self))
             else:
                 assert False, f"Unknown node type: {node}"
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        for pragma in self.__pragmas:
+        for pragma in self._pragmas:
             yield from pragma
-        for import_directive in self.__imports:
+        for import_directive in self._imports:
             yield from import_directive
-        for variable_declaration in self.__declared_variables:
+        for variable_declaration in self._declared_variables:
             yield from variable_declaration
-        for enum in self.__enums:
+        for enum in self._enums:
             yield from enum
-        for function in self.__functions:
+        for function in self._functions:
             yield from function
-        for struct in self.__structs:
+        for struct in self._structs:
             yield from struct
-        for error in self.__errors:
+        for error in self._errors:
             yield from error
-        for user_defined_value_type in self.__user_defined_value_types:
+        for user_defined_value_type in self._user_defined_value_types:
             yield from user_defined_value_type
-        for contract in self.__contracts:
+        for contract in self._contracts:
             yield from contract
-        for using_for_directive in self.__using_for_directives:
+        for using_for_directive in self._using_for_directives:
             yield from using_for_directive
 
     @property
@@ -152,7 +153,7 @@ class SourceUnit(SolidityAbc):
         Returns:
             Source code of the file including trailing newlines and license string.
         """
-        return self.__file_source
+        return self._file_source
 
     @property
     def license(self) -> Optional[str]:
@@ -165,7 +166,7 @@ class SourceUnit(SolidityAbc):
         Returns:
             License string of the file, if any.
         """
-        return self.__license
+        return self._license
 
     @property
     def source_unit_name(self) -> str:
@@ -173,7 +174,7 @@ class SourceUnit(SolidityAbc):
         Returns:
             Source unit name of the file.
         """
-        return self.__source_unit_name
+        return self._source_unit_name
 
     @property
     def pragmas(self) -> Tuple[PragmaDirective]:
@@ -181,7 +182,7 @@ class SourceUnit(SolidityAbc):
         Returns:
             Pragma directives present in the file.
         """
-        return tuple(self.__pragmas)
+        return tuple(self._pragmas)
 
     @property
     def imports(self) -> Tuple[ImportDirective]:
@@ -189,7 +190,7 @@ class SourceUnit(SolidityAbc):
         Returns:
             Import directives present in the file.
         """
-        return tuple(self.__imports)
+        return tuple(self._imports)
 
     @property
     def declared_variables(self) -> Tuple[VariableDeclaration]:
@@ -198,7 +199,7 @@ class SourceUnit(SolidityAbc):
         Returns:
             Top-level variable declarations present in the file.
         """
-        return tuple(self.__declared_variables)
+        return tuple(self._declared_variables)
 
     @property
     def enums(self) -> Tuple[EnumDefinition]:
@@ -206,7 +207,7 @@ class SourceUnit(SolidityAbc):
         Returns:
             Top-level enum definitions present in the file.
         """
-        return tuple(self.__enums)
+        return tuple(self._enums)
 
     @property
     def functions(self) -> Tuple[FunctionDefinition]:
@@ -215,7 +216,7 @@ class SourceUnit(SolidityAbc):
         Returns:
             Top-level function definitions present in the file.
         """
-        return tuple(self.__functions)
+        return tuple(self._functions)
 
     @property
     def structs(self) -> Tuple[StructDefinition]:
@@ -223,7 +224,7 @@ class SourceUnit(SolidityAbc):
         Returns:
             Top-level struct definitions present in the file.
         """
-        return tuple(self.__structs)
+        return tuple(self._structs)
 
     @property
     def errors(self) -> Tuple[ErrorDefinition]:
@@ -231,7 +232,7 @@ class SourceUnit(SolidityAbc):
         Returns:
             Top-level error definitions present in the file.
         """
-        return tuple(self.__errors)
+        return tuple(self._errors)
 
     @property
     def user_defined_value_types(self) -> Tuple[UserDefinedValueTypeDefinition]:
@@ -239,7 +240,7 @@ class SourceUnit(SolidityAbc):
         Returns:
             Top-level user-defined value type definitions present in the file.
         """
-        return tuple(self.__user_defined_value_types)
+        return tuple(self._user_defined_value_types)
 
     @property
     def contracts(self) -> Tuple[ContractDefinition]:
@@ -247,7 +248,7 @@ class SourceUnit(SolidityAbc):
         Returns:
             Contract definitions present in the file.
         """
-        return tuple(self.__contracts)
+        return tuple(self._contracts)
 
     @property
     def using_for_directives(self) -> Tuple[UsingForDirective]:
@@ -255,7 +256,7 @@ class SourceUnit(SolidityAbc):
         Returns:
             Top-level using for directives present in the file.
         """
-        return tuple(self.__using_for_directives)
+        return tuple(self._using_for_directives)
 
     def declarations_iter(self) -> Iterator[DeclarationAbc]:
         """
