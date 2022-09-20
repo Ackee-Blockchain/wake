@@ -31,6 +31,7 @@ class RevertStatement(StatementAbc):
         revert("Insufficient balance");
         ```
     """
+
     _ast_node: SolcRevertStatement
     _parent: Union[
         Block,
@@ -88,6 +89,6 @@ class RevertStatement(StatementAbc):
         return self.__error_call
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         return self.error_call.modifies_state

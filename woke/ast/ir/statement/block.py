@@ -36,6 +36,7 @@ class Block(StatementAbc):
         }
         ```
     """
+
     _ast_node: SolcBlock
     _parent: Union[
         Block,
@@ -94,7 +95,7 @@ class Block(StatementAbc):
         return tuple(self.__statements)
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         if self.statements is None:
             return set()

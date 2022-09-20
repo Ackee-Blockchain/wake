@@ -101,7 +101,7 @@ class Identifier(ExpressionAbc):
         return node
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def is_ref_to_state_variable(self) -> bool:
         referenced_declaration = self.referenced_declaration
         return (

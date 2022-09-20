@@ -61,6 +61,7 @@ class SymbolAlias:
         foreign (Identifier): Identifier referencing the symbol in the imported file.
         local (Optional[str]): Alias name of the imported symbol (if any).
     """
+
     foreign: Identifier
     local: Optional[str]
 
@@ -81,6 +82,7 @@ class ImportDirective(SolidityAbc):
         import { SafeType as CustomSafeType } from "SafeLib.sol";
         ```
     """
+
     _ast_node: SolcImportDirective
     _parent: SourceUnit
 
@@ -198,6 +200,7 @@ class ImportDirective(SolidityAbc):
             Source unit imported by this import directive.
         """
         from .source_unit import SourceUnit
+
         node = self._reference_resolver.resolve_node(
             self.__source_unit_id, self._cu_hash
         )
@@ -238,7 +241,7 @@ class ImportDirective(SolidityAbc):
         return self.__unit_alias
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def import_string_pos(self) -> Tuple[int, int]:
         """
         Returns:

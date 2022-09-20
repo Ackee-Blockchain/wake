@@ -37,6 +37,7 @@ class TryCatchClause(SolidityAbc):
         }
         ```
     """
+
     _ast_node: SolcTryCatchClause
     _parent: TryStatement
 
@@ -141,6 +142,6 @@ class TryCatchClause(SolidityAbc):
         return self.__parameters
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         return self.block.modifies_state

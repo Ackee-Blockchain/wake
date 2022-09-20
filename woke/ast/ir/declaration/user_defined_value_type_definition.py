@@ -25,6 +25,7 @@ class UserDefinedValueTypeDefinition(DeclarationAbc):
         type MyInt is uint;
         ```
     """
+
     _ast_node: SolcUserDefinedValueTypeDefinition
     _parent: Union[ContractDefinition, SourceUnit]
 
@@ -67,7 +68,7 @@ class UserDefinedValueTypeDefinition(DeclarationAbc):
         return self._parent
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def canonical_name(self) -> str:
         from .contract_definition import ContractDefinition
 
@@ -76,7 +77,7 @@ class UserDefinedValueTypeDefinition(DeclarationAbc):
         return self._name
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def declaration_string(self) -> str:
         return f"type {self.name} is {self.__underlying_type.source}"
 

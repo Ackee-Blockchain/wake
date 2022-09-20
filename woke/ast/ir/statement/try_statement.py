@@ -36,6 +36,7 @@ class TryStatement(StatementAbc):
         }
         ```
     """
+
     _ast_node: SolcTryStatement
     _parent: Union[
         Block,
@@ -98,7 +99,7 @@ class TryStatement(StatementAbc):
         return self.__external_call
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         return (
             reduce(

@@ -353,7 +353,7 @@ class MemberAccess(ExpressionAbc):
         return self.__member_name
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def member_byte_location(self) -> Tuple[int, int]:
         relative_expression_end = (
             self.__expression.byte_location[1] - self.byte_location[0]
@@ -377,7 +377,7 @@ class MemberAccess(ExpressionAbc):
         return node
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def is_ref_to_state_variable(self) -> bool:
         referenced_declaration = self.referenced_declaration
         return (
@@ -387,6 +387,6 @@ class MemberAccess(ExpressionAbc):
         )
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         return self.expression.modifies_state

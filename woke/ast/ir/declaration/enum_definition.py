@@ -29,6 +29,7 @@ class EnumDefinition(DeclarationAbc):
         enum ActionChoices { GoLeft, GoRight, GoStraight, SitStill }
         ```
     """
+
     _ast_node: SolcEnumDefinition
     _parent: Union[ContractDefinition, SourceUnit]
 
@@ -76,7 +77,7 @@ class EnumDefinition(DeclarationAbc):
         return self.__canonical_name
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def declaration_string(self) -> str:
         return (
             f"enum {self.name}"

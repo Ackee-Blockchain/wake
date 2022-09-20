@@ -32,6 +32,7 @@ class IfStatement(StatementAbc):
         }
         ```
     """
+
     _ast_node: SolcIfStatement
     _parent: Union[
         Block,
@@ -107,7 +108,7 @@ class IfStatement(StatementAbc):
         return self.__false_body
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         return (
             self.condition.modifies_state

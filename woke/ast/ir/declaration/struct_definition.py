@@ -29,6 +29,7 @@ class StructDefinition(DeclarationAbc):
         }
         ```
     """
+
     _ast_node: SolcStructDefinition
     _parent: Union[ContractDefinition, SourceUnit]
 
@@ -82,7 +83,7 @@ class StructDefinition(DeclarationAbc):
         return self.__canonical_name
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def declaration_string(self) -> str:
         return (
             f"struct {self.name}"

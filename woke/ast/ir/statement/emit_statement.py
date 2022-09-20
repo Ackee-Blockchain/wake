@@ -29,6 +29,7 @@ class EmitStatement(StatementAbc):
         }
         ```
     """
+
     _ast_node: SolcEmitStatement
     _parent: Union[
         Block,
@@ -83,6 +84,6 @@ class EmitStatement(StatementAbc):
         return self.__event_call
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         return {(self, ModifiesStateFlag.EMITS)} | self.event_call.modifies_state
