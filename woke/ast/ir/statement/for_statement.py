@@ -49,38 +49,38 @@ class ForStatement(StatementAbc):
         WhileStatement,
     ]
 
-    __body: StatementAbc
-    __condition: Optional[ExpressionAbc]
-    __initialization_expression: Optional[
+    _body: StatementAbc
+    _condition: Optional[ExpressionAbc]
+    _initialization_expression: Optional[
         Union[ExpressionStatement, VariableDeclarationStatement]
     ]
-    __loop_expression: Optional[ExpressionStatement]
+    _loop_expression: Optional[ExpressionStatement]
 
     def __init__(self, init: IrInitTuple, for_: SolcForStatement, parent: SolidityAbc):
         super().__init__(init, for_, parent)
-        self.__body = StatementAbc.from_ast(init, for_.body, self)
+        self._body = StatementAbc.from_ast(init, for_.body, self)
 
-        self.__condition = (
+        self._condition = (
             ExpressionAbc.from_ast(init, for_.condition, self)
             if for_.condition
             else None
         )
 
         if for_.initialization_expression is None:
-            self.__initialization_expression = None
+            self._initialization_expression = None
         else:
             if isinstance(for_.initialization_expression, SolcExpressionStatement):
-                self.__initialization_expression = ExpressionStatement(
+                self._initialization_expression = ExpressionStatement(
                     init, for_.initialization_expression, self
                 )
             elif isinstance(
                 for_.initialization_expression, SolcVariableDeclarationStatement
             ):
-                self.__initialization_expression = VariableDeclarationStatement(
+                self._initialization_expression = VariableDeclarationStatement(
                     init, for_.initialization_expression, self
                 )
 
-        self.__loop_expression = (
+        self._loop_expression = (
             ExpressionStatement(init, for_.loop_expression, self)
             if for_.loop_expression
             else None
@@ -88,13 +88,13 @@ class ForStatement(StatementAbc):
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        yield from self.__body
-        if self.__condition is not None:
-            yield from self.__condition
-        if self.__initialization_expression is not None:
-            yield from self.__initialization_expression
-        if self.__loop_expression is not None:
-            yield from self.__loop_expression
+        yield from self._body
+        if self._condition is not None:
+            yield from self._condition
+        if self._initialization_expression is not None:
+            yield from self._initialization_expression
+        if self._loop_expression is not None:
+            yield from self._loop_expression
 
     @property
     def parent(
@@ -119,7 +119,7 @@ class ForStatement(StatementAbc):
         Returns:
             Body of the for loop.
         """
-        return self.__body
+        return self._body
 
     @property
     def condition(self) -> Optional[ExpressionAbc]:
@@ -135,7 +135,7 @@ class ForStatement(StatementAbc):
         Returns:
             Condition of the for loop, if any.
         """
-        return self.__condition
+        return self._condition
 
     @property
     def initialization_expression(
@@ -153,7 +153,7 @@ class ForStatement(StatementAbc):
         Returns:
             Initialization expression of the for loop, if any.
         """
-        return self.__initialization_expression
+        return self._initialization_expression
 
     @property
     def loop_expression(self) -> Optional[ExpressionStatement]:
@@ -169,7 +169,7 @@ class ForStatement(StatementAbc):
         Returns:
             Loop expression of the for loop, if any.
         """
-        return self.__loop_expression
+        return self._loop_expression
 
     @property
     @lru_cache(maxsize=2048)
@@ -185,8 +185,8 @@ class ForStatement(StatementAbc):
 
     def statements_iter(self) -> Iterator["StatementAbc"]:
         yield self
-        yield from self.__body.statements_iter()
-        if self.__initialization_expression is not None:
-            yield from self.__initialization_expression.statements_iter()
-        if self.__loop_expression is not None:
-            yield from self.__loop_expression.statements_iter()
+        yield from self._body.statements_iter()
+        if self._initialization_expression is not None:
+            yield from self._initialization_expression.statements_iter()
+        if self._loop_expression is not None:
+            yield from self._loop_expression.statements_iter()

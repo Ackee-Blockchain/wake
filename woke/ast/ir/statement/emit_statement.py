@@ -40,15 +40,15 @@ class EmitStatement(StatementAbc):
         WhileStatement,
     ]
 
-    __event_call: FunctionCall
+    _event_call: FunctionCall
 
     def __init__(self, init: IrInitTuple, emit: SolcEmitStatement, parent: SolidityAbc):
         super().__init__(init, emit, parent)
-        self.__event_call = FunctionCall(init, emit.event_call, self)
+        self._event_call = FunctionCall(init, emit.event_call, self)
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        yield from self.__event_call
+        yield from self._event_call
 
     @property
     def parent(
@@ -81,7 +81,7 @@ class EmitStatement(StatementAbc):
         Returns:
             Expression representing the event call.
         """
-        return self.__event_call
+        return self._event_call
 
     @property
     @lru_cache(maxsize=2048)

@@ -134,11 +134,11 @@ class ExpressionStatement(StatementAbc):
                 UnaryOperation,
             ),
         )
-        self.__expression = expr
+        self._expression = expr
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        yield from self.__expression
+        yield from self._expression
 
     @property
     def parent(
@@ -178,7 +178,7 @@ class ExpressionStatement(StatementAbc):
         Returns:
             Expression of the expression statement.
         """
-        return self.__expression
+        return self._expression
 
     @property
     @lru_cache(maxsize=2048)

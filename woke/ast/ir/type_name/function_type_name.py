@@ -53,10 +53,10 @@ class FunctionTypeName(TypeNameAbc):
     _ast_node: SolcFunctionTypeName
     _parent: Union[VariableDeclaration, UsingForDirective, ArrayTypeName, Mapping]
 
-    __parameter_types: ParameterList
-    __return_parameter_types: ParameterList
-    __state_mutability: StateMutability
-    __visibility: Visibility
+    _parameter_types: ParameterList
+    _return_parameter_types: ParameterList
+    _state_mutability: StateMutability
+    _visibility: Visibility
 
     def __init__(
         self,
@@ -65,19 +65,19 @@ class FunctionTypeName(TypeNameAbc):
         parent: SolidityAbc,
     ):
         super().__init__(init, function_type_name, parent)
-        self.__parameter_types = ParameterList(
+        self._parameter_types = ParameterList(
             init, function_type_name.parameter_types, self
         )
-        self.__return_parameter_types = ParameterList(
+        self._return_parameter_types = ParameterList(
             init, function_type_name.return_parameter_types, self
         )
-        self.__state_mutability = function_type_name.state_mutability
-        self.__visibility = function_type_name.visibility
+        self._state_mutability = function_type_name.state_mutability
+        self._visibility = function_type_name.visibility
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        yield from self.__parameter_types
-        yield from self.__return_parameter_types
+        yield from self._parameter_types
+        yield from self._return_parameter_types
 
     @property
     def parent(self) -> Union[VariableDeclaration, UsingForDirective, ArrayTypeName, Mapping]:
@@ -103,7 +103,7 @@ class FunctionTypeName(TypeNameAbc):
         Returns:
             Parameter list describing the function type name parameters.
         """
-        return self.__parameter_types
+        return self._parameter_types
 
     @property
     def return_parameter_types(self) -> ParameterList:
@@ -111,7 +111,7 @@ class FunctionTypeName(TypeNameAbc):
         Returns:
             Parameter list describing the function type name return parameters.
         """
-        return self.__return_parameter_types
+        return self._return_parameter_types
 
     @property
     def state_mutability(self) -> StateMutability:
@@ -119,7 +119,7 @@ class FunctionTypeName(TypeNameAbc):
         Returns:
             State mutability of the function type name.
         """
-        return self.__state_mutability
+        return self._state_mutability
 
     @property
     def visibility(self) -> Visibility:
@@ -127,4 +127,4 @@ class FunctionTypeName(TypeNameAbc):
         Returns:
             Visibility of the function type name.
         """
-        return self.__visibility
+        return self._visibility

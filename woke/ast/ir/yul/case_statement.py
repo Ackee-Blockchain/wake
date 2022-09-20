@@ -19,22 +19,22 @@ class Case(YulAbc):
     TBD
     """
     _parent: Switch
-    __body: Block
-    __value: Union[typing_extensions.Literal["default"], Literal]
+    _body: Block
+    _value: Union[typing_extensions.Literal["default"], Literal]
 
     def __init__(self, init: IrInitTuple, case_: YulCase, parent: YulAbc):
         super().__init__(init, case_, parent)
-        self.__body = Block(init, case_.body, self)
+        self._body = Block(init, case_.body, self)
         if case_.value == "default":
-            self.__value = "default"
+            self._value = "default"
         else:
-            self.__value = Literal(init, case_.value, self)
+            self._value = Literal(init, case_.value, self)
 
     def __iter__(self) -> Iterator[YulAbc]:
         yield self
-        yield from self.__body
-        if self.__value != "default":
-            yield from self.__value
+        yield from self._body
+        if self._value != "default":
+            yield from self._value
 
     @property
     def parent(self) -> Switch:
@@ -42,8 +42,8 @@ class Case(YulAbc):
 
     @property
     def body(self) -> Block:
-        return self.__body
+        return self._body
 
     @property
     def value(self) -> Union[typing_extensions.Literal["default"], Literal]:
-        return self.__value
+        return self._value

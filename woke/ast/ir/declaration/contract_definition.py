@@ -72,130 +72,128 @@ class ContractDefinition(DeclarationAbc):
     _ast_node: SolcContractDefinition
     _parent: SourceUnit
 
-    __abstract: bool
-    __base_contracts: List[InheritanceSpecifier]
+    _abstract: bool
+    _base_contracts: List[InheritanceSpecifier]
     # ___dependencies
-    __kind: ContractKind
-    __fully_implemented: Optional[bool]
-    __linearized_base_contracts: List[AstNodeId]
+    _kind: ContractKind
+    _fully_implemented: Optional[bool]
+    _linearized_base_contracts: List[AstNodeId]
     # __scope
-    __documentation: Optional[Union[StructuredDocumentation, str]]
+    _documentation: Optional[Union[StructuredDocumentation, str]]
     # __used_errors
-    __enums: List[EnumDefinition]
-    __errors: List[ErrorDefinition]
-    __events: List[EventDefinition]
-    __functions: List[FunctionDefinition]
-    __modifiers: List[ModifierDefinition]
-    __structs: List[StructDefinition]
-    __user_defined_value_types: List[UserDefinedValueTypeDefinition]
-    __using_for_directives: List[UsingForDirective]
-    __declared_variables: List[VariableDeclaration]
+    _enums: List[EnumDefinition]
+    _errors: List[ErrorDefinition]
+    _events: List[EventDefinition]
+    _functions: List[FunctionDefinition]
+    _modifiers: List[ModifierDefinition]
+    _structs: List[StructDefinition]
+    _user_defined_value_types: List[UserDefinedValueTypeDefinition]
+    _using_for_directives: List[UsingForDirective]
+    _declared_variables: List[VariableDeclaration]
 
-    __child_contracts: Set[ContractDefinition]
+    _child_contracts: Set[ContractDefinition]
 
     def __init__(
         self, init: IrInitTuple, contract: SolcContractDefinition, parent: SourceUnit
     ):
         super().__init__(init, contract, parent)
-        self.__abstract = contract.abstract
-        self.__kind = contract.contract_kind
-        self.__fully_implemented = contract.fully_implemented
-        self.__linearized_base_contracts = list(contract.linearized_base_contracts)
+        self._abstract = contract.abstract
+        self._kind = contract.contract_kind
+        self._fully_implemented = contract.fully_implemented
+        self._linearized_base_contracts = list(contract.linearized_base_contracts)
 
         if contract.documentation is None:
-            self.__documentation = None
+            self._documentation = None
         elif isinstance(contract.documentation, SolcStructuredDocumentation):
-            self.__documentation = StructuredDocumentation(
+            self._documentation = StructuredDocumentation(
                 init, contract.documentation, self
             )
         elif isinstance(contract.documentation, str):
-            self.__documentation = contract.documentation
+            self._documentation = contract.documentation
         else:
             raise TypeError(
                 f"Unknown type of documentation: {type(contract.documentation)}"
             )
 
-        self.__base_contracts = []
+        self._base_contracts = []
         for base_contract in contract.base_contracts:
-            self.__base_contracts.append(
-                InheritanceSpecifier(init, base_contract, self)
-            )
-        self.__child_contracts = set()
+            self._base_contracts.append(InheritanceSpecifier(init, base_contract, self))
+        self._child_contracts = set()
 
-        self.__enums = []
-        self.__errors = []
-        self.__events = []
-        self.__functions = []
-        self.__modifiers = []
-        self.__structs = []
-        self.__user_defined_value_types = []
-        self.__using_for_directives = []
-        self.__declared_variables = []
+        self._enums = []
+        self._errors = []
+        self._events = []
+        self._functions = []
+        self._modifiers = []
+        self._structs = []
+        self._user_defined_value_types = []
+        self._using_for_directives = []
+        self._declared_variables = []
 
         for node in contract.nodes:
             if isinstance(node, SolcEnumDefinition):
-                self.__enums.append(EnumDefinition(init, node, self))
+                self._enums.append(EnumDefinition(init, node, self))
             elif isinstance(node, SolcErrorDefinition):
-                self.__errors.append(ErrorDefinition(init, node, self))
+                self._errors.append(ErrorDefinition(init, node, self))
             elif isinstance(node, SolcEventDefinition):
-                self.__events.append(EventDefinition(init, node, self))
+                self._events.append(EventDefinition(init, node, self))
             elif isinstance(node, SolcFunctionDefinition):
-                self.__functions.append(FunctionDefinition(init, node, self))
+                self._functions.append(FunctionDefinition(init, node, self))
             elif isinstance(node, SolcModifierDefinition):
-                self.__modifiers.append(ModifierDefinition(init, node, self))
+                self._modifiers.append(ModifierDefinition(init, node, self))
             elif isinstance(node, SolcStructDefinition):
-                self.__structs.append(StructDefinition(init, node, self))
+                self._structs.append(StructDefinition(init, node, self))
             elif isinstance(node, SolcUserDefinedValueTypeDefinition):
-                self.__user_defined_value_types.append(
+                self._user_defined_value_types.append(
                     UserDefinedValueTypeDefinition(init, node, self)
                 )
             elif isinstance(node, SolcUsingForDirective):
-                self.__using_for_directives.append(UsingForDirective(init, node, self))
+                self._using_for_directives.append(UsingForDirective(init, node, self))
             elif isinstance(node, SolcVariableDeclaration):
-                self.__declared_variables.append(VariableDeclaration(init, node, self))
+                self._declared_variables.append(VariableDeclaration(init, node, self))
 
-        init.reference_resolver.register_post_process_callback(self.__post_process)
+        init.reference_resolver.register_post_process_callback(self._post_process)
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        for base_contract in self.__base_contracts:
+        for base_contract in self._base_contracts:
             yield from base_contract
-        if isinstance(self.__documentation, StructuredDocumentation):
-            yield from self.__documentation
-        for enum in self.__enums:
+        if isinstance(self._documentation, StructuredDocumentation):
+            yield from self._documentation
+        for enum in self._enums:
             yield from enum
-        for error in self.__errors:
+        for error in self._errors:
             yield from error
-        for event in self.__events:
+        for event in self._events:
             yield from event
-        for function in self.__functions:
+        for function in self._functions:
             yield from function
-        for modifier in self.__modifiers:
+        for modifier in self._modifiers:
             yield from modifier
-        for struct in self.__structs:
+        for struct in self._structs:
             yield from struct
-        for user_defined_value_type in self.__user_defined_value_types:
+        for user_defined_value_type in self._user_defined_value_types:
             yield from user_defined_value_type
-        for using_for_directive in self.__using_for_directives:
+        for using_for_directive in self._using_for_directives:
             yield from using_for_directive
-        for declared_variable in self.__declared_variables:
+        for declared_variable in self._declared_variables:
             yield from declared_variable
 
-    def __post_process(self, callback_params: CallbackParams):
+    def _post_process(self, callback_params: CallbackParams):
         base_contracts = []
-        for base_contract in self.__base_contracts:
+        for base_contract in self._base_contracts:
             contract = base_contract.base_name.referenced_declaration
             assert isinstance(contract, ContractDefinition)
-            contract.__child_contracts.add(self)
+            contract._child_contracts.add(self)
             base_contracts.append(contract)
 
         self._reference_resolver.register_destroy_callback(
-            self.file, partial(self.__destroy, base_contracts)
+            self.file, partial(self._destroy, base_contracts)
         )
 
-    def __destroy(self, base_contracts: List[ContractDefinition]) -> None:
+    def _destroy(self, base_contracts: List[ContractDefinition]) -> None:
         for base_contract in base_contracts:
-            base_contract.__child_contracts.remove(self)
+            base_contract._child_contracts.remove(self)
 
     def _parse_name_location(self) -> Tuple[int, int]:
         IDENTIFIER = r"[a-zA-Z$_][a-zA-Z0-9$_]*"
@@ -275,7 +273,7 @@ class ContractDefinition(DeclarationAbc):
         Returns:
             `True` if the contract is abstract, `False` otherwise.
         """
-        return self.__abstract
+        return self._abstract
 
     @property
     def base_contracts(self) -> Tuple[InheritanceSpecifier]:
@@ -296,7 +294,7 @@ class ContractDefinition(DeclarationAbc):
         Returns:
             Base contracts of this contract.
         """
-        return tuple(self.__base_contracts)
+        return tuple(self._base_contracts)
 
     @property
     def child_contracts(self) -> FrozenSet[ContractDefinition]:
@@ -304,7 +302,7 @@ class ContractDefinition(DeclarationAbc):
         Returns:
             Contracts that list this contract in their [base_contracts][woke.ast.ir.declaration.contract_definition.ContractDefinition.base_contracts] property.
         """
-        return frozenset(self.__child_contracts)
+        return frozenset(self._child_contracts)
 
     @property
     def kind(self) -> ContractKind:
@@ -312,7 +310,7 @@ class ContractDefinition(DeclarationAbc):
         Returns:
             Contract kind.
         """
-        return self.__kind
+        return self._kind
 
     @property
     def fully_implemented(self) -> Optional[bool]:
@@ -321,7 +319,7 @@ class ContractDefinition(DeclarationAbc):
         Returns:
             `True` if all functions and modifiers of the contract are implemented, `False` otherwise.
         """
-        return self.__fully_implemented
+        return self._fully_implemented
 
     @property
     def linearized_base_contracts(self) -> Tuple[ContractDefinition]:
@@ -330,7 +328,7 @@ class ContractDefinition(DeclarationAbc):
             C3 linearized list of all base contracts.
         """
         base_contracts = []
-        for base_contract in self.__linearized_base_contracts:
+        for base_contract in self._linearized_base_contracts:
             node = self._reference_resolver.resolve_node(base_contract, self._cu_hash)
             assert isinstance(node, ContractDefinition)
             base_contracts.append(node)
@@ -343,7 +341,7 @@ class ContractDefinition(DeclarationAbc):
         Returns:
             [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation of this contract, if any.
         """
-        return self.__documentation
+        return self._documentation
 
     @property
     def enums(self) -> Tuple[EnumDefinition]:
@@ -351,7 +349,7 @@ class ContractDefinition(DeclarationAbc):
         Returns:
             Enum definitions contained in this contract.
         """
-        return tuple(self.__enums)
+        return tuple(self._enums)
 
     @property
     def errors(self) -> Tuple[ErrorDefinition]:
@@ -359,7 +357,7 @@ class ContractDefinition(DeclarationAbc):
         Returns:
             Error definitions contained in this contract.
         """
-        return tuple(self.__errors)
+        return tuple(self._errors)
 
     @property
     def events(self) -> Tuple[EventDefinition]:
@@ -367,7 +365,7 @@ class ContractDefinition(DeclarationAbc):
         Returns:
             Event definitions contained in this contract.
         """
-        return tuple(self.__events)
+        return tuple(self._events)
 
     @property
     def functions(self) -> Tuple[FunctionDefinition]:
@@ -375,7 +373,7 @@ class ContractDefinition(DeclarationAbc):
         Returns:
             Function definitions contained in this contract.
         """
-        return tuple(self.__functions)
+        return tuple(self._functions)
 
     @property
     def modifiers(self) -> Tuple[ModifierDefinition]:
@@ -383,7 +381,7 @@ class ContractDefinition(DeclarationAbc):
         Returns:
             Modifier definitions contained in this contract.
         """
-        return tuple(self.__modifiers)
+        return tuple(self._modifiers)
 
     @property
     def structs(self) -> Tuple[StructDefinition]:
@@ -391,7 +389,7 @@ class ContractDefinition(DeclarationAbc):
         Returns:
             Struct definitions contained in this contract.
         """
-        return tuple(self.__structs)
+        return tuple(self._structs)
 
     @property
     def user_defined_value_types(self) -> Tuple[UserDefinedValueTypeDefinition]:
@@ -399,7 +397,7 @@ class ContractDefinition(DeclarationAbc):
         Returns:
             User defined value type definitions contained in this contract.
         """
-        return tuple(self.__user_defined_value_types)
+        return tuple(self._user_defined_value_types)
 
     @property
     def using_for_directives(self) -> Tuple[UsingForDirective]:
@@ -407,7 +405,7 @@ class ContractDefinition(DeclarationAbc):
         Returns:
             Using for directives contained in this contract.
         """
-        return tuple(self.__using_for_directives)
+        return tuple(self._using_for_directives)
 
     @property
     def declared_variables(self) -> Tuple[VariableDeclaration]:
@@ -415,7 +413,7 @@ class ContractDefinition(DeclarationAbc):
         Returns:
             Variable declarations contained in this contract.
         """
-        return tuple(self.__declared_variables)
+        return tuple(self._declared_variables)
 
     def declarations_iter(self) -> Iterator[DeclarationAbc]:
         """

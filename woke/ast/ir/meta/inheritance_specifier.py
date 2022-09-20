@@ -37,8 +37,8 @@ class InheritanceSpecifier(SolidityAbc):
     _ast_node: SolcInheritanceSpecifier
     _parent: ContractDefinition
 
-    __base_name: Union[IdentifierPath, UserDefinedTypeName]
-    __arguments: Optional[List[ExpressionAbc]]
+    _base_name: Union[IdentifierPath, UserDefinedTypeName]
+    _arguments: Optional[List[ExpressionAbc]]
 
     def __init__(
         self,
@@ -49,26 +49,26 @@ class InheritanceSpecifier(SolidityAbc):
         super().__init__(init, inheritance_specifier, parent)
 
         if isinstance(inheritance_specifier.base_name, SolcIdentifierPath):
-            self.__base_name = IdentifierPath(
+            self._base_name = IdentifierPath(
                 init, inheritance_specifier.base_name, self
             )
         elif isinstance(inheritance_specifier.base_name, SolcUserDefinedTypeName):
-            self.__base_name = UserDefinedTypeName(
+            self._base_name = UserDefinedTypeName(
                 init, inheritance_specifier.base_name, self
             )
 
         if inheritance_specifier.arguments is None:
-            self.__arguments = None
+            self._arguments = None
         else:
-            self.__arguments = []
+            self._arguments = []
             for argument in inheritance_specifier.arguments:
-                self.__arguments.append(ExpressionAbc.from_ast(init, argument, self))
+                self._arguments.append(ExpressionAbc.from_ast(init, argument, self))
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        yield from self.__base_name
-        if self.__arguments is not None:
-            for argument in self.__arguments:
+        yield from self._base_name
+        if self._arguments is not None:
+            for argument in self._arguments:
                 yield from argument
 
     @property
@@ -91,7 +91,7 @@ class InheritanceSpecifier(SolidityAbc):
         Returns:
             IR node representing the base contract name.
         """
-        return self.__base_name
+        return self._base_name
 
     @property
     def arguments(self) -> Optional[List[ExpressionAbc]]:
@@ -114,4 +114,4 @@ class InheritanceSpecifier(SolidityAbc):
         Returns:
             Arguments of the base constructor call, if provided.
         """
-        return self.__arguments
+        return self._arguments

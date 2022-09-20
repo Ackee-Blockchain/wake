@@ -33,9 +33,9 @@ class StructDefinition(DeclarationAbc):
     _ast_node: SolcStructDefinition
     _parent: Union[ContractDefinition, SourceUnit]
 
-    __canonical_name: str
-    __members: List[VariableDeclaration]
-    __visibility: Visibility
+    _canonical_name: str
+    _members: List[VariableDeclaration]
+    _visibility: Visibility
 
     def __init__(
         self,
@@ -44,17 +44,17 @@ class StructDefinition(DeclarationAbc):
         parent: SolidityAbc,
     ):
         super().__init__(init, struct_definition, parent)
-        self.__canonical_name = struct_definition.canonical_name
+        self._canonical_name = struct_definition.canonical_name
         # TODO scope
-        self.__visibility = struct_definition.visibility
+        self._visibility = struct_definition.visibility
 
-        self.__members = []
+        self._members = []
         for member in struct_definition.members:
-            self.__members.append(VariableDeclaration(init, member, self))
+            self._members.append(VariableDeclaration(init, member, self))
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        for member in self.__members:
+        for member in self._members:
             yield from member
 
     def _parse_name_location(self) -> Tuple[int, int]:
@@ -80,7 +80,7 @@ class StructDefinition(DeclarationAbc):
 
     @property
     def canonical_name(self) -> str:
-        return self.__canonical_name
+        return self._canonical_name
 
     @property
     @lru_cache(maxsize=2048)
@@ -88,9 +88,7 @@ class StructDefinition(DeclarationAbc):
         return (
             f"struct {self.name}"
             + " {\n"
-            + ";\n".join(
-                f"    {member.declaration_string}" for member in self.__members
-            )
+            + ";\n".join(f"    {member.declaration_string}" for member in self._members)
             + ";\n}"
         )
 
@@ -100,4 +98,4 @@ class StructDefinition(DeclarationAbc):
         Returns:
             Tuple of member variable declarations.
         """
-        return tuple(self.__members)
+        return tuple(self._members)

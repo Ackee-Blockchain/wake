@@ -43,17 +43,17 @@ class IfStatement(StatementAbc):
         WhileStatement,
     ]
 
-    __condition: ExpressionAbc
-    __true_body: StatementAbc
-    __false_body: Optional[StatementAbc]
+    _condition: ExpressionAbc
+    _true_body: StatementAbc
+    _false_body: Optional[StatementAbc]
 
     def __init__(
         self, init: IrInitTuple, if_statement: SolcIfStatement, parent: SolidityAbc
     ):
         super().__init__(init, if_statement, parent)
-        self.__condition = ExpressionAbc.from_ast(init, if_statement.condition, self)
-        self.__true_body = StatementAbc.from_ast(init, if_statement.true_body, self)
-        self.__false_body = (
+        self._condition = ExpressionAbc.from_ast(init, if_statement.condition, self)
+        self._true_body = StatementAbc.from_ast(init, if_statement.true_body, self)
+        self._false_body = (
             None
             if if_statement.false_body is None
             else StatementAbc.from_ast(init, if_statement.false_body, self)
@@ -61,10 +61,10 @@ class IfStatement(StatementAbc):
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        yield from self.__condition
-        yield from self.__true_body
-        if self.__false_body is not None:
-            yield from self.__false_body
+        yield from self._condition
+        yield from self._true_body
+        if self._false_body is not None:
+            yield from self._false_body
 
     @property
     def parent(
@@ -89,7 +89,7 @@ class IfStatement(StatementAbc):
         Returns:
             Condition of the if statement.
         """
-        return self.__condition
+        return self._condition
 
     @property
     def true_body(self) -> StatementAbc:
@@ -97,7 +97,7 @@ class IfStatement(StatementAbc):
         Returns:
             Statement executed if the condition is true.
         """
-        return self.__true_body
+        return self._true_body
 
     @property
     def false_body(self) -> Optional[StatementAbc]:
@@ -105,7 +105,7 @@ class IfStatement(StatementAbc):
         Returns:
             Statement executed if the condition is false (if any).
         """
-        return self.__false_body
+        return self._false_body
 
     @property
     @lru_cache(maxsize=2048)
@@ -118,6 +118,6 @@ class IfStatement(StatementAbc):
 
     def statements_iter(self) -> Iterator["StatementAbc"]:
         yield self
-        yield from self.__true_body.statements_iter()
-        if self.__false_body is not None:
-            yield from self.__false_body.statements_iter()
+        yield from self._true_body.statements_iter()
+        if self._false_body is not None:
+            yield from self._false_body.statements_iter()

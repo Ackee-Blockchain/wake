@@ -17,8 +17,8 @@ class TupleExpression(ExpressionAbc):
     _ast_node: SolcTupleExpression
     _parent: SolidityAbc  # TODO: make this more specific
 
-    __components: List[Optional[ExpressionAbc]]
-    __is_inline_array: bool
+    _components: List[Optional[ExpressionAbc]]
+    _is_inline_array: bool
 
     def __init__(
         self,
@@ -27,18 +27,18 @@ class TupleExpression(ExpressionAbc):
         parent: SolidityAbc,
     ):
         super().__init__(init, tuple_expression, parent)
-        self.__is_inline_array = tuple_expression.is_inline_array
+        self._is_inline_array = tuple_expression.is_inline_array
 
-        self.__components = []
+        self._components = []
         for component in tuple_expression.components:
             if component is None:
-                self.__components.append(None)
+                self._components.append(None)
             else:
-                self.__components.append(ExpressionAbc.from_ast(init, component, self))
+                self._components.append(ExpressionAbc.from_ast(init, component, self))
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        for component in self.__components:
+        for component in self._components:
             if component is not None:
                 yield from component
 
@@ -48,18 +48,18 @@ class TupleExpression(ExpressionAbc):
 
     @property
     def is_inline_array(self) -> bool:
-        return self.__is_inline_array
+        return self._is_inline_array
 
     @property
     def components(self) -> Tuple[Optional[ExpressionAbc]]:
-        return tuple(self.__components)
+        return tuple(self._components)
 
     @property
     @lru_cache(maxsize=2048)
     def is_ref_to_state_variable(self) -> bool:
         return any(
             component.is_ref_to_state_variable
-            for component in self.__components
+            for component in self._components
             if component is not None
         )
 
@@ -70,7 +70,7 @@ class TupleExpression(ExpressionAbc):
             or_,
             (
                 component.modifies_state
-                for component in self.__components
+                for component in self._components
                 if component is not None
             ),
             set(),

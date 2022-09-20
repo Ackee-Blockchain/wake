@@ -31,29 +31,29 @@ class FunctionCall(YulAbc):
         VariableDeclaration,
         FunctionCall,
     ]
-    __arguments: List[Union["FunctionCall", Identifier, Literal]]
-    __function_name: Identifier
+    _arguments: List[Union["FunctionCall", Identifier, Literal]]
+    _function_name: Identifier
 
     def __init__(
         self, init: IrInitTuple, function_call: YulFunctionCall, parent: YulAbc
     ):
         super().__init__(init, function_call, parent)
-        self.__function_name = Identifier(init, function_call.function_name, self)
-        self.__arguments = []
+        self._function_name = Identifier(init, function_call.function_name, self)
+        self._arguments = []
         for argument in function_call.arguments:
             if isinstance(argument, YulFunctionCall):
-                self.__arguments.append(FunctionCall(init, argument, self))
+                self._arguments.append(FunctionCall(init, argument, self))
             elif isinstance(argument, YulIdentifier):
-                self.__arguments.append(Identifier(init, argument, self))
+                self._arguments.append(Identifier(init, argument, self))
             elif isinstance(argument, YulLiteral):
-                self.__arguments.append(Literal(init, argument, self))
+                self._arguments.append(Literal(init, argument, self))
             else:
                 assert False, f"Unexpected type: {type(argument)}"
 
     def __iter__(self) -> Iterator[YulAbc]:
         yield self
-        yield from self.__function_name
-        for argument in self.__arguments:
+        yield from self._function_name
+        for argument in self._arguments:
             yield from argument
 
     @property
@@ -72,8 +72,8 @@ class FunctionCall(YulAbc):
 
     @property
     def arguments(self) -> Tuple[Union["FunctionCall", Identifier, Literal]]:
-        return tuple(self.__arguments)
+        return tuple(self._arguments)
 
     @property
     def function_name(self) -> Identifier:
-        return self.__function_name
+        return self._function_name

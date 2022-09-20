@@ -17,7 +17,7 @@ class ElementaryTypeNameExpression(ExpressionAbc):
     _ast_node: SolcElementaryTypeNameExpression
     _parent: SolidityAbc  # TODO: make this more specific
 
-    __type_name: ElementaryTypeName
+    _type_name: ElementaryTypeName
 
     def __init__(
         self,
@@ -26,13 +26,13 @@ class ElementaryTypeNameExpression(ExpressionAbc):
         parent: SolidityAbc,
     ):
         super().__init__(init, elementary_type_name_expression, parent)
-        self.__type_name = ElementaryTypeName(
+        self._type_name = ElementaryTypeName(
             init, elementary_type_name_expression.type_name, self
         )
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        yield from self.__type_name
+        yield from self._type_name
 
     @property
     def parent(self) -> SolidityAbc:
@@ -40,7 +40,7 @@ class ElementaryTypeNameExpression(ExpressionAbc):
 
     @property
     def type_name(self) -> ElementaryTypeName:
-        return self.__type_name
+        return self._type_name
 
     @property
     def is_ref_to_state_variable(self) -> bool:

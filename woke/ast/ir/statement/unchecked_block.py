@@ -35,7 +35,7 @@ class UncheckedBlock(StatementAbc):
     _ast_node: SolcUncheckedBlock
     _parent: Union[Block, DoWhileStatement, ForStatement, IfStatement, WhileStatement]
 
-    __statements: List[StatementAbc]
+    _statements: List[StatementAbc]
 
     def __init__(
         self,
@@ -44,14 +44,14 @@ class UncheckedBlock(StatementAbc):
         parent: SolidityAbc,
     ):
         super().__init__(init, unchecked_block, parent)
-        self.__statements = [
+        self._statements = [
             StatementAbc.from_ast(init, statement, self)
             for statement in unchecked_block.statements
         ]
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        for statement in self.__statements:
+        for statement in self._statements:
             yield from statement
 
     @property
@@ -71,18 +71,18 @@ class UncheckedBlock(StatementAbc):
         Returns:
             Statements in the block.
         """
-        return tuple(self.__statements)
+        return tuple(self._statements)
 
     @property
     @lru_cache(maxsize=2048)
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         return reduce(
             or_,
-            (statement.modifies_state for statement in self.__statements),
+            (statement.modifies_state for statement in self._statements),
             set(),
         )
 
     def statements_iter(self) -> Iterator["StatementAbc"]:
         yield self
-        for statement in self.__statements:
+        for statement in self._statements:
             yield from statement.statements_iter()

@@ -16,9 +16,9 @@ class IndexRangeAccess(ExpressionAbc):
     _ast_node: SolcIndexRangeAccess
     _parent: SolidityAbc  # TODO: make this more specific
 
-    __base_expression: ExpressionAbc
-    __start_expression: Optional[ExpressionAbc]
-    __end_expression: Optional[ExpressionAbc]
+    _base_expression: ExpressionAbc
+    _start_expression: Optional[ExpressionAbc]
+    _end_expression: Optional[ExpressionAbc]
 
     def __init__(
         self,
@@ -27,31 +27,31 @@ class IndexRangeAccess(ExpressionAbc):
         parent: SolidityAbc,
     ):
         super().__init__(init, index_range_access, parent)
-        self.__base_expression = ExpressionAbc.from_ast(
+        self._base_expression = ExpressionAbc.from_ast(
             init, index_range_access.base_expression, self
         )
 
         if index_range_access.start_expression is None:
-            self.__start_expression = None
+            self._start_expression = None
         else:
-            self.__start_expression = ExpressionAbc.from_ast(
+            self._start_expression = ExpressionAbc.from_ast(
                 init, index_range_access.start_expression, self
             )
 
         if index_range_access.end_expression is None:
-            self.__end_expression = None
+            self._end_expression = None
         else:
-            self.__end_expression = ExpressionAbc.from_ast(
+            self._end_expression = ExpressionAbc.from_ast(
                 init, index_range_access.end_expression, self
             )
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        yield from self.__base_expression
-        if self.__start_expression is not None:
-            yield from self.__start_expression
-        if self.__end_expression is not None:
-            yield from self.__end_expression
+        yield from self._base_expression
+        if self._start_expression is not None:
+            yield from self._start_expression
+        if self._end_expression is not None:
+            yield from self._end_expression
 
     @property
     def parent(self) -> SolidityAbc:
@@ -59,15 +59,15 @@ class IndexRangeAccess(ExpressionAbc):
 
     @property
     def base_expression(self) -> ExpressionAbc:
-        return self.__base_expression
+        return self._base_expression
 
     @property
     def start_expression(self) -> Optional[ExpressionAbc]:
-        return self.__start_expression
+        return self._start_expression
 
     @property
     def end_expression(self) -> Optional[ExpressionAbc]:
-        return self.__end_expression
+        return self._end_expression
 
     @property
     def is_ref_to_state_variable(self) -> bool:

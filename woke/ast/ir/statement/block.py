@@ -50,19 +50,19 @@ class Block(StatementAbc):
         TryCatchClause,  # meta
     ]
 
-    __statements: List[StatementAbc]
+    _statements: List[StatementAbc]
 
     def __init__(self, init: IrInitTuple, block: SolcBlock, parent: SolidityAbc):
         super().__init__(init, block, parent)
-        self.__statements = [
+        self._statements = [
             StatementAbc.from_ast(init, statement, self)
             for statement in block.statements
         ]
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        if self.__statements is not None:
-            for statement in self.__statements:
+        if self._statements is not None:
+            for statement in self._statements:
                 yield from statement
 
     @property
@@ -92,7 +92,7 @@ class Block(StatementAbc):
         Returns:
             Statements in the block.
         """
-        return tuple(self.__statements)
+        return tuple(self._statements)
 
     @property
     @lru_cache(maxsize=2048)
@@ -107,6 +107,6 @@ class Block(StatementAbc):
 
     def statements_iter(self) -> Iterator["StatementAbc"]:
         yield self
-        if self.__statements is not None:
-            for statement in self.__statements:
+        if self._statements is not None:
+            for statement in self._statements:
                 yield from statement.statements_iter()

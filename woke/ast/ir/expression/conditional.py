@@ -17,27 +17,27 @@ class Conditional(ExpressionAbc):
     _ast_node: SolcConditional
     _parent: SolidityAbc  # TODO: make this more specific
 
-    __condition: ExpressionAbc
-    __false_expression: ExpressionAbc
-    __true_expression: ExpressionAbc
+    _condition: ExpressionAbc
+    _false_expression: ExpressionAbc
+    _true_expression: ExpressionAbc
 
     def __init__(
         self, init: IrInitTuple, conditional: SolcConditional, parent: SolidityAbc
     ):
         super().__init__(init, conditional, parent)
-        self.__condition = ExpressionAbc.from_ast(init, conditional.condition, self)
-        self.__false_expression = ExpressionAbc.from_ast(
+        self._condition = ExpressionAbc.from_ast(init, conditional.condition, self)
+        self._false_expression = ExpressionAbc.from_ast(
             init, conditional.false_expression, self
         )
-        self.__true_expression = ExpressionAbc.from_ast(
+        self._true_expression = ExpressionAbc.from_ast(
             init, conditional.true_expression, self
         )
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        yield from self.__condition
-        yield from self.__false_expression
-        yield from self.__true_expression
+        yield from self._condition
+        yield from self._false_expression
+        yield from self._true_expression
 
     @property
     def parent(self) -> SolidityAbc:
@@ -45,15 +45,15 @@ class Conditional(ExpressionAbc):
 
     @property
     def condition(self) -> ExpressionAbc:
-        return self.__condition
+        return self._condition
 
     @property
     def false_expression(self) -> ExpressionAbc:
-        return self.__false_expression
+        return self._false_expression
 
     @property
     def true_expression(self) -> ExpressionAbc:
-        return self.__true_expression
+        return self._true_expression
 
     @property
     @lru_cache(maxsize=2048)

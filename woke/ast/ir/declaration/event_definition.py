@@ -28,39 +28,39 @@ class EventDefinition(DeclarationAbc):
     _ast_node: SolcEventDefinition
     _parent: ContractDefinition
 
-    __anonymous: bool
-    __parameters: ParameterList
-    __documentation: Optional[Union[StructuredDocumentation, str]]
-    __event_selector: Optional[bytes]
+    _anonymous: bool
+    _parameters: ParameterList
+    _documentation: Optional[Union[StructuredDocumentation, str]]
+    _event_selector: Optional[bytes]
 
     def __init__(
         self, init: IrInitTuple, event: SolcEventDefinition, parent: SolidityAbc
     ):
         super().__init__(init, event, parent)
-        self.__anonymous = event.anonymous
-        self.__parameters = ParameterList(init, event.parameters, self)
+        self._anonymous = event.anonymous
+        self._parameters = ParameterList(init, event.parameters, self)
 
         if event.documentation is None:
-            self.__documentation = None
+            self._documentation = None
         elif isinstance(event.documentation, SolcStructuredDocumentation):
-            self.__documentation = StructuredDocumentation(
+            self._documentation = StructuredDocumentation(
                 init, event.documentation, self
             )
         elif isinstance(event.documentation, str):
-            self.__documentation = event.documentation
+            self._documentation = event.documentation
         else:
             raise TypeError(
                 f"Unknown type of documentation: {type(event.documentation)}"
             )
-        self.__event_selector = (
+        self._event_selector = (
             bytes.fromhex(event.event_selector) if event.event_selector else None
         )
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        yield from self.__parameters
-        if isinstance(self.__documentation, StructuredDocumentation):
-            yield from self.__documentation
+        yield from self._parameters
+        if isinstance(self._documentation, StructuredDocumentation):
+            yield from self._documentation
 
     def _parse_name_location(self) -> Tuple[int, int]:
         IDENTIFIER = r"[a-zA-Z$_][a-zA-Z0-9$_]*"
@@ -124,7 +124,7 @@ class EventDefinition(DeclarationAbc):
         Returns:
             `True` if the event is anonymous, `False` otherwise.
         """
-        return self.__anonymous
+        return self._anonymous
 
     @property
     def parameters(self) -> ParameterList:
@@ -132,7 +132,7 @@ class EventDefinition(DeclarationAbc):
         Returns:
             Parameter list describing parameters of the event.
         """
-        return self.__parameters
+        return self._parameters
 
     @property
     def documentation(self) -> Optional[Union[StructuredDocumentation, str]]:
@@ -141,7 +141,7 @@ class EventDefinition(DeclarationAbc):
         Returns:
             [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation string, if any.
         """
-        return self.__documentation
+        return self._documentation
 
     @property
     def event_selector(self) -> Optional[bytes]:
@@ -150,4 +150,4 @@ class EventDefinition(DeclarationAbc):
         Returns:
             Selector of the event.
         """
-        return self.__event_selector
+        return self._event_selector

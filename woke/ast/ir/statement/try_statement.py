@@ -47,23 +47,23 @@ class TryStatement(StatementAbc):
         WhileStatement,
     ]
 
-    __clauses: List[TryCatchClause]
-    __external_call: FunctionCall
+    _clauses: List[TryCatchClause]
+    _external_call: FunctionCall
 
     def __init__(
         self, init: IrInitTuple, try_statement: SolcTryStatement, parent: SolidityAbc
     ):
         super().__init__(init, try_statement, parent)
-        self.__clauses = [
+        self._clauses = [
             TryCatchClause(init, clause, self) for clause in try_statement.clauses
         ]
-        self.__external_call = FunctionCall(init, try_statement.external_call, self)
+        self._external_call = FunctionCall(init, try_statement.external_call, self)
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        for clause in self.__clauses:
+        for clause in self._clauses:
             yield from clause
-        yield from self.__external_call
+        yield from self._external_call
 
     @property
     def parent(
@@ -88,7 +88,7 @@ class TryStatement(StatementAbc):
         Returns:
             Try/catch clauses.
         """
-        return tuple(self.__clauses)
+        return tuple(self._clauses)
 
     @property
     def external_call(self) -> FunctionCall:
@@ -96,7 +96,7 @@ class TryStatement(StatementAbc):
         Returns:
             External call executed in the try statement.
         """
-        return self.__external_call
+        return self._external_call
 
     @property
     @lru_cache(maxsize=2048)
@@ -104,7 +104,7 @@ class TryStatement(StatementAbc):
         return (
             reduce(
                 or_,
-                (clause.modifies_state for clause in self.__clauses),
+                (clause.modifies_state for clause in self._clauses),
                 set(),
             )
             | self.external_call.modifies_state
@@ -112,5 +112,5 @@ class TryStatement(StatementAbc):
 
     def statements_iter(self) -> Iterator["StatementAbc"]:
         yield self
-        for clause in self.__clauses:
+        for clause in self._clauses:
             yield from clause.block.statements_iter()

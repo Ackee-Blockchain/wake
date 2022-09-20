@@ -41,45 +41,45 @@ class ExternalReference:
         Since this is not an IR node, there must still be a Yul IR node (e.g. Yul [Identifier][woke.ast.ir.yul.identifier.Identifier]) in the source code that represents the identifier.
     """
 
-    __external_reference_model: ExternalReferenceModel
-    __reference_resolver: ReferenceResolver
-    __cu_hash: bytes
-    __file: Path
-    __source: bytes
+    _external_reference_model: ExternalReferenceModel
+    _reference_resolver: ReferenceResolver
+    _cu_hash: bytes
+    _file: Path
+    _source: bytes
 
-    __referenced_declaration_id: AstNodeId
-    __value_size: int
-    __suffix: Optional[InlineAssemblySuffix]
+    _referenced_declaration_id: AstNodeId
+    _value_size: int
+    _suffix: Optional[InlineAssemblySuffix]
 
     def __init__(
         self, init: IrInitTuple, external_reference_model: ExternalReferenceModel
     ):
-        self.__external_reference_model = external_reference_model
-        self.__reference_resolver = init.reference_resolver
-        self.__cu_hash = init.cu.hash
-        self.__file = init.file
-        self.__source = init.source[self.byte_location[0] : self.byte_location[1]]
+        self._external_reference_model = external_reference_model
+        self._reference_resolver = init.reference_resolver
+        self._cu_hash = init.cu.hash
+        self._file = init.file
+        self._source = init.source[self.byte_location[0] : self.byte_location[1]]
 
-        self.__referenced_declaration_id = external_reference_model.declaration
-        assert self.__referenced_declaration_id >= 0
-        self.__value_size = external_reference_model.value_size
-        self.__suffix = external_reference_model.suffix
+        self._referenced_declaration_id = external_reference_model.declaration
+        assert self._referenced_declaration_id >= 0
+        self._value_size = external_reference_model.value_size
+        self._suffix = external_reference_model.suffix
 
         if external_reference_model.is_offset:
-            self.__suffix = InlineAssemblySuffix.OFFSET
+            self._suffix = InlineAssemblySuffix.OFFSET
         elif external_reference_model.is_slot:
-            self.__suffix = InlineAssemblySuffix.SLOT
+            self._suffix = InlineAssemblySuffix.SLOT
 
-        self.__reference_resolver.register_post_process_callback(self.__post_process)
+        self._reference_resolver.register_post_process_callback(self._post_process)
 
-    def __post_process(self, callback_params: CallbackParams):
+    def _post_process(self, callback_params: CallbackParams):
         referenced_declaration = self.referenced_declaration
         referenced_declaration.register_reference(self)
-        self.__reference_resolver.register_destroy_callback(
-            self.__file, partial(self.__destroy, referenced_declaration)
+        self._reference_resolver.register_destroy_callback(
+            self._file, partial(self._destroy, referenced_declaration)
         )
 
-    def __destroy(self, referenced_declaration: DeclarationAbc) -> None:
+    def _destroy(self, referenced_declaration: DeclarationAbc) -> None:
         referenced_declaration.unregister_reference(self)
 
     @property
@@ -88,7 +88,7 @@ class ExternalReference:
         Returns:
             Absolute path to the file containing the inline assembly block.
         """
-        return self.__file
+        return self._file
 
     @property
     def byte_location(self) -> Tuple[int, int]:
@@ -97,9 +97,9 @@ class ExternalReference:
             Byte offsets (start and end) of the external reference in the source file.
         """
         return (
-            self.__external_reference_model.src.byte_offset,
-            self.__external_reference_model.src.byte_offset
-            + self.__external_reference_model.src.byte_length,
+            self._external_reference_model.src.byte_offset,
+            self._external_reference_model.src.byte_offset
+            + self._external_reference_model.src.byte_length,
         )
 
     @property
@@ -122,7 +122,7 @@ class ExternalReference:
         Returns:
             Byte offsets (start and end) of the identifier representing the external reference in the source file.
         """
-        match = IDENTIFIER_RE.match(self.__source)
+        match = IDENTIFIER_RE.match(self._source)
         assert match
         start = self.byte_location[0] + match.start()
         end = self.byte_location[0] + match.end()
@@ -134,8 +134,8 @@ class ExternalReference:
         Returns:
             Solidity declaration referenced by this external reference.
         """
-        node = self.__reference_resolver.resolve_node(
-            self.__referenced_declaration_id, self.__cu_hash
+        node = self._reference_resolver.resolve_node(
+            self._referenced_declaration_id, self._cu_hash
         )
         assert isinstance(node, DeclarationAbc)
         return node
@@ -143,7 +143,7 @@ class ExternalReference:
     @property
     def value_size(self) -> int:
         # TODO document this?
-        return self.__value_size
+        return self._value_size
 
     @property
     def suffix(self) -> Optional[InlineAssemblySuffix]:
@@ -151,7 +151,7 @@ class ExternalReference:
         Returns:
             Suffix of the external reference, if any.
         """
-        return self.__suffix
+        return self._suffix
 
 
 class InlineAssembly(StatementAbc):
@@ -179,10 +179,10 @@ class InlineAssembly(StatementAbc):
         WhileStatement,
     ]
 
-    __yul_block: YulBlock
-    __evm_version: InlineAssemblyEvmVersion
-    __external_references: IntervalTree
-    __flags: Set[InlineAssemblyFlag]
+    _yul_block: YulBlock
+    _evm_version: InlineAssemblyEvmVersion
+    _external_references: IntervalTree
+    _flags: Set[InlineAssemblyFlag]
 
     def __init__(
         self,
@@ -191,23 +191,23 @@ class InlineAssembly(StatementAbc):
         parent: SolidityAbc,
     ):
         super().__init__(init, inline_assembly, parent)
-        self.__yul_block = YulBlock(init, inline_assembly.ast, self)
-        self.__evm_version = inline_assembly.evm_version
-        self.__external_references = IntervalTree()
-        self.__flags = set()
+        self._yul_block = YulBlock(init, inline_assembly.ast, self)
+        self._evm_version = inline_assembly.evm_version
+        self._external_references = IntervalTree()
+        self._flags = set()
         if inline_assembly.flags is not None:
             for flag in inline_assembly.flags:
-                self.__flags.add(InlineAssemblyFlag(flag))
+                self._flags.add(InlineAssemblyFlag(flag))
         for external_reference in inline_assembly.external_references:
             start = external_reference.src.byte_offset
             end = start + external_reference.src.byte_length
-            self.__external_references[start:end] = ExternalReference(
+            self._external_references[start:end] = ExternalReference(
                 init, external_reference
             )
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        yield from self.__yul_block
+        yield from self._yul_block
 
     @property
     def parent(
@@ -232,7 +232,7 @@ class InlineAssembly(StatementAbc):
         Returns:
             Yul block containing Yul IR nodes ([YulAbc][woke.ast.ir.yul.abc.YulAbc]).
         """
-        return self.__yul_block
+        return self._yul_block
 
     @property
     def evm_version(self) -> InlineAssemblyEvmVersion:
@@ -241,7 +241,7 @@ class InlineAssembly(StatementAbc):
         Returns:
             EVM version used for the inline assembly block.
         """
-        return self.__evm_version
+        return self._evm_version
 
     @property
     def flags(self) -> FrozenSet[InlineAssemblyFlag]:
@@ -259,7 +259,7 @@ class InlineAssembly(StatementAbc):
         Returns:
             Flags decorating the inline assembly block.
         """
-        return frozenset(self.__flags)
+        return frozenset(self._flags)
 
     @property
     def external_references(self) -> Tuple[ExternalReference]:
@@ -267,7 +267,7 @@ class InlineAssembly(StatementAbc):
         Returns:
             External references in the inline assembly block.
         """
-        return tuple(interval.data for interval in self.__external_references)
+        return tuple(interval.data for interval in self._external_references)
 
     def external_reference_at(self, byte_offset: int) -> Optional[ExternalReference]:
         """
@@ -276,7 +276,7 @@ class InlineAssembly(StatementAbc):
         Returns:
             External reference at the given byte offset, if any.
         """
-        intervals = self.__external_references.at(byte_offset)
+        intervals = self._external_references.at(byte_offset)
         assert len(intervals) <= 1
         if len(intervals) == 0:
             return None

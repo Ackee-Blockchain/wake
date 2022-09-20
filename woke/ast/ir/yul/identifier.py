@@ -29,11 +29,11 @@ class Identifier(YulAbc):
         VariableDeclaration,
         FunctionCall,
     ]
-    __name: str
+    _name: str
 
     def __init__(self, init: IrInitTuple, identifier: YulIdentifier, parent: YulAbc):
         super().__init__(init, identifier, parent)
-        self.__name = identifier.name
+        self._name = identifier.name
 
     @property
     def parent(
@@ -51,4 +51,4 @@ class Identifier(YulAbc):
 
     @property
     def name(self) -> str:
-        return self.__name
+        return self._name

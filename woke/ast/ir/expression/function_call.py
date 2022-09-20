@@ -36,34 +36,34 @@ class FunctionCall(ExpressionAbc):
     _ast_node: SolcFunctionCall
     _parent: SolidityAbc  # TODO: make this more specific
 
-    __arguments: List[ExpressionAbc]
-    __expression: ExpressionAbc
-    __kind: FunctionCallKind
-    __names: List[str]
-    __try_call: bool
+    _arguments: List[ExpressionAbc]
+    _expression: ExpressionAbc
+    _kind: FunctionCallKind
+    _names: List[str]
+    _try_call: bool
 
-    __recursion_lock: bool
+    _recursion_lock: bool
 
     def __init__(
         self, init: IrInitTuple, function_call: SolcFunctionCall, parent: SolidityAbc
     ):
         super().__init__(init, function_call, parent)
-        self.__recursion_lock = False
-        self.__kind = function_call.kind
-        self.__names = list(function_call.names)
-        self.__try_call = function_call.try_call
+        self._recursion_lock = False
+        self._kind = function_call.kind
+        self._names = list(function_call.names)
+        self._try_call = function_call.try_call
 
-        self.__expression = ExpressionAbc.from_ast(init, function_call.expression, self)
-        self.__arguments = [
+        self._expression = ExpressionAbc.from_ast(init, function_call.expression, self)
+        self._arguments = [
             ExpressionAbc.from_ast(init, argument, self)
             for argument in function_call.arguments
         ]
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        for argument in self.__arguments:
+        for argument in self._arguments:
             yield from argument
-        yield from self.__expression
+        yield from self._expression
 
     @property
     def parent(self) -> SolidityAbc:
@@ -71,23 +71,23 @@ class FunctionCall(ExpressionAbc):
 
     @property
     def kind(self) -> FunctionCallKind:
-        return self.__kind
+        return self._kind
 
     @property
     def names(self) -> Tuple[str]:
-        return tuple(self.__names)
+        return tuple(self._names)
 
     @property
     def try_call(self) -> bool:
-        return self.__try_call
+        return self._try_call
 
     @property
     def expression(self) -> ExpressionAbc:
-        return self.__expression
+        return self._expression
 
     @property
     def arguments(self) -> Tuple[ExpressionAbc]:
-        return tuple(self.__arguments)
+        return tuple(self._arguments)
 
     @property
     @lru_cache(maxsize=2048)
@@ -178,9 +178,9 @@ class FunctionCall(ExpressionAbc):
     @property
     @lru_cache(maxsize=2048)
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
-        if self.__recursion_lock:
+        if self._recursion_lock:
             return set()
-        self.__recursion_lock = True
+        self._recursion_lock = True
         ret = self.expression.modifies_state | reduce(
             or_, (arg.modifies_state for arg in self.arguments), set()
         )
@@ -235,5 +235,5 @@ class FunctionCall(ExpressionAbc):
                     }
                 else:
                     assert False
-        self.__recursion_lock = False
+        self._recursion_lock = False
         return ret

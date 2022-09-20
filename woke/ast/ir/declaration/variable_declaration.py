@@ -112,20 +112,20 @@ class VariableDeclaration(DeclarationAbc):
         VariableDeclarationStatement,
     ]
 
-    __constant: bool
+    _constant: bool
     # __scope
-    __mutability: Optional[Mutability]
-    __state_variable: bool
-    __data_location: DataLocation
-    __visibility: Visibility
-    __base_functions: List[AstNodeId]
-    __documentation: Optional[StructuredDocumentation]
-    __function_selector: Optional[bytes]
-    __indexed: bool
-    __overrides: Optional[OverrideSpecifier]
-    __type_name: TypeNameAbc
-    __value: Optional[ExpressionAbc]
-    __type_descriptions: TypeDescriptionsModel
+    _mutability: Optional[Mutability]
+    _state_variable: bool
+    _data_location: DataLocation
+    _visibility: Visibility
+    _base_functions: List[AstNodeId]
+    _documentation: Optional[StructuredDocumentation]
+    _function_selector: Optional[bytes]
+    _indexed: bool
+    _overrides: Optional[OverrideSpecifier]
+    _type_name: TypeNameAbc
+    _value: Optional[ExpressionAbc]
+    _type_descriptions: TypeDescriptionsModel
 
     def __init__(
         self,
@@ -134,29 +134,29 @@ class VariableDeclaration(DeclarationAbc):
         parent: SolidityAbc,
     ):
         super().__init__(init, variable_declaration, parent)
-        self.__constant = variable_declaration.constant
-        self.__mutability = variable_declaration.mutability
+        self._constant = variable_declaration.constant
+        self._mutability = variable_declaration.mutability
         # TODO scope
-        self.__state_variable = variable_declaration.state_variable
-        self.__data_location = variable_declaration.storage_location
-        self.__visibility = variable_declaration.visibility
-        self.__base_functions = (
+        self._state_variable = variable_declaration.state_variable
+        self._data_location = variable_declaration.storage_location
+        self._visibility = variable_declaration.visibility
+        self._base_functions = (
             list(variable_declaration.base_functions)
             if variable_declaration.base_functions is not None
             else []
         )
-        self.__documentation = (
+        self._documentation = (
             StructuredDocumentation(init, variable_declaration.documentation, self)
             if variable_declaration.documentation
             else None
         )
-        self.__function_selector = (
+        self._function_selector = (
             bytes.fromhex(variable_declaration.function_selector)
             if variable_declaration.function_selector
             else None
         )
-        self.__indexed = variable_declaration.indexed or False
-        self.__overrides = (
+        self._indexed = variable_declaration.indexed or False
+        self._overrides = (
             OverrideSpecifier(init, variable_declaration.overrides, self)
             if variable_declaration.overrides
             else None
@@ -167,46 +167,46 @@ class VariableDeclaration(DeclarationAbc):
         assert (
             variable_declaration.type_name is not None
         ), "Variable declaration must have a type name"
-        self.__type_name = TypeNameAbc.from_ast(
+        self._type_name = TypeNameAbc.from_ast(
             init, variable_declaration.type_name, self
         )
-        self.__value = (
+        self._value = (
             ExpressionAbc.from_ast(init, variable_declaration.value, self)
             if variable_declaration.value is not None
             else None
         )
-        self.__type_descriptions = variable_declaration.type_descriptions
-        self._reference_resolver.register_post_process_callback(self.__post_process)
+        self._type_descriptions = variable_declaration.type_descriptions
+        self._reference_resolver.register_post_process_callback(self._post_process)
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        if self.__documentation is not None:
-            yield from self.__documentation
-        if self.__overrides is not None:
-            yield from self.__overrides
-        yield from self.__type_name
-        if self.__value is not None:
-            yield from self.__value
+        if self._documentation is not None:
+            yield from self._documentation
+        if self._overrides is not None:
+            yield from self._overrides
+        yield from self._type_name
+        if self._value is not None:
+            yield from self._value
 
-    def __post_process(self, callback_params: CallbackParams):
+    def _post_process(self, callback_params: CallbackParams):
         base_functions = self.base_functions
         for base_function in base_functions:
             base_function._child_functions.add(self)
         self._reference_resolver.register_destroy_callback(
-            self.file, partial(self.__destroy, base_functions)
+            self.file, partial(self._destroy, base_functions)
         )
 
-    def __destroy(self, base_functions: Tuple[FunctionDefinition]) -> None:
+    def _destroy(self, base_functions: Tuple[FunctionDefinition]) -> None:
         for base_function in base_functions:
             base_function._child_functions.discard(self)
 
     def _parse_name_location(self) -> Tuple[int, int]:
         # this one is a bit tricky
         # it is easier to parse the variable declaration from the end (while omitting an optional assigned expression)
-        if self.__value is None:
+        if self._value is None:
             source_without_value = self._source
         else:
-            length_without_value = self.__value.byte_location[0] - self.byte_location[0]
+            length_without_value = self._value.byte_location[0] - self.byte_location[0]
             source_without_value = self._source[:length_without_value]
 
         IDENTIFIER = r"[a-zA-Z$_][a-zA-Z0-9$_]*"
@@ -289,20 +289,18 @@ class VariableDeclaration(DeclarationAbc):
         Returns:
             Mutability of the variable.
         """
-        if self.__mutability is None:
-            relative_type_end = (
-                self.__type_name.byte_location[1] - self.byte_location[0]
-            )
+        if self._mutability is None:
+            relative_type_end = self._type_name.byte_location[1] - self.byte_location[0]
             relative_name_start = self.name_location[0] - self.byte_location[0]
             keywords_source = self._source[relative_type_end:relative_name_start]
 
             if b"immutable" in keywords_source:
-                self.__mutability = Mutability.IMMUTABLE
-            elif self.__constant:
-                self.__mutability = Mutability.CONSTANT
+                self._mutability = Mutability.IMMUTABLE
+            elif self._constant:
+                self._mutability = Mutability.CONSTANT
             else:
-                self.__mutability = Mutability.MUTABLE
-        return self.__mutability
+                self._mutability = Mutability.MUTABLE
+        return self._mutability
 
     @property
     def is_state_variable(self) -> bool:
@@ -310,7 +308,7 @@ class VariableDeclaration(DeclarationAbc):
         Returns:
             `True` if the variable is a state variable, `False` otherwise.
         """
-        return self.__state_variable
+        return self._state_variable
 
     @property
     def data_location(self) -> DataLocation:
@@ -319,7 +317,7 @@ class VariableDeclaration(DeclarationAbc):
         Returns:
             Data location of the variable.
         """
-        return self.__data_location
+        return self._data_location
 
     @property
     def visibility(self) -> Visibility:
@@ -327,7 +325,7 @@ class VariableDeclaration(DeclarationAbc):
         Returns:
             Visibility of the variable.
         """
-        return self.__visibility
+        return self._visibility
 
     @property
     def base_functions(self) -> Tuple[FunctionDefinition]:
@@ -370,7 +368,7 @@ class VariableDeclaration(DeclarationAbc):
         from ..declaration.function_definition import FunctionDefinition
 
         base_functions = []
-        for base_function_id in self.__base_functions:
+        for base_function_id in self._base_functions:
             base_function = self._reference_resolver.resolve_node(
                 base_function_id, self._cu_hash
             )
@@ -384,7 +382,7 @@ class VariableDeclaration(DeclarationAbc):
         Returns:
             [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation string, if any.
         """
-        return self.__documentation
+        return self._documentation
 
     @property
     def function_selector(self) -> Optional[bytes]:
@@ -393,7 +391,7 @@ class VariableDeclaration(DeclarationAbc):
         Returns:
             Function selector of the getter function generated for this variable, if any.
         """
-        return self.__function_selector
+        return self._function_selector
 
     @property
     def indexed(self) -> bool:
@@ -401,7 +399,7 @@ class VariableDeclaration(DeclarationAbc):
         Returns:
             `True` if the variable is indexed, `False` otherwise.
         """
-        return self.__indexed
+        return self._indexed
 
     @property
     def overrides(self) -> Optional[OverrideSpecifier]:
@@ -433,7 +431,7 @@ class VariableDeclaration(DeclarationAbc):
         Returns:
             Override specifier, if any.
         """
-        return self.__overrides
+        return self._overrides
 
     @property
     def type_name(self) -> TypeNameAbc:
@@ -441,7 +439,7 @@ class VariableDeclaration(DeclarationAbc):
         Returns:
             Type name IR node as present in the source code.
         """
-        return self.__type_name
+        return self._type_name
 
     @property
     def value(self) -> Optional[ExpressionAbc]:
@@ -451,7 +449,7 @@ class VariableDeclaration(DeclarationAbc):
         Returns:
             Initial value expression assigned to the variable in this declaration, if any.
         """
-        return self.__value
+        return self._value
 
     @property
     @lru_cache(maxsize=2048)
@@ -460,15 +458,15 @@ class VariableDeclaration(DeclarationAbc):
         Returns:
             Type of the variable.
         """
-        assert self.__type_descriptions.type_identifier is not None
+        assert self._type_descriptions.type_identifier is not None
 
-        type_identifier = StringReader(self.__type_descriptions.type_identifier)
+        type_identifier = StringReader(self._type_descriptions.type_identifier)
         ret = TypeAbc.from_type_identifier(
             type_identifier, self._reference_resolver, self.cu_hash
         )
         assert (
             len(type_identifier) == 0 and ret is not None
-        ), f"Failed to parse type identifier: {self.__type_descriptions.type_identifier}"
+        ), f"Failed to parse type identifier: {self._type_descriptions.type_identifier}"
         return ret
 
     @property
@@ -477,5 +475,5 @@ class VariableDeclaration(DeclarationAbc):
         Returns:
             User-friendly string describing the variable type.
         """
-        assert self.__type_descriptions.type_string is not None
-        return self.__type_descriptions.type_string
+        assert self._type_descriptions.type_string is not None
+        return self._type_descriptions.type_string
