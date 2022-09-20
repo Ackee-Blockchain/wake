@@ -15,17 +15,17 @@ class Literal(ExpressionAbc):
     _ast_node: SolcLiteral
     _parent: SolidityAbc  # TODO: make this more specific
 
-    __hex_value: str
-    __kind: LiteralKind
-    __subdenomination: Optional[str]
-    __value: Optional[str]
+    _hex_value: str
+    _kind: LiteralKind
+    _subdenomination: Optional[str]
+    _value: Optional[str]
 
     def __init__(self, init: IrInitTuple, literal: SolcLiteral, parent: SolidityAbc):
         super().__init__(init, literal, parent)
-        self.__hex_value = literal.hex_value
-        self.__kind = literal.kind
-        self.__subdenomination = literal.subdenomination
-        self.__value = literal.value
+        self._hex_value = literal.hex_value
+        self._kind = literal.kind
+        self._subdenomination = literal.subdenomination
+        self._value = literal.value
 
     @property
     def parent(self) -> SolidityAbc:
@@ -33,19 +33,19 @@ class Literal(ExpressionAbc):
 
     @property
     def hex_value(self) -> str:
-        return self.__hex_value
+        return self._hex_value
 
     @property
     def kind(self) -> LiteralKind:
-        return self.__kind
+        return self._kind
 
     @property
     def subdenomination(self) -> Optional[str]:
-        return self.__subdenomination
+        return self._subdenomination
 
     @property
     def value(self) -> Optional[str]:
-        return self.__value
+        return self._value
 
     @property
     def is_ref_to_state_variable(self) -> bool:

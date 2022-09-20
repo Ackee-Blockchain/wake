@@ -46,9 +46,9 @@ class UsingForDirective(SolidityAbc):
     _ast_node: SolcUsingForDirective
     _parent: Union[ContractDefinition, SourceUnit]
 
-    __functions: Optional[List[IdentifierPath]]
-    __library_name: Optional[Union[IdentifierPath, UserDefinedTypeName]]
-    __type_name: Optional[TypeNameAbc]
+    _functions: Optional[List[IdentifierPath]]
+    _library_name: Optional[Union[IdentifierPath, UserDefinedTypeName]]
+    _type_name: Optional[TypeNameAbc]
 
     def __init__(
         self,
@@ -59,40 +59,40 @@ class UsingForDirective(SolidityAbc):
         super().__init__(init, using_for_directive, parent)
 
         if using_for_directive.function_list is None:
-            self.__functions = None
+            self._functions = None
         else:
-            self.__functions = [
+            self._functions = [
                 IdentifierPath(init, function.function, self)
                 for function in using_for_directive.function_list
             ]
 
         if using_for_directive.library_name is None:
-            self.__library_name = None
+            self._library_name = None
         elif isinstance(using_for_directive.library_name, SolcUserDefinedTypeName):
-            self.__library_name = UserDefinedTypeName(
+            self._library_name = UserDefinedTypeName(
                 init, using_for_directive.library_name, self
             )
         elif isinstance(using_for_directive.library_name, SolcIdentifierPath):
-            self.__library_name = IdentifierPath(
+            self._library_name = IdentifierPath(
                 init, using_for_directive.library_name, self
             )
 
         if using_for_directive.type_name is None:
-            self.__type_name = None
+            self._type_name = None
         else:
-            self.__type_name = TypeNameAbc.from_ast(
+            self._type_name = TypeNameAbc.from_ast(
                 init, using_for_directive.type_name, self
             )
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        if self.__functions is not None:
-            for function in self.__functions:
+        if self._functions is not None:
+            for function in self._functions:
                 yield from function
-        if self.__library_name is not None:
-            yield from self.__library_name
-        if self.__type_name is not None:
-            yield from self.__type_name
+        if self._library_name is not None:
+            yield from self._library_name
+        if self._type_name is not None:
+            yield from self._type_name
 
     @property
     def parent(self) -> Union[ContractDefinition, SourceUnit]:
@@ -109,9 +109,9 @@ class UsingForDirective(SolidityAbc):
         Returns:
             List of functions that are bound to the target type.
         """
-        if self.__functions is None:
+        if self._functions is None:
             return None
-        return tuple(self.__functions)
+        return tuple(self._functions)
 
     @property
     def library_name(self) -> Optional[Union[IdentifierPath, UserDefinedTypeName]]:
@@ -120,7 +120,7 @@ class UsingForDirective(SolidityAbc):
         Returns:
             IR node referencing the library ([ContractDefinition][woke.ast.ir.declaration.contract_definition.ContractDefinition] of the [ContractKind.LIBRARY][woke.ast.enums.ContractKind.LIBRARY] kind) that is bound to the target type.
         """
-        return self.__library_name
+        return self._library_name
 
     @property
     def type_name(self) -> Optional[TypeNameAbc]:
@@ -129,4 +129,4 @@ class UsingForDirective(SolidityAbc):
         Returns:
             Type name that is bound to the functions or library.
         """
-        return self.__type_name
+        return self._type_name

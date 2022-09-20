@@ -43,9 +43,9 @@ class VariableDeclarationStatement(StatementAbc):
         WhileStatement,
     ]
 
-    __assignments: List[Optional[AstNodeId]]
-    __declarations: List[Optional[VariableDeclaration]]
-    __initial_value: Optional[ExpressionAbc]
+    _assignments: List[Optional[AstNodeId]]
+    _declarations: List[Optional[VariableDeclaration]]
+    _initial_value: Optional[ExpressionAbc]
 
     def __init__(
         self,
@@ -54,29 +54,29 @@ class VariableDeclarationStatement(StatementAbc):
         parent: SolidityAbc,
     ):
         super().__init__(init, variable_declaration_statement, parent)
-        self.__assignments = list(variable_declaration_statement.assignments)
+        self._assignments = list(variable_declaration_statement.assignments)
 
-        self.__declarations = []
+        self._declarations = []
         for declaration in variable_declaration_statement.declarations:
             if declaration is None:
-                self.__declarations.append(None)
+                self._declarations.append(None)
             else:
-                self.__declarations.append(VariableDeclaration(init, declaration, self))
+                self._declarations.append(VariableDeclaration(init, declaration, self))
 
         if variable_declaration_statement.initial_value is None:
-            self.__initial_value = None
+            self._initial_value = None
         else:
-            self.__initial_value = ExpressionAbc.from_ast(
+            self._initial_value = ExpressionAbc.from_ast(
                 init, variable_declaration_statement.initial_value, self
             )
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        for declaration in self.__declarations:
+        for declaration in self._declarations:
             if declaration is not None:
                 yield from declaration
-        if self.__initial_value is not None:
-            yield from self.__initial_value
+        if self._initial_value is not None:
+            yield from self._initial_value
 
     @property
     def parent(
@@ -107,7 +107,7 @@ class VariableDeclarationStatement(StatementAbc):
         Returns:
             Tuple of variable declarations in this statement.
         """
-        return tuple(self.__declarations)
+        return tuple(self._declarations)
 
     @property
     def initial_value(self) -> Optional[ExpressionAbc]:
@@ -117,7 +117,7 @@ class VariableDeclarationStatement(StatementAbc):
         Returns:
             Initial value assigned to the declared variables (if any).
         """
-        return self.__initial_value
+        return self._initial_value
 
     @property
     @lru_cache(maxsize=2048)

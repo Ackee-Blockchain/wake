@@ -19,8 +19,8 @@ class VariableDeclaration(YulAbc):
     TBD
     """
     _parent: Block
-    __variables: List[TypedName]
-    __value: Optional[Union[FunctionCall, Identifier, Literal]]
+    _variables: List[TypedName]
+    _value: Optional[Union[FunctionCall, Identifier, Literal]]
 
     def __init__(
         self,
@@ -29,27 +29,27 @@ class VariableDeclaration(YulAbc):
         parent: YulAbc,
     ):
         super().__init__(init, variable_declaration, parent)
-        self.__variables = [
+        self._variables = [
             TypedName(init, variable, self)
             for variable in variable_declaration.variables
         ]
         if variable_declaration.value is None:
-            self.__value = None
+            self._value = None
         elif isinstance(variable_declaration.value, YulFunctionCall):
-            self.__value = FunctionCall(init, variable_declaration.value, self)
+            self._value = FunctionCall(init, variable_declaration.value, self)
         elif isinstance(variable_declaration.value, YulIdentifier):
-            self.__value = Identifier(init, variable_declaration.value, self)
+            self._value = Identifier(init, variable_declaration.value, self)
         elif isinstance(variable_declaration.value, YulLiteral):
-            self.__value = Literal(init, variable_declaration.value, self)
+            self._value = Literal(init, variable_declaration.value, self)
         else:
             assert False, f"Unexpected type: {type(variable_declaration.value)}"
 
     def __iter__(self) -> Iterator[YulAbc]:
         yield self
-        for variable in self.__variables:
+        for variable in self._variables:
             yield from variable
-        if self.__value is not None:
-            yield from self.__value
+        if self._value is not None:
+            yield from self._value
 
     @property
     def parent(self) -> Block:
@@ -57,8 +57,8 @@ class VariableDeclaration(YulAbc):
 
     @property
     def variables(self) -> Tuple[TypedName]:
-        return tuple(self.__variables)
+        return tuple(self._variables)
 
     @property
     def value(self) -> Optional[Union[FunctionCall, Identifier, Literal]]:
-        return self.__value
+        return self._value

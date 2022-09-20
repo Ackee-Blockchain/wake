@@ -40,7 +40,7 @@ class Block(YulAbc):
     TBD
     """
     _parent: Union[InlineAssembly, Block, ForLoop, FunctionDefinition, If, Case]
-    __statements: List[
+    _statements: List[
         Union[
             Assignment,
             "Block",
@@ -71,36 +71,36 @@ class Block(YulAbc):
         from .variable_declaration import VariableDeclaration
 
         super().__init__(init, block, parent)
-        self.__statements = []
+        self._statements = []
         for statement in block.statements:
             if isinstance(statement, YulAssignment):
-                self.__statements.append(Assignment(init, statement, self))
+                self._statements.append(Assignment(init, statement, self))
             elif isinstance(statement, YulBlock):
-                self.__statements.append(Block(init, statement, self))
+                self._statements.append(Block(init, statement, self))
             elif isinstance(statement, YulBreak):
-                self.__statements.append(Break(init, statement, self))
+                self._statements.append(Break(init, statement, self))
             elif isinstance(statement, YulContinue):
-                self.__statements.append(Continue(init, statement, self))
+                self._statements.append(Continue(init, statement, self))
             elif isinstance(statement, YulExpressionStatement):
-                self.__statements.append(ExpressionStatement(init, statement, self))
+                self._statements.append(ExpressionStatement(init, statement, self))
             elif isinstance(statement, YulLeave):
-                self.__statements.append(Leave(init, statement, self))
+                self._statements.append(Leave(init, statement, self))
             elif isinstance(statement, YulForLoop):
-                self.__statements.append(ForLoop(init, statement, self))
+                self._statements.append(ForLoop(init, statement, self))
             elif isinstance(statement, YulFunctionDefinition):
-                self.__statements.append(FunctionDefinition(init, statement, self))
+                self._statements.append(FunctionDefinition(init, statement, self))
             elif isinstance(statement, YulIf):
-                self.__statements.append(If(init, statement, self))
+                self._statements.append(If(init, statement, self))
             elif isinstance(statement, YulSwitch):
-                self.__statements.append(Switch(init, statement, self))
+                self._statements.append(Switch(init, statement, self))
             elif isinstance(statement, YulVariableDeclaration):
-                self.__statements.append(VariableDeclaration(init, statement, self))
+                self._statements.append(VariableDeclaration(init, statement, self))
             else:
                 assert False, f"Unexpected type: {type(statement)}"
 
     def __iter__(self) -> Iterator[YulAbc]:
         yield self
-        for statement in self.__statements:
+        for statement in self._statements:
             yield from statement
 
     @property
@@ -127,4 +127,4 @@ class Block(YulAbc):
             VariableDeclaration,
         ]
     ]:
-        return tuple(self.__statements)
+        return tuple(self._statements)

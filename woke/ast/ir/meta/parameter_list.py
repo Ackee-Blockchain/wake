@@ -76,20 +76,20 @@ class ParameterList(SolidityAbc):
         TryCatchClause,
     ]
 
-    __parameters: List[VariableDeclaration]
+    _parameters: List[VariableDeclaration]
 
     def __init__(
         self, init: IrInitTuple, parameter_list: SolcParameterList, parent: SolidityAbc
     ):
         super().__init__(init, parameter_list, parent)
 
-        self.__parameters = []
+        self._parameters = []
         for parameter in parameter_list.parameters:
-            self.__parameters.append(VariableDeclaration(init, parameter, self))
+            self._parameters.append(VariableDeclaration(init, parameter, self))
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        for parameter in self.__parameters:
+        for parameter in self._parameters:
             yield from parameter
 
     @property
@@ -116,4 +116,4 @@ class ParameterList(SolidityAbc):
         Returns:
             Variable declarations of the parameter list.
         """
-        return tuple(self.__parameters)
+        return tuple(self._parameters)

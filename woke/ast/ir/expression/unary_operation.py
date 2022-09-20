@@ -16,9 +16,9 @@ class UnaryOperation(ExpressionAbc):
     _ast_node: SolcUnaryOperation
     _parent: SolidityAbc
 
-    __operator: UnaryOpOperator
-    __prefix: bool
-    __sub_expression: ExpressionAbc
+    _operator: UnaryOpOperator
+    _prefix: bool
+    _sub_expression: ExpressionAbc
 
     def __init__(
         self,
@@ -27,15 +27,15 @@ class UnaryOperation(ExpressionAbc):
         parent: SolidityAbc,
     ):
         super().__init__(init, unary_operation, parent)
-        self.__operator = unary_operation.operator
-        self.__prefix = unary_operation.prefix
-        self.__sub_expression = ExpressionAbc.from_ast(
+        self._operator = unary_operation.operator
+        self._prefix = unary_operation.prefix
+        self._sub_expression = ExpressionAbc.from_ast(
             init, unary_operation.sub_expression, self
         )
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        yield from self.__sub_expression
+        yield from self._sub_expression
 
     @property
     def parent(self) -> SolidityAbc:
@@ -43,15 +43,15 @@ class UnaryOperation(ExpressionAbc):
 
     @property
     def operator(self) -> UnaryOpOperator:
-        return self.__operator
+        return self._operator
 
     @property
     def prefix(self) -> bool:
-        return self.__prefix
+        return self._prefix
 
     @property
     def sub_expression(self) -> ExpressionAbc:
-        return self.__sub_expression
+        return self._sub_expression
 
     @property
     def is_ref_to_state_variable(self) -> bool:

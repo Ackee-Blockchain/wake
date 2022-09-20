@@ -50,20 +50,20 @@ class Mapping(TypeNameAbc):
     _ast_node: SolcMapping
     _parent: Union[VariableDeclaration, UsingForDirective, ArrayTypeName, Mapping]
 
-    __key_type: Union[ElementaryTypeName, UserDefinedTypeName]
-    __value_type: TypeNameAbc
+    _key_type: Union[ElementaryTypeName, UserDefinedTypeName]
+    _value_type: TypeNameAbc
 
     def __init__(self, init: IrInitTuple, mapping: SolcMapping, parent: SolidityAbc):
         super().__init__(init, mapping, parent)
         key_type = TypeNameAbc.from_ast(init, mapping.key_type, self)
         assert isinstance(key_type, (ElementaryTypeName, UserDefinedTypeName))
-        self.__key_type = key_type
-        self.__value_type = TypeNameAbc.from_ast(init, mapping.value_type, self)
+        self._key_type = key_type
+        self._value_type = TypeNameAbc.from_ast(init, mapping.value_type, self)
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        yield from self.__key_type
-        yield from self.__value_type
+        yield from self._key_type
+        yield from self._value_type
 
     @property
     def parent(self) -> Union[VariableDeclaration, UsingForDirective, ArrayTypeName, Mapping]:
@@ -95,7 +95,7 @@ class Mapping(TypeNameAbc):
         Returns:
             Mapping key type name.
         """
-        return self.__key_type
+        return self._key_type
 
     @property
     def value_type(self) -> TypeNameAbc:
@@ -103,4 +103,4 @@ class Mapping(TypeNameAbc):
         Returns:
             Mapping value type name.
         """
-        return self.__value_type
+        return self._value_type

@@ -59,7 +59,7 @@ class OverrideSpecifier(SolidityAbc):
     _ast_node: SolcOverrideSpecifier
     _parent: Union[FunctionDefinition, ModifierDefinition, VariableDeclaration]
 
-    __overrides: List[Union[IdentifierPath, UserDefinedTypeName]]
+    _overrides: List[Union[IdentifierPath, UserDefinedTypeName]]
 
     def __init__(
         self,
@@ -68,17 +68,17 @@ class OverrideSpecifier(SolidityAbc):
         parent: SolidityAbc,
     ):
         super().__init__(init, override_specifier, parent)
-        self.__overrides = []
+        self._overrides = []
 
         for override in override_specifier.overrides:
             if isinstance(override, SolcIdentifierPath):
-                self.__overrides.append(IdentifierPath(init, override, self))
+                self._overrides.append(IdentifierPath(init, override, self))
             elif isinstance(override, SolcUserDefinedTypeName):
-                self.__overrides.append(UserDefinedTypeName(init, override, self))
+                self._overrides.append(UserDefinedTypeName(init, override, self))
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        for override in self.__overrides:
+        for override in self._overrides:
             yield from override
 
     @property
@@ -99,4 +99,4 @@ class OverrideSpecifier(SolidityAbc):
         Returns:
             Tuple of IR nodes referencing the contract or interface whose declaration is being overridden.
         """
-        return tuple(self.__overrides)
+        return tuple(self._overrides)

@@ -17,13 +17,13 @@ class TypedName(YulAbc):
     TBD
     """
     _parent: Union[FunctionDefinition, VariableDeclaration]
-    __name: str
-    __type: str
+    _name: str
+    _type: str
 
     def __init__(self, init: IrInitTuple, typed_name: YulTypedName, parent: YulAbc):
         super().__init__(init, typed_name, parent)
-        self.__name = typed_name.name
-        self.__type = typed_name.type
+        self._name = typed_name.name
+        self._type = typed_name.type
 
     @property
     def parent(self) -> Union[FunctionDefinition, VariableDeclaration]:
@@ -31,8 +31,8 @@ class TypedName(YulAbc):
 
     @property
     def name(self) -> str:
-        return self.__name
+        return self._name
 
     @property
     def type(self) -> str:
-        return self.__type
+        return self._type

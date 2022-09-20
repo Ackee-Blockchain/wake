@@ -33,17 +33,17 @@ class Literal(YulAbc):
         FunctionCall,
         Case,
     ]
-    __kind: YulLiteralValueKind
-    __type: str
-    __value: Optional[str]
-    __hex_value: Optional[str]
+    _kind: YulLiteralValueKind
+    _type: str
+    _value: Optional[str]
+    _hex_value: Optional[str]
 
     def __init__(self, init: IrInitTuple, literal: YulLiteral, parent: YulAbc):
         super().__init__(init, literal, parent)
-        self.__kind = literal.kind
-        self.__type = literal.type
-        self.__value = literal.value
-        self.__hex_value = literal.hex_value
+        self._kind = literal.kind
+        self._type = literal.type
+        self._value = literal.value
+        self._hex_value = literal.hex_value
 
     @property
     def parent(
@@ -62,16 +62,16 @@ class Literal(YulAbc):
 
     @property
     def kind(self) -> YulLiteralValueKind:
-        return self.__kind
+        return self._kind
 
     @property
     def type(self) -> str:
-        return self.__type
+        return self._type
 
     @property
     def value(self) -> Optional[str]:
-        return self.__value
+        return self._value
 
     @property
     def hex_value(self) -> Optional[str]:
-        return self.__hex_value
+        return self._hex_value

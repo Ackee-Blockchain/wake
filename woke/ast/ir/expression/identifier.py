@@ -19,8 +19,8 @@ class Identifier(ExpressionAbc):
     _ast_node: SolcIdentifier
     _parent: SolidityAbc  # TODO: make this more specific
 
-    __name: str
-    __overloaded_declarations: List[AstNodeId]
+    _name: str
+    _overloaded_declarations: List[AstNodeId]
     _referenced_declaration_id: Optional[AstNodeId]
 
     def __init__(
@@ -29,14 +29,14 @@ class Identifier(ExpressionAbc):
         from woke.ast.ir.meta.import_directive import ImportDirective
 
         super().__init__(init, identifier, parent)
-        self.__name = identifier.name
-        self.__overloaded_declarations = list(identifier.overloaded_declarations)
+        self._name = identifier.name
+        self._overloaded_declarations = list(identifier.overloaded_declarations)
         self._referenced_declaration_id = identifier.referenced_declaration
         if self._referenced_declaration_id is None:
             assert isinstance(self._parent, ImportDirective)
-        init.reference_resolver.register_post_process_callback(self.__post_process)
+        init.reference_resolver.register_post_process_callback(self._post_process)
 
-    def __post_process(self, callback_params: CallbackParams):
+    def _post_process(self, callback_params: CallbackParams):
         assert self._referenced_declaration_id is not None
         if self._referenced_declaration_id < 0:
             global_symbol = GlobalSymbolsEnum(self._referenced_declaration_id)
@@ -44,17 +44,17 @@ class Identifier(ExpressionAbc):
                 global_symbol, self
             )
             self._reference_resolver.register_destroy_callback(
-                self.file, partial(self.__destroy, global_symbol)
+                self.file, partial(self._destroy, global_symbol)
             )
         else:
             referenced_declaration = self.referenced_declaration
             assert isinstance(referenced_declaration, DeclarationAbc)
             referenced_declaration.register_reference(self)
             self._reference_resolver.register_destroy_callback(
-                self.file, partial(self.__destroy, referenced_declaration)
+                self.file, partial(self._destroy, referenced_declaration)
             )
 
-    def __destroy(
+    def _destroy(
         self, referenced_declaration: Union[GlobalSymbolsEnum, DeclarationAbc]
     ) -> None:
         if isinstance(referenced_declaration, GlobalSymbolsEnum):
@@ -72,12 +72,12 @@ class Identifier(ExpressionAbc):
 
     @property
     def name(self) -> str:
-        return self.__name
+        return self._name
 
     @property
     def overloaded_declarations(self) -> Tuple[DeclarationAbc]:
         overloaded_declarations = []
-        for overloaded_declaration_id in self.__overloaded_declarations:
+        for overloaded_declaration_id in self._overloaded_declarations:
             if overloaded_declaration_id < 0:
                 continue
 

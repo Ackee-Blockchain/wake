@@ -41,9 +41,9 @@ class TryCatchClause(SolidityAbc):
     _ast_node: SolcTryCatchClause
     _parent: TryStatement
 
-    __block: Block
-    __error_name: str
-    __parameters: Optional[ParameterList]
+    _block: Block
+    _error_name: str
+    _parameters: Optional[ParameterList]
 
     def __init__(
         self,
@@ -52,19 +52,19 @@ class TryCatchClause(SolidityAbc):
         parent: TryStatement,
     ):
         super().__init__(init, try_catch_clause, parent)
-        self.__block = Block(init, try_catch_clause.block, self)
-        self.__error_name = try_catch_clause.error_name
+        self._block = Block(init, try_catch_clause.block, self)
+        self._error_name = try_catch_clause.error_name
 
         if try_catch_clause.parameters is None:
-            self.__parameters = None
+            self._parameters = None
         else:
-            self.__parameters = ParameterList(init, try_catch_clause.parameters, self)
+            self._parameters = ParameterList(init, try_catch_clause.parameters, self)
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        yield from self.__block
-        if self.__parameters is not None:
-            yield from self.__parameters
+        yield from self._block
+        if self._parameters is not None:
+            yield from self._parameters
 
     @property
     def parent(self) -> TryStatement:
@@ -80,7 +80,7 @@ class TryCatchClause(SolidityAbc):
         Returns:
             Body of the try/catch clause.
         """
-        return self.__block
+        return self._block
 
     @property
     def error_name(self) -> str:
@@ -106,7 +106,7 @@ class TryCatchClause(SolidityAbc):
         Returns:
             Error name of the try/catch clause.
         """
-        return self.__error_name
+        return self._error_name
 
     @property
     def parameters(self) -> Optional[ParameterList]:
@@ -139,7 +139,7 @@ class TryCatchClause(SolidityAbc):
         Returns:
             Return parameters in the case of a try clause, or error parameters in the case of a catch clause.
         """
-        return self.__parameters
+        return self._parameters
 
     @property
     @lru_cache(maxsize=2048)

@@ -29,29 +29,29 @@ class ErrorDefinition(DeclarationAbc):
     _ast_node: SolcErrorDefinition
     _parent: Union[ContractDefinition, SourceUnit]
 
-    __parameters: ParameterList
-    __documentation: Optional[StructuredDocumentation]
-    __error_selector: Optional[bytes]
+    _parameters: ParameterList
+    _documentation: Optional[StructuredDocumentation]
+    _error_selector: Optional[bytes]
 
     def __init__(
         self, init: IrInitTuple, error: SolcErrorDefinition, parent: SolidityAbc
     ):
         super().__init__(init, error, parent)
-        self.__parameters = ParameterList(init, error.parameters, self)
-        self.__documentation = (
+        self._parameters = ParameterList(init, error.parameters, self)
+        self._documentation = (
             StructuredDocumentation(init, error.documentation, self)
             if error.documentation
             else None
         )
-        self.__error_selector = (
+        self._error_selector = (
             bytes.fromhex(error.error_selector) if error.error_selector else None
         )
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        yield from self.__parameters
-        if self.__documentation is not None:
-            yield from self.__documentation
+        yield from self._parameters
+        if self._documentation is not None:
+            yield from self._documentation
 
     def _parse_name_location(self) -> Tuple[int, int]:
         # SolcErrorDefinition node always contains name_location attribute
@@ -102,7 +102,7 @@ class ErrorDefinition(DeclarationAbc):
         Returns:
             Parameter list describing parameters of the error.
         """
-        return self.__parameters
+        return self._parameters
 
     @property
     def documentation(self) -> Optional[StructuredDocumentation]:
@@ -110,7 +110,7 @@ class ErrorDefinition(DeclarationAbc):
         Returns:
             [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation string, if any.
         """
-        return self.__documentation
+        return self._documentation
 
     @property
     def error_selector(self) -> Optional[bytes]:
@@ -119,4 +119,4 @@ class ErrorDefinition(DeclarationAbc):
         Returns:
             Selector of the error.
         """
-        return self.__error_selector
+        return self._error_selector

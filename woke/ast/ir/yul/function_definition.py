@@ -12,10 +12,10 @@ class FunctionDefinition(YulAbc):
     TBD
     """
     _parent: Block
-    __body: Block
-    __name: str
-    __parameters: Optional[List[TypedName]]
-    __return_variables: Optional[List[TypedName]]
+    _body: Block
+    _name: str
+    _parameters: Optional[List[TypedName]]
+    _return_variables: Optional[List[TypedName]]
 
     def __init__(
         self,
@@ -24,31 +24,31 @@ class FunctionDefinition(YulAbc):
         parent: YulAbc,
     ):
         super().__init__(init, function_definition, parent)
-        self.__body = Block(init, function_definition.body, self)
-        self.__name = function_definition.name
+        self._body = Block(init, function_definition.body, self)
+        self._name = function_definition.name
         if function_definition.parameters is None:
-            self.__parameters = None
+            self._parameters = None
         else:
-            self.__parameters = [
+            self._parameters = [
                 TypedName(init, parameter, self)
                 for parameter in function_definition.parameters
             ]
         if function_definition.return_variables is None:
-            self.__return_variables = None
+            self._return_variables = None
         else:
-            self.__return_variables = [
+            self._return_variables = [
                 TypedName(init, return_variable, self)
                 for return_variable in function_definition.return_variables
             ]
 
     def __iter__(self) -> Iterator[YulAbc]:
         yield self
-        yield from self.__body
-        if self.__parameters is not None:
-            for parameter in self.__parameters:
+        yield from self._body
+        if self._parameters is not None:
+            for parameter in self._parameters:
                 yield from parameter
-        if self.__return_variables is not None:
-            for return_variable in self.__return_variables:
+        if self._return_variables is not None:
+            for return_variable in self._return_variables:
                 yield from return_variable
 
     @property
@@ -57,20 +57,20 @@ class FunctionDefinition(YulAbc):
 
     @property
     def body(self) -> Block:
-        return self.__body
+        return self._body
 
     @property
     def name(self) -> str:
-        return self.__name
+        return self._name
 
     @property
     def parameters(self) -> Optional[Tuple[TypedName]]:
-        if self.__parameters is None:
+        if self._parameters is None:
             return None
-        return tuple(self.__parameters)
+        return tuple(self._parameters)
 
     @property
     def return_variables(self) -> Optional[Tuple[TypedName]]:
-        if self.__return_variables is None:
+        if self._return_variables is None:
             return None
-        return tuple(self.__return_variables)
+        return tuple(self._return_variables)

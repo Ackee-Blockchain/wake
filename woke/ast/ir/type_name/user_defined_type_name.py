@@ -99,11 +99,11 @@ class UserDefinedTypeName(TypeNameAbc):
         Mapping,
     ]
 
-    __referenced_declaration_id: AstNodeId
-    __contract_scope_id: Optional[AstNodeId]
-    __name: Optional[str]
-    __path_node: Optional[IdentifierPath]
-    __parts: Optional[IntervalTree]
+    _referenced_declaration_id: AstNodeId
+    _contract_scope_id: Optional[AstNodeId]
+    _name: Optional[str]
+    _path_node: Optional[IdentifierPath]
+    _parts: Optional[IntervalTree]
 
     def __init__(
         self,
@@ -112,39 +112,39 @@ class UserDefinedTypeName(TypeNameAbc):
         parent: SolidityAbc,
     ):
         super().__init__(init, user_defined_type_name, parent)
-        self.__name = user_defined_type_name.name
-        self.__referenced_declaration_id = user_defined_type_name.referenced_declaration
-        assert self.__referenced_declaration_id >= 0
-        self.__contract_scope_id = user_defined_type_name.contract_scope
+        self._name = user_defined_type_name.name
+        self._referenced_declaration_id = user_defined_type_name.referenced_declaration
+        assert self._referenced_declaration_id >= 0
+        self._contract_scope_id = user_defined_type_name.contract_scope
         if user_defined_type_name.path_node is None:
-            self.__path_node = None
+            self._path_node = None
             matches = list(IDENTIFIER_RE.finditer(self._source))
             groups_count = len(matches)
             assert groups_count > 0
 
-            self.__parts = IntervalTree()
+            self._parts = IntervalTree()
             for i, match in enumerate(matches):
                 name = match.group(0).decode("utf-8")
                 start = self.byte_location[0] + match.start()
                 end = self.byte_location[0] + match.end()
-                self.__parts[start:end] = IdentifierPathPart(
+                self._parts[start:end] = IdentifierPathPart(
                     self,
                     init,
                     (start, end),
                     name,
-                    self.__referenced_declaration_id,
+                    self._referenced_declaration_id,
                     groups_count - i - 1,
                 )
         else:
-            self.__path_node = IdentifierPath(
+            self._path_node = IdentifierPath(
                 init, user_defined_type_name.path_node, self
             )
-            self.__parts = None
+            self._parts = None
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        if self.__path_node is not None:
-            yield from self.__path_node
+        if self._path_node is not None:
+            yield from self._path_node
 
     @property
     def parent(
@@ -182,10 +182,10 @@ class UserDefinedTypeName(TypeNameAbc):
         Returns:
             Name of the user defined type as it appears in the source code.
         """
-        if self.__name is None:
-            assert self.__path_node is not None
-            self.__name = self.__path_node.name
-        return self.__name
+        if self._name is None:
+            assert self._path_node is not None
+            self._name = self._path_node.name
+        return self._name
 
     @property
     def identifier_path_parts(self) -> Tuple[IdentifierPathPart, ...]:
@@ -193,11 +193,11 @@ class UserDefinedTypeName(TypeNameAbc):
         Returns:
             Parts of the user defined type name.
         """
-        if self.__path_node is not None:
-            return self.__path_node.identifier_path_parts
+        if self._path_node is not None:
+            return self._path_node.identifier_path_parts
 
-        assert self.__parts is not None
-        return tuple(interval.data for interval in sorted(self.__parts))
+        assert self._parts is not None
+        return tuple(interval.data for interval in sorted(self._parts))
 
     def identifier_path_part_at(self, byte_offset: int) -> Optional[IdentifierPathPart]:
         """
@@ -206,11 +206,11 @@ class UserDefinedTypeName(TypeNameAbc):
         Returns:
             Identifier path part at the given byte offset, if any.
         """
-        if self.__path_node is not None:
-            return self.__path_node.identifier_path_part_at(byte_offset)
+        if self._path_node is not None:
+            return self._path_node.identifier_path_part_at(byte_offset)
 
-        assert self.__parts is not None
-        intervals = self.__parts.at(byte_offset)
+        assert self._parts is not None
+        intervals = self._parts.at(byte_offset)
         assert len(intervals) <= 1
         if len(intervals) == 0:
             return None
@@ -223,7 +223,7 @@ class UserDefinedTypeName(TypeNameAbc):
             Declaration IR node referenced by this user defined type name.
         """
         node = self._reference_resolver.resolve_node(
-            self.__referenced_declaration_id, self._cu_hash
+            self._referenced_declaration_id, self._cu_hash
         )
         assert isinstance(node, DeclarationAbc)
         return node
@@ -235,4 +235,4 @@ class UserDefinedTypeName(TypeNameAbc):
         Returns:
             Identifier path IR node.
         """
-        return self.__path_node
+        return self._path_node

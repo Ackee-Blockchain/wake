@@ -57,14 +57,14 @@ class ModifierDefinition(DeclarationAbc):
     _parent: ContractDefinition
     _child_modifiers: Set[ModifierDefinition]
 
-    __body: Optional[Block]
-    __implemented: bool
-    __parameters: ParameterList
-    __virtual: bool
-    __visibility: Visibility
-    __base_modifiers: List[AstNodeId]
-    __documentation: Optional[Union[StructuredDocumentation, str]]
-    __overrides: Optional[OverrideSpecifier]
+    _body: Optional[Block]
+    _implemented: bool
+    _parameters: ParameterList
+    _virtual: bool
+    _visibility: Visibility
+    _base_modifiers: List[AstNodeId]
+    _documentation: Optional[Union[StructuredDocumentation, str]]
+    _overrides: Optional[OverrideSpecifier]
 
     def __init__(
         self, init: IrInitTuple, modifier: SolcModifierDefinition, parent: SolidityAbc
@@ -72,52 +72,52 @@ class ModifierDefinition(DeclarationAbc):
         super().__init__(init, modifier, parent)
         self._child_modifiers = set()
 
-        self.__body = Block(init, modifier.body, self) if modifier.body else None
-        self.__implemented = self.__body is not None
-        self.__parameters = ParameterList(init, modifier.parameters, self)
-        self.__virtual = modifier.virtual
-        self.__visibility = modifier.visibility
-        self.__base_modifiers = (
+        self._body = Block(init, modifier.body, self) if modifier.body else None
+        self._implemented = self._body is not None
+        self._parameters = ParameterList(init, modifier.parameters, self)
+        self._virtual = modifier.virtual
+        self._visibility = modifier.visibility
+        self._base_modifiers = (
             list(modifier.base_modifiers) if modifier.base_modifiers is not None else []
         )
         if modifier.documentation is None:
-            self.__documentation = None
+            self._documentation = None
         elif isinstance(modifier.documentation, SolcStructuredDocumentation):
-            self.__documentation = StructuredDocumentation(
+            self._documentation = StructuredDocumentation(
                 init, modifier.documentation, self
             )
         elif isinstance(modifier.documentation, str):
-            self.__documentation = modifier.documentation
+            self._documentation = modifier.documentation
         else:
             raise TypeError(
                 f"Unknown type of documentation: {type(modifier.documentation)}"
             )
-        self.__overrides = (
+        self._overrides = (
             OverrideSpecifier(init, modifier.overrides, self)
             if modifier.overrides is not None
             else None
         )
-        self._reference_resolver.register_post_process_callback(self.__post_process)
+        self._reference_resolver.register_post_process_callback(self._post_process)
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        if self.__body is not None:
-            yield from self.__body
-        yield from self.__parameters
-        if isinstance(self.__documentation, StructuredDocumentation):
-            yield from self.__documentation
-        if self.__overrides is not None:
-            yield from self.__overrides
+        if self._body is not None:
+            yield from self._body
+        yield from self._parameters
+        if isinstance(self._documentation, StructuredDocumentation):
+            yield from self._documentation
+        if self._overrides is not None:
+            yield from self._overrides
 
-    def __post_process(self, callback_params: CallbackParams):
+    def _post_process(self, callback_params: CallbackParams):
         base_modifiers = self.base_modifiers
         for base_modifier in base_modifiers:
             base_modifier._child_modifiers.add(self)
         self._reference_resolver.register_destroy_callback(
-            self.file, partial(self.__destroy, base_modifiers)
+            self.file, partial(self._destroy, base_modifiers)
         )
 
-    def __destroy(self, base_modifiers: Tuple[ModifierDefinition]) -> None:
+    def _destroy(self, base_modifiers: Tuple[ModifierDefinition]) -> None:
         for base_modifier in base_modifiers:
             base_modifier._child_modifiers.remove(self)
 
@@ -225,7 +225,7 @@ class ModifierDefinition(DeclarationAbc):
         Returns:
             Body of the modifier, if any.
         """
-        return self.__body
+        return self._body
 
     @property
     def implemented(self) -> bool:
@@ -233,7 +233,7 @@ class ModifierDefinition(DeclarationAbc):
         Returns:
             `True` if the modifier [body][woke.ast.ir.declaration.modifier_definition.ModifierDefinition.body] is not `None`, `False` otherwise.
         """
-        return self.__implemented
+        return self._implemented
 
     @property
     def parameters(self) -> ParameterList:
@@ -241,7 +241,7 @@ class ModifierDefinition(DeclarationAbc):
         Returns:
             Parameter list describing the modifier parameters.
         """
-        return self.__parameters
+        return self._parameters
 
     @property
     def virtual(self) -> bool:
@@ -249,7 +249,7 @@ class ModifierDefinition(DeclarationAbc):
         Returns:
             `True` if the modifier is virtual, `False` otherwise.
         """
-        return self.__virtual
+        return self._virtual
 
     @property
     def visibility(self) -> Visibility:
@@ -257,7 +257,7 @@ class ModifierDefinition(DeclarationAbc):
         Returns:
             Visibility of the modifier.
         """
-        return self.__visibility
+        return self._visibility
 
     @property
     def base_modifiers(self) -> Tuple[ModifierDefinition]:
@@ -317,7 +317,7 @@ class ModifierDefinition(DeclarationAbc):
             List of base modifiers overridden by this modifier.
         """
         base_modifiers = []
-        for base_modifier_id in self.__base_modifiers:
+        for base_modifier_id in self._base_modifiers:
             base_modifier = self._reference_resolver.resolve_node(
                 base_modifier_id, self._cu_hash
             )
@@ -340,7 +340,7 @@ class ModifierDefinition(DeclarationAbc):
         Returns:
             [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation string, if any.
         """
-        return self.__documentation
+        return self._documentation
 
     @property
     def overrides(self) -> Optional[OverrideSpecifier]:
@@ -381,7 +381,7 @@ class ModifierDefinition(DeclarationAbc):
         Returns:
             Override specifier, if any.
         """
-        return self.__overrides
+        return self._overrides
 
     @property
     @lru_cache(maxsize=2048)

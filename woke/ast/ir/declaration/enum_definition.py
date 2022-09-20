@@ -33,22 +33,22 @@ class EnumDefinition(DeclarationAbc):
     _ast_node: SolcEnumDefinition
     _parent: Union[ContractDefinition, SourceUnit]
 
-    __canonical_name: str
-    __values: List[EnumValue]
+    _canonical_name: str
+    _values: List[EnumValue]
 
     def __init__(
         self, init: IrInitTuple, enum: SolcEnumDefinition, parent: SolidityAbc
     ):
         super().__init__(init, enum, parent)
-        self.__canonical_name = enum.canonical_name
+        self._canonical_name = enum.canonical_name
 
-        self.__values = []
+        self._values = []
         for value in enum.members:
-            self.__values.append(EnumValue(init, value, self))
+            self._values.append(EnumValue(init, value, self))
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        for value in self.__values:
+        for value in self._values:
             yield from value
 
     def _parse_name_location(self) -> Tuple[int, int]:
@@ -74,7 +74,7 @@ class EnumDefinition(DeclarationAbc):
 
     @property
     def canonical_name(self) -> str:
-        return self.__canonical_name
+        return self._canonical_name
 
     @property
     @lru_cache(maxsize=2048)
@@ -82,7 +82,7 @@ class EnumDefinition(DeclarationAbc):
         return (
             f"enum {self.name}"
             + " {\n"
-            + ",\n".join(f"    {value.name}" for value in self.__values)
+            + ",\n".join(f"    {value.name}" for value in self._values)
             + "\n}"
         )
 
@@ -92,4 +92,4 @@ class EnumDefinition(DeclarationAbc):
         Returns:
             Enum values defined in this enum.
         """
-        return tuple(self.__values)
+        return tuple(self._values)

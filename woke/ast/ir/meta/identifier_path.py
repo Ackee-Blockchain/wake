@@ -28,15 +28,15 @@ class IdentifierPathPart:
     A class representing a part of an identifier path. Is almost the same as [Identifier][woke.ast.ir.expression.identifier.Identifier], but it is not generated in the AST output of the compiler and so it is not an IR node.
     """
 
-    __reference_resolver: ReferenceResolver
-    __underlying_node: Union[IdentifierPath, UserDefinedTypeName]
-    __path_referenced_declaration_id: AstNodeId
-    __path_index: int
-    __referenced_declaration_id: Optional[AstNodeId]
-    __cu_hash: bytes
-    __file: Path
-    __byte_location: Tuple[int, int]
-    __name: str
+    _reference_resolver: ReferenceResolver
+    _underlying_node: Union[IdentifierPath, UserDefinedTypeName]
+    _path_referenced_declaration_id: AstNodeId
+    _path_index: int
+    _referenced_declaration_id: Optional[AstNodeId]
+    _cu_hash: bytes
+    _file: Path
+    _byte_location: Tuple[int, int]
+    _name: str
 
     def __init__(
         self,
@@ -47,43 +47,43 @@ class IdentifierPathPart:
         path_referenced_declaration_id: AstNodeId,
         path_index: int,
     ):
-        self.__underlying_node = underlying_node
-        self.__reference_resolver = init.reference_resolver
-        self.__path_referenced_declaration_id = path_referenced_declaration_id
+        self._underlying_node = underlying_node
+        self._reference_resolver = init.reference_resolver
+        self._path_referenced_declaration_id = path_referenced_declaration_id
         # zero-based index from the end of the path
-        self.__path_index = path_index
-        self.__referenced_declaration_id = None
-        self.__cu_hash = init.cu.hash
-        self.__file = init.file
-        self.__byte_location = byte_location
-        self.__name = name
+        self._path_index = path_index
+        self._referenced_declaration_id = None
+        self._cu_hash = init.cu.hash
+        self._file = init.file
+        self._byte_location = byte_location
+        self._name = name
 
-        self.__reference_resolver.register_post_process_callback(self.__post_process)
+        self._reference_resolver.register_post_process_callback(self._post_process)
 
-    def __post_process(self, callback_params: CallbackParams):
-        referenced_declaration = self.__reference_resolver.resolve_node(
-            self.__path_referenced_declaration_id, self.__cu_hash
+    def _post_process(self, callback_params: CallbackParams):
+        referenced_declaration = self._reference_resolver.resolve_node(
+            self._path_referenced_declaration_id, self._cu_hash
         )
-        for i in range(self.__path_index):
+        for i in range(self._path_index):
             assert referenced_declaration.parent is not None
             referenced_declaration = referenced_declaration.parent
         assert isinstance(referenced_declaration, DeclarationAbc)
 
-        node_path_order = self.__reference_resolver.get_node_path_order(
+        node_path_order = self._reference_resolver.get_node_path_order(
             AstNodeId(referenced_declaration.ast_node_id),
             referenced_declaration.cu_hash,
         )
-        this_cu_id = self.__reference_resolver.get_ast_id_from_cu_node_path_order(
-            node_path_order, self.__cu_hash
+        this_cu_id = self._reference_resolver.get_ast_id_from_cu_node_path_order(
+            node_path_order, self._cu_hash
         )
 
-        self.__referenced_declaration_id = this_cu_id
+        self._referenced_declaration_id = this_cu_id
         referenced_declaration.register_reference(self)
-        self.__reference_resolver.register_destroy_callback(
-            self.file, partial(self.__destroy, referenced_declaration)
+        self._reference_resolver.register_destroy_callback(
+            self.file, partial(self._destroy, referenced_declaration)
         )
 
-    def __destroy(self, referenced_declaration: DeclarationAbc) -> None:
+    def _destroy(self, referenced_declaration: DeclarationAbc) -> None:
         referenced_declaration.unregister_reference(self)
 
     @property
@@ -92,7 +92,7 @@ class IdentifierPathPart:
         Returns:
             Underlying IR node (parent) of this identifier path part.
         """
-        return self.__underlying_node
+        return self._underlying_node
 
     @property
     def file(self) -> Path:
@@ -101,7 +101,7 @@ class IdentifierPathPart:
         Returns:
             Absolute path to the file containing this identifier path part.
         """
-        return self.__file
+        return self._file
 
     @property
     def byte_location(self) -> Tuple[int, int]:
@@ -112,7 +112,7 @@ class IdentifierPathPart:
         Returns:
             Tuple of the start and end byte offsets of this node in the source file.
         """
-        return self.__byte_location
+        return self._byte_location
 
     @property
     def name(self) -> str:
@@ -122,7 +122,7 @@ class IdentifierPathPart:
         Returns:
             Name of the identifier path part as it appears in the source code.
         """
-        return self.__name
+        return self._name
 
     @property
     def referenced_declaration(self) -> DeclarationAbc:
@@ -132,9 +132,9 @@ class IdentifierPathPart:
         Returns:
             Declaration referenced by this identifier path part.
         """
-        assert self.__referenced_declaration_id is not None
-        node = self.__reference_resolver.resolve_node(
-            self.__referenced_declaration_id, self.__cu_hash
+        assert self._referenced_declaration_id is not None
+        node = self._reference_resolver.resolve_node(
+            self._referenced_declaration_id, self._cu_hash
         )
         assert isinstance(node, DeclarationAbc)
         return node
@@ -155,9 +155,9 @@ class IdentifierPath(SolidityAbc):
         UserDefinedTypeName,
     ]
 
-    __name: str
-    __referenced_declaration_id: AstNodeId
-    __parts: IntervalTree
+    _name: str
+    _referenced_declaration_id: AstNodeId
+    _parts: IntervalTree
 
     def __init__(
         self,
@@ -166,25 +166,25 @@ class IdentifierPath(SolidityAbc):
         parent: SolidityAbc,
     ):
         super().__init__(init, identifier_path, parent)
-        self.__name = identifier_path.name
-        self.__referenced_declaration_id = identifier_path.referenced_declaration
-        assert self.__referenced_declaration_id >= 0
+        self._name = identifier_path.name
+        self._referenced_declaration_id = identifier_path.referenced_declaration
+        assert self._referenced_declaration_id >= 0
 
         matches = list(IDENTIFIER_RE.finditer(self._source))
         groups_count = len(matches)
         assert groups_count > 0
 
-        self.__parts = IntervalTree()
+        self._parts = IntervalTree()
         for i, match in enumerate(matches):
             name = match.group(0).decode("utf-8")
             start = self.byte_location[0] + match.start()
             end = self.byte_location[0] + match.end()
-            self.__parts[start:end] = IdentifierPathPart(
+            self._parts[start:end] = IdentifierPathPart(
                 self,
                 init,
                 (start, end),
                 name,
-                self.__referenced_declaration_id,
+                self._referenced_declaration_id,
                 groups_count - i - 1,
             )
 
@@ -210,7 +210,7 @@ class IdentifierPath(SolidityAbc):
         Returns:
             Name (as it appears in the source code) of the user-defined type referenced by this identifier path.
         """
-        return self.__name
+        return self._name
 
     @property
     def identifier_path_parts(self) -> Tuple[IdentifierPathPart, ...]:
@@ -218,7 +218,7 @@ class IdentifierPath(SolidityAbc):
         Returns:
             Parts of the identifier path.
         """
-        return tuple(interval.data for interval in sorted(self.__parts))
+        return tuple(interval.data for interval in sorted(self._parts))
 
     def identifier_path_part_at(self, byte_offset: int) -> Optional[IdentifierPathPart]:
         """
@@ -227,7 +227,7 @@ class IdentifierPath(SolidityAbc):
         Returns:
             Identifier path part at the given byte offset, if any.
         """
-        intervals = self.__parts.at(byte_offset)
+        intervals = self._parts.at(byte_offset)
         assert len(intervals) <= 1
         if len(intervals) == 0:
             return None
@@ -240,7 +240,7 @@ class IdentifierPath(SolidityAbc):
             Declaration referenced by this identifier path.
         """
         node = self._reference_resolver.resolve_node(
-            self.__referenced_declaration_id, self._cu_hash
+            self._referenced_declaration_id, self._cu_hash
         )
         assert isinstance(node, DeclarationAbc)
         return node

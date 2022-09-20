@@ -93,20 +93,20 @@ class FunctionDefinition(DeclarationAbc):
     _parent: Union[ContractDefinition, SourceUnit]
     _child_functions: Set[Union[FunctionDefinition, VariableDeclaration]]
 
-    __implemented: bool
-    __kind: FunctionKind
-    __modifiers: List[ModifierInvocation]
-    __parameters: ParameterList
-    __return_parameters: ParameterList
+    _implemented: bool
+    _kind: FunctionKind
+    _modifiers: List[ModifierInvocation]
+    _parameters: ParameterList
+    _return_parameters: ParameterList
     # __scope
-    __state_mutability: StateMutability
-    __virtual: bool
-    __visibility: Visibility
-    __base_functions: List[AstNodeId]
-    __documentation: Optional[Union[StructuredDocumentation, str]]
-    __function_selector: Optional[bytes]
-    __body: Optional[Block]
-    __overrides: Optional[OverrideSpecifier]
+    _state_mutability: StateMutability
+    _virtual: bool
+    _visibility: Visibility
+    _base_functions: List[AstNodeId]
+    _documentation: Optional[Union[StructuredDocumentation, str]]
+    _function_selector: Optional[bytes]
+    _body: Optional[Block]
+    _overrides: Optional[OverrideSpecifier]
 
     def __init__(
         self, init: IrInitTuple, function: SolcFunctionDefinition, parent: SolidityAbc
@@ -114,85 +114,85 @@ class FunctionDefinition(DeclarationAbc):
         super().__init__(init, function, parent)
         self._child_functions = set()
 
-        self.__implemented = function.implemented
-        self.__kind = function.kind
+        self._implemented = function.implemented
+        self._kind = function.kind
 
-        if self.__kind == FunctionKind.CONSTRUCTOR:
+        if self._kind == FunctionKind.CONSTRUCTOR:
             self._name = "constructor"
-        elif self.__kind == FunctionKind.FALLBACK:
+        elif self._kind == FunctionKind.FALLBACK:
             self._name = "fallback"
-        elif self.__kind == FunctionKind.RECEIVE:
+        elif self._kind == FunctionKind.RECEIVE:
             self._name = "receive"
 
-        self.__modifiers = [
+        self._modifiers = [
             ModifierInvocation(init, modifier, self) for modifier in function.modifiers
         ]
-        self.__parameters = ParameterList(init, function.parameters, self)
-        self.__return_parameters = ParameterList(init, function.return_parameters, self)
+        self._parameters = ParameterList(init, function.parameters, self)
+        self._return_parameters = ParameterList(init, function.return_parameters, self)
         # self.__scope = function.scope
-        self.__state_mutability = function.state_mutability
-        self.__virtual = function.virtual
-        self.__visibility = function.visibility
-        self.__base_functions = (
+        self._state_mutability = function.state_mutability
+        self._virtual = function.virtual
+        self._visibility = function.visibility
+        self._base_functions = (
             list(function.base_functions) if function.base_functions is not None else []
         )
         if function.documentation is None:
-            self.__documentation = None
+            self._documentation = None
         elif isinstance(function.documentation, SolcStructuredDocumentation):
-            self.__documentation = StructuredDocumentation(
+            self._documentation = StructuredDocumentation(
                 init, function.documentation, self
             )
         elif isinstance(function.documentation, str):
-            self.__documentation = function.documentation
+            self._documentation = function.documentation
         else:
             raise TypeError(
                 f"Unknown type of documentation: {type(function.documentation)}"
             )
-        self.__function_selector = (
+        self._function_selector = (
             bytes.fromhex(function.function_selector)
             if function.function_selector
             else None
         )
 
         if (
-            self.__visibility in {Visibility.PUBLIC, Visibility.EXTERNAL}
-            and self.__kind == FunctionKind.FUNCTION
+            self._visibility in {Visibility.PUBLIC, Visibility.EXTERNAL}
+            and self._kind == FunctionKind.FUNCTION
         ):
-            assert self.__function_selector is not None
+            assert self._function_selector is not None
         else:
-            assert self.__function_selector is None
+            assert self._function_selector is None
 
-        self.__body = Block(init, function.body, self) if function.body else None
-        assert (self.__body is not None) == self.__implemented
-        self.__overrides = (
+        self._body = Block(init, function.body, self) if function.body else None
+        assert (self._body is not None) == self._implemented
+        self._overrides = (
             OverrideSpecifier(init, function.overrides, self)
             if function.overrides
             else None
         )
-        self._reference_resolver.register_post_process_callback(self.__post_process)
+        self._reference_resolver.register_post_process_callback(self._post_process)
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        for modifier in self.__modifiers:
+        for modifier in self._modifiers:
             yield from modifier
-        yield from self.__parameters
-        yield from self.__return_parameters
-        if isinstance(self.__documentation, StructuredDocumentation):
-            yield from self.__documentation
-        if self.__body is not None:
-            yield from self.__body
-        if self.__overrides is not None:
-            yield from self.__overrides
+        yield from self._parameters
+        yield from self._return_parameters
+        if isinstance(self._documentation, StructuredDocumentation):
+            yield from self._documentation
+        if self._body is not None:
+            yield from self._body
+        if self._overrides is not None:
+            yield from self._overrides
 
-    def __post_process(self, callback_params: CallbackParams):
+    def _post_process(self, callback_params: CallbackParams):
         base_functions = self.base_functions
         for base_function in base_functions:
             base_function._child_functions.add(self)
         self._reference_resolver.register_destroy_callback(
-            self.file, partial(self.__destroy, base_functions)
+            self.file, partial(self._destroy, base_functions)
         )
 
-    def __destroy(self, base_functions: Tuple[FunctionDefinition]) -> None:
+    def _destroy(self, base_functions: Tuple[FunctionDefinition]) -> None:
         for base_function in base_functions:
             base_function._child_functions.remove(self)
 
@@ -343,7 +343,7 @@ class FunctionDefinition(DeclarationAbc):
         Returns:
             `True` if the function [body][woke.ast.ir.declaration.function_definition.FunctionDefinition.body] is not `None`, `False` otherwise.
         """
-        return self.__implemented
+        return self._implemented
 
     @property
     def kind(self) -> FunctionKind:
@@ -351,7 +351,7 @@ class FunctionDefinition(DeclarationAbc):
         Returns:
             Kind of the function.
         """
-        return self.__kind
+        return self._kind
 
     @property
     def modifiers(self) -> Tuple[ModifierInvocation]:
@@ -368,7 +368,7 @@ class FunctionDefinition(DeclarationAbc):
         Returns:
             List of modifiers applied to the function.
         """
-        return tuple(self.__modifiers)
+        return tuple(self._modifiers)
 
     @property
     def parameters(self) -> ParameterList:
@@ -376,7 +376,7 @@ class FunctionDefinition(DeclarationAbc):
         Returns:
             Parameter list describing the function parameters.
         """
-        return self.__parameters
+        return self._parameters
 
     @property
     def return_parameters(self) -> ParameterList:
@@ -384,7 +384,7 @@ class FunctionDefinition(DeclarationAbc):
         Returns:
             Parameter list describing the function return parameters.
         """
-        return self.__return_parameters
+        return self._return_parameters
 
     @property
     def state_mutability(self) -> StateMutability:
@@ -392,7 +392,7 @@ class FunctionDefinition(DeclarationAbc):
         Returns:
             State mutability of the function.
         """
-        return self.__state_mutability
+        return self._state_mutability
 
     @property
     def virtual(self) -> bool:
@@ -400,7 +400,7 @@ class FunctionDefinition(DeclarationAbc):
         Returns:
             `True` if the function is virtual, `False` otherwise.
         """
-        return self.__virtual
+        return self._virtual
 
     @property
     def visibility(self) -> Visibility:
@@ -408,7 +408,7 @@ class FunctionDefinition(DeclarationAbc):
         Returns:
             Visibility of the function.
         """
-        return self.__visibility
+        return self._visibility
 
     @property
     def base_functions(self) -> Tuple[FunctionDefinition]:
@@ -468,7 +468,7 @@ class FunctionDefinition(DeclarationAbc):
             List of base functions overridden by this function.
         """
         base_functions = []
-        for base_function_id in self.__base_functions:
+        for base_function_id in self._base_functions:
             base_function = self._reference_resolver.resolve_node(
                 base_function_id, self._cu_hash
             )
@@ -493,7 +493,7 @@ class FunctionDefinition(DeclarationAbc):
         Returns:
             [NatSpec](https://solidity.readthedocs.io/en/latest/natspec-format.html) documentation string, if any.
         """
-        return self.__documentation
+        return self._documentation
 
     @property
     def function_selector(self) -> Optional[bytes]:
@@ -502,7 +502,7 @@ class FunctionDefinition(DeclarationAbc):
         Returns:
             Selector of the function.
         """
-        return self.__function_selector
+        return self._function_selector
 
     @property
     def body(self) -> Optional[Block]:
@@ -510,7 +510,7 @@ class FunctionDefinition(DeclarationAbc):
         Returns:
             Body of the function, if any.
         """
-        return self.__body
+        return self._body
 
     @property
     def overrides(self) -> Optional[OverrideSpecifier]:
@@ -543,7 +543,7 @@ class FunctionDefinition(DeclarationAbc):
         Returns:
             Override specifier, if any.
         """
-        return self.__overrides
+        return self._overrides
 
     @property
     @lru_cache(maxsize=2048)

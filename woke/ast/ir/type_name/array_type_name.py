@@ -62,15 +62,15 @@ class ArrayTypeName(TypeNameAbc):
     _ast_node: SolcArrayTypeName
     _parent: Union[VariableDeclaration, NewExpression, UsingForDirective, ArrayTypeName, Mapping]
 
-    __base_type: TypeNameAbc
-    __length: Optional[ExpressionAbc]
+    _base_type: TypeNameAbc
+    _length: Optional[ExpressionAbc]
 
     def __init__(
         self, init: IrInitTuple, array_type_name: SolcArrayTypeName, parent: SolidityAbc
     ):
         super().__init__(init, array_type_name, parent)
-        self.__base_type = TypeNameAbc.from_ast(init, array_type_name.base_type, self)
-        self.__length = (
+        self._base_type = TypeNameAbc.from_ast(init, array_type_name.base_type, self)
+        self._length = (
             ExpressionAbc.from_ast(init, array_type_name.length, self)
             if array_type_name.length
             else None
@@ -78,9 +78,9 @@ class ArrayTypeName(TypeNameAbc):
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        yield from self.__base_type
-        if self.__length is not None:
-            yield from self.__length
+        yield from self._base_type
+        if self._length is not None:
+            yield from self._length
 
     @property
     def parent(self) -> Union[VariableDeclaration, NewExpression, UsingForDirective, ArrayTypeName, Mapping]:
@@ -110,7 +110,7 @@ class ArrayTypeName(TypeNameAbc):
         Returns:
             Type name IR node describing the base type.
         """
-        return self.__base_type
+        return self._base_type
 
     @property
     def length(self) -> Optional[ExpressionAbc]:
@@ -119,4 +119,4 @@ class ArrayTypeName(TypeNameAbc):
         Returns:
             Expression defining the length of the array.
         """
-        return self.__length
+        return self._length

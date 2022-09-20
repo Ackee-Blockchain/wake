@@ -29,7 +29,7 @@ class UserDefinedValueTypeDefinition(DeclarationAbc):
     _ast_node: SolcUserDefinedValueTypeDefinition
     _parent: Union[ContractDefinition, SourceUnit]
 
-    __underlying_type: ElementaryTypeName
+    _underlying_type: ElementaryTypeName
 
     def __init__(
         self,
@@ -38,13 +38,13 @@ class UserDefinedValueTypeDefinition(DeclarationAbc):
         parent: SolidityAbc,
     ):
         super().__init__(init, user_defined_value_type_definition, parent)
-        self.__underlying_type = ElementaryTypeName(
+        self._underlying_type = ElementaryTypeName(
             init, user_defined_value_type_definition.underlying_type, self
         )
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        yield from self.__underlying_type
+        yield from self._underlying_type
 
     def _parse_name_location(self) -> Tuple[int, int]:
         IDENTIFIER = r"[a-zA-Z$_][a-zA-Z0-9$_]*"
@@ -79,7 +79,7 @@ class UserDefinedValueTypeDefinition(DeclarationAbc):
     @property
     @lru_cache(maxsize=2048)
     def declaration_string(self) -> str:
-        return f"type {self.name} is {self.__underlying_type.source}"
+        return f"type {self.name} is {self._underlying_type.source}"
 
     @property
     def underlying_type(self) -> ElementaryTypeName:
@@ -87,4 +87,4 @@ class UserDefinedValueTypeDefinition(DeclarationAbc):
         Returns:
             Underlying type of the user defined value type.
         """
-        return self.__underlying_type
+        return self._underlying_type
