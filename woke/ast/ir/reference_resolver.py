@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+import heapq
 import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
-from queue import PriorityQueue
 from typing import TYPE_CHECKING, Callable, DefaultDict, Dict, List, Tuple, Union
 
 from woke.ast.enums import GlobalSymbolsEnum
@@ -34,7 +34,7 @@ class PostProcessQueueItem:
 class ReferenceResolver:
     __ordered_nodes: Dict[bytes, Dict[AstNodeId, Tuple[Path, int]]]
     __registered_nodes: Dict[Tuple[Path, int], SolidityAbc]
-    __post_process_callbacks: PriorityQueue[PostProcessQueueItem]
+    __post_process_callbacks: List[PostProcessQueueItem]
     __destroy_callbacks: DefaultDict[Path, List[Callable[[], None]]]
     __global_symbol_references: DefaultDict[
         GlobalSymbolsEnum, List[Union[Identifier, MemberAccess]]
@@ -43,7 +43,7 @@ class ReferenceResolver:
     def __init__(self):
         self.__ordered_nodes = defaultdict(dict)
         self.__registered_nodes = {}
-        self.__post_process_callbacks = PriorityQueue()
+        self.__post_process_callbacks = []
         self.__destroy_callbacks = defaultdict(list)
         self.__global_symbol_references = defaultdict(list)
 
@@ -80,14 +80,16 @@ class ReferenceResolver:
     def register_post_process_callback(
         self, callback: Callable[[CallbackParams], None], priority: int = 0
     ):
-        self.__post_process_callbacks.put(PostProcessQueueItem(priority, callback))
+        heapq.heappush(
+            self.__post_process_callbacks, PostProcessQueueItem(priority, callback)
+        )
 
     def register_destroy_callback(self, file: Path, callback: Callable[[], None]):
         self.__destroy_callbacks[file].append(callback)
 
     def run_post_process_callbacks(self, callback_params: CallbackParams):
-        while not self.__post_process_callbacks.empty():
-            callback = self.__post_process_callbacks.get().callback
+        while len(self.__post_process_callbacks):
+            callback = heapq.heappop(self.__post_process_callbacks).callback
             callback(callback_params)
 
     def run_destroy_callbacks(self, file: Path):
