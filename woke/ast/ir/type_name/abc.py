@@ -3,18 +3,20 @@ from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from functools import lru_cache
-from typing import Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
     from ..declaration.variable_declaration import VariableDeclaration
-    from ..declaration.user_defined_value_type_definition import UserDefinedValueTypeDefinition
-    from ..expression.elementary_type_name_expression import ElementaryTypeNameExpression
+    from ..declaration.user_defined_value_type_definition import (
+        UserDefinedValueTypeDefinition,
+    )
+    from ..expression.elementary_type_name_expression import (
+        ElementaryTypeNameExpression,
+    )
     from ..expression.new_expression import NewExpression
     from ..meta.using_for_directive import UsingForDirective
     from .array_type_name import ArrayTypeName
 
-from woke.ast.types import TypeAbc, Array, Address, Bool, Int, UInt, Fixed, UFixed, String, Bytes, \
-    FixedBytes, Type, Function, Mapping, Struct, Enum, Contract
 from woke.ast.ir.abc import SolidityAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import (
@@ -26,6 +28,25 @@ from woke.ast.nodes import (
     SolcUserDefinedTypeName,
     TypeDescriptionsModel,
 )
+from woke.ast.types import (
+    Address,
+    Array,
+    Bool,
+    Bytes,
+    Contract,
+    Enum,
+    Fixed,
+    FixedBytes,
+    Function,
+    Int,
+    Mapping,
+    String,
+    Struct,
+    Type,
+    TypeAbc,
+    UFixed,
+    UInt,
+)
 from woke.utils.string import StringReader
 
 logger = logging.getLogger(__name__)
@@ -35,6 +56,7 @@ class TypeNameAbc(SolidityAbc, ABC):
     """
     Abstract base class for all IR type name nodes.
     """
+
     _type_descriptions: TypeDescriptionsModel
 
     def __init__(
@@ -67,8 +89,16 @@ class TypeNameAbc(SolidityAbc, ABC):
     @property
     @abstractmethod
     def parent(
-            self,
-    ) -> Union[VariableDeclaration, UserDefinedValueTypeDefinition, ElementaryTypeNameExpression, NewExpression, UsingForDirective, ArrayTypeName, Mapping]:
+        self,
+    ) -> Union[
+        VariableDeclaration,
+        UserDefinedValueTypeDefinition,
+        ElementaryTypeNameExpression,
+        NewExpression,
+        UsingForDirective,
+        ArrayTypeName,
+        Mapping,
+    ]:
         """
         Returns:
             Parent node of the type name.
@@ -76,8 +106,27 @@ class TypeNameAbc(SolidityAbc, ABC):
         ...
 
     @property
-    @lru_cache(maxsize=None)
-    def type(self) -> Union[Array, Address, Bool, Int, UInt, Fixed, UFixed, String, Bytes, FixedBytes, Type, Function, Mapping, Struct, Enum, Contract]:
+    @lru_cache(maxsize=2048)
+    def type(
+        self,
+    ) -> Union[
+        Array,
+        Address,
+        Bool,
+        Int,
+        UInt,
+        Fixed,
+        UFixed,
+        String,
+        Bytes,
+        FixedBytes,
+        Type,
+        Function,
+        Mapping,
+        Struct,
+        Enum,
+        Contract,
+    ]:
         """
         Returns:
             Type of the type name.
@@ -91,7 +140,27 @@ class TypeNameAbc(SolidityAbc, ABC):
         assert (
             len(type_identifier) == 0 and ret is not None
         ), f"Failed to parse type identifier: {self._type_descriptions.type_identifier}"
-        assert isinstance(ret, (Array, Address, Bool, Int, UInt, Fixed, UFixed, String, Bytes, FixedBytes, Type, Function, Mapping, Struct, Enum, Contract))
+        assert isinstance(
+            ret,
+            (
+                Array,
+                Address,
+                Bool,
+                Int,
+                UInt,
+                Fixed,
+                UFixed,
+                String,
+                Bytes,
+                FixedBytes,
+                Type,
+                Function,
+                Mapping,
+                Struct,
+                Enum,
+                Contract,
+            ),
+        )
         return ret
 
     @property

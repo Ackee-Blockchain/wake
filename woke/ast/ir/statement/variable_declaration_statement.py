@@ -32,6 +32,7 @@ class VariableDeclarationStatement(StatementAbc):
         }
         ```
     """
+
     _ast_node: SolcVariableDeclarationStatement
     _parent: Union[
         Block,
@@ -119,7 +120,7 @@ class VariableDeclarationStatement(StatementAbc):
         return self.__initial_value
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         ret = set()
         if self.initial_value is not None:

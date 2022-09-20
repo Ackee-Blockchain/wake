@@ -29,6 +29,7 @@ class WhileStatement(StatementAbc):
         }
         ```
     """
+
     _ast_node: SolcWhileStatement
     _parent: Union[
         Block,
@@ -91,7 +92,7 @@ class WhileStatement(StatementAbc):
         return self.__condition
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         return self.body.modifies_state | self.condition.modifies_state
 

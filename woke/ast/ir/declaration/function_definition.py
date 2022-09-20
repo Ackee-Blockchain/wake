@@ -88,6 +88,7 @@ class FunctionDefinition(DeclarationAbc):
         }
         ```
     """
+
     _ast_node: SolcFunctionDefinition
     _parent: Union[ContractDefinition, SourceUnit]
     _child_functions: Set[Union[FunctionDefinition, VariableDeclaration]]
@@ -216,7 +217,15 @@ class FunctionDefinition(DeclarationAbc):
 
     def get_all_references(
         self, include_declarations: bool
-    ) -> Iterator[Union[DeclarationAbc, Identifier, IdentifierPathPart, MemberAccess, ExternalReference]]:
+    ) -> Iterator[
+        Union[
+            DeclarationAbc,
+            Identifier,
+            IdentifierPathPart,
+            MemberAccess,
+            ExternalReference,
+        ]
+    ]:
         from .variable_declaration import VariableDeclaration
 
         processed_declarations: Set[Union[FunctionDefinition, VariableDeclaration]] = {
@@ -252,7 +261,7 @@ class FunctionDefinition(DeclarationAbc):
         return self._parent
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def canonical_name(self) -> str:
         from .contract_definition import ContractDefinition
 
@@ -261,7 +270,7 @@ class FunctionDefinition(DeclarationAbc):
         return self.name
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def declaration_string(self) -> str:
         if self.kind == FunctionKind.CONSTRUCTOR:
             ret = "constructor"
@@ -537,9 +546,10 @@ class FunctionDefinition(DeclarationAbc):
         return self.__overrides
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def cfg(self) -> Optional[ControlFlowGraph]:
         from woke.analysis.cfg import ControlFlowGraph
+
         if self.body is None:
             return None
         return ControlFlowGraph(self)

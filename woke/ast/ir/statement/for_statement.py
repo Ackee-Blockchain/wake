@@ -38,6 +38,7 @@ class ForStatement(StatementAbc):
         }
         ```
     """
+
     _ast_node: SolcForStatement
     _parent: Union[
         Block,
@@ -171,7 +172,7 @@ class ForStatement(StatementAbc):
         return self.__loop_expression
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         ret = set()
         if self.initialization_expression is not None:

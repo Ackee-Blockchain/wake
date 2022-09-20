@@ -52,6 +52,7 @@ class ModifierDefinition(DeclarationAbc):
         }
         ```
     """
+
     _ast_node: SolcModifierDefinition
     _parent: ContractDefinition
     _child_modifiers: Set[ModifierDefinition]
@@ -135,7 +136,15 @@ class ModifierDefinition(DeclarationAbc):
 
     def get_all_references(
         self, include_declarations: bool
-    ) -> Iterator[Union[DeclarationAbc, Identifier, IdentifierPathPart, MemberAccess, ExternalReference]]:
+    ) -> Iterator[
+        Union[
+            DeclarationAbc,
+            Identifier,
+            IdentifierPathPart,
+            MemberAccess,
+            ExternalReference,
+        ]
+    ]:
         processed_declarations: Set[ModifierDefinition] = {self}
         declarations_queue: Deque[ModifierDefinition] = deque([self])
 
@@ -167,7 +176,7 @@ class ModifierDefinition(DeclarationAbc):
         return f"{self._parent.canonical_name}.{self._name}"
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def declaration_string(self) -> str:
         ret = f"modifier {self._name}"
         ret += (
@@ -375,9 +384,10 @@ class ModifierDefinition(DeclarationAbc):
         return self.__overrides
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def cfg(self) -> Optional[ControlFlowGraph]:
         from woke.analysis.cfg import ControlFlowGraph
+
         if self.body is None:
             return None
         return ControlFlowGraph(self)

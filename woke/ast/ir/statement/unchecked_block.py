@@ -31,6 +31,7 @@ class UncheckedBlock(StatementAbc):
         }
         ```
     """
+
     _ast_node: SolcUncheckedBlock
     _parent: Union[Block, DoWhileStatement, ForStatement, IfStatement, WhileStatement]
 
@@ -73,7 +74,7 @@ class UncheckedBlock(StatementAbc):
         return tuple(self.__statements)
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         return reduce(
             or_,

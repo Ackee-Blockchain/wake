@@ -34,6 +34,7 @@ class Return(StatementAbc):
         }
         ```
     """
+
     _ast_node: SolcReturn
     _parent: Union[
         Block,
@@ -114,7 +115,7 @@ class Return(StatementAbc):
         return self.__expression
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         if self.__expression is None:
             return set()

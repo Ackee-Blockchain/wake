@@ -55,7 +55,7 @@ class TupleExpression(ExpressionAbc):
         return tuple(self.__components)
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def is_ref_to_state_variable(self) -> bool:
         return any(
             component.is_ref_to_state_variable
@@ -64,7 +64,7 @@ class TupleExpression(ExpressionAbc):
         )
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         return reduce(
             or_,

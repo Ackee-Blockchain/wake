@@ -53,12 +53,12 @@ class IndexAccess(ExpressionAbc):
         return self.__index_expression
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def is_ref_to_state_variable(self) -> bool:
         return self.base_expression.is_ref_to_state_variable
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         ret = self.base_expression.modifies_state
         if self.index_expression is not None:

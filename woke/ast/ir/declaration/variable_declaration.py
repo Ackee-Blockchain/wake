@@ -102,6 +102,7 @@ class VariableDeclaration(DeclarationAbc):
         }
         ```
     """
+
     _ast_node: SolcVariableDeclaration
     _parent: Union[
         ContractDefinition,
@@ -236,7 +237,7 @@ class VariableDeclaration(DeclarationAbc):
         return self._parent
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def canonical_name(self) -> str:
         node = self.parent
         while node is not None:
@@ -248,7 +249,7 @@ class VariableDeclaration(DeclarationAbc):
         return f"{node.canonical_name}.{self.name}"
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def declaration_string(self) -> str:
         ret = self.type_name.source
         ret += f" {self.visibility}" if self.is_state_variable else ""
@@ -453,7 +454,7 @@ class VariableDeclaration(DeclarationAbc):
         return self.__value
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def type(self) -> TypeAbc:
         """
         Returns:

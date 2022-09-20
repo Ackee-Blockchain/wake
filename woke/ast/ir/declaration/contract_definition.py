@@ -242,7 +242,7 @@ class ContractDefinition(DeclarationAbc):
         return self._name
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def declaration_string(self) -> str:
         ret = f"{'abstract ' if self.abstract else ''}{self.kind} {self.name}"
         ret += (

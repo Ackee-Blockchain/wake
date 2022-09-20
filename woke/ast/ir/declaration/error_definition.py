@@ -25,6 +25,7 @@ class ErrorDefinition(DeclarationAbc):
         error InsufficientBalance(uint256 available, uint256 required);
         ```
     """
+
     _ast_node: SolcErrorDefinition
     _parent: Union[ContractDefinition, SourceUnit]
 
@@ -68,7 +69,7 @@ class ErrorDefinition(DeclarationAbc):
         return self._parent
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def canonical_name(self) -> str:
         from .contract_definition import ContractDefinition
 
@@ -77,7 +78,7 @@ class ErrorDefinition(DeclarationAbc):
         return self._name
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def declaration_string(self) -> str:
         ret = (
             f"error {self._name}("

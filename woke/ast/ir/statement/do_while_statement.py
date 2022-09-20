@@ -30,6 +30,7 @@ class DoWhileStatement(StatementAbc):
         }
         ```
     """
+
     _ast_node: SolcDoWhileStatement
     _parent: Union[
         Block,
@@ -89,7 +90,7 @@ class DoWhileStatement(StatementAbc):
         return self.__condition
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2048)
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         return self.condition.modifies_state | self.body.modifies_state
 
