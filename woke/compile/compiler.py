@@ -98,7 +98,7 @@ class SolidityCompiler:
             source_unit_name, path, content = source_units_queue.pop()
             if content is None:
                 try:
-                    versions, imports, h = SoliditySourceParser.parse(
+                    versions, imports, h, content = SoliditySourceParser.parse(
                         path, ignore_errors
                     )
                 except UnicodeDecodeError:
