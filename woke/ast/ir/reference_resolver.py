@@ -7,6 +7,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable, DefaultDict, Dict, List, Tuple, Union
 
+from intervaltree import IntervalTree
+
 from woke.ast.enums import GlobalSymbolsEnum
 
 if TYPE_CHECKING:
@@ -22,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class CallbackParams:
+    interval_trees: Dict[Path, IntervalTree]
     source_units: Dict[Path, SourceUnit]
 
 
