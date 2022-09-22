@@ -7,7 +7,7 @@ import woke.ast.types as types
 from woke.analysis.cfg import CfgBlock, TransitionCondition
 from woke.analysis.detectors.utils import (
     expression_is_global_symbol,
-    get_variable_declaration_from_expression,
+    get_variable_declarations_from_expression,
     pair_function_call_arguments,
 )
 from woke.ast.enums import (
@@ -45,23 +45,23 @@ def expression_is_only_owner(
 ) -> bool:
     if isinstance(expression, BinaryOperation):
         if expression.operator in {BinaryOpOperator.EQ, BinaryOpOperator.NEQ}:
-            left = get_variable_declaration_from_expression(expression.left_expression)
-            right = get_variable_declaration_from_expression(
+            left = get_variable_declarations_from_expression(expression.left_expression)
+            right = get_variable_declarations_from_expression(
                 expression.right_expression
             )
 
             left_is_msg_sender = (
-                left is not None and left in msg_sender_variables
+                len(left) == 1 and left[0] in msg_sender_variables
             ) or expression_is_global_symbol(
                 expression.left_expression, GlobalSymbolsEnum.MSG_SENDER
             )
             right_is_msg_sender = (
-                right is not None and right in msg_sender_variables
+                len(right) == 1 and right[0] in msg_sender_variables
             ) or expression_is_global_symbol(
                 expression.right_expression, GlobalSymbolsEnum.MSG_SENDER
             )
-            left_is_owner = left is not None and variable_is_owner(left)
-            right_is_owner = right is not None and variable_is_owner(right)
+            left_is_owner = not any(var is None for var in left) and all(variable_is_owner(var) for var in left)  # type: ignore
+            right_is_owner = not any(var is None for var in right) and all(variable_is_owner(var) for var in right)  # type: ignore
 
             if check_only_eoa:
                 if left_is_msg_sender and expression_is_global_symbol(
@@ -162,15 +162,21 @@ def expression_is_only_owner(
         and expression.index_expression is not None
         and not inverted
     ):
-        possible_owners = get_variable_declaration_from_expression(
+        possible_owners = get_variable_declarations_from_expression(
             expression.base_expression
         )
+        index_vars = get_variable_declarations_from_expression(
+            expression.index_expression
+        )
+        index_is_msg_sender = (
+            len(index_vars) == 1 and index_vars[0] in msg_sender_variables
+        ) or expression_is_global_symbol(
+            expression.index_expression, GlobalSymbolsEnum.MSG_SENDER
+        )
         if (
-            possible_owners is not None
-            and variable_is_owner(possible_owners)
-            and expression_is_global_symbol(
-                expression.index_expression, GlobalSymbolsEnum.MSG_SENDER
-            )
+            not any(var is None for var in possible_owners)
+            and all(variable_is_owner(var) for var in possible_owners)  # type: ignore
+            and index_is_msg_sender
         ):
             logger.debug(f"Expression is only owner: {expression.source}")
             return True
