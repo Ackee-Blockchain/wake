@@ -654,7 +654,10 @@ class LspCompiler:
                     self.__interval_trees[path] = interval_tree
 
             self.__ir_reference_resolver.run_post_process_callbacks(
-                CallbackParams(source_units=self.__source_units)
+                CallbackParams(
+                    interval_trees=self.__interval_trees,
+                    source_units=self.__source_units,
+                )
             )
 
             if progress_token is not None:
