@@ -123,5 +123,5 @@ def run_compile(
                 source_units[path] = SourceUnit(init, ast)
 
         reference_resolver.run_post_process_callbacks(
-            CallbackParams(source_units=source_units)
+            CallbackParams(interval_trees=interval_trees, source_units=source_units)
         )

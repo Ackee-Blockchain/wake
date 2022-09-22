@@ -21,6 +21,8 @@ from woke.ast.ir.utils import IrInitTuple
 from woke.ast.ir.yul.block import Block as YulBlock
 from woke.ast.nodes import AstNodeId, ExternalReferenceModel, SolcInlineAssembly
 
+from ..yul.identifier import Identifier
+
 if TYPE_CHECKING:
     from .block import Block
     from .do_while_statement import DoWhileStatement
@@ -38,7 +40,7 @@ class ExternalReference:
     Reference from an inline assembly block to a Solidity declaration.
     !!! warning
         This is not an IR node, but a helper class for [InlineAssembly][woke.ast.ir.statement.inline_assembly.InlineAssembly].
-        Since this is not an IR node, there must still be a Yul IR node (e.g. Yul [Identifier][woke.ast.ir.yul.identifier.Identifier]) in the source code that represents the identifier.
+        Since this is not an IR node, there must still be a Yul IR node (Yul [Identifier][woke.ast.ir.yul.identifier.Identifier]) in the source code that represents the identifier.
     """
 
     _external_reference_model: ExternalReferenceModel
@@ -50,6 +52,7 @@ class ExternalReference:
     _referenced_declaration_id: AstNodeId
     _value_size: int
     _suffix: Optional[InlineAssemblySuffix]
+    _yul_identifier: Optional[Identifier]
 
     def __init__(
         self, init: IrInitTuple, external_reference_model: ExternalReferenceModel
@@ -64,6 +67,7 @@ class ExternalReference:
         assert self._referenced_declaration_id >= 0
         self._value_size = external_reference_model.value_size
         self._suffix = external_reference_model.suffix
+        self._yul_identifier = None
 
         if external_reference_model.is_offset:
             self._suffix = InlineAssemblySuffix.OFFSET
@@ -78,6 +82,14 @@ class ExternalReference:
         self._reference_resolver.register_destroy_callback(
             self._file, partial(self._destroy, referenced_declaration)
         )
+        interval_tree = callback_params.interval_trees[self._file]
+        start, end = self.byte_location
+        nodes = interval_tree[start:end]
+        node = next(node for node in nodes if node.begin == start and node.end == end)
+        assert isinstance(
+            node.data, Identifier
+        ), f"Expected Identifier, got {type(node.data)}"
+        self._yul_identifier = node.data
 
     def _destroy(self, referenced_declaration: DeclarationAbc) -> None:
         referenced_declaration.unregister_reference(self)
@@ -139,6 +151,15 @@ class ExternalReference:
         )
         assert isinstance(node, DeclarationAbc)
         return node
+
+    @property
+    def yul_identifier(self) -> Identifier:
+        """
+        Returns:
+            Yul Identifier node representing this external reference.
+        """
+        assert isinstance(self._yul_identifier, Identifier)
+        return self._yul_identifier
 
     @property
     def value_size(self) -> int:
