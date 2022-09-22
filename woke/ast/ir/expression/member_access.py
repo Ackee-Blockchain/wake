@@ -157,6 +157,10 @@ class MemberAccess(ExpressionAbc):
                     self.__referenced_declaration_id = AstNodeId(
                         GlobalSymbolsEnum.FUNCTION_GAS
                     )
+                elif self.member_name == "address":
+                    self.__referenced_declaration_id = AstNodeId(
+                        GlobalSymbolsEnum.FUNCTION_ADDRESS
+                    )
                 else:
                     assert False, f"Unknown function member: {self.member_name}"
             elif isinstance(expr_type, Magic):
