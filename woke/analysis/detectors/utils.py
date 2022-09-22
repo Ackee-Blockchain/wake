@@ -1,5 +1,6 @@
 import logging
-from typing import Optional, Tuple
+from collections import deque
+from typing import Optional, Set, Tuple, Union
 
 import woke.ast.types as types
 from woke.ast.enums import FunctionCallKind, GlobalSymbolsEnum
@@ -82,26 +83,75 @@ def expression_is_global_symbol(
     return False
 
 
-def get_variable_declaration_from_expression(
+def get_variable_declarations_from_expression(
     expr: ExpressionAbc,
-) -> Optional[VariableDeclaration]:
-    if isinstance(expr, (Identifier, MemberAccess)):
+) -> Tuple[Optional[VariableDeclaration], ...]:
+    if isinstance(expr, Identifier):
         ref = expr.referenced_declaration
         if isinstance(ref, VariableDeclaration):
-            return ref
+            return (ref,)
+    elif isinstance(expr, MemberAccess):
+        ref = expr.referenced_declaration
+        if isinstance(ref, VariableDeclaration):
+            return get_variable_declarations_from_expression(expr.expression) + (ref,)
     elif isinstance(expr, FunctionCall) and isinstance(
-        expr.function_called, FunctionDefinition
+        expr.function_called, (FunctionDefinition, VariableDeclaration)
     ):
         func = expr.function_called
-        assert isinstance(func, FunctionDefinition)
-        if func.body is None:
-            return None
 
-        returns = []
-        for statement in func.body.statements_iter():
-            if isinstance(statement, Return):
-                returns.append(statement)
-        if len(returns) == 1 and returns[0].expression is not None:
-            return get_variable_declaration_from_expression(returns[0].expression)
+        func_expr = expr.expression
+        if isinstance(func_expr, Identifier):
+            ret: Tuple[Optional[VariableDeclaration]] = tuple()
+        elif isinstance(func_expr, MemberAccess):
+            ret = get_variable_declarations_from_expression(func_expr.expression)
+        else:
+            return (None,)
 
-    return None
+        if isinstance(func, VariableDeclaration):
+            return ret + (func,)
+        elif isinstance(func, FunctionDefinition):
+            if func.body is None:
+                implementations = get_function_implementations(func)
+                if len(implementations) == 1:
+                    if isinstance(implementations[0], VariableDeclaration):
+                        return ret + (implementations[0],)
+                    elif isinstance(implementations[0], FunctionDefinition):
+                        func = implementations[0]
+                        assert func.body is not None
+                    else:
+                        return (None,)
+                else:
+                    return (None,)
+
+            returns = []
+            for statement in func.body.statements_iter():
+                if isinstance(statement, Return):
+                    returns.append(statement)
+            if len(returns) == 1 and returns[0].expression is not None:
+                return ret + get_variable_declarations_from_expression(
+                    returns[0].expression
+                )
+
+    return (None,)
+
+
+def get_function_implementations(
+    function: FunctionDefinition,
+) -> Tuple[Union[FunctionDefinition, VariableDeclaration], ...]:
+    ret = set()
+    visited: Set[Union[FunctionDefinition, VariableDeclaration]] = {function}
+
+    queue = deque([function])
+    while len(queue) > 0:
+        func = queue.popleft()
+        if func.implemented:
+            ret.add(func)
+
+        for f in func.child_functions:
+            if f not in visited:
+                visited.add(f)
+                if isinstance(f, VariableDeclaration):
+                    ret.add(f)
+                elif isinstance(f, FunctionDefinition):
+                    queue.append(f)
+    return tuple(ret)
