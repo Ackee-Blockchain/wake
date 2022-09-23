@@ -198,10 +198,15 @@ class TypeGenerator():
     def generate_deploy_func(self, contract: ContractDefinition):
         param_names = ''
         params = ''
+        has_contructor: bool = False
         for fn in contract.functions:
             if fn.name == "constructor":
+                has_contructor = True
                 param_names, params = self.generate_func_params(fn)
                 break
+        #if no constructor, add generic params parameter
+        if not has_contructor:
+            params += "params: Optional[TxParams] = None"
         self.add_str_to_types(1, "@classmethod", 1)
         self.add_str_to_types(1, f"def deploy(cls, {params}) -> {contract.name}:", 1)
         self.add_str_to_types(2, f"return super().deploy([{param_names}], params)", 1)
@@ -284,6 +289,7 @@ class TypeGenerator():
             params += self.get_name(par.name) + ": " + self.parse_type_and_import(par.type) + ", "
         params += "params: Optional[TxParams] = None"
         if params_names:
+            #remove trailing ", "
             return params_names[:-2], params
         return params_names, params
 
