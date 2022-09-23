@@ -70,6 +70,7 @@ class TypeGenerator():
     __current_source_unit: str
     __pytypes_dir: Path
     __sol_to_py_lookup: Dict[type, str]
+    #set of function names which should be overloaded
     __func_to_overload: Set[str]
 
     def __init__(
@@ -315,6 +316,7 @@ class TypeGenerator():
         name = var_type.__class__.__name__
         return name ==  "Array" or name == "Mapping"
 
+
     def generate_getter_for_state_var(self, decl: VariableDeclaration):
 
         def get_struct_return_list(struct: expr_types.Struct) -> str:
@@ -394,7 +396,7 @@ class TypeGenerator():
         self.generate_type_hint_stub_func(decl.name, generated_params, "TransactionObject", True)
 
         #getters never modify the state - passing VIEW is ok
-        self.generate_func_implementation(StateMutability.VIEW, decl.name, decl.function_selector.hex(), generated_params, param_names, returns)
+        self.generate_func_implementation(StateMutability.VIEW, decl.canonical_name, decl.name, decl.function_selector.hex(), generated_params, param_names, returns)
 
         if param_names:
             param_names = param_names[:-2]
@@ -402,10 +404,35 @@ class TypeGenerator():
         #self.add_str_to_contract_types(2, "pass" + " " + param_names, 2) 
         #print(decl.function_selector[3:].decode("utf-8"))
         #self.add_str_to_types(2, "return self.transact(\"" + decl.function_selector.hex() + '\", [' + param_names + ']' + ", params)", 2)
-        #print(self.__contract_types)
 
-    def generate_func_implementation(self, state_mutability: StateMutability, fn_name: str, fn_selector: str, params: str, param_names: str, returns: str):
+
+    #receives names of params and their type hints, returns only the types to be used for dispatch 
+    def get_types_from_func_params(self, params) -> str:
+        # 1. split on , to separete the params
+        # 2. split on : and get the last (the second) elem to get the type (each pair is in the format name: type)
+        # 3. remove the last elem which is params: Optional[TxParams] = None (not used for dispatch)
+        name_type = params.split(",")
+        types = []
+        for name_type_pair in name_type:
+            types.append(name_type_pair.split(":")[-1])
+        res: str = ', '.join(types[:-1])
+        if res:
+            #remove the first char which a redundant whitespace
+            res = res[1:]
+        return res
+
+
+    def generate_func_implementation(self, state_mutability: StateMutability, canonical_name: str, fn_name: str, fn_selector: str, params: str, param_names: str, returns: str):
+        if self.current_source_unit == "hello_world.sol":
+            print(f"canonical_name: {self.current_source_unit + canonical_name}")
         #default value whether to return tx or the return data - if the function is pure/view the default is to make only a call and return the return data
+        if self.current_source_unit + canonical_name in self.__func_to_overload:
+            if self.current_source_unit == "hello_world.sol":
+                print(f"creating dispatch for: {self.current_source_unit + canonical_name}")
+            #add the library that enables dispatch to the imports
+            self.__imports.add_python_import("from multipledispatch import dispatch")
+            types: str = self.get_types_from_func_params(params)
+            self.add_str_to_types(1, f"@dispatch({types})", 1)
         is_view_or_pure: bool = state_mutability == StateMutability.VIEW or state_mutability == StateMutability.PURE
         self.add_str_to_types(1, f"def {self.get_name(fn_name)}(self, {params}, *, return_tx: bool=False, request_type: RequestType='{'call' if is_view_or_pure else 'default'}') -> Union[{returns}, TransactionObject]:", 1)
         self.add_str_to_types(2, f"return self.transact(\"{fn_selector}\", [{param_names}], params, return_tx, request_type) if not request_type == 'call' else self.call(\"{fn_selector}\", [{param_names}], params, return_tx)", 2)
@@ -425,11 +452,7 @@ class TypeGenerator():
         self.generate_type_hint_stub_func(fn.name, params, returns, False)
         self.generate_type_hint_stub_func(fn.name, params, "TransactionObject", True)
 
-        self.generate_func_implementation(fn.state_mutability, fn.name, fn.function_selector.hex(), params, params_names, returns)
-        #gs_view_or_pure: bool = fn.state_mutability == StateMutability.VIEW or fn.state_mutability == StateMutability.PURE
-        #gelf.add_str_to_types(1, f"def {self.get_name(fn.name)}(self{params}, return_tx: bool={True if is_view_or_pure else False}) -> Union[{returns}, TransactionObject]:", 1)
-        #self.add_str_to_types(2, f"return self.transact(\"{fn.function_selector.hex()}\", [{params_names}], params) if return_tx else self.call(\"{fn.function_selector.hex()}\", [{params_names}], params)", 3)
-
+        self.generate_func_implementation(fn.state_mutability, fn.canonical_name, fn.name, fn.function_selector.hex(), params, params_names, returns)
 
 
     def generate_types_contract(self, contract: ContractDefinition, generate_template: bool) -> None:
@@ -555,10 +578,26 @@ class TypeGenerator():
 
     def add_func_overload_if_match(self, fn: FunctionDefinition, contract: ContractDefinition):
         for function in contract.functions:
-            if fn.name == function.name: #and len(fn.parameters.parameters) == len(function.parameters.parameters):
-                self.__func_to_overload.add(fn.canonical_name)
-                self.__func_to_overload.add(function.canonical_name)
+            #this function is called also with the contract in which the function is defined
+            #thus we need to ensure that we don't compare the function with itself
+            if fn.name == function.name and fn != function: #and len(fn.parameters.parameters) == len(function.parameters.parameters):
+                #both functions have to be overloded -> add both
+                source_unit: str = ""
+                if isinstance(fn.parent, ContractDefinition):
+                    source_unit = fn.parent.parent
+                else:
+                    source_unit = fn.parent
+                #there can be 2 contracts with the same name and both of them can define function with the same name
+                #thus to uniquely idenify the funtion also the source unit has to be used, otherwise it could happen
+                #that an incorrect function gets overloaded
+                self.__func_to_overload.add(source_unit.source_unit_name + fn.canonical_name)
+                self.__func_to_overload.add(contract.parent.source_unit_name + function.canonical_name)
+                print("-------------------")
+                print(f"overload: {fn.canonical_name} {fn.parent.canonical_name}")
+                print(f"overload: {function.canonical_name} {contract.canonical_name}")
+                print("-------------------")
 
+    #TODO add check if func not in __func_to_overload for optimization
     def traverse_funcs_in_child_contracts(self, fn: FunctionDefinition, contract: ContractDefinition):
         for child in contract.child_contracts:
            self.add_func_overload_if_match(fn, child)
@@ -567,6 +606,7 @@ class TypeGenerator():
            self.traverse_funcs_in_child_contracts(fn, child)
 
 
+    #TODO add check if func not in __func_to_overload
     def traverse_funcs_in_parent_contracts(self, fn: FunctionDefinition, contract: ContractDefinition):
         for inh_spec in contract.base_contracts:
             if not inh_spec.parent.kind == ContractKind.INTERFACE:
@@ -576,6 +616,7 @@ class TypeGenerator():
                 self.traverse_funcs_in_parent_contracts(fn, inh_spec.base_name.referenced_declaration)
 
 
+    #TODO travesrse also state variables as getters are generated for them and thus overlaoding might be necessary
     def traverse_funcs_to_check_overload(self):
         #set containing canonical names of functions to be overloaded
         for _, unit in self.__source_units.items():
@@ -589,6 +630,8 @@ class TypeGenerator():
                                 self.add_func_overload_if_match(fn, contract)
                                 self.traverse_funcs_in_parent_contracts(fn, contract)
                                 self.traverse_funcs_in_child_contracts(fn, contract)
+            if unit.source_unit_name == "overloading.sol":
+                print(self.__func_to_overload)
 
 
     def generate_types(self, overwrite: bool = False) -> None:
@@ -597,9 +640,9 @@ class TypeGenerator():
         self.run_compile() 
         self.clean_type_dir()
         self.traverse_funcs_to_check_overload()
-        print(self.__func_to_overload)
+        #print(self.__func_to_overload)
         for _, unit in self.__source_units.items():
-            print(f"source unit: {unit.source_unit_name}")
+            #print(f"source unit: {unit.source_unit_name}")
             self.__current_source_unit = unit.source_unit_name
             self.generate_types_source_unit(unit)
             self.write_source_unit_to_file(unit.source_unit_name)
