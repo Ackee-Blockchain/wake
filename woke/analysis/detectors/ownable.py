@@ -1,10 +1,10 @@
 import logging
 from collections import deque
 from functools import lru_cache
-from typing import Optional, Set, Tuple
+from typing import Optional, Set, Tuple, Union
 
 import woke.ast.types as types
-from woke.analysis.cfg import CfgBlock, TransitionCondition
+from woke.analysis.cfg import CfgBlock, ControlFlowGraph, TransitionCondition
 from woke.analysis.detectors.utils import (
     expression_is_global_symbol,
     get_variable_declarations_from_expression,
@@ -215,41 +215,36 @@ def statement_is_only_owner(statement: StatementAbc, check_only_eoa: bool) -> bo
         ):
             cfg = function_called.cfg
             assert cfg is not None
-            if len(cfg.end_block.statements) > 0:
-                return statement_is_publicly_executable(
-                    cfg.end_block.statements[-1], False, check_only_eoa=check_only_eoa
-                )
+            return not _cfg_block_or_statement_is_publicly_reachable(
+                cfg.end_block,
+                cfg,
+                check_func_visibility=False,
+                check_only_eoa=check_only_eoa,
+            )
     return False
 
 
-_statement_is_publicly_executable_recursion_guard = set()
+_block_statement_reachable_guard = set()
 
 
 @lru_cache(maxsize=2048)
-def statement_is_publicly_executable(
-    statement: StatementAbc,
+def _cfg_block_or_statement_is_publicly_reachable(
+    target: Union[CfgBlock, StatementAbc],
+    cfg: ControlFlowGraph,
     check_func_visibility: bool = True,
     check_only_eoa: bool = False,
 ) -> bool:
     if (
-        statement,
+        target,
         check_func_visibility,
         check_only_eoa,
-    ) in _statement_is_publicly_executable_recursion_guard:
+    ) in _block_statement_reachable_guard:
         return False
 
     with recursion_guard(
-        _statement_is_publicly_executable_recursion_guard,
-        statement,
-        check_func_visibility,
-        check_only_eoa,
+        _block_statement_reachable_guard, target, check_func_visibility, check_only_eoa
     ):
-        decl = statement
-        while decl is not None:
-            if isinstance(decl, (FunctionDefinition, ModifierDefinition)):
-                break
-            decl = decl.parent
-        assert isinstance(decl, (FunctionDefinition, ModifierDefinition))
+        decl = cfg.declaration
 
         if isinstance(decl, FunctionDefinition):
             if decl.kind == FunctionKind.CONSTRUCTOR:
@@ -270,23 +265,25 @@ def statement_is_publicly_executable(
                 ):
                     return False
 
-        cfg = decl.cfg
-        assert cfg is not None
-
-        block = cfg.get_cfg_block(statement)
-        if statement not in block.statements:
-            assert statement == block.control_statement
-            if any(
-                statement_is_only_owner(s, check_only_eoa) for s in block.statements
-            ):
-                return False
+        if isinstance(target, StatementAbc):
+            block = cfg.get_cfg_block(target)
+            if target not in block.statements:
+                assert target == block.control_statement
+                if any(
+                    statement_is_only_owner(s, check_only_eoa) for s in block.statements
+                ):
+                    return False
+            else:
+                index = block.statements.index(target)
+                if any(
+                    statement_is_only_owner(s, check_only_eoa)
+                    for s in block.statements[:index]
+                ):
+                    return False
+        elif isinstance(target, CfgBlock):
+            block = target
         else:
-            index = block.statements.index(statement)
-            if any(
-                statement_is_only_owner(s, check_only_eoa)
-                for s in block.statements[:index]
-            ):
-                return False
+            raise NotImplementedError()
 
         if block == cfg.start_block:
             reached_start = True
@@ -362,6 +359,29 @@ def statement_is_publicly_executable(
             ):
                 return True
         return False
+
+
+@lru_cache(maxsize=2048)
+def statement_is_publicly_executable(
+    statement: StatementAbc,
+    check_func_visibility: bool = True,
+    check_only_eoa: bool = False,
+) -> bool:
+    decl = statement
+    while decl is not None:
+        if isinstance(decl, (FunctionDefinition, ModifierDefinition)):
+            break
+        decl = decl.parent
+    assert isinstance(decl, (FunctionDefinition, ModifierDefinition))
+
+    cfg = decl.cfg
+    assert cfg is not None
+    return _cfg_block_or_statement_is_publicly_reachable(
+        statement,
+        cfg,
+        check_func_visibility=check_func_visibility,
+        check_only_eoa=check_only_eoa,
+    )
 
 
 @return_on_recursion(True)
