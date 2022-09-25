@@ -52,7 +52,28 @@ async def generate_cfg_handler(
     g.attr(rankdir=context.config.generator.control_flow_graph.direction)
     g.attr("node", shape="box")
 
+    skip_start_block = False
+    if (
+        len(cfg.start_block.statements) == 0
+        and cfg.start_block.control_statement is None
+        and graph.out_degree(cfg.start_block) == 1
+    ):
+        skip_start_block = True
+
+    skip_end_block = False
+    if (
+        len(cfg.end_block.statements) == 0
+        and cfg.end_block.control_statement is None
+        and graph.in_degree(cfg.end_block) == 1
+    ):
+        skip_end_block = True
+
     for node in graph.nodes:
+        if skip_start_block and node == cfg.start_block:
+            continue
+        if skip_end_block and node == cfg.end_block:
+            continue
+
         statements: List[StatementAbc] = node.statements
         node_attrs = {"label": str(node)}
         if (
@@ -69,6 +90,11 @@ async def generate_cfg_handler(
         g.node(str(node.id), **node_attrs)
 
     for from_, to, data in graph.edges.data():
+        if skip_start_block and from_ == cfg.start_block:
+            continue
+        if skip_end_block and to == cfg.end_block:
+            continue
+
         condition = data["condition"]
         if condition[1] is not None:
             label = f"{condition[1].source} {condition[0]}"
