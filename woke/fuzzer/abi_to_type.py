@@ -219,9 +219,16 @@ class TypeGenerator():
             self.add_str_to_types(1, f"abi = {compilation_info.abi}", 1)
         if compilation_info.abi and compilation_info.evm.bytecode.opcodes: 
             self.add_str_to_types(1, f"bytecode = \"{compilation_info.evm.bytecode.object}\"", 2)
+        
+        if compilation_info.abi and not compilation_info.evm.bytecode.opcodes:
+           self.add_str_to_types(0, "", 1)
 
         self.__imports.add_python_import("from __future__ import annotations")
-        self.generate_deploy_func(contract)
+        if contract.kind == ContractKind.CONTRACT and not contract.abstract:
+            self.generate_deploy_func(contract)
+        elif contract.kind == ContractKind.INTERFACE or contract.abstract == True:
+            self.add_str_to_types(1, "def __init__(self, address: AnyAddress):", 1)
+            self.add_str_to_types(2, "Contract.__init__(self, address, None)", 1)
         self.add_str_to_types(0, "", 1)
 
 
@@ -304,16 +311,8 @@ class TypeGenerator():
         else:
             return return_params + "None"
 
-    #generates undeployable contract - interafaces and abstract contracts
-    def generate_types_interface(self, contract: ContractDefinition) -> None:
-        if contract.structs:
-            self.__imports.add_python_import("from dataclasses import dataclass")
-        self.add_str_to_types(0, "class " + self.get_name(contract.name) + "():", 1)
-        if not contract.structs:
-            self.add_str_to_types(1, "pass" , 1)
 
-
-    #TODO ensure that making the path alphanum wont create collisions
+    #TODO ensure that making the path alphanum won't create collisions
     def make_path_alphanum(self, path: str) -> str:
         return ''.join(filter(lambda ch: ch.isalnum() or ch == '/' or ch == '_', path))
 
@@ -466,35 +465,24 @@ class TypeGenerator():
             return
         else:
             self.__already_generated_contracts.add(contract.name)
-        #bool indicating whether the given contract should inherit from Contract class
-        inhertits_contract: bool = contract.kind == ContractKind.CONTRACT and not contract.abstract
+        inhertits_contract_class: bool = False if contract.base_contracts else True
         base_names: str = ""
 
         for base in contract.base_contracts:
             parent_contract: ContractDefinition = base.base_name.referenced_declaration
             #only the types for contracts in the same source_unit are generated
             if parent_contract.parent.source_unit_name == contract.parent.source_unit_name:
-                if parent_contract.kind == ContractKind.CONTRACT and not parent_contract.abstract:
-                    inhertits_contract = False
-                    self.generate_types_contract(parent_contract, True)
-                    base_names += self.get_name(parent_contract.name) + ", "
-                elif parent_contract.kind == ContractKind.INTERFACE and parent_contract.structs:
-                    #TODO will nevever inherit from Contract, will probably not need template (aka imports)
-                    #will only be generated to contain the user defined types
-                    self.generate_types_interface(parent_contract, False)
-                elif parent_contract.kind == ContractKind.CONTRACT and parent_contract.abstract and parent_contract.structs:
-                    self.generate_types_undeployable_contract(parent_contract, False)
-                    base_names += self.get_name(parent_contract.name) + ", "
+                self.generate_types_contract(parent_contract, True)
+                base_names += self.get_name(parent_contract.name) + ", "
+            #contract is not in the same source unit, so it must be imported
             else:
                 base_names += self.get_name(parent_contract.name) + ", "
                 self.__imports.generate_contract_import_name(parent_contract.name, parent_contract.parent.source_unit_name)
-            if parent_contract.kind == ContractKind.CONTRACT and not parent_contract.abstract:
-                inhertits_contract = False
 
         if base_names:
             #remove trailing ", "
             base_names = base_names[:-2] 
-        if inhertits_contract:
+        if inhertits_contract_class:
             base_names = "Contract, " + base_names if base_names else "Contract"
 
         #TODO generate template only if the given contract file (as specified by its canonical name)
@@ -503,8 +491,6 @@ class TypeGenerator():
         if generate_template:
             self.__imports.generate_default_imports = True
             self.generate_contract_template(contract, base_names)
-        if contract.kind == ContractKind.INTERFACE:
-            self.generate_types_interface(contract)
 
         if contract.enums:
             self.generate_types_enum(contract.enums, 1)
@@ -512,20 +498,15 @@ class TypeGenerator():
         if contract.structs:
             self.generate_types_struct(contract.structs, 1)
 
-        if contract.kind == ContractKind.CONTRACT and not contract.abstract or contract.kind == ContractKind.LIBRARY:
-            for var in contract.declared_variables:
-                if var.visibility == Visibility.EXTERNAL or var.visibility == Visibility.PUBLIC:
-                    self.generate_getter_for_state_var(var)
-            for fn in contract.functions:
-                if fn.function_selector:
-                    self.generate_types_function(fn)
-                elif fn.name == "fallback":
-                    self.generate_fallback_function(fn)
+        for var in contract.declared_variables:
+            if var.visibility == Visibility.EXTERNAL or var.visibility == Visibility.PUBLIC:
+                self.generate_getter_for_state_var(var)
+        for fn in contract.functions:
+            if fn.function_selector:
+                self.generate_types_function(fn)
+            elif fn.name == "fallback":
+                self.generate_fallback_function(fn)
                     
-            for variable in contract.declared_variables:
-                if isinstance(variable.type_name, Mapping):
-                    variable.type
-
 
     def generate_fallback_function(self, fn: FunctionDefinition) -> None:
         #self.add_str_to_types(1, "@overload", 1)
@@ -542,12 +523,11 @@ class TypeGenerator():
         self.generate_types_struct(unit.structs, 0)
         self.generate_types_enum(unit.enums, 0)
         for contract in unit.contracts:
-            if contract.kind == ContractKind.CONTRACT and not contract.abstract:
-                self.generate_types_contract(contract, True)
-            elif contract.kind == ContractKind.LIBRARY:
+            #TODO add generating types for libraries
+            if contract.kind == ContractKind.LIBRARY:
                 continue
-            elif contract.kind == ContractKind.INTERFACE:
-                self.generate_types_contract(contract, False)
+            else:
+                self.generate_types_contract(contract, True)
 
 
     def clean_type_dir(self):
@@ -598,10 +578,10 @@ class TypeGenerator():
                 #that an incorrect function gets overloaded
                 self.__func_to_overload.add(source_unit.source_unit_name + fn.canonical_name)
                 self.__func_to_overload.add(contract.parent.source_unit_name + function.canonical_name)
-                print("-------------------")
-                print(f"overload: {fn.canonical_name} {fn.parent.canonical_name}")
-                print(f"overload: {function.canonical_name} {contract.canonical_name}")
-                print("-------------------")
+                #print("-------------------")
+                #print(f"overload: {fn.canonical_name} {fn.parent.canonical_name}")
+                #print(f"overload: {function.canonical_name} {contract.canonical_name}")
+                #print("-------------------")
 
     #TODO add check if func not in __func_to_overload for optimization
     def traverse_funcs_in_child_contracts(self, fn: FunctionDefinition, contract: ContractDefinition):
@@ -645,7 +625,7 @@ class TypeGenerator():
         #TODO fail if any compile erors
         self.run_compile() 
         self.clean_type_dir()
-        self.traverse_funcs_to_check_overload()
+        #self.traverse_funcs_to_check_overload()
         #print(self.__func_to_overload)
         for _, unit in self.__source_units.items():
             #print(f"source unit: {unit.source_unit_name}")
@@ -817,7 +797,7 @@ class NameSanitizer():
 
     def __init__(self):
         #TODO add names
-        self.__black_listed = {"Dict", "List", "Mapping", "Set", "Tuple", "Union", "Path", "bytearray", "deploy", "IntEnum", "dataclass", "Contract", "bytes", "map", "__str__", "__call__", "__init__", "transact"}
+        self.__black_listed = {"Dict", "List", "Mapping", "Set", "Tuple", "Union", "Path", "bytearray", "deploy", "IntEnum", "dataclass", "Contract", "bytes", "map", "__str__", "__call__", "__init__", "transact", "call"}
         self.__used_names = set()
         self.__renamed = {}
 
