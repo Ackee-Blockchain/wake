@@ -4,7 +4,7 @@ from enum import IntEnum
 
 import eth_abi
 import web3.contract
-from eth_typing import HexStr
+from eth_typing import HexStr, AnyAddress
 from web3 import Web3
 from web3._utils.abi import get_abi_output_types
 from web3._utils.compat import TypedDict
@@ -44,6 +44,7 @@ class DevchainInterface:
     def __init__(self, port: int):
         self.__port = port
         self.__w3 = Web3(Web3.WebsocketProvider(f"ws://127.0.0.1:{str(port)}", websocket_timeout=60))
+        #self.__w3 = Web3(Web3.IPCProvider(f"/tmp/anvil.ipc"))
         #self.__w3 = Web3(Web3.HTTPProvider(f"http://127.0.0.1:{str(port)}"))
         self.__w3.eth.attach_methods({
             "trace_transaction": Method(RPCEndpoint("trace_transaction")),
@@ -100,7 +101,7 @@ class DevchainInterface:
 
 
     def transact(self, contract: web3.contract.Contract, selector: HexStr, arguments: Iterable, params: TxParams, return_tx, request_type) -> Any:
-        print("making a transaction")
+        #print("making a transaction")
         #start_time = time.time()
         func = contract.get_function_by_selector(selector)(*arguments)
         output_abi = get_abi_output_types(func.abi)
@@ -108,24 +109,32 @@ class DevchainInterface:
         output = self.dev_chain.retrieve_transaction_data([], tx_hash, request_type)
         return eth_abi.abi.decode(output_abi, bytes.fromhex(output))  # type: ignore
 
+    def create_factory(self, addr: AnyAddress, abi) -> web3.contract.Contract:
+        return self.__w3.eth.contract(abi=abi, address=addr)  
+
 
 dev_interface = DevchainInterface(8545)
-
 
 class Contract:
     abi: Any
     bytecode: HexStr
+    address: AnyAddress
     _contract: web3.contract.Contract
 
-    def __init__(self, contract: web3.contract.Contract):
-        self._contract = contract
+    def __init__(self, addr: AnyAddress,  contract: Optional[web3.contract.Contract]):
+        self.address = addr
+        if not contract:
+            self._contract = dev_interface.create_factory(addr, self.abi)
+        else:
+            self._contract = contract
 
     @classmethod
     #TODO add option to deploy using a different instance of web3
     def deploy(
         cls, arguments: Iterable, params: Optional[TxParams] = None
     ) -> web3.contract.Contract:
-        return cls(dev_interface.deploy(cls.abi, cls.bytecode, arguments)) 
+        contract = dev_interface.deploy(cls.abi, cls.bytecode, arguments)
+        return cls(contract.address, contract) 
 
 
     def transact(self, selector: HexStr, arguments: Iterable, params: TxParams, return_tx: bool, request_type: RequestType) -> Any:
