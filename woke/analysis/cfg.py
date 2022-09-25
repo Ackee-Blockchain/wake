@@ -53,12 +53,17 @@ class ControlFlowGraph:
         self.__graph = nx.DiGraph()
         self.__start_block = CfgBlock()
         self.__graph.add_node(self.__start_block)
+        next_block = CfgBlock()
+        self.__graph.add_node(next_block)
+        self.__graph.add_edge(
+            self.__start_block, next_block, condition=(TransitionCondition.ALWAYS, None)
+        )
         self.__end_block = CfgBlock()
         self.__graph.add_node(self.__end_block)
 
         last = CfgBlock.from_statement(
             self.__graph,
-            self.__start_block,
+            next_block,
             self.__end_block,
             None,
             None,
@@ -71,14 +76,15 @@ class ControlFlowGraph:
         while _normalize(self.__graph, self.__start_block, self.__end_block):
             pass
 
-        if (
-            len(self.__end_block.statements) == 0
-            and len(self.__graph.in_edges(self.__end_block)) == 1
-        ):
-            edge = next(iter(self.__graph.in_edges(self.__end_block, data=True)))
-            if edge[2]["condition"][0] == TransitionCondition.ALWAYS:
-                self.__graph.remove_node(self.__end_block)
-                self.__end_block = edge[0]
+        if len(self.__end_block.statements) != 0:
+            end_block = CfgBlock()
+            self.__graph.add_node(end_block)
+            self.__graph.add_edge(
+                self.__end_block,
+                end_block,
+                condition=(TransitionCondition.ALWAYS, None),
+            )
+            self.__end_block = end_block
 
         self.__statements_lookup = {
             stmt: block for block in self.__graph.nodes for stmt in block.statements
@@ -94,11 +100,21 @@ class ControlFlowGraph:
         return self.__graph.copy(as_view=True)
 
     @property
+    def declaration(self) -> Union[FunctionDefinition, ModifierDefinition]:
+        return self.__declaration
+
+    @property
     def start_block(self) -> CfgBlock:
+        """
+        Start block is guaranteed to be empty, i.e. it has no statements.
+        """
         return self.__start_block
 
     @property
     def end_block(self) -> CfgBlock:
+        """
+        End block is guaranteed to be empty, i.e. it has no statements.
+        """
         return self.__end_block
 
     def get_cfg_block(self, statement: StatementAbc) -> CfgBlock:
