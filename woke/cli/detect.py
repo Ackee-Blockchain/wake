@@ -91,8 +91,6 @@ def run_detect(ctx: click.Context, paths: Tuple[str], svg: bool) -> None:
     for cu, output in outputs:
         for source_unit_name, info in output.sources.items():
             path = cu.source_unit_name_to_path(PurePath(source_unit_name))
-
-            interval_trees[path] = IntervalTree()
             ast = AstSolc.parse_obj(info.ast)
 
             reference_resolver.index_nodes(ast, path, cu.hash)
@@ -100,6 +98,7 @@ def run_detect(ctx: click.Context, paths: Tuple[str], svg: bool) -> None:
             if path in processed_files:
                 continue
             processed_files.add(path)
+            interval_trees[path] = IntervalTree()
 
             init = IrInitTuple(
                 path,
