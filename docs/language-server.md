@@ -15,7 +15,7 @@ woke lsp --port 1234
 
     Multi-root workspaces are not currently supported.
 
-## Projects using Woke server
+## Projects using Woke LSP server
 - VS Code Extension
 
 ## Configuration options
@@ -99,6 +99,12 @@ Number of references is shown above each declaration.
 ![Diagnostics preview](images/lsp/diagnostics-1.gif)
 
 ![Diagnostics preview](images/lsp/diagnostics-2.png)
+
+Together with compiler errors, diagnostics also include results from Woke vulnerability detectors.
+
+![Diagnostics preview](images/lsp/diagnostics-3.png)
+
+![Diagnostics preview](images/lsp/diagnostics-4.png)
 
 ### Rename
 
