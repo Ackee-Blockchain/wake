@@ -659,7 +659,8 @@ class LspCompiler:
                                 file, detection.result.ir_node.byte_location
                             ),
                             severity=DiagnosticSeverity.WARNING,
-                            message="Woke: " + detection.result.message,
+                            source="Woke",
+                            message=detection.result.message,
                             code=detection.code,
                             related_information=related_info,
                         )
