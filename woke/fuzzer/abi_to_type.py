@@ -39,8 +39,7 @@ from ..ast.ir.utils import IrInitTuple
 from ..cli.console import console
 from woke.ast.enums import *
 
-import woke.ast.expression_types as expr_types
-from woke.ast.expression_types import ExpressionTypeAbc
+import woke.ast.types as types
 from ..ast.ir.declaration.function_definition import FunctionDefinition
 from ..compile.compilation_unit import CompilationUnit
 from ..compile.solc_frontend import SolcOutputErrorSeverityEnum
@@ -89,28 +88,28 @@ class TypeGenerator():
 
 
     def __init_sol_to_py_types(self):
-        self.__sol_to_py_lookup[expr_types.Address.__name__] = "AnyAddress"
-        self.__sol_to_py_lookup[expr_types.String.__name__] = "str"
-        self.__sol_to_py_lookup[expr_types.Array.__name__] = "arr"
-        self.__sol_to_py_lookup[expr_types.Struct.__name__] = "struct"
-        self.__sol_to_py_lookup[expr_types.Bool.__name__] = "bool"
-        self.__sol_to_py_lookup[expr_types.Int.__name__] = "int"
-        #self.__sol_to_py_lookup[expr_types.FixedBytes.__name__] = "fixed_bytes"
-        self.__sol_to_py_lookup[expr_types.Bytes.__name__] = "bytearray"
-        self.__sol_to_py_lookup[expr_types.Contract.__name__] = "contract"
-        self.__sol_to_py_lookup[expr_types.Mapping.__name__] = "mapping"
-        self.__sol_to_py_lookup[expr_types.UserDefinedValueType.__name__] = "user_defined"
-        self.__sol_to_py_lookup[expr_types.Enum.__name__] = "enum"
-        self.__sol_to_py_lookup[expr_types.Function.__name__] = "function"
+        self.__sol_to_py_lookup[types.Address.__name__] = "AnyAddress"
+        self.__sol_to_py_lookup[types.String.__name__] = "str"
+        self.__sol_to_py_lookup[types.Array.__name__] = "arr"
+        self.__sol_to_py_lookup[types.Struct.__name__] = "struct"
+        self.__sol_to_py_lookup[types.Bool.__name__] = "bool"
+        self.__sol_to_py_lookup[types.Int.__name__] = "int"
+        #self.__sol_to_py_lookup[types.FixedBytes.__name__] = "fixed_bytes"
+        self.__sol_to_py_lookup[types.Bytes.__name__] = "bytearray"
+        self.__sol_to_py_lookup[types.Contract.__name__] = "contract"
+        self.__sol_to_py_lookup[types.Mapping.__name__] = "mapping"
+        self.__sol_to_py_lookup[types.UserDefinedValueType.__name__] = "user_defined"
+        self.__sol_to_py_lookup[types.Enum.__name__] = "enum"
+        self.__sol_to_py_lookup[types.Function.__name__] = "function"
         i: int = 8
         while i <= 256:
             #print("bytes" + str(i) + " = NewType(\"uint" + str(i) + "\", int)")
-            self.__sol_to_py_lookup[expr_types.UInt.__name__ + str(i)] = "uint" + str(i)
+            self.__sol_to_py_lookup[types.UInt.__name__ + str(i)] = "uint" + str(i)
             i += 8
         i = 1
         while i <= 32:
             #print("bytes" + str(i) + " = NewType(\"bytes" + str(i) + "\", bytearray)")
-            self.__sol_to_py_lookup[expr_types.FixedBytes.__name__ + str(i)] = "bytes" + str(i)
+            self.__sol_to_py_lookup[types.FixedBytes.__name__ + str(i)] = "bytes" + str(i)
             i += 1
 
     @property
@@ -259,7 +258,7 @@ class TypeGenerator():
 
     #parses the expr to string
     #optionaly generates an import
-    def parse_type_and_import(self, expr: ExpressionTypeAbc) -> str:
+    def parse_type_and_import(self, expr: types.TypeAbc) -> str:
         name = expr.__class__.__name__
         parsed: str = ""
         if name == "Struct":
@@ -317,19 +316,19 @@ class TypeGenerator():
         return ''.join(filter(lambda ch: ch.isalnum() or ch == '/' or ch == '_', path))
 
     
-    def is_compound_type(self, var_type: ExpressionTypeAbc):
+    def is_compound_type(self, var_type: types.TypeAbc):
         name = var_type.__class__.__name__
         return name ==  "Array" or name == "Mapping"
 
 
     def generate_getter_for_state_var(self, decl: VariableDeclaration):
 
-        def get_struct_return_list(struct: expr_types.Struct) -> str:
+        def get_struct_return_list(struct: types.Struct) -> str:
             node = struct.ir_node
             assert isinstance(node, StructDefinition)
             non_exluded = []
             for member in node.members:
-                if not isinstance(member.type, expr_types.Mapping) and not isinstance(member.type, expr_types.Array):
+                if not isinstance(member.type, types.Mapping) and not isinstance(member.type, types.Array):
                     non_exluded.append(self.parse_type_and_import(member.type))
             if len(node.members) == len(non_exluded):
                 #nothing was exluded -> the whole struct will be used -> add the struct to imports
@@ -345,7 +344,7 @@ class TypeGenerator():
         #if the type is compound we need to use the type as an index, for primitive types we use the
         #the type only for the return
         #TODO reorder the elif chain such that the most common types are on the top
-        def generate_getter_helper(var_type: ExpressionTypeAbc, use_parse: bool, depth: int) -> str:
+        def generate_getter_helper(var_type: types.TypeAbc, use_parse: bool, depth: int) -> str:
             nonlocal returns
             nonlocal param_names
             name = var_type.__class__.__name__
@@ -722,7 +721,7 @@ class SourceUnitImports():
         self.__all_imports += num_of_indentation * TAB_WIDTH * ' ' + string + num_of_newlines * '\n'
 
 
-    def generate_struct_import(self, expr: ExpressionTypeAbc):
+    def generate_struct_import(self, expr: types.TypeAbc):
         node  = expr.ir_node
         if isinstance(node.parent, ContractDefinition):
             source_unit = node.parent.parent
@@ -739,7 +738,7 @@ class SourceUnitImports():
 
 
     #TODO impl of this func is basicaly the same as generate_struct_import -> refactor and remove duplication
-    def generate_enum_import(self, expr: ExpressionTypeAbc):
+    def generate_enum_import(self, expr: types.TypeAbc):
         node  = expr.ir_node
         if isinstance(node.parent, ContractDefinition):
             source_unit = node.parent.parent
@@ -756,7 +755,7 @@ class SourceUnitImports():
 
 
     #TODO impl of this func is basicaly the same as generate_struct_import -> refactor and remove duplication
-    def generate_contract_import_expr(self, expr: ExpressionTypeAbc):
+    def generate_contract_import_expr(self, expr: types.TypeAbc):
         node: ContractDefinition  = expr.ir_node
         source_unit = node.parent
         #only those contracts that are defined in a different source unit should be imported
