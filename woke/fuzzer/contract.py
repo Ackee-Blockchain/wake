@@ -135,7 +135,7 @@ class Contract:
     ) -> web3.contract.Contract:
         contract = dev_interface.deploy(cls.abi, cls.bytecode, arguments)
         print(f"the cls is: {cls}")
-        return Contract(contract.address, contract) 
+        return cls(contract.address, contract)
 
 
     def transact(self, selector: HexStr, arguments: Iterable, params: TxParams, return_tx: bool, request_type: RequestType) -> Any:
