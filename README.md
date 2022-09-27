@@ -16,10 +16,12 @@ Features:
 
 ## Installation
 
+> :warning: **Woke has been moved from `abch-woke` PyPi package to `woke`.**
+
 via `pip`
 
 ```shell
-pip3 install abch-woke
+pip3 install woke
 ```
 
 ## Features
@@ -54,7 +56,7 @@ All LSP server features can be found in the [documentation](https://ackeeblockch
 The property-based fuzzer can be installed as an extra dependency. Due to the dependency on [eth-brownie](https://eth-brownie.readthedocs.io/en/stable/), it is recommended to install it into a [virtual environment](https://docs.python.org/3/library/venv.html).
 
 ```shell
-pip3 install abch-woke[fuzzer]
+pip3 install woke[fuzzer]
 ```
 
 ## Documentation & Contribution

@@ -37,7 +37,7 @@ except ImportError:
     help="Override Woke root path.",
 )
 @click.option("--debug/--no-debug", default=False)
-@click.version_option(message="%(version)s", package_name="abch-woke")
+@click.version_option(message="%(version)s", package_name="woke")
 @click.pass_context
 def main(ctx: Context, woke_root_path: Optional[str], debug: bool) -> None:
     rich.traceback.install(show_locals=debug, suppress=[click], console=console)
