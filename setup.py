@@ -43,7 +43,7 @@ extras_require = dict(
 )
 
 setup(
-    name="abch-woke",
+    name="woke",
     description="Woke is a Python-based development and testing framework for Solidity.",
     long_description=long_description,
     long_description_content_type="text/markdown",
