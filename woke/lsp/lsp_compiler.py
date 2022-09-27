@@ -4,11 +4,12 @@ import asyncio
 import logging
 import re
 import threading
-from collections import deque
+from collections import defaultdict, deque
 from pathlib import Path, PurePath
 from typing import (
     TYPE_CHECKING,
     AbstractSet,
+    DefaultDict,
     Deque,
     Dict,
     Iterable,
@@ -533,12 +534,51 @@ class LspCompiler:
             for task in tasks:
                 task.cancel()
             await self.__server.log_message(str(e), MessageType.ERROR)
+            for file in self.__discovered_files:
+                # clear diagnostics
+                await self.__diagnostic_queue.put((file, set()))
             self.__interval_trees.clear()
             self.__source_units.clear()
             return
 
-        errors_per_file: Dict[Path, Set[Diagnostic]] = {}
         errors_without_location: Set[SolcOutputError] = set()
+        errors_per_file: DefaultDict[Path, Set[Diagnostic]] = defaultdict(set)
+
+        for cu, solc_output in zip(compilation_units, ret):
+            for error in solc_output.errors:
+                if error.source_location is not None:
+                    path = cu.source_unit_name_to_path(
+                        PurePath(error.source_location.file)
+                    )
+                else:
+                    errors_without_location.add(error)
+
+        for error in errors_without_location:
+            if error.severity == SolcOutputErrorSeverityEnum.ERROR:
+                error_type = MessageType.ERROR
+            elif error.severity == SolcOutputErrorSeverityEnum.WARNING:
+                error_type = MessageType.WARNING
+            elif error.severity == SolcOutputErrorSeverityEnum.INFO:
+                error_type = MessageType.INFO
+            else:
+                error_type = MessageType.LOG
+            await self.__server.show_message(error.message, error_type)
+            await self.__server.log_message(error.message, error_type)
+
+        if (
+            any(
+                e.severity == SolcOutputErrorSeverityEnum.ERROR
+                for e in errors_without_location
+            )
+            > 0
+        ):
+            for file in self.__discovered_files:
+                # clear diagnostics
+                await self.__diagnostic_queue.put((file, set()))
+            self.__interval_trees.clear()
+            self.__source_units.clear()
+            return
+
         files_to_recompile = set(files_to_compile)
         processed_files: Set[Path] = set()
 
@@ -550,8 +590,6 @@ class LspCompiler:
 
         for cu_index, (cu, solc_output) in enumerate(zip(compilation_units, ret)):
             for file in cu.files:
-                if file not in errors_per_file:
-                    errors_per_file[file] = set()
                 if file in self.__line_indexes:
                     self.__line_indexes.pop(file)
                 if file in self.__opened_files:
@@ -567,11 +605,8 @@ class LspCompiler:
                     errors_per_file[path].add(
                         self.__solc_error_to_diagnostic(error, path)
                     )
-
                     if error.severity == SolcOutputErrorSeverityEnum.ERROR:
                         errored_files.add(path)
-                else:
-                    errors_without_location.add(error)
 
             _out_edge_bfs(cu, errored_files, errored_files)
 
@@ -667,18 +702,6 @@ class LspCompiler:
                     )
             except Exception:
                 pass
-
-        for error in errors_without_location:
-            if error.severity == SolcOutputErrorSeverityEnum.ERROR:
-                error_type = MessageType.ERROR
-            elif error.severity == SolcOutputErrorSeverityEnum.WARNING:
-                error_type = MessageType.WARNING
-            elif error.severity == SolcOutputErrorSeverityEnum.INFO:
-                error_type = MessageType.INFO
-            else:
-                error_type = MessageType.LOG
-            await self.__server.show_message(error.message, error_type)
-            await self.__server.log_message(error.message, error_type)
 
         for path, errors in errors_per_file.items():
             await self.__diagnostic_queue.put((path, errors))
