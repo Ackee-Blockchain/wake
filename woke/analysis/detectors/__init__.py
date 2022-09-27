@@ -4,6 +4,10 @@ from .call_options_not_called import (
     detect_function_call_options_not_called,
     detect_old_gas_value_not_called,
 )
+from .overflow_calldata_tuple_reencoding_bug import (
+    detect_overflow_calldata_tuple_reencoding_function_call,
+    detect_overflow_calldata_tuple_reencoding_function_definition,
+)
 from .reentrancy import detect_reentrancy
 from .unchecked_return_value import detect_unchecked_return_value
 from .unsafe_delegatecall import detect_unsafe_delegatecall
