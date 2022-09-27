@@ -10,7 +10,7 @@ Woke fuzzer is a property-based fuzzer for Solidity smart contracts that allows 
 
 Woke fuzzer is an optional feature of Woke and can be installed with pip:
 ```shell
-pip install abch-woke[fuzzer]
+pip install woke[fuzzer]
 ```
 
 ## Getting started
