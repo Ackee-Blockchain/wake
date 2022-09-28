@@ -290,9 +290,17 @@ class TypeGenerator():
         params: str = ""
         #params_names are later inserted as an argument to the self.transact call
         params_names: str = ""
+        unnamed_params_identifier: int = 1
+        #helper variable for storing parameter name, used because some solidity params can be unnamed, eg. in interfaces
+        param_name: str = ""
         for par in fn.parameters.parameters:
-            params_names += self.get_name(par.name) + ", "
-            params += self.get_name(par.name) + ": " + self.parse_type_and_import(par.type) + ", "
+            if not par.name:
+                param_name: str = "arg" + str(unnamed_params_identifier)
+                unnamed_params_identifier += 1
+            else:
+                param_name = par.name
+            params_names += self.get_name(param_name) + ", "
+            params += self.get_name(param_name) + ": " + self.parse_type_and_import(par.type) + ", "
         params += "params: Optional[TxParams] = None"
         if params_names:
             #remove trailing ", "
