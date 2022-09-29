@@ -4,12 +4,11 @@ import asyncio
 import logging
 import re
 import threading
-from collections import defaultdict, deque
+from collections import deque
 from pathlib import Path, PurePath
 from typing import (
     TYPE_CHECKING,
     AbstractSet,
-    DefaultDict,
     Deque,
     Dict,
     Iterable,
@@ -542,7 +541,7 @@ class LspCompiler:
             return
 
         errors_without_location: Set[SolcOutputError] = set()
-        errors_per_file: DefaultDict[Path, Set[Diagnostic]] = defaultdict(set)
+        errors_per_file: Dict[Path, Set[Diagnostic]] = {}
 
         for cu, solc_output in zip(compilation_units, ret):
             for error in solc_output.errors:
@@ -590,6 +589,8 @@ class LspCompiler:
 
         for cu_index, (cu, solc_output) in enumerate(zip(compilation_units, ret)):
             for file in cu.files:
+                if file not in errors_per_file:
+                    errors_per_file[file] = set()
                 if file in self.__line_indexes:
                     self.__line_indexes.pop(file)
                 if file in self.__opened_files:
