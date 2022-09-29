@@ -1,13 +1,14 @@
 import logging
 from typing import List, Optional, Tuple, Union
 
+import woke.ast.ir.yul as yul
+
 from ...ast.ir.abc import IrAbc
 from ...ast.ir.declaration.abc import DeclarationAbc
 from ...ast.ir.declaration.contract_definition import ContractDefinition
 from ...ast.ir.expression.identifier import Identifier
 from ...ast.ir.expression.member_access import MemberAccess
 from ...ast.ir.meta.identifier_path import IdentifierPath
-from ...ast.ir.statement.inline_assembly import InlineAssembly
 from ...ast.ir.type_name.user_defined_type_name import UserDefinedTypeName
 from ...core.solidity_version import SemanticVersion
 from ..common_structures import (
@@ -184,8 +185,8 @@ async def hover(context: LspContext, params: HoverParams) -> Optional[Hover]:
             return None
         node = part.referenced_declaration
         original_node_location = part.byte_location
-    elif isinstance(node, InlineAssembly):
-        external_reference = node.external_reference_at(byte_offset)
+    elif isinstance(node, yul.Identifier):
+        external_reference = node.external_reference
         if external_reference is None:
             return None
         node = external_reference.referenced_declaration
