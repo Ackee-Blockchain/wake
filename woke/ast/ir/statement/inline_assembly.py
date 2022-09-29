@@ -90,6 +90,7 @@ class ExternalReference:
             node.data, Identifier
         ), f"Expected Identifier, got {type(node.data)}"
         self._yul_identifier = node.data
+        self._yul_identifier._external_reference = self
 
     def _destroy(self, referenced_declaration: DeclarationAbc) -> None:
         referenced_declaration.unregister_reference(self)
