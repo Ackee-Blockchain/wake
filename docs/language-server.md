@@ -42,9 +42,10 @@ The semantics of these configuration options are explained in the [configuration
 
 Woke LSP server implements the command execution provider as specified by the [LSP specification](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workspace_executeCommand). The following commands are supported:
 
-| Command                                 | Description                                                                                                                  |
-|:----------------------------------------|:-----------------------------------------------------------------------------------------------------------------------------|
-| <nobr>`woke.lsp.force_recompile`</nobr> | Force recompile the opened project/files. Useful after modifying files outside the IDE (e.g. after installing npm packages). |
+| Command                                        | Arguments                                                                                                                                                                                  | Description                                                                                                                                     |
+|:-----------------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------|
+| <nobr>`woke.lsp.force_recompile`</nobr>        |                                                                                                                                                                                            | Force recompile the opened project/files. Useful after modifying files outside the IDE (e.g. after installing npm packages).                    |
+| <nobr>`woke.generate.cfg`</nobr>               | `0`: [URI](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#uri) of the document containing the function<br>`1`: canonical name of the function | Generate a control flow graph for the given function or modifier. Returns the source code of the graph in Graphviz (DOT) format.                |
 
 ## Features
 

@@ -21,6 +21,7 @@ from typing import (
 from pydantic.error_wrappers import ValidationError
 
 from ..config import WokeConfig
+from .commands import generate_cfg_handler
 from .common_structures import (
     ConfigurationItem,
     ConfigurationParams,
@@ -28,6 +29,7 @@ from .common_structures import (
     DeleteFilesParams,
     DidChangeConfigurationParams,
     DocumentFilter,
+    DocumentUri,
     ExecuteCommandOptions,
     ExecuteCommandParams,
     InitializedParams,
@@ -114,6 +116,7 @@ ConfigPath = Tuple[Union[str, int], ...]
 
 
 class CommandsEnum(str, Enum):
+    GENERATE_CFG = "woke.generate.cfg"
     LSP_FORCE_RECOMPILE = "woke.lsp.force_recompile"
 
 
@@ -683,13 +686,7 @@ class LspServer:
         if "woke" in params.settings:
             await self._handle_config_change(params.settings["woke"])
 
-    async def _workspace_route(self, params: Any) -> Any:
-        if isinstance(
-            params, (TypeHierarchySupertypesParams, TypeHierarchySubtypesParams)
-        ):
-            uri = params.item.data.uri
-        else:
-            uri = params.text_document.uri
+    def _get_workspace(self, uri: DocumentUri) -> LspContext:
         path = uri_to_path(uri)
         matching_workspaces = []
         for workspace in self.__workspaces.values():
@@ -700,7 +697,17 @@ class LspServer:
             except ValueError:
                 pass
         assert len(matching_workspaces) >= 1
-        context = min(matching_workspaces, key=lambda x: len(x[1].parts))[0]
+        return min(matching_workspaces, key=lambda x: len(x[1].parts))[0]
+
+    async def _workspace_route(self, params: Any) -> Any:
+        if isinstance(
+            params, (TypeHierarchySupertypesParams, TypeHierarchySubtypesParams)
+        ):
+            uri = params.item.data.uri
+        else:
+            uri = params.text_document.uri
+
+        context = self._get_workspace(uri)
 
         if isinstance(params, DocumentLinkParams):
             return await document_link(context, params)
@@ -807,6 +814,16 @@ class LspServer:
             for context in self.__workspaces.values():
                 await context.compiler.force_recompile()
             return None
+        elif command == CommandsEnum.GENERATE_CFG:
+            if params.arguments is None or len(params.arguments) != 2:
+                raise LspError(
+                    ErrorCodes.InvalidParams,
+                    f"Expected 2 arguments for `{CommandsEnum.GENERATE_CFG}` command",
+                )
+            document_uri = DocumentUri(params.arguments[0])
+            canonical_name = str(params.arguments[1])
+            context = self._get_workspace(document_uri)
+            return await generate_cfg_handler(context, document_uri, canonical_name)
         raise LspError(ErrorCodes.InvalidRequest, f"Unknown command: {command}")
 
     async def get_configuration(self) -> None:
