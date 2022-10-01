@@ -87,6 +87,7 @@ class TypeGenerator():
         self.__func_to_overload = set()
 
 
+    #TODO do some prettier init :) 
     def __init_sol_to_py_types(self):
         self.__sol_to_py_lookup[types.Address.__name__] = "AnyAddress"
         self.__sol_to_py_lookup[types.String.__name__] = "str"
@@ -95,7 +96,7 @@ class TypeGenerator():
         self.__sol_to_py_lookup[types.Bool.__name__] = "bool"
         self.__sol_to_py_lookup[types.Int.__name__] = "int"
         #self.__sol_to_py_lookup[types.FixedBytes.__name__] = "fixed_bytes"
-        self.__sol_to_py_lookup[types.Bytes.__name__] = "bytearray"
+        self.__sol_to_py_lookup[types.Bytes.__name__] = "Union[bytearray, bytes]"
         self.__sol_to_py_lookup[types.Contract.__name__] = "contract"
         self.__sol_to_py_lookup[types.Mapping.__name__] = "mapping"
         self.__sol_to_py_lookup[types.UserDefinedValueType.__name__] = "user_defined"
@@ -435,12 +436,12 @@ class TypeGenerator():
 
 
     def generate_func_implementation(self, state_mutability: StateMutability, canonical_name: str, fn_name: str, fn_selector: str, params: str, param_names: str, returns: str):
-        if self.current_source_unit == "hello_world.sol":
-            print(f"canonical_name: {self.current_source_unit + canonical_name}")
+        #if self.current_source_unit == "hello_world.sol":
+        #    print(f"canonical_name: {self.current_source_unit + canonical_name}")
         #default value whether to return tx or the return data - if the function is pure/view the default is to make only a call and return the return data
         if self.current_source_unit + canonical_name in self.__func_to_overload:
-            if self.current_source_unit == "hello_world.sol":
-                print(f"creating dispatch for: {self.current_source_unit + canonical_name}")
+            #if self.current_source_unit == "hello_world.sol":
+            #    print(f"creating dispatch for: {self.current_source_unit + canonical_name}")
             #add the library that enables dispatch to the imports
             self.__imports.add_python_import("from multipledispatch import dispatch")
             types: str = self.get_types_from_func_params(params)
@@ -623,8 +624,8 @@ class TypeGenerator():
                                 self.add_func_overload_if_match(fn, contract)
                                 self.traverse_funcs_in_parent_contracts(fn, contract)
                                 self.traverse_funcs_in_child_contracts(fn, contract)
-            if unit.source_unit_name == "overloading.sol":
-                print(self.__func_to_overload)
+            #if unit.source_unit_name == "overloading.sol":
+            #    print(self.__func_to_overload)
 
 
     def generate_types(self, overwrite: bool = False) -> None:
