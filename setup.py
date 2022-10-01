@@ -16,6 +16,7 @@ install_requires = [
     "rich >= 10.16",
     "pathvalidate >= 2.5.0, < 3",
     "intervaltree >= 3.1",
+    "graphviz >= 0.19",
 ]
 
 # Also: [pyright](https://github.com/microsoft/pyright/) (distributed through npm)

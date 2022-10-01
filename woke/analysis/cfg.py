@@ -4,6 +4,9 @@ import enum
 import logging
 from typing import Dict, List, Optional, Tuple, Union
 
+import graphviz as gv
+import networkx as nx
+
 from woke.ast.enums import GlobalSymbolsEnum
 from woke.ast.ir.declaration.function_definition import FunctionDefinition
 from woke.ast.ir.declaration.modifier_definition import ModifierDefinition
@@ -21,15 +24,6 @@ from woke.ast.ir.statement.revert_statement import RevertStatement
 from woke.ast.ir.statement.try_statement import TryStatement
 from woke.ast.ir.statement.unchecked_block import UncheckedBlock
 from woke.ast.ir.statement.while_statement import WhileStatement
-
-try:
-    import graphviz as gv  # type: ignore
-
-    GRAPHVIZ_AVAILABLE = True
-except ImportError:
-    GRAPHVIZ_AVAILABLE = False
-
-import networkx as nx
 
 logger = logging.getLogger(__name__)
 
@@ -130,8 +124,6 @@ class ControlFlowGraph:
             return nx.has_path(self.__graph, start_block, end_block)
 
     def view(self) -> None:
-        if not GRAPHVIZ_AVAILABLE:
-            raise RuntimeError("Graphviz is not installed.")
 
         g = gv.Digraph(self.__declaration.name)
         g.attr("node", shape="box")
