@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import asyncio
+import difflib
 import logging
 import re
 import threading
 from collections import deque
+from functools import lru_cache
 from pathlib import Path, PurePath
 from typing import (
     TYPE_CHECKING,
@@ -118,6 +120,7 @@ class LspCompiler:
     __force_compile_files: Set[Path]
     __compiler: SolidityCompiler
     __output_contents: Dict[Path, VersionedFile]
+    __last_successful_compilation_contents: Dict[Path, VersionedFile]
     __interval_trees: Dict[Path, IntervalTree]
     __source_units: Dict[Path, SourceUnit]
     __line_indexes: Dict[Path, List[Tuple[bytes, int]]]
@@ -146,6 +149,7 @@ class LspCompiler:
         self.__source_units = {}
         self.__line_indexes = {}
         self.__output_contents = dict()
+        self.__last_successful_compilation_contents = dict()
         self.__output_ready = asyncio.Event()
         self.__perform_files_discovery = perform_files_discovery
 
@@ -172,6 +176,26 @@ class LspCompiler:
     @property
     def source_units(self) -> Dict[Path, SourceUnit]:
         return self.__source_units
+
+    @lru_cache(maxsize=128)
+    def _compute_diff_interval_tree(
+        self, a: VersionedFile, b: VersionedFile
+    ) -> IntervalTree:
+        seq_matcher = difflib.SequenceMatcher(None, a.text, b.text)
+        interval_tree = IntervalTree()
+        for tag, i1, i2, j1, j2 in seq_matcher.get_opcodes():
+            if tag == "equal":
+                continue
+            interval_tree.addi(i1, i2 + 1, (tag, j1, j2 + 1))
+        return interval_tree
+
+    def get_last_successful_compilation(self, path: Path) -> Optional[IntervalTree]:
+        if path not in self.__last_successful_compilation_contents:
+            return None
+        return self._compute_diff_interval_tree(
+            self.__last_successful_compilation_contents[path],
+            self.get_compiled_file(path),
+        )
 
     async def add_change(
         self,
@@ -652,6 +676,17 @@ class LspCompiler:
                     self.__ir_reference_resolver.run_destroy_callbacks(path)
                     self.__source_units[path] = SourceUnit(init, ast)
                     self.__interval_trees[path] = interval_tree
+
+                    if path in self.__opened_files:
+                        self.__last_successful_compilation_contents[
+                            path
+                        ] = self.__opened_files[path]
+                    else:
+                        self.__last_successful_compilation_contents[
+                            path
+                        ] = VersionedFile(
+                            cu.graph.nodes[PurePath(source_unit_name)]["content"], None
+                        )
 
             self.__ir_reference_resolver.run_post_process_callbacks(
                 CallbackParams(
