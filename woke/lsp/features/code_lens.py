@@ -1,5 +1,8 @@
 import logging
-from typing import Any, Iterable, List, Optional, Tuple, Union
+from pathlib import Path
+from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Tuple, Union
+
+from intervaltree import IntervalTree
 
 from woke.ast.ir.declaration.abc import DeclarationAbc
 from woke.ast.ir.declaration.function_definition import FunctionDefinition
@@ -90,6 +93,63 @@ def _resolve_declaration(declaration: DeclarationAbc, context: LspContext) -> in
     return refs_count
 
 
+class CodeLensCache(NamedTuple):
+    original: CodeLens
+    original_byte_range: Tuple[int, int]
+    validity_byte_range: Tuple[int, int]
+
+
+_code_lens_cache: Dict[Path, List[CodeLensCache]] = {}
+
+
+def _get_code_lens_from_cache(
+    context: LspContext, path: Path, tree_diff: IntervalTree
+) -> Optional[List[CodeLens]]:
+    if path not in _code_lens_cache:
+        return None
+    ret = []
+    for cached_code_lens in _code_lens_cache[path]:
+        changes_at_range = tree_diff[
+            cached_code_lens.validity_byte_range[
+                0
+            ] : cached_code_lens.validity_byte_range[1]
+        ]
+        start, end = cached_code_lens.original_byte_range
+        if len(changes_at_range) > 0:
+            # changes at range, invalidate code lens
+            continue
+        if start == 0:
+            ret.append(cached_code_lens.original)
+        else:
+            # recompute code lens range
+            changes_before_range = tree_diff[0:start]
+            byte_offset = 0
+            tag: str
+            j1: int
+            j2: int
+            for change in changes_before_range:
+                tag, j1, j2 = change.data
+                if tag == "insert":
+                    byte_offset += j2 - j1 - 1
+                elif tag == "delete":
+                    byte_offset -= change.end - change.begin - 1
+                elif tag == "replace":
+                    byte_offset += j2 - j1 - (change.end - change.begin)
+                else:
+                    raise ValueError(f"Unknown tag {tag}")
+            ret.append(
+                CodeLens(
+                    range=context.compiler.get_range_from_byte_offsets(
+                        path, (start + byte_offset, end + byte_offset)
+                    ),
+                    command=cached_code_lens.original.command,
+                    data=cached_code_lens.original.data,
+                )
+            )
+
+    return ret
+
+
 async def code_lens(
     context: LspContext, params: CodeLensParams
 ) -> Union[None, List[CodeLens]]:
@@ -101,10 +161,15 @@ async def code_lens(
     path = uri_to_path(params.text_document.uri).resolve()
 
     if path not in context.compiler.source_units:
-        return None
+        tree_diff = context.compiler.get_last_successful_compilation(path)
+        if tree_diff is None:
+            return None
+        return _get_code_lens_from_cache(context, path, tree_diff)
 
     code_lens = []
     source_unit = context.compiler.source_units[path]
+
+    _code_lens_cache[path] = []
 
     for declaration in source_unit.declarations_iter():
         refs_count = _resolve_declaration(declaration, context)
@@ -121,6 +186,11 @@ async def code_lens(
                     arguments=None,
                 ),
                 data=None,
+            )
+        )
+        _code_lens_cache[path].append(
+            CodeLensCache(
+                code_lens[-1], declaration.name_location, declaration.name_location
             )
         )
     return code_lens
