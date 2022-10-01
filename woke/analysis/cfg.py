@@ -41,6 +41,7 @@ class TransitionCondition(str, enum.Enum):
 
 class ControlFlowGraph:
     __graph: nx.DiGraph
+    __gv_graph: Optional[gv.Digraph]
     __declaration: Union[FunctionDefinition, ModifierDefinition]
     __statements_lookup: Dict[StatementAbc, CfgBlock]
     __start_block: CfgBlock
@@ -52,6 +53,7 @@ class ControlFlowGraph:
         self.__declaration = declaration
 
         self.__graph = nx.DiGraph()
+        self.__gv_graph = None
         self.__start_block = CfgBlock()
         self.__graph.add_node(self.__start_block)
         self.__end_block = CfgBlock()
@@ -123,8 +125,9 @@ class ControlFlowGraph:
         else:
             return nx.has_path(self.__graph, start_block, end_block)
 
-    def view(self) -> None:
-
+    def to_dot(self) -> str:
+        if self.__gv_graph is not None:
+            return self.__gv_graph.source
         g = gv.Digraph(self.__declaration.name)
         g.attr("node", shape="box")
 
@@ -139,6 +142,27 @@ class ControlFlowGraph:
                 label = condition[0]
             g.edge(str(from_.id), str(to.id), label=label)
 
+        self.__gv_graph = g
+        return g.source
+
+    def view(self) -> None:
+        if self.__gv_graph is not None:
+            self.__gv_graph.view()
+        g = gv.Digraph(self.__declaration.name)
+        g.attr("node", shape="box")
+
+        for node in self.__graph.nodes:
+            g.node(str(node.id), label=str(node))
+
+        for from_, to, data in self.__graph.edges.data():
+            condition = data["condition"]
+            if condition[1] is not None:
+                label = f"{condition[1].source} {condition[0]}"
+            else:
+                label = condition[0]
+            g.edge(str(from_.id), str(to.id), label=label)
+
+        self.__gv_graph = g
         g.view()
 
 
