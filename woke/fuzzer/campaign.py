@@ -7,7 +7,7 @@ from typing import Callable, Counter, List, Optional, Tuple
 
 import brownie
 
-from woke.fuzzer.coverage import Coverage
+from woke.fuzzer.coverage import CoverageProvider
 
 from .utils import partition
 
@@ -28,7 +28,7 @@ class Campaign:
         self,
         sequences_count: int,
         flows_count: int,
-        coverage: Coverage,
+        cov_provider: Optional[CoverageProvider],
         coverage_conn: multiprocessing.connection.Connection,
         run_for_seconds: Optional[int] = None,
         dry_run: bool = False,
@@ -108,16 +108,14 @@ class Campaign:
                         inv[0]()
                         del inv
 
-                if j % 20 == 0 or j == sequences_count - 1:
+                if cov_provider and (j % 5 == 0 or j == sequences_count - 1):
                     asyncio.run(
-                        coverage.update_coverage(
+                        cov_provider.update_coverage(
                             {seq.contract.address.lower(): seq.contract._name}
                         )
                     )
                     if coverage_conn:
-                        coverage_conn.send(
-                            coverage.get_contract_coverage(seq.contract._name)
-                        )
+                        coverage_conn.send(cov_provider.get_coverage())
 
             del invs, flows
             # point_coverage += seq.point_coverage

@@ -1,4 +1,6 @@
+import copy
 import inspect
+import json
 import logging
 import multiprocessing
 import multiprocessing.connection
@@ -10,7 +12,7 @@ import sys
 import types
 from contextlib import closing, redirect_stderr, redirect_stdout
 from pathlib import Path
-from typing import Callable, Iterable
+from typing import Callable, Dict, Iterable, Optional
 
 import brownie
 import rich.progress
@@ -26,14 +28,13 @@ from tblib import pickling_support
 
 from woke.cli.console import console
 from woke.config import WokeConfig
-from woke.fuzzer.coverage import ContractCoverage, Coverage
+from woke.fuzzer.coverage import Coverage, CoverageProvider, get_merged_ide_coverage
 from woke.json_rpc import communicator
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
-
-def _setup(port: int, network_id: str, project) -> Coverage:
+def _setup(
+    port: int, network_id: str, coverage: Optional[Coverage]
+) -> Optional[CoverageProvider]:
     brownie.reverts = RevertContextManager
     active_network = CONFIG.set_active_network(network_id)
 
@@ -47,9 +48,11 @@ def _setup(port: int, network_id: str, project) -> Coverage:
 
     rpc.launch(active_network["cmd"], **cmd_settings)
 
-    cov = Coverage(communicator.JsonRpcCommunicator("http://localhost", port))
-
-    return cov
+    if coverage:
+        return CoverageProvider(
+            communicator.JsonRpcCommunicator("http://localhost", port), coverage
+        )
+    return None
 
 
 def _attach_debugger() -> None:
@@ -75,12 +78,12 @@ def _run_core(
     err_child_conn: multiprocessing.connection.Connection,
     cov_child_conn: multiprocessing.connection.Connection,
     network_id: str,
+    coverage: Optional[Coverage],
 ):
     print(f"Using seed '{random_seed.hex()}' for process #{index}")
 
     project = brownie.project.load()
-    coverage = _setup(port, network_id, project)
-
+    cov_provider = _setup(port, network_id, coverage)
     brownie.chain.reset()
 
     args = []
@@ -101,8 +104,8 @@ def _run_core(
             args.append(brownie.web3)
         elif arg in project.keys():
             args.append(project[arg])
-        elif arg == "coverage":
-            args.append(coverage)
+        elif arg == "cov_provider":
+            args.append(cov_provider)
         elif arg == "cov_conn":
             args.append(cov_child_conn)
         else:
@@ -126,6 +129,7 @@ def _run(
     err_child_conn: multiprocessing.connection.Connection,
     cov_child_conn: multiprocessing.connection.Connection,
     network_id: str,
+    coverage: Optional[Coverage],
 ):
     pickling_support.install()
     random.seed(random_seed)
@@ -145,6 +149,7 @@ def _run(
                     err_child_conn,
                     cov_child_conn,
                     network_id,
+                    coverage,
                 )
         else:
             with log_file.open("w") as f, redirect_stdout(f), redirect_stderr(f):
@@ -157,6 +162,7 @@ def _run(
                     err_child_conn,
                     cov_child_conn,
                     network_id,
+                    coverage,
                 )
     except Exception:
         err_child_conn.send(pickle.dumps(sys.exc_info()))
@@ -182,12 +188,15 @@ def fuzz(
     logs_dir: Path,
     passive: bool,
     network_id: str,
+    cov_proc_num: int,
 ):
+    # logging.basicConfig(filename=logs_dir / sanitize_filename("master.log"), force=True)
     random_seeds = list(seeds)
     if len(random_seeds) < process_count:
         for i in range(process_count - len(random_seeds)):
             random_seeds.append(os.urandom(8))
 
+    coverage = Coverage()
     processes = dict()
     for i, seed in zip(range(process_count), random_seeds):
         console.print(f"Using seed '{seed.hex()}' for process #{i}")
@@ -198,6 +207,8 @@ def fuzz(
         log_path = logs_dir / sanitize_filename(
             f"{fuzz_test.__module__}.{fuzz_test.__name__}_{i}.ansi"
         )
+
+        proc_cov = copy.deepcopy(coverage) if i < cov_proc_num else None
 
         p = multiprocessing.Process(
             target=_run,
@@ -212,6 +223,7 @@ def fuzz(
                 err_child_con,
                 cov_child_conn,
                 network_id,
+                proc_cov,
             ),
         )
         processes[i] = (p, finished_event, err_parent_conn, cov_parent_conn)
@@ -223,8 +235,7 @@ def fuzz(
         "[green]{task.fields[thr_rem]}[yellow] "
         "processes remaining",
     ) as progress:
-        summed_coverage = {}
-        coverage_tasks = {}
+        coverages: Dict[int, Coverage] = {}
 
         if passive:
             progress.stop()
@@ -278,22 +289,17 @@ def fuzz(
                     if i == 0:
                         progress.start()
                 if cov_parent_conn.poll():
-                    contract_cov: ContractCoverage = cov_parent_conn.recv()
-                    fn_cov = {fn: [] for fn in set(contract_cov.function_instr.keys())}
-                    for (
-                        fn,
-                        covered,
-                    ) in contract_cov.get_function_instr_coverage().items():
-                        fn_cov[fn].append(covered)
-                    for (
-                        fn,
-                        covered,
-                    ) in contract_cov.get_function_branch_coverage().items():
-                        fn_cov[fn].append(covered)
-                    for fn, cov in fn_cov.items():
-                        logger.info(
-                            f"{fn} instr: {cov[0][0]}/{cov[0][1]}, branch: {cov[1][0]}/{cov[1][1]}"
-                        )
+                    coverage: Coverage = cov_parent_conn.recv()
+                    coverages[i] = coverage
+                    res = get_merged_ide_coverage(list(coverages.values()))
+                    if res:
+                        ide_cov, ide_cov_per_trans = res
+                        with open("woke-coverage.cov", "w") as f:
+                            f.write(json.dumps(ide_cov, indent=4, sort_keys=True))
+                        with open("woke-coverage-per-trans.cov", "w") as f:
+                            f.write(
+                                json.dumps(ide_cov_per_trans, indent=4, sort_keys=True)
+                            )
             for i in to_be_removed:
                 processes.pop(i)
         progress.update(task, description="Finished", completed=1)
