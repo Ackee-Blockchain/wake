@@ -121,12 +121,9 @@ class Contract:
     address: AnyAddress
     _contract: web3.contract.Contract
 
-    def __init__(self, addr: AnyAddress,  contract: Optional[web3.contract.Contract]):
+    def __init__(self, addr: AnyAddress):
         self.address = addr
-        if not contract:
-            self._contract = dev_interface.create_factory(addr, self.abi)
-        else:
-            self._contract = contract
+        self._contract = dev_interface.create_factory(addr, self.abi)
 
     @classmethod
     #TODO add option to deploy using a different instance of web3
@@ -135,7 +132,7 @@ class Contract:
     ) -> web3.contract.Contract:
         contract = dev_interface.deploy(cls.abi, cls.bytecode, arguments)
         print(f"the cls is: {cls}")
-        return cls(contract.address, contract)
+        return cls(contract.address)
 
 
     def transact(self, selector: HexStr, arguments: Iterable, params: TxParams, return_tx: bool, request_type: RequestType) -> Any:
