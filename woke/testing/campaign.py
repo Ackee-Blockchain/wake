@@ -6,7 +6,7 @@ from typing import Callable, Counter, Iterable, List, Optional, Tuple
 
 from woke.testing.core import ChainInterface, default_chain
 
-from .coverage import Coverage
+from .coverage import CoverageProvider
 from .utils import partition
 
 Methods = List[Tuple[Callable, str]]
@@ -94,7 +94,7 @@ class Campaign:
         run_for_seconds: Optional[int] = None,
         dry_run: bool = False,
         coverage: Optional[
-            Tuple[Coverage, multiprocessing.connection.Connection]
+            Tuple[CoverageProvider, multiprocessing.connection.Connection]
         ] = None,
     ):
         init_timestamp = datetime.now()
@@ -135,7 +135,7 @@ class Campaign:
                             inv[0]()
                             del inv
 
-                    if j % 20 == 0 or j == len(generated_flows) - 1:
+                    if j % 5 == 0 or j == len(generated_flows) - 1:
                         if coverage is not None:
                             coverage[0].update_coverage()
                             coverage[1].send(coverage[0].get_coverage())
