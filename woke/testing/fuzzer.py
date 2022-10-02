@@ -1,4 +1,6 @@
+import copy
 import inspect
+import json
 import logging
 import multiprocessing
 import multiprocessing.connection
@@ -13,7 +15,7 @@ import types
 from contextlib import closing, redirect_stderr, redirect_stdout
 from pathlib import Path
 from time import sleep
-from typing import Callable, Dict, Iterable
+from typing import Callable, Dict, Iterable, Optional
 from urllib.error import URLError
 
 import rich.progress
@@ -27,10 +29,7 @@ from tblib import pickling_support
 from woke.cli.console import console
 from woke.config import WokeConfig
 from woke.testing.core import default_chain
-from woke.testing.coverage import ContractCoverage, Coverage
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+from woke.testing.coverage import Coverage, CoverageProvider, get_merged_ide_coverage
 
 
 def _setup(port: int, network_id: str) -> subprocess.Popen:
@@ -77,6 +76,7 @@ def _run_core(
     finished_event: multiprocessing.synchronize.Event,
     err_child_conn: multiprocessing.connection.Connection,
     cov_child_conn: multiprocessing.connection.Connection,
+    coverage: Optional[Coverage],
 ):
     print(f"Using seed '{random_seed.hex()}' for process #{index}")
 
@@ -88,9 +88,17 @@ def _run_core(
     args = []
     for arg in inspect.getfullargspec(fuzz_test).args:
         if arg == "coverage":
-            args.append(
-                (Coverage(default_chain.dev_chain.get_block_number()), cov_child_conn)
-            )
+            if coverage is not None:
+                args.append(
+                    (
+                        CoverageProvider(
+                            coverage, default_chain.dev_chain.get_block_number()
+                        ),
+                        cov_child_conn,
+                    )
+                )
+            else:
+                args.append(None)
         else:
             raise ValueError(
                 f"Unable to set value for '{arg}' argument in '{fuzz_test.__name__}' function."
@@ -113,6 +121,7 @@ def _run(
     err_child_conn: multiprocessing.connection.Connection,
     cov_child_conn: multiprocessing.connection.Connection,
     network_id: str,
+    coverage: Optional[Coverage],
 ):
     pickling_support.install()
     random.seed(random_seed)
@@ -146,6 +155,7 @@ def _run(
                     finished_event,
                     err_child_conn,
                     cov_child_conn,
+                    coverage,
                 )
         else:
             with log_file.open("w") as f, redirect_stdout(f), redirect_stderr(f):
@@ -156,6 +166,7 @@ def _run(
                     finished_event,
                     err_child_conn,
                     cov_child_conn,
+                    coverage,
                 )
     except Exception:
         err_child_conn.send(pickle.dumps(sys.exc_info()))
@@ -182,12 +193,14 @@ def fuzz(
     logs_dir: Path,
     passive: bool,
     network_id: str,
+    cov_proc_num: int,
 ):
     random_seeds = list(seeds)
     if len(random_seeds) < process_count:
         for i in range(process_count - len(random_seeds)):
             random_seeds.append(os.urandom(8))
 
+    coverage = Coverage()
     processes = dict()
     for i, seed in zip(range(process_count), random_seeds):
         console.print(f"Using seed '{seed.hex()}' for process #{i}")
@@ -198,6 +211,8 @@ def fuzz(
         log_path = logs_dir / sanitize_filename(
             f"{fuzz_test.__module__}.{fuzz_test.__name__}_{i}.ansi"
         )
+
+        proc_cov = copy.deepcopy(coverage) if i < cov_proc_num else None
 
         p = multiprocessing.Process(
             target=_run,
@@ -212,6 +227,7 @@ def fuzz(
                 err_child_con,
                 cov_child_conn,
                 network_id,
+                proc_cov,
             ),
         )
         processes[i] = (p, finished_event, err_parent_conn, cov_parent_conn)
@@ -223,8 +239,7 @@ def fuzz(
         "[green]{task.fields[thr_rem]}[yellow] "
         "processes remaining",
     ) as progress:
-        summed_coverage = {}
-        coverage_tasks = {}
+        coverages: Dict[int, Coverage] = {}
 
         if passive:
             progress.stop()
@@ -278,24 +293,16 @@ def fuzz(
                     if i == 0:
                         progress.start()
                 if cov_parent_conn.poll():
-                    coverage: Dict[str, ContractCoverage] = cov_parent_conn.recv()
-                    for contract_fqn, contract_cov in coverage.items():
-                        fn_cov = {
-                            fn: [] for fn in set(contract_cov.function_instr.keys())
-                        }
-                        for (
-                            fn,
-                            covered,
-                        ) in contract_cov.get_function_instr_coverage().items():
-                            fn_cov[fn].append(covered)
-                        for (
-                            fn,
-                            covered,
-                        ) in contract_cov.get_function_branch_coverage().items():
-                            fn_cov[fn].append(covered)
-                        for fn, cov in fn_cov.items():
-                            logger.info(
-                                f"{fn} instr: {cov[0][0]}/{cov[0][1]}, branch: {cov[1][0]}/{cov[1][1]}"
+                    coverage: Coverage = cov_parent_conn.recv()
+                    coverages[i] = coverage
+                    res = get_merged_ide_coverage(list(coverages.values()))
+                    if res:
+                        ide_cov, ide_cov_per_trans = res
+                        with open("woke-coverage.cov", "w") as f:
+                            f.write(json.dumps(ide_cov, indent=4, sort_keys=True))
+                        with open("woke-coverage-per-trans.cov", "w") as f:
+                            f.write(
+                                json.dumps(ide_cov_per_trans, indent=4, sort_keys=True)
                             )
             for i in to_be_removed:
                 processes.pop(i)
