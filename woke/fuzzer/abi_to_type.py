@@ -226,9 +226,6 @@ class TypeGenerator():
         self.__imports.add_python_import("from __future__ import annotations")
         if contract.kind == ContractKind.CONTRACT and not contract.abstract:
             self.generate_deploy_func(contract)
-        elif contract.kind == ContractKind.INTERFACE or contract.abstract == True:
-            self.add_str_to_types(1, "def __init__(self, address: AnyAddress):", 1)
-            self.add_str_to_types(2, "Contract.__init__(self, address, None)", 1)
         self.add_str_to_types(0, "", 1)
 
 
