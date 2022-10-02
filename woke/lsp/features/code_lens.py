@@ -5,6 +5,7 @@ from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Tuple, Union
 from intervaltree import IntervalTree
 
 from woke.ast.ir.declaration.abc import DeclarationAbc
+from woke.ast.ir.declaration.contract_definition import ContractDefinition
 from woke.ast.ir.declaration.function_definition import FunctionDefinition
 from woke.ast.ir.declaration.modifier_definition import ModifierDefinition
 from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
@@ -214,5 +215,31 @@ async def code_lens(
                     data=None,
                 )
             )
-            _code_lens_cache[path].append(CodeLensCache(code_lens[-1], declaration.name_location, declaration.byte_location))
+            _code_lens_cache[path].append(
+                CodeLensCache(
+                    code_lens[-1], declaration.name_location, declaration.byte_location
+                )
+            )
+        elif isinstance(declaration, ContractDefinition):
+            code_lens.append(
+                CodeLens(
+                    range=context.compiler.get_range_from_byte_offsets(
+                        declaration.file, declaration.name_location
+                    ),
+                    command=Command(
+                        title="Inheritance graph",
+                        command="Tools-for-Solidity.generate.inheritance_graph",
+                        arguments=[
+                            params.text_document.uri,
+                            declaration.canonical_name,
+                        ],
+                    ),
+                    data=None,
+                )
+            )
+            _code_lens_cache[path].append(
+                CodeLensCache(
+                    code_lens[-1], declaration.name_location, declaration.name_location
+                )
+            )
     return code_lens
