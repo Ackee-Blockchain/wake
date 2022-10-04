@@ -1,10 +1,8 @@
 from abc import ABC, abstractmethod
+from enum import IntEnum
+from typing import Any, Callable, Dict, List
 
 from eth_typing import HexStr
-from typing import Callable, List, Dict, Any
-
-from enum import IntEnum
-
 from web3 import Web3
 
 from woke.fuzzer.abi_to_type import RequestType
@@ -20,8 +18,8 @@ class DevChainABC(ABC):
     @abstractmethod
     def retrieve_transaction_data(
         self, params: List, tx_hash: Any, request_type: RequestType
-    ) -> Dict:
-        raise NotImplementedError
+    ) -> str:
+        ...
 
 
 class HardhatDevChain(DevChainABC):
@@ -30,7 +28,7 @@ class HardhatDevChain(DevChainABC):
 
     def retrieve_transaction_data(
         self, params: List, tx_hash: Any, request_type: RequestType
-    ) -> Dict:
+    ) -> str:
         output = None
         if request_type == RequestType.DEFAULT:
             # output = self.w3.eth.debug_trace_transaction(HexStr(tx_hash.hex()))
@@ -40,8 +38,7 @@ class HardhatDevChain(DevChainABC):
             # output = self.__w3.eth.trace_transaction(HexStr(tx_hash.hex()))
             output = output.returnValue
         else:
-            # TODO throw exception
-            pass
+            raise NotImplementedError()
         return output
 
 
@@ -51,7 +48,7 @@ class AnvilDevChain(DevChainABC):
 
     def retrieve_transaction_data(
         self, params: List, tx_hash: Any, request_type: RequestType
-    ) -> Dict:
+    ) -> str:
         output = None
         if request_type == RequestType.DEFAULT:
             output = self.w3.eth.trace_transaction(HexStr(tx_hash.hex()))  # type: ignore
@@ -59,7 +56,5 @@ class AnvilDevChain(DevChainABC):
                 output = self.w3.eth.trace_transaction(HexStr(tx_hash.hex()))  # type: ignore
             output = output[0].result.output[2:]
         else:
-            # TODO trow exception
-            print(f"request_type: {request_type}")
-            pass
+            raise NotImplementedError()
         return output

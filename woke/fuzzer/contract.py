@@ -1,21 +1,19 @@
-from multiprocessing.sharedctypes import Value
-from typing import Any, Iterable, Optional, Type, overload
+import time
 from enum import IntEnum
+from multiprocessing.sharedctypes import Value
+from typing import Any, Iterable, Optional, Sequence, Type, Union, overload
 
 import eth_abi
+import web3._utils.empty
 import web3.contract
-from eth_typing import HexStr, AnyAddress
+from eth_typing import Address, AnyAddress, ChecksumAddress, HexStr
 from web3 import Web3
 from web3._utils.abi import get_abi_output_types
-from web3._utils.compat import TypedDict
-from web3.types import TxParams, RPCEndpoint
 from web3.method import Method
+from web3.types import RPCEndpoint, TxParams
 
 from woke.fuzzer.abi_to_type import RequestType
-
-import time
-
-from woke.fuzzer.development_chains import DevChainABC, AnvilDevChain, HardhatDevChain
+from woke.fuzzer.development_chains import AnvilDevChain, DevChainABC, HardhatDevChain
 
 
 class NetworkKind(IntEnum):
@@ -27,12 +25,14 @@ class NetworkKind(IntEnum):
 
 class Abi:
     @classmethod
-    def encode(self, arguments: Iterable, types: Iterable) -> HexStr:
-        return eth_abi.encode(types, arguments)
+    def encode(cls, arguments: Iterable, types: Iterable) -> bytes:
+        return eth_abi.encode(  # pyright: ignore[reportPrivateImportUsage]
+            types, arguments
+        )
 
     @classmethod
-    def decode(self, data: bytes, types: Iterable) -> Any:
-        return eth_abi.decode(types, data)
+    def decode(cls, data: bytes, types: Iterable) -> Any:
+        return eth_abi.decode(types, data)  # pyright: ignore[reportPrivateImportUsage]
 
 
 # global interface for communicating with the devchain
@@ -103,7 +103,9 @@ class DevchainInterface:
         if not params:
             params = {}
         # if no from address is specified, use the default account
-        if not "from" in params:
+        if "from" not in params:
+            if isinstance(self.__w3.eth.default_account, web3._utils.empty.Empty):
+                raise ValueError("No default account set")
             params["from"] = self.__w3.eth.default_account
         # set the to address to the value of contract on which the fallback function is called
         params["to"] = contract.address
@@ -134,8 +136,12 @@ class DevchainInterface:
         output = self.dev_chain.retrieve_transaction_data([], tx_hash, request_type)
         return eth_abi.abi.decode(output_abi, bytes.fromhex(output))  # type: ignore
 
-    def create_factory(self, addr: AnyAddress, abi) -> web3.contract.Contract:
-        return self.__w3.eth.contract(abi=abi, address=addr)
+    def create_factory(
+        self, addr: Union[Address, ChecksumAddress], abi
+    ) -> web3.contract.Contract:
+        contract = self.__w3.eth.contract(abi=abi, address=addr)
+        assert isinstance(contract, web3.contract.Contract)
+        return contract
 
 
 dev_interface = DevchainInterface(8545)
@@ -144,10 +150,10 @@ dev_interface = DevchainInterface(8545)
 class Contract:
     abi: Any
     bytecode: HexStr
-    address: AnyAddress
+    address: Union[Address, ChecksumAddress]
     _contract: web3.contract.Contract
 
-    def __init__(self, addr: AnyAddress):
+    def __init__(self, addr: Union[Address, ChecksumAddress]):
         self.address = addr
         self._contract = dev_interface.create_factory(addr, self.abi)
 
@@ -155,9 +161,8 @@ class Contract:
     # TODO add option to deploy using a different instance of web3
     def deploy(
         cls, arguments: Iterable, params: Optional[TxParams] = None
-    ) -> web3.contract.Contract:
+    ) -> "Contract":
         contract = dev_interface.deploy(cls.abi, cls.bytecode, arguments)
-        print(f"the cls is: {cls}")
         return cls(contract.address)
 
     def transact(
@@ -179,14 +184,14 @@ class Contract:
     # TODO handle return data
     def fallback_handler(
         self,
-        arguments: Iterable,
+        arguments: Sequence,
         params: TxParams,
         return_tx: bool,
         request_type: RequestType,
     ) -> Any:
         return dev_interface.fallback(
             self._contract,
-            arguments[0] if arguments else None,
+            arguments[0] if arguments else b"",
             params,
             return_tx,
             request_type,
