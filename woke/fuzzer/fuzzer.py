@@ -251,9 +251,7 @@ def fuzz(
                         if not passive:
                             progress.start()
 
-                    progress.update(
-                        task, thr_rem=len(processes) - len(to_be_removed)
-                    )
+                    progress.update(task, thr_rem=len(processes) - len(to_be_removed))
                     if i == 0:
                         progress.start()
             for i in to_be_removed:
