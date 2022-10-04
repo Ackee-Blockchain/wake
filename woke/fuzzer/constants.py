@@ -1,7 +1,7 @@
-#tab space width for indentation
+# tab space width for indentation
 TAB_WIDTH = 4
 
-#TODO move to constants file
+# TODO move to constants file
 DEFAULT_IMPORTS: str = """
 import random 
 from dataclasses import dataclass 
