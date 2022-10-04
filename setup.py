@@ -17,15 +17,13 @@ install_requires = [
     "pathvalidate >= 2.5.0, < 3",
     "intervaltree >= 3.1",
     "graphviz >= 0.19",
+    "web3 >= 6.0.0b4",
+    "tblib >= 1.7.0, < 2",
+    "ipdb",
 ]
 
 # Also: [pyright](https://github.com/microsoft/pyright/) (distributed through npm)
 extras_require = dict(
-    fuzzer=[
-        "web3 >= 6.0.0b4",
-        "tblib >= 1.7.0, < 2",
-        "ipdb",
-    ],
     tests=[
         "pytest >= 6.2.5, < 7.0",
         "pytest-asyncio >= 0.17, < 1",
