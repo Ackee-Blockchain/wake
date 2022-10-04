@@ -1,51 +1,46 @@
 from __future__ import annotations
 
+import asyncio
+import json
+import keyword
+import shutil
+import struct
 from abc import ABC
 from ast import parse
-import asyncio
 from distutils.command import config
 from distutils.command.clean import clean
-from genericpath import exists
+from enum import Enum
 from multiprocessing.dummy import Array
 from pathlib import Path, PurePath
 from re import A
-import shutil
-from pathlib import Path, PurePath
-import struct
-from typing import Dict, List, Mapping, Set, Tuple, Union
-from enum import Enum
+from typing import Dict, Iterable, List, Mapping, Set, Tuple, Union
 
 import click
 from click.core import Context
+from genericpath import exists
 from intervaltree import IntervalTree
 from rich.panel import Panel
 
-import json
-import keyword
-
+import woke.ast.types as types
 from woke.ast.enums import *
+from woke.ast.ir.declaration.enum_definition import EnumDefinition
+from woke.ast.ir.declaration.struct_definition import StructDefinition
+from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
 from woke.ast.nodes import AstSolc
 from woke.compile import SolcOutput, SolidityCompiler
 from woke.compile.solc_frontend.input_data_model import SolcOutputSelectionEnum
 from woke.config import WokeConfig
 
 from ..ast.ir.declaration.contract_definition import ContractDefinition
-from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
-from woke.ast.ir.declaration.struct_definition import StructDefinition
-from woke.ast.ir.declaration.enum_definition import EnumDefinition
+from ..ast.ir.declaration.function_definition import FunctionDefinition
 from ..ast.ir.meta.source_unit import SourceUnit
 from ..ast.ir.reference_resolver import CallbackParams, ReferenceResolver
 from ..ast.ir.utils import IrInitTuple
 from ..cli.console import console
-from woke.ast.enums import *
-
-import woke.ast.types as types
-from ..ast.ir.declaration.function_definition import FunctionDefinition
 from ..compile.compilation_unit import CompilationUnit
 from ..compile.solc_frontend import SolcOutputErrorSeverityEnum
 from ..utils.file_utils import is_relative_to
-
-from .constants import TAB_WIDTH, DEFAULT_IMPORTS
+from .constants import DEFAULT_IMPORTS, TAB_WIDTH
 
 
 class RequestType(str, Enum):
@@ -68,7 +63,7 @@ class TypeGenerator:
     __name_sanitizer: NameSanitizer
     __current_source_unit: str
     __pytypes_dir: Path
-    __sol_to_py_lookup: Dict[type, str]
+    __sol_to_py_lookup: Dict[str, str]
     # set of function names which should be overloaded
     __func_to_overload: Set[str]
 
@@ -163,7 +158,6 @@ class TypeGenerator:
             for source_unit_name, info in output.sources.items():
                 path = cu.source_unit_name_to_path(PurePath(source_unit_name))
 
-                interval_trees[path] = IntervalTree()
                 ast = AstSolc.parse_obj(info.ast)
 
                 reference_resolver.index_nodes(ast, path, cu.hash)
@@ -171,6 +165,7 @@ class TypeGenerator:
                 if path in processed_files:
                     continue
                 processed_files.add(path)
+                interval_trees[path] = IntervalTree()
 
                 assert source_unit_name in output.contracts
 
@@ -185,7 +180,9 @@ class TypeGenerator:
                 self.__source_units[path] = SourceUnit(init, ast)
 
         reference_resolver.run_post_process_callbacks(
-            CallbackParams(source_units=self.__source_units)
+            CallbackParams(
+                interval_trees=interval_trees, source_units=self.__source_units
+            )
         )
 
     def add_str_to_types(
@@ -221,26 +218,23 @@ class TypeGenerator:
             0, "class " + self.get_name(contract.name) + "(" + base_names + "):", 1
         )
         compilation_info = contract.compilation_info
-        if compilation_info.abi:
-            self.add_str_to_types(1, f"abi = {compilation_info.abi}", 1)
-        if compilation_info.abi and compilation_info.evm.bytecode.opcodes:
-            self.add_str_to_types(
-                1, f'bytecode = "{compilation_info.evm.bytecode.object}"', 2
-            )
-
-        if compilation_info.abi and not compilation_info.evm.bytecode.opcodes:
-            self.add_str_to_types(0, "", 1)
+        assert compilation_info is not None
+        assert compilation_info.abi is not None
+        assert compilation_info.evm is not None
+        assert compilation_info.evm.bytecode is not None
+        assert compilation_info.evm.bytecode.opcodes is not None
+        self.add_str_to_types(1, f"abi = {compilation_info.abi}", 1)
+        self.add_str_to_types(
+            1, f'bytecode = "{compilation_info.evm.bytecode.object}"', 2
+        )
 
         self.__imports.add_python_import("from __future__ import annotations")
         if contract.kind == ContractKind.CONTRACT and not contract.abstract:
             self.generate_deploy_func(contract)
         self.add_str_to_types(0, "", 1)
 
-    def generate_types_enum(self, contract: ContractDefinition) -> None:
-        enums = contract.enums
-
     def generate_types_struct(
-        self, structs: List[StructDefinition], indent: int
+        self, structs: Iterable[StructDefinition], indent: int
     ) -> None:
         for struct in structs:
             self.add_str_to_types(indent, "@dataclass", 1)
@@ -256,7 +250,7 @@ class TypeGenerator:
             self.add_str_to_types(0, "", 2)
 
     # TODO very similar to generate_types_struct -> refactor
-    def generate_types_enum(self, enums: List[EnumDefinition], indent: int) -> None:
+    def generate_types_enum(self, enums: Iterable[EnumDefinition], indent: int) -> None:
         self.__imports.add_python_import("from enum import IntEnum")
         for enum in enums:
             self.add_str_to_types(
@@ -273,34 +267,33 @@ class TypeGenerator:
     # parses the expr to string
     # optionaly generates an import
     def parse_type_and_import(self, expr: types.TypeAbc) -> str:
-        name = expr.__class__.__name__
         parsed: str = ""
-        if name == "Struct":
+        if isinstance(expr, types.Struct):
             parsed += self.get_name(expr.name)
             self.__imports.generate_struct_import(expr)
-        elif name == "Array":
+        elif isinstance(expr, types.Array):
             parsed += "List[" + self.parse_type_and_import(expr.base_type) + "]"
-        elif name == "UInt":
+        elif isinstance(expr, types.UInt):
             self.__imports.add_primitive_type(
-                self.__sol_to_py_lookup[name + str(expr.bits_count)]
+                self.__sol_to_py_lookup["UInt" + str(expr.bits_count)]
             )
-            parsed += self.__sol_to_py_lookup[name + str(expr.bits_count)]
-        elif name == "FixedBytes":
+            parsed += self.__sol_to_py_lookup["UInt" + str(expr.bits_count)]
+        elif isinstance(expr, types.FixedBytes):
             self.__imports.add_primitive_type(
-                self.__sol_to_py_lookup[name + str(expr.bytes_count)]
+                self.__sol_to_py_lookup["FixedBytes" + str(expr.bytes_count)]
             )
-            parsed += self.__sol_to_py_lookup[name + str(expr.bytes_count)]
-        elif name == "Contract":
+            parsed += self.__sol_to_py_lookup["FixedBytes" + str(expr.bytes_count)]
+        elif isinstance(expr, types.Contract):
             parsed += self.get_name(expr.name)
             self.__imports.generate_contract_import_expr(expr)
-        elif name == "Mapping":
+        elif isinstance(expr, types.Mapping):
             self.__imports.add_python_import("from typing import Dict")
             parsed += f"Dict[{self.parse_type_and_import(expr.key_type)}, {self.parse_type_and_import(expr.value_type)}]"
-        elif name == "Enum":
+        elif isinstance(expr, types.Enum):
             parsed += self.get_name(expr.name)
             self.__imports.generate_enum_import(expr)
         else:
-            parsed += self.__sol_to_py_lookup[name]
+            parsed += self.__sol_to_py_lookup[expr.__class__.__name__]
         return parsed
 
     def generate_func_params(self, fn: FunctionDefinition) -> Tuple[str, str]:
@@ -375,16 +368,15 @@ class TypeGenerator:
         ) -> str:
             nonlocal returns
             nonlocal param_names
-            name = var_type.__class__.__name__
             parsed: str = ""
-            if name == "Struct":
+            if isinstance(var_type, types.Struct):
                 if depth == 0:
                     parsed += ""
                 else:
                     parsed += self.get_name(var_type.name)
                     self.__imports.generate_struct_import(var_type)
                 returns = get_struct_return_list(var_type)
-            elif name == "Array":
+            elif isinstance(var_type, types.Array):
                 # parsed += "List[" + generate_function(var_type.base_type, True) + "]"
                 use_parse = True
                 param_names += "index" + str(depth) + ", "
@@ -400,7 +392,7 @@ class TypeGenerator:
                     parsed += "index" + str(depth) + ": uint256"
                     # ignores the parsed return, only called for the side-effect of changing the returns var to value_type
                     _ = generate_getter_helper(var_type.base_type, False, depth + 1)
-            elif name == "Mapping":
+            elif isinstance(var_type, types.Mapping):
                 # parse key
                 use_parse = True
                 param_names += "key" + str(depth) + ", "
@@ -417,24 +409,28 @@ class TypeGenerator:
                 else:
                     # ignores the parsed return, only called for the side-effect of changing the returns var to value_type
                     _ = generate_getter_helper(var_type.value_type, True, depth + 1)
-            elif name == "UInt":
+            elif isinstance(var_type, types.UInt):
                 self.__imports.add_primitive_type(
-                    self.__sol_to_py_lookup[name + str(var_type.bits_count)]
+                    self.__sol_to_py_lookup["UInt" + str(var_type.bits_count)]
                 )
-                parsed += self.__sol_to_py_lookup[name + str(var_type.bits_count)]
-                returns = self.__sol_to_py_lookup[name + str(var_type.bits_count)]
-            elif name == "FixedBytes":
+                parsed += self.__sol_to_py_lookup["UInt" + str(var_type.bits_count)]
+                returns = self.__sol_to_py_lookup["UInt" + str(var_type.bits_count)]
+            elif isinstance(var_type, types.FixedBytes):
                 self.__imports.add_primitive_type(
-                    self.__sol_to_py_lookup[name + str(var_type.bytes_count)]
+                    self.__sol_to_py_lookup["FixedBytes" + str(var_type.bytes_count)]
                 )
-                parsed += self.__sol_to_py_lookup[name + str(var_type.bytes_count)]
-                returns = self.__sol_to_py_lookup[name + str(var_type.bytes_count)]
-            elif name == "Contract":
+                parsed += self.__sol_to_py_lookup[
+                    "FixedBytes" + str(var_type.bytes_count)
+                ]
+                returns = self.__sol_to_py_lookup[
+                    "FixedBytes" + str(var_type.bytes_count)
+                ]
+            elif isinstance(var_type, types.Contract):
                 self.__imports.generate_contract_import_expr(var_type)
                 returns = self.get_name(var_type.name)
             else:
-                parsed += self.__sol_to_py_lookup[name]
-                returns = self.__sol_to_py_lookup[name]
+                parsed += self.__sol_to_py_lookup[var_type.__class__.__name__]
+                returns = self.__sol_to_py_lookup[var_type.__class__.__name__]
 
             return parsed if use_parse else ""
 
@@ -451,6 +447,7 @@ class TypeGenerator:
         )
 
         # getters never modify the state - passing VIEW is ok
+        assert decl.function_selector is not None
         self.generate_func_implementation(
             StateMutability.VIEW,
             decl.canonical_name,
@@ -539,6 +536,7 @@ class TypeGenerator:
         self.generate_type_hint_stub_func(fn.name, params, returns, False)
         self.generate_type_hint_stub_func(fn.name, params, "TransactionObject", True)
 
+        assert fn.function_selector is not None
         self.generate_func_implementation(
             fn.state_mutability,
             fn.canonical_name,
@@ -560,7 +558,8 @@ class TypeGenerator:
         base_names: str = ""
 
         for base in contract.base_contracts:
-            parent_contract: ContractDefinition = base.base_name.referenced_declaration
+            parent_contract = base.base_name.referenced_declaration
+            assert isinstance(parent_contract, ContractDefinition)
             # only the types for contracts in the same source_unit are generated
             if (
                 parent_contract.parent.source_unit_name
@@ -673,7 +672,6 @@ class TypeGenerator:
                 fn.name == function.name and fn != function
             ):  # and len(fn.parameters.parameters) == len(function.parameters.parameters):
                 # both functions have to be overloded -> add both
-                source_unit: str = ""
                 if isinstance(fn.parent, ContractDefinition):
                     source_unit = fn.parent.parent
                 else:
@@ -707,15 +705,15 @@ class TypeGenerator:
         self, fn: FunctionDefinition, contract: ContractDefinition
     ):
         for inh_spec in contract.base_contracts:
-            if not inh_spec.parent.kind == ContractKind.INTERFACE:
-                self.add_func_overload_if_match(
-                    fn, inh_spec.base_name.referenced_declaration
-                )
+            if not contract.kind == ContractKind.INTERFACE:
+                parent_contract = inh_spec.base_name.referenced_declaration
+                assert isinstance(parent_contract, ContractDefinition)
+                self.add_func_overload_if_match(fn, parent_contract)
         for inh_spec in contract.base_contracts:
-            if not inh_spec.parent.kind == ContractKind.INTERFACE:
-                self.traverse_funcs_in_parent_contracts(
-                    fn, inh_spec.base_name.referenced_declaration
-                )
+            if not contract.kind == ContractKind.INTERFACE:
+                parent_contract = inh_spec.base_name.referenced_declaration
+                assert isinstance(parent_contract, ContractDefinition)
+                self.traverse_funcs_in_parent_contracts(fn, parent_contract)
 
     # TODO travesrse also state variables as getters are generated for them and thus overlaoding might be necessary
     def traverse_funcs_to_check_overload(self):
@@ -853,8 +851,8 @@ class SourceUnitImports:
             num_of_indentation * TAB_WIDTH * " " + string + num_of_newlines * "\n"
         )
 
-    def generate_struct_import(self, expr: types.TypeAbc):
-        node = expr.ir_node
+    def generate_struct_import(self, struct_type: types.Struct):
+        node = struct_type.ir_node
         if isinstance(node.parent, ContractDefinition):
             source_unit = node.parent.parent
         else:
@@ -862,15 +860,17 @@ class SourceUnitImports:
         # only those structs that are defined in a different source unit should be imported
         if source_unit.source_unit_name == self.__type_gen.current_source_unit:
             return
-        struct_import = self.generate_import(expr.name, source_unit.source_unit_name)
+        struct_import = self.generate_import(
+            struct_type.name, source_unit.source_unit_name
+        )
 
         if struct_import not in self.__struct_imports:
             # self.add_str_to_imports(0, struct_import, 1)
             self.__struct_imports.add(struct_import)
 
     # TODO impl of this func is basicaly the same as generate_struct_import -> refactor and remove duplication
-    def generate_enum_import(self, expr: types.TypeAbc):
-        node = expr.ir_node
+    def generate_enum_import(self, enum_type: types.Enum):
+        node = enum_type.ir_node
         if isinstance(node.parent, ContractDefinition):
             source_unit = node.parent.parent
         else:
@@ -878,21 +878,23 @@ class SourceUnitImports:
         # only those structs that are defined in a different source unit should be imported
         if source_unit.source_unit_name == self.__type_gen.current_source_unit:
             return
-        enum_import = self.generate_import(expr.name, source_unit.source_unit_name)
+        enum_import = self.generate_import(enum_type.name, source_unit.source_unit_name)
 
         if enum_import not in self.__enum_imports:
             # self.add_str_to_imports(0, struct_import, 1)
             self.__struct_imports.add(enum_import)
 
     # TODO impl of this func is basicaly the same as generate_struct_import -> refactor and remove duplication
-    def generate_contract_import_expr(self, expr: types.TypeAbc):
-        node: ContractDefinition = expr.ir_node
+    def generate_contract_import_expr(self, contract_type: types.Contract):
+        node = contract_type.ir_node
         source_unit = node.parent
         # only those contracts that are defined in a different source unit should be imported
         if source_unit.source_unit_name == self.__type_gen.current_source_unit:
             return
 
-        contract_import = self.generate_import(expr.name, source_unit.source_unit_name)
+        contract_import = self.generate_import(
+            contract_type.name, source_unit.source_unit_name
+        )
 
         if contract_import not in self.__contract_imports:
             # self.add_str_to_imports(0, contract_import, 1)
