@@ -145,7 +145,7 @@ def expression_is_only_owner(
             for statement in func.body.statements_iter():
                 if isinstance(statement, Return):
                     returns.append(statement)
-            if all(
+            if len(returns) > 0 and all(
                 expression_is_only_owner(
                     return_.expression,
                     sender_variables,
