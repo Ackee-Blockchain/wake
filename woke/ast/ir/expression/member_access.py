@@ -142,6 +142,10 @@ class MemberAccess(ExpressionAbc):
                     self._referenced_declaration_id = AstNodeId(
                         GlobalSymbolsEnum.BYTES_LENGTH
                     )
+                elif self.member_name == "push":
+                    self._referenced_declaration_id = AstNodeId(
+                        GlobalSymbolsEnum.BYTES_PUSH
+                    )
                 else:
                     assert False, f"Unknown bytes member: {self.member_name}"
             elif isinstance(expr_type, Function):
