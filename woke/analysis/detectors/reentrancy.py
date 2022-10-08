@@ -21,6 +21,7 @@ from woke.ast.enums import (
     GlobalSymbolsEnum,
     ModifiesStateFlag,
     Mutability,
+    StateMutability,
     Visibility,
 )
 from woke.ast.ir.abc import IrAbc
@@ -338,10 +339,15 @@ def detect_reentrancy(ir_node: MemberAccess) -> Optional[DetectorResult]:
     """
 
     t = ir_node.type
-    if not isinstance(t, types.Function) or t.kind not in {
-        FunctionTypeKind.BARE_CALL,
-        FunctionTypeKind.EXTERNAL,
-    }:
+    if (
+        not isinstance(t, types.Function)
+        or t.kind
+        not in {
+            FunctionTypeKind.BARE_CALL,
+            FunctionTypeKind.EXTERNAL,
+        }
+        or t.state_mutability in {StateMutability.PURE, StateMutability.VIEW}
+    ):
         return None
 
     address_source = ir_node.expression
