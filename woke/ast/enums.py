@@ -56,6 +56,7 @@ class GlobalSymbolsEnum(enum.IntEnum):
 
     BYTES_CONCAT = -500
     BYTES_LENGTH = -501
+    BYTES_PUSH = -502
 
     STRING_CONCAT = -600
 
