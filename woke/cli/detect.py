@@ -114,11 +114,11 @@ def run_detect(ctx: click.Context, paths: Tuple[str], svg: bool) -> None:
     )
 
     if svg:
-        print_detectors(theme="vs")
+        print_detectors(config, theme="vs")
     else:
-        print_detectors()
+        print_detectors(config)
 
-    for detection in detect(source_units):
+    for detection in detect(config, source_units):
         if svg:
             print_detection(detection, theme="vs")
         else:

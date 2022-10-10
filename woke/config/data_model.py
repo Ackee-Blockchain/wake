@@ -2,7 +2,7 @@ import enum
 import re
 from dataclasses import astuple
 from pathlib import Path
-from typing import FrozenSet, List, Optional
+from typing import FrozenSet, List, Optional, Union
 
 from pydantic import BaseModel, Extra, Field, validator
 from pydantic.dataclasses import dataclass
@@ -111,6 +111,11 @@ class CompilerConfig(WokeConfigModel):
     solc: SolcConfig = Field(default_factory=SolcConfig)
 
 
+class DetectorsConfig(WokeConfigModel):
+    exclude: FrozenSet[Union[int, str]] = frozenset()
+    only: Optional[FrozenSet[Union[int, str]]] = None
+
+
 class LspConfig(WokeConfigModel):
     code_lens: CodeLensConfig = Field(default_factory=CodeLensConfig)
     detectors: DetectorsLspConfig = Field(default_factory=DetectorsLspConfig)
@@ -150,6 +155,7 @@ class GeneratorConfig(WokeConfigModel):
 class TopLevelConfig(WokeConfigModel):
     subconfigs: List[Path] = []
     compiler: CompilerConfig = Field(default_factory=CompilerConfig)
+    detectors: DetectorsConfig = Field(default_factory=DetectorsConfig)
     generator: GeneratorConfig = Field(default_factory=GeneratorConfig)
     lsp: LspConfig = Field(default_factory=LspConfig)
 

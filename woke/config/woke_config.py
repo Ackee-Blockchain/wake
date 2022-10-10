@@ -11,7 +11,7 @@ import tomli
 from woke.utils import change_cwd
 
 from ..core.solidity_version import SolidityVersion
-from .data_model import CompilerConfig, GeneratorConfig, LspConfig, TopLevelConfig
+from .data_model import CompilerConfig, DetectorsConfig, GeneratorConfig, LspConfig, TopLevelConfig
 
 logger = logging.getLogger(__name__)
 
@@ -261,6 +261,10 @@ class WokeConfig:
     @property
     def max_solidity_version(self) -> SolidityVersion:
         return SolidityVersion.fromstring("0.8.17")
+
+    @property
+    def detectors(self) -> DetectorsConfig:
+        return self.__config.detectors
 
     @property
     def compiler(self) -> CompilerConfig:
