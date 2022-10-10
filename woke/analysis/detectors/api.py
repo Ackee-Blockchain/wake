@@ -424,13 +424,32 @@ class DetectorAbc(ABC):
         pass
 
 
-def detect(source_units: Dict[Path, SourceUnit]) -> List[DetectionResult]:
+def _get_enabled_detectors(config: WokeConfig) -> List[Detector]:
+    ret = []
+    for d in detectors:
+        if (
+            config.detectors.only is not None
+            and d.string_id not in config.detectors.only
+        ):
+            continue
+        if (
+            d.string_id not in config.detectors.exclude
+            and d.code not in config.detectors.exclude
+        ):
+            ret.append(d)
+    return ret
+
+
+def detect(
+    config: WokeConfig, source_units: Dict[Path, SourceUnit]
+) -> List[DetectionResult]:
     results: DefaultDict[str, DefaultDict[str, List[DetectionResult]]] = defaultdict(
         lambda: defaultdict(list)
     )
-    enabled_detectors = detectors
+    enabled_detectors = []
     enabled_detector_instances = []
-    for d in enabled_detectors:
+    for d in _get_enabled_detectors(config):
+        enabled_detectors.append(d)
         enabled_detector_instances.append(d.detector())
 
     path_to_source_unit_name: Dict[Path, str] = {}
@@ -467,9 +486,9 @@ def detect(source_units: Dict[Path, SourceUnit]) -> List[DetectionResult]:
     return ret
 
 
-def print_detectors(theme: str = "monokai") -> None:
+def print_detectors(config: WokeConfig, theme: str = "monokai") -> None:
     applied_detectors = set()
-    for d in detectors:
+    for d in _get_enabled_detectors(config):
         applied_detectors.add((d.string_id, d.detector.__doc__))
 
     detectors_list = "Using the following detectors:\n- " + "\n- ".join(

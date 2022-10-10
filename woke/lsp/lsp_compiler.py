@@ -702,7 +702,7 @@ class LspCompiler:
             await self.__server.progress_end(progress_token)
 
         if self.__config.lsp.detectors.enable:
-            for detection in detect(self.__source_units):
+            for detection in detect(self.__config, self.__source_units):
                 file = detection.result.ir_node.file
                 if detection.result.related_info is not None:
                     related_info = [
