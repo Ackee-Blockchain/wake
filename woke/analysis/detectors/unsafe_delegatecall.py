@@ -1,8 +1,8 @@
 import logging
-from typing import List, Optional, Set
+from typing import List, Set
 
 import woke.ast.types as types
-from woke.analysis.detectors.api import DetectorResult, detector
+from woke.analysis.detectors.api import DetectorAbc, DetectorResult, detector
 from woke.analysis.detectors.ownable import statement_is_publicly_executable
 from woke.analysis.detectors.reentrancy import (
     address_is_safe,
@@ -122,40 +122,53 @@ def check_delegatecall_in_function(
     return ret
 
 
-@detector(MemberAccess, -1005, "unsafe-delegatecall")
-def detect_unsafe_delegatecall(ir_node: MemberAccess) -> Optional[DetectorResult]:
-    """
-    Delegatecall to an untrusted contract.
-    """
-    t = ir_node.type
-    if not isinstance(t, types.Function) or t.kind not in {
-        FunctionTypeKind.DELEGATE_CALL,
-        FunctionTypeKind.BARE_DELEGATE_CALL,
-    }:
-        return None
+@detector(-1005, "unsafe-delegatecall")
+class UnsafeDelegatecallDetector(DetectorAbc):
+    _detections: Set[DetectorResult]
 
-    address_source = ir_node.expression
-    statement = ir_node
-    while statement is not None:
-        if isinstance(statement, StatementAbc):
-            break
-        statement = statement.parent
-    if statement is None:
-        return None
-    func = statement
-    while func is not None:
-        if isinstance(func, FunctionDefinition):
-            break
-        func = func.parent
-    if func is None:
-        return None
+    def __init__(self):
+        self._detections = set()
 
-    ret = check_delegatecall_in_function(func, statement, address_source, set())
-    if len(ret) == 0:
-        return None
+    def report(self) -> List[DetectorResult]:
+        return list(self._detections)
 
-    return DetectorResult(
-        ir_node,
-        f"Possibly unsafe delegatecall in `{func.canonical_name}`",
-        ret,
-    )
+    def visit_member_access(self, node: MemberAccess):
+        t = node.type
+        if (
+            not isinstance(t, types.Function)
+            or t.kind
+            not in {
+                FunctionTypeKind.DELEGATE_CALL,
+                FunctionTypeKind.BARE_DELEGATE_CALL,
+            }
+            or t.bound_to is not None
+        ):
+            return
+
+        address_source = node.expression
+        statement = node
+        while statement is not None:
+            if isinstance(statement, StatementAbc):
+                break
+            statement = statement.parent
+        if statement is None:
+            return
+        func = statement
+        while func is not None:
+            if isinstance(func, FunctionDefinition):
+                break
+            func = func.parent
+        if func is None:
+            return
+
+        ret = check_delegatecall_in_function(func, statement, address_source, set())
+        if len(ret) == 0:
+            return
+
+        self._detections.add(
+            DetectorResult(
+                node,
+                f"Possibly unsafe delegatecall in `{func.canonical_name}`",
+                tuple(ret),
+            )
+        )

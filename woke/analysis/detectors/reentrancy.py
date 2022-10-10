@@ -8,7 +8,7 @@ import networkx as nx
 
 import woke.ast.types as types
 from woke.analysis.cfg import CfgBlock
-from woke.analysis.detectors.api import DetectorResult, detector
+from woke.analysis.detectors.api import DetectorAbc, DetectorResult, detector
 from woke.analysis.detectors.ownable import (
     statement_is_publicly_executable,
     variable_is_owner,
@@ -324,71 +324,72 @@ def check_reentrancy_in_function(
     return ret
 
 
-# @detector(VariableDeclaration, -1005, "test")
-def check_reentrancy(ir_node: VariableDeclaration) -> Optional[DetectorResult]:
-    if ir_node.name not in {"uniswapV2Router", "_owner"}:
-        return None
+@detector(-1004, "reentrancy")
+class ReentrancyDetector(DetectorAbc):
+    _detections: Set[DetectorResult]
 
-    return DetectorResult(ir_node, f"Variable is owner: {variable_is_owner(ir_node)}")
+    def __init__(self):
+        self._detections = set()
 
+    def report(self) -> List[DetectorResult]:
+        return list(self._detections)
 
-@detector(MemberAccess, -1004, "reentrancy")
-def detect_reentrancy(ir_node: MemberAccess) -> Optional[DetectorResult]:
-    """
-    Detects re-entrancy vulnerabilities.
-    """
+    def visit_member_access(self, node: MemberAccess):
+        t = node.type
+        if (
+            not isinstance(t, types.Function)
+            or t.kind
+            not in {
+                FunctionTypeKind.BARE_CALL,
+                FunctionTypeKind.EXTERNAL,
+            }
+            or t.state_mutability in {StateMutability.PURE, StateMutability.VIEW}
+        ):
+            return
 
-    t = ir_node.type
-    if (
-        not isinstance(t, types.Function)
-        or t.kind
-        not in {
-            FunctionTypeKind.BARE_CALL,
-            FunctionTypeKind.EXTERNAL,
-        }
-        or t.state_mutability in {StateMutability.PURE, StateMutability.VIEW}
-    ):
-        return None
+        address_source = node.expression
 
-    address_source = ir_node.expression
+        function_call = node
+        while function_call is not None:
+            if isinstance(function_call, FunctionCall):
+                break
+            function_call = function_call.parent
+        if function_call is None:
+            return
 
-    function_call = ir_node
-    while function_call is not None:
-        if isinstance(function_call, FunctionCall):
-            break
-        function_call = function_call.parent
-    if function_call is None:
-        return None
+        if function_call.function_called != node.referenced_declaration:
+            logger.debug(f"Re-entrancy ignored: {function_call.source}")
+            return
 
-    if function_call.function_called != ir_node.referenced_declaration:
-        logger.debug(f"Re-entrancy ignored: {function_call.source}")
-        return None
+        statement = function_call
+        while statement is not None:
+            if isinstance(statement, StatementAbc):
+                break
+            statement = statement.parent
+        if statement is None:
+            return
 
-    statement = function_call
-    while statement is not None:
-        if isinstance(statement, StatementAbc):
-            break
-        statement = statement.parent
-    if statement is None:
-        return None
+        function_def = statement
+        while function_def is not None:
+            if isinstance(function_def, FunctionDefinition):
+                break
+            function_def = function_def.parent
+        if function_def is None:
+            return
 
-    function_def = statement
-    while function_def is not None:
-        if isinstance(function_def, FunctionDefinition):
-            break
-        function_def = function_def.parent
-    if function_def is None:
-        return None
+        ret = check_reentrancy_in_function(
+            function_def, statement, address_source, set(), set()
+        )
+        if len(ret) == 0:
+            return
+        ret = list(
+            sorted(ret, key=lambda x: (str(x.ir_node.file), x.ir_node.byte_location[0]))
+        )
 
-    ret = check_reentrancy_in_function(
-        function_def, statement, address_source, set(), set()
-    )
-    if len(ret) == 0:
-        return None
-    ret = list(
-        sorted(ret, key=lambda x: (str(x.ir_node.file), x.ir_node.byte_location[0]))
-    )
-
-    return DetectorResult(
-        ir_node, f"Possible re-entrancy in `{function_def.canonical_name}`", ret
-    )
+        self._detections.add(
+            DetectorResult(
+                node,
+                f"Possible re-entrancy in `{function_def.canonical_name}`",
+                tuple(ret),
+            )
+        )

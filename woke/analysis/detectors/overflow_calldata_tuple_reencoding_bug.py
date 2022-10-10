@@ -1,8 +1,8 @@
 import logging
-from typing import Optional, Sequence
+from typing import List, Sequence, Set
 
 import woke.ast.types as types
-from woke.analysis.detectors import DetectorResult, detector
+from woke.analysis.detectors import DetectorAbc, DetectorResult, detector
 from woke.ast.enums import DataLocation, FunctionCallKind, FunctionTypeKind, Visibility
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.declaration.function_definition import FunctionDefinition
@@ -108,115 +108,124 @@ def types_meet_requirements(
     return True
 
 
-@detector(FunctionDefinition, -1020, "overflow-calldata-tuple-reencoding-bug")
-def detect_overflow_calldata_tuple_reencoding_function_definition(
-    node: FunctionDefinition,
-) -> Optional[DetectorResult]:
-    if node.visibility not in {Visibility.PUBLIC, Visibility.EXTERNAL}:
-        return None
+@detector(-1020, "overflow-calldata-tuple-reencoding-bug")
+class OverflowCalldataTupleReencodingBugDetector(DetectorAbc):
+    _detections: Set[DetectorResult]
 
-    versions = node.version_ranges
-    affected_versions = SolidityVersionRanges(
-        [SolidityVersionRange("0.5.8", True, "0.8.16", False)]
-    )
-    if len(versions & affected_versions) == 0:
-        return None
+    def __init__(self):
+        self._detections = set()
 
-    # ABI encoder v2 must be enabled
-    if not abi_encoder_v2_enabled(node):
-        return None
+    def report(self) -> List[DetectorResult]:
+        return list(self._detections)
 
-    encoded_types = [param.type for param in node.return_parameters.parameters]
-    if types_meet_requirements(encoded_types):
-        return DetectorResult(
-            node.return_parameters,
-            "Found head overflow calldata tuple reencoding compiler bug",
-        )
-
-
-@detector(FunctionCall, -1020, "overflow-calldata-tuple-reencoding-bug")
-def detect_overflow_calldata_tuple_reencoding_function_call(
-    node: FunctionCall,
-) -> Optional[DetectorResult]:
-    if node.kind == FunctionCallKind.TYPE_CONVERSION:
-        return None
-
-    versions = node.version_ranges
-    affected_versions = SolidityVersionRanges(
-        [SolidityVersionRange("0.5.8", True, "0.8.16", False)]
-    )
-    if len(versions & affected_versions) == 0:
-        return None
-
-    func_identifier = node.expression
-    while True:
-        if isinstance(func_identifier, (Identifier, MemberAccess)):
-            break
-        elif isinstance(func_identifier, FunctionCallOptions):
-            func_identifier = func_identifier.expression
-        elif isinstance(func_identifier, NewExpression):
+    def visit_function_definition(self, node: FunctionDefinition):
+        if node.visibility not in {Visibility.PUBLIC, Visibility.EXTERNAL}:
             return None
-        elif (
-            isinstance(func_identifier, TupleExpression)
-            and len(func_identifier.components) == 1
-        ):
-            func_identifier = func_identifier.components[0]
-        elif isinstance(func_identifier, FunctionCall):
-            t = func_identifier.type
-            if isinstance(t, types.Function) and (t.value_set or t.gas_set):
+
+        versions = node.version_ranges
+        affected_versions = SolidityVersionRanges(
+            [SolidityVersionRange("0.5.8", True, "0.8.16", False)]
+        )
+        if len(versions & affected_versions) == 0:
+            return
+
+        # ABI encoder v2 must be enabled
+        if not abi_encoder_v2_enabled(node):
+            return
+
+        encoded_types = [param.type for param in node.return_parameters.parameters]
+        if types_meet_requirements(encoded_types):
+            self._detections.add(
+                DetectorResult(
+                    node.return_parameters,
+                    "Found head overflow calldata tuple reencoding compiler bug",
+                )
+            )
+
+    def visit_function_call(self, node: FunctionCall):
+        if node.kind == FunctionCallKind.TYPE_CONVERSION:
+            return
+
+        versions = node.version_ranges
+        affected_versions = SolidityVersionRanges(
+            [SolidityVersionRange("0.5.8", True, "0.8.16", False)]
+        )
+        if len(versions & affected_versions) == 0:
+            return
+
+        func_identifier = node.expression
+        while True:
+            if isinstance(func_identifier, (Identifier, MemberAccess)):
+                break
+            elif isinstance(func_identifier, FunctionCallOptions):
                 func_identifier = func_identifier.expression
+            elif isinstance(func_identifier, NewExpression):
+                return
+            elif (
+                isinstance(func_identifier, TupleExpression)
+                and len(func_identifier.components) == 1
+            ):
+                func_identifier = func_identifier.components[0]
+            elif isinstance(func_identifier, FunctionCall):
+                t = func_identifier.type
+                if isinstance(t, types.Function) and (t.value_set or t.gas_set):
+                    func_identifier = func_identifier.expression
+                else:
+                    logger.warning(
+                        f"Unexpected function call child node: {func_identifier} {func_identifier.source}"
+                    )
             else:
                 logger.warning(
                     f"Unexpected function call child node: {func_identifier} {func_identifier.source}"
                 )
+                return
+
+        t = func_identifier.type
+
+        if not isinstance(t, types.Function):
+            return
+
+        if t.kind == FunctionTypeKind.EXTERNAL:
+            assert t.bound_to is None
+            encoded_types = [arg.type for arg in node.arguments]
+        elif t.kind in {FunctionTypeKind.ERROR, FunctionTypeKind.EVENT}:
+            encoded_types = [arg.type for arg in node.arguments]
+        elif t.kind in {
+            FunctionTypeKind.ABI_ENCODE,
+            FunctionTypeKind.ABI_ENCODE_PACKED,
+        }:
+            encoded_types = [arg.type for arg in node.arguments]
+        elif t.kind in {
+            FunctionTypeKind.ABI_ENCODE_WITH_SELECTOR,
+            FunctionTypeKind.ABI_ENCODE_WITH_SIGNATURE,
+        }:
+            assert len(node.arguments) >= 1
+            encoded_types = [arg.type for arg in node.arguments[1:]]
+        elif t.kind == FunctionTypeKind.ABI_ENCODE_CALL:
+            assert len(node.arguments) == 2
+            if isinstance(node.arguments[1], TupleExpression):
+                encoded_types = [arg.type for arg in node.arguments[1].components]
+            elif (
+                isinstance(node.arguments[1], FunctionCall)
+                and node.arguments[1].kind == FunctionCallKind.STRUCT_CONSTRUCTOR_CALL
+            ):
+                # probably always created in memory, not calldata
+                return
+            else:
+                logger.warning(
+                    f"Unexpected abi.encodeCall second argument: {node.arguments[1]}"
+                )
+                return
         else:
-            logger.warning(
-                f"Unexpected function call child node: {func_identifier} {func_identifier.source}"
+            return
+
+        # ABI encoder v2 must be enabled
+        if not abi_encoder_v2_enabled(node):
+            return
+
+        if types_meet_requirements(encoded_types):  # type: ignore
+            self._detections.add(
+                DetectorResult(
+                    node, "Found head overflow calldata tuple reencoding compiler bug"
+                )
             )
-            return None
-
-    t = func_identifier.type
-
-    if not isinstance(t, types.Function):
-        return None
-
-    if t.kind == FunctionTypeKind.EXTERNAL:
-        assert t.bound_to is None
-        encoded_types = [arg.type for arg in node.arguments]
-    elif t.kind in {FunctionTypeKind.ERROR, FunctionTypeKind.EVENT}:
-        encoded_types = [arg.type for arg in node.arguments]
-    elif t.kind in {FunctionTypeKind.ABI_ENCODE, FunctionTypeKind.ABI_ENCODE_PACKED}:
-        encoded_types = [arg.type for arg in node.arguments]
-    elif t.kind in {
-        FunctionTypeKind.ABI_ENCODE_WITH_SELECTOR,
-        FunctionTypeKind.ABI_ENCODE_WITH_SIGNATURE,
-    }:
-        assert len(node.arguments) >= 1
-        encoded_types = [arg.type for arg in node.arguments[1:]]
-    elif t.kind == FunctionTypeKind.ABI_ENCODE_CALL:
-        assert len(node.arguments) == 2
-        if isinstance(node.arguments[1], TupleExpression):
-            encoded_types = [arg.type for arg in node.arguments[1].components]
-        elif (
-            isinstance(node.arguments[1], FunctionCall)
-            and node.arguments[1].kind == FunctionCallKind.STRUCT_CONSTRUCTOR_CALL
-        ):
-            # probably always created in memory, not calldata
-            return None
-        else:
-            logger.warning(
-                f"Unexpected abi.encodeCall second argument: {node.arguments[1]}"
-            )
-            return None
-    else:
-        return None
-
-    # ABI encoder v2 must be enabled
-    if not abi_encoder_v2_enabled(node):
-        return None
-
-    if types_meet_requirements(encoded_types):  # type: ignore
-        return DetectorResult(
-            node, "Found head overflow calldata tuple reencoding compiler bug"
-        )
-    return None

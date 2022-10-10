@@ -1,41 +1,43 @@
-from typing import Optional
+from typing import List, Set
 
 from woke.ast.enums import GlobalSymbolsEnum
 from woke.ast.ir.expression.function_call import FunctionCall
 from woke.ast.ir.expression.function_call_options import FunctionCallOptions
 from woke.ast.ir.expression.member_access import MemberAccess
 
-from .api import DetectorResult, detector
+from .api import DetectorAbc, DetectorResult, detector
 
 
-@detector(FunctionCallOptions, -1002, "function-call-options-not-called")
-def detect_function_call_options_not_called(
-    ir_node: FunctionCallOptions,
-) -> Optional[DetectorResult]:
-    """
-    Function with call options actually is not called, e.g. `this.externalFunction{value: targetValue}`.
-    """
-    if not isinstance(ir_node.parent, FunctionCall):
-        return DetectorResult(ir_node, "Function call options not called")
-    return None
+@detector(-1002, "function-call-options-not-called")
+class FunctionCallOptionsNotCalledDetector(DetectorAbc):
+    _detections: Set[DetectorResult]
 
+    def __init__(self):
+        self._detections = set()
 
-@detector(MemberAccess, -1003, "old-gas-value-not-called")
-def detect_old_gas_value_not_called(ir_node: MemberAccess) -> Optional[DetectorResult]:
-    """
-    Function with gas or value set actually is not called, e.g. `this.externalFunction.value(targetValue)`.
-    """
-    if ir_node.referenced_declaration not in {
-        GlobalSymbolsEnum.FUNCTION_GAS,
-        GlobalSymbolsEnum.FUNCTION_VALUE,
-    }:
-        return None
-    parent = ir_node.parent
-    assert isinstance(parent, FunctionCall)
+    def report(self) -> List[DetectorResult]:
+        return list(self._detections)
 
-    if not isinstance(parent.parent, FunctionCall):
-        if ir_node.referenced_declaration == GlobalSymbolsEnum.FUNCTION_GAS:
-            return DetectorResult(ir_node, "Function with gas not called")
-        else:
-            return DetectorResult(ir_node, "Function with value not called")
-    return None
+    def visit_function_call_options(self, node: FunctionCallOptions):
+        if not isinstance(node.parent, FunctionCall):
+            self._detections.add(
+                DetectorResult(node, "Function call options not called")
+            )
+
+    def visit_member_access(self, node: MemberAccess):
+        if node.referenced_declaration in {
+            GlobalSymbolsEnum.FUNCTION_GAS,
+            GlobalSymbolsEnum.FUNCTION_VALUE,
+        }:
+            parent = node.parent
+            assert isinstance(parent, FunctionCall)
+
+            if not isinstance(parent.parent, FunctionCall):
+                if node.referenced_declaration == GlobalSymbolsEnum.FUNCTION_GAS:
+                    self._detections.add(
+                        DetectorResult(node, "Function with gas not called")
+                    )
+                else:
+                    self._detections.add(
+                        DetectorResult(node, "Function with value not called")
+                    )

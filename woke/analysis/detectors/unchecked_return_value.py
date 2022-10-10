@@ -1,7 +1,7 @@
-from typing import Optional
+from typing import List, Set
 
 import woke.ast.types as types
-from woke.analysis.detectors import DetectorResult, detector
+from woke.analysis.detectors import DetectorAbc, DetectorResult, detector
 from woke.ast.enums import UnaryOpOperator
 from woke.ast.ir.expression.assignment import Assignment
 from woke.ast.ir.expression.conditional import Conditional
@@ -13,48 +13,59 @@ from woke.ast.ir.expression.unary_operation import UnaryOperation
 from woke.ast.ir.statement.expression_statement import ExpressionStatement
 
 
-@detector(FunctionCall, -1000, "unchecked-function-return-value")
-def detect_unchecked_return_value(ir_node: FunctionCall) -> Optional[DetectorResult]:
-    """
-    Return value of a function call is ignored.
-    """
-    t = ir_node.type
-    has_return_value = not (isinstance(t, types.Tuple) and len(t.components) == 0)
-    if not has_return_value:
-        return None
+@detector(-1000, "unchecked-function-return-value")
+class UncheckedFunctionReturnValueDetector(DetectorAbc):
+    _detections: Set[DetectorResult]
 
-    # TODO external call in try statement
+    def __init__(self):
+        self._detections = set()
 
-    node = ir_node
-    nodes = []
-    is_expression_statement = False
-    while node is not None:
-        if isinstance(node, ExpressionStatement):
-            is_expression_statement = True
-            break
-        nodes.append(node)
-        node = node.parent
+    def report(self) -> List[DetectorResult]:
+        return list(self._detections)
 
-        if isinstance(node, (Assignment, FunctionCall, FunctionCallOptions)):
-            return None
-        elif isinstance(node, Conditional):
-            if node.condition == nodes[-1]:
-                return None
-        elif isinstance(node, IndexAccess):
-            if node.index_expression == nodes[-1]:
-                return None
-        elif isinstance(node, IndexRangeAccess):
-            if node.start_expression == nodes[-1] or node.end_expression == nodes[-1]:
-                return None
-        elif isinstance(node, UnaryOperation):
-            if node.operator in {
-                UnaryOpOperator.PLUS_PLUS,
-                UnaryOpOperator.MINUS_MINUS,
-                UnaryOpOperator.DELETE,
-            }:
-                return None
+    def visit_function_call(self, node: FunctionCall):
+        t = node.type
+        has_return_value = not (isinstance(t, types.Tuple) and len(t.components) == 0)
+        if not has_return_value:
+            return
 
-    if not is_expression_statement:
-        return None
+        # TODO external call in try statement
 
-    return DetectorResult(ir_node, "Unchecked return value")
+        current_node = node
+        nodes = []
+        is_expression_statement = False
+        while current_node is not None:
+            if isinstance(current_node, ExpressionStatement):
+                is_expression_statement = True
+                break
+            nodes.append(current_node)
+            current_node = current_node.parent
+
+            if isinstance(
+                current_node, (Assignment, FunctionCall, FunctionCallOptions)
+            ):
+                return
+            elif isinstance(current_node, Conditional):
+                if current_node.condition == nodes[-1]:
+                    return
+            elif isinstance(current_node, IndexAccess):
+                if current_node.index_expression == nodes[-1]:
+                    return
+            elif isinstance(current_node, IndexRangeAccess):
+                if (
+                    current_node.start_expression == nodes[-1]
+                    or current_node.end_expression == nodes[-1]
+                ):
+                    return
+            elif isinstance(current_node, UnaryOperation):
+                if current_node.operator in {
+                    UnaryOpOperator.PLUS_PLUS,
+                    UnaryOpOperator.MINUS_MINUS,
+                    UnaryOpOperator.DELETE,
+                }:
+                    return
+
+        if not is_expression_statement:
+            return
+
+        self._detections.add(DetectorResult(node, "Unchecked return value"))
