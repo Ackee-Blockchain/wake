@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Iterator, List, Optional, Tuple
 
 from ...nodes import YulFunctionDefinition
@@ -11,6 +13,7 @@ class FunctionDefinition(YulAbc):
     """
     TBD
     """
+
     _parent: Block
     _body: Block
     _name: str
