@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Iterator, Union
 
 from ...nodes import YulFunctionCall, YulIdentifier, YulIf, YulLiteral
@@ -13,6 +15,7 @@ class If(YulAbc):
     """
     TBD
     """
+
     _parent: Block
     _body: Block
     _condition: Union[FunctionCall, Identifier, Literal]
