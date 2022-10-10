@@ -1,14 +1,17 @@
-from .api import DetectorResult, detect, detector
-from .balance_state_var import detect_unsafe_address_balance_use
-from .call_options_not_called import (
-    detect_function_call_options_not_called,
-    detect_old_gas_value_not_called,
+from .api import (
+    DetectorAbc,
+    DetectorResult,
+    detect,
+    detector,
+    print_detection,
+    print_detectors,
 )
+from .balance_state_var import UnsafeAddressBalanceUseDetector
+from .call_options_not_called import FunctionCallOptionsNotCalledDetector
 from .overflow_calldata_tuple_reencoding_bug import (
-    detect_overflow_calldata_tuple_reencoding_function_call,
-    detect_overflow_calldata_tuple_reencoding_function_definition,
+    OverflowCalldataTupleReencodingBugDetector,
 )
-from .reentrancy import detect_reentrancy
-from .unchecked_return_value import detect_unchecked_return_value
-from .unsafe_delegatecall import detect_unsafe_delegatecall
-from .unsafe_selfdestruct import detect_unsafe_selfdestruct
+from .reentrancy import ReentrancyDetector
+from .unchecked_return_value import UncheckedFunctionReturnValueDetector
+from .unsafe_delegatecall import UnsafeDelegatecallDetector
+from .unsafe_selfdestruct import UnsafeSelfdestructDetector

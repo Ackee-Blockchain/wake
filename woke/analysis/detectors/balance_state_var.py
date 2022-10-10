@@ -1,7 +1,7 @@
 import logging
 from typing import List, Optional, Set
 
-from woke.analysis.detectors.api import DetectorResult, detector
+from woke.analysis.detectors.api import DetectorAbc, DetectorResult, detector
 from woke.ast.enums import BinaryOpOperator, GlobalSymbolsEnum
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.declaration.function_definition import FunctionDefinition
@@ -133,17 +133,19 @@ def _process_assigned_vars(address_balance: ExpressionAbc) -> List[DetectorResul
     return ret
 
 
-@detector(MemberAccess, -1003, "unsafe-address-balance-use")
-def detect_unsafe_address_balance_use(
-    ir_node: MemberAccess,
-) -> Optional[DetectorResult]:
-    """
-    Address.balance is either written to a state variable or used in a strict comparison (== or !=).
-    """
-    if ir_node.referenced_declaration != GlobalSymbolsEnum.ADDRESS_BALANCE:
-        return None
+@detector(-1003, "unsafe-address-balance-use")
+class UnsafeAddressBalanceUseDetector(DetectorAbc):
+    _detections: Set[DetectorResult]
 
-    detections = _process_assigned_vars(ir_node)
-    if len(detections) == 0:
-        return None
-    return DetectorResult(ir_node, "Unsafe use of address.balance", detections)
+    def __init__(self):
+        self._detections = set()
+
+    def report(self) -> List[DetectorResult]:
+        return list(self._detections)
+
+    def visit_member_access(self, node: MemberAccess):
+        if node.referenced_declaration == GlobalSymbolsEnum.ADDRESS_BALANCE:
+            detections = _process_assigned_vars(node)
+            self._detections.add(
+                DetectorResult(node, "Unsafe use of address.balance", tuple(detections))
+            )
