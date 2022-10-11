@@ -120,7 +120,7 @@ ConfigPath = Tuple[Union[str, int], ...]
 
 
 class CommandsEnum(str, Enum):
-    GENERATE_CFG = "woke.generate.cfg"
+    GENERATE_CFG = "woke.generate.control_flow_graph"
     GENERATE_INHERITANCE_GRAPH = "woke.generate.inheritance_graph"
     GENERATE_LINEARIZED_INHERITANCE_GRAPH = "woke.generate.linearized_inheritance_graph"
     LSP_FORCE_RECOMPILE = "woke.lsp.force_recompile"
