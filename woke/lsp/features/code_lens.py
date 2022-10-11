@@ -206,7 +206,7 @@ async def code_lens(
                     ),
                     command=Command(
                         title="Control flow graph",
-                        command="Tools-for-Solidity.generate.cfg",
+                        command="Tools-for-Solidity.generate.control_flow_graph",
                         arguments=[
                             params.text_document.uri,
                             declaration.canonical_name,
