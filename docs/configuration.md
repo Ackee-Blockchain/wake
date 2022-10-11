@@ -66,6 +66,22 @@ The resolution order for each configuration option is:
 | `enabled` | Compile the project with solc optimizations enabled. Leaving this unset disables most of the available optimizations. Setting this to `false` disables all optimizations for Solidity <0.8.6 and has the same behavior as leaving this unset for Solidity >=0.8.6. | `""` (unset)  |
 | `runs`    | Configuration of the optimizer specifying how many times the code is intended to be run. Lower values optimize more for initial deployment cost, while higher values optimize more for high-frequency usage.                                                       | `200`         |
 
+### `generator.control_flow_graph` namespace
+Related to the `woke.generate.control_flow_graph` LSP command.
+
+| Option        | Description                            | Default value |
+|:--------------|:---------------------------------------|:--------------|
+| `direction`   | Graph direction                        | `TB`          |
+| `vscode_urls` | Attach VS Code URLs to the graph nodes | `true`        |
+
+### `generator.inheritance_graph` namespace
+Related to the `woke.generate.inheritance_graph` LSP command.
+
+| Option        | Description                            | Default value |
+|:--------------|:---------------------------------------|:--------------|
+| `direction`   | Graph direction                        | `BT`          |
+| `vscode_urls` | Attach VS Code URLs to the graph nodes | `true`        |
+
 ### `lsp.code_lens` namespace
 
 | Option   | Description                            | Default value |

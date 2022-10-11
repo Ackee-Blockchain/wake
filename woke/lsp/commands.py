@@ -1,12 +1,13 @@
 import logging
 from collections import deque
-from typing import Deque, Optional, Set, Tuple
+from typing import Deque, List, Optional, Set, Tuple
 
 import graphviz as gv
 
 from woke.ast.ir.declaration.contract_definition import ContractDefinition
 from woke.ast.ir.declaration.function_definition import FunctionDefinition
 from woke.ast.ir.declaration.modifier_definition import ModifierDefinition
+from woke.ast.ir.statement.abc import StatementAbc
 from woke.lsp.common_structures import DocumentUri
 from woke.lsp.context import LspContext
 from woke.lsp.exceptions import LspError
@@ -30,6 +31,7 @@ async def generate_cfg_handler(
         raise LspError(ErrorCodes.InternalError, "File not found in compiler output")
 
     source_unit = context.compiler.source_units[path]
+    target_declaration = None
     for declaration in source_unit.declarations_iter():
         if declaration.canonical_name == canonical_name:
             if not isinstance(declaration, (FunctionDefinition, ModifierDefinition)):
@@ -37,14 +39,46 @@ async def generate_cfg_handler(
                     ErrorCodes.InvalidParams,
                     "Declaration is not a function or modifier",
                 )
-            cfg = declaration.cfg
-            if cfg is None:
-                raise LspError(
-                    ErrorCodes.InternalError, "Control flow graph not available"
-                )
-            return cfg.to_dot()
+            target_declaration = declaration
+            break
 
-    raise LspError(ErrorCodes.InvalidParams, "Declaration not found")
+    if target_declaration is None:
+        raise LspError(ErrorCodes.InvalidParams, "Declaration not found")
+
+    cfg = target_declaration.cfg
+    if cfg is None:
+        raise LspError(ErrorCodes.InternalError, "Control flow graph not available")
+    graph = cfg.graph
+
+    g = gv.Digraph(f"{canonical_name} control flow graph")
+    g.attr(rankdir=context.config.generator.control_flow_graph.direction)
+    g.attr("node", shape="box")
+
+    for node in graph.nodes:
+        statements: List[StatementAbc] = node.statements
+        node_attrs = {"label": str(node)}
+        if (
+            context.config.generator.control_flow_graph.vscode_urls
+            and len(statements) > 0
+        ):
+            first_statement = statements[0]
+            line, column = context.compiler.get_line_pos_from_byte_offset(
+                first_statement.file, first_statement.byte_location[0]
+            )
+            line += 1
+            column += 1
+            node_attrs["URL"] = f"vscode://file/{first_statement.file}:{line}:{column}"
+        g.node(str(node.id), **node_attrs)
+
+    for from_, to, data in graph.edges.data():
+        condition = data["condition"]
+        if condition[1] is not None:
+            label = f"{condition[1].source} {condition[0]}"
+        else:
+            label = condition[0]
+        g.edge(str(from_.id), str(to.id), label=label)
+
+    return g.source
 
 
 async def generate_inheritance_graph_handler(
@@ -89,20 +123,30 @@ async def generate_inheritance_graph_handler(
         if contract_info is not None
         else "Inheritance graph"
     )
+    g.attr(rankdir=context.config.generator.inheritance_graph.direction)
     g.attr("node", shape="box")
 
     while len(queue) > 0:
         contract, visit_base, visit_child = queue.popleft()
         node_id = f"{contract.parent.source_unit_name}_{contract.canonical_name}"
+        node_attrs = {}
         if (
             path is not None
             and contract_info is not None
             and contract.file == path
             and contract.canonical_name == contract_info[1]
         ):
-            g.node(node_id, contract.canonical_name, style="filled")
-        else:
-            g.node(node_id, label=contract.canonical_name)
+            node_attrs["style"] = "filled"
+
+        if context.config.generator.inheritance_graph.vscode_urls:
+            line, column = context.compiler.get_line_pos_from_byte_offset(
+                contract.file, contract.name_location[0]
+            )
+            line += 1
+            column += 1
+            node_attrs["URL"] = f"vscode://file/{contract.file}:{line}:{column}"
+
+        g.node(node_id, contract.canonical_name, **node_attrs)
 
         if visit_base:
             for parent in contract.base_contracts:
