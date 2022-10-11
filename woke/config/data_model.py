@@ -1,3 +1,4 @@
+import enum
 import re
 from dataclasses import astuple
 from pathlib import Path
@@ -30,6 +31,13 @@ class SolcRemapping:
 
     def __str__(self):
         return f"{self.context or ''}:{self.prefix}={self.target or ''}"
+
+
+class GraphsDirection(str, enum.Enum):
+    TopBottom = "TB"
+    BottomTop = "BT"
+    LeftRight = "LR"
+    RightLeft = "RL"
 
 
 class SolcOptimizerConfig(WokeConfigModel):
@@ -109,9 +117,29 @@ class LspConfig(WokeConfigModel):
     find_references: FindReferencesConfig = Field(default_factory=FindReferencesConfig)
 
 
+class ControlFlowGraphConfig(WokeConfigModel):
+    direction: GraphsDirection = GraphsDirection.TopBottom
+    vscode_urls: bool = True
+
+
+class InheritanceGraphConfig(WokeConfigModel):
+    direction: GraphsDirection = GraphsDirection.BottomTop
+    vscode_urls: bool = True
+
+
+class GeneratorConfig(WokeConfigModel):
+    control_flow_graph: ControlFlowGraphConfig = Field(
+        default_factory=ControlFlowGraphConfig
+    )
+    inheritance_graph: InheritanceGraphConfig = Field(
+        default_factory=InheritanceGraphConfig
+    )
+
+
 class TopLevelConfig(WokeConfigModel):
     subconfigs: List[Path] = []
     compiler: CompilerConfig = Field(default_factory=CompilerConfig)
+    generator: GeneratorConfig = Field(default_factory=GeneratorConfig)
     lsp: LspConfig = Field(default_factory=LspConfig)
 
     @validator("subconfigs", pre=True, each_item=True)
