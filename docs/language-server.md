@@ -16,7 +16,7 @@ woke lsp --port 1234
     Multi-root workspaces are not currently supported.
 
 ## Projects using Woke LSP server
-- VS Code Extension
+- [VS Code Extension](https://marketplace.visualstudio.com/items?itemName=AckeeBlockchain.tools-for-solidity)
 
 ## Configuration options
 Server configuration options are loaded using the [standard interface](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workspace_configuration) from LSP clients. The process of setting the configuration options is client specific. Configuration changes are handled by the server, and the project is recompiled if the compilation options change.
