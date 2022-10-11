@@ -21,22 +21,10 @@ woke lsp --port 1234
 ## Configuration options
 Server configuration options are loaded using the [standard interface](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workspace_configuration) from LSP clients. The process of setting the configuration options is client specific. Configuration changes are handled by the server, and the project is recompiled if the compilation options change.
 
-The following configuration options are supported:
+The full list of supported configuration options can be found in the [configuration](configuration.md#configuration-options) section.
 
-- `woke.compiler.solc.allow_paths`,
-- `woke.compiler.solc.evm_version`,
-- `woke.compiler.solc.ignore_paths`,
-- `woke.compiler.solc.include_paths`,
-- `woke.compiler.solc.remappings`,
-- `woke.compiler.solc.target_version`,
-- `woke.compiler.solc.via_IR`,
-- `woke.compiler.solc.optimizer.enabled`,
-- `woke.compiler.solc.optimizer.runs`,
-- `woke.lsp.code_lens.enable`,
-- `woke.lsp.detectors.enable`,
-- `woke.lsp.find_references.include_declarations`.
-
-The semantics of these configuration options are explained in the [configuration section](configuration.md#compilersolc-namespace).
+!!! warning
+    Configuration options are not loaded from `woke.toml` files by the LSP server.
 
 ## Supported commands
 
