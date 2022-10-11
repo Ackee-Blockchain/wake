@@ -127,12 +127,20 @@ class InheritanceGraphConfig(WokeConfigModel):
     vscode_urls: bool = True
 
 
+class LinearizedInheritanceGraphConfig(WokeConfigModel):
+    direction: GraphsDirection = GraphsDirection.LeftRight
+    vscode_urls: bool = True
+
+
 class GeneratorConfig(WokeConfigModel):
     control_flow_graph: ControlFlowGraphConfig = Field(
         default_factory=ControlFlowGraphConfig
     )
     inheritance_graph: InheritanceGraphConfig = Field(
         default_factory=InheritanceGraphConfig
+    )
+    linearized_inheritance_graph: LinearizedInheritanceGraphConfig = Field(
+        default_factory=LinearizedInheritanceGraphConfig
     )
 
 
