@@ -82,6 +82,14 @@ Related to the `woke.generate.inheritance_graph` LSP command.
 | `direction`   | Graph direction                        | `BT`          |
 | `vscode_urls` | Attach VS Code URLs to the graph nodes | `true`        |
 
+### `generator.linearized_inheritance_graph` namespace
+Related to the `woke.generate.linearized_inheritance_graph` LSP command.
+
+| Option        | Description                            | Default value |
+|:--------------|:---------------------------------------|:--------------|
+| `direction`   | Graph direction                        | `LR`          |
+| `vscode_urls` | Attach VS Code URLs to the graph nodes | `true`        |
+
 ### `lsp.code_lens` namespace
 
 | Option   | Description                            | Default value |

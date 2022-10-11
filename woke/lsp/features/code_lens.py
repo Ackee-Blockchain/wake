@@ -242,4 +242,26 @@ async def code_lens(
                     code_lens[-1], declaration.name_location, declaration.name_location
                 )
             )
+
+            code_lens.append(
+                CodeLens(
+                    range=context.compiler.get_range_from_byte_offsets(
+                        declaration.file, declaration.name_location
+                    ),
+                    command=Command(
+                        title="Linearized inheritance graph",
+                        command="Tools-for-Solidity.generate.linearized_inheritance_graph",
+                        arguments=[
+                            params.text_document.uri,
+                            declaration.canonical_name,
+                        ],
+                    ),
+                    data=None,
+                )
+            )
+            _code_lens_cache[path].append(
+                CodeLensCache(
+                    code_lens[-1], declaration.name_location, declaration.name_location
+                )
+            )
     return code_lens

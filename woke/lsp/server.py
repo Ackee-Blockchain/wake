@@ -21,7 +21,11 @@ from typing import (
 from pydantic.error_wrappers import ValidationError
 
 from ..config import WokeConfig
-from .commands import generate_cfg_handler, generate_inheritance_graph_handler
+from .commands import (
+    generate_cfg_handler,
+    generate_inheritance_graph_handler,
+    generate_linearized_inheritance_graph_handler,
+)
 from .common_structures import (
     ConfigurationItem,
     ConfigurationParams,
@@ -118,6 +122,7 @@ ConfigPath = Tuple[Union[str, int], ...]
 class CommandsEnum(str, Enum):
     GENERATE_CFG = "woke.generate.cfg"
     GENERATE_INHERITANCE_GRAPH = "woke.generate.inheritance_graph"
+    GENERATE_LINEARIZED_INHERITANCE_GRAPH = "woke.generate.linearized_inheritance_graph"
     LSP_FORCE_RECOMPILE = "woke.lsp.force_recompile"
 
 
@@ -843,6 +848,14 @@ class LspServer:
                 raise LspError(
                     ErrorCodes.InvalidParams,
                     f"Expected 0 or 2 arguments for `{CommandsEnum.GENERATE_INHERITANCE_GRAPH}` command",
+                )
+        elif command == CommandsEnum.GENERATE_LINEARIZED_INHERITANCE_GRAPH:
+            if params.arguments is not None and len(params.arguments) == 2:
+                document_uri = DocumentUri(params.arguments[0])
+                canonical_name = str(params.arguments[1])
+                context = self._get_workspace(document_uri)
+                return await generate_linearized_inheritance_graph_handler(
+                    context, document_uri, canonical_name
                 )
 
         raise LspError(ErrorCodes.InvalidRequest, f"Unknown command: {command}")
