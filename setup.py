@@ -52,7 +52,6 @@ setup(
     author="Ackee Blockchain",
     version="1.0.2",
     packages=find_packages(exclude=("tests",)),
-    author_email="hello@ackeeblockchain.com",
     keywords=[
         "solidity",
         "ethereum",
