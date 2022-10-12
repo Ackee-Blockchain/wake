@@ -331,6 +331,11 @@ class SolidityCompiler:
             compilation_units = self.build_compilation_units_maximize(graph)
         else:
             compilation_units = self.build_compilation_units_minimize(graph)
+        compilation_unit_hashes = {cu.hash for cu in compilation_units}
+        if len(compilation_unit_hashes) != len(compilation_units):
+            raise CompilationError(
+                "Compilation units are not unique. This is a bug in the compiler."
+            )
         build_settings = self.create_build_settings(output_types)
 
         # sort compilation units by their hash

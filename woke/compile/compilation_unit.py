@@ -3,6 +3,7 @@ from pathlib import Path, PurePath
 from typing import DefaultDict, FrozenSet, Iterable, Set
 
 import networkx as nx
+from Cryptodome.Hash import BLAKE2b
 
 from woke.compile.source_path_resolver import SourcePathResolver
 from woke.config import WokeConfig
@@ -22,8 +23,14 @@ class CompilationUnit:
 
         self.__hash = bytes([0] * 32)
         for node in unit_graph.nodes:
+            source_unit_name_hash = BLAKE2b.new(
+                data=str(node).encode("utf-8"), digest_bits=256
+            ).digest()
             self.__hash = bytes(
-                a ^ b for a, b in zip(self.__hash, unit_graph.nodes[node]["hash"])
+                a ^ b ^ c
+                for a, b, c in zip(
+                    self.__hash, source_unit_name_hash, unit_graph.nodes[node]["hash"]
+                )
             )
 
             path = unit_graph.nodes[node]["path"]
