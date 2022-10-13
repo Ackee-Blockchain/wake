@@ -4,6 +4,7 @@ import asyncio
 import json
 import keyword
 import shutil
+import string
 import struct
 from abc import ABC
 from ast import parse
@@ -48,6 +49,17 @@ class RequestType(str, Enum):
     DEBUG = "debug"
     TRACE = "trace"
     DEFAULT = "default"  # default request type for the given network
+
+
+# TODO ensure that making the path alphanum won't create collisions
+def _make_path_alphanum(source_unit_name: str) -> str:
+    filtered = "".join(
+        filter(lambda ch: ch.isalnum() or ch == "/" or ch == "_", source_unit_name)
+    )
+    return "/".join(
+        f"_{segment}" if segment.startswith(tuple(string.digits)) else segment
+        for segment in filtered.split("/")
+    )
 
 
 class TypeGenerator:
@@ -343,10 +355,6 @@ class TypeGenerator:
             return return_params[:-2]
         else:
             return return_params + "None"
-
-    # TODO ensure that making the path alphanum won't create collisions
-    def make_path_alphanum(self, path: str) -> str:
-        return "".join(filter(lambda ch: ch.isalnum() or ch == "/" or ch == "_", path))
 
     def is_compound_type(self, var_type: types.TypeAbc):
         name = var_type.__class__.__name__
@@ -656,7 +664,7 @@ class TypeGenerator:
 
     def write_source_unit_to_file(self, contract_name: str):
         self.__pytypes_dir.mkdir(exist_ok=True)
-        contract_name = self.make_path_alphanum(contract_name[:-3])
+        contract_name = _make_path_alphanum(contract_name[:-3])
         unit_path = (self.__pytypes_dir / contract_name).with_suffix(".py")
         unit_path_parent = unit_path.parent
         # TODO validate whether project root can become paraent
@@ -848,7 +856,7 @@ class SourceUnitImports:
 
     # TODO rename to better represent the functionality
     def generate_import(self, name: str, source_unit_name: str) -> str:
-        source_unit_name = self.make_path_alphanum(source_unit_name)
+        source_unit_name = _make_path_alphanum(source_unit_name)
         return (
             "from pytypes."
             + source_unit_name[:-3].replace("/", ".")
@@ -929,9 +937,6 @@ class SourceUnitImports:
 
     def add_python_import(self, p_import: str) -> None:
         self.__python_imports.add(p_import)
-
-    def make_path_alphanum(self, path: str) -> str:
-        return "".join(filter(lambda ch: ch.isalnum() or ch == "/" or ch == "_", path))
 
 
 class NameSanitizer:
