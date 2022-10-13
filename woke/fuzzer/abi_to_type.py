@@ -267,34 +267,46 @@ class TypeGenerator:
     # parses the expr to string
     # optionaly generates an import
     def parse_type_and_import(self, expr: types.TypeAbc) -> str:
-        parsed: str = ""
         if isinstance(expr, types.Struct):
-            parsed += self.get_name(expr.name)
-            self.__imports.generate_struct_import(expr)
+            parent = expr.ir_node.parent
+            if isinstance(parent, ContractDefinition):
+                self.__imports.generate_contract_import_name(
+                    parent.name, parent.parent.source_unit_name
+                )
+                return f"{self.get_name(parent.name)}.{self.get_name(expr.name)}"
+            else:
+                self.__imports.generate_struct_import(expr)
+                return self.get_name(expr.name)
+        elif isinstance(expr, types.Enum):
+            parent = expr.ir_node.parent
+            if isinstance(parent, ContractDefinition):
+                self.__imports.generate_contract_import_name(
+                    parent.name, parent.parent.source_unit_name
+                )
+                return f"{self.get_name(parent.name)}.{self.get_name(expr.name)}"
+            else:
+                self.__imports.generate_enum_import(expr)
+                return self.get_name(expr.name)
         elif isinstance(expr, types.Array):
-            parsed += "List[" + self.parse_type_and_import(expr.base_type) + "]"
+            return f"List[{self.parse_type_and_import(expr.base_type)}]"
         elif isinstance(expr, types.UInt):
             self.__imports.add_primitive_type(
                 self.__sol_to_py_lookup["UInt" + str(expr.bits_count)]
             )
-            parsed += self.__sol_to_py_lookup["UInt" + str(expr.bits_count)]
+            return self.__sol_to_py_lookup["UInt" + str(expr.bits_count)]
         elif isinstance(expr, types.FixedBytes):
             self.__imports.add_primitive_type(
                 self.__sol_to_py_lookup["FixedBytes" + str(expr.bytes_count)]
             )
-            parsed += self.__sol_to_py_lookup["FixedBytes" + str(expr.bytes_count)]
+            return self.__sol_to_py_lookup["FixedBytes" + str(expr.bytes_count)]
         elif isinstance(expr, types.Contract):
-            parsed += self.get_name(expr.name)
             self.__imports.generate_contract_import_expr(expr)
+            return self.get_name(expr.name)
         elif isinstance(expr, types.Mapping):
             self.__imports.add_python_import("from typing import Dict")
-            parsed += f"Dict[{self.parse_type_and_import(expr.key_type)}, {self.parse_type_and_import(expr.value_type)}]"
-        elif isinstance(expr, types.Enum):
-            parsed += self.get_name(expr.name)
-            self.__imports.generate_enum_import(expr)
+            return f"Dict[{self.parse_type_and_import(expr.key_type)}, {self.parse_type_and_import(expr.value_type)}]"
         else:
-            parsed += self.__sol_to_py_lookup[expr.__class__.__name__]
-        return parsed
+            return self.__sol_to_py_lookup[expr.__class__.__name__]
 
     def generate_func_params(self, fn: FunctionDefinition) -> Tuple[str, str]:
         params: str = ""
@@ -902,6 +914,10 @@ class SourceUnitImports:
 
     # TODO remove duplication
     def generate_contract_import_name(self, name: str, source_unit_name: str) -> None:
+        # only those contracts that are defined in a different source unit should be imported
+        if source_unit_name == self.__type_gen.current_source_unit:
+            return
+
         contract_import = self.generate_import(name, source_unit_name)
 
         if contract_import not in self.__contract_imports:
