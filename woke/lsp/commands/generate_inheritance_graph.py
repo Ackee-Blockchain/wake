@@ -57,12 +57,17 @@ async def generate_inheritance_graph_handler(
     if len(queue) == 0:
         raise LspError(ErrorCodes.InternalError, "No contracts found")
 
+    if contract_info is None:
+        config = context.config.generator.inheritance_graph_full
+    else:
+        config = context.config.generator.inheritance_graph
+
     g = gv.Digraph(
         f"{contract_info[1]} inheritance graph"
         if contract_info is not None
         else "Inheritance graph"
     )
-    g.attr(rankdir=context.config.generator.inheritance_graph.direction)
+    g.attr(rankdir=config.direction)
     g.attr("node", shape="box")
 
     while len(queue) > 0:
@@ -77,7 +82,7 @@ async def generate_inheritance_graph_handler(
         ):
             node_attrs["style"] = "filled"
 
-        if context.config.generator.inheritance_graph.vscode_urls:
+        if config.vscode_urls:
             line, column = context.compiler.get_line_pos_from_byte_offset(
                 contract.file, contract.name_location[0]
             )

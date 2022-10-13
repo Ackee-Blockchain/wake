@@ -139,6 +139,9 @@ class GeneratorConfig(WokeConfigModel):
     inheritance_graph: InheritanceGraphConfig = Field(
         default_factory=InheritanceGraphConfig
     )
+    inheritance_graph_full: InheritanceGraphConfig = Field(
+        default_factory=InheritanceGraphConfig
+    )
     linearized_inheritance_graph: LinearizedInheritanceGraphConfig = Field(
         default_factory=LinearizedInheritanceGraphConfig
     )
