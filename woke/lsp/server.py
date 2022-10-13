@@ -122,6 +122,7 @@ ConfigPath = Tuple[Union[str, int], ...]
 class CommandsEnum(str, Enum):
     GENERATE_CFG = "woke.generate.control_flow_graph"
     GENERATE_INHERITANCE_GRAPH = "woke.generate.inheritance_graph"
+    GENERATE_INHERITANCE_GRAPH_FULL = "woke.generate.inheritance_graph_full"
     GENERATE_LINEARIZED_INHERITANCE_GRAPH = "woke.generate.linearized_inheritance_graph"
     LSP_FORCE_RECOMPILE = "woke.lsp.force_recompile"
 
@@ -831,13 +832,7 @@ class LspServer:
             context = self._get_workspace(document_uri)
             return await generate_cfg_handler(context, document_uri, canonical_name)
         elif command == CommandsEnum.GENERATE_INHERITANCE_GRAPH:
-            if params.arguments is None or len(params.arguments) == 0:
-                if self.__main_workspace is None:
-                    raise LspError(ErrorCodes.RequestFailed, "No workspace open")
-                return await generate_inheritance_graph_handler(
-                    self.__main_workspace, None
-                )
-            elif params.arguments is not None and len(params.arguments) == 2:
+            if params.arguments is not None and len(params.arguments) == 2:
                 document_uri = DocumentUri(params.arguments[0])
                 canonical_name = str(params.arguments[1])
                 context = self._get_workspace(document_uri)
@@ -848,6 +843,18 @@ class LspServer:
                 raise LspError(
                     ErrorCodes.InvalidParams,
                     f"Expected 0 or 2 arguments for `{CommandsEnum.GENERATE_INHERITANCE_GRAPH}` command",
+                )
+        elif command == CommandsEnum.GENERATE_INHERITANCE_GRAPH_FULL:
+            if params.arguments is None or len(params.arguments) == 0:
+                if self.__main_workspace is None:
+                    raise LspError(ErrorCodes.RequestFailed, "No workspace open")
+                return await generate_inheritance_graph_handler(
+                    self.__main_workspace, None
+                )
+            else:
+                raise LspError(
+                    ErrorCodes.InvalidParams,
+                    f"Expected 0 arguments for `{CommandsEnum.GENERATE_INHERITANCE_GRAPH_FULL}` command",
                 )
         elif command == CommandsEnum.GENERATE_LINEARIZED_INHERITANCE_GRAPH:
             if params.arguments is not None and len(params.arguments) == 2:
