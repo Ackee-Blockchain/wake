@@ -347,14 +347,22 @@ class TypeGenerator:
         return params_names, params
 
     def generate_func_returns(self, fn: FunctionDefinition) -> str:
-        return_params: str = ""
-        for ret in fn.return_parameters.parameters:
-            return_params += self.parse_type_and_import(ret.type) + ", "
-        if return_params:
-            # return and remove the trailing comma ", "
-            return return_params[:-2]
+        if len(fn.return_parameters.parameters) > 1:
+            self.__imports.add_python_import("from typing import Tuple")
+            return (
+                "Tuple["
+                + ", ".join(
+                    [
+                        self.parse_type_and_import(par.type)
+                        for par in fn.return_parameters.parameters
+                    ]
+                )
+                + "]"
+            )
+        elif len(fn.return_parameters.parameters) == 1:
+            return self.parse_type_and_import(fn.return_parameters.parameters[0].type)
         else:
-            return return_params + "None"
+            return "None"
 
     def is_compound_type(self, var_type: types.TypeAbc):
         name = var_type.__class__.__name__
