@@ -662,6 +662,14 @@ class LspServer:
         )
 
     async def _handle_config_change(self, raw_config: dict) -> None:
+        def key_in_nested_dict(key: Tuple, d: Dict) -> bool:
+            try:
+                for k in key:
+                    d = d[k]
+                return True
+            except KeyError:
+                return False
+
         for context in self.__workspaces.values():
             raw_config_copy = deepcopy(raw_config)
             (
@@ -675,8 +683,18 @@ class LspServer:
             changed = context.config.update(
                 raw_config_copy, invalid_options.union(removed_options)
             )
-            if changed:
+
+            if key_in_nested_dict(("compiler", "solc"), changed) or key_in_nested_dict(
+                ("lsp", "detectors"), changed
+            ):
                 await context.compiler.force_recompile()
+            elif key_in_nested_dict(("lsp", "code_lens"), changed):
+                try:
+                    await self.send_request(
+                        RequestMethodEnum.WORKSPACE_CODE_LENS_REFRESH, None
+                    )
+                except LspError:
+                    pass
 
     async def _initialized(self, params: InitializedParams) -> None:
         if self.__workspace_path is not None:

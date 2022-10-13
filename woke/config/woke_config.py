@@ -84,6 +84,23 @@ class WokeConfig:
                 else:
                     old[k] = v
 
+    def __modified_keys(self, old: Dict, new: Dict, result: Dict) -> None:
+        for k, v in new.items():
+            if k not in old.keys():
+                result[k] = v
+            else:
+                if isinstance(v, dict):
+                    result[k] = {}
+                    self.__modified_keys(old[k], new[k], result[k])
+                    if not result[k]:
+                        del result[k]
+                else:
+                    if old[k] != v:
+                        result[k] = v
+        for k, v in old.items():
+            if k not in new.keys():
+                result[k] = None
+
     def __load_file(
         self,
         parent: Optional[Path],
@@ -155,13 +172,15 @@ class WokeConfig:
         self,
         config_dict: Dict[str, Any],
         deleted_options: Iterable[Tuple[Union[int, str], ...]],
-    ) -> bool:
+    ) -> Dict:
         """
         Update the config with a new dictionary. Return `True` if the config was changed.
         """
         with change_cwd(self.project_root_path):
             parsed_config = TopLevelConfig.parse_obj(config_dict)
         parsed_config_raw = parsed_config.dict(by_alias=True, exclude_unset=True)
+
+        original_config = deepcopy(self.__config_raw)
         self.__merge_dicts(self.__config_raw, parsed_config_raw)
 
         for deleted_option in deleted_options:
@@ -181,10 +200,14 @@ class WokeConfig:
             elif isinstance(conf, list):
                 conf.remove(deleted_option[-1])
 
-        new_config = TopLevelConfig.parse_obj(self.__config_raw)
-        ret = new_config != self.__config
         self.__config = TopLevelConfig.parse_obj(self.__config_raw)
-        return ret
+        modified_keys = {}
+        self.__modified_keys(
+            original_config,
+            self.__config.dict(by_alias=True, exclude_unset=True),
+            modified_keys,
+        )
+        return modified_keys
 
     def load_configs(self) -> None:
         """
