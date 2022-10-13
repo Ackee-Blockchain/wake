@@ -100,7 +100,7 @@ class FindReferencesConfig(WokeConfigModel):
 
 
 class CodeLensConfig(WokeConfigModel):
-    enable: bool = False
+    enable: bool = True
 
 
 class DetectorsLspConfig(WokeConfigModel):

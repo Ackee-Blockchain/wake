@@ -102,7 +102,7 @@ Related to the `woke.generate.linearized_inheritance_graph` LSP command.
 
 | Option   | Description                            | Default value |
 |:---------|:---------------------------------------|:--------------|
-| `enable` | Enable LSP code lens language feature. | `false`       |
+| `enable` | Enable LSP code lens language feature. | `true`        |
 
 ### `lsp.detectors` namespace
 
