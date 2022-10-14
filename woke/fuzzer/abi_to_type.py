@@ -371,20 +371,26 @@ class TypeGenerator:
     def generate_getter_for_state_var(self, decl: VariableDeclaration):
         def get_struct_return_list(struct: types.Struct) -> str:
             node = struct.ir_node
-            assert isinstance(node, StructDefinition)
-            non_exluded = []
+            non_excluded = []
             for member in node.members:
                 if not isinstance(member.type, types.Mapping) and not isinstance(
                     member.type, types.Array
                 ):
-                    non_exluded.append(self.parse_type_and_import(member.type))
-            if len(node.members) == len(non_exluded):
-                # nothing was exluded -> the whole struct will be used -> add the struct to imports
+                    non_excluded.append(self.parse_type_and_import(member.type))
+            if len(node.members) == len(non_excluded):
+                # nothing was excluded -> the whole struct will be used -> add the struct to imports
                 self.__imports.generate_struct_import(struct)
-                return self.get_name(struct.name)
+                parent = node.parent
+                if isinstance(parent, ContractDefinition):
+                    self.__imports.generate_contract_import_name(
+                        parent.name, parent.parent.source_unit_name
+                    )
+                    return f"{self.get_name(parent.name)}.{self.get_name(struct.name)}"
+                else:
+                    return self.get_name(struct.name)
             else:
                 self.__imports.add_python_import("from typing import Tuple")
-                return "Tuple[" + ", ".join(non_exluded) + "]"
+                return "Tuple[" + ", ".join(non_excluded) + "]"
 
         returns: str = ""
         param_names: str = ""
@@ -404,6 +410,18 @@ class TypeGenerator:
                     parsed += self.get_name(var_type.name)
                     self.__imports.generate_struct_import(var_type)
                 returns = get_struct_return_list(var_type)
+            elif isinstance(var_type, types.Enum):
+                parent = var_type.ir_node.parent
+                if isinstance(parent, ContractDefinition):
+                    self.__imports.generate_contract_import_name(
+                        parent.name, parent.parent.source_unit_name
+                    )
+                    returns = (
+                        f"{self.get_name(parent.name)}.{self.get_name(var_type.name)}"
+                    )
+                else:
+                    self.__imports.generate_enum_import(var_type)
+                    returns = self.get_name(var_type.name)
             elif isinstance(var_type, types.Array):
                 # parsed += "List[" + generate_function(var_type.base_type, True) + "]"
                 use_parse = True
