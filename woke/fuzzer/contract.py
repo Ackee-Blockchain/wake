@@ -23,6 +23,10 @@ class NetworkKind(IntEnum):
     GETH = 3
 
 
+class TransactionObject:
+    pass
+
+
 class Abi:
     @classmethod
     def encode(cls, arguments: Iterable, types: Iterable) -> bytes:
