@@ -152,21 +152,19 @@ dev_interface = DevchainInterface(8545)
 
 
 class Contract:
-    abi: Any
-    bytecode: HexStr
-    address: Union[Address, ChecksumAddress]
+    _abi: Any
+    _bytecode: HexStr
     _contract: web3.contract.Contract
 
     def __init__(self, addr: Union[Address, ChecksumAddress]):
-        self.address = addr
-        self._contract = dev_interface.create_factory(addr, self.abi)
+        self._contract = dev_interface.create_factory(addr, self.__class__._abi)
 
     @classmethod
     # TODO add option to deploy using a different instance of web3
     def deploy(
         cls, arguments: Iterable, params: Optional[TxParams] = None
     ) -> "Contract":
-        contract = dev_interface.deploy(cls.abi, cls.bytecode, arguments)
+        contract = dev_interface.deploy(cls._abi, cls._bytecode, arguments)
         return cls(contract.address)
 
     def transact(
