@@ -221,7 +221,9 @@ class TypeGenerator:
             params += "params: Optional[TxParams] = None"
         self.add_str_to_types(1, "@classmethod", 1)
         self.add_str_to_types(1, f"def deploy(cls, {params}) -> {contract.name}:", 1)
-        self.add_str_to_types(2, f"return super().deploy([{param_names}], params)", 1)
+        self.add_str_to_types(
+            2, f"return Contract.deploy.__func__(cls, [{param_names}], params)", 1
+        )
 
     def generate_contract_template(
         self, contract: ContractDefinition, base_names: str
