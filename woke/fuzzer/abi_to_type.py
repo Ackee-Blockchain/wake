@@ -555,9 +555,13 @@ class TypeGenerator:
             f"def {self.get_name(fn_name)}(self, {params}, *, return_tx: bool=False, request_type: RequestType='{'call' if is_view_or_pure else 'default'}') -> Union[{returns}, TransactionObject]:",
             1,
         )
+        if returns.strip() == "None":
+            return_types = "type(None)"
+        else:
+            return_types = returns
         self.add_str_to_types(
             2,
-            f'return self.transact("{fn_selector}", [{param_names}], params, return_tx, request_type) if not request_type == \'call\' else self.call("{fn_selector}", [{param_names}], params, return_tx)',
+            f'return self.transact("{fn_selector}", [{param_names}], params, return_tx, request_type, {return_types}) if not request_type == \'call\' else self.call("{fn_selector}", [{param_names}], params, return_tx, {return_types})',
             2,
         )
 

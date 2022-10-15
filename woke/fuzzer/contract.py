@@ -1,7 +1,17 @@
+import dataclasses
 import time
 from enum import IntEnum
 from multiprocessing.sharedctypes import Value
-from typing import Any, Iterable, Optional, Sequence, Type, Union, overload
+from typing import (
+    Any,
+    Iterable,
+    Optional,
+    Sequence,
+    Type,
+    Union,
+    get_type_hints,
+    overload,
+)
 
 import eth_abi
 import web3._utils.empty
@@ -82,19 +92,65 @@ class DevchainInterface:
     def dev_chain(self):
         return self.__dev_chain
 
+    @classmethod
+    def _convert_to_web3_type(cls, value: Any) -> Any:
+        if dataclasses.is_dataclass(value):
+            return tuple(
+                cls._convert_to_web3_type(v) for v in dataclasses.astuple(value)
+            )
+        elif isinstance(value, list):
+            return [cls._convert_to_web3_type(v) for v in value]
+        elif isinstance(value, tuple):
+            return tuple(cls._convert_to_web3_type(v) for v in value)
+        elif isinstance(value, Contract):
+            return value._contract.address
+        else:
+            return value
+
+    @classmethod
+    def _convert_from_web3_type(cls, value: Any, expected_type: Type) -> Any:
+        if isinstance(expected_type, type(None)):
+            return None
+        elif dataclasses.is_dataclass(expected_type):
+            assert isinstance(value, tuple)
+            resolved_types = get_type_hints(expected_type)
+            field_types = [
+                resolved_types[field.name]
+                for field in dataclasses.fields(expected_type)
+            ]
+            assert len(value) == len(field_types)
+            converted_values = [
+                cls._convert_from_web3_type(v, t) for v, t in zip(value, field_types)
+            ]
+            return expected_type(*converted_values)
+        elif isinstance(expected_type, type):
+            if issubclass(expected_type, Contract):
+                return expected_type(value)
+            elif issubclass(expected_type, IntEnum):
+                return expected_type(value)
+        return value
+
     def deploy(
         self, abi, bytecode, arguments: Iterable, params: Optional[TxParams] = None
     ) -> web3.contract.Contract:
+        arguments = [self._convert_to_web3_type(arg) for arg in arguments]
         factory = self.__w3.eth.contract(abi=abi, bytecode=bytecode)
         tx_hash = factory.constructor(*arguments).transact(params)
         tx_receipt = self.__w3.eth.wait_for_transaction_receipt(tx_hash)
         return self.__w3.eth.contract(address=tx_receipt["contractAddress"], abi=abi)  # type: ignore
 
     def call(
-        self, contract, selector: HexStr, arguments: Iterable, params: TxParams
+        self,
+        contract,
+        selector: HexStr,
+        arguments: Iterable,
+        params: TxParams,
+        return_type: Type,
     ) -> Any:
+        arguments = [self._convert_to_web3_type(arg) for arg in arguments]
         func = contract.get_function_by_selector(selector)(*arguments)
-        return func.call(params)
+        web3_data = func.call(params)
+        return self._convert_from_web3_type(web3_data, return_type)
 
     def fallback(
         self,
@@ -130,12 +186,17 @@ class DevchainInterface:
         params: TxParams,
         return_tx,
         request_type,
+        return_type: Type,
     ) -> Any:
+        arguments = [self._convert_to_web3_type(arg) for arg in arguments]
         func = contract.get_function_by_selector(selector)(*arguments)
         output_abi = get_abi_output_types(func.abi)
         tx_hash = func.transact(params)
         output = self.dev_chain.retrieve_transaction_data([], tx_hash, request_type)
-        return eth_abi.abi.decode(output_abi, bytes.fromhex(output))  # type: ignore
+        web3_data = eth_abi.abi.decode(
+            output_abi, bytes.fromhex(output)
+        )  # pyright: reportGeneralTypeIssues=false
+        return self._convert_from_web3_type(web3_data, return_type)
 
     def create_factory(
         self, addr: Union[Address, ChecksumAddress], abi
@@ -156,6 +217,12 @@ class Contract:
     def __init__(self, addr: Union[Address, ChecksumAddress]):
         self._contract = dev_interface.create_factory(addr, self.__class__._abi)
 
+    def __str__(self):
+        return f"{self.__class__.__name__}({self._contract.address})"
+
+    def __repr__(self):
+        return self.__str__()
+
     @classmethod
     # TODO add option to deploy using a different instance of web3
     def _deploy(
@@ -171,12 +238,19 @@ class Contract:
         params: TxParams,
         return_tx: bool,
         request_type: RequestType,
+        return_type: Type,
     ) -> Any:
         if return_tx:
             raise NotImplementedError("returning a transaction is not implemented")
 
         return dev_interface.transact(
-            self._contract, selector, arguments, params, return_tx, request_type
+            self._contract,
+            selector,
+            arguments,
+            params,
+            return_tx,
+            request_type,
+            return_type,
         )
 
     # TODO handle return data
@@ -196,9 +270,16 @@ class Contract:
         )
 
     def call(
-        self, selector: HexStr, arguments: Iterable, params: TxParams, return_tx: bool
+        self,
+        selector: HexStr,
+        arguments: Iterable,
+        params: TxParams,
+        return_tx: bool,
+        return_type: Type,
     ) -> Any:
         if return_tx:
             raise ValueError("transaction can't be returned from a call")
-        output = dev_interface.call(self._contract, selector, arguments, params)
+        output = dev_interface.call(
+            self._contract, selector, arguments, params, return_type
+        )
         return output
