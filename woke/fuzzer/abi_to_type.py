@@ -237,9 +237,9 @@ class TypeGenerator:
         assert compilation_info.evm is not None
         assert compilation_info.evm.bytecode is not None
         assert compilation_info.evm.bytecode.opcodes is not None
-        self.add_str_to_types(1, f"abi = {compilation_info.abi}", 1)
+        self.add_str_to_types(1, f"_abi = {compilation_info.abi}", 1)
         self.add_str_to_types(
-            1, f'bytecode = "{compilation_info.evm.bytecode.object}"', 2
+            1, f'_bytecode = "{compilation_info.evm.bytecode.object}"', 2
         )
 
         self.__imports.add_python_import("from __future__ import annotations")
