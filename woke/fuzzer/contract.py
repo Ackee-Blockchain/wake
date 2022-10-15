@@ -6,7 +6,7 @@ from typing import Any, Iterable, Optional, Sequence, Type, Union, overload
 import eth_abi
 import web3._utils.empty
 import web3.contract
-from eth_typing import Address, AnyAddress, ChecksumAddress, HexStr
+from eth_typing import Address, ChecksumAddress, HexStr
 from web3 import Web3
 from web3._utils.abi import get_abi_output_types
 from web3.method import Method
@@ -90,7 +90,7 @@ class DevchainInterface:
         tx_receipt = self.__w3.eth.wait_for_transaction_receipt(tx_hash)
         return self.__w3.eth.contract(address=tx_receipt["contractAddress"], abi=abi)  # type: ignore
 
-    def call_test(
+    def call(
         self, contract, selector: HexStr, arguments: Iterable, params: TxParams
     ) -> Any:
         func = contract.get_function_by_selector(selector)(*arguments)
@@ -120,7 +120,6 @@ class DevchainInterface:
         # TODO process the transaction inside the devhcain class and return
         tx_hash = self.__w3.eth.send_transaction(params)
         output = self.dev_chain.retrieve_transaction_data([], tx_hash, request_type)
-        print(f"type of output: {type(output)}")
         return bytes.fromhex(output)
 
     def transact(
@@ -132,8 +131,6 @@ class DevchainInterface:
         return_tx,
         request_type,
     ) -> Any:
-        # print("making a transaction")
-        # start_time = time.time()
         func = contract.get_function_by_selector(selector)(*arguments)
         output_abi = get_abi_output_types(func.abi)
         tx_hash = func.transact(params)
@@ -161,7 +158,7 @@ class Contract:
 
     @classmethod
     # TODO add option to deploy using a different instance of web3
-    def deploy(
+    def _deploy(
         cls, arguments: Iterable, params: Optional[TxParams] = None
     ) -> "Contract":
         contract = dev_interface.deploy(cls._abi, cls._bytecode, arguments)
@@ -175,7 +172,6 @@ class Contract:
         return_tx: bool,
         request_type: RequestType,
     ) -> Any:
-        # print("making a transaction")
         if return_tx:
             raise NotImplementedError("returning a transaction is not implemented")
 
@@ -204,9 +200,5 @@ class Contract:
     ) -> Any:
         if return_tx:
             raise ValueError("transaction can't be returned from a call")
-        # print("making a call")
-        # start = time.time()
-        output = dev_interface.call_test(self._contract, selector, arguments, params)
-        # print(f"call val: {output}")
-        # print(f"call: {time.time()-start}")
+        output = dev_interface.call(self._contract, selector, arguments, params)
         return output
