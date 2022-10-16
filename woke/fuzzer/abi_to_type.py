@@ -210,18 +210,21 @@ class TypeGenerator:
     def generate_deploy_func(self, contract: ContractDefinition):
         param_names = ""
         params = ""
-        has_contructor: bool = False
         for fn in contract.functions:
             if fn.name == "constructor":
-                has_contructor = True
                 param_names, params = self.generate_func_params(fn)
                 break
-        # if no constructor, add generic params parameter
-        if not has_contructor:
-            params += "params: Optional[TxParams] = None"
+        if params != "":
+            params += ", "
         self.add_str_to_types(1, "@classmethod", 1)
-        self.add_str_to_types(1, f"def deploy(cls, {params}) -> {contract.name}:", 1)
-        self.add_str_to_types(2, f"return cls._deploy([{param_names}], params)", 1)
+        self.add_str_to_types(
+            1,
+            f"def deploy(cls, {params}*, from_: Optional[Union[Address, ChecksumAddress, str]] = None, value: Wei = 0) -> {contract.name}:",
+            1,
+        )
+        self.add_str_to_types(
+            2, f"return cls._deploy([{param_names}], from_, value)", 1
+        )
 
     def generate_contract_template(
         self, contract: ContractDefinition, base_names: str
@@ -340,10 +343,9 @@ class TypeGenerator:
                 + self.parse_type_and_import(par.type)
                 + ", "
             )
-        params += "params: Optional[TxParams] = None"
         if params_names:
             # remove trailing ", "
-            return params_names[:-2], params
+            return params_names[:-2], params[:-2]
         return params_names, params
 
     def generate_func_returns(self, fn: FunctionDefinition) -> str:
@@ -481,11 +483,6 @@ class TypeGenerator:
             return parsed if use_parse else ""
 
         generated_params = generate_getter_helper(decl.type, False, 0)
-        generated_params = (
-            generated_params + ", params: Optional[TxParams] = None"
-            if generated_params
-            else "params: Optional[TxParams] = None"
-        )
 
         self.generate_type_hint_stub_func(decl.name, generated_params, returns, False)
         self.generate_type_hint_stub_func(
@@ -550,9 +547,11 @@ class TypeGenerator:
             state_mutability == StateMutability.VIEW
             or state_mutability == StateMutability.PURE
         )
+        if params != "":
+            params += ", "
         self.add_str_to_types(
             1,
-            f"def {self.get_name(fn_name)}(self, {params}, *, return_tx: bool=False, request_type: RequestType='{'call' if is_view_or_pure else 'default'}') -> Union[{returns}, TransactionObject]:",
+            f"def {self.get_name(fn_name)}(self, {params}*, from_: Optional[Union[Address, ChecksumAddress, str]] = None, to: Optional[Union[Address, ChecksumAddress, str, Contract]] = None, value: Wei = 0, return_tx: bool=False, request_type: RequestType='{'call' if is_view_or_pure else 'default'}') -> Union[{returns}, TransactionObject]:",
             1,
         )
         if returns.strip() == "None":
@@ -561,17 +560,19 @@ class TypeGenerator:
             return_types = returns
         self.add_str_to_types(
             2,
-            f'return self.transact("{fn_selector}", [{param_names}], params, return_tx, request_type, {return_types}) if not request_type == \'call\' else self.call("{fn_selector}", [{param_names}], params, return_tx, {return_types})',
+            f'return self.transact("{fn_selector}", [{param_names}], return_tx, request_type, {return_types}, from_, to, value) if not request_type == \'call\' else self.call("{fn_selector}", [{param_names}], return_tx, {return_types}, from_, to, value)',
             2,
         )
 
     def generate_type_hint_stub_func(
         self, fn_name: str, params: str, returns: str, return_tx: bool
     ):
+        if params != "":
+            params += ", "
         self.add_str_to_types(1, "@overload", 1)
         self.add_str_to_types(
             1,
-            f"def {self.get_name(fn_name)}(self, {params}, *, return_tx: bool={return_tx}, request_type: RequestType='default') -> {returns}:",
+            f"def {self.get_name(fn_name)}(self, {params}*, from_: Optional[Union[Address, ChecksumAddress, str]] = None, to: Optional[Union[Address, ChecksumAddress, str, Contract]] = None, value: Wei = 0, return_tx: bool={return_tx}, request_type: RequestType='default') -> {returns}:",
             1,
         )
         self.add_str_to_types(2, "...", 2)
@@ -658,18 +659,20 @@ class TypeGenerator:
     def generate_fallback_function(self, fn: FunctionDefinition) -> None:
         # self.add_str_to_types(1, "@overload", 1)
         param_names, params = self.generate_func_params(fn)
+        if params != "":
+            params += ", "
         returns = self.generate_func_returns(fn)
         self.generate_type_hint_stub_func(fn.name, params, returns, False)
         self.generate_type_hint_stub_func(fn.name, params, "TransactionObject", True)
 
         self.add_str_to_types(
             1,
-            f"def {self.get_name(fn.name)}(self, {params}, *, return_tx: bool=False, request_type: RequestType='default') -> {returns}:",
+            f"def {self.get_name(fn.name)}(self, {params}*, from_: Optional[Union[Address, ChecksumAddress, str]] = None, value: Wei = 0, return_tx: bool=False, request_type: RequestType='default') -> {returns}:",
             1,
         )
         self.add_str_to_types(
             2,
-            f"return self.fallback_handler([{param_names}], params, return_tx, request_type)",
+            f"return self.fallback_handler([{param_names}], return_tx, request_type, from_, None, value)",
             2,
         )
 
