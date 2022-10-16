@@ -20,7 +20,7 @@ from eth_typing import Address, ChecksumAddress, HexStr
 from web3 import Web3
 from web3._utils.abi import get_abi_output_types
 from web3.method import Method
-from web3.types import RPCEndpoint, TxParams
+from web3.types import RPCEndpoint, TxParams, Wei
 
 from woke.fuzzer.abi_to_type import RequestType
 from woke.fuzzer.development_chains import AnvilDevChain, DevChainABC, HardhatDevChain
@@ -226,23 +226,41 @@ class Contract:
     @classmethod
     # TODO add option to deploy using a different instance of web3
     def _deploy(
-        cls, arguments: Iterable, params: Optional[TxParams] = None
+        cls,
+        arguments: Iterable,
+        from_: Optional[Union[Address, ChecksumAddress, str]],
+        value: Wei,
     ) -> "Contract":
-        contract = dev_interface.deploy(cls._abi, cls._bytecode, arguments)
+        params = {}
+        if from_ is not None:
+            params["from"] = from_
+        params["value"] = value
+
+        contract = dev_interface.deploy(cls._abi, cls._bytecode, arguments, params)
         return cls(contract.address)
 
     def transact(
         self,
         selector: HexStr,
         arguments: Iterable,
-        params: TxParams,
         return_tx: bool,
         request_type: RequestType,
         return_type: Type,
+        from_: Optional[Union[Address, ChecksumAddress, str]],
+        to: Optional[Union[Address, ChecksumAddress, str, "Contract"]],
+        value: Wei,
     ) -> Any:
         if return_tx:
             raise NotImplementedError("returning a transaction is not implemented")
+        params = {}
+        if from_ is not None:
+            params["from"] = from_
+        params["value"] = value
 
+        if to is not None:
+            if isinstance(to, Contract):
+                to = to._contract.address
+            params["to"] = to
         return dev_interface.transact(
             self._contract,
             selector,
@@ -273,13 +291,23 @@ class Contract:
         self,
         selector: HexStr,
         arguments: Iterable,
-        params: TxParams,
         return_tx: bool,
         return_type: Type,
+        from_: Optional[Union[Address, ChecksumAddress, str]],
+        to: Optional[Union[Address, ChecksumAddress, str, "Contract"]],
+        value: Wei,
     ) -> Any:
         if return_tx:
             raise ValueError("transaction can't be returned from a call")
-        output = dev_interface.call(
+        params = {}
+        if from_ is not None:
+            params["from"] = from_
+        params["value"] = value
+
+        if to is not None:
+            if isinstance(to, Contract):
+                to = to._contract.address
+            params["to"] = to
+        return dev_interface.call(
             self._contract, selector, arguments, params, return_type
         )
-        return output
