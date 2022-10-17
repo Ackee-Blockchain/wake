@@ -29,13 +29,8 @@ class HardhatDevChain(DevChainABC):
     def retrieve_transaction_data(
         self, params: List, tx_hash: Any, request_type: RequestType
     ) -> str:
-        output = None
         if request_type == RequestType.DEFAULT:
-            # output = self.w3.eth.debug_trace_transaction(HexStr(tx_hash.hex()))
             output = self.w3.eth.debug_trace_transaction(HexStr(tx_hash.hex()), {"disableMemory": True, "disableStack": True, "disableStorage": True})  # type: ignore
-            # while not output:
-            # output = self.w3.eth.debug_trace_transaction(HexStr(tx_hash.hex()))
-            # output = self.__w3.eth.trace_transaction(HexStr(tx_hash.hex()))
             output = output.returnValue
         else:
             raise NotImplementedError()
@@ -49,12 +44,26 @@ class AnvilDevChain(DevChainABC):
     def retrieve_transaction_data(
         self, params: List, tx_hash: Any, request_type: RequestType
     ) -> str:
-        output = None
         if request_type == RequestType.DEFAULT:
             output = self.w3.eth.trace_transaction(HexStr(tx_hash.hex()))  # type: ignore
             while not output:
                 output = self.w3.eth.trace_transaction(HexStr(tx_hash.hex()))  # type: ignore
             output = output[0].result.output[2:]
+        else:
+            raise NotImplementedError()
+        return output
+
+
+class GanacheDevChain(DevChainABC):
+    def __init__(self, w3: Web3):
+        DevChainABC.__init__(self, w3)
+
+    def retrieve_transaction_data(
+        self, params: List, tx_hash: Any, request_type: RequestType
+    ) -> str:
+        if request_type == RequestType.DEFAULT:
+            output = self.w3.eth.debug_trace_transaction(HexStr(tx_hash.hex()), {"disableMemory": True, "disableStack": True, "disableStorage": True})  # type: ignore
+            output = output.returnValue
         else:
             raise NotImplementedError()
         return output
