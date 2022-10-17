@@ -23,14 +23,12 @@ from web3.method import Method
 from web3.types import RPCEndpoint, TxParams, Wei
 
 from woke.fuzzer.abi_to_type import RequestType
-from woke.fuzzer.development_chains import AnvilDevChain, DevChainABC, HardhatDevChain
-
-
-class NetworkKind(IntEnum):
-    ANVIL = (0,)
-    HARDHAT = (1,)
-    GANACHE = (2,)
-    GETH = 3
+from woke.fuzzer.development_chains import (
+    AnvilDevChain,
+    DevChainABC,
+    GanacheDevChain,
+    HardhatDevChain,
+)
 
 
 class TransactionObject:
@@ -51,7 +49,6 @@ class Abi:
 
 # global interface for communicating with the devchain
 class DevchainInterface:
-    # __network: NetworkKind
     __dev_chain: DevChainABC
     __port: int
     __w3: Web3
@@ -83,10 +80,10 @@ class DevchainInterface:
             self.__dev_chain = AnvilDevChain(self.__w3)
         elif "hardhat" in client_version:
             self.__dev_chain = HardhatDevChain(self.__w3)
-        # elif "ethereumjs" in client_version:
-        #    self.__network = NetworkKind.GANACHE
-        # else:
-        #    self.__network = NetworkKind.GETH
+        elif "ethereumjs" in client_version:
+            self.__dev_chain = GanacheDevChain(self.__w3)
+        else:
+            raise NotImplementedError(f"Client version {client_version} not supported")
 
     @property
     def dev_chain(self):
