@@ -7,10 +7,10 @@ import random
 from dataclasses import dataclass 
 from typing import List, NewType, Optional, overload, Union
 
-from woke.fuzzer.contract import Contract, TransactionObject
+from woke.fuzzer.contract import Contract, TransactionObject, Address, Wei
 
 from eth_typing import AnyAddress, HexStr
 from web3 import Web3, WebsocketProvider, HTTPProvider
 from web3.method import Method
-from web3.types import Address, ChecksumAddress, RPCEndpoint, Wei
+from web3.types import RPCEndpoint
 """
