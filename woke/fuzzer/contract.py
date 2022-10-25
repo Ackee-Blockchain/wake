@@ -1,4 +1,5 @@
 import dataclasses
+from contextlib import contextmanager
 from enum import IntEnum
 from typing import (
     Any,
@@ -18,6 +19,7 @@ import web3.contract
 from eth_typing import HexStr
 from web3 import Web3
 from web3._utils.abi import get_abi_output_types
+from web3._utils.empty import Empty
 from web3.types import TxParams
 
 from woke.fuzzer.abi_to_type import RequestType
@@ -81,6 +83,7 @@ class DevchainInterface:
     __dev_chain: DevChainABC
     __port: int
     __w3: Web3
+    __accounts: List[Address]
 
     def __init__(self, port: int):
         self.__port = port
@@ -89,8 +92,6 @@ class DevchainInterface:
         )
         # self.__w3 = Web3(Web3.IPCProvider(f"/tmp/anvil.ipc"))
         # self.__w3 = Web3(Web3.HTTPProvider(f"http://127.0.0.1:{str(port)}"))
-        self.__w3.eth.default_account = self.__w3.eth.accounts[0]
-        print(f"default acc: {self.__w3.eth.default_account}")
         client_version: str = self.__w3.clientVersion.lower()
         print(f"client version: {client_version}")
         if "anvil" in client_version:
@@ -101,10 +102,24 @@ class DevchainInterface:
             self.__dev_chain = GanacheDevChain(self.__w3)
         else:
             raise NotImplementedError(f"Client version {client_version} not supported")
+        self.__accounts = [Address(acc) for acc in self.__w3.eth.accounts]
+        if len(self.__accounts) > 0:
+            self.__w3.eth.default_account = self.__accounts[0]
 
     @property
     def accounts(self) -> Tuple[Address, ...]:
-        return tuple(Address(acc) for acc in self.__w3.eth.accounts)
+        return tuple(self.__accounts)
+
+    @property
+    def default_account(self) -> Optional[Address]:
+        default_acc = self.__w3.eth.default_account
+        if isinstance(default_acc, Empty):
+            return None
+        return Address(default_acc)
+
+    @default_account.setter
+    def default_account(self, account: Union[Address, str]) -> None:
+        self.__w3.eth.default_account = str(account)
 
     @property
     def dev_chain(self):
@@ -152,12 +167,23 @@ class DevchainInterface:
                 return expected_type(value)
         return value
 
+    def update_accounts(self):
+        self.__accounts = [Address(acc) for acc in self.__w3.eth.accounts]
+
     def deploy(
-        self, abi, bytecode, arguments: Iterable, params: Optional[TxParams] = None
+        self, abi, bytecode, arguments: Iterable, params: TxParams
     ) -> web3.contract.Contract:
         arguments = [self._convert_to_web3_type(arg) for arg in arguments]
         factory = self.__w3.eth.contract(abi=abi, bytecode=bytecode)
-        tx_hash = factory.constructor(*arguments).transact(params)
+
+        if "from" not in params and self.default_account is None:
+            raise ValueError("No from_ account specified and no default account set")
+
+        with _signer_account(
+            Address(params["from"]) if "from" in params else self.default_account, self
+        ):
+            tx_hash = factory.constructor(*arguments).transact(params)
+
         tx_receipt = self.__w3.eth.wait_for_transaction_receipt(tx_hash)
         return self.__w3.eth.contract(address=tx_receipt["contractAddress"], abi=abi)  # type: ignore
 
@@ -184,11 +210,9 @@ class DevchainInterface:
     ) -> Any:
         if not params:
             params = {}
-        # if no from address is specified, use the default account
-        if "from" not in params:
-            if isinstance(self.__w3.eth.default_account, web3._utils.empty.Empty):
-                raise ValueError("No default account set")
-            params["from"] = self.__w3.eth.default_account
+        if "from" not in params and self.default_account is None:
+            raise ValueError("No from_ account specified and no default account set")
+
         # set the to address to the value of contract on which the fallback function is called
         params["to"] = contract.address
         if data:
@@ -196,7 +220,12 @@ class DevchainInterface:
                 "data"
             ] = data  # eth_abi.encode(*arguments, *types) #eth_abi.encode(['uint256', 'address'], [666, contract.address]) #self.__w3.eth.default_account])
         # TODO process the transaction inside the devhcain class and return
-        tx_hash = self.__w3.eth.send_transaction(params)
+
+        with _signer_account(
+            Address(params["from"]) if "from" in params else self.default_account, self
+        ):
+            tx_hash = self.__w3.eth.send_transaction(params)
+
         output = self.dev_chain.retrieve_transaction_data([], tx_hash, request_type)
         return bytes.fromhex(output)
 
@@ -213,7 +242,15 @@ class DevchainInterface:
         arguments = [self._convert_to_web3_type(arg) for arg in arguments]
         func = contract.get_function_by_selector(selector)(*arguments)
         output_abi = get_abi_output_types(func.abi)
-        tx_hash = func.transact(params)
+
+        if "from" not in params and self.default_account is None:
+            raise ValueError("No from_ account specified and no default account set")
+
+        with _signer_account(
+            Address(params["from"]) if "from" in params else self.default_account, self
+        ):
+            tx_hash = func.transact(params)
+
         output = self.dev_chain.retrieve_transaction_data([], tx_hash, request_type)
         web3_data = eth_abi.abi.decode(
             output_abi, bytes.fromhex(output)
@@ -224,6 +261,30 @@ class DevchainInterface:
         contract = self.__w3.eth.contract(abi=abi, address=addr)
         assert isinstance(contract, web3.contract.Contract)
         return contract
+
+
+@contextmanager
+def _signer_account(address: Address, interface: DevchainInterface):
+    chain = interface.dev_chain
+    account_created = True
+    if address not in interface.accounts:
+        interface.update_accounts()
+        if address not in interface.accounts:
+            account_created = False
+
+    if not account_created:
+        if isinstance(chain, (AnvilDevChain, HardhatDevChain)):
+            chain.impersonate_account(address)
+        elif isinstance(chain, GanacheDevChain):
+            chain.add_account(address, "")
+        else:
+            raise NotImplementedError()
+
+    try:
+        yield
+    finally:
+        if not account_created and isinstance(chain, (AnvilDevChain, HardhatDevChain)):
+            chain.stop_impersonating_account(address)
 
 
 dev_interface = DevchainInterface(8545)
