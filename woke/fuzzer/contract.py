@@ -1,26 +1,24 @@
 import dataclasses
-import time
 from enum import IntEnum
-from multiprocessing.sharedctypes import Value
 from typing import (
     Any,
     Iterable,
+    List,
     Optional,
     Sequence,
+    Tuple,
     Type,
     Union,
     get_type_hints,
-    overload,
 )
 
 import eth_abi
 import web3._utils.empty
 import web3.contract
-from eth_typing import Address, ChecksumAddress, HexStr
+from eth_typing import HexStr
 from web3 import Web3
 from web3._utils.abi import get_abi_output_types
-from web3.method import Method
-from web3.types import RPCEndpoint, TxParams, Wei
+from web3.types import TxParams
 
 from woke.fuzzer.abi_to_type import RequestType
 from woke.fuzzer.development_chains import (
@@ -47,6 +45,37 @@ class Abi:
         return eth_abi.decode(types, data)  # pyright: ignore[reportPrivateImportUsage]
 
 
+class Wei(int):
+    def to_ether(self) -> float:
+        return self / 10**18
+
+    @classmethod
+    def from_ether(cls, value: Union[int, float]) -> "Wei":
+        return cls(int(value * 10**18))
+
+
+class Address(str):
+    def __new__(cls, addr):
+        return super().__new__(cls, Web3.toChecksumAddress(addr))
+
+    def __eq__(self, other):
+        if not isinstance(other, str):
+            return NotImplemented
+        return Web3.toChecksumAddress(self) == Web3.toChecksumAddress(other)
+
+    @property
+    def balance(self) -> Wei:
+        return Wei(dev_interface.dev_chain.get_balance(self))
+
+    @balance.setter
+    def balance(self, value: Union[Wei, int]) -> None:
+        if not isinstance(value, int):
+            raise TypeError("value must be an integer")
+        if value < 0:
+            raise ValueError("value must be non-negative")
+        dev_interface.dev_chain.set_balance(self, value)
+
+
 # global interface for communicating with the devchain
 class DevchainInterface:
     __dev_chain: DevChainABC
@@ -60,18 +89,6 @@ class DevchainInterface:
         )
         # self.__w3 = Web3(Web3.IPCProvider(f"/tmp/anvil.ipc"))
         # self.__w3 = Web3(Web3.HTTPProvider(f"http://127.0.0.1:{str(port)}"))
-        self.__w3.eth.attach_methods(
-            {
-                "trace_transaction": Method(RPCEndpoint("trace_transaction")),
-                # TODO call
-                "debug_trace_transaction": Method(
-                    RPCEndpoint("debug_traceTransaction")
-                ),
-                "anvil_enable_traces": Method(
-                    RPCEndpoint("anvil_enableTraces")
-                ),  # currently not implemented in anvil - ValueError: {'code': -32603, 'message': 'Not implemented'}
-            }
-        )
         self.__w3.eth.default_account = self.__w3.eth.accounts[0]
         print(f"default acc: {self.__w3.eth.default_account}")
         client_version: str = self.__w3.clientVersion.lower()
@@ -84,6 +101,10 @@ class DevchainInterface:
             self.__dev_chain = GanacheDevChain(self.__w3)
         else:
             raise NotImplementedError(f"Client version {client_version} not supported")
+
+    @property
+    def accounts(self) -> Tuple[Address, ...]:
+        return tuple(Address(acc) for acc in self.__w3.eth.accounts)
 
     @property
     def dev_chain(self):
@@ -101,6 +122,8 @@ class DevchainInterface:
             return tuple(cls._convert_to_web3_type(v) for v in value)
         elif isinstance(value, Contract):
             return value._contract.address
+        elif isinstance(value, Address):
+            return str(value)
         else:
             return value
 
@@ -122,6 +145,8 @@ class DevchainInterface:
             return expected_type(*converted_values)
         elif isinstance(expected_type, type):
             if issubclass(expected_type, Contract):
+                return expected_type(value)
+            elif isinstance(expected_type, Address):
                 return expected_type(value)
             elif issubclass(expected_type, IntEnum):
                 return expected_type(value)
@@ -195,9 +220,7 @@ class DevchainInterface:
         )  # pyright: reportGeneralTypeIssues=false
         return self._convert_from_web3_type(web3_data, return_type)
 
-    def create_factory(
-        self, addr: Union[Address, ChecksumAddress], abi
-    ) -> web3.contract.Contract:
+    def create_factory(self, addr: Union[Address, str], abi) -> web3.contract.Contract:
         contract = self.__w3.eth.contract(abi=abi, address=addr)
         assert isinstance(contract, web3.contract.Contract)
         return contract
@@ -211,7 +234,7 @@ class Contract:
     _bytecode: HexStr
     _contract: web3.contract.Contract
 
-    def __init__(self, addr: Union[Address, ChecksumAddress]):
+    def __init__(self, addr: Union[Address, str]):
         self._contract = dev_interface.create_factory(addr, self.__class__._abi)
 
     def __str__(self):
@@ -225,12 +248,12 @@ class Contract:
     def _deploy(
         cls,
         arguments: Iterable,
-        from_: Optional[Union[Address, ChecksumAddress, str]],
+        from_: Optional[Union[Address, str]],
         value: Wei,
     ) -> "Contract":
         params = {}
         if from_ is not None:
-            params["from"] = from_
+            params["from"] = Address(from_)
         params["value"] = value
 
         contract = dev_interface.deploy(cls._abi, cls._bytecode, arguments, params)
@@ -243,15 +266,15 @@ class Contract:
         return_tx: bool,
         request_type: RequestType,
         return_type: Type,
-        from_: Optional[Union[Address, ChecksumAddress, str]],
-        to: Optional[Union[Address, ChecksumAddress, str, "Contract"]],
+        from_: Optional[Union[Address, str]],
+        to: Optional[Union[Address, str, "Contract"]],
         value: Wei,
     ) -> Any:
         if return_tx:
             raise NotImplementedError("returning a transaction is not implemented")
         params = {}
         if from_ is not None:
-            params["from"] = from_
+            params["from"] = Address(from_)
         params["value"] = value
 
         if to is not None:
@@ -290,15 +313,15 @@ class Contract:
         arguments: Iterable,
         return_tx: bool,
         return_type: Type,
-        from_: Optional[Union[Address, ChecksumAddress, str]],
-        to: Optional[Union[Address, ChecksumAddress, str, "Contract"]],
+        from_: Optional[Union[Address, str]],
+        to: Optional[Union[Address, str, "Contract"]],
         value: Wei,
     ) -> Any:
         if return_tx:
             raise ValueError("transaction can't be returned from a call")
         params = {}
         if from_ is not None:
-            params["from"] = from_
+            params["from"] = Address(from_)
         params["value"] = value
 
         if to is not None:

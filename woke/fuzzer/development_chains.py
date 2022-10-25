@@ -4,6 +4,8 @@ from typing import Any, Callable, Dict, List
 
 from eth_typing import HexStr
 from web3 import Web3
+from web3.method import Method
+from web3.types import RPCEndpoint
 
 from woke.fuzzer.abi_to_type import RequestType
 
@@ -21,10 +23,26 @@ class DevChainABC(ABC):
     ) -> str:
         ...
 
+    @abstractmethod
+    def get_balance(self, address: str) -> int:
+        ...
+
+    @abstractmethod
+    def set_balance(self, address: str, value: int) -> None:
+        ...
+
 
 class HardhatDevChain(DevChainABC):
     def __init__(self, w3: Web3):
-        DevChainABC.__init__(self, w3)
+        super().__init__(w3)
+        self.w3.eth.attach_methods(
+            {
+                "debug_trace_transaction": Method(
+                    RPCEndpoint("debug_traceTransaction")
+                ),
+                "hardhat_set_balance": Method(RPCEndpoint("hardhat_setBalance")),
+            }
+        )
 
     def retrieve_transaction_data(
         self, params: List, tx_hash: Any, request_type: RequestType
@@ -36,10 +54,30 @@ class HardhatDevChain(DevChainABC):
             raise NotImplementedError()
         return output
 
+    def get_balance(self, address: str) -> int:
+        return self.w3.eth.get_balance(address)
+
+    def set_balance(self, address: str, value: int) -> None:
+        self.w3.eth.hardhat_set_balance(
+            address, hex(value)
+        )  # pyright: reportGeneralTypeIssues=false
+
 
 class AnvilDevChain(DevChainABC):
     def __init__(self, w3: Web3):
-        DevChainABC.__init__(self, w3)
+        super().__init__(w3)
+        self.w3.eth.attach_methods(
+            {
+                "trace_transaction": Method(RPCEndpoint("trace_transaction")),
+                "debug_trace_transaction": Method(
+                    RPCEndpoint("debug_traceTransaction")
+                ),
+                "anvil_enable_traces": Method(
+                    RPCEndpoint("anvil_enableTraces")
+                ),  # currently not implemented in anvil - ValueError: {'code': -32603, 'message': 'Not implemented'}
+                "anvil_set_balance": Method(RPCEndpoint("anvil_setBalance")),
+            }
+        )
 
     def retrieve_transaction_data(
         self, params: List, tx_hash: Any, request_type: RequestType
@@ -53,10 +91,26 @@ class AnvilDevChain(DevChainABC):
             raise NotImplementedError()
         return output
 
+    def get_balance(self, address: str) -> int:
+        return self.w3.eth.get_balance(address)
+
+    def set_balance(self, address: str, value: int) -> None:
+        self.w3.eth.anvil_set_balance(
+            address, hex(value)
+        )  # pyright: reportGeneralTypeIssues=false
+
 
 class GanacheDevChain(DevChainABC):
     def __init__(self, w3: Web3):
-        DevChainABC.__init__(self, w3)
+        super().__init__(w3)
+        self.w3.eth.attach_methods(
+            {
+                "debug_trace_transaction": Method(
+                    RPCEndpoint("debug_traceTransaction")
+                ),
+                "evm_set_account_balance": Method(RPCEndpoint("evm_setAccountBalance")),
+            }
+        )
 
     def retrieve_transaction_data(
         self, params: List, tx_hash: Any, request_type: RequestType
@@ -67,3 +121,11 @@ class GanacheDevChain(DevChainABC):
         else:
             raise NotImplementedError()
         return output
+
+    def get_balance(self, address: str) -> int:
+        return self.w3.eth.get_balance(address)
+
+    def set_balance(self, address: str, value: int) -> None:
+        self.w3.eth.evm_set_account_balance(
+            address, hex(value)
+        )  # pyright: reportGeneralTypeIssues=false

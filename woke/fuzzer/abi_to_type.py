@@ -94,7 +94,7 @@ class TypeGenerator:
 
     # TODO do some prettier init :)
     def __init_sol_to_py_types(self):
-        self.__sol_to_py_lookup[types.Address.__name__] = "AnyAddress"
+        self.__sol_to_py_lookup[types.Address.__name__] = "Address"
         self.__sol_to_py_lookup[types.String.__name__] = "str"
         self.__sol_to_py_lookup[types.Array.__name__] = "arr"
         self.__sol_to_py_lookup[types.Struct.__name__] = "struct"
@@ -219,7 +219,7 @@ class TypeGenerator:
         self.add_str_to_types(1, "@classmethod", 1)
         self.add_str_to_types(
             1,
-            f"def deploy(cls, {params}*, from_: Optional[Union[Address, ChecksumAddress, str]] = None, value: Wei = 0) -> {contract.name}:",
+            f"def deploy(cls, {params}*, from_: Optional[Union[Address, str]] = None, value: Wei = 0) -> {contract.name}:",
             1,
         )
         self.add_str_to_types(
@@ -551,7 +551,7 @@ class TypeGenerator:
             params += ", "
         self.add_str_to_types(
             1,
-            f"def {self.get_name(fn_name)}(self, {params}*, from_: Optional[Union[Address, ChecksumAddress, str]] = None, to: Optional[Union[Address, ChecksumAddress, str, Contract]] = None, value: Wei = 0, return_tx: bool=False, request_type: RequestType='{'call' if is_view_or_pure else 'default'}') -> Union[{returns}, TransactionObject]:",
+            f"def {self.get_name(fn_name)}(self, {params}*, from_: Optional[Union[Address, str]] = None, to: Optional[Union[Address, str, Contract]] = None, value: Wei = 0, return_tx: bool=False, request_type: RequestType='{'call' if is_view_or_pure else 'default'}') -> Union[{returns}, TransactionObject]:",
             1,
         )
         if returns.strip() == "None":
@@ -572,7 +572,7 @@ class TypeGenerator:
         self.add_str_to_types(1, "@overload", 1)
         self.add_str_to_types(
             1,
-            f"def {self.get_name(fn_name)}(self, {params}*, from_: Optional[Union[Address, ChecksumAddress, str]] = None, to: Optional[Union[Address, ChecksumAddress, str, Contract]] = None, value: Wei = 0, return_tx: bool={return_tx}, request_type: RequestType='default') -> {returns}:",
+            f"def {self.get_name(fn_name)}(self, {params}*, from_: Optional[Union[Address, str]] = None, to: Optional[Union[Address, str, Contract]] = None, value: Wei = 0, return_tx: bool={return_tx}, request_type: RequestType='default') -> {returns}:",
             1,
         )
         self.add_str_to_types(2, "...", 2)
@@ -667,7 +667,7 @@ class TypeGenerator:
 
         self.add_str_to_types(
             1,
-            f"def {self.get_name(fn.name)}(self, {params}*, from_: Optional[Union[Address, ChecksumAddress, str]] = None, value: Wei = 0, return_tx: bool=False, request_type: RequestType='default') -> {returns}:",
+            f"def {self.get_name(fn.name)}(self, {params}*, from_: Optional[Union[Address, str]] = None, value: Wei = 0, return_tx: bool=False, request_type: RequestType='default') -> {returns}:",
             1,
         )
         self.add_str_to_types(
@@ -999,6 +999,8 @@ class NameSanitizer:
             "__init__",
             "transact",
             "call",
+            "to",
+            "from_",
         }
         self.__used_names = set()
         self.__renamed = {}
