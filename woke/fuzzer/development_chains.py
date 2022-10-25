@@ -41,6 +41,12 @@ class HardhatDevChain(DevChainABC):
                     RPCEndpoint("debug_traceTransaction")
                 ),
                 "hardhat_set_balance": Method(RPCEndpoint("hardhat_setBalance")),
+                "hardhat_impersonate_account": Method(
+                    RPCEndpoint("hardhat_impersonateAccount")
+                ),
+                "hardhat_stop_impersonating_account": Method(
+                    RPCEndpoint("hardhat_stopImpersonatingAccount")
+                ),
             }
         )
 
@@ -62,6 +68,12 @@ class HardhatDevChain(DevChainABC):
             address, hex(value)
         )  # pyright: reportGeneralTypeIssues=false
 
+    def impersonate_account(self, address: str) -> None:
+        self.w3.eth.hardhat_impersonate_account(address)
+
+    def stop_impersonating_account(self, address: str) -> None:
+        self.w3.eth.hardhat_stop_impersonating_account(address)
+
 
 class AnvilDevChain(DevChainABC):
     def __init__(self, w3: Web3):
@@ -76,6 +88,12 @@ class AnvilDevChain(DevChainABC):
                     RPCEndpoint("anvil_enableTraces")
                 ),  # currently not implemented in anvil - ValueError: {'code': -32603, 'message': 'Not implemented'}
                 "anvil_set_balance": Method(RPCEndpoint("anvil_setBalance")),
+                "anvil_impersonate_account": Method(
+                    RPCEndpoint("anvil_impersonateAccount")
+                ),
+                "anvil_stop_impersonating_account": Method(
+                    RPCEndpoint("anvil_stopImpersonatingAccount")
+                ),
             }
         )
 
@@ -99,6 +117,12 @@ class AnvilDevChain(DevChainABC):
             address, hex(value)
         )  # pyright: reportGeneralTypeIssues=false
 
+    def impersonate_account(self, address: str) -> None:
+        self.w3.eth.anvil_impersonate_account(address)
+
+    def stop_impersonating_account(self, address: str) -> None:
+        self.w3.eth.anvil_stop_impersonating_account(address)
+
 
 class GanacheDevChain(DevChainABC):
     def __init__(self, w3: Web3):
@@ -109,6 +133,7 @@ class GanacheDevChain(DevChainABC):
                     RPCEndpoint("debug_traceTransaction")
                 ),
                 "evm_set_account_balance": Method(RPCEndpoint("evm_setAccountBalance")),
+                "evm_add_account": Method(RPCEndpoint("evm_addAccount")),
             }
         )
 
@@ -129,3 +154,6 @@ class GanacheDevChain(DevChainABC):
         self.w3.eth.evm_set_account_balance(
             address, hex(value)
         )  # pyright: reportGeneralTypeIssues=false
+
+    def add_account(self, address: str, passphrase: str) -> bool:
+        return self.w3.eth.evm_add_account(address, passphrase)
