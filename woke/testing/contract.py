@@ -26,8 +26,8 @@ from web3._utils.abi import get_abi_input_types, get_abi_output_types
 from web3._utils.empty import Empty
 from web3.types import TxParams, TxReceipt
 
-from woke.fuzzer.abi_to_type import RequestType
-from woke.fuzzer.development_chains import (
+from woke.testing.abi_to_type import RequestType
+from woke.testing.development_chains import (
     AnvilDevChain,
     DevChainABC,
     GanacheDevChain,

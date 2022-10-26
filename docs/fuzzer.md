@@ -43,8 +43,8 @@ In the example below, the contract is deployed and the `Campaign` is run with 10
 ```python
 import brownie
 from pytypes import VotingContractType
-from woke.fuzzer import Campaign
-from woke.fuzzer.random import random_account
+from woke.testing import Campaign
+from woke.testing.random import random_account
 
 class TestingSequence:
     def __init__(self, contract: VotingContractType):
@@ -69,8 +69,8 @@ The number of execution times for a **[Flow](#flows)** per sequence can be tuned
 A **[Flow](#flows)** is a test method with `@flow` decorator that uses the fuzzed smart contract and specifies where Woke fuzzer should insert randomly generated data. 
 ```python
 import brownie
-from woke.fuzzer.decorators import flow
-from woke.fuzzer.random import random_account, random_string
+from woke.testing.decorators import flow
+from woke.testing.random import random_account, random_string
 ...
     @flow
     def flow_add_subject(self):
@@ -97,8 +97,8 @@ Should a contract fail to revert the transaction, it will be reported as a bug b
 
 Woke fuzzer is a property-based fuzzer, and as such, it allows testers to define **[Invariant](#invariants)** methods with `@invariant` decorator. These **[Invariant](#invariants)** methods check for correctness of certain properties in deployed fuzzed smart contracts after every **[Flow](#flows)** execution.
 ```python
-from woke.fuzzer.decorators import invariant
-from woke.fuzzer.random import random_account
+from woke.testing.decorators import invariant
+from woke.testing.random import random_account
 ...
     @invariant
     def invariant_subjects(self):
@@ -125,7 +125,7 @@ Woke fuzzer has several built-in methods for generating pseudo-random data:
 * `random_string` can construct a random string of given `min` and `max` length,
 * `random_bytes` generates a sequence of random bytes with given `min` and `max` length.
 
-Some of the methods mentioned above also have other optional parameters such as predicates that can be used to further restrict which values will be generated, see [source code](https://github.com/Ackee-Blockchain/woke/blob/main/woke/fuzzer/random.py) for full specification.
+Some of the methods mentioned above also have other optional parameters such as predicates that can be used to further restrict which values will be generated, see [source code](https://github.com/Ackee-Blockchain/woke/blob/main/woke/testing/random.py) for full specification.
 
 ### Running the fuzzer
 After writing **[Flows](#flows)** and **[Invariants](#invariants)**, Woke fuzzer can be run with all fuzz test files using:

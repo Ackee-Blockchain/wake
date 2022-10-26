@@ -5,7 +5,7 @@ from click.core import Context
 
 from woke.config import WokeConfig
 from woke.utils import file_utils
-from ..fuzzer.abi_to_type import TypeGenerator
+from ..testing.abi_to_type import TypeGenerator
 
 
 @click.group(name="init")

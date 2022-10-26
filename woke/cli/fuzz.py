@@ -11,7 +11,7 @@ from typing import Callable, Iterable, Tuple
 import click
 
 from woke.config import WokeConfig
-from woke.fuzzer import fuzz
+from woke.testing import fuzz
 
 from .console import console
 

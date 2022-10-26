@@ -1,7 +1,7 @@
 import IPython
 
-from woke.fuzzer import Campaign
-from woke.fuzzer.decorators import (
+from woke.testing import Campaign
+from woke.testing.decorators import (
     flow,
     ignore,
     invariant,
@@ -9,7 +9,7 @@ from woke.fuzzer.decorators import (
     precondition,
     weight,
 )
-from woke.fuzzer.random import (
+from woke.testing.random import (
     random_account,
     random_bool,
     random_bytes,
