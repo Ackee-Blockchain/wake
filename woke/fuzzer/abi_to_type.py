@@ -653,28 +653,6 @@ class TypeGenerator:
         for fn in contract.functions:
             if fn.function_selector:
                 self.generate_types_function(fn)
-            elif fn.name == "fallback":
-                self.generate_fallback_function(fn)
-
-    def generate_fallback_function(self, fn: FunctionDefinition) -> None:
-        # self.add_str_to_types(1, "@overload", 1)
-        param_names, params = self.generate_func_params(fn)
-        if params != "":
-            params += ", "
-        returns = self.generate_func_returns(fn)
-        self.generate_type_hint_stub_func(fn.name, params, returns, False)
-        self.generate_type_hint_stub_func(fn.name, params, "TransactionObject", True)
-
-        self.add_str_to_types(
-            1,
-            f"def {self.get_name(fn.name)}(self, {params}*, from_: Optional[Union[Address, str]] = None, value: Wei = 0, return_tx: bool=False, request_type: RequestType='default') -> {returns}:",
-            1,
-        )
-        self.add_str_to_types(
-            2,
-            f"return self.fallback_handler([{param_names}], return_tx, request_type, from_, None, value)",
-            2,
-        )
 
     def generate_types_source_unit(self, unit: SourceUnit) -> None:
         self.generate_types_struct(unit.structs, 0)

@@ -200,35 +200,6 @@ class DevchainInterface:
         web3_data = func.call(params)
         return self._convert_from_web3_type(web3_data, return_type)
 
-    def fallback(
-        self,
-        contract,
-        data: bytes,
-        params: TxParams,
-        return_tx: bool,
-        request_type: RequestType,
-    ) -> Any:
-        if not params:
-            params = {}
-        if "from" not in params and self.default_account is None:
-            raise ValueError("No from_ account specified and no default account set")
-
-        # set the to address to the value of contract on which the fallback function is called
-        params["to"] = contract.address
-        if data:
-            params[
-                "data"
-            ] = data  # eth_abi.encode(*arguments, *types) #eth_abi.encode(['uint256', 'address'], [666, contract.address]) #self.__w3.eth.default_account])
-        # TODO process the transaction inside the devhcain class and return
-
-        with _signer_account(
-            Address(params["from"]) if "from" in params else self.default_account, self
-        ):
-            tx_hash = self.__w3.eth.send_transaction(params)
-
-        output = self.dev_chain.retrieve_transaction_data([], tx_hash, request_type)
-        return bytes.fromhex(output)
-
     def transact(
         self,
         contract: web3.contract.Contract,
@@ -350,22 +321,6 @@ class Contract:
             return_tx,
             request_type,
             return_type,
-        )
-
-    # TODO handle return data
-    def fallback_handler(
-        self,
-        arguments: Sequence,
-        params: TxParams,
-        return_tx: bool,
-        request_type: RequestType,
-    ) -> Any:
-        return dev_interface.fallback(
-            self._contract,
-            arguments[0] if arguments else b"",
-            params,
-            return_tx,
-            request_type,
         )
 
     def call(
