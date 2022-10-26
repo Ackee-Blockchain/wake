@@ -560,7 +560,7 @@ class TypeGenerator:
             return_types = returns
         self.add_str_to_types(
             2,
-            f'return self.transact("{fn_selector}", [{param_names}], return_tx, request_type, {return_types}, from_, to, value) if not request_type == \'call\' else self.call("{fn_selector}", [{param_names}], return_tx, {return_types}, from_, to, value)',
+            f'return self._transact("{fn_selector}", [{param_names}], return_tx, request_type, {return_types}, from_, to, value) if not request_type == \'call\' else self._call("{fn_selector}", [{param_names}], return_tx, {return_types}, from_, to, value)',
             2,
         )
 
@@ -966,7 +966,6 @@ class NameSanitizer:
             "Union",
             "Path",
             "bytearray",
-            "deploy",
             "IntEnum",
             "dataclass",
             "Contract",
@@ -975,8 +974,9 @@ class NameSanitizer:
             "__str__",
             "__call__",
             "__init__",
-            "transact",
-            "call",
+            "_deploy",
+            "_transact",
+            "_call",
             "to",
             "from_",
         }
