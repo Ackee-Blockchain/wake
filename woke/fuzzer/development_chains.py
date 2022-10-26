@@ -7,8 +7,6 @@ from web3 import Web3
 from web3.method import Method
 from web3.types import RPCEndpoint
 
-from woke.fuzzer.abi_to_type import RequestType
-
 
 class DevChainABC(ABC):
     w3: Web3
@@ -18,9 +16,7 @@ class DevChainABC(ABC):
         self.w3 = w3
 
     @abstractmethod
-    def retrieve_transaction_data(
-        self, params: List, tx_hash: Any, request_type: RequestType
-    ) -> str:
+    def retrieve_transaction_data(self, params: List, tx_hash: Any) -> str:
         ...
 
     @abstractmethod
@@ -55,15 +51,9 @@ class HardhatDevChain(DevChainABC):
             }
         )
 
-    def retrieve_transaction_data(
-        self, params: List, tx_hash: Any, request_type: RequestType
-    ) -> str:
-        if request_type == RequestType.DEFAULT:
-            output = self.w3.eth.debug_trace_transaction(HexStr(tx_hash.hex()), {"disableMemory": True, "disableStack": True, "disableStorage": True})  # type: ignore
-            output = output.returnValue
-        else:
-            raise NotImplementedError()
-        return output
+    def retrieve_transaction_data(self, params: List, tx_hash: Any) -> str:
+        output = self.w3.eth.debug_trace_transaction(HexStr(tx_hash.hex()), {"disableMemory": True, "disableStack": True, "disableStorage": True})  # type: ignore
+        return output.returnValue
 
     def get_balance(self, address: str) -> int:
         return self.w3.eth.get_balance(address)
@@ -106,17 +96,11 @@ class AnvilDevChain(DevChainABC):
             }
         )
 
-    def retrieve_transaction_data(
-        self, params: List, tx_hash: Any, request_type: RequestType
-    ) -> str:
-        if request_type == RequestType.DEFAULT:
+    def retrieve_transaction_data(self, params: List, tx_hash: Any) -> str:
+        output = self.w3.eth.trace_transaction(HexStr(tx_hash.hex()))  # type: ignore
+        while not output:
             output = self.w3.eth.trace_transaction(HexStr(tx_hash.hex()))  # type: ignore
-            while not output:
-                output = self.w3.eth.trace_transaction(HexStr(tx_hash.hex()))  # type: ignore
-            output = output[0].result.output[2:]
-        else:
-            raise NotImplementedError()
-        return output
+        return output[0].result.output[2:]
 
     def get_balance(self, address: str) -> int:
         return self.w3.eth.get_balance(address)
@@ -149,15 +133,9 @@ class GanacheDevChain(DevChainABC):
             }
         )
 
-    def retrieve_transaction_data(
-        self, params: List, tx_hash: Any, request_type: RequestType
-    ) -> str:
-        if request_type == RequestType.DEFAULT:
-            output = self.w3.eth.debug_trace_transaction(HexStr(tx_hash.hex()), {"disableMemory": True, "disableStack": True, "disableStorage": True})  # type: ignore
-            output = output.returnValue
-        else:
-            raise NotImplementedError()
-        return output
+    def retrieve_transaction_data(self, params: List, tx_hash: Any) -> str:
+        output = self.w3.eth.debug_trace_transaction(HexStr(tx_hash.hex()), {"disableMemory": True, "disableStack": True, "disableStorage": True})  # type: ignore
+        return output.returnValue
 
     def get_balance(self, address: str) -> int:
         return self.w3.eth.get_balance(address)
