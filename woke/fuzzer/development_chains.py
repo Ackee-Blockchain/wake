@@ -31,6 +31,10 @@ class DevChainABC(ABC):
     def set_balance(self, address: str, value: int) -> None:
         ...
 
+    @abstractmethod
+    def set_block_gas_limit(self, gas_limit: int) -> None:
+        ...
+
 
 class HardhatDevChain(DevChainABC):
     def __init__(self, w3: Web3):
@@ -47,6 +51,7 @@ class HardhatDevChain(DevChainABC):
                 "hardhat_stop_impersonating_account": Method(
                     RPCEndpoint("hardhat_stopImpersonatingAccount")
                 ),
+                "evm_set_block_gas_limit": Method(RPCEndpoint("evm_setBlockGasLimit")),
             }
         )
 
@@ -74,6 +79,9 @@ class HardhatDevChain(DevChainABC):
     def stop_impersonating_account(self, address: str) -> None:
         self.w3.eth.hardhat_stop_impersonating_account(address)
 
+    def set_block_gas_limit(self, gas_limit: int) -> None:
+        self.w3.eth.evm_set_block_gas_limit(hex(gas_limit))
+
 
 class AnvilDevChain(DevChainABC):
     def __init__(self, w3: Web3):
@@ -94,6 +102,7 @@ class AnvilDevChain(DevChainABC):
                 "anvil_stop_impersonating_account": Method(
                     RPCEndpoint("anvil_stopImpersonatingAccount")
                 ),
+                "evm_set_block_gas_limit": Method(RPCEndpoint("evm_setBlockGasLimit")),
             }
         )
 
@@ -122,6 +131,9 @@ class AnvilDevChain(DevChainABC):
 
     def stop_impersonating_account(self, address: str) -> None:
         self.w3.eth.anvil_stop_impersonating_account(address)
+
+    def set_block_gas_limit(self, gas_limit: int) -> None:
+        self.w3.eth.evm_set_block_gas_limit(hex(gas_limit))
 
 
 class GanacheDevChain(DevChainABC):
@@ -157,3 +169,6 @@ class GanacheDevChain(DevChainABC):
 
     def add_account(self, address: str, passphrase: str) -> bool:
         return self.w3.eth.evm_add_account(address, passphrase)
+
+    def set_block_gas_limit(self, gas_limit: int) -> None:
+        raise NotImplementedError("Ganache does not support setting block gas limit")

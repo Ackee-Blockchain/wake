@@ -17,6 +17,7 @@ import eth_abi
 import web3._utils.empty
 import web3.contract
 from eth_typing import HexStr
+from typing_extensions import Literal
 from web3 import Web3
 from web3._utils.abi import get_abi_output_types
 from web3._utils.empty import Empty
@@ -84,6 +85,7 @@ class DevchainInterface:
     __port: int
     __w3: Web3
     __accounts: List[Address]
+    __block_gas_limit: int
 
     def __init__(self, port: int):
         self.__port = port
@@ -103,6 +105,9 @@ class DevchainInterface:
         else:
             raise NotImplementedError(f"Client version {client_version} not supported")
         self.__accounts = [Address(acc) for acc in self.__w3.eth.accounts]
+        block_info = self.__w3.eth.get_block("latest")
+        assert "gasLimit" in block_info
+        self.__block_gas_limit = block_info["gasLimit"]
         if len(self.__accounts) > 0:
             self.__w3.eth.default_account = self.__accounts[0]
 
@@ -120,6 +125,15 @@ class DevchainInterface:
     @default_account.setter
     def default_account(self, account: Union[Address, str]) -> None:
         self.__w3.eth.default_account = str(account)
+
+    @property
+    def block_gas_limit(self) -> int:
+        return self.__block_gas_limit
+
+    @block_gas_limit.setter
+    def block_gas_limit(self, value: int) -> None:
+        self.__dev_chain.set_block_gas_limit(value)
+        self.__block_gas_limit = value
 
     @property
     def dev_chain(self):
@@ -282,11 +296,21 @@ class Contract:
         arguments: Iterable,
         from_: Optional[Union[Address, str]],
         value: Wei,
+        gas_limit: Union[int, Literal["max"], Literal["auto"]],
     ) -> "Contract":
         params = {}
         if from_ is not None:
             params["from"] = Address(from_)
         params["value"] = value
+
+        if gas_limit == "max":
+            params["gas"] = dev_interface.block_gas_limit
+        elif gas_limit == "auto":
+            pass
+        elif isinstance(gas_limit, int):
+            params["gas"] = gas_limit
+        else:
+            raise ValueError("invalid gas limit")
 
         contract = dev_interface.deploy(cls._abi, cls._bytecode, arguments, params)
         return cls(contract.address)
@@ -301,6 +325,7 @@ class Contract:
         from_: Optional[Union[Address, str]],
         to: Optional[Union[Address, str, "Contract"]],
         value: Wei,
+        gas_limit: Union[int, Literal["max"], Literal["auto"]],
     ) -> Any:
         if return_tx:
             raise NotImplementedError("returning a transaction is not implemented")
@@ -308,6 +333,15 @@ class Contract:
         if from_ is not None:
             params["from"] = Address(from_)
         params["value"] = value
+
+        if gas_limit == "max":
+            params["gas"] = dev_interface.block_gas_limit
+        elif gas_limit == "auto":
+            pass
+        elif isinstance(gas_limit, int):
+            params["gas"] = gas_limit
+        else:
+            raise ValueError("invalid gas limit")
 
         if to is not None:
             if isinstance(to, Contract):
@@ -332,6 +366,7 @@ class Contract:
         from_: Optional[Union[Address, str]],
         to: Optional[Union[Address, str, "Contract"]],
         value: Wei,
+        gas_limit: Union[int, Literal["max"], Literal["auto"]],
     ) -> Any:
         if return_tx:
             raise ValueError("transaction can't be returned from a call")
@@ -339,6 +374,15 @@ class Contract:
         if from_ is not None:
             params["from"] = Address(from_)
         params["value"] = value
+
+        if gas_limit == "max":
+            params["gas"] = dev_interface.block_gas_limit
+        elif gas_limit == "auto":
+            pass
+        elif isinstance(gas_limit, int):
+            params["gas"] = gas_limit
+        else:
+            raise ValueError("invalid gas limit")
 
         if to is not None:
             if isinstance(to, Contract):
