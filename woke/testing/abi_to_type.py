@@ -582,7 +582,7 @@ class TypeGenerator:
         returns = self.generate_func_returns(fn)
         # the generated functions have parameter of type RequestType, which is an enum and must be imported
         self.__imports.add_python_import(
-            "from woke.fuzzer.abi_to_type import RequestType"
+            "from woke.testing.abi_to_type import RequestType"
         )
         self.generate_type_hint_stub_func(fn.name, params, returns, False)
         self.generate_type_hint_stub_func(fn.name, params, "TransactionObject", True)
@@ -843,7 +843,7 @@ class SourceUnitImports:
         # TODO add to one import statement to avoid having multiple lines of imports from the same file
         for p_type in self.__used_primitive_types:
             self.add_str_to_imports(
-                0, "from woke.fuzzer.primitive_types import " + p_type, 1
+                0, "from woke.testing.primitive_types import " + p_type, 1
             )
 
         if (
