@@ -291,7 +291,7 @@ class Contract:
         contract = dev_interface.deploy(cls._abi, cls._bytecode, arguments, params)
         return cls(contract.address)
 
-    def transact(
+    def _transact(
         self,
         selector: HexStr,
         arguments: Iterable,
@@ -323,7 +323,7 @@ class Contract:
             return_type,
         )
 
-    def call(
+    def _call(
         self,
         selector: HexStr,
         arguments: Iterable,
