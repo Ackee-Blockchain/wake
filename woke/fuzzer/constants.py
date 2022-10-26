@@ -6,6 +6,7 @@ DEFAULT_IMPORTS: str = """
 import random 
 from dataclasses import dataclass 
 from typing import List, NewType, Optional, overload, Union
+from typing_extensions import Literal
 
 from woke.fuzzer.contract import Contract, TransactionObject, Address, Wei
 

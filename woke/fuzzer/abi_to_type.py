@@ -219,11 +219,11 @@ class TypeGenerator:
         self.add_str_to_types(1, "@classmethod", 1)
         self.add_str_to_types(
             1,
-            f"def deploy(cls, {params}*, from_: Optional[Union[Address, str]] = None, value: Wei = 0) -> {contract.name}:",
+            f'def deploy(cls, {params}*, from_: Optional[Union[Address, str]] = None, value: Wei = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max") -> {contract.name}:',
             1,
         )
         self.add_str_to_types(
-            2, f"return cls._deploy([{param_names}], from_, value)", 1
+            2, f"return cls._deploy([{param_names}], from_, value, gas_limit)", 1
         )
 
     def generate_contract_template(
@@ -551,7 +551,7 @@ class TypeGenerator:
             params += ", "
         self.add_str_to_types(
             1,
-            f"def {self.get_name(fn_name)}(self, {params}*, from_: Optional[Union[Address, str]] = None, to: Optional[Union[Address, str, Contract]] = None, value: Wei = 0, return_tx: bool=False, request_type: RequestType='{'call' if is_view_or_pure else 'default'}') -> Union[{returns}, TransactionObject]:",
+            f"""def {self.get_name(fn_name)}(self, {params}*, from_: Optional[Union[Address, str]] = None, to: Optional[Union[Address, str, Contract]] = None, value: Wei = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: bool=False, request_type: RequestType='{'call' if is_view_or_pure else 'default'}') -> Union[{returns}, TransactionObject]:""",
             1,
         )
         if returns.strip() == "None":
@@ -560,7 +560,7 @@ class TypeGenerator:
             return_types = returns
         self.add_str_to_types(
             2,
-            f'return self._transact("{fn_selector}", [{param_names}], return_tx, request_type, {return_types}, from_, to, value) if not request_type == \'call\' else self._call("{fn_selector}", [{param_names}], return_tx, {return_types}, from_, to, value)',
+            f'return self._transact("{fn_selector}", [{param_names}], return_tx, request_type, {return_types}, from_, to, value, gas_limit) if not request_type == \'call\' else self._call("{fn_selector}", [{param_names}], return_tx, {return_types}, from_, to, value, gas_limit)',
             2,
         )
 
@@ -572,7 +572,7 @@ class TypeGenerator:
         self.add_str_to_types(1, "@overload", 1)
         self.add_str_to_types(
             1,
-            f"def {self.get_name(fn_name)}(self, {params}*, from_: Optional[Union[Address, str]] = None, to: Optional[Union[Address, str, Contract]] = None, value: Wei = 0, return_tx: bool={return_tx}, request_type: RequestType='default') -> {returns}:",
+            f"""def {self.get_name(fn_name)}(self, {params}*, from_: Optional[Union[Address, str]] = None, to: Optional[Union[Address, str, Contract]] = None, value: Wei = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: bool={return_tx}, request_type: RequestType='default') -> {returns}:""",
             1,
         )
         self.add_str_to_types(2, "...", 2)
