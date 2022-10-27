@@ -246,9 +246,19 @@ class TypeGenerator:
             f'def deploy(cls, {params}*, from_: Optional[Union[Address, str]] = None, value: Wei = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max") -> {contract.name}:',
             1,
         )
-        self.add_str_to_types(
-            2, f"return cls._deploy([{param_names}], from_, value, gas_limit)", 1
-        )
+        if contract.kind == ContractKind.CONTRACT:
+            if not contract.abstract:
+                self.add_str_to_types(
+                    2,
+                    f"return cls._deploy([{param_names}], from_, value, gas_limit)",
+                    1,
+                )
+            else:
+                self.add_str_to_types(
+                    2, 'raise Exception("Cannot deploy abstract contract")', 1
+                )
+        else:
+            self.add_str_to_types(2, 'raise Exception("Cannot deploy interface")', 1)
 
     def generate_contract_template(
         self, contract: ContractDefinition, base_names: str
@@ -288,8 +298,7 @@ class TypeGenerator:
         )
 
         self.__imports.add_python_import("from __future__ import annotations")
-        if contract.kind == ContractKind.CONTRACT and not contract.abstract:
-            self.generate_deploy_func(contract)
+        self.generate_deploy_func(contract)
         self.add_str_to_types(0, "", 1)
 
     def generate_types_struct(
