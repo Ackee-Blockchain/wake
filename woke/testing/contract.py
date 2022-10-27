@@ -60,6 +60,11 @@ class Wei(int):
 
 class Address(str):
     def __new__(cls, addr):
+        # cannot use isinstance(addr, Contract) because of circular dependency
+        try:
+            addr = addr._address
+        except AttributeError:
+            pass
         return super().__new__(
             cls, eth_utils.to_checksum_address(addr)
         )  # pyright: reportPrivateImportUsage=false
@@ -454,7 +459,7 @@ class Contract:
     def _deploy(
         cls,
         arguments: Iterable,
-        from_: Optional[Union[Address, str]],
+        from_: Optional[Union[Address, str, "Contract"]],
         value: Wei,
         gas_limit: Union[int, Literal["max"], Literal["auto"]],
     ) -> "Contract":
@@ -482,7 +487,7 @@ class Contract:
         return_tx: bool,
         request_type: RequestType,
         return_type: Type,
-        from_: Optional[Union[Address, str]],
+        from_: Optional[Union[Address, str, "Contract"]],
         to: Optional[Union[Address, str, "Contract"]],
         value: Wei,
         gas_limit: Union[int, Literal["max"], Literal["auto"]],
@@ -526,7 +531,7 @@ class Contract:
         arguments: Iterable,
         return_tx: bool,
         return_type: Type,
-        from_: Optional[Union[Address, str]],
+        from_: Optional[Union[Address, str, "Contract"]],
         to: Optional[Union[Address, str, "Contract"]],
         value: Wei,
         gas_limit: Union[int, Literal["max"], Literal["auto"]],
