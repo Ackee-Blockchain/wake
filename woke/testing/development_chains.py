@@ -54,9 +54,14 @@ class DevChainABC(ABC):
         )
 
     def wait_for_transaction_receipt(self, tx_hash: str) -> Dict[str, Any]:
-        return self._loop.run_until_complete(
+        ret = self._loop.run_until_complete(
             self._communicator.eth_get_transaction_receipt(tx_hash)
         )
+        while ret is None:
+            ret = self._loop.run_until_complete(
+                self._communicator.eth_get_transaction_receipt(tx_hash)
+            )
+        return ret
 
     @abstractmethod
     def set_balance(self, address: str, value: int) -> None:
