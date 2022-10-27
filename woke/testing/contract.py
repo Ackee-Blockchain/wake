@@ -250,10 +250,9 @@ class DevchainInterface:
         else:
             # auto
             estimate_params = {
-                "to": str(params["to"]),
                 "from": str(sender),
                 "value": params["value"] if "value" in params else 0,
-                "input": data,
+                "data": data,
             }
             if "gas_price" in params:
                 estimate_params["gas_price"] = params["gas_price"]
