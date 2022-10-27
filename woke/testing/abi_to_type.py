@@ -638,7 +638,7 @@ class TypeGenerator:
         inhertits_contract_class: bool = False if contract.base_contracts else True
         base_names: str = ""
 
-        for base in contract.base_contracts:
+        for base in reversed(contract.base_contracts):
             parent_contract = base.base_name.referenced_declaration
             assert isinstance(parent_contract, ContractDefinition)
             # only the types for contracts in the same source_unit are generated
