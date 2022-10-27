@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import itertools
 import json
 import keyword
 import shutil
@@ -15,7 +14,7 @@ from enum import Enum
 from multiprocessing.dummy import Array
 from pathlib import Path, PurePath
 from re import A
-from typing import Dict, Iterable, List, Mapping, Set, Tuple, Union
+from typing import Any, Dict, Iterable, List, Mapping, Set, Tuple, Union
 
 import click
 import eth_utils
@@ -44,7 +43,7 @@ from ..cli.console import console
 from ..compile.compilation_unit import CompilationUnit
 from ..compile.solc_frontend import SolcOutputErrorSeverityEnum
 from ..utils.file_utils import is_relative_to
-from .constants import DEFAULT_IMPORTS, TAB_WIDTH
+from .constants import DEFAULT_IMPORTS, INIT_CONTENT, TAB_WIDTH
 
 
 class RequestType(str, Enum):
@@ -81,6 +80,8 @@ class TypeGenerator:
     __sol_to_py_lookup: Dict[str, str]
     # set of function names which should be overloaded
     __func_to_overload: Set[str]
+    __errors_index: Dict[bytes, Any]
+    __events_index: Dict[bytes, Any]
 
     def __init__(self, config: WokeConfig):
         self.__config = config
@@ -94,6 +95,26 @@ class TypeGenerator:
         self.__sol_to_py_lookup = {}
         self.__init_sol_to_py_types()
         self.__func_to_overload = set()
+        self.__errors_index = {}
+        self.__events_index = {}
+
+        # built-in Error(str) and Panic(uint256) errors
+        error_abi = {
+            "name": "Error",
+            "type": "error",
+            "inputs": [{"name": "message", "type": "string"}],
+        }
+        panic_abi = {
+            "name": "Panic",
+            "type": "error",
+            "inputs": [{"name": "code", "type": "uint256"}],
+        }
+
+        for item in [error_abi, panic_abi]:
+            selector = eth_utils.function_abi_to_4byte_selector(
+                item
+            )  # pyright: reportPrivateImportUsage=false
+            self.__errors_index[selector] = item
 
     # TODO do some prettier init :)
     def __init_sol_to_py_types(self):
@@ -243,27 +264,17 @@ class TypeGenerator:
         assert compilation_info.evm.bytecode.object is not None
         abi_by_selector: Dict[Union[bytes, Literal["constructor"]], Dict] = {}
 
-        # built-in Error(str) and Panic(uint256) errors
-        error_abi = {
-            "name": "Error",
-            "type": "error",
-            "inputs": [{"name": "message", "type": "string"}],
-        }
-        panic_abi = {
-            "name": "Panic",
-            "type": "error",
-            "inputs": [{"name": "code", "type": "uint256"}],
-        }
-
-        for item in itertools.chain(compilation_info.abi, [error_abi, panic_abi]):
+        for item in compilation_info.abi:
             if item["type"] in {"function", "error"}:
                 selector = eth_utils.function_abi_to_4byte_selector(
                     item
                 )  # pyright: reportPrivateImportUsage=false
+                self.__errors_index[selector] = item
             elif item["type"] == "event":
                 selector = eth_utils.event_abi_to_log_topic(
                     item
                 )  # pyright: reportPrivateImportUsage=false
+                self.__events_index[selector] = item
             elif item["type"] == "constructor":
                 selector = "constructor"
             elif item["type"] in {"fallback", "receive"}:
@@ -816,6 +827,11 @@ class TypeGenerator:
             self.generate_types_source_unit(unit)
             self.write_source_unit_to_file(unit.source_unit_name)
             self.cleanup_source_unit()
+
+        init_path = self.__pytypes_dir / "__init__.py"
+        init_path.write_text(
+            INIT_CONTENT.format(errors=self.__errors_index, events=self.__events_index)
+        )
 
 
 class SourceUnitImports:

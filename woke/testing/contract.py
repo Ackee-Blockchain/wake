@@ -277,18 +277,18 @@ class DevchainInterface:
             tx["to"] = params["to"]
         return tx
 
-    def _process_revert_data(self, revert_data: bytes, abi: Dict[bytes, Any]):
+    def _process_revert_data(self, revert_data: bytes):
         selector = revert_data[0:4]
-        if selector not in abi:
+        if selector not in errors:
             raise NotImplementedError(
                 f"Transaction reverted with unknown error selector {selector.hex()}"
             )
-        if abi[selector]["type"] != "error":
-            raise ValueError(f"Expected error abi, got {abi[selector]['type']}")
+        if errors[selector]["type"] != "error":
+            raise ValueError(f"Expected error abi, got {errors[selector]['type']}")
 
         types = [
             eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
-            for arg in abi[selector]["inputs"]
+            for arg in errors[selector]["inputs"]
         ]
         revert_data = eth_abi.abi.decode(types, revert_data[4:])
 
@@ -301,13 +301,12 @@ class DevchainInterface:
             else:
                 revert_data = (self.__panic_reasons[code],)
 
-        raise TransactionRevertedError(abi[selector]["name"], revert_data)
+        raise TransactionRevertedError(errors[selector]["name"], revert_data)
 
     def _process_tx_result(
         self,
         tx_params: TxParams,
         tx_hash: str,
-        abi: Dict[bytes, Any],
     ) -> Dict:
         tx_receipt = self.__dev_chain.wait_for_transaction_receipt(tx_hash)
         if int(tx_receipt["status"], 16) == 0:
@@ -321,10 +320,10 @@ class DevchainInterface:
                         revert_data = e.data["data"][2:]
                     except Exception:
                         raise e
-                self._process_revert_data(bytes.fromhex(revert_data), abi)
+                self._process_revert_data(bytes.fromhex(revert_data))
             elif isinstance(self.__dev_chain, HardhatDevChain):
                 data = self.__dev_chain.call(tx_params)
-                self._process_revert_data(data, abi)
+                self._process_revert_data(data)
         return tx_receipt
 
     def _process_return_data(self, output: bytes, abi: Dict, return_type: Type):
@@ -363,7 +362,7 @@ class DevchainInterface:
                 except Exception:
                     raise e
 
-        tx_receipt = self._process_tx_result(tx, tx_hash, abi)
+        tx_receipt = self._process_tx_result(tx, tx_hash)
         self.__nonces[sender] += 1
         assert (
             "contractAddress" in tx_receipt
@@ -405,7 +404,7 @@ class DevchainInterface:
                 except Exception:
                     raise e
 
-        tx_receipt = self._process_tx_result(tx, tx_hash, abi)
+        tx_receipt = self._process_tx_result(tx, tx_hash)
         self.__nonces[sender] += 1
         output = self.dev_chain.retrieve_transaction_data([], tx_hash)
         return self._process_return_data(output, abi[selector], return_type)
@@ -436,6 +435,8 @@ def _signer_account(address: Address, interface: DevchainInterface):
 
 
 dev_interface = DevchainInterface(8545)
+errors = {}
+events = {}
 
 
 class Contract:
