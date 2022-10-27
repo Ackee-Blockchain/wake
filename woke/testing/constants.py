@@ -10,3 +10,10 @@ from typing_extensions import Literal
 
 from woke.testing.contract import Contract, TransactionObject, Address, Wei
 """
+
+INIT_CONTENT: str = """
+import woke.testing.contract
+
+woke.testing.contract.errors = {errors}
+woke.testing.contract.events = {events}
+"""
