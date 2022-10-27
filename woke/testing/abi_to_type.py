@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import itertools
 import json
 import keyword
 import shutil
@@ -17,6 +18,7 @@ from re import A
 from typing import Dict, Iterable, List, Mapping, Set, Tuple, Union
 
 import click
+import eth_utils
 from click.core import Context
 from genericpath import exists
 from intervaltree import IntervalTree
@@ -237,10 +239,38 @@ class TypeGenerator:
         assert compilation_info.abi is not None
         assert compilation_info.evm is not None
         assert compilation_info.evm.bytecode is not None
-        assert compilation_info.evm.bytecode.opcodes is not None
-        self.add_str_to_types(1, f"_abi = {compilation_info.abi}", 1)
+        assert compilation_info.evm.bytecode.object is not None
+        abi_by_selector: Dict[bytes, Dict] = {}
+
+        # built-in Error(str) and Panic(uint256) errors
+        error_abi = {
+            "name": "Error",
+            "type": "error",
+            "inputs": [{"name": "message", "type": "string"}],
+        }
+        panic_abi = {
+            "name": "Panic",
+            "type": "error",
+            "inputs": [{"name": "code", "type": "uint256"}],
+        }
+
+        for item in itertools.chain(compilation_info.abi, [error_abi, panic_abi]):
+            if item["type"] in {"function", "error"}:
+                selector = eth_utils.function_abi_to_4byte_selector(
+                    item
+                )  # pyright: reportPrivateImportUsage=false
+            elif item["type"] == "event":
+                selector = eth_utils.event_abi_to_log_topic(
+                    item
+                )  # pyright: reportPrivateImportUsage=false
+            elif item["type"] in {"constructor", "fallback", "receive"}:
+                continue
+            else:
+                raise Exception(f"Unexpected ABI item type: {item['type']}")
+            abi_by_selector[selector] = item
+        self.add_str_to_types(1, f"_abi = {abi_by_selector}", 1)
         self.add_str_to_types(
-            1, f'_bytecode = "{compilation_info.evm.bytecode.object}"', 2
+            1, f"_bytecode = {bytes.fromhex(compilation_info.evm.bytecode.object)}", 2
         )
 
         self.__imports.add_python_import("from __future__ import annotations")

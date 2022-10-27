@@ -17,8 +17,9 @@ install_requires = [
     "pathvalidate >= 2.5.0, < 3",
     "intervaltree >= 3.1",
     "graphviz >= 0.19",
-    "web3 >= 6.0.0b4",
     "tblib >= 1.7.0, < 2",
+    "eth_utils >= 2.0.0, < 3",
+    "eth_abi >= 3.0.0, < 4",
     "ipdb",
 ]
 
