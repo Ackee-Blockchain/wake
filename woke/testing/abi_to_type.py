@@ -23,6 +23,7 @@ from click.core import Context
 from genericpath import exists
 from intervaltree import IntervalTree
 from rich.panel import Panel
+from typing_extensions import Literal
 
 import woke.ast.types as types
 from woke.ast.enums import *
@@ -240,7 +241,7 @@ class TypeGenerator:
         assert compilation_info.evm is not None
         assert compilation_info.evm.bytecode is not None
         assert compilation_info.evm.bytecode.object is not None
-        abi_by_selector: Dict[bytes, Dict] = {}
+        abi_by_selector: Dict[Union[bytes, Literal["constructor"]], Dict] = {}
 
         # built-in Error(str) and Panic(uint256) errors
         error_abi = {
@@ -263,7 +264,9 @@ class TypeGenerator:
                 selector = eth_utils.event_abi_to_log_topic(
                     item
                 )  # pyright: reportPrivateImportUsage=false
-            elif item["type"] in {"constructor", "fallback", "receive"}:
+            elif item["type"] == "constructor":
+                selector = "constructor"
+            elif item["type"] in {"fallback", "receive"}:
                 continue
             else:
                 raise Exception(f"Unexpected ABI item type: {item['type']}")

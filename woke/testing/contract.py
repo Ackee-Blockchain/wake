@@ -342,18 +342,17 @@ class DevchainInterface:
 
     def deploy(
         self,
-        abi: Dict[bytes, Any],
+        abi: Dict[Union[bytes, Literal["constructor"]], Any],
         bytecode: bytes,
         arguments: Iterable,
         params: TxParams,
     ) -> Address:
-        constructor_abi = None
-        for item in abi.values():
-            if item["type"] == "constructor":
-                constructor_abi = item
-                break
-
-        tx = self._build_transaction(params, bytecode, arguments, constructor_abi)
+        tx = self._build_transaction(
+            params,
+            bytecode,
+            arguments,
+            abi["constructor"] if "constructor" in abi else None,
+        )
         sender = Address(params["from"]) if "from" in params else self.default_account
 
         with _signer_account(sender, self):
@@ -376,7 +375,7 @@ class DevchainInterface:
     def call(
         self,
         selector: bytes,
-        abi: Dict,
+        abi: Dict[Union[bytes, Literal["constructor"]], Any],
         arguments: Iterable,
         params: TxParams,
         return_type: Type,
@@ -388,7 +387,7 @@ class DevchainInterface:
     def transact(
         self,
         selector: bytes,
-        abi: Dict,
+        abi: Dict[Union[bytes, Literal["constructor"]], Any],
         arguments: Iterable,
         params: TxParams,
         return_tx,
@@ -441,7 +440,7 @@ dev_interface = DevchainInterface(8545)
 
 
 class Contract:
-    _abi: Dict[bytes, Any]
+    _abi: Dict[Union[bytes, Literal["constructor"]], Any]
     _bytecode: bytes
     _address: Address
 
