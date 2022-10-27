@@ -1,27 +1,62 @@
+import asyncio
 from abc import ABC, abstractmethod
-from enum import IntEnum
-from typing import Any, Callable, Dict, List
+from typing import Any, Dict, List, Union
 
-from eth_typing import HexStr
-from web3 import Web3
-from web3.method import Method
-from web3.types import RPCEndpoint
+from .json_rpc.communicator import JsonRpcCommunicator, TxParams
 
 
 class DevChainABC(ABC):
-    w3: Web3
+    _loop: asyncio.AbstractEventLoop
+    _communicator: JsonRpcCommunicator
+
+    def __init__(
+        self, loop: asyncio.AbstractEventLoop, communicator: JsonRpcCommunicator
+    ) -> None:
+        self._loop = loop
+        self._communicator = communicator
 
     @abstractmethod
-    def __init__(self, w3: Web3) -> None:
-        self.w3 = w3
-
-    @abstractmethod
-    def retrieve_transaction_data(self, params: List, tx_hash: Any) -> str:
+    def retrieve_transaction_data(self, params: List, tx_hash: str) -> bytes:
         ...
 
-    @abstractmethod
     def get_balance(self, address: str) -> int:
-        ...
+        return self._loop.run_until_complete(
+            self._communicator.eth_get_balance(address)
+        )
+
+    def accounts(self) -> List[str]:
+        return self._loop.run_until_complete(self._communicator.eth_accounts())
+
+    def get_block(self, block_identifier: Union[int, str]) -> Dict[str, Any]:
+        return self._loop.run_until_complete(
+            self._communicator.eth_get_block_by_number(block_identifier, False)
+        )
+
+    def get_chain_id(self) -> int:
+        return self._loop.run_until_complete(self._communicator.eth_chain_id())
+
+    def get_transaction_count(self, address: str) -> int:
+        return self._loop.run_until_complete(
+            self._communicator.eth_get_transaction_count(address)
+        )
+
+    def call(self, params: TxParams) -> bytes:
+        return self._loop.run_until_complete(self._communicator.eth_call(params))
+
+    def estimate_gas(self, params: TxParams) -> int:
+        return self._loop.run_until_complete(
+            self._communicator.eth_estimate_gas(params)
+        )
+
+    def send_transaction(self, params: TxParams) -> str:
+        return self._loop.run_until_complete(
+            self._communicator.eth_send_transaction(params)
+        )
+
+    def wait_for_transaction_receipt(self, tx_hash: str) -> Dict[str, Any]:
+        return self._loop.run_until_complete(
+            self._communicator.eth_get_transaction_receipt(tx_hash)
+        )
 
     @abstractmethod
     def set_balance(self, address: str, value: int) -> None:
@@ -33,120 +68,81 @@ class DevChainABC(ABC):
 
 
 class HardhatDevChain(DevChainABC):
-    def __init__(self, w3: Web3):
-        super().__init__(w3)
-        self.w3.eth.attach_methods(
-            {
-                "debug_trace_transaction": Method(
-                    RPCEndpoint("debug_traceTransaction")
-                ),
-                "hardhat_set_balance": Method(RPCEndpoint("hardhat_setBalance")),
-                "hardhat_impersonate_account": Method(
-                    RPCEndpoint("hardhat_impersonateAccount")
-                ),
-                "hardhat_stop_impersonating_account": Method(
-                    RPCEndpoint("hardhat_stopImpersonatingAccount")
-                ),
-                "evm_set_block_gas_limit": Method(RPCEndpoint("evm_setBlockGasLimit")),
-            }
+    def retrieve_transaction_data(self, params: List, tx_hash: str) -> bytes:
+        options = {"disableMemory": True, "disableStack": True, "disableStorage": True}
+        output = self._loop.run_until_complete(
+            self._communicator.debug_trace_transaction(tx_hash, options)
         )
-
-    def retrieve_transaction_data(self, params: List, tx_hash: Any) -> str:
-        output = self.w3.eth.debug_trace_transaction(HexStr(tx_hash.hex()), {"disableMemory": True, "disableStack": True, "disableStorage": True})  # type: ignore
-        return output.returnValue
-
-    def get_balance(self, address: str) -> int:
-        return self.w3.eth.get_balance(address)
+        return bytes.fromhex(output["returnValue"])
 
     def set_balance(self, address: str, value: int) -> None:
-        self.w3.eth.hardhat_set_balance(
-            address, hex(value)
-        )  # pyright: reportGeneralTypeIssues=false
+        self._loop.run_until_complete(
+            self._communicator.hardhat_set_balance(address, value)
+        )
 
     def impersonate_account(self, address: str) -> None:
-        self.w3.eth.hardhat_impersonate_account(address)
+        self._loop.run_until_complete(
+            self._communicator.hardhat_impersonate_account(address)
+        )
 
     def stop_impersonating_account(self, address: str) -> None:
-        self.w3.eth.hardhat_stop_impersonating_account(address)
+        self._loop.run_until_complete(
+            self._communicator.hardhat_stop_impersonating_account(address)
+        )
 
     def set_block_gas_limit(self, gas_limit: int) -> None:
-        self.w3.eth.evm_set_block_gas_limit(hex(gas_limit))
+        self._loop.run_until_complete(
+            self._communicator.evm_set_block_gas_limit(gas_limit)
+        )
 
 
 class AnvilDevChain(DevChainABC):
-    def __init__(self, w3: Web3):
-        super().__init__(w3)
-        self.w3.eth.attach_methods(
-            {
-                "trace_transaction": Method(RPCEndpoint("trace_transaction")),
-                "debug_trace_transaction": Method(
-                    RPCEndpoint("debug_traceTransaction")
-                ),
-                "anvil_enable_traces": Method(
-                    RPCEndpoint("anvil_enableTraces")
-                ),  # currently not implemented in anvil - ValueError: {'code': -32603, 'message': 'Not implemented'}
-                "anvil_set_balance": Method(RPCEndpoint("anvil_setBalance")),
-                "anvil_impersonate_account": Method(
-                    RPCEndpoint("anvil_impersonateAccount")
-                ),
-                "anvil_stop_impersonating_account": Method(
-                    RPCEndpoint("anvil_stopImpersonatingAccount")
-                ),
-                "evm_set_block_gas_limit": Method(RPCEndpoint("evm_setBlockGasLimit")),
-            }
+    def retrieve_transaction_data(self, params: List, tx_hash: Any) -> bytes:
+        output = self._loop.run_until_complete(
+            self._communicator.trace_transaction(tx_hash)
         )
-
-    def retrieve_transaction_data(self, params: List, tx_hash: Any) -> str:
-        output = self.w3.eth.trace_transaction(HexStr(tx_hash.hex()))  # type: ignore
-        while not output:
-            output = self.w3.eth.trace_transaction(HexStr(tx_hash.hex()))  # type: ignore
-        return output[0].result.output[2:]
-
-    def get_balance(self, address: str) -> int:
-        return self.w3.eth.get_balance(address)
+        return bytes.fromhex(output[0]["result"]["output"][2:])
 
     def set_balance(self, address: str, value: int) -> None:
-        self.w3.eth.anvil_set_balance(
-            address, hex(value)
-        )  # pyright: reportGeneralTypeIssues=false
+        self._loop.run_until_complete(
+            self._communicator.anvil_set_balance(address, value)
+        )
 
     def impersonate_account(self, address: str) -> None:
-        self.w3.eth.anvil_impersonate_account(address)
+        self._loop.run_until_complete(
+            self._communicator.anvil_impersonate_account(address)
+        )
 
     def stop_impersonating_account(self, address: str) -> None:
-        self.w3.eth.anvil_stop_impersonating_account(address)
+        self._loop.run_until_complete(
+            self._communicator.anvil_stop_impersonating_account(address)
+        )
 
     def set_block_gas_limit(self, gas_limit: int) -> None:
-        self.w3.eth.evm_set_block_gas_limit(hex(gas_limit))
+        self._loop.run_until_complete(
+            self._communicator.evm_set_block_gas_limit(gas_limit)
+        )
 
 
 class GanacheDevChain(DevChainABC):
-    def __init__(self, w3: Web3):
-        super().__init__(w3)
-        self.w3.eth.attach_methods(
-            {
-                "debug_trace_transaction": Method(
-                    RPCEndpoint("debug_traceTransaction")
-                ),
-                "evm_set_account_balance": Method(RPCEndpoint("evm_setAccountBalance")),
-                "evm_add_account": Method(RPCEndpoint("evm_addAccount")),
-            }
+    def retrieve_transaction_data(self, params: List, tx_hash: Any) -> bytes:
+        options = {"disableMemory": True, "disableStack": True, "disableStorage": True}
+        output = self._loop.run_until_complete(
+            self._communicator.debug_trace_transaction(tx_hash, options)
         )
-
-    def retrieve_transaction_data(self, params: List, tx_hash: Any) -> str:
-        output = self.w3.eth.debug_trace_transaction(HexStr(tx_hash.hex()), {"disableMemory": True, "disableStack": True, "disableStorage": True})  # type: ignore
-        return output.returnValue
-
-    def get_balance(self, address: str) -> int:
-        return self.w3.eth.get_balance(address)
+        return bytes.fromhex(output["returnValue"])
 
     def set_balance(self, address: str, value: int) -> None:
-        self.w3.eth.evm_set_account_balance(
-            address, hex(value)
-        )  # pyright: reportGeneralTypeIssues=false
+        self._loop.run_until_complete(
+            self._communicator.evm_set_account_balance(address, value)
+        )
 
     def add_account(self, address: str, passphrase: str) -> bool:
-        return self.w3.eth.evm_add_account(address, passphrase)
+        return self._loop.run_until_complete(
+            self._communicator.evm_add_account(address, passphrase)
+        ) and self._loop.run_until_complete(
+            self._communicator.personal_unlock_account(address, passphrase, 0)
+        )
 
     def set_block_gas_limit(self, gas_limit: int) -> None:
         raise NotImplementedError("Ganache does not support setting block gas limit")

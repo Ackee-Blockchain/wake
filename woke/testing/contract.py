@@ -1,9 +1,11 @@
+import asyncio
 import dataclasses
-import itertools
+from collections import defaultdict
 from contextlib import contextmanager
 from enum import IntEnum
 from typing import (
     Any,
+    DefaultDict,
     Dict,
     Iterable,
     List,
@@ -12,19 +14,13 @@ from typing import (
     Tuple,
     Type,
     Union,
+    cast,
     get_type_hints,
 )
 
 import eth_abi
 import eth_utils
-import web3.contract
-from eth_typing import HexStr
-from hexbytes import HexBytes
 from typing_extensions import Literal
-from web3 import Web3
-from web3._utils.abi import get_abi_input_types, get_abi_output_types
-from web3._utils.empty import Empty
-from web3.types import TxParams, TxReceipt
 
 from woke.testing.abi_to_type import RequestType
 from woke.testing.development_chains import (
@@ -33,6 +29,8 @@ from woke.testing.development_chains import (
     GanacheDevChain,
     HardhatDevChain,
 )
+
+from .json_rpc.communicator import JsonRpcCommunicator, JsonRpcError, TxParams
 
 
 class TransactionObject:
@@ -62,12 +60,19 @@ class Wei(int):
 
 class Address(str):
     def __new__(cls, addr):
-        return super().__new__(cls, Web3.toChecksumAddress(addr))
+        return super().__new__(
+            cls, eth_utils.to_checksum_address(addr)
+        )  # pyright: reportPrivateImportUsage=false
 
     def __eq__(self, other):
         if not isinstance(other, str):
             return NotImplemented
-        return Web3.toChecksumAddress(self) == Web3.toChecksumAddress(other)
+        return eth_utils.to_checksum_address(self) == eth_utils.to_checksum_address(
+            other
+        )  # pyright: reportPrivateImportUsage=false
+
+    def __hash__(self):
+        return hash(str(self))
 
     @property
     def balance(self) -> Wei:
@@ -82,6 +87,9 @@ class Address(str):
         dev_interface.dev_chain.set_balance(self, value)
 
 
+Address.ZERO = Address("0x0000000000000000000000000000000000000000")
+
+
 class TransactionRevertedError(Exception):
     def __init__(self, name, data):
         super().__init__(f"{name}({', '.join(map(repr, data))})")
@@ -91,9 +99,11 @@ class TransactionRevertedError(Exception):
 class DevchainInterface:
     __dev_chain: DevChainABC
     __port: int
-    __w3: Web3
     __accounts: List[Address]
+    __default_account: Optional[Address]
     __block_gas_limit: int
+    __chain_id: int
+    __nonces: DefaultDict[Address, int]
     __panic_reasons: Dict[int, str] = {
         0x00: "Generic compiler panic",
         0x01: "Assert evaluated to false",
@@ -109,27 +119,29 @@ class DevchainInterface:
 
     def __init__(self, port: int):
         self.__port = port
-        self.__w3 = Web3(
-            Web3.WebsocketProvider(f"ws://127.0.0.1:{str(port)}", websocket_timeout=60)
-        )
-        # self.__w3 = Web3(Web3.IPCProvider(f"/tmp/anvil.ipc"))
-        # self.__w3 = Web3(Web3.HTTPProvider(f"http://127.0.0.1:{str(port)}"))
-        client_version: str = self.__w3.clientVersion.lower()
-        print(f"client version: {client_version}")
+        self._loop = asyncio.new_event_loop()
+        self._communicator = JsonRpcCommunicator()
+        client_version = self._loop.run_until_complete(
+            self._communicator.web3_client_version()
+        ).lower()
         if "anvil" in client_version:
-            self.__dev_chain = AnvilDevChain(self.__w3)
+            self.__dev_chain = AnvilDevChain(self._loop, self._communicator)
         elif "hardhat" in client_version:
-            self.__dev_chain = HardhatDevChain(self.__w3)
+            self.__dev_chain = HardhatDevChain(self._loop, self._communicator)
         elif "ethereumjs" in client_version:
-            self.__dev_chain = GanacheDevChain(self.__w3)
+            self.__dev_chain = GanacheDevChain(self._loop, self._communicator)
         else:
             raise NotImplementedError(f"Client version {client_version} not supported")
-        self.__accounts = [Address(acc) for acc in self.__w3.eth.accounts]
-        block_info = self.__w3.eth.get_block("latest")
+        self.__accounts = [Address(acc) for acc in self.__dev_chain.accounts()]
+        block_info = self.__dev_chain.get_block("latest")
         assert "gasLimit" in block_info
-        self.__block_gas_limit = block_info["gasLimit"]
+        self.__block_gas_limit = int(block_info["gasLimit"], 16)
+        self.__chain_id = self.__dev_chain.get_chain_id()
+        self.__nonces = defaultdict(lambda: 0)
         if len(self.__accounts) > 0:
-            self.__w3.eth.default_account = self.__accounts[0]
+            self.__default_account = self.__accounts[0]
+        else:
+            self.__default_account = None
 
     @property
     def accounts(self) -> Tuple[Address, ...]:
@@ -137,14 +149,11 @@ class DevchainInterface:
 
     @property
     def default_account(self) -> Optional[Address]:
-        default_acc = self.__w3.eth.default_account
-        if isinstance(default_acc, Empty):
-            return None
-        return Address(default_acc)
+        return self.__default_account
 
     @default_account.setter
     def default_account(self, account: Union[Address, str]) -> None:
-        self.__w3.eth.default_account = str(account)
+        self.__default_account = Address(account)
 
     @property
     def block_gas_limit(self) -> int:
@@ -170,7 +179,7 @@ class DevchainInterface:
         elif isinstance(value, tuple):
             return tuple(cls._convert_to_web3_type(v) for v in value)
         elif isinstance(value, Contract):
-            return value._contract.address
+            return value._address
         elif isinstance(value, Address):
             return str(value)
         else:
@@ -202,17 +211,82 @@ class DevchainInterface:
         return value
 
     def update_accounts(self):
-        self.__accounts = [Address(acc) for acc in self.__w3.eth.accounts]
+        self.__accounts = [Address(acc) for acc in self.__dev_chain.accounts()]
 
-    def _process_revert_data(self, revert_data: bytes, errors: Dict[bytes, Any]):
+    def _get_nonce(self, address: Address) -> int:
+        if address not in self.__nonces:
+            self.__nonces[address] = self.__dev_chain.get_transaction_count(
+                str(address)
+            )
+        return self.__nonces[address]
+
+    def _build_transaction(
+        self, params: Dict, data: bytes, arguments: Iterable, abi: Optional[Dict]
+    ) -> TxParams:
+        if abi is None:
+            data += eth_abi.encode([], [])
+        else:
+            arguments = [self._convert_to_web3_type(arg) for arg in arguments]
+            types = [
+                eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
+                for arg in abi["inputs"]
+            ]
+            data += eth_abi.encode(types, arguments)
+
+        if "from" in params:
+            sender = params["from"]
+        elif self.default_account is not None:
+            sender = self.default_account
+        else:
+            raise ValueError("No from_ account specified and no default account set")
+
+        if "gas" in params:
+            gas = params["gas"]
+        else:
+            # auto
+            estimate_params = {
+                "to": str(params["to"]),
+                "from": str(sender),
+                "value": params["value"] if "value" in params else 0,
+                "input": data,
+            }
+            if "gas_price" in params:
+                estimate_params["gas_price"] = params["gas_price"]
+            if "to" in params:
+                estimate_params["to"] = params["to"]
+            gas = self.__dev_chain.estimate_gas(estimate_params)
+
+        tx: TxParams = {
+            "type": 2,
+            "nonce": self._get_nonce(sender),
+            "from": str(sender),
+            "gas": gas,
+            "value": params["value"] if "value" in params else 0,
+            "data": data,
+            # "gas_price": 0,
+            # "max_priority_fee_per_gas": 0,
+            # "max_fee_per_gas": 0,
+            # "access_list": [],
+            # "chain_id": self.__chain_id
+        }
+        if "to" in params:
+            tx["to"] = params["to"]
+        return tx
+
+    def _process_revert_data(self, revert_data: bytes, abi: Dict[bytes, Any]):
         selector = revert_data[0:4]
-        if selector not in errors:
+        if selector not in abi:
             raise NotImplementedError(
                 f"Transaction reverted with unknown error selector {selector.hex()}"
             )
-        revert_data = eth_abi.abi.decode(
-            get_abi_input_types(errors[selector]), revert_data[4:]
-        )
+        if abi[selector]["type"] != "error":
+            raise ValueError(f"Expected error abi, got {abi[selector]['type']}")
+
+        types = [
+            eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
+            for arg in abi[selector]["inputs"]
+        ]
+        revert_data = eth_abi.abi.decode(types, revert_data[4:])
 
         if selector == bytes.fromhex("4e487b71"):
             # panic
@@ -223,124 +297,115 @@ class DevchainInterface:
             else:
                 revert_data = (self.__panic_reasons[code],)
 
-        raise TransactionRevertedError(errors[selector]["name"], revert_data)
+        raise TransactionRevertedError(abi[selector]["name"], revert_data)
 
     def _process_tx_result(
         self,
         tx_params: TxParams,
-        tx_hash: Union[HexBytes, HexStr],
-        errors: Dict[bytes, Any],
-    ) -> TxReceipt:
-        print(tx_hash)
-        tx_receipt = self.__w3.eth.wait_for_transaction_receipt(tx_hash)
-        if tx_receipt["status"] == 0:
-            if isinstance(self.__dev_chain, AnvilDevChain):
-                # eth_call cannot be used because web3.py throws an exception without the revert reason data
-                output = self.dev_chain.retrieve_transaction_data([], tx_hash)
-                self._process_revert_data(bytes.fromhex(output), errors)
-            elif isinstance(self.__dev_chain, GanacheDevChain):
+        tx_hash: str,
+        abi: Dict[bytes, Any],
+    ) -> Dict:
+        tx_receipt = self.__dev_chain.wait_for_transaction_receipt(tx_hash)
+        if int(tx_receipt["status"], 16) == 0:
+            if isinstance(self.__dev_chain, (AnvilDevChain, GanacheDevChain)):
                 # should also revert
                 try:
-                    self.__w3.eth.call(tx_params)
+                    self.__dev_chain.call(tx_params)
                     raise AssertionError("Transaction should have reverted")
-                except ValueError as e:
+                except JsonRpcError as e:
                     try:
-                        revert_data = e.args[0]["data"][2:]
+                        revert_data = e.data["data"][2:]
                     except Exception:
                         raise e
-                self._process_revert_data(bytes.fromhex(revert_data), errors)
+                self._process_revert_data(bytes.fromhex(revert_data), abi)
             elif isinstance(self.__dev_chain, HardhatDevChain):
-                data = self.__w3.eth.call(tx_params)
-                self._process_revert_data(data, errors)
+                data = self.__dev_chain.call(tx_params)
+                self._process_revert_data(data, abi)
         return tx_receipt
+
+    def _process_return_data(self, output: bytes, abi: Dict, return_type: Type):
+        output_types = [
+            eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
+            for arg in abi["outputs"]
+        ]
+        decoded_data = eth_abi.abi.decode(
+            output_types, output
+        )  # pyright: reportGeneralTypeIssues=false
+        if isinstance(decoded_data, (list, tuple)) and len(decoded_data) == 1:
+            decoded_data = decoded_data[0]
+        return self._convert_from_web3_type(decoded_data, return_type)
 
     def deploy(
         self,
-        abi,
-        bytecode,
+        abi: Dict[bytes, Any],
+        bytecode: bytes,
         arguments: Iterable,
         params: TxParams,
-        errors: Dict[bytes, Any],
-    ) -> web3.contract.Contract:
-        arguments = [self._convert_to_web3_type(arg) for arg in arguments]
-        factory = self.__w3.eth.contract(abi=abi, bytecode=bytecode)
+    ) -> Address:
+        constructor_abi = None
+        for item in abi.values():
+            if item["type"] == "constructor":
+                constructor_abi = item
+                break
 
-        if "from" not in params and self.default_account is None:
-            raise ValueError("No from_ account specified and no default account set")
+        tx = self._build_transaction(params, bytecode, arguments, constructor_abi)
+        sender = Address(params["from"]) if "from" in params else self.default_account
 
-        with _signer_account(
-            Address(params["from"]) if "from" in params else self.default_account, self
-        ):
+        with _signer_account(sender, self):
             try:
-                tx_hash = factory.constructor(*arguments).transact(params)
+                tx_hash = self.__dev_chain.send_transaction(tx)
             except ValueError as e:
                 try:
                     tx_hash = e.args[0]["data"]["txHash"]
                 except Exception:
                     raise e
 
-        tx_receipt = self._process_tx_result(
-            factory.constructor(*arguments).build_transaction(params), tx_hash, errors
+        tx_receipt = self._process_tx_result(tx, tx_hash, abi)
+        self.__nonces[sender] += 1
+        assert (
+            "contractAddress" in tx_receipt
+            and tx_receipt["contractAddress"] is not None
         )
-
-        return self.__w3.eth.contract(address=tx_receipt["contractAddress"], abi=abi)  # type: ignore
+        return Address(tx_receipt["contractAddress"])
 
     def call(
         self,
-        contract,
-        selector: HexStr,
+        selector: bytes,
+        abi: Dict,
         arguments: Iterable,
         params: TxParams,
         return_type: Type,
     ) -> Any:
-        arguments = [self._convert_to_web3_type(arg) for arg in arguments]
-        func = contract.get_function_by_selector(selector)(*arguments)
-        web3_data = func.call(params)
-        return self._convert_from_web3_type(web3_data, return_type)
+        tx = self._build_transaction(params, selector, arguments, abi[selector])
+        output = self.__dev_chain.call(tx)
+        return self._process_return_data(output, abi[selector], return_type)
 
     def transact(
         self,
-        contract: web3.contract.Contract,
-        selector: HexStr,
+        selector: bytes,
+        abi: Dict,
         arguments: Iterable,
         params: TxParams,
         return_tx,
         request_type,
         return_type: Type,
-        errors: Dict[bytes, Any],
     ) -> Any:
-        arguments = [self._convert_to_web3_type(arg) for arg in arguments]
-        func = contract.get_function_by_selector(selector)(*arguments)
-        output_abi = get_abi_output_types(func.abi)
+        tx = self._build_transaction(params, selector, arguments, abi[selector])
+        sender = Address(params["from"]) if "from" in params else self.default_account
 
-        if "from" not in params and self.default_account is None:
-            raise ValueError("No from_ account specified and no default account set")
-
-        with _signer_account(
-            Address(params["from"]) if "from" in params else self.default_account, self
-        ):
+        with _signer_account(sender, self):
             try:
-                tx_hash = func.transact(params)
+                tx_hash = self.__dev_chain.send_transaction(tx)
             except ValueError as e:
                 try:
                     tx_hash = e.args[0]["data"]["txHash"]
                 except Exception:
                     raise e
 
-        tx_receipt = self._process_tx_result(
-            func.build_transaction(params), tx_hash, errors
-        )
+        tx_receipt = self._process_tx_result(tx, tx_hash, abi)
+        self.__nonces[sender] += 1
         output = self.dev_chain.retrieve_transaction_data([], tx_hash)
-
-        web3_data = eth_abi.abi.decode(
-            output_abi, bytes.fromhex(output)
-        )  # pyright: reportGeneralTypeIssues=false
-        return self._convert_from_web3_type(web3_data, return_type)
-
-    def create_factory(self, addr: Union[Address, str], abi) -> web3.contract.Contract:
-        contract = self.__w3.eth.contract(abi=abi, address=addr)
-        assert isinstance(contract, web3.contract.Contract)
-        return contract
+        return self._process_return_data(output, abi[selector], return_type)
 
 
 @contextmanager
@@ -371,36 +436,15 @@ dev_interface = DevchainInterface(8545)
 
 
 class Contract:
-    _abi: List
-    _bytecode: HexStr
-    _contract: web3.contract.Contract
-    _errors: Dict[bytes, Any]
+    _abi: Dict[bytes, Any]
+    _bytecode: bytes
+    _address: Address
 
     def __init__(self, addr: Union[Address, str]):
-        self._contract = dev_interface.create_factory(addr, self.__class__._abi)
-        self._errors = {}
-
-        # built-in Error(str) and Panic(uint256) errors
-        error_abi = {
-            "name": "Error",
-            "type": "error",
-            "inputs": [{"name": "message", "type": "string"}],
-        }
-        panic_abi = {
-            "name": "Panic",
-            "type": "error",
-            "inputs": [{"name": "code", "type": "uint256"}],
-        }
-
-        for item in itertools.chain(self.__class__._abi, [error_abi, panic_abi]):
-            if item["type"] == "error":
-                selector = eth_utils.function_abi_to_4byte_selector(
-                    item
-                )  # pyright: reportPrivateImportUsage=false
-                self._errors[selector] = item
+        self._address = Address(addr)
 
     def __str__(self):
-        return f"{self.__class__.__name__}({self._contract.address})"
+        return f"{self.__class__.__name__}({self._address})"
 
     def __repr__(self):
         return self.__str__()
@@ -428,35 +472,12 @@ class Contract:
         else:
             raise ValueError("invalid gas limit")
 
-        errors = {}
-
-        # built-in Error(str) and Panic(uint256) errors
-        error_abi = {
-            "name": "Error",
-            "type": "error",
-            "inputs": [{"name": "message", "type": "string"}],
-        }
-        panic_abi = {
-            "name": "Panic",
-            "type": "error",
-            "inputs": [{"name": "code", "type": "uint256"}],
-        }
-
-        for item in itertools.chain(cls._abi, [error_abi, panic_abi]):
-            if item["type"] == "error":
-                selector = eth_utils.function_abi_to_4byte_selector(
-                    item
-                )  # pyright: reportPrivateImportUsage=false
-                errors[selector] = item
-
-        contract = dev_interface.deploy(
-            cls._abi, cls._bytecode, arguments, params, errors
-        )
-        return cls(contract.address)
+        address = dev_interface.deploy(cls._abi, cls._bytecode, arguments, params)
+        return cls(address)
 
     def _transact(
         self,
-        selector: HexStr,
+        selector: str,
         arguments: Iterable,
         return_tx: bool,
         request_type: RequestType,
@@ -484,22 +505,24 @@ class Contract:
 
         if to is not None:
             if isinstance(to, Contract):
-                to = to._contract.address
+                to = to._address
             params["to"] = to
+        else:
+            params["to"] = self._address
+
         return dev_interface.transact(
-            self._contract,
-            selector,
+            bytes.fromhex(selector),
+            self.__class__._abi,
             arguments,
             params,
             return_tx,
             request_type,
             return_type,
-            self._errors,
         )
 
     def _call(
         self,
-        selector: HexStr,
+        selector: str,
         arguments: Iterable,
         return_tx: bool,
         return_type: Type,
@@ -526,8 +549,12 @@ class Contract:
 
         if to is not None:
             if isinstance(to, Contract):
-                to = to._contract.address
+                to = to._address
             params["to"] = to
+        else:
+            params["to"] = self._address
+
+        sel = bytes.fromhex(selector)
         return dev_interface.call(
-            self._contract, selector, arguments, params, return_type
+            sel, self.__class__._abi, arguments, params, return_type
         )
