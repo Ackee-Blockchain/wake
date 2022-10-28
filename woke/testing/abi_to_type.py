@@ -12,6 +12,7 @@ from distutils.command import config
 from distutils.command.clean import clean
 from enum import Enum
 from multiprocessing.dummy import Array
+from operator import itemgetter
 from pathlib import Path, PurePath
 from re import A
 from typing import Any, Dict, Iterable, List, Mapping, Set, Tuple, Union
@@ -24,6 +25,7 @@ from intervaltree import IntervalTree
 from rich.panel import Panel
 from typing_extensions import Literal
 
+import woke.ast.ir.type_name.mapping
 import woke.ast.types as types
 from woke.ast.enums import *
 from woke.ast.ir.declaration.enum_definition import EnumDefinition
@@ -38,6 +40,9 @@ from ..ast.ir.declaration.contract_definition import ContractDefinition
 from ..ast.ir.declaration.function_definition import FunctionDefinition
 from ..ast.ir.meta.source_unit import SourceUnit
 from ..ast.ir.reference_resolver import CallbackParams, ReferenceResolver
+from ..ast.ir.type_name.abc import TypeNameAbc
+from ..ast.ir.type_name.array_type_name import ArrayTypeName
+from ..ast.ir.type_name.user_defined_type_name import UserDefinedTypeName
 from ..ast.ir.utils import IrInitTuple
 from ..cli.console import console
 from ..compile.compilation_unit import CompilationUnit
@@ -232,25 +237,33 @@ class TypeGenerator:
         return self.__name_sanitizer.sanitize_name(name)
 
     def generate_deploy_func(self, contract: ContractDefinition):
-        param_names = ""
-        params = ""
+        param_names = []
+        params = []
         for fn in contract.functions:
             if fn.name == "constructor":
                 param_names, params = self.generate_func_params(fn)
                 break
-        if params != "":
-            params += ", "
+        params_str = "".join(param + ", " for param in params)
+
         self.add_str_to_types(1, "@classmethod", 1)
         self.add_str_to_types(
             1,
-            f'def deploy(cls, {params}*, from_: Optional[Union[Address, str]] = None, value: Wei = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max") -> {contract.name}:',
+            f'def deploy(cls, {params_str}*, from_: Optional[Union[Address, str]] = None, value: Wei = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max") -> {contract.name}:',
             1,
         )
+
+        if len(param_names) > 0:
+            self.add_str_to_types(2, '"""', 1)
+            self.add_str_to_types(2, "Args:", 1)
+            for param_name, param_type in param_names:
+                self.add_str_to_types(3, f"{param_name}: {param_type}", 1)
+            self.add_str_to_types(2, '"""', 1)
+
         if contract.kind == ContractKind.CONTRACT:
             if not contract.abstract:
                 self.add_str_to_types(
                     2,
-                    f"return cls._deploy([{param_names}], from_, value, gas_limit)",
+                    f"return cls._deploy([{', '.join(map(itemgetter(0), param_names))}], from_, value, gas_limit)",
                     1,
                 )
             else:
@@ -376,62 +389,51 @@ class TypeGenerator:
         else:
             return self.__sol_to_py_lookup[expr.__class__.__name__]
 
-    def generate_func_params(self, fn: FunctionDefinition) -> Tuple[str, str]:
-        params: str = ""
-        # params_names are later inserted as an argument to the self.transact call
-        params_names: str = ""
+    def generate_func_params(
+        self, fn: FunctionDefinition
+    ) -> Tuple[List[Tuple[str, str]], List[str]]:
+        params = []
+        param_names = []
         unnamed_params_identifier: int = 1
-        # helper variable for storing parameter name, used because some solidity params can be unnamed, eg. in interfaces
-        param_name: str = ""
         for par in fn.parameters.parameters:
             if not par.name:
                 param_name: str = "arg" + str(unnamed_params_identifier)
                 unnamed_params_identifier += 1
             else:
                 param_name = par.name
-            params_names += self.get_name(param_name) + ", "
-            params += (
-                self.get_name(param_name)
-                + ": "
-                + self.parse_type_and_import(par.type)
-                + ", "
+            param_names.append((self.get_name(param_name), par.type_string))
+            params.append(
+                f"{self.get_name(param_name)}: {self.parse_type_and_import(par.type)}"
             )
-        if params_names:
-            # remove trailing ", "
-            return params_names[:-2], params[:-2]
-        return params_names, params
+        return param_names, params
 
-    def generate_func_returns(self, fn: FunctionDefinition) -> str:
+    def generate_func_returns(self, fn: FunctionDefinition) -> List[Tuple[str, str]]:
         if len(fn.return_parameters.parameters) > 1:
             self.__imports.add_python_import("from typing import Tuple")
-            return (
-                "Tuple["
-                + ", ".join(
-                    [
-                        self.parse_type_and_import(par.type)
-                        for par in fn.return_parameters.parameters
-                    ]
-                )
-                + "]"
-            )
-        elif len(fn.return_parameters.parameters) == 1:
-            return self.parse_type_and_import(fn.return_parameters.parameters[0].type)
-        else:
-            return "None"
+        return [
+            (self.parse_type_and_import(par.type), par.type_string)
+            for par in fn.return_parameters.parameters
+        ]
 
     def is_compound_type(self, var_type: types.TypeAbc):
         name = var_type.__class__.__name__
         return name == "Array" or name == "Mapping"
 
     def generate_getter_for_state_var(self, decl: VariableDeclaration):
-        def get_struct_return_list(struct: types.Struct) -> str:
+        def get_struct_return_list(
+            struct_type_name: UserDefinedTypeName,
+        ) -> List[Tuple[str, str]]:
+            struct = struct_type_name.type
+            assert isinstance(struct, types.Struct)
             node = struct.ir_node
-            non_excluded = []
+            non_excluded: List[Tuple[str, str]] = []
             for member in node.members:
                 if not isinstance(member.type, types.Mapping) and not isinstance(
                     member.type, types.Array
                 ):
-                    non_excluded.append(self.parse_type_and_import(member.type))
+                    non_excluded.append(
+                        (self.parse_type_and_import(member.type), member.type_string)
+                    )
             if len(node.members) == len(non_excluded):
                 # nothing was excluded -> the whole struct will be used -> add the struct to imports
                 self.__imports.generate_struct_import(struct)
@@ -440,106 +442,140 @@ class TypeGenerator:
                     self.__imports.generate_contract_import_name(
                         parent.name, parent.parent.source_unit_name
                     )
-                    return f"{self.get_name(parent.name)}.{self.get_name(struct.name)}"
+                    return [
+                        (
+                            f"{self.get_name(parent.name)}.{self.get_name(struct.name)}",
+                            struct_type_name.type_string,
+                        )
+                    ]
                 else:
-                    return self.get_name(struct.name)
+                    return [(self.get_name(struct.name), struct_type_name.type_string)]
             else:
                 self.__imports.add_python_import("from typing import Tuple")
-                return "Tuple[" + ", ".join(non_excluded) + "]"
+                return non_excluded
 
-        returns: str = ""
-        param_names: str = ""
+        returns: List[Tuple[str, str]] = []
+        param_names: List[Tuple[str, str]] = []
         # if the type is compound we need to use the type as an index, for primitive types we use the
         # the type only for the return
         # TODO reorder the elif chain such that the most common types are on the top
         def generate_getter_helper(
-            var_type: types.TypeAbc, use_parse: bool, depth: int
-        ) -> str:
+            var_type_name: TypeNameAbc, use_parse: bool, depth: int
+        ) -> List[str]:
             nonlocal returns
             nonlocal param_names
-            parsed: str = ""
+            parsed = []
+            var_type = var_type_name.type
             if isinstance(var_type, types.Struct):
                 if depth == 0:
-                    parsed += ""
+                    pass
                 else:
-                    parsed += self.get_name(var_type.name)
+                    parsed.append(self.get_name(var_type.name))
                     self.__imports.generate_struct_import(var_type)
-                returns = get_struct_return_list(var_type)
+                assert isinstance(var_type_name, UserDefinedTypeName)
+                returns = get_struct_return_list(var_type_name)
             elif isinstance(var_type, types.Enum):
                 parent = var_type.ir_node.parent
                 if isinstance(parent, ContractDefinition):
                     self.__imports.generate_contract_import_name(
                         parent.name, parent.parent.source_unit_name
                     )
-                    returns = (
-                        f"{self.get_name(parent.name)}.{self.get_name(var_type.name)}"
-                    )
+                    returns = [
+                        (
+                            f"{self.get_name(parent.name)}.{self.get_name(var_type.name)}",
+                            var_type_name.type_string,
+                        )
+                    ]
+
                 else:
                     self.__imports.generate_enum_import(var_type)
-                    returns = self.get_name(var_type.name)
+                    returns = [
+                        (self.get_name(var_type.name), var_type_name.type_string)
+                    ]
             elif isinstance(var_type, types.Array):
-                # parsed += "List[" + generate_function(var_type.base_type, True) + "]"
                 use_parse = True
-                param_names += "index" + str(depth) + ", "
+                param_names.append(("index" + str(depth), "uint256"))
+                parsed.append(f"index{depth}: uint256")
+                assert isinstance(var_type_name, ArrayTypeName)
                 if self.is_compound_type(var_type.base_type):
-                    parsed += (
-                        "index"
-                        + str(depth)
-                        + ": uint256"
-                        + ", "
-                        + generate_getter_helper(var_type.base_type, True, depth + 1)
+                    parsed.extend(
+                        generate_getter_helper(var_type_name.base_type, True, depth + 1)
                     )
                 else:
-                    parsed += "index" + str(depth) + ": uint256"
                     # ignores the parsed return, only called for the side-effect of changing the returns var to value_type
-                    _ = generate_getter_helper(var_type.base_type, False, depth + 1)
+                    _ = generate_getter_helper(
+                        var_type_name.base_type, False, depth + 1
+                    )
             elif isinstance(var_type, types.Mapping):
                 # parse key
                 use_parse = True
-                param_names += "key" + str(depth) + ", "
-                parsed += (
-                    "key"
-                    + str(depth)
-                    + ": "
-                    + generate_getter_helper(var_type.key_type, True, depth + 1)
+                param_names.append(("key" + str(depth), var_type_name.type_string))
+                assert isinstance(var_type_name, woke.ast.ir.type_name.mapping.Mapping)
+                key_type = generate_getter_helper(
+                    var_type_name.key_type, True, depth + 1
                 )
+                assert len(key_type) == 1
+                parsed.append(f"key{depth}: {key_type[0]}")
                 if self.is_compound_type(var_type.value_type):
-                    parsed += ", " + generate_getter_helper(
-                        var_type.value_type, True, depth + 1
+                    parsed.extend(
+                        generate_getter_helper(
+                            var_type_name.value_type, True, depth + 1
+                        )
                     )
                 else:
                     # ignores the parsed return, only called for the side-effect of changing the returns var to value_type
-                    _ = generate_getter_helper(var_type.value_type, True, depth + 1)
+                    _ = generate_getter_helper(
+                        var_type_name.value_type, True, depth + 1
+                    )
             elif isinstance(var_type, types.UInt):
                 self.__imports.add_primitive_type(
                     self.__sol_to_py_lookup["UInt" + str(var_type.bits_count)]
                 )
-                parsed += self.__sol_to_py_lookup["UInt" + str(var_type.bits_count)]
-                returns = self.__sol_to_py_lookup["UInt" + str(var_type.bits_count)]
+                parsed.append(
+                    self.__sol_to_py_lookup["UInt" + str(var_type.bits_count)]
+                )
+                returns = [
+                    (
+                        self.__sol_to_py_lookup["UInt" + str(var_type.bits_count)],
+                        var_type_name.type_string,
+                    )
+                ]
             elif isinstance(var_type, types.FixedBytes):
                 self.__imports.add_primitive_type(
                     self.__sol_to_py_lookup["FixedBytes" + str(var_type.bytes_count)]
                 )
-                parsed += self.__sol_to_py_lookup[
-                    "FixedBytes" + str(var_type.bytes_count)
-                ]
-                returns = self.__sol_to_py_lookup[
-                    "FixedBytes" + str(var_type.bytes_count)
+                parsed.append(
+                    self.__sol_to_py_lookup["FixedBytes" + str(var_type.bytes_count)]
+                )
+                returns = [
+                    (
+                        self.__sol_to_py_lookup[
+                            "FixedBytes" + str(var_type.bytes_count)
+                        ],
+                        var_type_name.type_string,
+                    )
                 ]
             elif isinstance(var_type, types.Contract):
                 self.__imports.generate_contract_import_expr(var_type)
-                returns = self.get_name(var_type.name)
+                returns = [(self.get_name(var_type.name), var_type_name.type_string)]
             else:
-                parsed += self.__sol_to_py_lookup[var_type.__class__.__name__]
-                returns = self.__sol_to_py_lookup[var_type.__class__.__name__]
+                parsed.append(self.__sol_to_py_lookup[var_type.__class__.__name__])
+                returns = [
+                    (
+                        self.__sol_to_py_lookup[var_type.__class__.__name__],
+                        var_type_name.type_string,
+                    )
+                ]
 
-            return parsed if use_parse else ""
+            return parsed if use_parse else []
 
-        generated_params = generate_getter_helper(decl.type, False, 0)
+        generated_params = generate_getter_helper(decl.type_name, False, 0)
 
-        self.generate_type_hint_stub_func(decl.name, generated_params, returns, False)
         self.generate_type_hint_stub_func(
-            decl.name, generated_params, "TransactionObject", True
+            decl.name, generated_params, [ret[0] for ret in returns], False
+        )
+        self.generate_type_hint_stub_func(
+            decl.name, generated_params, ["TransactionObject"], True
         )
 
         # getters never modify the state - passing VIEW is ok
@@ -553,13 +589,6 @@ class TypeGenerator:
             param_names,
             returns,
         )
-
-        if param_names:
-            param_names = param_names[:-2]
-        # self.add_str_to_types(1, f"def {self.get_name(decl.name)}({generated_params}) -> {returns if returns else 'None'}:", 1)
-        # self.add_str_to_contract_types(2, "pass" + " " + param_names, 2)
-        # print(decl.function_selector[3:].decode("utf-8"))
-        # self.add_str_to_types(2, "return self.transact(\"" + decl.function_selector.hex() + '\", [' + param_names + ']' + ", params)", 2)
 
     # receives names of params and their type hints, returns only the types to be used for dispatch
     def get_types_from_func_params(self, params) -> str:
@@ -582,50 +611,68 @@ class TypeGenerator:
         canonical_name: str,
         fn_name: str,
         fn_selector: str,
-        params: str,
-        param_names: str,
-        returns: str,
+        params: List[str],
+        param_names: List[Tuple[str, str]],
+        returns: List[Tuple[str, str]],
     ):
-        # if self.current_source_unit == "hello_world.sol":
-        #    print(f"canonical_name: {self.current_source_unit + canonical_name}")
-        # default value whether to return tx or the return data - if the function is pure/view the default is to make only a call and return the return data
-        if self.current_source_unit + canonical_name in self.__func_to_overload:
-            # if self.current_source_unit == "hello_world.sol":
-            #    print(f"creating dispatch for: {self.current_source_unit + canonical_name}")
-            # add the library that enables dispatch to the imports
-            self.__imports.add_python_import("from multipledispatch import dispatch")
-            types: str = self.get_types_from_func_params(params)
-            self.add_str_to_types(1, f"@dispatch({types})", 1)
         is_view_or_pure: bool = (
             state_mutability == StateMutability.VIEW
             or state_mutability == StateMutability.PURE
         )
-        if params != "":
-            params += ", "
+        params_str = "".join(param + ", " for param in params)
+        if len(returns) == 0:
+            returns_str = None
+        elif len(returns) == 1:
+            returns_str = returns[0][0]
+        else:
+            returns_str = f"Tuple[{', '.join(ret[0] for ret in returns)}]"
         self.add_str_to_types(
             1,
-            f"""def {self.get_name(fn_name)}(self, {params}*, from_: Optional[Union[Address, str]] = None, to: Optional[Union[Address, str, Contract]] = None, value: Wei = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: bool=False, request_type: RequestType='{'call' if is_view_or_pure else 'default'}') -> Union[{returns}, TransactionObject]:""",
+            f"""def {self.get_name(fn_name)}(self, {params_str}*, from_: Optional[Union[Address, str]] = None, to: Optional[Union[Address, str, Contract]] = None, value: Wei = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: bool=False, request_type: RequestType='{'call' if is_view_or_pure else 'default'}') -> Union[{returns_str}, TransactionObject]:""",
             1,
         )
-        if returns.strip() == "None":
+
+        if len(param_names) + len(returns) > 0:
+            self.add_str_to_types(2, '"""', 1)
+            if len(param_names) > 0:
+                self.add_str_to_types(2, "Args:", 1)
+                for param_name, param_type in param_names:
+                    self.add_str_to_types(3, f"{param_name}: {param_type}", 1)
+            if len(returns) == 1:
+                self.add_str_to_types(2, "Returns:", 1)
+                self.add_str_to_types(3, f"{returns[0][1]}", 1)
+            elif len(returns) > 1:
+                self.add_str_to_types(2, "Returns:", 1)
+                self.add_str_to_types(3, f'({", ".join(ret[1] for ret in returns)})', 1)
+            self.add_str_to_types(2, '"""', 1)
+
+        if len(returns) == 0:
             return_types = "type(None)"
+        elif len(returns) == 1:
+            return_types = returns[0][0]
         else:
-            return_types = returns
+            return_types = f"Tuple[{', '.join(map(itemgetter(0), returns))}]"
         self.add_str_to_types(
             2,
-            f'return self._transact("{fn_selector}", [{param_names}], return_tx, request_type, {return_types}, from_, to, value, gas_limit) if not request_type == \'call\' else self._call("{fn_selector}", [{param_names}], return_tx, {return_types}, from_, to, value, gas_limit)',
+            f'return self._transact("{fn_selector}", [{", ".join(map(itemgetter(0), param_names))}], return_tx, request_type, {return_types}, from_, to, value, gas_limit) if not request_type == \'call\' else self._call("{fn_selector}", [{", ".join(map(itemgetter(0), param_names))}], return_tx, {return_types}, from_, to, value, gas_limit)',
             2,
         )
 
     def generate_type_hint_stub_func(
-        self, fn_name: str, params: str, returns: str, return_tx: bool
+        self, fn_name: str, params: List[str], returns: List[str], return_tx: bool
     ):
-        if params != "":
-            params += ", "
+        params_str = "".join(param + ", " for param in params)
+        if len(returns) == 0:
+            returns_str = "None"
+        elif len(returns) == 1:
+            returns_str = returns[0]
+        else:
+            returns_str = f"Tuple[{', '.join(returns)}]"
+
         self.add_str_to_types(1, "@overload", 1)
         self.add_str_to_types(
             1,
-            f"""def {self.get_name(fn_name)}(self, {params}*, from_: Optional[Union[Address, str]] = None, to: Optional[Union[Address, str, Contract]] = None, value: Wei = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: bool={return_tx}, request_type: RequestType='default') -> {returns}:""",
+            f"""def {self.get_name(fn_name)}(self, {params_str}*, from_: Optional[Union[Address, str]] = None, to: Optional[Union[Address, str, Contract]] = None, value: Wei = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: bool={return_tx}, request_type: RequestType='default') -> {returns_str}:""",
             1,
         )
         self.add_str_to_types(2, "...", 2)
@@ -637,8 +684,10 @@ class TypeGenerator:
         self.__imports.add_python_import(
             "from woke.testing.abi_to_type import RequestType"
         )
-        self.generate_type_hint_stub_func(fn.name, params, returns, False)
-        self.generate_type_hint_stub_func(fn.name, params, "TransactionObject", True)
+        self.generate_type_hint_stub_func(
+            fn.name, params, [ret[0] for ret in returns], False
+        )
+        self.generate_type_hint_stub_func(fn.name, params, ["TransactionObject"], True)
 
         assert fn.function_selector is not None
         self.generate_func_implementation(
