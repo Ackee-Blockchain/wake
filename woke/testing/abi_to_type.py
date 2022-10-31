@@ -208,15 +208,15 @@ class TypeGenerator:
                 processed_files.add(path)
                 interval_trees[path] = IntervalTree()
 
-                assert source_unit_name in output.contracts
-
                 init = IrInitTuple(
                     path,
                     path.read_bytes(),
                     cu,
                     interval_trees[path],
                     reference_resolver,
-                    output.contracts[source_unit_name],
+                    output.contracts[source_unit_name]
+                    if source_unit_name in output.contracts
+                    else None,
                 )
                 self.__source_units[path] = SourceUnit(init, ast)
 
