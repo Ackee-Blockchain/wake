@@ -63,6 +63,16 @@ class DevChainABC(ABC):
             )
         return ret
 
+    def snapshot(self) -> str:
+        return self._loop.run_until_complete(self._communicator.evm_snapshot())
+
+    def revert(self, snapshot_id: str) -> bool:
+        return self._loop.run_until_complete(self._communicator.evm_revert(snapshot_id))
+
+    @abstractmethod
+    def reset(self) -> None:
+        ...
+
     @abstractmethod
     def set_balance(self, address: str, value: int) -> None:
         ...
@@ -100,6 +110,9 @@ class HardhatDevChain(DevChainABC):
             self._communicator.evm_set_block_gas_limit(gas_limit)
         )
 
+    def reset(self) -> None:
+        self._loop.run_until_complete(self._communicator.hardhat_reset())
+
 
 class AnvilDevChain(DevChainABC):
     def retrieve_transaction_data(self, params: List, tx_hash: Any) -> bytes:
@@ -128,6 +141,10 @@ class AnvilDevChain(DevChainABC):
             self._communicator.evm_set_block_gas_limit(gas_limit)
         )
 
+    def reset(self) -> None:
+        raise NotImplementedError("Anvil does not support resetting the chain")
+        self._loop.run_until_complete(self._communicator.anvil_reset())
+
 
 class GanacheDevChain(DevChainABC):
     def retrieve_transaction_data(self, params: List, tx_hash: Any) -> bytes:
@@ -151,3 +168,6 @@ class GanacheDevChain(DevChainABC):
 
     def set_block_gas_limit(self, gas_limit: int) -> None:
         raise NotImplementedError("Ganache does not support setting block gas limit")
+
+    def reset(self) -> None:
+        raise NotImplementedError("Ganache does not support resetting the chain")

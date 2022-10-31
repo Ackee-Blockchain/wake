@@ -11,7 +11,7 @@ from typing import Callable, Iterable, Tuple
 import click
 
 from woke.config import WokeConfig
-from woke.testing import fuzz
+from woke.testing.fuzzer import fuzz
 
 from .console import console
 
@@ -38,9 +38,9 @@ def _get_module_name(path: Path, root: Path) -> str:
 )
 @click.option(
     "--network",
-    type=str,
-    default="development",
-    help="Choose brownie dev chain. Default is 'development' for ganache",
+    type=click.Choice(["anvil", "ganache", "hardhat"], case_sensitive=False),
+    default="anvil",
+    help="Choose development chain implementation.",
 )
 @click.pass_context
 def run_fuzz(

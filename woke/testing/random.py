@@ -2,23 +2,21 @@ import random
 import string
 from typing import Callable, Optional
 
-import brownie
-from brownie.network.account import Account
+from .contract import Address, dev_interface
 
 
 def random_account(
     lower_bound: int = 0,
     length: Optional[int] = None,
-    predicate: Optional[Callable[[Account], bool]] = None,
-) -> Account:
+    predicate: Optional[Callable[[Address], bool]] = None,
+) -> Address:
+    accounts = dev_interface.accounts
     if length is None:
-        length = len(brownie.accounts)
-    if predicate is None:
-        accs = brownie.accounts[lower_bound : lower_bound + length]
-    else:
-        accs = brownie.accounts[lower_bound : lower_bound + length]
-        accs = [acc for acc in accs if predicate(acc)]
-    return random.choice(accs)
+        length = len(accounts)
+    accounts = accounts[lower_bound:length]
+    if predicate is not None:
+        accounts = [acc for acc in accounts if predicate(acc)]
+    return random.choice(accounts)
 
 
 def random_int(min: int, max: int) -> int:
