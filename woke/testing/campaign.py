@@ -3,8 +3,7 @@ import random
 from datetime import datetime, timedelta
 from typing import Callable, Counter, List, Optional, Tuple
 
-import brownie
-import IPython
+from woke.testing.contract import dev_interface
 
 from .utils import partition
 
@@ -29,7 +28,6 @@ class Campaign:
         dry_run: bool = False,
     ):
         init_timestamp = datetime.now()
-        brownie.chain.snapshot()
 
         for i in range(sequences_count):
             if (
@@ -38,8 +36,9 @@ class Campaign:
                 >= init_timestamp + timedelta(seconds=run_for_seconds)
             ):
                 break
+            snapshot_id = dev_interface.snapshot()
+
             logger.info(self.__format_heading(f"SEQUENCE {i}"))
-            brownie.chain.revert()
             seq = self.__sequence_constructor()
 
             flows, _ = self.__get_methods(seq, attr="flow")
@@ -108,6 +107,7 @@ class Campaign:
             # logger.info(self.__format_heading("Campaign point coverage:"))
             # self.__log_point_coverage(point_coverage)
             del seq
+            dev_interface.revert(snapshot_id)
         logger.info(f"\nRan {flows_count} flows. All flows and invariants passed.")
 
     @staticmethod

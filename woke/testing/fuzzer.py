@@ -6,17 +6,17 @@ import multiprocessing.synchronize
 import os
 import pickle
 import random
+import subprocess
 import sys
+import time
 import types
 from contextlib import closing, redirect_stderr, redirect_stdout
 from pathlib import Path
+from time import sleep
 from typing import Callable, Iterable
 
-import brownie
 import rich.progress
-from brownie import rpc, web3
-from brownie._config import CONFIG
-from brownie.test.managers.runner import RevertContextManager
+from aiohttp.client_exceptions import ClientConnectorError
 from ipdb.__main__ import _init_pdb
 from IPython.core.debugger import BdbQuit_excepthook
 from IPython.utils.io import Tee
@@ -26,21 +26,20 @@ from tblib import pickling_support
 
 from woke.cli.console import console
 from woke.config import WokeConfig
+from woke.testing.contract import dev_interface
 
 
-def _setup(port: int, network_id: str) -> None:
-    brownie.reverts = RevertContextManager
-    active_network = CONFIG.set_active_network(network_id)
+def _setup(port: int, network_id: str) -> subprocess.Popen:
+    if network_id == "anvil":
+        args = ["anvil", "--port", str(port)]
+    elif network_id == "ganache":
+        args = ["ganache-cli", "--port", str(port)]
+    elif network_id == "hardhat":
+        args = ["npx", "hardhat", "node", "--port", str(port)]
+    else:
+        raise ValueError(f"Unknown network ID '{network_id}'")
 
-    # Disables color formatting for brownie output
-    CONFIG.settings["console"]["show_colors"] = False
-
-    web3.connect(f"{active_network['host']}:{port}")
-
-    cmd_settings = active_network["cmd_settings"]
-    cmd_settings["port"] = port
-
-    rpc.launch(active_network["cmd"], **cmd_settings)
+    return subprocess.Popen(args, stdout=subprocess.DEVNULL)
 
 
 def _attach_debugger() -> None:
@@ -60,42 +59,18 @@ def _attach_debugger() -> None:
 def _run_core(
     fuzz_test: Callable,
     index: int,
-    port: int,
     random_seed: bytes,
     finished_event: multiprocessing.synchronize.Event,
     child_conn: multiprocessing.connection.Connection,
-    network_id: str,
 ):
     print(f"Using seed '{random_seed.hex()}' for process #{index}")
-    _setup(port, network_id)
 
-    project = brownie.project.load()
+    try:
+        dev_interface.reset()
+    except NotImplementedError:
+        logging.warning("Development chain does not support resetting")
 
-    brownie.chain.reset()
-
-    args = []
-    for arg in inspect.getfullargspec(fuzz_test).args:
-        if arg in {"a", "accounts"}:
-            args.append(brownie.accounts)
-        elif arg == "chain":
-            args.append(brownie.chain)
-        elif arg == "Contract":
-            args.append(brownie.Contract)
-        elif arg == "history":
-            args.append(brownie.history)
-        elif arg == "interface":
-            args.append(project.interface)
-        elif arg == "rpc":
-            args.append(brownie.rpc)
-        elif arg == "web3":
-            args.append(brownie.web3)
-        elif arg in project.keys():
-            args.append(project[arg])
-        else:
-            raise ValueError(
-                f"Unable to set value for '{arg}' argument in '{fuzz_test.__name__}' function."
-            )
-    fuzz_test(*args)
+    fuzz_test()
 
     child_conn.send(None)
     finished_event.set()
@@ -115,6 +90,18 @@ def _run(
     pickling_support.install()
     random.seed(random_seed)
 
+    chain_process = _setup(port, network_id)
+
+    start = time.perf_counter()
+    while True:
+        try:
+            dev_interface.connect(port)
+            break
+        except (ConnectionRefusedError, ClientConnectorError):
+            sleep(0.1)
+            if time.perf_counter() - start > 10:
+                raise
+
     if not tee:
         logging.basicConfig(filename=log_file)
 
@@ -124,22 +111,18 @@ def _run(
                 _run_core(
                     fuzz_test,
                     index,
-                    port,
                     random_seed,
                     finished_event,
                     child_conn,
-                    network_id,
                 )
         else:
             with log_file.open("w") as f, redirect_stdout(f), redirect_stderr(f):
                 _run_core(
                     fuzz_test,
                     index,
-                    port,
                     random_seed,
                     finished_event,
                     child_conn,
-                    network_id,
                 )
     except Exception:
         child_conn.send(pickle.dumps(sys.exc_info()))
@@ -154,7 +137,7 @@ def _run(
             finished_event.set()
     finally:
         with log_file.open("a") as f, redirect_stdout(f), redirect_stderr(f):
-            rpc.kill()
+            chain_process.kill()
 
 
 def fuzz(

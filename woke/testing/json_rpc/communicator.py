@@ -236,6 +236,12 @@ class JsonRpcCommunicator:
         text = await self._send_request("hardhat_stopImpersonatingAccount", params)
         _ = self._process_response(text)
 
+    async def hardhat_reset(self, options: Optional[Dict] = None) -> None:
+        text = await self._send_request(
+            "hardhat_reset", [options] if options is not None else []
+        )
+        _ = self._process_response(text)
+
     async def anvil_set_balance(self, address: str, balance: int) -> None:
         params = [address, hex(balance)]
         text = await self._send_request("anvil_setBalance", params)
@@ -249,6 +255,12 @@ class JsonRpcCommunicator:
     async def anvil_stop_impersonating_account(self, address: str) -> None:
         params = [address]
         text = await self._send_request("anvil_stopImpersonatingAccount", params)
+        _ = self._process_response(text)
+
+    async def anvil_reset(self, options: Optional[Dict] = None) -> None:
+        text = await self._send_request(
+            "anvil_reset", [options] if options is not None else []
+        )
         _ = self._process_response(text)
 
     async def evm_set_account_balance(self, address: str, balance: int) -> None:
@@ -265,6 +277,14 @@ class JsonRpcCommunicator:
     async def evm_add_account(self, address: str, passphrase: str) -> bool:
         params = [address, passphrase]
         text = await self._send_request("evm_addAccount", params)
+        return self._process_response(text)
+
+    async def evm_snapshot(self) -> str:
+        text = await self._send_request("evm_snapshot")
+        return self._process_response(text)
+
+    async def evm_revert(self, snapshot_id: str) -> bool:
+        text = await self._send_request("evm_revert", [snapshot_id])
         return self._process_response(text)
 
     async def web3_client_version(self) -> str:

@@ -100,6 +100,10 @@ class TransactionRevertedError(Exception):
         super().__init__(f"{name}({', '.join(map(repr, data))})")
 
 
+class RevertToSnapshotFailedError(Exception):
+    pass
+
+
 # global interface for communicating with the devchain
 class DevchainInterface:
     __dev_chain: DevChainABC
@@ -109,6 +113,7 @@ class DevchainInterface:
     __block_gas_limit: int
     __chain_id: int
     __nonces: DefaultDict[Address, int]
+    __snapshots: Dict[str, Dict]
     __panic_reasons: Dict[int, str] = {
         0x00: "Generic compiler panic",
         0x01: "Assert evaluated to false",
@@ -122,19 +127,19 @@ class DevchainInterface:
         0x51: "Called invalid internal function",
     }
 
-    def __init__(self, port: int):
+    def connect(self, port: int):
         self.__port = port
-        self._loop = asyncio.new_event_loop()
-        self._communicator = JsonRpcCommunicator()
-        client_version = self._loop.run_until_complete(
-            self._communicator.web3_client_version()
+        communicator = JsonRpcCommunicator(port)
+        loop = asyncio.new_event_loop()
+        client_version = loop.run_until_complete(
+            communicator.web3_client_version()
         ).lower()
         if "anvil" in client_version:
-            self.__dev_chain = AnvilDevChain(self._loop, self._communicator)
+            self.__dev_chain = AnvilDevChain(loop, communicator)
         elif "hardhat" in client_version:
-            self.__dev_chain = HardhatDevChain(self._loop, self._communicator)
+            self.__dev_chain = HardhatDevChain(loop, communicator)
         elif "ethereumjs" in client_version:
-            self.__dev_chain = GanacheDevChain(self._loop, self._communicator)
+            self.__dev_chain = GanacheDevChain(loop, communicator)
         else:
             raise NotImplementedError(f"Client version {client_version} not supported")
         self.__accounts = [Address(acc) for acc in self.__dev_chain.accounts()]
@@ -143,6 +148,7 @@ class DevchainInterface:
         self.__block_gas_limit = int(block_info["gasLimit"], 16)
         self.__chain_id = self.__dev_chain.get_chain_id()
         self.__nonces = defaultdict(lambda: 0)
+        self.__snapshots = {}
         if len(self.__accounts) > 0:
             self.__default_account = self.__accounts[0]
         else:
@@ -217,6 +223,32 @@ class DevchainInterface:
 
     def update_accounts(self):
         self.__accounts = [Address(acc) for acc in self.__dev_chain.accounts()]
+
+    def snapshot(self) -> str:
+        snapshot_id = self.__dev_chain.snapshot()
+
+        self.__snapshots[snapshot_id] = {
+            "nonces": self.__nonces.copy(),
+            "accounts": self.__accounts.copy(),
+            "default_account": self.__default_account,
+            "block_gas_limit": self.__block_gas_limit,
+        }
+        return snapshot_id
+
+    def revert(self, snapshot_id: str) -> None:
+        reverted = self.__dev_chain.revert(snapshot_id)
+        if not reverted:
+            raise RevertToSnapshotFailedError()
+
+        snapshot = self.__snapshots[snapshot_id]
+        self.__nonces = snapshot["nonces"]
+        self.__accounts = snapshot["accounts"]
+        self.__default_account = snapshot["default_account"]
+        self.__block_gas_limit = snapshot["block_gas_limit"]
+        del self.__snapshots[snapshot_id]
+
+    def reset(self) -> None:
+        self.__dev_chain.reset()
 
     def _get_nonce(self, address: Address) -> int:
         if address not in self.__nonces:
@@ -434,7 +466,7 @@ def _signer_account(address: Address, interface: DevchainInterface):
             chain.stop_impersonating_account(address)
 
 
-dev_interface = DevchainInterface(8545)
+dev_interface = DevchainInterface()
 errors = {}
 events = {}
 
