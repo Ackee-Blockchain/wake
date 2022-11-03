@@ -826,6 +826,7 @@ class LspCompiler:
             range=range_,
             severity=severity,
             code=error.error_code,
+            source="Woke(solc)",
             message=error.message,
         )
 
