@@ -75,7 +75,7 @@ async def generate_cfg_handler(
             continue
 
         statements: List[StatementAbc] = node.statements
-        node_attrs = {"label": str(node)}
+        node_attrs = {"label": "".join(f"{line}\l" for line in str(node).splitlines())}
         if (
             context.config.generator.control_flow_graph.vscode_urls
             and len(statements) > 0
