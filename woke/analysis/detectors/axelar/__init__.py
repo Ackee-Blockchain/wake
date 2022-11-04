@@ -1,0 +1,1 @@
+from .proxy_contract_id import AxelarProxyContractIdDetector
