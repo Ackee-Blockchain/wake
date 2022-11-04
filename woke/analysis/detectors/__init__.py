@@ -15,3 +15,5 @@ from .reentrancy import ReentrancyDetector
 from .unchecked_return_value import UncheckedFunctionReturnValueDetector
 from .unsafe_delegatecall import UnsafeDelegatecallDetector
 from .unsafe_selfdestruct import UnsafeSelfdestructDetector
+
+from . import axelar  # isort:skip
