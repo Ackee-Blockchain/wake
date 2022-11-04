@@ -692,11 +692,13 @@ class LspServer:
                 raw_config_copy, invalid_options.union(removed_options)
             )
 
-            if key_in_nested_dict(("compiler", "solc"), changed) or key_in_nested_dict(
-                ("lsp", "detectors"), changed
-            ):
+            if key_in_nested_dict(("compiler", "solc"), changed):
                 await context.compiler.force_recompile()
-            elif key_in_nested_dict(("lsp", "code_lens"), changed):
+            if key_in_nested_dict(("lsp", "detectors"), changed) or key_in_nested_dict(
+                ("detectors",), changed
+            ):
+                await context.compiler.force_rerun_detectors()
+            if key_in_nested_dict(("lsp", "code_lens"), changed):
                 try:
                     await self.send_request(
                         RequestMethodEnum.WORKSPACE_CODE_LENS_REFRESH, None
