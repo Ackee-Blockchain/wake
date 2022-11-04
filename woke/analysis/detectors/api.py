@@ -177,7 +177,7 @@ visit_map: Dict[Type[IrAbc], Callable] = {
 class DetectorResult:
     ir_node: IrAbc
     message: str
-    related_info: Tuple[DetectorResult] = field(default_factory=tuple)
+    related_info: Tuple[DetectorResult, ...] = field(default_factory=tuple)
 
 
 @dataclass
