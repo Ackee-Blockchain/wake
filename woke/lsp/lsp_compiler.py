@@ -215,6 +215,9 @@ class LspCompiler:
         self.__output_ready.clear()
         await self.__file_changes_queue.put(None)
 
+    async def force_rerun_detectors(self) -> None:
+        await self.__file_changes_queue.put(None)
+
     def get_compiled_file(self, file: Union[Path, str]) -> VersionedFile:
         if isinstance(file, str):
             file = uri_to_path(file)
