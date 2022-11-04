@@ -597,14 +597,22 @@ class LspServer:
                 for k in list(config):
                     v = config[k]
                     if isinstance(v, (dict, list)):
-                        _normalize_config(v, config_path + (k,))
+                        if len(v) == 0:
+                            del config[k]
+                            removed_options.add(config_path + (k,))
+                        else:
+                            _normalize_config(v, config_path + (k,))
                     elif isinstance(v, str) and len(v.strip()) == 0:
                         del config[k]
                         removed_options.add(config_path + (k,))
             else:
                 for no, item in enumerate(config):
                     if isinstance(item, (dict, list)):
-                        _normalize_config(item, config_path + (no,))
+                        if len(item) == 0:
+                            config.remove(item)
+                            removed_options.add(config_path + (no,))
+                        else:
+                            _normalize_config(item, config_path + (no,))
                     elif isinstance(item, str) and len(item.strip()) == 0:
                         config.remove(item)
                         removed_options.add(config_path + (no,))
