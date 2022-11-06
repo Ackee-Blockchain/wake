@@ -125,6 +125,7 @@ class CommandsEnum(str, Enum):
     GENERATE_INHERITANCE_GRAPH_FULL = "woke.generate.inheritance_graph_full"
     GENERATE_LINEARIZED_INHERITANCE_GRAPH = "woke.generate.linearized_inheritance_graph"
     LSP_FORCE_RECOMPILE = "woke.lsp.force_recompile"
+    LSP_FORCE_RERUN_DETECTORS = "woke.lsp.force_rerun_detectors"
 
 
 class LspServer:
@@ -848,6 +849,10 @@ class LspServer:
         if command == CommandsEnum.LSP_FORCE_RECOMPILE:
             for context in self.__workspaces.values():
                 await context.compiler.force_recompile()
+            return None
+        elif command == CommandsEnum.LSP_FORCE_RERUN_DETECTORS:
+            for context in self.__workspaces.values():
+                await context.compiler.force_rerun_detectors()
             return None
         elif command == CommandsEnum.GENERATE_CFG:
             if params.arguments is None or len(params.arguments) != 2:

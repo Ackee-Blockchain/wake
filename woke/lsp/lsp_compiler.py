@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import asyncio
 import difflib
+import enum
 import logging
 import re
 import threading
 from collections import deque
+from copy import deepcopy
 from functools import lru_cache
 from pathlib import Path, PurePath
 from typing import (
@@ -107,6 +109,11 @@ class VersionedFile(NamedTuple):
     version: Optional[int]
 
 
+class CustomFileChangeCommand(str, enum.Enum):
+    FORCE_RECOMPILE = "force_recompile"
+    FORCE_RERUN_DETECTORS = "force_rerun_detectors"
+
+
 class LspCompiler:
     __config: WokeConfig
     __svm: SolcVersionManager
@@ -120,11 +127,13 @@ class LspCompiler:
     __force_compile_files: Set[Path]
     __compiler: SolidityCompiler
     __output_contents: Dict[Path, VersionedFile]
+    __compilation_errors: Dict[Path, Set[Diagnostic]]
     __last_successful_compilation_contents: Dict[Path, VersionedFile]
     __interval_trees: Dict[Path, IntervalTree]
     __source_units: Dict[Path, SourceUnit]
     __line_indexes: Dict[Path, List[Tuple[bytes, int]]]
     __perform_files_discovery: bool
+    __force_run_detectors: bool
 
     __ir_reference_resolver: ReferenceResolver
 
@@ -149,9 +158,11 @@ class LspCompiler:
         self.__source_units = {}
         self.__line_indexes = {}
         self.__output_contents = dict()
+        self.__compilation_errors = dict()
         self.__last_successful_compilation_contents = dict()
         self.__output_ready = asyncio.Event()
         self.__perform_files_discovery = perform_files_discovery
+        self.__force_run_detectors = False
 
         self.__ir_reference_resolver = ReferenceResolver()
 
@@ -213,10 +224,12 @@ class LspCompiler:
 
     async def force_recompile(self) -> None:
         self.__output_ready.clear()
-        await self.__file_changes_queue.put(None)
+        await self.__file_changes_queue.put(CustomFileChangeCommand.FORCE_RECOMPILE)
 
     async def force_rerun_detectors(self) -> None:
-        await self.__file_changes_queue.put(None)
+        await self.__file_changes_queue.put(
+            CustomFileChangeCommand.FORCE_RERUN_DETECTORS
+        )
 
     def get_compiled_file(self, file: Union[Path, str]) -> VersionedFile:
         if isinstance(file, str):
@@ -270,22 +283,25 @@ class LspCompiler:
             None,
         ],
     ) -> None:
-        if change is None:
-            for file in self.__discovered_files:
-                # clear diagnostics
-                await self.__diagnostic_queue.put((file, set()))
+        if isinstance(change, CustomFileChangeCommand):
+            if change == CustomFileChangeCommand.FORCE_RECOMPILE:
+                for file in self.__discovered_files:
+                    # clear diagnostics
+                    await self.__diagnostic_queue.put((file, set()))
 
-            self.__discovered_files.clear()
-            if self.__perform_files_discovery:
-                for file in self.__config.project_root_path.rglob("**/*.sol"):
-                    if not self.__file_ignored(file) and file.is_file():
-                        self.__discovered_files.add(file.resolve())
+                self.__discovered_files.clear()
+                if self.__perform_files_discovery:
+                    for file in self.__config.project_root_path.rglob("**/*.sol"):
+                        if not self.__file_ignored(file) and file.is_file():
+                            self.__discovered_files.add(file.resolve())
 
-            for file in self.__opened_files.keys():
-                if not self.__file_ignored(file):
-                    self.__discovered_files.add(file)
+                for file in self.__opened_files.keys():
+                    if not self.__file_ignored(file):
+                        self.__discovered_files.add(file)
 
-            self.__force_compile_files.update(self.__discovered_files)
+                self.__force_compile_files.update(self.__discovered_files)
+            elif change == CustomFileChangeCommand.FORCE_RERUN_DETECTORS:
+                self.__force_run_detectors = True
         elif isinstance(change, CreateFilesParams):
             for file in change.files:
                 path = uri_to_path(file.uri)
@@ -568,9 +584,13 @@ class LspCompiler:
             return
 
         errors_without_location: Set[SolcOutputError] = set()
-        errors_per_file: Dict[Path, Set[Diagnostic]] = {}
+        errors_per_file: Dict[Path, Set[Diagnostic]] = deepcopy(
+            self.__compilation_errors
+        )
 
         for cu, solc_output in zip(compilation_units, ret):
+            for file in cu.files:
+                errors_per_file[file] = set()
             for error in solc_output.errors:
                 if error.source_location is None:
                     errors_without_location.add(error)
@@ -612,8 +632,6 @@ class LspCompiler:
 
         for cu_index, (cu, solc_output) in enumerate(zip(compilation_units, ret)):
             for file in cu.files:
-                if file not in errors_per_file:
-                    errors_per_file[file] = set()
                 if file in self.__line_indexes:
                     self.__line_indexes.pop(file)
                 if file in self.__opened_files:
@@ -704,6 +722,21 @@ class LspCompiler:
         if progress_token is not None:
             await self.__server.progress_end(progress_token)
 
+        self.__compilation_errors = deepcopy(errors_per_file)
+
+        # diagnostics (compiler errors and warnings + detections) are sent in this function
+        await self.__run_detectors()
+
+        if len(files_to_recompile) > 0:
+            # avoid infinite recursion
+            if files_to_recompile != files_to_compile or full_compile:
+                await self.__compile(files_to_recompile, False)
+
+    async def __run_detectors(self):
+        errors_per_file: Dict[Path, Set[Diagnostic]] = deepcopy(
+            self.__compilation_errors
+        )
+
         if self.__config.lsp.detectors.enable:
             for detection in detect(self.__config, self.__source_units):
                 file = detection.result.ir_node.file
@@ -741,11 +774,6 @@ class LspCompiler:
         for path, errors in errors_per_file.items():
             await self.__diagnostic_queue.put((path, errors))
 
-        if len(files_to_recompile) > 0:
-            # avoid infinite recursion
-            if files_to_recompile != files_to_compile or full_compile:
-                await self.__compile(files_to_recompile, False)
-
     async def __compilation_loop(self):
         if self.__perform_files_discovery:
             # perform Solidity files discovery
@@ -781,6 +809,10 @@ class LspCompiler:
                 self.__force_compile_files.clear()
                 self.__modified_files.clear()
                 self.__deleted_files.clear()
+
+            if self.__force_run_detectors:
+                await self.__run_detectors()
+                self.__force_run_detectors = False
 
             if self.__file_changes_queue.empty():
                 self.output_ready.set()
