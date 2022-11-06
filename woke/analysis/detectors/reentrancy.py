@@ -326,6 +326,10 @@ def check_reentrancy_in_function(
 
 @detector(-1004, "reentrancy")
 class ReentrancyDetector(DetectorAbc):
+    """
+    Detects re-entrancy vulnerabilities.
+    """
+
     _detections: Set[DetectorResult]
 
     def __init__(self):

@@ -12,6 +12,10 @@ logger = logging.getLogger(__name__)
 
 @detector(-100, "unsafe-selfdestruct")
 class UnsafeSelfdestructDetector(DetectorAbc):
+    """
+    Selfdestruct call is not protected.
+    """
+
     _detections: Set[DetectorResult]
 
     def __init__(self):
