@@ -6,6 +6,8 @@ from intervaltree import IntervalTree
 
 from woke.ast.ir.declaration.abc import DeclarationAbc
 from woke.ast.ir.declaration.contract_definition import ContractDefinition
+from woke.ast.ir.declaration.error_definition import ErrorDefinition
+from woke.ast.ir.declaration.event_definition import EventDefinition
 from woke.ast.ir.declaration.function_definition import FunctionDefinition
 from woke.ast.ir.declaration.modifier_definition import ModifierDefinition
 from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
@@ -151,6 +153,28 @@ def _get_code_lens_from_cache(
     return ret
 
 
+def _generate_code_lens(
+    context: LspContext,
+    path: Path,
+    title: str,
+    command: str,
+    arguments: Optional[List],
+    byte_range: Tuple[int, int],
+    validity_range: Tuple[int, int],
+) -> CodeLens:
+    ret = CodeLens(
+        range=context.compiler.get_range_from_byte_offsets(path, byte_range),
+        command=Command(
+            title=title,
+            command=command,
+            arguments=arguments,
+        ),
+        data=None,
+    )
+    _code_lens_cache[path].append(CodeLensCache(ret, byte_range, validity_range))
+    return ret
+
+
 async def code_lens(
     context: LspContext, params: CodeLensParams
 ) -> Union[None, List[CodeLens]]:
@@ -175,23 +199,14 @@ async def code_lens(
     for declaration in source_unit.declarations_iter():
         refs_count = _resolve_declaration(declaration, context)
         code_lens.append(
-            CodeLens(
-                range=context.compiler.get_range_from_byte_offsets(
-                    declaration.file, declaration.name_location
-                ),
-                command=Command(
-                    title=f"{refs_count} references"
-                    if refs_count != 1
-                    else "1 reference",
-                    command="",
-                    arguments=None,
-                ),
-                data=None,
-            )
-        )
-        _code_lens_cache[path].append(
-            CodeLensCache(
-                code_lens[-1], declaration.name_location, declaration.name_location
+            _generate_code_lens(
+                context,
+                declaration.file,
+                f"{refs_count} references" if refs_count != 1 else "1 reference",
+                "",
+                None,
+                declaration.name_location,
+                declaration.name_location,
             )
         )
 
@@ -200,68 +215,84 @@ async def code_lens(
             and declaration.implemented
         ):
             code_lens.append(
-                CodeLens(
-                    range=context.compiler.get_range_from_byte_offsets(
-                        declaration.file, declaration.name_location
-                    ),
-                    command=Command(
-                        title="Control flow graph",
-                        command="Tools-for-Solidity.generate.control_flow_graph",
-                        arguments=[
-                            params.text_document.uri,
-                            declaration.canonical_name,
-                        ],
-                    ),
-                    data=None,
-                )
-            )
-            _code_lens_cache[path].append(
-                CodeLensCache(
-                    code_lens[-1], declaration.name_location, declaration.byte_location
+                _generate_code_lens(
+                    context,
+                    declaration.file,
+                    "Control flow graph",
+                    "Tools-for-Solidity.generate.control_flow_graph",
+                    [params.text_document.uri, declaration.canonical_name],
+                    declaration.name_location,
+                    declaration.byte_location,
                 )
             )
         elif isinstance(declaration, ContractDefinition):
             code_lens.append(
-                CodeLens(
-                    range=context.compiler.get_range_from_byte_offsets(
-                        declaration.file, declaration.name_location
-                    ),
-                    command=Command(
-                        title="Inheritance graph",
-                        command="Tools-for-Solidity.generate.inheritance_graph",
-                        arguments=[
-                            params.text_document.uri,
-                            declaration.canonical_name,
-                        ],
-                    ),
-                    data=None,
-                )
-            )
-            _code_lens_cache[path].append(
-                CodeLensCache(
-                    code_lens[-1], declaration.name_location, declaration.name_location
+                _generate_code_lens(
+                    context,
+                    declaration.file,
+                    "Inheritance graph",
+                    "Tools-for-Solidity.generate.inheritance_graph",
+                    [params.text_document.uri, declaration.canonical_name],
+                    declaration.name_location,
+                    declaration.name_location,
                 )
             )
 
             code_lens.append(
-                CodeLens(
-                    range=context.compiler.get_range_from_byte_offsets(
-                        declaration.file, declaration.name_location
-                    ),
-                    command=Command(
-                        title="Linearized inheritance graph",
-                        command="Tools-for-Solidity.generate.linearized_inheritance_graph",
-                        arguments=[
-                            params.text_document.uri,
-                            declaration.canonical_name,
-                        ],
-                    ),
-                    data=None,
+                _generate_code_lens(
+                    context,
+                    declaration.file,
+                    "Linearized inheritance graph",
+                    "Tools-for-Solidity.generate.linearized_inheritance_graph",
+                    [params.text_document.uri, declaration.canonical_name],
+                    declaration.name_location,
+                    declaration.name_location,
                 )
             )
-            _code_lens_cache[path].append(
-                CodeLensCache(
-                    code_lens[-1], declaration.name_location, declaration.name_location
+
+        if (
+            isinstance(declaration, FunctionDefinition)
+            and declaration.function_selector is not None
+        ):
+            code_lens.append(
+                _generate_code_lens(
+                    context,
+                    declaration.file,
+                    f"{declaration.function_selector.hex()}",
+                    "Tools-for-Solidity.copy_to_clipboard",
+                    [declaration.function_selector.hex()],
+                    declaration.name_location,
+                    declaration.byte_location,
+                )
+            )
+        elif (
+            isinstance(declaration, ErrorDefinition)
+            and declaration.error_selector is not None
+        ):
+            code_lens.append(
+                _generate_code_lens(
+                    context,
+                    declaration.file,
+                    f"{declaration.error_selector.hex()}",
+                    "Tools-for-Solidity.copy_to_clipboard",
+                    [declaration.error_selector.hex()],
+                    declaration.name_location,
+                    declaration.byte_location,
+                )
+            )
+        elif (
+            isinstance(declaration, EventDefinition)
+            and declaration.event_selector is not None
+        ):
+            code_lens.append(
+                _generate_code_lens(
+                    context,
+                    declaration.file,
+                    f"{declaration.event_selector.hex()}",
+                    "Tools-for-Solidity.copy_to_clipboard",
+                    [declaration.event_selector.hex()],
+                    declaration.name_location,
+                    declaration.byte_location,
                 )
             )
     return code_lens
