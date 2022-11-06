@@ -124,6 +124,10 @@ def check_delegatecall_in_function(
 
 @detector(-1005, "unsafe-delegatecall")
 class UnsafeDelegatecallDetector(DetectorAbc):
+    """
+    Delegatecall to an untrusted contract.
+    """
+
     _detections: Set[DetectorResult]
 
     def __init__(self):

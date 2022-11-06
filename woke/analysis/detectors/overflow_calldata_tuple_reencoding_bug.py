@@ -110,6 +110,10 @@ def types_meet_requirements(
 
 @detector(-1020, "overflow-calldata-tuple-reencoding-bug")
 class OverflowCalldataTupleReencodingBugDetector(DetectorAbc):
+    """
+    Detects Head Overflow Calldata Tuple Reencoding compiler bug
+    """
+
     _detections: Set[DetectorResult]
 
     def __init__(self):

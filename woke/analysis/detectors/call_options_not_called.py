@@ -10,6 +10,10 @@ from .api import DetectorAbc, DetectorResult, detector
 
 @detector(-1002, "function-call-options-not-called")
 class FunctionCallOptionsNotCalledDetector(DetectorAbc):
+    """
+    Function with gas or value set actually is not called, e.g. `this.externalFunction.value(targetValue)` or `this.externalFunction{value: targetValue}`.
+    """
+
     _detections: Set[DetectorResult]
 
     def __init__(self):

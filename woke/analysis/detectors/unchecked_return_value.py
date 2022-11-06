@@ -15,6 +15,10 @@ from woke.ast.ir.statement.expression_statement import ExpressionStatement
 
 @detector(-1000, "unchecked-function-return-value")
 class UncheckedFunctionReturnValueDetector(DetectorAbc):
+    """
+    Return value of a function call is ignored.
+    """
+
     _detections: Set[DetectorResult]
 
     def __init__(self):

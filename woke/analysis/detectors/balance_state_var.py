@@ -135,6 +135,10 @@ def _process_assigned_vars(address_balance: ExpressionAbc) -> List[DetectorResul
 
 @detector(-1003, "unsafe-address-balance-use")
 class UnsafeAddressBalanceUseDetector(DetectorAbc):
+    """
+    Address.balance is either written to a state variable or used in a strict comparison (== or !=).
+    """
+
     _detections: Set[DetectorResult]
 
     def __init__(self):

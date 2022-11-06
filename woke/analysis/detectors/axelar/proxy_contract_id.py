@@ -25,6 +25,10 @@ from woke.ast.ir.statement.return_statement import Return
 
 @detector(-12000, "axelar-proxy-contract-id")
 class AxelarProxyContractIdDetector(DetectorAbc):
+    """
+    Detects incorrect use of the `contractId` function in Axelar proxy and upgradeable contracts.
+    """
+
     proxies: Dict[bytes, Set[FunctionDefinition]]
     upgradeables: Dict[bytes, Set[FunctionDefinition]]
 
