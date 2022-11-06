@@ -79,46 +79,48 @@ class AxelarProxyContractIdDetector(DetectorAbc):
 
         ret = []
 
-        for proxies in proxy_contracts.values():
+        for proxies in sorted(proxy_contracts.values()):
             if len(proxies) > 1:
-                first = next(iter(proxies))
+                sorted_proxies = sorted(proxies, key=lambda c: c.name)
                 ret.append(
                     DetectorResult(
-                        first,
+                        sorted_proxies[0],
                         "Proxy contract ID is shared between multiple contracts",
                         tuple(
                             DetectorResult(other, "Other contract")
-                            for other in proxies
-                            if other != first
+                            for other in sorted_proxies[1:]
                         ),
                     )
                 )
 
-        for upgradeables in upgradeable_contracts.values():
+        for upgradeables in sorted(upgradeable_contracts.values()):
             if len(upgradeables) > 1:
-                first = next(iter(upgradeables))
+                sorted_upgradeables = sorted(upgradeables, key=lambda c: c.name)
                 ret.append(
                     DetectorResult(
-                        first,
+                        sorted_upgradeables[0],
                         "Upgradeable contract ID is shared between multiple contracts",
                         tuple(
                             DetectorResult(other, "Other contract")
-                            for other in upgradeables
-                            if other != first
+                            for other in sorted_upgradeables[1:]
                         ),
                     )
                 )
 
-        for only_proxy in proxy_contracts.keys() - upgradeable_contracts.keys():
-            for proxy in proxy_contracts[only_proxy]:
+        for only_proxy in sorted(proxy_contracts.keys() - upgradeable_contracts.keys()):
+            for proxy in sorted(proxy_contracts[only_proxy], key=lambda c: c.name):
                 ret.append(
                     DetectorResult(
                         proxy,
                         "Found a proxy contract without an upgradeable contract with the same contract ID",
                     )
                 )
-        for only_upgradeable in upgradeable_contracts.keys() - proxy_contracts.keys():
-            for upgradeable in upgradeable_contracts[only_upgradeable]:
+        for only_upgradeable in sorted(
+            upgradeable_contracts.keys() - proxy_contracts.keys()
+        ):
+            for upgradeable in sorted(
+                upgradeable_contracts[only_upgradeable], key=lambda c: c.name
+            ):
                 ret.append(
                     DetectorResult(
                         upgradeable,
@@ -131,9 +133,15 @@ class AxelarProxyContractIdDetector(DetectorAbc):
             bytes.fromhex("9ded06df"): "setup",
         }
 
-        for common_contract_id in proxy_contracts.keys() & upgradeable_contracts.keys():
-            for proxy in proxy_contracts[common_contract_id]:
-                for upgradeable in upgradeable_contracts[common_contract_id]:
+        for common_contract_id in sorted(
+            proxy_contracts.keys() & upgradeable_contracts.keys()
+        ):
+            for proxy in sorted(
+                proxy_contracts[common_contract_id], key=lambda c: c.name
+            ):
+                for upgradeable in sorted(
+                    upgradeable_contracts[common_contract_id], key=lambda c: c.name
+                ):
                     proxy_functions: Dict[bytes, FunctionDefinition] = {}
                     upgradeable_functions: Dict[bytes, FunctionDefinition] = {}
 
@@ -153,7 +161,7 @@ class AxelarProxyContractIdDetector(DetectorAbc):
                             ):
                                 upgradeable_functions[func.function_selector] = func
 
-                    for common_selector in (
+                    for common_selector in sorted(
                         proxy_functions.keys() & upgradeable_functions.keys()
                     ):
                         if common_selector in whitelisted_functions:
