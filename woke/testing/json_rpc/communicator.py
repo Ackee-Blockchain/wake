@@ -9,7 +9,7 @@ from aiohttp import ClientSession
 from typing_extensions import TypedDict
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.ERROR)
 
 
 class BlockEnum(str, enum.Enum):
