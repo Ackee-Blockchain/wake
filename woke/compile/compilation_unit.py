@@ -3,7 +3,7 @@ from pathlib import Path, PurePath
 from typing import DefaultDict, FrozenSet, Iterable, Set
 
 import networkx as nx
-from Cryptodome.Hash import BLAKE2b
+from Crypto.Hash import BLAKE2b
 
 from woke.compile.source_path_resolver import SourcePathResolver
 from woke.config import WokeConfig

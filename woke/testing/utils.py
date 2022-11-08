@@ -3,7 +3,7 @@ import math
 from collections import defaultdict
 from typing import Callable, Iterable, List, Tuple, TypeVar
 
-from Cryptodome.Hash import keccak
+from Crypto.Hash import keccak
 
 
 def format_int(x: int) -> str:

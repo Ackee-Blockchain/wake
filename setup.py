@@ -11,7 +11,6 @@ install_requires = [
     "aiofiles >= 0.8.0",
     "tomli >= 2.0.0, < 3",
     "networkx >= 2.5, < 3",
-    "pycryptodomex >= 3.12, < 4",
     "click >= 8, < 9",
     "rich >= 10.16",
     "pathvalidate >= 2.5.0, < 3",
@@ -20,6 +19,7 @@ install_requires = [
     "tblib >= 1.7.0, < 2",
     "eth_utils >= 2.0.0, < 3",
     "eth_abi >= 3.0.0, < 4",
+    "eth-hash[pycryptodome] >= 0.3.3, < 1",
     "ipdb",
 ]
 

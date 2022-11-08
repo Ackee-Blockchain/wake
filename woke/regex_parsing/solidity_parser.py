@@ -2,7 +2,7 @@ import re
 from pathlib import Path
 from typing import List, Tuple
 
-from Cryptodome.Hash import BLAKE2b
+from Crypto.Hash import BLAKE2b
 
 from woke.core.solidity_version import (
     SolidityVersionExpr,

@@ -1,7 +1,7 @@
 from collections import deque
 from typing import Deque, Dict, List, Optional, Set, Union
 
-from Cryptodome.Hash import keccak
+from Crypto.Hash import keccak
 
 import woke.ast.types as types
 from woke.analysis.detectors import DetectorAbc, DetectorResult, detector
