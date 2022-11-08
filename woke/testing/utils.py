@@ -1,9 +1,24 @@
 import inspect
 import math
 from collections import defaultdict
+from functools import wraps
 from typing import Callable, Iterable, List, Tuple, TypeVar
 
 from Crypto.Hash import keccak
+
+from woke.testing.contract import DevchainInterface
+
+
+def snapshot_and_revert(devchain_interface: DevchainInterface):
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            with devchain_interface.snapshot_and_revert():
+                return fn(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
 
 
 def format_int(x: int) -> str:
