@@ -9,7 +9,7 @@ from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, Union
 from zipfile import ZipFile
 
 import aiohttp
-from Cryptodome.Hash import keccak
+from Crypto.Hash import keccak
 from pydantic import BaseModel, Field
 
 from woke.config import UnsupportedPlatformError, WokeConfig
