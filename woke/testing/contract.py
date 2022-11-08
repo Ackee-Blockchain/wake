@@ -247,6 +247,14 @@ class DevchainInterface:
         self.__block_gas_limit = snapshot["block_gas_limit"]
         del self.__snapshots[snapshot_id]
 
+    @contextmanager
+    def snapshot_and_revert(self):
+        snapshot_id = self.snapshot()
+        try:
+            yield
+        finally:
+            self.revert(snapshot_id)
+
     def reset(self) -> None:
         self.__dev_chain.reset()
 
