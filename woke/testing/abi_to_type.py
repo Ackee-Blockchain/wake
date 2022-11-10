@@ -1,26 +1,18 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import keyword
+import re
 import shutil
 import string
-import struct
-from abc import ABC
-from ast import parse
-from distutils.command import config
-from distutils.command.clean import clean
+from collections import deque
 from enum import Enum
-from multiprocessing.dummy import Array
 from operator import itemgetter
 from pathlib import Path, PurePath
-from re import A
-from typing import Any, Dict, Iterable, List, Mapping, Set, Tuple, Union
+from typing import Any, Dict, Iterable, List, Set, Tuple, Union
 
-import click
 import eth_utils
-from click.core import Context
-from genericpath import exists
+from Crypto.Hash import keccak
 from intervaltree import IntervalTree
 from rich.panel import Panel
 from typing_extensions import Literal
@@ -70,6 +62,8 @@ def _make_path_alphanum(source_unit_name: str) -> str:
 
 
 class TypeGenerator:
+    LIBRARY_PLACEHOLDER_REGEX = re.compile(r"__\$[0-9a-fA-F]{34}\$__")
+
     __config: WokeConfig
     # generated types for the given source unit
     __source_unit_types: str
@@ -236,7 +230,7 @@ class TypeGenerator:
     def get_name(self, name: str) -> str:
         return self.__name_sanitizer.sanitize_name(name)
 
-    def generate_deploy_func(self, contract: ContractDefinition):
+    def generate_deploy_func(self, contract: ContractDefinition, bytecode: str):
         param_names = []
         params = []
         for fn in contract.functions:
@@ -245,10 +239,46 @@ class TypeGenerator:
                 break
         params_str = "".join(param + ", " for param in params)
 
+        lib_ids: Set[bytes] = set()
+
+        for match in self.__class__.LIBRARY_PLACEHOLDER_REGEX.findall(bytecode):
+            lib_id = bytes.fromhex(match[3:-3])
+            lib_ids.add(lib_id)
+
+        libraries: Dict[bytes, Tuple[str, str]] = {}
+        source_units_queue = deque([contract.parent])
+
+        while len(source_units_queue) > 0 and len(lib_ids) > 0:
+            source_unit = source_units_queue.popleft()
+            for contract in source_unit.contracts:
+                if contract.kind == ContractKind.LIBRARY:
+                    fqn = f"{contract.parent.source_unit_name}:{contract.name}"
+                    lib_id = keccak.new(
+                        data=fqn.encode("utf-8"), digest_bits=256
+                    ).digest()[:17]
+
+                    if lib_id in lib_ids:
+                        lib_ids.remove(lib_id)
+                        self.__imports.generate_contract_import_name(
+                            contract.name, contract.parent.source_unit_name
+                        )
+                        libraries[lib_id] = (
+                            contract.name[0].lower() + contract.name[1:],
+                            self.get_name(contract.name),
+                        )
+
+            source_units_queue.extend(imp.source_unit for imp in source_unit.imports)
+
+        assert len(lib_ids) == 0, "Not all libraries were found"
+        libraries_str = "".join(
+            f", {l[0]}: Optional[Union[{l[1]}, Address]] = None"
+            for l in libraries.values()
+        )
+
         self.add_str_to_types(1, "@classmethod", 1)
         self.add_str_to_types(
             1,
-            f'def deploy(cls, {params_str}*, from_: Optional[Union[Address, str]] = None, value: Wei = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max") -> {contract.name}:',
+            f'def deploy(cls, {params_str}*, from_: Optional[Union[Address, str]] = None, value: Wei = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max"{libraries_str}) -> {self.get_name(contract.name)}:',
             1,
         )
 
@@ -259,11 +289,19 @@ class TypeGenerator:
                 self.add_str_to_types(3, f"{param_name}: {param_type}", 1)
             self.add_str_to_types(2, '"""', 1)
 
-        if contract.kind == ContractKind.CONTRACT:
+        if contract.kind in {ContractKind.CONTRACT, ContractKind.LIBRARY}:
             if not contract.abstract:
+                libs_arg = (
+                    "{"
+                    + ", ".join(
+                        f"{lib_id}: ({l[0]}, '{l[1]}')"
+                        for lib_id, l in libraries.items()
+                    )
+                    + "}"
+                )
                 self.add_str_to_types(
                     2,
-                    f"return cls._deploy([{', '.join(map(itemgetter(0), param_names))}], from_, value, gas_limit)",
+                    f"return cls._deploy([{', '.join(map(itemgetter(0), param_names))}], from_, value, gas_limit, {libs_arg})",
                     1,
                 )
             else:
@@ -276,9 +314,14 @@ class TypeGenerator:
     def generate_contract_template(
         self, contract: ContractDefinition, base_names: str
     ) -> None:
-        self.add_str_to_types(
-            0, "class " + self.get_name(contract.name) + "(" + base_names + "):", 1
-        )
+        if contract.kind == ContractKind.LIBRARY:
+            self.add_str_to_types(
+                0, "class " + self.get_name(contract.name) + "(Library):", 1
+            )
+        else:
+            self.add_str_to_types(
+                0, "class " + self.get_name(contract.name) + "(" + base_names + "):", 1
+            )
         compilation_info = contract.compilation_info
         assert compilation_info is not None
         assert compilation_info.abi is not None
@@ -307,11 +350,16 @@ class TypeGenerator:
             abi_by_selector[selector] = item
         self.add_str_to_types(1, f"_abi = {abi_by_selector}", 1)
         self.add_str_to_types(
-            1, f"_bytecode = {bytes.fromhex(compilation_info.evm.bytecode.object)}", 2
+            1, f'_bytecode = "{compilation_info.evm.bytecode.object}"', 2
         )
 
+        if contract.kind == ContractKind.LIBRARY:
+            fqn = f"{contract.parent.source_unit_name}:{contract.name}"
+            lib_id = keccak.new(data=fqn.encode("utf-8"), digest_bits=256).digest()[:17]
+            self.add_str_to_types(1, f"_library_id = {lib_id}", 2)
+
         self.__imports.add_python_import("from __future__ import annotations")
-        self.generate_deploy_func(contract)
+        self.generate_deploy_func(contract, compilation_info.evm.bytecode.object)
         self.add_str_to_types(0, "", 1)
 
     def generate_types_struct(
@@ -760,11 +808,7 @@ class TypeGenerator:
         self.generate_types_struct(unit.structs, 0)
         self.generate_types_enum(unit.enums, 0)
         for contract in unit.contracts:
-            # TODO add generating types for libraries
-            if contract.kind == ContractKind.LIBRARY:
-                continue
-            else:
-                self.generate_types_contract(contract, True)
+            self.generate_types_contract(contract, True)
 
     def clean_type_dir(self):
         """
@@ -1086,6 +1130,8 @@ class NameSanitizer:
             "_call",
             "to",
             "from_",
+            "value",
+            "self",
         }
         self.__used_names = set()
         self.__renamed = {}
