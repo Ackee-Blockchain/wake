@@ -1,5 +1,6 @@
 import asyncio
 import dataclasses
+import re
 from collections import defaultdict
 from contextlib import contextmanager
 from enum import IntEnum
@@ -114,6 +115,7 @@ class DevchainInterface:
     __chain_id: int
     __nonces: DefaultDict[Address, int]
     __snapshots: Dict[str, Dict]
+    __deployed_libraries: DefaultDict[bytes, List[Address]]
     __panic_reasons: Dict[int, str] = {
         0x00: "Generic compiler panic",
         0x01: "Assert evaluated to false",
@@ -149,6 +151,7 @@ class DevchainInterface:
         self.__chain_id = self.__dev_chain.get_chain_id()
         self.__nonces = defaultdict(lambda: 0)
         self.__snapshots = {}
+        self.__deployed_libraries = defaultdict(list)
         if len(self.__accounts) > 0:
             self.__default_account = self.__accounts[0]
         else:
@@ -246,6 +249,10 @@ class DevchainInterface:
         self.__default_account = snapshot["default_account"]
         self.__block_gas_limit = snapshot["block_gas_limit"]
         del self.__snapshots[snapshot_id]
+
+    @property
+    def deployed_libraries(self) -> DefaultDict[bytes, List[Address]]:
+        return self.__deployed_libraries
 
     @contextmanager
     def snapshot_and_revert(self):
@@ -478,10 +485,12 @@ dev_interface = DevchainInterface()
 errors = {}
 events = {}
 
+LIBRARY_PLACEHOLDER_REGEX = re.compile(r"__\$[0-9a-fA-F]{34}\$__")
+
 
 class Contract:
     _abi: Dict[Union[bytes, Literal["constructor"]], Any]
-    _bytecode: bytes
+    _bytecode: str
     _address: Address
 
     def __init__(self, addr: Union[Address, str]):
@@ -501,6 +510,7 @@ class Contract:
         from_: Optional[Union[Address, str, "Contract"]],
         value: Wei,
         gas_limit: Union[int, Literal["max"], Literal["auto"]],
+        libraries: Dict[bytes, Tuple[Union["Contract", Address, None], str]],
     ) -> "Contract":
         params = {}
         if from_ is not None:
@@ -516,7 +526,23 @@ class Contract:
         else:
             raise ValueError("invalid gas limit")
 
-        address = dev_interface.deploy(cls._abi, cls._bytecode, arguments, params)
+        bytecode = cls._bytecode
+        for match in LIBRARY_PLACEHOLDER_REGEX.finditer(bytecode):
+            lib_id = bytes.fromhex(match.group(0)[3:-3])
+            assert lib_id in libraries
+
+            if libraries[lib_id][0] is not None:
+                lib_addr = str(Address(libraries[lib_id][0]))[2:]
+            elif lib_id in dev_interface.deployed_libraries:
+                lib_addr = str(dev_interface.deployed_libraries[lib_id][-1])[2:]
+            else:
+                raise ValueError(f"Library {libraries[lib_id][1]} not deployed")
+
+            bytecode = bytecode[: match.start()] + lib_addr + bytecode[match.end() :]
+
+        address = dev_interface.deploy(
+            cls._abi, bytes.fromhex(bytecode), arguments, params
+        )
         return cls(address)
 
     def _transact(
@@ -602,3 +628,20 @@ class Contract:
         return dev_interface.call(
             sel, self.__class__._abi, arguments, params, return_type
         )
+
+
+class Library(Contract):
+    _library_id: bytes
+
+    @classmethod
+    def _deploy(
+        cls,
+        arguments: Iterable,
+        from_: Optional[Union[Address, str, "Contract"]],
+        value: Wei,
+        gas_limit: Union[int, Literal["max"], Literal["auto"]],
+        libraries: Dict[bytes, Tuple[Union["Contract", Address, None], str]],
+    ) -> "Contract":
+        ret = super()._deploy(arguments, from_, value, gas_limit, libraries)
+        dev_interface.deployed_libraries[cls._library_id].append(Address(ret))
+        return ret
