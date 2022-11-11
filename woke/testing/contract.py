@@ -19,6 +19,7 @@ from typing import (
     get_type_hints,
 )
 
+import aiohttp
 import eth_abi
 import eth_utils
 from typing_extensions import Literal
@@ -108,7 +109,6 @@ class RevertToSnapshotFailedError(Exception):
 # global interface for communicating with the devchain
 class DevchainInterface:
     __dev_chain: DevChainABC
-    __port: int
     __accounts: List[Address]
     __default_account: Optional[Address]
     __block_gas_limit: int
@@ -129,33 +129,42 @@ class DevchainInterface:
         0x51: "Called invalid internal function",
     }
 
-    def connect(self, port: int):
-        self.__port = port
-        communicator = JsonRpcCommunicator(port)
-        loop = asyncio.new_event_loop()
-        client_version = loop.run_until_complete(
-            communicator.web3_client_version()
-        ).lower()
-        if "anvil" in client_version:
-            self.__dev_chain = AnvilDevChain(loop, communicator)
-        elif "hardhat" in client_version:
-            self.__dev_chain = HardhatDevChain(loop, communicator)
-        elif "ethereumjs" in client_version:
-            self.__dev_chain = GanacheDevChain(loop, communicator)
-        else:
-            raise NotImplementedError(f"Client version {client_version} not supported")
-        self.__accounts = [Address(acc) for acc in self.__dev_chain.accounts()]
-        block_info = self.__dev_chain.get_block("latest")
-        assert "gasLimit" in block_info
-        self.__block_gas_limit = int(block_info["gasLimit"], 16)
-        self.__chain_id = self.__dev_chain.get_chain_id()
-        self.__nonces = defaultdict(lambda: 0)
-        self.__snapshots = {}
-        self.__deployed_libraries = defaultdict(list)
-        if len(self.__accounts) > 0:
-            self.__default_account = self.__accounts[0]
-        else:
-            self.__default_account = None
+    @contextmanager
+    def connect(self, uri: str):
+        loop = asyncio.get_event_loop()
+        session = aiohttp.ClientSession()
+        try:
+            communicator = JsonRpcCommunicator(uri, session)
+            client_version = loop.run_until_complete(
+                communicator.web3_client_version()
+            ).lower()
+            if "anvil" in client_version:
+                self.__dev_chain = AnvilDevChain(loop, communicator)
+            elif "hardhat" in client_version:
+                self.__dev_chain = HardhatDevChain(loop, communicator)
+            elif "ethereumjs" in client_version:
+                self.__dev_chain = GanacheDevChain(loop, communicator)
+            else:
+                raise NotImplementedError(
+                    f"Client version {client_version} not supported"
+                )
+            self.__accounts = [Address(acc) for acc in self.__dev_chain.accounts()]
+            block_info = self.__dev_chain.get_block("latest")
+            assert "gasLimit" in block_info
+            self.__block_gas_limit = int(block_info["gasLimit"], 16)
+            self.__chain_id = self.__dev_chain.get_chain_id()
+            self.__nonces = defaultdict(lambda: 0)
+            self.__snapshots = {}
+            self.__deployed_libraries = defaultdict(list)
+            if len(self.__accounts) > 0:
+                self.__default_account = self.__accounts[0]
+            else:
+                self.__default_account = None
+
+            yield
+        finally:
+            loop.run_until_complete(session.close())
+            loop.close()
 
     @property
     def accounts(self) -> Tuple[Address, ...]:

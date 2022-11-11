@@ -21,6 +21,18 @@ def snapshot_and_revert(devchain_interface: DevchainInterface):
     return decorator
 
 
+def connect(devchain_interface: DevchainInterface, uri: str):
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            with devchain_interface.connect(uri):
+                return fn(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
 def format_int(x: int) -> str:
     if abs(x) < 10**5:
         return f"{x:_}"
