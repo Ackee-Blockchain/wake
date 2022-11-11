@@ -46,18 +46,15 @@ class JsonRpcError(Exception):
 
 
 class JsonRpcCommunicator:
-    __client_session: Optional[ClientSession]
+    __client_session: ClientSession
     __port: int
     __request_id: int
     __url: str
 
-    def __init__(
-        self, port: int = 8545, client_session: Optional[ClientSession] = None
-    ):
+    def __init__(self, uri: str, client_session: ClientSession):
         self.__client_session = client_session
-        self.__port = port
         self.__request_id = 0
-        self.__url = f"http://localhost:{port}"
+        self.__url = uri
 
     async def _send_request(
         self, method_name: str, params: Optional[List] = None
@@ -71,19 +68,10 @@ class JsonRpcCommunicator:
         logger.info(f"Sending request:\n{post_data}")
         self.__request_id += 1
 
-        if self.__client_session is not None:
-            async with self.__client_session.post(
-                self.__url, json=post_data
-            ) as response:
-                text = await response.text()
-                logger.info(f"Received response:\n{text}")
-                return text
-        else:
-            async with aiohttp.ClientSession() as session:
-                async with session.post(self.__url, json=post_data) as response:
-                    text = await response.text()
-                    logger.info(f"Received response:\n{text}")
-                    return text
+        async with self.__client_session.post(self.__url, json=post_data) as response:
+            text = await response.text()
+            logger.info(f"Received response:\n{text}")
+            return text
 
     def _process_response(self, text: str) -> Any:
         response = json.loads(text)
