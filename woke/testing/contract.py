@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from enum import IntEnum
 from typing import (
     Any,
+    Callable,
     DefaultDict,
     Dict,
     Iterable,
@@ -32,6 +33,7 @@ from woke.testing.development_chains import (
     HardhatDevChain,
 )
 
+from . import hardhat_console
 from .json_rpc.communicator import JsonRpcCommunicator, JsonRpcError, TxParams
 
 
@@ -129,6 +131,8 @@ class DevchainInterface:
         0x51: "Called invalid internal function",
     }
 
+    console_logs_callback: Optional[Callable[[str, List[Any]], None]]
+
     @contextmanager
     def connect(self, uri: str):
         loop = asyncio.get_event_loop()
@@ -160,6 +164,8 @@ class DevchainInterface:
                 self.__default_account = self.__accounts[0]
             else:
                 self.__default_account = None
+
+            self.console_logs_callback = None
 
             yield
         finally:
@@ -206,6 +212,29 @@ class DevchainInterface:
             return str(value)
         else:
             return value
+
+    @classmethod
+    def _parse_console_log_data(cls, data: bytes):
+        selector = data[:4]
+
+        if selector not in hardhat_console.abis:
+            raise ValueError(f"Unknown selector: {selector.hex()}")
+        abi = hardhat_console.abis[selector]
+
+        output_types = [
+            eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg)) for arg in abi
+        ]
+        decoded_data = eth_abi.abi.decode(
+            output_types, data[4:]
+        )  # pyright: reportGeneralTypeIssues=false
+        for i in range(len(decoded_data)):
+            if abi[i]["type"] == "address":
+                decoded_data[i] = Address(decoded_data[i])
+
+        if len(decoded_data) == 1:
+            decoded_data = decoded_data[0]
+
+        return decoded_data
 
     @classmethod
     def _convert_from_web3_type(cls, value: Any, expected_type: Type) -> Any:
@@ -461,7 +490,35 @@ class DevchainInterface:
 
         tx_receipt = self._process_tx_result(tx, tx_hash)
         self.__nonces[sender] += 1
-        output = self.dev_chain.retrieve_transaction_data([], tx_hash)
+
+        if isinstance(self.__dev_chain, AnvilDevChain):
+            output = self.__dev_chain.trace_transaction(tx_hash)
+            hardhat_console_address = bytes.fromhex(
+                "000000000000000000636F6e736F6c652e6c6f67"
+            )
+            console_logs = []
+            for trace in output:
+                if "action" in trace and "to" in trace["action"]:
+                    if (
+                        bytes.fromhex(trace["action"]["to"][2:])
+                        == hardhat_console_address
+                    ):
+                        console_logs.append(
+                            self._parse_console_log_data(
+                                bytes.fromhex(trace["action"]["input"][2:])
+                            )
+                        )
+
+            if len(console_logs) > 0 and self.console_logs_callback is not None:
+                self.console_logs_callback(tx_hash, console_logs)
+
+            output = bytes.fromhex(output[0]["result"]["output"][2:])
+        elif isinstance(self.__dev_chain, (GanacheDevChain, HardhatDevChain)):
+            output = self.__dev_chain.debug_trace_transaction(tx_hash)
+            output = bytes.fromhex(output["returnValue"])
+        else:
+            raise NotImplementedError()
+
         return self._process_return_data(output, abi[selector], return_type)
 
 
