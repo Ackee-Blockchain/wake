@@ -15,10 +15,6 @@ class DevChainABC(ABC):
         self._loop = loop
         self._communicator = communicator
 
-    @abstractmethod
-    def retrieve_transaction_data(self, params: List, tx_hash: str) -> bytes:
-        ...
-
     def get_balance(self, address: str) -> int:
         return self._loop.run_until_complete(
             self._communicator.eth_get_balance(address)
@@ -83,12 +79,11 @@ class DevChainABC(ABC):
 
 
 class HardhatDevChain(DevChainABC):
-    def retrieve_transaction_data(self, params: List, tx_hash: str) -> bytes:
+    def debug_trace_transaction(self, tx_hash: str) -> Dict:
         options = {"disableMemory": True, "disableStack": True, "disableStorage": True}
-        output = self._loop.run_until_complete(
+        return self._loop.run_until_complete(
             self._communicator.debug_trace_transaction(tx_hash, options)
         )
-        return bytes.fromhex(output["returnValue"])
 
     def set_balance(self, address: str, value: int) -> None:
         self._loop.run_until_complete(
@@ -115,11 +110,10 @@ class HardhatDevChain(DevChainABC):
 
 
 class AnvilDevChain(DevChainABC):
-    def retrieve_transaction_data(self, params: List, tx_hash: Any) -> bytes:
-        output = self._loop.run_until_complete(
+    def trace_transaction(self, tx_hash: Any) -> Dict:
+        return self._loop.run_until_complete(
             self._communicator.trace_transaction(tx_hash)
         )
-        return bytes.fromhex(output[0]["result"]["output"][2:])
 
     def set_balance(self, address: str, value: int) -> None:
         self._loop.run_until_complete(
@@ -147,12 +141,11 @@ class AnvilDevChain(DevChainABC):
 
 
 class GanacheDevChain(DevChainABC):
-    def retrieve_transaction_data(self, params: List, tx_hash: Any) -> bytes:
+    def retrieve_transaction_data(self, params: List, tx_hash: Any) -> Dict:
         options = {"disableMemory": True, "disableStack": True, "disableStorage": True}
-        output = self._loop.run_until_complete(
+        return self._loop.run_until_complete(
             self._communicator.debug_trace_transaction(tx_hash, options)
         )
-        return bytes.fromhex(output["returnValue"])
 
     def set_balance(self, address: str, value: int) -> None:
         self._loop.run_until_complete(
