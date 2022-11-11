@@ -164,7 +164,6 @@ class DevchainInterface:
             yield
         finally:
             loop.run_until_complete(session.close())
-            loop.close()
 
     @property
     def accounts(self) -> Tuple[Address, ...]:
