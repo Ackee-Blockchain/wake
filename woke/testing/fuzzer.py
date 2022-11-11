@@ -94,18 +94,22 @@ def _run(
 
     start = time.perf_counter()
     while True:
+        gen = None
         try:
-            dev_interface.connect(port)
+            gen = dev_interface.connect(f"http://localhost:{port}")
+            gen.__enter__()
             break
         except (ConnectionRefusedError, ClientConnectorError):
+            if gen is not None:
+                gen.__exit__(None, None, None)
             sleep(0.1)
             if time.perf_counter() - start > 10:
                 raise
 
-    if not tee:
-        logging.basicConfig(filename=log_file)
-
     try:
+        if not tee:
+            logging.basicConfig(filename=log_file)
+
         if tee:
             with closing(Tee(log_file)):
                 _run_core(
@@ -136,6 +140,7 @@ def _run(
         finally:
             finished_event.set()
     finally:
+        gen.__exit__(None, None, None)
         with log_file.open("a") as f, redirect_stdout(f), redirect_stderr(f):
             chain_process.kill()
 
