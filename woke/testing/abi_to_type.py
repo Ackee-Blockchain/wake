@@ -1023,7 +1023,7 @@ class SourceUnitImports:
             "from pytypes."
             + source_unit_name[:-3].replace("/", ".")
             + " import "
-            + name
+            + self.__type_gen.get_name(name)
         )
 
     def add_str_to_imports(
