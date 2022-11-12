@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 import typing as typ
-from abc import ABC
+from abc import ABC, abstractmethod
 
 if typ.TYPE_CHECKING:
     from woke.ast.ir.declaration.contract_definition import ContractDefinition
@@ -12,7 +12,12 @@ if typ.TYPE_CHECKING:
         UserDefinedValueTypeDefinition,
     )
 
-from woke.ast.enums import DataLocation, StateMutability, FunctionTypeKind, MagicTypeKind
+from woke.ast.enums import (
+    DataLocation,
+    FunctionTypeKind,
+    MagicTypeKind,
+    StateMutability,
+)
 from woke.ast.ir.reference_resolver import ReferenceResolver
 from woke.ast.nodes import AstNodeId
 from woke.utils.string import StringReader
@@ -86,6 +91,10 @@ class TypeAbc(ABC):
         else:
             return None
 
+    @abstractmethod
+    def abi_type(self) -> str:
+        ...
+
 
 def _parse_list(
     type_identifier: StringReader, reference_resolver: ReferenceResolver, cu_hash: bytes
@@ -95,24 +104,21 @@ def _parse_list(
     # either a comma or a closing bracket
     if type_identifier.startswith("_$"):
         index = 0
-        while index + 2 <= len(type_identifier.data) and type_identifier.data[index:index + 2] == "_$":
+        while (
+            index + 2 <= len(type_identifier.data)
+            and type_identifier.data[index : index + 2] == "_$"
+        ):
             index += 2
         # if we have a closing bracket, there should not be a trailing underscore
         if index >= len(type_identifier.data) or type_identifier.data[index] != "_":
             type_identifier.read("_$")
             return tuple()
 
-    items = [
-        TypeAbc.from_type_identifier(
-            type_identifier, reference_resolver, cu_hash
-        )
-    ]
+    items = [TypeAbc.from_type_identifier(type_identifier, reference_resolver, cu_hash)]
     while not type_identifier.startswith("_$_$") and type_identifier.startswith("_$_"):
         type_identifier.read("_$_")
         items.append(
-            TypeAbc.from_type_identifier(
-                type_identifier, reference_resolver, cu_hash
-            )
+            TypeAbc.from_type_identifier(type_identifier, reference_resolver, cu_hash)
         )
     type_identifier.read("_$")
     return tuple(items)
@@ -136,6 +142,7 @@ class Address(TypeAbc):
     """
     Address type.
     """
+
     __is_payable: bool
 
     def __init__(self, type_identifier: StringReader):
@@ -146,6 +153,9 @@ class Address(TypeAbc):
             self.__is_payable = True
         else:
             self.__is_payable = False
+
+    def abi_type(self) -> str:
+        return "address"
 
     @property
     def is_payable(self) -> bool:
@@ -160,14 +170,19 @@ class Bool(TypeAbc):
     """
     Boolean type.
     """
+
     def __init__(self, type_identifier: StringReader):
         type_identifier.read("t_bool")
+
+    def abi_type(self) -> str:
+        return "bool"
 
 
 class IntAbc(TypeAbc):
     """
     Base class for [Int][woke.ast.types.Int] and [UInt][woke.ast.types.UInt] types.
     """
+
     _bits_count: int
 
     @property
@@ -193,6 +208,9 @@ class Int(IntAbc):
         type_identifier.read(number)
         self._bits_count = int(number)
 
+    def abi_type(self) -> str:
+        return f"int{self._bits_count}"
+
 
 class UInt(IntAbc):
     """
@@ -207,6 +225,9 @@ class UInt(IntAbc):
         type_identifier.read(number)
         self._bits_count = int(number)
 
+    def abi_type(self) -> str:
+        return f"uint{self._bits_count}"
+
 
 class FixedAbc(TypeAbc):
     """
@@ -214,6 +235,7 @@ class FixedAbc(TypeAbc):
     !!! info
         Currently not fully implemented in Solidity.
     """
+
     _total_bits: int
     _fractional_digits: int
 
@@ -240,6 +262,7 @@ class Fixed(FixedAbc):
     !!! info
         Currently not fully implemented in Solidity.
     """
+
     def __init__(self, type_identifier: StringReader):
         type_identifier.read("t_fixed")
         match = NUMBER_RE.match(type_identifier.data)
@@ -256,6 +279,9 @@ class Fixed(FixedAbc):
         type_identifier.read(fractional_digits)
         self._fractional_digits = int(fractional_digits)
 
+    def abi_type(self) -> str:
+        raise NotImplementedError
+
 
 class UFixed(FixedAbc):
     """
@@ -263,6 +289,7 @@ class UFixed(FixedAbc):
     !!! info
         Currently not fully implemented in Solidity.
     """
+
     def __init__(self, type_identifier: StringReader):
         type_identifier.read("t_ufixed")
         match = NUMBER_RE.match(type_identifier.data)
@@ -279,6 +306,9 @@ class UFixed(FixedAbc):
         type_identifier.read(fractional_digits)
         self._fractional_digits = int(fractional_digits)
 
+    def abi_type(self) -> str:
+        raise NotImplementedError
+
 
 class StringLiteral(TypeAbc):
     """
@@ -294,6 +324,7 @@ class StringLiteral(TypeAbc):
         string("Hello, world!")
         ```
     """
+
     __keccak256_hash: bytes
 
     def __init__(self, type_identifier: StringReader):
@@ -303,6 +334,9 @@ class StringLiteral(TypeAbc):
         hex = match.group("hex")
         type_identifier.read(hex)
         self.__keccak256_hash = bytes.fromhex(hex)
+
+    def abi_type(self) -> str:
+        raise NotImplementedError
 
     @property
     def keccak256_hash(self) -> bytes:
@@ -317,6 +351,7 @@ class String(TypeAbc):
     """
     String type.
     """
+
     __data_location: DataLocation
     __is_pointer: bool
     __is_slice: bool
@@ -346,6 +381,9 @@ class String(TypeAbc):
             type_identifier.read("_slice")
         else:
             self.__is_slice = False
+
+    def abi_type(self) -> str:
+        return "string"
 
     @property
     def data_location(self) -> DataLocation:
@@ -391,6 +429,7 @@ class Bytes(TypeAbc):
     """
     Bytes type.
     """
+
     __data_location: DataLocation
     __is_pointer: bool
     __is_slice: bool
@@ -420,6 +459,9 @@ class Bytes(TypeAbc):
             type_identifier.read("_slice")
         else:
             self.__is_slice = False
+
+    def abi_type(self) -> str:
+        return "bytes"
 
     @property
     def data_location(self) -> DataLocation:
@@ -465,6 +507,7 @@ class FixedBytes(TypeAbc):
     """
     Fixed-size byte array type.
     """
+
     __bytes_count: int
 
     def __init__(self, type_identifier: StringReader):
@@ -474,6 +517,9 @@ class FixedBytes(TypeAbc):
         number = match.group("number")
         type_identifier.read(number)
         self.__bytes_count = int(number)
+
+    def abi_type(self) -> str:
+        return f"bytes{self.__bytes_count}"
 
     @property
     def bytes_count(self) -> int:
@@ -503,6 +549,7 @@ class Function(TypeAbc):
         the type of `foo` is [Function][woke.ast.types.Function], but the type of `:::solidity foo(1, 2)` is [Tuple][woke.ast.types.Tuple].
 
     """
+
     __kind: FunctionTypeKind
     __state_mutability: StateMutability
     __parameters: typ.Tuple[TypeAbc, ...]
@@ -577,6 +624,9 @@ class Function(TypeAbc):
             self.__bound_to = bound_to  # type: ignore
         else:
             self.__bound_to = None
+
+    def abi_type(self) -> str:
+        return "function"
 
     @property
     def kind(self) -> FunctionTypeKind:
@@ -694,6 +744,7 @@ class Tuple(TypeAbc):
     """
     Tuple type.
     """
+
     __components: typ.Tuple[typ.Optional[TypeAbc], ...]
 
     def __init__(
@@ -704,6 +755,15 @@ class Tuple(TypeAbc):
     ):
         type_identifier.read("t_tuple")
         self.__components = _parse_list(type_identifier, reference_resolver, cu_hash)
+
+    def abi_type(self) -> str:
+        if any(component is None for component in self.__components):
+            raise NotImplementedError
+        return (
+            "("
+            + ",".join(component.abi_type() for component in self.__components)
+            + ")"
+        )  # pyright: reportOptionalMemberAccess=false
 
     @property
     def components(self) -> typ.Tuple[typ.Optional[TypeAbc], ...]:
@@ -726,6 +786,7 @@ class Type(TypeAbc):
     """
     Type type. As opposed to other types, this type describes the type of a type, not the type of an instance of a type.
     """
+
     __actual_type: TypeAbc
 
     def __init__(
@@ -738,6 +799,9 @@ class Type(TypeAbc):
         actual_type = _parse_list(type_identifier, reference_resolver, cu_hash)
         assert len(actual_type) == 1 and actual_type[0] is not None
         self.__actual_type = actual_type[0]
+
+    def abi_type(self) -> str:
+        raise NotImplementedError
 
     @property
     def actual_type(self) -> TypeAbc:
@@ -780,6 +844,7 @@ class Rational(TypeAbc):
     !!! example
         `:::solidity 1`, `:::solidity 0x1234`, `:::solidity 1e18`, `:::solidity 1 * 2 / 3` are all of the [Rational][woke.ast.types.Rational] type.
     """
+
     __numerator: int
     __denominator: int
 
@@ -806,6 +871,9 @@ class Rational(TypeAbc):
         type_identifier.read(number)
         self.__denominator = int(number)
 
+    def abi_type(self) -> str:
+        raise NotImplementedError
+
     @property
     def numerator(self) -> int:
         """
@@ -828,6 +896,7 @@ class Modifier(TypeAbc):
     """
     Modifier type.
     """
+
     __parameters: typ.Tuple[TypeAbc, ...]
 
     def __init__(
@@ -840,6 +909,9 @@ class Modifier(TypeAbc):
         parameters = _parse_list(type_identifier, reference_resolver, cu_hash)
         assert not any(param is None for param in parameters)
         self.__parameters = parameters  # type: ignore
+
+    def abi_type(self) -> str:
+        raise NotImplementedError
 
     @property
     def parameters(self) -> typ.Tuple[TypeAbc, ...]:
@@ -854,6 +926,7 @@ class Array(TypeAbc):
     """
     Array type.
     """
+
     __base_type: TypeAbc
     __length: typ.Optional[int]
     __data_location: DataLocation
@@ -905,6 +978,12 @@ class Array(TypeAbc):
             type_identifier.read("_slice")
         else:
             self.__is_slice = False
+
+    def abi_type(self) -> str:
+        if self.length is not None:
+            return f"{self.base_type.abi_type()}[{self.length}]"
+        else:
+            return f"{self.base_type.abi_type()}[]"
 
     @property
     def base_type(self) -> TypeAbc:
@@ -965,6 +1044,7 @@ class Mapping(TypeAbc):
     """
     Mapping type.
     """
+
     __key_type: TypeAbc
     __value_type: TypeAbc
 
@@ -981,6 +1061,9 @@ class Mapping(TypeAbc):
         assert key_value[1] is not None, f"{type_identifier} is not a valid mapping"
         self.__key_type = key_value[0]
         self.__value_type = key_value[1]
+
+    def abi_type(self) -> str:
+        raise NotImplementedError
 
     @property
     def key_type(self) -> TypeAbc:
@@ -1029,6 +1112,9 @@ class Contract(TypeAbc):
 
         self.__reference_resolver = reference_resolver
         self.__cu_hash = cu_hash
+
+    def abi_type(self) -> str:
+        return "address"
 
     @property
     def is_super(self) -> bool:
@@ -1080,6 +1166,7 @@ class Struct(TypeAbc):
     """
     Struct type.
     """
+
     __name: str
     __ast_id: AstNodeId
     __data_location: DataLocation
@@ -1121,6 +1208,13 @@ class Struct(TypeAbc):
 
         self.__reference_resolver = reference_resolver
         self.__cu_hash = cu_hash
+
+    def abi_type(self) -> str:
+        return (
+            "("
+            + ",".join([member.type.abi_type() for member in self.ir_node.members])
+            + ")"
+        )
 
     @property
     def name(self) -> str:
@@ -1174,6 +1268,7 @@ class Enum(TypeAbc):
     !!! warning
         Enum values are of the [Enum][woke.ast.types.Enum] type and enums are of the [Type][woke.ast.types.Type] type with [Enum][woke.ast.types.Enum] as the [actual_type][woke.ast.types.Type.actual_type].
     """
+
     __name: str
     __ast_id: AstNodeId
     __reference_resolver: ReferenceResolver
@@ -1195,6 +1290,9 @@ class Enum(TypeAbc):
 
         self.__reference_resolver = reference_resolver
         self.__cu_hash = cu_hash
+
+    def abi_type(self) -> str:
+        return "uint8"
 
     @property
     def name(self) -> str:
@@ -1221,6 +1319,7 @@ class Magic(TypeAbc):
     """
     Magic type represents Solidity language built-in objects.
     """
+
     __kind: MagicTypeKind
     __meta_argument_type: typ.Optional[TypeAbc]
 
@@ -1250,6 +1349,9 @@ class Magic(TypeAbc):
             self.__meta_argument_type = meta_argument_type
         else:
             self.__meta_argument_type = None
+
+    def abi_type(self) -> str:
+        raise NotImplementedError
 
     @property
     def kind(self) -> MagicTypeKind:
@@ -1295,6 +1397,9 @@ class UserDefinedValueType(TypeAbc):
         self.__reference_resolver = reference_resolver
         self.__cu_hash = cu_hash
 
+    def abi_type(self) -> str:
+        return self.ir_node.underlying_type.type.abi_type()
+
     @property
     def name(self) -> str:
         """
@@ -1324,6 +1429,7 @@ class Module(TypeAbc):
     !!! note
         It is probably currently not possible to create an expression of this type.
     """
+
     __source_unit_id: int
 
     def __init__(self, type_identifier: StringReader):
@@ -1335,3 +1441,6 @@ class Module(TypeAbc):
         type_identifier.read(match.group("number"))
 
         self.__source_unit_id = int(match.group("number"))
+
+    def abi_type(self) -> str:
+        raise NotImplementedError

@@ -3,6 +3,8 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
 
+from Crypto.Hash import keccak
+
 from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcErrorDefinition
@@ -113,10 +115,19 @@ class ErrorDefinition(DeclarationAbc):
         return self._documentation
 
     @property
-    def error_selector(self) -> Optional[bytes]:
+    @lru_cache(maxsize=2048)
+    def error_selector(self) -> bytes:
         """
-        Available since Solidity 0.8.13 (errors were introduced in 0.8.4).
         Returns:
             Selector of the error.
         """
-        return self._error_selector
+        if self._error_selector is not None:
+            return self._error_selector
+        else:
+            signature = f"{self._name}("
+            signature += ",".join(
+                param.type.abi_type() for param in self.parameters.parameters
+            )
+            signature += ")"
+            h = keccak.new(data=signature.encode("utf-8"), digest_bits=256)
+            return h.digest()[:4]
