@@ -4,6 +4,8 @@ import re
 from functools import lru_cache
 from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
 
+from Crypto.Hash import keccak
+
 from .abc import DeclarationAbc
 
 if TYPE_CHECKING:
@@ -144,10 +146,15 @@ class EventDefinition(DeclarationAbc):
         return self._documentation
 
     @property
-    def event_selector(self) -> Optional[bytes]:
+    @lru_cache(maxsize=2048)
+    def event_selector(self) -> bytes:
         """
-        Available since Solidity 0.8.13.
         Returns:
             Selector of the event.
         """
-        return self._event_selector
+        if self._event_selector is not None:
+            return self._event_selector
+        else:
+            signature = f"{self._name}({','.join(param.type.abi_type() for param in self.parameters.parameters)})"
+            h = keccak.new(data=signature.encode("utf-8"), digest_bits=256)
+            return h.digest()
