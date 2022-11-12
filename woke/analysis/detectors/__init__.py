@@ -8,6 +8,7 @@ from .api import (
 )
 from .balance_state_var import UnsafeAddressBalanceUseDetector
 from .call_options_not_called import FunctionCallOptionsNotCalledDetector
+from .locked_ether import LockedEtherDetector
 from .overflow_calldata_tuple_reencoding_bug import (
     OverflowCalldataTupleReencodingBugDetector,
 )
