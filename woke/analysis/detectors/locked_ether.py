@@ -85,6 +85,18 @@ class LockedEtherDetector(DetectorAbc):
                 )
             )
 
+        for contract in sending_contracts.keys() - receiving_contracts.keys():
+            ret.append(
+                DetectorResult(
+                    contract,
+                    "Contract sends ether but does not receive ether (except for selfdestruct)",
+                    tuple(
+                        DetectorResult(f, "Sends ether here")
+                        for f in sending_contracts[contract]
+                    ),
+                )
+            )
+
         return ret
 
     def visit_function_definition(self, node: FunctionDefinition):
