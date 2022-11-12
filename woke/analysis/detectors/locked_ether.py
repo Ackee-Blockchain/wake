@@ -1,6 +1,7 @@
 from collections import defaultdict, deque
 from typing import DefaultDict, List, Set, Tuple
 
+from woke.analysis.cfg import CfgBlock
 from woke.analysis.detectors import DetectorAbc, DetectorResult, detector
 from woke.ast.enums import ContractKind, GlobalSymbolsEnum, StateMutability
 from woke.ast.ir.declaration.contract_definition import ContractDefinition
@@ -8,6 +9,8 @@ from woke.ast.ir.declaration.function_definition import FunctionDefinition
 from woke.ast.ir.expression.function_call import FunctionCall
 from woke.ast.ir.expression.function_call_options import FunctionCallOptions
 from woke.ast.ir.expression.member_access import MemberAccess
+from woke.ast.ir.statement.expression_statement import ExpressionStatement
+from woke.ast.ir.statement.revert_statement import RevertStatement
 
 
 @detector(-1009, "locked-ether")
@@ -85,10 +88,39 @@ class LockedEtherDetector(DetectorAbc):
         return ret
 
     def visit_function_definition(self, node: FunctionDefinition):
-        if node.state_mutability != StateMutability.PAYABLE:
+        if node.state_mutability != StateMutability.PAYABLE or not node.implemented:
             return
 
-        self._receiving_ether.add(node)
+        cfg = node.cfg
+        assert cfg is not None
+
+        graph = cfg.graph
+        queue = deque([cfg.end_block])
+        while len(queue) > 0:
+            block: CfgBlock = queue.popleft()
+
+            reverts = False
+            for stmt in block.statements:
+                if isinstance(stmt, RevertStatement):
+                    reverts = True
+                    break
+                elif isinstance(stmt, ExpressionStatement):
+                    if (
+                        isinstance(stmt.expression, FunctionCall)
+                        and stmt.expression.function_called == GlobalSymbolsEnum.REVERT
+                    ):
+                        reverts = True
+                        break
+
+            if reverts:
+                continue
+
+            for from_, _ in graph.in_edges(block):
+                if from_ == cfg.start_block:
+                    self._receiving_ether.add(node)
+                    return
+                else:
+                    queue.append(from_)
 
     def visit_member_access(self, node: MemberAccess):
         if node.referenced_declaration not in {
