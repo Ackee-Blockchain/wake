@@ -100,8 +100,7 @@ Address.ZERO = Address("0x0000000000000000000000000000000000000000")
 
 
 class TransactionRevertedError(Exception):
-    def __init__(self, name, data):
-        super().__init__(f"{name}({', '.join(map(repr, data))})")
+    pass
 
 
 class RevertToSnapshotFailedError(Exception):
@@ -385,7 +384,10 @@ class DevchainInterface:
             else:
                 revert_data = (self.__panic_reasons[code],)
 
-        raise TransactionRevertedError(errors[selector]["name"], revert_data)
+        exception_msg = (
+            f"{errors[selector]['name']}({', '.join(map(repr, revert_data))})"
+        )
+        raise TransactionRevertedError(exception_msg)
 
     def _process_tx_result(
         self,
