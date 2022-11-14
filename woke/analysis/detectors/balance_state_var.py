@@ -150,6 +150,9 @@ class UnsafeAddressBalanceUseDetector(DetectorAbc):
     def visit_member_access(self, node: MemberAccess):
         if node.referenced_declaration == GlobalSymbolsEnum.ADDRESS_BALANCE:
             detections = _process_assigned_vars(node)
-            self._detections.add(
-                DetectorResult(node, "Unsafe use of address.balance", tuple(detections))
-            )
+            if len(detections) > 0:
+                self._detections.add(
+                    DetectorResult(
+                        node, "Unsafe use of address.balance", tuple(detections)
+                    )
+                )
