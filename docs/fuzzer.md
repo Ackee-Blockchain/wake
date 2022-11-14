@@ -47,7 +47,7 @@ from woke.fuzzer import Campaign
 from woke.fuzzer.random import random_account
 
 class TestingSequence:
-    def __init(self, contract: VotingContractType):
+    def __init__(self, contract: VotingContractType):
         self.owner = random_account()
         self.contract = contract.deploy({"from": self.owner})
         self.subjects = {}
