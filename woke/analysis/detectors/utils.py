@@ -1,12 +1,18 @@
+import copy
 import logging
 from collections import deque
-from typing import Deque, Optional, Set, Tuple, Union
+from typing import Deque, Dict, List, Optional, Set, Tuple, Union
+
+import networkx as nx
 
 import woke.ast.types as types
+from woke.analysis.cfg import CfgBlock
 from woke.ast.enums import FunctionCallKind, GlobalSymbolsEnum
+from woke.ast.ir.declaration.contract_definition import ContractDefinition
 from woke.ast.ir.declaration.function_definition import FunctionDefinition
 from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
 from woke.ast.ir.expression.abc import ExpressionAbc
+from woke.ast.ir.expression.assignment import Assignment
 from woke.ast.ir.expression.elementary_type_name_expression import (
     ElementaryTypeNameExpression,
 )
@@ -14,7 +20,12 @@ from woke.ast.ir.expression.function_call import FunctionCall
 from woke.ast.ir.expression.function_call_options import FunctionCallOptions
 from woke.ast.ir.expression.identifier import Identifier
 from woke.ast.ir.expression.member_access import MemberAccess
+from woke.ast.ir.statement.expression_statement import ExpressionStatement
+from woke.ast.ir.statement.inline_assembly import InlineAssembly
 from woke.ast.ir.statement.return_statement import Return
+from woke.ast.ir.yul.abc import YulAbc
+from woke.ast.ir.yul.assignment import Assignment as YulAssignment
+from woke.ast.ir.yul.identifier import Identifier as YulIdentifier
 
 logger = logging.getLogger(__name__)
 
@@ -127,7 +138,7 @@ def get_variable_declarations_from_expression(
 
         func_expr = expr.expression
         if isinstance(func_expr, Identifier):
-            ret: Tuple[Optional[VariableDeclaration]] = tuple()
+            ret: Tuple[Optional[VariableDeclaration], ...] = tuple()
         elif isinstance(func_expr, MemberAccess):
             ret = get_variable_declarations_from_expression(func_expr.expression)
         else:
@@ -181,3 +192,126 @@ def get_function_implementations(
                 elif isinstance(f, FunctionDefinition):
                     queue.append(f)
     return tuple(ret)
+
+
+def get_function_definition_from_expression(
+    expr: ExpressionAbc,
+) -> Optional[FunctionDefinition]:
+    fn_dec = expr
+    while (
+        fn_dec.parent
+        and not isinstance(fn_dec, FunctionDefinition)
+        and not isinstance(fn_dec, ContractDefinition)
+    ):
+        fn_dec = fn_dec.parent
+    if (
+        fn_dec is not None
+        and isinstance(fn_dec, FunctionDefinition)
+        and fn_dec.body is not None
+    ):
+        return fn_dec
+    return None
+
+
+def check_all_return_params_set(
+    params: Tuple[VariableDeclaration],
+    graph: nx.DiGraph,
+    start_block: CfgBlock,
+    end_block: CfgBlock,
+) -> Tuple[
+    bool, List[Dict[Tuple[Optional[VariableDeclaration]], Union[ExpressionAbc, YulAbc]]]
+]:
+    out = []
+    visited = set()
+    all_set = _check_all_return_params_set(
+        params, {}, set(), graph, start_block, end_block, out, visited
+    )
+    return all_set, out
+
+
+def _check_all_return_params_set(
+    params: Tuple[VariableDeclaration],
+    solved_params: Dict[
+        Tuple[Optional[VariableDeclaration]], Union[ExpressionAbc, YulAbc]
+    ],
+    solved_declarations: Set[VariableDeclaration],
+    graph: nx.DiGraph,
+    start_block: CfgBlock,
+    end_block: CfgBlock,
+    out: List[Dict[Tuple[Optional[VariableDeclaration]], Union[ExpressionAbc, YulAbc]]],
+    visited: Set[CfgBlock],
+) -> bool:
+    visited.add(start_block)
+    if len(solved_declarations) == len(params):
+        out.append(solved_params)
+        return True
+    if start_block == end_block:
+        out.append(solved_params)
+        return False
+
+    for stmt in reversed(start_block.statements):
+        if isinstance(stmt, ExpressionStatement) and isinstance(
+            stmt.expression, Assignment
+        ):
+            assigned_vars = []
+            assigned_params = set()
+            for vars in stmt.expression.assigned_variables:
+                if vars is None:
+                    continue
+                for decls in vars:
+                    for vd in decls:
+                        if (
+                            isinstance(vd, VariableDeclaration)
+                            and vd in params
+                            and vd not in solved_declarations
+                        ):
+                            assigned_vars.append(vd)
+                            assigned_params.add(vd)
+                        else:
+                            assigned_vars.append(None)
+            if len(assigned_params) > 0:
+                solved_declarations.update(assigned_params)
+                solved_params[tuple(assigned_vars)] = stmt.expression.right_expression
+        elif isinstance(stmt, InlineAssembly) and stmt.yul_block is not None:
+            for yul_stmt in stmt.yul_block.statements:
+                if isinstance(yul_stmt, YulAssignment):
+                    assigned_vars = []
+                    assigned_params = set()
+                    for var in yul_stmt.variable_names:
+                        if (
+                            isinstance(var, YulIdentifier)
+                            and var.external_reference is not None
+                            and isinstance(
+                                var.external_reference.referenced_declaration,
+                                VariableDeclaration,
+                            )
+                            and var.external_reference.referenced_declaration in params
+                        ):
+                            assigned_vars.append(
+                                var.external_reference.referenced_declaration
+                            )
+                            assigned_params.add(
+                                var.external_reference.referenced_declaration
+                            )
+                        else:
+                            assigned_vars.append(None)
+                    if len(assigned_params) > 0:
+                        solved_declarations.update(assigned_params)
+                        solved_params[tuple(assigned_vars)] = yul_stmt.value
+
+    all_set = True
+    for next_start in graph.predecessors(start_block):
+        if next_start in visited:
+            continue
+        if not _check_all_return_params_set(
+            params,
+            copy.copy(solved_params),
+            copy.copy(solved_declarations),
+            graph,
+            next_start,
+            end_block,
+            out,
+            visited,
+        ):
+            all_set = False
+    return all_set
