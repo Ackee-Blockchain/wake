@@ -1132,6 +1132,7 @@ class NameSanitizer:
             "from_",
             "value",
             "self",
+            "deploy",
         }
         self.__used_names = set()
         self.__renamed = {}
