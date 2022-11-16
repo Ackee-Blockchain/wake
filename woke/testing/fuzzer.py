@@ -31,7 +31,7 @@ from woke.testing.contract import dev_interface
 
 def _setup(port: int, network_id: str) -> subprocess.Popen:
     if network_id == "anvil":
-        args = ["anvil", "--port", str(port)]
+        args = ["anvil", "--port", str(port), "--prune-history"]
     elif network_id == "ganache":
         args = ["ganache-cli", "--port", str(port)]
     elif network_id == "hardhat":
