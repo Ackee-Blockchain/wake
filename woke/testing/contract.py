@@ -223,8 +223,8 @@ class DevchainInterface:
         output_types = [
             eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg)) for arg in abi
         ]
-        decoded_data = eth_abi.abi.decode(
-            output_types, data[4:]
+        decoded_data = list(
+            eth_abi.abi.decode(output_types, data[4:])
         )  # pyright: reportGeneralTypeIssues=false
         for i in range(len(decoded_data)):
             if abi[i]["type"] == "address":
