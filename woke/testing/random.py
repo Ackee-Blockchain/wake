@@ -19,6 +19,10 @@ def random_account(
     return random.choice(accounts)
 
 
+def random_address() -> Address:
+    return Address("0x" + random_bytes(20, 20).hex())
+
+
 def random_int(min: int, max: int) -> int:
     """like random.randint, but with the following probability distribution:
     if min < 0 and max > 0:
