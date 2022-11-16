@@ -498,21 +498,22 @@ class DevchainInterface:
             hardhat_console_address = bytes.fromhex(
                 "000000000000000000636F6e736F6c652e6c6f67"
             )
-            console_logs = []
-            for trace in output:
-                if "action" in trace and "to" in trace["action"]:
-                    if (
-                        bytes.fromhex(trace["action"]["to"][2:])
-                        == hardhat_console_address
-                    ):
-                        console_logs.append(
-                            self._parse_console_log_data(
-                                bytes.fromhex(trace["action"]["input"][2:])
+            if self.console_logs_callback is not None:
+                console_logs = []
+                for trace in output:
+                    if "action" in trace and "to" in trace["action"]:
+                        if (
+                            bytes.fromhex(trace["action"]["to"][2:])
+                            == hardhat_console_address
+                        ):
+                            console_logs.append(
+                                self._parse_console_log_data(
+                                    bytes.fromhex(trace["action"]["input"][2:])
+                                )
                             )
-                        )
 
-            if len(console_logs) > 0 and self.console_logs_callback is not None:
-                self.console_logs_callback(tx_hash, console_logs)
+                if len(console_logs) > 0:
+                    self.console_logs_callback(tx_hash, console_logs)
 
             output = bytes.fromhex(output[0]["result"]["output"][2:])
         elif isinstance(self.__dev_chain, (GanacheDevChain, HardhatDevChain)):
