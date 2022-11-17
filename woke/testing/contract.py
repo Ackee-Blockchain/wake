@@ -389,12 +389,11 @@ class DevchainInterface:
         )
         raise TransactionRevertedError(exception_msg)
 
-    def _process_tx_result(
+    def _process_tx_receipt(
         self,
+        tx_receipt: Dict[str, Any],
         tx_params: TxParams,
-        tx_hash: str,
-    ) -> Dict:
-        tx_receipt = self.__dev_chain.wait_for_transaction_receipt(tx_hash)
+    ) -> None:
         if int(tx_receipt["status"], 16) == 0:
             if isinstance(self.__dev_chain, (AnvilDevChain, GanacheDevChain)):
                 # should also revert
@@ -410,7 +409,6 @@ class DevchainInterface:
             elif isinstance(self.__dev_chain, HardhatDevChain):
                 data = self.__dev_chain.call(tx_params)
                 self._process_revert_data(data)
-        return tx_receipt
 
     def _process_return_data(self, output: bytes, abi: Dict, return_type: Type):
         output_types = [
@@ -448,7 +446,8 @@ class DevchainInterface:
                 except Exception:
                     raise e
 
-        tx_receipt = self._process_tx_result(tx, tx_hash)
+        tx_receipt = self.__dev_chain.wait_for_transaction_receipt(tx_hash)
+        self._process_tx_receipt(tx_receipt, tx)
         self.__nonces[sender] += 1
         assert (
             "contractAddress" in tx_receipt
@@ -490,8 +489,7 @@ class DevchainInterface:
                 except Exception:
                     raise e
 
-        tx_receipt = self._process_tx_result(tx, tx_hash)
-        self.__nonces[sender] += 1
+        tx_receipt = self.__dev_chain.wait_for_transaction_receipt(tx_hash)
 
         if isinstance(self.__dev_chain, AnvilDevChain):
             output = self.__dev_chain.trace_transaction(tx_hash)
@@ -515,8 +513,14 @@ class DevchainInterface:
                 if len(console_logs) > 0:
                     self.console_logs_callback(tx_hash, console_logs)
 
+            self._process_tx_receipt(tx_receipt, tx)
+            self.__nonces[sender] += 1
+
             output = bytes.fromhex(output[0]["result"]["output"][2:])
         elif isinstance(self.__dev_chain, (GanacheDevChain, HardhatDevChain)):
+            self._process_tx_receipt(tx_receipt, tx)
+            self.__nonces[sender] += 1
+
             output = self.__dev_chain.debug_trace_transaction(tx_hash)
             output = bytes.fromhex(output["returnValue"])
         else:
