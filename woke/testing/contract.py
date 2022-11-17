@@ -422,6 +422,25 @@ class DevchainInterface:
             decoded_data = decoded_data[0]
         return self._convert_from_web3_type(decoded_data, return_type)
 
+    def _process_console_logs(self, tx_hash: str, trace_output: Dict[str, Any]) -> None:
+        if self.console_logs_callback is None:
+            return
+        hardhat_console_address = bytes.fromhex(
+            "000000000000000000636F6e736F6c652e6c6f67"
+        )
+        console_logs = []
+        for trace in trace_output:
+            if "action" in trace and "to" in trace["action"]:
+                if bytes.fromhex(trace["action"]["to"][2:]) == hardhat_console_address:
+                    console_logs.append(
+                        self._parse_console_log_data(
+                            bytes.fromhex(trace["action"]["input"][2:])
+                        )
+                    )
+
+        if len(console_logs) > 0:
+            self.console_logs_callback(tx_hash, console_logs)
+
     def deploy(
         self,
         abi: Dict[Union[bytes, Literal["constructor"]], Any],
@@ -447,6 +466,13 @@ class DevchainInterface:
                     raise e
 
         tx_receipt = self.__dev_chain.wait_for_transaction_receipt(tx_hash)
+
+        if self.console_logs_callback is not None and isinstance(
+            self.__dev_chain, AnvilDevChain
+        ):
+            output = self.__dev_chain.trace_transaction(tx_hash)
+            self._process_console_logs(tx_hash, output)
+
         self._process_tx_receipt(tx_receipt, tx)
         self.__nonces[sender] += 1
         assert (
@@ -493,25 +519,8 @@ class DevchainInterface:
 
         if isinstance(self.__dev_chain, AnvilDevChain):
             output = self.__dev_chain.trace_transaction(tx_hash)
-            hardhat_console_address = bytes.fromhex(
-                "000000000000000000636F6e736F6c652e6c6f67"
-            )
             if self.console_logs_callback is not None:
-                console_logs = []
-                for trace in output:
-                    if "action" in trace and "to" in trace["action"]:
-                        if (
-                            bytes.fromhex(trace["action"]["to"][2:])
-                            == hardhat_console_address
-                        ):
-                            console_logs.append(
-                                self._parse_console_log_data(
-                                    bytes.fromhex(trace["action"]["input"][2:])
-                                )
-                            )
-
-                if len(console_logs) > 0:
-                    self.console_logs_callback(tx_hash, console_logs)
+                self._process_console_logs(tx_hash, output)
 
             self._process_tx_receipt(tx_receipt, tx)
             self.__nonces[sender] += 1
