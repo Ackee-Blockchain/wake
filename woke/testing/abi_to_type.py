@@ -278,7 +278,7 @@ class TypeGenerator:
         self.add_str_to_types(1, "@classmethod", 1)
         self.add_str_to_types(
             1,
-            f'def deploy(cls, {params_str}*, from_: Optional[Union[Address, str]] = None, value: Wei = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max"{libraries_str}) -> {self.get_name(contract.name)}:',
+            f'def deploy(cls, {params_str}*, from_: Optional[Union[Address, str]] = None, value: Wei = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max"{libraries_str}, chain: Optional[ChainInterface] = None) -> {self.get_name(contract.name)}:',
             1,
         )
 
@@ -301,7 +301,7 @@ class TypeGenerator:
                 )
                 self.add_str_to_types(
                     2,
-                    f"return cls._deploy([{', '.join(map(itemgetter(0), param_names))}], from_, value, gas_limit, {libs_arg})",
+                    f"return cls._deploy([{', '.join(map(itemgetter(0), param_names))}], from_, value, gas_limit, {libs_arg}, chain)",
                     1,
                 )
             else:
@@ -676,7 +676,7 @@ class TypeGenerator:
             returns_str = f"Tuple[{', '.join(ret[0] for ret in returns)}]"
         self.add_str_to_types(
             1,
-            f"""def {self.get_name(fn_name)}(self, {params_str}*, from_: Optional[Union[Address, str]] = None, to: Optional[Union[Address, str, Contract]] = None, value: Wei = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: bool=False, request_type: RequestType='{'call' if is_view_or_pure else 'default'}') -> Union[{returns_str}, TransactionObject]:""",
+            f"""def {self.get_name(fn_name)}(self, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, to: Optional[Union[Account, Address, str]] = None, value: Wei = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: bool=False, request_type: RequestType='{'call' if is_view_or_pure else 'default'}') -> Union[{returns_str}, TransactionObject]:""",
             1,
         )
 
@@ -720,7 +720,7 @@ class TypeGenerator:
         self.add_str_to_types(1, "@overload", 1)
         self.add_str_to_types(
             1,
-            f"""def {self.get_name(fn_name)}(self, {params_str}*, from_: Optional[Union[Address, str]] = None, to: Optional[Union[Address, str, Contract]] = None, value: Wei = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: bool={return_tx}, request_type: RequestType='default') -> {returns_str}:""",
+            f"""def {self.get_name(fn_name)}(self, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, to: Optional[Union[Account, Address, str]] = None, value: Wei = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: bool={return_tx}, request_type: RequestType='default') -> {returns_str}:""",
             1,
         )
         self.add_str_to_types(2, "...", 2)
@@ -1133,6 +1133,7 @@ class NameSanitizer:
             "value",
             "self",
             "deploy",
+            "chain",
         }
         self.__used_names = set()
         self.__renamed = {}

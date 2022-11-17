@@ -2,15 +2,18 @@ import random
 import string
 from typing import Callable, Optional
 
-from .contract import Address, dev_interface
+from .contract import Account, Address, ChainInterface, dev_interface
 
 
 def random_account(
     lower_bound: int = 0,
     length: Optional[int] = None,
-    predicate: Optional[Callable[[Address], bool]] = None,
-) -> Address:
-    accounts = dev_interface.accounts
+    predicate: Optional[Callable[[Account], bool]] = None,
+    chain: Optional[ChainInterface] = None,
+) -> Account:
+    if chain is None:
+        chain = dev_interface
+    accounts = chain.accounts
     if length is None:
         length = len(accounts)
     accounts = accounts[lower_bound:length]

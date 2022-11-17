@@ -1,9 +1,9 @@
 import logging
 import random
 from datetime import datetime, timedelta
-from typing import Callable, Counter, List, Optional, Tuple
+from typing import Callable, Counter, Iterable, List, Optional, Tuple
 
-from woke.testing.contract import dev_interface
+from woke.testing.contract import ChainInterface, dev_interface
 
 from .utils import partition
 
@@ -26,8 +26,12 @@ class Campaign:
         flows_count: int,
         run_for_seconds: Optional[int] = None,
         dry_run: bool = False,
+        chains: Optional[Iterable[ChainInterface]] = None,
     ):
         init_timestamp = datetime.now()
+
+        if chains is None:
+            chains = [dev_interface]
 
         for i in range(sequences_count):
             if (
@@ -36,7 +40,8 @@ class Campaign:
                 >= init_timestamp + timedelta(seconds=run_for_seconds)
             ):
                 break
-            snapshot_id = dev_interface.snapshot()
+
+            snapshots = [chain.snapshot() for chain in chains]
 
             logger.info(self.__format_heading(f"SEQUENCE {i}"))
             seq = self.__sequence_constructor()
@@ -107,7 +112,9 @@ class Campaign:
             # logger.info(self.__format_heading("Campaign point coverage:"))
             # self.__log_point_coverage(point_coverage)
             del seq
-            dev_interface.revert(snapshot_id)
+
+            for snapshot, chain in zip(snapshots, chains):
+                chain.revert(snapshot)
         logger.info(f"\nRan {flows_count} flows. All flows and invariants passed.")
 
     @staticmethod

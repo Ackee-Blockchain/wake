@@ -6,10 +6,10 @@ from typing import Callable, Iterable, List, Tuple, TypeVar
 
 from Crypto.Hash import keccak
 
-from woke.testing.contract import DevchainInterface
+from woke.testing.contract import ChainInterface
 
 
-def snapshot_and_revert(devchain_interface: DevchainInterface):
+def snapshot_and_revert(devchain_interface: ChainInterface):
     def decorator(fn):
         @wraps(fn)
         def wrapper(*args, **kwargs):
@@ -21,7 +21,7 @@ def snapshot_and_revert(devchain_interface: DevchainInterface):
     return decorator
 
 
-def connect(devchain_interface: DevchainInterface, uri: str):
+def connect(devchain_interface: ChainInterface, uri: str):
     def decorator(fn):
         @wraps(fn)
         def wrapper(*args, **kwargs):
