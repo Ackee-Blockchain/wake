@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 import dataclasses
 import re
@@ -43,13 +45,13 @@ class TransactionObject:
 
 class Abi:
     @classmethod
-    def encode(cls, arguments: Iterable, types: Iterable) -> bytes:
+    def encode(cls, types: Iterable, arguments: Iterable) -> bytes:
         return eth_abi.encode(  # pyright: ignore[reportPrivateImportUsage]
             types, arguments
         )
 
     @classmethod
-    def decode(cls, data: bytes, types: Iterable) -> Any:
+    def decode(cls, types: Iterable, data: bytes) -> Any:
         return eth_abi.decode(types, data)  # pyright: ignore[reportPrivateImportUsage]
 
 
@@ -58,34 +60,73 @@ class Wei(int):
         return self / 10**18
 
     @classmethod
-    def from_ether(cls, value: Union[int, float]) -> "Wei":
+    def from_ether(cls, value: Union[int, float]) -> Wei:
         return cls(int(value * 10**18))
 
 
-class Address(str):
-    def __new__(cls, addr):
-        # cannot use isinstance(addr, Contract) because of circular dependency
-        try:
-            addr = addr._address
-        except AttributeError:
-            pass
-        return super().__new__(
-            cls, eth_utils.to_checksum_address(addr)
+class Address:
+    def __init__(self, address: str) -> None:
+        self._address = eth_utils.to_checksum_address(
+            address
         )  # pyright: reportPrivateImportUsage=false
 
-    def __eq__(self, other):
-        if not isinstance(other, str):
+    def __str__(self) -> str:
+        return self._address
+
+    def __repr__(self) -> str:
+        return self._address
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, Address):
+            return self._address == other._address
+        elif isinstance(other, str):
+            return self._address == eth_utils.to_checksum_address(
+                other
+            )  # pyright: reportPrivateImportUsage=false
+        else:
             return NotImplemented
-        return eth_utils.to_checksum_address(self) == eth_utils.to_checksum_address(
-            other
-        )  # pyright: reportPrivateImportUsage=false
 
-    def __hash__(self):
-        return hash(str(self))
+    def __hash__(self) -> int:
+        return hash(self._address)
+
+
+Address.ZERO = Address("0x0000000000000000000000000000000000000000")
+
+
+class Account:
+    _address: Address
+    _chain: ChainInterface
+
+    def __init__(
+        self, address: Union[Address, str], chain: Optional[ChainInterface] = None
+    ) -> None:
+        if isinstance(address, Address):
+            self._address = address
+        else:
+            self._address = Address(address)
+        self._chain = chain if chain is not None else dev_interface
+
+    def __str__(self) -> str:
+        return str(self._address)
+
+    def __repr__(self) -> str:
+        return str(self._address)
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, Account):
+            return self._address == other._address and self._chain == other._chain
+        return NotImplemented
+
+    def __hash__(self) -> int:
+        return hash((self._address, self._chain))
+
+    @property
+    def address(self) -> Address:
+        return self._address
 
     @property
     def balance(self) -> Wei:
-        return Wei(dev_interface.dev_chain.get_balance(self))
+        return Wei(self._chain.dev_chain.get_balance(str(self._address)))
 
     @balance.setter
     def balance(self, value: Union[Wei, int]) -> None:
@@ -93,10 +134,11 @@ class Address(str):
             raise TypeError("value must be an integer")
         if value < 0:
             raise ValueError("value must be non-negative")
-        dev_interface.dev_chain.set_balance(self, value)
+        self._chain.dev_chain.set_balance(str(self.address), value)
 
-
-Address.ZERO = Address("0x0000000000000000000000000000000000000000")
+    @property
+    def chain(self) -> ChainInterface:
+        return self._chain
 
 
 class TransactionRevertedError(Exception):
@@ -107,16 +149,15 @@ class RevertToSnapshotFailedError(Exception):
     pass
 
 
-# global interface for communicating with the devchain
-class DevchainInterface:
+class ChainInterface:
     __dev_chain: DevChainABC
-    __accounts: List[Address]
-    __default_account: Optional[Address]
+    __accounts: List[Account]
+    __default_account: Optional[Account]
     __block_gas_limit: int
     __chain_id: int
     __nonces: DefaultDict[Address, int]
     __snapshots: Dict[str, Dict]
-    __deployed_libraries: DefaultDict[bytes, List[Address]]
+    __deployed_libraries: DefaultDict[bytes, List[Library]]
     __panic_reasons: Dict[int, str] = {
         0x00: "Generic compiler panic",
         0x01: "Assert evaluated to false",
@@ -151,7 +192,9 @@ class DevchainInterface:
                 raise NotImplementedError(
                     f"Client version {client_version} not supported"
                 )
-            self.__accounts = [Address(acc) for acc in self.__dev_chain.accounts()]
+            self.__accounts = [
+                Account(acc, self) for acc in self.__dev_chain.accounts()
+            ]
             block_info = self.__dev_chain.get_block("latest")
             assert "gasLimit" in block_info
             self.__block_gas_limit = int(block_info["gasLimit"], 16)
@@ -171,16 +214,19 @@ class DevchainInterface:
             loop.run_until_complete(session.close())
 
     @property
-    def accounts(self) -> Tuple[Address, ...]:
+    def accounts(self) -> Tuple[Account, ...]:
         return tuple(self.__accounts)
 
     @property
-    def default_account(self) -> Optional[Address]:
+    def default_account(self) -> Optional[Account]:
         return self.__default_account
 
     @default_account.setter
-    def default_account(self, account: Union[Address, str]) -> None:
-        self.__default_account = Address(account)
+    def default_account(self, account: Union[Account, Address, str]) -> None:
+        if isinstance(account, Account):
+            self.__default_account = account
+        else:
+            self.__default_account = Account(account, self)
 
     @property
     def block_gas_limit(self) -> int:
@@ -205,15 +251,14 @@ class DevchainInterface:
             return [cls._convert_to_web3_type(v) for v in value]
         elif isinstance(value, tuple):
             return tuple(cls._convert_to_web3_type(v) for v in value)
-        elif isinstance(value, Contract):
-            return value._address
+        elif isinstance(value, Account):
+            return str(value.address)
         elif isinstance(value, Address):
             return str(value)
         else:
             return value
 
-    @classmethod
-    def _parse_console_log_data(cls, data: bytes):
+    def _parse_console_log_data(self, data: bytes):
         selector = data[:4]
 
         if selector not in hardhat_console.abis:
@@ -228,15 +273,14 @@ class DevchainInterface:
         )  # pyright: reportGeneralTypeIssues=false
         for i in range(len(decoded_data)):
             if abi[i]["type"] == "address":
-                decoded_data[i] = Address(decoded_data[i])
+                decoded_data[i] = Account(decoded_data[i], self)
 
         if len(decoded_data) == 1:
             decoded_data = decoded_data[0]
 
         return decoded_data
 
-    @classmethod
-    def _convert_from_web3_type(cls, value: Any, expected_type: Type) -> Any:
+    def _convert_from_web3_type(self, value: Any, expected_type: Type) -> Any:
         if isinstance(expected_type, type(None)):
             return None
         elif dataclasses.is_dataclass(expected_type):
@@ -248,12 +292,14 @@ class DevchainInterface:
             ]
             assert len(value) == len(field_types)
             converted_values = [
-                cls._convert_from_web3_type(v, t) for v, t in zip(value, field_types)
+                self._convert_from_web3_type(v, t) for v, t in zip(value, field_types)
             ]
             return expected_type(*converted_values)
         elif isinstance(expected_type, type):
             if issubclass(expected_type, Contract):
-                return expected_type(value)
+                return Contract(value, self)
+            elif issubclass(expected_type, Account):
+                return Account(value, self)
             elif isinstance(expected_type, Address):
                 return expected_type(value)
             elif issubclass(expected_type, IntEnum):
@@ -261,7 +307,7 @@ class DevchainInterface:
         return value
 
     def update_accounts(self):
-        self.__accounts = [Address(acc) for acc in self.__dev_chain.accounts()]
+        self.__accounts = [Account(acc, self) for acc in self.__dev_chain.accounts()]
 
     def snapshot(self) -> str:
         snapshot_id = self.__dev_chain.snapshot()
@@ -287,7 +333,7 @@ class DevchainInterface:
         del self.__snapshots[snapshot_id]
 
     @property
-    def deployed_libraries(self) -> DefaultDict[bytes, List[Address]]:
+    def deployed_libraries(self) -> DefaultDict[bytes, List[Library]]:
         return self.__deployed_libraries
 
     @contextmanager
@@ -301,7 +347,7 @@ class DevchainInterface:
     def reset(self) -> None:
         self.__dev_chain.reset()
 
-    def _get_nonce(self, address: Address) -> int:
+    def _get_nonce(self, address: Union[str, Address]) -> int:
         if address not in self.__nonces:
             self.__nonces[address] = self.__dev_chain.get_transaction_count(
                 str(address)
@@ -312,19 +358,19 @@ class DevchainInterface:
         self, params: Dict, data: bytes, arguments: Iterable, abi: Optional[Dict]
     ) -> TxParams:
         if abi is None:
-            data += eth_abi.encode([], [])
+            data += Abi.encode([], [])
         else:
             arguments = [self._convert_to_web3_type(arg) for arg in arguments]
             types = [
                 eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
                 for arg in abi["inputs"]
             ]
-            data += eth_abi.encode(types, arguments)
+            data += Abi.encode(types, arguments)
 
         if "from" in params:
             sender = params["from"]
         elif self.default_account is not None:
-            sender = self.default_account
+            sender = self.default_account.address
         else:
             raise ValueError("No from_ account specified and no default account set")
 
@@ -454,7 +500,11 @@ class DevchainInterface:
             arguments,
             abi["constructor"] if "constructor" in abi else None,
         )
-        sender = Address(params["from"]) if "from" in params else self.default_account
+        sender = (
+            Account(params["from"], self) if "from" in params else self.default_account
+        )
+        if sender is None:
+            raise ValueError("No from_ account specified and no default account set")
 
         with _signer_account(sender, self):
             try:
@@ -474,7 +524,7 @@ class DevchainInterface:
             self._process_console_logs(tx_hash, output)
 
         self._process_tx_receipt(tx_receipt, tx)
-        self.__nonces[sender] += 1
+        self.__nonces[sender.address] += 1
         assert (
             "contractAddress" in tx_receipt
             and tx_receipt["contractAddress"] is not None
@@ -504,7 +554,11 @@ class DevchainInterface:
         return_type: Type,
     ) -> Any:
         tx = self._build_transaction(params, selector, arguments, abi[selector])
-        sender = Address(params["from"]) if "from" in params else self.default_account
+        sender = (
+            Account(params["from"], self) if "from" in params else self.default_account
+        )
+        if sender is None:
+            raise ValueError("No from_ account specified and no default account set")
 
         with _signer_account(sender, self):
             try:
@@ -523,12 +577,12 @@ class DevchainInterface:
                 self._process_console_logs(tx_hash, output)
 
             self._process_tx_receipt(tx_receipt, tx)
-            self.__nonces[sender] += 1
+            self.__nonces[sender.address] += 1
 
             output = bytes.fromhex(output[0]["result"]["output"][2:])
         elif isinstance(self.__dev_chain, (GanacheDevChain, HardhatDevChain)):
             self._process_tx_receipt(tx_receipt, tx)
-            self.__nonces[sender] += 1
+            self.__nonces[sender.address] += 1
 
             output = self.__dev_chain.debug_trace_transaction(tx_hash)
             output = bytes.fromhex(output["returnValue"])
@@ -539,19 +593,19 @@ class DevchainInterface:
 
 
 @contextmanager
-def _signer_account(address: Address, interface: DevchainInterface):
+def _signer_account(sender: Account, interface: ChainInterface):
     chain = interface.dev_chain
     account_created = True
-    if address not in interface.accounts:
+    if sender not in interface.accounts:
         interface.update_accounts()
-        if address not in interface.accounts:
+        if sender not in interface.accounts:
             account_created = False
 
     if not account_created:
         if isinstance(chain, (AnvilDevChain, HardhatDevChain)):
-            chain.impersonate_account(address)
+            chain.impersonate_account(str(sender))
         elif isinstance(chain, GanacheDevChain):
-            chain.add_account(address, "")
+            chain.add_account(str(sender), "")
         else:
             raise NotImplementedError()
 
@@ -559,23 +613,24 @@ def _signer_account(address: Address, interface: DevchainInterface):
         yield
     finally:
         if not account_created and isinstance(chain, (AnvilDevChain, HardhatDevChain)):
-            chain.stop_impersonating_account(address)
+            chain.stop_impersonating_account(str(sender))
 
 
-dev_interface = DevchainInterface()
+dev_interface = ChainInterface()
 errors = {}
 events = {}
 
 LIBRARY_PLACEHOLDER_REGEX = re.compile(r"__\$[0-9a-fA-F]{34}\$__")
 
 
-class Contract:
+class Contract(Account):
     _abi: Dict[Union[bytes, Literal["constructor"]], Any]
     _bytecode: str
-    _address: Address
 
-    def __init__(self, addr: Union[Address, str]):
-        self._address = Address(addr)
+    def __init__(
+        self, addr: Union[Address, str], chain: ChainInterface = dev_interface
+    ):
+        super().__init__(addr, chain)
 
     def __str__(self):
         return f"{self.__class__.__name__}({self._address})"
@@ -584,22 +639,28 @@ class Contract:
         return self.__str__()
 
     @classmethod
-    # TODO add option to deploy using a different instance of web3
     def _deploy(
         cls,
         arguments: Iterable,
-        from_: Optional[Union[Address, str, "Contract"]],
+        from_: Optional[Union[Account, Address, str]],
         value: Wei,
         gas_limit: Union[int, Literal["max"], Literal["auto"]],
-        libraries: Dict[bytes, Tuple[Union["Contract", Address, None], str]],
-    ) -> "Contract":
+        libraries: Dict[bytes, Tuple[Union[Account, Address, None], str]],
+        chain: Optional[ChainInterface],
+    ) -> Contract:
         params = {}
+        if chain is None:
+            chain = dev_interface
+
         if from_ is not None:
-            params["from"] = Address(from_)
+            if isinstance(from_, Account):
+                params["from"] = str(from_.address)
+            else:
+                params["from"] = str(from_)
         params["value"] = value
 
         if gas_limit == "max":
-            params["gas"] = dev_interface.block_gas_limit
+            params["gas"] = chain.block_gas_limit
         elif gas_limit == "auto":
             pass
         elif isinstance(gas_limit, int):
@@ -612,19 +673,21 @@ class Contract:
             lib_id = bytes.fromhex(match.group(0)[3:-3])
             assert lib_id in libraries
 
-            if libraries[lib_id][0] is not None:
-                lib_addr = str(Address(libraries[lib_id][0]))[2:]
-            elif lib_id in dev_interface.deployed_libraries:
-                lib_addr = str(dev_interface.deployed_libraries[lib_id][-1])[2:]
+            lib = libraries[lib_id][0]
+            if lib is not None:
+                if isinstance(lib, Account):
+                    lib_addr = str(lib.address)[2:]
+                else:
+                    lib_addr = str(lib)[2:]
+            elif lib_id in chain.deployed_libraries:
+                lib_addr = str(chain.deployed_libraries[lib_id][-1].address)[2:]
             else:
                 raise ValueError(f"Library {libraries[lib_id][1]} not deployed")
 
             bytecode = bytecode[: match.start()] + lib_addr + bytecode[match.end() :]
 
-        address = dev_interface.deploy(
-            cls._abi, bytes.fromhex(bytecode), arguments, params
-        )
-        return cls(address)
+        address = chain.deploy(cls._abi, bytes.fromhex(bytecode), arguments, params)
+        return cls(address, chain)
 
     def _transact(
         self,
@@ -633,8 +696,8 @@ class Contract:
         return_tx: bool,
         request_type: RequestType,
         return_type: Type,
-        from_: Optional[Union[Address, str, "Contract"]],
-        to: Optional[Union[Address, str, "Contract"]],
+        from_: Optional[Union[Account, Address, str]],
+        to: Optional[Union[Account, Address, str]],
         value: Wei,
         gas_limit: Union[int, Literal["max"], Literal["auto"]],
     ) -> Any:
@@ -642,11 +705,14 @@ class Contract:
             raise NotImplementedError("returning a transaction is not implemented")
         params = {}
         if from_ is not None:
-            params["from"] = Address(from_)
+            if isinstance(from_, Account):
+                params["from"] = str(from_.address)
+            else:
+                params["from"] = str(from_)
         params["value"] = value
 
         if gas_limit == "max":
-            params["gas"] = dev_interface.block_gas_limit
+            params["gas"] = self.chain.block_gas_limit
         elif gas_limit == "auto":
             pass
         elif isinstance(gas_limit, int):
@@ -655,13 +721,14 @@ class Contract:
             raise ValueError("invalid gas limit")
 
         if to is not None:
-            if isinstance(to, Contract):
-                to = to._address
-            params["to"] = to
+            if isinstance(to, Account):
+                params["to"] = str(to.address)
+            else:
+                params["to"] = str(to)
         else:
-            params["to"] = self._address
+            params["to"] = str(self._address)
 
-        return dev_interface.transact(
+        return self.chain.transact(
             bytes.fromhex(selector),
             self.__class__._abi,
             arguments,
@@ -677,8 +744,8 @@ class Contract:
         arguments: Iterable,
         return_tx: bool,
         return_type: Type,
-        from_: Optional[Union[Address, str, "Contract"]],
-        to: Optional[Union[Address, str, "Contract"]],
+        from_: Optional[Union[Account, Address, str]],
+        to: Optional[Union[Account, Address, str]],
         value: Wei,
         gas_limit: Union[int, Literal["max"], Literal["auto"]],
     ) -> Any:
@@ -686,11 +753,14 @@ class Contract:
             raise ValueError("transaction can't be returned from a call")
         params = {}
         if from_ is not None:
-            params["from"] = Address(from_)
+            if isinstance(from_, Account):
+                params["from"] = str(from_.address)
+            else:
+                params["from"] = str(from_)
         params["value"] = value
 
         if gas_limit == "max":
-            params["gas"] = dev_interface.block_gas_limit
+            params["gas"] = self.chain.block_gas_limit
         elif gas_limit == "auto":
             pass
         elif isinstance(gas_limit, int):
@@ -699,16 +769,15 @@ class Contract:
             raise ValueError("invalid gas limit")
 
         if to is not None:
-            if isinstance(to, Contract):
-                to = to._address
-            params["to"] = to
+            if isinstance(to, Account):
+                params["to"] = str(to.address)
+            else:
+                params["to"] = str(to)
         else:
-            params["to"] = self._address
+            params["to"] = str(self._address)
 
         sel = bytes.fromhex(selector)
-        return dev_interface.call(
-            sel, self.__class__._abi, arguments, params, return_type
-        )
+        return self.chain.call(sel, self.__class__._abi, arguments, params, return_type)
 
 
 class Library(Contract):
@@ -718,11 +787,16 @@ class Library(Contract):
     def _deploy(
         cls,
         arguments: Iterable,
-        from_: Optional[Union[Address, str, "Contract"]],
+        from_: Optional[Union[Account, Address, str]],
         value: Wei,
         gas_limit: Union[int, Literal["max"], Literal["auto"]],
-        libraries: Dict[bytes, Tuple[Union["Contract", Address, None], str]],
-    ) -> "Contract":
-        ret = super()._deploy(arguments, from_, value, gas_limit, libraries)
-        dev_interface.deployed_libraries[cls._library_id].append(Address(ret))
-        return ret
+        libraries: Dict[bytes, Tuple[Union[Account, Address, None], str]],
+        chain: Optional[ChainInterface],
+    ) -> Library:
+        if chain is None:
+            chain = dev_interface
+
+        ret = super()._deploy(arguments, from_, value, gas_limit, libraries, chain)
+        lib = Library(ret.address, chain)
+        chain.deployed_libraries[cls._library_id].append(lib)
+        return lib
