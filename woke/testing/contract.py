@@ -514,6 +514,7 @@ class ChainInterface:
                     tx_hash = e.args[0]["data"]["txHash"]
                 except Exception:
                     raise e
+            self.__nonces[sender.address] += 1
 
         tx_receipt = self.__dev_chain.wait_for_transaction_receipt(tx_hash)
 
@@ -524,7 +525,6 @@ class ChainInterface:
             self._process_console_logs(tx_hash, output)
 
         self._process_tx_receipt(tx_receipt, tx)
-        self.__nonces[sender.address] += 1
         assert (
             "contractAddress" in tx_receipt
             and tx_receipt["contractAddress"] is not None
@@ -568,6 +568,7 @@ class ChainInterface:
                     tx_hash = e.args[0]["data"]["txHash"]
                 except Exception:
                     raise e
+            self.__nonces[sender.address] += 1
 
         tx_receipt = self.__dev_chain.wait_for_transaction_receipt(tx_hash)
 
@@ -577,12 +578,10 @@ class ChainInterface:
                 self._process_console_logs(tx_hash, output)
 
             self._process_tx_receipt(tx_receipt, tx)
-            self.__nonces[sender.address] += 1
 
             output = bytes.fromhex(output[0]["result"]["output"][2:])
         elif isinstance(self.__dev_chain, (GanacheDevChain, HardhatDevChain)):
             self._process_tx_receipt(tx_receipt, tx)
-            self.__nonces[sender.address] += 1
 
             output = self.__dev_chain.debug_trace_transaction(tx_hash)
             output = bytes.fromhex(output["returnValue"])
