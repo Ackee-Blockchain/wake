@@ -10,12 +10,24 @@ abis = {
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "address", "name": "p3", "type": "address"},
     ],
+    b"\xf1a\xb2!": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
     b"\x01\x8c\x84\xc2": [
         {"internalType": "address", "name": "p0", "type": "address"},
         {"internalType": "address", "name": "p1", "type": "address"},
         {"internalType": "address", "name": "p2", "type": "address"},
     ],
     b"\x03\x1cos": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
+    b"yC\xdcf": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "address", "name": "p1", "type": "address"},
         {"internalType": "address", "name": "p2", "type": "address"},
@@ -33,7 +45,19 @@ abis = {
         {"internalType": "address", "name": "p2", "type": "address"},
         {"internalType": "uint256", "name": "p3", "type": "uint256"},
     ],
+    b"A\xb5\xef;": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
     b"\x07\x83\x15\x02": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"L\xb6\x0f\xd1": [
         {"internalType": "bool", "name": "p0", "type": "bool"},
         {"internalType": "address", "name": "p1", "type": "address"},
         {"internalType": "bool", "name": "p2", "type": "bool"},
@@ -44,7 +68,18 @@ abis = {
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "address", "name": "p2", "type": "address"},
     ],
+    b"\xc4\xd25\x07": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+    ],
     b"\t\x1f\xfa\xf5": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
+    b"\x01U\x0b\x04": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "address", "name": "p1", "type": "address"},
         {"internalType": "address", "name": "p2", "type": "address"},
@@ -56,7 +91,19 @@ abis = {
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "string", "name": "p3", "type": "string"},
     ],
+    b"\x9bX\x8e\xcc": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
     b"\x0b\xb0\x0e\xab": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"Fg\xde\x8e": [
         {"internalType": "bool", "name": "p0", "type": "bool"},
         {"internalType": "bool", "name": "p1", "type": "bool"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -68,13 +115,30 @@ abis = {
         {"internalType": "address", "name": "p2", "type": "address"},
         {"internalType": "uint256", "name": "p3", "type": "uint256"},
     ],
+    b"R\x84\xbdl": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
     b"\x0c\x9c\xd9\xc1": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "address", "name": "p1", "type": "address"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "uint256", "name": "p3", "type": "uint256"},
     ],
+    b"\xca\x9a>\xb4": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
     b"\r&\xb9%": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+    ],
+    b"\x07\xc8\x12\x17": [
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "address", "name": "p1", "type": "address"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -103,13 +167,31 @@ abis = {
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "bool", "name": "p3", "type": "bool"},
     ],
+    b"~%\r[": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
     b"\x10\x0fe\x0e": [
         {"internalType": "address", "name": "p0", "type": "address"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "address", "name": "p2", "type": "address"},
         {"internalType": "uint256", "name": "p3", "type": "uint256"},
     ],
+    b"\xa5\xd9\x87h": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
     b"\x10#\xf7\xb2": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
+    b"]OF\x80": [
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "string", "name": "p1", "type": "string"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -125,6 +207,11 @@ abis = {
         {"internalType": "string", "name": "p1", "type": "string"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
     ],
+    b"\xc08*\xac": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+    ],
     b"\x12\xd6\xc7\x88": [
         {"internalType": "bool", "name": "p0", "type": "bool"},
         {"internalType": "string", "name": "p1", "type": "string"},
@@ -136,7 +223,18 @@ abis = {
         {"internalType": "bool", "name": "p1", "type": "bool"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
     ],
+    b"\xb0\x13e\xbb": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+    ],
     b"\x13k\x05\xdd": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
+    b"h\xf1X\xb5": [
         {"internalType": "bool", "name": "p0", "type": "bool"},
         {"internalType": "address", "name": "p1", "type": "address"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -148,7 +246,19 @@ abis = {
         {"internalType": "address", "name": "p2", "type": "address"},
         {"internalType": "uint256", "name": "p3", "type": "uint256"},
     ],
+    b"\xca\xa5#j": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
     b"\x15\x96\xa1\xce": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
+    b'["\xb98': [
         {"internalType": "bool", "name": "p0", "type": "bool"},
         {"internalType": "string", "name": "p1", "type": "string"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -160,7 +270,19 @@ abis = {
         {"internalType": "string", "name": "p2", "type": "string"},
         {"internalType": "uint256", "name": "p3", "type": "uint256"},
     ],
+    b"\xa1O\xd09": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
     b"\x15\xc1'\xb5": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
+    b"\xfd\xb2\xec\xd4": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "address", "name": "p1", "type": "address"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -172,7 +294,19 @@ abis = {
         {"internalType": "address", "name": "p2", "type": "address"},
         {"internalType": "bool", "name": "p3", "type": "bool"},
     ],
+    b"\xa8\xe8 \xae": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
     b"\x16\x06\xa3\x93": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"\x8do\x9c\xa5": [
         {"internalType": "bool", "name": "p0", "type": "bool"},
         {"internalType": "string", "name": "p1", "type": "string"},
         {"internalType": "bool", "name": "p2", "type": "bool"},
@@ -189,12 +323,23 @@ abis = {
         {"internalType": "address", "name": "p1", "type": "address"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
     ],
+    b"l6mr": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+    ],
     b"\x18\xc9\xc7F": [
         {"internalType": "bool", "name": "p0", "type": "bool"},
         {"internalType": "address", "name": "p1", "type": "address"},
         {"internalType": "bool", "name": "p2", "type": "bool"},
     ],
     b"\x19?\xb8\x00": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"\\\xa0\xad>": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -212,7 +357,19 @@ abis = {
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "string", "name": "p3", "type": "string"},
     ],
+    b"w\xa1\xab\xed": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
     b"\x1b\xb3\xb0\x9a": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
+    b"\x18\t\x13A": [
         {"internalType": "bool", "name": "p0", "type": "bool"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "address", "name": "p2", "type": "address"},
@@ -229,7 +386,16 @@ abis = {
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "address", "name": "p2", "type": "address"},
     ],
+    b"\xe3\x84\x9fy": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+    ],
     b"\x1c\x9d~\xb3": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+    ],
+    b"\x1em\xd4\xec": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "bool", "name": "p1", "type": "bool"},
     ],
@@ -245,7 +411,19 @@ abis = {
         {"internalType": "address", "name": "p2", "type": "address"},
         {"internalType": "string", "name": "p3", "type": "string"},
     ],
+    b"]q\xf3\x9e": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
     b"\x1d\xc8\xe1\xb8": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"\xa4\xc9*`": [
         {"internalType": "address", "name": "p0", "type": "address"},
         {"internalType": "string", "name": "p1", "type": "string"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -262,6 +440,11 @@ abis = {
         {"internalType": "bool", "name": "p1", "type": "bool"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
     ],
+    b'ZM\x99"': [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+    ],
     b" Xq\xc2": [
         {"internalType": "address", "name": "p0", "type": "address"},
         {"internalType": "string", "name": "p1", "type": "string"},
@@ -273,7 +456,18 @@ abis = {
         {"internalType": "bool", "name": "p1", "type": "bool"},
         {"internalType": "bool", "name": "p2", "type": "bool"},
     ],
+    b"\xd5\xce\xac\xe0": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+    ],
     b" \xe3\x98M": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
+    b"\x1e\xf644": [
         {"internalType": "address", "name": "p0", "type": "address"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -285,6 +479,12 @@ abis = {
         {"internalType": "string", "name": "p2", "type": "string"},
     ],
     b"!\xad\x06\x83": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
+    b"W\xdd\n\x11": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "string", "name": "p1", "type": "string"},
         {"internalType": "string", "name": "p2", "type": "string"},
@@ -308,6 +508,12 @@ abis = {
         {"internalType": "bool", "name": "p2", "type": "bool"},
         {"internalType": "uint256", "name": "p3", "type": "uint256"},
     ],
+    b"i\x8fC\x92": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
     b"$Y\x86\xf2": [
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "address", "name": "p1", "type": "address"},
@@ -320,7 +526,19 @@ abis = {
         {"internalType": "address", "name": "p2", "type": "address"},
         {"internalType": "address", "name": "p3", "type": "address"},
     ],
+    b"UGE\xf9": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
     b"$\xf9\x14e": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"4\xcb0\x8d": [
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "bool", "name": "p1", "type": "bool"},
         {"internalType": "string", "name": "p2", "type": "string"},
@@ -337,13 +555,31 @@ abis = {
         {"internalType": "address", "name": "p2", "type": "address"},
         {"internalType": "address", "name": "p3", "type": "address"},
     ],
+    b"\x8a/\x90\xaa": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
     b"'\xd8\xaf\xd2": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "string", "name": "p2", "type": "string"},
         {"internalType": "string", "name": "p3", "type": "string"},
     ],
+    b"|\x03*2": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
     b"(\x86?\xcb": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"\x8eJ\xe8n": [
         {"internalType": "bool", "name": "p0", "type": "bool"},
         {"internalType": "string", "name": "p1", "type": "string"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -372,6 +608,12 @@ abis = {
         {"internalType": "bool", "name": "p3", "type": "bool"},
     ],
     b",\x1d\x07F": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"\x91_\xdb(": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "bool", "name": "p1", "type": "bool"},
         {"internalType": "string", "name": "p2", "type": "string"},
@@ -418,12 +660,29 @@ abis = {
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "uint256", "name": "p3", "type": "uint256"},
     ],
+    b"=\x0e\x9d\xe4": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
     b"5\x08_{": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "bool", "name": "p1", "type": "bool"},
         {"internalType": "address", "name": "p2", "type": "address"},
     ],
+    b"BN\xff\xbf": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+    ],
     b"5L6\xd6": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
+    b"\xe3\x7f\xf3\xd0": [
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "bool", "name": "p2", "type": "bool"},
@@ -440,7 +699,18 @@ abis = {
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
     ],
+    b";\\\x03\xe0": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+    ],
     b"7K\xb4\xb2": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"2\xdf\xa5$": [
         {"internalType": "bool", "name": "p0", "type": "bool"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -451,7 +721,18 @@ abis = {
         {"internalType": "string", "name": "p1", "type": "string"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
     ],
+    b"[m\xe8?": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+    ],
     b"8o\xf5\xf4": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"\xc2\x10\xa0\x1e": [
         {"internalType": "address", "name": "p0", "type": "address"},
         {"internalType": "bool", "name": "p1", "type": "bool"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -463,11 +744,27 @@ abis = {
         {"internalType": "bool", "name": "p2", "type": "bool"},
         {"internalType": "uint256", "name": "p3", "type": "uint256"},
     ],
+    b"\x95\xd6_\x11": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
     b"9\x91t\xd3": [
         {"internalType": "bool", "name": "p0", "type": "bool"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
     ],
+    b"6Kj\x92": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+    ],
     b';"y\xb4': [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
+    b"\xab{\xd9\xfd": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "string", "name": "p1", "type": "string"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -485,13 +782,31 @@ abis = {
         {"internalType": "bool", "name": "p2", "type": "bool"},
         {"internalType": "bool", "name": "p3", "type": "bool"},
     ],
+    b"\xfe\xa1\xd5Z": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
     b">\x12\x8c\xa3": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "address", "name": "p1", "type": "address"},
         {"internalType": "string", "name": "p2", "type": "string"},
         {"internalType": "string", "name": "p3", "type": "string"},
     ],
+    b"\x8dw\x86$": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
     b">\x9f\x86j": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"\xc5\xd1\xbb\x8b": [
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "address", "name": "p1", "type": "address"},
         {"internalType": "bool", "name": "p2", "type": "bool"},
@@ -516,6 +831,12 @@ abis = {
         {"internalType": "string", "name": "p2", "type": "string"},
         {"internalType": "address", "name": "p3", "type": "address"},
     ],
+    b"C2\x85\xa2": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
     b"C\x9c{\xef": [
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "string", "name": "p1", "type": "string"},
@@ -528,13 +849,31 @@ abis = {
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "string", "name": "p3", "type": "string"},
     ],
+    b"]\x13e\xc9": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
     b"EMT\xa5": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "bool", "name": "p1", "type": "bool"},
         {"internalType": "address", "name": "p2", "type": "address"},
         {"internalType": "bool", "name": "p3", "type": "bool"},
     ],
+    b"\x91\xfb\x12B": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
     b"E\x7f\xe3\xcf": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"\x8c\x193\xa9": [
         {"internalType": "address", "name": "p0", "type": "address"},
         {"internalType": "string", "name": "p1", "type": "string"},
         {"internalType": "address", "name": "p2", "type": "address"},
@@ -552,6 +891,12 @@ abis = {
         {"internalType": "string", "name": "p2", "type": "string"},
         {"internalType": "uint256", "name": "p3", "type": "uint256"},
     ],
+    b"\xa0\xc4\x14\xe8": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
     b"G\\\\3": [
         {"internalType": "address", "name": "p0", "type": "address"},
         {"internalType": "bool", "name": "p1", "type": "bool"},
@@ -563,7 +908,18 @@ abis = {
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "bool", "name": "p2", "type": "bool"},
     ],
+    b"gW\x0f\xf7": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+    ],
     b"G\x8d\x1cb": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
+    b"\xec$\x84o": [
         {"internalType": "address", "name": "p0", "type": "address"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "address", "name": "p2", "type": "address"},
@@ -576,6 +932,12 @@ abis = {
         {"internalType": "string", "name": "p3", "type": "string"},
     ],
     b"J(\xc0\x17": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
+    b"\x894\r\xab": [
         {"internalType": "address", "name": "p0", "type": "address"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -597,12 +959,29 @@ abis = {
         {"internalType": "address", "name": "p2", "type": "address"},
         {"internalType": "uint256", "name": "p3", "type": "uint256"},
     ],
+    b"`\x93\x86\xe7": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
     b"L\xed\xa7Z": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "string", "name": "p1", "type": "string"},
         {"internalType": "bool", "name": "p2", "type": "bool"},
     ],
+    b"F\xa7\xd0\xce": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+    ],
     b"O\x04\xfd\xc6": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"XIz\xfe": [
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "address", "name": "p2", "type": "address"},
@@ -625,8 +1004,20 @@ abis = {
         {"internalType": "bool", "name": "p2", "type": "bool"},
         {"internalType": "uint256", "name": "p3", "type": "uint256"},
     ],
+    b"\xe7 R\x1c": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
     b"Q\x97>\xc9": [],
     b"Q\xf0\x9f\xf8": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
+    b"\xa0hX3": [
         {"internalType": "bool", "name": "p0", "type": "bool"},
         {"internalType": "address", "name": "p1", "type": "address"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -644,7 +1035,19 @@ abis = {
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "address", "name": "p3", "type": "address"},
     ],
+    b"\x0b\xff\x95\r": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
     b"V\xa5\xd1\xb1": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
+    b"\xca\x93\x9b ": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "address", "name": "p2", "type": "address"},
@@ -655,12 +1058,28 @@ abis = {
         {"internalType": "string", "name": "p1", "type": "string"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
     ],
+    b"\xf3b\xcaY": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+    ],
     b"Yp\xe0\x89": [
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "string", "name": "p2", "type": "string"},
     ],
+    b"\xa3\xf5\xc79": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+    ],
     b"Y\xcf\xcb\xe3": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
+    b"x\xadz\x0c": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -672,12 +1091,29 @@ abis = {
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "string", "name": "p3", "type": "string"},
     ],
+    b"LU\xf24": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
     b"Z\x9b^\xd5": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "address", "name": "p1", "type": "address"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
     ],
+    b"\x88CC\xaa": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+    ],
     b"Z\xb8N\x1f": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
+    b"l\x98\xda\xe2": [
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "string", "name": "p2", "type": "string"},
@@ -689,13 +1125,30 @@ abis = {
         {"internalType": "bool", "name": "p2", "type": "bool"},
         {"internalType": "uint256", "name": "p3", "type": "uint256"},
     ],
+    b"{\x08\xe8\xeb": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
     b"\\C\rG": [
         {"internalType": "address", "name": "p0", "type": "address"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "string", "name": "p2", "type": "string"},
         {"internalType": "address", "name": "p3", "type": "address"},
     ],
+    b"\xdcy&\x04": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
     b"\\\x96\xb31": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+    ],
+    b"\xbe3I\x1b": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "address", "name": "p2", "type": "address"},
@@ -718,13 +1171,31 @@ abis = {
         {"internalType": "address", "name": "p2", "type": "address"},
         {"internalType": "uint256", "name": "p3", "type": "uint256"},
     ],
+    b"(\xdfN\x96": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
     b"]\x1a\x97\x1a": [
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "string", "name": "p1", "type": "string"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "string", "name": "p3", "type": "string"},
     ],
+    b"\x8d\x14,\xdd": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
     b"]\xa2\x97\xeb": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"8\x94\x16=": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "string", "name": "p2", "type": "string"},
@@ -737,6 +1208,12 @@ abis = {
         {"internalType": "string", "name": "p3", "type": "string"},
     ],
     b"^\xa2\xb7\xae": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
+    b"\xea\xc8\x92\x81": [
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "address", "name": "p2", "type": "address"},
@@ -760,12 +1237,29 @@ abis = {
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "bool", "name": "p3", "type": "bool"},
     ],
+    b"\x19\xf6si": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
     b"_{\x9a\xfb": [
         {"internalType": "bool", "name": "p0", "type": "bool"},
         {"internalType": "address", "name": "p1", "type": "address"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
     ],
+    b"\xebpK\xaf": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+    ],
     b"ah\xeda": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
+    b"\x7f\xa5E\x8b": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "string", "name": "p1", "type": "string"},
         {"internalType": "address", "name": "p2", "type": "address"},
@@ -777,7 +1271,19 @@ abis = {
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "bool", "name": "p3", "type": "bool"},
     ],
+    b"\xab\\\xc1\xc4": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
     b"c\x186x": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
+    b"\xdf\xd7\xd8\x0b": [
         {"internalType": "address", "name": "p0", "type": "address"},
         {"internalType": "string", "name": "p1", "type": "string"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -788,7 +1294,18 @@ abis = {
         {"internalType": "address", "name": "p1", "type": "address"},
         {"internalType": "string", "name": "p2", "type": "string"},
     ],
+    b"\xce\x83\x04{": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+    ],
     b"c\xfb\x8b\xc5": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
+    b"\xa3f\xec\x80": [
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "address", "name": "p1", "type": "address"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -798,7 +1315,17 @@ abis = {
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "string", "name": "p1", "type": "string"},
     ],
+    b"\x0f\xa3\xf3E": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+    ],
     b"d\xb5\xbbg": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"]\xbf\xf08": [
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "bool", "name": "p1", "type": "bool"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -822,7 +1349,18 @@ abis = {
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "bool", "name": "p3", "type": "bool"},
     ],
+    b"\xecK\xa8\xa2": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
     b"g\x82\t\xa8": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+    ],
+    b"\xe5J\xe1D": [
         {"internalType": "address", "name": "p0", "type": "address"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "bool", "name": "p2", "type": "bool"},
@@ -832,7 +1370,18 @@ abis = {
         {"internalType": "string", "name": "p1", "type": "string"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
     ],
+    b"\x1c\xda\xf2\x8a": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+    ],
     b"h\xc8\xb8\xbd": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
+    b"\xa43\xfc\xfd": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "bool", "name": "p1", "type": "bool"},
         {"internalType": "string", "name": "p2", "type": "string"},
@@ -844,7 +1393,17 @@ abis = {
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "bool", "name": "p3", "type": "bool"},
     ],
+    b"\x87Zn.": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
     b"i'l\x86": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+    ],
+    b"X\xeb\x86\x0c": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "address", "name": "p1", "type": "address"},
     ],
@@ -854,7 +1413,19 @@ abis = {
         {"internalType": "bool", "name": "p2", "type": "bool"},
         {"internalType": "address", "name": "p3", "type": "address"},
     ],
+    b'S\x06"]': [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
     b"j\x11\x99\xe2": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"A\x80\x01\x1b": [
         {"internalType": "bool", "name": "p0", "type": "bool"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "string", "name": "p2", "type": "string"},
@@ -872,7 +1443,19 @@ abis = {
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "bool", "name": "p3", "type": "bool"},
     ],
+    b" \xbb\xc9\xaf": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
     b"l\xde@\xb8": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
+    b"\xd6\xa2\xd1\xde": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "address", "name": "p2", "type": "address"},
@@ -891,6 +1474,12 @@ abis = {
         {"internalType": "address", "name": "p3", "type": "address"},
     ],
     b"mpE\xc1": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"\xc2H\x83M": [
         {"internalType": "bool", "name": "p0", "type": "bool"},
         {"internalType": "bool", "name": "p1", "type": "bool"},
         {"internalType": "bool", "name": "p2", "type": "bool"},
@@ -925,7 +1514,18 @@ abis = {
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "string", "name": "p2", "type": "string"},
     ],
+    b"}i\x0e\xe6": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+    ],
     b"sn\xfb\xb6": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"\x9a<\xbf\x96": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "address", "name": "p1", "type": "address"},
         {"internalType": "address", "name": "p2", "type": "address"},
@@ -937,7 +1537,19 @@ abis = {
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "string", "name": "p3", "type": "string"},
     ],
+    b"B\xb9\xa2'": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
     b"td\xce#": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"\xbd%\xadY": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "bool", "name": "p1", "type": "bool"},
         {"internalType": "bool", "name": "p2", "type": "bool"},
@@ -957,6 +1569,12 @@ abis = {
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "bool", "name": "p3", "type": "bool"},
     ],
+    b"\xf7<~=": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
     b"y\x88L+": [
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "address", "name": "p1", "type": "address"},
@@ -969,7 +1587,18 @@ abis = {
         {"internalType": "string", "name": "p2", "type": "string"},
         {"internalType": "bool", "name": "p3", "type": "bool"},
     ],
+    b"\xb2.\xaf\x06": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
     b"z\xfa\xc9Y": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+    ],
+    b"\x1f\x90\xf2J": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "string", "name": "p1", "type": "string"},
         {"internalType": "address", "name": "p2", "type": "address"},
@@ -979,7 +1608,18 @@ abis = {
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "address", "name": "p2", "type": "address"},
     ],
+    b"\x97\xec\xa3\x94": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+    ],
     b"{\xe0\xc3\xeb": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"]\xdb%\x92": [
         {"internalType": "bool", "name": "p0", "type": "bool"},
         {"internalType": "string", "name": "p1", "type": "string"},
         {"internalType": "string", "name": "p2", "type": "string"},
@@ -991,7 +1631,19 @@ abis = {
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "uint256", "name": "p3", "type": "uint256"},
     ],
+    b"\x9b\xfer\xbc": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
     b"|F2\xa4": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
+    b"\xbbr5\xe9": [
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "string", "name": "p2", "type": "string"},
@@ -1003,7 +1655,19 @@ abis = {
         {"internalType": "address", "name": "p2", "type": "address"},
         {"internalType": "uint256", "name": "p3", "type": "uint256"},
     ],
+    b"J\x81\xa5j": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
     b"}$I\x1d": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
+    b"\xe9\x9f\x82\xcf": [
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "string", "name": "p2", "type": "string"},
@@ -1015,7 +1679,19 @@ abis = {
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "string", "name": "p3", "type": "string"},
     ],
+    b"Pa\x897": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
     b"\x7f\x9b\xbc\xa2": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"\xd3\xdeU\x93": [
         {"internalType": "bool", "name": "p0", "type": "bool"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "bool", "name": "p2", "type": "bool"},
@@ -1033,7 +1709,19 @@ abis = {
         {"internalType": "string", "name": "p2", "type": "string"},
         {"internalType": "uint256", "name": "p3", "type": "uint256"},
     ],
+    b"\x9e\x12{n": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
     b"\x82\x11*B": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
+    b"\x11\x06\xa8\xf7": [
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "address", "name": "p2", "type": "address"},
@@ -1045,7 +1733,17 @@ abis = {
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "uint256", "name": "p3", "type": "uint256"},
     ],
+    b"\xc0\x048\x07": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
     b"\x83\t\xe8\xa8": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+    ],
+    b'"C\xcf\xa3': [
         {"internalType": "address", "name": "p0", "type": "address"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
     ],
@@ -1064,12 +1762,29 @@ abis = {
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "string", "name": "p3", "type": "string"},
     ],
+    b"\xa5N\xd4\xbd": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
     b"\x85wP!": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "bool", "name": "p1", "type": "bool"},
         {"internalType": "string", "name": "p2", "type": "string"},
     ],
+    b"\x8b\x0e\x14\xfe": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+    ],
     b"\x88\xa8\xc4\x06": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
+    b"~V\xc6\x93": [
         {"internalType": "address", "name": "p0", "type": "address"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "string", "name": "p2", "type": "string"},
@@ -1081,7 +1796,19 @@ abis = {
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "address", "name": "p3", "type": "address"},
     ],
+    b"O@\x05\x8e": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
     b"\x88\xf6\xe4\xb2": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"a\x0b\xa8\xc0": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "address", "name": "p2", "type": "address"},
@@ -1099,6 +1826,12 @@ abis = {
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "bool", "name": "p3", "type": "bool"},
     ],
+    b"<\xc5\xb5\xd3": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
     b"\x8c2\x9b\x1a": [
         {"internalType": "bool", "name": "p0", "type": "bool"},
         {"internalType": "bool", "name": "p1", "type": "bool"},
@@ -1111,7 +1844,19 @@ abis = {
         {"internalType": "bool", "name": "p2", "type": "bool"},
         {"internalType": "uint256", "name": "p3", "type": "uint256"},
     ],
+    b"\xcf\xb5\x87V": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
     b"\x8d\xa6\xde\xf5": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
+    b"\xd6\xc6Rv": [
         {"internalType": "address", "name": "p0", "type": "address"},
         {"internalType": "address", "name": "p1", "type": "address"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -1123,7 +1868,19 @@ abis = {
         {"internalType": "bool", "name": "p2", "type": "bool"},
         {"internalType": "uint256", "name": "p3", "type": "uint256"},
     ],
+    b"\x80u1\xe8": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
     b"\x8ei\xfb]": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
+    b"\xda\x06f\xc8": [
         {"internalType": "bool", "name": "p0", "type": "bool"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -1135,7 +1892,19 @@ abis = {
         {"internalType": "string", "name": "p2", "type": "string"},
         {"internalType": "uint256", "name": "p3", "type": "uint256"},
     ],
+    b"\x9f\xd0\t\xf5": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
     b"\x8e\xf3\xf3\x99": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"n\xb7\x94=": [
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "address", "name": "p1", "type": "address"},
         {"internalType": "address", "name": "p2", "type": "address"},
@@ -1157,7 +1926,19 @@ abis = {
         {"internalType": "address", "name": "p2", "type": "address"},
         {"internalType": "bool", "name": "p3", "type": "bool"},
     ],
+    b"\xf9?\xff7": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
     b"\x90\xfb\x06\xaa": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
+    b"c\xf0\xe2B": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "address", "name": "p1", "type": "address"},
         {"internalType": "bool", "name": "p2", "type": "bool"},
@@ -1169,13 +1950,31 @@ abis = {
         {"internalType": "bool", "name": "p2", "type": "bool"},
         {"internalType": "string", "name": "p3", "type": "string"},
     ],
+    b"\xb6\xd5i\xd4": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
     b"\x91\xa0.*": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "bool", "name": "p1", "type": "bool"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "bool", "name": "p3", "type": "bool"},
     ],
+    b"\xd2\xab\xc4\xfd": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
     b"\x91\xd1\x11.": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"\x8fbK\xe9": [
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "address", "name": "p1", "type": "address"},
         {"internalType": "string", "name": "p2", "type": "string"},
@@ -1192,7 +1991,19 @@ abis = {
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "address", "name": "p3", "type": "address"},
     ],
+    b"q\xd3\x85\r": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
     b"\x94%\rw": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"\xed^\xac\x87": [
         {"internalType": "address", "name": "p0", "type": "address"},
         {"internalType": "address", "name": "p1", "type": "address"},
         {"internalType": "address", "name": "p2", "type": "address"},
@@ -1226,7 +2037,19 @@ abis = {
         {"internalType": "bool", "name": "p2", "type": "bool"},
         {"internalType": "address", "name": "p3", "type": "address"},
     ],
+    b"\xe1\x17tO": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
     b"\x9a\xcd6\x16": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
+    b"Bg\xc7\xf8": [
         {"internalType": "bool", "name": "p0", "type": "bool"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "bool", "name": "p2", "type": "bool"},
@@ -1238,7 +2061,18 @@ abis = {
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "bool", "name": "p3", "type": "bool"},
     ],
+    b"\xc2\xf6\x88\xec": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
     b"\x9bn\xc0B": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+    ],
+    b"z\xd0\x12\x8e": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "address", "name": "p1", "type": "address"},
         {"internalType": "bool", "name": "p2", "type": "bool"},
@@ -1249,12 +2083,29 @@ abis = {
         {"internalType": "address", "name": "p2", "type": "address"},
         {"internalType": "string", "name": "p3", "type": "string"},
     ],
+    b"\xf8\x98W\x7f": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
     b"\x9cO\x99\xfb": [
         {"internalType": "address", "name": "p0", "type": "address"},
         {"internalType": "bool", "name": "p1", "type": "bool"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
     ],
+    b",F\x8d\x15": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+    ],
     b"\x9c\xba\x8f\xff": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
+    b"\xcb\xe5\x8e\xfd": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "address", "name": "p1", "type": "address"},
         {"internalType": "string", "name": "p2", "type": "string"},
@@ -1278,6 +2129,12 @@ abis = {
         {"internalType": "address", "name": "p2", "type": "address"},
         {"internalType": "string", "name": "p3", "type": "string"},
     ],
+    b"2T\xc2\xe8": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
     b"\xa0N/\x87": [
         {"internalType": "address", "name": "p0", "type": "address"},
         {"internalType": "string", "name": "p1", "type": "string"},
@@ -1296,7 +2153,19 @@ abis = {
         {"internalType": "address", "name": "p2", "type": "address"},
         {"internalType": "bool", "name": "p3", "type": "bool"},
     ],
+    b"\xf1\x81\xa1\xe9": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
     b"\xa1\xefL\xbb": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
+    b"\x86\xed\xc1\x0c": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "bool", "name": "p1", "type": "bool"},
         {"internalType": "address", "name": "p2", "type": "address"},
@@ -1307,7 +2176,18 @@ abis = {
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "string", "name": "p2", "type": "string"},
     ],
+    b"\xba\xf9hI": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+    ],
     b"\xa3\x1b\xfd\xcc": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
+    b"#\xe5Ir": [
         {"internalType": "address", "name": "p0", "type": "address"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "bool", "name": "p2", "type": "bool"},
@@ -1319,7 +2199,19 @@ abis = {
         {"internalType": "bool", "name": "p2", "type": "bool"},
         {"internalType": "string", "name": "p3", "type": "string"},
     ],
+    b"\xef\xd9\xcb\xee": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
     b"\xa5\xca\xda\x94": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"\x1b\x0b\x95[": [
         {"internalType": "bool", "name": "p0", "type": "bool"},
         {"internalType": "string", "name": "p1", "type": "string"},
         {"internalType": "address", "name": "p2", "type": "address"},
@@ -1343,7 +2235,19 @@ abis = {
         {"internalType": "address", "name": "p2", "type": "address"},
         {"internalType": "uint256", "name": "p3", "type": "uint256"},
     ],
+    b"\xdcq\x16\xd2": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
     b"\xa7\xa8xS": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"\x08\xeeVf": [
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -1373,7 +2277,19 @@ abis = {
         {"internalType": "bool", "name": "p2", "type": "bool"},
         {"internalType": "bool", "name": "p3", "type": "bool"},
     ],
+    b"\x94\xbe;\xb1": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
     b"\xab\xf7:\x98": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
+    b"v\xcc`d": [
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "bool", "name": "p2", "type": "bool"},
@@ -1385,13 +2301,31 @@ abis = {
         {"internalType": "address", "name": "p2", "type": "address"},
         {"internalType": "string", "name": "p3", "type": "string"},
     ],
+    b"\xa20v\x1e": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
     b"\xae.\xc5\x81": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "string", "name": "p1", "type": "string"},
         {"internalType": "bool", "name": "p2", "type": "bool"},
         {"internalType": "address", "name": "p3", "type": "address"},
     ],
+    b"yo(\xa0": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
     b"\xb0(\xc9\xbd": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"v\xecc^": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "string", "name": "p1", "type": "string"},
         {"internalType": "string", "name": "p2", "type": "string"},
@@ -1412,13 +2346,30 @@ abis = {
         {"internalType": "string", "name": "p1", "type": "string"},
         {"internalType": "string", "name": "p2", "type": "string"},
     ],
+    b"?W\xc2\x95": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+    ],
     b"\xb3\xa6\xb6\xbd": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "string", "name": "p1", "type": "string"},
         {"internalType": "string", "name": "p2", "type": "string"},
         {"internalType": "bool", "name": "p3", "type": "bool"},
     ],
+    b"\x12\x86+\x98": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
     b"\xb4\xc3\x14\xff": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
+    b"e\xad\xf4\x08": [
         {"internalType": "bool", "name": "p0", "type": "bool"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "address", "name": "p2", "type": "address"},
@@ -1434,7 +2385,16 @@ abis = {
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
     ],
+    b"\x97\x10\xa9\xd0": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+    ],
     b"\xb6\x9b\xca\xf6": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+    ],
+    b"\x87\x86\x13^": [
         {"internalType": "address", "name": "p0", "type": "address"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -1445,7 +2405,19 @@ abis = {
         {"internalType": "bool", "name": "p2", "type": "bool"},
         {"internalType": "bool", "name": "p3", "type": "bool"},
     ],
+    b"NlS\x15": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
     b"\xb7\xb9\x14\xca": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
+    b"\xa2\xbc\x0c\x99": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "string", "name": "p1", "type": "string"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -1463,6 +2435,12 @@ abis = {
         {"internalType": "bool", "name": "p2", "type": "bool"},
         {"internalType": "bool", "name": "p3", "type": "bool"},
     ],
+    b"Q\xbc+\xc1": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
     b"\xbc\x0ba\xfe": [
         {"internalType": "address", "name": "p0", "type": "address"},
         {"internalType": "string", "name": "p1", "type": "string"},
@@ -1474,7 +2452,18 @@ abis = {
         {"internalType": "address", "name": "p1", "type": "address"},
         {"internalType": "address", "name": "p2", "type": "address"},
     ],
+    b"}w\xa6\x1b": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+    ],
     b"\xbeU4\x81": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"T\xfd\xf3\xe4": [
         {"internalType": "address", "name": "p0", "type": "address"},
         {"internalType": "address", "name": "p1", "type": "address"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -1486,7 +2475,19 @@ abis = {
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "bool", "name": "p3", "type": "bool"},
     ],
+    b"\xa4\x1d\x81\xde": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
     b"\xbf\x01\xf8\x91": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"\xf5\x12\xcf\x9b": [
         {"internalType": "address", "name": "p0", "type": "address"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "string", "name": "p2", "type": "string"},
@@ -1504,6 +2505,12 @@ abis = {
         {"internalType": "string", "name": "p2", "type": "string"},
         {"internalType": "uint256", "name": "p3", "type": "uint256"},
     ],
+    b'\x0b\x99\xfc"': [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
     b"\xc3q\xc7\xdb": [
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "string", "name": "p1", "type": "string"},
@@ -1511,6 +2518,12 @@ abis = {
         {"internalType": "address", "name": "p3", "type": "address"},
     ],
     b"\xc3\xa8\xa6T": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
+    b"\xe6VX\xca": [
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "string", "name": "p1", "type": "string"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -1525,7 +2538,18 @@ abis = {
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "string", "name": "p2", "type": "string"},
     ],
+    b"\xc89~\xb0": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+    ],
     b"\xc4d> ": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
+    b"\x85\xcd\xc5\xaf": [
         {"internalType": "address", "name": "p0", "type": "address"},
         {"internalType": "bool", "name": "p1", "type": "bool"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -1537,7 +2561,19 @@ abis = {
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "bool", "name": "p3", "type": "bool"},
     ],
+    b"dR\xb9\xcb": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
     b"\xc5\xad\x85\xf9": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
+    b"\x8e\x8eNu": [
         {"internalType": "address", "name": "p0", "type": "address"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "bool", "name": "p2", "type": "bool"},
@@ -1549,7 +2585,19 @@ abis = {
         {"internalType": "string", "name": "p2", "type": "string"},
         {"internalType": "uint256", "name": "p3", "type": "uint256"},
     ],
+    b"\xa0\xc4\xb2%": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
     b"\xc6\xac\xc7\xa8": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"V\x82\x8d\xa4": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "bool", "name": "p1", "type": "bool"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -1565,12 +2613,27 @@ abis = {
         {"internalType": "bool", "name": "p1", "type": "bool"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
     ],
+    b")\x1b\xb9\xd0": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+    ],
     b"\xcaG\xc4\xeb": [
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
     ],
+    b"\x96\x9c\xdd\x03": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+    ],
     b"\xcaw3\xb1": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+    ],
+    b"\xf1\x02\xee\x05": [
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "bool", "name": "p2", "type": "bool"},
@@ -1587,7 +2650,19 @@ abis = {
         {"internalType": "string", "name": "p2", "type": "string"},
         {"internalType": "bool", "name": "p3", "type": "bool"},
     ],
+    b'"\xa4y\xa6': [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
     b"\xcc\xf7\x90\xa1": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
+    b"\r\x8c\xe6\x1e": [
         {"internalType": "address", "name": "p0", "type": "address"},
         {"internalType": "bool", "name": "p1", "type": "bool"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -1599,7 +2674,19 @@ abis = {
         {"internalType": "bool", "name": "p2", "type": "bool"},
         {"internalType": "bool", "name": "p3", "type": "bool"},
     ],
+    b"\x9e\x01\xf7A": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
     b"\xcf\x00\x98\x80": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"\xa4\xb4\x8a\x7f": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "string", "name": "p1", "type": "string"},
         {"internalType": "bool", "name": "p2", "type": "bool"},
@@ -1616,6 +2703,12 @@ abis = {
         {"internalType": "string", "name": "p2", "type": "string"},
         {"internalType": "bool", "name": "p3", "type": "bool"},
     ],
+    b"\xa4\x02O\x11": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
     b"\xcf9D\x85": [
         {"internalType": "address", "name": "p0", "type": "address"},
         {"internalType": "bool", "name": "p1", "type": "bool"},
@@ -1623,6 +2716,11 @@ abis = {
         {"internalType": "address", "name": "p3", "type": "address"},
     ],
     b"\xd1\xedz<": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+    ],
+    b"\xe7\x82\nt": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -1638,7 +2736,19 @@ abis = {
         {"internalType": "bool", "name": "p2", "type": "bool"},
         {"internalType": "string", "name": "p3", "type": "string"},
     ],
+    b"\x8dH\x9c\xa0": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
     b"\xd5\x83\xc6\x02": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
+    b"\xcc\x98\x8a\xa0": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "string", "name": "p1", "type": "string"},
         {"internalType": "string", "name": "p2", "type": "string"},
@@ -1650,7 +2760,19 @@ abis = {
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "bool", "name": "p3", "type": "bool"},
     ],
+    b"\xee\x8d\x86r": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
     b"\xd6\xae\xfa\xd2": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"\x86\x81\x8az": [
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "string", "name": "p1", "type": "string"},
         {"internalType": "bool", "name": "p2", "type": "bool"},
@@ -1683,13 +2805,31 @@ abis = {
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "string", "name": "p3", "type": "string"},
     ],
+    b">\xd3\xbd(": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
     b"\xdd\xdb\x95a": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "bool", "name": "p1", "type": "bool"},
         {"internalType": "bool", "name": "p2", "type": "bool"},
         {"internalType": "string", "name": "p3", "type": "string"},
     ],
+    b"1\x8a\xe5\x9b": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
     b"\xde\x03\xe7t": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
+    b"\xe8\xdd\xbcV": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "bool", "name": "p1", "type": "bool"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -1724,12 +2864,24 @@ abis = {
         {"internalType": "bool", "name": "p2", "type": "bool"},
         {"internalType": "address", "name": "p3", "type": "address"},
     ],
+    b"\xe5T\x9d\x91": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
     b"\xe0\xe9\xadO": [
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "address", "name": "p1", "type": "address"},
         {"internalType": "string", "name": "p2", "type": "string"},
     ],
     b"\xe2\x1d\xe2x": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
+    b"\xbe\xd7(\xbf": [
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -1752,7 +2904,19 @@ abis = {
         {"internalType": "bool", "name": "p2", "type": "bool"},
         {"internalType": "bool", "name": "p3", "type": "bool"},
     ],
+    b"~'A\r": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
     b"\xe3\xa9\xca/": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"\x17\x8bF\x85": [
         {"internalType": "bool", "name": "p0", "type": "bool"},
         {"internalType": "bool", "name": "p1", "type": "bool"},
         {"internalType": "string", "name": "p2", "type": "string"},
@@ -1764,7 +2928,19 @@ abis = {
         {"internalType": "bool", "name": "p2", "type": "bool"},
         {"internalType": "uint256", "name": "p3", "type": "uint256"},
     ],
+    b"U\x0en\xf5": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
     b"\xe5\xe7\x0b+": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
+    b"\x91\xd2\xf8\x13": [
         {"internalType": "bool", "name": "p0", "type": "bool"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "string", "name": "p2", "type": "string"},
@@ -1776,7 +2952,18 @@ abis = {
         {"internalType": "address", "name": "p2", "type": "address"},
         {"internalType": "uint256", "name": "p3", "type": "uint256"},
     ],
+    b"\x98\xe7\xf3\xf3": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "address", "name": "p2", "type": "address"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
     b"\xe8\xde\xfb\xa9": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+    ],
+    b"\x1b\xad\xc9\xeb": [
         {"internalType": "bool", "name": "p0", "type": "bool"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "bool", "name": "p2", "type": "bool"},
@@ -1793,12 +2980,24 @@ abis = {
         {"internalType": "bool", "name": "p2", "type": "bool"},
         {"internalType": "uint256", "name": "p3", "type": "uint256"},
     ],
+    b"ld|\x8c": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
     b"\xeb\x83\x0c\x92": [
         {"internalType": "address", "name": "p0", "type": "address"},
         {"internalType": "bool", "name": "p1", "type": "bool"},
         {"internalType": "bool", "name": "p2", "type": "bool"},
     ],
     b"\xeb\x92\x8d\x7f": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
+    b"4n\xb8\xc7": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "bool", "name": "p1", "type": "bool"},
         {"internalType": "string", "name": "p2", "type": "string"},
@@ -1816,13 +3015,31 @@ abis = {
         {"internalType": "string", "name": "p2", "type": "string"},
         {"internalType": "uint256", "name": "p3", "type": "uint256"},
     ],
+    b"\x04(\x93\x00": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
     b"\xefR\x90\x18": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "bool", "name": "p1", "type": "bool"},
         {"internalType": "string", "name": "p2", "type": "string"},
         {"internalType": "address", "name": "p3", "type": "address"},
     ],
+    b"In+\xb4": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "bool", "name": "p1", "type": "bool"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
     b"\xefr\xc5\x13": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "bool", "name": "p2", "type": "bool"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
+    b"\xb610\x94": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "address", "name": "p1", "type": "address"},
         {"internalType": "bool", "name": "p2", "type": "bool"},
@@ -1849,6 +3066,12 @@ abis = {
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "uint256", "name": "p3", "type": "uint256"},
     ],
+    b"\xd5\xcf\x17\xd0": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "string", "name": "p1", "type": "string"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
     b"\xf4\x88\x0e\xa4": [
         {"internalType": "bool", "name": "p0", "type": "bool"},
         {"internalType": "bool", "name": "p1", "type": "bool"},
@@ -1861,7 +3084,17 @@ abis = {
         {"internalType": "string", "name": "p2", "type": "string"},
         {"internalType": "string", "name": "p3", "type": "string"},
     ],
+    b"\xd3*eH": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
     b"\xf6fqZ": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+    ],
+    b"l\x0fi\x80": [
         {"internalType": "uint256", "name": "p0", "type": "uint256"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
     ],
@@ -1878,7 +3111,14 @@ abis = {
         {"internalType": "string", "name": "p3", "type": "string"},
     ],
     b"\xf8,P\xf1": [{"internalType": "uint256", "name": "p0", "type": "uint256"}],
+    b"\xf5\xb1\xbb\xa9": [{"internalType": "uint256", "name": "p0", "type": "uint256"}],
     b"\xf8\xf5\x1b\x1e": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "uint256", "name": "p3", "type": "uint256"},
+    ],
+    b"\xda\xa3\x94\xbd": [
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "address", "name": "p1", "type": "address"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -1896,12 +3136,24 @@ abis = {
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "address", "name": "p3", "type": "address"},
     ],
+    b"\xe0\x85?i": [
+        {"internalType": "uint256", "name": "p0", "type": "uint256"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
     b'\xfbw"e': [
         {"internalType": "address", "name": "p0", "type": "address"},
         {"internalType": "string", "name": "p1", "type": "string"},
         {"internalType": "string", "name": "p2", "type": "string"},
     ],
     b"\xfcHE\xf0": [
+        {"internalType": "string", "name": "p0", "type": "string"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "bool", "name": "p3", "type": "bool"},
+    ],
+    b"Z\xc1\xc1<": [
         {"internalType": "string", "name": "p0", "type": "string"},
         {"internalType": "address", "name": "p1", "type": "address"},
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
@@ -1918,10 +3170,57 @@ abis = {
         {"internalType": "uint256", "name": "p2", "type": "uint256"},
         {"internalType": "string", "name": "p3", "type": "string"},
     ],
+    b"\x9d\xd1.\xad": [
+        {"internalType": "address", "name": "p0", "type": "address"},
+        {"internalType": "address", "name": "p1", "type": "address"},
+        {"internalType": "uint256", "name": "p2", "type": "uint256"},
+        {"internalType": "string", "name": "p3", "type": "string"},
+    ],
     b"\xfe\xdd\x1f\xff": [
         {"internalType": "bool", "name": "p0", "type": "bool"},
         {"internalType": "uint256", "name": "p1", "type": "uint256"},
         {"internalType": "string", "name": "p2", "type": "string"},
         {"internalType": "address", "name": "p3", "type": "address"},
     ],
+    b"\xa5\xc7\r)": [
+        {"internalType": "bool", "name": "p0", "type": "bool"},
+        {"internalType": "uint256", "name": "p1", "type": "uint256"},
+        {"internalType": "string", "name": "p2", "type": "string"},
+        {"internalType": "address", "name": "p3", "type": "address"},
+    ],
+    b"-[l\xb9": [{"internalType": "int256", "name": "p0", "type": "int256"}],
+    b"N\x0c\x1d\x1d": [{"internalType": "int256", "name": "p0", "type": "int256"}],
+    b"\x0b\xe7\x7fV": [{"internalType": "bytes", "name": "p0", "type": "bytes"}],
+    b"n\x18\xa1(": [{"internalType": "bytes1", "name": "p0", "type": "bytes1"}],
+    b'\xe9\xb6"\x96': [{"internalType": "bytes2", "name": "p0", "type": "bytes2"}],
+    b"-\x83I&": [{"internalType": "bytes3", "name": "p0", "type": "bytes3"}],
+    b"\xe0_H\xd1": [{"internalType": "bytes4", "name": "p0", "type": "bytes4"}],
+    b"\xa6\x84\x80\x8d": [{"internalType": "bytes5", "name": "p0", "type": "bytes5"}],
+    b"\xae\x84\xa5\x91": [{"internalType": "bytes6", "name": "p0", "type": "bytes6"}],
+    b"N\xd5~(": [{"internalType": "bytes7", "name": "p0", "type": "bytes7"}],
+    b"O\x84%.": [{"internalType": "bytes8", "name": "p0", "type": "bytes8"}],
+    b"\x90\xbd\x8c\xd0": [{"internalType": "bytes9", "name": "p0", "type": "bytes9"}],
+    b"\x01=\x17\x8b": [{"internalType": "bytes10", "name": "p0", "type": "bytes10"}],
+    b"\x04\x00J.": [{"internalType": "bytes11", "name": "p0", "type": "bytes11"}],
+    b"\x86\xa0j\xbd": [{"internalType": "bytes12", "name": "p0", "type": "bytes12"}],
+    b"\x94R\x9e4": [{"internalType": "bytes13", "name": "p0", "type": "bytes13"}],
+    b"\x92f\xf0\x7f": [{"internalType": "bytes14", "name": "p0", "type": "bytes14"}],
+    b"\xda\x95t\xe0": [{"internalType": "bytes15", "name": "p0", "type": "bytes15"}],
+    b"f\\a\x04": [{"internalType": "bytes16", "name": "p0", "type": "bytes16"}],
+    b"3\x9fg:": [{"internalType": "bytes17", "name": "p0", "type": "bytes17"}],
+    b"\xc4\xd2=\x9a": [{"internalType": "bytes18", "name": "p0", "type": "bytes18"}],
+    b"^kZ3": [{"internalType": "bytes19", "name": "p0", "type": "bytes19"}],
+    b"Q\x88\xe3\xe9": [{"internalType": "bytes20", "name": "p0", "type": "bytes20"}],
+    b"\xe9\xda5`": [{"internalType": "bytes21", "name": "p0", "type": "bytes21"}],
+    b"\xd5\xfa\xe8\x9c": [{"internalType": "bytes22", "name": "p0", "type": "bytes22"}],
+    b"\xab\xa1\xcf\r": [{"internalType": "bytes23", "name": "p0", "type": "bytes23"}],
+    b"\xf1\xb3[4": [{"internalType": "bytes24", "name": "p0", "type": "bytes24"}],
+    b"\x0b\x84\xbcX": [{"internalType": "bytes25", "name": "p0", "type": "bytes25"}],
+    b"\xf8\xb1I\xf1": [{"internalType": "bytes26", "name": "p0", "type": "bytes26"}],
+    b":7W\xdd": [{"internalType": "bytes27", "name": "p0", "type": "bytes27"}],
+    b"\xc8*\xea\xee": [{"internalType": "bytes28", "name": "p0", "type": "bytes28"}],
+    b"Ki\xc3\xd5": [{"internalType": "bytes29", "name": "p0", "type": "bytes29"}],
+    b"\xee\x12\xc4\xed": [{"internalType": "bytes30", "name": "p0", "type": "bytes30"}],
+    b"\xc2\x85M\x92": [{"internalType": "bytes31", "name": "p0", "type": "bytes31"}],
+    b"'\xb7\xcf\x85": [{"internalType": "bytes32", "name": "p0", "type": "bytes32"}],
 }
