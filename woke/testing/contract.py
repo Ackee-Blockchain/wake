@@ -300,7 +300,7 @@ class ChainInterface:
                 return Contract(value, self)
             elif issubclass(expected_type, Account):
                 return Account(value, self)
-            elif isinstance(expected_type, Address):
+            elif issubclass(expected_type, Address):
                 return expected_type(value)
             elif issubclass(expected_type, IntEnum):
                 return expected_type(value)
