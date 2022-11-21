@@ -166,6 +166,11 @@ class JsonRpcCommunicator:
         text = await self._send_request("eth_estimateGas", params)
         return int(self._process_response(text), 16)
 
+    async def eth_gas_price(self) -> int:
+        """Returns the current price per gas in wei."""
+        text = await self._send_request("eth_gasPrice")
+        return int(self._process_response(text), 16)
+
     async def eth_get_balance(
         self, address: str, block: Union[int, str] = BlockEnum.LATEST
     ) -> int:

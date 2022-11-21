@@ -154,6 +154,7 @@ class ChainInterface:
     __accounts: List[Account]
     __default_account: Optional[Account]
     __block_gas_limit: int
+    __gas_price: int
     __chain_id: int
     __nonces: DefaultDict[Address, int]
     __snapshots: Dict[str, Dict]
@@ -199,6 +200,7 @@ class ChainInterface:
             assert "gasLimit" in block_info
             self.__block_gas_limit = int(block_info["gasLimit"], 16)
             self.__chain_id = self.__dev_chain.get_chain_id()
+            self.__gas_price = self.__dev_chain.get_gas_price()
             self.__nonces = defaultdict(lambda: 0)
             self.__snapshots = {}
             self.__deployed_libraries = defaultdict(list)
@@ -236,6 +238,14 @@ class ChainInterface:
     def block_gas_limit(self, value: int) -> None:
         self.__dev_chain.set_block_gas_limit(value)
         self.__block_gas_limit = value
+
+    @property
+    def gas_price(self) -> int:
+        return self.__gas_price
+
+    @gas_price.setter
+    def gas_price(self, value: int) -> None:
+        self.__gas_price = value
 
     @property
     def dev_chain(self):
@@ -382,9 +392,8 @@ class ChainInterface:
                 "from": str(sender),
                 "value": params["value"] if "value" in params else 0,
                 "data": data,
+                "gas_price": self.__gas_price,
             }
-            if "gas_price" in params:
-                estimate_params["gas_price"] = params["gas_price"]
             if "to" in params:
                 estimate_params["to"] = params["to"]
             gas = self.__dev_chain.estimate_gas(estimate_params)
@@ -396,7 +405,7 @@ class ChainInterface:
             "gas": gas,
             "value": params["value"] if "value" in params else 0,
             "data": data,
-            # "gas_price": 0,
+            "gas_price": self.__gas_price,
             # "max_priority_fee_per_gas": 0,
             # "max_fee_per_gas": 0,
             # "access_list": [],
