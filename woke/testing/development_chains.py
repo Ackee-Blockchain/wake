@@ -31,6 +31,9 @@ class DevChainABC(ABC):
     def get_chain_id(self) -> int:
         return self._loop.run_until_complete(self._communicator.eth_chain_id())
 
+    def get_gas_price(self) -> int:
+        return self._loop.run_until_complete(self._communicator.eth_gas_price())
+
     def get_transaction_count(self, address: str) -> int:
         return self._loop.run_until_complete(
             self._communicator.eth_get_transaction_count(address)
