@@ -25,7 +25,7 @@ from typing import (
 import aiohttp
 import eth_abi
 import eth_utils
-from typing_extensions import Literal
+from typing_extensions import Literal, get_args, get_origin
 
 from woke.testing.abi_to_type import RequestType
 from woke.testing.development_chains import (
@@ -293,6 +293,11 @@ class ChainInterface:
     def _convert_from_web3_type(self, value: Any, expected_type: Type) -> Any:
         if isinstance(expected_type, type(None)):
             return None
+        elif get_origin(expected_type) is list:
+            return [
+                self._convert_from_web3_type(v, get_args(expected_type)[0])
+                for v in value
+            ]
         elif dataclasses.is_dataclass(expected_type):
             assert isinstance(value, tuple)
             resolved_types = get_type_hints(expected_type)
