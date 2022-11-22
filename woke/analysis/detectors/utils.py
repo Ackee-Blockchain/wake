@@ -241,6 +241,8 @@ def _check_all_return_params_set(
     out: List[Dict[Tuple[Optional[VariableDeclaration]], Union[ExpressionAbc, YulAbc]]],
     visited: Set[CfgBlock],
 ) -> bool:
+    if start_block in visited:
+        return False
     visited.add(start_block)
     if len(solved_declarations) == len(params):
         out.append(solved_params)
