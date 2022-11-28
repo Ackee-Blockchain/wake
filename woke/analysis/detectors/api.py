@@ -79,6 +79,7 @@ from woke.ast.ir.type_name.function_type_name import FunctionTypeName
 from woke.ast.ir.type_name.mapping import Mapping
 from woke.ast.ir.type_name.user_defined_type_name import UserDefinedTypeName
 from woke.config import WokeConfig
+from woke.utils.file_utils import is_relative_to
 
 logger = logging.getLogger(__name__)
 
@@ -443,6 +444,12 @@ def _get_enabled_detectors(config: WokeConfig) -> List[Detector]:
 def detect(
     config: WokeConfig, source_units: Dict[Path, SourceUnit]
 ) -> List[DetectionResult]:
+    def _detection_ignored(detection: DetectorResult) -> bool:
+        return any(
+            is_relative_to(detection.ir_node.file, p)
+            for p in config.compiler.solc.ignore_paths
+        ) and all(_detection_ignored(d) for d in detection.related_info)
+
     results: DefaultDict[str, DefaultDict[str, List[DetectionResult]]] = defaultdict(
         lambda: defaultdict(list)
     )
@@ -464,13 +471,16 @@ def detect(
 
     for d, detector_instance in zip(enabled_detectors, enabled_detector_instances):
         for result in detector_instance.report():
-            results[d.string_id][path_to_source_unit_name[result.ir_node.file]].append(
-                DetectionResult(
-                    result=result,
-                    code=d.code,
-                    string_id=d.string_id,
+            if not _detection_ignored(result):
+                results[d.string_id][
+                    path_to_source_unit_name[result.ir_node.file]
+                ].append(
+                    DetectionResult(
+                        result=result,
+                        code=d.code,
+                        string_id=d.string_id,
+                    )
                 )
-            )
 
     ret = []
     sorted_detectors = sorted(results.keys())
