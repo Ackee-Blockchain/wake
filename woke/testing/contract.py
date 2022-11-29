@@ -65,10 +65,17 @@ class Wei(int):
 
 
 class Address:
-    def __init__(self, address: str) -> None:
-        self._address = eth_utils.to_checksum_address(
-            address
-        )  # pyright: reportPrivateImportUsage=false
+    ZERO: Address
+
+    def __init__(self, address: Union[str, int]) -> None:
+        if isinstance(address, int):
+            self._address = eth_utils.to_checksum_address(
+                format(address, "#042x")
+            )  # pyright: reportPrivateImportUsage=false
+        else:
+            self._address = eth_utils.to_checksum_address(
+                address
+            )  # pyright: reportPrivateImportUsage=false
 
     def __str__(self) -> str:
         return self._address
@@ -98,7 +105,7 @@ class Account:
     _chain: ChainInterface
 
     def __init__(
-        self, address: Union[Address, str], chain: Optional[ChainInterface] = None
+        self, address: Union[Address, str, int], chain: Optional[ChainInterface] = None
     ) -> None:
         if isinstance(address, Address):
             self._address = address
