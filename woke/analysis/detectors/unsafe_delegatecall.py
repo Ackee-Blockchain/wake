@@ -68,7 +68,7 @@ def check_delegatecall_in_function(
             )
         )
 
-    for ref in function_definition.references:
+    for ref in function_definition.get_all_references(False):
         if isinstance(ref, IdentifierPathPart):
             top_statement = ref.underlying_node
         elif isinstance(ref, ExternalReference):

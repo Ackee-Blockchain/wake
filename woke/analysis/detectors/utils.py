@@ -1,6 +1,6 @@
 import logging
 from collections import deque
-from typing import Optional, Set, Tuple, Union
+from typing import Deque, Optional, Set, Tuple, Union
 
 import woke.ast.types as types
 from woke.ast.enums import FunctionCallKind, GlobalSymbolsEnum
@@ -38,6 +38,32 @@ def pair_function_call_arguments(
         raise ValueError(
             f"{definition.name} has {len(definition.parameters.parameters)} parameters but called with {len(call.arguments)} arguments"
         )
+
+
+def get_all_base_and_child_functions(
+    func: Union[FunctionDefinition, VariableDeclaration]
+) -> Set[Union[FunctionDefinition, VariableDeclaration]]:
+    ret = {func}
+    queue: Deque[Union[FunctionDefinition, VariableDeclaration]] = deque([func])
+
+    while len(queue) > 0:
+        func = queue.popleft()
+
+        if isinstance(func, VariableDeclaration):
+            for base in func.base_functions:
+                if base not in ret:
+                    ret.add(base)
+                    queue.append(base)
+        elif isinstance(func, FunctionDefinition):
+            for base in func.base_functions:
+                if base not in ret:
+                    ret.add(base)
+                    queue.append(base)
+            for child in func.child_functions:
+                if child not in ret:
+                    ret.add(child)
+                    queue.append(child)
+    return ret
 
 
 def expression_is_global_symbol(

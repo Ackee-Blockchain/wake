@@ -13,7 +13,10 @@ from woke.analysis.detectors.ownable import (
     statement_is_publicly_executable,
     variable_is_owner,
 )
-from woke.analysis.detectors.utils import pair_function_call_arguments
+from woke.analysis.detectors.utils import (
+    get_all_base_and_child_functions,
+    pair_function_call_arguments,
+)
 from woke.ast.enums import (
     ContractKind,
     FunctionCallKind,
@@ -263,7 +266,7 @@ def check_reentrancy_in_function(
             )
         )
 
-    for ref in function_definition.references:
+    for ref in function_definition.get_all_references(False):
         if isinstance(ref, IdentifierPathPart):
             top_statement = ref.underlying_node
         elif isinstance(ref, ExternalReference):
@@ -275,7 +278,8 @@ def check_reentrancy_in_function(
             if (
                 func_call is None
                 and isinstance(top_statement, FunctionCall)
-                and top_statement.function_called == function_definition
+                and top_statement.function_called
+                in get_all_base_and_child_functions(function_definition)
             ):
                 func_call = top_statement
             if isinstance(top_statement, StatementAbc):

@@ -343,7 +343,7 @@ def _cfg_block_or_statement_is_publicly_reachable(
         if decl.visibility in {Visibility.PUBLIC, Visibility.EXTERNAL}:
             return True
 
-        for ref in decl.references:
+        for ref in decl.get_all_references(False):
             if isinstance(ref, IdentifierPathPart):
                 calling_statement = ref.underlying_node
             elif isinstance(ref, ExternalReference):
