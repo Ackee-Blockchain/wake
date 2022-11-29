@@ -106,6 +106,7 @@ def run_detect(ctx: click.Context, paths: Tuple[str], svg: bool) -> None:
                 cu,
                 interval_trees[path],
                 reference_resolver,
+                None,
             )
             source_units[path] = SourceUnit(init, ast)
 
