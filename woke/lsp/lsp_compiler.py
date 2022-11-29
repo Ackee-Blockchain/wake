@@ -27,6 +27,7 @@ from typing import (
 from woke.compile.exceptions import CompilationError
 
 from ..analysis.detectors import detect
+from ..core.solidity_version import SolidityVersionRange, SolidityVersionRanges
 from ..utils.file_utils import is_relative_to
 
 if TYPE_CHECKING:
@@ -464,6 +465,41 @@ class LspCompiler:
         build_settings = self.__compiler.create_build_settings(
             [SolcOutputSelectionEnum.AST]
         )
+
+        # optimization - merge compilation units that can be compiled together
+        if all(len(cu.versions) for cu in compilation_units):
+            compilation_units = sorted(
+                compilation_units, key=lambda cu: cu.versions.version_ranges[0].lower
+            )
+
+            merged_compilation_units: List[CompilationUnit] = []
+            source_unit_names: Set = set()
+            versions = SolidityVersionRanges(
+                [SolidityVersionRange(None, None, None, None)]
+            )
+
+            for cu in compilation_units:
+                if versions & cu.versions:
+                    source_unit_names |= cu.source_unit_names
+                    versions &= cu.versions
+                else:
+                    merged_compilation_units.append(
+                        CompilationUnit(
+                            graph.subgraph(source_unit_names).copy(),
+                            versions,
+                        )
+                    )
+                    source_unit_names = set(cu.source_unit_names)
+                    versions = cu.versions
+
+            merged_compilation_units.append(
+                CompilationUnit(
+                    graph.subgraph(source_unit_names).copy(),
+                    versions,
+                )
+            )
+
+            compilation_units = merged_compilation_units
 
         target_versions = []
         skipped_compilation_units = []
