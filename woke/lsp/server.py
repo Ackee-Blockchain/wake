@@ -631,18 +631,31 @@ class LspServer:
                 )
                 run = False
             except ValidationError as e:
+                to_be_removed = []
                 for error in e.errors():
-                    invalid_options.add(error["loc"])
                     invalid_option = raw_config
                     for segment in error["loc"][:-1]:
                         invalid_option = invalid_option[segment]
 
                     if isinstance(invalid_option, list):
-                        invalid_option.remove(error["loc"][-1])
+                        val = invalid_option[error["loc"][-1]]  # type: ignore
+                        invalid_options.add(error["loc"][:-1] + (val,))
+                        to_be_removed.append((error["loc"][:-1], val))
                     elif isinstance(invalid_option, dict):
-                        del invalid_option[error["loc"][-1]]
+                        invalid_options.add(error["loc"])
+                        to_be_removed.append((error["loc"][:-1], error["loc"][-1]))
                     else:
                         raise NotImplementedError()
+
+                for p, val in to_be_removed:
+                    path = raw_config
+                    for segment in p:
+                        path = path[segment]
+
+                    if isinstance(path, list):
+                        path.remove(val)
+                    else:
+                        del path[val]
         if len(invalid_options) > 0:
             message = (
                 "Failed to parse the following config options, using defaults:\n"

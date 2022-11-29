@@ -11,7 +11,13 @@ import tomli
 from woke.utils import change_cwd
 
 from ..core.solidity_version import SolidityVersion
-from .data_model import CompilerConfig, DetectorsConfig, GeneratorConfig, LspConfig, TopLevelConfig
+from .data_model import (
+    CompilerConfig,
+    DetectorsConfig,
+    GeneratorConfig,
+    LspConfig,
+    TopLevelConfig,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -198,7 +204,10 @@ class WokeConfig:
             if isinstance(conf, dict):
                 conf.pop(deleted_option[-1], None)  # type: ignore
             elif isinstance(conf, list):
-                conf.remove(deleted_option[-1])
+                try:
+                    conf.remove(deleted_option[-1])
+                except ValueError:
+                    pass
 
         self.__config = TopLevelConfig.parse_obj(self.__config_raw)
         modified_keys = {}
