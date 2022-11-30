@@ -46,6 +46,7 @@ from woke.ast.types import (
     TypeAbc,
     UFixed,
     UInt,
+    UserDefinedValueType,
 )
 from woke.utils.string import StringReader
 
@@ -126,6 +127,7 @@ class TypeNameAbc(SolidityAbc, ABC):
         Struct,
         Enum,
         Contract,
+        UserDefinedValueType,
     ]:
         """
         Returns:
@@ -159,6 +161,7 @@ class TypeNameAbc(SolidityAbc, ABC):
                 Struct,
                 Enum,
                 Contract,
+                UserDefinedValueType,
             ),
         )
         return ret
