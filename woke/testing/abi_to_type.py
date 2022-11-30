@@ -76,7 +76,7 @@ class TypeGenerator:
     __name_sanitizer: NameSanitizer
     __current_source_unit: str
     __pytypes_dir: Path
-    __sol_to_py_lookup: Dict[str, str]
+    __sol_to_py_lookup: Dict[str, Tuple[str, str]]
     # set of function names which should be overloaded
     __func_to_overload: Set[str]
     __errors_index: Dict[bytes, Any]
@@ -117,29 +117,33 @@ class TypeGenerator:
 
     # TODO do some prettier init :)
     def __init_sol_to_py_types(self):
-        self.__sol_to_py_lookup[types.Address.__name__] = "Address"
-        self.__sol_to_py_lookup[types.String.__name__] = "str"
-        self.__sol_to_py_lookup[types.Array.__name__] = "arr"
-        self.__sol_to_py_lookup[types.Struct.__name__] = "struct"
-        self.__sol_to_py_lookup[types.Bool.__name__] = "bool"
-        self.__sol_to_py_lookup[types.Int.__name__] = "int"
-        # self.__sol_to_py_lookup[types.FixedBytes.__name__] = "fixed_bytes"
-        self.__sol_to_py_lookup[types.Bytes.__name__] = "Union[bytearray, bytes]"
-        self.__sol_to_py_lookup[types.Contract.__name__] = "contract"
-        self.__sol_to_py_lookup[types.Mapping.__name__] = "mapping"
-        self.__sol_to_py_lookup[types.UserDefinedValueType.__name__] = "user_defined"
-        self.__sol_to_py_lookup[types.Enum.__name__] = "enum"
-        self.__sol_to_py_lookup[types.Function.__name__] = "function"
+        self.__sol_to_py_lookup[types.Address.__name__] = (
+            "Union[Account, Address]",
+            "Account",
+        )
+        self.__sol_to_py_lookup[types.String.__name__] = ("str", "str")
+        self.__sol_to_py_lookup[types.Bool.__name__] = ("bool", "bool")
+        self.__sol_to_py_lookup[types.Bytes.__name__] = (
+            "Union[bytearray, bytes]",
+            "bytearray",
+        )
+        self.__sol_to_py_lookup[types.Function.__name__] = ("Callable", "TODO")
         i: int = 8
         while i <= 256:
-            # print("bytes" + str(i) + " = NewType(\"uint" + str(i) + "\", int)")
-            self.__sol_to_py_lookup[types.UInt.__name__ + str(i)] = "uint" + str(i)
+            self.__sol_to_py_lookup[types.UInt.__name__ + str(i)] = (
+                f"uint{i}",
+                f"uint{i}",
+            )
+            self.__sol_to_py_lookup[types.Int.__name__ + str(i)] = (
+                f"int{i}",
+                f"int{i}",
+            )
             i += 8
         i = 1
         while i <= 32:
-            # print("bytes" + str(i) + " = NewType(\"bytes" + str(i) + "\", bytearray)")
-            self.__sol_to_py_lookup[types.FixedBytes.__name__ + str(i)] = "bytes" + str(
-                i
+            self.__sol_to_py_lookup[types.FixedBytes.__name__ + str(i)] = (
+                f"bytes{i}",
+                f"bytes{i}",
             )
             i += 1
 
@@ -373,7 +377,7 @@ class TypeGenerator:
                     indent + 1,
                     self.get_name(member.name)
                     + ": "
-                    + self.parse_type_and_import(member.type),
+                    + self.parse_type_and_import(member.type, True),
                     1,
                 )
             self.add_str_to_types(0, "", 2)
@@ -395,7 +399,12 @@ class TypeGenerator:
 
     # parses the expr to string
     # optionaly generates an import
-    def parse_type_and_import(self, expr: types.TypeAbc) -> str:
+    def parse_type_and_import(self, expr: types.TypeAbc, return_types: bool) -> str:
+        if return_types:
+            types_index = 1
+        else:
+            types_index = 0
+
         if isinstance(expr, types.Struct):
             parent = expr.ir_node.parent
             if isinstance(parent, ContractDefinition):
@@ -417,25 +426,30 @@ class TypeGenerator:
                 self.__imports.generate_enum_import(expr)
                 return self.get_name(expr.name)
         elif isinstance(expr, types.Array):
-            return f"List[{self.parse_type_and_import(expr.base_type)}]"
+            return f"List[{self.parse_type_and_import(expr.base_type, return_types)}]"
         elif isinstance(expr, types.UInt):
             self.__imports.add_primitive_type(
-                self.__sol_to_py_lookup["UInt" + str(expr.bits_count)]
+                self.__sol_to_py_lookup[f"UInt{expr.bits_count}"][types_index]
             )
-            return self.__sol_to_py_lookup["UInt" + str(expr.bits_count)]
+            return self.__sol_to_py_lookup[f"UInt{expr.bits_count}"][types_index]
+        elif isinstance(expr, types.Int):
+            self.__imports.add_primitive_type(
+                self.__sol_to_py_lookup[f"Int{expr.bits_count}"][types_index]
+            )
+            return self.__sol_to_py_lookup[f"Int{expr.bits_count}"][types_index]
         elif isinstance(expr, types.FixedBytes):
             self.__imports.add_primitive_type(
-                self.__sol_to_py_lookup["FixedBytes" + str(expr.bytes_count)]
+                self.__sol_to_py_lookup[f"FixedBytes{expr.bytes_count}"][types_index]
             )
-            return self.__sol_to_py_lookup["FixedBytes" + str(expr.bytes_count)]
+            return self.__sol_to_py_lookup[f"FixedBytes{expr.bytes_count}"][types_index]
         elif isinstance(expr, types.Contract):
             self.__imports.generate_contract_import_expr(expr)
             return self.get_name(expr.name)
         elif isinstance(expr, types.Mapping):
             self.__imports.add_python_import("from typing import Dict")
-            return f"Dict[{self.parse_type_and_import(expr.key_type)}, {self.parse_type_and_import(expr.value_type)}]"
+            return f"Dict[{self.parse_type_and_import(expr.key_type, return_types)}, {self.parse_type_and_import(expr.value_type, return_types)}]"
         else:
-            return self.__sol_to_py_lookup[expr.__class__.__name__]
+            return self.__sol_to_py_lookup[expr.__class__.__name__][types_index]
 
     def generate_func_params(
         self, fn: FunctionDefinition
@@ -451,7 +465,7 @@ class TypeGenerator:
                 param_name = par.name
             param_names.append((self.get_name(param_name), par.type_string))
             params.append(
-                f"{self.get_name(param_name)}: {self.parse_type_and_import(par.type)}"
+                f"{self.get_name(param_name)}: {self.parse_type_and_import(par.type, False)}"
             )
         return param_names, params
 
@@ -459,7 +473,7 @@ class TypeGenerator:
         if len(fn.return_parameters.parameters) > 1:
             self.__imports.add_python_import("from typing import Tuple")
         return [
-            (self.parse_type_and_import(par.type), par.type_string)
+            (self.parse_type_and_import(par.type, True), par.type_string)
             for par in fn.return_parameters.parameters
         ]
 
@@ -480,7 +494,10 @@ class TypeGenerator:
                     member.type, types.Array
                 ):
                     non_excluded.append(
-                        (self.parse_type_and_import(member.type), member.type_string)
+                        (
+                            self.parse_type_and_import(member.type, True),
+                            member.type_string,
+                        )
                     )
             if len(node.members) == len(non_excluded):
                 # nothing was excluded -> the whole struct will be used -> add the struct to imports
@@ -528,6 +545,9 @@ class TypeGenerator:
                     self.__imports.generate_contract_import_name(
                         parent.name, parent.parent.source_unit_name
                     )
+                    parsed.append(
+                        f"{self.get_name(parent.name)}.{self.get_name(var_type.name)}"
+                    )
                     returns = [
                         (
                             f"{self.get_name(parent.name)}.{self.get_name(var_type.name)}",
@@ -537,6 +557,7 @@ class TypeGenerator:
 
                 else:
                     self.__imports.generate_enum_import(var_type)
+                    parsed.append(self.get_name(var_type.name))
                     returns = [
                         (self.get_name(var_type.name), var_type_name.type_string)
                     ]
@@ -577,29 +598,25 @@ class TypeGenerator:
                     )
             elif isinstance(var_type, types.UInt):
                 self.__imports.add_primitive_type(
-                    self.__sol_to_py_lookup["UInt" + str(var_type.bits_count)]
+                    self.__sol_to_py_lookup[f"UInt{var_type.bits_count}"][1]
                 )
-                parsed.append(
-                    self.__sol_to_py_lookup["UInt" + str(var_type.bits_count)]
-                )
+                parsed.append(self.__sol_to_py_lookup[f"UInt{var_type.bits_count}"][0])
                 returns = [
                     (
-                        self.__sol_to_py_lookup["UInt" + str(var_type.bits_count)],
+                        self.__sol_to_py_lookup[f"UInt{var_type.bits_count}"][1],
                         var_type_name.type_string,
                     )
                 ]
             elif isinstance(var_type, types.FixedBytes):
                 self.__imports.add_primitive_type(
-                    self.__sol_to_py_lookup["FixedBytes" + str(var_type.bytes_count)]
+                    self.__sol_to_py_lookup[f"FixedBytes{var_type.bytes_count}"][1]
                 )
                 parsed.append(
-                    self.__sol_to_py_lookup["FixedBytes" + str(var_type.bytes_count)]
+                    self.__sol_to_py_lookup[f"FixedBytes{var_type.bytes_count}"][0]
                 )
                 returns = [
                     (
-                        self.__sol_to_py_lookup[
-                            "FixedBytes" + str(var_type.bytes_count)
-                        ],
+                        self.__sol_to_py_lookup[f"FixedBytes{var_type.bytes_count}"][1],
                         var_type_name.type_string,
                     )
                 ]
@@ -607,10 +624,10 @@ class TypeGenerator:
                 self.__imports.generate_contract_import_expr(var_type)
                 returns = [(self.get_name(var_type.name), var_type_name.type_string)]
             else:
-                parsed.append(self.__sol_to_py_lookup[var_type.__class__.__name__])
+                parsed.append(self.__sol_to_py_lookup[var_type.__class__.__name__][0])
                 returns = [
                     (
-                        self.__sol_to_py_lookup[var_type.__class__.__name__],
+                        self.__sol_to_py_lookup[var_type.__class__.__name__][1],
                         var_type_name.type_string,
                     )
                 ]
