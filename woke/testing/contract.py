@@ -258,17 +258,18 @@ class ChainInterface:
     def dev_chain(self):
         return self.__dev_chain
 
-    @classmethod
-    def _convert_to_web3_type(cls, value: Any) -> Any:
+    def _convert_to_web3_type(self, value: Any) -> Any:
         if dataclasses.is_dataclass(value):
             return tuple(
-                cls._convert_to_web3_type(v) for v in dataclasses.astuple(value)
+                self._convert_to_web3_type(v) for v in dataclasses.astuple(value)
             )
         elif isinstance(value, list):
-            return [cls._convert_to_web3_type(v) for v in value]
+            return [self._convert_to_web3_type(v) for v in value]
         elif isinstance(value, tuple):
-            return tuple(cls._convert_to_web3_type(v) for v in value)
+            return tuple(self._convert_to_web3_type(v) for v in value)
         elif isinstance(value, Account):
+            if value.chain != self:
+                raise ValueError("Account must belong to this chain")
             return str(value.address)
         elif isinstance(value, Address):
             return str(value)
