@@ -221,7 +221,9 @@ class TypeGenerator:
     def get_name(self, name: str) -> str:
         return self.__name_sanitizer.sanitize_name(name)
 
-    def generate_deploy_func(self, contract: ContractDefinition, bytecode: str):
+    def generate_deploy_func(
+        self, contract: ContractDefinition, libraries: Dict[bytes, Tuple[str, str]]
+    ):
         param_names = []
         params = []
         for fn in contract.functions:
@@ -230,37 +232,6 @@ class TypeGenerator:
                 break
         params_str = "".join(param + ", " for param in params)
 
-        lib_ids: Set[bytes] = set()
-
-        for match in self.__class__.LIBRARY_PLACEHOLDER_REGEX.findall(bytecode):
-            lib_id = bytes.fromhex(match[3:-3])
-            lib_ids.add(lib_id)
-
-        libraries: Dict[bytes, Tuple[str, str]] = {}
-        source_units_queue = deque([contract.parent])
-
-        while len(source_units_queue) > 0 and len(lib_ids) > 0:
-            source_unit = source_units_queue.popleft()
-            for contract in source_unit.contracts:
-                if contract.kind == ContractKind.LIBRARY:
-                    fqn = f"{contract.parent.source_unit_name}:{contract.name}"
-                    lib_id = keccak.new(
-                        data=fqn.encode("utf-8"), digest_bits=256
-                    ).digest()[:17]
-
-                    if lib_id in lib_ids:
-                        lib_ids.remove(lib_id)
-                        self.__imports.generate_contract_import_name(
-                            contract.name, contract.parent.source_unit_name
-                        )
-                        libraries[lib_id] = (
-                            contract.name[0].lower() + contract.name[1:],
-                            self.get_name(contract.name),
-                        )
-
-            source_units_queue.extend(imp.source_unit for imp in source_unit.imports)
-
-        assert len(lib_ids) == 0, "Not all libraries were found"
         libraries_str = "".join(
             f", {l[0]}: Optional[Union[{l[1]}, Address]] = None"
             for l in libraries.values()
@@ -301,6 +272,46 @@ class TypeGenerator:
                 )
         else:
             self.add_str_to_types(2, 'raise Exception("Cannot deploy interface")', 1)
+
+    def generate_bytecode_func(
+        self, contract: ContractDefinition, libraries: Dict[bytes, Tuple[str, str]]
+    ):
+        libraries_arg = "".join(
+            f", {l[0]}: Union[{l[1]}, Address]" for l in libraries.values()
+        )
+
+        self.add_str_to_types(1, "@classmethod", 1)
+        self.add_str_to_types(
+            1,
+            f"def bytecode(cls{libraries_arg}) -> bytes:",
+            1,
+        )
+
+        if contract.kind in {ContractKind.CONTRACT, ContractKind.LIBRARY}:
+            if not contract.abstract:
+                libs_arg = (
+                    "{"
+                    + ", ".join(
+                        f"{lib_id}: ({l[0]}, '{l[1]}')"
+                        for lib_id, l in libraries.items()
+                    )
+                    + "}"
+                )
+                self.add_str_to_types(
+                    2,
+                    f"return cls._get_bytecode({libs_arg})",
+                    1,
+                )
+            else:
+                self.add_str_to_types(
+                    2,
+                    'raise Exception("Cannot get bytecode of an abstract contract")',
+                    1,
+                )
+        else:
+            self.add_str_to_types(
+                2, 'raise Exception("Cannot get bytecode of an interface")', 1
+            )
 
     def generate_contract_template(
         self, contract: ContractDefinition, base_names: str
@@ -349,8 +360,45 @@ class TypeGenerator:
             lib_id = keccak.new(data=fqn.encode("utf-8"), digest_bits=256).digest()[:17]
             self.add_str_to_types(1, f"_library_id = {lib_id}", 2)
 
+        # find all needed libraries
+        lib_ids: Set[bytes] = set()
+
+        for match in self.__class__.LIBRARY_PLACEHOLDER_REGEX.findall(
+            compilation_info.evm.bytecode.object
+        ):
+            lib_id = bytes.fromhex(match[3:-3])
+            lib_ids.add(lib_id)
+
+        libraries: Dict[bytes, Tuple[str, str]] = {}
+        source_units_queue = deque([contract.parent])
+
+        while len(source_units_queue) > 0 and len(lib_ids) > 0:
+            source_unit = source_units_queue.popleft()
+            for contract in source_unit.contracts:
+                if contract.kind == ContractKind.LIBRARY:
+                    fqn = f"{contract.parent.source_unit_name}:{contract.name}"
+                    lib_id = keccak.new(
+                        data=fqn.encode("utf-8"), digest_bits=256
+                    ).digest()[:17]
+
+                    if lib_id in lib_ids:
+                        lib_ids.remove(lib_id)
+                        self.__imports.generate_contract_import_name(
+                            contract.name, contract.parent.source_unit_name
+                        )
+                        libraries[lib_id] = (
+                            contract.name[0].lower() + contract.name[1:],
+                            self.get_name(contract.name),
+                        )
+
+            source_units_queue.extend(imp.source_unit for imp in source_unit.imports)
+
+        assert len(lib_ids) == 0, "Not all libraries were found"
+
         self.__imports.add_python_import("from __future__ import annotations")
-        self.generate_deploy_func(contract, compilation_info.evm.bytecode.object)
+        self.generate_deploy_func(contract, libraries)
+        self.add_str_to_types(0, "", 1)
+        self.generate_bytecode_func(contract, libraries)
         self.add_str_to_types(0, "", 1)
 
     def generate_types_struct(
@@ -1102,6 +1150,7 @@ class NameSanitizer:
             "self",
             "deploy",
             "chain",
+            "bytecode",
         }
         self.__used_names = set()
         self.__renamed = {}

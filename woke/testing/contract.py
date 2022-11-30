@@ -660,6 +660,28 @@ class Contract(Account):
         return self.__str__()
 
     @classmethod
+    def _get_bytecode(
+        cls, libraries: Dict[bytes, Tuple[Union[Account, Address], str]]
+    ) -> bytes:
+        bytecode = cls._bytecode
+        for match in LIBRARY_PLACEHOLDER_REGEX.finditer(bytecode):
+            lib_id = bytes.fromhex(match.group(0)[3:-3])
+            assert (
+                lib_id in libraries
+            ), f"Address of library {libraries[lib_id][1]} required to generate bytecode"
+
+            lib = libraries[lib_id][0]
+            if isinstance(lib, Account):
+                lib_addr = str(lib.address)[2:]
+            elif isinstance(lib, Address):
+                lib_addr = str(lib)[2:]
+            else:
+                raise TypeError()
+
+            bytecode = bytecode[: match.start()] + lib_addr + bytecode[match.end() :]
+        return bytes.fromhex(bytecode)
+
+    @classmethod
     def _deploy(
         cls,
         arguments: Iterable,
