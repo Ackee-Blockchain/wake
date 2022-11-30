@@ -412,6 +412,10 @@ class TypeGenerator:
             else:
                 self.__imports.generate_enum_import(expr)
                 return self.get_name(expr.name)
+        elif isinstance(expr, types.UserDefinedValueType):
+            return self.parse_type_and_import(
+                expr.ir_node.underlying_type.type, return_types
+            )
         elif isinstance(expr, types.Array):
             return f"List[{self.parse_type_and_import(expr.base_type, return_types)}]"
         elif isinstance(expr, types.Contract):
@@ -533,6 +537,17 @@ class TypeGenerator:
                     returns = [
                         (self.get_name(var_type.name), var_type_name.type_string)
                     ]
+            elif isinstance(var_type, types.UserDefinedValueType):
+                underlying_type = var_type.ir_node.underlying_type.type
+                parsed.append(
+                    self.__sol_to_py_lookup[underlying_type.__class__.__name__][0]
+                )
+                returns = [
+                    (
+                        self.__sol_to_py_lookup[underlying_type.__class__.__name__][1],
+                        var_type_name.type_string,
+                    )
+                ]
             elif isinstance(var_type, types.Array):
                 use_parse = True
                 param_names.append(("index" + str(depth), "uint256"))
