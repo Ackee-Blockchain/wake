@@ -5,7 +5,8 @@ from click.core import Context
 
 from woke.config import WokeConfig
 from woke.utils import file_utils
-from ..testing.abi_to_type import TypeGenerator
+
+from ..testing.pytypes_generator import TypeGenerator
 
 
 @click.group(name="init")
@@ -43,8 +44,8 @@ def init_types(ctx: Context, force: bool) -> None:
 def init_fuzz(ctx: Context, force: bool) -> None:
     """Generate Python contract types and create example fuzz tests."""
     config: WokeConfig = ctx.obj["config"]
-
-    generate_types(config, force)
+    type_generator = TypeGenerator(config)
+    type_generator.generate_types(True)
 
     examples_dir = pathlib.Path(__file__).parent.parent.resolve() / "examples/fuzzer"
     tests_dir = config.project_root_path / "tests"

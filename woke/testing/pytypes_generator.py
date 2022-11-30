@@ -747,7 +747,7 @@ class TypeGenerator:
         returns = self.generate_func_returns(fn)
         # the generated functions have parameter of type RequestType, which is an enum and must be imported
         self.__imports.add_python_import(
-            "from woke.testing.abi_to_type import RequestType"
+            "from woke.testing.pytypes_generator import RequestType"
         )
         self.generate_type_hint_stub_func(
             fn.name, params, [ret[0] for ret in returns], False
