@@ -71,7 +71,6 @@ class TypeGenerator:
     # used to avoid generating the same contract multiple times, eg. when multiple contracts inherit from it
     __already_generated_contracts: Set[str]
     __source_units: Dict[Path, SourceUnit]
-    # list of primitive types that the currently generated contract imports
     __imports: SourceUnitImports
     __name_sanitizer: NameSanitizer
     __current_source_unit: str
@@ -117,35 +116,23 @@ class TypeGenerator:
 
     # TODO do some prettier init :)
     def __init_sol_to_py_types(self):
+        self.__sol_to_py_lookup[types.UInt.__name__] = ("int", "int")
+        self.__sol_to_py_lookup[types.Int.__name__] = ("int", "int")
         self.__sol_to_py_lookup[types.Address.__name__] = (
             "Union[Account, Address]",
             "Account",
         )
         self.__sol_to_py_lookup[types.String.__name__] = ("str", "str")
         self.__sol_to_py_lookup[types.Bool.__name__] = ("bool", "bool")
+        self.__sol_to_py_lookup[types.FixedBytes.__name__] = (
+            "Union[bytearray, bytes]",
+            "bytearray",
+        )
         self.__sol_to_py_lookup[types.Bytes.__name__] = (
             "Union[bytearray, bytes]",
             "bytearray",
         )
         self.__sol_to_py_lookup[types.Function.__name__] = ("Callable", "TODO")
-        i: int = 8
-        while i <= 256:
-            self.__sol_to_py_lookup[types.UInt.__name__ + str(i)] = (
-                f"uint{i}",
-                f"uint{i}",
-            )
-            self.__sol_to_py_lookup[types.Int.__name__ + str(i)] = (
-                f"int{i}",
-                f"int{i}",
-            )
-            i += 8
-        i = 1
-        while i <= 32:
-            self.__sol_to_py_lookup[types.FixedBytes.__name__ + str(i)] = (
-                f"bytes{i}",
-                f"bytes{i}",
-            )
-            i += 1
 
     @property
     def current_source_unit(self):
@@ -427,21 +414,6 @@ class TypeGenerator:
                 return self.get_name(expr.name)
         elif isinstance(expr, types.Array):
             return f"List[{self.parse_type_and_import(expr.base_type, return_types)}]"
-        elif isinstance(expr, types.UInt):
-            self.__imports.add_primitive_type(
-                self.__sol_to_py_lookup[f"UInt{expr.bits_count}"][types_index]
-            )
-            return self.__sol_to_py_lookup[f"UInt{expr.bits_count}"][types_index]
-        elif isinstance(expr, types.Int):
-            self.__imports.add_primitive_type(
-                self.__sol_to_py_lookup[f"Int{expr.bits_count}"][types_index]
-            )
-            return self.__sol_to_py_lookup[f"Int{expr.bits_count}"][types_index]
-        elif isinstance(expr, types.FixedBytes):
-            self.__imports.add_primitive_type(
-                self.__sol_to_py_lookup[f"FixedBytes{expr.bytes_count}"][types_index]
-            )
-            return self.__sol_to_py_lookup[f"FixedBytes{expr.bytes_count}"][types_index]
         elif isinstance(expr, types.Contract):
             self.__imports.generate_contract_import_expr(expr)
             return self.get_name(expr.name)
@@ -596,30 +568,6 @@ class TypeGenerator:
                     _ = generate_getter_helper(
                         var_type_name.value_type, True, depth + 1
                     )
-            elif isinstance(var_type, types.UInt):
-                self.__imports.add_primitive_type(
-                    self.__sol_to_py_lookup[f"UInt{var_type.bits_count}"][1]
-                )
-                parsed.append(self.__sol_to_py_lookup[f"UInt{var_type.bits_count}"][0])
-                returns = [
-                    (
-                        self.__sol_to_py_lookup[f"UInt{var_type.bits_count}"][1],
-                        var_type_name.type_string,
-                    )
-                ]
-            elif isinstance(var_type, types.FixedBytes):
-                self.__imports.add_primitive_type(
-                    self.__sol_to_py_lookup[f"FixedBytes{var_type.bytes_count}"][1]
-                )
-                parsed.append(
-                    self.__sol_to_py_lookup[f"FixedBytes{var_type.bytes_count}"][0]
-                )
-                returns = [
-                    (
-                        self.__sol_to_py_lookup[f"FixedBytes{var_type.bytes_count}"][1],
-                        var_type_name.type_string,
-                    )
-                ]
             elif isinstance(var_type, types.Contract):
                 self.__imports.generate_contract_import_expr(var_type)
                 returns = [(self.get_name(var_type.name), var_type_name.type_string)]
@@ -955,7 +903,6 @@ class TypeGenerator:
 
 
 class SourceUnitImports:
-    __used_primitive_types: Set[str]
     __all_imports: str
     __struct_imports: Set[str]
     __enum_imports: Set[str]
@@ -967,7 +914,6 @@ class SourceUnitImports:
     def __init__(self, outer: TypeGenerator):
         self.__struct_imports = set()
         self.__enum_imports = set()
-        self.__used_primitive_types = set()
         self.__all_imports = ""
         self.__contract_imports = set()
         self.__python_imports = set()
@@ -1009,18 +955,11 @@ class SourceUnitImports:
         if self.__struct_imports:
             self.add_str_to_imports(0, "", 1)
 
-        # TODO add to one import statement to avoid having multiple lines of imports from the same file
-        for p_type in self.__used_primitive_types:
-            self.add_str_to_imports(
-                0, "from woke.testing.primitive_types import " + p_type, 1
-            )
-
         if (
             self.generate_default_imports
             or self.__python_imports
             or self.__contract_imports
             or self.__struct_imports
-            or self.__used_primitive_types
         ):
             self.add_str_to_imports(0, "", 2)
 
@@ -1030,7 +969,6 @@ class SourceUnitImports:
         self.__struct_imports = set()
         self.__enum_imports = set()
         self.__contract_imports = set()
-        self.__used_primitive_types = set()
         self.__python_imports = set()
         self.__all_imports = ""
 
@@ -1111,9 +1049,6 @@ class SourceUnitImports:
         if contract_import not in self.__contract_imports:
             # self.add_str_to_imports(0, contract_import, 1)
             self.__contract_imports.add(contract_import)
-
-    def add_primitive_type(self, primitive_type: str) -> None:
-        self.__used_primitive_types.add(primitive_type)
 
     def add_python_import(self, p_import: str) -> None:
         self.__python_imports.add(p_import)
