@@ -90,6 +90,10 @@ class Address:
             return self._address == eth_utils.to_checksum_address(
                 other
             )  # pyright: reportPrivateImportUsage=false
+        elif isinstance(other, Account):
+            raise TypeError(
+                "Cannot compare Address and Account. Use Account.address == Address"
+            )
         else:
             return NotImplemented
 
@@ -122,6 +126,10 @@ class Account:
     def __eq__(self, other: Any) -> bool:
         if isinstance(other, Account):
             return self._address == other._address and self._chain == other._chain
+        elif isinstance(other, Address):
+            raise TypeError(
+                "Cannot compare Account to Address. Use Account.address == Address"
+            )
         return NotImplemented
 
     def __hash__(self) -> int:
@@ -649,8 +657,12 @@ class Contract(Account):
     _bytecode: str
 
     def __init__(
-        self, addr: Union[Address, str], chain: ChainInterface = dev_interface
+        self, addr: Union[Account, Address, str], chain: ChainInterface = dev_interface
     ):
+        if isinstance(addr, Account):
+            if addr.chain != chain:
+                raise ValueError("Account and chain must be from the same chain")
+            addr = addr.address
         super().__init__(addr, chain)
 
     def __str__(self):
