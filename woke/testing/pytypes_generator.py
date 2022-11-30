@@ -120,7 +120,7 @@ class TypeGenerator:
         self.__sol_to_py_lookup[types.Int.__name__] = ("int", "int")
         self.__sol_to_py_lookup[types.Address.__name__] = (
             "Union[Account, Address]",
-            "Account",
+            "Address",
         )
         self.__sol_to_py_lookup[types.String.__name__] = ("str", "str")
         self.__sol_to_py_lookup[types.Bool.__name__] = ("bool", "bool")
