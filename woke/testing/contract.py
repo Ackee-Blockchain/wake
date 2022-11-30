@@ -818,6 +818,6 @@ class Library(Contract):
             chain = dev_interface
 
         ret = super()._deploy(arguments, from_, value, gas_limit, libraries, chain)
-        lib = Library(ret.address, chain)
+        lib = cls(ret.address, chain)
         chain.deployed_libraries[cls._library_id].append(lib)
         return lib

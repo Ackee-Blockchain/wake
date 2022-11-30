@@ -811,15 +811,16 @@ class TypeGenerator:
         if contract.structs:
             self.generate_types_struct(contract.structs, 1)
 
-        for var in contract.declared_variables:
-            if (
-                var.visibility == Visibility.EXTERNAL
-                or var.visibility == Visibility.PUBLIC
-            ):
-                self.generate_getter_for_state_var(var)
-        for fn in contract.functions:
-            if fn.function_selector:
-                self.generate_types_function(fn)
+        if contract.kind != ContractKind.LIBRARY:
+            for var in contract.declared_variables:
+                if (
+                    var.visibility == Visibility.EXTERNAL
+                    or var.visibility == Visibility.PUBLIC
+                ):
+                    self.generate_getter_for_state_var(var)
+            for fn in contract.functions:
+                if fn.function_selector:
+                    self.generate_types_function(fn)
 
     def generate_types_source_unit(self, unit: SourceUnit) -> None:
         self.generate_types_struct(unit.structs, 0)
