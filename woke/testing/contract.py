@@ -27,13 +27,13 @@ import eth_abi
 import eth_utils
 from typing_extensions import Literal, get_args, get_origin
 
-from woke.testing.abi_to_type import RequestType
 from woke.testing.development_chains import (
     AnvilDevChain,
     DevChainABC,
     GanacheDevChain,
     HardhatDevChain,
 )
+from woke.testing.pytypes_generator import RequestType
 
 from . import hardhat_console
 from .json_rpc.communicator import JsonRpcCommunicator, JsonRpcError, TxParams
