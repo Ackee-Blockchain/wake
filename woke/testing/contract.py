@@ -158,10 +158,6 @@ class Account:
         return self._chain
 
 
-class TransactionRevertedError(Exception):
-    pass
-
-
 class RevertToSnapshotFailedError(Exception):
     pass
 
@@ -176,18 +172,6 @@ class ChainInterface:
     __nonces: DefaultDict[Address, int]
     __snapshots: Dict[str, Dict]
     __deployed_libraries: DefaultDict[bytes, List[Library]]
-    __panic_reasons: Dict[int, str] = {
-        0x00: "Generic compiler panic",
-        0x01: "Assert evaluated to false",
-        0x11: "Underflow or overflow",
-        0x12: "Division or modulo by zero",
-        0x21: "Too big or negative value converted to enum",
-        0x22: "Access to incorrectly encoded storage byte array",
-        0x31: ".pop() on empty array",
-        0x32: "Out-of-bounds or negative index access to fixed-length array",
-        0x41: "Too much memory allocated",
-        0x51: "Called invalid internal function",
-    }
 
     console_logs_callback: Optional[Callable[[str, List[Any]], None]]
     events_callback: Optional[Callable[[str, List[Tuple[bytes, Any]]], None]]
@@ -446,28 +430,27 @@ class ChainInterface:
             raise NotImplementedError(
                 f"Transaction reverted with unknown error selector {selector.hex()}"
             )
-        if errors[selector]["type"] != "error":
-            raise ValueError(f"Expected error abi, got {errors[selector]['type']}")
+
+        if len(errors[selector]) > 1:
+            raise NotImplementedError(
+                f"Transaction reverted with ambiguous error selector {selector.hex()}"
+            )
+
+        fqn = list(errors[selector].keys())[0]
+        module_name, attrs = errors[selector][fqn]
+        obj = getattr(importlib.import_module(module_name), attrs[0])
+        for attr in attrs[1:]:
+            obj = getattr(obj, attr)
+        abi = obj._abi
 
         types = [
             eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
-            for arg in errors[selector]["inputs"]
+            for arg in abi["inputs"]
         ]
-        revert_data = eth_abi.abi.decode(types, revert_data[4:])
-
-        if selector == bytes.fromhex("4e487b71"):
-            # panic
-            assert len(revert_data) == 1
-            code = int(revert_data[0])
-            if code not in self.__panic_reasons:
-                revert_data = (f"Unknown panic reason {code}",)
-            else:
-                revert_data = (self.__panic_reasons[code],)
-
-        exception_msg = (
-            f"{errors[selector]['name']}({', '.join(map(repr, revert_data))})"
-        )
-        raise TransactionRevertedError(exception_msg)
+        decoded = Abi.decode(types, revert_data[4:])
+        generated_error = self._convert_from_web3_type(decoded, obj)
+        # raise native pytypes exception on transaction revert
+        raise generated_error
 
     def _process_events(
         self, tx_hash: str, logs: List, origin: Union[Address, str]
