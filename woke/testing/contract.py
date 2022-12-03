@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import dataclasses
 import re
+import sys
 from collections import defaultdict
 from contextlib import contextmanager
 from enum import IntEnum
@@ -188,6 +189,7 @@ class ChainInterface:
     }
 
     console_logs_callback: Optional[Callable[[str, List[Any]], None]]
+    events_callback: Optional[Callable[[str, List[Tuple[bytes, Any]]], None]]
 
     @contextmanager
     def connect(self, uri: str):
@@ -225,6 +227,7 @@ class ChainInterface:
                 self.__default_account = None
 
             self.console_logs_callback = None
+            self.events_callback = None
 
             yield
         finally:
@@ -328,7 +331,7 @@ class ChainInterface:
             return expected_type(*converted_values)
         elif isinstance(expected_type, type):
             if issubclass(expected_type, Contract):
-                return Contract(value, self)
+                return expected_type(value, self)
             elif issubclass(expected_type, Account):
                 return Account(value, self)
             elif issubclass(expected_type, Address):
@@ -465,6 +468,91 @@ class ChainInterface:
         )
         raise TransactionRevertedError(exception_msg)
 
+    def _process_events(self, tx_hash: str, logs: List) -> None:
+        if self.events_callback is None or len(logs) == 0:
+            return
+
+        generated_events = []
+
+        assert all(len(log["topics"]) > 0 for log in logs)
+
+        non_unique = False
+        for log in logs:
+            selector = log["topics"][0]
+            if selector.startswith("0x"):
+                selector = selector[2:]
+            selector = bytes.fromhex(selector)
+
+            if selector not in events:
+                raise ValueError(
+                    f"Transaction emitted unknown event selector {selector.hex()}"
+                )
+
+            if len(events[selector]) > 1:
+                non_unique = True
+                break
+
+        if non_unique:
+            raise NotImplementedError("Non-unique event selectors not supported")
+
+        for log in logs:
+            default_topic = log["topics"][0]
+            if default_topic.startswith("0x"):
+                default_topic = default_topic[2:]
+            selector = bytes.fromhex(default_topic)
+
+            if selector not in events:
+                raise ValueError(
+                    f"Transaction emitted unknown event selector {selector.hex()}"
+                )
+
+            if len(events[selector]) > 1:
+                raise NotImplementedError("Non-unique event selectors not supported")
+            else:
+                canonical_name = list(events[selector].keys())[0]
+                module_name, attrs = events[selector][canonical_name]
+                obj = getattr(sys.modules[module_name], attrs[0])
+                for attr in attrs[1:]:
+                    obj = getattr(obj, attr)
+                abi = obj._abi
+
+            topic_index = 1
+            types = []
+
+            decoded_indexed = []
+
+            for input in abi["inputs"]:
+                if input["indexed"]:
+                    if (
+                        input["type"] in {"string", "bytes"}
+                        or input["internalType"].startswith("struct ")
+                        or input["type"].endswith("]")
+                    ):
+                        topic_type = "bytes32"
+                    else:
+                        topic_type = input["type"]
+                    topic_data = log["topics"][topic_index]
+                    decoded_indexed.append(
+                        Abi.decode([topic_type], bytes.fromhex(topic_data[2:]))[0]
+                    )
+                    topic_index += 1
+                else:
+                    types.append(eth_utils.abi.collapse_if_tuple(input))
+            decoded = list(Abi.decode(types, bytes.fromhex(log["data"][2:])))
+            merged = []
+
+            for input in abi["inputs"]:
+                if input["indexed"]:
+                    merged.append(decoded_indexed.pop(0))
+                else:
+                    merged.append(decoded.pop(0))
+
+            merged = tuple(merged)
+            generated_event = self._convert_from_web3_type(merged, obj)
+            generated_events.append(generated_event)
+
+        self.events_callback(tx_hash, generated_events)
+
     def _process_tx_receipt(
         self,
         tx_receipt: Dict[str, Any],
@@ -554,6 +642,9 @@ class ChainInterface:
             output = self.__dev_chain.trace_transaction(tx_hash)
             self._process_console_logs(tx_hash, output)
 
+        if self.events_callback is not None:
+            self._process_events(tx_hash, tx_receipt["logs"])
+
         self._process_tx_receipt(tx_receipt, tx)
         assert (
             "contractAddress" in tx_receipt
@@ -607,13 +698,26 @@ class ChainInterface:
             if self.console_logs_callback is not None:
                 self._process_console_logs(tx_hash, output)
 
+            if self.events_callback is not None:
+                self._process_events(tx_hash, tx_receipt["logs"])
+
             self._process_tx_receipt(tx_receipt, tx)
 
             output = bytes.fromhex(output[0]["result"]["output"][2:])
-        elif isinstance(self.__dev_chain, (GanacheDevChain, HardhatDevChain)):
+        elif isinstance(self.__dev_chain, GanacheDevChain):
+            if self.events_callback is not None:
+                self._process_events(tx_hash, tx_receipt["logs"])
+
             self._process_tx_receipt(tx_receipt, tx)
 
-            output = self.__dev_chain.debug_trace_transaction(tx_hash)
+            output = self.__dev_chain.call(tx)
+        elif isinstance(self.__dev_chain, HardhatDevChain):
+            if self.events_callback is not None:
+                self._process_events(tx_hash, tx_receipt["logs"])
+
+            self._process_tx_receipt(tx_receipt, tx)
+
+            output = self.__dev_chain.debug_trace_transaction(tx_hash, {})
             output = bytes.fromhex(output["returnValue"])
         else:
             raise NotImplementedError()
@@ -646,8 +750,12 @@ def _signer_account(sender: Account, interface: ChainInterface):
 
 
 dev_interface = ChainInterface()
-errors = {}
-events = {}
+# selector => (source_unit_name + contract_name => pytypes_object)
+errors: Dict[bytes, Dict[str, Any]] = {}
+# selector => (source_unit_name + contract_name => pytypes_object)
+events: Dict[bytes, Dict[str, Any]] = {}
+# contract_metadata => source_unit_name + contract_name
+contracts: Dict[bytes, str] = {}
 
 LIBRARY_PLACEHOLDER_REGEX = re.compile(r"__\$[0-9a-fA-F]{34}\$__")
 

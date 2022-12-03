@@ -16,4 +16,5 @@ import woke.testing.contract
 
 woke.testing.contract.errors = {errors}
 woke.testing.contract.events = {events}
+woke.testing.contract.contracts = {contracts}
 """

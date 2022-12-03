@@ -52,6 +52,11 @@ class DevChainABC(ABC):
             self._communicator.eth_send_transaction(params)
         )
 
+    def debug_trace_transaction(self, tx_hash: str, options: Dict) -> Dict:
+        return self._loop.run_until_complete(
+            self._communicator.debug_trace_transaction(tx_hash, options)
+        )
+
     def wait_for_transaction_receipt(self, tx_hash: str) -> Dict[str, Any]:
         ret = self._loop.run_until_complete(
             self._communicator.eth_get_transaction_receipt(tx_hash)
@@ -82,12 +87,6 @@ class DevChainABC(ABC):
 
 
 class HardhatDevChain(DevChainABC):
-    def debug_trace_transaction(self, tx_hash: str) -> Dict:
-        options = {"disableMemory": True, "disableStack": True, "disableStorage": True}
-        return self._loop.run_until_complete(
-            self._communicator.debug_trace_transaction(tx_hash, options)
-        )
-
     def set_balance(self, address: str, value: int) -> None:
         self._loop.run_until_complete(
             self._communicator.hardhat_set_balance(address, value)
@@ -144,12 +143,6 @@ class AnvilDevChain(DevChainABC):
 
 
 class GanacheDevChain(DevChainABC):
-    def retrieve_transaction_data(self, params: List, tx_hash: Any) -> Dict:
-        options = {"disableMemory": True, "disableStack": True, "disableStorage": True}
-        return self._loop.run_until_complete(
-            self._communicator.debug_trace_transaction(tx_hash, options)
-        )
-
     def set_balance(self, address: str, value: int) -> None:
         self._loop.run_until_complete(
             self._communicator.evm_set_account_balance(address, value)
