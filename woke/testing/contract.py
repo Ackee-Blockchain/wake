@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import asyncio
 import dataclasses
+import importlib
 import re
-import sys
 from collections import defaultdict
 from contextlib import contextmanager
 from enum import IntEnum
@@ -26,6 +26,7 @@ from typing import (
 import aiohttp
 import eth_abi
 import eth_utils
+from Crypto.Hash import BLAKE2b
 from typing_extensions import Literal, get_args, get_origin
 
 from woke.testing.development_chains import (
@@ -468,11 +469,14 @@ class ChainInterface:
         )
         raise TransactionRevertedError(exception_msg)
 
-    def _process_events(self, tx_hash: str, logs: List) -> None:
+    def _process_events(
+        self, tx_hash: str, logs: List, origin: Union[Address, str]
+    ) -> None:
         if self.events_callback is None or len(logs) == 0:
             return
 
         generated_events = []
+        unknown_events = []
 
         assert all(len(log["topics"]) > 0 for log in logs)
 
@@ -493,28 +497,48 @@ class ChainInterface:
                 break
 
         if non_unique:
-            raise NotImplementedError("Non-unique event selectors not supported")
+            debug_trace = self.__dev_chain.debug_trace_transaction(
+                tx_hash, {"enableMemory": True}
+            )
+            event_traces = self._process_debug_trace(debug_trace, origin)
+            assert len(event_traces) == len(logs)
+        else:
+            event_traces = [(None, None)] * len(logs)
 
-        for log in logs:
+        for log, (traced_selector, fqn) in zip(logs, event_traces):
             default_topic = log["topics"][0]
             if default_topic.startswith("0x"):
                 default_topic = default_topic[2:]
             selector = bytes.fromhex(default_topic)
 
             if selector not in events:
-                raise ValueError(
-                    f"Transaction emitted unknown event selector {selector.hex()}"
-                )
+                unknown_events.append((log["topics"], log["data"]))
+                continue
 
             if len(events[selector]) > 1:
-                raise NotImplementedError("Non-unique event selectors not supported")
+                assert traced_selector == selector
+
+                if fqn is None:
+                    unknown_events.append((log["topics"], log["data"]))
+                    continue
+
+                found = False
+                for base_fqn in contracts_inheritance[fqn]:
+                    if base_fqn in events[selector]:
+                        found = True
+                        fqn = base_fqn
+                        break
+                assert (
+                    found
+                ), f"Event with selector {selector.hex()} not found in {fqn} or its ancestors"
             else:
-                canonical_name = list(events[selector].keys())[0]
-                module_name, attrs = events[selector][canonical_name]
-                obj = getattr(sys.modules[module_name], attrs[0])
-                for attr in attrs[1:]:
-                    obj = getattr(obj, attr)
-                abi = obj._abi
+                fqn = list(events[selector].keys())[0]
+
+            module_name, attrs = events[selector][fqn]
+            obj = getattr(importlib.import_module(module_name), attrs[0])
+            for attr in attrs[1:]:
+                obj = getattr(obj, attr)
+            abi = obj._abi
 
             topic_index = 1
             types = []
@@ -605,6 +629,38 @@ class ChainInterface:
         if len(console_logs) > 0:
             self.console_logs_callback(tx_hash, console_logs)
 
+    @staticmethod
+    def _get_fqn_from_bytecode(bytecode: bytes) -> str:
+        for bytecode_segments, fqn in bytecode_index:
+
+            length, h = bytecode_segments[0]
+            if length > len(bytecode):
+                continue
+            segment_h = BLAKE2b.new(data=bytecode[:length], digest_bits=256).digest()
+            if segment_h != h:
+                continue
+
+            bytecode = bytecode[length:]
+            found = True
+
+            for length, h in bytecode_segments[1:]:
+                if length + 20 > len(bytecode):
+                    found = False
+                    break
+                bytecode = bytecode[20:]
+                segment_h = BLAKE2b.new(
+                    data=bytecode[:length], digest_bits=256
+                ).digest()
+                if segment_h != h:
+                    found = False
+                    break
+                bytecode = bytecode[length:]
+
+            if found:
+                return fqn
+
+        raise ValueError("Could not find contract definition from bytecode")
+
     def deploy(
         self,
         abi: Dict[Union[bytes, Literal["constructor"]], Any],
@@ -643,7 +699,9 @@ class ChainInterface:
             self._process_console_logs(tx_hash, output)
 
         if self.events_callback is not None:
-            self._process_events(tx_hash, tx_receipt["logs"])
+            self._process_events(
+                tx_hash, tx_receipt["logs"], self._get_fqn_from_bytecode(bytecode)
+            )
 
         self._process_tx_receipt(tx_receipt, tx)
         assert (
@@ -664,6 +722,65 @@ class ChainInterface:
         output = self.__dev_chain.call(tx)
         return self._process_return_data(output, abi[selector], return_type)
 
+    def _process_debug_trace(
+        self, debug_trace: Dict, origin: Union[Address, str]
+    ) -> List[Tuple[bytes, Optional[str]]]:
+        addresses = [origin]
+        event_fqns = []
+
+        for trace in debug_trace["structLogs"]:
+            if trace["op"] in {"CALL", "CALLCODE", "DELEGATECALL", "STATICCALL"}:
+                addr = int(trace["stack"][-2], 16)
+                addresses.append(Address(addr))
+            elif trace["op"] in {"CREATE", "CREATE2"}:
+                offset = int(trace["stack"][-2], 16)
+                length = int(trace["stack"][-3], 16)
+
+                start_block = offset // 32
+                start_offset = offset % 32
+                end_block = (offset + length) // 32
+                end_offset = (offset + length) % 32
+
+                if start_block == end_block:
+                    bytecode = bytes.fromhex(trace["memory"][start_block])[
+                        start_offset : start_offset + length
+                    ]
+                else:
+                    bytecode = bytes.fromhex(trace["memory"][start_block])[
+                        start_offset:
+                    ]
+                    for i in range(start_block + 1, end_block):
+                        bytecode += bytes.fromhex(trace["memory"][i])
+                    bytecode += bytes.fromhex(trace["memory"][end_block])[:end_offset]
+
+                fqn = self._get_fqn_from_bytecode(bytecode)
+                addresses.append(fqn)
+            elif trace["op"] in {"RETURN", "REVERT", "STOP"}:
+                addresses.pop()
+            elif trace["op"] in {"LOG1", "LOG2", "LOG3", "LOG4"}:
+                selector = trace["stack"][-3]
+                if selector.startswith("0x"):
+                    selector = selector[2:]
+                selector = bytes.fromhex(selector)
+
+                if not isinstance(addresses[-1], str):
+                    if addresses[-1] == "0x000000000000000000636F6e736F6c652e6c6f67":
+                        # skip events from console.log
+                        event_fqns.append((selector, None))
+                        continue
+                    code = self.__dev_chain.get_code(str(addresses[-1]))
+                    metadata = code[-53:]
+                    if metadata not in contracts_by_metadata:
+                        raise ValueError(
+                            f"Unable to find contract metadata in index: {metadata.hex()}"
+                        )
+                    else:
+                        event_fqns.append((selector, contracts_by_metadata[metadata]))
+                else:
+                    event_fqns.append((selector, addresses[-1]))
+
+        return event_fqns
+
     def transact(
         self,
         selector: bytes,
@@ -675,6 +792,7 @@ class ChainInterface:
         return_type: Type,
     ) -> Any:
         tx = self._build_transaction(params, selector, arguments, abi[selector])
+        assert "to" in tx
         sender = (
             Account(params["from"], self) if "from" in params else self.default_account
         )
@@ -699,21 +817,21 @@ class ChainInterface:
                 self._process_console_logs(tx_hash, output)
 
             if self.events_callback is not None:
-                self._process_events(tx_hash, tx_receipt["logs"])
+                self._process_events(tx_hash, tx_receipt["logs"], Address(tx["to"]))
 
             self._process_tx_receipt(tx_receipt, tx)
 
             output = bytes.fromhex(output[0]["result"]["output"][2:])
         elif isinstance(self.__dev_chain, GanacheDevChain):
             if self.events_callback is not None:
-                self._process_events(tx_hash, tx_receipt["logs"])
+                self._process_events(tx_hash, tx_receipt["logs"], Address(tx["to"]))
 
             self._process_tx_receipt(tx_receipt, tx)
 
             output = self.__dev_chain.call(tx)
         elif isinstance(self.__dev_chain, HardhatDevChain):
             if self.events_callback is not None:
-                self._process_events(tx_hash, tx_receipt["logs"])
+                self._process_events(tx_hash, tx_receipt["logs"], Address(tx["to"]))
 
             self._process_tx_receipt(tx_receipt, tx)
 
@@ -750,12 +868,17 @@ def _signer_account(sender: Account, interface: ChainInterface):
 
 
 dev_interface = ChainInterface()
-# selector => (source_unit_name + contract_name => pytypes_object)
+# selector => (contract_fqn => pytypes_object)
 errors: Dict[bytes, Dict[str, Any]] = {}
-# selector => (source_unit_name + contract_name => pytypes_object)
+# selector => (contract_fqn => pytypes_object)
 events: Dict[bytes, Dict[str, Any]] = {}
-# contract_metadata => source_unit_name + contract_name
-contracts: Dict[bytes, str] = {}
+# contract_metadata => contract_fqn
+contracts_by_metadata: Dict[bytes, str] = {}
+# contract_fqn => tuple of linearized base contract fqns
+contracts_inheritance: Dict[str, Tuple[str, ...]] = {}
+# list of pairs of (bytecode segments, contract_fqn)
+# where bytecode segments is a tuple of (length, BLAKE2b hash)
+bytecode_index: List[Tuple[Tuple[Tuple[int, bytes], ...], str]] = []
 
 LIBRARY_PLACEHOLDER_REGEX = re.compile(r"__\$[0-9a-fA-F]{34}\$__")
 

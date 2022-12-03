@@ -12,7 +12,7 @@ from pathlib import Path, PurePath
 from typing import Any, Dict, Iterable, List, Set, Tuple, Union
 
 import eth_utils
-from Crypto.Hash import keccak
+from Crypto.Hash import BLAKE2b, keccak
 from intervaltree import IntervalTree
 from rich.panel import Panel
 from typing_extensions import Literal
@@ -82,7 +82,9 @@ class TypeGenerator:
     __func_to_overload: Set[str]
     __errors_index: Dict[bytes, Dict[str, Any]]
     __events_index: Dict[bytes, Dict[str, Any]]
-    __contracts_index: Dict[bytes, str]
+    __contracts_by_metadata_index: Dict[bytes, str]
+    __contracts_inheritance_index: Dict[str, Tuple[str, ...]]
+    __bytecode_index: List[Tuple[Tuple[Tuple[int, bytes], ...], str]]
 
     def __init__(self, config: WokeConfig):
         self.__config = config
@@ -98,7 +100,9 @@ class TypeGenerator:
         self.__func_to_overload = set()
         self.__errors_index = {}
         self.__events_index = {}
-        self.__contracts_index = {}
+        self.__contracts_by_metadata_index = {}
+        self.__contracts_inheritance_index = {}
+        self.__bytecode_index = []
 
         # built-in Error(str) and Panic(uint256) errors
         error_abi = {
@@ -347,8 +351,14 @@ class TypeGenerator:
             metadata = bytes.fromhex(compilation_info.evm.deployed_bytecode.object)[
                 -53:
             ]
-            assert metadata not in self.__contracts_index
-            self.__contracts_index[metadata] = fqn
+            assert metadata not in self.__contracts_by_metadata_index
+            self.__contracts_by_metadata_index[metadata] = fqn
+
+        assert fqn not in self.__contracts_inheritance_index
+        self.__contracts_inheritance_index[fqn] = tuple(
+            f"{base.parent.source_unit_name}:{base.name}"
+            for base in contract.linearized_base_contracts
+        )
 
         abi_by_selector: Dict[Union[bytes, Literal["constructor"]], Dict] = {}
 
@@ -406,12 +416,30 @@ class TypeGenerator:
 
         # find all needed libraries
         lib_ids: Set[bytes] = set()
+        bytecode = compilation_info.evm.bytecode.object
 
-        for match in self.__class__.LIBRARY_PLACEHOLDER_REGEX.findall(
-            compilation_info.evm.bytecode.object
-        ):
-            lib_id = bytes.fromhex(match[3:-3])
-            lib_ids.add(lib_id)
+        if len(bytecode) > 0:
+            bytecode_segments: List[Tuple[int, bytes]] = []
+            start = 0
+
+            # TODO test segments work in this case
+            for match in self.__class__.LIBRARY_PLACEHOLDER_REGEX.finditer(bytecode):
+                s = match.start()
+                e = match.end()
+                segment = bytes.fromhex(bytecode[start:s])
+                h = BLAKE2b.new(data=segment, digest_bits=256).digest()
+                bytecode_segments.append((len(segment), h))
+                start = e
+                lib_id = bytes.fromhex(bytecode[s + 3 : e - 3])
+                lib_ids.add(lib_id)
+
+            fqn = f"{contract.parent.source_unit_name}:{contract.name}"
+
+            segment = bytes.fromhex(bytecode[start:])
+            h = BLAKE2b.new(data=segment, digest_bits=256).digest()
+            bytecode_segments.append((len(segment), h))
+
+            self.__bytecode_index.append((tuple(bytecode_segments), fqn))
 
         libraries: Dict[bytes, Tuple[str, str]] = {}
         source_units_queue = deque([contract.parent])
@@ -515,7 +543,7 @@ class TypeGenerator:
                 indent + 1, f"_abi = {events_abi[event.event_selector]}", 2
             )
             for parameter in event.parameters.parameters:
-                if isinstance(
+                if parameter.indexed and isinstance(
                     parameter.type,
                     (types.Array, types.Struct, types.Bytes, types.String),
                 ):
@@ -1069,7 +1097,9 @@ class TypeGenerator:
             INIT_CONTENT.format(
                 errors=self.__errors_index,
                 events=self.__events_index,
-                contracts=self.__contracts_index,
+                contracts_by_metadata=self.__contracts_by_metadata_index,
+                contracts_inheritance=self.__contracts_inheritance_index,
+                bytecode_index=self.__bytecode_index,
             )
         )
 

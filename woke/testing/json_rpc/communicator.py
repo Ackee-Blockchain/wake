@@ -136,6 +136,20 @@ class JsonRpcCommunicator:
         text = await self._send_request("eth_accounts")
         return self._process_response(text)
 
+    async def eth_get_code(
+        self, address: str, block: Union[int, str] = BlockEnum.LATEST
+    ) -> bytes:
+        """Returns code at a given address."""
+        params = [address]
+        if isinstance(block, int):
+            params.append(hex(block))
+        elif isinstance(block, str):
+            params.append(block)
+        else:
+            raise TypeError("block must be either int or BlockEnum")
+        text = await self._send_request("eth_getCode", params)
+        return bytes.fromhex(self._process_response(text)[2:])
+
     async def eth_call(
         self,
         transaction: TxParams,

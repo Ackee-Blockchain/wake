@@ -16,5 +16,7 @@ import woke.testing.contract
 
 woke.testing.contract.errors = {errors}
 woke.testing.contract.events = {events}
-woke.testing.contract.contracts = {contracts}
+woke.testing.contract.contracts_by_metadata = {contracts_by_metadata}
+woke.testing.contract.contracts_inheritance = {contracts_inheritance}
+woke.testing.contract.bytecode_index = {bytecode_index}
 """

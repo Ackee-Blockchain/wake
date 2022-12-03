@@ -20,6 +20,9 @@ class DevChainABC(ABC):
             self._communicator.eth_get_balance(address)
         )
 
+    def get_code(self, address: str) -> bytes:
+        return self._loop.run_until_complete(self._communicator.eth_get_code(address))
+
     def accounts(self) -> List[str]:
         return self._loop.run_until_complete(self._communicator.eth_accounts())
 
