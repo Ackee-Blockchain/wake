@@ -327,7 +327,7 @@ class TypeGenerator:
 
     def generate_contract_template(
         self, contract: ContractDefinition, base_names: str
-    ) -> Tuple[Dict[bytes, Any], Dict[bytes, Any]]:
+    ) -> Dict[bytes, Any]:
         if contract.kind == ContractKind.LIBRARY:
             self.add_str_to_types(
                 0, "class " + self.get_name(contract.name) + "(Library):", 1
@@ -366,7 +366,6 @@ class TypeGenerator:
             contract.parent.source_unit_name[:-3]
         ).replace("/", ".")
 
-        errors_abi = {}
         events_abi = {}
 
         for item in compilation_info.abi:
@@ -379,14 +378,37 @@ class TypeGenerator:
                 selector = eth_utils.function_abi_to_4byte_selector(
                     item
                 )  # pyright: reportPrivateImportUsage=false
-                errors_abi[selector] = item
 
                 if selector not in self.__errors_index:
                     self.__errors_index[selector] = {}
-                self.__errors_index[selector][fqn] = (
-                    module_name,
-                    (contract.name, item["name"]),
-                )
+
+                # find where the error is declared
+                error_decl = None
+                for error in contract.used_errors:
+                    if error.name == item["name"]:
+                        error_decl = error
+                        break
+                assert error_decl is not None
+
+                if isinstance(error_decl.parent, ContractDefinition):
+                    # error is declared in a contract
+                    error_module_name = "pytypes." + _make_path_alphanum(
+                        error_decl.parent.parent.source_unit_name[:-3]
+                    ).replace("/", ".")
+                    self.__errors_index[selector][fqn] = (
+                        error_module_name,
+                        (error_decl.parent.name, error_decl.name),
+                    )
+                elif isinstance(error_decl.parent, SourceUnit):
+                    error_module_name = "pytypes." + _make_path_alphanum(
+                        error_decl.parent.source_unit_name[:-3]
+                    ).replace("/", ".")
+                    self.__errors_index[selector][fqn] = (
+                        error_module_name,
+                        (error_decl.name,),
+                    )
+                else:
+                    raise Exception("Unknown error parent")
             elif item["type"] == "event":
                 selector = eth_utils.event_abi_to_log_topic(
                     item
@@ -473,7 +495,7 @@ class TypeGenerator:
         self.generate_bytecode_func(contract, libraries)
         self.add_str_to_types(0, "", 1)
 
-        return errors_abi, events_abi
+        return events_abi
 
     def generate_types_struct(
         self, structs: Iterable[StructDefinition], indent: int
@@ -510,16 +532,36 @@ class TypeGenerator:
         self,
         errors: Iterable[ErrorDefinition],
         indent: int,
-        errors_abi: Dict[bytes, Any],
     ) -> None:
         for error in errors:
+            # cannot generate pytypes for unused errors
+            if len(error.used_in) == 0:
+                continue
+
+            used_in = error.used_in[0]
+            assert used_in.compilation_info is not None
+            assert used_in.compilation_info.abi is not None
+
+            error_abi = None
+
+            for item in used_in.compilation_info.abi:
+                if item["type"] == "error" and item["name"] == error.name:
+                    selector = eth_utils.function_abi_to_4byte_selector(
+                        item
+                    )  # pyright: reportPrivateImportUsage=false
+                    if selector == error.error_selector:
+                        error_abi = item
+                        break
+
+            assert error_abi is not None
+
             self.add_str_to_types(indent, "@dataclass", 1)
             self.add_str_to_types(
-                indent, f"class {self.get_name(error.name)}(Exception):", 1
+                indent,
+                f"class {self.get_name(error.name)}(TransactionRevertedError):",
+                1,
             )
-            self.add_str_to_types(
-                indent + 1, f"_abi = {errors_abi[error.error_selector]}", 2
-            )
+            self.add_str_to_types(indent + 1, f"_abi = {error_abi}", 2)
             for parameter in error.parameters.parameters:
                 self.add_str_to_types(
                     indent + 1,
@@ -938,7 +980,7 @@ class TypeGenerator:
             base_names = "Contract, " + base_names if base_names else "Contract"
 
         self.__imports.generate_default_imports = True
-        errors_abi, events_abi = self.generate_contract_template(contract, base_names)
+        events_abi = self.generate_contract_template(contract, base_names)
 
         if contract.enums:
             self.generate_types_enum(contract.enums, 1)
@@ -947,7 +989,7 @@ class TypeGenerator:
             self.generate_types_struct(contract.structs, 1)
 
         if contract.errors:
-            self.generate_types_error(contract.errors, 1, errors_abi)
+            self.generate_types_error(contract.errors, 1)
 
         if contract.events:
             self.generate_types_event(contract.events, 1, events_abi)
@@ -966,9 +1008,7 @@ class TypeGenerator:
     def generate_types_source_unit(self, unit: SourceUnit) -> None:
         self.generate_types_struct(unit.structs, 0)
         self.generate_types_enum(unit.enums, 0)
-        if len(unit.errors) > 0:
-            raise NotImplementedError("Top level errors are not supported yet")
-        # self.generate_types_error(unit.errors, 0)
+        self.generate_types_error(unit.errors, 0)
         for contract in unit.contracts:
             self.generate_types_contract(contract)
 
