@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
 
 from Crypto.Hash import keccak
 
@@ -34,6 +34,7 @@ class ErrorDefinition(DeclarationAbc):
     _parameters: ParameterList
     _documentation: Optional[StructuredDocumentation]
     _error_selector: Optional[bytes]
+    _used_in: List[ContractDefinition]
 
     def __init__(
         self, init: IrInitTuple, error: SolcErrorDefinition, parent: SolidityAbc
@@ -48,6 +49,7 @@ class ErrorDefinition(DeclarationAbc):
         self._error_selector = (
             bytes.fromhex(error.error_selector) if error.error_selector else None
         )
+        self._used_in = []
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
@@ -131,3 +133,11 @@ class ErrorDefinition(DeclarationAbc):
             signature += ")"
             h = keccak.new(data=signature.encode("utf-8"), digest_bits=256)
             return h.digest()[:4]
+
+    @property
+    def used_in(self) -> Tuple[ContractDefinition]:
+        """
+        Returns:
+            List of contracts where the error is used.
+        """
+        return tuple(self._used_in)

@@ -83,7 +83,7 @@ class ContractDefinition(DeclarationAbc):
     # __scope
     _documentation: Optional[Union[StructuredDocumentation, str]]
     _compilation_info: Optional[SolcOutputContractInfo]
-    # __used_errors
+    _used_errors: List[AstNodeId]
     _enums: List[EnumDefinition]
     _errors: List[ErrorDefinition]
     _events: List[EventDefinition]
@@ -104,6 +104,9 @@ class ContractDefinition(DeclarationAbc):
         self._kind = contract.contract_kind
         self._fully_implemented = contract.fully_implemented
         self._linearized_base_contracts = list(contract.linearized_base_contracts)
+        self._used_errors = (
+            list(contract.used_errors) if contract.used_errors is not None else []
+        )
 
         if contract.documentation is None:
             self._documentation = None
@@ -194,6 +197,9 @@ class ContractDefinition(DeclarationAbc):
             contract._child_contracts.add(self)
             base_contracts.append(contract)
 
+        for error in self.used_errors:
+            error._used_in.append(self)
+
         self._reference_resolver.register_destroy_callback(
             self.file, partial(self._destroy, base_contracts)
         )
@@ -201,6 +207,8 @@ class ContractDefinition(DeclarationAbc):
     def _destroy(self, base_contracts: List[ContractDefinition]) -> None:
         for base_contract in base_contracts:
             base_contract._child_contracts.remove(self)
+        for error in self.used_errors:
+            error._used_in.remove(self)
 
     def _parse_name_location(self) -> Tuple[int, int]:
         IDENTIFIER = r"[a-zA-Z$_][a-zA-Z0-9$_]*"
@@ -340,6 +348,19 @@ class ContractDefinition(DeclarationAbc):
             assert isinstance(node, ContractDefinition)
             base_contracts.append(node)
         return tuple(base_contracts)
+
+    @property
+    def used_errors(self) -> Tuple[ErrorDefinition]:
+        """
+        Returns:
+            Errors used in the contract.
+        """
+        used_errors = []
+        for error in self._used_errors:
+            node = self._reference_resolver.resolve_node(error, self._cu_hash)
+            assert isinstance(node, ErrorDefinition)
+            used_errors.append(node)
+        return tuple(used_errors)
 
     @property
     def documentation(self) -> Optional[Union[StructuredDocumentation, str]]:
