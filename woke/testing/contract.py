@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import dataclasses
 import functools
 import importlib
@@ -24,7 +23,6 @@ from typing import (
     get_type_hints,
 )
 
-import aiohttp
 import eth_abi
 import eth_utils
 from Crypto.Hash import BLAKE2b
@@ -195,21 +193,18 @@ class ChainInterface:
 
     @contextmanager
     def connect(self, uri: str):
-        loop = asyncio.get_event_loop()
-        session = aiohttp.ClientSession()
+        communicator = JsonRpcCommunicator(uri)
         try:
-            communicator = JsonRpcCommunicator(uri, session)
+            communicator.__enter__()
             self._connected = True
 
-            client_version = loop.run_until_complete(
-                communicator.web3_client_version()
-            ).lower()
+            client_version = communicator.web3_client_version().lower()
             if "anvil" in client_version:
-                self._dev_chain = AnvilDevChain(loop, communicator)
+                self._dev_chain = AnvilDevChain(communicator)
             elif "hardhat" in client_version:
-                self._dev_chain = HardhatDevChain(loop, communicator)
+                self._dev_chain = HardhatDevChain(communicator)
             elif "ethereumjs" in client_version:
-                self._dev_chain = GanacheDevChain(loop, communicator)
+                self._dev_chain = GanacheDevChain(communicator)
             else:
                 raise NotImplementedError(
                     f"Client version {client_version} not supported"
@@ -239,7 +234,8 @@ class ChainInterface:
 
             yield
         finally:
-            loop.run_until_complete(session.close())
+            if communicator.connected:
+                communicator.__exit__(None, None, None)
             self._connected = False
 
     @property

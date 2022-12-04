@@ -1,4 +1,3 @@
-import asyncio
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Union
 
@@ -6,75 +5,55 @@ from .json_rpc.communicator import JsonRpcCommunicator, TxParams
 
 
 class DevChainABC(ABC):
-    _loop: asyncio.AbstractEventLoop
     _communicator: JsonRpcCommunicator
 
-    def __init__(
-        self, loop: asyncio.AbstractEventLoop, communicator: JsonRpcCommunicator
-    ) -> None:
-        self._loop = loop
+    def __init__(self, communicator: JsonRpcCommunicator) -> None:
         self._communicator = communicator
 
     def get_balance(self, address: str) -> int:
-        return self._loop.run_until_complete(
-            self._communicator.eth_get_balance(address)
-        )
+        return self._communicator.eth_get_balance(address)
 
     def get_code(self, address: str) -> bytes:
-        return self._loop.run_until_complete(self._communicator.eth_get_code(address))
+        return self._communicator.eth_get_code(address)
 
     def accounts(self) -> List[str]:
-        return self._loop.run_until_complete(self._communicator.eth_accounts())
+        return self._communicator.eth_accounts()
 
     def get_block(self, block_identifier: Union[int, str]) -> Dict[str, Any]:
-        return self._loop.run_until_complete(
-            self._communicator.eth_get_block_by_number(block_identifier, False)
-        )
+        return self._communicator.eth_get_block_by_number(block_identifier, False)
 
     def get_chain_id(self) -> int:
-        return self._loop.run_until_complete(self._communicator.eth_chain_id())
+        return self._communicator.eth_chain_id()
 
     def get_gas_price(self) -> int:
-        return self._loop.run_until_complete(self._communicator.eth_gas_price())
+        return self._communicator.eth_gas_price()
 
     def get_transaction_count(self, address: str) -> int:
-        return self._loop.run_until_complete(
-            self._communicator.eth_get_transaction_count(address)
-        )
+        return self._communicator.eth_get_transaction_count(address)
 
     def call(self, params: TxParams) -> bytes:
-        return self._loop.run_until_complete(self._communicator.eth_call(params))
+        return self._communicator.eth_call(params)
 
     def estimate_gas(self, params: TxParams) -> int:
-        return self._loop.run_until_complete(
-            self._communicator.eth_estimate_gas(params)
-        )
+        return self._communicator.eth_estimate_gas(params)
 
     def send_transaction(self, params: TxParams) -> str:
-        return self._loop.run_until_complete(
-            self._communicator.eth_send_transaction(params)
-        )
+        return self._communicator.eth_send_transaction(params)
 
     def debug_trace_transaction(self, tx_hash: str, options: Dict) -> Dict:
-        return self._loop.run_until_complete(
-            self._communicator.debug_trace_transaction(tx_hash, options)
-        )
+        return self._communicator.debug_trace_transaction(tx_hash, options)
 
     def wait_for_transaction_receipt(self, tx_hash: str) -> Dict[str, Any]:
-        ret = self._loop.run_until_complete(
-            self._communicator.eth_get_transaction_receipt(tx_hash)
-        )
+        ret = self._communicator.eth_get_transaction_receipt(tx_hash)
         while ret is None:
-            ret = self._loop.run_until_complete(
-                self._communicator.eth_get_transaction_receipt(tx_hash)
-            )
+            ret = self._communicator.eth_get_transaction_receipt(tx_hash)
         return ret
 
     def snapshot(self) -> str:
-        return self._loop.run_until_complete(self._communicator.evm_snapshot())
+        return self._communicator.evm_snapshot()
 
     def revert(self, snapshot_id: str) -> bool:
-        return self._loop.run_until_complete(self._communicator.evm_revert(snapshot_id))
+        return self._communicator.evm_revert(snapshot_id)
 
     @abstractmethod
     def reset(self) -> None:
@@ -91,72 +70,50 @@ class DevChainABC(ABC):
 
 class HardhatDevChain(DevChainABC):
     def set_balance(self, address: str, value: int) -> None:
-        self._loop.run_until_complete(
-            self._communicator.hardhat_set_balance(address, value)
-        )
+        self._communicator.hardhat_set_balance(address, value)
 
     def impersonate_account(self, address: str) -> None:
-        self._loop.run_until_complete(
-            self._communicator.hardhat_impersonate_account(address)
-        )
+        self._communicator.hardhat_impersonate_account(address)
 
     def stop_impersonating_account(self, address: str) -> None:
-        self._loop.run_until_complete(
-            self._communicator.hardhat_stop_impersonating_account(address)
-        )
+        self._communicator.hardhat_stop_impersonating_account(address)
 
     def set_block_gas_limit(self, gas_limit: int) -> None:
-        self._loop.run_until_complete(
-            self._communicator.evm_set_block_gas_limit(gas_limit)
-        )
+        self._communicator.evm_set_block_gas_limit(gas_limit)
 
     def reset(self) -> None:
-        self._loop.run_until_complete(self._communicator.hardhat_reset())
+        self._communicator.hardhat_reset()
 
 
 class AnvilDevChain(DevChainABC):
     def trace_transaction(self, tx_hash: Any) -> Dict:
-        return self._loop.run_until_complete(
-            self._communicator.trace_transaction(tx_hash)
-        )
+        return self._communicator.trace_transaction(tx_hash)
 
     def set_balance(self, address: str, value: int) -> None:
-        self._loop.run_until_complete(
-            self._communicator.anvil_set_balance(address, value)
-        )
+        self._communicator.anvil_set_balance(address, value)
 
     def impersonate_account(self, address: str) -> None:
-        self._loop.run_until_complete(
-            self._communicator.anvil_impersonate_account(address)
-        )
+        self._communicator.anvil_impersonate_account(address)
 
     def stop_impersonating_account(self, address: str) -> None:
-        self._loop.run_until_complete(
-            self._communicator.anvil_stop_impersonating_account(address)
-        )
+        self._communicator.anvil_stop_impersonating_account(address)
 
     def set_block_gas_limit(self, gas_limit: int) -> None:
-        self._loop.run_until_complete(
-            self._communicator.evm_set_block_gas_limit(gas_limit)
-        )
+        self._communicator.evm_set_block_gas_limit(gas_limit)
 
     def reset(self) -> None:
         raise NotImplementedError("Anvil does not support resetting the chain")
-        self._loop.run_until_complete(self._communicator.anvil_reset())
+        self._communicator.anvil_reset()
 
 
 class GanacheDevChain(DevChainABC):
     def set_balance(self, address: str, value: int) -> None:
-        self._loop.run_until_complete(
-            self._communicator.evm_set_account_balance(address, value)
-        )
+        self._communicator.evm_set_account_balance(address, value)
 
     def add_account(self, address: str, passphrase: str) -> bool:
-        return self._loop.run_until_complete(
-            self._communicator.evm_add_account(address, passphrase)
-        ) and self._loop.run_until_complete(
-            self._communicator.personal_unlock_account(address, passphrase, 0)
-        )
+        return self._communicator.evm_add_account(
+            address, passphrase
+        ) and self._communicator.personal_unlock_account(address, passphrase, 0)
 
     def set_block_gas_limit(self, gas_limit: int) -> None:
         raise NotImplementedError("Ganache does not support setting block gas limit")

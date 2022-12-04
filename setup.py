@@ -21,6 +21,7 @@ install_requires = [
     "eth_abi >= 3.0.0, < 4",
     "eth-hash[pycryptodome] >= 0.3.3, < 1",
     "ipdb",
+    "websocket-client >= 1.4.0",
 ]
 
 # Also: [pyright](https://github.com/microsoft/pyright/) (distributed through npm)
