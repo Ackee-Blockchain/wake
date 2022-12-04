@@ -6,7 +6,7 @@ from typing import Callable, Iterable, List, Tuple, TypeVar
 
 from Crypto.Hash import keccak
 
-from woke.testing.contract import ChainInterface
+from woke.testing.core import ChainInterface
 
 
 def snapshot_and_revert(devchain_interface: ChainInterface):

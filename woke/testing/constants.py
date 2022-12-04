@@ -8,16 +8,16 @@ from dataclasses import dataclass
 from typing import List, NewType, Optional, overload, Union
 from typing_extensions import Literal
 
-from woke.testing.contract import Contract, Library, TransactionObject, Address, Wei, Account, ChainInterface
+from woke.testing.core import Contract, Library, TransactionObject, Address, Wei, Account, ChainInterface
 from woke.testing.internal import TransactionRevertedError
 """
 
 INIT_CONTENT: str = """
-import woke.testing.contract
+import woke.testing.core
 
-woke.testing.contract.errors = {errors}
-woke.testing.contract.events = {events}
-woke.testing.contract.contracts_by_metadata = {contracts_by_metadata}
-woke.testing.contract.contracts_inheritance = {contracts_inheritance}
-woke.testing.contract.bytecode_index = {bytecode_index}
+woke.testing.core.errors = {errors}
+woke.testing.core.events = {events}
+woke.testing.core.contracts_by_metadata = {contracts_by_metadata}
+woke.testing.core.contracts_inheritance = {contracts_inheritance}
+woke.testing.core.bytecode_index = {bytecode_index}
 """
