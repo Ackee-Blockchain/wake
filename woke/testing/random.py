@@ -2,7 +2,7 @@ import random
 import string
 from typing import Callable, Optional
 
-from .contract import Account, Address, ChainInterface, default_chain
+from .core import Account, Address, ChainInterface, default_chain
 
 
 def random_account(

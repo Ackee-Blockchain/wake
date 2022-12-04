@@ -3,7 +3,7 @@ import random
 from datetime import datetime, timedelta
 from typing import Callable, Counter, Iterable, List, Optional, Tuple
 
-from woke.testing.contract import ChainInterface, default_chain
+from woke.testing.core import ChainInterface, default_chain
 
 from .utils import partition
 

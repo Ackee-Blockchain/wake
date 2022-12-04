@@ -26,7 +26,7 @@ from tblib import pickling_support
 
 from woke.cli.console import console
 from woke.config import WokeConfig
-from woke.testing.contract import default_chain
+from woke.testing.core import default_chain
 
 
 def _setup(port: int, network_id: str) -> subprocess.Popen:
