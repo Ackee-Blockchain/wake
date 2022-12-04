@@ -103,7 +103,7 @@ class Address:
         return hash(self._address)
 
 
-Address.ZERO = Address("0x0000000000000000000000000000000000000000")
+Address.ZERO = Address(0)
 
 
 class Account:
@@ -163,16 +163,16 @@ class RevertToSnapshotFailedError(Exception):
 
 
 class ChainInterface:
-    __dev_chain: DevChainABC
-    __accounts: List[Account]
-    __default_account: Optional[Account]
-    __block_gas_limit: int
-    __gas_price: int
-    __chain_id: int
-    __nonces: DefaultDict[Address, int]
-    __snapshots: Dict[str, Dict]
-    __deployed_libraries: DefaultDict[bytes, List[Library]]
-    __single_source_errors: Set[bytes]
+    _dev_chain: DevChainABC
+    _accounts: List[Account]
+    _default_account: Optional[Account]
+    _block_gas_limit: int
+    _gas_price: int
+    _chain_id: int
+    _nonces: DefaultDict[Address, int]
+    _snapshots: Dict[str, Dict]
+    _deployed_libraries: DefaultDict[bytes, List[Library]]
+    _single_source_errors: Set[bytes]
 
     console_logs_callback: Optional[Callable[[str, List[Any]], None]]
     events_callback: Optional[Callable[[str, List[Tuple[bytes, Any]]], None]]
@@ -187,32 +187,30 @@ class ChainInterface:
                 communicator.web3_client_version()
             ).lower()
             if "anvil" in client_version:
-                self.__dev_chain = AnvilDevChain(loop, communicator)
+                self._dev_chain = AnvilDevChain(loop, communicator)
             elif "hardhat" in client_version:
-                self.__dev_chain = HardhatDevChain(loop, communicator)
+                self._dev_chain = HardhatDevChain(loop, communicator)
             elif "ethereumjs" in client_version:
-                self.__dev_chain = GanacheDevChain(loop, communicator)
+                self._dev_chain = GanacheDevChain(loop, communicator)
             else:
                 raise NotImplementedError(
                     f"Client version {client_version} not supported"
                 )
-            self.__accounts = [
-                Account(acc, self) for acc in self.__dev_chain.accounts()
-            ]
-            block_info = self.__dev_chain.get_block("latest")
+            self._accounts = [Account(acc, self) for acc in self._dev_chain.accounts()]
+            block_info = self._dev_chain.get_block("latest")
             assert "gasLimit" in block_info
-            self.__block_gas_limit = int(block_info["gasLimit"], 16)
-            self.__chain_id = self.__dev_chain.get_chain_id()
-            self.__gas_price = self.__dev_chain.get_gas_price()
-            self.__nonces = defaultdict(lambda: 0)
-            self.__snapshots = {}
-            self.__deployed_libraries = defaultdict(list)
-            if len(self.__accounts) > 0:
-                self.__default_account = self.__accounts[0]
+            self._block_gas_limit = int(block_info["gasLimit"], 16)
+            self._chain_id = self._dev_chain.get_chain_id()
+            self._gas_price = self._dev_chain.get_gas_price()
+            self._nonces = defaultdict(lambda: 0)
+            self._snapshots = {}
+            self._deployed_libraries = defaultdict(list)
+            if len(self._accounts) > 0:
+                self._default_account = self._accounts[0]
             else:
-                self.__default_account = None
+                self._default_account = None
 
-            self.__single_source_errors = {
+            self._single_source_errors = {
                 selector
                 for selector, sources in errors.items()
                 if len({source for fqn, source in sources.items()}) == 1
@@ -227,39 +225,39 @@ class ChainInterface:
 
     @property
     def accounts(self) -> Tuple[Account, ...]:
-        return tuple(self.__accounts)
+        return tuple(self._accounts)
 
     @property
     def default_account(self) -> Optional[Account]:
-        return self.__default_account
+        return self._default_account
 
     @default_account.setter
     def default_account(self, account: Union[Account, Address, str]) -> None:
         if isinstance(account, Account):
-            self.__default_account = account
+            self._default_account = account
         else:
-            self.__default_account = Account(account, self)
+            self._default_account = Account(account, self)
 
     @property
     def block_gas_limit(self) -> int:
-        return self.__block_gas_limit
+        return self._block_gas_limit
 
     @block_gas_limit.setter
     def block_gas_limit(self, value: int) -> None:
-        self.__dev_chain.set_block_gas_limit(value)
-        self.__block_gas_limit = value
+        self._dev_chain.set_block_gas_limit(value)
+        self._block_gas_limit = value
 
     @property
     def gas_price(self) -> int:
-        return self.__gas_price
+        return self._gas_price
 
     @gas_price.setter
     def gas_price(self, value: int) -> None:
-        self.__gas_price = value
+        self._gas_price = value
 
     @property
     def dev_chain(self):
-        return self.__dev_chain
+        return self._dev_chain
 
     def _convert_to_web3_type(self, value: Any) -> Any:
         if dataclasses.is_dataclass(value):
@@ -333,34 +331,34 @@ class ChainInterface:
         return value
 
     def update_accounts(self):
-        self.__accounts = [Account(acc, self) for acc in self.__dev_chain.accounts()]
+        self._accounts = [Account(acc, self) for acc in self._dev_chain.accounts()]
 
     def snapshot(self) -> str:
-        snapshot_id = self.__dev_chain.snapshot()
+        snapshot_id = self._dev_chain.snapshot()
 
-        self.__snapshots[snapshot_id] = {
-            "nonces": self.__nonces.copy(),
-            "accounts": self.__accounts.copy(),
-            "default_account": self.__default_account,
-            "block_gas_limit": self.__block_gas_limit,
+        self._snapshots[snapshot_id] = {
+            "nonces": self._nonces.copy(),
+            "accounts": self._accounts.copy(),
+            "default_account": self._default_account,
+            "block_gas_limit": self._block_gas_limit,
         }
         return snapshot_id
 
     def revert(self, snapshot_id: str) -> None:
-        reverted = self.__dev_chain.revert(snapshot_id)
+        reverted = self._dev_chain.revert(snapshot_id)
         if not reverted:
             raise RevertToSnapshotFailedError()
 
-        snapshot = self.__snapshots[snapshot_id]
-        self.__nonces = snapshot["nonces"]
-        self.__accounts = snapshot["accounts"]
-        self.__default_account = snapshot["default_account"]
-        self.__block_gas_limit = snapshot["block_gas_limit"]
-        del self.__snapshots[snapshot_id]
+        snapshot = self._snapshots[snapshot_id]
+        self._nonces = snapshot["nonces"]
+        self._accounts = snapshot["accounts"]
+        self._default_account = snapshot["default_account"]
+        self._block_gas_limit = snapshot["block_gas_limit"]
+        del self._snapshots[snapshot_id]
 
     @property
     def deployed_libraries(self) -> DefaultDict[bytes, List[Library]]:
-        return self.__deployed_libraries
+        return self._deployed_libraries
 
     @contextmanager
     def snapshot_and_revert(self):
@@ -371,14 +369,12 @@ class ChainInterface:
             self.revert(snapshot_id)
 
     def reset(self) -> None:
-        self.__dev_chain.reset()
+        self._dev_chain.reset()
 
     def _get_nonce(self, address: Union[str, Address]) -> int:
-        if address not in self.__nonces:
-            self.__nonces[address] = self.__dev_chain.get_transaction_count(
-                str(address)
-            )
-        return self.__nonces[address]
+        if address not in self._nonces:
+            self._nonces[address] = self._dev_chain.get_transaction_count(str(address))
+        return self._nonces[address]
 
     def _build_transaction(
         self, params: Dict, data: bytes, arguments: Iterable, abi: Optional[Dict]
@@ -408,11 +404,11 @@ class ChainInterface:
                 "from": str(sender),
                 "value": params["value"] if "value" in params else 0,
                 "data": data,
-                "gas_price": self.__gas_price,
+                "gas_price": self._gas_price,
             }
             if "to" in params:
                 estimate_params["to"] = params["to"]
-            gas = self.__dev_chain.estimate_gas(estimate_params)
+            gas = self._dev_chain.estimate_gas(estimate_params)
 
         tx: TxParams = {
             "type": 2,
@@ -421,7 +417,7 @@ class ChainInterface:
             "gas": gas,
             "value": params["value"] if "value" in params else 0,
             "data": data,
-            "gas_price": self.__gas_price,
+            "gas_price": self._gas_price,
             # "max_priority_fee_per_gas": 0,
             # "max_fee_per_gas": 0,
             # "access_list": [],
@@ -440,9 +436,9 @@ class ChainInterface:
                 f"Transaction reverted with unknown error selector {selector.hex()}"
             )
 
-        if selector not in self.__single_source_errors:
+        if selector not in self._single_source_errors:
             # ambiguous error, try to find the source contract
-            debug_trace = self.__dev_chain.debug_trace_transaction(
+            debug_trace = self._dev_chain.debug_trace_transaction(
                 tx_hash, {"enableMemory": True}
             )
             fqn = self._process_debug_trace_for_revert(debug_trace, origin)
@@ -492,7 +488,7 @@ class ChainInterface:
                 break
 
         if non_unique:
-            debug_trace = self.__dev_chain.debug_trace_transaction(
+            debug_trace = self._dev_chain.debug_trace_transaction(
                 tx_hash, {"enableMemory": True}
             )
             event_traces = self._process_debug_trace_for_events(debug_trace, origin)
@@ -580,10 +576,10 @@ class ChainInterface:
         origin: Union[Address, str],
     ) -> None:
         if int(tx_receipt["status"], 16) == 0:
-            if isinstance(self.__dev_chain, (AnvilDevChain, GanacheDevChain)):
+            if isinstance(self._dev_chain, (AnvilDevChain, GanacheDevChain)):
                 # should also revert
                 try:
-                    self.__dev_chain.call(tx_params)
+                    self._dev_chain.call(tx_params)
                     raise AssertionError("Transaction should have reverted")
                 except JsonRpcError as e:
                     try:
@@ -591,8 +587,8 @@ class ChainInterface:
                     except Exception:
                         raise e
                 self._process_revert_data(tx_hash, bytes.fromhex(revert_data), origin)
-            elif isinstance(self.__dev_chain, HardhatDevChain):
-                data = self.__dev_chain.call(tx_params)
+            elif isinstance(self._dev_chain, HardhatDevChain):
+                data = self._dev_chain.call(tx_params)
                 self._process_revert_data(tx_hash, data, origin)
 
     def _process_return_data(self, output: bytes, abi: Dict, return_type: Type):
@@ -679,20 +675,20 @@ class ChainInterface:
 
         with _signer_account(sender, self):
             try:
-                tx_hash = self.__dev_chain.send_transaction(tx)
+                tx_hash = self._dev_chain.send_transaction(tx)
             except ValueError as e:
                 try:
                     tx_hash = e.args[0]["data"]["txHash"]
                 except Exception:
                     raise e
-            self.__nonces[sender.address] += 1
+            self._nonces[sender.address] += 1
 
-        tx_receipt = self.__dev_chain.wait_for_transaction_receipt(tx_hash)
+        tx_receipt = self._dev_chain.wait_for_transaction_receipt(tx_hash)
 
         if self.console_logs_callback is not None and isinstance(
-            self.__dev_chain, AnvilDevChain
+            self._dev_chain, AnvilDevChain
         ):
-            output = self.__dev_chain.trace_transaction(tx_hash)
+            output = self._dev_chain.trace_transaction(tx_hash)
             self._process_console_logs(tx_hash, output)
 
         origin_fqn = self._get_fqn_from_bytecode(bytecode)
@@ -716,7 +712,7 @@ class ChainInterface:
         return_type: Type,
     ) -> Any:
         tx = self._build_transaction(params, selector, arguments, abi[selector])
-        output = self.__dev_chain.call(tx)
+        output = self._dev_chain.call(tx)
         return self._process_return_data(output, abi[selector], return_type)
 
     def _process_debug_trace_for_events(
@@ -765,7 +761,7 @@ class ChainInterface:
                         # skip events from console.log
                         event_fqns.append((selector, None))
                         continue
-                    code = self.__dev_chain.get_code(str(addresses[-1]))
+                    code = self._dev_chain.get_code(str(addresses[-1]))
                     metadata = code[-53:]
                     if metadata not in contracts_by_metadata:
                         raise ValueError(
@@ -815,7 +811,7 @@ class ChainInterface:
                 last_popped = addresses.pop()
 
         if isinstance(last_popped, Address):
-            code = self.__dev_chain.get_code(str(last_popped))
+            code = self._dev_chain.get_code(str(last_popped))
             metadata = code[-53:]
             if metadata not in contracts_by_metadata:
                 raise ValueError(
@@ -845,18 +841,18 @@ class ChainInterface:
 
         with _signer_account(sender, self):
             try:
-                tx_hash = self.__dev_chain.send_transaction(tx)
+                tx_hash = self._dev_chain.send_transaction(tx)
             except ValueError as e:
                 try:
                     tx_hash = e.args[0]["data"]["txHash"]
                 except Exception:
                     raise e
-            self.__nonces[sender.address] += 1
+            self._nonces[sender.address] += 1
 
-        tx_receipt = self.__dev_chain.wait_for_transaction_receipt(tx_hash)
+        tx_receipt = self._dev_chain.wait_for_transaction_receipt(tx_hash)
 
-        if isinstance(self.__dev_chain, AnvilDevChain):
-            output = self.__dev_chain.trace_transaction(tx_hash)
+        if isinstance(self._dev_chain, AnvilDevChain):
+            output = self._dev_chain.trace_transaction(tx_hash)
             if self.console_logs_callback is not None:
                 self._process_console_logs(tx_hash, output)
 
@@ -866,20 +862,20 @@ class ChainInterface:
             self._process_tx_receipt(tx_receipt, tx_hash, tx, Address(tx["to"]))
 
             output = bytes.fromhex(output[0]["result"]["output"][2:])
-        elif isinstance(self.__dev_chain, GanacheDevChain):
+        elif isinstance(self._dev_chain, GanacheDevChain):
             if self.events_callback is not None:
                 self._process_events(tx_hash, tx_receipt["logs"], Address(tx["to"]))
 
             self._process_tx_receipt(tx_receipt, tx_hash, tx, Address(tx["to"]))
 
-            output = self.__dev_chain.call(tx)
-        elif isinstance(self.__dev_chain, HardhatDevChain):
+            output = self._dev_chain.call(tx)
+        elif isinstance(self._dev_chain, HardhatDevChain):
             if self.events_callback is not None:
                 self._process_events(tx_hash, tx_receipt["logs"], Address(tx["to"]))
 
             self._process_tx_receipt(tx_receipt, tx_hash, tx, Address(tx["to"]))
 
-            output = self.__dev_chain.debug_trace_transaction(tx_hash, {})
+            output = self._dev_chain.debug_trace_transaction(tx_hash, {})
             output = bytes.fromhex(output["returnValue"])
         else:
             raise NotImplementedError()
