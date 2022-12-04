@@ -620,7 +620,11 @@ class ChainInterface:
                         raise e
                 self._process_revert_data(tx_hash, bytes.fromhex(revert_data), origin)
             elif isinstance(self._dev_chain, HardhatDevChain):
-                data = self._dev_chain.call(tx_params)
+                try:
+                    _ = self._dev_chain.call(tx_params)
+                    raise AssertionError("Transaction should have reverted")
+                except JsonRpcError as e:
+                    data = bytes.fromhex(e.data["data"]["data"][2:])
                 self._process_revert_data(tx_hash, data, origin)
 
     def _process_return_data(self, output: bytes, abi: Dict, return_type: Type):
@@ -877,7 +881,7 @@ class ChainInterface:
         with _signer_account(sender, self):
             try:
                 tx_hash = self._dev_chain.send_transaction(tx)
-            except ValueError as e:
+            except (ValueError, JsonRpcError) as e:
                 try:
                     tx_hash = e.args[0]["data"]["txHash"]
                 except Exception:
