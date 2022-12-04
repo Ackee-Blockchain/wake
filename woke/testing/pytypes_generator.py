@@ -697,7 +697,6 @@ class TypeGenerator:
                     )
             if len(node.members) == len(non_excluded):
                 # nothing was excluded -> the whole struct will be used -> add the struct to imports
-                self.__imports.generate_struct_import(struct)
                 parent = node.parent
                 if isinstance(parent, ContractDefinition):
                     self.__imports.generate_contract_import_name(
@@ -710,6 +709,7 @@ class TypeGenerator:
                         )
                     ]
                 else:
+                    self.__imports.generate_struct_import(struct)
                     return [(self.get_name(struct.name), struct_type_name.type_string)]
             else:
                 self.__imports.add_python_import("from typing import Tuple")
@@ -731,8 +731,17 @@ class TypeGenerator:
                 if depth == 0:
                     pass
                 else:
-                    parsed.append(self.get_name(var_type.name))
-                    self.__imports.generate_struct_import(var_type)
+                    parent = var_type.ir_node.parent
+                    if isinstance(parent, ContractDefinition):
+                        self.__imports.generate_contract_import_name(
+                            parent.name, parent.parent.source_unit_name
+                        )
+                        parsed.append(
+                            f"{self.get_name(parent.name)}.{self.get_name(var_type.name)}"
+                        )
+                    else:
+                        self.__imports.generate_struct_import(var_type)
+                        parsed.append(self.get_name(var_type.name))
                 assert isinstance(var_type_name, UserDefinedTypeName)
                 returns = get_struct_return_list(var_type_name)
             elif isinstance(var_type, types.Enum):
@@ -771,7 +780,7 @@ class TypeGenerator:
             elif isinstance(var_type, types.Array):
                 use_parse = True
                 param_names.append(("index" + str(depth), "uint256"))
-                parsed.append(f"index{depth}: uint256")
+                parsed.append(f"index{depth}: int")
                 assert isinstance(var_type_name, ArrayTypeName)
                 if self.is_compound_type(var_type.base_type):
                     parsed.extend(
@@ -785,8 +794,10 @@ class TypeGenerator:
             elif isinstance(var_type, types.Mapping):
                 # parse key
                 use_parse = True
-                param_names.append(("key" + str(depth), var_type_name.type_string))
                 assert isinstance(var_type_name, woke.ast.ir.type_name.mapping.Mapping)
+                param_names.append(
+                    ("key" + str(depth), var_type_name.key_type.type_string)
+                )
                 key_type = generate_getter_helper(
                     var_type_name.key_type, True, depth + 1
                 )
