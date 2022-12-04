@@ -117,7 +117,7 @@ class Account:
             self._address = address
         else:
             self._address = Address(address)
-        self._chain = chain if chain is not None else dev_interface
+        self._chain = chain if chain is not None else default_chain
 
     def __str__(self) -> str:
         return str(self._address)
@@ -911,7 +911,7 @@ def _signer_account(sender: Account, interface: ChainInterface):
             chain.stop_impersonating_account(str(sender))
 
 
-dev_interface = ChainInterface()
+default_chain = ChainInterface()
 # selector => (contract_fqn => pytypes_object)
 errors: Dict[bytes, Dict[str, Any]] = {}
 # selector => (contract_fqn => pytypes_object)
@@ -932,7 +932,7 @@ class Contract(Account):
     _bytecode: str
 
     def __init__(
-        self, addr: Union[Account, Address, str], chain: ChainInterface = dev_interface
+        self, addr: Union[Account, Address, str], chain: ChainInterface = default_chain
     ):
         if isinstance(addr, Account):
             if addr.chain != chain:
@@ -980,7 +980,7 @@ class Contract(Account):
     ) -> Contract:
         params = {}
         if chain is None:
-            chain = dev_interface
+            chain = default_chain
 
         if from_ is not None:
             if isinstance(from_, Account):
@@ -1124,7 +1124,7 @@ class Library(Contract):
         chain: Optional[ChainInterface],
     ) -> Library:
         if chain is None:
-            chain = dev_interface
+            chain = default_chain
 
         ret = super()._deploy(arguments, from_, value, gas_limit, libraries, chain)
         lib = cls(ret.address, chain)

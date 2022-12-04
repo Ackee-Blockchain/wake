@@ -26,7 +26,7 @@ from tblib import pickling_support
 
 from woke.cli.console import console
 from woke.config import WokeConfig
-from woke.testing.contract import dev_interface
+from woke.testing.contract import default_chain
 
 
 def _setup(port: int, network_id: str) -> subprocess.Popen:
@@ -66,7 +66,7 @@ def _run_core(
     print(f"Using seed '{random_seed.hex()}' for process #{index}")
 
     try:
-        dev_interface.reset()
+        default_chain.reset()
     except NotImplementedError:
         logging.warning("Development chain does not support resetting")
 
@@ -96,7 +96,7 @@ def _run(
     while True:
         gen = None
         try:
-            gen = dev_interface.connect(f"http://localhost:{port}")
+            gen = default_chain.connect(f"http://localhost:{port}")
             gen.__enter__()
             break
         except (ConnectionRefusedError, ClientConnectorError):

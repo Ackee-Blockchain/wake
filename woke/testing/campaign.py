@@ -3,7 +3,7 @@ import random
 from datetime import datetime, timedelta
 from typing import Callable, Counter, Iterable, List, Optional, Tuple
 
-from woke.testing.contract import ChainInterface, dev_interface
+from woke.testing.contract import ChainInterface, default_chain
 
 from .utils import partition
 
@@ -31,7 +31,7 @@ class Campaign:
         init_timestamp = datetime.now()
 
         if chains is None:
-            chains = [dev_interface]
+            chains = [default_chain]
 
         for i in range(sequences_count):
             if (
