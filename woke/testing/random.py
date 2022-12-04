@@ -2,7 +2,7 @@ import random
 import string
 from typing import Callable, Optional
 
-from .contract import Account, Address, ChainInterface, dev_interface
+from .contract import Account, Address, ChainInterface, default_chain
 
 
 def random_account(
@@ -12,7 +12,7 @@ def random_account(
     chain: Optional[ChainInterface] = None,
 ) -> Account:
     if chain is None:
-        chain = dev_interface
+        chain = default_chain
     accounts = chain.accounts
     if length is None:
         length = len(accounts)
