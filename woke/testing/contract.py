@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import dataclasses
+import functools
 import importlib
 import re
 from collections import defaultdict
@@ -162,7 +163,22 @@ class RevertToSnapshotFailedError(Exception):
     pass
 
 
+class NotConnectedError(Exception):
+    pass
+
+
+def _check_connected(f):
+    @functools.wraps(f)
+    def wrapper(*args, **kwargs):
+        if not args[0].connected:
+            raise NotConnectedError("Not connected to a chain")
+        return f(*args, **kwargs)
+
+    return wrapper
+
+
 class ChainInterface:
+    _connected: bool = False
     _dev_chain: DevChainABC
     _accounts: List[Account]
     _default_account: Optional[Account]
@@ -183,6 +199,8 @@ class ChainInterface:
         session = aiohttp.ClientSession()
         try:
             communicator = JsonRpcCommunicator(uri, session)
+            self._connected = True
+
             client_version = loop.run_until_complete(
                 communicator.web3_client_version()
             ).lower()
@@ -222,16 +240,24 @@ class ChainInterface:
             yield
         finally:
             loop.run_until_complete(session.close())
+            self._connected = False
 
     @property
+    def connected(self) -> bool:
+        return self._connected
+
+    @property
+    @_check_connected
     def accounts(self) -> Tuple[Account, ...]:
         return tuple(self._accounts)
 
     @property
+    @_check_connected
     def default_account(self) -> Optional[Account]:
         return self._default_account
 
     @default_account.setter
+    @_check_connected
     def default_account(self, account: Union[Account, Address, str]) -> None:
         if isinstance(account, Account):
             self._default_account = account
@@ -239,23 +265,28 @@ class ChainInterface:
             self._default_account = Account(account, self)
 
     @property
+    @_check_connected
     def block_gas_limit(self) -> int:
         return self._block_gas_limit
 
     @block_gas_limit.setter
+    @_check_connected
     def block_gas_limit(self, value: int) -> None:
         self._dev_chain.set_block_gas_limit(value)
         self._block_gas_limit = value
 
     @property
+    @_check_connected
     def gas_price(self) -> int:
         return self._gas_price
 
     @gas_price.setter
+    @_check_connected
     def gas_price(self, value: int) -> None:
         self._gas_price = value
 
     @property
+    @_check_connected
     def dev_chain(self):
         return self._dev_chain
 
@@ -330,9 +361,11 @@ class ChainInterface:
                 return expected_type(value)
         return value
 
+    @_check_connected
     def update_accounts(self):
         self._accounts = [Account(acc, self) for acc in self._dev_chain.accounts()]
 
+    @_check_connected
     def snapshot(self) -> str:
         snapshot_id = self._dev_chain.snapshot()
 
@@ -344,6 +377,7 @@ class ChainInterface:
         }
         return snapshot_id
 
+    @_check_connected
     def revert(self, snapshot_id: str) -> None:
         reverted = self._dev_chain.revert(snapshot_id)
         if not reverted:
@@ -357,6 +391,7 @@ class ChainInterface:
         del self._snapshots[snapshot_id]
 
     @property
+    @_check_connected
     def deployed_libraries(self) -> DefaultDict[bytes, List[Library]]:
         return self._deployed_libraries
 
@@ -368,6 +403,7 @@ class ChainInterface:
         finally:
             self.revert(snapshot_id)
 
+    @_check_connected
     def reset(self) -> None:
         self._dev_chain.reset()
 
@@ -654,6 +690,7 @@ class ChainInterface:
 
         raise ValueError("Could not find contract definition from bytecode")
 
+    @_check_connected
     def deploy(
         self,
         abi: Dict[Union[bytes, Literal["constructor"]], Any],
@@ -703,6 +740,7 @@ class ChainInterface:
         )
         return Address(tx_receipt["contractAddress"])
 
+    @_check_connected
     def call(
         self,
         selector: bytes,
@@ -821,6 +859,7 @@ class ChainInterface:
 
         return last_popped
 
+    @_check_connected
     def transact(
         self,
         selector: bytes,
