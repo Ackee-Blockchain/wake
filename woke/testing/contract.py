@@ -750,7 +750,23 @@ class ChainInterface:
         return_type: Type,
     ) -> Any:
         tx = self._build_transaction(params, selector, arguments, abi[selector])
-        output = self._dev_chain.call(tx)
+        try:
+            output = self._dev_chain.call(tx)
+        except JsonRpcError as e:
+            if isinstance(self._dev_chain, AnvilDevChain) and e.data["code"] == 3:
+                # call reverted, try to send as a transaction to get more info
+                return self.transact(
+                    selector, abi, arguments, params, None, None, return_type
+                )
+            elif (
+                isinstance(self._dev_chain, HardhatDevChain)
+                and e.data["code"] == -32603
+            ):
+                # call reverted, try to send as a transaction to get more info
+                return self.transact(
+                    selector, abi, arguments, params, None, None, return_type
+                )
+            raise e from None
         return self._process_return_data(output, abi[selector], return_type)
 
     def _process_debug_trace_for_events(
