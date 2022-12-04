@@ -15,7 +15,7 @@ from typing import (
     Iterable,
     List,
     Optional,
-    Sequence,
+    Set,
     Tuple,
     Type,
     Union,
@@ -172,6 +172,7 @@ class ChainInterface:
     __nonces: DefaultDict[Address, int]
     __snapshots: Dict[str, Dict]
     __deployed_libraries: DefaultDict[bytes, List[Library]]
+    __single_source_errors: Set[bytes]
 
     console_logs_callback: Optional[Callable[[str, List[Any]], None]]
     events_callback: Optional[Callable[[str, List[Tuple[bytes, Any]]], None]]
@@ -210,6 +211,12 @@ class ChainInterface:
                 self.__default_account = self.__accounts[0]
             else:
                 self.__default_account = None
+
+            self.__single_source_errors = {
+                selector
+                for selector, sources in errors.items()
+                if len({source for fqn, source in sources.items()}) == 1
+            }
 
             self.console_logs_callback = None
             self.events_callback = None
@@ -424,19 +431,24 @@ class ChainInterface:
             tx["to"] = params["to"]
         return tx
 
-    def _process_revert_data(self, revert_data: bytes):
+    def _process_revert_data(
+        self, tx_hash, revert_data: bytes, origin: Union[Address, str]
+    ):
         selector = revert_data[0:4]
         if selector not in errors:
             raise NotImplementedError(
                 f"Transaction reverted with unknown error selector {selector.hex()}"
             )
 
-        if len(errors[selector]) > 1:
-            raise NotImplementedError(
-                f"Transaction reverted with ambiguous error selector {selector.hex()}"
+        if selector not in self.__single_source_errors:
+            # ambiguous error, try to find the source contract
+            debug_trace = self.__dev_chain.debug_trace_transaction(
+                tx_hash, {"enableMemory": True}
             )
+            fqn = self._process_debug_trace_for_revert(debug_trace, origin)
+        else:
+            fqn = list(errors[selector].keys())[0]
 
-        fqn = list(errors[selector].keys())[0]
         module_name, attrs = errors[selector][fqn]
         obj = getattr(importlib.import_module(module_name), attrs[0])
         for attr in attrs[1:]:
@@ -483,7 +495,7 @@ class ChainInterface:
             debug_trace = self.__dev_chain.debug_trace_transaction(
                 tx_hash, {"enableMemory": True}
             )
-            event_traces = self._process_debug_trace(debug_trace, origin)
+            event_traces = self._process_debug_trace_for_events(debug_trace, origin)
             assert len(event_traces) == len(logs)
         else:
             event_traces = [(None, None)] * len(logs)
@@ -563,7 +575,9 @@ class ChainInterface:
     def _process_tx_receipt(
         self,
         tx_receipt: Dict[str, Any],
+        tx_hash: str,
         tx_params: TxParams,
+        origin: Union[Address, str],
     ) -> None:
         if int(tx_receipt["status"], 16) == 0:
             if isinstance(self.__dev_chain, (AnvilDevChain, GanacheDevChain)):
@@ -576,10 +590,10 @@ class ChainInterface:
                         revert_data = e.data["data"][2:]
                     except Exception:
                         raise e
-                self._process_revert_data(bytes.fromhex(revert_data))
+                self._process_revert_data(tx_hash, bytes.fromhex(revert_data), origin)
             elif isinstance(self.__dev_chain, HardhatDevChain):
                 data = self.__dev_chain.call(tx_params)
-                self._process_revert_data(data)
+                self._process_revert_data(tx_hash, data, origin)
 
     def _process_return_data(self, output: bytes, abi: Dict, return_type: Type):
         output_types = [
@@ -681,12 +695,12 @@ class ChainInterface:
             output = self.__dev_chain.trace_transaction(tx_hash)
             self._process_console_logs(tx_hash, output)
 
-        if self.events_callback is not None:
-            self._process_events(
-                tx_hash, tx_receipt["logs"], self._get_fqn_from_bytecode(bytecode)
-            )
+        origin_fqn = self._get_fqn_from_bytecode(bytecode)
 
-        self._process_tx_receipt(tx_receipt, tx)
+        if self.events_callback is not None:
+            self._process_events(tx_hash, tx_receipt["logs"], origin_fqn)
+
+        self._process_tx_receipt(tx_receipt, tx_hash, tx, origin_fqn)
         assert (
             "contractAddress" in tx_receipt
             and tx_receipt["contractAddress"] is not None
@@ -705,7 +719,7 @@ class ChainInterface:
         output = self.__dev_chain.call(tx)
         return self._process_return_data(output, abi[selector], return_type)
 
-    def _process_debug_trace(
+    def _process_debug_trace_for_events(
         self, debug_trace: Dict, origin: Union[Address, str]
     ) -> List[Tuple[bytes, Optional[str]]]:
         addresses = [origin]
@@ -764,6 +778,53 @@ class ChainInterface:
 
         return event_fqns
 
+    def _process_debug_trace_for_revert(
+        self, debug_trace: Dict, origin: Union[Address, str]
+    ) -> str:
+        addresses = [origin]
+        last_popped = None
+
+        for trace in debug_trace["structLogs"]:
+            if trace["op"] in {"CALL", "CALLCODE", "DELEGATECALL", "STATICCALL"}:
+                addr = int(trace["stack"][-2], 16)
+                addresses.append(Address(addr))
+            elif trace["op"] in {"CREATE", "CREATE2"}:
+                offset = int(trace["stack"][-2], 16)
+                length = int(trace["stack"][-3], 16)
+
+                start_block = offset // 32
+                start_offset = offset % 32
+                end_block = (offset + length) // 32
+                end_offset = (offset + length) % 32
+
+                if start_block == end_block:
+                    bytecode = bytes.fromhex(trace["memory"][start_block])[
+                        start_offset : start_offset + length
+                    ]
+                else:
+                    bytecode = bytes.fromhex(trace["memory"][start_block])[
+                        start_offset:
+                    ]
+                    for i in range(start_block + 1, end_block):
+                        bytecode += bytes.fromhex(trace["memory"][i])
+                    bytecode += bytes.fromhex(trace["memory"][end_block])[:end_offset]
+
+                fqn = self._get_fqn_from_bytecode(bytecode)
+                addresses.append(fqn)
+            elif trace["op"] in {"RETURN", "REVERT", "STOP"}:
+                last_popped = addresses.pop()
+
+        if isinstance(last_popped, Address):
+            code = self.__dev_chain.get_code(str(last_popped))
+            metadata = code[-53:]
+            if metadata not in contracts_by_metadata:
+                raise ValueError(
+                    f"Unable to find contract metadata in index: {metadata.hex()}"
+                )
+            last_popped = contracts_by_metadata[metadata]
+
+        return last_popped
+
     def transact(
         self,
         selector: bytes,
@@ -802,21 +863,21 @@ class ChainInterface:
             if self.events_callback is not None:
                 self._process_events(tx_hash, tx_receipt["logs"], Address(tx["to"]))
 
-            self._process_tx_receipt(tx_receipt, tx)
+            self._process_tx_receipt(tx_receipt, tx_hash, tx, Address(tx["to"]))
 
             output = bytes.fromhex(output[0]["result"]["output"][2:])
         elif isinstance(self.__dev_chain, GanacheDevChain):
             if self.events_callback is not None:
                 self._process_events(tx_hash, tx_receipt["logs"], Address(tx["to"]))
 
-            self._process_tx_receipt(tx_receipt, tx)
+            self._process_tx_receipt(tx_receipt, tx_hash, tx, Address(tx["to"]))
 
             output = self.__dev_chain.call(tx)
         elif isinstance(self.__dev_chain, HardhatDevChain):
             if self.events_callback is not None:
                 self._process_events(tx_hash, tx_receipt["logs"], Address(tx["to"]))
 
-            self._process_tx_receipt(tx_receipt, tx)
+            self._process_tx_receipt(tx_receipt, tx_hash, tx, Address(tx["to"]))
 
             output = self.__dev_chain.debug_trace_transaction(tx_hash, {})
             output = bytes.fromhex(output["returnValue"])
