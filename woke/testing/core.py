@@ -245,9 +245,30 @@ class ChainInterface:
                 communicator.__exit__(None, None, None)
             self._connected = False
 
+    @contextmanager
+    def change_automine(self, automine: bool):
+        if not self._connected:
+            raise NotConnectedError("Not connected to a chain")
+        automine_was = self._dev_chain.get_automine()
+        self._dev_chain.set_automine(automine)
+        try:
+            yield
+        finally:
+            self._dev_chain.set_automine(automine_was)
+
     @property
     def connected(self) -> bool:
         return self._connected
+
+    @property
+    @_check_connected
+    def automine(self) -> bool:
+        return self._dev_chain.get_automine()
+
+    @automine.setter
+    @_check_connected
+    def automine(self, value: bool) -> None:
+        self._dev_chain.set_automine(value)
 
     @property
     @_check_connected
@@ -762,6 +783,7 @@ class ChainInterface:
         except JsonRpcError as e:
             if isinstance(self._dev_chain, AnvilDevChain) and e.data["code"] == 3:
                 # call reverted, try to send as a transaction to get more info
+                # TODO what if auto-mine is off?
                 return self.transact(
                     selector, abi, arguments, params, None, None, return_type
                 )
@@ -770,6 +792,7 @@ class ChainInterface:
                 and e.data["code"] == -32603
             ):
                 # call reverted, try to send as a transaction to get more info
+                # TODO what if auto-mine is off?
                 return self.transact(
                     selector, abi, arguments, params, None, None, return_type
                 )

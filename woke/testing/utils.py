@@ -33,6 +33,18 @@ def connect(devchain_interface: ChainInterface, uri: str):
     return decorator
 
 
+def change_automine(devchain_interface: ChainInterface, automine: bool):
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            with devchain_interface.change_automine(automine):
+                return fn(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
 def format_int(x: int) -> str:
     if abs(x) < 10**5:
         return f"{x:_}"
