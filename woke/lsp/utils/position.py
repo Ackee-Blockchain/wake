@@ -1,4 +1,26 @@
+from typing import Set
+
+from intervaltree import Interval
+
 from woke.lsp.common_structures import Position, Range
+
+
+def changes_to_byte_offset(changes: Set[Interval]) -> int:
+    byte_offset = 0
+    tag: str
+    j1: int
+    j2: int
+    for change in changes:
+        tag, j1, j2 = change.data
+        if tag == "insert":
+            byte_offset += j2 - j1 - 1
+        elif tag == "delete":
+            byte_offset -= change.end - change.begin - 1
+        elif tag == "replace":
+            byte_offset += j2 - j1 - (change.end - change.begin)
+        else:
+            raise ValueError(f"Unknown tag {tag}")
+    return byte_offset
 
 
 def position_within_range(pos: Position, range: Range) -> bool:

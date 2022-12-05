@@ -186,7 +186,7 @@ async def code_lens(
     path = uri_to_path(params.text_document.uri).resolve()
 
     if path not in context.compiler.source_units:
-        tree_diff = context.compiler.get_last_successful_compilation(path)
+        tree_diff = context.compiler.get_last_compilation_forward_changes(path)
         if tree_diff is None:
             return None
         return _get_code_lens_from_cache(context, path, tree_diff)
