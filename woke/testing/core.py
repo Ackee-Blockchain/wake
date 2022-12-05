@@ -165,6 +165,10 @@ class NotConnectedError(Exception):
     pass
 
 
+class AlreadyConnectedError(Exception):
+    pass
+
+
 def _check_connected(f):
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
@@ -176,7 +180,7 @@ def _check_connected(f):
 
 
 class ChainInterface:
-    _connected: bool = False
+    _connected: bool
     _dev_chain: DevChainABC
     _accounts: List[Account]
     _default_account: Optional[Account]
@@ -191,8 +195,14 @@ class ChainInterface:
     console_logs_callback: Optional[Callable[[str, List[Any]], None]]
     events_callback: Optional[Callable[[str, List[Tuple[bytes, Any]]], None]]
 
+    def __init__(self):
+        self._connected = False
+
     @contextmanager
     def connect(self, uri: str):
+        if self._connected:
+            raise AlreadyConnectedError("Already connected to a chain")
+
         communicator = JsonRpcCommunicator(uri)
         try:
             communicator.__enter__()
