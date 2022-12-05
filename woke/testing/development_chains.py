@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 from .json_rpc.communicator import JsonRpcCommunicator, TxParams
 
@@ -22,6 +22,9 @@ class DevChainABC(ABC):
     def get_block(self, block_identifier: Union[int, str]) -> Dict[str, Any]:
         return self._communicator.eth_get_block_by_number(block_identifier, False)
 
+    def get_transaction(self, tx_hash: str) -> Dict[str, Any]:
+        return self._communicator.eth_get_transaction_by_hash(tx_hash)
+
     def get_chain_id(self) -> int:
         return self._communicator.eth_chain_id()
 
@@ -30,6 +33,9 @@ class DevChainABC(ABC):
 
     def get_transaction_count(self, address: str) -> int:
         return self._communicator.eth_get_transaction_count(address)
+
+    def get_transaction_receipt(self, tx_hash: str) -> Optional[Dict[str, Any]]:
+        return self._communicator.eth_get_transaction_receipt(tx_hash)
 
     def call(self, params: TxParams) -> bytes:
         return self._communicator.eth_call(params)

@@ -830,11 +830,18 @@ class TypeGenerator:
 
         generated_params = generate_getter_helper(decl.type_name, False, 0)
 
+        if len(returns) == 0:
+            returns_str = "None"
+        elif len(returns) == 1:
+            returns_str = returns[0][0]
+        else:
+            returns_str = f"Tuple[{', '.join(ret[0] for ret in returns)}]"
+
         self.generate_type_hint_stub_func(
-            decl.name, generated_params, [ret[0] for ret in returns], False
+            decl.name, generated_params, returns_str, False
         )
         self.generate_type_hint_stub_func(
-            decl.name, generated_params, ["TransactionObject"], True
+            decl.name, generated_params, f"LegacyTransaction[{returns_str}]", True
         )
 
         # getters never modify the state - passing VIEW is ok
@@ -887,7 +894,7 @@ class TypeGenerator:
             returns_str = f"Tuple[{', '.join(ret[0] for ret in returns)}]"
         self.add_str_to_types(
             1,
-            f"""def {self.get_name(fn_name)}(self, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, to: Optional[Union[Account, Address, str]] = None, value: Wei = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: bool = False, request_type: RequestType='{'call' if is_view_or_pure else 'default'}') -> Union[{returns_str}, TransactionObject]:""",
+            f"""def {self.get_name(fn_name)}(self, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, to: Optional[Union[Account, Address, str]] = None, value: Wei = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: bool = False, request_type: RequestType='{'call' if is_view_or_pure else 'default'}') -> Union[{returns_str}, LegacyTransaction[{returns_str}]]:""",
             1,
         )
 
@@ -913,20 +920,14 @@ class TypeGenerator:
             return_types = f"Tuple[{', '.join(map(itemgetter(0), returns))}]"
         self.add_str_to_types(
             2,
-            f'return self._transact("{fn_selector}", [{", ".join(map(itemgetter(0), param_names))}], return_tx, request_type, {return_types}, from_, to, value, gas_limit) if not request_type == \'call\' else self._call("{fn_selector}", [{", ".join(map(itemgetter(0), param_names))}], return_tx, {return_types}, from_, to, value, gas_limit)',
+            f'return self._transact("{fn_selector}", [{", ".join(map(itemgetter(0), param_names))}], return_tx, request_type, LegacyTransaction[{return_types}] if return_tx else {return_types}, from_, to, value, gas_limit) if not request_type == \'call\' else self._call("{fn_selector}", [{", ".join(map(itemgetter(0), param_names))}], return_tx, {return_types}, from_, to, value, gas_limit)',
             2,
         )
 
     def generate_type_hint_stub_func(
-        self, fn_name: str, params: List[str], returns: List[str], return_tx: bool
+        self, fn_name: str, params: List[str], returns_str: str, return_tx: bool
     ):
         params_str = "".join(param + ", " for param in params)
-        if len(returns) == 0:
-            returns_str = "None"
-        elif len(returns) == 1:
-            returns_str = returns[0]
-        else:
-            returns_str = f"Tuple[{', '.join(returns)}]"
 
         self.add_str_to_types(1, "@overload", 1)
         self.add_str_to_types(
@@ -943,10 +944,18 @@ class TypeGenerator:
         self.__imports.add_python_import(
             "from woke.testing.pytypes_generator import RequestType"
         )
+
+        if len(returns) == 0:
+            returns_str = "None"
+        elif len(returns) == 1:
+            returns_str = returns[0][0]
+        else:
+            returns_str = f"Tuple[{', '.join(ret[0] for ret in returns)}]"
+
+        self.generate_type_hint_stub_func(fn.name, params, returns_str, False)
         self.generate_type_hint_stub_func(
-            fn.name, params, [ret[0] for ret in returns], False
+            fn.name, params, f"LegacyTransaction[{returns_str}]", True
         )
-        self.generate_type_hint_stub_func(fn.name, params, ["TransactionObject"], True)
 
         assert fn.function_selector is not None
         self.generate_func_implementation(
