@@ -19,11 +19,17 @@ def run_init(ctx: Context):
 
 
 @run_init.command(name="pytypes")
+@click.option(
+    "--return-tx",
+    is_flag=True,
+    default=False,
+    help="Return transaction objects instead of return data by default.",
+)
 @click.pass_context
-def init_pytypes(ctx: Context) -> None:
+def init_pytypes(ctx: Context, return_tx: bool) -> None:
     """Generate Python contract types from Solidity ABI."""
     config: WokeConfig = ctx.obj["config"]
-    type_generator = TypeGenerator(config)
+    type_generator = TypeGenerator(config, return_tx)
     type_generator.generate_types()
 
 
@@ -34,11 +40,17 @@ def init_pytypes(ctx: Context) -> None:
     default=False,
     help="Overwrite existing pytypes and tests directories",
 )
+@click.option(
+    "--return-tx",
+    is_flag=True,
+    default=False,
+    help="Return transaction objects instead of return data by default.",
+)
 @click.pass_context
-def init_fuzz(ctx: Context, force: bool) -> None:
+def init_fuzz(ctx: Context, force: bool, return_tx: bool) -> None:
     """Generate Python contract types and create example fuzz tests."""
     config: WokeConfig = ctx.obj["config"]
-    type_generator = TypeGenerator(config)
+    type_generator = TypeGenerator(config, return_tx)
     type_generator.generate_types()
 
     examples_dir = pathlib.Path(__file__).parent.parent.resolve() / "examples/fuzzer"

@@ -67,6 +67,7 @@ class TypeGenerator:
     LIBRARY_PLACEHOLDER_REGEX = re.compile(r"__\$[0-9a-fA-F]{34}\$__")
 
     __config: WokeConfig
+    __return_tx_obj: bool
     # generated types for the given source unit
     __source_unit_types: str
     # set of contracts that were already generated in the given source unit
@@ -86,8 +87,9 @@ class TypeGenerator:
     __contracts_inheritance_index: Dict[str, Tuple[str, ...]]
     __bytecode_index: List[Tuple[Tuple[Tuple[int, bytes], ...], str]]
 
-    def __init__(self, config: WokeConfig):
+    def __init__(self, config: WokeConfig, return_tx_obj: bool):
         self.__config = config
+        self.__return_tx_obj = return_tx_obj
         self.__source_unit_types = ""
         self.__already_generated_contracts = set()
         self.__source_units = {}
@@ -894,7 +896,7 @@ class TypeGenerator:
             returns_str = f"Tuple[{', '.join(ret[0] for ret in returns)}]"
         self.add_str_to_types(
             1,
-            f"""def {self.get_name(fn_name)}(self, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, to: Optional[Union[Account, Address, str]] = None, value: Wei = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: bool = False, request_type: RequestType='{'call' if is_view_or_pure else 'default'}') -> Union[{returns_str}, LegacyTransaction[{returns_str}]]:""",
+            f"""def {self.get_name(fn_name)}(self, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, to: Optional[Union[Account, Address, str]] = None, value: Wei = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: bool = {self.__return_tx_obj}, request_type: RequestType='{'call' if is_view_or_pure else 'default'}') -> Union[{returns_str}, LegacyTransaction[{returns_str}]]:""",
             1,
         )
 
