@@ -132,6 +132,8 @@ class LspCompiler:
     __last_successful_compilation_contents: Dict[Path, VersionedFile]
     __interval_trees: Dict[Path, IntervalTree]
     __source_units: Dict[Path, SourceUnit]
+    __last_compilation_interval_trees: Dict[Path, IntervalTree]
+    __last_compilation_source_units: Dict[Path, SourceUnit]
     __line_indexes: Dict[Path, List[Tuple[bytes, int]]]
     __perform_files_discovery: bool
     __force_run_detectors: bool
@@ -157,6 +159,8 @@ class LspCompiler:
         self.__force_compile_files = set()
         self.__interval_trees = {}
         self.__source_units = {}
+        self.__last_compilation_interval_trees = {}
+        self.__last_compilation_source_units = {}
         self.__line_indexes = {}
         self.__output_contents = dict()
         self.__compilation_errors = dict()
@@ -187,6 +191,14 @@ class LspCompiler:
 
     @property
     def source_units(self) -> Dict[Path, SourceUnit]:
+        return self.__last_compilation_source_units
+
+    @property
+    def last_compilation_interval_trees(self) -> Dict[Path, IntervalTree]:
+        return self.__last_compilation_interval_trees
+
+    @property
+    def last_compilation_source_units(self) -> Dict[Path, SourceUnit]:
         return self.__source_units
 
     @lru_cache(maxsize=128)
@@ -201,12 +213,24 @@ class LspCompiler:
             interval_tree.addi(i1, i2 + 1, (tag, j1, j2 + 1))
         return interval_tree
 
-    def get_last_successful_compilation(self, path: Path) -> Optional[IntervalTree]:
+    def get_last_compilation_forward_changes(
+        self, path: Path
+    ) -> Optional[IntervalTree]:
         if path not in self.__last_successful_compilation_contents:
             return None
         return self._compute_diff_interval_tree(
             self.__last_successful_compilation_contents[path],
             self.get_compiled_file(path),
+        )
+
+    def get_last_compilation_backward_changes(
+        self, path: Path
+    ) -> Optional[IntervalTree]:
+        if path not in self.__last_successful_compilation_contents:
+            return None
+        return self._compute_diff_interval_tree(
+            self.get_compiled_file(path),
+            self.__last_successful_compilation_contents[path],
         )
 
     async def add_change(
@@ -729,6 +753,13 @@ class LspCompiler:
                     self.__ir_reference_resolver.run_destroy_callbacks(path)
                     self.__source_units[path] = SourceUnit(init, ast)
                     self.__interval_trees[path] = interval_tree
+
+                    self.__last_compilation_source_units[path] = self.__source_units[
+                        path
+                    ]
+                    self.__last_compilation_interval_trees[
+                        path
+                    ] = self.__interval_trees[path]
 
                     if path in self.__opened_files:
                         self.__last_successful_compilation_contents[
