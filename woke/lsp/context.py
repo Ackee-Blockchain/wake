@@ -48,5 +48,9 @@ class LspContext:
         return self.__diagnostics_queue
 
     @property
+    def server(self) -> LspServer:
+        return self.__server
+
+    @property
     def openzeppelin_contracts_version(self) -> Optional[SemanticVersion]:
         return self.__openzeppelin_contracts_version
