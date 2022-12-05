@@ -18,7 +18,7 @@ def run_init(ctx: Context):
     ctx.obj["config"] = config
 
 
-@run_init.command(name="types")
+@run_init.command(name="pytypes")
 @click.option(
     "--force",
     is_flag=True,
@@ -26,7 +26,7 @@ def run_init(ctx: Context):
     help="Overwrite existing types.",
 )
 @click.pass_context
-def init_types(ctx: Context, force: bool) -> None:
+def init_pytypes(ctx: Context, force: bool) -> None:
     """Generate Python contract types from Solidity ABI."""
     config: WokeConfig = ctx.obj["config"]
     type_generator = TypeGenerator(config)
