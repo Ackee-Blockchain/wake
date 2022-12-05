@@ -141,6 +141,11 @@ class JsonRpcCommunicator:
         text = self._send_request("eth_getBlockByNumber", params)
         return self._process_response(text)
 
+    def eth_get_transaction_by_hash(self, tx_hash: str) -> Dict:
+        """Returns the information about a transaction requested by transaction hash."""
+        text = self._send_request("eth_getTransactionByHash", [tx_hash])
+        return self._process_response(text)
+
     def eth_block_number(self) -> int:
         """Returns the number of most recent block."""
         text = self._send_request("eth_blockNumber")
@@ -240,7 +245,7 @@ class JsonRpcCommunicator:
         )
         return self._process_response(text)
 
-    def eth_get_transaction_receipt(self, tx_hash: str) -> Dict:
+    def eth_get_transaction_receipt(self, tx_hash: str) -> Optional[Dict]:
         """Returns the receipt of a transaction by transaction hash."""
         text = self._send_request("eth_getTransactionReceipt", [tx_hash])
         return self._process_response(text)

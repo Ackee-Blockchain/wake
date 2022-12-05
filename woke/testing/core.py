@@ -40,10 +40,6 @@ from . import hardhat_console
 from .json_rpc.communicator import JsonRpcCommunicator, JsonRpcError, TxParams
 
 
-class TransactionObject:
-    pass
-
-
 class Abi:
     @classmethod
     def encode(cls, types: Iterable, arguments: Iterable) -> bytes:
@@ -785,7 +781,7 @@ class ChainInterface:
                 # call reverted, try to send as a transaction to get more info
                 # TODO what if auto-mine is off?
                 return self.transact(
-                    selector, abi, arguments, params, None, None, return_type
+                    selector, abi, arguments, params, False, return_type
                 )
             elif (
                 isinstance(self._dev_chain, HardhatDevChain)
@@ -794,7 +790,7 @@ class ChainInterface:
                 # call reverted, try to send as a transaction to get more info
                 # TODO what if auto-mine is off?
                 return self.transact(
-                    selector, abi, arguments, params, None, None, return_type
+                    selector, abi, arguments, params, False, return_type
                 )
             raise e from None
         return self._process_return_data(output, abi[selector], return_type)
@@ -912,8 +908,7 @@ class ChainInterface:
         abi: Dict[Union[bytes, Literal["constructor"]], Any],
         arguments: Iterable,
         params: TxParams,
-        return_tx,
-        request_type,
+        return_tx: bool,
         return_type: Type,
     ) -> Any:
         tx = self._build_transaction(params, selector, arguments, abi[selector])
@@ -933,6 +928,9 @@ class ChainInterface:
                 except Exception:
                     raise e
             self._nonces[sender.address] += 1
+
+        if return_tx:
+            return return_type(tx_hash, self)
 
         tx_receipt = self._dev_chain.wait_for_transaction_receipt(tx_hash)
 
@@ -1112,8 +1110,6 @@ class Contract(Account):
         value: Wei,
         gas_limit: Union[int, Literal["max"], Literal["auto"]],
     ) -> Any:
-        if return_tx:
-            raise NotImplementedError("returning a transaction is not implemented")
         params = {}
         if from_ is not None:
             if isinstance(from_, Account):
@@ -1145,7 +1141,6 @@ class Contract(Account):
             arguments,
             params,
             return_tx,
-            request_type,
             return_type,
         )
 
