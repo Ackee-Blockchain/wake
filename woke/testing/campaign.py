@@ -157,7 +157,11 @@ class Campaign:
                 generated_cnt[fname] += cf.min_times
                 # this removes weight from a flow that was generated because of min_times
                 weight = adjusted_weights[i] - (weight_unit * cf.min_times)
-                adjusted_weights[i] = weight if weight > 0 else 1
+                adjusted_weights[i] = (
+                    weight
+                    if weight >= 0
+                    else (0 if hasattr(cf, "weight") and not cf.weight else 1)
+                )
 
         indexed_flows = {k: v for k, v in enumerate(flows)}
         for _ in range(flows_count - len(generated_flows)):
