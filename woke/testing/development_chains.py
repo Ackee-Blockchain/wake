@@ -56,6 +56,14 @@ class DevChainABC(ABC):
         return self._communicator.evm_revert(snapshot_id)
 
     @abstractmethod
+    def get_automine(self) -> bool:
+        ...
+
+    @abstractmethod
+    def set_automine(self, value: bool) -> None:
+        ...
+
+    @abstractmethod
     def reset(self) -> None:
         ...
 
@@ -84,6 +92,12 @@ class HardhatDevChain(DevChainABC):
     def reset(self) -> None:
         self._communicator.hardhat_reset()
 
+    def get_automine(self) -> bool:
+        return self._communicator.hardhat_get_automine()
+
+    def set_automine(self, value: bool) -> None:
+        self._communicator.evm_set_automine(value)
+
 
 class AnvilDevChain(DevChainABC):
     def trace_transaction(self, tx_hash: Any) -> Dict:
@@ -105,6 +119,12 @@ class AnvilDevChain(DevChainABC):
         raise NotImplementedError("Anvil does not support resetting the chain")
         self._communicator.anvil_reset()
 
+    def get_automine(self) -> bool:
+        return self._communicator.anvil_get_automine()
+
+    def set_automine(self, value: bool) -> None:
+        self._communicator.evm_set_automine(value)
+
 
 class GanacheDevChain(DevChainABC):
     def set_balance(self, address: str, value: int) -> None:
@@ -120,3 +140,9 @@ class GanacheDevChain(DevChainABC):
 
     def reset(self) -> None:
         raise NotImplementedError("Ganache does not support resetting the chain")
+
+    def get_automine(self) -> bool:
+        raise NotImplementedError("Ganache does not support automine")
+
+    def set_automine(self, value: bool) -> None:
+        raise NotImplementedError("Ganache does not support automine")

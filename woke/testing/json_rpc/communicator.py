@@ -269,6 +269,10 @@ class JsonRpcCommunicator:
         )
         _ = self._process_response(text)
 
+    def hardhat_get_automine(self) -> bool:
+        text = self._send_request("hardhat_getAutomine")
+        return self._process_response(text)
+
     def anvil_set_balance(self, address: str, balance: int) -> None:
         params = [address, hex(balance)]
         text = self._send_request("anvil_setBalance", params)
@@ -289,6 +293,10 @@ class JsonRpcCommunicator:
             "anvil_reset", [options] if options is not None else []
         )
         _ = self._process_response(text)
+
+    def anvil_get_automine(self) -> bool:
+        text = self._send_request("anvil_getAutomine")
+        return self._process_response(text)
 
     def evm_set_account_balance(self, address: str, balance: int) -> None:
         """Sets the given account's balance to the specified WEI value. Mines a new block before returning."""
@@ -313,6 +321,10 @@ class JsonRpcCommunicator:
     def evm_revert(self, snapshot_id: str) -> bool:
         text = self._send_request("evm_revert", [snapshot_id])
         return self._process_response(text)
+
+    def evm_set_automine(self, automine: bool) -> None:
+        text = self._send_request("evm_setAutomine", [automine])
+        _ = self._process_response(text)
 
     def web3_client_version(self) -> str:
         """Returns the current client version."""
