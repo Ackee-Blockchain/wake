@@ -1138,7 +1138,7 @@ class TypeGenerator:
             # if unit.source_unit_name == "overloading.sol":
             #    print(self.__func_to_overload)
 
-    def generate_types(self, overwrite: bool = False) -> None:
+    def generate_types(self) -> None:
         # compile proj and generate ir
         # TODO fail if any compile erors
         self.run_compile()
