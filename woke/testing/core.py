@@ -218,10 +218,7 @@ class ChainInterface:
             self._nonces = defaultdict(lambda: 0)
             self._snapshots = {}
             self._deployed_libraries = defaultdict(list)
-            if len(self._accounts) > 0:
-                self._default_account = self._accounts[0]
-            else:
-                self._default_account = None
+            self._default_account = None
 
             self._single_source_errors = {
                 selector
