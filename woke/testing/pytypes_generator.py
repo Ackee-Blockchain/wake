@@ -251,10 +251,31 @@ class TypeGenerator:
             for l in libraries.values()
         )
 
+        contract_name = self.get_name(contract.name)
+
+        # generate @overload stubs
+        self.add_str_to_types(1, "@overload", 1)
         self.add_str_to_types(1, "@classmethod", 1)
         self.add_str_to_types(
             1,
-            f'def deploy(cls, {params_str}*, from_: Optional[Union[Address, str]] = None, value: Wei = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max"{libraries_str}, chain: Optional[ChainInterface] = None) -> {self.get_name(contract.name)}:',
+            f'def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: Wei = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: Literal[False] = False{libraries_str}, chain: Optional[ChainInterface] = None) -> {contract_name}:',
+            1,
+        )
+        self.add_str_to_types(2, "...", 2)
+
+        self.add_str_to_types(1, "@overload", 1)
+        self.add_str_to_types(1, "@classmethod", 1)
+        self.add_str_to_types(
+            1,
+            f'def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: Wei = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: Literal[True] = True{libraries_str}, chain: Optional[ChainInterface] = None) -> LegacyTransaction[{contract_name}]:',
+            1,
+        )
+        self.add_str_to_types(2, "...", 2)
+
+        self.add_str_to_types(1, "@classmethod", 1)
+        self.add_str_to_types(
+            1,
+            f'def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: Wei = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: bool = {self.__return_tx_obj}{libraries_str}, chain: Optional[ChainInterface] = None) -> Union[{contract_name}, LegacyTransaction[{contract_name}]]:',
             1,
         )
 
@@ -277,7 +298,7 @@ class TypeGenerator:
                 )
                 self.add_str_to_types(
                     2,
-                    f"return cls._deploy([{', '.join(map(itemgetter(0), param_names))}], from_, value, gas_limit, {libs_arg}, chain)",
+                    f"return cls._deploy([{', '.join(map(itemgetter(0), param_names))}], return_tx, LegacyTransaction[{contract_name}] if return_tx else {contract_name}, from_, value, gas_limit, {libs_arg}, chain)",
                     1,
                 )
             else:

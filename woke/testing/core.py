@@ -721,6 +721,8 @@ class ChainInterface:
         bytecode: bytes,
         arguments: Iterable,
         params: TxParams,
+        return_tx: bool,
+        return_type: Type,
     ) -> Address:
         tx = self._build_transaction(
             params,
@@ -744,6 +746,9 @@ class ChainInterface:
                     raise e
             self._nonces[sender.address] += 1
 
+        if return_tx:
+            return return_type(tx_hash, self)
+
         tx_receipt = self._dev_chain.wait_for_transaction_receipt(tx_hash)
 
         if self.console_logs_callback is not None and isinstance(
@@ -762,7 +767,7 @@ class ChainInterface:
             "contractAddress" in tx_receipt
             and tx_receipt["contractAddress"] is not None
         )
-        return Address(tx_receipt["contractAddress"])
+        return return_type(tx_receipt["contractAddress"], self)
 
     @_check_connected
     def call(
@@ -1051,12 +1056,14 @@ class Contract(Account):
     def _deploy(
         cls,
         arguments: Iterable,
+        return_tx: bool,
+        return_type: Type,
         from_: Optional[Union[Account, Address, str]],
         value: Wei,
         gas_limit: Union[int, Literal["max"], Literal["auto"]],
         libraries: Dict[bytes, Tuple[Union[Account, Address, None], str]],
         chain: Optional[ChainInterface],
-    ) -> Contract:
+    ) -> Any:
         params = {}
         if chain is None:
             chain = default_chain
@@ -1095,8 +1102,9 @@ class Contract(Account):
 
             bytecode = bytecode[: match.start()] + lib_addr + bytecode[match.end() :]
 
-        address = chain.deploy(cls._abi, bytes.fromhex(bytecode), arguments, params)
-        return cls(address, chain)
+        return chain.deploy(
+            cls._abi, bytes.fromhex(bytecode), arguments, params, return_tx, return_type
+        )
 
     def _transact(
         self,
@@ -1193,16 +1201,19 @@ class Library(Contract):
     def _deploy(
         cls,
         arguments: Iterable,
+        return_tx: bool,
+        return_type: Type,
         from_: Optional[Union[Account, Address, str]],
         value: Wei,
         gas_limit: Union[int, Literal["max"], Literal["auto"]],
         libraries: Dict[bytes, Tuple[Union[Account, Address, None], str]],
         chain: Optional[ChainInterface],
-    ) -> Library:
+    ) -> Any:
         if chain is None:
             chain = default_chain
 
-        ret = super()._deploy(arguments, from_, value, gas_limit, libraries, chain)
-        lib = cls(ret.address, chain)
+        lib = super()._deploy(
+            arguments, return_tx, return_type, from_, value, gas_limit, libraries, chain
+        )
         chain.deployed_libraries[cls._library_id].append(lib)
         return lib
