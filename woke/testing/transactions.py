@@ -12,9 +12,9 @@ T = TypeVar("T")
 
 
 class TransactionStatusEnum(IntEnum):
-    PENDING = 0
+    PENDING = -1
     SUCCESS = 1
-    FAILURE = 2
+    FAILURE = 0
 
 
 class TransactionTypeEnum(IntEnum):
@@ -155,7 +155,7 @@ class TransactionAbc(ABC, Generic[T]):
 
     def wait(self) -> None:
         for _ in range(40):
-            if self.status == TransactionStatusEnum.PENDING:
+            if self.status != TransactionStatusEnum.PENDING:
                 return
 
         while self.status == TransactionStatusEnum.PENDING:
