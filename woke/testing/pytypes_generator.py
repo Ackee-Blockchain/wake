@@ -917,7 +917,7 @@ class TypeGenerator:
             returns_str = f"Tuple[{', '.join(ret[0] for ret in returns)}]"
         self.add_str_to_types(
             1,
-            f"""def {self.get_name(fn_name)}(self, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, to: Optional[Union[Account, Address, str]] = None, value: Wei = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: bool = {self.__return_tx_obj}, request_type: RequestType='{'call' if is_view_or_pure else 'default'}') -> Union[{returns_str}, LegacyTransaction[{returns_str}]]:""",
+            f"""def {self.get_name(fn_name)}(self, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, to: Optional[Union[Account, Address, str]] = None, value: Wei = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: bool = {False if is_view_or_pure else self.__return_tx_obj}, request_type: RequestType='{'call' if is_view_or_pure else 'default'}') -> Union[{returns_str}, LegacyTransaction[{returns_str}]]:""",
             1,
         )
 
