@@ -331,6 +331,13 @@ class JsonRpcCommunicator:
         text = self._send_request("evm_setAutomine", [automine])
         _ = self._process_response(text)
 
+    def evm_mine(self, timestamp: Optional[int]) -> None:
+        if timestamp is None:
+            text = self._send_request("evm_mine")
+        else:
+            text = self._send_request("evm_mine", [hex(timestamp)])
+        _ = self._process_response(text)
+
     def web3_client_version(self) -> str:
         """Returns the current client version."""
         text = self._send_request("web3_clientVersion")
