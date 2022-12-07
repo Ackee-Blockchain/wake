@@ -61,6 +61,9 @@ class DevChainABC(ABC):
     def revert(self, snapshot_id: str) -> bool:
         return self._communicator.evm_revert(snapshot_id)
 
+    def mine(self, timestamp: Optional[int]) -> None:
+        self._communicator.evm_mine(timestamp)
+
     @abstractmethod
     def get_automine(self) -> bool:
         ...

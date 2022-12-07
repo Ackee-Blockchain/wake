@@ -310,6 +310,18 @@ class ChainInterface:
     def dev_chain(self):
         return self._dev_chain
 
+    @_check_connected
+    def mine(self, timestamp_change: Optional[Callable[[int], int]] = None) -> None:
+        if timestamp_change is not None:
+            block_info = self._dev_chain.get_block("latest")
+            assert "timestamp" in block_info
+            last_timestamp = int(block_info["timestamp"], 16)
+            timestamp = timestamp_change(last_timestamp)
+        else:
+            timestamp = None
+
+        self._dev_chain.mine(timestamp)
+
     def _convert_to_web3_type(self, value: Any) -> Any:
         if dataclasses.is_dataclass(value):
             return tuple(
