@@ -530,9 +530,9 @@ class ChainInterface:
 
     def _process_events(
         self, tx_hash: str, logs: List, origin: Union[Address, str]
-    ) -> None:
-        if self.events_callback is None or len(logs) == 0:
-            return
+    ) -> list:
+        if len(logs) == 0:
+            return []
 
         generated_events = []
         unknown_events = []
@@ -634,7 +634,7 @@ class ChainInterface:
             generated_event = self._convert_from_web3_type(merged, obj)
             generated_events.append(generated_event)
 
-        self.events_callback(tx_hash, generated_events)
+        return generated_events
 
     def _process_tx_receipt(
         self,
@@ -675,9 +675,7 @@ class ChainInterface:
             decoded_data = decoded_data[0]
         return self._convert_from_web3_type(decoded_data, return_type)
 
-    def _process_console_logs(self, tx_hash: str, trace_output: Dict[str, Any]) -> None:
-        if self.console_logs_callback is None:
-            return
+    def _process_console_logs(self, trace_output: List[Dict[str, Any]]) -> List:
         hardhat_console_address = bytes.fromhex(
             "000000000000000000636F6e736F6c652e6c6f67"
         )
@@ -690,9 +688,7 @@ class ChainInterface:
                             bytes.fromhex(trace["action"]["input"][2:])
                         )
                     )
-
-        if len(console_logs) > 0:
-            self.console_logs_callback(tx_hash, console_logs)
+        return console_logs
 
     @staticmethod
     def _get_fqn_from_bytecode(bytecode: bytes) -> str:
@@ -726,6 +722,14 @@ class ChainInterface:
 
         raise ValueError("Could not find contract definition from bytecode")
 
+    def _get_fqn_from_address(self, addr: Address) -> Optional[str]:
+        code = self._dev_chain.get_code(str(addr))
+        metadata = code[-53:]
+        if metadata in contracts_by_metadata:
+            return contracts_by_metadata[metadata]
+        else:
+            return None
+
     @_check_connected
     def deploy(
         self,
@@ -735,8 +739,8 @@ class ChainInterface:
         params: TxParams,
         return_tx: bool,
         return_type: Type,
-    ) -> Address:
-        tx = self._build_transaction(
+    ) -> Any:
+        tx_params = self._build_transaction(
             params,
             bytecode,
             arguments,
@@ -750,7 +754,7 @@ class ChainInterface:
 
         with _signer_account(sender, self):
             try:
-                tx_hash = self._dev_chain.send_transaction(tx)
+                tx_hash = self._dev_chain.send_transaction(tx_params)
             except ValueError as e:
                 try:
                     tx_hash = e.args[0]["data"]["txHash"]
@@ -758,8 +762,19 @@ class ChainInterface:
                     raise e
             self._nonces[sender.address] += 1
 
+        deployed_contract_fqn = self._get_fqn_from_bytecode(bytecode)
+
         if return_tx:
-            return return_type(tx_hash, self)
+            from .transactions import LegacyTransaction
+
+            return LegacyTransaction[return_type](
+                tx_hash,
+                tx_params,
+                abi["constructor"] if "constructor" in abi else None,
+                return_type,
+                deployed_contract_fqn,
+                self,
+            )
 
         tx_receipt = self._dev_chain.wait_for_transaction_receipt(tx_hash)
 
@@ -767,14 +782,18 @@ class ChainInterface:
             self._dev_chain, AnvilDevChain
         ):
             output = self._dev_chain.trace_transaction(tx_hash)
-            self._process_console_logs(tx_hash, output)
-
-        origin_fqn = self._get_fqn_from_bytecode(bytecode)
+            logs = self._process_console_logs(output)
+            if len(logs) > 0:
+                self.console_logs_callback(tx_hash, logs)
 
         if self.events_callback is not None:
-            self._process_events(tx_hash, tx_receipt["logs"], origin_fqn)
+            events = self._process_events(
+                tx_hash, tx_receipt["logs"], deployed_contract_fqn
+            )
+            if len(events) > 0:
+                self.events_callback(tx_hash, events)
 
-        self._process_tx_receipt(tx_receipt, tx_hash, tx, origin_fqn)
+        self._process_tx_receipt(tx_receipt, tx_hash, tx_params, deployed_contract_fqn)
         assert (
             "contractAddress" in tx_receipt
             and tx_receipt["contractAddress"] is not None
@@ -858,14 +877,13 @@ class ChainInterface:
                         # skip events from console.log
                         event_fqns.append((selector, None))
                         continue
-                    code = self._dev_chain.get_code(str(addresses[-1]))
-                    metadata = code[-53:]
-                    if metadata not in contracts_by_metadata:
+
+                    address_fqn = self._get_fqn_from_address(addresses[-1])
+                    if address_fqn is None:
                         raise ValueError(
-                            f"Unable to find contract metadata in index: {metadata.hex()}"
+                            f"Could not find contract with address {addresses[-1]}"
                         )
-                    else:
-                        event_fqns.append((selector, contracts_by_metadata[metadata]))
+                    event_fqns.append((selector, address_fqn))
                 else:
                     event_fqns.append((selector, addresses[-1]))
 
@@ -908,13 +926,10 @@ class ChainInterface:
                 last_popped = addresses.pop()
 
         if isinstance(last_popped, Address):
-            code = self._dev_chain.get_code(str(last_popped))
-            metadata = code[-53:]
-            if metadata not in contracts_by_metadata:
-                raise ValueError(
-                    f"Unable to find contract metadata in index: {metadata.hex()}"
-                )
-            last_popped = contracts_by_metadata[metadata]
+            last_popped = self._get_fqn_from_address(last_popped)
+            assert (
+                last_popped is not None
+            ), f"Could not find contract with address {last_popped}"
 
         return last_popped
 
@@ -928,8 +943,8 @@ class ChainInterface:
         return_tx: bool,
         return_type: Type,
     ) -> Any:
-        tx = self._build_transaction(params, selector, arguments, abi[selector])
-        assert "to" in tx
+        tx_params = self._build_transaction(params, selector, arguments, abi[selector])
+        assert "to" in tx_params
         sender = (
             Account(params["from"], self) if "from" in params else self.default_account
         )
@@ -938,7 +953,7 @@ class ChainInterface:
 
         with _signer_account(sender, self):
             try:
-                tx_hash = self._dev_chain.send_transaction(tx)
+                tx_hash = self._dev_chain.send_transaction(tx_params)
             except (ValueError, JsonRpcError) as e:
                 try:
                     tx_hash = e.args[0]["data"]["txHash"]
@@ -946,34 +961,59 @@ class ChainInterface:
                     raise e
             self._nonces[sender.address] += 1
 
+        recipient_fqn = self._get_fqn_from_address(Address(tx_params["to"]))
+
         if return_tx:
-            return return_type(tx_hash, self)
+            from .transactions import LegacyTransaction
+
+            return LegacyTransaction[return_type](
+                tx_hash,
+                tx_params,
+                abi[selector],
+                return_type,
+                recipient_fqn,
+                self,
+            )
 
         tx_receipt = self._dev_chain.wait_for_transaction_receipt(tx_hash)
 
         if isinstance(self._dev_chain, AnvilDevChain):
             output = self._dev_chain.trace_transaction(tx_hash)
             if self.console_logs_callback is not None:
-                self._process_console_logs(tx_hash, output)
+                logs = self._process_console_logs(output)
+                if len(logs) > 0:
+                    self.console_logs_callback(tx_hash, logs)
 
             if self.events_callback is not None:
-                self._process_events(tx_hash, tx_receipt["logs"], Address(tx["to"]))
+                events = self._process_events(
+                    tx_hash, tx_receipt["logs"], recipient_fqn
+                )
+                if len(events) > 0:
+                    self.events_callback(tx_hash, events)
 
-            self._process_tx_receipt(tx_receipt, tx_hash, tx, Address(tx["to"]))
+            self._process_tx_receipt(tx_receipt, tx_hash, tx_params, recipient_fqn)
 
             output = bytes.fromhex(output[0]["result"]["output"][2:])
         elif isinstance(self._dev_chain, GanacheDevChain):
             if self.events_callback is not None:
-                self._process_events(tx_hash, tx_receipt["logs"], Address(tx["to"]))
+                events = self._process_events(
+                    tx_hash, tx_receipt["logs"], recipient_fqn
+                )
+                if len(events) > 0:
+                    self.events_callback(tx_hash, events)
 
-            self._process_tx_receipt(tx_receipt, tx_hash, tx, Address(tx["to"]))
+            self._process_tx_receipt(tx_receipt, tx_hash, tx_params, recipient_fqn)
 
-            output = self._dev_chain.call(tx)
+            output = self._dev_chain.call(tx_params)
         elif isinstance(self._dev_chain, HardhatDevChain):
             if self.events_callback is not None:
-                self._process_events(tx_hash, tx_receipt["logs"], Address(tx["to"]))
+                events = self._process_events(
+                    tx_hash, tx_receipt["logs"], recipient_fqn
+                )
+                if len(events) > 0:
+                    self.events_callback(tx_hash, events)
 
-            self._process_tx_receipt(tx_receipt, tx_hash, tx, Address(tx["to"]))
+            self._process_tx_receipt(tx_receipt, tx_hash, tx_params, recipient_fqn)
 
             output = self._dev_chain.debug_trace_transaction(tx_hash, {})
             output = bytes.fromhex(output["returnValue"])

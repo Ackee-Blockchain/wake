@@ -298,7 +298,7 @@ class TypeGenerator:
                 )
                 self.add_str_to_types(
                     2,
-                    f"return cls._deploy([{', '.join(map(itemgetter(0), param_names))}], return_tx, LegacyTransaction[{contract_name}] if return_tx else {contract_name}, from_, value, gas_limit, {libs_arg}, chain)",
+                    f"return cls._deploy([{', '.join(map(itemgetter(0), param_names))}], return_tx, {contract_name}, from_, value, gas_limit, {libs_arg}, chain)",
                     1,
                 )
             else:
@@ -943,7 +943,7 @@ class TypeGenerator:
             return_types = f"Tuple[{', '.join(map(itemgetter(0), returns))}]"
         self.add_str_to_types(
             2,
-            f'return self._transact("{fn_selector}", [{", ".join(map(itemgetter(0), param_names))}], return_tx, request_type, LegacyTransaction[{return_types}] if return_tx else {return_types}, from_, to, value, gas_limit) if not request_type == \'call\' else self._call("{fn_selector}", [{", ".join(map(itemgetter(0), param_names))}], return_tx, {return_types}, from_, to, value, gas_limit)',
+            f'return self._transact("{fn_selector}", [{", ".join(map(itemgetter(0), param_names))}], return_tx, request_type, {return_types}, from_, to, value, gas_limit) if not request_type == \'call\' else self._call("{fn_selector}", [{", ".join(map(itemgetter(0), param_names))}], return_tx, {return_types}, from_, to, value, gas_limit)',
             2,
         )
 
