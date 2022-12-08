@@ -109,7 +109,7 @@ class HardhatDevChain(DevChainABC):
 
 
 class AnvilDevChain(DevChainABC):
-    def trace_transaction(self, tx_hash: Any) -> Dict:
+    def trace_transaction(self, tx_hash: Any) -> List:
         return self._communicator.trace_transaction(tx_hash)
 
     def set_balance(self, address: str, value: int) -> None:

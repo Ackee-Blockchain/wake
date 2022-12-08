@@ -353,7 +353,7 @@ class JsonRpcCommunicator:
         text = self._send_request("debug_traceTransaction", params)
         return self._process_response(text)
 
-    def trace_transaction(self, tx_hash: str) -> Dict:
+    def trace_transaction(self, tx_hash: str) -> List:
         text = self._send_request("trace_transaction", [tx_hash])
         return self._process_response(text)
 
