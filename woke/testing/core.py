@@ -479,7 +479,7 @@ class ChainInterface:
             gas = self._dev_chain.estimate_gas(estimate_params)
 
         tx: TxParams = {
-            "type": 2,
+            "type": 0,
             "nonce": self._get_nonce(sender),
             "from": str(sender),
             "gas": gas,
