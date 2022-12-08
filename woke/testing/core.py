@@ -764,41 +764,33 @@ class ChainInterface:
 
         deployed_contract_fqn = self._get_fqn_from_bytecode(bytecode)
 
+        from .transactions import LegacyTransaction
+
+        tx = LegacyTransaction[return_type](
+            tx_hash,
+            tx_params,
+            abi["constructor"] if "constructor" in abi else None,
+            return_type,
+            deployed_contract_fqn,
+            self,
+        )
+
         if return_tx:
-            from .transactions import LegacyTransaction
+            return tx
 
-            return LegacyTransaction[return_type](
-                tx_hash,
-                tx_params,
-                abi["constructor"] if "constructor" in abi else None,
-                return_type,
-                deployed_contract_fqn,
-                self,
-            )
+        tx.wait()
 
-        tx_receipt = self._dev_chain.wait_for_transaction_receipt(tx_hash)
-
-        if self.console_logs_callback is not None and isinstance(
-            self._dev_chain, AnvilDevChain
-        ):
-            output = self._dev_chain.trace_transaction(tx_hash)
-            logs = self._process_console_logs(output)
+        if self.console_logs_callback is not None:
+            logs = tx.console_logs
             if len(logs) > 0:
-                self.console_logs_callback(tx_hash, logs)
+                self.console_logs_callback(tx.tx_hash, logs)
 
         if self.events_callback is not None:
-            events = self._process_events(
-                tx_hash, tx_receipt["logs"], deployed_contract_fqn
-            )
+            events = tx.events
             if len(events) > 0:
-                self.events_callback(tx_hash, events)
+                self.events_callback(tx.tx_hash, events)
 
-        self._process_tx_receipt(tx_receipt, tx_hash, tx_params, deployed_contract_fqn)
-        assert (
-            "contractAddress" in tx_receipt
-            and tx_receipt["contractAddress"] is not None
-        )
-        return return_type(tx_receipt["contractAddress"], self)
+        return tx.return_value
 
     @_check_connected
     def call(
@@ -809,9 +801,9 @@ class ChainInterface:
         params: TxParams,
         return_type: Type,
     ) -> Any:
-        tx = self._build_transaction(params, selector, arguments, abi[selector])
+        tx_params = self._build_transaction(params, selector, arguments, abi[selector])
         try:
-            output = self._dev_chain.call(tx)
+            output = self._dev_chain.call(tx_params)
         except JsonRpcError as e:
             if isinstance(self._dev_chain, AnvilDevChain) and e.data["code"] == 3:
                 # call reverted, try to send as a transaction to get more info
@@ -944,7 +936,6 @@ class ChainInterface:
         return_type: Type,
     ) -> Any:
         tx_params = self._build_transaction(params, selector, arguments, abi[selector])
-        assert "to" in tx_params
         sender = (
             Account(params["from"], self) if "from" in params else self.default_account
         )
@@ -961,66 +952,36 @@ class ChainInterface:
                     raise e
             self._nonces[sender.address] += 1
 
+        assert "to" in tx_params
         recipient_fqn = self._get_fqn_from_address(Address(tx_params["to"]))
 
+        from .transactions import LegacyTransaction
+
+        tx = LegacyTransaction[return_type](
+            tx_hash,
+            tx_params,
+            abi[selector],
+            return_type,
+            recipient_fqn,
+            self,
+        )
+
         if return_tx:
-            from .transactions import LegacyTransaction
+            return tx
 
-            return LegacyTransaction[return_type](
-                tx_hash,
-                tx_params,
-                abi[selector],
-                return_type,
-                recipient_fqn,
-                self,
-            )
+        tx.wait()
 
-        tx_receipt = self._dev_chain.wait_for_transaction_receipt(tx_hash)
+        if self.console_logs_callback is not None:
+            logs = tx.console_logs
+            if len(logs) > 0:
+                self.console_logs_callback(tx.tx_hash, logs)
 
-        if isinstance(self._dev_chain, AnvilDevChain):
-            output = self._dev_chain.trace_transaction(tx_hash)
-            if self.console_logs_callback is not None:
-                logs = self._process_console_logs(output)
-                if len(logs) > 0:
-                    self.console_logs_callback(tx_hash, logs)
+        if self.events_callback is not None:
+            events = tx.events
+            if len(events) > 0:
+                self.events_callback(tx.tx_hash, events)
 
-            if self.events_callback is not None:
-                events = self._process_events(
-                    tx_hash, tx_receipt["logs"], recipient_fqn
-                )
-                if len(events) > 0:
-                    self.events_callback(tx_hash, events)
-
-            self._process_tx_receipt(tx_receipt, tx_hash, tx_params, recipient_fqn)
-
-            output = bytes.fromhex(output[0]["result"]["output"][2:])
-        elif isinstance(self._dev_chain, GanacheDevChain):
-            if self.events_callback is not None:
-                events = self._process_events(
-                    tx_hash, tx_receipt["logs"], recipient_fqn
-                )
-                if len(events) > 0:
-                    self.events_callback(tx_hash, events)
-
-            self._process_tx_receipt(tx_receipt, tx_hash, tx_params, recipient_fqn)
-
-            output = self._dev_chain.call(tx_params)
-        elif isinstance(self._dev_chain, HardhatDevChain):
-            if self.events_callback is not None:
-                events = self._process_events(
-                    tx_hash, tx_receipt["logs"], recipient_fqn
-                )
-                if len(events) > 0:
-                    self.events_callback(tx_hash, events)
-
-            self._process_tx_receipt(tx_receipt, tx_hash, tx_params, recipient_fqn)
-
-            output = self._dev_chain.debug_trace_transaction(tx_hash, {})
-            output = bytes.fromhex(output["returnValue"])
-        else:
-            raise NotImplementedError()
-
-        return self._process_return_data(output, abi[selector], return_type)
+        return tx.return_value
 
 
 @contextmanager
