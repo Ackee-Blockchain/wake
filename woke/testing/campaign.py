@@ -91,12 +91,8 @@ class Campaign:
         flows_count: int,
         run_for_seconds: Optional[int] = None,
         dry_run: bool = False,
-        chains: Optional[Iterable[ChainInterface]] = None,
     ):
         init_timestamp = datetime.now()
-
-        if chains is None:
-            chains = [default_chain]
 
         for i in range(sequences_count):
             if (
@@ -106,43 +102,42 @@ class Campaign:
             ):
                 break
 
-            snapshots = [chain.snapshot() for chain in chains]
+            with default_chain.snapshot_and_revert():
+                logger.info(self.__format_heading(f"SEQUENCE {i}"))
+                seq = self.__sequence_constructor()
 
-            logger.info(self.__format_heading(f"SEQUENCE {i}"))
-            seq = self.__sequence_constructor()
+                flows, _ = self.__get_methods(seq, attr="flow")
+                invs, _ = self.__get_methods(seq, attr="invariant")
 
-            flows, _ = self.__get_methods(seq, attr="flow")
-            invs, _ = self.__get_methods(seq, attr="invariant")
+                # point_coverage = Counter[str]()
 
-            # point_coverage = Counter[str]()
+                try:
+                    generated_flows = _generate_flows(flows, flows_count, seq)
+                    for f in flows:
+                        logger.info(f"{f[1]} {f[0].weight}: {generated_flows.count(f)}")
+                except ValueError as ex:
+                    logger.exception("Exception caught while generating flows sequence")
+                    raise ex
 
-            try:
-                generated_flows = _generate_flows(flows, flows_count, seq)
-                for f in flows:
-                    logger.info(f"{f[1]} {f[0].weight}: {generated_flows.count(f)}")
-            except ValueError as ex:
-                logger.exception("Exception caught while generating flows sequence")
-                raise ex
+                for j, flow in enumerate(generated_flows):
+                    logger.info(
+                        f'\n{f"FLOW...":<9} {j:>4} IN SEQUENCE {i:>5} {flow[1]}:'
+                    )
+                    flow[0]()
+                    if not dry_run and invs:
+                        for idx, inv in enumerate(invs):
+                            logger.info(f'{"inv...":<33}{inv[1]}')
+                            inv[0]()
+                            del inv
 
-            for j, flow in enumerate(generated_flows):
-                logger.info(f'\n{f"FLOW...":<9} {j:>4} IN SEQUENCE {i:>5} {flow[1]}:')
-                flow[0]()
-                if not dry_run and invs:
-                    for idx, inv in enumerate(invs):
-                        logger.info(f'{"inv...":<33}{inv[1]}')
-                        inv[0]()
-                        del inv
+                del invs, flows
+                # point_coverage += seq.point_coverage
+                # logger.info(self.__format_heading("Sequence point coverage:"))
+                # self.__log_point_coverage(seq.point_coverage)
+                # logger.info(self.__format_heading("Campaign point coverage:"))
+                # self.__log_point_coverage(point_coverage)
+                del seq
 
-            del invs, flows
-            # point_coverage += seq.point_coverage
-            # logger.info(self.__format_heading("Sequence point coverage:"))
-            # self.__log_point_coverage(seq.point_coverage)
-            # logger.info(self.__format_heading("Campaign point coverage:"))
-            # self.__log_point_coverage(point_coverage)
-            del seq
-
-            for snapshot, chain in zip(snapshots, chains):
-                chain.revert(snapshot)
         logger.info(f"\nRan {flows_count} flows. All flows and invariants passed.")
 
     @staticmethod
