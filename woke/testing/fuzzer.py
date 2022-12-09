@@ -31,7 +31,17 @@ from woke.testing.core import default_chain
 
 def _setup(port: int, network_id: str) -> subprocess.Popen:
     if network_id == "anvil":
-        args = ["anvil", "--port", str(port), "--prune-history"]
+        args = [
+            "anvil",
+            "--port",
+            str(port),
+            "--prune-history",
+            "--gas-price",
+            "0",
+            "--base-fee",
+            "0",
+            "--steps-tracing",
+        ]
     elif network_id == "ganache":
         args = ["ganache-cli", "--port", str(port)]
     elif network_id == "hardhat":
