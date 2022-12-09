@@ -524,16 +524,25 @@ class TypeGenerator:
         self, structs: Iterable[StructDefinition], indent: int
     ) -> None:
         for struct in structs:
+            members: List[Tuple[str, str, str]] = []
+            for member in struct.members:
+                member_name = self.get_name(member.name)
+                member_type = self.parse_type_and_import(member.type, True)
+                member_type_desc = member.type_string
+                members.append((member_name, member_type, member_type_desc))
+
             self.add_str_to_types(indent, "@dataclass", 1)
             self.add_str_to_types(indent, f"class {self.get_name(struct.name)}:", 1)
-            for member in struct.members:
+            self.add_str_to_types(indent + 1, '"""', 1)
+            self.add_str_to_types(indent + 1, "Attributes:", 1)
+            for member_name, member_type, member_type_desc in members:
                 self.add_str_to_types(
-                    indent + 1,
-                    self.get_name(member.name)
-                    + ": "
-                    + self.parse_type_and_import(member.type, True),
-                    1,
+                    indent + 2, f"{member_name} ({member_type}): {member_type_desc}", 1
                 )
+            self.add_str_to_types(indent + 1, '"""', 1)
+
+            for member_name, member_type, _ in members:
+                self.add_str_to_types(indent + 1, f"{member_name}: {member_type}", 1)
             self.add_str_to_types(0, "", 2)
 
     # TODO very similar to generate_types_struct -> refactor
@@ -578,21 +587,32 @@ class TypeGenerator:
 
             assert error_abi is not None
 
+            parameters: List[Tuple[str, str, str]] = []
+            for parameter in error.parameters.parameters:
+                parameter_name = self.get_name(parameter.name)
+                parameter_type = self.parse_type_and_import(parameter.type, True)
+                parameter_type_desc = parameter.type_string
+                parameters.append((parameter_name, parameter_type, parameter_type_desc))
+
             self.add_str_to_types(indent, "@dataclass", 1)
             self.add_str_to_types(
                 indent,
                 f"class {self.get_name(error.name)}(TransactionRevertedError):",
                 1,
             )
+
+            if len(parameters) > 0:
+                self.add_str_to_types(indent + 1, '"""', 1)
+                self.add_str_to_types(indent + 1, "Attributes:", 1)
+                for param_name, param_type, param_type_desc in parameters:
+                    self.add_str_to_types(
+                        indent + 2, f"{param_name} ({param_type}): {param_type_desc}", 1
+                    )
+                self.add_str_to_types(indent + 1, '"""', 1)
+
             self.add_str_to_types(indent + 1, f"_abi = {error_abi}", 2)
-            for parameter in error.parameters.parameters:
-                self.add_str_to_types(
-                    indent + 1,
-                    self.get_name(parameter.name)
-                    + ": "
-                    + self.parse_type_and_import(parameter.type, True),
-                    1,
-                )
+            for param_name, param_type, _ in parameters:
+                self.add_str_to_types(indent + 1, f"{param_name}: {param_type}", 1)
             self.add_str_to_types(0, "", 2)
 
     def generate_types_event(
@@ -602,30 +622,41 @@ class TypeGenerator:
         events_abi: Dict[bytes, Any],
     ) -> None:
         for event in events:
-            self.add_str_to_types(indent, "@dataclass", 1)
-            self.add_str_to_types(indent, f"class {self.get_name(event.name)}:", 1)
-            self.add_str_to_types(
-                indent + 1, f"_abi = {events_abi[event.event_selector]}", 2
-            )
+            parameters: List[Tuple[str, str, str]] = []
             for parameter in event.parameters.parameters:
                 if parameter.indexed and isinstance(
                     parameter.type,
                     (types.Array, types.Struct, types.Bytes, types.String),
                 ):
-                    self.add_str_to_types(
-                        indent + 1,
-                        self.get_name(parameter.name) + "_hash: bytes",
-                        1,
-                    )
+                    parameter_name = self.get_name(parameter.name) + "_hash"
+                    parameter_type = "bytes"
                 else:
+                    parameter_name = self.get_name(parameter.name)
+                    parameter_type = self.parse_type_and_import(parameter.type, True)
+                if parameter.indexed:
+                    parameter_type_desc = "indexed " + parameter.type_string
+                else:
+                    parameter_type_desc = parameter.type_string
+                parameters.append((parameter_name, parameter_type, parameter_type_desc))
+
+            self.add_str_to_types(indent, "@dataclass", 1)
+            self.add_str_to_types(indent, f"class {self.get_name(event.name)}:", 1)
+
+            if len(parameters) > 0:
+                self.add_str_to_types(indent + 1, '"""', 1)
+                self.add_str_to_types(indent + 1, "Attributes:", 1)
+                for param_name, param_type, param_type_desc in parameters:
                     self.add_str_to_types(
-                        indent + 1,
-                        self.get_name(parameter.name)
-                        + ": "
-                        + self.parse_type_and_import(parameter.type, True),
-                        1,
+                        indent + 2, f"{param_name} ({param_type}): {param_type_desc}", 1
                     )
-                    self.add_str_to_types(0, "", 2)
+                self.add_str_to_types(indent + 1, '"""', 1)
+
+            self.add_str_to_types(
+                indent + 1, f"_abi = {events_abi[event.event_selector]}", 2
+            )
+            for param_name, param_type, _ in parameters:
+                self.add_str_to_types(indent + 1, f"{param_name}: {param_type}", 1)
+            self.add_str_to_types(0, "", 2)
 
     # parses the expr to string
     # optionaly generates an import
