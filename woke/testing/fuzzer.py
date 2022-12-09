@@ -14,9 +14,9 @@ from contextlib import closing, redirect_stderr, redirect_stdout
 from pathlib import Path
 from time import sleep
 from typing import Callable, Iterable
+from urllib.error import URLError
 
 import rich.progress
-from aiohttp.client_exceptions import ClientConnectorError
 from ipdb.__main__ import _init_pdb
 from IPython.core.debugger import BdbQuit_excepthook
 from IPython.utils.io import Tee
@@ -99,7 +99,7 @@ def _run(
             gen = default_chain.connect(f"http://localhost:{port}")
             gen.__enter__()
             break
-        except (ConnectionRefusedError, ClientConnectorError):
+        except (ConnectionRefusedError, URLError):
             if gen is not None:
                 gen.__exit__(None, None, None)
             sleep(0.1)
