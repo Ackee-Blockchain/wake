@@ -281,7 +281,13 @@ class SolidityCompiler:
                 contracts[source_unit_name] = {}
                 for contract in info.keys():
                     contracts[source_unit_name][contract] = (
-                        Path(f"{index:03d}") / "contracts" / f"{contract}.json"
+                        Path(f"{index:03d}")
+                        / "contracts"
+                        / sanitize_filename(
+                            f"{source_unit_name}:{contract}.json",
+                            "_",
+                            platform="universal",
+                        )
                     )
 
             info = CompilationUnitBuildInfo(
@@ -626,7 +632,9 @@ class SolidityCompiler:
                 # All other build info is generated per contract. Contract names cannot contain slashes so it should
                 # be safe to name the build info file by its contract name.
                 for contract, info in d.items():
-                    file_path = contract_path / (contract + ".json")
+                    file_path = contract_path / sanitize_filename(
+                        f"{source_unit_name}:{contract}.json", "_", platform="universal"
+                    )
 
                     async with aiofiles.open(file_path, mode="w") as f:
                         await f.write(info.json(by_alias=True, exclude_none=True))
