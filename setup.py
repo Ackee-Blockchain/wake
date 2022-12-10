@@ -22,6 +22,7 @@ install_requires = [
     "eth-hash[pycryptodome] >= 0.3.3, < 1",
     "ipdb",
     "websocket-client >= 1.4.0",
+    "pywin32 >= 302; platform_system == 'Windows'",
 ]
 
 # Also: [pyright](https://github.com/microsoft/pyright/) (distributed through npm)

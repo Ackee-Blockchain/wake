@@ -1,6 +1,7 @@
 import enum
 import json
 import logging
+import platform
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
@@ -58,7 +59,7 @@ class JsonRpcCommunicator:
             self._protocol = HttpProtocol(uri)
         elif uri.startswith("ws://"):
             self._protocol = WebsocketProtocol(uri)
-        elif Path(uri).is_socket():
+        elif Path(uri).is_socket() or platform.system() == "Windows":
             self._protocol = IpcProtocol(uri)
         else:
             raise ValueError(f"Invalid URI: {uri}")
