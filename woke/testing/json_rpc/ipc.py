@@ -1,3 +1,4 @@
+import json
 import platform
 
 from woke.testing.json_rpc.abc import ProtocolAbc
@@ -24,7 +25,7 @@ else:
         def __exit__(self, exc_type, exc_val, exc_tb):
             self._socket.close()
 
-        def send_recv(self, data: str) -> str:
+        def send_recv(self, data: str):
             self._socket.sendall(data.encode("utf-8"))
             received = b""
 
@@ -32,8 +33,9 @@ else:
                 try:
                     received += self._socket.recv(4096)
                 except BlockingIOError:
-                    if not received.endswith((b"}", b"}\n", b"]", b"]\n")):
+                    if not received.rstrip().endswith((b"}", b"]")):
                         continue
-                    break
-
-            return received.decode("utf-8")
+                    try:
+                        return json.loads(received.decode("utf-8"))
+                    except json.JSONDecodeError:
+                        continue

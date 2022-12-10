@@ -1,3 +1,4 @@
+import json
 from urllib.request import Request, urlopen
 
 from woke.testing.json_rpc.abc import ProtocolAbc
@@ -15,7 +16,7 @@ class HttpProtocol(ProtocolAbc):
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
 
-    def send_recv(self, data: str) -> str:
+    def send_recv(self, data: str):
         req = Request(
             self._uri,
             data.encode("utf-8"),
@@ -23,4 +24,4 @@ class HttpProtocol(ProtocolAbc):
         )
 
         with urlopen(req) as response:
-            return response.read().decode("utf-8")
+            return json.loads(response.read().decode("utf-8"))
