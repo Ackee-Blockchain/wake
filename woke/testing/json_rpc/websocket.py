@@ -1,3 +1,5 @@
+import json
+
 from websocket import WebSocket, create_connection
 
 from .abc import ProtocolAbc
@@ -16,6 +18,6 @@ class WebsocketProtocol(ProtocolAbc):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._ws.close()
 
-    def send_recv(self, data: str) -> str:
+    def send_recv(self, data: str):
         self._ws.send(data)
-        return self._ws.recv()
+        return json.loads(self._ws.recv())

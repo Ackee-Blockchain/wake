@@ -79,7 +79,7 @@ class JsonRpcCommunicator:
     def connected(self) -> bool:
         return self._connected
 
-    def _send_request(self, method_name: str, params: Optional[List] = None) -> str:
+    def _send_request(self, method_name: str, params: Optional[List] = None) -> Any:
         post_data = {
             "jsonrpc": "2.0",
             "method": method_name,
@@ -90,11 +90,11 @@ class JsonRpcCommunicator:
         self._request_id += 1
 
         response = self._protocol.send_recv(json.dumps(post_data))
-        logger.info(f"Received response:\n{response}")
+        logger.info(f"Received response:\n{json.dumps(response)}")
         return response
 
-    def _process_response(self, text: str) -> Any:
-        response = json.loads(text)
+    @staticmethod
+    def _process_response(response: Any) -> Any:
         if "error" in response:
             raise JsonRpcError(response["error"])
         return response["result"]

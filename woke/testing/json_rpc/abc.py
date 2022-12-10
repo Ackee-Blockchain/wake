@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Any
 
 
 class ProtocolAbc(ABC):
@@ -11,5 +12,5 @@ class ProtocolAbc(ABC):
         ...
 
     @abstractmethod
-    def send_recv(self, data: str) -> str:
+    def send_recv(self, data: str) -> Any:
         ...
