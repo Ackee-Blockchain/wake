@@ -29,6 +29,7 @@ from woke.lsp.common_structures import (
 )
 from woke.lsp.context import LspContext
 from woke.lsp.lsp_data_model import LspModel
+from woke.lsp.utils.position import changes_to_byte_offset
 from woke.lsp.utils.uri import path_to_uri, uri_to_path
 
 logger = logging.getLogger(__name__)
@@ -106,13 +107,13 @@ _code_lens_cache: Dict[Path, List[CodeLensCache]] = {}
 
 
 def _get_code_lens_from_cache(
-    context: LspContext, path: Path, tree_diff: IntervalTree
+    context: LspContext, path: Path, forward_changes: IntervalTree
 ) -> Optional[List[CodeLens]]:
     if path not in _code_lens_cache:
         return None
     ret = []
     for cached_code_lens in _code_lens_cache[path]:
-        changes_at_range = tree_diff[
+        changes_at_range = forward_changes[
             cached_code_lens.validity_byte_range[
                 0
             ] : cached_code_lens.validity_byte_range[1]
@@ -125,25 +126,12 @@ def _get_code_lens_from_cache(
             ret.append(cached_code_lens.original)
         else:
             # recompute code lens range
-            changes_before_range = tree_diff[0:start]
-            byte_offset = 0
-            tag: str
-            j1: int
-            j2: int
-            for change in changes_before_range:
-                tag, j1, j2 = change.data
-                if tag == "insert":
-                    byte_offset += j2 - j1 - 1
-                elif tag == "delete":
-                    byte_offset -= change.end - change.begin - 1
-                elif tag == "replace":
-                    byte_offset += j2 - j1 - (change.end - change.begin)
-                else:
-                    raise ValueError(f"Unknown tag {tag}")
+            new_start = changes_to_byte_offset(forward_changes[0:start]) + start
+            new_end = changes_to_byte_offset(forward_changes[0:end]) + end
             ret.append(
                 CodeLens(
                     range=context.compiler.get_range_from_byte_offsets(
-                        path, (start + byte_offset, end + byte_offset)
+                        path, (new_start, new_end)
                     ),
                     command=cached_code_lens.original.command,
                     data=cached_code_lens.original.data,
@@ -186,10 +174,10 @@ async def code_lens(
     path = uri_to_path(params.text_document.uri).resolve()
 
     if path not in context.compiler.source_units:
-        tree_diff = context.compiler.get_last_compilation_forward_changes(path)
-        if tree_diff is None:
+        forward_changes = context.compiler.get_last_compilation_forward_changes(path)
+        if forward_changes is None:
             return None
-        return _get_code_lens_from_cache(context, path, tree_diff)
+        return _get_code_lens_from_cache(context, path, forward_changes)
 
     code_lens = []
     source_unit = context.compiler.source_units[path]
