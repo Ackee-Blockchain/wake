@@ -191,7 +191,7 @@ class LspCompiler:
 
     @property
     def source_units(self) -> Dict[Path, SourceUnit]:
-        return self.__last_compilation_source_units
+        return self.__source_units
 
     @property
     def last_compilation_interval_trees(self) -> Dict[Path, IntervalTree]:
@@ -199,7 +199,7 @@ class LspCompiler:
 
     @property
     def last_compilation_source_units(self) -> Dict[Path, SourceUnit]:
-        return self.__source_units
+        return self.__last_compilation_source_units
 
     @lru_cache(maxsize=128)
     def _compute_diff_interval_tree(
