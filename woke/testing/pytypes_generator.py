@@ -371,9 +371,10 @@ class TypeGenerator:
         fqn = f"{contract.parent.source_unit_name}:{contract.name}"
 
         if len(compilation_info.evm.deployed_bytecode.object) > 0:
-            metadata = bytes.fromhex(compilation_info.evm.deployed_bytecode.object)[
-                -53:
-            ]
+            metadata = bytes.fromhex(
+                compilation_info.evm.deployed_bytecode.object[-106:]
+            )
+            assert len(metadata) == 53
             assert metadata not in self.__contracts_by_metadata_index
             self.__contracts_by_metadata_index[metadata] = fqn
 
