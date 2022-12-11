@@ -492,9 +492,9 @@ class TypeGenerator:
 
         while len(source_units_queue) > 0 and len(lib_ids) > 0:
             source_unit = source_units_queue.popleft()
-            for contract in source_unit.contracts:
-                if contract.kind == ContractKind.LIBRARY:
-                    fqn = f"{contract.parent.source_unit_name}:{contract.name}"
+            for c in source_unit.contracts:
+                if c.kind == ContractKind.LIBRARY:
+                    fqn = f"{c.parent.source_unit_name}:{c.name}"
                     lib_id = keccak.new(
                         data=fqn.encode("utf-8"), digest_bits=256
                     ).digest()[:17]
@@ -502,11 +502,11 @@ class TypeGenerator:
                     if lib_id in lib_ids:
                         lib_ids.remove(lib_id)
                         self.__imports.generate_contract_import_name(
-                            contract.name, contract.parent.source_unit_name
+                            c.name, c.parent.source_unit_name
                         )
                         libraries[lib_id] = (
-                            contract.name[0].lower() + contract.name[1:],
-                            self.get_name(contract.name),
+                            c.name[0].lower() + c.name[1:],
+                            self.get_name(c.name),
                         )
 
             source_units_queue.extend(imp.source_unit for imp in source_unit.imports)
