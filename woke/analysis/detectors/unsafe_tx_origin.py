@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional
 
 from woke.analysis.detectors import DetectorAbc, DetectorResult, detector
 from woke.analysis.detectors.utils import (
@@ -6,7 +6,6 @@ from woke.analysis.detectors.utils import (
     get_function_definition_from_expression,
 )
 from woke.ast.enums import BinaryOpOperator, GlobalSymbolsEnum
-from woke.ast.ir.abc import SolidityAbc
 from woke.ast.ir.expression.assignment import Assignment
 from woke.ast.ir.expression.binary_operation import BinaryOperation
 from woke.ast.ir.expression.function_call import FunctionCall
@@ -22,18 +21,7 @@ from woke.ast.ir.statement.variable_declaration_statement import (
 )
 
 
-def find_parent_by_type(node: SolidityAbc, stop_type: type) -> Optional[SolidityAbc]:
-    n = node
-    while not type(n) is stop_type:
-        if not n.parent:
-            return None
-        n = n.parent
-    if not isinstance(n, SolidityAbc):
-        return None
-    return n
-
-
-def check_variable_assigned_global_symbol(
+def _check_variable_assigned_global_symbol(
     identifier: Identifier, symbol: GlobalSymbolsEnum
 ):
     ident_statement = identifier
@@ -78,7 +66,7 @@ def check_variable_assigned_global_symbol(
     return False
 
 
-def check_unsafe_usage(node: MemberAccess) -> Optional[DetectorResult]:
+def _check_unsafe_usage(node: MemberAccess) -> Optional[DetectorResult]:
     if node.parent and node.parent.parent:
         np = node.parent
         npp = node.parent.parent
@@ -106,7 +94,7 @@ def check_unsafe_usage(node: MemberAccess) -> Optional[DetectorResult]:
                     if (
                         isinstance(other, Identifier)
                         and not other.is_ref_to_state_variable
-                        and check_variable_assigned_global_symbol(
+                        and _check_variable_assigned_global_symbol(
                             other, GlobalSymbolsEnum.MSG_SENDER
                         )
                     ):
@@ -141,10 +129,10 @@ def check_unsafe_usage(node: MemberAccess) -> Optional[DetectorResult]:
 
 def detect_unsafe_tx_origin(node: MemberAccess) -> Optional[DetectorResult]:
     if expression_is_global_symbol(node, GlobalSymbolsEnum.TX_ORIGIN):
-        return check_unsafe_usage(node)
+        return _check_unsafe_usage(node)
 
 
-@detector(-1010, "unsafe_tx_origin")
+@detector(-1010, "unsafe-tx-origin")
 class UnsafeTxOriginDetector(DetectorAbc):
     """
     Detects unsafe usage of tx.origin.

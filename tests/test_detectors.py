@@ -142,7 +142,7 @@ class TestNoReturnDetector:
     def config(self, tmp_path) -> WokeConfig:
         config_dict = {
             "compiler": {"solc": {"include_paths": ["./node_modules"]}},
-            "detectors": {"only": {"no_return_detector"}},
+            "detectors": {"only": {"no-return"}},
         }
         return WokeConfig.fromdict(
             config_dict,
@@ -162,7 +162,7 @@ class TestBugEmptyByteArrayCopy:
     def config(self, tmp_path) -> WokeConfig:
         config_dict = {
             "compiler": {"solc": {"include_paths": ["./node_modules"]}},
-            "detectors": {"only": {"bug_empty_byte_array_copy"}},
+            "detectors": {"only": {"bug-empty-byte-array-copy"}},
         }
         return WokeConfig.fromdict(
             config_dict,
@@ -182,7 +182,7 @@ class TestUnsafeTxOrigin:
     def config(self, tmp_path) -> WokeConfig:
         config_dict = {
             "compiler": {"solc": {"include_paths": ["./node_modules"]}},
-            "detectors": {"only": {"unsafe_tx_origin"}},
+            "detectors": {"only": {"unsafe-tx-origin"}},
         }
         return WokeConfig.fromdict(
             config_dict,
@@ -202,7 +202,7 @@ class TestNotUsed:
     def config(self, tmp_path) -> WokeConfig:
         config_dict = {
             "compiler": {"solc": {"include_paths": ["./node_modules"]}},
-            "detectors": {"only": {"not_used"}},
+            "detectors": {"only": {"not-used"}},
         }
         return WokeConfig.fromdict(
             config_dict,
@@ -223,7 +223,7 @@ class TestProxyContract:
     def config(self, tmp_path) -> WokeConfig:
         config_dict = {
             "compiler": {"solc": {"include_paths": ["./node_modules"]}},
-            "detectors": {"only": {"detect_proxy_contract"}},
+            "detectors": {"only": {"proxy-contract"}},
         }
         return WokeConfig.fromdict(
             config_dict,

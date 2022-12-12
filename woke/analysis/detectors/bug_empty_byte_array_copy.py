@@ -17,7 +17,7 @@ from woke.ast.ir.statement.variable_declaration_statement import (
 from woke.core.solidity_version import SolidityVersionRange, SolidityVersionRanges
 
 
-def bug_empty_byte_array_copy(fc: FunctionCall) -> Optional[DetectorResult]:
+def check_bug_empty_byte_array_copy(fc: FunctionCall) -> Optional[DetectorResult]:
     versions = fc.version_ranges
     affected_versions = SolidityVersionRanges(
         [SolidityVersionRange(None, None, "0.7.14", False)]
@@ -103,7 +103,7 @@ def bug_empty_byte_array_copy(fc: FunctionCall) -> Optional[DetectorResult]:
     return None
 
 
-@detector(-1020, "bug_empty_byte_array_copy")
+@detector(-1020, "bug-empty-byte-array-copy")
 class BugEmptyByteArrayCopyDetector(DetectorAbc):
     """
     Detects empty array copy bug for solidity versions < 0.7.14
@@ -119,6 +119,6 @@ class BugEmptyByteArrayCopyDetector(DetectorAbc):
         return list(self._detections)
 
     def visit_function_call(self, node: FunctionCall):
-        res = bug_empty_byte_array_copy(node)
+        res = check_bug_empty_byte_array_copy(node)
         if res:
             self._detections.add(res)

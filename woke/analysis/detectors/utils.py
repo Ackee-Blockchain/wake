@@ -221,6 +221,9 @@ def check_all_return_params_set(
 ) -> Tuple[
     bool, List[Dict[Tuple[Optional[VariableDeclaration]], Union[ExpressionAbc, YulAbc]]]
 ]:
+    """
+    Checks if all return parameters are set
+    """
     out = []
     visited = set()
     all_set = _check_all_return_params_set(
