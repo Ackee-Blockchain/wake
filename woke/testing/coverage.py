@@ -210,8 +210,8 @@ class ContractCoverage:
     pc_instruction_cov: Dict[int, InstrCovRecord]
     pc_branch_cov: Dict[int, BranchCovRecord]
     pc_modifier_cov: Dict[int, ModifierCovRecord]
+    functions: Dict[str, FunctionInfo]
 
-    _functions: Dict[str, FunctionInfo]
     _declaration_locations: Dict[str, Tuple[int, int]]
     _modifiers_locations: Dict[str, Dict[str, Tuple[int, int]]]
     _line_intervals: IntervalTree
@@ -229,14 +229,14 @@ class ContractCoverage:
         self.pc_modifier_cov = {}
         self.pc_function = {}
         self.filename = str(contract_def.file.absolute())
-        self._functions = {}
+        self.functions = {}
 
         for base_contract_def in contract_def.linearized_base_contracts:
             spaces_intervals = _find_code_spaces_intervals(
                 base_contract_def.source, base_contract_def.byte_location[0]
             )
 
-            self._functions.update(
+            self.functions.update(
                 {
                     fn.canonical_name: FunctionInfo(fn, line_intervals)
                     for fn in (
@@ -249,11 +249,22 @@ class ContractCoverage:
             )
 
         for pc, rec in self.pc_map.items():
-            if rec.fn_name in self._functions:
-                self.pc_function[pc] = self._functions[rec.fn_name]
+            if rec.fn_name in self.functions:
+                self.pc_function[pc] = self.functions[rec.fn_name]
 
         self._add_instruction_coverage()
         self._add_modifier_coverage()
+
+    def __add__(self, other):
+        for fn, fn_info in self.functions.items():
+            fn_info += other.functions[fn]
+        for pc, rec in other.pc_instruction_cov.items():
+            self.pc_instruction_cov[pc].hit_count += rec.hit_count
+        for pc, rec in other.pc_branch_cov.items():
+            self.pc_branch_cov[pc].hit_count += rec.hit_count
+        for pc, rec in other.pc_modifier_cov.items():
+            self.pc_modifier_cov[pc].hit_count += rec.hit_count
+        return self
 
     def add_cov(self, pc: int):
         for cov in [self.pc_branch_cov, self.pc_modifier_cov, self.pc_instruction_cov]:
@@ -268,7 +279,7 @@ class ContractCoverage:
         """
 
         cov_data = {}
-        for fn in self._functions.values():
+        for fn in self.functions.values():
             for rec in fn.branch_cov.values():
                 (start_line, start_col), (end_line, end_col) = rec.branch.ide_pos
                 logger.info(
@@ -292,10 +303,10 @@ class ContractCoverage:
         Returns a list of IdeCoverageRecord for each function
         """
 
-        fns_max_calls = max([fn.calls for fn in self._functions.values()])
+        fns_max_calls = max([fn.calls for fn in self.functions.values()])
 
         cov_data = {}
-        for fn in self._functions.values():
+        for fn in self.functions.values():
             (start_line, start_col), (end_line, end_col) = fn.name_location.ide_pos
             cov_data[fn.name_location.ide_pos] = IdeCoverageRecord(
                 start_line=start_line,
@@ -316,7 +327,7 @@ class ContractCoverage:
 
         cov_data = {}
 
-        for fn in self._functions.values():
+        for fn in self.functions.values():
             for pc, rec in fn.modifier_cov.items():
                 (start_line, start_col), (end_line, end_col) = fn.modifiers[
                     rec.modifier_fn_name
@@ -399,7 +410,7 @@ class ContractCoverage:
                         self._find_modifier_call(
                             mod_push_pc,
                             parent_fn,
-                            self._functions[mod_push.fn_name],
+                            self.functions[mod_push.fn_name],
                             allowed_fns,
                         )
                         logger.debug(
@@ -408,7 +419,7 @@ class ContractCoverage:
             act_pc = act_pc + act_instr.size
 
     def _add_modifier_coverage(self):
-        for fn in self._functions.values():
+        for fn in self.functions.values():
             for pc, rec in fn.instruction_cov.items():
                 jump_pc = pc + rec.src_pc_map.size
                 if (
@@ -491,12 +502,28 @@ class ContractCoverage:
             changed = True
             while changed:
                 changed = False
-                if (
-                    function_def.source[int_to - function_def.byte_location[0] - 1]
-                    in ("{", "}")
-                    and len(spaces_intervals[int_to - 1]) != 0
+                if function_def.source[int_to - function_def.byte_location[0] - 1] in (
+                    "{",
+                    "}",
                 ):
-                    int_to = list(spaces_intervals[int_to - 1])[0].begin
+                    if len(spaces_intervals[int_to - 1]) != 0:
+                        int_to = list(spaces_intervals[int_to - 1])[0].begin
+                    else:
+                        int_to -= 1
+                    changed = True
+                if (
+                    function_def.source[
+                        int_to
+                        - function_def.byte_location[0]
+                        - 4 : int_to
+                        - function_def.byte_location[0]
+                    ]
+                    == "else"
+                ):
+                    if len(spaces_intervals[int_to - 4]) != 0:
+                        int_to = list(spaces_intervals[int_to - 4])[0].begin
+                    else:
+                        int_to -= 4
                     changed = True
 
             branches_fin.append((int_from, int_to))
@@ -510,7 +537,7 @@ class ContractCoverage:
         spaces_intervals: IntervalTree,
     ):
         for fn_def in contract_def.functions + contract_def.modifiers:
-            fn = self._functions[fn_def.canonical_name]
+            fn = self.functions[fn_def.canonical_name]
             if fn_def.body:
                 logger.debug(f"Adding branch coverage to {fn.name}")
                 branches = self._get_function_branches(fn_def, spaces_intervals)
@@ -540,7 +567,7 @@ class ContractCoverage:
         for pc, rec in self.pc_map.items():
             if rec.fn_name is not None:
                 cov = InstrCovRecord(hit_count=0, src_pc_map=rec)
-                self._functions[rec.fn_name].instruction_cov[pc] = cov
+                self.functions[rec.fn_name].instruction_cov[pc] = cov
                 self.pc_instruction_cov[pc] = cov
 
     def _find_branch_pc(self, source_int: Tuple[int, int]) -> Optional[int]:
@@ -864,9 +891,9 @@ class Coverage:
                 ret[filename].append(
                     {
                         "startLine": record.start_line,
-                        "startCol": record.start_column,
+                        "startColumn": record.start_column,
                         "endLine": record.end_line,
-                        "endCol": record.end_column,
+                        "endColumn": record.end_column,
                         "coverage": f"{int((record.coverage_hits / record.calls) * 100) if record.calls != 0 else 0}",
                         "coverageHits": record.coverage_hits,
                         "message": f"Execs: {record.coverage_hits} / {record.calls}",
