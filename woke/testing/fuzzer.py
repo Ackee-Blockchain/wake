@@ -293,7 +293,10 @@ def fuzz(
                     if i == 0:
                         progress.start()
                 while cov_parent_conn.poll():
-                    coverage: Coverage = cov_parent_conn.recv()
+                    try:
+                        coverage: Coverage = cov_parent_conn.recv()
+                    except EOFError:
+                        break
                     coverages[i] = coverage
                     res = get_merged_ide_coverage(list(coverages.values()))
                     if res:
