@@ -292,7 +292,7 @@ def fuzz(
                     progress.update(task, thr_rem=len(processes) - len(to_be_removed))
                     if i == 0:
                         progress.start()
-                if cov_parent_conn.poll():
+                while cov_parent_conn.poll():
                     coverage: Coverage = cov_parent_conn.recv()
                     coverages[i] = coverage
                     res = get_merged_ide_coverage(list(coverages.values()))
