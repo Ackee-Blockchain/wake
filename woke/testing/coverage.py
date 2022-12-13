@@ -902,13 +902,13 @@ class Coverage:
 
         return ret
 
-    def process_trace(self, contract_fqn: str, trace: Dict["str", Any]):
+    def process_trace(self, contract_fqn: str, trace: Dict[str, Any]):
         """
         Processes debug_traceTransaction and it's struct_logs
         """
         contract_fqn_stack = [contract_fqn]
+        transaction_fqn_pcs = set()
 
-        transaction_pcs = set()
         for struct_log in trace["structLogs"]:
             last_fqn = contract_fqn_stack[-1]
             pc = int(struct_log["pc"])
@@ -943,9 +943,10 @@ class Coverage:
                 )
             else:
                 logger.debug(f"{pc} {struct_log['op']} is executed ")
-            if pc not in transaction_pcs:
+
+            if (last_fqn, pc) not in transaction_fqn_pcs:
+                transaction_fqn_pcs.add((last_fqn, pc))
                 contract_cov_per_trans.add_cov(pc)
-                transaction_pcs.add(pc)
             contract_cov.add_cov(pc)
 
 
