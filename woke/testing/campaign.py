@@ -135,10 +135,13 @@ class Campaign:
                             inv[0]()
                             del inv
 
-                    if j % 5 == 0 or j == len(generated_flows) - 1:
-                        if coverage is not None:
-                            coverage[0].update_coverage()
-                            coverage[1].send(coverage[0].get_coverage())
+                    if j % 20 == 0 and coverage is not None:
+                        coverage[0].update_coverage()
+                        coverage[1].send(coverage[0].get_coverage())
+
+                if coverage is not None:
+                    coverage[0].update_coverage()
+                    coverage[1].send(coverage[0].get_coverage())  # type: ignore
 
                 del invs, flows
                 # point_coverage += seq.point_coverage
