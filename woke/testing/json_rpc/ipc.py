@@ -52,14 +52,15 @@ else:
 
         def __enter__(self):
             self._socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            self._socket.setblocking(False)
             self._socket.connect(self._uri)
 
         def __exit__(self, exc_type, exc_val, exc_tb):
             self._socket.close()
 
         def send_recv(self, data: str):
+            self._socket.setblocking(True)
             self._socket.sendall(data.encode("utf-8"))
+            self._socket.setblocking(False)
             received = b""
 
             while True:
