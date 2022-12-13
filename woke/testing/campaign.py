@@ -135,7 +135,7 @@ class Campaign:
                             inv[0]()
                             del inv
 
-                    if j % 20 == 0 and coverage is not None:
+                    if j % 23 == 0 and coverage is not None:
                         coverage[0].update_coverage()
                         coverage[1].send(coverage[0].get_coverage())
 

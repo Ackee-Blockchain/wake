@@ -15,7 +15,7 @@ import types
 from contextlib import closing, redirect_stderr, redirect_stdout
 from pathlib import Path
 from time import sleep
-from typing import Callable, Dict, Iterable, Optional
+from typing import Callable, Dict, Iterable, List, Optional, Tuple
 from urllib.error import URLError
 
 import rich.progress
@@ -185,6 +185,20 @@ def _run(
             chain_process.kill()
 
 
+def _compute_coverage_per_function(coverages: Dict[int, Coverage]) -> Dict[str, int]:
+    funcs_cov = {}
+    for cov in coverages.values():
+        for contract_cov in cov.contracts_cov.values():
+            for fn_name, fn_info in contract_cov.functions.items():
+                if fn_info.calls == 0:
+                    continue
+                if fn_name not in funcs_cov:
+                    funcs_cov[fn_name] = fn_info.calls
+                else:
+                    funcs_cov[fn_name] += fn_info.calls
+    return funcs_cov
+
+
 def fuzz(
     config: WokeConfig,
     fuzz_test: types.FunctionType,
@@ -194,6 +208,7 @@ def fuzz(
     passive: bool,
     network_id: str,
     cov_proc_num: int,
+    verbose_coverage: bool,
 ):
     random_seeds = list(seeds)
     if len(random_seeds) < process_count:
@@ -237,13 +252,15 @@ def fuzz(
         rich.progress.SpinnerColumn(finished_text="[green]⠿"),
         "[progress.description][yellow]{task.description}, "
         "[green]{task.fields[thr_rem]}[yellow] "
-        "processes remaining",
+        "processes remaining{task.fields[coverage_info]}",
     ) as progress:
         coverages: Dict[int, Coverage] = {}
 
         if passive:
             progress.stop()
-        task = progress.add_task("Fuzzing", thr_rem=len(processes), total=1)
+        task = progress.add_task(
+            "Fuzzing", thr_rem=len(processes), coverage_info="", total=1
+        )
 
         while len(processes):
             to_be_removed = []
@@ -307,6 +324,22 @@ def fuzz(
                             f.write(
                                 json.dumps(ide_cov_per_trans, indent=4, sort_keys=True)
                             )
+
+                    cov_info = ""
+                    if not passive and verbose_coverage:
+                        cov_info = "\n[dark_goldenrod]" + "\n".join(
+                            [
+                                f"{fn_name}: [green]{fn_calls}[dark_goldenrod]"
+                                for (fn_name, fn_calls) in sorted(
+                                    _compute_coverage_per_function(coverages).items(),
+                                    key=lambda x: x[1],
+                                    reverse=True,
+                                )
+                            ]
+                        )
+                    progress.update(task, coverage_info=cov_info)
+
             for i in to_be_removed:
                 processes.pop(i)
+
         progress.update(task, description="Finished", completed=1)

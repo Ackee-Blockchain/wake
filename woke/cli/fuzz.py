@@ -37,6 +37,15 @@ def _get_module_name(path: Path, root: Path) -> str:
     show_default=True,
     help="Number of processes that will track coverage.",
 )
+@click.option(
+    "--verbose-coverage",
+    "-v",
+    type=bool,
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Verbose coverage info for funcions",
+)
 @click.option("--seed", "-s", "seeds", multiple=True, type=str, help="Random seeds")
 @click.option(
     "--passive",
@@ -56,6 +65,7 @@ def run_fuzz(
     paths: Tuple[str],
     process_count: int,
     cov_proc_count: int,
+    verbose_coverage: bool,
     seeds: Tuple[str],
     passive: bool,
     network: str,
@@ -132,4 +142,5 @@ def run_fuzz(
             passive,
             network,
             cov_proc_count,
+            verbose_coverage,
         )
