@@ -269,8 +269,8 @@ class TestCoverage:
         for file, coverages in ide_coverage.items():
             for record in coverages:
                 pos = (
-                    (record["startLine"], record["startCol"]),
-                    (record["endLine"], record["endCol"]),
+                    (record["startLine"], record["startColumn"]),
+                    (record["endLine"], record["endColumn"]),
                 )
                 if pos in parents_pos:
                     assert record["coverageHits"] == 2
@@ -360,4 +360,4 @@ class TestCoverageProvider:
         assert coverage.get_fqn_from_address.call_count == 2
         for pc in called.pc_branch_cov:
             assert called.pc_branch_cov[pc].hit_count == 1
-        assert called._functions["Called.receive_A"].calls == 1
+        assert called.functions["Called.receive_A"].calls == 1
