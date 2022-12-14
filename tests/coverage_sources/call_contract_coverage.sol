@@ -1,10 +1,7 @@
 pragma solidity ^0.7;
 
-contract Called {
-    function receive_A() public payable returns (uint) {
-        return 0xAA;
-    }
-}
+import "./call_contract_coverage_2.sol";
+
 contract Callee {
     function call(uint a, address _addr) payable public {
         if (a == 1)

@@ -312,6 +312,9 @@ class TestCoverageProvider:
         test_file = "call_contract_coverage.sol"
         source_path = tmp_path / test_file
         shutil.copy(SOURCES_PATH / test_file, source_path)
+        test_file_2 = "call_contract_coverage_2.sol"
+        source_path_2 = tmp_path / test_file_2
+        shutil.copy(SOURCES_PATH / test_file_2, source_path_2)
 
         cov = Coverage(config)
         coverage.default_chain = mock.MagicMock()
@@ -346,7 +349,7 @@ class TestCoverageProvider:
 
     def test_calls_coverage(self, calls_coverage_provider):
         callee_fqn = "call_contract_coverage.sol:Callee"
-        called_fqn = "call_contract_coverage.sol:Called"
+        called_fqn = "call_contract_coverage_2.sol:Called"
         callee = calls_coverage_provider.get_coverage().contracts_cov[callee_fqn]
         called = calls_coverage_provider.get_coverage().contracts_cov[called_fqn]
 
@@ -378,3 +381,14 @@ class TestCoverageProvider:
         for pc in called.pc_branch_cov:
             assert called.pc_branch_cov[pc].hit_count == 1
         assert called.functions["Called.receive_A"].calls == 1
+
+        ide_coverage = calls_coverage_provider._coverage.get_contract_ide_coverage(
+            False
+        )
+        for file_name, ide_cov in ide_coverage.items():
+            if called_fqn.split(":")[0] in file_name:
+                for record in ide_cov:
+                    assert record["coverageHits"] == 1
+            if callee_fqn.split(":")[0] in file_name:
+                for record in ide_cov:
+                    assert record["coverageHits"] == 0
