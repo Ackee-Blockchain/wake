@@ -37,6 +37,7 @@ from woke.testing.development_chains import (
 from woke.testing.pytypes_generator import RequestType
 
 from . import hardhat_console
+from .internal import UnknownEvent, UnknownTransactionRevertedError
 from .json_rpc.communicator import JsonRpcCommunicator, JsonRpcError, TxParams
 
 
@@ -544,9 +545,7 @@ class ChainInterface:
     ):
         selector = revert_data[0:4]
         if selector not in errors:
-            raise ValueError(
-                f"Transaction reverted with unknown error selector {selector.hex()}"
-            )
+            raise UnknownTransactionRevertedError(revert_data)
 
         if selector not in self._single_source_errors:
             # ambiguous error, try to find the source contract
@@ -556,9 +555,7 @@ class ChainInterface:
             try:
                 fqn = self._process_debug_trace_for_revert(debug_trace, origin)
             except ValueError:
-                raise ValueError(
-                    f"Transaction reverted with unknown error selector {selector.hex()}"
-                )
+                raise UnknownTransactionRevertedError(revert_data)
         else:
             fqn = list(errors[selector].keys())[0]
 
@@ -584,21 +581,19 @@ class ChainInterface:
             return []
 
         generated_events = []
-        unknown_events = []
-
-        assert all(len(log["topics"]) > 0 for log in logs)
 
         non_unique = False
         for log in logs:
+            if len(log["topics"]) == 0:
+                continue
+
             selector = log["topics"][0]
             if selector.startswith("0x"):
                 selector = selector[2:]
             selector = bytes.fromhex(selector)
 
             if selector not in events:
-                raise ValueError(
-                    f"Transaction emitted unknown event selector {selector.hex()}"
-                )
+                continue
 
             if len(events[selector]) > 1:
                 non_unique = True
@@ -614,20 +609,31 @@ class ChainInterface:
             event_traces = [(None, None)] * len(logs)
 
         for log, (traced_selector, fqn) in zip(logs, event_traces):
-            default_topic = log["topics"][0]
-            if default_topic.startswith("0x"):
-                default_topic = default_topic[2:]
-            selector = bytes.fromhex(default_topic)
+            topics = [
+                bytes.fromhex(t[2:]) if t.startswith("0x") else bytes.fromhex(t)
+                for t in log["topics"]
+            ]
+            data = (
+                bytes.fromhex(log["data"][2:])
+                if log["data"].startswith("0x")
+                else bytes.fromhex(log["data"])
+            )
+
+            if len(topics) == 0:
+                generated_events.append(UnknownEvent([], data))
+                continue
+
+            selector = topics[0]
 
             if selector not in events:
-                unknown_events.append((log["topics"], log["data"]))
+                generated_events.append(UnknownEvent(topics, data))
                 continue
 
             if len(events[selector]) > 1:
                 assert traced_selector == selector
 
                 if fqn is None:
-                    unknown_events.append((log["topics"], log["data"]))
+                    generated_events.append(UnknownEvent(topics, data))
                     continue
 
                 found = False
@@ -636,9 +642,10 @@ class ChainInterface:
                         found = True
                         fqn = base_fqn
                         break
-                assert (
-                    found
-                ), f"Event with selector {selector.hex()} not found in {fqn} or its ancestors"
+
+                if not found:
+                    generated_events.append(UnknownEvent(topics, data))
+                    continue
             else:
                 fqn = list(events[selector].keys())[0]
 
