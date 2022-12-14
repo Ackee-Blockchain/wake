@@ -297,6 +297,11 @@ class ChainInterface:
 
     @property
     @_check_connected
+    def chain_id(self) -> int:
+        return self._chain_id
+
+    @property
+    @_check_connected
     def automine(self) -> bool:
         return self._dev_chain.get_automine()
 
