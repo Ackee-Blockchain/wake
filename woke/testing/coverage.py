@@ -32,7 +32,11 @@ from woke.compile.solc_frontend import (
     SolcOutputSelectionEnum,
 )
 from woke.testing import default_chain
-from woke.testing.core import Address, get_fqn_from_address, get_fqn_from_bytecode
+from woke.testing.core import (
+    Address,
+    get_fqn_from_address,
+    get_fqn_from_deployment_code,
+)
 from woke.testing.development_chains import DevChainABC
 from woke.utils.file_utils import is_relative_to
 
@@ -861,7 +865,7 @@ class CoverageProvider:
                     if bytecode.startswith("0x"):
                         bytecode = bytecode[2:]
                     bytecode = bytes.fromhex(bytecode)
-                    contract_fqn = get_fqn_from_bytecode(bytecode)
+                    contract_fqn = get_fqn_from_deployment_code(bytecode)
                 else:
                     contract_fqn = get_fqn_from_address(
                         Address(transaction["to"]), default_chain

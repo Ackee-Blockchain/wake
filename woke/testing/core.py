@@ -190,34 +190,36 @@ def _check_connected(f):
     return wrapper
 
 
-def get_fqn_from_bytecode(bytecode: bytes) -> str:
-    for bytecode_segments, fqn in bytecode_index:
+def get_fqn_from_deployment_code(deployment_code: bytes) -> str:
+    for deployment_code_segments, fqn in deployment_code_index:
 
-        length, h = bytecode_segments[0]
-        if length > len(bytecode):
+        length, h = deployment_code_segments[0]
+        if length > len(deployment_code):
             continue
-        segment_h = BLAKE2b.new(data=bytecode[:length], digest_bits=256).digest()
+        segment_h = BLAKE2b.new(data=deployment_code[:length], digest_bits=256).digest()
         if segment_h != h:
             continue
 
-        bytecode = bytecode[length:]
+        deployment_code = deployment_code[length:]
         found = True
 
-        for length, h in bytecode_segments[1:]:
-            if length + 20 > len(bytecode):
+        for length, h in deployment_code_segments[1:]:
+            if length + 20 > len(deployment_code):
                 found = False
                 break
-            bytecode = bytecode[20:]
-            segment_h = BLAKE2b.new(data=bytecode[:length], digest_bits=256).digest()
+            deployment_code = deployment_code[20:]
+            segment_h = BLAKE2b.new(
+                data=deployment_code[:length], digest_bits=256
+            ).digest()
             if segment_h != h:
                 found = False
                 break
-            bytecode = bytecode[length:]
+            deployment_code = deployment_code[length:]
 
         if found:
             return fqn
 
-    raise ValueError("Could not find contract definition from bytecode")
+    raise ValueError("Could not find contract definition from deployment code")
 
 
 def get_fqn_from_address(addr: Address, chain: ChainInterface) -> Optional[str]:
@@ -766,7 +768,7 @@ class ChainInterface:
     def deploy(
         self,
         abi: Dict[Union[bytes, Literal["constructor"]], Any],
-        bytecode: bytes,
+        deployment_code: bytes,
         arguments: Iterable,
         params: TxParams,
         return_tx: bool,
@@ -774,7 +776,7 @@ class ChainInterface:
     ) -> Any:
         tx_params = self._build_transaction(
             params,
-            bytecode,
+            deployment_code,
             arguments,
             abi["constructor"] if "constructor" in abi else None,
         )
@@ -794,7 +796,7 @@ class ChainInterface:
                     raise e
             self._nonces[sender.address] += 1
 
-        deployed_contract_fqn = get_fqn_from_bytecode(bytecode)
+        deployed_contract_fqn = get_fqn_from_deployment_code(deployment_code)
 
         from .transactions import LegacyTransaction
 
@@ -875,18 +877,20 @@ class ChainInterface:
                 end_offset = (offset + length) % 32
 
                 if start_block == end_block:
-                    bytecode = bytes.fromhex(trace["memory"][start_block])[
+                    deployment_code = bytes.fromhex(trace["memory"][start_block])[
                         start_offset : start_offset + length
                     ]
                 else:
-                    bytecode = bytes.fromhex(trace["memory"][start_block])[
+                    deployment_code = bytes.fromhex(trace["memory"][start_block])[
                         start_offset:
                     ]
                     for i in range(start_block + 1, end_block):
-                        bytecode += bytes.fromhex(trace["memory"][i])
-                    bytecode += bytes.fromhex(trace["memory"][end_block])[:end_offset]
+                        deployment_code += bytes.fromhex(trace["memory"][i])
+                    deployment_code += bytes.fromhex(trace["memory"][end_block])[
+                        :end_offset
+                    ]
 
-                fqn = get_fqn_from_bytecode(bytecode)
+                fqn = get_fqn_from_deployment_code(deployment_code)
                 addresses.append(fqn)
             elif trace["op"] in {"RETURN", "REVERT", "STOP"}:
                 addresses.pop()
@@ -933,18 +937,20 @@ class ChainInterface:
                 end_offset = (offset + length) % 32
 
                 if start_block == end_block:
-                    bytecode = bytes.fromhex(trace["memory"][start_block])[
+                    deployment_code = bytes.fromhex(trace["memory"][start_block])[
                         start_offset : start_offset + length
                     ]
                 else:
-                    bytecode = bytes.fromhex(trace["memory"][start_block])[
+                    deployment_code = bytes.fromhex(trace["memory"][start_block])[
                         start_offset:
                     ]
                     for i in range(start_block + 1, end_block):
-                        bytecode += bytes.fromhex(trace["memory"][i])
-                    bytecode += bytes.fromhex(trace["memory"][end_block])[:end_offset]
+                        deployment_code += bytes.fromhex(trace["memory"][i])
+                    deployment_code += bytes.fromhex(trace["memory"][end_block])[
+                        :end_offset
+                    ]
 
-                fqn = get_fqn_from_bytecode(bytecode)
+                fqn = get_fqn_from_deployment_code(deployment_code)
                 addresses.append(fqn)
             elif trace["op"] == "REVERT":
                 addr = addresses.pop()
@@ -1057,16 +1063,16 @@ contracts_by_metadata: Dict[bytes, str] = {}
 contracts_inheritance: Dict[str, Tuple[str, ...]] = {}
 # contract_fqn => set of REVERT opcode PCs belonging to a revert statement
 contracts_revert_index: Dict[str, Set[int]] = {}
-# list of pairs of (bytecode segments, contract_fqn)
-# where bytecode segments is a tuple of (length, BLAKE2b hash)
-bytecode_index: List[Tuple[Tuple[Tuple[int, bytes], ...], str]] = []
+# list of pairs of (deployment code segments, contract_fqn)
+# where deployment code segments is a tuple of (length, BLAKE2b hash)
+deployment_code_index: List[Tuple[Tuple[Tuple[int, bytes], ...], str]] = []
 
 LIBRARY_PLACEHOLDER_REGEX = re.compile(r"__\$[0-9a-fA-F]{34}\$__")
 
 
 class Contract(Account):
     _abi: Dict[Union[bytes, Literal["constructor"]], Any]
-    _bytecode: str
+    _deployment_code: str
 
     def __init__(
         self, addr: Union[Account, Address, str], chain: ChainInterface = default_chain
@@ -1084,15 +1090,15 @@ class Contract(Account):
         return self.__str__()
 
     @classmethod
-    def _get_bytecode(
+    def _get_deployment_code(
         cls, libraries: Dict[bytes, Tuple[Union[Account, Address], str]]
     ) -> bytes:
-        bytecode = cls._bytecode
-        for match in LIBRARY_PLACEHOLDER_REGEX.finditer(bytecode):
+        deployment_code = cls._deployment_code
+        for match in LIBRARY_PLACEHOLDER_REGEX.finditer(deployment_code):
             lib_id = bytes.fromhex(match.group(0)[3:-3])
             assert (
                 lib_id in libraries
-            ), f"Address of library {libraries[lib_id][1]} required to generate bytecode"
+            ), f"Address of library {libraries[lib_id][1]} required to generate deployment code"
 
             lib = libraries[lib_id][0]
             if isinstance(lib, Account):
@@ -1102,8 +1108,12 @@ class Contract(Account):
             else:
                 raise TypeError()
 
-            bytecode = bytecode[: match.start()] + lib_addr + bytecode[match.end() :]
-        return bytes.fromhex(bytecode)
+            deployment_code = (
+                deployment_code[: match.start()]
+                + lib_addr
+                + deployment_code[match.end() :]
+            )
+        return bytes.fromhex(deployment_code)
 
     @classmethod
     def _deploy(
@@ -1137,8 +1147,8 @@ class Contract(Account):
         else:
             raise ValueError("invalid gas limit")
 
-        bytecode = cls._bytecode
-        for match in LIBRARY_PLACEHOLDER_REGEX.finditer(bytecode):
+        deployment_code = cls._deployment_code
+        for match in LIBRARY_PLACEHOLDER_REGEX.finditer(deployment_code):
             lib_id = bytes.fromhex(match.group(0)[3:-3])
             assert lib_id in libraries
 
@@ -1153,10 +1163,19 @@ class Contract(Account):
             else:
                 raise ValueError(f"Library {libraries[lib_id][1]} not deployed")
 
-            bytecode = bytecode[: match.start()] + lib_addr + bytecode[match.end() :]
+            deployment_code = (
+                deployment_code[: match.start()]
+                + lib_addr
+                + deployment_code[match.end() :]
+            )
 
         return chain.deploy(
-            cls._abi, bytes.fromhex(bytecode), arguments, params, return_tx, return_type
+            cls._abi,
+            bytes.fromhex(deployment_code),
+            arguments,
+            params,
+            return_tx,
+            return_type,
         )
 
     def _transact(
