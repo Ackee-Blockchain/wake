@@ -279,6 +279,12 @@ class JsonRpcCommunicator:
         text = self._send_request("hardhat_getAutomine")
         return self._process_response(text)
 
+    def hardhat_set_code(self, address: str, code: bytes) -> None:
+        """Sets the code of the account of given address."""
+        params = [address, "0x" + code.hex()]
+        text = self._send_request("hardhat_setCode", params)
+        _ = self._process_response(text)
+
     def anvil_set_balance(self, address: str, balance: int) -> None:
         params = [address, hex(balance)]
         text = self._send_request("anvil_setBalance", params)
@@ -303,6 +309,11 @@ class JsonRpcCommunicator:
     def anvil_get_automine(self) -> bool:
         text = self._send_request("anvil_getAutomine")
         return self._process_response(text)
+
+    def anvil_set_code(self, address: str, code: bytes) -> None:
+        params = [address, "0x" + code.hex()]
+        text = self._send_request("anvil_setCode", params)
+        _ = self._process_response(text)
 
     def evm_set_account_balance(self, address: str, balance: int) -> None:
         """Sets the given account's balance to the specified WEI value. Mines a new block before returning."""
@@ -337,6 +348,11 @@ class JsonRpcCommunicator:
             text = self._send_request("evm_mine")
         else:
             text = self._send_request("evm_mine", [hex(timestamp)])
+        _ = self._process_response(text)
+
+    def evm_set_account_code(self, address: str, code: bytes) -> None:
+        params = [address, "0x" + code.hex()]
+        text = self._send_request("evm_setAccountCode", params)
         _ = self._process_response(text)
 
     def web3_client_version(self) -> str:
