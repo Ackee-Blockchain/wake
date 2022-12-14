@@ -31,9 +31,25 @@ from .svm import run_svm
     help="Override Woke root path.",
 )
 @click.option("--debug/--no-debug", default=False)
+@click.option("--profile", is_flag=True, default=False)
 @click.version_option(message="%(version)s", package_name="woke")
 @click.pass_context
-def main(ctx: Context, woke_root_path: Optional[str], debug: bool) -> None:
+def main(
+    ctx: Context, woke_root_path: Optional[str], debug: bool, profile: bool
+) -> None:
+    if profile:
+        import atexit
+        import cProfile
+
+        pr = cProfile.Profile()
+        pr.enable()
+
+        def exit():
+            pr.disable()
+            pr.dump_stats("woke.prof")
+
+        atexit.register(exit)
+
     rich.traceback.install(show_locals=debug, suppress=[click], console=console)
     logging.basicConfig(
         format="%(asctime)s %(name)s: %(message)s",
