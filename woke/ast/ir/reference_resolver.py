@@ -35,7 +35,8 @@ class PostProcessQueueItem:
 
 
 class ReferenceResolver:
-    __ordered_nodes: Dict[bytes, Dict[AstNodeId, Tuple[Path, int]]]
+    __ordered_nodes: DefaultDict[bytes, Dict[AstNodeId, Tuple[Path, int]]]
+    __registered_source_files: DefaultDict[bytes, Dict[int, Path]]
     __registered_nodes: Dict[Tuple[Path, int], SolidityAbc]
     __post_process_callbacks: List[PostProcessQueueItem]
     __destroy_callbacks: DefaultDict[Path, List[Callable[[], None]]]
@@ -45,6 +46,7 @@ class ReferenceResolver:
 
     def __init__(self):
         self.__ordered_nodes = defaultdict(dict)
+        self.__registered_source_files = defaultdict(dict)
         self.__registered_nodes = {}
         self.__post_process_callbacks = []
         self.__destroy_callbacks = defaultdict(list)
@@ -54,6 +56,9 @@ class ReferenceResolver:
         self.__ordered_nodes[cu_hash][root_node.id] = (path, 0)
         for index, node in enumerate(root_node):
             self.__ordered_nodes[cu_hash][node.id] = (path, index + 1)
+
+    def register_source_file_id(self, source_file_id: int, path: Path, cu_hash: bytes):
+        self.__registered_source_files[cu_hash][source_file_id] = path
 
     def get_node_path_order(
         self, node_id: AstNodeId, cu_hash: bytes
@@ -79,6 +84,9 @@ class ReferenceResolver:
     def resolve_node(self, node_id: AstNodeId, cu_hash: bytes) -> SolidityAbc:
         node_path_order = self.__ordered_nodes[cu_hash][node_id]
         return self.__registered_nodes[node_path_order]
+
+    def resolve_source_file_id(self, source_file_id: int, cu_hash: bytes) -> Path:
+        return self.__registered_source_files[cu_hash][source_file_id]
 
     def register_post_process_callback(
         self, callback: Callable[[CallbackParams], None], priority: int = 0

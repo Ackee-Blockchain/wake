@@ -9,7 +9,7 @@ from collections import deque
 from enum import Enum
 from operator import itemgetter
 from pathlib import Path, PurePath
-from typing import Any, Dict, Iterable, List, Set, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import eth_utils
 from Crypto.Hash import BLAKE2b, keccak
@@ -32,8 +32,10 @@ from ..ast.ir.declaration.contract_definition import ContractDefinition
 from ..ast.ir.declaration.error_definition import ErrorDefinition
 from ..ast.ir.declaration.event_definition import EventDefinition
 from ..ast.ir.declaration.function_definition import FunctionDefinition
+from ..ast.ir.expression.function_call import FunctionCall
 from ..ast.ir.meta.source_unit import SourceUnit
 from ..ast.ir.reference_resolver import CallbackParams, ReferenceResolver
+from ..ast.ir.statement.revert_statement import RevertStatement
 from ..ast.ir.type_name.abc import TypeNameAbc
 from ..ast.ir.type_name.array_type_name import ArrayTypeName
 from ..ast.ir.type_name.user_defined_type_name import UserDefinedTypeName
@@ -63,6 +65,52 @@ def _make_path_alphanum(source_unit_name: str) -> str:
     )
 
 
+def _parse_opcodes(opcodes: str) -> List[Tuple[int, str, int, Optional[int]]]:
+    pc_op_map = []
+    opcodes_spl = opcodes.split(" ")
+
+    pc = 0
+    ignore = False
+
+    for i, opcode in enumerate(opcodes_spl):
+        if ignore:
+            ignore = False
+            continue
+
+        if not opcode.startswith("PUSH"):
+            pc_op_map.append((pc, opcode, 1, None))
+            pc += 1
+        else:
+            size = int(opcode[4:]) + 1
+            pc_op_map.append((pc, opcode, size, int(opcodes_spl[i + 1], 16)))
+            pc += size
+            ignore = True
+    return pc_op_map
+
+
+def _parse_source_map(
+    source_map: str,
+    pc_op_map: List[Tuple[int, str, int, Optional[int]]],
+) -> Dict[int, Tuple[int, int, int]]:
+    pc_map = {}
+    last_data = [-1, -1, -1, None, None]
+
+    for i, sm_item in enumerate(source_map.split(";")):
+        pc, op, size, argument = pc_op_map[i]
+        source_spl = sm_item.split(":")
+        for x in range(len(source_spl)):
+            if source_spl[x] == "":
+                continue
+            if x < 3:
+                last_data[x] = int(source_spl[x])
+            else:
+                last_data[x] = source_spl[x]
+
+        pc_map[pc] = (last_data[0], last_data[0] + last_data[1], last_data[2])
+
+    return pc_map
+
+
 class TypeGenerator:
     LIBRARY_PLACEHOLDER_REGEX = re.compile(r"__\$[0-9a-fA-F]{34}\$__")
 
@@ -74,6 +122,8 @@ class TypeGenerator:
     # used to avoid generating the same contract multiple times, eg. when multiple contracts inherit from it
     __already_generated_contracts: Set[str]
     __source_units: Dict[Path, SourceUnit]
+    __interval_trees: Dict[Path, IntervalTree]
+    __reference_resolver: ReferenceResolver
     __imports: SourceUnitImports
     __name_sanitizer: NameSanitizer
     __current_source_unit: str
@@ -85,6 +135,7 @@ class TypeGenerator:
     __events_index: Dict[bytes, Dict[str, Any]]
     __contracts_by_metadata_index: Dict[bytes, str]
     __contracts_inheritance_index: Dict[str, Tuple[str, ...]]
+    __contracts_revert_index: Dict[str, Set[int]]
     __bytecode_index: List[Tuple[Tuple[Tuple[int, bytes], ...], str]]
 
     def __init__(self, config: WokeConfig, return_tx_obj: bool):
@@ -93,6 +144,8 @@ class TypeGenerator:
         self.__source_unit_types = ""
         self.__already_generated_contracts = set()
         self.__source_units = {}
+        self.__interval_trees = {}
+        self.__reference_resolver = ReferenceResolver()
         self.__imports = SourceUnitImports(self)
         self.__name_sanitizer = NameSanitizer()
         self.__current_source_unit = ""
@@ -104,6 +157,7 @@ class TypeGenerator:
         self.__events_index = {}
         self.__contracts_by_metadata_index = {}
         self.__contracts_inheritance_index = {}
+        self.__contracts_revert_index = {}
         self.__bytecode_index = []
 
         # built-in Error(str) and Panic(uint256) errors
@@ -191,8 +245,6 @@ class TypeGenerator:
             raise Exception("Compilation failed")
 
         processed_files: Set[Path] = set()
-        reference_resolver = ReferenceResolver()
-        interval_trees: Dict[Path, IntervalTree] = {}
 
         for cu, output in outputs:
             for source_unit_name, info in output.sources.items():
@@ -200,28 +252,31 @@ class TypeGenerator:
 
                 ast = AstSolc.parse_obj(info.ast)
 
-                reference_resolver.index_nodes(ast, path, cu.hash)
+                self.__reference_resolver.register_source_file_id(
+                    info.id, path, cu.hash
+                )
+                self.__reference_resolver.index_nodes(ast, path, cu.hash)
 
                 if path in processed_files:
                     continue
                 processed_files.add(path)
-                interval_trees[path] = IntervalTree()
+                self.__interval_trees[path] = IntervalTree()
 
                 init = IrInitTuple(
                     path,
                     path.read_bytes(),
                     cu,
-                    interval_trees[path],
-                    reference_resolver,
+                    self.__interval_trees[path],
+                    self.__reference_resolver,
                     output.contracts[source_unit_name]
                     if source_unit_name in output.contracts
                     else None,
                 )
                 self.__source_units[path] = SourceUnit(init, ast)
 
-        reference_resolver.run_post_process_callbacks(
+        self.__reference_resolver.run_post_process_callbacks(
             CallbackParams(
-                interval_trees=interval_trees, source_units=self.__source_units
+                interval_trees=self.__interval_trees, source_units=self.__source_units
             )
         )
 
@@ -367,8 +422,44 @@ class TypeGenerator:
         assert compilation_info.evm.bytecode.object is not None
         assert compilation_info.evm.deployed_bytecode is not None
         assert compilation_info.evm.deployed_bytecode.object is not None
+        assert compilation_info.evm.deployed_bytecode.opcodes is not None
+        assert compilation_info.evm.deployed_bytecode.source_map is not None
 
         fqn = f"{contract.parent.source_unit_name}:{contract.name}"
+        parsed_opcodes = _parse_opcodes(compilation_info.evm.deployed_bytecode.opcodes)
+        pc_map = _parse_source_map(
+            compilation_info.evm.deployed_bytecode.source_map, parsed_opcodes
+        )
+
+        for pc, op, size, argument in parsed_opcodes:
+            if op == "REVERT" and pc in pc_map:
+                start, end, file_id = pc_map[pc]
+                if file_id == -1:
+                    continue
+                try:
+                    path = self.__reference_resolver.resolve_source_file_id(
+                        file_id, contract.cu_hash
+                    )
+                except KeyError:
+                    continue
+
+                intervals = self.__interval_trees[path].envelop(start, end)
+                nodes: List = sorted(
+                    [interval.data for interval in intervals],
+                    key=lambda n: n.ast_tree_depth,
+                )
+
+                if len(nodes) > 0:
+                    node = nodes[0]
+                    if isinstance(node, FunctionCall) and isinstance(
+                        node.parent, RevertStatement
+                    ):
+                        func_called = node.function_called
+                        assert isinstance(func_called, ErrorDefinition)
+
+                        if fqn not in self.__contracts_revert_index:
+                            self.__contracts_revert_index[fqn] = set()
+                        self.__contracts_revert_index[fqn].add(pc)
 
         if len(compilation_info.evm.deployed_bytecode.object) > 0:
             metadata = bytes.fromhex(
@@ -1214,6 +1305,7 @@ class TypeGenerator:
                 events=self.__events_index,
                 contracts_by_metadata=self.__contracts_by_metadata_index,
                 contracts_inheritance=self.__contracts_inheritance_index,
+                contracts_revert_index=self.__contracts_revert_index,
                 bytecode_index=self.__bytecode_index,
             )
         )

@@ -544,7 +544,7 @@ class ChainInterface:
     ):
         selector = revert_data[0:4]
         if selector not in errors:
-            raise NotImplementedError(
+            raise ValueError(
                 f"Transaction reverted with unknown error selector {selector.hex()}"
             )
 
@@ -553,7 +553,12 @@ class ChainInterface:
             debug_trace = self._dev_chain.debug_trace_transaction(
                 tx_hash, {"enableMemory": True}
             )
-            fqn = self._process_debug_trace_for_revert(debug_trace, origin)
+            try:
+                fqn = self._process_debug_trace_for_revert(debug_trace, origin)
+            except ValueError:
+                raise ValueError(
+                    f"Transaction reverted with unknown error selector {selector.hex()}"
+                )
         else:
             fqn = list(errors[selector].keys())[0]
 
@@ -889,7 +894,7 @@ class ChainInterface:
         self, debug_trace: Dict, origin: Union[Address, str]
     ) -> str:
         addresses = [origin]
-        last_popped = None
+        last_revert_origin = None
 
         for trace in debug_trace["structLogs"]:
             if trace["op"] in {"CALL", "CALLCODE", "DELEGATECALL", "STATICCALL"}:
@@ -918,16 +923,22 @@ class ChainInterface:
 
                 fqn = get_fqn_from_bytecode(bytecode)
                 addresses.append(fqn)
-            elif trace["op"] in {"RETURN", "REVERT", "STOP"}:
-                last_popped = addresses.pop()
+            elif trace["op"] == "REVERT":
+                addr = addresses.pop()
+                pc = trace["pc"]
+                if isinstance(addr, str):
+                    fqn = addr
+                else:
+                    fqn = get_fqn_from_address(addr, self)
 
-        if isinstance(last_popped, Address):
-            last_popped = get_fqn_from_address(last_popped, self)
-            assert (
-                last_popped is not None
-            ), f"Could not find contract with address {last_popped}"
+                if fqn in contracts_revert_index and pc in contracts_revert_index[fqn]:
+                    last_revert_origin = fqn
+            elif trace["op"] in {"RETURN", "STOP"}:
+                addresses.pop()
 
-        return last_popped
+        if last_revert_origin is None:
+            raise ValueError("Could not find revert origin")
+        return last_revert_origin
 
     @_check_connected
     def transact(
@@ -1021,6 +1032,8 @@ events: Dict[bytes, Dict[str, Any]] = {}
 contracts_by_metadata: Dict[bytes, str] = {}
 # contract_fqn => tuple of linearized base contract fqns
 contracts_inheritance: Dict[str, Tuple[str, ...]] = {}
+# contract_fqn => set of REVERT opcode PCs belonging to a revert statement
+contracts_revert_index: Dict[str, Set[int]] = {}
 # list of pairs of (bytecode segments, contract_fqn)
 # where bytecode segments is a tuple of (length, BLAKE2b hash)
 bytecode_index: List[Tuple[Tuple[Tuple[int, bytes], ...], str]] = []

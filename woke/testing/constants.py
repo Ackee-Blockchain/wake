@@ -20,5 +20,6 @@ woke.testing.core.errors = {errors}
 woke.testing.core.events = {events}
 woke.testing.core.contracts_by_metadata = {contracts_by_metadata}
 woke.testing.core.contracts_inheritance = {contracts_inheritance}
+woke.testing.core.contracts_revert_index = {contracts_revert_index}
 woke.testing.core.bytecode_index = {bytecode_index}
 """
