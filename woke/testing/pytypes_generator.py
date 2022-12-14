@@ -680,8 +680,13 @@ class TypeGenerator:
             assert error_abi is not None
 
             parameters: List[Tuple[str, str, str]] = []
+            unnamed_params_index = 1
             for parameter in error.parameters.parameters:
-                parameter_name = self.get_name(parameter.name)
+                if parameter.name:
+                    parameter_name = self.get_name(parameter.name)
+                else:
+                    parameter_name = f"param{unnamed_params_index}"
+                    unnamed_params_index += 1
                 parameter_type = self.parse_type_and_import(parameter.type, True)
                 parameter_type_desc = parameter.type_string
                 parameters.append((parameter_name, parameter_type, parameter_type_desc))
@@ -715,15 +720,21 @@ class TypeGenerator:
     ) -> None:
         for event in events:
             parameters: List[Tuple[str, str, str]] = []
+            unnamed_params_index = 1
             for parameter in event.parameters.parameters:
+                if parameter.name:
+                    parameter_name = self.get_name(parameter.name)
+                else:
+                    parameter_name = f"param{unnamed_params_index}"
+                    unnamed_params_index += 1
+
                 if parameter.indexed and isinstance(
                     parameter.type,
                     (types.Array, types.Struct, types.Bytes, types.String),
                 ):
-                    parameter_name = self.get_name(parameter.name) + "_hash"
+                    parameter_name += "_hash"
                     parameter_type = "bytes"
                 else:
-                    parameter_name = self.get_name(parameter.name)
                     parameter_type = self.parse_type_and_import(parameter.type, True)
                 if parameter.indexed:
                     parameter_type_desc = "indexed " + parameter.type_string
