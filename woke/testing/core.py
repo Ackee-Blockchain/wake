@@ -154,6 +154,16 @@ class Account:
         self._chain.dev_chain.set_balance(str(self.address), value)
 
     @property
+    def code(self) -> bytes:
+        return self._chain.dev_chain.get_code(str(self._address))
+
+    @code.setter
+    def code(self, value: Union[bytes, bytearray]) -> None:
+        if not isinstance(value, (bytes, bytearray)):
+            raise TypeError("value must be a bytes object")
+        self._chain.dev_chain.set_code(str(self.address), value)
+
+    @property
     def chain(self) -> ChainInterface:
         return self._chain
 

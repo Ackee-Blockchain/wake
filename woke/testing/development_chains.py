@@ -91,6 +91,10 @@ class DevChainABC(ABC):
     def set_block_gas_limit(self, gas_limit: int) -> None:
         ...
 
+    @abstractmethod
+    def set_code(self, address: str, value: bytes) -> None:
+        ...
+
 
 class HardhatDevChain(DevChainABC):
     def set_balance(self, address: str, value: int) -> None:
@@ -113,6 +117,9 @@ class HardhatDevChain(DevChainABC):
 
     def set_automine(self, value: bool) -> None:
         self._communicator.evm_set_automine(value)
+
+    def set_code(self, address: str, value: bytes) -> None:
+        self._communicator.hardhat_set_code(address, value)
 
 
 class AnvilDevChain(DevChainABC):
@@ -141,6 +148,9 @@ class AnvilDevChain(DevChainABC):
     def set_automine(self, value: bool) -> None:
         self._communicator.evm_set_automine(value)
 
+    def set_code(self, address: str, value: bytes) -> None:
+        self._communicator.anvil_set_code(address, value)
+
 
 class GanacheDevChain(DevChainABC):
     def set_balance(self, address: str, value: int) -> None:
@@ -162,3 +172,6 @@ class GanacheDevChain(DevChainABC):
 
     def set_automine(self, value: bool) -> None:
         raise NotImplementedError("Ganache does not support automine")
+
+    def set_code(self, address: str, value: bytes) -> None:
+        return self._communicator.evm_set_account_code(address, value)
