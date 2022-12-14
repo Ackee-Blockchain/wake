@@ -23,8 +23,7 @@ from woke.ast.enums import *
 from woke.ast.ir.declaration.enum_definition import EnumDefinition
 from woke.ast.ir.declaration.struct_definition import StructDefinition
 from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
-from woke.ast.nodes import AstSolc
-from woke.compile import SolcOutput, SolidityCompiler
+from woke.compile import SolidityCompiler
 from woke.compile.solc_frontend.input_data_model import SolcOutputSelectionEnum
 from woke.config import WokeConfig
 
@@ -34,15 +33,14 @@ from ..ast.ir.declaration.event_definition import EventDefinition
 from ..ast.ir.declaration.function_definition import FunctionDefinition
 from ..ast.ir.expression.function_call import FunctionCall
 from ..ast.ir.meta.source_unit import SourceUnit
-from ..ast.ir.reference_resolver import CallbackParams, ReferenceResolver
+from ..ast.ir.reference_resolver import ReferenceResolver
 from ..ast.ir.statement.revert_statement import RevertStatement
 from ..ast.ir.type_name.abc import TypeNameAbc
 from ..ast.ir.type_name.array_type_name import ArrayTypeName
 from ..ast.ir.type_name.user_defined_type_name import UserDefinedTypeName
-from ..ast.ir.utils import IrInitTuple
 from ..cli.console import console
-from ..compile.compilation_unit import CompilationUnit
-from ..compile.solc_frontend import SolcOutputErrorSeverityEnum
+from ..compile.build_data_model import BuildInfo
+from ..compile.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
 from ..utils.file_utils import is_relative_to
 from .constants import DEFAULT_IMPORTS, INIT_CONTENT, TAB_WIDTH
 
@@ -227,65 +225,33 @@ class TypeGenerator:
                 sol_files.add(file)
 
         compiler = SolidityCompiler(self.__config)
-        outputs: List[Tuple[CompilationUnit, SolcOutput]] = asyncio.run(
+        build: BuildInfo
+        errors: Set[SolcOutputError]
+        build, errors = asyncio.run(
             compiler.compile(
                 sol_files,
                 [SolcOutputSelectionEnum.ALL],
-                write_artifacts=(True),
-                reuse_latest_artifacts=(True),
-                maximize_compilation_units=True,
+                write_artifacts=True,
+                reuse_latest_artifacts=True,
             )
         )
 
         errored = False
-        for _, output in outputs:
-            for error in output.errors:
-                if error.severity == SolcOutputErrorSeverityEnum.ERROR:
-                    errored = True
-                if warnings or error.severity == SolcOutputErrorSeverityEnum.ERROR:
-                    if error.formatted_message is not None:
-                        console.print(Panel(error.formatted_message, highlight=True))
-                    else:
-                        console.print(Panel(error.message, highlight=True))
+        for error in errors:
+            if error.severity == SolcOutputErrorSeverityEnum.ERROR:
+                errored = True
+            if warnings or error.severity == SolcOutputErrorSeverityEnum.ERROR:
+                if error.formatted_message is not None:
+                    console.print(Panel(error.formatted_message, highlight=True))
+                else:
+                    console.print(Panel(error.message, highlight=True))
 
         if errored:
             raise Exception("Compilation failed")
 
-        processed_files: Set[Path] = set()
-
-        for cu, output in outputs:
-            for source_unit_name, info in output.sources.items():
-                path = cu.source_unit_name_to_path(PurePath(source_unit_name))
-
-                ast = AstSolc.parse_obj(info.ast)
-
-                self.__reference_resolver.register_source_file_id(
-                    info.id, path, cu.hash
-                )
-                self.__reference_resolver.index_nodes(ast, path, cu.hash)
-
-                if path in processed_files:
-                    continue
-                processed_files.add(path)
-                self.__interval_trees[path] = IntervalTree()
-
-                init = IrInitTuple(
-                    path,
-                    path.read_bytes(),
-                    cu,
-                    self.__interval_trees[path],
-                    self.__reference_resolver,
-                    output.contracts[source_unit_name]
-                    if source_unit_name in output.contracts
-                    else None,
-                )
-                self.__source_units[path] = SourceUnit(init, ast)
-
-        self.__reference_resolver.run_post_process_callbacks(
-            CallbackParams(
-                interval_trees=self.__interval_trees, source_units=self.__source_units
-            )
-        )
+        self.__source_units = build.source_units
+        self.__interval_trees = build.interval_trees
+        self.__reference_resolver = build.reference_resolver
 
     def add_str_to_types(
         self, num_of_indentation: int, string: str, num_of_newlines: int

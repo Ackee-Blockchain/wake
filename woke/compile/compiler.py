@@ -1,16 +1,24 @@
 import asyncio
 import logging
-import platform
-import shutil
-import time
-from collections import deque
-from itertools import chain
+import pickle
+from collections import defaultdict, deque
 from json import JSONDecodeError
 from pathlib import Path, PurePath
-from typing import Collection, Dict, Iterable, List, Mapping, Optional, Set, Tuple
+from typing import (
+    Collection,
+    DefaultDict,
+    Deque,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Set,
+    Tuple,
+)
 
-import aiofiles
 import networkx as nx
+from intervaltree import IntervalTree
 from pathvalidate import sanitize_filename  # type: ignore
 from pydantic import ValidationError
 from rich.progress import Progress
@@ -24,7 +32,12 @@ from woke.core.solidity_version import (
 from woke.regex_parsing import SoliditySourceParser
 from woke.svm import SolcVersionManager
 
-from .build_data_model import CompilationUnitBuildInfo, ProjectBuildInfo
+from ..ast.ir.meta.source_unit import SourceUnit
+from ..ast.ir.reference_resolver import CallbackParams, ReferenceResolver
+from ..ast.ir.utils import IrInitTuple
+from ..ast.nodes import AstSolc
+from ..utils import get_package_version
+from .build_data_model import BuildInfo, CompilationUnitBuildInfo, ProjectBuildInfo
 from .compilation_unit import CompilationUnit
 from .exceptions import CompilationError, CompilationResolveError
 from .solc_frontend import (
@@ -32,9 +45,9 @@ from .solc_frontend import (
     SolcInputOptimizerSettings,
     SolcInputSettings,
     SolcOutput,
-    SolcOutputContractInfo,
+    SolcOutputError,
+    SolcOutputErrorSeverityEnum,
     SolcOutputSelectionEnum,
-    SolcOutputSourceInfo,
 )
 from .source_path_resolver import SourcePathResolver
 from .source_unit_name_resolver import SourceUnitNameResolver
@@ -61,7 +74,7 @@ class SolidityCompiler:
         files: Collection[Path],
         modified_files: Mapping[Path, str],
         ignore_errors: bool = False,
-    ) -> nx.DiGraph:
+    ) -> Tuple[nx.DiGraph, Dict[PurePath, Path]]:
         # source unit name, full path, file content
         source_units_queue: deque[Tuple[PurePath, Path, Optional[str]]] = deque()
         source_units: Dict[PurePath, Path] = {}
@@ -148,7 +161,7 @@ class SolidityCompiler:
                         )
                     )
                 graph.add_edge(import_unit_name, source_unit_name)
-        return graph
+        return graph, source_units
 
     @staticmethod
     def build_compilation_units_maximize(graph: nx.DiGraph) -> List[CompilationUnit]:
@@ -199,28 +212,6 @@ class SolidityCompiler:
                 compilation_units.append(compilation_unit)
         return compilation_units
 
-    @staticmethod
-    def build_compilation_units_minimize(graph: nx.DiGraph) -> List[CompilationUnit]:
-        """
-        Builds a list of compilation units from a graph. Number of compilation units is *almost* minimized.
-        This approach assures that every compiled file is in exactly one compilation unit.
-        In very rare cases the project may not be possible to compile using this method. An example:
-        - Lib.sol requires solc v0.5.*
-        - A.sol requires solc v0.5.0 and imports Lib.sol
-        - B.sol requires solc v0.5.1 and imports Lib.sol
-        """
-        compilation_units = []
-        for component in nx.weakly_connected_components(graph):
-            subgraph = graph.subgraph(component)
-
-            versions: SolidityVersionRanges = SolidityVersionRanges(
-                [SolidityVersionRange(None, None, None, None)]
-            )
-            for file in component:
-                versions &= graph.nodes[file]["versions"]
-            compilation_units.append(CompilationUnit(subgraph, versions))
-        return compilation_units
-
     def create_build_settings(
         self, output_types: Collection[SolcOutputSelectionEnum]
     ) -> SolcInputSettings:
@@ -248,138 +239,20 @@ class SolidityCompiler:
         else:
             if SolcOutputSelectionEnum.AST in output_types:
                 settings.output_selection["*"][""] = [SolcOutputSelectionEnum.AST]  # type: ignore
-            settings.output_selection["*"]["*"] = [output_type for output_type in output_types if output_type != SolcOutputSelectionEnum.AST]  # type: ignore
+            settings.output_selection["*"]["*"] = [
+                output_type
+                for output_type in output_types
+                if output_type != SolcOutputSelectionEnum.AST
+            ]  # type: ignore
 
         return settings
 
-    def __write_global_artifacts(
-        self,
-        build_path: Path,
-        build_settings: SolcInputSettings,
-        output: Tuple[SolcOutput, ...],
-        compilation_units: List[CompilationUnit],
-        target_versions: List[SolidityVersion],
-    ) -> None:
-        units_info = {}
-
-        # units are already sorted
-        for index, (unit, target_version, out) in enumerate(
-            zip(compilation_units, target_versions, output)
-        ):
-            sources = {}
-            for source_unit_name in out.sources.keys():
-                sources[source_unit_name] = (
-                    Path(f"{index:03d}")
-                    / "asts"
-                    / sanitize_filename(
-                        source_unit_name + ".json", "_", platform="universal"
-                    )
-                )
-
-            contracts = {}
-            for source_unit_name, info in out.contracts.items():
-                contracts[source_unit_name] = {}
-                for contract in info.keys():
-                    contracts[source_unit_name][contract] = (
-                        Path(f"{index:03d}")
-                        / "contracts"
-                        / sanitize_filename(
-                            f"{source_unit_name}:{contract}.json",
-                            "_",
-                            platform="universal",
-                        )
-                    )
-
-            info = CompilationUnitBuildInfo(
-                build_dir=f"{index:03d}",
-                sources=sources,
-                contracts=contracts,
-                errors=out.errors,
-                source_units=unit.source_unit_names,
-                allow_paths=self.__config.compiler.solc.allow_paths,
-                include_paths=self.__config.compiler.solc.include_paths,
-                settings=build_settings,
-                compiler_version=target_version,
-            )
-            units_info[unit.hash.hex()] = info
-
-        build_info = ProjectBuildInfo(compilation_units=units_info)
-        with (build_path / "build.json").open("w") as f:
-            f.write(build_info.json(by_alias=True, exclude_none=True))
-
-    async def compile(
-        self,
-        files: Collection[Path],
-        output_types: Collection[SolcOutputSelectionEnum],
-        write_artifacts: bool = True,
-        reuse_latest_artifacts: bool = True,
-        modified_files: Optional[Mapping[Path, str]] = None,
-        maximize_compilation_units: bool = False,
-    ) -> List[Tuple[CompilationUnit, SolcOutput]]:
-        if modified_files is None:
-            modified_files = {}
-        if len(files) + len(modified_files) == 0:
-            raise CompilationError("No source files provided to compile.")
-        target_version = self.__config.compiler.solc.target_version
+    def determine_solc_versions(
+        self, compilation_units: Iterable[CompilationUnit]
+    ) -> List[SolidityVersion]:
+        target_versions = []
         min_version = self.__config.min_solidity_version
         max_version = self.__config.max_solidity_version
-        if target_version is not None and target_version < min_version:
-            raise CompilationError(
-                f"Target configured version {target_version} is lower than minimum supported version {min_version}"
-            )
-        if target_version is not None and target_version > max_version:
-            raise CompilationError(
-                f"Target configured version {target_version} is higher than maximum supported version {max_version}"
-            )
-
-        graph = self.build_graph(files, modified_files)
-        if maximize_compilation_units:
-            compilation_units = self.build_compilation_units_maximize(graph)
-        else:
-            compilation_units = self.build_compilation_units_minimize(graph)
-        compilation_unit_hashes = {cu.hash for cu in compilation_units}
-        if len(compilation_unit_hashes) != len(compilation_units):
-            raise CompilationError(
-                "Compilation units are not unique. This is a bug in the compiler."
-            )
-        build_settings = self.create_build_settings(output_types)
-
-        # sort compilation units by their hash
-        compilation_units.sort(key=lambda u: u.hash.hex())
-
-        if write_artifacts:
-            # prepare build dir
-            build_path = self.__config.project_root_path / ".woke-build"
-            if not build_path.is_dir():
-                build_path.mkdir(parents=True, exist_ok=False)
-            tmp_path = build_path / "tmp"
-            if tmp_path.is_file():
-                tmp_path.unlink()
-            elif tmp_path.is_dir():
-                shutil.rmtree(tmp_path)
-        else:
-            build_path = None
-
-        latest_build_path = self.__config.project_root_path / ".woke-build"
-        if reuse_latest_artifacts:
-            try:
-                latest_build_info = ProjectBuildInfo.parse_file(
-                    latest_build_path / "build.json"
-                )
-            except (ValidationError, JSONDecodeError):
-                logger.warning(
-                    f"Failed to parse '{latest_build_path / 'build.json'}' file while trying to reuse the latest build artifacts."
-                )
-                latest_build_info = None
-            except FileNotFoundError as e:
-                logger.warning(
-                    f"Unable to find '{e.filename}' file while trying to reuse the latest build artifacts."
-                )
-                latest_build_info = None
-        else:
-            latest_build_info = None
-
-        target_versions = []
         for compilation_unit in compilation_units:
             target_version = self.__config.compiler.solc.target_version
             if target_version is not None:
@@ -421,8 +294,10 @@ class SolidityCompiler:
                         + files_str,
                     )
             target_versions.append(target_version)
+        return target_versions
 
-        for version in set(target_versions):
+    async def install_solc(self, versions: Iterable[SolidityVersion]) -> None:
+        for version in set(versions):
             if not self.__svm.installed(version):
                 with Progress() as progress:
                     task = progress.add_task(
@@ -437,150 +312,255 @@ class SolidityCompiler:
                         progress=on_progress,
                     )
 
-        tasks = []
-        for index, (compilation_unit, target_version) in enumerate(
-            zip(compilation_units, target_versions)
-        ):
-            task = asyncio.create_task(
-                self.__compile_unit(
-                    compilation_unit,
-                    target_version,
-                    build_settings,
-                    build_path / f"{index:03d}" if build_path is not None else None,
-                    latest_build_info,
+    @staticmethod
+    def _out_edge_bfs(
+        cu: CompilationUnit, start: Iterable[Path], out: Set[Path]
+    ) -> None:
+        processed: Set[PurePath] = set()
+        for path in start:
+            processed.update(cu.path_to_source_unit_names(path))
+        out.update(start)
+
+        queue: Deque[PurePath] = deque(processed)
+        while len(queue):
+            node = queue.pop()
+            for out_edge in cu.graph.out_edges(node):
+                from_, to = out_edge
+                if to not in processed:
+                    processed.add(to)
+                    queue.append(to)
+                    out.add(cu.source_unit_name_to_path(to))
+
+    async def compile(
+        self,
+        files: Collection[Path],
+        output_types: Collection[SolcOutputSelectionEnum],
+        write_artifacts: bool = True,
+        reuse_latest_artifacts: bool = True,
+        modified_files: Optional[Mapping[Path, str]] = None,
+    ) -> Tuple[BuildInfo, Set[SolcOutputError]]:
+        if modified_files is None:
+            modified_files = {}
+        if len(files) + len(modified_files) == 0:
+            raise CompilationError("No source files provided to compile.")
+        target_version = self.__config.compiler.solc.target_version
+        min_version = self.__config.min_solidity_version
+        max_version = self.__config.max_solidity_version
+        if target_version is not None and target_version < min_version:
+            raise CompilationError(
+                f"Target configured version {target_version} is lower than minimum supported version {min_version}"
+            )
+        if target_version is not None and target_version > max_version:
+            raise CompilationError(
+                f"Target configured version {target_version} is higher than maximum supported version {max_version}"
+            )
+
+        graph, source_units_to_paths = self.build_graph(files, modified_files)
+        compilation_units = self.build_compilation_units_maximize(graph)
+        build_settings = self.create_build_settings(output_types)
+
+        deleted_files: Set[Path] = set()
+        errors_per_cu: DefaultDict[bytes, Set[SolcOutputError]] = defaultdict(set)
+
+        if not reuse_latest_artifacts:
+            build = BuildInfo(
+                interval_trees={},
+                reference_resolver=ReferenceResolver(),
+                source_units={},
+            )
+            files_to_compile = set(
+                source_units_to_paths[source_unit] for source_unit in graph.nodes
+            )
+            logger.debug("Not reusing latest artifacts")
+        else:
+            latest_build_path = self.__config.project_root_path / ".woke-build"
+            try:
+                build_info = ProjectBuildInfo.parse_file(
+                    latest_build_path / "build.json"
                 )
+                source_units_blake2b: Dict[PurePath, bytes] = {
+                    PurePath(source_unit_name): build_info.source_units_blake2b[
+                        source_unit_name
+                    ]
+                    for source_unit_name in build_info.source_units_blake2b.keys()
+                }
+
+                if (
+                    build_info.allow_paths != self.__config.compiler.solc.allow_paths
+                    or build_info.include_paths
+                    != self.__config.compiler.solc.include_paths
+                    or build_info.settings != build_settings
+                    or build_info.target_solidity_version
+                    != self.__config.compiler.solc.target_version
+                    or build_info.woke_version != get_package_version("woke")
+                ):
+                    # trigger the except block
+                    raise CompilationError("Build settings changed")
+
+                build = pickle.load((latest_build_path / "build.bin").open("rb"))
+
+                # files_to_compile = modified files + force compile files (build settings changed)
+                files_to_compile = set(modified_files.keys())
+
+                for source_unit in graph.nodes:
+                    if (
+                        source_unit not in source_units_blake2b
+                        or source_units_blake2b[source_unit]
+                        != graph.nodes[source_unit]["hash"]
+                    ):
+                        files_to_compile.add(source_units_to_paths[source_unit])
+
+                for source_unit in source_units_blake2b.keys():
+                    if source_unit not in graph.nodes:
+                        deleted_files.add(source_units_to_paths[source_unit])
+
+                for cu_hash, cu_data in build_info.compilation_units.items():
+                    if any(cu.hash.hex() == cu_hash for cu in compilation_units):
+                        errors_per_cu[bytes.fromhex(cu_hash)] = set(cu_data.errors)
+
+                # select only compilation units that need to be compiled
+                compilation_units = [
+                    cu for cu in compilation_units if (cu.files & files_to_compile)
+                ]
+                logger.debug("Reusing latest artifacts")
+            except (
+                CompilationError,
+                ValidationError,
+                JSONDecodeError,
+                FileNotFoundError,
+                pickle.UnpicklingError,
+            ):
+                build = BuildInfo(
+                    interval_trees={},
+                    reference_resolver=ReferenceResolver(),
+                    source_units={},
+                )
+                files_to_compile = set(
+                    source_units_to_paths[source_unit] for source_unit in graph.nodes
+                )
+                logger.debug("Reusing latest artifacts failed")
+
+        target_versions = self.determine_solc_versions(compilation_units)
+        await self.install_solc(target_versions)
+
+        tasks = []
+        for compilation_unit, target_version in zip(compilation_units, target_versions):
+            task = asyncio.create_task(
+                self.compile_unit_raw(compilation_unit, target_version, build_settings)
             )
             tasks.append(task)
 
+        logger.debug(f"Compiling {len(compilation_units)} compilation units")
+
         # wait for compilation of all compilation units
         try:
-            ret = await asyncio.gather(*tasks)
+            ret: Tuple[SolcOutput, ...] = await asyncio.gather(
+                *tasks
+            )  # pyright: ignore[reportGeneralTypeIssues]
         except Exception:
             for task in tasks:
                 task.cancel()
             raise
-        if write_artifacts:
-            if build_path is None:
-                # should not really happen (it is present here just to silence the linter)
-                raise ValueError("Build path is not set.")
-            self.__rename_and_remove_artifacts(build_path)
-            self.__write_global_artifacts(
-                build_path, build_settings, ret, compilation_units, target_versions  # type: ignore
-            )
 
-        return [(cu, out) for cu, out in zip(compilation_units, ret)]
+        for deleted_file in deleted_files:
+            if deleted_file in build.source_units:
+                build.reference_resolver.run_destroy_callbacks(deleted_file)
+                build.source_units.pop(deleted_file)
 
-    @staticmethod
-    def __rename_and_remove_artifacts(build_path: Path):
-        """
-        When this func is called .woke-build/ should the following contents:
-          .woke-build/old-artifact-0,...,.woke-build/old-artifact-n      <- old artifacts
-          .woke-build/tmp                                                <- tmp_dir with new artifacts
-          .woke-build/build.json                                         <- old build info
-        This func manages removal of the old artifacts and also moves the new ones out
-        of the tmp/ directory.
-        This is neccesary because old artifacts can't be removed before new ones are
-        created and because we want to limit the amount of stored artifacts.
-        """
-        for fl in build_path.iterdir():
-            if fl.stem != "tmp" and fl.stem != "build.json":
-                if fl.is_dir():
-                    shutil.rmtree(fl)
-                else:
-                    fl.unlink()
-        if not (build_path / "tmp").exists():
-            raise ValueError("New artificats do not exist.")
-        for fl in (build_path / "tmp").iterdir():
-            p = Path(fl).absolute()
-            parent_dir = p.parents[1]
-            p.rename(parent_dir / p.name)
-        (build_path / "tmp").rmdir()
+        processed_files: Set[Path] = set()
 
-    async def __compile_unit(
+        for cu, solc_output in zip(compilation_units, ret):
+            errored: bool = False
+            errors_per_cu[cu.hash] = set()
+
+            for error in solc_output.errors:
+                errors_per_cu[cu.hash].add(error)
+                if error.severity == SolcOutputErrorSeverityEnum.ERROR:
+                    errored = True
+
+            # files requested to be compiled and files that import these files (even indirectly)
+            recompiled_files: Set[Path] = set()
+            self._out_edge_bfs(cu, files_to_compile & cu.files, recompiled_files)
+
+            if not errored:
+                for source_unit_name, raw_ast in solc_output.sources.items():
+                    source_unit = PurePath(source_unit_name)
+                    path = cu.source_unit_name_to_path(source_unit)
+                    ast = AstSolc.parse_obj(raw_ast.ast)
+
+                    build.reference_resolver.index_nodes(ast, path, cu.hash)
+
+                    if (
+                        path in build.source_units and path not in recompiled_files
+                    ) or path in processed_files:
+                        continue
+                    processed_files.add(path)
+                    assert (
+                        source_unit in graph.nodes
+                    ), f"Source unit {source_unit} not in graph"
+
+                    interval_tree = IntervalTree()
+                    init = IrInitTuple(
+                        path,
+                        graph.nodes[source_unit]["content"].encode("utf-8"),
+                        cu,
+                        interval_tree,
+                        build.reference_resolver,
+                        solc_output.contracts[source_unit_name]
+                        if source_unit_name in solc_output.contracts
+                        else None,
+                    )
+                    build.reference_resolver.run_destroy_callbacks(path)
+                    build.source_units[path] = SourceUnit(init, ast)
+                    build.interval_trees[path] = interval_tree
+
+                build.reference_resolver.run_post_process_callbacks(
+                    CallbackParams(
+                        interval_trees=build.interval_trees,
+                        source_units=build.source_units,
+                    )
+                )
+
+        if write_artifacts and (len(compilation_units) > 0 or len(deleted_files) > 0):
+            logger.debug("Writing artifacts")
+            self._write_artifacts(build, build_settings, graph, errors_per_cu)
+
+        errors = set()
+        for error_list in errors_per_cu.values():
+            errors |= error_list
+
+        return build, errors
+
+    def _write_artifacts(
         self,
-        compilation_unit: CompilationUnit,
-        target_version: SolidityVersion,
+        build: BuildInfo,
         build_settings: SolcInputSettings,
-        build_path: Optional[Path],
-        latest_build_info: Optional[ProjectBuildInfo],
-    ) -> SolcOutput:
-        # try to reuse the latest build artifacts
-        if (
-            latest_build_info is not None
-            and compilation_unit.hash.hex() in latest_build_info.compilation_units
-        ):
-            latest_unit_info = latest_build_info.compilation_units[
-                compilation_unit.hash.hex()
-            ]
+        graph: nx.DiGraph,
+        errors_per_cu: Dict[bytes, Set[SolcOutputError]],
+    ) -> None:
+        build_path = self.__config.project_root_path / ".woke-build"
+        build_path.mkdir(exist_ok=True)
 
-            if (
-                latest_unit_info.source_units == compilation_unit.source_unit_names
-                and latest_unit_info.allow_paths
-                == self.__config.compiler.solc.allow_paths
-                and latest_unit_info.include_paths
-                == self.__config.compiler.solc.include_paths
-                and latest_unit_info.settings == build_settings
-                and latest_unit_info.compiler_version == target_version
-            ):
-                try:
-                    logger.info("Reusing the latest build artifacts.")
-                    latest_build_path = self.__config.project_root_path / ".woke-build"
-                    sources = {}
-                    for source, path in latest_unit_info.sources.items():
-                        sources[source] = SolcOutputSourceInfo.parse_file(
-                            latest_build_path / path
-                        )
+        build_info = ProjectBuildInfo(
+            compilation_units={
+                cu_hash.hex(): CompilationUnitBuildInfo(errors=list(errors))
+                for cu_hash, errors in errors_per_cu.items()
+            },
+            allow_paths=self.__config.compiler.solc.allow_paths,
+            include_paths=self.__config.compiler.solc.include_paths,
+            settings=build_settings,
+            source_units_blake2b={
+                str(source_unit): graph.nodes[source_unit]["hash"]
+                for source_unit in graph.nodes
+            },
+            target_solidity_version=self.__config.compiler.solc.target_version,
+            woke_version=get_package_version("woke"),
+        )
+        with (build_path / "build.json").open("w") as f:
+            f.write(build_info.json(by_alias=True, exclude_none=True))
 
-                    contracts = {}
-                    for (
-                        source_unit,
-                        source_unit_info,
-                    ) in latest_unit_info.contracts.items():
-                        contracts[source_unit] = {}
-                        for contract, path in source_unit_info.items():
-                            contracts[source_unit][
-                                contract
-                            ] = SolcOutputContractInfo.parse_file(
-                                latest_build_path / path
-                            )
-                    out = SolcOutput(
-                        errors=latest_unit_info.errors,
-                        sources=sources,
-                        contracts=contracts,
-                    )
-                except (ValidationError, JSONDecodeError):
-                    logger.warning(
-                        "Failed to parse the latest build artifacts, falling back to solc compilation."
-                    )
-                    out = await self.compile_unit_raw(
-                        compilation_unit, target_version, build_settings
-                    )
-                except FileNotFoundError as e:
-                    logger.warning(
-                        f"Unable to find '{e.filename}' file while reusing the latest build info. Build artifacts may be corrupted."
-                    )
-                    out = await self.compile_unit_raw(
-                        compilation_unit, target_version, build_settings
-                    )
-            else:
-                logger.info(
-                    "Build settings have changed since the last build. Falling back to solc compilation."
-                )
-                out = await self.compile_unit_raw(
-                    compilation_unit, target_version, build_settings
-                )
-        else:
-            out = await self.compile_unit_raw(
-                compilation_unit, target_version, build_settings
-            )
-
-        # write build artifacts
-        if build_path is not None:
-            tmp_path = build_path.parent / "tmp" / build_path.stem
-            tmp_path.mkdir(parents=True, exist_ok=False)
-            await self.__write_artifacts(out, tmp_path)
-
-        return out
+        with (build_path / "build.bin").open("wb") as f:
+            pickle.dump(build, f)
 
     async def compile_unit_raw(
         self,
@@ -604,37 +584,3 @@ class SolidityCompiler:
         return await self.__solc_frontend.compile(
             files, sources, target_version, build_settings
         )
-
-    @staticmethod
-    async def __write_artifacts(output: SolcOutput, build_path: Path) -> None:
-        if output.sources is not None:
-            ast_path = build_path / "asts"
-            ast_path.mkdir(parents=False, exist_ok=False)
-            for source_unit_name, value in output.sources.items():
-                # AST output is generated per file (source unit name)
-                # Because a source unit name can contain slashes, it is not possible to name the AST build file
-                # by its source unit name. Blake2b hash of the Solidity source file content is used instead.
-                file_path = ast_path / sanitize_filename(
-                    source_unit_name + ".json", "_", platform="universal"
-                )
-
-                if file_path.is_file():
-                    raise CompilationError(
-                        f"Cannot write build info into '{file_path}' - file already exists."
-                    )
-                async with aiofiles.open(file_path, mode="w") as f:
-                    await f.write(value.json(by_alias=True, exclude_none=True))
-
-        if output.contracts is not None:
-            contract_path = build_path / "contracts"
-            contract_path.mkdir(parents=False, exist_ok=False)
-            for source_unit_name, d in output.contracts.items():
-                # All other build info is generated per contract. Contract names cannot contain slashes so it should
-                # be safe to name the build info file by its contract name.
-                for contract, info in d.items():
-                    file_path = contract_path / sanitize_filename(
-                        f"{source_unit_name}:{contract}.json", "_", platform="universal"
-                    )
-
-                    async with aiofiles.open(file_path, mode="w") as f:
-                        await f.write(info.json(by_alias=True, exclude_none=True))

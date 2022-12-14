@@ -4,8 +4,6 @@ import re
 from functools import lru_cache, partial
 from typing import TYPE_CHECKING, FrozenSet, Iterator, List, Optional, Set, Tuple, Union
 
-from woke.compile import SolcOutputContractInfo
-
 from ..abc import IrAbc
 from ..meta.inheritance_specifier import InheritanceSpecifier
 from ..meta.using_for_directive import UsingForDirective
@@ -13,6 +11,7 @@ from ..reference_resolver import CallbackParams
 from .abc import DeclarationAbc
 
 if TYPE_CHECKING:
+    from woke.compile import SolcOutputContractInfo
     from ..meta.source_unit import SourceUnit
 
 from woke.ast.enums import ContractKind
