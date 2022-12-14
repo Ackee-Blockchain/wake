@@ -707,7 +707,8 @@ class TypeGenerator:
                     )
                 self.add_str_to_types(indent + 1, '"""', 1)
 
-            self.add_str_to_types(indent + 1, f"_abi = {error_abi}", 2)
+            self.add_str_to_types(indent + 1, f"_abi = {error_abi}", 1)
+            self.add_str_to_types(indent + 1, f"selector = {error.error_selector}", 2)
             for param_name, param_type, _ in parameters:
                 self.add_str_to_types(indent + 1, f"{param_name}: {param_type}", 1)
             self.add_str_to_types(0, "", 2)
@@ -755,8 +756,9 @@ class TypeGenerator:
                 self.add_str_to_types(indent + 1, '"""', 1)
 
             self.add_str_to_types(
-                indent + 1, f"_abi = {events_abi[event.event_selector]}", 2
+                indent + 1, f"_abi = {events_abi[event.event_selector]}", 1
             )
+            self.add_str_to_types(indent + 1, f"selector = {event.event_selector}", 2)
             for param_name, param_type, _ in parameters:
                 self.add_str_to_types(indent + 1, f"{param_name}: {param_type}", 1)
             self.add_str_to_types(0, "", 2)
