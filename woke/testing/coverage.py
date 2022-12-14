@@ -754,7 +754,10 @@ def _parse_source_map(
             else:
                 last_data[x] = source_spl[x]
 
-        if last_data[2] < 0:
+        if last_data[2] not in interval_tree_indexes:
+            logger.debug(
+                f"PC skipped because source file with id {last_data[2]} is not indexed"
+            )
             continue
 
         source_interval = (last_data[0], last_data[0] + last_data[1], last_data[2])
