@@ -78,6 +78,7 @@ def _get_line_col_from_offset(
 class SourceMapPcRecord:
     fn_name: str
     offset: Tuple[int, int]
+    source_id: int
     jump_type: str
     op: str
     argument: Optional[int]
@@ -244,6 +245,7 @@ class ContractCoverage:
                     )
                 }
             )
+
             self._add_branch_coverage(
                 base_contract_def, line_intervals, spaces_intervals
             )
@@ -622,7 +624,6 @@ def _find_fn_for_source(
     ]
     logger.debug(f"{function_def_nodes} {nodes} {source_from}:{source_to}")
     if not function_def_nodes:
-        # logger.info(f"No for {source_int}")
         return None
     max_overlap = None
     final_name = None
@@ -640,11 +641,19 @@ def _find_fn_for_source(
 
 def _parse_project(
     outputs: List[Tuple[CompilationUnit, SolcOutput]]
-) -> Tuple[Dict[pathlib.Path, SourceUnit], Dict[pathlib.Path, IntervalTree],]:
+) -> Tuple[
+    Dict[pathlib.Path, IntervalTree],
+    Dict[bytes, Dict[int, pathlib.Path]],
+    Dict[pathlib.Path, SourceUnit],
+    Dict[pathlib.Path, bytes],
+]:
     processed_files: Set[pathlib.Path] = set()
     reference_resolver = ReferenceResolver()
+
     interval_trees: Dict[pathlib.Path, IntervalTree] = {}
+    interval_trees_indexes: Dict[bytes, Dict[int, pathlib.Path]] = {}
     source_units: Dict[pathlib.Path, SourceUnit] = {}
+    paths_to_cu: Dict[pathlib.Path, bytes] = {}
 
     for cu, output in outputs:
         for source_unit_name, info in output.sources.items():
@@ -669,11 +678,17 @@ def _parse_project(
                 else None,
             )
             source_units[path] = SourceUnit(init, ast)
+            if cu.hash not in interval_trees_indexes:
+                interval_trees_indexes[cu.hash] = {}
+
+            interval_trees_indexes[cu.hash][info.id] = path
+            paths_to_cu[path] = cu.hash
 
     reference_resolver.run_post_process_callbacks(
         CallbackParams(interval_trees=interval_trees, source_units=source_units)
     )
-    return source_units, interval_trees
+
+    return interval_trees, interval_trees_indexes, source_units, paths_to_cu
 
 
 def _compile_project(
@@ -714,7 +729,8 @@ def _compile_project(
 
 
 def _parse_source_map(
-    interval_tree: IntervalTree,
+    interval_trees: Dict[pathlib.Path, IntervalTree],
+    interval_tree_indexes: Dict[int, pathlib.Path],
     source_map: str,
     pc_op_map: List[Tuple[int, str, int, Optional[int]]],
 ) -> Dict[int, SourceMapPcRecord]:
@@ -738,20 +754,29 @@ def _parse_source_map(
             else:
                 last_data[x] = source_spl[x]
 
-        if last_data[2] and last_data[2] != 0:
+        if last_data[2] < 0:
             continue
 
-        source_interval = (last_data[0], last_data[0] + last_data[1])
+        source_interval = (last_data[0], last_data[0] + last_data[1], last_data[2])
         if fn_changed:
             if source_interval in name_cache:
                 last_fn = name_cache[source_interval]
             else:
-                last_fn = _find_fn_for_source(interval_tree, *source_interval)
+                interval_tree = interval_trees[interval_tree_indexes[last_data[2]]]
+                last_fn = _find_fn_for_source(
+                    interval_tree, source_interval[0], source_interval[1]
+                )
             name_cache[source_interval] = last_fn
 
         if last_fn:
             pc_map[pc] = SourceMapPcRecord(
-                last_fn, source_interval, last_data[3], op, argument, size
+                last_fn,
+                (source_interval[0], source_interval[1]),
+                source_interval[2],
+                last_data[3],
+                op,
+                argument,
+                size,
             )
         logger.debug(f"{pc} {i} {source_interval}, {last_fn}, {fn_changed}")
 
@@ -771,10 +796,13 @@ def _construct_coverage_data(
     config: Optional[WokeConfig] = None,
 ) -> Dict[str, ContractCoverage]:
     outputs = _compile_project(config)
-    source_units, interval_trees = _parse_project(outputs)
+    interval_trees, interval_trees_indexes, source_units, paths_to_cu = _parse_project(
+        outputs
+    )
     contracts_cov = {}
 
     for unit_path, source_unit in source_units.items():
+        cu_hash = paths_to_cu[unit_path]
         line_intervals = _get_line_intervals(source_unit.file.read_text())
         for contract in source_unit.contracts:
             assert contract.compilation_info is not None
@@ -791,7 +819,9 @@ def _construct_coverage_data(
             logger.debug(f"{contract.name} Opcodes {opcodes}")
             pc_op_map = _parse_opcodes(opcodes)
             logger.debug(f"{contract.name} Pc Op Map {pc_op_map}")
-            pc_map = _parse_source_map(interval_trees[unit_path], source_map, pc_op_map)
+            pc_map = _parse_source_map(
+                interval_trees, interval_trees_indexes[cu_hash], source_map, pc_op_map
+            )
             logger.debug(f"{contract.name} Pc Map {pc_map}")
 
             contract_fqn = f"{source_unit.source_unit_name}:{contract.name}"
