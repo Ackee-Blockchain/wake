@@ -285,6 +285,12 @@ class JsonRpcCommunicator:
         text = self._send_request("hardhat_setCode", params)
         _ = self._process_response(text)
 
+    def hardhat_set_nonce(self, address: str, nonce: int) -> None:
+        """Sets the nonce of the account of given address."""
+        params = [address, hex(nonce)]
+        text = self._send_request("hardhat_setNonce", params)
+        _ = self._process_response(text)
+
     def anvil_set_balance(self, address: str, balance: int) -> None:
         params = [address, hex(balance)]
         text = self._send_request("anvil_setBalance", params)
@@ -313,6 +319,11 @@ class JsonRpcCommunicator:
     def anvil_set_code(self, address: str, code: bytes) -> None:
         params = [address, "0x" + code.hex()]
         text = self._send_request("anvil_setCode", params)
+        _ = self._process_response(text)
+
+    def anvil_set_nonce(self, address: str, nonce: int) -> None:
+        params = [address, hex(nonce)]
+        text = self._send_request("anvil_setNonce", params)
         _ = self._process_response(text)
 
     def evm_set_account_balance(self, address: str, balance: int) -> None:
@@ -353,6 +364,11 @@ class JsonRpcCommunicator:
     def evm_set_account_code(self, address: str, code: bytes) -> None:
         params = [address, "0x" + code.hex()]
         text = self._send_request("evm_setAccountCode", params)
+        _ = self._process_response(text)
+
+    def evm_set_account_nonce(self, address: str, nonce: int) -> None:
+        params = [address, hex(nonce)]
+        text = self._send_request("evm_setAccountNonce", params)
         _ = self._process_response(text)
 
     def web3_client_version(self) -> str:

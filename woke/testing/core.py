@@ -167,6 +167,18 @@ class Account:
     def chain(self) -> ChainInterface:
         return self._chain
 
+    @property
+    def nonce(self) -> int:
+        return self._chain.dev_chain.get_transaction_count(str(self._address))
+
+    @nonce.setter
+    def nonce(self, value: int) -> None:
+        if not isinstance(value, int):
+            raise TypeError("value must be an integer")
+        if value < 0:
+            raise ValueError("value must be non-negative")
+        self._chain.dev_chain.set_nonce(str(self.address), value)
+
 
 class RevertToSnapshotFailedError(Exception):
     pass

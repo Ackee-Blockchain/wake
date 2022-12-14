@@ -95,6 +95,10 @@ class DevChainABC(ABC):
     def set_code(self, address: str, value: bytes) -> None:
         ...
 
+    @abstractmethod
+    def set_nonce(self, address: str, value: int) -> None:
+        ...
+
 
 class HardhatDevChain(DevChainABC):
     def set_balance(self, address: str, value: int) -> None:
@@ -120,6 +124,9 @@ class HardhatDevChain(DevChainABC):
 
     def set_code(self, address: str, value: bytes) -> None:
         self._communicator.hardhat_set_code(address, value)
+
+    def set_nonce(self, address: str, value: int) -> None:
+        self._communicator.hardhat_set_nonce(address, value)
 
 
 class AnvilDevChain(DevChainABC):
@@ -151,6 +158,9 @@ class AnvilDevChain(DevChainABC):
     def set_code(self, address: str, value: bytes) -> None:
         self._communicator.anvil_set_code(address, value)
 
+    def set_nonce(self, address: str, value: int) -> None:
+        self._communicator.anvil_set_nonce(address, value)
+
 
 class GanacheDevChain(DevChainABC):
     def set_balance(self, address: str, value: int) -> None:
@@ -175,3 +185,6 @@ class GanacheDevChain(DevChainABC):
 
     def set_code(self, address: str, value: bytes) -> None:
         return self._communicator.evm_set_account_code(address, value)
+
+    def set_nonce(self, address: str, value: int) -> None:
+        return self._communicator.evm_set_account_nonce(address, value)
