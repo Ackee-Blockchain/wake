@@ -24,7 +24,12 @@ SOURCES_PATH = Path(__file__).parent.resolve() / "coverage_sources"
 
 def compile_project(
     sample_path: Path, config: WokeConfig
-) -> Tuple[Dict[Path, IntervalTree], Dict[Path, SourceUnit]]:
+) -> Tuple[
+    Dict[Path, IntervalTree],
+    Dict[bytes, Dict[int, Path]],
+    Dict[Path, SourceUnit],
+    Dict[Path, bytes],
+]:
     sol_files: Set[Path] = {sample_path}
 
     compiler = SolidityCompiler(config)
@@ -45,8 +50,11 @@ def compile_project(
 
     processed_files: Set[Path] = set()
     reference_resolver = ReferenceResolver()
+
     interval_trees: Dict[Path, IntervalTree] = {}
+    interval_trees_indexes: Dict[bytes, Dict[int, Path]] = {}
     source_units: Dict[Path, SourceUnit] = {}
+    paths_to_cu: Dict[Path, bytes] = {}
 
     for cu, output in outputs:
         for source_unit_name, info in output.sources.items():
@@ -71,12 +79,17 @@ def compile_project(
                 else None,
             )
             source_units[path] = SourceUnit(init, ast)
+            if cu.hash not in interval_trees_indexes:
+                interval_trees_indexes[cu.hash] = {}
+
+            interval_trees_indexes[cu.hash][info.id] = path
+            paths_to_cu[path] = cu.hash
 
     reference_resolver.run_post_process_callbacks(
         CallbackParams(interval_trees=interval_trees, source_units=source_units)
     )
 
-    return interval_trees, source_units
+    return interval_trees, interval_trees_indexes, source_units, paths_to_cu
 
 
 @pytest.fixture
@@ -92,12 +105,14 @@ def config(tmp_path) -> WokeConfig:
 
 
 def get_contract_and_intervals(config, source_path):
-    interval_trees, source_units = compile_project(source_path, config)
+    interval_trees, interval_trees_indexes, source_units, paths_to_cu = compile_project(
+        source_path, config
+    )
     source_file = source_units[source_path]
+    cu_hash = paths_to_cu[source_path]
     assert len(source_file.contracts) == 1
 
     contract = source_file.contracts[0]
-    interval_tree = interval_trees[source_path]
 
     assert contract.compilation_info is not None
     assert contract.compilation_info.evm is not None
@@ -111,7 +126,9 @@ def get_contract_and_intervals(config, source_path):
     assert source_map is not None
 
     pc_op_map = coverage._parse_opcodes(opcodes)
-    pc_map = coverage._parse_source_map(interval_tree, source_map, pc_op_map)
+    pc_map = coverage._parse_source_map(
+        interval_trees, interval_trees_indexes[cu_hash], source_map, pc_op_map
+    )
 
     return contract, line_intervals, pc_map
 
