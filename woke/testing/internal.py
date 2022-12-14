@@ -1,9 +1,21 @@
 from dataclasses import dataclass
 from enum import IntEnum
+from typing import List
+
+
+@dataclass
+class UnknownEvent:
+    topics: List[bytes]
+    data: bytes
 
 
 class TransactionRevertedError(Exception):
     pass
+
+
+@dataclass
+class UnknownTransactionRevertedError(TransactionRevertedError):
+    data: bytes
 
 
 @dataclass
