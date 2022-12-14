@@ -8,6 +8,7 @@ from collections import defaultdict
 from contextlib import contextmanager
 from enum import IntEnum
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     DefaultDict,
@@ -39,6 +40,9 @@ from woke.testing.pytypes_generator import RequestType
 from . import hardhat_console
 from .internal import UnknownEvent, UnknownTransactionRevertedError
 from .json_rpc.communicator import JsonRpcCommunicator, JsonRpcError, TxParams
+
+if TYPE_CHECKING:
+    from .transactions import LegacyTransaction
 
 
 class Abi:
@@ -228,8 +232,10 @@ class ChainInterface:
     _deployed_libraries: DefaultDict[bytes, List[Library]]
     _single_source_errors: Set[bytes]
 
-    console_logs_callback: Optional[Callable[[str, List[Any]], None]]
-    events_callback: Optional[Callable[[str, List[Tuple[bytes, Any]]], None]]
+    console_logs_callback: Optional[Callable[[LegacyTransaction, List[Any]], None]]
+    events_callback: Optional[
+        Callable[[LegacyTransaction, List[Tuple[bytes, Any]]], None]
+    ]
 
     def __init__(self):
         self._connected = False
@@ -799,12 +805,12 @@ class ChainInterface:
         if self.console_logs_callback is not None:
             logs = tx.console_logs
             if len(logs) > 0:
-                self.console_logs_callback(tx.tx_hash, logs)
+                self.console_logs_callback(tx, logs)
 
         if self.events_callback is not None:
             events = tx.events
             if len(events) > 0:
-                self.events_callback(tx.tx_hash, events)
+                self.events_callback(tx, events)
 
         return tx.return_value
 
@@ -996,12 +1002,12 @@ class ChainInterface:
         if self.console_logs_callback is not None:
             logs = tx.console_logs
             if len(logs) > 0:
-                self.console_logs_callback(tx.tx_hash, logs)
+                self.console_logs_callback(tx, logs)
 
         if self.events_callback is not None:
             events = tx.events
             if len(events) > 0:
-                self.events_callback(tx.tx_hash, events)
+                self.events_callback(tx, events)
 
         return tx.return_value
 
