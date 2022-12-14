@@ -44,10 +44,9 @@ from woke.ast.ir.yul.function_call import FunctionCall as YulFunctionCall
 from woke.ast.ir.yul.if_statement import If as YulIf
 from woke.ast.ir.yul.leave import Leave as YulLeave
 from woke.ast.ir.yul.switch import Switch as YulSwitch
-from woke.ast.nodes import AstSolc
-from woke.compile import SolcOutput
-from woke.compile.compilation_unit import CompilationUnit
+from woke.compile.build_data_model import BuildInfo
 from woke.compile.solc_frontend import (
+    SolcOutputError,
     SolcOutputErrorSeverityEnum,
     SolcOutputSelectionEnum,
 )
@@ -882,61 +881,9 @@ def _find_fn_for_source(
     return final_fn
 
 
-def _parse_project(
-    outputs: List[Tuple[CompilationUnit, SolcOutput]]
-) -> Tuple[
-    Dict[pathlib.Path, IntervalTree],
-    Dict[bytes, Dict[int, pathlib.Path]],
-    Dict[pathlib.Path, SourceUnit],
-    Dict[pathlib.Path, bytes],
-]:
-    processed_files: Set[pathlib.Path] = set()
-    reference_resolver = ReferenceResolver()
-
-    interval_trees: Dict[pathlib.Path, IntervalTree] = {}
-    interval_trees_indexes: Dict[bytes, Dict[int, pathlib.Path]] = {}
-    source_units: Dict[pathlib.Path, SourceUnit] = {}
-    paths_to_cu: Dict[pathlib.Path, bytes] = {}
-
-    for cu, output in outputs:
-        for source_unit_name, info in output.sources.items():
-            path = cu.source_unit_name_to_path(pathlib.PurePath(source_unit_name))
-            ast = AstSolc.parse_obj(info.ast)
-
-            reference_resolver.index_nodes(ast, path, cu.hash)
-
-            if path in processed_files:
-                continue
-            processed_files.add(path)
-            interval_trees[path] = IntervalTree()
-
-            init = IrInitTuple(
-                path,
-                path.read_bytes(),
-                cu,
-                interval_trees[path],
-                reference_resolver,
-                output.contracts[source_unit_name]
-                if source_unit_name in output.contracts
-                else None,
-            )
-            source_units[path] = SourceUnit(init, ast)
-            if cu.hash not in interval_trees_indexes:
-                interval_trees_indexes[cu.hash] = {}
-
-            interval_trees_indexes[cu.hash][info.id] = path
-            paths_to_cu[path] = cu.hash
-
-    reference_resolver.run_post_process_callbacks(
-        CallbackParams(interval_trees=interval_trees, source_units=source_units)
-    )
-
-    return interval_trees, interval_trees_indexes, source_units, paths_to_cu
-
-
 def _compile_project(
     config: Optional[WokeConfig] = None,
-) -> List[Tuple[CompilationUnit, SolcOutput]]:
+) -> BuildInfo:
     if config is None:
         config = woke.config.WokeConfig()
         config.load_configs()
@@ -950,30 +897,31 @@ def _compile_project(
             sol_files.add(file)
 
     compiler = woke.compile.SolidityCompiler(config)
-    outputs: List[Tuple[CompilationUnit, SolcOutput]] = asyncio.run(
+    build: BuildInfo
+    errors: Set[SolcOutputError]
+    build, errors = asyncio.run(
         compiler.compile(
             sol_files,
             [SolcOutputSelectionEnum.ALL],
             write_artifacts=False,
             reuse_latest_artifacts=True,
-            maximize_compilation_units=True,
         )
     )
 
-    for _, output in outputs:
-        for error in output.errors:
-            if error.severity == SolcOutputErrorSeverityEnum.ERROR:
-                if error.formatted_message is not None:
-                    raise Exception(f"Error compiling\n{error.formatted_message}")
-                else:
-                    raise Exception(f"Error compiling\n{error.message}")
+    for error in errors:
+        if error.severity == SolcOutputErrorSeverityEnum.ERROR:
+            if error.formatted_message is not None:
+                raise Exception(f"Error compiling\n{error.formatted_message}")
+            else:
+                raise Exception(f"Error compiling\n{error.message}")
 
-    return outputs
+    return build
 
 
 def _parse_source_map(
     interval_trees: Dict[pathlib.Path, IntervalTree],
-    interval_tree_indexes: Dict[int, pathlib.Path],
+    cu_hash: bytes,
+    reference_resolver: ReferenceResolver,
     source_map: str,
     pc_op_map: List[Tuple[int, str, int, Optional[int]]],
 ) -> Tuple[
@@ -1001,7 +949,9 @@ def _parse_source_map(
             else:
                 last_data[x] = source_spl[x]
 
-        if last_data[2] not in interval_tree_indexes:
+        try:
+            reference_resolver.resolve_source_file_id(last_data[2], cu_hash)
+        except KeyError:
             logger.debug(
                 f"PC skipped because source file with id {last_data[2]} is not indexed"
             )
@@ -1012,7 +962,9 @@ def _parse_source_map(
             if source_interval in name_cache:
                 last_fn = name_cache[source_interval]
             else:
-                interval_tree = interval_trees[interval_tree_indexes[last_data[2]]]
+                interval_tree = interval_trees[
+                    reference_resolver.resolve_source_file_id(last_data[2], cu_hash)
+                ]
                 last_fn = _find_fn_for_source(
                     interval_tree, source_interval[0], source_interval[1]
                 )
@@ -1050,15 +1002,10 @@ def _get_line_intervals(source: str) -> IntervalTree:
 def _construct_coverage_data(
     config: Optional[WokeConfig] = None, use_deployed_bytecode: bool = True
 ) -> Dict[str, ContractCoverage]:
-    outputs = _compile_project(config)
-    interval_trees, interval_trees_indexes, source_units, paths_to_cu = _parse_project(
-        outputs
-    )
+    build = _compile_project(config)
     contracts_cov = {}
 
-    for unit_path, source_unit in source_units.items():
-        cu_hash = paths_to_cu[unit_path]
-
+    for unit_path, source_unit in build.source_units.items():
         for contract in source_unit.contracts:
             assert contract.compilation_info is not None
             assert contract.compilation_info.evm is not None
@@ -1080,7 +1027,11 @@ def _construct_coverage_data(
             pc_op_map = _parse_opcodes(opcodes)
             logger.debug(f"{contract.name} Pc Op Map {pc_op_map}")
             pc_map, pc_fn_def_map = _parse_source_map(
-                interval_trees, interval_trees_indexes[cu_hash], source_map, pc_op_map
+                build.interval_trees,
+                contract.cu_hash,
+                build.reference_resolver,
+                source_map,
+                pc_op_map,
             )
             logger.debug(f"{contract.name} Pc Map {pc_map}")
 

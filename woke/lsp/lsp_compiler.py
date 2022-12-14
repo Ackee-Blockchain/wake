@@ -457,13 +457,13 @@ class LspCompiler:
 
         try:
             if full_compile:
-                graph = self.__compiler.build_graph(
+                graph, _ = self.__compiler.build_graph(
                     self.__discovered_files,
                     {path: info.text for path, info in self.__opened_files.items()},
                     True,
                 )
             else:
-                graph = self.__compiler.build_graph(
+                graph, _ = self.__compiler.build_graph(
                     files_to_compile,
                     {path: info.text for path, info in self.__opened_files.items()},
                     True,

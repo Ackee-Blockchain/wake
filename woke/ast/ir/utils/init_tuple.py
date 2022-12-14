@@ -1,10 +1,14 @@
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Dict, NamedTuple, Optional
+from typing import TYPE_CHECKING, Dict, NamedTuple, Optional
 
 from intervaltree import IntervalTree
 
+if TYPE_CHECKING:
+    from woke.compile import SolcOutputContractInfo
+
 from woke.ast.ir.reference_resolver import ReferenceResolver
-from woke.compile import SolcOutputContractInfo
 from woke.compile.compilation_unit import CompilationUnit
 
 
