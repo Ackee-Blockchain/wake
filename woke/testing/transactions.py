@@ -8,7 +8,7 @@ from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 
 from .core import Account, ChainInterface, default_chain
 from .development_chains import AnvilDevChain, GanacheDevChain, HardhatDevChain
-from .internal import TransactionRevertedError
+from .internal import TransactionRevertedError, UnknownEvent
 from .json_rpc.communicator import JsonRpcError, TxParams
 
 T = TypeVar("T")
@@ -232,6 +232,25 @@ class TransactionAbc(ABC, Generic[T]):
             self._tx_hash, self._tx_receipt["logs"], self._recipient_fqn
         )
         return self._events
+
+    @property
+    @_fetch_tx_receipt
+    def raw_events(self) -> List[UnknownEvent]:
+        assert self._tx_receipt is not None
+
+        ret = []
+        for log in self._tx_receipt["logs"]:
+            topics = [
+                bytes.fromhex(t[2:]) if t.startswith("0x") else bytes.fromhex(t)
+                for t in log["topics"]
+            ]
+            data = (
+                bytes.fromhex(log["data"][2:])
+                if log["data"].startswith("0x")
+                else bytes.fromhex(log["data"])
+            )
+            ret.append(UnknownEvent(topics, data))
+        return ret
 
     @property
     @_fetch_tx_receipt
