@@ -1145,6 +1145,8 @@ class Contract(Account):
 
         if from_ is not None:
             if isinstance(from_, Account):
+                if from_.chain != chain:
+                    raise ValueError("from_ account must belong to the chain")
                 params["from"] = str(from_.address)
             else:
                 params["from"] = str(from_)
@@ -1205,6 +1207,8 @@ class Contract(Account):
         params = {}
         if from_ is not None:
             if isinstance(from_, Account):
+                if from_.chain != self.chain:
+                    raise ValueError("`from_` account must belong to this chain")
                 params["from"] = str(from_.address)
             else:
                 params["from"] = str(from_)
@@ -1221,6 +1225,8 @@ class Contract(Account):
 
         if to is not None:
             if isinstance(to, Account):
+                if to.chain != self.chain:
+                    raise ValueError("`to` account must belong to this chain")
                 params["to"] = str(to.address)
             else:
                 params["to"] = str(to)
@@ -1252,6 +1258,8 @@ class Contract(Account):
         params = {}
         if from_ is not None:
             if isinstance(from_, Account):
+                if from_.chain != self.chain:
+                    raise ValueError("`from_` account must belong to this chain")
                 params["from"] = str(from_.address)
             else:
                 params["from"] = str(from_)
@@ -1268,6 +1276,8 @@ class Contract(Account):
 
         if to is not None:
             if isinstance(to, Account):
+                if to.chain != self.chain:
+                    raise ValueError("`to` account must belong to this chain")
                 params["to"] = str(to.address)
             else:
                 params["to"] = str(to)
