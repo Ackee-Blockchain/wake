@@ -202,6 +202,11 @@ class IdeCoverageRecord:
         return self
 
 
+@dataclass
+class IdeFunctionCoverageRecord(IdeCoverageRecord):
+    pass
+
+
 def _find_code_spaces_intervals(source_code: str) -> IntervalTree:
     in_interval = False
     int_start = 0
@@ -309,7 +314,7 @@ class ContractCoverage:
         cov_data = {}
         for fn in self.functions.values():
             (start_line, start_col), (end_line, end_col) = fn.name_location.ide_pos
-            cov_data[fn.name_location.ide_pos] = IdeCoverageRecord(
+            cov_data[fn.name_location.ide_pos] = IdeFunctionCoverageRecord(
                 start_line=start_line,
                 start_column=start_col,
                 end_line=end_line,
@@ -928,21 +933,36 @@ class Coverage:
                             coverages[rec.file_path] = []
                         coverages[rec.file_path].append((pos, rec))
 
+        merged_coverages = _merge_coverages_for_files(coverages)
+
+        max_sum_calls = 0
+        for c in merged_coverages.values():
+            for rec in c.values():
+                if isinstance(rec, IdeFunctionCoverageRecord):
+                    max_sum_calls = max(max_sum_calls, rec.calls)
+
         ret = {}
-        for file_path, cov_records in _merge_coverages_for_files(coverages).items():
+        for file_path, cov_records in merged_coverages.items():
             file_path_str = str(file_path)
             if file_path not in ret:
                 ret[file_path_str] = []
             for _, record in cov_records.items():
+
+                calls = (
+                    max_sum_calls
+                    if isinstance(record, IdeFunctionCoverageRecord)
+                    else record.calls
+                )
+
                 ret[file_path_str].append(
                     {
                         "startLine": record.start_line,
                         "startColumn": record.start_column,
                         "endLine": record.end_line,
                         "endColumn": record.end_column,
-                        "coverage": f"{int((record.coverage_hits / record.calls) * 100) if record.calls != 0 else 0}",
+                        "coverage": f"{int((record.coverage_hits / calls) * 100) if calls != 0 else 0}",
                         "coverageHits": record.coverage_hits,
-                        "message": f"Execs: {record.coverage_hits} / {record.calls}",
+                        "message": f"Execs: {record.coverage_hits} / {calls}",
                     }
                 )
 
@@ -1028,14 +1048,10 @@ class CoverageProvider:
         Checks for latest transactions on blockchain for
         """
         last_block = self._dev_chain.get_block_number()
-        logging.error(last_block)
-        logging.error(self._next_block_to_cover)
         if (
             self._next_block_to_cover > last_block + 1
         ):  # chain was reset -> reset last_covered_block
             self._next_block_to_cover = 0
-        logging.error(last_block)
-        logging.error(self._next_block_to_cover)
 
         for block_number in range(self._next_block_to_cover, last_block + 1):
             logger.debug("Working on block %d", block_number)
