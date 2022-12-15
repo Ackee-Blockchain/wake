@@ -6,11 +6,11 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from intervaltree import IntervalTree
-from pydantic import BaseModel
 
 import woke.compile
 import woke.config
 from woke.ast.enums import GlobalSymbolsEnum
+from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.declaration.contract_definition import ContractDefinition
 from woke.ast.ir.declaration.function_definition import FunctionDefinition
 from woke.ast.ir.declaration.modifier_definition import ModifierDefinition
@@ -51,13 +51,6 @@ def _to_camel(s: str) -> str:
     return split[0].lower() + "".join([w.capitalize() for w in split[1:]])
 
 
-class Exportable(BaseModel):
-    class Config:
-        alias_generator = _to_camel
-        allow_mutation = True
-        allow_population_by_field_name = True
-
-
 @dataclass
 class BytecodeInfo:
     opcodes: str
@@ -74,9 +67,18 @@ def _get_line_col_from_offset(
     return interval.data, location - interval.begin
 
 
+def _get_full_source(node: IrAbc) -> str:
+    if isinstance(node, SourceUnit):
+        return node.file_source.decode("utf-8")
+    if node.parent is None:
+        raise ValueError(f"Node {node} has no parent")
+    return _get_full_source(node.parent)
+
+
 @dataclass
 class SourceMapPcRecord:
     fn_name: str
+    fn_def: Union[FunctionDefinition, ModifierDefinition]
     offset: Tuple[int, int]
     source_id: int
     jump_type: str
@@ -87,10 +89,17 @@ class SourceMapPcRecord:
 
 class LocationInfo:
     byte_offsets: Tuple[int, int]
+    file_path: pathlib.Path
     ide_pos: Tuple[Tuple[int, int], Tuple[int, int]]
 
-    def __init__(self, byte_location: Tuple[int, int], line_intervals: IntervalTree):
+    def __init__(
+        self,
+        byte_location: Tuple[int, int],
+        filename: pathlib.Path,
+        line_intervals: IntervalTree,
+    ):
         self.byte_offsets = byte_location
+        self.file_path = filename
         self.ide_pos = (
             _get_line_col_from_offset(byte_location[0], line_intervals),
             _get_line_col_from_offset(byte_location[1], line_intervals),
@@ -136,9 +145,12 @@ class FunctionInfo:
         line_intervals: IntervalTree,
     ):
         self.name = fn.canonical_name
-        self.name_location = LocationInfo(fn.name_location, line_intervals)
+        self.name_location = LocationInfo(fn.name_location, fn.file, line_intervals)
+
         self.body_location = (
-            LocationInfo(fn.body.byte_location, line_intervals) if fn.body else None
+            LocationInfo(fn.body.byte_location, fn.file, line_intervals)
+            if fn.body
+            else None
         )
 
         self.modifiers = {}
@@ -149,7 +161,7 @@ class FunctionInfo:
                 ):
                     self.modifiers[
                         mod.modifier_name.referenced_declaration.canonical_name
-                    ] = LocationInfo(mod.byte_location, line_intervals)
+                    ] = LocationInfo(mod.byte_location, fn.file, line_intervals)
 
         self.instruction_cov = {}
         self.branch_cov = {}
@@ -174,11 +186,13 @@ class FunctionInfo:
         )
 
 
-class IdeCoverageRecord(Exportable):
+@dataclass
+class IdeCoverageRecord:
     start_line: int
     start_column: int
     end_line: int
     end_column: int
+    file_path: pathlib.Path
     coverage_hits: int
     calls: int
 
@@ -188,9 +202,7 @@ class IdeCoverageRecord(Exportable):
         return self
 
 
-def _find_code_spaces_intervals(
-    source_code: str, start_byte_offset: int
-) -> IntervalTree:
+def _find_code_spaces_intervals(source_code: str) -> IntervalTree:
     in_interval = False
     int_start = 0
     intervals = set()
@@ -200,7 +212,7 @@ def _find_code_spaces_intervals(
                 int_start = i
                 in_interval = True
         elif in_interval:
-            intervals.add((int_start + start_byte_offset, i + start_byte_offset + 1))
+            intervals.add((int_start, i + 1))
             in_interval = False
     return IntervalTree.from_tuples(intervals)
 
@@ -215,51 +227,36 @@ class ContractCoverage:
 
     _declaration_locations: Dict[str, Tuple[int, int]]
     _modifiers_locations: Dict[str, Dict[str, Tuple[int, int]]]
-    _line_intervals: IntervalTree
-    _spaces_intervals: IntervalTree
 
     def __init__(
         self,
         pc_map: Dict[int, SourceMapPcRecord],
         contract_def: ContractDefinition,
-        line_intervals: IntervalTree,
     ):
         self.pc_map = pc_map
         self.pc_instruction_cov = {}
         self.pc_branch_cov = {}
         self.pc_modifier_cov = {}
         self.pc_function = {}
-        self.filename = str(contract_def.file.absolute())
+        self.file_path = pathlib.Path(contract_def.file.absolute())
         self.functions = {}
 
-        for base_contract_def in contract_def.linearized_base_contracts:
-            spaces_intervals = _find_code_spaces_intervals(
-                base_contract_def.source, base_contract_def.byte_location[0]
-            )
+        for pc, rec in self.pc_map.items():
+            if rec.fn_name not in self.functions:
+                fn_line_intervals = _get_line_intervals(_get_full_source(rec.fn_def))
+                self.functions[rec.fn_name] = FunctionInfo(
+                    rec.fn_def, fn_line_intervals
+                )
 
-            self.functions.update(
-                {
-                    fn.canonical_name: FunctionInfo(fn, line_intervals)
-                    for fn in (
-                        base_contract_def.functions + base_contract_def.modifiers
-                    )
-                }
-            )
-
-            self._add_branch_coverage(
-                base_contract_def, line_intervals, spaces_intervals
-            )
+                self._add_branch_coverage(rec.fn_def, fn_line_intervals)
 
         for pc, rec in self.pc_map.items():
-            if rec.fn_name in self.functions:
-                self.pc_function[pc] = self.functions[rec.fn_name]
+            self.pc_function[pc] = self.functions[rec.fn_name]
 
         self._add_instruction_coverage()
         self._add_modifier_coverage()
 
     def __add__(self, other):
-        for fn, fn_info in self.functions.items():
-            fn_info += other.functions[fn]
         for pc, rec in other.pc_instruction_cov.items():
             self.pc_instruction_cov[pc].hit_count += rec.hit_count
         for pc, rec in other.pc_branch_cov.items():
@@ -292,6 +289,7 @@ class ContractCoverage:
                     start_column=start_col,
                     end_line=end_line,
                     end_column=end_col,
+                    file_path=fn.name_location.file_path,
                     coverage_hits=rec.hit_count,
                     calls=fn.calls,
                 )
@@ -305,7 +303,11 @@ class ContractCoverage:
         Returns a list of IdeCoverageRecord for each function
         """
 
-        fns_max_calls = max([fn.calls for fn in self.functions.values()])
+        fns_max_calls = (
+            max([fn.calls for fn in self.functions.values()])
+            if len(self.functions) > 0
+            else 0
+        )
 
         cov_data = {}
         for fn in self.functions.values():
@@ -315,6 +317,7 @@ class ContractCoverage:
                 start_column=start_col,
                 end_line=end_line,
                 end_column=end_col,
+                file_path=fn.name_location.file_path,
                 coverage_hits=fn.calls,
                 calls=fns_max_calls,
             )
@@ -342,6 +345,7 @@ class ContractCoverage:
                     start_column=start_col,
                     end_line=end_line,
                     end_column=end_col,
+                    file_path=fn.name_location.file_path,
                     coverage_hits=rec.hit_count,
                     calls=fn.calls,
                 )
@@ -534,41 +538,41 @@ class ContractCoverage:
 
     def _add_branch_coverage(
         self,
-        contract_def: ContractDefinition,
+        fn_def: Union[FunctionDefinition, ModifierDefinition],
         line_intervals: IntervalTree,
-        spaces_intervals: IntervalTree,
     ):
-        for fn_def in contract_def.functions + contract_def.modifiers:
-            fn = self.functions[fn_def.canonical_name]
-            if fn_def.body:
-                logger.debug(f"Adding branch coverage to {fn.name}")
-                branches = self._get_function_branches(fn_def, spaces_intervals)
-                logger.debug(f"Found branches: {branches}")
-                for branch in branches:
-                    branch_loc = LocationInfo(branch, line_intervals)
-                    logger.debug(f"Branch: {branch_loc}")
-                    pc = self._find_branch_pc(branch)
-                    if pc is None:
-                        logger.debug(f"No pc found")
-                        continue
-                    logger.debug(
-                        f"Pc: {pc} at {self.pc_map[pc].offset} {self.pc_map[pc].op}"
-                    )
+        if not fn_def.body:
+            return
+        fn_space_intervals = _find_code_spaces_intervals(_get_full_source(fn_def))
 
-                    branch_cov = BranchCovRecord(
-                        hit_count=0, src_pc_map=self.pc_map[pc], branch=branch_loc
-                    )
-                    self.pc_branch_cov[pc] = branch_cov
-                    fn.branch_cov[pc] = branch_cov
-                logger.debug(
-                    f"Function {fn.name} has these branch detection instructions: "
-                    f"{fn.branch_cov.keys()}"
-                )
+        fn = self.functions[fn_def.canonical_name]
+        logger.debug(f"Adding branch coverage to {fn_def.canonical_name}")
+        branches = self._get_function_branches(fn_def, fn_space_intervals)
+
+        for branch in branches:
+            branch_loc = LocationInfo(branch, fn_def.file, line_intervals)
+            logger.debug(f"Branch: {branch_loc}")
+            pc = self._find_branch_pc(branch)
+            if pc is None:
+                logger.debug(f"No pc found")
+                continue
+            logger.debug(f"Pc: {pc} at {self.pc_map[pc].offset} {self.pc_map[pc].op}")
+
+            branch_cov = BranchCovRecord(
+                hit_count=0, src_pc_map=self.pc_map[pc], branch=branch_loc
+            )
+            self.pc_branch_cov[pc] = branch_cov
+            fn.branch_cov[pc] = branch_cov
+        logger.debug(
+            f"Function {fn.name} has these branch detection instructions: "
+            f"{fn.branch_cov.keys()}"
+        )
 
     def _add_instruction_coverage(self):
         for pc, rec in self.pc_map.items():
             if rec.fn_name is not None:
                 cov = InstrCovRecord(hit_count=0, src_pc_map=rec)
+
                 self.functions[rec.fn_name].instruction_cov[pc] = cov
                 self.pc_instruction_cov[pc] = cov
 
@@ -614,7 +618,7 @@ def _parse_opcodes(opcodes: str) -> List[Tuple[int, str, int, Optional[int]]]:
 
 def _find_fn_for_source(
     interval_tree: IntervalTree, source_from: int, source_to: int
-) -> Optional[str]:
+) -> Optional[FunctionDefinition]:
     nodes = interval_tree[source_from:source_to]
     function_def_nodes = [
         n
@@ -626,7 +630,7 @@ def _find_fn_for_source(
     if not function_def_nodes:
         return None
     max_overlap = None
-    final_name = None
+    final_fn = None
     for node in function_def_nodes:
         logger.debug(
             f"{source_from}:{source_to} {len(function_def_nodes)} {str(type(node.data))} {node.data.canonical_name}"
@@ -635,8 +639,8 @@ def _find_fn_for_source(
         logger.debug(f"overlap {overlap} {max_overlap} {source_from}:{source_to}")
         if max_overlap is None or overlap > max_overlap:
             max_overlap = overlap
-            final_name = node.data.canonical_name
-    return final_name
+            final_fn = node.data
+    return final_fn
 
 
 def _parse_project(
@@ -773,6 +777,7 @@ def _parse_source_map(
 
         if last_fn:
             pc_map[pc] = SourceMapPcRecord(
+                last_fn.canonical_name,
                 last_fn,
                 (source_interval[0], source_interval[1]),
                 source_interval[2],
@@ -789,8 +794,12 @@ def _parse_source_map(
 def _get_line_intervals(source: str) -> IntervalTree:
     location = 0
     intervals = set()
-    for line_num, line in enumerate(source.splitlines(keepends=True)):
-        intervals.add((location, location + len(line), line_num))
+    lines = source.splitlines(keepends=True)
+    for line_num, line in enumerate(lines):
+        location_end = location + len(line)
+        if line_num + 1 == len(lines):
+            location_end += 1
+        intervals.add((location, location_end, line_num))
         location += len(line)
     return IntervalTree.from_tuples(intervals)
 
@@ -806,7 +815,7 @@ def _construct_coverage_data(
 
     for unit_path, source_unit in source_units.items():
         cu_hash = paths_to_cu[unit_path]
-        line_intervals = _get_line_intervals(source_unit.file.read_text())
+
         for contract in source_unit.contracts:
             assert contract.compilation_info is not None
             assert contract.compilation_info.evm is not None
@@ -819,6 +828,7 @@ def _construct_coverage_data(
             opcodes = contract.compilation_info.evm.deployed_bytecode.opcodes
             source_map = contract.compilation_info.evm.deployed_bytecode.source_map
 
+            logger.debug(f"Processing {contract.name} from {unit_path}")
             logger.debug(f"{contract.name} Opcodes {opcodes}")
             pc_op_map = _parse_opcodes(opcodes)
             logger.debug(f"{contract.name} Pc Op Map {pc_op_map}")
@@ -828,26 +838,26 @@ def _construct_coverage_data(
             logger.debug(f"{contract.name} Pc Map {pc_map}")
 
             contract_fqn = f"{source_unit.source_unit_name}:{contract.name}"
-            contracts_cov[contract_fqn] = ContractCoverage(
-                pc_map, contract, line_intervals
-            )
+            contracts_cov[contract_fqn] = ContractCoverage(pc_map, contract)
     return contracts_cov
 
 
 def _merge_coverages_for_files(
     coverages_for_files: Dict[
-        str, List[Dict[Tuple[Tuple[int, int], Tuple[int, int]], IdeCoverageRecord]]
+        pathlib.Path,
+        List[Tuple[Tuple[Tuple[int, int], Tuple[int, int]], IdeCoverageRecord]],
     ]
-) -> Dict[str, Dict[Tuple[Tuple[int, int], Tuple[int, int]], IdeCoverageRecord]]:
+) -> Dict[
+    pathlib.Path, Dict[Tuple[Tuple[int, int], Tuple[int, int]], IdeCoverageRecord]
+]:
     merged_coverages = {}
-    for file, coverages in coverages_for_files.items():
-        merged_coverages[file] = {}
-        for coverage in coverages:
-            for (start, end), record in coverage.items():
-                if (start, end) in merged_coverages[file]:
-                    merged_coverages[file][(start, end)] += record
-                else:
-                    merged_coverages[file][(start, end)] = record
+    for file_path, records in coverages_for_files.items():
+        merged_coverages[file_path] = {}
+        for (start, end), record in records:
+            if (start, end) in merged_coverages[file_path]:
+                merged_coverages[file_path][(start, end)] += record
+            else:
+                merged_coverages[file_path][(start, end)] = record
     return merged_coverages
 
 
@@ -909,19 +919,24 @@ class Coverage:
             if per_transaction
             else self.contracts_cov.items()
         ):
-            if cov.filename not in coverages:
-                coverages[cov.filename] = []
 
-            coverages[cov.filename].append(cov.get_ide_branch_coverage())
-            coverages[cov.filename].append(cov.get_ide_function_calls_coverage())
-            coverages[cov.filename].append(cov.get_ide_modifier_calls_coverage())
+            for data in (
+                cov.get_ide_branch_coverage(),
+                cov.get_ide_function_calls_coverage(),
+                cov.get_ide_modifier_calls_coverage(),
+            ):
+                for pos, rec in data.items():
+                    if rec.file_path not in coverages:
+                        coverages[rec.file_path] = []
+                    coverages[rec.file_path].append((pos, rec))
 
         ret = {}
-        for filename, cov_records in _merge_coverages_for_files(coverages).items():
-            if filename not in ret:
-                ret[filename] = []
+        for file_path, cov_records in _merge_coverages_for_files(coverages).items():
+            file_path_str = str(file_path)
+            if file_path not in ret:
+                ret[file_path_str] = []
             for _, record in cov_records.items():
-                ret[filename].append(
+                ret[file_path_str].append(
                     {
                         "startLine": record.start_line,
                         "startColumn": record.start_column,
@@ -1051,7 +1066,6 @@ def get_merged_ide_coverage(
     """
     Returns both not per transaction and per transaction merged coverages for IDE
     """
-
     if len(coverages) < 0:
         return None
     cov = copy.deepcopy(coverages[0])
