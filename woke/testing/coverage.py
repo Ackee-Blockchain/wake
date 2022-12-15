@@ -281,9 +281,6 @@ class ContractCoverage:
         for fn in self.functions.values():
             for rec in fn.branch_cov.values():
                 (start_line, start_col), (end_line, end_col) = rec.branch.ide_pos
-                logger.info(
-                    f"Branch: {rec.hit_count} / {fn.calls} for {fn.name} and {rec.branch}"
-                )
                 cov_data[rec.branch.ide_pos] = IdeCoverageRecord(
                     start_line=start_line,
                     start_column=start_col,
@@ -805,7 +802,7 @@ def _get_line_intervals(source: str) -> IntervalTree:
 
 
 def _construct_coverage_data(
-    config: Optional[WokeConfig] = None,
+    config: Optional[WokeConfig] = None, use_deployed_bytecode: bool = True
 ) -> Dict[str, ContractCoverage]:
     outputs = _compile_project(config)
     interval_trees, interval_trees_indexes, source_units, paths_to_cu = _parse_project(
@@ -819,14 +816,18 @@ def _construct_coverage_data(
         for contract in source_unit.contracts:
             assert contract.compilation_info is not None
             assert contract.compilation_info.evm is not None
-            assert contract.compilation_info.evm.deployed_bytecode is not None
-            assert contract.compilation_info.evm.deployed_bytecode.opcodes is not None
-            assert (
-                contract.compilation_info.evm.deployed_bytecode.source_map is not None
-            )
 
-            opcodes = contract.compilation_info.evm.deployed_bytecode.opcodes
-            source_map = contract.compilation_info.evm.deployed_bytecode.source_map
+            if use_deployed_bytecode:
+                bytecode = contract.compilation_info.evm.deployed_bytecode
+            else:
+                bytecode = contract.compilation_info.evm.bytecode
+
+            assert bytecode is not None
+            assert bytecode.opcodes is not None
+            assert bytecode.source_map is not None
+
+            opcodes = bytecode.opcodes
+            source_map = bytecode.source_map
 
             logger.debug(f"Processing {contract.name} from {unit_path}")
             logger.debug(f"{contract.name} Opcodes {opcodes}")
@@ -875,35 +876,32 @@ def _merge_coverages_for_offsets(
 
 class Coverage:
     contracts_cov: Dict[str, ContractCoverage]
+    contracts_undeployed_cov: Dict[str, ContractCoverage]
     contracts_per_trans_cov: Dict[str, ContractCoverage]
+    contracts_undeployed_per_trans_cov: Dict[str, ContractCoverage]
 
     def __init__(self, config: Optional[WokeConfig] = None):
-        cov = _construct_coverage_data(config)
-        self.contracts_cov = cov
-        self.contracts_per_trans_cov = copy.deepcopy(cov)
+        self.contracts_cov = _construct_coverage_data(
+            config, use_deployed_bytecode=True
+        )
+        self.contracts_per_trans_cov = copy.deepcopy(self.contracts_cov)
+        self.contracts_undeployed_cov = _construct_coverage_data(
+            config, use_deployed_bytecode=False
+        )
+        self.contracts_undeployed_per_trans_cov = copy.deepcopy(
+            self.contracts_undeployed_cov
+        )
 
     def __add__(self, other):
         for fp, cov in self.contracts_cov.items():
             cov += other.contracts_cov[fp]
         for fp, cov in self.contracts_per_trans_cov.items():
             cov += other.contracts_per_trans_cov[fp]
+        for fp, cov in self.contracts_undeployed_cov.items():
+            cov += other.contracts_undeployed_cov[fp]
+        for fp, cov in self.contracts_undeployed_per_trans_cov.items():
+            cov += other.contracts_undeployed_per_trans_cov[fp]
         return self
-
-    def get_covered_contracts(self):
-        """
-        Returns covered contract names that can be then used in other methods
-        """
-        return self.contracts_cov.keys()
-
-    def get_contract_coverage(
-        self, contract_fqn: str, per_transaction: bool
-    ) -> ContractCoverage:
-        """
-        Returns ContractCoverage for given contract name
-        """
-        if per_transaction:
-            return self.contracts_per_trans_cov[contract_fqn]
-        return self.contracts_cov[contract_fqn]
 
     def get_contract_ide_coverage(
         self, per_transaction: bool
@@ -914,21 +912,21 @@ class Coverage:
 
         coverages = {}
 
-        for name, cov in (
-            self.contracts_per_trans_cov.items()
-            if per_transaction
-            else self.contracts_cov.items()
+        for coverage in (
+            (self.contracts_cov, self.contracts_undeployed_cov)
+            if not per_transaction
+            else (self.contracts_per_trans_cov, self.contracts_undeployed_per_trans_cov)
         ):
-
-            for data in (
-                cov.get_ide_branch_coverage(),
-                cov.get_ide_function_calls_coverage(),
-                cov.get_ide_modifier_calls_coverage(),
-            ):
-                for pos, rec in data.items():
-                    if rec.file_path not in coverages:
-                        coverages[rec.file_path] = []
-                    coverages[rec.file_path].append((pos, rec))
+            for name, cov in coverage.items():
+                for data in (
+                    cov.get_ide_branch_coverage(),
+                    cov.get_ide_function_calls_coverage(),
+                    cov.get_ide_modifier_calls_coverage(),
+                ):
+                    for pos, rec in data.items():
+                        if rec.file_path not in coverages:
+                            coverages[rec.file_path] = []
+                        coverages[rec.file_path].append((pos, rec))
 
         ret = {}
         for file_path, cov_records in _merge_coverages_for_files(coverages).items():
@@ -950,12 +948,25 @@ class Coverage:
 
         return ret
 
-    def process_trace(self, contract_fqn: str, trace: Dict[str, Any]):
+    def process_trace(
+        self, contract_fqn: str, trace: Dict[str, Any], is_from_deployment: bool = False
+    ):
         """
         Processes debug_traceTransaction and it's struct_logs
         """
         contract_fqn_stack = [contract_fqn]
         transaction_fqn_pcs = set()
+
+        contracts_cov = (
+            self.contracts_cov
+            if not is_from_deployment
+            else self.contracts_undeployed_cov
+        )
+        contracts_per_trans_cov = (
+            self.contracts_per_trans_cov
+            if not is_from_deployment
+            else self.contracts_undeployed_per_trans_cov
+        )
 
         for struct_log in trace["structLogs"]:
             last_fqn = contract_fqn_stack[-1]
@@ -974,14 +985,11 @@ class Coverage:
                 logger.debug(f"{pc} {struct_log['op']} before pop {contract_fqn_stack}")
                 contract_fqn_stack.pop()
 
-            if (
-                last_fqn not in self.contracts_cov
-                or last_fqn not in self.contracts_per_trans_cov
-            ):
+            if last_fqn not in contracts_cov or last_fqn not in contracts_per_trans_cov:
                 continue
 
-            contract_cov = self.contracts_cov[last_fqn]
-            contract_cov_per_trans = self.contracts_per_trans_cov[last_fqn]
+            contract_cov = contracts_cov[last_fqn]
+            contract_cov_per_trans = contracts_per_trans_cov[last_fqn]
             if pc in contract_cov.pc_map:
                 logger.debug(
                     f"{pc} {struct_log['op']} {contract_cov.pc_map[pc].op} "
@@ -1020,31 +1028,21 @@ class CoverageProvider:
         Checks for latest transactions on blockchain for
         """
         last_block = self._dev_chain.get_block_number()
+        logging.error(last_block)
+        logging.error(self._next_block_to_cover)
         if (
-            self._next_block_to_cover >= last_block
+            self._next_block_to_cover > last_block + 1
         ):  # chain was reset -> reset last_covered_block
             self._next_block_to_cover = 0
+        logging.error(last_block)
+        logging.error(self._next_block_to_cover)
 
         for block_number in range(self._next_block_to_cover, last_block + 1):
             logger.debug("Working on block %d", block_number)
             block_info = self._dev_chain.get_block(block_number, True)
             logger.debug(block_info["transactions"])
             for transaction in block_info["transactions"]:
-                if "to" not in transaction or transaction["to"] is None:
-                    assert "input" in transaction
-                    bytecode = transaction["input"]
-                    if bytecode.startswith("0x"):
-                        bytecode = bytecode[2:]
-                    bytecode = bytes.fromhex(bytecode)
-                    contract_fqn = get_fqn_from_deployment_code(bytecode)
-                    logger.info(f"Contract {contract_fqn} was deployed")
-                else:
-                    contract_fqn = get_fqn_from_address(
-                        Address(transaction["to"]), default_chain
-                    )
-                    assert (
-                        contract_fqn is not None
-                    ), f"Contract not found for {transaction['to']}"
+                logger.debug(transaction)
 
                 trace = self._dev_chain.debug_trace_transaction(
                     transaction["hash"],
@@ -1054,7 +1052,30 @@ class CoverageProvider:
                         "disableStorage": True,
                     },
                 )
-                self._coverage.process_trace(contract_fqn, trace)
+
+                if "to" not in transaction or transaction["to"] is None:
+                    assert "input" in transaction
+                    bytecode = transaction["input"]
+                    if bytecode.startswith("0x"):
+                        bytecode = bytecode[2:]
+                    bytecode = bytes.fromhex(bytecode)
+                    contract_fqn = get_fqn_from_deployment_code(bytecode)
+
+                    self._coverage.process_trace(
+                        contract_fqn, trace, is_from_deployment=True
+                    )
+                    logger.info(f"Contract {contract_fqn} was deployed")
+                else:
+                    contract_fqn = get_fqn_from_address(
+                        Address(transaction["to"]), default_chain
+                    )
+                    assert (
+                        contract_fqn is not None
+                    ), f"Contract not found for {transaction['to']}"
+
+                    self._coverage.process_trace(
+                        contract_fqn, trace, is_from_deployment=False
+                    )
         self._next_block_to_cover = last_block + 1
 
 

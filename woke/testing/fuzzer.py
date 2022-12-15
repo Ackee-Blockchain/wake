@@ -188,14 +188,18 @@ def _run(
 def _compute_coverage_per_function(coverages: Dict[int, Coverage]) -> Dict[str, int]:
     funcs_cov = {}
     for cov in coverages.values():
-        for contract_cov in cov.contracts_cov.values():
-            for fn_name, fn_info in contract_cov.functions.items():
-                if fn_info.calls == 0:
-                    continue
-                if fn_name not in funcs_cov:
-                    funcs_cov[fn_name] = fn_info.calls
-                else:
-                    funcs_cov[fn_name] += fn_info.calls
+        for contract_coverages in (
+            cov.contracts_cov.values(),
+            cov.contracts_undeployed_cov.values(),
+        ):
+            for contract_cov in contract_coverages:
+                for fn_name, fn_info in contract_cov.functions.items():
+                    if fn_info.calls == 0:
+                        continue
+                    if fn_name not in funcs_cov:
+                        funcs_cov[fn_name] = fn_info.calls
+                    else:
+                        funcs_cov[fn_name] += fn_info.calls
     return funcs_cov
 
 

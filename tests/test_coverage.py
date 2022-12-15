@@ -230,22 +230,10 @@ class TestCoverage:
         assert len(cov.contracts_cov) == 2
         return cov
 
-    def test_covered_contracts(self, basic_coverage):
-        fqn = "basic_contract_coverage.sol:C"
-        assert len(basic_coverage.get_covered_contracts()) == 1
-        assert list(basic_coverage.get_covered_contracts())[0] == fqn
-
-    def test_get_contract_coverage(self, basic_coverage):
-        fqn = "basic_contract_coverage.sol:C"
-        contract_coverage = basic_coverage.get_contract_coverage(fqn, False)
-        assert contract_coverage == basic_coverage.contracts_cov[fqn]
-        contract_coverage = basic_coverage.get_contract_coverage(fqn, True)
-        assert contract_coverage == basic_coverage.contracts_per_trans_cov[fqn]
-
     def test_get_contract_ide_coverage(self, basic_coverage):
         fqn = "basic_contract_coverage.sol:C"
 
-        contract_coverage = basic_coverage.get_contract_coverage(fqn, False)
+        contract_coverage = basic_coverage.contracts_cov[fqn]
 
         for pc in contract_coverage.pc_branch_cov.keys():
             contract_coverage.add_cov(pc)
@@ -258,7 +246,7 @@ class TestCoverage:
 
     def test_process_trace(self, basic_coverage):
         fqn = "basic_contract_coverage.sol:C"
-        contract_coverage = basic_coverage.get_contract_coverage(fqn, False)
+        contract_coverage = basic_coverage.contracts_cov[fqn]
 
         covered_pcs = random.sample(list(contract_coverage.pc_map.keys()), 50)
 
@@ -296,32 +284,35 @@ class TestCoverage:
 
 
 class TestCoverageProvider:
-    @pytest.fixture
-    def basic_coverage_provider(self, config, tmp_path) -> CoverageProvider:
-        test_file = "basic_contract_coverage.sol"
-        source_path = tmp_path / test_file
-        shutil.copy(SOURCES_PATH / test_file, source_path)
+    def create_coverage_provider(
+        self, test_files, config, tmp_path
+    ) -> CoverageProvider:
+        for test_file in test_files:
+            source_path = tmp_path / test_file
+            shutil.copy(SOURCES_PATH / test_file, source_path)
 
         cov = Coverage(config)
         coverage.default_chain = mock.MagicMock()
         provider = CoverageProvider(cov, None)
         return provider
+
+    @pytest.fixture
+    def basic_coverage_provider(self, config, tmp_path) -> CoverageProvider:
+        test_file = "basic_contract_coverage.sol"
+        return self.create_coverage_provider([test_file], config, tmp_path)
+
+    @pytest.fixture
+    def parents_coverage_provider(self, config, tmp_path) -> CoverageProvider:
+        test_file = "parents_contract_coverage.sol"
+        return self.create_coverage_provider([test_file], config, tmp_path)
 
     @pytest.fixture
     def calls_coverage_provider(self, config, tmp_path) -> CoverageProvider:
         test_file = "call_contract_coverage.sol"
-        source_path = tmp_path / test_file
-        shutil.copy(SOURCES_PATH / test_file, source_path)
         test_file_2 = "call_contract_coverage_2.sol"
-        source_path_2 = tmp_path / test_file_2
-        shutil.copy(SOURCES_PATH / test_file_2, source_path_2)
+        return self.create_coverage_provider([test_file, test_file_2], config, tmp_path)
 
-        cov = Coverage(config)
-        coverage.default_chain = mock.MagicMock()
-        provider = CoverageProvider(cov, None)
-        return provider
-
-    def test_get_coverage(self, basic_coverage_provider):
+    def test_basic_coverage(self, basic_coverage_provider):
         fqn = "basic_contract_coverage.sol:C"
         cov = basic_coverage_provider.get_coverage().contracts_cov[fqn]
         covered_pcs = random.sample(list(cov.pc_map.keys()), 50)
@@ -392,3 +383,33 @@ class TestCoverageProvider:
             if callee_fqn.split(":")[0] in file_name:
                 for record in ide_cov:
                     assert record["coverageHits"] == 0
+
+    def test_constructor(self, parents_coverage_provider):
+        child_fqn = "parents_contract_coverage.sol:Child"
+        undeployed_cov = (
+            parents_coverage_provider.get_coverage().contracts_undeployed_cov[child_fqn]
+        )
+
+        trace = {
+            "structLogs": [{"pc": pc, "op": "ADD"} for pc in undeployed_cov.pc_map]
+        }
+
+        parents_coverage_provider._dev_chain.get_block_number.return_value = 0
+        parents_coverage_provider._dev_chain.get_block.return_value = {
+            "transactions": [{"to": None, "hash": "0x0", "input": "0xABCD"}]
+        }
+
+        parents_coverage_provider._dev_chain.debug_trace_transaction.return_value = (
+            trace
+        )
+        coverage.get_fqn_from_deployment_code = mock.MagicMock(return_value=child_fqn)
+
+        parents_coverage_provider.update_coverage()
+
+        for pc in undeployed_cov.pc_map:
+            assert undeployed_cov.pc_instruction_cov[pc].hit_count == 1
+
+        parents_coverage_provider._dev_chain.get_block_number.assert_called_once()
+        parents_coverage_provider._dev_chain.get_block.assert_called_once()
+        parents_coverage_provider._dev_chain.debug_trace_transaction.assert_called_once()
+        coverage.get_fqn_from_deployment_code.assert_called_once()
