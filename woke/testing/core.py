@@ -66,6 +66,7 @@ class Wei(int):
         return cls(int(value * 10**18))
 
 
+@functools.total_ordering
 class Address:
     ZERO: Address
 
@@ -94,7 +95,21 @@ class Address:
             )  # pyright: reportPrivateImportUsage=false
         elif isinstance(other, Account):
             raise TypeError(
-                "Cannot compare Address and Account. Use Account.address == Address"
+                "Cannot compare Address and Account. Use Account.address instead"
+            )
+        else:
+            return NotImplemented
+
+    def __lt__(self, other: Any) -> bool:
+        if isinstance(other, Address):
+            return int(self._address, 16) < int(other._address, 16)
+        elif isinstance(other, str):
+            return int(self._address, 16) < int(
+                eth_utils.to_checksum_address(other), 16
+            )
+        elif isinstance(other, Account):
+            raise TypeError(
+                "Cannot compare Address and Account. Use Account.address instead"
             )
         else:
             return NotImplemented
