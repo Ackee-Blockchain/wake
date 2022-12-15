@@ -28,7 +28,7 @@ if platform.system() == "Windows":
 
         def send_recv(self, data: str):
             win32file.WriteFile(self._handle, data.encode("utf-8"))
-            received = b""
+            received = bytearray()
 
             while True:
                 res, data = win32file.ReadFile(self._handle, 4096)
@@ -53,20 +53,19 @@ else:
         def __enter__(self):
             self._socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             self._socket.connect(self._uri)
+            self._socket.settimeout(0.0005)
 
         def __exit__(self, exc_type, exc_val, exc_tb):
             self._socket.close()
 
         def send_recv(self, data: str):
-            self._socket.setblocking(True)
             self._socket.sendall(data.encode("utf-8"))
-            self._socket.setblocking(False)
-            received = b""
+            received = bytearray()
 
             while True:
                 try:
                     received += self._socket.recv(4096)
-                except BlockingIOError:
+                except socket.timeout:
                     if not received.rstrip().endswith((b"}", b"]")):
                         continue
                     try:
