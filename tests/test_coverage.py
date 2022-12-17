@@ -184,29 +184,30 @@ class TestContractCoverage:
         for pc in basic_contract_coverage.pc_branch_cov.keys():
             basic_contract_coverage.add_cov(pc)
 
-        ide_branch_coverage = basic_contract_coverage.get_ide_branch_coverage()
-        for record in ide_branch_coverage.values():
-            assert record.coverage_hits == 1
+        ide_branch_coverage = basic_contract_coverage.get_ide_coverage()
+        for records in ide_branch_coverage.values():
+            for fn_rec in records.values():
+                for branch in fn_rec.branch_records.values():
+                    assert branch.coverage_hits == 1
 
     def test_get_ide_modifier_coverage(self, basic_contract_coverage):
         for pc in basic_contract_coverage.pc_modifier_cov.keys():
             basic_contract_coverage.add_cov(pc)
 
-        ide_modifier_coverage = (
-            basic_contract_coverage.get_ide_modifier_calls_coverage()
-        )
-        for record in ide_modifier_coverage.values():
-            assert record.coverage_hits == 1
+        ide_modifier_coverage = basic_contract_coverage.get_ide_coverage()
+        for records in ide_modifier_coverage.values():
+            for fn_rec in records.values():
+                for mod in fn_rec.mod_records.values():
+                    assert mod.coverage_hits == 1
 
     def test_get_ide_function_calls_coverage(self, basic_contract_coverage):
         for pc in basic_contract_coverage.pc_instruction_cov.keys():
             basic_contract_coverage.add_cov(pc)
 
-        ide_function_calls_coverage = (
-            basic_contract_coverage.get_ide_function_calls_coverage()
-        )
-        for record in ide_function_calls_coverage.values():
-            assert record.coverage_hits == 1
+        ide_function_calls_coverage = basic_contract_coverage.get_ide_coverage()
+        for records in ide_function_calls_coverage.values():
+            for fn_rec in records.values():
+                assert fn_rec.coverage_hits == 1
 
 
 class TestCoverage:
@@ -240,9 +241,11 @@ class TestCoverage:
         for pc in contract_coverage.pc_modifier_cov.keys():
             contract_coverage.add_cov(pc)
 
-        ide_branch_coverage = contract_coverage.get_ide_branch_coverage()
-        for record in ide_branch_coverage.values():
-            assert record.coverage_hits == 1
+        ide_branch_coverage = contract_coverage.get_ide_coverage()
+        for records in ide_branch_coverage.values():
+            for fn_rec in records.values():
+                for branch in fn_rec.branch_records.values():
+                    assert branch.coverage_hits == 1
 
     def test_process_trace(self, basic_coverage):
         fqn = "basic_contract_coverage.sol:C"
@@ -267,20 +270,17 @@ class TestCoverage:
         for pc in parent.pc_branch_cov:
             parent.add_cov(pc)
 
-        parents_pos = [l.branch.ide_pos for l in parent.pc_branch_cov.values()]
-        child_pos = [l.branch.ide_pos for l in child.pc_branch_cov.values()]
-
         ide_coverage = parent_coverage.get_contract_ide_coverage(False)
-        for file, coverages in ide_coverage.items():
-            for record in coverages:
-                pos = (
-                    (record["startLine"], record["startColumn"]),
-                    (record["endLine"], record["endColumn"]),
-                )
-                if pos in parents_pos:
-                    assert record["coverageHits"] == 2
-                elif pos in child_pos:
-                    assert record["coverageHits"] == 1
+        for file_path, coverages in ide_coverage.items():
+            for fn_rec in coverages.values():
+                if fn_rec.name == "Parent.func1":
+                    assert fn_rec.coverage_hits == 2
+                    for branch in fn_rec.branch_records.values():
+                        assert branch.coverage_hits == 2
+                else:
+                    assert fn_rec.coverage_hits == 1
+                    for branch in fn_rec.branch_records.values():
+                        assert branch.coverage_hits == 1
 
 
 class TestCoverageProvider:
@@ -377,12 +377,12 @@ class TestCoverageProvider:
             False
         )
         for file_name, ide_cov in ide_coverage.items():
-            if called_fqn.split(":")[0] in file_name:
-                for record in ide_cov:
-                    assert record["coverageHits"] == 1
-            if callee_fqn.split(":")[0] in file_name:
-                for record in ide_cov:
-                    assert record["coverageHits"] == 0
+            if called_fqn.split(":")[0] in str(file_name):
+                for record in ide_cov.values():
+                    assert record.coverage_hits == 1
+            if callee_fqn.split(":")[0] in str(file_name):
+                for record in ide_cov.values():
+                    assert record.coverage_hits == 0
 
     def test_constructor(self, parents_coverage_provider):
         child_fqn = "parents_contract_coverage.sol:Child"
