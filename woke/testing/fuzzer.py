@@ -15,7 +15,7 @@ import types
 from contextlib import closing, redirect_stderr, redirect_stdout
 from pathlib import Path
 from time import sleep
-from typing import Callable, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Optional
 from urllib.error import URLError
 
 import rich.progress
@@ -29,7 +29,13 @@ from tblib import pickling_support
 from woke.cli.console import console
 from woke.config import WokeConfig
 from woke.testing.core import default_chain
-from woke.testing.coverage import Coverage, CoverageProvider, get_merged_ide_coverage
+from woke.testing.coverage import (
+    Coverage,
+    CoverageProvider,
+    IdeFunctionCoverageRecord,
+    IdePosition,
+    export_merged_ide_coverage,
+)
 
 
 def _setup(port: int, network_id: str) -> subprocess.Popen:
@@ -185,21 +191,23 @@ def _run(
             chain_process.kill()
 
 
-def _compute_coverage_per_function(coverages: Dict[int, Coverage]) -> Dict[str, int]:
+def _compute_coverage_per_function(
+    ide_cov: Dict[str, List[Dict[str, Any]]]
+) -> Dict[str, int]:
     funcs_cov = {}
-    for cov in coverages.values():
-        for contract_coverages in (
-            cov.contracts_cov.values(),
-            cov.contracts_undeployed_cov.values(),
-        ):
-            for contract_cov in contract_coverages:
-                for fn_name, fn_info in contract_cov.functions.items():
-                    if fn_info.calls == 0:
-                        continue
-                    if fn_name not in funcs_cov:
-                        funcs_cov[fn_name] = fn_info.calls
-                    else:
-                        funcs_cov[fn_name] += fn_info.calls
+    fn_names = []
+    for path_rec in ide_cov.values():
+        fn_names.extend([rec["name"] for rec in path_rec if rec["coverageHits"] > 0])
+
+    for fn_path, path_rec in ide_cov.items():
+        for fn_rec in path_rec:
+            if fn_rec["coverageHits"] == 0:
+                continue
+            if fn_names.count(fn_rec["name"]) > 1:
+                funcs_cov[f"{fn_path}:{fn_rec['name']}"] = fn_rec["coverageHits"]
+            else:
+                funcs_cov[fn_rec["name"]] = fn_rec["coverageHits"]
+
     return funcs_cov
 
 
@@ -219,19 +227,22 @@ def fuzz(
         for i in range(process_count - len(random_seeds)):
             random_seeds.append(os.urandom(8))
 
-    coverage = Coverage()
+    if cov_proc_num != 0:
+        empty_coverage = Coverage()
+    else:
+        empty_coverage = None
     processes = dict()
     for i, seed in zip(range(process_count), random_seeds):
         console.print(f"Using seed '{seed.hex()}' for process #{i}")
         finished_event = multiprocessing.Event()
         err_parent_conn, err_child_con = multiprocessing.Pipe()
-        cov_parent_conn, cov_child_conn = multiprocessing.Pipe()
+        cov_queue = multiprocessing.Queue()
 
         log_path = logs_dir / sanitize_filename(
             f"{fuzz_test.__module__}.{fuzz_test.__name__}_{i}.ansi"
         )
 
-        proc_cov = copy.deepcopy(coverage) if i < cov_proc_num else None
+        proc_cov = copy.deepcopy(empty_coverage) if i < cov_proc_num else None
 
         p = multiprocessing.Process(
             target=_run,
@@ -244,12 +255,12 @@ def fuzz(
                 passive and i == 0,
                 finished_event,
                 err_child_con,
-                cov_child_conn,
+                cov_queue,
                 network_id,
                 proc_cov,
             ),
         )
-        processes[i] = (p, finished_event, err_parent_conn, cov_parent_conn)
+        processes[i] = (p, finished_event, err_parent_conn, cov_queue)
         p.start()
 
     with rich.progress.Progress(
@@ -258,7 +269,12 @@ def fuzz(
         "[green]{task.fields[thr_rem]}[yellow] "
         "processes remaining{task.fields[coverage_info]}",
     ) as progress:
-        coverages: Dict[int, Coverage] = {}
+        exported_coverages: Dict[
+            int, Dict[Path, Dict[IdePosition, IdeFunctionCoverageRecord]]
+        ] = {}
+        exported_coverages_per_trans: Dict[
+            int, Dict[Path, Dict[IdePosition, IdeFunctionCoverageRecord]]
+        ] = {}
 
         if passive:
             progress.stop()
@@ -268,7 +284,7 @@ def fuzz(
 
         while len(processes):
             to_be_removed = []
-            for i, (p, e, err_parent_conn, cov_parent_conn) in processes.items():
+            for i, (p, e, err_parent_conn, cov_queue) in processes.items():
                 finished = e.wait(0.125)
                 if finished:
                     to_be_removed.append(i)
@@ -313,35 +329,41 @@ def fuzz(
                     progress.update(task, thr_rem=len(processes) - len(to_be_removed))
                     if i == 0:
                         progress.start()
-                while cov_parent_conn.poll():
+                while not cov_queue.empty():
                     try:
-                        coverage: Coverage = cov_parent_conn.recv()
+                        exported_coverage = cov_queue.get()
+                        if not cov_queue.empty():
+                            continue
+                        (
+                            exported_coverages[i],
+                            exported_coverages_per_trans[i],
+                        ) = exported_coverage
                     except EOFError:
-                        break
-                    coverages[i] = coverage
-                    res = get_merged_ide_coverage(list(coverages.values()))
+                        pass
+                    res = export_merged_ide_coverage(list(exported_coverages.values()))
+                    res_per_trans = export_merged_ide_coverage(
+                        list(exported_coverages_per_trans.values())
+                    )
                     if res:
-                        ide_cov, ide_cov_per_trans = res
                         with open("woke-coverage.cov", "w") as f:
-                            f.write(json.dumps(ide_cov, indent=4, sort_keys=True))
+                            f.write(json.dumps(res, indent=4, sort_keys=True))
                         with open("woke-coverage-per-trans.cov", "w") as f:
-                            f.write(
-                                json.dumps(ide_cov_per_trans, indent=4, sort_keys=True)
-                            )
-
+                            f.write(json.dumps(res_per_trans, indent=4, sort_keys=True))
                     cov_info = ""
                     if not passive and verbose_coverage:
                         cov_info = "\n[dark_goldenrod]" + "\n".join(
                             [
                                 f"{fn_name}: [green]{fn_calls}[dark_goldenrod]"
                                 for (fn_name, fn_calls) in sorted(
-                                    _compute_coverage_per_function(coverages).items(),
+                                    _compute_coverage_per_function(res).items(),
                                     key=lambda x: x[1],
                                     reverse=True,
                                 )
                             ]
                         )
                     progress.update(task, coverage_info=cov_info)
+                if finished:
+                    cov_queue.close()
 
             for i in to_be_removed:
                 processes.pop(i)

@@ -1,10 +1,10 @@
 import logging
-import multiprocessing.connection
+import multiprocessing.queues
 import random
 from datetime import datetime, timedelta
-from typing import Callable, Counter, Iterable, List, Optional, Tuple
+from typing import Callable, Counter, List, Optional, Tuple
 
-from woke.testing.core import ChainInterface, default_chain
+from woke.testing.core import default_chain
 
 from .coverage import CoverageProvider
 from .utils import partition
@@ -81,6 +81,20 @@ def _generate_flows(flows: Methods, flows_count: int, seq) -> Methods:
     return generated_flows
 
 
+def _update_send_coverage(
+    proc_cov: Tuple[CoverageProvider, multiprocessing.queues.Queue]
+):
+    proc_cov[0].update_coverage()
+    if not proc_cov[1].empty():
+        proc_cov[1].get()
+    proc_cov[1].put(
+        (
+            proc_cov[0].get_coverage().get_contract_ide_coverage(False),
+            proc_cov[0].get_coverage().get_contract_ide_coverage(True),
+        )
+    )
+
+
 class Campaign:
     __sequence_constructor: Callable
 
@@ -94,7 +108,7 @@ class Campaign:
         run_for_seconds: Optional[int] = None,
         dry_run: bool = False,
         coverage: Optional[
-            Tuple[CoverageProvider, multiprocessing.connection.Connection]
+            Tuple[CoverageProvider, multiprocessing.queues.Queue]
         ] = None,
     ):
         init_timestamp = datetime.now()
@@ -136,12 +150,10 @@ class Campaign:
                             del inv
 
                     if j % 23 == 0 and coverage is not None:
-                        coverage[0].update_coverage()
-                        coverage[1].send(coverage[0].get_coverage())
+                        _update_send_coverage(coverage)
 
                 if coverage is not None:
-                    coverage[0].update_coverage()
-                    coverage[1].send(coverage[0].get_coverage())  # type: ignore
+                    _update_send_coverage(coverage)
 
                 del invs, flows
                 # point_coverage += seq.point_coverage

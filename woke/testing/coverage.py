@@ -9,7 +9,7 @@ from intervaltree import IntervalTree
 
 import woke.compile
 import woke.config
-from woke.ast.enums import GlobalSymbolsEnum
+from woke.ast.enums import FunctionKind, GlobalSymbolsEnum
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.declaration.contract_definition import ContractDefinition
 from woke.ast.ir.declaration.function_definition import FunctionDefinition
@@ -23,6 +23,7 @@ from woke.ast.ir.statement.do_while_statement import DoWhileStatement
 from woke.ast.ir.statement.expression_statement import ExpressionStatement
 from woke.ast.ir.statement.for_statement import ForStatement
 from woke.ast.ir.statement.if_statement import IfStatement
+from woke.ast.ir.statement.placeholder_statement import PlaceholderStatement
 from woke.ast.ir.statement.while_statement import WhileStatement
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import AstSolc
@@ -46,15 +47,30 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
 
 
-def _to_camel(s: str) -> str:
-    split = s.split("_")
-    return split[0].lower() + "".join([w.capitalize() for w in split[1:]])
-
-
 @dataclass
-class BytecodeInfo:
-    opcodes: str
-    source_map: str
+class SourceMapPcRecord:
+    fn_name: str
+    offset: Tuple[int, int]
+    source_id: int
+    jump_type: str
+    mod_depth: Optional[int]
+    op: str
+    argument: Optional[int]
+    size: int
+
+
+@dataclass(frozen=True, eq=True)
+class IdePosition:
+    start_line: int
+    start_column: int
+    end_line: int
+    end_column: int
+
+    def __iter__(self):
+        yield self.start_line
+        yield self.start_column
+        yield self.end_line
+        yield self.end_column
 
 
 def _get_line_col_from_offset(
@@ -67,30 +83,10 @@ def _get_line_col_from_offset(
     return interval.data, location - interval.begin
 
 
-def _get_full_source(node: IrAbc) -> str:
-    if isinstance(node, SourceUnit):
-        return node.file_source.decode("utf-8")
-    if node.parent is None:
-        raise ValueError(f"Node {node} has no parent")
-    return _get_full_source(node.parent)
-
-
-@dataclass
-class SourceMapPcRecord:
-    fn_name: str
-    fn_def: Union[FunctionDefinition, ModifierDefinition]
-    offset: Tuple[int, int]
-    source_id: int
-    jump_type: str
-    op: str
-    argument: Optional[int]
-    size: int
-
-
 class LocationInfo:
     byte_offsets: Tuple[int, int]
     file_path: pathlib.Path
-    ide_pos: Tuple[Tuple[int, int], Tuple[int, int]]
+    ide_pos: IdePosition
 
     def __init__(
         self,
@@ -100,9 +96,9 @@ class LocationInfo:
     ):
         self.byte_offsets = byte_location
         self.file_path = filename
-        self.ide_pos = (
-            _get_line_col_from_offset(byte_location[0], line_intervals),
-            _get_line_col_from_offset(byte_location[1], line_intervals),
+        self.ide_pos = IdePosition(
+            *_get_line_col_from_offset(byte_location[0], line_intervals),
+            *_get_line_col_from_offset(byte_location[1], line_intervals),
         )
 
     def __str__(self):
@@ -137,74 +133,139 @@ class FunctionInfo:
     modifiers: Dict[str, LocationInfo]
     instruction_cov: Dict[int, InstrCovRecord]
     branch_cov: Dict[int, BranchCovRecord]
+    first_branches_cov: List[BranchCovRecord]
     modifier_cov: Dict[int, ModifierCovRecord]
+    modifiers_pcs: Dict[str, Tuple[int, int]]
+    fn_type: type
+    consturctor_mods: Set[str]
 
     def __init__(
         self,
-        fn: Union[FunctionDefinition, ModifierDefinition],
+        fn_def: Union[FunctionDefinition, ModifierDefinition],
         line_intervals: IntervalTree,
     ):
-        self.name = fn.canonical_name
-        self.name_location = LocationInfo(fn.name_location, fn.file, line_intervals)
+        self.name = fn_def.canonical_name
+        self.fn_type = (
+            FunctionDefinition
+            if isinstance(fn_def, FunctionDefinition)
+            else ModifierDefinition
+        )
+        self.name_location = LocationInfo(
+            fn_def.name_location, fn_def.file, line_intervals
+        )
+        self.consturctor_mods = set()
 
         self.body_location = (
-            LocationInfo(fn.body.byte_location, fn.file, line_intervals)
-            if fn.body
+            LocationInfo(fn_def.body.byte_location, fn_def.file, line_intervals)
+            if fn_def.body
             else None
         )
 
         self.modifiers = {}
-        if isinstance(fn, FunctionDefinition):
-            for mod in fn.modifiers:
+        if isinstance(fn_def, FunctionDefinition):
+            for mod in fn_def.modifiers:
                 if not isinstance(
                     mod.modifier_name.referenced_declaration, GlobalSymbolsEnum
                 ):
-                    self.modifiers[
-                        mod.modifier_name.referenced_declaration.canonical_name
-                    ] = LocationInfo(mod.byte_location, fn.file, line_intervals)
+                    if isinstance(
+                        mod.modifier_name.referenced_declaration, ContractDefinition
+                    ):
+                        constructors = [
+                            f
+                            for f in mod.modifier_name.referenced_declaration.functions
+                            if f.kind == FunctionKind.CONSTRUCTOR
+                        ]
+                        assert len(constructors) == 1
+                        mod_ref_decl = constructors[0]
+                    else:
+                        mod_ref_decl = mod.modifier_name.referenced_declaration
 
+                    self.modifiers[mod_ref_decl.canonical_name] = LocationInfo(
+                        mod.byte_location, fn_def.file, line_intervals
+                    )
+                    if (
+                        isinstance(mod_ref_decl, FunctionDefinition)
+                        and mod_ref_decl.kind == FunctionKind.CONSTRUCTOR
+                    ):
+                        self.consturctor_mods.add(mod_ref_decl.canonical_name)
+
+        self.modifiers_pcs = {}
         self.instruction_cov = {}
         self.branch_cov = {}
         self.modifier_cov = {}
-
-    def __add__(self, other):
-        for pc, cov in self.instruction_cov.items():
-            cov.hit_count += other.instruction_cov[pc].hit_count
-        for pc, cov in self.branch_cov.items():
-            cov.hit_count += other.branch_cov[pc].hit_count
-        for pc, cov in self.modifier_cov.items():
-            cov.hit_count += other.modifier_cov[pc].hit_count
-        return self
+        self.first_branches_cov = []
 
     @property
     def calls(self):
-        if len(self.branch_cov) + len(self.modifier_cov) == 0:
-            return 0
+        if len(self.first_branches_cov) == 0 and len(self.modifier_cov) == 0:
+            if len(self.instruction_cov) > 0:
+                return self.instruction_cov[min(self.instruction_cov.keys())].hit_count
+            else:
+                return 0
         return max(
-            [x.hit_count for x in self.branch_cov.values()]
-            + [x.hit_count for x in self.modifier_cov.values()]
+            sum([x.hit_count for x in self.first_branches_cov]),
+            max([x.hit_count for x in self.modifier_cov.values()])
+            if len(self.modifier_cov) > 0
+            else 0,
         )
 
 
 @dataclass
 class IdeCoverageRecord:
-    start_line: int
-    start_column: int
-    end_line: int
-    end_column: int
-    file_path: pathlib.Path
+    ide_pos: IdePosition
     coverage_hits: int
-    calls: int
 
     def __add__(self, other):
         self.coverage_hits += other.coverage_hits
-        self.calls += other.calls
         return self
+
+    def export(self):
+        """
+        Exports record in a dictionary for IDE coverage
+        """
+        return {
+            "startLine": self.ide_pos.start_line,
+            "startColumn": self.ide_pos.start_column,
+            "endLine": self.ide_pos.end_line,
+            "endColumn": self.ide_pos.end_column,
+            "coverageHits": self.coverage_hits,
+        }
 
 
 @dataclass
 class IdeFunctionCoverageRecord(IdeCoverageRecord):
-    pass
+    name: str
+    mod_records: Dict[IdePosition, IdeCoverageRecord]
+    branch_records: Dict[IdePosition, IdeCoverageRecord]
+
+    def __add__(self, other):
+        self.coverage_hits += other.coverage_hits
+        for pos, rec in other.mod_records.items():
+            if pos in self.mod_records:
+                self.mod_records[pos] += rec
+            else:
+                self.mod_records[pos] = copy.deepcopy(rec)
+        for pos, rec in other.branch_records.items():
+            if pos in self.branch_records:
+                self.branch_records[pos] += rec
+            else:
+                self.branch_records[pos] = copy.deepcopy(rec)
+        return self
+
+    def export(self):
+        """
+        Exports record in a dictionary for IDE coverage
+        """
+        return {
+            "name": self.name,
+            "startLine": self.ide_pos.start_line,
+            "startColumn": self.ide_pos.start_column,
+            "endLine": self.ide_pos.end_line,
+            "endColumn": self.ide_pos.end_column,
+            "coverageHits": self.coverage_hits,
+            "modRecords": [v.export() for v in self.mod_records.values()],
+            "branchRecords": [v.export() for v in self.branch_records.values()],
+        }
 
 
 def _find_code_spaces_intervals(source_code: str) -> IntervalTree:
@@ -222,6 +283,14 @@ def _find_code_spaces_intervals(source_code: str) -> IntervalTree:
     return IntervalTree.from_tuples(intervals)
 
 
+def _get_full_source(node: IrAbc) -> str:
+    if isinstance(node, SourceUnit):
+        return node.file_source.decode("utf-8")
+    if node.parent is None:
+        raise ValueError(f"Node {node} has no parent")
+    return _get_full_source(node.parent)
+
+
 class ContractCoverage:
     pc_map: Dict[int, SourceMapPcRecord]
     pc_function: Dict[int, FunctionInfo]
@@ -230,12 +299,10 @@ class ContractCoverage:
     pc_modifier_cov: Dict[int, ModifierCovRecord]
     functions: Dict[str, FunctionInfo]
 
-    _declaration_locations: Dict[str, Tuple[int, int]]
-    _modifiers_locations: Dict[str, Dict[str, Tuple[int, int]]]
-
     def __init__(
         self,
         pc_map: Dict[int, SourceMapPcRecord],
+        pc_fn_def_map: Dict[int, Union[FunctionDefinition, ModifierDefinition]],
         contract_def: ContractDefinition,
     ):
         self.pc_map = pc_map
@@ -245,123 +312,70 @@ class ContractCoverage:
         self.pc_function = {}
         self.file_path = pathlib.Path(contract_def.file.absolute())
         self.functions = {}
+        fn_defs = {}
 
         for pc, rec in self.pc_map.items():
             if rec.fn_name not in self.functions:
-                fn_line_intervals = _get_line_intervals(_get_full_source(rec.fn_def))
-                self.functions[rec.fn_name] = FunctionInfo(
-                    rec.fn_def, fn_line_intervals
+                fn_line_intervals = _get_line_intervals(
+                    _get_full_source(pc_fn_def_map[pc])
                 )
+                fn_info = FunctionInfo(pc_fn_def_map[pc], fn_line_intervals)
+                self.functions[rec.fn_name] = fn_info
+                fn_defs[rec.fn_name] = pc_fn_def_map[pc]
 
-                self._add_branch_coverage(rec.fn_def, fn_line_intervals)
+        self._add_instruction_coverage()
+        for rec in self.functions.values():
+            self._add_modifier_coverage(rec)
+            self._add_branch_coverage(rec, fn_defs[rec.name])
 
         for pc, rec in self.pc_map.items():
             self.pc_function[pc] = self.functions[rec.fn_name]
-
-        self._add_instruction_coverage()
-        self._add_modifier_coverage()
-
-    def __add__(self, other):
-        for pc, rec in other.pc_instruction_cov.items():
-            self.pc_instruction_cov[pc].hit_count += rec.hit_count
-        for pc, rec in other.pc_branch_cov.items():
-            self.pc_branch_cov[pc].hit_count += rec.hit_count
-        for pc, rec in other.pc_modifier_cov.items():
-            self.pc_modifier_cov[pc].hit_count += rec.hit_count
-        return self
 
     def add_cov(self, pc: int):
         for cov in [self.pc_branch_cov, self.pc_modifier_cov, self.pc_instruction_cov]:
             if pc in cov:
                 cov[pc].hit_count += 1
 
-    def get_ide_branch_coverage(
+    def get_ide_coverage(
         self,
-    ) -> Dict[Tuple[Tuple[int, int], Tuple[int, int]], IdeCoverageRecord]:
+    ) -> Dict[pathlib.Path, Dict[IdePosition, IdeFunctionCoverageRecord]]:
         """
-        Returns a list of IdeCoverageRecord for each branch
+        Returns coverage for covered functions (per path) with calls, modifier and branch coverages
         """
-
         cov_data = {}
-        for fn in self.functions.values():
-            for rec in fn.branch_cov.values():
-                (start_line, start_col), (end_line, end_col) = rec.branch.ide_pos
-                cov_data[rec.branch.ide_pos] = IdeCoverageRecord(
-                    start_line=start_line,
-                    start_column=start_col,
-                    end_line=end_line,
-                    end_column=end_col,
-                    file_path=fn.name_location.file_path,
-                    coverage_hits=rec.hit_count,
-                    calls=fn.calls,
-                )
+        for fn_name, fn in self.functions.items():
+            fp = fn.name_location.file_path
+            if fp not in cov_data:
+                cov_data[fp] = {}
 
-        return _merge_coverages_for_offsets(cov_data)
-
-    def get_ide_function_calls_coverage(
-        self,
-    ) -> Dict[Tuple[Tuple[int, int], Tuple[int, int]], IdeCoverageRecord]:
-        """
-        Returns a list of IdeCoverageRecord for each function
-        """
-
-        fns_max_calls = (
-            max([fn.calls for fn in self.functions.values()])
-            if len(self.functions) > 0
-            else 0
-        )
-
-        cov_data = {}
-        for fn in self.functions.values():
-            (start_line, start_col), (end_line, end_col) = fn.name_location.ide_pos
-            cov_data[fn.name_location.ide_pos] = IdeFunctionCoverageRecord(
-                start_line=start_line,
-                start_column=start_col,
-                end_line=end_line,
-                end_column=end_col,
-                file_path=fn.name_location.file_path,
-                coverage_hits=fn.calls,
-                calls=fns_max_calls,
-            )
-        return _merge_coverages_for_offsets(cov_data)
-
-    def get_ide_modifier_calls_coverage(
-        self,
-    ) -> Dict[Tuple[Tuple[int, int], Tuple[int, int]], IdeCoverageRecord]:
-        """
-        Returns a list of IdeCoverageRecord as a dict for each modifier
-        """
-
-        cov_data = {}
-
-        for fn in self.functions.values():
+            mod_records = {}
             for pc, rec in fn.modifier_cov.items():
-                (start_line, start_col), (end_line, end_col) = fn.modifiers[
-                    rec.modifier_fn_name
-                ].ide_pos
+                mod = fn.modifiers[rec.modifier_fn_name]
+                if mod.ide_pos not in mod_records:
+                    mod_records[mod.ide_pos] = IdeCoverageRecord(
+                        mod.ide_pos, rec.hit_count
+                    )
+                else:
+                    mod_records[mod.ide_pos] += rec.hit_count
 
-                cov_data[
-                    fn.modifiers[rec.modifier_fn_name].ide_pos
-                ] = IdeCoverageRecord(
-                    start_line=start_line,
-                    start_column=start_col,
-                    end_line=end_line,
-                    end_column=end_col,
-                    file_path=fn.name_location.file_path,
-                    coverage_hits=rec.hit_count,
-                    calls=fn.calls,
-                )
-        return _merge_coverages_for_offsets(cov_data)
+            branch_records = {}
+            for pc, rec in fn.branch_cov.items():
+                if rec.branch.ide_pos not in branch_records:
+                    branch_records[rec.branch.ide_pos] = IdeCoverageRecord(
+                        rec.branch.ide_pos, rec.hit_count
+                    )
+                else:
+                    branch_records[rec.branch.ide_pos].coverage_hits += rec.hit_count
 
-    def _get_source_coverage(self, instr: Dict[int, int]) -> Dict[Tuple[int, int], int]:
-        source_cov = {}
+            cov_data[fp][fn.name_location.ide_pos] = IdeFunctionCoverageRecord(
+                name=fn_name,
+                ide_pos=fn.name_location.ide_pos,
+                coverage_hits=fn.calls,
+                mod_records=mod_records,
+                branch_records=branch_records,
+            )
 
-        for pc, rec in self.pc_map.items():
-            if pc in instr and (
-                rec.offset not in source_cov or instr[pc] > source_cov[rec.offset]
-            ):
-                source_cov[rec.offset] = instr[pc]
-        return source_cov
+        return cov_data
 
     def _find_modifier_call(
         self,
@@ -372,19 +386,18 @@ class ContractCoverage:
     ):
         starting_instr = self.pc_map[starting_pc]
         act_pc = starting_pc
-        logger.info(
-            f"Finding modifier call at {starting_pc} in {starting_instr.fn_name}"
+        logger.debug(
+            f"Searching for modifier call from {parent_fn.name} called by {caller_fn.name} at {starting_pc} in {starting_instr.fn_name}"
         )
         while True:
             if act_pc not in self.pc_map:
                 logger.debug(f"PC {act_pc} is not in pc_map")
                 break
             act_instr = self.pc_map[act_pc]
-            if (
-                act_instr.fn_name is None
-                or act_instr.fn_name != starting_instr.fn_name
-                or not act_instr.argument
-            ):
+            logger.debug(
+                f"Act instr: {act_pc} {act_instr.fn_name} {act_instr.op} {act_instr.argument} {act_instr.fn_name} {starting_instr.fn_name}"
+            )
+            if act_instr.fn_name is None or act_instr.fn_name != starting_instr.fn_name:
                 break
 
             jump_pc = act_pc + act_instr.size
@@ -398,7 +411,11 @@ class ContractCoverage:
                     if act_instr.argument in caller_fn.instruction_cov
                     else None
                 )
-                if jumpdest and jumpdest.src_pc_map.op == "JUMPDEST":
+                if (
+                    jumpdest
+                    and jumpdest.src_pc_map.op == "JUMPDEST"
+                    and act_instr.argument is not None
+                ):
                     mod_push_pc = act_instr.argument + 1
                     mod_push = (
                         self.pc_map[mod_push_pc] if mod_push_pc in self.pc_map else None
@@ -415,28 +432,94 @@ class ContractCoverage:
                         )
                         self.pc_modifier_cov[mod_push_pc] = mod_cov
                         parent_fn.modifier_cov[mod_push_pc] = mod_cov
+                        logger.debug(
+                            f"Added {mod_push_pc} of {mod_cov} to coverage of {parent_fn.modifier_cov}"
+                        )
                         self._find_modifier_call(
                             mod_push_pc,
                             parent_fn,
                             self.functions[mod_push.fn_name],
                             allowed_fns,
                         )
-                        logger.debug(
-                            f"Adding {mod_push_pc} to coverage of {parent_fn.modifier_cov}"
-                        )
             act_pc = act_pc + act_instr.size
 
-    def _add_modifier_coverage(self):
-        for fn in self.functions.values():
-            for pc, rec in fn.instruction_cov.items():
-                jump_pc = pc + rec.src_pc_map.size
-                if (
-                    rec.src_pc_map.op.startswith("PUSH")
-                    and jump_pc in fn.instruction_cov
-                    and fn.instruction_cov[jump_pc].src_pc_map.op.startswith("JUMP")
+    def _find_constructors(
+        self,
+        starting_pc: int,
+        const_name: str,
+        parent_fn: FunctionInfo,
+        allowed_fns: List[str],
+    ):
+        const_pc = starting_pc
+        logger.debug(
+            f"Searching for constructor {const_name} in {parent_fn.name} at {starting_pc}"
+        )
+        while True:
+            act_fn_name = self.pc_map[const_pc].fn_name
+            if (
+                const_pc in self.pc_map
+                and act_fn_name != const_name
+                and act_fn_name in allowed_fns
+                or act_fn_name == parent_fn.name
+            ):
+                if const_name not in [
+                    m.modifier_fn_name for m in parent_fn.modifier_cov.values()
+                ]:
+                    const_cov = ModifierCovRecord(
+                        hit_count=0, modifier_fn_name=const_name
+                    )
+                    logger.debug(
+                        f"Added constructor coverage {starting_pc} {const_name}, stopped at {const_pc} {act_fn_name}"
+                    )
+                    self.pc_modifier_cov[starting_pc] = const_cov
+                    parent_fn.modifier_cov[starting_pc] = const_cov
+
+                if act_fn_name in allowed_fns:
+                    self._find_constructors(
+                        const_pc, act_fn_name, parent_fn, allowed_fns
+                    )
+                break
+            if const_pc not in self.pc_map or act_fn_name not in allowed_fns:
+                break
+            const_pc = const_pc + self.pc_map[const_pc].size
+
+    def _add_modifier_coverage(self, fn: FunctionInfo):
+        if len(fn.modifiers) == 0:
+            return
+        fn_modifier_constructors = [name for name in fn.consturctor_mods]
+        logger.debug(f"Adding modifier coverage for {fn.name}")
+        for pc, rec in fn.instruction_cov.items():
+            next_pc = pc + rec.src_pc_map.size
+            if (
+                rec.src_pc_map.op.startswith("PUSH")
+                and next_pc in fn.instruction_cov
+                and fn.instruction_cov[next_pc].src_pc_map.op.startswith("JUMP")
+            ):
+                logger.debug(f"Found jump from {pc} to {next_pc} in {fn.name}")
+                self._find_modifier_call(pc, fn, fn, list(fn.modifiers.keys()))
+
+            if (
+                next_pc in self.pc_map
+                and self.pc_map[next_pc].fn_name != fn.name
+                and self.pc_map[next_pc].fn_name in fn_modifier_constructors
+            ):
+                logger.debug(f"Found constructor from {pc} to {next_pc} in {fn.name}")
+                self._find_constructors(
+                    next_pc, self.pc_map[next_pc].fn_name, fn, fn_modifier_constructors
+                )
+
+        logger.debug(f"Modifiers: {fn.name} {fn.modifiers} {fn.modifier_cov.keys()}")
+        for pc in fn.modifier_cov.keys():
+            new_pc = pc
+            while True:
+                if new_pc not in self.pc_map or self.pc_map[new_pc].fn_name not in (
+                    *fn.modifiers.keys(),
+                    fn.name,
                 ):
-                    self._find_modifier_call(pc, fn, fn, list(fn.modifiers.keys()))
-                    logger.debug(f"{fn.name} {fn.modifiers} {fn.modifier_cov.keys()}")
+                    break
+                new_pc = new_pc + self.pc_map[new_pc].size
+            fn.modifiers_pcs[fn.modifier_cov[pc].modifier_fn_name] = (pc, new_pc)
+        logger.debug(f"Modifier PCs: {fn.name} {fn.modifiers_pcs}")
 
     def _find_branches(
         self, statement: Union[StatementAbc, Block], branches: List[Tuple[int, int]]
@@ -451,9 +534,11 @@ class ContractCoverage:
                 stmt.byte_location[0],
                 stmt_to,
             )
-            logger.debug(f"{stmt.byte_location} {stmt.source[:stmt_to]}")
             if append_next:
                 branches.append(stmt_loc_data)
+                logger.debug(
+                    f"Added {stmt.file.name} {stmt.byte_location} {stmt.source[:stmt_to]}"
+                )
                 append_next = False
 
             if type(stmt) == IfStatement:
@@ -471,6 +556,8 @@ class ContractCoverage:
                 type(stmt) == ExpressionStatement
                 and type(stmt.expression) == FunctionCall  # type: ignore
             ):
+                append_next = True
+            elif type(stmt) == PlaceholderStatement:
                 append_next = True
 
     def _get_function_branches(
@@ -495,6 +582,7 @@ class ContractCoverage:
 
         branches_fin: List[Tuple[int, int]] = []
         for i, branch in enumerate(branches_sec):
+            logger.debug(f"Processing branch {branch}")
             int_from = branch[0]
             if i < len(branches) - 1:
                 int_to = branches[i + 1][0]  # stretch to next branch
@@ -535,39 +623,58 @@ class ContractCoverage:
                     changed = True
 
             branches_fin.append((int_from, int_to))
+            logger.debug(
+                f"Final branches for {function_def.canonical_name} {branches_fin}"
+            )
 
         return branches_fin
 
     def _add_branch_coverage(
         self,
+        fn_info: FunctionInfo,
         fn_def: Union[FunctionDefinition, ModifierDefinition],
-        line_intervals: IntervalTree,
     ):
         if not fn_def.body:
             return
         fn_space_intervals = _find_code_spaces_intervals(_get_full_source(fn_def))
+        fn_line_intervals = _get_line_intervals(_get_full_source(fn_def))
 
-        fn = self.functions[fn_def.canonical_name]
         logger.debug(f"Adding branch coverage to {fn_def.canonical_name}")
         branches = self._get_function_branches(fn_def, fn_space_intervals)
+        logger.debug(f"Branches: {branches}")
+        logger.debug(f"Modifiers: {fn_info.modifiers}")
 
+        first_branch = True
         for branch in branches:
-            branch_loc = LocationInfo(branch, fn_def.file, line_intervals)
+            branch_loc = LocationInfo(branch, fn_def.file, fn_line_intervals)
             logger.debug(f"Branch: {branch_loc}")
-            pc = self._find_branch_pc(branch)
-            if pc is None:
-                logger.debug(f"No pc found")
-                continue
-            logger.debug(f"Pc: {pc} at {self.pc_map[pc].offset} {self.pc_map[pc].op}")
-
-            branch_cov = BranchCovRecord(
-                hit_count=0, src_pc_map=self.pc_map[pc], branch=branch_loc
-            )
-            self.pc_branch_cov[pc] = branch_cov
-            fn.branch_cov[pc] = branch_cov
+            pcs = set()
+            if isinstance(fn_def, ModifierDefinition):
+                mods = []
+                for f in self.functions.values():
+                    for m in f.modifiers.keys():
+                        if m == fn_def.canonical_name:
+                            mods.append(f.modifiers_pcs[m])
+                logger.debug(f"Modifiers: {fn_info.name} {mods}")
+                for mod in mods:
+                    pcs.add(self._find_branch_pcs(branch, mod))
+            else:
+                pcs.add(self._find_branch_pcs(branch))
+            for pc in pcs:
+                if pc is None:
+                    logger.debug(f"No pc found")
+                    continue
+                branch_cov = BranchCovRecord(
+                    hit_count=0, src_pc_map=self.pc_map[pc], branch=branch_loc
+                )
+                self.pc_branch_cov[pc] = branch_cov
+                fn_info.branch_cov[pc] = branch_cov
+                if first_branch:
+                    fn_info.first_branches_cov.append(branch_cov)
+            first_branch = False
         logger.debug(
-            f"Function {fn.name} has these branch detection instructions: "
-            f"{fn.branch_cov.keys()}"
+            f"Function {fn_info.name} has these branch detection instructions: "
+            f"{fn_info.branch_cov.keys()} and these first branches: {[x.src_pc_map.op for x in fn_info.first_branches_cov]}"
         )
 
     def _add_instruction_coverage(self):
@@ -578,9 +685,16 @@ class ContractCoverage:
                 self.functions[rec.fn_name].instruction_cov[pc] = cov
                 self.pc_instruction_cov[pc] = cov
 
-    def _find_branch_pc(self, source_int: Tuple[int, int]) -> Optional[int]:
+    def _find_branch_pcs(
+        self, source_int: Tuple[int, int], allowed_int: Optional[Tuple[int, int]] = None
+    ) -> Optional[int]:
         interval_tree = IntervalTree.from_tuples(
-            {(rec.offset[0], rec.offset[1], pc) for pc, rec in self.pc_map.items()}
+            {
+                (rec.offset[0], rec.offset[1], pc)
+                for pc, rec in self.pc_map.items()
+                if allowed_int is None
+                or (pc >= allowed_int[0] and pc <= allowed_int[1])
+            }
         )
         intervals = [
             (i.begin, i.end - i.begin, i.data)
@@ -739,8 +853,12 @@ def _parse_source_map(
     interval_tree_indexes: Dict[int, pathlib.Path],
     source_map: str,
     pc_op_map: List[Tuple[int, str, int, Optional[int]]],
-) -> Dict[int, SourceMapPcRecord]:
+) -> Tuple[
+    Dict[int, SourceMapPcRecord],
+    Dict[int, Union[FunctionDefinition, ModifierDefinition]],
+]:
     pc_map = {}
+    pc_fn_def_map = {}
     source_map_spl = source_map.split(";")
 
     last_data = [-1, -1, -1, None, None]
@@ -780,17 +898,17 @@ def _parse_source_map(
         if last_fn:
             pc_map[pc] = SourceMapPcRecord(
                 last_fn.canonical_name,
-                last_fn,
                 (source_interval[0], source_interval[1]),
                 source_interval[2],
                 last_data[3],
+                last_data[4],
                 op,
                 argument,
                 size,
             )
-        logger.debug(f"{pc} {i} {source_interval}, {last_fn}, {fn_changed}")
+            pc_fn_def_map[pc] = last_fn
 
-    return pc_map
+    return pc_map, pc_fn_def_map
 
 
 def _get_line_intervals(source: str) -> IntervalTree:
@@ -838,45 +956,16 @@ def _construct_coverage_data(
             logger.debug(f"{contract.name} Opcodes {opcodes}")
             pc_op_map = _parse_opcodes(opcodes)
             logger.debug(f"{contract.name} Pc Op Map {pc_op_map}")
-            pc_map = _parse_source_map(
+            pc_map, pc_fn_def_map = _parse_source_map(
                 interval_trees, interval_trees_indexes[cu_hash], source_map, pc_op_map
             )
             logger.debug(f"{contract.name} Pc Map {pc_map}")
 
             contract_fqn = f"{source_unit.source_unit_name}:{contract.name}"
-            contracts_cov[contract_fqn] = ContractCoverage(pc_map, contract)
+            contracts_cov[contract_fqn] = ContractCoverage(
+                pc_map, pc_fn_def_map, contract
+            )
     return contracts_cov
-
-
-def _merge_coverages_for_files(
-    coverages_for_files: Dict[
-        pathlib.Path,
-        List[Tuple[Tuple[Tuple[int, int], Tuple[int, int]], IdeCoverageRecord]],
-    ]
-) -> Dict[
-    pathlib.Path, Dict[Tuple[Tuple[int, int], Tuple[int, int]], IdeCoverageRecord]
-]:
-    merged_coverages = {}
-    for file_path, records in coverages_for_files.items():
-        merged_coverages[file_path] = {}
-        for (start, end), record in records:
-            if (start, end) in merged_coverages[file_path]:
-                merged_coverages[file_path][(start, end)] += record
-            else:
-                merged_coverages[file_path][(start, end)] = record
-    return merged_coverages
-
-
-def _merge_coverages_for_offsets(
-    coverages: Dict[Tuple[Tuple[int, int], Tuple[int, int]], IdeCoverageRecord]
-) -> Dict[Tuple[Tuple[int, int], Tuple[int, int]], IdeCoverageRecord]:
-    merged_coverages = {}
-    for (start, end), record in coverages.items():
-        if (start, end) in merged_coverages:
-            merged_coverages[(start, end)] += record
-        else:
-            merged_coverages[(start, end)] = record
-    return merged_coverages
 
 
 class Coverage:
@@ -897,76 +986,22 @@ class Coverage:
             self.contracts_undeployed_cov
         )
 
-    def __add__(self, other):
-        for fp, cov in self.contracts_cov.items():
-            cov += other.contracts_cov[fp]
-        for fp, cov in self.contracts_per_trans_cov.items():
-            cov += other.contracts_per_trans_cov[fp]
-        for fp, cov in self.contracts_undeployed_cov.items():
-            cov += other.contracts_undeployed_cov[fp]
-        for fp, cov in self.contracts_undeployed_per_trans_cov.items():
-            cov += other.contracts_undeployed_per_trans_cov[fp]
-        return self
-
     def get_contract_ide_coverage(
         self, per_transaction: bool
-    ) -> Dict[str, List[Dict[str, List]]]:
+    ) -> Dict[pathlib.Path, Dict[IdePosition, IdeFunctionCoverageRecord]]:
         """
-        Returns dictionary where key is an absolute filepath and values are coverage data for IDE
+        Returns coverage data for IDE usage
         """
 
-        coverages = {}
-
+        funcs_covs = []
         for coverage in (
             (self.contracts_cov, self.contracts_undeployed_cov)
             if not per_transaction
             else (self.contracts_per_trans_cov, self.contracts_undeployed_per_trans_cov)
         ):
-            for name, cov in coverage.items():
-                for data in (
-                    cov.get_ide_branch_coverage(),
-                    cov.get_ide_function_calls_coverage(),
-                    cov.get_ide_modifier_calls_coverage(),
-                ):
-                    for pos, rec in data.items():
-                        if rec.file_path not in coverages:
-                            coverages[rec.file_path] = []
-                        coverages[rec.file_path].append((pos, rec))
-
-        merged_coverages = _merge_coverages_for_files(coverages)
-
-        max_sum_calls = 0
-        for c in merged_coverages.values():
-            for rec in c.values():
-                if isinstance(rec, IdeFunctionCoverageRecord):
-                    max_sum_calls = max(max_sum_calls, rec.calls)
-
-        ret = {}
-        for file_path, cov_records in merged_coverages.items():
-            file_path_str = str(file_path)
-            if file_path not in ret:
-                ret[file_path_str] = []
-            for _, record in cov_records.items():
-
-                calls = (
-                    max_sum_calls
-                    if isinstance(record, IdeFunctionCoverageRecord)
-                    else record.calls
-                )
-
-                ret[file_path_str].append(
-                    {
-                        "startLine": record.start_line,
-                        "startColumn": record.start_column,
-                        "endLine": record.end_line,
-                        "endColumn": record.end_column,
-                        "coverage": f"{int((record.coverage_hits / calls) * 100) if calls != 0 else 0}",
-                        "coverageHits": record.coverage_hits,
-                        "message": f"Execs: {record.coverage_hits} / {calls}",
-                    }
-                )
-
-        return ret
+            for con_cov in coverage.values():
+                funcs_covs.append(con_cov.get_ide_coverage())
+        return _merge_ide_function_coverages(funcs_covs)
 
     def process_trace(
         self, contract_fqn: str, trace: Dict[str, Any], is_from_deployment: bool = False
@@ -1012,7 +1047,7 @@ class Coverage:
             contract_cov_per_trans = contracts_per_trans_cov[last_fqn]
             if pc in contract_cov.pc_map:
                 logger.debug(
-                    f"{pc} {struct_log['op']} {contract_cov.pc_map[pc].op} "
+                    f"{pc} {struct_log['op']} {contract_cov.pc_map[pc].op} {contract_cov.pc_map[pc].mod_depth} "
                     f"{contract_cov.pc_map[pc].argument} "
                     f"from {contract_cov.pc_map[pc].fn_name} {contract_cov.pc_map[pc].offset} is "
                     f"executed "
@@ -1045,14 +1080,13 @@ class CoverageProvider:
 
     def update_coverage(self):
         """
-        Checks for latest transactions on blockchain for
+        Checks for latest transactions on blockchain and updates coverage
         """
         last_block = self._dev_chain.get_block_number()
         if (
             self._next_block_to_cover > last_block + 1
         ):  # chain was reset -> reset last_covered_block
             self._next_block_to_cover = 0
-
         for block_number in range(self._next_block_to_cover, last_block + 1):
             logger.debug("Working on block %d", block_number)
             block_info = self._dev_chain.get_block(block_number, True)
@@ -1095,17 +1129,37 @@ class CoverageProvider:
         self._next_block_to_cover = last_block + 1
 
 
-def get_merged_ide_coverage(
-    coverages: List[Coverage],
-) -> Optional[
-    Tuple[Dict[str, List[Dict[str, List]]], Dict[str, List[Dict[str, List]]]]
-]:
+def _merge_ide_function_coverages(
+    func_covs: List[Dict[pathlib.Path, Dict[IdePosition, IdeFunctionCoverageRecord]]]
+) -> Dict[pathlib.Path, Dict[IdePosition, IdeFunctionCoverageRecord]]:
+    merged = {}
+
+    for func_cov in func_covs:
+        for file_path, ide_func_cov_recs in func_cov.items():
+            if file_path not in merged:
+                merged[file_path] = {}
+            for ide_pos, func_cov_rec in ide_func_cov_recs.items():
+                if ide_pos not in merged[file_path]:
+                    merged[file_path][ide_pos] = copy.deepcopy(func_cov_rec)
+                else:
+                    merged[file_path][ide_pos] += func_cov_rec
+    return merged
+
+
+def export_merged_ide_coverage(
+    func_covs: List[Dict[pathlib.Path, Dict[IdePosition, IdeFunctionCoverageRecord]]]
+) -> Dict[str, List[Dict[str, List]]]:
     """
-    Returns both not per transaction and per transaction merged coverages for IDE
+    Merges and exports IDE coverage records into a dictionary of paths -> funcs and their
+    coverage records
     """
-    if len(coverages) < 0:
-        return None
-    cov = copy.deepcopy(coverages[0])
-    for c in coverages[1:]:
-        cov += c
-    return cov.get_contract_ide_coverage(False), cov.get_contract_ide_coverage(True)
+    merged_records = _merge_ide_function_coverages(func_covs)
+
+    exported_coverage = {}
+    for file_path, func_cov_recs in merged_records.items():
+        file_path_str = str(file_path)
+        if file_path not in exported_coverage:
+            exported_coverage[file_path_str] = []
+        for ide_pos, func_cov_rec in func_cov_recs.items():
+            exported_coverage[file_path_str].append(func_cov_rec.export())
+    return exported_coverage
