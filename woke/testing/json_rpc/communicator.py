@@ -361,6 +361,10 @@ class JsonRpcCommunicator:
             text = self._send_request("evm_mine", [hex(timestamp)])
         _ = self._process_response(text)
 
+    def evm_set_next_block_timestamp(self, timestamp: int) -> None:
+        text = self._send_request("evm_setNextBlockTimestamp", [hex(timestamp)])
+        _ = self._process_response(text)
+
     def evm_set_account_code(self, address: str, code: bytes) -> None:
         params = [address, "0x" + code.hex()]
         text = self._send_request("evm_setAccountCode", params)

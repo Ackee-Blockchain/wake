@@ -99,6 +99,10 @@ class DevChainABC(ABC):
     def set_nonce(self, address: str, value: int) -> None:
         ...
 
+    @abstractmethod
+    def set_next_block_timestamp(self, timestamp: int) -> None:
+        ...
+
 
 class HardhatDevChain(DevChainABC):
     def set_balance(self, address: str, value: int) -> None:
@@ -127,6 +131,9 @@ class HardhatDevChain(DevChainABC):
 
     def set_nonce(self, address: str, value: int) -> None:
         self._communicator.hardhat_set_nonce(address, value)
+
+    def set_next_block_timestamp(self, timestamp: int) -> None:
+        self._communicator.evm_set_next_block_timestamp(timestamp)
 
 
 class AnvilDevChain(DevChainABC):
@@ -161,6 +168,9 @@ class AnvilDevChain(DevChainABC):
     def set_nonce(self, address: str, value: int) -> None:
         self._communicator.anvil_set_nonce(address, value)
 
+    def set_next_block_timestamp(self, timestamp: int) -> None:
+        self._communicator.evm_set_next_block_timestamp(timestamp)
+
 
 class GanacheDevChain(DevChainABC):
     def set_balance(self, address: str, value: int) -> None:
@@ -188,3 +198,8 @@ class GanacheDevChain(DevChainABC):
 
     def set_nonce(self, address: str, value: int) -> None:
         return self._communicator.evm_set_account_nonce(address, value)
+
+    def set_next_block_timestamp(self, timestamp: int) -> None:
+        raise NotImplementedError(
+            "Ganache does not support setting next block timestamp"
+        )
