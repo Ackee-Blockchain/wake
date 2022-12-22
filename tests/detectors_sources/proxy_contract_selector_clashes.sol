@@ -7,7 +7,7 @@ contract Slots {
     bytes32 internal constant _OWNER_SLOT = 0x02016836a56b71f0d02689e69e326f4f4c1b9057164ef592671cf0d37c8040c0;
 }
 
-abstract contract Legit_Proxy_1 {
+abstract contract AProxy {
     function _implementation() internal view virtual returns (address);
 
     function _delegate(address implementation) internal virtual {
@@ -37,15 +37,19 @@ abstract contract Legit_Proxy_1 {
     function _beforeFallback() internal virtual {}
 }
 
-contract Bug_Proxy_1 is Legit_Proxy_1, Slots {
+contract Proxy is AProxy, Slots {
     function _implementation() internal view override returns (address implementation_) {
         assembly {
             implementation_ := sload(_IMPLEMENTATION_SLOT)
         }
     }
+
+    function bug_clash(address addr) public {
+        int a = 1;
+    }
 }
 
-abstract contract Legit_Proxy_2 {
+abstract contract AProxy2 {
     function _implementation() internal view virtual returns (address);
 
     function _delegate(address implementation) internal virtual {
@@ -248,17 +252,48 @@ library Address {
     }
 }
 
-contract Bug_Impl_1 is Slots {
+contract Proxy2 is AProxy, Slots {
+    function _implementation() internal view override returns (address implementation_) {
+        assembly {
+            implementation_ := sload(_IMPLEMENTATION_SLOT)
+        }
+    }
+
+    function legit_clash(address addr) public {
+        int a = 1;
+    }
+}
+
+contract Impl1 is Slots {
     function _setImplementation(address newImplementation) private {
         require(Address.isContract(newImplementation), "ERC1967: new implementation is not a contract");
         StorageSlot.getAddressSlot(_IMPLEMENTATION_SLOT).value = newImplementation;
     }
+
+    function bug_clash(address addr) public {
+        _setImplementation(addr);
+    }
 }
 
-contract Legit_Impl_2 is Slots {
+contract Impl2 is Slots {
+    function _setImplementation(address newImplementation) private {
+        require(Address.isContract(newImplementation), "ERC1967: new implementation is not a contract");
+        StorageSlot.getAddressSlot(_IMPLEMENTATION_SLOT).value = newImplementation;
+    }
+
+    function legit_clash(address addr, uint a) public {
+        _setImplementation(addr);
+    }
+}
+
+contract Impl3 is Slots {
     function _setImplementation(address newImplementation) private {
         require(Address.isContract(newImplementation), "ERC1967: new implementation is not a contract");
         StorageSlot.getAddressSlot(_OWNER_SLOT).value = newImplementation;
+    }
+
+    function legit_clash(address addr) public {
+        _setImplementation(addr);
     }
 }
 

@@ -14,7 +14,7 @@ from .not_used_detector import NotUsedDetector
 from .overflow_calldata_tuple_reencoding_bug import (
     OverflowCalldataTupleReencodingBugDetector,
 )
-from .proxy_contract import ProxyContractDetector
+from .proxy_contract_selector_clashes import ProxyContractSelectorClashDetector
 from .reentrancy import ReentrancyDetector
 from .unchecked_return_value import UncheckedFunctionReturnValueDetector
 from .unsafe_delegatecall import UnsafeDelegatecallDetector

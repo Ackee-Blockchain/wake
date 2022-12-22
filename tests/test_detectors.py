@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import shutil
 import tempfile
 from pathlib import Path, PurePath
@@ -104,20 +105,24 @@ def check_detected_in_functions(config, source_path):
     detections = detect(config, source_units)
 
     detections_fns = [_get_function_def(det.result.ir_node) for det in detections]
-    detections_fn_names = [fn.name for fn in detections_fns if fn is not None]
+    detections_fn_names = [fn.canonical_name for fn in detections_fns if fn is not None]
 
+    detected_something = False
     for contract in source_file.contracts:
         for fn in contract.functions:
             if fn.name.startswith("legit_"):
-                assert fn.name not in detections_fn_names
+                assert fn.canonical_name not in detections_fn_names
             elif fn.name.startswith("bug_"):
-                assert fn.name in detections_fn_names
+                detected_something = True
+                assert fn.canonical_name in detections_fn_names
 
     for fn in source_file.functions:
         if fn.name.startswith("legit_"):
-            assert fn.name not in detections_fn_names
+            assert fn.canonical_name not in detections_fn_names
         elif fn.name.startswith("bug_"):
-            assert fn.name in detections_fn_names
+            detected_something = True
+            assert fn.canonical_name in detections_fn_names
+    assert detected_something
 
 
 def check_detected_in_contracts(config, source_path):
@@ -130,11 +135,14 @@ def check_detected_in_contracts(config, source_path):
         contract.name for contract in detections_contracts if contract is not None
     ]
 
+    detected_something = False
     for cf in source_file.contracts:
         if cf.name.startswith("Legit_"):
             assert cf.name not in detections_contract_names
         elif cf.name.startswith("Bug_"):
+            detected_something = True
             assert cf.name in detections_contract_names
+    assert detected_something
 
 
 class TestNoReturnDetector:
@@ -214,16 +222,15 @@ class TestNotUsed:
         test_file = "not_used.sol"
         test_source_path = tmp_path / test_file
         shutil.copyfile(SOURCES_PATH / test_file, test_source_path)
-        check_detected_in_functions(config, test_source_path)
         check_detected_in_contracts(config, test_source_path)
 
 
-class TestProxyContract:
+class TestProxyContractSelectorClashes:
     @pytest.fixture
     def config(self, tmp_path) -> WokeConfig:
         config_dict = {
             "compiler": {"solc": {"include_paths": ["./node_modules"]}},
-            "detectors": {"only": {"proxy-contract"}},
+            "detectors": {"only": {"proxy-contract-selector-clashes"}},
         }
         return WokeConfig.fromdict(
             config_dict,
@@ -232,7 +239,16 @@ class TestProxyContract:
         )
 
     def test_sources(self, config, tmp_path):
-        test_file = "proxy_contract.sol"
+        test_file = "proxy_contract_selector_clashes.sol"
         test_source_path = tmp_path / test_file
         shutil.copyfile(SOURCES_PATH / test_file, test_source_path)
-        check_detected_in_contracts(config, test_source_path)
+
+        _, source_units = compile_project(test_source_path, config)
+        detections = detect(config, source_units)
+        logging.error(detections)
+        detections_fns = [_get_function_def(det.result.ir_node) for det in detections]
+        detections_fn_names = [
+            fn.canonical_name for fn in detections_fns if fn is not None
+        ]
+
+        assert "Proxy.bug_clash" in detections_fn_names

@@ -1,12 +1,12 @@
 from functools import lru_cache
-from typing import List, Optional, Set, Tuple, Union
+from typing import Dict, List, Optional, Set, Tuple, Union
 
 from woke.analysis.detectors import DetectorAbc, DetectorResult, detector
 from woke.analysis.detectors.utils import (
     get_function_implementations,
     pair_function_call_arguments,
 )
-from woke.ast.enums import FunctionKind, GlobalSymbolsEnum, LiteralKind
+from woke.ast.enums import FunctionKind, GlobalSymbolsEnum, LiteralKind, Visibility
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.declaration.abc import DeclarationAbc
 from woke.ast.ir.declaration.contract_definition import ContractDefinition
@@ -398,17 +398,60 @@ def detect_slot_usage(fn: FunctionDefinition, visited=None) -> List[DetectorResu
     return dets
 
 
-@detector(-1030, "proxy-contract")
-class ProxyContractDetector(DetectorAbc):
+def detect_selector_clashes(
+    proxy_contract: ContractDefinition,
+    impl_contract: ContractDefinition,
+    proxy_detection: DetectorResult,
+    impl_detection: DetectorResult,
+) -> List[DetectorResult]:
+    fn_whitelist = ["implementation"]
+
+    proxy_selectors = {}
+    for c in proxy_contract.linearized_base_contracts:
+        for f in c.functions + c.declared_variables:
+            if f.function_selector is not None:
+                proxy_selectors[f.function_selector] = f
+
+    impl_selectors = {}
+    for c in impl_contract.linearized_base_contracts:
+        for f in c.functions + c.declared_variables:
+            if f.function_selector is not None:
+                impl_selectors[f.function_selector] = f
+
+    clashes = []
+    for proxy_sel, proxy_fn in proxy_selectors.items():
+        if isinstance(proxy_fn, FunctionDefinition) and proxy_fn.name in fn_whitelist:
+            continue
+        if proxy_sel in impl_selectors:
+            clashes.append(
+                DetectorResult(
+                    proxy_fn,
+                    "Detected selector clash with implementation contract",
+                    related_info=(
+                        DetectorResult(
+                            impl_selectors[proxy_sel],
+                            "Implementation function with same selector",
+                            related_info=(impl_detection,),
+                        ),
+                        proxy_detection,
+                    ),
+                )
+            )
+    return clashes
+
+
+@detector(-1030, "proxy-contract-selector-clashes")
+class ProxyContractSelectorClashDetector(DetectorAbc):
     """
-    Detects proxy contracts based on fallback function and usage of slot variables and
+    Detects selector clashes in proxy and implementation contracts.
+    Proxy contracts are detected based on fallback function and usage of slot variables and
     implementation contracts that use same slots as proxy contracts
     """
 
     _proxy_detections: Set[Tuple[ContractDefinition, DetectorResult]]
     _proxy_associated_contracts: Set[ContractDefinition]
     _implementation_slots_detections: Set[Tuple[ContractDefinition, DetectorResult]]
-    _implementation_slots: Set[VariableDeclaration]
+    _implementation_slots: Dict[VariableDeclaration, List[ContractDefinition]]
 
     def __init__(self):
         self._proxy_detections: Set[Tuple[ContractDefinition, DetectorResult]] = set()
@@ -416,7 +459,9 @@ class ProxyContractDetector(DetectorAbc):
         self._implementation_slots_detections: Set[
             Tuple[ContractDefinition, DetectorResult]
         ] = set()
-        self._implementation_slots: Set[VariableDeclaration] = set()
+        self._implementation_slots: Dict[
+            VariableDeclaration, List[ContractDefinition]
+        ] = {}
 
     def report(self) -> List[DetectorResult]:
         detections = []
@@ -428,9 +473,10 @@ class ProxyContractDetector(DetectorAbc):
                     continue
                 base_proxy_contracts.add(c)
 
+        proxy_detections = {}
         for (contract, det) in self._proxy_detections:
             if contract not in base_proxy_contracts:
-                detections.append(det)
+                proxy_detections[contract] = det
 
         base_impl_contracts = set()
         for (contract, _) in self._implementation_slots_detections:
@@ -439,22 +485,37 @@ class ProxyContractDetector(DetectorAbc):
                     continue
                 base_impl_contracts.add(c)
 
+        checked_pairs = set()
         impl_detections_contracts = set()
         for (contract, det) in self._implementation_slots_detections:
+            impl_slot = get_last_detection_node(det).parent
             if (
                 contract not in self._proxy_associated_contracts
                 and contract not in base_impl_contracts
-                and get_last_detection_node(det).parent in self._implementation_slots
+                and impl_slot in self._implementation_slots
                 and contract not in impl_detections_contracts
             ):
-                impl_detections_contracts.add(contract)
-                detections.append(
-                    DetectorResult(
+                for proxy_contract in self._implementation_slots[impl_slot]:
+                    if (
+                        proxy_contract,
                         contract,
-                        "Detected implementation contract with slot used in proxy contract",
+                    ) in checked_pairs or proxy_contract not in proxy_detections:
+                        continue
+                    checked_pairs.add((proxy_contract, contract))
+                    impl_det = DetectorResult(
+                        contract,
+                        f"Detected implementation contract with slot used in proxy contract {proxy_contract.name}",
                         related_info=(det,),
                     )
-                )
+
+                    dets = detect_selector_clashes(
+                        proxy_contract,
+                        contract,
+                        proxy_detections[proxy_contract],
+                        impl_det,
+                    )
+                    if len(dets) > 0:
+                        detections.extend(dets)
         return list(detections)
 
     def visit_contract_definition(self, node: ContractDefinition):
@@ -478,10 +539,22 @@ class ProxyContractDetector(DetectorAbc):
                             )
                             for det in dets:
                                 last_det_node = get_last_detection_node(det)
-                                if isinstance(
-                                    last_det_node.parent, VariableDeclaration
+                                if (
+                                    isinstance(
+                                        last_det_node.parent, VariableDeclaration
+                                    )
+                                    and last_det_node.parent is not None
                                 ):
-                                    self._implementation_slots.add(last_det_node.parent)
+                                    if (
+                                        last_det_node.parent
+                                        not in self._implementation_slots
+                                    ):
+                                        self._implementation_slots[
+                                            last_det_node.parent
+                                        ] = []
+                                    self._implementation_slots[
+                                        last_det_node.parent
+                                    ].append(node)
                                 self._proxy_associated_contracts.add(node)
                                 for bc in node.linearized_base_contracts:
                                     self._proxy_associated_contracts.add(bc)
