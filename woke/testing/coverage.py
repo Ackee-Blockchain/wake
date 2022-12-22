@@ -19,13 +19,30 @@ from woke.ast.ir.meta.source_unit import SourceUnit
 from woke.ast.ir.reference_resolver import CallbackParams, ReferenceResolver
 from woke.ast.ir.statement.abc import StatementAbc
 from woke.ast.ir.statement.block import Block
+from woke.ast.ir.statement.break_statement import Break
+from woke.ast.ir.statement.continue_statement import Continue
 from woke.ast.ir.statement.do_while_statement import DoWhileStatement
 from woke.ast.ir.statement.expression_statement import ExpressionStatement
 from woke.ast.ir.statement.for_statement import ForStatement
 from woke.ast.ir.statement.if_statement import IfStatement
+from woke.ast.ir.statement.inline_assembly import InlineAssembly
 from woke.ast.ir.statement.placeholder_statement import PlaceholderStatement
+from woke.ast.ir.statement.return_statement import Return
+from woke.ast.ir.statement.revert_statement import RevertStatement
 from woke.ast.ir.statement.while_statement import WhileStatement
 from woke.ast.ir.utils import IrInitTuple
+from woke.ast.ir.yul.abc import YulAbc
+from woke.ast.ir.yul.block import Block as YulBlock
+from woke.ast.ir.yul.break_statement import Break as YulBreak
+from woke.ast.ir.yul.continue_statement import Continue as YulContinue
+from woke.ast.ir.yul.expression_statement import (
+    ExpressionStatement as YulExpressionStatement,
+)
+from woke.ast.ir.yul.for_loop import ForLoop as YulForLoop
+from woke.ast.ir.yul.function_call import FunctionCall as YulFunctionCall
+from woke.ast.ir.yul.if_statement import If as YulIf
+from woke.ast.ir.yul.leave import Leave as YulLeave
+from woke.ast.ir.yul.switch import Switch as YulSwitch
 from woke.ast.nodes import AstSolc
 from woke.compile import SolcOutput
 from woke.compile.compilation_unit import CompilationUnit
@@ -137,7 +154,7 @@ class FunctionInfo:
     modifier_cov: Dict[int, ModifierCovRecord]
     modifiers_pcs: Dict[str, Tuple[int, int]]
     fn_type: type
-    consturctor_mods: Set[str]
+    constructor_mods: Set[str]
 
     def __init__(
         self,
@@ -153,7 +170,7 @@ class FunctionInfo:
         self.name_location = LocationInfo(
             fn_def.name_location, fn_def.file, line_intervals
         )
-        self.consturctor_mods = set()
+        self.constructor_mods = set()
 
         self.body_location = (
             LocationInfo(fn_def.body.byte_location, fn_def.file, line_intervals)
@@ -187,7 +204,7 @@ class FunctionInfo:
                         isinstance(mod_ref_decl, FunctionDefinition)
                         and mod_ref_decl.kind == FunctionKind.CONSTRUCTOR
                     ):
-                        self.consturctor_mods.add(mod_ref_decl.canonical_name)
+                        self.constructor_mods.add(mod_ref_decl.canonical_name)
 
         self.modifiers_pcs = {}
         self.instruction_cov = {}
@@ -382,16 +399,19 @@ class ContractCoverage:
         starting_pc: int,
         parent_fn: FunctionInfo,
         caller_fn: FunctionInfo,
-        allowed_fns: List[str],
+        modifier_fns: List[str],
     ):
+
         starting_instr = self.pc_map[starting_pc]
         act_pc = starting_pc
         logger.debug(
             f"Searching for modifier call from {parent_fn.name} called by {caller_fn.name} at {starting_pc} in {starting_instr.fn_name}"
         )
-        while True:
+
+        scan = True
+        while scan:
             if act_pc not in self.pc_map:
-                logger.debug(f"PC {act_pc} is not in pc_map")
+                logger.warning(f"PC {act_pc} is not in pc_map")
                 break
             act_instr = self.pc_map[act_pc]
             logger.debug(
@@ -416,31 +436,46 @@ class ContractCoverage:
                     and jumpdest.src_pc_map.op == "JUMPDEST"
                     and act_instr.argument is not None
                 ):
-                    mod_push_pc = act_instr.argument + 1
-                    mod_push = (
-                        self.pc_map[mod_push_pc] if mod_push_pc in self.pc_map else None
-                    )
+                    for i in range(20):
+                        mod_push_pc = act_instr.argument + i
+                        mod_push = (
+                            self.pc_map[mod_push_pc]
+                            if mod_push_pc in self.pc_map
+                            else None
+                        )
 
-                    if (
-                        mod_push
-                        and mod_push.op.startswith("PUSH")
-                        and mod_push.fn_name != act_instr.fn_name
-                        and mod_push.fn_name in allowed_fns
-                    ):
-                        mod_cov = ModifierCovRecord(
-                            hit_count=0, modifier_fn_name=mod_push.fn_name
-                        )
-                        self.pc_modifier_cov[mod_push_pc] = mod_cov
-                        parent_fn.modifier_cov[mod_push_pc] = mod_cov
-                        logger.debug(
-                            f"Added {mod_push_pc} of {mod_cov} to coverage of {parent_fn.modifier_cov}"
-                        )
-                        self._find_modifier_call(
-                            mod_push_pc,
-                            parent_fn,
-                            self.functions[mod_push.fn_name],
-                            allowed_fns,
-                        )
+                        if (
+                            mod_push
+                            and mod_push.fn_name != act_instr.fn_name
+                            and mod_push.fn_name in modifier_fns
+                        ):
+                            if len(parent_fn.modifier_cov) == len(parent_fn.modifiers):
+                                scan = False
+                                break
+                            if mod_push.fn_name in {
+                                m.modifier_fn_name
+                                for m in parent_fn.modifier_cov.values()
+                            }:
+                                break
+                            mod_cov = ModifierCovRecord(
+                                hit_count=0, modifier_fn_name=mod_push.fn_name
+                            )
+                            self.pc_modifier_cov[mod_push_pc] = mod_cov
+                            parent_fn.modifier_cov[mod_push_pc] = mod_cov
+                            logger.debug(
+                                f"Added {mod_push_pc} of {mod_cov} to coverage of {parent_fn.modifier_cov}"
+                            )
+
+                            if len(parent_fn.modifier_cov) != len(parent_fn.modifiers):
+                                self._find_modifier_call(
+                                    mod_push_pc,
+                                    parent_fn,
+                                    self.functions[mod_push.fn_name],
+                                    modifier_fns,
+                                )
+                            else:
+                                scan = False
+                            break
             act_pc = act_pc + act_instr.size
 
     def _find_constructors(
@@ -455,6 +490,9 @@ class ContractCoverage:
             f"Searching for constructor {const_name} in {parent_fn.name} at {starting_pc}"
         )
         while True:
+            if const_pc not in self.pc_map:
+                logger.warning(f"PC {const_pc} is not in pc_map")
+                break
             act_fn_name = self.pc_map[const_pc].fn_name
             if (
                 const_pc in self.pc_map
@@ -486,7 +524,11 @@ class ContractCoverage:
     def _add_modifier_coverage(self, fn: FunctionInfo):
         if len(fn.modifiers) == 0:
             return
-        fn_modifier_constructors = [name for name in fn.consturctor_mods]
+
+        for pc, rec in self.pc_map.items():
+            logger.debug(f"PC {pc} {rec.op} {rec.argument} {rec.fn_name}")
+
+        fn_modifier_constructors = [name for name in fn.constructor_mods]
         logger.debug(f"Adding modifier coverage for {fn.name}")
         for pc, rec in fn.instruction_cov.items():
             next_pc = pc + rec.src_pc_map.size
@@ -511,6 +553,7 @@ class ContractCoverage:
         logger.debug(f"Modifiers: {fn.name} {fn.modifiers} {fn.modifier_cov.keys()}")
         for pc in fn.modifier_cov.keys():
             new_pc = pc
+            logger.debug(f"PC: {pc} {self.pc_map[pc].op} {self.pc_map[pc].fn_name}")
             while True:
                 if new_pc not in self.pc_map or self.pc_map[new_pc].fn_name not in (
                     *fn.modifiers.keys(),
@@ -520,55 +563,120 @@ class ContractCoverage:
                 new_pc = new_pc + self.pc_map[new_pc].size
             fn.modifiers_pcs[fn.modifier_cov[pc].modifier_fn_name] = (pc, new_pc)
         logger.debug(f"Modifier PCs: {fn.name} {fn.modifiers_pcs}")
+        if len(fn.modifiers_pcs) != len(fn.modifiers):
+            raise Exception(
+                f"PCs were not found for all modifiers for {fn.name}. Please compile without optimizations"
+            )
 
-    def _find_branches(
-        self, statement: Union[StatementAbc, Block], branches: List[Tuple[int, int]]
+    def _append_branch(
+        self, stmt: IrAbc, parent_statement: IrAbc, branches: Set[Tuple[int, int]]
+    ):
+        stmt_to = stmt.byte_location[1] - stmt.byte_location[0]
+        if parent_statement.source[stmt_to - 1] in ("{", "}"):
+            stmt_to -= 1
+        stmt_loc_data = (
+            stmt.byte_location[0],
+            stmt_to,
+        )
+
+        branches.add(stmt_loc_data)
+        logger.debug(
+            f"Added {stmt.file.name} {stmt.byte_location} {stmt.source[:stmt_to]}"
+        )
+
+    def _find_assembly_branches(
+        self,
+        statement: Union[YulAbc, InlineAssembly, YulBlock],
+        branches: Set[Tuple[int, int]],
     ):
         append_next = True
-        stmts = [statement] if type(statement) != Block else statement.statements  # type: ignore
+        stmts = (
+            [statement] if not isinstance(statement, YulBlock) else statement.statements
+        )
         for stmt in stmts:
-            stmt_to = stmt.byte_location[1] - stmt.byte_location[0]
-            if statement.source[stmt_to - 1] in ("{", "}"):
-                stmt_to -= 1
-            stmt_loc_data = (
-                stmt.byte_location[0],
-                stmt_to,
-            )
             if append_next:
-                branches.append(stmt_loc_data)
-                logger.debug(
-                    f"Added {stmt.file.name} {stmt.byte_location} {stmt.source[:stmt_to]}"
-                )
+                self._append_branch(stmt, statement, branches)
                 append_next = False
 
-            if type(stmt) == IfStatement:
-                self._find_branches(stmt.true_body, branches)  # type: ignore
-                if stmt.false_body:  # type: ignore
-                    self._find_branches(stmt.false_body, branches)  # type: ignore
+            if isinstance(stmt, YulIf) or isinstance(stmt, YulForLoop):
+                self._find_assembly_branches(stmt.body, branches)
                 append_next = True
+            elif isinstance(stmt, YulSwitch):
+                for case in stmt.cases:
+                    self._find_assembly_branches(case.body, branches)
             elif (
-                type(stmt) in (WhileStatement, ForStatement, DoWhileStatement)
-                and stmt.body  # type: ignore
-            ):
-                self._find_branches(stmt.body, branches)  # type: ignore
-                append_next = True
-            elif (
-                type(stmt) == ExpressionStatement
-                and type(stmt.expression) == FunctionCall  # type: ignore
+                isinstance(stmt, YulBreak)
+                or isinstance(stmt, YulContinue)
+                or isinstance(stmt, YulLeave)
             ):
                 append_next = True
-            elif type(stmt) == PlaceholderStatement:
+            elif isinstance(stmt, YulExpressionStatement) and isinstance(
+                stmt.expression, YulFunctionCall
+            ):
                 append_next = True
+            elif isinstance(stmt, YulBlock):
+                self._find_assembly_branches(stmt, branches)
+
+    def _find_branches(
+        self, statement: Union[StatementAbc, Block], branches: Set[Tuple[int, int]]
+    ):
+        append_next = True
+        stmts = (
+            [statement] if not isinstance(statement, Block) else statement.statements
+        )
+        for stmt in stmts:
+            if append_next:
+                self._append_branch(stmt, statement, branches)
+                append_next = False
+
+            if isinstance(stmt, IfStatement):
+                self._find_branches(stmt.true_body, branches)
+                if stmt.false_body:
+                    self._find_branches(stmt.false_body, branches)
+                append_next = True
+            elif (
+                isinstance(stmt, WhileStatement)
+                or isinstance(stmt, ForStatement)
+                or isinstance(stmt, DoWhileStatement)
+                and stmt.body is not None
+            ):
+                self._find_branches(stmt.body, branches)
+                append_next = True
+            elif isinstance(stmt, ExpressionStatement) and isinstance(
+                stmt.expression, FunctionCall
+            ):
+                append_next = True
+            elif (
+                isinstance(stmt, PlaceholderStatement)
+                or isinstance(stmt, RevertStatement)
+                or isinstance(stmt, Return)
+                or isinstance(stmt, Continue)
+                or isinstance(stmt, Break)
+            ):
+                append_next = True
+            elif isinstance(stmt, InlineAssembly):
+                self._find_assembly_branches(stmt.yul_block, branches)
+                append_next = True
+            elif isinstance(stmt, YulBlock):
+                self._find_assembly_branches(stmt, branches)
+            else:
+                for n in stmt:
+                    if isinstance(n, FunctionCall) and isinstance(
+                        n.function_called, FunctionDefinition
+                    ):
+                        append_next = True
+                        break
 
     def _get_function_branches(
         self,
         function_def: Union[FunctionDefinition, ModifierDefinition],
         spaces_intervals: IntervalTree,
     ) -> List[Tuple[int, int]]:
-        branches: List[Tuple[int, int]] = []
+        uniq_branches: Set[Tuple[int, int]] = set()
         if not function_def.body:
             return []
-        self._find_branches(function_def.body, branches)
+        self._find_branches(function_def.body, uniq_branches)
+        branches = list(uniq_branches)
         branches.sort(key=lambda b: (b[0], -b[1]))
 
         branches_sec = []
@@ -692,8 +800,7 @@ class ContractCoverage:
             {
                 (rec.offset[0], rec.offset[1], pc)
                 for pc, rec in self.pc_map.items()
-                if allowed_int is None
-                or (pc >= allowed_int[0] and pc <= allowed_int[1])
+                if allowed_int is None or (allowed_int[0] <= pc <= allowed_int[1])
             }
         )
         intervals = [

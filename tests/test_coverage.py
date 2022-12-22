@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import random
 import shutil
 from pathlib import Path, PurePath
@@ -145,6 +146,18 @@ class TestContractCoverage:
         cov = list(covs.values())[0]
         return cov
 
+    @pytest.fixture
+    def parsing_contract_coverages(
+        self, config, tmp_path
+    ) -> Dict[str, ContractCoverage]:
+        test_file = "parsing_contract_coverage.sol"
+        source_path = tmp_path / test_file
+        shutil.copy(SOURCES_PATH / test_file, source_path)
+
+        covs = coverage._construct_coverage_data(config)
+        assert len(covs) == 2
+        return covs
+
     def test_add_random_coverage(self, basic_contract_coverage):
         covered_pcs = random.sample(list(basic_contract_coverage.pc_map.keys()), 50)
 
@@ -208,6 +221,26 @@ class TestContractCoverage:
         for records in ide_function_calls_coverage.values():
             for fn_rec in records.values():
                 assert fn_rec.coverage_hits == 1
+
+    def test_parsing_modifiers(self, parsing_contract_coverages):
+        cov = parsing_contract_coverages["parsing_contract_coverage.sol:Parsing"]
+        calls_func = cov.functions["Parsing.fcalls_func"]
+        assert len(calls_func.modifiers) == 2
+        assert len(calls_func.modifier_cov) == 2
+        if_func = cov.functions["Parsing.if_func"]
+        assert len(if_func.modifiers) == 1
+        assert len(if_func.modifier_cov) == 1
+
+    def test_parsing_branches(self, parsing_contract_coverages):
+        cov = parsing_contract_coverages["parsing_contract_coverage.sol:Parsing"]
+        calls_func = cov.functions["Parsing.fcalls_func"]
+        assert len(calls_func.branch_cov) == 2
+        if_func = cov.functions["Parsing.if_func"]
+        assert len(if_func.branch_cov) == 7
+        for_func = cov.functions["Parsing.for_func"]
+        assert len(for_func.branch_cov) == 6
+        assembly_func = cov.functions["Parsing.assembly_func"]
+        assert len(assembly_func.branch_cov) == 5
 
 
 class TestCoverage:

@@ -175,13 +175,16 @@ Usage: woke fuzz [OPTIONS] [PATHS]...
   Run Woke fuzzer.
 
 Options:
-  -n, --process-count INTEGER  Number of processes to create for fuzzing.
-  -s, --seed TEXT              Random seeds
-  --passive                    Print one process output into console, run
-                               other in background.
-  --network TEXT               Choose brownie dev chain. Default is
-                               'development' for ganache
-  --help                       Show this message and exit.
+  -n, --process-count INTEGER     Number of processes to create for fuzzing.
+  -c, --cov-proc-count INTEGER    Number of processes that will track
+                                  coverage.  [default: 1]
+  -v, --verbose-coverage          Verbose coverage info for funcions
+  -s, --seed TEXT                 Random seeds
+  --passive                       Print one process output into console, run
+                                  other in background.
+  --network [anvil|ganache|hardhat]
+                                  Choose development chain implementation.
+  --help                          Show this message and exit.
 
 ```
 
@@ -206,6 +209,24 @@ For debugging purposes, it's possible to run Woke fuzzer in passive mode using t
 
 ## Python bindings
 To make working with contracts a bit easier, Woke fuzzer generates Python bindings from smart contract's ABI into the `pytypes` directory of the project.
+
+## Coverage
+Woke fuzzer comes with coverage tracking for fuzz tests.
+It is enabled for one process by default but can be either disabled by specifying `0` as a number of processes or enabled for more processes should they have their coverage tracked using `-c` or `--cov-proc-count` option.
+You can also use `-v` or `--verbose-coverage` to get quick summary in CLI about function call counts.
+Detailed coverage for use with VS Code IDE and Tools for Solidity is exported to files `woke-coverage.sol` and `woke-coverage-per-trans.cov`.
+The `per-trans` one only tracks each program counter once per transaction.
+
+The coverage tracks following information:
+* Number of times a function, modifier and constructors were called
+* Number of times an applied modifier for function was called
+* Number of times a parent constructor was called as a 'modifier'
+* Branch coverage with number of times each branch was taken
+
+Branch coverage has branches for both Solidity and Yul and a branch is created every time a flow control structure or a function call is used.
+
+!!! warning
+    It may happen that the coverage won't be able to find program counters for modifiers and reports an error. Try turning off compiler optimizations in configuration. 
 
 ## Recommended directory structure
 
