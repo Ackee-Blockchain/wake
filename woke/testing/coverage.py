@@ -564,8 +564,9 @@ class ContractCoverage:
             fn.modifiers_pcs[fn.modifier_cov[pc].modifier_fn_name] = (pc, new_pc)
         logger.debug(f"Modifier PCs: {fn.name} {fn.modifiers_pcs}")
         if len(fn.modifiers_pcs) != len(fn.modifiers):
-            raise Exception(
-                f"PCs were not found for all modifiers for {fn.name}. Please compile without optimizations"
+            logging.warning(
+                f"PCs were not found for all modifiers for {fn.name}. "
+                f"Try compiling without optimizations"
             )
 
     def _append_branch(
@@ -761,7 +762,7 @@ class ContractCoverage:
                 mods = []
                 for f in self.functions.values():
                     for m in f.modifiers.keys():
-                        if m == fn_def.canonical_name:
+                        if m == fn_def.canonical_name and m in f.modifiers_pcs:
                             mods.append(f.modifiers_pcs[m])
                 logger.debug(f"Modifiers: {fn_info.name} {mods}")
                 for mod in mods:
