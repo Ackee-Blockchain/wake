@@ -11,6 +11,7 @@ import woke.compile
 import woke.config
 from woke.ast.enums import FunctionKind, GlobalSymbolsEnum
 from woke.ast.ir.abc import IrAbc
+from woke.ast.ir.declaration.abc import DeclarationAbc
 from woke.ast.ir.declaration.contract_definition import ContractDefinition
 from woke.ast.ir.declaration.function_definition import FunctionDefinition
 from woke.ast.ir.declaration.modifier_definition import ModifierDefinition
@@ -66,7 +67,7 @@ logger.setLevel(logging.ERROR)
 
 @dataclass
 class SourceMapPcRecord:
-    fn_name: str
+    fn_ident: str
     offset: Tuple[int, int]
     source_id: int
     jump_type: str
@@ -139,12 +140,23 @@ class BranchCovRecord(InstrCovRecord):
 
 @dataclass
 class ModifierCovRecord(HitCountRecord):
-    modifier_fn_name: str
+    modifier_fn_ident: str
+
+
+def _get_fn_ident(definition: DeclarationAbc) -> str:
+    lines = definition.declaration_string.splitlines()
+    if len(lines) > 0:
+        ident = lines[-1]
+    else:
+        ident = definition.declaration_string
+    if isinstance(definition.parent, ContractDefinition):
+        ident = f"{definition.parent.canonical_name}:{ident}"
+    return ident
 
 
 @dataclass
 class FunctionInfo:
-    name: str
+    ident: str
     name_location: LocationInfo
     body_location: Optional[LocationInfo]
     modifiers: Dict[str, LocationInfo]
@@ -161,7 +173,7 @@ class FunctionInfo:
         fn_def: Union[FunctionDefinition, ModifierDefinition],
         line_intervals: IntervalTree,
     ):
-        self.name = fn_def.canonical_name
+        self.ident = _get_fn_ident(fn_def)
         self.fn_type = (
             FunctionDefinition
             if isinstance(fn_def, FunctionDefinition)
@@ -197,14 +209,14 @@ class FunctionInfo:
                     else:
                         mod_ref_decl = mod.modifier_name.referenced_declaration
 
-                    self.modifiers[mod_ref_decl.canonical_name] = LocationInfo(
+                    self.modifiers[_get_fn_ident(mod_ref_decl)] = LocationInfo(
                         mod.byte_location, fn_def.file, line_intervals
                     )
                     if (
                         isinstance(mod_ref_decl, FunctionDefinition)
                         and mod_ref_decl.kind == FunctionKind.CONSTRUCTOR
                     ):
-                        self.constructor_mods.add(mod_ref_decl.canonical_name)
+                        self.constructor_mods.add(_get_fn_ident(mod_ref_decl))
 
         self.modifiers_pcs = {}
         self.instruction_cov = {}
@@ -332,21 +344,21 @@ class ContractCoverage:
         fn_defs = {}
 
         for pc, rec in self.pc_map.items():
-            if rec.fn_name not in self.functions:
+            if rec.fn_ident not in self.functions:
                 fn_line_intervals = _get_line_intervals(
                     _get_full_source(pc_fn_def_map[pc])
                 )
                 fn_info = FunctionInfo(pc_fn_def_map[pc], fn_line_intervals)
-                self.functions[rec.fn_name] = fn_info
-                fn_defs[rec.fn_name] = pc_fn_def_map[pc]
+                self.functions[rec.fn_ident] = fn_info
+                fn_defs[rec.fn_ident] = pc_fn_def_map[pc]
 
         self._add_instruction_coverage()
         for rec in self.functions.values():
             self._add_modifier_coverage(rec)
-            self._add_branch_coverage(rec, fn_defs[rec.name])
+            self._add_branch_coverage(rec, fn_defs[rec.ident])
 
         for pc, rec in self.pc_map.items():
-            self.pc_function[pc] = self.functions[rec.fn_name]
+            self.pc_function[pc] = self.functions[rec.fn_ident]
 
     def add_cov(self, pc: int):
         for cov in [self.pc_branch_cov, self.pc_modifier_cov, self.pc_instruction_cov]:
@@ -360,14 +372,14 @@ class ContractCoverage:
         Returns coverage for covered functions (per path) with calls, modifier and branch coverages
         """
         cov_data = {}
-        for fn_name, fn in self.functions.items():
+        for fn_ident, fn in self.functions.items():
             fp = fn.name_location.file_path
             if fp not in cov_data:
                 cov_data[fp] = {}
 
             mod_records = {}
             for pc, rec in fn.modifier_cov.items():
-                mod = fn.modifiers[rec.modifier_fn_name]
+                mod = fn.modifiers[rec.modifier_fn_ident]
                 if mod.ide_pos not in mod_records:
                     mod_records[mod.ide_pos] = IdeCoverageRecord(
                         mod.ide_pos, rec.hit_count
@@ -385,7 +397,7 @@ class ContractCoverage:
                     branch_records[rec.branch.ide_pos].coverage_hits += rec.hit_count
 
             cov_data[fp][fn.name_location.ide_pos] = IdeFunctionCoverageRecord(
-                name=fn_name,
+                name=fn_ident,
                 ide_pos=fn.name_location.ide_pos,
                 coverage_hits=fn.calls,
                 mod_records=mod_records,
@@ -405,7 +417,7 @@ class ContractCoverage:
         starting_instr = self.pc_map[starting_pc]
         act_pc = starting_pc
         logger.debug(
-            f"Searching for modifier call from {parent_fn.name} called by {caller_fn.name} at {starting_pc} in {starting_instr.fn_name}"
+            f"Searching for modifier call from {parent_fn.ident} called by {caller_fn.ident} at {starting_pc} in {starting_instr.fn_ident}"
         )
 
         scan = True
@@ -415,9 +427,12 @@ class ContractCoverage:
                 break
             act_instr = self.pc_map[act_pc]
             logger.debug(
-                f"Act instr: {act_pc} {act_instr.fn_name} {act_instr.op} {act_instr.argument} {act_instr.fn_name} {starting_instr.fn_name}"
+                f"Act instr: {act_pc} {act_instr.fn_ident} {act_instr.op} {act_instr.argument} {act_instr.fn_ident} {starting_instr.fn_ident}"
             )
-            if act_instr.fn_name is None or act_instr.fn_name != starting_instr.fn_name:
+            if (
+                act_instr.fn_ident is None
+                or act_instr.fn_ident != starting_instr.fn_ident
+            ):
                 break
 
             jump_pc = act_pc + act_instr.size
@@ -446,19 +461,19 @@ class ContractCoverage:
 
                         if (
                             mod_push
-                            and mod_push.fn_name != act_instr.fn_name
-                            and mod_push.fn_name in modifier_fns
+                            and mod_push.fn_ident != act_instr.fn_ident
+                            and mod_push.fn_ident in modifier_fns
                         ):
                             if len(parent_fn.modifier_cov) == len(parent_fn.modifiers):
                                 scan = False
                                 break
-                            if mod_push.fn_name in {
-                                m.modifier_fn_name
+                            if mod_push.fn_ident in {
+                                m.modifier_fn_ident
                                 for m in parent_fn.modifier_cov.values()
                             }:
                                 break
                             mod_cov = ModifierCovRecord(
-                                hit_count=0, modifier_fn_name=mod_push.fn_name
+                                hit_count=0, modifier_fn_ident=mod_push.fn_ident
                             )
                             self.pc_modifier_cov[mod_push_pc] = mod_cov
                             parent_fn.modifier_cov[mod_push_pc] = mod_cov
@@ -470,7 +485,7 @@ class ContractCoverage:
                                 self._find_modifier_call(
                                     mod_push_pc,
                                     parent_fn,
-                                    self.functions[mod_push.fn_name],
+                                    self.functions[mod_push.fn_ident],
                                     modifier_fns,
                                 )
                             else:
@@ -481,43 +496,43 @@ class ContractCoverage:
     def _find_constructors(
         self,
         starting_pc: int,
-        const_name: str,
+        const_ident: str,
         parent_fn: FunctionInfo,
         allowed_fns: List[str],
     ):
         const_pc = starting_pc
         logger.debug(
-            f"Searching for constructor {const_name} in {parent_fn.name} at {starting_pc}"
+            f"Searching for constructor {const_ident} in {parent_fn.ident} at {starting_pc}"
         )
         while True:
             if const_pc not in self.pc_map:
                 logger.warning(f"PC {const_pc} is not in pc_map")
                 break
-            act_fn_name = self.pc_map[const_pc].fn_name
+            act_fn_ident = self.pc_map[const_pc].fn_ident
             if (
                 const_pc in self.pc_map
-                and act_fn_name != const_name
-                and act_fn_name in allowed_fns
-                or act_fn_name == parent_fn.name
+                and act_fn_ident != const_ident
+                and act_fn_ident in allowed_fns
+                or act_fn_ident == parent_fn.ident
             ):
-                if const_name not in [
-                    m.modifier_fn_name for m in parent_fn.modifier_cov.values()
+                if const_ident not in [
+                    m.modifier_fn_ident for m in parent_fn.modifier_cov.values()
                 ]:
                     const_cov = ModifierCovRecord(
-                        hit_count=0, modifier_fn_name=const_name
+                        hit_count=0, modifier_fn_ident=const_ident
                     )
                     logger.debug(
-                        f"Added constructor coverage {starting_pc} {const_name}, stopped at {const_pc} {act_fn_name}"
+                        f"Added constructor coverage {starting_pc} {const_ident}, stopped at {const_pc} {act_fn_ident}"
                     )
                     self.pc_modifier_cov[starting_pc] = const_cov
                     parent_fn.modifier_cov[starting_pc] = const_cov
 
-                if act_fn_name in allowed_fns:
+                if act_fn_ident in allowed_fns:
                     self._find_constructors(
-                        const_pc, act_fn_name, parent_fn, allowed_fns
+                        const_pc, act_fn_ident, parent_fn, allowed_fns
                     )
                 break
-            if const_pc not in self.pc_map or act_fn_name not in allowed_fns:
+            if const_pc not in self.pc_map or act_fn_ident not in allowed_fns:
                 break
             const_pc = const_pc + self.pc_map[const_pc].size
 
@@ -526,10 +541,10 @@ class ContractCoverage:
             return
 
         for pc, rec in self.pc_map.items():
-            logger.debug(f"PC {pc} {rec.op} {rec.argument} {rec.fn_name}")
+            logger.debug(f"PC {pc} {rec.op} {rec.argument} {rec.fn_ident}")
 
         fn_modifier_constructors = [name for name in fn.constructor_mods]
-        logger.debug(f"Adding modifier coverage for {fn.name}")
+        logger.debug(f"Adding modifier coverage for {fn.ident}")
         for pc, rec in fn.instruction_cov.items():
             next_pc = pc + rec.src_pc_map.size
             if (
@@ -537,35 +552,35 @@ class ContractCoverage:
                 and next_pc in fn.instruction_cov
                 and fn.instruction_cov[next_pc].src_pc_map.op.startswith("JUMP")
             ):
-                logger.debug(f"Found jump from {pc} to {next_pc} in {fn.name}")
+                logger.debug(f"Found jump from {pc} to {next_pc} in {fn.ident}")
                 self._find_modifier_call(pc, fn, fn, list(fn.modifiers.keys()))
 
             if (
                 next_pc in self.pc_map
-                and self.pc_map[next_pc].fn_name != fn.name
-                and self.pc_map[next_pc].fn_name in fn_modifier_constructors
+                and self.pc_map[next_pc].fn_ident != fn.ident
+                and self.pc_map[next_pc].fn_ident in fn_modifier_constructors
             ):
-                logger.debug(f"Found constructor from {pc} to {next_pc} in {fn.name}")
+                logger.debug(f"Found constructor from {pc} to {next_pc} in {fn.ident}")
                 self._find_constructors(
-                    next_pc, self.pc_map[next_pc].fn_name, fn, fn_modifier_constructors
+                    next_pc, self.pc_map[next_pc].fn_ident, fn, fn_modifier_constructors
                 )
 
-        logger.debug(f"Modifiers: {fn.name} {fn.modifiers} {fn.modifier_cov.keys()}")
+        logger.debug(f"Modifiers: {fn.ident} {fn.modifiers} {fn.modifier_cov.keys()}")
         for pc in fn.modifier_cov.keys():
             new_pc = pc
-            logger.debug(f"PC: {pc} {self.pc_map[pc].op} {self.pc_map[pc].fn_name}")
+            logger.debug(f"PC: {pc} {self.pc_map[pc].op} {self.pc_map[pc].fn_ident}")
             while True:
-                if new_pc not in self.pc_map or self.pc_map[new_pc].fn_name not in (
+                if new_pc not in self.pc_map or self.pc_map[new_pc].fn_ident not in (
                     *fn.modifiers.keys(),
-                    fn.name,
+                    fn.ident,
                 ):
                     break
                 new_pc = new_pc + self.pc_map[new_pc].size
-            fn.modifiers_pcs[fn.modifier_cov[pc].modifier_fn_name] = (pc, new_pc)
-        logger.debug(f"Modifier PCs: {fn.name} {fn.modifiers_pcs}")
+            fn.modifiers_pcs[fn.modifier_cov[pc].modifier_fn_ident] = (pc, new_pc)
+        logger.debug(f"Modifier PCs: {fn.ident} {fn.modifiers_pcs}")
         if len(fn.modifiers_pcs) != len(fn.modifiers):
             logging.warning(
-                f"PCs were not found for all modifiers for {fn.name}. "
+                f"PCs were not found for all modifiers for {fn.ident}. "
                 f"Try compiling without optimizations"
             )
 
@@ -733,7 +748,7 @@ class ContractCoverage:
 
             branches_fin.append((int_from, int_to))
             logger.debug(
-                f"Final branches for {function_def.canonical_name} {branches_fin}"
+                f"Final branches for {_get_fn_ident(function_def)} {branches_fin}"
             )
 
         return branches_fin
@@ -748,7 +763,7 @@ class ContractCoverage:
         fn_space_intervals = _find_code_spaces_intervals(_get_full_source(fn_def))
         fn_line_intervals = _get_line_intervals(_get_full_source(fn_def))
 
-        logger.debug(f"Adding branch coverage to {fn_def.canonical_name}")
+        logger.debug(f"Adding branch coverage to {_get_fn_ident(fn_def)}")
         branches = self._get_function_branches(fn_def, fn_space_intervals)
         logger.debug(f"Branches: {branches}")
         logger.debug(f"Modifiers: {fn_info.modifiers}")
@@ -762,9 +777,9 @@ class ContractCoverage:
                 mods = []
                 for f in self.functions.values():
                     for m in f.modifiers.keys():
-                        if m == fn_def.canonical_name and m in f.modifiers_pcs:
+                        if m == _get_fn_ident(fn_def) and m in f.modifiers_pcs:
                             mods.append(f.modifiers_pcs[m])
-                logger.debug(f"Modifiers: {fn_info.name} {mods}")
+                logger.debug(f"Modifiers: {fn_info.ident} {mods}")
                 for mod in mods:
                     pcs.add(self._find_branch_pcs(branch, mod))
             else:
@@ -782,16 +797,16 @@ class ContractCoverage:
                     fn_info.first_branches_cov.append(branch_cov)
             first_branch = False
         logger.debug(
-            f"Function {fn_info.name} has these branch detection instructions: "
+            f"Function {fn_info.ident} has these branch detection instructions: "
             f"{fn_info.branch_cov.keys()} and these first branches: {[x.src_pc_map.op for x in fn_info.first_branches_cov]}"
         )
 
     def _add_instruction_coverage(self):
         for pc, rec in self.pc_map.items():
-            if rec.fn_name is not None:
+            if rec.fn_ident is not None:
                 cov = InstrCovRecord(hit_count=0, src_pc_map=rec)
 
-                self.functions[rec.fn_name].instruction_cov[pc] = cov
+                self.functions[rec.fn_ident].instruction_cov[pc] = cov
                 self.pc_instruction_cov[pc] = cov
 
     def _find_branch_pcs(
@@ -857,7 +872,7 @@ def _find_fn_for_source(
     final_fn = None
     for node in function_def_nodes:
         logger.debug(
-            f"{source_from}:{source_to} {len(function_def_nodes)} {str(type(node.data))} {node.data.canonical_name}"
+            f"{source_from}:{source_to} {len(function_def_nodes)} {str(type(node.data))} {_get_fn_ident(node.data)}"
         )
         overlap = node.overlap_size(source_from, source_to) / node.length()
         logger.debug(f"overlap {overlap} {max_overlap} {source_from}:{source_to}")
@@ -1005,7 +1020,7 @@ def _parse_source_map(
 
         if last_fn:
             pc_map[pc] = SourceMapPcRecord(
-                last_fn.canonical_name,
+                _get_fn_ident(last_fn),
                 (source_interval[0], source_interval[1]),
                 source_interval[2],
                 last_data[3],
@@ -1119,17 +1134,7 @@ class Coverage:
         """
         contract_fqn_stack = [contract_fqn]
         transaction_fqn_pcs = set()
-
-        contracts_cov = (
-            self.contracts_cov
-            if not is_from_deployment
-            else self.contracts_undeployed_cov
-        )
-        contracts_per_trans_cov = (
-            self.contracts_per_trans_cov
-            if not is_from_deployment
-            else self.contracts_undeployed_per_trans_cov
-        )
+        deployment = is_from_deployment
 
         for struct_log in trace["structLogs"]:
             last_fqn = contract_fqn_stack[-1]
@@ -1141,13 +1146,49 @@ class Coverage:
                 if new_fqn is None:
                     new_fqn = "Unknown"
                 contract_fqn_stack.append(new_fqn)
+            elif struct_log["op"] in ("CREATE", "CREATE2"):
+                logger.debug(f"Call {pc} {struct_log['op']} {struct_log['memory']}")
+                offset = int(struct_log["stack"][-2], 16)
+                length = int(struct_log["stack"][-3], 16)
+
+                start_block = offset // 32
+                start_offset = offset % 32
+                end_block = (offset + length) // 32
+                end_offset = (offset + length) % 32
+
+                if start_block == end_block:
+                    deployment_code = bytes.fromhex(struct_log["memory"][start_block])[
+                        start_offset : start_offset + length
+                    ]
+                else:
+                    deployment_code = bytes.fromhex(struct_log["memory"][start_block])[
+                        start_offset:
+                    ]
+                    for i in range(start_block + 1, end_block):
+                        deployment_code += bytes.fromhex(struct_log["memory"][i])
+                    deployment_code += bytes.fromhex(struct_log["memory"][end_block])[
+                        :end_offset
+                    ]
+                new_fqn = get_fqn_from_deployment_code(deployment_code)
+                contract_fqn_stack.append(new_fqn)
+                deployment = True
             elif (
                 struct_log["op"] in ("RETURN", "STOP", "REVERT")
                 and len(contract_fqn_stack) > 1
             ):
                 logger.debug(f"{pc} {struct_log['op']} before pop {contract_fqn_stack}")
                 contract_fqn_stack.pop()
+                if not is_from_deployment and deployment:
+                    deployment = False
 
+            contracts_cov = (
+                self.contracts_cov if not deployment else self.contracts_undeployed_cov
+            )
+            contracts_per_trans_cov = (
+                self.contracts_per_trans_cov
+                if not deployment
+                else self.contracts_undeployed_per_trans_cov
+            )
             if last_fqn not in contracts_cov or last_fqn not in contracts_per_trans_cov:
                 continue
 
@@ -1157,7 +1198,7 @@ class Coverage:
                 logger.debug(
                     f"{pc} {struct_log['op']} {contract_cov.pc_map[pc].op} {contract_cov.pc_map[pc].mod_depth} "
                     f"{contract_cov.pc_map[pc].argument} "
-                    f"from {contract_cov.pc_map[pc].fn_name} {contract_cov.pc_map[pc].offset} is "
+                    f"from {contract_cov.pc_map[pc].fn_ident} {contract_cov.pc_map[pc].offset} is "
                     f"executed "
                 )
             else:
@@ -1205,9 +1246,9 @@ class CoverageProvider:
                 trace = self._dev_chain.debug_trace_transaction(
                     transaction["hash"],
                     {
-                        "disableMemory": True,
-                        "disableStack": False,
-                        "disableStorage": True,
+                        "enableMemory": True,
+                        "enableStack": True,
+                        "disableStorage": False,
                     },
                 )
 
