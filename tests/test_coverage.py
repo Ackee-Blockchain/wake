@@ -1,5 +1,4 @@
 import asyncio
-import logging
 import random
 import shutil
 from pathlib import Path, PurePath
@@ -224,22 +223,33 @@ class TestContractCoverage:
 
     def test_parsing_modifiers(self, parsing_contract_coverages):
         cov = parsing_contract_coverages["parsing_contract_coverage.sol:Parsing"]
-        calls_func = cov.functions["Parsing.fcalls_func"]
+        calls_func = cov.functions[
+            "Parsing:function fcalls_func(uint a) public mod_test1(a) mod_test2(a) returns (uint b)"
+        ]
         assert len(calls_func.modifiers) == 2
         assert len(calls_func.modifier_cov) == 2
-        if_func = cov.functions["Parsing.if_func"]
+        if_func = cov.functions[
+            "Parsing:function if_func(uint a) public mod_test1(a) returns (uint b)"
+        ]
         assert len(if_func.modifiers) == 1
         assert len(if_func.modifier_cov) == 1
 
     def test_parsing_branches(self, parsing_contract_coverages):
         cov = parsing_contract_coverages["parsing_contract_coverage.sol:Parsing"]
-        calls_func = cov.functions["Parsing.fcalls_func"]
+
+        calls_func = cov.functions[
+            "Parsing:function fcalls_func(uint a) public mod_test1(a) mod_test2(a) returns (uint b)"
+        ]
         assert len(calls_func.branch_cov) == 2
-        if_func = cov.functions["Parsing.if_func"]
+        if_func = cov.functions[
+            "Parsing:function if_func(uint a) public mod_test1(a) returns (uint b)"
+        ]
         assert len(if_func.branch_cov) == 7
-        for_func = cov.functions["Parsing.for_func"]
+        for_func = cov.functions["Parsing:function for_func() public"]
         assert len(for_func.branch_cov) == 6
-        assembly_func = cov.functions["Parsing.assembly_func"]
+        assembly_func = cov.functions[
+            "Parsing:function assembly_func(uint256 a) public returns (uint)"
+        ]
         assert len(assembly_func.branch_cov) == 5
 
 
@@ -306,7 +316,7 @@ class TestCoverage:
         ide_coverage = parent_coverage.get_contract_ide_coverage(False)
         for file_path, coverages in ide_coverage.items():
             for fn_rec in coverages.values():
-                if fn_rec.name == "Parent.func1":
+                if fn_rec.name == "Parent:function func1(uint a) public returns (uint)":
                     assert fn_rec.coverage_hits == 2
                     for branch in fn_rec.branch_records.values():
                         assert branch.coverage_hits == 2
@@ -381,7 +391,8 @@ class TestCoverageProvider:
             pc
             for pc in callee.pc_function.keys()
             if callee.pc_map[pc].op == "CALL"
-            and callee.pc_function[pc].name == "Callee.call"
+            and callee.pc_function[pc].ident
+            == "Callee:function call(uint a, address _addr) public payable"
         ][0]
 
         trace = {
@@ -404,7 +415,12 @@ class TestCoverageProvider:
         assert coverage.get_fqn_from_address.call_count == 2
         for pc in called.pc_branch_cov:
             assert called.pc_branch_cov[pc].hit_count == 1
-        assert called.functions["Called.receive_A"].calls == 1
+        assert (
+            called.functions[
+                "Called:function receive_A() public payable returns (uint)"
+            ].calls
+            == 1
+        )
 
         ide_coverage = calls_coverage_provider._coverage.get_contract_ide_coverage(
             False
