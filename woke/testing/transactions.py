@@ -312,16 +312,45 @@ class TransactionAbc(ABC, Generic[T]):
             self._fetch_trace_transaction()
             assert self._trace_transaction is not None
             output = bytes.fromhex(self._trace_transaction[0]["result"]["output"][2:])
-            return self._chain._process_return_data(
-                output, self._abi, self._return_type
-            )
+        elif isinstance(dev_chain, GanacheDevChain):
+            self._fetch_debug_trace_transaction()
+            assert self._debug_trace_transaction is not None
+
+            if len(self._debug_trace_transaction["structLogs"]) == 0 or self._debug_trace_transaction["structLogs"][-1]["op"] != "RETURN":  # type: ignore
+                output = b""
+            else:
+                trace: Any = self._debug_trace_transaction["structLogs"][-1]  # type: ignore
+                offset = int(trace["stack"][-1], 16)
+                length = int(trace["stack"][-2], 16)
+
+                start_block = offset // 32
+                start_offset = offset % 32
+                end_block = (offset + length) // 32
+                end_offset = (offset + length) % 32
+
+                if start_block == end_block:
+                    output = bytearray.fromhex(trace["memory"][start_block])[
+                        start_offset : start_offset + length
+                    ]
+                else:
+                    output = bytearray.fromhex(trace["memory"][start_block])[
+                        start_offset:
+                    ]
+                    for i in range(start_block + 1, end_block):
+                        output += bytearray.fromhex(trace["memory"][i])
+                    if end_offset > 0:
+                        output += bytearray.fromhex(trace["memory"][end_block])[
+                            :end_offset
+                        ]
         else:
             self._fetch_debug_trace_transaction()
             assert self._debug_trace_transaction is not None
             output = bytes.fromhex(self._debug_trace_transaction["returnValue"])  # type: ignore
-            return self._chain._process_return_data(
-                output, self._abi, self._return_type
-            )
+
+        if self._return_type == type(None):
+            assert len(output) == 0
+            return None  # type: ignore
+        return self._chain._process_return_data(output, self._abi, self._return_type)
 
     @property
     @abstractmethod
