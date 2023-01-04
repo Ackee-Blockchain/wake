@@ -35,6 +35,7 @@ def mock_fn(weight=None, min_times=None, max_times=None):
     return fn
 
 
+@pytest.mark.slow
 def test_no_weight():
     fn1 = mock_fn()
     fn2 = mock_fn()
@@ -45,6 +46,7 @@ def test_no_weight():
         run_and_count([(fn1, "fn1"), (fn2, "fn2")], flow_cnt, run_cnt)
 
 
+@pytest.mark.slow
 def test_same_weight():
     fn1 = mock_fn(weight=10)
     fn2 = mock_fn(weight=10)
@@ -65,6 +67,7 @@ def test_same_weight():
     )
 
 
+@pytest.mark.slow
 def test_different_weight():
     fn1 = mock_fn(weight=1)
     fn2 = mock_fn(weight=4)
@@ -85,6 +88,7 @@ def test_different_weight():
     )
 
 
+@pytest.mark.slow
 def test_zero_weight():
     fn1 = mock_fn(weight=0)
     fn2 = mock_fn(weight=1)
@@ -96,6 +100,7 @@ def test_zero_weight():
     assert counts["fn2"] == flow_cnt * run_cnt
 
 
+@pytest.mark.slow
 def test_min_times():
     fn1 = mock_fn(weight=10, min_times=50)
     fn2 = mock_fn(weight=10)
@@ -117,6 +122,7 @@ def test_min_times():
     )
 
 
+@pytest.mark.slow
 def test_max_times():
     fn1 = mock_fn(weight=10, max_times=50)
     fn2 = mock_fn(weight=10)
@@ -138,6 +144,7 @@ def test_max_times():
     )
 
 
+@pytest.mark.slow
 def test_zero_weight_min_times():
     fn1 = mock_fn(weight=0, min_times=50)
     fn2 = mock_fn(weight=10)
@@ -154,6 +161,7 @@ def test_zero_weight_min_times():
     )
 
 
+@pytest.mark.slow
 def test_small_weight_min_times():
     fn1 = mock_fn(weight=1, min_times=50)
     fn2 = mock_fn(weight=10)
@@ -170,6 +178,7 @@ def test_small_weight_min_times():
     )
 
 
+@pytest.mark.slow
 def test_multiple_weights():
     fn1 = mock_fn(weight=1)
     fn2 = mock_fn(weight=1)

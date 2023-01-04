@@ -157,6 +157,7 @@ class TestContractCoverage:
         assert len(covs) == 2
         return covs
 
+    @pytest.mark.slow
     def test_add_random_coverage(self, basic_contract_coverage):
         covered_pcs = random.sample(list(basic_contract_coverage.pc_map.keys()), 50)
 
@@ -174,6 +175,7 @@ class TestContractCoverage:
                 == expected_cov[pc]
             )
 
+    @pytest.mark.slow
     def test_add_random_branch_coverage(self, basic_contract_coverage):
         covered_pcs = random.sample(
             list(basic_contract_coverage.pc_branch_cov.keys()), 5
@@ -192,6 +194,7 @@ class TestContractCoverage:
                 basic_contract_coverage.pc_branch_cov[pc].hit_count == expected_cov[pc]
             )
 
+    @pytest.mark.slow
     def test_get_ide_branch_coverage(self, basic_contract_coverage):
         for pc in basic_contract_coverage.pc_branch_cov.keys():
             basic_contract_coverage.add_cov(pc)
@@ -202,6 +205,7 @@ class TestContractCoverage:
                 for branch in fn_rec.branch_records.values():
                     assert branch.coverage_hits == 1
 
+    @pytest.mark.slow
     def test_get_ide_modifier_coverage(self, basic_contract_coverage):
         for pc in basic_contract_coverage.pc_modifier_cov.keys():
             basic_contract_coverage.add_cov(pc)
@@ -212,6 +216,7 @@ class TestContractCoverage:
                 for mod in fn_rec.mod_records.values():
                     assert mod.coverage_hits == 1
 
+    @pytest.mark.slow
     def test_get_ide_function_calls_coverage(self, basic_contract_coverage):
         for pc in basic_contract_coverage.pc_instruction_cov.keys():
             basic_contract_coverage.add_cov(pc)
@@ -221,6 +226,7 @@ class TestContractCoverage:
             for fn_rec in records.values():
                 assert fn_rec.coverage_hits == 1
 
+    @pytest.mark.slow
     def test_parsing_modifiers(self, parsing_contract_coverages):
         cov = parsing_contract_coverages["parsing_contract_coverage.sol:Parsing"]
         calls_func = cov.functions[
@@ -234,6 +240,7 @@ class TestContractCoverage:
         assert len(if_func.modifiers) == 1
         assert len(if_func.modifier_cov) == 1
 
+    @pytest.mark.slow
     def test_parsing_branches(self, parsing_contract_coverages):
         cov = parsing_contract_coverages["parsing_contract_coverage.sol:Parsing"]
 
@@ -274,6 +281,7 @@ class TestCoverage:
         assert len(cov.contracts_cov) == 2
         return cov
 
+    @pytest.mark.slow
     def test_get_contract_ide_coverage(self, basic_coverage):
         fqn = "basic_contract_coverage.sol:C"
 
@@ -290,6 +298,7 @@ class TestCoverage:
                 for branch in fn_rec.branch_records.values():
                     assert branch.coverage_hits == 1
 
+    @pytest.mark.slow
     def test_process_trace(self, basic_coverage):
         fqn = "basic_contract_coverage.sol:C"
         contract_coverage = basic_coverage.contracts_cov[fqn]
@@ -304,6 +313,7 @@ class TestCoverage:
             assert pc in contract_coverage.pc_instruction_cov
             assert contract_coverage.pc_instruction_cov[pc].hit_count == 1
 
+    @pytest.mark.slow
     def test_parent_coverage(self, parent_coverage):
         child = parent_coverage.contracts_cov["parents_contract_coverage.sol:Child"]
         parent = parent_coverage.contracts_cov["parents_contract_coverage.sol:Parent"]
@@ -355,6 +365,7 @@ class TestCoverageProvider:
         test_file_2 = "call_contract_coverage_2.sol"
         return self.create_coverage_provider([test_file, test_file_2], config, tmp_path)
 
+    @pytest.mark.slow
     def test_basic_coverage(self, basic_coverage_provider):
         fqn = "basic_contract_coverage.sol:C"
         cov = basic_coverage_provider.get_coverage().contracts_cov[fqn]
@@ -381,6 +392,7 @@ class TestCoverageProvider:
         basic_coverage_provider._dev_chain.debug_trace_transaction.assert_called_once()
         coverage.get_fqn_from_address.assert_called_once()
 
+    @pytest.mark.slow
     def test_calls_coverage(self, calls_coverage_provider):
         callee_fqn = "call_contract_coverage.sol:Callee"
         called_fqn = "call_contract_coverage_2.sol:Called"
@@ -433,6 +445,7 @@ class TestCoverageProvider:
                 for record in ide_cov.values():
                     assert record.coverage_hits == 0
 
+    @pytest.mark.slow
     def test_constructor(self, parents_coverage_provider):
         child_fqn = "parents_contract_coverage.sol:Child"
         undeployed_cov = (

@@ -161,6 +161,7 @@ class TestNoReturnDetector:
             project_root_path=tmp_path,
         )
 
+    @pytest.mark.slow
     def test_sources(self, config, tmp_path):
         test_file = "no_return.sol"
         test_source_path = tmp_path / test_file
@@ -181,6 +182,7 @@ class TestBugEmptyByteArrayCopy:
             project_root_path=tmp_path,
         )
 
+    @pytest.mark.slow
     def test_sources(self, config, tmp_path):
         test_file = "bug_empty_byte_array_copy.sol"
         test_source_path = tmp_path / test_file
@@ -201,6 +203,7 @@ class TestUnsafeTxOrigin:
             project_root_path=tmp_path,
         )
 
+    @pytest.mark.slow
     def test_sources(self, config, tmp_path):
         test_file = "unsafe_tx_origin.sol"
         test_source_path = tmp_path / test_file
@@ -221,6 +224,7 @@ class TestNotUsed:
             project_root_path=tmp_path,
         )
 
+    @pytest.mark.slow
     def test_sources(self, config, tmp_path):
         test_file = "not_used.sol"
         test_source_path = tmp_path / test_file
@@ -241,6 +245,7 @@ class TestProxyContractSelectorClashes:
             project_root_path=tmp_path,
         )
 
+    @pytest.mark.slow
     def test_sources(self, config, tmp_path):
         test_file = "proxy_contract_selector_clashes.sol"
         test_source_path = tmp_path / test_file
