@@ -123,7 +123,7 @@ class SolidityCompiler:
                 )
                 try:
                     import_path = self.__source_path_resolver.resolve(
-                        import_unit_name, modified_files.keys()
+                        import_unit_name, source_unit_name, modified_files.keys()
                     ).resolve()
                 except (FileNotFoundError, CompilationResolveError):
                     if ignore_errors:

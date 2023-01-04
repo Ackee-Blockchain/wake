@@ -14,7 +14,10 @@ class SourcePathResolver:
         self.__config = woke_config
 
     def resolve(
-        self, source_unit_name: PurePath, virtual_files: AbstractSet[Path]
+        self,
+        source_unit_name: PurePath,
+        parent_source_unit_name: PurePath,
+        virtual_files: AbstractSet[Path],
     ) -> Path:
         """
         Return a system path for the given source unit name. Currently, this is done in a single step:
@@ -35,11 +38,11 @@ class SourcePathResolver:
 
         if len(matching_paths) == 0:
             raise CompilationResolveError(
-                f"Unable to find '{source_unit_name}' in the project root dir or include paths."
+                f"Unable to find '{source_unit_name}' imported from '{parent_source_unit_name}' in the project root dir or include paths."
             )
 
         if len(matching_paths) > 1:
-            err = f"Source unit name '{source_unit_name}' is ambiguous. It can be included as:"
+            err = f"Source unit name '{source_unit_name}' imported from '{parent_source_unit_name}' is ambiguous. It can be included as:"
             for matching_path in matching_paths:
                 err += f"\n{matching_path}"
             raise CompilationResolveError(err)
