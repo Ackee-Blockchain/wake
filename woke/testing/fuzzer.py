@@ -52,7 +52,7 @@ def _setup(port: int, network_id: str) -> subprocess.Popen:
             "--steps-tracing",
         ]
     elif network_id == "ganache":
-        args = ["ganache-cli", "--port", str(port)]
+        args = ["ganache-cli", "--port", str(port), "-g", "0", "-k", "istanbul"]
     elif network_id == "hardhat":
         args = ["npx", "hardhat", "node", "--port", str(port)]
     else:
