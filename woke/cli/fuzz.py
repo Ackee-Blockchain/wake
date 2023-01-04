@@ -33,7 +33,7 @@ def _get_module_name(path: Path, root: Path) -> str:
     "--cov-proc-count",
     "-c",
     type=int,
-    default=1,
+    default=0,
     show_default=True,
     help="Number of processes that will track coverage.",
 )
