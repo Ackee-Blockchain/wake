@@ -8,7 +8,11 @@ from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 
 from .core import Account, ChainInterface, default_chain
 from .development_chains import AnvilDevChain, GanacheDevChain, HardhatDevChain
-from .internal import TransactionRevertedError, UnknownEvent
+from .internal import (
+    TransactionRevertedError,
+    UnknownEvent,
+    UnknownTransactionRevertedError,
+)
 from .json_rpc.communicator import JsonRpcError, TxParams
 
 T = TypeVar("T")
@@ -289,6 +293,34 @@ class TransactionAbc(ABC, Generic[T]):
         except TransactionRevertedError as e:
             self._error = e
             return e
+
+    @property
+    @_fetch_tx_receipt
+    def raw_error(self) -> Optional[UnknownTransactionRevertedError]:
+        if self.status == TransactionStatusEnum.SUCCESS:
+            return None
+
+        dev_chain = self._chain.dev_chain
+
+        # call with the same parameters should also revert
+        try:
+            dev_chain.call(self._tx_params)
+            assert False, "Call should have reverted"
+        except JsonRpcError as e:
+            try:
+                if isinstance(dev_chain, (AnvilDevChain, GanacheDevChain)):
+                    revert_data = e.data["data"]
+                elif isinstance(dev_chain, HardhatDevChain):
+                    revert_data = e.data["data"]["data"]
+                else:
+                    raise NotImplementedError
+
+                if revert_data.startswith("0x"):
+                    revert_data = revert_data[2:]
+            except Exception:
+                raise e from None
+
+        return UnknownTransactionRevertedError(bytes.fromhex(revert_data))
 
     @property
     @_fetch_tx_receipt
