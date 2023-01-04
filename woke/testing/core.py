@@ -161,7 +161,7 @@ class Account:
         return Wei(self._chain.dev_chain.get_balance(str(self._address)))
 
     @balance.setter
-    def balance(self, value: Union[Wei, int]) -> None:
+    def balance(self, value: int) -> None:
         if not isinstance(value, int):
             raise TypeError("value must be an integer")
         if value < 0:
@@ -1149,7 +1149,7 @@ class Contract(Account):
         return_tx: bool,
         return_type: Type,
         from_: Optional[Union[Account, Address, str]],
-        value: Wei,
+        value: int,
         gas_limit: Union[int, Literal["max"], Literal["auto"]],
         libraries: Dict[bytes, Tuple[Union[Account, Address, None], str]],
         chain: Optional[ChainInterface],
@@ -1216,7 +1216,7 @@ class Contract(Account):
         return_type: Type,
         from_: Optional[Union[Account, Address, str]],
         to: Optional[Union[Account, Address, str]],
-        value: Wei,
+        value: int,
         gas_limit: Union[int, Literal["max"], Literal["auto"]],
     ) -> Any:
         params = {}
@@ -1265,7 +1265,7 @@ class Contract(Account):
         return_type: Type,
         from_: Optional[Union[Account, Address, str]],
         to: Optional[Union[Account, Address, str]],
-        value: Wei,
+        value: int,
         gas_limit: Union[int, Literal["max"], Literal["auto"]],
     ) -> Any:
         if return_tx:
@@ -1313,7 +1313,7 @@ class Library(Contract):
         return_tx: bool,
         return_type: Type,
         from_: Optional[Union[Account, Address, str]],
-        value: Wei,
+        value: int,
         gas_limit: Union[int, Literal["max"], Literal["auto"]],
         libraries: Dict[bytes, Tuple[Union[Account, Address, None], str]],
         chain: Optional[ChainInterface],
