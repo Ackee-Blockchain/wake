@@ -25,12 +25,19 @@ def run_init(ctx: Context):
     default=False,
     help="Return transaction objects instead of return data by default.",
 )
+@click.option(
+    "--warnings",
+    "-w",
+    is_flag=True,
+    default=False,
+    help="Print compilation warnings to console.",
+)
 @click.pass_context
-def init_pytypes(ctx: Context, return_tx: bool) -> None:
+def init_pytypes(ctx: Context, return_tx: bool, warnings: bool) -> None:
     """Generate Python contract types from Solidity ABI."""
     config: WokeConfig = ctx.obj["config"]
     type_generator = TypeGenerator(config, return_tx)
-    type_generator.generate_types()
+    type_generator.generate_types(warnings)
 
 
 @run_init.command(name="fuzz")
@@ -46,12 +53,19 @@ def init_pytypes(ctx: Context, return_tx: bool) -> None:
     default=False,
     help="Return transaction objects instead of return data by default.",
 )
+@click.option(
+    "--warnings",
+    "-w",
+    is_flag=True,
+    default=False,
+    help="Print compilation warnings to console.",
+)
 @click.pass_context
-def init_fuzz(ctx: Context, force: bool, return_tx: bool) -> None:
+def init_fuzz(ctx: Context, force: bool, return_tx: bool, warnings: bool) -> None:
     """Generate Python contract types and create example fuzz tests."""
     config: WokeConfig = ctx.obj["config"]
     type_generator = TypeGenerator(config, return_tx)
-    type_generator.generate_types()
+    type_generator.generate_types(warnings)
 
     examples_dir = pathlib.Path(__file__).parent.parent.resolve() / "examples/fuzzer"
     tests_dir = config.project_root_path / "tests"

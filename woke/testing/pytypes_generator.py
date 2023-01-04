@@ -206,7 +206,7 @@ class TypeGenerator:
     def current_source_unit(self):
         return self.__current_source_unit
 
-    def run_compile(self, parse=True) -> None:
+    def run_compile(self, warnings: bool) -> None:
         """Compile the project."""
         sol_files: Set[Path] = set()
         for file in self.__config.project_root_path.rglob("**/*.sol"):
@@ -220,7 +220,6 @@ class TypeGenerator:
                 sol_files.add(file)
 
         compiler = SolidityCompiler(self.__config)
-        # TODO Allow choosing build artifacts subset in compile subcommand
         outputs: List[Tuple[CompilationUnit, SolcOutput]] = asyncio.run(
             compiler.compile(
                 sol_files,
@@ -236,10 +235,11 @@ class TypeGenerator:
             for error in output.errors:
                 if error.severity == SolcOutputErrorSeverityEnum.ERROR:
                     errored = True
-                if error.formatted_message is not None:
-                    console.print(Panel(error.formatted_message, highlight=True))
-                else:
-                    console.print(Panel(error.message, highlight=True))
+                if warnings or error.severity == SolcOutputErrorSeverityEnum.ERROR:
+                    if error.formatted_message is not None:
+                        console.print(Panel(error.formatted_message, highlight=True))
+                    else:
+                        console.print(Panel(error.message, highlight=True))
 
         if errored:
             raise Exception("Compilation failed")
@@ -1297,10 +1297,9 @@ class TypeGenerator:
             # if unit.source_unit_name == "overloading.sol":
             #    print(self.__func_to_overload)
 
-    def generate_types(self) -> None:
+    def generate_types(self, compilation_warnings: bool) -> None:
         # compile proj and generate ir
-        # TODO fail if any compile erors
-        self.run_compile()
+        self.run_compile(compilation_warnings)
         self.clean_type_dir()
         # self.traverse_funcs_to_check_overload()
         # print(self.__func_to_overload)
