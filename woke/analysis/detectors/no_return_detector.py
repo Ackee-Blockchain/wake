@@ -78,7 +78,9 @@ def check_no_return_statement(node: FunctionDefinition) -> List[DetectorResult]:
                                     block.statements[0].parent,
                                     "Block where return is missing or return values are not set",
                                 ),
-                            ),
+                            )
+                            if len(block.statements) > 0
+                            else (),
                         )
                     )
     return detections
