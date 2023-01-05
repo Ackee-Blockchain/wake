@@ -14,6 +14,7 @@ from .internal import (
     UnknownTransactionRevertedError,
 )
 from .json_rpc.communicator import JsonRpcError, TxParams
+from .utils import read_from_memory
 
 T = TypeVar("T")
 
@@ -353,25 +354,7 @@ class TransactionAbc(ABC, Generic[T]):
                 offset = int(trace["stack"][-1], 16)
                 length = int(trace["stack"][-2], 16)
 
-                start_block = offset // 32
-                start_offset = offset % 32
-                end_block = (offset + length) // 32
-                end_offset = (offset + length) % 32
-
-                if start_block == end_block:
-                    output = bytearray.fromhex(trace["memory"][start_block])[
-                        start_offset : start_offset + length
-                    ]
-                else:
-                    output = bytearray.fromhex(trace["memory"][start_block])[
-                        start_offset:
-                    ]
-                    for i in range(start_block + 1, end_block):
-                        output += bytearray.fromhex(trace["memory"][i])
-                    if end_offset > 0:
-                        output += bytearray.fromhex(trace["memory"][end_block])[
-                            :end_offset
-                        ]
+                output = read_from_memory(offset, length, trace["memory"])
         else:
             self._fetch_debug_trace_transaction()
             assert self._debug_trace_transaction is not None
