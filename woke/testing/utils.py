@@ -1,12 +1,14 @@
+from __future__ import annotations
+
 import inspect
 import math
-from collections import defaultdict
 from functools import wraps
-from typing import Callable, Iterable, List, Tuple, TypeVar
+from typing import TYPE_CHECKING, Callable, Iterable, List, Tuple, TypeVar
 
 from Crypto.Hash import keccak
 
-from woke.testing.core import ChainInterface
+if TYPE_CHECKING:
+    from woke.testing.core import ChainInterface
 
 
 def snapshot_and_revert(devchain_interface: ChainInterface):
@@ -97,3 +99,30 @@ def negate(fn):
         return not fn(*args, **kwargs)
 
     return inner
+
+
+def read_from_memory(offset: int, length: int, memory: List) -> bytearray:
+    start_block = offset // 32
+    start_offset = offset % 32
+    end_block = (offset + length) // 32
+    end_offset = (offset + length) % 32
+
+    if start_block == end_block:
+        if start_block >= len(memory):
+            return bytearray(length)
+        return bytearray.fromhex(memory[start_block])[start_offset:end_offset]
+    else:
+        if start_block >= len(memory):
+            ret = bytearray(32 - start_offset)
+        else:
+            ret = bytearray.fromhex(memory[start_block])[start_offset:]
+        for i in range(start_block + 1, end_block):
+            if i >= len(memory):
+                ret += bytearray(32)
+            else:
+                ret += bytearray.fromhex(memory[i])
+        if end_block >= len(memory):
+            ret += bytearray(end_offset)
+        else:
+            ret += bytearray.fromhex(memory[end_block])[:end_offset]
+        return ret

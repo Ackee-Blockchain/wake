@@ -41,6 +41,7 @@ from woke.testing.pytypes_generator import RequestType
 from . import hardhat_console
 from .internal import UnknownEvent, UnknownTransactionRevertedError
 from .json_rpc.communicator import JsonRpcCommunicator, JsonRpcError, TxParams
+from .utils import read_from_memory
 
 if TYPE_CHECKING:
     from .transactions import LegacyTransaction
@@ -1037,25 +1038,7 @@ class ChainInterface:
                 offset = int(trace["stack"][-2], 16)
                 length = int(trace["stack"][-3], 16)
 
-                start_block = offset // 32
-                start_offset = offset % 32
-                end_block = (offset + length) // 32
-                end_offset = (offset + length) % 32
-
-                if start_block == end_block:
-                    deployment_code = bytes.fromhex(trace["memory"][start_block])[
-                        start_offset : start_offset + length
-                    ]
-                else:
-                    deployment_code = bytes.fromhex(trace["memory"][start_block])[
-                        start_offset:
-                    ]
-                    for i in range(start_block + 1, end_block):
-                        deployment_code += bytes.fromhex(trace["memory"][i])
-                    deployment_code += bytes.fromhex(trace["memory"][end_block])[
-                        :end_offset
-                    ]
-
+                deployment_code = read_from_memory(offset, length, trace["memory"])
                 fqn = get_fqn_from_deployment_code(deployment_code)
                 addresses.append(fqn)
             elif trace["op"] in {"RETURN", "REVERT", "STOP"}:
@@ -1097,25 +1080,7 @@ class ChainInterface:
                 offset = int(trace["stack"][-2], 16)
                 length = int(trace["stack"][-3], 16)
 
-                start_block = offset // 32
-                start_offset = offset % 32
-                end_block = (offset + length) // 32
-                end_offset = (offset + length) % 32
-
-                if start_block == end_block:
-                    deployment_code = bytes.fromhex(trace["memory"][start_block])[
-                        start_offset : start_offset + length
-                    ]
-                else:
-                    deployment_code = bytes.fromhex(trace["memory"][start_block])[
-                        start_offset:
-                    ]
-                    for i in range(start_block + 1, end_block):
-                        deployment_code += bytes.fromhex(trace["memory"][i])
-                    deployment_code += bytes.fromhex(trace["memory"][end_block])[
-                        :end_offset
-                    ]
-
+                deployment_code = read_from_memory(offset, length, trace["memory"])
                 fqn = get_fqn_from_deployment_code(deployment_code)
                 addresses.append(fqn)
             elif trace["op"] == "REVERT":
