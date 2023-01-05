@@ -337,8 +337,6 @@ class TransactionAbc(ABC, Generic[T]):
         ):
             return self._return_type(self._tx_receipt["contractAddress"], self._chain)
 
-        assert self._abi is not None
-
         dev_chain = self._chain.dev_chain
         if isinstance(dev_chain, AnvilDevChain):
             self._fetch_trace_transaction()
@@ -378,6 +376,9 @@ class TransactionAbc(ABC, Generic[T]):
             self._fetch_debug_trace_transaction()
             assert self._debug_trace_transaction is not None
             output = bytes.fromhex(self._debug_trace_transaction["returnValue"])  # type: ignore
+
+        if self._abi is None:
+            return self._return_type(output)
 
         if self._return_type == type(None):
             assert len(output) == 0
