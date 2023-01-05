@@ -24,7 +24,10 @@ def run_svm(ctx: Context):
 @run_svm.command(name="install")
 @click.argument("version_range", nargs=-1)
 @click.option(
-    "--force", is_flag=True, help="Reinstall the target version if already installed."
+    "--force",
+    "-f",
+    is_flag=True,
+    help="Reinstall the target version if already installed.",
 )
 @click.pass_context
 def svm_install(ctx: Context, version_range: Tuple[str], force: bool) -> None:
@@ -79,7 +82,10 @@ def svm_switch(ctx: Context, version: str) -> None:
 @run_svm.command(name="use")
 @click.argument("version_range", nargs=-1)
 @click.option(
-    "--force", is_flag=True, help="Reinstall the target version if already installed."
+    "--force",
+    "-f",
+    is_flag=True,
+    help="Reinstall the target version if already installed.",
 )
 @click.pass_context
 def svm_use(ctx: Context, version_range: Tuple[str], force: bool) -> None:

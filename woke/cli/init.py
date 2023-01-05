@@ -43,6 +43,7 @@ def init_pytypes(ctx: Context, return_tx: bool, warnings: bool) -> None:
 @run_init.command(name="fuzz")
 @click.option(
     "--force",
+    "-f",
     is_flag=True,
     default=False,
     help="Overwrite existing pytypes and tests directories",

@@ -31,6 +31,7 @@ from .console import console
 )
 @click.option(
     "--force",
+    "-f",
     is_flag=True,
     default=False,
     help="Force recompile the project without previous build artifacts.",
