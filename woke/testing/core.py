@@ -22,6 +22,7 @@ from typing import (
     Union,
     cast,
     get_type_hints,
+    overload,
 )
 
 import eth_abi
@@ -193,6 +194,144 @@ class Account:
         if value < 0:
             raise ValueError("value must be non-negative")
         self._chain.dev_chain.set_nonce(str(self.address), value)
+
+    def _prepare_tx_params(
+        self,
+        data: Union[bytes, bytearray] = b"",
+        value: int = 0,
+        from_: Optional[Union[Account, Address, str]] = None,
+        gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max",
+    ):
+        params: TxParams = {
+            "type": 0,
+            "value": value,
+            "data": data,
+            "gas_price": self._chain.gas_price,
+            "to": str(self.address),
+        }
+        if from_ is None:
+            if self._chain.default_account is None:
+                raise ValueError("No from_ specified and no default account set")
+            params["from"] = str(self._chain.default_account.address)
+        elif isinstance(from_, Account):
+            if from_.chain != self.chain:
+                raise ValueError("`from_` account must belong to this chain")
+            params["from"] = str(from_.address)
+        else:
+            params["from"] = str(from_)
+
+        params["nonce"] = self._chain._get_nonce(params["from"])
+
+        if gas_limit == "max":
+            params["gas"] = self.chain.block_gas_limit
+        elif gas_limit == "auto":
+            params["gas"] = self.chain.dev_chain.estimate_gas(params)
+        elif isinstance(gas_limit, int):
+            params["gas"] = gas_limit
+        else:
+            raise ValueError("invalid gas limit")
+
+        return params
+
+    def call(
+        self,
+        data: Union[bytes, bytearray] = b"",
+        value: int = 0,
+        from_: Optional[Union[Account, Address, str]] = None,
+        gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max",
+    ) -> bytearray:
+        params = self._prepare_tx_params(data, value, from_, gas_limit)
+        try:
+            output = self._chain.dev_chain.call(params)
+        except JsonRpcError as e:
+            if isinstance(self._chain.dev_chain, AnvilDevChain) and e.data["code"] == 3:
+                # call reverted, try to send as a transaction to get more info
+                # TODO what if auto-mine is off?
+                return self.transact(data, value, from_, gas_limit, False)
+            elif (
+                isinstance(self._chain.dev_chain, HardhatDevChain)
+                and e.data["code"] == -32603
+            ):
+                # call reverted, try to send as a transaction to get more info
+                # TODO what if auto-mine is off?
+                return self.transact(data, value, from_, gas_limit, False)
+            raise e from None
+
+        return bytearray(output)
+
+    @overload
+    def transact(
+        self,
+        data: Union[bytes, bytearray] = b"",
+        value: int = 0,
+        from_: Optional[Union[Account, Address, str]] = None,
+        gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max",
+        return_tx: Literal[False] = False,
+    ) -> bytearray:
+        ...
+
+    @overload
+    def transact(
+        self,
+        data: Union[bytes, bytearray] = b"",
+        value: int = 0,
+        from_: Optional[Union[Account, Address, str]] = None,
+        gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max",
+        return_tx: Literal[True] = True,
+    ) -> LegacyTransaction[bytearray]:
+        ...
+
+    def transact(
+        self,
+        data: Union[bytes, bytearray] = b"",
+        value: int = 0,
+        from_: Optional[Union[Account, Address, str]] = None,
+        gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max",
+        return_tx: bool = False,
+    ) -> Union[bytearray, LegacyTransaction[bytearray]]:
+        tx_params = self._prepare_tx_params(data, value, from_, gas_limit)
+        sender = Account(tx_params["from"], self._chain)
+
+        with _signer_account(sender):
+            try:
+                tx_hash = self._chain.dev_chain.send_transaction(tx_params)
+            except (ValueError, JsonRpcError) as e:
+                try:
+                    tx_hash = e.args[0]["data"]["txHash"]
+                except Exception:
+                    raise e
+            self.chain._nonces[sender.address] += 1
+
+        assert "to" in tx_params
+        recipient_fqn = get_fqn_from_address(Address(tx_params["to"]), self.chain)
+
+        from .transactions import LegacyTransaction
+
+        tx = LegacyTransaction[bytearray](
+            tx_hash,
+            tx_params,
+            None,
+            bytearray,
+            recipient_fqn,
+            self.chain,
+        )
+
+        if return_tx:
+            return tx
+
+        tx.wait()
+
+        if self._chain.console_logs_callback is not None:
+            logs = tx.console_logs
+            if len(logs) > 0:
+                self._chain.console_logs_callback(tx, logs)
+
+        if self._chain.events_callback is not None:
+            events = tx.events
+            if len(events) > 0:
+                self._chain.events_callback(tx, events)
+
+        return tx.return_value
 
 
 class RevertToSnapshotFailedError(Exception):
@@ -813,7 +952,7 @@ class ChainInterface:
         if sender is None:
             raise ValueError("No from_ account specified and no default account set")
 
-        with _signer_account(sender, self):
+        with _signer_account(sender):
             try:
                 tx_hash = self._dev_chain.send_transaction(tx_params)
             except ValueError as e:
@@ -1013,7 +1152,7 @@ class ChainInterface:
         if sender is None:
             raise ValueError("No from_ account specified and no default account set")
 
-        with _signer_account(sender, self):
+        with _signer_account(sender):
             try:
                 tx_hash = self._dev_chain.send_transaction(tx_params)
             except (ValueError, JsonRpcError) as e:
@@ -1056,27 +1195,30 @@ class ChainInterface:
 
 
 @contextmanager
-def _signer_account(sender: Account, interface: ChainInterface):
-    chain = interface.dev_chain
+def _signer_account(sender: Account):
+    chain = sender.chain
+    dev_chain = chain.dev_chain
     account_created = True
-    if sender not in interface.accounts:
-        interface.update_accounts()
-        if sender not in interface.accounts:
+    if sender not in chain.accounts:
+        chain.update_accounts()
+        if sender not in chain.accounts:
             account_created = False
 
     if not account_created:
-        if isinstance(chain, (AnvilDevChain, HardhatDevChain)):
-            chain.impersonate_account(str(sender))
-        elif isinstance(chain, GanacheDevChain):
-            chain.add_account(str(sender), "")
+        if isinstance(dev_chain, (AnvilDevChain, HardhatDevChain)):
+            dev_chain.impersonate_account(str(sender))
+        elif isinstance(dev_chain, GanacheDevChain):
+            dev_chain.add_account(str(sender), "")
         else:
             raise NotImplementedError()
 
     try:
         yield
     finally:
-        if not account_created and isinstance(chain, (AnvilDevChain, HardhatDevChain)):
-            chain.stop_impersonating_account(str(sender))
+        if not account_created and isinstance(
+            dev_chain, (AnvilDevChain, HardhatDevChain)
+        ):
+            dev_chain.stop_impersonating_account(str(sender))
 
 
 default_chain = ChainInterface()
