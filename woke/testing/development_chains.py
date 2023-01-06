@@ -53,7 +53,7 @@ class DevChainABC(ABC):
     def send_transaction(self, params: TxParams) -> str:
         return self._communicator.eth_send_transaction(params)
 
-    def debug_trace_transaction(self, tx_hash: str, options: Dict) -> Dict:
+    def debug_trace_transaction(self, tx_hash: str, options: Dict) -> Dict[str, Any]:
         return self._communicator.debug_trace_transaction(tx_hash, options)
 
     def wait_for_transaction_receipt(self, tx_hash: str) -> Dict[str, Any]:

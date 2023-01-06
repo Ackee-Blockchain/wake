@@ -91,7 +91,7 @@ def _parse_opcodes(opcodes: str) -> List[Tuple[int, str, int, Optional[int]]]:
 def _parse_source_map(
     source_map: str,
     pc_op_map: List[Tuple[int, str, int, Optional[int]]],
-) -> Dict[int, Tuple[int, int, int]]:
+) -> Dict[int, Tuple[int, int, int, Optional[str]]]:
     pc_map = {}
     last_data = [-1, -1, -1, None, None]
 
@@ -106,7 +106,12 @@ def _parse_source_map(
             else:
                 last_data[x] = source_spl[x]
 
-        pc_map[pc] = (last_data[0], last_data[0] + last_data[1], last_data[2])
+        pc_map[pc] = (
+            last_data[0],
+            last_data[0] + last_data[1],
+            last_data[2],
+            last_data[3],
+        )
 
     return pc_map
 
@@ -131,6 +136,10 @@ class TypeGenerator:
     __sol_to_py_lookup: Dict[str, Tuple[str, str]]
     # set of function names which should be overloaded
     __func_to_overload: Set[str]
+    __contracts_index: Dict[str, Any]
+    __contracts_jump_in: Dict[str, Set[int]]
+    __contracts_jump_out: Dict[str, Set[int]]
+    __contracts_jumpdest: Dict[str, Dict[int, Tuple[Optional[str], str]]]
     __errors_index: Dict[bytes, Dict[str, Any]]
     __events_index: Dict[bytes, Dict[str, Any]]
     __contracts_by_metadata_index: Dict[bytes, str]
@@ -153,6 +162,10 @@ class TypeGenerator:
         self.__sol_to_py_lookup = {}
         self.__init_sol_to_py_types()
         self.__func_to_overload = set()
+        self.__contracts_index = {}
+        self.__contracts_jump_in = {}
+        self.__contracts_jump_out = {}
+        self.__contracts_jumpdest = {}
         self.__errors_index = {}
         self.__events_index = {}
         self.__contracts_by_metadata_index = {}
@@ -433,7 +446,7 @@ class TypeGenerator:
 
         for pc, op, size, argument in parsed_opcodes:
             if op == "REVERT" and pc in pc_map:
-                start, end, file_id = pc_map[pc]
+                start, end, file_id, _ = pc_map[pc]
                 if file_id == -1:
                     continue
                 try:
@@ -460,6 +473,56 @@ class TypeGenerator:
                         if fqn not in self.__contracts_revert_index:
                             self.__contracts_revert_index[fqn] = set()
                         self.__contracts_revert_index[fqn].add(pc)
+            elif op in {"JUMP", "JUMPI"} and pc in pc_map:
+                _, _, file_id, jump_type = pc_map[pc]
+                if file_id == -1:
+                    continue
+                if jump_type == "i":
+                    if fqn not in self.__contracts_jump_in:
+                        self.__contracts_jump_in[fqn] = set()
+                    self.__contracts_jump_in[fqn].add(pc)
+                elif jump_type == "o":
+                    if fqn not in self.__contracts_jump_out:
+                        self.__contracts_jump_out[fqn] = set()
+                    self.__contracts_jump_out[fqn].add(pc)
+            elif op == "JUMPDEST" and pc in pc_map:
+                start, end, file_id, _ = pc_map[pc]
+                if file_id == -1:
+                    continue
+
+                try:
+                    path = self.__reference_resolver.resolve_source_file_id(
+                        file_id, contract.cu_hash
+                    )
+                except KeyError:
+                    continue
+
+                intervals = self.__interval_trees[path].envelop(start, end)
+                nodes: List = sorted(
+                    [interval.data for interval in intervals],
+                    key=lambda n: n.ast_tree_depth,
+                    reverse=True,
+                )
+
+                func_defs = [n for n in nodes if isinstance(n, FunctionDefinition)]
+
+                if len(func_defs) == 1:
+                    if fqn not in self.__contracts_jumpdest:
+                        self.__contracts_jumpdest[fqn] = {}
+                    func = func_defs[0]
+                    if isinstance(func.parent, ContractDefinition):
+                        if func.parent.kind == ContractKind.LIBRARY:
+                            self.__contracts_jumpdest[fqn][pc] = (
+                                func.parent.name,
+                                func.name,
+                            )
+                        else:
+                            self.__contracts_jumpdest[fqn][pc] = (
+                                contract.name,
+                                func.name,
+                            )
+                    else:
+                        self.__contracts_jumpdest[fqn][pc] = (None, func.name)
 
         if len(compilation_info.evm.deployed_bytecode.object) > 0:
             metadata = bytes.fromhex(
@@ -475,7 +538,12 @@ class TypeGenerator:
             for base in contract.linearized_base_contracts
         )
 
-        abi_by_selector: Dict[Union[bytes, Literal["constructor"]], Dict] = {}
+        abi_by_selector: Dict[
+            Union[
+                bytes, Literal["constructor"], Literal["fallback"], Literal["receive"]
+            ],
+            Dict,
+        ] = {}
 
         module_name = "pytypes." + _make_path_alphanum(
             contract.parent.source_unit_name[:-3]
@@ -536,10 +604,8 @@ class TypeGenerator:
                     module_name,
                     (contract.name, item["name"]),
                 )
-            elif item["type"] == "constructor":
-                abi_by_selector["constructor"] = item
-            elif item["type"] in {"fallback", "receive"}:
-                continue
+            elif item["type"] in {"constructor", "fallback", "receive"}:
+                abi_by_selector[item["type"]] = item
             else:
                 raise Exception(f"Unexpected ABI item type: {item['type']}")
         self.add_str_to_types(1, f"_abi = {abi_by_selector}", 1)
@@ -1152,6 +1218,15 @@ class TypeGenerator:
                     parent_contract.name, parent_contract.parent.source_unit_name
                 )
 
+        fqn = f"{contract.parent.source_unit_name}:{contract.name}"
+        contract_module_name = "pytypes." + _make_path_alphanum(
+            contract.parent.source_unit_name[:-3]
+        ).replace("/", ".")
+        self.__contracts_index[fqn] = (
+            contract_module_name,
+            (self.get_name(contract.name),),
+        )
+
         if base_names:
             # remove trailing ", "
             base_names = base_names[:-2]
@@ -1315,10 +1390,14 @@ class TypeGenerator:
             INIT_CONTENT.format(
                 errors=self.__errors_index,
                 events=self.__events_index,
+                contracts_by_fqn=self.__contracts_index,
                 contracts_by_metadata=self.__contracts_by_metadata_index,
                 contracts_inheritance=self.__contracts_inheritance_index,
                 contracts_revert_index=self.__contracts_revert_index,
                 deployment_code_index=self.__deployment_code_index,
+                contract_internal_jumps_in=self.__contracts_jump_in,
+                contract_internal_jumps_out=self.__contracts_jump_out,
+                contract_internal_jumpdests=self.__contracts_jumpdest,
             )
         )
 
