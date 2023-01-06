@@ -877,33 +877,6 @@ class ChainInterface:
 
         return generated_events
 
-    def _process_tx_receipt(
-        self,
-        tx_receipt: Dict[str, Any],
-        tx_hash: str,
-        tx_params: TxParams,
-        origin: Union[Address, str],
-    ) -> None:
-        if int(tx_receipt["status"], 16) == 0:
-            if isinstance(self._dev_chain, (AnvilDevChain, GanacheDevChain)):
-                # should also revert
-                try:
-                    self._dev_chain.call(tx_params)
-                    raise AssertionError("Transaction should have reverted")
-                except JsonRpcError as e:
-                    try:
-                        revert_data = e.data["data"][2:]
-                    except Exception:
-                        raise e
-                self._process_revert_data(tx_hash, bytes.fromhex(revert_data), origin)
-            elif isinstance(self._dev_chain, HardhatDevChain):
-                try:
-                    _ = self._dev_chain.call(tx_params)
-                    raise AssertionError("Transaction should have reverted")
-                except JsonRpcError as e:
-                    data = bytes.fromhex(e.data["data"]["data"][2:])
-                self._process_revert_data(tx_hash, data, origin)
-
     def _process_return_data(self, output: bytes, abi: Dict, return_type: Type):
         output_types = [
             eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
