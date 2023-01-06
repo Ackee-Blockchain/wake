@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from enum import IntEnum
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 
+from .call_trace import CallTrace
 from .core import Account, ChainInterface, default_chain
 from .development_chains import AnvilDevChain, GanacheDevChain, HardhatDevChain
 from .internal import (
@@ -367,6 +368,20 @@ class TransactionAbc(ABC, Generic[T]):
             assert len(output) == 0
             return None  # type: ignore
         return self._chain._process_return_data(output, self._abi, self._return_type)
+
+    @property
+    @_fetch_tx_receipt
+    def call_trace(self) -> CallTrace:
+        if self._debug_trace_transaction is None:
+            self._fetch_debug_trace_transaction()
+        assert self._debug_trace_transaction is not None
+
+        return CallTrace.from_debug_trace(
+            self._debug_trace_transaction,
+            self._recipient_fqn,
+            self._tx_params,
+            self._chain,
+        )  # pyright: reportGeneralTypeIssues=false
 
     @property
     @abstractmethod

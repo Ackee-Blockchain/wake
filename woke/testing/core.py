@@ -1191,6 +1191,8 @@ default_chain = ChainInterface()
 errors: Dict[bytes, Dict[str, Any]] = {}
 # selector => (contract_fqn => pytypes_object)
 events: Dict[bytes, Dict[str, Any]] = {}
+# contract_fqn => contract type
+contracts_by_fqn: Dict[str, Any] = {}
 # contract_metadata => contract_fqn
 contracts_by_metadata: Dict[bytes, str] = {}
 # contract_fqn => tuple of linearized base contract fqns
@@ -1201,11 +1203,34 @@ contracts_revert_index: Dict[str, Set[int]] = {}
 # where deployment code segments is a tuple of (length, BLAKE2b hash)
 deployment_code_index: List[Tuple[Tuple[Tuple[int, bytes], ...], str]] = []
 
+contract_internal_jumps_in: Dict[str, Set[int]] = {}
+contract_internal_jumps_out: Dict[str, Set[int]] = {}
+contract_internal_jumpdests: Dict[str, Dict[int, Tuple[Optional[str], str]]] = {}
+
 LIBRARY_PLACEHOLDER_REGEX = re.compile(r"__\$[0-9a-fA-F]{34}\$__")
 
 
+def get_contracts_by_fqn() -> Dict[str, Any]:
+    return contracts_by_fqn
+
+
+def get_contract_internal_jumps_in() -> Dict[str, Set[int]]:
+    return contract_internal_jumps_in
+
+
+def get_contract_internal_jumps_out() -> Dict[str, Set[int]]:
+    return contract_internal_jumps_out
+
+
+def get_contract_internal_jumpdests() -> Dict[str, Dict[int, Tuple[str, str]]]:
+    return contract_internal_jumpdests
+
+
 class Contract(Account):
-    _abi: Dict[Union[bytes, Literal["constructor"]], Any]
+    _abi: Dict[
+        Union[bytes, Literal["constructor"], Literal["fallback"], Literal["receive"]],
+        Any,
+    ]
     _deployment_code: str
 
     def __init__(
