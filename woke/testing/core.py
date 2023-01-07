@@ -1003,7 +1003,17 @@ class ChainInterface:
         addresses = [origin]
         event_fqns = []
 
-        for trace in debug_trace["structLogs"]:
+        for i, trace in enumerate(debug_trace["structLogs"]):
+            if i > 0:
+                prev_trace = debug_trace["structLogs"][i - 1]
+                if (
+                    prev_trace["op"]
+                    in {"CALL", "CALLCODE", "DELEGATECALL", "STATICCALL"}
+                    and prev_trace["depth"] == trace["depth"]
+                ):
+                    # precompiled contract was called in the previous trace
+                    addresses.pop()
+
             if trace["op"] in {"CALL", "CALLCODE", "DELEGATECALL", "STATICCALL"}:
                 addr = int(trace["stack"][-2], 16)
                 addresses.append(Address(addr))
@@ -1045,7 +1055,17 @@ class ChainInterface:
         addresses = [origin]
         last_revert_origin = None
 
-        for trace in debug_trace["structLogs"]:
+        for i, trace in enumerate(debug_trace["structLogs"]):
+            if i > 0:
+                prev_trace = debug_trace["structLogs"][i - 1]
+                if (
+                    prev_trace["op"]
+                    in {"CALL", "CALLCODE", "DELEGATECALL", "STATICCALL"}
+                    and prev_trace["depth"] == trace["depth"]
+                ):
+                    # precompiled contract was called in the previous trace
+                    addresses.pop()
+
             if trace["op"] in {"CALL", "CALLCODE", "DELEGATECALL", "STATICCALL"}:
                 addr = int(trace["stack"][-2], 16)
                 addresses.append(Address(addr))
