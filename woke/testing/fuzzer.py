@@ -291,7 +291,6 @@ def fuzz(
 
                     exception_info = err_parent_conn.recv()
                     if exception_info is not None:
-                        print(exception_info)
                         exception_info = pickle.loads(exception_info)
 
                     if exception_info is not None:
