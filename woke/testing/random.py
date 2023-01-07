@@ -82,11 +82,21 @@ def random_string(
 
 
 def random_bytes(
-    min: int, max: int, predicate: Optional[Callable[[bytes], bool]] = None
-) -> bytes:
-    def gen() -> bytes:
-        len = random.randint(min, max)
-        return bytes(random.getrandbits(8) for _ in range(len))
+    min: int,
+    max: Optional[int] = None,
+    predicate: Optional[Callable[[bytes], bool]] = None,
+) -> bytearray:
+    """
+    Generates a random bytearray of length between min and max.
+    If max is None, the length is exactly min.
+    """
+
+    def gen() -> bytearray:
+        if max is None:
+            len = min
+        else:
+            len = random.randint(min, max)
+        return bytearray(random.getrandbits(8) for _ in range(len))
 
     ret = gen()
     if predicate is None:
