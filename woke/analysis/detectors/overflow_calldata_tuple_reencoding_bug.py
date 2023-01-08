@@ -180,7 +180,7 @@ class OverflowCalldataTupleReencodingBugDetector(DetectorAbc):
                     )
             else:
                 logger.warning(
-                    f"Unexpected function call child node: {func_identifier} {func_identifier.source}"
+                    f"Unexpected function call child node: {func_identifier} {func_identifier.source if func_identifier else ''}"
                 )
                 return
 
@@ -208,7 +208,9 @@ class OverflowCalldataTupleReencodingBugDetector(DetectorAbc):
         elif t.kind == FunctionTypeKind.ABI_ENCODE_CALL:
             assert len(node.arguments) == 2
             if isinstance(node.arguments[1], TupleExpression):
-                encoded_types = [arg.type for arg in node.arguments[1].components]
+                encoded_types = [
+                    arg.type for arg in node.arguments[1].components
+                ]  # pyright: reportGeneralTypeIssues=false
             elif (
                 isinstance(node.arguments[1], FunctionCall)
                 and node.arguments[1].kind == FunctionCallKind.STRUCT_CONSTRUCTOR_CALL
