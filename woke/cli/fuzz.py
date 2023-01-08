@@ -3,6 +3,7 @@ import importlib.util
 import inspect
 import multiprocessing
 import platform
+import shutil
 import sys
 import time
 from pathlib import Path
@@ -120,15 +121,9 @@ def run_fuzz(
             )
             fuzz_functions.append(func)
 
-    logs_dir = config.project_root_path / ".woke-logs" / "fuzz" / str(int(time.time()))
-    logs_dir.mkdir(parents=True, exist_ok=False)
-    latest_dir = logs_dir.parent / "latest"
-
-    # create `latest` symlink
-    if platform.system() != "Windows":
-        if latest_dir.is_symlink():
-            latest_dir.unlink()
-        latest_dir.symlink_to(logs_dir, target_is_directory=True)
+    logs_dir = config.project_root_path / ".woke-logs" / "fuzz"
+    shutil.rmtree(logs_dir, ignore_errors=True)
+    logs_dir.mkdir(parents=True, exist_ok=True)
 
     for func in fuzz_functions:
         console.print("\n\n")
