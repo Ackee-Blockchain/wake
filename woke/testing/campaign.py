@@ -1,10 +1,12 @@
+import dataclasses
+import enum
 import logging
 import multiprocessing.queues
 import random
 from datetime import datetime, timedelta
-from typing import Callable, Counter, List, Optional, Tuple
+from typing import Any, Callable, Counter, Dict, Tuple, Type
 
-from typing_extensions import get_type_hints
+from typing_extensions import get_args, get_origin, get_type_hints
 
 from woke.testing.core import Address, Wei, default_chain
 
@@ -221,9 +223,6 @@ generators_map = {
     Address: lambda: random_address(),
     Wei: lambda: Wei(random.randint(0, 10000000000000000000)),
     int: lambda: random.randint(-(2**255), 2**255 - 1),
-    bytes: lambda: bytes(random_bytes(0, 64)),
-    bytearray: lambda: random_bytes(0, 64),
-    str: lambda: random_string(0, 64),
     bytes1: lambda: random_bytes(1),
     bytes2: lambda: random_bytes(2),
     bytes3: lambda: random_bytes(3),
@@ -324,11 +323,49 @@ generators_map = {
 
 
 def _generate_params_for_flow(flow: Callable) -> List:
-    hints = get_type_hints(flow)
-    ret = []
-    for type_ in hints.values():
+    def gen(t: Type, options: Optional[Dict[str, Any]] = None):
+        if options is None:
+            options = {}
+
+        if "min_len" in options:
+            min_len = options["min_len"]
+        else:
+            min_len = 0
+        if "max_len" in options:
+            max_len = options["max_len"]
+        else:
+            max_len = 64
+
         try:
-            ret.append(generators_map[type_]())
+            return generators_map[t]()
         except KeyError:
-            raise ValueError(f"No fuzz generator found for type {type_}")
-    return ret
+            if get_origin(t) is Annotated:
+                args = get_args(t)
+                opt = {}
+
+                for arg in args[1:]:
+                    if isinstance(arg, Length):
+                        opt["min_len"] = arg.min
+                        opt["max_len"] = arg.max
+
+                return gen(args[0], opt)
+            elif get_origin(t) is list:
+                return [
+                    gen(get_args(t)[0]) for _ in range(random.randint(min_len, max_len))
+                ]
+            elif t is bytes:
+                return bytes(random_bytes(min_len, max_len))
+            elif t is bytearray:
+                return random_bytes(min_len, max_len)
+            elif t is str:
+                return random_string(min_len, max_len)
+            elif issubclass(t, enum.Enum):
+                return random.choice(list(t))
+            elif dataclasses.is_dataclass(t):
+                return t(
+                    *[gen(h) for h in get_type_hints(t, include_extras=True).values()]
+                )
+            else:
+                raise ValueError(f"No fuzz generator found for type {t}")
+
+    return [gen(h) for h in get_type_hints(flow, include_extras=True).values()]
