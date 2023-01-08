@@ -512,7 +512,11 @@ def print_detectors(config: WokeConfig, theme: str = "monokai") -> None:
 def print_detection(
     result: DetectionResult, theme: Union[str, SyntaxTheme] = "monokai"
 ) -> None:
-    def print_result(detector_result: DetectorResult, tree: Optional[Tree]) -> Tree:
+    def print_result(
+        detector_result: DetectorResult,
+        tree: Optional[Tree],
+        detector_id: Optional[str],
+    ) -> Tree:
         source_unit = detector_result.ir_node
         while source_unit is not None:
             if isinstance(source_unit, SourceUnit):
@@ -550,7 +554,9 @@ def print_detection(
                 start_line=(start_line_index + 1),
                 highlight_lines={line_index + 1},
             ),
-            title=detector_result.message,
+            title=f"{detector_result.message} \[{detector_id}]"
+            if detector_id is not None
+            else detector_result.message,
             title_align="left",
             subtitle=source_unit.source_unit_name,
             subtitle_align="left",
@@ -562,12 +568,12 @@ def print_detection(
             t = tree.add(panel)
 
         for additional_result in detector_result.related_info:
-            print_result(additional_result, t)
+            print_result(additional_result, t, None)
 
         return t
 
     woke.cli.console.console.print("\n")
-    tree = print_result(result.result, None)
+    tree = print_result(result.result, None, result.string_id)
     woke.cli.console.console.print(tree)
 
 
