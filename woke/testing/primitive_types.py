@@ -1,4 +1,6 @@
-from typing import NewType
+from typing import List, NewType, Optional, TypeVar
+
+from typing_extensions import Annotated
 
 uint8 = NewType("uint8", int)
 uint16 = NewType("uint16", int)
@@ -67,35 +69,91 @@ int240 = NewType("int240", int)
 int248 = NewType("int248", int)
 int256 = NewType("int256", int)
 
-bytes1 = NewType("bytes1", bytearray)
-bytes2 = NewType("bytes2", bytearray)
-bytes3 = NewType("bytes3", bytearray)
-bytes4 = NewType("bytes4", bytearray)
-bytes5 = NewType("bytes5", bytearray)
-bytes6 = NewType("bytes6", bytearray)
-bytes7 = NewType("bytes7", bytearray)
-bytes8 = NewType("bytes8", bytearray)
-bytes9 = NewType("bytes9", bytearray)
-bytes10 = NewType("bytes10", bytearray)
-bytes11 = NewType("bytes11", bytearray)
-bytes12 = NewType("bytes12", bytearray)
-bytes13 = NewType("bytes13", bytearray)
-bytes14 = NewType("bytes14", bytearray)
-bytes15 = NewType("bytes15", bytearray)
-bytes16 = NewType("bytes16", bytearray)
-bytes17 = NewType("bytes17", bytearray)
-bytes18 = NewType("bytes18", bytearray)
-bytes19 = NewType("bytes19", bytearray)
-bytes20 = NewType("bytes20", bytearray)
-bytes21 = NewType("bytes21", bytearray)
-bytes22 = NewType("bytes22", bytearray)
-bytes23 = NewType("bytes23", bytearray)
-bytes24 = NewType("bytes24", bytearray)
-bytes25 = NewType("bytes25", bytearray)
-bytes26 = NewType("bytes26", bytearray)
-bytes27 = NewType("bytes27", bytearray)
-bytes28 = NewType("bytes28", bytearray)
-bytes29 = NewType("bytes29", bytearray)
-bytes30 = NewType("bytes30", bytearray)
-bytes31 = NewType("bytes31", bytearray)
-bytes32 = NewType("bytes32", bytearray)
+bytes1 = NewType("bytes1", bytes)
+bytes2 = NewType("bytes2", bytes)
+bytes3 = NewType("bytes3", bytes)
+bytes4 = NewType("bytes4", bytes)
+bytes5 = NewType("bytes5", bytes)
+bytes6 = NewType("bytes6", bytes)
+bytes7 = NewType("bytes7", bytes)
+bytes8 = NewType("bytes8", bytes)
+bytes9 = NewType("bytes9", bytes)
+bytes10 = NewType("bytes10", bytes)
+bytes11 = NewType("bytes11", bytes)
+bytes12 = NewType("bytes12", bytes)
+bytes13 = NewType("bytes13", bytes)
+bytes14 = NewType("bytes14", bytes)
+bytes15 = NewType("bytes15", bytes)
+bytes16 = NewType("bytes16", bytes)
+bytes17 = NewType("bytes17", bytes)
+bytes18 = NewType("bytes18", bytes)
+bytes19 = NewType("bytes19", bytes)
+bytes20 = NewType("bytes20", bytes)
+bytes21 = NewType("bytes21", bytes)
+bytes22 = NewType("bytes22", bytes)
+bytes23 = NewType("bytes23", bytes)
+bytes24 = NewType("bytes24", bytes)
+bytes25 = NewType("bytes25", bytes)
+bytes26 = NewType("bytes26", bytes)
+bytes27 = NewType("bytes27", bytes)
+bytes28 = NewType("bytes28", bytes)
+bytes29 = NewType("bytes29", bytes)
+bytes30 = NewType("bytes30", bytes)
+bytes31 = NewType("bytes31", bytes)
+bytes32 = NewType("bytes32", bytes)
+
+
+class Length:
+    _min: int
+    _max: int
+
+    def __init__(self, a: int, b: Optional[int] = None) -> None:
+        if b is None:
+            self._min = a
+            self._max = a
+        else:
+            self._min = min(a, b)
+            self._max = max(a, b)
+
+    @property
+    def min(self) -> int:
+        return self._min
+
+    @property
+    def max(self) -> int:
+        return self._max
+
+
+T = TypeVar("T")
+List1 = Annotated[List[T], Length(1)]
+List2 = Annotated[List[T], Length(2)]
+List3 = Annotated[List[T], Length(3)]
+List4 = Annotated[List[T], Length(4)]
+List5 = Annotated[List[T], Length(5)]
+List6 = Annotated[List[T], Length(6)]
+List7 = Annotated[List[T], Length(7)]
+List8 = Annotated[List[T], Length(8)]
+List9 = Annotated[List[T], Length(9)]
+List10 = Annotated[List[T], Length(10)]
+List11 = Annotated[List[T], Length(11)]
+List12 = Annotated[List[T], Length(12)]
+List13 = Annotated[List[T], Length(13)]
+List14 = Annotated[List[T], Length(14)]
+List15 = Annotated[List[T], Length(15)]
+List16 = Annotated[List[T], Length(16)]
+List17 = Annotated[List[T], Length(17)]
+List18 = Annotated[List[T], Length(18)]
+List19 = Annotated[List[T], Length(19)]
+List20 = Annotated[List[T], Length(20)]
+List21 = Annotated[List[T], Length(21)]
+List22 = Annotated[List[T], Length(22)]
+List23 = Annotated[List[T], Length(23)]
+List24 = Annotated[List[T], Length(24)]
+List25 = Annotated[List[T], Length(25)]
+List26 = Annotated[List[T], Length(26)]
+List27 = Annotated[List[T], Length(27)]
+List28 = Annotated[List[T], Length(28)]
+List29 = Annotated[List[T], Length(29)]
+List30 = Annotated[List[T], Length(30)]
+List31 = Annotated[List[T], Length(31)]
+List32 = Annotated[List[T], Length(32)]

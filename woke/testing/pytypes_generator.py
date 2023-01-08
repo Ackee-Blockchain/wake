@@ -197,18 +197,12 @@ class TypeGenerator:
 
     # TODO do some prettier init :)
     def __init_sol_to_py_types(self):
-        self.__sol_to_py_lookup[types.UInt.__name__] = ("int", "int")
-        self.__sol_to_py_lookup[types.Int.__name__] = ("int", "int")
         self.__sol_to_py_lookup[types.Address.__name__] = (
             "Union[Account, Address]",
             "Address",
         )
         self.__sol_to_py_lookup[types.String.__name__] = ("str", "str")
         self.__sol_to_py_lookup[types.Bool.__name__] = ("bool", "bool")
-        self.__sol_to_py_lookup[types.FixedBytes.__name__] = (
-            "Union[bytearray, bytes]",
-            "bytearray",
-        )
         self.__sol_to_py_lookup[types.Bytes.__name__] = (
             "Union[bytearray, bytes]",
             "bytearray",
@@ -862,10 +856,23 @@ class TypeGenerator:
                 expr.ir_node.underlying_type.type, return_types
             )
         elif isinstance(expr, types.Array):
-            return f"List[{self.parse_type_and_import(expr.base_type, return_types)}]"
+            if expr.length is None:
+                return (
+                    f"List[{self.parse_type_and_import(expr.base_type, return_types)}]"
+                )
+            elif expr.length <= 32:
+                return f"List{expr.length}[{self.parse_type_and_import(expr.base_type, return_types)}]"
+            else:
+                return f"Annotated[List[{self.parse_type_and_import(expr.base_type, return_types)}], Length({expr.length})]"
         elif isinstance(expr, types.Contract):
             self.__imports.generate_contract_import_expr(expr)
             return self.get_name(expr.name)
+        elif isinstance(expr, types.FixedBytes):
+            return f"bytes{expr.bytes_count}"
+        elif isinstance(expr, types.Int):
+            return f"int{expr.bits_count}"
+        elif isinstance(expr, types.UInt):
+            return f"uint{expr.bits_count}"
         elif isinstance(expr, types.Mapping):
             self.__imports.add_python_import("from typing import Dict")
             return f"Dict[{self.parse_type_and_import(expr.key_type, return_types)}, {self.parse_type_and_import(expr.value_type, return_types)}]"
@@ -993,15 +1000,36 @@ class TypeGenerator:
                     ]
             elif isinstance(var_type, types.UserDefinedValueType):
                 underlying_type = var_type.ir_node.underlying_type.type
-                parsed.append(
-                    self.__sol_to_py_lookup[underlying_type.__class__.__name__][0]
-                )
-                returns = [
-                    (
-                        self.__sol_to_py_lookup[underlying_type.__class__.__name__][1],
-                        var_type_name.type_string,
+                if isinstance(underlying_type, types.FixedBytes):
+                    parsed.append(f"bytes{underlying_type.bytes_count}")
+                    returns = [
+                        (
+                            f"bytes{underlying_type.bytes_count}",
+                            var_type_name.type_string,
+                        )
+                    ]
+                elif isinstance(underlying_type, types.Int):
+                    parsed.append(f"int{underlying_type.bits_count}")
+                    returns = [
+                        (f"int{underlying_type.bits_count}", var_type_name.type_string)
+                    ]
+                elif isinstance(underlying_type, types.UInt):
+                    parsed.append(f"uint{underlying_type.bits_count}")
+                    returns = [
+                        (f"uint{underlying_type.bits_count}", var_type_name.type_string)
+                    ]
+                else:
+                    parsed.append(
+                        self.__sol_to_py_lookup[underlying_type.__class__.__name__][0]
                     )
-                ]
+                    returns = [
+                        (
+                            self.__sol_to_py_lookup[underlying_type.__class__.__name__][
+                                1
+                            ],
+                            var_type_name.type_string,
+                        )
+                    ]
             elif isinstance(var_type, types.Array):
                 use_parse = True
                 param_names.append(("index" + str(depth), "uint256"))
@@ -1042,6 +1070,15 @@ class TypeGenerator:
             elif isinstance(var_type, types.Contract):
                 self.__imports.generate_contract_import_expr(var_type)
                 returns = [(self.get_name(var_type.name), var_type_name.type_string)]
+            elif isinstance(var_type, types.FixedBytes):
+                parsed.append(f"bytes{var_type.bytes_count}")
+                returns = [(f"bytes{var_type.bytes_count}", var_type_name.type_string)]
+            elif isinstance(var_type, types.Int):
+                parsed.append(f"int{var_type.bits_count}")
+                returns = [(f"int{var_type.bits_count}", var_type_name.type_string)]
+            elif isinstance(var_type, types.UInt):
+                parsed.append(f"uint{var_type.bits_count}")
+                returns = [(f"uint{var_type.bits_count}", var_type_name.type_string)]
             else:
                 parsed.append(self.__sol_to_py_lookup[var_type.__class__.__name__][0])
                 returns = [
