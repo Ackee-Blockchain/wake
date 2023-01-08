@@ -36,6 +36,7 @@ class CallTrace:
     _status: bool
     _value: int
     _kind: CallTraceKind
+    _depth: int
     _subtraces: List[CallTrace]
     _parent: Optional[CallTrace]
 
@@ -45,11 +46,13 @@ class CallTrace:
         function_name: str,
         value: int,
         kind: CallTraceKind,
+        depth: int,
     ):
         self._contract_name = contract_name
         self._function_name = function_name
         self._value = value
         self._kind = kind
+        self._depth = depth
         self._status = True
         self._subtraces = []
         self._parent = None
@@ -103,6 +106,10 @@ class CallTrace:
     def kind(self) -> CallTraceKind:
         return self._kind
 
+    @property
+    def depth(self) -> int:
+        return self._depth
+
     @classmethod
     def from_debug_trace(
         cls,
@@ -129,7 +136,7 @@ class CallTrace:
         if origin_fqn is None or origin_fqn not in contracts_by_fqn:
             assert "to" in tx_params
             root_trace = CallTrace(
-                f"Unknown({tx_params['to']})", "<???>", value, CallTraceKind.CALL
+                f"Unknown({tx_params['to']})", "<???>", value, CallTraceKind.CALL, 1
             )
         else:
             contract_name = origin_fqn.split(":")[-1]
@@ -145,7 +152,7 @@ class CallTrace:
                 and "receive" in contract_abi
             ):
                 root_trace = CallTrace(
-                    contract_name, "<receive>", value, CallTraceKind.CALL
+                    contract_name, "<receive>", value, CallTraceKind.CALL, 1
                 )
             elif (
                 "data" not in tx_params
@@ -157,21 +164,37 @@ class CallTrace:
                     or contract_abi["fallback"]["stateMutability"] == "payable"
                 ):
                     root_trace = CallTrace(
-                        contract_name, "<fallback>", value, CallTraceKind.CALL
+                        contract_name, "<fallback>", value, CallTraceKind.CALL, 1
                     )
                 else:
                     root_trace = CallTrace(
-                        contract_name, "<???>", value, CallTraceKind.CALL
+                        contract_name, "<???>", value, CallTraceKind.CALL, 1
                     )
             else:
                 fn_abi = contract_abi[tx_params["data"][:4]]
                 root_trace = CallTrace(
-                    contract_name, fn_abi["name"], value, CallTraceKind.CALL
+                    contract_name, fn_abi["name"], value, CallTraceKind.CALL, 1
                 )
 
         current_trace = root_trace
 
-        for log in trace["structLogs"]:
+        for i, log in enumerate(trace["structLogs"]):
+            assert current_trace is not None
+            if current_trace.depth != log["depth"]:
+                if trace["structLogs"][i - 1]["op"] in {
+                    "CALL",
+                    "CALLCODE",
+                    "DELEGATECALL",
+                    "STATICCALL",
+                }:
+                    # precompiled contract was called in the previous step
+                    assert current_trace is not None
+                    current_trace = current_trace._parent
+                    contracts.pop()
+                    values.pop()
+                else:
+                    assert current_trace.depth == log["depth"]
+
             if log["op"] in {"CALL", "CALLCODE", "DELEGATECALL", "STATICCALL"}:
                 if log["op"] in {"CALL", "CALLCODE"}:
                     value = int(log["stack"][-3], 16)
@@ -180,16 +203,24 @@ class CallTrace:
                 else:
                     value = 0
 
+                assert current_trace is not None
+
                 addr = int(log["stack"][-2], 16)
                 fqn = get_fqn_from_address(Address(addr), chain)
                 if fqn is None:
                     if Address(addr) == Address(
                         "0x000000000000000000636F6e736F6c652e6c6f67"
                     ):
-                        call_trace = CallTrace("console", "log", value, log["op"])
+                        call_trace = CallTrace(
+                            "console", "log", value, log["op"], current_trace.depth + 1
+                        )
                     else:
                         call_trace = CallTrace(
-                            f"Unknown({Address(addr)})", "<???>", value, log["op"]
+                            f"Unknown({Address(addr)})",
+                            "<???>",
+                            value,
+                            log["op"],
+                            current_trace.depth + 1,
                         )
                 else:
                     contract_name = fqn.split(":")[-1]
@@ -230,15 +261,21 @@ class CallTrace:
                         else:
                             fn_name = "<???>"
 
-                    call_trace = CallTrace(contract_name, fn_name, value, log["op"])
+                    call_trace = CallTrace(
+                        contract_name,
+                        fn_name,
+                        value,
+                        log["op"],
+                        current_trace.depth + 1,
+                    )
 
-                assert current_trace is not None
                 current_trace._subtraces.append(call_trace)
                 call_trace._parent = current_trace
                 current_trace = call_trace
                 contracts.append(fqn)
                 values.append(value)
             elif log["op"] in {"JUMP", "JUMPI"}:
+                continue
                 pc = int(log["stack"][-1], 16)
                 fqn = contracts[-1]
 
@@ -265,6 +302,7 @@ class CallTrace:
                                 function_name,
                                 current_trace._value,
                                 CallTraceKind.INTERNAL,
+                                current_trace.depth,
                             )
                             current_trace._subtraces.append(jump_trace)
                             jump_trace._parent = current_trace
