@@ -8,7 +8,7 @@ from typing import Any, Callable, Counter, Dict, Tuple, Type
 
 from typing_extensions import get_args, get_origin, get_type_hints
 
-from woke.testing.core import Address, Wei, default_chain
+from woke.testing.core import Address, ChainInterface, Wei, default_chain
 
 from .coverage import CoverageProvider
 from .primitive_types import *
@@ -116,8 +116,12 @@ class Campaign:
         coverage: Optional[
             Tuple[CoverageProvider, multiprocessing.queues.Queue]
         ] = None,
+        chains: Optional[List[ChainInterface]] = None,
     ):
         init_timestamp = datetime.now()
+
+        if chains is None:
+            chains = [default_chain]
 
         for i in range(sequences_count):
             if (
@@ -127,48 +131,50 @@ class Campaign:
             ):
                 break
 
-            with default_chain.snapshot_and_revert():
-                logger.info(self.__format_heading(f"SEQUENCE {i}"))
-                seq = self.__sequence_constructor()
+            snapshots = [chain.snapshot() for chain in chains]
 
-                flows, _ = self.__get_methods(seq, attr="flow")
-                invs, _ = self.__get_methods(seq, attr="invariant")
+            logger.info(self.__format_heading(f"SEQUENCE {i}"))
+            seq = self.__sequence_constructor()
 
-                # point_coverage = Counter[str]()
+            flows, _ = self.__get_methods(seq, attr="flow")
+            invs, _ = self.__get_methods(seq, attr="invariant")
 
-                try:
-                    generated_flows = _generate_flows(flows, flows_count, seq)
-                    for f in flows:
-                        logger.info(f"{f[1]} {f[0].weight}: {generated_flows.count(f)}")
-                except ValueError as ex:
-                    logger.exception("Exception caught while generating flows sequence")
-                    raise ex
+            # point_coverage = Counter[str]()
 
-                for j, flow in enumerate(generated_flows):
-                    logger.info(
-                        f'\n{f"FLOW...":<9} {j:>4} IN SEQUENCE {i:>5} {flow[1]}:'
-                    )
-                    params = _generate_params_for_flow(flow[0])
-                    flow[0](*params)
-                    if not dry_run and invs:
-                        for idx, inv in enumerate(invs):
-                            logger.info(f'{"inv...":<33}{inv[1]}')
-                            inv[0]()
-                            del inv
+            try:
+                generated_flows = _generate_flows(flows, flows_count, seq)
+                for f in flows:
+                    logger.info(f"{f[1]} {f[0].weight}: {generated_flows.count(f)}")
+            except ValueError as ex:
+                logger.exception("Exception caught while generating flows sequence")
+                raise ex
 
-                    if j % 23 == 0 and coverage is not None:
-                        _update_send_coverage(coverage)
+            for j, flow in enumerate(generated_flows):
+                logger.info(f'\n{f"FLOW...":<9} {j:>4} IN SEQUENCE {i:>5} {flow[1]}:')
+                params = _generate_params_for_flow(flow[0])
+                flow[0](*params)
+                if not dry_run and invs:
+                    for idx, inv in enumerate(invs):
+                        logger.info(f'{"inv...":<33}{inv[1]}')
+                        inv[0]()
+                        del inv
 
-                if coverage is not None:
+                if j % 23 == 0 and coverage is not None:
                     _update_send_coverage(coverage)
 
-                del invs, flows
-                # point_coverage += seq.point_coverage
-                # logger.info(self.__format_heading("Sequence point coverage:"))
-                # self.__log_point_coverage(seq.point_coverage)
-                # logger.info(self.__format_heading("Campaign point coverage:"))
-                # self.__log_point_coverage(point_coverage)
-                del seq
+            if coverage is not None:
+                _update_send_coverage(coverage)
+
+            del invs, flows
+            # point_coverage += seq.point_coverage
+            # logger.info(self.__format_heading("Sequence point coverage:"))
+            # self.__log_point_coverage(seq.point_coverage)
+            # logger.info(self.__format_heading("Campaign point coverage:"))
+            # self.__log_point_coverage(point_coverage)
+            del seq
+
+            for snapshot, chain in zip(snapshots, chains):
+                chain.revert(snapshot)
 
         logger.info(f"\nRan {flows_count} flows. All flows and invariants passed.")
 
