@@ -6,7 +6,6 @@ import re
 import shutil
 import string
 from collections import deque
-from enum import Enum
 from operator import itemgetter
 from pathlib import Path, PurePath
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
@@ -43,13 +42,6 @@ from ..compile.build_data_model import BuildInfo
 from ..compile.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
 from ..utils.file_utils import is_relative_to
 from .constants import DEFAULT_IMPORTS, INIT_CONTENT, TAB_WIDTH
-
-
-class RequestType(str, Enum):
-    CALL = "call"
-    DEBUG = "debug"
-    TRACE = "trace"
-    DEFAULT = "default"  # default request type for the given network
 
 
 # TODO ensure that making the path alphanum won't create collisions
@@ -1122,7 +1114,7 @@ class TypeGenerator:
             returns_str = f"Tuple[{', '.join(ret[0] for ret in returns)}]"
         self.add_str_to_types(
             1,
-            f"""def {self.get_name(fn_name)}(self, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, to: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: bool = {False if is_view_or_pure else self.__return_tx_obj}, request_type: RequestType='{'call' if is_view_or_pure else 'default'}') -> Union[{returns_str}, LegacyTransaction[{returns_str}]]:""",
+            f"""def {self.get_name(fn_name)}(self, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, to: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: bool = {False if is_view_or_pure else self.__return_tx_obj}, request_type: RequestType='{'call' if is_view_or_pure else 'tx'}') -> Union[{returns_str}, LegacyTransaction[{returns_str}]]:""",
             1,
         )
 
@@ -1148,7 +1140,7 @@ class TypeGenerator:
             return_types = f"Tuple[{', '.join(map(itemgetter(0), returns))}]"
         self.add_str_to_types(
             2,
-            f'return self._transact("{fn_selector}", [{", ".join(map(itemgetter(0), param_names))}], return_tx, request_type, {return_types}, from_, to, value, gas_limit) if not request_type == \'call\' else self._call("{fn_selector}", [{", ".join(map(itemgetter(0), param_names))}], return_tx, {return_types}, from_, to, value, gas_limit)',
+            f'return self._transact("{fn_selector}", [{", ".join(map(itemgetter(0), param_names))}], return_tx, {return_types}, from_, to, value, gas_limit) if not request_type == \'call\' else self._call("{fn_selector}", [{", ".join(map(itemgetter(0), param_names))}], return_tx, {return_types}, from_, to, value, gas_limit)',
             2,
         )
 
@@ -1160,7 +1152,7 @@ class TypeGenerator:
         self.add_str_to_types(1, "@overload", 1)
         self.add_str_to_types(
             1,
-            f"""def {self.get_name(fn_name)}(self, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, to: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: Literal[{return_tx}] = {return_tx}, request_type: RequestType='default') -> {returns_str}:""",
+            f"""def {self.get_name(fn_name)}(self, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, to: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: Literal[{return_tx}] = {return_tx}, request_type: RequestType='tx') -> {returns_str}:""",
             1,
         )
         self.add_str_to_types(2, "...", 2)
@@ -1168,10 +1160,6 @@ class TypeGenerator:
     def generate_types_function(self, fn: FunctionDefinition):
         params_names, params = self.generate_func_params(fn)
         returns = self.generate_func_returns(fn)
-        # the generated functions have parameter of type RequestType, which is an enum and must be imported
-        self.__imports.add_python_import(
-            "from woke.testing.pytypes_generator import RequestType"
-        )
 
         if len(returns) == 0:
             returns_str = "None"
