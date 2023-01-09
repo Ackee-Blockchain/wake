@@ -3,6 +3,7 @@ from __future__ import annotations
 import dataclasses
 import functools
 import importlib
+import inspect
 import re
 from collections import defaultdict
 from contextlib import contextmanager
@@ -26,8 +27,9 @@ from typing import (
 )
 
 import eth_abi
+import eth_abi.packed
 import eth_utils
-from Crypto.Hash import BLAKE2b
+from Crypto.Hash import BLAKE2b, keccak
 from typing_extensions import Literal, get_args, get_origin
 
 from woke.testing.development_chains import (
@@ -52,11 +54,77 @@ class RequestType(str, Enum):
 
 
 class Abi:
+    @staticmethod
+    def _normalize_arguments(arguments: Iterable) -> List:
+        ret = []
+        for arg in arguments:
+            if isinstance(arg, Address):
+                ret.append(str(arg))
+            elif isinstance(arg, Account):
+                ret.append(str(arg.address))
+            else:
+                ret.append(arg)
+        return ret
+
     @classmethod
     def encode(cls, types: Iterable, arguments: Iterable) -> bytes:
         return eth_abi.encode(  # pyright: ignore[reportPrivateImportUsage]
-            types, arguments
+            types, cls._normalize_arguments(arguments)
         )
+
+    @classmethod
+    def encode_packed(cls, types: Iterable, arguments: Iterable) -> bytes:
+        return (
+            eth_abi.packed.encode_packed(  # pyright: ignore[reportPrivateImportUsage]
+                types, cls._normalize_arguments(arguments)
+            )
+        )
+
+    @classmethod
+    def encode_with_selector(
+        cls, selector: bytes, types: Iterable, arguments: Iterable
+    ) -> bytes:
+        return selector + cls.encode(types, arguments)
+
+    @classmethod
+    def encode_with_signature(
+        cls, signature: str, types: Iterable, arguments: Iterable
+    ) -> bytes:
+        selector = keccak.new(signature.encode("utf-8")).digest()[:4]
+        return cls.encode_with_selector(selector, types, arguments)
+
+    @classmethod
+    def encode_call(cls, func: Callable, arguments: Iterable) -> bytes:
+        def get_class_that_defined_method(meth):
+            if isinstance(meth, functools.partial):
+                return get_class_that_defined_method(meth.func)
+            if inspect.ismethod(meth):
+                for c in inspect.getmro(meth.__self__.__class__):
+                    if meth.__name__ in c.__dict__:
+                        return c
+                meth = getattr(
+                    meth, "__func__", meth
+                )  # fallback to __qualname__ parsing
+            if inspect.isfunction(meth):
+                c = getattr(
+                    inspect.getmodule(meth),
+                    meth.__qualname__.split(".<locals>", 1)[0].rsplit(".", 1)[0],
+                    None,
+                )
+                if isinstance(c, type):
+                    return c
+            return getattr(
+                meth, "__objclass__", None
+            )  # handle special descriptor objects
+
+        selector = func.selector
+        contract = get_class_that_defined_method(func)
+        assert selector in contract._abi  # pyright: reportOptionalMemberAccess=false
+        types = [
+            eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
+            for arg in contract._abi[selector]["inputs"]
+        ]
+        return cls.encode_with_selector(selector, types, arguments)
 
     @classmethod
     def decode(cls, types: Iterable, data: bytes) -> Any:
