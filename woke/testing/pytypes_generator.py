@@ -1239,6 +1239,8 @@ class TypeGenerator:
         if contract.events:
             self.generate_types_event(contract.events, 1, events_abi)
 
+        selector_assignments = []
+
         if contract.kind != ContractKind.LIBRARY:
             for var in contract.declared_variables:
                 if (
@@ -1246,9 +1248,20 @@ class TypeGenerator:
                     or var.visibility == Visibility.PUBLIC
                 ):
                     self.generate_getter_for_state_var(var)
+                    selector_assignments.append(
+                        (self.get_name(var.name), var.function_selector)
+                    )
             for fn in contract.functions:
                 if fn.function_selector:
                     self.generate_types_function(fn)
+                    selector_assignments.append(
+                        (self.get_name(fn.name), fn.function_selector)
+                    )
+
+        for fn_name, selector in selector_assignments:
+            self.add_str_to_types(
+                0, f"{self.get_name(contract.name)}.{fn_name}.selector = {selector}", 1
+            )
 
     def generate_types_source_unit(self, unit: SourceUnit) -> None:
         self.generate_types_struct(unit.structs, 0)
