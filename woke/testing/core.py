@@ -6,7 +6,7 @@ import importlib
 import re
 from collections import defaultdict
 from contextlib import contextmanager
-from enum import IntEnum
+from enum import Enum, IntEnum
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -36,7 +36,6 @@ from woke.testing.development_chains import (
     GanacheDevChain,
     HardhatDevChain,
 )
-from woke.testing.pytypes_generator import RequestType
 
 from . import hardhat_console
 from .internal import UnknownEvent, UnknownTransactionRevertedError
@@ -45,6 +44,11 @@ from .utils import read_from_memory
 
 if TYPE_CHECKING:
     from .transactions import LegacyTransaction
+
+
+class RequestType(str, Enum):
+    CALL = "call"
+    TX = "tx"
 
 
 class Abi:
@@ -1337,7 +1341,6 @@ class Contract(Account):
         selector: str,
         arguments: Iterable,
         return_tx: bool,
-        request_type: RequestType,
         return_type: Type,
         from_: Optional[Union[Account, Address, str]],
         to: Optional[Union[Account, Address, str]],
@@ -1394,7 +1397,7 @@ class Contract(Account):
         gas_limit: Union[int, Literal["max"], Literal["auto"]],
     ) -> Any:
         if return_tx:
-            raise ValueError("transaction can't be returned from a call")
+            raise ValueError("Transaction cannot be returned from a call")
         params = {}
         if from_ is not None:
             if isinstance(from_, Account):
