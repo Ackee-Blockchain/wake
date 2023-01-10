@@ -270,6 +270,7 @@ class Account:
 
     def _prepare_tx_params(
         self,
+        request_type: RequestType,
         data: Union[bytes, bytearray] = b"",
         value: int = 0,
         from_: Optional[Union[Account, Address, str]] = None,
@@ -283,9 +284,12 @@ class Account:
             "to": str(self.address),
         }
         if from_ is None:
-            if self._chain.default_account is None:
+            if request_type == "call" and self._chain.default_call_account is not None:
+                params["from"] = str(self._chain.default_call_account.address)
+            elif request_type == "tx" and self._chain.default_tx_account is not None:
+                params["from"] = str(self._chain.default_tx_account.address)
+            else:
                 raise ValueError("No from_ specified and no default account set")
-            params["from"] = str(self._chain.default_account.address)
         elif isinstance(from_, Account):
             if from_.chain != self.chain:
                 raise ValueError("`from_` account must belong to this chain")
@@ -313,7 +317,9 @@ class Account:
         from_: Optional[Union[Account, Address, str]] = None,
         gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max",
     ) -> bytearray:
-        params = self._prepare_tx_params(data, value, from_, gas_limit)
+        params = self._prepare_tx_params(
+            RequestType.CALL, data, value, from_, gas_limit
+        )
         try:
             output = self._chain.dev_chain.call(params)
         except JsonRpcError as e:
@@ -362,7 +368,9 @@ class Account:
         gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max",
         return_tx: bool = False,
     ) -> Union[bytearray, LegacyTransaction[bytearray]]:
-        tx_params = self._prepare_tx_params(data, value, from_, gas_limit)
+        tx_params = self._prepare_tx_params(
+            RequestType.TX, data, value, from_, gas_limit
+        )
         sender = Account(tx_params["from"], self._chain)
 
         with _signer_account(sender):
@@ -474,7 +482,8 @@ class ChainInterface:
     _connected: bool
     _dev_chain: DevChainABC
     _accounts: List[Account]
-    _default_account: Optional[Account]
+    _default_call_account: Optional[Account]
+    _default_tx_account: Optional[Account]
     _block_gas_limit: int
     _gas_price: int
     _chain_id: int
@@ -521,7 +530,10 @@ class ChainInterface:
             self._nonces = defaultdict(lambda: 0)
             self._snapshots = {}
             self._deployed_libraries = defaultdict(list)
-            self._default_account = None
+            self._default_call_account = (
+                self._accounts[0] if len(self._accounts) > 0 else None
+            )
+            self._default_tx_account = None
 
             self._single_source_errors = {
                 selector
@@ -575,16 +587,33 @@ class ChainInterface:
 
     @property
     @_check_connected
-    def default_account(self) -> Optional[Account]:
-        return self._default_account
+    def default_call_account(self) -> Optional[Account]:
+        return self._default_call_account
 
-    @default_account.setter
+    @default_call_account.setter
     @_check_connected
-    def default_account(self, account: Union[Account, Address, str]) -> None:
+    def default_call_account(self, account: Union[Account, Address, str]) -> None:
         if isinstance(account, Account):
-            self._default_account = account
+            if account.chain != self:
+                raise ValueError("Account is not from this chain")
+            self._default_call_account = account
         else:
-            self._default_account = Account(account, self)
+            self._default_call_account = Account(account, self)
+
+    @property
+    @_check_connected
+    def default_tx_account(self) -> Optional[Account]:
+        return self._default_tx_account
+
+    @default_tx_account.setter
+    @_check_connected
+    def default_tx_account(self, account: Union[Account, Address, str]) -> None:
+        if isinstance(account, Account):
+            if account.chain != self:
+                raise ValueError("Account is not from this chain")
+            self._default_tx_account = account
+        else:
+            self._default_tx_account = Account(account, self)
 
     @property
     @_check_connected
@@ -706,7 +735,8 @@ class ChainInterface:
         self._snapshots[snapshot_id] = {
             "nonces": self._nonces.copy(),
             "accounts": self._accounts.copy(),
-            "default_account": self._default_account,
+            "default_call_account": self._default_call_account,
+            "default_tx_account": self._default_tx_account,
             "block_gas_limit": self._block_gas_limit,
         }
         return snapshot_id
@@ -720,7 +750,8 @@ class ChainInterface:
         snapshot = self._snapshots[snapshot_id]
         self._nonces = snapshot["nonces"]
         self._accounts = snapshot["accounts"]
-        self._default_account = snapshot["default_account"]
+        self._default_call_account = snapshot["default_call_account"]
+        self._default_tx_account = snapshot["default_tx_account"]
         self._block_gas_limit = snapshot["block_gas_limit"]
         del self._snapshots[snapshot_id]
 
@@ -747,7 +778,12 @@ class ChainInterface:
         return self._nonces[address]
 
     def _build_transaction(
-        self, params: Dict, data: bytes, arguments: Iterable, abi: Optional[Dict]
+        self,
+        request_type: RequestType,
+        params: Dict,
+        data: bytes,
+        arguments: Iterable,
+        abi: Optional[Dict],
     ) -> TxParams:
         if abi is None:
             data += Abi.encode([], [])
@@ -761,10 +797,15 @@ class ChainInterface:
 
         if "from" in params:
             sender = params["from"]
-        elif self.default_account is not None:
-            sender = self.default_account.address
         else:
-            raise ValueError("No from_ account specified and no default account set")
+            if request_type == "call" and self.default_call_account is not None:
+                sender = self.default_call_account.address
+            elif request_type == "tx" and self.default_tx_account is not None:
+                sender = self.default_tx_account.address
+            else:
+                raise ValueError(
+                    "No from_ account specified and no default account set"
+                )
 
         if "gas" in params:
             gas = params["gas"]
@@ -987,13 +1028,16 @@ class ChainInterface:
         return_type: Type,
     ) -> Any:
         tx_params = self._build_transaction(
+            RequestType.TX,
             params,
             deployment_code,
             arguments,
             abi["constructor"] if "constructor" in abi else None,
         )
         sender = (
-            Account(params["from"], self) if "from" in params else self.default_account
+            Account(params["from"], self)
+            if "from" in params
+            else self.default_tx_account
         )
         if sender is None:
             raise ValueError("No from_ account specified and no default account set")
@@ -1047,7 +1091,9 @@ class ChainInterface:
         params: TxParams,
         return_type: Type,
     ) -> Any:
-        tx_params = self._build_transaction(params, selector, arguments, abi[selector])
+        tx_params = self._build_transaction(
+            RequestType.CALL, params, selector, arguments, abi[selector]
+        )
         try:
             output = self._dev_chain.call(tx_params)
         except JsonRpcError as e:
@@ -1175,9 +1221,13 @@ class ChainInterface:
         return_tx: bool,
         return_type: Type,
     ) -> Any:
-        tx_params = self._build_transaction(params, selector, arguments, abi[selector])
+        tx_params = self._build_transaction(
+            RequestType.TX, params, selector, arguments, abi[selector]
+        )
         sender = (
-            Account(params["from"], self) if "from" in params else self.default_account
+            Account(params["from"], self)
+            if "from" in params
+            else self.default_tx_account
         )
         if sender is None:
             raise ValueError("No from_ account specified and no default account set")
