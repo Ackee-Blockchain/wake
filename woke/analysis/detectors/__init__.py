@@ -9,6 +9,7 @@ from .api import (
 from .balance_state_var import UnsafeAddressBalanceUseDetector
 from .bug_empty_byte_array_copy import BugEmptyByteArrayCopyDetector
 from .call_options_not_called import FunctionCallOptionsNotCalledDetector
+from .msg_value_nonpayable_function import MsgValueNonpayableFunctionDetector
 from .no_return_detector import NoReturnDetector
 from .not_used_detector import NotUsedDetector
 from .overflow_calldata_tuple_reencoding_bug import (

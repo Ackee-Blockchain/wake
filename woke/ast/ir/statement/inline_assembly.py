@@ -43,6 +43,7 @@ class ExternalReference:
         Since this is not an IR node, there must still be a Yul IR node (Yul [Identifier][woke.ast.ir.yul.identifier.Identifier]) in the source code that represents the identifier.
     """
 
+    _inline_assembly: InlineAssembly
     _external_reference_model: ExternalReferenceModel
     _reference_resolver: ReferenceResolver
     _cu_hash: bytes
@@ -55,8 +56,12 @@ class ExternalReference:
     _yul_identifier: Optional[Identifier]
 
     def __init__(
-        self, init: IrInitTuple, external_reference_model: ExternalReferenceModel
+        self,
+        inline_assembly: InlineAssembly,
+        init: IrInitTuple,
+        external_reference_model: ExternalReferenceModel,
     ):
+        self._inline_assembly = inline_assembly
         self._external_reference_model = external_reference_model
         self._reference_resolver = init.reference_resolver
         self._cu_hash = init.cu.hash
@@ -154,6 +159,14 @@ class ExternalReference:
         return node
 
     @property
+    def inline_assembly(self) -> InlineAssembly:
+        """
+        Returns:
+            Inline assembly block this external references belongs to.
+        """
+        return self._inline_assembly
+
+    @property
     def yul_identifier(self) -> Identifier:
         """
         Returns:
@@ -224,7 +237,7 @@ class InlineAssembly(StatementAbc):
             start = external_reference.src.byte_offset
             end = start + external_reference.src.byte_length
             self._external_references[start:end] = ExternalReference(
-                init, external_reference
+                self, init, external_reference
             )
 
     def __iter__(self) -> Iterator[IrAbc]:
