@@ -1299,10 +1299,12 @@ class Contract(Account):
     _deployment_code: str
 
     def __init__(
-        self, addr: Union[Account, Address, str], chain: ChainInterface = default_chain
+        self, addr: Union[Account, Address, str], chain: Optional[ChainInterface] = None
     ):
         if isinstance(addr, Account):
-            if addr.chain != chain:
+            if chain is None:
+                chain = addr.chain
+            elif addr.chain != chain:
                 raise ValueError("Account and chain must be from the same chain")
             addr = addr.address
         super().__init__(addr, chain)
