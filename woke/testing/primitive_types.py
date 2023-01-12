@@ -1,106 +1,23 @@
-from typing import List, NewType, Optional, TypeVar
+from typing import List, Optional, TypeVar
 
 from typing_extensions import Annotated
 
-uint8 = NewType("uint8", int)
-uint16 = NewType("uint16", int)
-uint24 = NewType("uint24", int)
-uint32 = NewType("uint32", int)
-uint40 = NewType("uint40", int)
-uint48 = NewType("uint48", int)
-uint56 = NewType("uint56", int)
-uint64 = NewType("uint64", int)
-uint72 = NewType("uint72", int)
-uint80 = NewType("uint80", int)
-uint88 = NewType("uint88", int)
-uint96 = NewType("uint96", int)
-uint104 = NewType("uint104", int)
-uint112 = NewType("uint112", int)
-uint120 = NewType("uint120", int)
-uint128 = NewType("uint128", int)
-uint136 = NewType("uint136", int)
-uint144 = NewType("uint144", int)
-uint152 = NewType("uint152", int)
-uint160 = NewType("uint160", int)
-uint168 = NewType("uint168", int)
-uint176 = NewType("uint176", int)
-uint184 = NewType("uint184", int)
-uint192 = NewType("uint192", int)
-uint200 = NewType("uint200", int)
-uint208 = NewType("uint208", int)
-uint216 = NewType("uint216", int)
-uint224 = NewType("uint224", int)
-uint232 = NewType("uint232", int)
-uint240 = NewType("uint240", int)
-uint248 = NewType("uint248", int)
-uint256 = NewType("uint256", int)
-uint = uint256
 
-int8 = NewType("int8", int)
-int16 = NewType("int16", int)
-int24 = NewType("int24", int)
-int32 = NewType("int32", int)
-int40 = NewType("int40", int)
-int48 = NewType("int48", int)
-int56 = NewType("int56", int)
-int64 = NewType("int64", int)
-int72 = NewType("int72", int)
-int80 = NewType("int80", int)
-int88 = NewType("int88", int)
-int96 = NewType("int96", int)
-int104 = NewType("int104", int)
-int112 = NewType("int112", int)
-int120 = NewType("int120", int)
-int128 = NewType("int128", int)
-int136 = NewType("int136", int)
-int144 = NewType("int144", int)
-int152 = NewType("int152", int)
-int160 = NewType("int160", int)
-int168 = NewType("int168", int)
-int176 = NewType("int176", int)
-int184 = NewType("int184", int)
-int192 = NewType("int192", int)
-int200 = NewType("int200", int)
-int208 = NewType("int208", int)
-int216 = NewType("int216", int)
-int224 = NewType("int224", int)
-int232 = NewType("int232", int)
-int240 = NewType("int240", int)
-int248 = NewType("int248", int)
-int256 = NewType("int256", int)
+class ValueRange:
+    _min: int
+    _max: int
 
-bytes1 = NewType("bytes1", bytes)
-bytes2 = NewType("bytes2", bytes)
-bytes3 = NewType("bytes3", bytes)
-bytes4 = NewType("bytes4", bytes)
-bytes5 = NewType("bytes5", bytes)
-bytes6 = NewType("bytes6", bytes)
-bytes7 = NewType("bytes7", bytes)
-bytes8 = NewType("bytes8", bytes)
-bytes9 = NewType("bytes9", bytes)
-bytes10 = NewType("bytes10", bytes)
-bytes11 = NewType("bytes11", bytes)
-bytes12 = NewType("bytes12", bytes)
-bytes13 = NewType("bytes13", bytes)
-bytes14 = NewType("bytes14", bytes)
-bytes15 = NewType("bytes15", bytes)
-bytes16 = NewType("bytes16", bytes)
-bytes17 = NewType("bytes17", bytes)
-bytes18 = NewType("bytes18", bytes)
-bytes19 = NewType("bytes19", bytes)
-bytes20 = NewType("bytes20", bytes)
-bytes21 = NewType("bytes21", bytes)
-bytes22 = NewType("bytes22", bytes)
-bytes23 = NewType("bytes23", bytes)
-bytes24 = NewType("bytes24", bytes)
-bytes25 = NewType("bytes25", bytes)
-bytes26 = NewType("bytes26", bytes)
-bytes27 = NewType("bytes27", bytes)
-bytes28 = NewType("bytes28", bytes)
-bytes29 = NewType("bytes29", bytes)
-bytes30 = NewType("bytes30", bytes)
-bytes31 = NewType("bytes31", bytes)
-bytes32 = NewType("bytes32", bytes)
+    def __init__(self, min: int, max: int):
+        self._min = min
+        self._max = max
+
+    @property
+    def min(self) -> int:
+        return self._min
+
+    @property
+    def max(self) -> int:
+        return self._max
 
 
 class Length:
@@ -122,6 +39,108 @@ class Length:
     @property
     def max(self) -> int:
         return self._max
+
+
+uint8 = Annotated[int, ValueRange(0, 2**8 - 1)]
+uint16 = Annotated[int, ValueRange(0, 2**16 - 1)]
+uint24 = Annotated[int, ValueRange(0, 2**24 - 1)]
+uint32 = Annotated[int, ValueRange(0, 2**32 - 1)]
+uint40 = Annotated[int, ValueRange(0, 2**40 - 1)]
+uint48 = Annotated[int, ValueRange(0, 2**48 - 1)]
+uint56 = Annotated[int, ValueRange(0, 2**56 - 1)]
+uint64 = Annotated[int, ValueRange(0, 2**64 - 1)]
+uint72 = Annotated[int, ValueRange(0, 2**72 - 1)]
+uint80 = Annotated[int, ValueRange(0, 2**80 - 1)]
+uint88 = Annotated[int, ValueRange(0, 2**88 - 1)]
+uint96 = Annotated[int, ValueRange(0, 2**96 - 1)]
+uint104 = Annotated[int, ValueRange(0, 2**104 - 1)]
+uint112 = Annotated[int, ValueRange(0, 2**112 - 1)]
+uint120 = Annotated[int, ValueRange(0, 2**120 - 1)]
+uint128 = Annotated[int, ValueRange(0, 2**128 - 1)]
+uint136 = Annotated[int, ValueRange(0, 2**136 - 1)]
+uint144 = Annotated[int, ValueRange(0, 2**144 - 1)]
+uint152 = Annotated[int, ValueRange(0, 2**152 - 1)]
+uint160 = Annotated[int, ValueRange(0, 2**160 - 1)]
+uint168 = Annotated[int, ValueRange(0, 2**168 - 1)]
+uint176 = Annotated[int, ValueRange(0, 2**176 - 1)]
+uint184 = Annotated[int, ValueRange(0, 2**184 - 1)]
+uint192 = Annotated[int, ValueRange(0, 2**192 - 1)]
+uint200 = Annotated[int, ValueRange(0, 2**200 - 1)]
+uint208 = Annotated[int, ValueRange(0, 2**208 - 1)]
+uint216 = Annotated[int, ValueRange(0, 2**216 - 1)]
+uint224 = Annotated[int, ValueRange(0, 2**224 - 1)]
+uint232 = Annotated[int, ValueRange(0, 2**232 - 1)]
+uint240 = Annotated[int, ValueRange(0, 2**240 - 1)]
+uint248 = Annotated[int, ValueRange(0, 2**248 - 1)]
+uint256 = Annotated[int, ValueRange(0, 2**256 - 1)]
+uint = uint256
+
+int8 = Annotated[int, ValueRange(-(2**7), 2**7 - 1)]
+int16 = Annotated[int, ValueRange(-(2**15), 2**15 - 1)]
+int24 = Annotated[int, ValueRange(-(2**23), 2**23 - 1)]
+int32 = Annotated[int, ValueRange(-(2**31), 2**31 - 1)]
+int40 = Annotated[int, ValueRange(-(2**39), 2**39 - 1)]
+int48 = Annotated[int, ValueRange(-(2**47), 2**47 - 1)]
+int56 = Annotated[int, ValueRange(-(2**55), 2**55 - 1)]
+int64 = Annotated[int, ValueRange(-(2**63), 2**63 - 1)]
+int72 = Annotated[int, ValueRange(-(2**71), 2**71 - 1)]
+int80 = Annotated[int, ValueRange(-(2**79), 2**79 - 1)]
+int88 = Annotated[int, ValueRange(-(2**87), 2**87 - 1)]
+int96 = Annotated[int, ValueRange(-(2**95), 2**95 - 1)]
+int104 = Annotated[int, ValueRange(-(2**103), 2**103 - 1)]
+int112 = Annotated[int, ValueRange(-(2**111), 2**111 - 1)]
+int120 = Annotated[int, ValueRange(-(2**119), 2**119 - 1)]
+int128 = Annotated[int, ValueRange(-(2**127), 2**127 - 1)]
+int136 = Annotated[int, ValueRange(-(2**135), 2**135 - 1)]
+int144 = Annotated[int, ValueRange(-(2**143), 2**143 - 1)]
+int152 = Annotated[int, ValueRange(-(2**151), 2**151 - 1)]
+int160 = Annotated[int, ValueRange(-(2**159), 2**159 - 1)]
+int168 = Annotated[int, ValueRange(-(2**167), 2**167 - 1)]
+int176 = Annotated[int, ValueRange(-(2**175), 2**175 - 1)]
+int184 = Annotated[int, ValueRange(-(2**183), 2**183 - 1)]
+int192 = Annotated[int, ValueRange(-(2**191), 2**191 - 1)]
+int200 = Annotated[int, ValueRange(-(2**199), 2**199 - 1)]
+int208 = Annotated[int, ValueRange(-(2**207), 2**207 - 1)]
+int216 = Annotated[int, ValueRange(-(2**215), 2**215 - 1)]
+int224 = Annotated[int, ValueRange(-(2**223), 2**223 - 1)]
+int232 = Annotated[int, ValueRange(-(2**231), 2**231 - 1)]
+int240 = Annotated[int, ValueRange(-(2**239), 2**239 - 1)]
+int248 = Annotated[int, ValueRange(-(2**247), 2**247 - 1)]
+int256 = Annotated[int, ValueRange(-(2**255), 2**255 - 1)]
+
+
+bytes1 = Annotated[bytes, Length(1)]
+bytes2 = Annotated[bytes, Length(2)]
+bytes3 = Annotated[bytes, Length(3)]
+bytes4 = Annotated[bytes, Length(4)]
+bytes5 = Annotated[bytes, Length(5)]
+bytes6 = Annotated[bytes, Length(6)]
+bytes7 = Annotated[bytes, Length(7)]
+bytes8 = Annotated[bytes, Length(8)]
+bytes9 = Annotated[bytes, Length(9)]
+bytes10 = Annotated[bytes, Length(10)]
+bytes11 = Annotated[bytes, Length(11)]
+bytes12 = Annotated[bytes, Length(12)]
+bytes13 = Annotated[bytes, Length(13)]
+bytes14 = Annotated[bytes, Length(14)]
+bytes15 = Annotated[bytes, Length(15)]
+bytes16 = Annotated[bytes, Length(16)]
+bytes17 = Annotated[bytes, Length(17)]
+bytes18 = Annotated[bytes, Length(18)]
+bytes19 = Annotated[bytes, Length(19)]
+bytes20 = Annotated[bytes, Length(20)]
+bytes21 = Annotated[bytes, Length(21)]
+bytes22 = Annotated[bytes, Length(22)]
+bytes23 = Annotated[bytes, Length(23)]
+bytes24 = Annotated[bytes, Length(24)]
+bytes25 = Annotated[bytes, Length(25)]
+bytes26 = Annotated[bytes, Length(26)]
+bytes27 = Annotated[bytes, Length(27)]
+bytes28 = Annotated[bytes, Length(28)]
+bytes29 = Annotated[bytes, Length(29)]
+bytes30 = Annotated[bytes, Length(30)]
+bytes31 = Annotated[bytes, Length(31)]
+bytes32 = Annotated[bytes, Length(32)]
 
 
 T = TypeVar("T")
