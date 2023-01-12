@@ -40,10 +40,15 @@ class HexBytes(bytes):
         raise pydantic.errors.BytesError()
 
 
+class SourceUnitInfo(NamedTuple):
+    fs_path: Path
+    blake2b_hash: HexBytes
+
+
 class ProjectBuildInfo(BuildInfoModel):
     compilation_units: Dict[str, CompilationUnitBuildInfo]
-    source_units_blake2b: Dict[
-        str, HexBytes
+    source_units_info: Dict[
+        str, SourceUnitInfo
     ]  # actually the key should be a PurePath but pydantic doesn't support it
     allow_paths: FrozenSet[Path]
     include_paths: FrozenSet[Path]
