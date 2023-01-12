@@ -228,103 +228,6 @@ generators_map = {
     bool: lambda: random.choice([True, False]),
     Address: lambda: random_address(),
     Wei: lambda: Wei(random.randint(0, 10000000000000000000)),
-    int: lambda: random.randint(-(2**255), 2**255 - 1),
-    bytes1: lambda: random_bytes(1),
-    bytes2: lambda: random_bytes(2),
-    bytes3: lambda: random_bytes(3),
-    bytes4: lambda: random_bytes(4),
-    bytes5: lambda: random_bytes(5),
-    bytes6: lambda: random_bytes(6),
-    bytes7: lambda: random_bytes(7),
-    bytes8: lambda: random_bytes(8),
-    bytes9: lambda: random_bytes(9),
-    bytes10: lambda: random_bytes(10),
-    bytes11: lambda: random_bytes(11),
-    bytes12: lambda: random_bytes(12),
-    bytes13: lambda: random_bytes(13),
-    bytes14: lambda: random_bytes(14),
-    bytes15: lambda: random_bytes(15),
-    bytes16: lambda: random_bytes(16),
-    bytes17: lambda: random_bytes(17),
-    bytes18: lambda: random_bytes(18),
-    bytes19: lambda: random_bytes(19),
-    bytes20: lambda: random_bytes(20),
-    bytes21: lambda: random_bytes(21),
-    bytes22: lambda: random_bytes(22),
-    bytes23: lambda: random_bytes(23),
-    bytes24: lambda: random_bytes(24),
-    bytes25: lambda: random_bytes(25),
-    bytes26: lambda: random_bytes(26),
-    bytes27: lambda: random_bytes(27),
-    bytes28: lambda: random_bytes(28),
-    bytes29: lambda: random_bytes(29),
-    bytes30: lambda: random_bytes(30),
-    bytes31: lambda: random_bytes(31),
-    bytes32: lambda: random_bytes(32),
-    uint8: lambda: random.randint(0, 2**8 - 1),
-    uint16: lambda: random.randint(0, 2**16 - 1),
-    uint24: lambda: random.randint(0, 2**24 - 1),
-    uint32: lambda: random.randint(0, 2**32 - 1),
-    uint40: lambda: random.randint(0, 2**40 - 1),
-    uint48: lambda: random.randint(0, 2**48 - 1),
-    uint56: lambda: random.randint(0, 2**56 - 1),
-    uint64: lambda: random.randint(0, 2**64 - 1),
-    uint72: lambda: random.randint(0, 2**72 - 1),
-    uint80: lambda: random.randint(0, 2**80 - 1),
-    uint88: lambda: random.randint(0, 2**88 - 1),
-    uint96: lambda: random.randint(0, 2**96 - 1),
-    uint104: lambda: random.randint(0, 2**104 - 1),
-    uint112: lambda: random.randint(0, 2**112 - 1),
-    uint120: lambda: random.randint(0, 2**120 - 1),
-    uint128: lambda: random.randint(0, 2**128 - 1),
-    uint136: lambda: random.randint(0, 2**136 - 1),
-    uint144: lambda: random.randint(0, 2**144 - 1),
-    uint152: lambda: random.randint(0, 2**152 - 1),
-    uint160: lambda: random.randint(0, 2**160 - 1),
-    uint168: lambda: random.randint(0, 2**168 - 1),
-    uint176: lambda: random.randint(0, 2**176 - 1),
-    uint184: lambda: random.randint(0, 2**184 - 1),
-    uint192: lambda: random.randint(0, 2**192 - 1),
-    uint200: lambda: random.randint(0, 2**200 - 1),
-    uint208: lambda: random.randint(0, 2**208 - 1),
-    uint216: lambda: random.randint(0, 2**216 - 1),
-    uint224: lambda: random.randint(0, 2**224 - 1),
-    uint232: lambda: random.randint(0, 2**232 - 1),
-    uint240: lambda: random.randint(0, 2**240 - 1),
-    uint248: lambda: random.randint(0, 2**248 - 1),
-    uint256: lambda: random.randint(0, 2**256 - 1),
-    int8: lambda: random.randint(-(2**7), 2**7 - 1),
-    int16: lambda: random.randint(-(2**15), 2**15 - 1),
-    int24: lambda: random.randint(-(2**23), 2**23 - 1),
-    int32: lambda: random.randint(-(2**31), 2**31 - 1),
-    int40: lambda: random.randint(-(2**39), 2**39 - 1),
-    int48: lambda: random.randint(-(2**47), 2**47 - 1),
-    int56: lambda: random.randint(-(2**55), 2**55 - 1),
-    int64: lambda: random.randint(-(2**63), 2**63 - 1),
-    int72: lambda: random.randint(-(2**71), 2**71 - 1),
-    int80: lambda: random.randint(-(2**79), 2**79 - 1),
-    int88: lambda: random.randint(-(2**87), 2**87 - 1),
-    int96: lambda: random.randint(-(2**95), 2**95 - 1),
-    int104: lambda: random.randint(-(2**103), 2**103 - 1),
-    int112: lambda: random.randint(-(2**111), 2**111 - 1),
-    int120: lambda: random.randint(-(2**119), 2**119 - 1),
-    int128: lambda: random.randint(-(2**127), 2**127 - 1),
-    int136: lambda: random.randint(-(2**135), 2**135 - 1),
-    int144: lambda: random.randint(-(2**143), 2**143 - 1),
-    int152: lambda: random.randint(-(2**151), 2**151 - 1),
-    int160: lambda: random.randint(-(2**159), 2**159 - 1),
-    int168: lambda: random.randint(-(2**167), 2**167 - 1),
-    int176: lambda: random.randint(-(2**175), 2**175 - 1),
-    int184: lambda: random.randint(-(2**183), 2**183 - 1),
-    int192: lambda: random.randint(-(2**191), 2**191 - 1),
-    int200: lambda: random.randint(-(2**199), 2**199 - 1),
-    int208: lambda: random.randint(-(2**207), 2**207 - 1),
-    int216: lambda: random.randint(-(2**215), 2**215 - 1),
-    int224: lambda: random.randint(-(2**223), 2**223 - 1),
-    int232: lambda: random.randint(-(2**231), 2**231 - 1),
-    int240: lambda: random.randint(-(2**239), 2**239 - 1),
-    int248: lambda: random.randint(-(2**247), 2**247 - 1),
-    int256: lambda: random.randint(-(2**255), 2**255 - 1),
 }
 
 
@@ -353,12 +256,19 @@ def _generate_params_for_flow(flow: Callable) -> List:
                     if isinstance(arg, Length):
                         opt["min_len"] = arg.min
                         opt["max_len"] = arg.max
+                    elif isinstance(arg, ValueRange):
+                        opt["min"] = arg.min
+                        opt["max"] = arg.max
 
                 return gen(args[0], opt)
             elif get_origin(t) is list:
                 return [
                     gen(get_args(t)[0]) for _ in range(random.randint(min_len, max_len))
                 ]
+            elif t is int:
+                min = options.get("min", -(2**255))
+                max = options.get("max", 2**255 - 1)
+                return random.randint(min, max)
             elif t is bytes:
                 return bytes(random_bytes(min_len, max_len))
             elif t is bytearray:
