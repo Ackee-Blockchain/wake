@@ -37,7 +37,12 @@ from ..ast.ir.reference_resolver import CallbackParams, ReferenceResolver
 from ..ast.ir.utils import IrInitTuple
 from ..ast.nodes import AstSolc
 from ..utils import get_package_version
-from .build_data_model import BuildInfo, CompilationUnitBuildInfo, ProjectBuildInfo
+from .build_data_model import (
+    BuildInfo,
+    CompilationUnitBuildInfo,
+    ProjectBuildInfo,
+    SourceUnitInfo,
+)
 from .compilation_unit import CompilationUnit
 from .exceptions import CompilationError, CompilationResolveError
 from .solc_frontend import (
@@ -378,11 +383,11 @@ class SolidityCompiler:
                 build_info = ProjectBuildInfo.parse_file(
                     latest_build_path / "build.json"
                 )
-                source_units_blake2b: Dict[PurePath, bytes] = {
-                    PurePath(source_unit_name): build_info.source_units_blake2b[
+                source_units_info: Dict[PurePath, SourceUnitInfo] = {
+                    PurePath(source_unit_name): build_info.source_units_info[
                         source_unit_name
                     ]
-                    for source_unit_name in build_info.source_units_blake2b.keys()
+                    for source_unit_name in build_info.source_units_info.keys()
                 }
 
                 if (
@@ -404,15 +409,15 @@ class SolidityCompiler:
 
                 for source_unit in graph.nodes:
                     if (
-                        source_unit not in source_units_blake2b
-                        or source_units_blake2b[source_unit]
+                        source_unit not in source_units_info
+                        or source_units_info[source_unit].blake2b_hash
                         != graph.nodes[source_unit]["hash"]
                     ):
                         files_to_compile.add(source_units_to_paths[source_unit])
 
-                for source_unit in source_units_blake2b.keys():
+                for source_unit, info in source_units_info.items():
                     if source_unit not in graph.nodes:
-                        deleted_files.add(source_units_to_paths[source_unit])
+                        deleted_files.add(info.fs_path)
 
                 for cu_hash, cu_data in build_info.compilation_units.items():
                     if any(cu.hash.hex() == cu_hash for cu in compilation_units):
@@ -586,8 +591,10 @@ class SolidityCompiler:
             allow_paths=self.__config.compiler.solc.allow_paths,
             include_paths=self.__config.compiler.solc.include_paths,
             settings=build_settings,
-            source_units_blake2b={
-                str(source_unit): graph.nodes[source_unit]["hash"]
+            source_units_info={
+                str(source_unit): SourceUnitInfo(
+                    graph.nodes[source_unit]["path"], graph.nodes[source_unit]["hash"]
+                )
                 for source_unit in graph.nodes
             },
             target_solidity_version=self.__config.compiler.solc.target_version,
