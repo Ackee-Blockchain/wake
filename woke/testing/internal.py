@@ -1,6 +1,8 @@
-from dataclasses import dataclass
+import inspect
+from contextlib import contextmanager
+from dataclasses import dataclass, fields
 from enum import IntEnum
-from typing import List
+from typing import Any, List, Optional
 
 
 @dataclass
@@ -9,8 +11,11 @@ class UnknownEvent:
     data: bytes
 
 
+@dataclass
 class TransactionRevertedError(Exception):
-    pass
+    def __str__(self):
+        s = ", ".join([f"{f.name}={getattr(self, f.name)!r}" for f in fields(self)])
+        return f"{self.__class__.__qualname__}({s})"
 
 
 @dataclass
@@ -59,3 +64,60 @@ class Panic(TransactionRevertedError):
         "inputs": [{"name": "code", "type": "uint256"}],
     }
     code: "PanicCodeEnum"
+
+
+class ExceptionWrapper:
+    value: Optional[Exception] = None
+
+
+@contextmanager
+def must_revert(exceptions=TransactionRevertedError):
+    if isinstance(exceptions, (tuple, list)):
+        types = tuple(
+            type(x) if not inspect.isclass(x) else x for x in exceptions
+        )  # pyright: reportGeneralTypeIssues=false
+    else:
+        types = type(exceptions) if not inspect.isclass(exceptions) else exceptions
+
+    wrapper = ExceptionWrapper()
+
+    try:
+        yield wrapper
+        raise AssertionError(f"Expected revert of type {exceptions}")
+    except types as e:  # pyright: reportGeneralTypeIssues=false
+        wrapper.value = e
+
+        if isinstance(exceptions, (tuple, list)):
+            for ex, t in zip(
+                exceptions, types
+            ):  # pyright: reportGeneralTypeIssues=false
+                if isinstance(ex, t) and not inspect.isclass(ex):
+                    assert e == ex, f"Expected {ex} but got {e}"
+                    return
+        else:
+            if not inspect.isclass(exceptions):
+                assert e == exceptions, f"Expected {e} but got {exceptions}"
+
+
+@contextmanager
+def may_revert(exceptions=TransactionRevertedError):
+    if isinstance(exceptions, (tuple, list)):
+        types = tuple(type(x) if not inspect.isclass(x) else x for x in exceptions)
+    else:
+        types = type(exceptions) if not inspect.isclass(exceptions) else exceptions
+
+    wrapper = ExceptionWrapper()
+
+    try:
+        yield wrapper
+    except types as e:
+        wrapper.value = e
+
+        if isinstance(exceptions, (tuple, list)):
+            for ex, t in zip(exceptions, types):
+                if isinstance(ex, t) and not inspect.isclass(ex):
+                    assert e == ex, f"Expected {ex} but got {e}"
+                    return
+        else:
+            if not inspect.isclass(exceptions):
+                assert e == exceptions, f"Expected {e} but got {exceptions}"
