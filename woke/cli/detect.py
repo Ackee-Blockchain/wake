@@ -68,6 +68,13 @@ def run_detect(
                 raise ValueError(f"Argument `{p}` is not a file or directory.")
 
     compiler = SolidityCompiler(config)
+
+    if not force:
+        try:
+            compiler.load()
+        except Exception:
+            pass
+
     build: BuildInfo
     errors: Set[SolcOutputError]
     build, errors = asyncio.run(
@@ -75,7 +82,7 @@ def run_detect(
             sol_files,
             [SolcOutputSelectionEnum.AST],
             write_artifacts=not no_artifacts,
-            reuse_latest_artifacts=not force,
+            force_recompile=force,
         )
     )
 

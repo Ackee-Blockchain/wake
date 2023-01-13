@@ -897,6 +897,12 @@ def _compile_project(
             sol_files.add(file)
 
     compiler = woke.compile.SolidityCompiler(config)
+
+    try:
+        compiler.load()
+    except Exception:
+        pass
+
     build: BuildInfo
     errors: Set[SolcOutputError]
     build, errors = asyncio.run(
@@ -904,7 +910,6 @@ def _compile_project(
             sol_files,
             [SolcOutputSelectionEnum.ALL],
             write_artifacts=False,
-            reuse_latest_artifacts=True,
         )
     )
 
