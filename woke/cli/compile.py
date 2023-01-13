@@ -67,6 +67,13 @@ def run_compile(
                 raise ValueError(f"Argument `{p}` is not a file or directory.")
 
     compiler = SolidityCompiler(config)
+
+    if not force:
+        try:
+            compiler.load()
+        except Exception:
+            pass
+
     # TODO Allow choosing build artifacts subset in compile subcommand
     build: BuildInfo
     errors: Set[SolcOutputError]
@@ -75,7 +82,7 @@ def run_compile(
             sol_files,
             [SolcOutputSelectionEnum.AST],
             write_artifacts=not no_artifacts,
-            reuse_latest_artifacts=not force,
+            force_recompile=force,
         )
     )
 

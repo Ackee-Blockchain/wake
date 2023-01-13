@@ -217,6 +217,12 @@ class TypeGenerator:
                 sol_files.add(file)
 
         compiler = SolidityCompiler(self.__config)
+
+        try:
+            compiler.load()
+        except Exception:
+            pass
+
         build: BuildInfo
         errors: Set[SolcOutputError]
         build, errors = asyncio.run(
@@ -224,7 +230,6 @@ class TypeGenerator:
                 sol_files,
                 [SolcOutputSelectionEnum.ALL],
                 write_artifacts=True,
-                reuse_latest_artifacts=True,
             )
         )
 

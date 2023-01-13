@@ -2,19 +2,14 @@ import asyncio
 import random
 import shutil
 from pathlib import Path, PurePath
-from typing import Dict, List, Set, Tuple
+from typing import Dict, Set
 from unittest import mock
 
 import pytest
-from intervaltree import IntervalTree
 
-from woke.ast.ir.meta.source_unit import SourceUnit
-from woke.ast.ir.reference_resolver import CallbackParams, ReferenceResolver
-from woke.ast.ir.utils import IrInitTuple
-from woke.ast.nodes import AstSolc
-from woke.compile import SolcOutput, SolcOutputSelectionEnum, SolidityCompiler
-from woke.compile.compilation_unit import CompilationUnit
-from woke.compile.solc_frontend import SolcOutputErrorSeverityEnum
+from woke.compile import SolcOutputSelectionEnum, SolidityCompiler
+from woke.compile.build_data_model import BuildInfo
+from woke.compile.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
 from woke.config import WokeConfig
 from woke.testing import coverage
 from woke.testing.coverage import ContractCoverage, Coverage, CoverageProvider
@@ -22,74 +17,24 @@ from woke.testing.coverage import ContractCoverage, Coverage, CoverageProvider
 SOURCES_PATH = Path(__file__).parent.resolve() / "coverage_sources"
 
 
-def compile_project(
-    sample_path: Path, config: WokeConfig
-) -> Tuple[
-    Dict[Path, IntervalTree],
-    Dict[bytes, Dict[int, Path]],
-    Dict[Path, SourceUnit],
-    Dict[Path, bytes],
-]:
+def compile_project(sample_path: Path, config: WokeConfig) -> BuildInfo:
     sol_files: Set[Path] = {sample_path}
 
     compiler = SolidityCompiler(config)
-    outputs: List[Tuple[CompilationUnit, SolcOutput]] = asyncio.run(
+    build: BuildInfo
+    errors: Set[SolcOutputError]
+    build, errors = asyncio.run(
         compiler.compile(
             sol_files,
             [SolcOutputSelectionEnum.AST],
-            maximize_compilation_units=True,
+            write_artifacts=False,
         )
     )
 
-    errored = False
-    for _, output in outputs:
-        for error in output.errors:
-            if error.severity == SolcOutputErrorSeverityEnum.ERROR:
-                errored = True
-    assert errored is False
-
-    processed_files: Set[Path] = set()
-    reference_resolver = ReferenceResolver()
-
-    interval_trees: Dict[Path, IntervalTree] = {}
-    interval_trees_indexes: Dict[bytes, Dict[int, Path]] = {}
-    source_units: Dict[Path, SourceUnit] = {}
-    paths_to_cu: Dict[Path, bytes] = {}
-
-    for cu, output in outputs:
-        for source_unit_name, info in output.sources.items():
-            path = cu.source_unit_name_to_path(PurePath(source_unit_name))
-            ast = AstSolc.parse_obj(info.ast)
-
-            reference_resolver.index_nodes(ast, path, cu.hash)
-
-            if path in processed_files:
-                continue
-            processed_files.add(path)
-            interval_trees[path] = IntervalTree()
-
-            init = IrInitTuple(
-                path,
-                path.read_bytes(),
-                cu,
-                interval_trees[path],
-                reference_resolver,
-                output.contracts[source_unit_name]
-                if source_unit_name in output.contracts
-                else None,
-            )
-            source_units[path] = SourceUnit(init, ast)
-            if cu.hash not in interval_trees_indexes:
-                interval_trees_indexes[cu.hash] = {}
-
-            interval_trees_indexes[cu.hash][info.id] = path
-            paths_to_cu[path] = cu.hash
-
-    reference_resolver.run_post_process_callbacks(
-        CallbackParams(interval_trees=interval_trees, source_units=source_units)
+    assert not any(
+        error.severity == SolcOutputErrorSeverityEnum.ERROR for error in errors
     )
-
-    return interval_trees, interval_trees_indexes, source_units, paths_to_cu
+    return build
 
 
 @pytest.fixture
@@ -105,14 +50,11 @@ def config(tmp_path) -> WokeConfig:
 
 
 def get_contract_and_intervals(config, source_path):
-    interval_trees, interval_trees_indexes, source_units, paths_to_cu = compile_project(
-        source_path, config
-    )
-    source_file = source_units[source_path]
-    cu_hash = paths_to_cu[source_path]
-    assert len(source_file.contracts) == 1
+    build = compile_project(source_path, config)
+    source_unit = build.source_units[source_path]
+    assert len(source_unit.contracts) == 1
 
-    contract = source_file.contracts[0]
+    contract = source_unit.contracts[0]
 
     assert contract.compilation_info is not None
     assert contract.compilation_info.evm is not None
@@ -127,7 +69,11 @@ def get_contract_and_intervals(config, source_path):
 
     pc_op_map = coverage._parse_opcodes(opcodes)
     pc_map = coverage._parse_source_map(
-        interval_trees, interval_trees_indexes[cu_hash], source_map, pc_op_map
+        build.interval_trees,
+        contract.cu_hash,
+        build.reference_resolver,
+        source_map,
+        pc_op_map,
     )
 
     return contract, line_intervals, pc_map
