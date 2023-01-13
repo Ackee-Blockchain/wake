@@ -1441,22 +1441,28 @@ class SourceUnitImports:
         if self.__generate_default_imports:
             self.add_str_to_imports(0, DEFAULT_IMPORTS, 1)
 
-        for python_import in self.__python_imports:
+        for python_import in sorted(self.__python_imports):
             self.add_str_to_imports(0, python_import, 1)
 
         if self.__python_imports:
             self.add_str_to_imports(0, "", 1)
 
-        for contract in self.__contract_imports:
+        for contract in sorted(self.__contract_imports):
             self.add_str_to_imports(0, contract, 1)
 
         if self.__contract_imports:
             self.add_str_to_imports(0, "", 1)
 
-        for struct in self.__struct_imports:
+        for struct in sorted(self.__struct_imports):
             self.add_str_to_imports(0, struct, 1)
 
         if self.__struct_imports:
+            self.add_str_to_imports(0, "", 1)
+
+        for enum in sorted(self.__enum_imports):
+            self.add_str_to_imports(0, enum, 1)
+
+        if self.__enum_imports:
             self.add_str_to_imports(0, "", 1)
 
         if (
@@ -1524,7 +1530,7 @@ class SourceUnitImports:
 
         if enum_import not in self.__enum_imports:
             # self.add_str_to_imports(0, struct_import, 1)
-            self.__struct_imports.add(enum_import)
+            self.__enum_imports.add(enum_import)
 
     # TODO impl of this func is basicaly the same as generate_struct_import -> refactor and remove duplication
     def generate_contract_import_expr(self, contract_type: types.Contract):
