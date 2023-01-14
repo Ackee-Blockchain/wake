@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import platform
 import subprocess
 import sys
 from pathlib import Path
@@ -21,6 +22,14 @@ from .fuzz import run_fuzz
 from .init import run_init
 from .lsp import run_lsp
 from .svm import run_svm
+
+if platform.system() != "Windows":
+    try:
+        from asyncio import (  # pyright: reportGeneralTypeIssues=false
+            ThreadedChildWatcher,
+        )
+    except ImportError:
+        from woke.utils.threaded_child_watcher import ThreadedChildWatcher
 
 
 @click.group()
@@ -68,8 +77,10 @@ def main(
     ctx.obj["debug"] = debug
     ctx.obj["woke_root_path"] = root_path
 
-    if "win32" in sys.platform:
+    if platform.system() == "Windows":
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+    else:
+        asyncio.get_event_loop_policy().set_child_watcher(ThreadedChildWatcher())
 
 
 main.add_command(run_compile)
