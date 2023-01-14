@@ -1,11 +1,14 @@
 import asyncio
+import logging
+import time
 from pathlib import Path
 from typing import Set, Tuple
 
 import click
 from click.core import Context
+from watchdog.observers import Observer
 
-from woke.compile.compiler import SolidityCompiler
+from woke.compile.compiler import CompilationFileSystemEventHandler, SolidityCompiler
 from woke.compile.solc_frontend.input_data_model import SolcOutputSelectionEnum
 from woke.config import WokeConfig
 
@@ -33,9 +36,21 @@ from .console import console
     default=False,
     help="Force recompile the project without previous build artifacts.",
 )
+@click.option(
+    "--watch",
+    "-w",
+    is_flag=True,
+    default=False,
+    help="Watch for changes in the project and recompile on change.",
+)
 @click.pass_context
 def run_compile(
-    ctx: Context, paths: Tuple[str], no_artifacts: bool, no_warnings: bool, force: bool
+    ctx: Context,
+    paths: Tuple[str],
+    no_artifacts: bool,
+    no_warnings: bool,
+    force: bool,
+    watch: bool,
 ) -> None:
     """Compile the project."""
     config = WokeConfig(woke_root_path=ctx.obj["woke_root_path"])
@@ -92,3 +107,27 @@ def run_compile(
             no_warnings=no_warnings,
         )
     )
+
+    if watch:
+        observer = Observer()
+        observer.schedule(
+            CompilationFileSystemEventHandler(
+                config,
+                compiler,
+                [SolcOutputSelectionEnum.AST],
+                write_artifacts=not no_artifacts,
+                console=console,
+                no_warnings=no_warnings,
+            ),
+            str(config.project_root_path),
+            recursive=True,
+        )
+        observer.start()
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            pass
+        finally:
+            observer.stop()
+            observer.join()

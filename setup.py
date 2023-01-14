@@ -23,6 +23,7 @@ install_requires = [
     "ipdb",
     "websocket-client >= 1.4.0",
     "pywin32 >= 302; platform_system == 'Windows'",
+    "watchdog >= 2.2.0, < 3",
 ]
 
 # Also: [pyright](https://github.com/microsoft/pyright/) (distributed through npm)
