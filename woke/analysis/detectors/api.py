@@ -4,10 +4,12 @@ import logging
 import re
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from contextlib import nullcontext
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, DefaultDict, Dict, List, Optional, Tuple, Type, Union
 
+import rich.console
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.syntax import Syntax, SyntaxTheme
@@ -442,7 +444,10 @@ def _get_enabled_detectors(config: WokeConfig) -> List[Detector]:
 
 
 def detect(
-    config: WokeConfig, source_units: Dict[Path, SourceUnit]
+    config: WokeConfig,
+    source_units: Dict[Path, SourceUnit],
+    *,
+    console: Optional[rich.console.Console] = None,
 ) -> List[DetectionResult]:
     def _detection_ignored(detection: DetectorResult) -> bool:
         return any(
@@ -461,13 +466,21 @@ def detect(
 
     path_to_source_unit_name: Dict[Path, str] = {}
 
-    for path, source_unit in source_units.items():
-        path_to_source_unit_name[path] = source_unit.source_unit_name
-        for ir_node in source_unit:
-            for d, detector_instance in zip(
-                enabled_detectors, enabled_detector_instances
-            ):
-                visit_map[ir_node.__class__](detector_instance, ir_node)
+    ctx_manager = (
+        console.status("[bold green]Running detectors...")
+        if console is not None
+        else nullcontext()
+    )
+    with ctx_manager as s:
+        for path, source_unit in source_units.items():
+            if s is not None:
+                s.update(f"[bold green]Detecting in {source_unit.source_unit_name}...")
+            path_to_source_unit_name[path] = source_unit.source_unit_name
+            for ir_node in source_unit:
+                for d, detector_instance in zip(
+                    enabled_detectors, enabled_detector_instances
+                ):
+                    visit_map[ir_node.__class__](detector_instance, ir_node)
 
     for d, detector_instance in zip(enabled_detectors, enabled_detector_instances):
         for result in detector_instance.report():

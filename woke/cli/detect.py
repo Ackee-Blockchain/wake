@@ -70,10 +70,7 @@ def run_detect(
     compiler = SolidityCompiler(config)
 
     if not force:
-        try:
-            compiler.load()
-        except Exception:
-            pass
+        compiler.load(console=console)
 
     build: BuildInfo
     errors: Set[SolcOutputError]
@@ -83,6 +80,7 @@ def run_detect(
             [SolcOutputSelectionEnum.AST],
             write_artifacts=not no_artifacts,
             force_recompile=force,
+            console=console,
         )
     )
 
@@ -97,7 +95,7 @@ def run_detect(
     else:
         print_detectors(config)
 
-    for detection in detect(config, build.source_units):
+    for detection in detect(config, build.source_units, console=console):
         if svg:
             print_detection(detection, theme="vs")
         else:

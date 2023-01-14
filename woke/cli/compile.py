@@ -56,10 +56,7 @@ async def compile(
     compiler = SolidityCompiler(config)
 
     if not force:
-        try:
-            compiler.load()
-        except Exception:
-            pass
+        compiler.load(console=console)
 
     # TODO Allow choosing build artifacts subset in compile subcommand
     await compiler.compile(

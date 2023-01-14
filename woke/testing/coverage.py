@@ -897,11 +897,7 @@ def _compile_project(
             sol_files.add(file)
 
     compiler = woke.compile.SolidityCompiler(config)
-
-    try:
-        compiler.load()
-    except Exception:
-        pass
+    compiler.load()
 
     build: BuildInfo
     errors: Set[SolcOutputError]

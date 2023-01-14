@@ -1,5 +1,6 @@
 import asyncio
 import pathlib
+import time
 from typing import Set
 
 import click
@@ -40,9 +41,14 @@ async def run_init_pytypes(
         )
 
         if not errored:
-            type_generator.generate_types(build)
-
-    type_generator = TypeGenerator(config, return_tx)
+            start = time.perf_counter()
+            with console.status("[bold green]Generating pytypes..."):
+                type_generator = TypeGenerator(config, return_tx)
+                type_generator.generate_types(build)
+            end = time.perf_counter()
+            console.log(
+                f"[green]Generated pytypes in [bold green]{end - start:.2f} s[/]"
+            )
 
     sol_files: Set[pathlib.Path] = set()
     for file in config.project_root_path.rglob("**/*.sol"):
@@ -53,11 +59,7 @@ async def run_init_pytypes(
             sol_files.add(file)
 
     compiler = SolidityCompiler(config)
-
-    try:
-        compiler.load()
-    except Exception:
-        pass
+    compiler.load(console=console)
 
     build, errors = await compiler.compile(
         sol_files,
@@ -71,7 +73,12 @@ async def run_init_pytypes(
         error for error in errors if error.severity == SolcOutputErrorSeverityEnum.ERROR
     )
     if not errored:
-        type_generator.generate_types(build)
+        start = time.perf_counter()
+        with console.status("[bold green]Generating pytypes..."):
+            type_generator = TypeGenerator(config, return_tx)
+            type_generator.generate_types(build)
+        end = time.perf_counter()
+        console.log(f"[green]Generated pytypes in [bold green]{end - start:.2f} s[/]")
 
     fs_handler = CompilationFileSystemEventHandler(
         config,
