@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import time
 from pathlib import Path
 from typing import Set, Tuple
 
@@ -12,10 +11,91 @@ from woke.compile.compiler import CompilationFileSystemEventHandler, SolidityCom
 from woke.compile.solc_frontend.input_data_model import SolcOutputSelectionEnum
 from woke.config import WokeConfig
 
-from ..compile.build_data_model import BuildInfo
-from ..compile.solc_frontend import SolcOutputError
 from ..utils.file_utils import is_relative_to
 from .console import console
+
+
+async def compile(
+    config: WokeConfig,
+    paths: Tuple[str],
+    no_artifacts: bool,
+    no_warnings: bool,
+    force: bool,
+    watch: bool,
+):
+    sol_files: Set[Path] = set()
+    if len(paths) == 0:
+        for file in config.project_root_path.rglob("**/*.sol"):
+            if (
+                not any(
+                    is_relative_to(file, p) for p in config.compiler.solc.ignore_paths
+                )
+                and file.is_file()
+            ):
+                sol_files.add(file)
+    else:
+        for p in paths:
+            path = Path(p)
+            if path.is_file():
+                if not path.match("*.sol"):
+                    raise ValueError(f"Argument `{p}` is not a Solidity file.")
+                sol_files.add(path)
+            elif path.is_dir():
+                for file in path.rglob("**/*.sol"):
+                    if (
+                        not any(
+                            is_relative_to(file, p)
+                            for p in config.compiler.solc.ignore_paths
+                        )
+                        and file.is_file()
+                    ):
+                        sol_files.add(file)
+            else:
+                raise ValueError(f"Argument `{p}` is not a file or directory.")
+
+    compiler = SolidityCompiler(config)
+
+    if not force:
+        try:
+            compiler.load()
+        except Exception:
+            pass
+
+    # TODO Allow choosing build artifacts subset in compile subcommand
+    await compiler.compile(
+        sol_files,
+        [SolcOutputSelectionEnum.AST],
+        write_artifacts=not no_artifacts,
+        force_recompile=force,
+        console=console,
+        no_warnings=no_warnings,
+    )
+
+    fs_handler = CompilationFileSystemEventHandler(
+        config,
+        asyncio.get_event_loop(),
+        compiler,
+        [SolcOutputSelectionEnum.AST],
+        write_artifacts=not no_artifacts,
+        console=console,
+        no_warnings=no_warnings,
+    )
+
+    if watch:
+        observer = Observer()
+        observer.schedule(
+            fs_handler,
+            str(config.project_root_path),
+            recursive=True,
+        )
+        observer.start()
+        try:
+            await fs_handler.run()
+        except KeyboardInterrupt:
+            pass
+        finally:
+            observer.stop()
+            observer.join()
 
 
 @click.command(name="compile")
@@ -56,78 +136,4 @@ def run_compile(
     config = WokeConfig(woke_root_path=ctx.obj["woke_root_path"])
     config.load_configs()  # load ~/.woke/config.toml and ./woke.toml
 
-    sol_files: Set[Path] = set()
-    if len(paths) == 0:
-        for file in config.project_root_path.rglob("**/*.sol"):
-            if (
-                not any(
-                    is_relative_to(file, p) for p in config.compiler.solc.ignore_paths
-                )
-                and file.is_file()
-            ):
-                sol_files.add(file)
-    else:
-        for p in paths:
-            path = Path(p)
-            if path.is_file():
-                if not path.match("*.sol"):
-                    raise ValueError(f"Argument `{p}` is not a Solidity file.")
-                sol_files.add(path)
-            elif path.is_dir():
-                for file in path.rglob("**/*.sol"):
-                    if (
-                        not any(
-                            is_relative_to(file, p)
-                            for p in config.compiler.solc.ignore_paths
-                        )
-                        and file.is_file()
-                    ):
-                        sol_files.add(file)
-            else:
-                raise ValueError(f"Argument `{p}` is not a file or directory.")
-
-    compiler = SolidityCompiler(config)
-
-    if not force:
-        try:
-            compiler.load()
-        except Exception:
-            pass
-
-    # TODO Allow choosing build artifacts subset in compile subcommand
-    build: BuildInfo
-    errors: Set[SolcOutputError]
-    build, errors = asyncio.run(
-        compiler.compile(
-            sol_files,
-            [SolcOutputSelectionEnum.AST],
-            write_artifacts=not no_artifacts,
-            force_recompile=force,
-            console=console,
-            no_warnings=no_warnings,
-        )
-    )
-
-    if watch:
-        observer = Observer()
-        observer.schedule(
-            CompilationFileSystemEventHandler(
-                config,
-                compiler,
-                [SolcOutputSelectionEnum.AST],
-                write_artifacts=not no_artifacts,
-                console=console,
-                no_warnings=no_warnings,
-            ),
-            str(config.project_root_path),
-            recursive=True,
-        )
-        observer.start()
-        try:
-            while True:
-                time.sleep(1)
-        except KeyboardInterrupt:
-            pass
-        finally:
-            observer.stop()
-            observer.join()
+    asyncio.run(compile(config, paths, no_artifacts, no_warnings, force, watch))
