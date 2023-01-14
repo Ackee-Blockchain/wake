@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import asyncio
 import logging
 import pickle
 from collections import defaultdict, deque
-from json import JSONDecodeError
 from pathlib import Path, PurePath
+from threading import Timer
 from typing import (
     Collection,
     DefaultDict,
@@ -23,8 +25,12 @@ import rich.console
 import rich.panel
 from intervaltree import IntervalTree
 from pathvalidate import sanitize_filename  # type: ignore
-from pydantic import ValidationError
 from rich.progress import Progress
+from watchdog.events import (
+    FileSystemEvent,
+    FileSystemEventHandler,
+    FileSystemMovedEvent,
+)
 
 from woke.config import WokeConfig
 from woke.core.solidity_version import (
@@ -40,6 +46,7 @@ from ..ast.ir.reference_resolver import CallbackParams, ReferenceResolver
 from ..ast.ir.utils import IrInitTuple
 from ..ast.nodes import AstSolc
 from ..utils import get_package_version
+from ..utils.file_utils import is_relative_to
 from .build_data_model import (
     BuildInfo,
     CompilationUnitBuildInfo,
@@ -61,6 +68,181 @@ from .source_path_resolver import SourcePathResolver
 from .source_unit_name_resolver import SourceUnitNameResolver
 
 logger = logging.getLogger(__name__)
+
+
+class CompilationFileSystemEventHandler(FileSystemEventHandler):
+    _config: WokeConfig
+    _config_path: Path
+    _compiler: SolidityCompiler
+    _output_types: Collection[SolcOutputSelectionEnum]
+    _write_artifacts: bool
+    _console: Optional[rich.console.Console]
+    _no_warnings: bool
+    _created_files: Set[Path]
+    _modified_files: Set[Path]
+    _deleted_files: Set[Path]
+    _config_changed: bool
+    _timer: Optional[Timer]
+
+    TIMER_INTERVAL = 1.0
+
+    def __init__(
+        self,
+        config: WokeConfig,
+        compiler: SolidityCompiler,
+        output_types: Collection[SolcOutputSelectionEnum],
+        write_artifacts: bool = True,
+        console: Optional[rich.console.Console] = None,
+        no_warnings: bool = False,
+    ):
+        self._config = config
+        self._config_path = config.project_root_path / "woke.toml"
+        self._compiler = compiler
+        self._output_types = output_types
+        self._write_artifacts = write_artifacts
+        self._console = console
+        self._no_warnings = no_warnings
+        self._created_files = set()
+        self._modified_files = set()
+        self._deleted_files = set()
+        self._config_changed = False
+        self._timer = None
+
+    def _update_timer(self):
+        if self._timer is None:
+            self._timer = Timer(self.TIMER_INTERVAL, self._on_timer)
+            self._timer.start()
+        else:
+            self._timer.cancel()
+            logger.debug("Cancelled timer")
+            self._timer = Timer(self.TIMER_INTERVAL, self._on_timer)
+            self._timer.start()
+
+    def _on_timer(self):
+        assert self._compiler.latest_build_info is not None
+
+        if self._config_changed:
+            self._config.load_configs()
+
+            # find files that were previously ignored but are now included
+            files = set()
+            for file in self._config.project_root_path.rglob("**/*.sol"):
+                if (
+                    not any(
+                        is_relative_to(file, p)
+                        for p in self._config.compiler.solc.ignore_paths
+                    )
+                    and file.is_file()
+                ):
+                    files.add(file)
+
+            ignored_files = {
+                unit_info.fs_path
+                for unit_info in self._compiler.latest_build_info.source_units_info.values()
+                if any(
+                    is_relative_to(unit_info.fs_path, p)
+                    for p in self._config.compiler.solc.ignore_paths
+                )
+            }
+            files.difference_update(ignored_files)
+            deleted_files = self._deleted_files.union(ignored_files)
+        else:
+            files = {
+                unit_info.fs_path
+                for unit_info in self._compiler.latest_build_info.source_units_info.values()
+            }
+            ignored_files = {
+                f
+                for f in files
+                if any(
+                    is_relative_to(f, p)
+                    for p in self._config.compiler.solc.ignore_paths
+                )
+            }
+            files.update(self._created_files)
+            files.update(self._modified_files)
+            files.difference_update(ignored_files)
+            files.difference_update(self._deleted_files)
+            deleted_files = self._deleted_files
+
+        asyncio.run(
+            self._compiler.compile(
+                files,
+                self._output_types,
+                write_artifacts=self._write_artifacts,
+                deleted_files=deleted_files,
+                console=self._console,
+                no_warnings=self._no_warnings,
+            )
+        )
+
+        self._created_files.clear()
+        self._modified_files.clear()
+        self._deleted_files.clear()
+        self._config_changed = False
+        self._timer = None
+
+    def on_moved(self, event: FileSystemMovedEvent):
+        if event.is_directory:
+            pass
+        else:
+            self._on_deleted(Path(event.src_path))
+            self._on_created(Path(event.dest_path))
+
+    def _on_created(self, file: Path):
+        if file == self._config_path:
+            self._config_changed = True
+            self._update_timer()
+        elif file.suffix == ".sol":
+            if file in self._deleted_files:
+                self._deleted_files.remove(file)
+                self._modified_files.add(file)
+                self._update_timer()
+            else:
+                logger.debug(f"File {file} created")
+                self._created_files.add(file)
+                self._update_timer()
+
+    def on_created(self, event: FileSystemEvent):
+        if event.is_directory:
+            pass
+        else:
+            self._on_created(Path(event.src_path))
+
+    def on_modified(self, event: FileSystemEvent):
+        if event.is_directory:
+            pass
+        else:
+            file = Path(event.src_path)
+            if file == self._config_path:
+                self._config_changed = True
+                self._update_timer()
+            elif file.suffix == ".sol":
+                logger.debug(f"File {file} modified")
+                self._modified_files.add(file)
+                self._update_timer()
+
+    def _on_deleted(self, file: Path):
+        if file == self._config_path:
+            self._config_changed = True
+            self._update_timer()
+        elif file.suffix == ".sol":
+            if file in self._modified_files:
+                self._modified_files.remove(file)
+
+            if file in self._created_files:
+                self._created_files.remove(file)
+                self._update_timer()
+            else:
+                logger.debug(f"File {file} deleted")
+                self._deleted_files.add(file)
+                self._update_timer()
+
+    def on_deleted(self, event: FileSystemEvent):
+        if event.is_directory:
+            pass
+        else:
+            self._on_deleted(Path(event.src_path))
 
 
 class SolidityCompiler:
