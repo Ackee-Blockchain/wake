@@ -1,19 +1,17 @@
 from __future__ import annotations
 
-import asyncio
 import keyword
 import re
 import shutil
 import string
 from collections import deque
 from operator import itemgetter
-from pathlib import Path, PurePath
+from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import eth_utils
 from Crypto.Hash import BLAKE2b, keccak
 from intervaltree import IntervalTree
-from rich.panel import Panel
 from typing_extensions import Literal
 
 import woke.ast.ir.type_name.mapping
@@ -22,8 +20,6 @@ from woke.ast.enums import *
 from woke.ast.ir.declaration.enum_definition import EnumDefinition
 from woke.ast.ir.declaration.struct_definition import StructDefinition
 from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
-from woke.compile import SolidityCompiler
-from woke.compile.solc_frontend.input_data_model import SolcOutputSelectionEnum
 from woke.config import WokeConfig
 
 from ..ast.ir.declaration.contract_definition import ContractDefinition
@@ -37,10 +33,7 @@ from ..ast.ir.statement.revert_statement import RevertStatement
 from ..ast.ir.type_name.abc import TypeNameAbc
 from ..ast.ir.type_name.array_type_name import ArrayTypeName
 from ..ast.ir.type_name.user_defined_type_name import UserDefinedTypeName
-from ..cli.console import console
 from ..compile.build_data_model import BuildInfo
-from ..compile.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
-from ..utils.file_utils import is_relative_to
 from .constants import DEFAULT_IMPORTS, INIT_CONTENT, TAB_WIDTH
 
 
@@ -202,53 +195,6 @@ class TypeGenerator:
     @property
     def current_source_unit(self):
         return self.__current_source_unit
-
-    def run_compile(self, warnings: bool) -> None:
-        """Compile the project."""
-        sol_files: Set[Path] = set()
-        for file in self.__config.project_root_path.rglob("**/*.sol"):
-            if (
-                not any(
-                    is_relative_to(file, p)
-                    for p in self.__config.compiler.solc.ignore_paths
-                )
-                and file.is_file()
-            ):
-                sol_files.add(file)
-
-        compiler = SolidityCompiler(self.__config)
-
-        try:
-            compiler.load()
-        except Exception:
-            pass
-
-        build: BuildInfo
-        errors: Set[SolcOutputError]
-        build, errors = asyncio.run(
-            compiler.compile(
-                sol_files,
-                [SolcOutputSelectionEnum.ALL],
-                write_artifacts=True,
-            )
-        )
-
-        errored = False
-        for error in errors:
-            if error.severity == SolcOutputErrorSeverityEnum.ERROR:
-                errored = True
-            if warnings or error.severity == SolcOutputErrorSeverityEnum.ERROR:
-                if error.formatted_message is not None:
-                    console.print(Panel(error.formatted_message, highlight=True))
-                else:
-                    console.print(Panel(error.message, highlight=True))
-
-        if errored:
-            raise Exception("Compilation failed")
-
-        self.__source_units = build.source_units
-        self.__interval_trees = build.interval_trees
-        self.__reference_resolver = build.reference_resolver
 
     def add_str_to_types(
         self, num_of_indentation: int, string: str, num_of_newlines: int
@@ -1382,9 +1328,11 @@ class TypeGenerator:
             # if unit.source_unit_name == "overloading.sol":
             #    print(self.__func_to_overload)
 
-    def generate_types(self, compilation_warnings: bool) -> None:
-        # compile proj and generate ir
-        self.run_compile(compilation_warnings)
+    def generate_types(self, build: BuildInfo) -> None:
+        self.__interval_trees = build.interval_trees
+        self.__source_units = build.source_units
+        self.__reference_resolver = build.reference_resolver
+
         self.clean_type_dir()
         # self.traverse_funcs_to_check_overload()
         # print(self.__func_to_overload)

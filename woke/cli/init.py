@@ -1,12 +1,21 @@
+import asyncio
 import pathlib
+from typing import Set
 
 import click
 from click.core import Context
+from watchdog.observers import Observer
 
 from woke.config import WokeConfig
 from woke.utils import file_utils
 
+from ..compile import SolcOutputSelectionEnum, SolidityCompiler
+from ..compile.build_data_model import BuildInfo, ProjectBuildInfo
+from ..compile.compiler import CompilationFileSystemEventHandler
+from ..compile.solc_frontend import SolcOutputErrorSeverityEnum
 from ..testing.pytypes_generator import TypeGenerator
+from ..utils.file_utils import is_relative_to
+from .console import console
 
 
 @click.group(name="init")
@@ -18,6 +27,80 @@ def run_init(ctx: Context):
     ctx.obj["config"] = config
 
 
+async def run_init_pytypes(
+    config: WokeConfig, return_tx: bool, warnings: bool, watch: bool
+):
+    def callback(build: BuildInfo, build_info: ProjectBuildInfo):
+        errored = any(
+            any(
+                error.severity == SolcOutputErrorSeverityEnum.ERROR
+                for error in cu_info.errors
+            )
+            for cu_info in build_info.compilation_units.values()
+        )
+
+        if not errored:
+            type_generator.generate_types(build)
+
+    type_generator = TypeGenerator(config, return_tx)
+
+    sol_files: Set[pathlib.Path] = set()
+    for file in config.project_root_path.rglob("**/*.sol"):
+        if (
+            not any(is_relative_to(file, p) for p in config.compiler.solc.ignore_paths)
+            and file.is_file()
+        ):
+            sol_files.add(file)
+
+    compiler = SolidityCompiler(config)
+
+    try:
+        compiler.load()
+    except Exception:
+        pass
+
+    build, errors = await compiler.compile(
+        sol_files,
+        [SolcOutputSelectionEnum.ALL],
+        write_artifacts=True,
+        force_recompile=False,
+        console=console,
+        no_warnings=not warnings,
+    )
+    errored = any(
+        error for error in errors if error.severity == SolcOutputErrorSeverityEnum.ERROR
+    )
+    if not errored:
+        type_generator.generate_types(build)
+
+    fs_handler = CompilationFileSystemEventHandler(
+        config,
+        asyncio.get_event_loop(),
+        compiler,
+        [SolcOutputSelectionEnum.ALL],
+        write_artifacts=True,
+        console=console,
+        no_warnings=not warnings,
+    )
+    fs_handler.register_callback(callback)
+
+    if watch:
+        observer = Observer()
+        observer.schedule(
+            fs_handler,
+            str(config.project_root_path),
+            recursive=True,
+        )
+        observer.start()
+        try:
+            await fs_handler.run()
+        except KeyboardInterrupt:
+            pass
+        finally:
+            observer.stop()
+            observer.join()
+
+
 @run_init.command(name="pytypes")
 @click.option(
     "--return-tx",
@@ -27,17 +110,23 @@ def run_init(ctx: Context):
 )
 @click.option(
     "--warnings",
-    "-w",
+    "-W",
     is_flag=True,
     default=False,
     help="Print compilation warnings to console.",
 )
+@click.option(
+    "--watch",
+    "-w",
+    is_flag=True,
+    default=False,
+    help="Watch for changes in the project and regenerate pytypes on change.",
+)
 @click.pass_context
-def init_pytypes(ctx: Context, return_tx: bool, warnings: bool) -> None:
+def init_pytypes(ctx: Context, return_tx: bool, warnings: bool, watch: bool) -> None:
     """Generate Python contract types from Solidity ABI."""
     config: WokeConfig = ctx.obj["config"]
-    type_generator = TypeGenerator(config, return_tx)
-    type_generator.generate_types(warnings)
+    asyncio.run(run_init_pytypes(config, return_tx, warnings, watch))
 
 
 @run_init.command(name="fuzz")
@@ -56,18 +145,27 @@ def init_pytypes(ctx: Context, return_tx: bool, warnings: bool) -> None:
 )
 @click.option(
     "--warnings",
-    "-w",
+    "-W",
     is_flag=True,
     default=False,
     help="Print compilation warnings to console.",
 )
+@click.option(
+    "--watch",
+    "-w",
+    is_flag=True,
+    default=False,
+    help="Watch for changes in the project and regenerate pytypes on change.",
+)
 @click.pass_context
-def init_fuzz(ctx: Context, force: bool, return_tx: bool, warnings: bool) -> None:
+def init_fuzz(
+    ctx: Context, force: bool, return_tx: bool, warnings: bool, watch: bool
+) -> None:
     """Generate Python contract types and create example fuzz tests."""
     config: WokeConfig = ctx.obj["config"]
-    type_generator = TypeGenerator(config, return_tx)
-    type_generator.generate_types(warnings)
 
     examples_dir = pathlib.Path(__file__).parent.parent.resolve() / "examples/fuzzer"
     tests_dir = config.project_root_path / "tests"
     file_utils.copy_dir(examples_dir, tests_dir, overwrite=force)
+
+    asyncio.run(run_init_pytypes(config, return_tx, warnings, watch))
