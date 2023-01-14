@@ -4,7 +4,6 @@ from typing import Set, Tuple
 
 import click
 from click.core import Context
-from rich.panel import Panel
 
 from woke.compile.compiler import SolidityCompiler
 from woke.compile.solc_frontend.input_data_model import SolcOutputSelectionEnum
@@ -22,6 +21,12 @@ from .console import console
     "--no-artifacts", is_flag=True, default=False, help="Do not write build artifacts."
 )
 @click.option(
+    "--no-warnings",
+    is_flag=True,
+    default=False,
+    help="Do not print compilation warnings.",
+)
+@click.option(
     "--force",
     "-f",
     is_flag=True,
@@ -30,7 +35,7 @@ from .console import console
 )
 @click.pass_context
 def run_compile(
-    ctx: Context, paths: Tuple[str], no_artifacts: bool, force: bool
+    ctx: Context, paths: Tuple[str], no_artifacts: bool, no_warnings: bool, force: bool
 ) -> None:
     """Compile the project."""
     config = WokeConfig(woke_root_path=ctx.obj["woke_root_path"])
@@ -83,11 +88,7 @@ def run_compile(
             [SolcOutputSelectionEnum.AST],
             write_artifacts=not no_artifacts,
             force_recompile=force,
+            console=console,
+            no_warnings=no_warnings,
         )
     )
-
-    for error in errors:
-        if error.formatted_message is not None:
-            console.print(Panel(error.formatted_message, highlight=True))
-        else:
-            console.print(Panel(error.message, highlight=True))
