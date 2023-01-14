@@ -18,6 +18,9 @@ from typing import (
 )
 
 import networkx as nx
+import rich
+import rich.console
+import rich.panel
 from intervaltree import IntervalTree
 from pathvalidate import sanitize_filename  # type: ignore
 from pydantic import ValidationError
@@ -417,6 +420,8 @@ class SolidityCompiler:
         deleted_files: Optional[
             Set[Path]
         ] = None,  # files that should be treated as deleted even if they exist
+        console: Optional[rich.console.Console] = None,
+        no_warnings: bool = False,
     ) -> Tuple[BuildInfo, Set[SolcOutputError]]:
         if modified_files is None:
             modified_files = {}
@@ -631,6 +636,19 @@ class SolidityCompiler:
             errors |= error_list
 
         logger.debug(f"Compilation finished with {len(errors)} errors")
+
+        if console is not None:
+            for error in errors:
+                if (
+                    error.severity == SolcOutputErrorSeverityEnum.ERROR
+                    or not no_warnings
+                ):
+                    if error.formatted_message is not None:
+                        console.print(
+                            rich.panel.Panel(error.formatted_message, highlight=True)
+                        )
+                    else:
+                        console.print(rich.panel.Panel(error.message, highlight=True))
 
         return build, errors
 
