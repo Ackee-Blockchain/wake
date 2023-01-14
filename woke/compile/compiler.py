@@ -5,6 +5,8 @@ import logging
 import pickle
 import time
 from collections import defaultdict, deque
+from contextlib import nullcontext
+from json import JSONDecodeError
 from pathlib import Path, PurePath
 from typing import (
     Callable,
@@ -26,6 +28,7 @@ import rich.console
 import rich.panel
 from intervaltree import IntervalTree
 from pathvalidate import sanitize_filename  # type: ignore
+from pydantic import ValidationError
 from rich.progress import Progress
 from watchdog.events import (
     FileSystemEvent,
@@ -523,21 +526,28 @@ class SolidityCompiler:
             target_versions.append(target_version)
         return target_versions
 
-    async def install_solc(self, versions: Iterable[SolidityVersion]) -> None:
+    async def install_solc(
+        self,
+        versions: Iterable[SolidityVersion],
+        console: Optional[rich.console.Console],
+    ) -> None:
         for version in set(versions):
             if not self.__svm.installed(version):
-                with Progress() as progress:
-                    task = progress.add_task(
-                        f"[green]Downloading solc {version}", total=1
-                    )
+                if console is None:
+                    await self.__svm.install(version)
+                else:
+                    with Progress(console=console) as progress:
+                        task = progress.add_task(
+                            f"[green]Downloading solc {version}", total=1
+                        )
 
-                    async def on_progress(downloaded: int, total: int) -> None:
-                        progress.update(task, completed=downloaded, total=total)  # type: ignore
+                        async def on_progress(downloaded: int, total: int) -> None:
+                            progress.update(task, completed=downloaded, total=total)  # type: ignore
 
-                    await self.__svm.install(
-                        version,
-                        progress=on_progress,
-                    )
+                        await self.__svm.install(
+                            version,
+                            progress=on_progress,
+                        )
 
     @staticmethod
     def _out_edge_bfs(
@@ -558,15 +568,47 @@ class SolidityCompiler:
                     queue.append(to)
                     out.add(cu.source_unit_name_to_path(to))
 
-    def load(self) -> None:
-        latest_build_path = self.__config.project_root_path / ".woke-build"
-        build_info = ProjectBuildInfo.parse_file(latest_build_path / "build.json")
+    def load(self, console: Optional[rich.console.Console] = None) -> None:
+        ctx_manager = (
+            console.status("[bold green]Loading previous build...")
+            if console is not None
+            else nullcontext()
+        )
+        start = time.perf_counter()
 
-        if build_info.woke_version != get_package_version("woke"):
-            raise CompilationError("Woke version has changed, please recompile")
+        with ctx_manager:
+            try:
+                latest_build_path = self.__config.project_root_path / ".woke-build"
+                build_info = ProjectBuildInfo.parse_file(
+                    latest_build_path / "build.json"
+                )
 
-        self._latest_build = pickle.load((latest_build_path / "build.bin").open("rb"))
-        self._latest_build_info = build_info
+                if build_info.woke_version != get_package_version("woke"):
+                    if console is not None:
+                        console.log(
+                            f"[yellow]Woke version changed from {build_info.woke_version} to {get_package_version('woke')} since the last build, rebuilding project[/yellow]"
+                        )
+                    return
+
+                self._latest_build = pickle.load(
+                    (latest_build_path / "build.bin").open("rb")
+                )
+                self._latest_build_info = build_info
+            except (
+                ValidationError,
+                JSONDecodeError,
+                FileNotFoundError,
+                pickle.UnpicklingError,
+            ):
+                if console is not None:
+                    console.log("[red]Failed to load previous build artifacts[/red]")
+                return
+
+        if console is not None:
+            end = time.perf_counter()
+            console.log(
+                f"[green]Loaded previous build in [bold green]{end - start:.2f} s[/bold green]"
+            )
 
     @staticmethod
     def _merge_compilation_units(
@@ -730,7 +772,7 @@ class SolidityCompiler:
             build = self._latest_build
 
         target_versions = self.determine_solc_versions(compilation_units)
-        await self.install_solc(target_versions)
+        await self.install_solc(target_versions, console)
 
         tasks = []
         for compilation_unit, target_version in zip(compilation_units, target_versions):
@@ -741,15 +783,31 @@ class SolidityCompiler:
 
         logger.debug(f"Compiling {len(compilation_units)} compilation units")
 
-        # wait for compilation of all compilation units
-        try:
-            ret: Tuple[SolcOutput, ...] = await asyncio.gather(
-                *tasks
-            )  # pyright: ignore[reportGeneralTypeIssues]
-        except Exception:
-            for task in tasks:
-                task.cancel()
-            raise
+        ctx_manager = (
+            console.status(
+                f"[bold green]Compiling {sum(len(cu.files) for cu in compilation_units)} files...[/]"
+            )
+            if console
+            else nullcontext()
+        )
+        start = time.perf_counter()
+
+        with ctx_manager:
+            # wait for compilation of all compilation units
+            try:
+                ret: Tuple[SolcOutput, ...] = await asyncio.gather(
+                    *tasks
+                )  # pyright: ignore[reportGeneralTypeIssues]
+            except Exception:
+                for task in tasks:
+                    task.cancel()
+                raise
+
+        end = time.perf_counter()
+        if console is not None:
+            console.log(
+                f"[green]Compiled {sum(len(cu.files) for cu in compilation_units)} files in [bold green]{end - start:.2f} s[/bold green][/]"
+            )
 
         # remove deleted files from the previous build
         for deleted_file in deleted_files:
@@ -757,63 +815,76 @@ class SolidityCompiler:
                 build.reference_resolver.run_destroy_callbacks(deleted_file)
                 build.source_units.pop(deleted_file)
 
+        ctx_manager = (
+            console.status(f"[bold green]Processing compilation results...[/]")
+            if console
+            else nullcontext()
+        )
+        start = time.perf_counter()
         processed_files: Set[Path] = set()
 
-        for cu, solc_output in zip(compilation_units, ret):
-            errored: bool = False
-            errors_per_cu[cu.hash] = set()
+        with ctx_manager:
+            for cu, solc_output in zip(compilation_units, ret):
+                errored: bool = False
+                errors_per_cu[cu.hash] = set()
 
-            for error in solc_output.errors:
-                errors_per_cu[cu.hash].add(error)
-                if error.severity == SolcOutputErrorSeverityEnum.ERROR:
-                    errored = True
+                for error in solc_output.errors:
+                    errors_per_cu[cu.hash].add(error)
+                    if error.severity == SolcOutputErrorSeverityEnum.ERROR:
+                        errored = True
 
-            if errored:
-                continue
-
-            # files requested to be compiled and files that import these files (even indirectly)
-            recompiled_files: Set[Path] = set()
-            self._out_edge_bfs(cu, files_to_compile & cu.files, recompiled_files)
-
-            for source_unit_name, raw_ast in solc_output.sources.items():
-                source_unit = PurePath(source_unit_name)
-                path = cu.source_unit_name_to_path(source_unit)
-                ast = AstSolc.parse_obj(raw_ast.ast)
-
-                build.reference_resolver.register_source_file_id(
-                    raw_ast.id, path, cu.hash
-                )
-                build.reference_resolver.index_nodes(ast, path, cu.hash)
-
-                if (
-                    path in build.source_units and path not in recompiled_files
-                ) or path in processed_files:
+                if errored:
                     continue
-                processed_files.add(path)
-                assert (
-                    source_unit in graph.nodes
-                ), f"Source unit {source_unit} not in graph"
 
-                interval_tree = IntervalTree()
-                init = IrInitTuple(
-                    path,
-                    graph.nodes[source_unit]["content"].encode("utf-8"),
-                    cu,
-                    interval_tree,
-                    build.reference_resolver,
-                    solc_output.contracts[source_unit_name]
-                    if source_unit_name in solc_output.contracts
-                    else None,
-                )
-                build.reference_resolver.run_destroy_callbacks(path)
-                build.source_units[path] = SourceUnit(init, ast)
-                build.interval_trees[path] = interval_tree
+                # files requested to be compiled and files that import these files (even indirectly)
+                recompiled_files: Set[Path] = set()
+                self._out_edge_bfs(cu, files_to_compile & cu.files, recompiled_files)
 
-            build.reference_resolver.run_post_process_callbacks(
-                CallbackParams(
-                    interval_trees=build.interval_trees,
-                    source_units=build.source_units,
+                for source_unit_name, raw_ast in solc_output.sources.items():
+                    source_unit = PurePath(source_unit_name)
+                    path = cu.source_unit_name_to_path(source_unit)
+                    ast = AstSolc.parse_obj(raw_ast.ast)
+
+                    build.reference_resolver.register_source_file_id(
+                        raw_ast.id, path, cu.hash
+                    )
+                    build.reference_resolver.index_nodes(ast, path, cu.hash)
+
+                    if (
+                        path in build.source_units and path not in recompiled_files
+                    ) or path in processed_files:
+                        continue
+                    processed_files.add(path)
+                    assert (
+                        source_unit in graph.nodes
+                    ), f"Source unit {source_unit} not in graph"
+
+                    interval_tree = IntervalTree()
+                    init = IrInitTuple(
+                        path,
+                        graph.nodes[source_unit]["content"].encode("utf-8"),
+                        cu,
+                        interval_tree,
+                        build.reference_resolver,
+                        solc_output.contracts[source_unit_name]
+                        if source_unit_name in solc_output.contracts
+                        else None,
+                    )
+                    build.reference_resolver.run_destroy_callbacks(path)
+                    build.source_units[path] = SourceUnit(init, ast)
+                    build.interval_trees[path] = interval_tree
+
+                build.reference_resolver.run_post_process_callbacks(
+                    CallbackParams(
+                        interval_trees=build.interval_trees,
+                        source_units=build.source_units,
+                    )
                 )
+
+        if console is not None:
+            end = time.perf_counter()
+            console.log(
+                f"[green]Processed compilation results in [bold green]{end - start:.2f} s[/bold green][/]"
             )
 
         self._latest_build_info = ProjectBuildInfo(
@@ -839,7 +910,7 @@ class SolidityCompiler:
             len(compilation_units) > 0 or len(deleted_files) > 0 or force_recompile
         ):
             logger.debug("Writing artifacts")
-            self.write_artifacts()
+            self.write_artifacts(console)
 
         errors = set()
         for error_list in errors_per_cu.values():
@@ -862,18 +933,32 @@ class SolidityCompiler:
 
         return build, errors
 
-    def write_artifacts(self) -> None:
+    def write_artifacts(self, console: Optional[rich.console.Console] = None) -> None:
         if self._latest_build_info is None or self._latest_build is None:
             raise Exception("Project not compiled yet")
 
-        build_path = self.__config.project_root_path / ".woke-build"
-        build_path.mkdir(exist_ok=True)
+        ctx_manager = (
+            console.status(f"[bold green]Writing build artifacts...[/]")
+            if console
+            else nullcontext()
+        )
+        start = time.perf_counter()
 
-        with (build_path / "build.json").open("w") as f:
-            f.write(self._latest_build_info.json(by_alias=True, exclude_none=True))
+        with ctx_manager:
+            build_path = self.__config.project_root_path / ".woke-build"
+            build_path.mkdir(exist_ok=True)
 
-        with (build_path / "build.bin").open("wb") as f:
-            pickle.dump(self._latest_build, f)
+            with (build_path / "build.json").open("w") as f:
+                f.write(self._latest_build_info.json(by_alias=True, exclude_none=True))
+
+            with (build_path / "build.bin").open("wb") as f:
+                pickle.dump(self._latest_build, f)
+
+        if console is not None:
+            end = time.perf_counter()
+            console.log(
+                f"[green]Wrote build artifacts in [bold green]{end - start:.2f} s[/bold green][/]"
+            )
 
     async def compile_unit_raw(
         self,
