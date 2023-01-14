@@ -7,6 +7,7 @@ import time
 from collections import defaultdict, deque
 from pathlib import Path, PurePath
 from typing import (
+    Callable,
     Collection,
     DefaultDict,
     Deque,
@@ -84,6 +85,7 @@ class CompilationFileSystemEventHandler(FileSystemEventHandler):
     _config_changed: bool
     _loop: asyncio.AbstractEventLoop
     _queue: asyncio.Queue[FileSystemEvent]
+    _callbacks: List[Callable[[BuildInfo, ProjectBuildInfo], None]]
 
     TIMEOUT_INTERVAL = 1.0
 
@@ -110,6 +112,7 @@ class CompilationFileSystemEventHandler(FileSystemEventHandler):
         self._deleted_files = set()
         self._config_changed = False
         self._queue = asyncio.Queue()
+        self._callbacks = []
 
     async def run(self):
         while True:
@@ -126,6 +129,22 @@ class CompilationFileSystemEventHandler(FileSystemEventHandler):
                     await asyncio.sleep(0.1)
 
             await self._compile()
+
+            assert self._compiler.latest_build is not None
+            assert self._compiler.latest_build_info is not None
+
+            for callback in self._callbacks:
+                callback(self._compiler.latest_build, self._compiler.latest_build_info)
+
+    def register_callback(
+        self, callback: Callable[[BuildInfo, ProjectBuildInfo], None]
+    ):
+        self._callbacks.append(callback)
+
+    def unregister_callback(
+        self, callback: Callable[[BuildInfo, ProjectBuildInfo], None]
+    ):
+        self._callbacks.remove(callback)
 
     def _process_event(self, event: FileSystemEvent):
         if isinstance(event, FileSystemMovedEvent):
