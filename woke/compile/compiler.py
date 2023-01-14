@@ -646,7 +646,9 @@ class SolidityCompiler:
                 f"Target configured version {target_version} is higher than maximum supported version {max_version}"
             )
 
-        graph, source_units_to_paths = self.build_graph(files, modified_files)
+        graph, source_units_to_paths = self.build_graph(
+            files, modified_files, ignore_errors=True
+        )
         compilation_units = self.build_compilation_units_maximize(graph)
         build_settings = self.create_build_settings(output_types)
 
@@ -715,7 +717,10 @@ class SolidityCompiler:
 
             # select only compilation units that need to be compiled
             compilation_units = [
-                cu for cu in compilation_units if (cu.files & files_to_compile)
+                cu
+                for cu in compilation_units
+                if (cu.files & files_to_compile)
+                or cu.contains_unresolved_file(deleted_files, self.__config)
             ]
 
             logger.debug(
