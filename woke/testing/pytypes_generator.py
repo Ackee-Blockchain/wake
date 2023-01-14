@@ -1032,6 +1032,7 @@ class TypeGenerator:
                     )
             elif isinstance(var_type, types.Contract):
                 self.__imports.generate_contract_import_expr(var_type)
+                parsed.append(self.get_name(var_type.name))
                 returns = [(self.get_name(var_type.name), var_type_name.type_string)]
             elif isinstance(var_type, types.FixedBytes):
                 parsed.append(f"bytes{var_type.bytes_count}")
