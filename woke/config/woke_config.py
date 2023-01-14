@@ -220,10 +220,16 @@ class WokeConfig:
 
     def load_configs(self) -> None:
         """
-        Load both the global config file `config.toml` located in the Woke root directory
-        and the project specific config file `woke.toml` located in the project root directory.
-        This is expected to be called right after `WokeConfig` instantiation.
+        Clear any previous config options and load both the global config file `config.toml`
+        located in the Woke root directory and the project specific config file `woke.toml`
+        located in the project root directory. This is expected to be called right after `WokeConfig`
+        instantiation.
         """
+        self.__loaded_files = set()
+        with change_cwd(self.__project_root_path):
+            self.__config = TopLevelConfig()
+        self.__config_raw = self.__config.dict(by_alias=True)
+
         self.load(self.woke_root_path / "config.toml")
         self.load(self.project_root_path / "woke.toml")
 
