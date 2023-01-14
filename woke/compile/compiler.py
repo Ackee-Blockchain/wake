@@ -3,9 +3,9 @@ from __future__ import annotations
 import asyncio
 import logging
 import pickle
+import time
 from collections import defaultdict, deque
 from pathlib import Path, PurePath
-from threading import Timer
 from typing import (
     Collection,
     DefaultDict,
@@ -82,13 +82,15 @@ class CompilationFileSystemEventHandler(FileSystemEventHandler):
     _modified_files: Set[Path]
     _deleted_files: Set[Path]
     _config_changed: bool
-    _timer: Optional[Timer]
+    _loop: asyncio.AbstractEventLoop
+    _queue: asyncio.Queue[FileSystemEvent]
 
-    TIMER_INTERVAL = 1.0
+    TIMEOUT_INTERVAL = 1.0
 
     def __init__(
         self,
         config: WokeConfig,
+        loop: asyncio.AbstractEventLoop,
         compiler: SolidityCompiler,
         output_types: Collection[SolcOutputSelectionEnum],
         write_artifacts: bool = True,
@@ -96,6 +98,7 @@ class CompilationFileSystemEventHandler(FileSystemEventHandler):
         no_warnings: bool = False,
     ):
         self._config = config
+        self._loop = loop
         self._config_path = config.project_root_path / "woke.toml"
         self._compiler = compiler
         self._output_types = output_types
@@ -106,19 +109,54 @@ class CompilationFileSystemEventHandler(FileSystemEventHandler):
         self._modified_files = set()
         self._deleted_files = set()
         self._config_changed = False
-        self._timer = None
+        self._queue = asyncio.Queue()
 
-    def _update_timer(self):
-        if self._timer is None:
-            self._timer = Timer(self.TIMER_INTERVAL, self._on_timer)
-            self._timer.start()
+    async def run(self):
+        while True:
+            # process at least one event
+            event = await self._queue.get()
+            self._process_event(event)
+
+            start = time.perf_counter()
+            while time.perf_counter() - start < self.TIMEOUT_INTERVAL:
+                try:
+                    event = self._queue.get_nowait()
+                    self._process_event(event)
+                except asyncio.QueueEmpty:
+                    await asyncio.sleep(0.1)
+
+            await self._compile()
+
+    def _process_event(self, event: FileSystemEvent):
+        if isinstance(event, FileSystemMovedEvent):
+            self._on_deleted(Path(event.src_path))
+            self._on_created(Path(event.dest_path))
+        elif event.event_type == "created":
+            self._on_created(Path(event.src_path))
+        elif event.event_type == "modified":
+            self._on_modified(Path(event.src_path))
+        elif event.event_type == "deleted":
+            self._on_deleted(Path(event.src_path))
+
+    def on_any_event(self, event: FileSystemEvent):
+        if event.is_directory:
+            return
+        if isinstance(event, FileSystemMovedEvent):
+            src_file = Path(event.src_path)
+            dest_file = Path(event.dest_path)
+            if (
+                src_file == self._config_path
+                or src_file.suffix == ".sol"
+                or dest_file == self._config_path
+                or dest_file.suffix == ".sol"
+            ):
+                self._loop.call_soon_threadsafe(self._queue.put, event)
         else:
-            self._timer.cancel()
-            logger.debug("Cancelled timer")
-            self._timer = Timer(self.TIMER_INTERVAL, self._on_timer)
-            self._timer.start()
+            file = Path(event.src_path)
+            if file == self._config_path or file.suffix == ".sol":
+                self._loop.call_soon_threadsafe(self._queue.put_nowait, event)
 
-    def _on_timer(self):
+    async def _compile(self):
         assert self._compiler.latest_build_info is not None
 
         if self._config_changed:
@@ -165,84 +203,50 @@ class CompilationFileSystemEventHandler(FileSystemEventHandler):
             files.difference_update(self._deleted_files)
             deleted_files = self._deleted_files
 
-        asyncio.run(
-            self._compiler.compile(
-                files,
-                self._output_types,
-                write_artifacts=self._write_artifacts,
-                deleted_files=deleted_files,
-                console=self._console,
-                no_warnings=self._no_warnings,
-            )
+        await self._compiler.compile(
+            files,
+            self._output_types,
+            write_artifacts=self._write_artifacts,
+            deleted_files=deleted_files,
+            console=self._console,
+            no_warnings=self._no_warnings,
         )
 
         self._created_files.clear()
         self._modified_files.clear()
         self._deleted_files.clear()
         self._config_changed = False
-        self._timer = None
-
-    def on_moved(self, event: FileSystemMovedEvent):
-        if event.is_directory:
-            pass
-        else:
-            self._on_deleted(Path(event.src_path))
-            self._on_created(Path(event.dest_path))
 
     def _on_created(self, file: Path):
         if file == self._config_path:
             self._config_changed = True
-            self._update_timer()
         elif file.suffix == ".sol":
             if file in self._deleted_files:
                 self._deleted_files.remove(file)
                 self._modified_files.add(file)
-                self._update_timer()
             else:
                 logger.debug(f"File {file} created")
                 self._created_files.add(file)
-                self._update_timer()
 
-    def on_created(self, event: FileSystemEvent):
-        if event.is_directory:
-            pass
-        else:
-            self._on_created(Path(event.src_path))
-
-    def on_modified(self, event: FileSystemEvent):
-        if event.is_directory:
-            pass
-        else:
-            file = Path(event.src_path)
-            if file == self._config_path:
-                self._config_changed = True
-                self._update_timer()
-            elif file.suffix == ".sol":
-                logger.debug(f"File {file} modified")
-                self._modified_files.add(file)
-                self._update_timer()
+    def _on_modified(self, file: Path):
+        if file == self._config_path:
+            self._config_changed = True
+        elif file.suffix == ".sol":
+            logger.debug(f"File {file} modified")
+            self._modified_files.add(file)
 
     def _on_deleted(self, file: Path):
         if file == self._config_path:
             self._config_changed = True
-            self._update_timer()
         elif file.suffix == ".sol":
             if file in self._modified_files:
                 self._modified_files.remove(file)
 
             if file in self._created_files:
                 self._created_files.remove(file)
-                self._update_timer()
             else:
                 logger.debug(f"File {file} deleted")
                 self._deleted_files.add(file)
-                self._update_timer()
-
-    def on_deleted(self, event: FileSystemEvent):
-        if event.is_directory:
-            pass
-        else:
-            self._on_deleted(Path(event.src_path))
 
 
 class SolidityCompiler:
