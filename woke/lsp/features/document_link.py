@@ -92,14 +92,20 @@ async def document_link(
     context: LspContext, params: DocumentLinkParams
 ) -> Optional[List[DocumentLink]]:
     logger.debug(f"Requested document links for file {params.text_document.uri}")
-    await context.compiler.output_ready.wait()
 
     path = uri_to_path(params.text_document.uri).resolve()
-    if path not in context.compiler.source_units:
+    if (
+        path not in context.compiler.source_units
+        or not context.compiler.output_ready.is_set()
+    ):
         try:
             return await _get_document_links_from_cache(path, context)
         except Exception:
-            return None
+            pass
+
+    await context.compiler.output_ready.wait()
+    if path not in context.compiler.source_units:
+        return None
 
     source_unit = context.compiler.source_units[path]
     document_links = []

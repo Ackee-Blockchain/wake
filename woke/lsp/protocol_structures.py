@@ -65,7 +65,7 @@ class NotificationMessage(Message):
 
 
 class CancelParams(LspModel):
-    id: Union[str, int]
+    id: Union[int, str]
     """
     The request id to cancel.
     """
