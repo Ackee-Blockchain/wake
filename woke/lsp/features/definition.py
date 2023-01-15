@@ -206,15 +206,20 @@ async def definition(
         f"Requested definition for file {params.text_document.uri} at {params.position}"
     )
 
-    await context.compiler.output_ready.wait()
-
     path = uri_to_path(params.text_document.uri).resolve()
-    if path not in context.compiler.interval_trees:
+    if (
+        path not in context.compiler.interval_trees
+        or not context.compiler.output_ready.is_set()
+    ):
         # try to use old build artifacts
         try:
             return await _get_definition_from_cache(path, params.position, context)
         except Exception:
-            return None
+            pass
+
+    await context.compiler.output_ready.wait()
+    if path not in context.compiler.interval_trees:
+        return None
 
     tree = context.compiler.interval_trees[path]
 

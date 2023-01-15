@@ -141,6 +141,7 @@ class LspServer:
     __sent_requests: Dict[Union[int, str], asyncio.Event]
     __message_responses: Dict[Union[int, str], ResponseMessage]
     __running_tasks: Set[asyncio.Task]
+    __request_tasks: Dict[Union[int, str], asyncio.Task]
 
     __method_mapping: Dict[str, Tuple[Callable, Optional[Type[LspModel]]]]
     __notification_mapping: Dict[str, Tuple[Callable, Optional[Type[LspModel]]]]
@@ -163,6 +164,7 @@ class LspServer:
         self.__sent_requests = {}
         self.__message_responses = {}
         self.__running_tasks = set()
+        self.__request_tasks = {}
 
         self.__method_mapping = {
             RequestMethodEnum.INITIALIZE: (self._initialize, InitializeParams),
@@ -285,6 +287,18 @@ class LspServer:
         task.add_done_callback(self._task_done_callback)
         return task
 
+    def create_request_task(
+        self, coroutine: Coroutine, request_id: Union[int, str]
+    ) -> asyncio.Task:
+        def _callback(task: asyncio.Task) -> None:
+            if request_id in self.__request_tasks:
+                del self.__request_tasks[request_id]
+
+        task = self.create_task(coroutine)
+        self.__request_tasks[request_id] = task
+        task.add_done_callback(_callback)
+        return task
+
     async def run(self) -> None:
         task = self.create_task(self._main_task())
         try:
@@ -313,9 +327,12 @@ class LspServer:
         while True:
             message = await queue.get()
             if isinstance(message, RequestMessage):
-                await self._handle_message(message)
+                self.create_request_task(self._handle_message(message), message.id)
             elif isinstance(message, NotificationMessage):
-                await self._handle_notification(message)
+                if message.method != RequestMethodEnum.INITIALIZED:
+                    self.create_task(self._handle_notification(message))
+                else:
+                    await self._handle_notification(message)
             else:
                 raise Exception("Unknown message type")
 
@@ -574,7 +591,9 @@ class LspServer:
         return InitializeResult(capabilities=server_capabilities, server_info=None)
 
     async def _cancel_request(self, params: CancelParams) -> None:
-        pass
+        if params.id in self.__request_tasks:
+            self.__request_tasks[params.id].cancel()
+            del self.__request_tasks[params.id]
 
     async def _progress(self, params: ProgressParams) -> None:
         pass
