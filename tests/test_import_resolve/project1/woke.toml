@@ -1,7 +1,0 @@
-[compiler.solc]
-remappings = [
-    "contracts/a.sol:https://github.com=github",
-    "contracts/:https://github.com=shorter_than_the_previous_one",
-    "@OpenZeppelin=this_will_be_ignored",
-    ":@OpenZeppelin=node_modules/openzeppelin",
-]
