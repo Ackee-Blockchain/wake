@@ -24,7 +24,7 @@ from typing import (
     Union,
 )
 
-from woke.compile.exceptions import CompilationError
+from woke.compiler.exceptions import CompilationError
 
 from ..analysis.detectors import detect
 from ..core.solidity_version import SolidityVersionRange, SolidityVersionRanges
@@ -40,10 +40,10 @@ from woke.ast.ir.meta.source_unit import SourceUnit
 from woke.ast.ir.reference_resolver import CallbackParams, ReferenceResolver
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import AstSolc
-from woke.compile import SolcOutput, SolcOutputSelectionEnum
-from woke.compile.compilation_unit import CompilationUnit
-from woke.compile.compiler import SolidityCompiler
-from woke.compile.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
+from woke.compiler import SolcOutput, SolcOutputSelectionEnum
+from woke.compiler.compilation_unit import CompilationUnit
+from woke.compiler.compiler import SolidityCompiler
+from woke.compiler.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
 from woke.config import WokeConfig
 from woke.lsp.document_sync import (
     DidChangeTextDocumentParams,

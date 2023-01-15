@@ -2,7 +2,7 @@ from pathlib import Path, PurePath
 
 import pytest
 
-from woke.compile.source_unit_name_resolver import SourceUnitNameResolver
+from woke.compiler.source_unit_name_resolver import SourceUnitNameResolver
 from woke.config import WokeConfig
 from woke.utils import change_cwd
 

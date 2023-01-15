@@ -5,7 +5,7 @@ from typing import DefaultDict, FrozenSet, Iterable, Set
 import networkx as nx
 from Crypto.Hash import BLAKE2b
 
-from woke.compile.source_path_resolver import SourcePathResolver
+from woke.compiler.source_path_resolver import SourcePathResolver
 from woke.config import WokeConfig
 from woke.core.solidity_version import SolidityVersionRanges
 

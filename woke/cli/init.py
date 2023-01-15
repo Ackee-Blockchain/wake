@@ -10,10 +10,10 @@ from watchdog.observers import Observer
 from woke.config import WokeConfig
 from woke.utils import file_utils
 
-from ..compile import SolcOutputSelectionEnum, SolidityCompiler
-from ..compile.build_data_model import BuildInfo, ProjectBuildInfo
-from ..compile.compiler import CompilationFileSystemEventHandler
-from ..compile.solc_frontend import SolcOutputErrorSeverityEnum
+from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
+from ..compiler.build_data_model import BuildInfo, ProjectBuildInfo
+from ..compiler.compiler import CompilationFileSystemEventHandler
+from ..compiler.solc_frontend import SolcOutputErrorSeverityEnum
 from ..testing.pytypes_generator import TypeGenerator
 from ..utils.file_utils import is_relative_to
 from .console import console

@@ -11,7 +11,7 @@ from click.testing import CliRunner
 from git import Repo  # type: ignore
 
 from woke.cli.__main__ import main
-from woke.compile import SolcOutputSelectionEnum, SolidityCompiler
+from woke.compiler import SolcOutputSelectionEnum, SolidityCompiler
 from woke.config import WokeConfig
 from woke.utils import change_cwd
 

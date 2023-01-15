@@ -7,9 +7,9 @@ import rich.terminal_theme
 from rich.panel import Panel
 
 from ..analysis.detectors.api import detect, print_detection, print_detectors
-from ..compile import SolcOutputSelectionEnum, SolidityCompiler
-from ..compile.build_data_model import BuildInfo
-from ..compile.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
+from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
+from ..compiler.build_data_model import BuildInfo
+from ..compiler.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
 from ..config import WokeConfig
 from ..utils.file_utils import is_relative_to
 from .console import console

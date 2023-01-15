@@ -33,7 +33,7 @@ from ..ast.ir.statement.revert_statement import RevertStatement
 from ..ast.ir.type_name.abc import TypeNameAbc
 from ..ast.ir.type_name.array_type_name import ArrayTypeName
 from ..ast.ir.type_name.user_defined_type_name import UserDefinedTypeName
-from ..compile.build_data_model import BuildInfo
+from ..compiler.build_data_model import BuildInfo
 from .constants import DEFAULT_IMPORTS, INIT_CONTENT, TAB_WIDTH
 
 

@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from intervaltree import IntervalTree
 
-import woke.compile
+import woke.compiler
 import woke.config
 from woke.ast.enums import FunctionKind, GlobalSymbolsEnum
 from woke.ast.ir.abc import IrAbc
@@ -44,8 +44,8 @@ from woke.ast.ir.yul.function_call import FunctionCall as YulFunctionCall
 from woke.ast.ir.yul.if_statement import If as YulIf
 from woke.ast.ir.yul.leave import Leave as YulLeave
 from woke.ast.ir.yul.switch import Switch as YulSwitch
-from woke.compile.build_data_model import BuildInfo
-from woke.compile.solc_frontend import (
+from woke.compiler.build_data_model import BuildInfo
+from woke.compiler.solc_frontend import (
     SolcOutputError,
     SolcOutputErrorSeverityEnum,
     SolcOutputSelectionEnum,
@@ -896,7 +896,7 @@ def _compile_project(
         ):
             sol_files.add(file)
 
-    compiler = woke.compile.SolidityCompiler(config)
+    compiler = woke.compiler.SolidityCompiler(config)
     compiler.load()
 
     build: BuildInfo

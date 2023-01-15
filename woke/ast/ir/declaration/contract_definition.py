@@ -11,7 +11,7 @@ from ..reference_resolver import CallbackParams
 from .abc import DeclarationAbc
 
 if TYPE_CHECKING:
-    from woke.compile import SolcOutputContractInfo
+    from woke.compiler import SolcOutputContractInfo
     from ..meta.source_unit import SourceUnit
 
 from woke.ast.enums import ContractKind

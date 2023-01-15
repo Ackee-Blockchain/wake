@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from woke.lsp.context import LspContext
     from woke.lsp.server import LspServer
 
-from woke.compile.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
+from woke.compiler.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
 from woke.lsp.common_structures import (
     Diagnostic,
     DiagnosticSeverity,
