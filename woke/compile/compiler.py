@@ -98,6 +98,7 @@ class CompilationFileSystemEventHandler(FileSystemEventHandler):
         loop: asyncio.AbstractEventLoop,
         compiler: SolidityCompiler,
         output_types: Collection[SolcOutputSelectionEnum],
+        *,
         write_artifacts: bool = True,
         console: Optional[rich.console.Console] = None,
         no_warnings: bool = False,
@@ -526,7 +527,7 @@ class SolidityCompiler:
             target_versions.append(target_version)
         return target_versions
 
-    async def install_solc(
+    async def _install_solc(
         self,
         versions: Iterable[SolidityVersion],
         console: Optional[rich.console.Console],
@@ -568,7 +569,7 @@ class SolidityCompiler:
                     queue.append(to)
                     out.add(cu.source_unit_name_to_path(to))
 
-    def load(self, console: Optional[rich.console.Console] = None) -> None:
+    def load(self, *, console: Optional[rich.console.Console] = None) -> None:
         ctx_manager = (
             console.status("[bold green]Loading previous build...")
             if console is not None
@@ -661,6 +662,7 @@ class SolidityCompiler:
         self,
         files: Iterable[Path],
         output_types: Collection[SolcOutputSelectionEnum],
+        *,
         write_artifacts: bool = True,
         force_recompile: bool = False,
         modified_files: Optional[Mapping[Path, str]] = None,
@@ -772,7 +774,7 @@ class SolidityCompiler:
             build = self._latest_build
 
         target_versions = self.determine_solc_versions(compilation_units)
-        await self.install_solc(target_versions, console)
+        await self._install_solc(target_versions, console)
 
         tasks = []
         for compilation_unit, target_version in zip(compilation_units, target_versions):
@@ -910,7 +912,7 @@ class SolidityCompiler:
             len(compilation_units) > 0 or len(deleted_files) > 0 or force_recompile
         ):
             logger.debug("Writing artifacts")
-            self.write_artifacts(console)
+            self.write_artifacts(console=console)
 
         errors = set()
         for error_list in errors_per_cu.values():
@@ -933,7 +935,9 @@ class SolidityCompiler:
 
         return build, errors
 
-    def write_artifacts(self, console: Optional[rich.console.Console] = None) -> None:
+    def write_artifacts(
+        self, *, console: Optional[rich.console.Console] = None
+    ) -> None:
         if self._latest_build_info is None or self._latest_build is None:
             raise Exception("Project not compiled yet")
 
