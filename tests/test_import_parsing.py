@@ -1,6 +1,6 @@
 import pytest
 
-from woke.regex_parsing.solidity_import import SolidityImportExpr
+from woke.regex_parser.solidity_import import SolidityImportExpr
 
 
 def test_import_simple():
