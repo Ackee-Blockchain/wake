@@ -23,6 +23,30 @@ async def compile(
     force: bool,
     watch: bool,
 ):
+    compiler = SolidityCompiler(config)
+
+    if watch:
+        fs_handler = CompilationFileSystemEventHandler(
+            config,
+            asyncio.get_event_loop(),
+            compiler,
+            [SolcOutputSelectionEnum.AST],
+            write_artifacts=not no_artifacts,
+            console=console,
+            no_warnings=no_warnings,
+        )
+
+        observer = Observer()
+        observer.schedule(
+            fs_handler,
+            str(config.project_root_path),
+            recursive=True,
+        )
+        observer.start()
+    else:
+        fs_handler = None
+        observer = None
+
     sol_files: Set[Path] = set()
     if len(paths) == 0:
         for file in config.project_root_path.rglob("**/*.sol"):
@@ -53,8 +77,6 @@ async def compile(
             else:
                 raise ValueError(f"Argument `{p}` is not a file or directory.")
 
-    compiler = SolidityCompiler(config)
-
     if not force:
         compiler.load(console=console)
 
@@ -68,24 +90,9 @@ async def compile(
         no_warnings=no_warnings,
     )
 
-    fs_handler = CompilationFileSystemEventHandler(
-        config,
-        asyncio.get_event_loop(),
-        compiler,
-        [SolcOutputSelectionEnum.AST],
-        write_artifacts=not no_artifacts,
-        console=console,
-        no_warnings=no_warnings,
-    )
-
     if watch:
-        observer = Observer()
-        observer.schedule(
-            fs_handler,
-            str(config.project_root_path),
-            recursive=True,
-        )
-        observer.start()
+        assert fs_handler is not None
+        assert observer is not None
         try:
             await fs_handler.run()
         except KeyboardInterrupt:
