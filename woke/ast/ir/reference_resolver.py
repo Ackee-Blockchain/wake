@@ -36,6 +36,7 @@ class PostProcessQueueItem:
 
 class ReferenceResolver:
     __ordered_nodes: DefaultDict[bytes, Dict[AstNodeId, Tuple[Path, int]]]
+    __ordered_nodes_inverted: DefaultDict[bytes, Dict[Tuple[Path, int], AstNodeId]]
     __registered_source_files: DefaultDict[bytes, Dict[int, Path]]
     __registered_nodes: Dict[Tuple[Path, int], SolidityAbc]
     __post_process_callbacks: List[PostProcessQueueItem]
@@ -46,6 +47,7 @@ class ReferenceResolver:
 
     def __init__(self):
         self.__ordered_nodes = defaultdict(dict)
+        self.__ordered_nodes_inverted = defaultdict(dict)
         self.__registered_source_files = defaultdict(dict)
         self.__registered_nodes = {}
         self.__post_process_callbacks = []
@@ -54,8 +56,10 @@ class ReferenceResolver:
 
     def index_nodes(self, root_node: AstSolc, path: Path, cu_hash: bytes) -> None:
         self.__ordered_nodes[cu_hash][root_node.id] = (path, 0)
+        self.__ordered_nodes_inverted[cu_hash][(path, 0)] = root_node.id
         for index, node in enumerate(root_node):
             self.__ordered_nodes[cu_hash][node.id] = (path, index + 1)
+            self.__ordered_nodes_inverted[cu_hash][(path, index + 1)] = node.id
 
     def register_source_file_id(self, source_file_id: int, path: Path, cu_hash: bytes):
         self.__registered_source_files[cu_hash][source_file_id] = path
@@ -68,12 +72,7 @@ class ReferenceResolver:
     def get_ast_id_from_cu_node_path_order(
         self, node_path_order: Tuple[Path, int], cu_hash: bytes
     ) -> AstNodeId:
-        for node_id, node_path_order_ in self.__ordered_nodes[cu_hash].items():
-            if node_path_order_ == node_path_order:
-                return node_id
-        raise KeyError(
-            f"No node found for path order {node_path_order} cu hash {cu_hash.hex()}"
-        )
+        return self.__ordered_nodes_inverted[cu_hash][node_path_order]
 
     def register_node(self, node: SolidityAbc, node_id: AstNodeId, cu_hash: bytes):
         assert cu_hash in self.__ordered_nodes
