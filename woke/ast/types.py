@@ -100,28 +100,33 @@ def _parse_list(
     type_identifier: StringReader, reference_resolver: ReferenceResolver, cu_hash: bytes
 ) -> typ.Tuple[typ.Optional[TypeAbc], ...]:
     type_identifier.read("$_")
-    # handle empty list
-    # either a comma or a closing bracket
-    if type_identifier.startswith("_$"):
-        index = 0
-        while (
-            index + 2 <= len(type_identifier.data)
-            and type_identifier.data[index : index + 2] == "_$"
-        ):
-            index += 2
-        # if we have a closing bracket, there should not be a trailing underscore
-        if index >= len(type_identifier.data) or type_identifier.data[index] != "_":
-            type_identifier.read("_$")
-            return tuple()
 
-    items = [TypeAbc.from_type_identifier(type_identifier, reference_resolver, cu_hash)]
-    while not type_identifier.startswith("_$_$") and type_identifier.startswith("_$_"):
-        type_identifier.read("_$_")
-        items.append(
-            TypeAbc.from_type_identifier(type_identifier, reference_resolver, cu_hash)
-        )
+    ret = []
+    last_was_comma = False
+
+    while True:
+        while type_identifier.startswith("_$_"):
+            type_identifier.read("_$_")
+            if last_was_comma:
+                ret.append(None)
+            last_was_comma = True
+        if type_identifier.startswith("_$"):
+            break
+        else:
+            ret.append(
+                TypeAbc.from_type_identifier(
+                    type_identifier, reference_resolver, cu_hash
+                )
+            )
+            last_was_comma = False
+            if ret[-1] is None:
+                # failed to parse => the last character was not a comma but a closing bracket
+                type_identifier.insert("_$_")
+                ret.pop()
+                break
+
     type_identifier.read("_$")
-    return tuple(items)
+    return tuple(ret)
 
 
 def _parse_user_identifier(type_identifier: StringReader) -> str:
