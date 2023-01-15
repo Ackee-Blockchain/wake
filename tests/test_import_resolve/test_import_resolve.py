@@ -14,6 +14,7 @@ def test_simple():
     # no config files loaded => no remappings
     config = WokeConfig(project_root_path=current_path, woke_root_path=current_path)
     resolver = SourceUnitNameResolver(config)
+
     assert resolver.resolve_import(
         PurePath("contracts/a.sol"), "./util.sol"
     ) == PurePath("contracts/util.sol")
@@ -51,10 +52,22 @@ def test_simple():
 
 @pytest.mark.platform_dependent
 def test_cmdline_args():
-    config = WokeConfig(
-        project_root_path=current_path / "project1", woke_root_path=current_path
+    config = WokeConfig.fromdict(
+        {
+            "compiler": {
+                "solc": {
+                    "remappings": [
+                        "contracts/a.sol:https://github.com=github",
+                        "contracts/a.sol:https://github.co=shorter_than_the_previous_one",
+                        "@OpenZeppelin=this_will_be_ignored",
+                        ":@OpenZeppelin=node_modules/openzeppelin",
+                    ]
+                }
+            }
+        },
+        project_root_path=current_path / "project1",
+        woke_root_path=current_path,
     )
-    config.load_configs()
     resolver = SourceUnitNameResolver(config)
 
     with change_cwd(current_path):
@@ -68,11 +81,23 @@ def test_cmdline_args():
 
 @pytest.mark.platform_dependent
 def test_remappings():
-    config = WokeConfig(
-        project_root_path=current_path / "project1", woke_root_path=current_path
+    config = WokeConfig.fromdict(
+        {
+            "compiler": {
+                "solc": {
+                    "remappings": [
+                        "contracts/a.sol:https://github.com=github",
+                        "contracts/a.sol:https://github.co=shorter_than_the_previous_one",
+                        "@OpenZeppelin=this_will_be_ignored",
+                        ":@OpenZeppelin=node_modules/openzeppelin",
+                    ]
+                }
+            }
+        },
+        woke_root_path=current_path,
     )
-    config.load_configs()
     resolver = SourceUnitNameResolver(config)
+
     assert resolver.resolve_import(
         PurePath("contracts/a.sol"), "https://github.com/test/abc.sol"
     ) == PurePath("github/test/abc.sol")

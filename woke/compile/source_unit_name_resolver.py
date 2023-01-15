@@ -1,4 +1,4 @@
-from pathlib import Path, PurePath, PurePosixPath
+from pathlib import Path, PurePath
 from typing import List
 
 from woke.config import WokeConfig
@@ -17,8 +17,8 @@ class SourceUnitNameResolver:
         self.__config = woke_config
 
     def __apply_remapping(
-        self, parent_source_unit: PurePath, source_unit_name: PurePath
-    ) -> PurePath:
+        self, parent_source_unit: PurePath, source_unit_name: str
+    ) -> str:
         """
         Try to apply a remapping and return a source unit name. Up to one remapping can be applied to a single import.
         It is the longest one. In case of multiple remappings with the same length, the one specified last wins.
@@ -27,36 +27,36 @@ class SourceUnitNameResolver:
         for remapping in self.__config.compiler.solc.remappings:
             context, prefix, target = remapping
             context_matches = (context is None) or (
-                context is not None
-                and str(parent_source_unit).startswith(str(PurePath(context)))
+                context is not None and str(parent_source_unit).startswith(context)
             )
-            if context_matches and str(source_unit_name).startswith(
-                str(PurePath(prefix))
-            ):
+            if context_matches and source_unit_name.startswith(prefix):
                 matching_remappings.append(remapping)
 
         if len(matching_remappings) == 0:
             return source_unit_name
 
-        longest = max(matching_remappings, key=lambda r: len(r.context or ""))  # type: ignore
-        remapping = next(
-            r
-            for r in reversed(matching_remappings)
-            if len(r.context or "") == len(longest.context or "")  # type: ignore
-        )
-        return PurePath(
-            str(source_unit_name).replace(
-                str(PurePath(remapping.prefix)), remapping.target or "", 1
-            )
+        matching_remappings.sort(key=lambda r: len(r.context or ""), reverse=True)
+
+        # choose the remapping with the longest context
+        # if there are multiple remappings with the same context, choose the last one
+        l = len(matching_remappings[0].prefix)
+        target_remapping = matching_remappings[-1]
+        for i in range(1, len(matching_remappings)):
+            if len(matching_remappings[i].prefix) != l:
+                target_remapping = matching_remappings[i - 1]
+                break
+
+        return source_unit_name.replace(
+            str(target_remapping.prefix), target_remapping.target or "", 1
         )
 
     def __resolve_direct_import(
-        self, parent_source_unit: PurePath, import_path: PurePath
+        self, parent_source_unit: PurePath, import_str: str
     ) -> PurePath:
         """
         Return a source unit name of a direct import in the file with given source unit name.
         """
-        return self.__apply_remapping(parent_source_unit, import_path)
+        return PurePath(self.__apply_remapping(parent_source_unit, import_str))
 
     def __resolve_relative_import(
         self, parent_source_unit: PurePath, import_path: PurePath
@@ -109,7 +109,9 @@ class SourceUnitNameResolver:
             source_unit_name = PurePath(normalized_import_parts[0])
             for part in normalized_import_parts[1:]:
                 source_unit_name = source_unit_name / part
-        return self.__apply_remapping(parent_source_unit, source_unit_name)
+        return PurePath(
+            self.__apply_remapping(parent_source_unit, str(source_unit_name))
+        )
 
     def resolve_import(self, parent_source_unit: PurePath, import_str: str) -> PurePath:
         """
@@ -121,7 +123,7 @@ class SourceUnitNameResolver:
             import_path = PurePath(import_str)
         if import_str.startswith((".", "..")):
             return self.__resolve_relative_import(parent_source_unit, import_path)
-        return self.__resolve_direct_import(parent_source_unit, import_path)
+        return self.__resolve_direct_import(parent_source_unit, import_str)
 
     def resolve_cmdline_arg(self, arg: str) -> PurePath:
         """
