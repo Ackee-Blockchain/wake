@@ -1,6 +1,6 @@
 import asyncio
 import subprocess
-from pathlib import Path, PurePath
+from pathlib import Path
 from typing import Dict
 
 from woke.config import WokeConfig
@@ -27,8 +27,8 @@ class SolcFrontend:
 
     async def compile(
         self,
-        files: Dict[PurePath, Path],
-        sources: Dict[PurePath, str],
+        files: Dict[str, Path],
+        sources: Dict[str, str],
         target_version: SolidityVersion,
         settings: SolcInputSettings,
     ) -> SolcOutput:
@@ -39,20 +39,14 @@ class SolcFrontend:
                 # path = {include_path} / {unit_name}
                 # since 0.8.8 include paths can be passed as cmdline arguments to solc
                 # because of this, source unit names can be passed here instead of (full) absolute paths
-                standard_input.sources[
-                    str(unit_name).replace("\\", "/")
-                ] = SolcInputSource(urls=[str(unit_name)])
+                standard_input.sources[unit_name] = SolcInputSource(urls=[unit_name])
             else:
                 # for solc versions < 0.8.8 include paths cannot be passed as cmdline arguments to solc
                 # because of this, absolute paths must be used here
-                standard_input.sources[
-                    str(unit_name).replace("\\", "/")
-                ] = SolcInputSource(urls=[str(path)])
+                standard_input.sources[unit_name] = SolcInputSource(urls=[str(path)])
 
         for unit_name, content in sources.items():
-            standard_input.sources[str(unit_name).replace("\\", "/")] = SolcInputSource(
-                content=content
-            )
+            standard_input.sources[unit_name] = SolcInputSource(content=content)
         standard_input.settings = settings
 
         return await self.__run_solc(target_version, standard_input)

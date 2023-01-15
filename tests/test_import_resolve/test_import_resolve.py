@@ -1,4 +1,4 @@
-from pathlib import Path, PurePath
+from pathlib import Path
 
 import pytest
 
@@ -15,39 +15,45 @@ def test_simple():
     config = WokeConfig(project_root_path=current_path, woke_root_path=current_path)
     resolver = SourceUnitNameResolver(config)
 
-    assert resolver.resolve_import(
-        PurePath("contracts/a.sol"), "./util.sol"
-    ) == PurePath("contracts/util.sol")
-    assert resolver.resolve_import(
-        PurePath("contracts/a.sol"), "../token.sol"
-    ) == PurePath("token.sol")
-    assert resolver.resolve_import(
-        PurePath("contracts/a.sol"), "./x/x.sol"
-    ) == PurePath("contracts/x/x.sol")
-    assert resolver.resolve_import(
-        PurePath("contracts/a.sol"), "contracts/tokens/y.sol"
-    ) == PurePath("contracts/tokens/y.sol")
-    assert resolver.resolve_import(
-        PurePath("lib/src/..///contract.sol"), "./util/./util.sol"
-    ) == PurePath("lib/src/../util/util.sol")
-    assert resolver.resolve_import(
-        PurePath("lib/src/../contract.sol"), "./util///util.sol"
-    ) == PurePath("lib/src/../util/util.sol")
-    assert resolver.resolve_import(
-        PurePath("lib/src/../contract.sol"), "../util/../array/util.sol"
-    ) == PurePath("lib/src/array/util.sol")
-    assert resolver.resolve_import(
-        PurePath("lib/src/../contract.sol"), "../.././../util.sol"
-    ) == PurePath("util.sol")
-    assert resolver.resolve_import(
-        PurePath("lib/src/../contract.sol"), "../../.././../util.sol"
-    ) == PurePath("util.sol")
-    assert resolver.resolve_import(
-        PurePath("protocol://test/abc.sol"), "./dummy.sol"
-    ) == PurePath("protocol://test/dummy.sol")
-    assert resolver.resolve_import(
-        PurePath("protocol://test/abc///"), "./dummy.sol"
-    ) == PurePath("protocol://test/dummy.sol")
+    assert (
+        resolver.resolve_import("contracts/a.sol", "./util.sol") == "contracts/util.sol"
+    )
+    assert resolver.resolve_import("contracts/a.sol", "../token.sol") == "token.sol"
+    assert (
+        resolver.resolve_import("contracts/a.sol", "./x/x.sol") == "contracts/x/x.sol"
+    )
+    assert (
+        resolver.resolve_import("contracts/a.sol", "contracts/tokens/y.sol")
+        == "contracts/tokens/y.sol"
+    )
+    assert (
+        resolver.resolve_import("lib/src/..///contract.sol", "./util/./util.sol")
+        == "lib/src/../util/util.sol"
+    )
+    assert (
+        resolver.resolve_import("lib/src/../contract.sol", "./util///util.sol")
+        == "lib/src/../util/util.sol"
+    )
+    assert (
+        resolver.resolve_import("lib/src/../contract.sol", "../util/../array/util.sol")
+        == "lib/src/array/util.sol"
+    )
+    assert (
+        resolver.resolve_import("lib/src/../contract.sol", "../.././../util.sol")
+        == "util.sol"
+    )
+    assert (
+        resolver.resolve_import("lib/src/../contract.sol", "../../.././../util.sol")
+        == "util.sol"
+    )
+    assert (
+        resolver.resolve_import("protocol://test/abc.sol", "./dummy.sol")
+        == "protocol://test/dummy.sol"
+    )
+    assert (
+        resolver.resolve_import("protocol://test/abc///", "./dummy.sol")
+        == "protocol://test/dummy.sol"
+    )
 
 
 @pytest.mark.platform_dependent
@@ -71,11 +77,13 @@ def test_cmdline_args():
     resolver = SourceUnitNameResolver(config)
 
     with change_cwd(current_path):
-        assert resolver.resolve_cmdline_arg("project1/contracts/a.sol") == PurePath(
-            "contracts/a.sol"
+        assert (
+            resolver.resolve_cmdline_arg("project1/contracts/a.sol")
+            == "contracts/a.sol"
         )
-        assert resolver.resolve_cmdline_arg("project1/interfaces/b.sol") == PurePath(
-            "interfaces/b.sol"
+        assert (
+            resolver.resolve_cmdline_arg("project1/interfaces/b.sol")
+            == "interfaces/b.sol"
         )
 
 
@@ -98,9 +106,11 @@ def test_remappings():
     )
     resolver = SourceUnitNameResolver(config)
 
-    assert resolver.resolve_import(
-        PurePath("contracts/a.sol"), "https://github.com/test/abc.sol"
-    ) == PurePath("github/test/abc.sol")
-    assert resolver.resolve_import(
-        PurePath("contracts/a.sol"), "@OpenZeppelin/test.sol"
-    ) == PurePath("node_modules/openzeppelin/test.sol")
+    assert (
+        resolver.resolve_import("contracts/a.sol", "https://github.com/test/abc.sol")
+        == "github/test/abc.sol"
+    )
+    assert (
+        resolver.resolve_import("contracts/a.sol", "@OpenZeppelin/test.sol")
+        == "node_modules/openzeppelin/test.sol"
+    )

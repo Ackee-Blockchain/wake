@@ -1,5 +1,5 @@
 import itertools
-from pathlib import Path, PurePath
+from pathlib import Path
 from typing import AbstractSet
 
 from woke.config import WokeConfig
@@ -15,8 +15,8 @@ class SourcePathResolver:
 
     def resolve(
         self,
-        source_unit_name: PurePath,
-        parent_source_unit_name: PurePath,
+        source_unit_name: str,
+        parent_source_unit_name: str,
         virtual_files: AbstractSet[Path],
     ) -> Path:
         """
@@ -48,7 +48,7 @@ class SourcePathResolver:
             raise CompilationResolveError(err)
         return matching_paths[0]
 
-    def matches(self, source_unit_name: PurePath, file: Path) -> bool:
+    def matches(self, source_unit_name: str, file: Path) -> bool:
         """
         Return True if the given source unit name matches the given file path.
         """

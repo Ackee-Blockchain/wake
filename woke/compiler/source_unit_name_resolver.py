@@ -1,4 +1,4 @@
-from pathlib import Path, PurePath
+from pathlib import Path, PurePath, PurePosixPath
 from typing import List
 
 from woke.config import WokeConfig
@@ -16,9 +16,7 @@ class SourceUnitNameResolver:
     def __init__(self, woke_config: WokeConfig):
         self.__config = woke_config
 
-    def __apply_remapping(
-        self, parent_source_unit: PurePath, source_unit_name: str
-    ) -> str:
+    def __apply_remapping(self, parent_source_unit: str, source_unit_name: str) -> str:
         """
         Try to apply a remapping and return a source unit name. Up to one remapping can be applied to a single import.
         It is the longest one. In case of multiple remappings with the same length, the one specified last wins.
@@ -27,7 +25,7 @@ class SourceUnitNameResolver:
         for remapping in self.__config.compiler.solc.remappings:
             context, prefix, target = remapping
             context_matches = (context is None) or (
-                context is not None and str(parent_source_unit).startswith(context)
+                context is not None and parent_source_unit.startswith(context)
             )
             if context_matches and source_unit_name.startswith(prefix):
                 matching_remappings.append(remapping)
@@ -50,24 +48,20 @@ class SourceUnitNameResolver:
             str(target_remapping.prefix), target_remapping.target or "", 1
         )
 
-    def __resolve_direct_import(
-        self, parent_source_unit: PurePath, import_str: str
-    ) -> PurePath:
+    def __resolve_direct_import(self, parent_source_unit: str, import_str: str) -> str:
         """
         Return a source unit name of a direct import in the file with given source unit name.
         """
-        return PurePath(self.__apply_remapping(parent_source_unit, import_str))
+        return self.__apply_remapping(parent_source_unit, import_str)
 
     def __resolve_relative_import(
-        self, parent_source_unit: PurePath, import_path: PurePath
-    ) -> PurePath:
+        self, parent_source_unit: str, import_str: str
+    ) -> str:
         """
         Return a source unit name of a relative import in the file with given source unit name.
         """
-        import_parts = [
-            part for part in import_path.parts if str(part) not in {"", "."}
-        ]
-        parent_parts = list(parent_source_unit.parts)
+        import_parts = [part for part in import_str.split("/") if part not in {"", "."}]
+        parent_parts = parent_source_unit.split("/")
 
         while len(parent_parts) > 0 and parent_parts[-1] == "":
             parent_parts.pop()
@@ -100,35 +94,27 @@ class SourceUnitNameResolver:
                 break
 
         if len(parent_parts) > 0:
-            source_unit_name = PurePath(parent_parts[0])
-            for part in parent_parts[1:]:
-                source_unit_name = source_unit_name / part
-            for part in normalized_import_parts:
-                source_unit_name = source_unit_name / part
+            source_unit_name = (
+                "/".join(parent_parts) + "/" + "/".join(normalized_import_parts)
+            )
         else:
-            source_unit_name = PurePath(normalized_import_parts[0])
-            for part in normalized_import_parts[1:]:
-                source_unit_name = source_unit_name / part
-        return PurePath(
-            self.__apply_remapping(parent_source_unit, str(source_unit_name))
-        )
+            source_unit_name = "/".join(normalized_import_parts)
+        return self.__apply_remapping(parent_source_unit, source_unit_name)
 
-    def resolve_import(self, parent_source_unit: PurePath, import_str: str) -> PurePath:
+    def resolve_import(self, parent_source_unit: str, import_str: str) -> str:
         """
         Resolve a source unit name of an import in the file with given source unit name.
         """
-        try:
-            import_path = PurePath(import_str.encode("utf-8").decode("unicode-escape"))
-        except UnicodeDecodeError:
-            import_path = PurePath(import_str)
         if import_str.startswith((".", "..")):
-            return self.__resolve_relative_import(parent_source_unit, import_path)
+            return self.__resolve_relative_import(parent_source_unit, import_str)
         return self.__resolve_direct_import(parent_source_unit, import_str)
 
-    def resolve_cmdline_arg(self, arg: str) -> PurePath:
+    def resolve_cmdline_arg(self, arg: str) -> str:
         """
         Return a source unit name of the file provided as a command-line argument.
         """
         path = Path(arg).resolve()
         pure_path = PurePath(path)
-        return pure_path.relative_to(self.__config.project_root_path)
+        return str(
+            PurePosixPath(pure_path.relative_to(self.__config.project_root_path))
+        )

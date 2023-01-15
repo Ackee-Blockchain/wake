@@ -5,7 +5,7 @@ import re
 from collections import deque
 from dataclasses import dataclass
 from functools import lru_cache
-from pathlib import Path, PurePath
+from pathlib import Path
 from typing import TYPE_CHECKING, Deque, Iterator, List, Optional, Set, Tuple
 
 from ..expression.identifier import Identifier
@@ -86,7 +86,7 @@ class ImportDirective(SolidityAbc):
     _ast_node: SolcImportDirective
     _parent: SourceUnit
 
-    _source_unit_name: PurePath
+    _source_unit_name: str
     _import_string: str
     _imported_file: Path
     _source_unit_id: AstNodeId
@@ -100,7 +100,7 @@ class ImportDirective(SolidityAbc):
         parent: SolidityAbc,
     ):
         super().__init__(init, import_directive, parent)
-        self._source_unit_name = PurePath(import_directive.absolute_path)
+        self._source_unit_name = import_directive.absolute_path
         self._import_string = import_directive.file
         self._imported_file = init.cu.source_unit_name_to_path(self._source_unit_name)
         self._source_unit_id = import_directive.source_unit
@@ -170,7 +170,7 @@ class ImportDirective(SolidityAbc):
         return self._parent
 
     @property
-    def source_unit_name(self) -> PurePath:
+    def source_unit_name(self) -> str:
         """
         Returns:
             Source unit name of the imported file.

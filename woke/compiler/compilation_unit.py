@@ -1,5 +1,5 @@
 from collections import defaultdict
-from pathlib import Path, PurePath
+from pathlib import Path
 from typing import DefaultDict, FrozenSet, Iterable, Set
 
 import networkx as nx
@@ -14,7 +14,7 @@ class CompilationUnit:
     __unit_graph: nx.DiGraph
     __version_ranges: SolidityVersionRanges
     __hash: bytes
-    __paths_to_source_unit_names: DefaultDict[Path, Set[PurePath]]
+    __paths_to_source_unit_names: DefaultDict[Path, Set[str]]
 
     def __init__(self, unit_graph: nx.DiGraph, version_ranges: SolidityVersionRanges):
         self.__unit_graph = unit_graph
@@ -49,16 +49,16 @@ class CompilationUnit:
         reversed_graph = nx.reverse(self.__unit_graph, False)
         nx.nx_pydot.write_dot(reversed_graph, path)
 
-    def source_unit_name_to_path(self, source_unit_name: PurePath) -> Path:
+    def source_unit_name_to_path(self, source_unit_name: str) -> Path:
         return self.__unit_graph.nodes[source_unit_name]["path"]
 
-    def path_to_source_unit_names(self, path: Path) -> FrozenSet[PurePath]:
+    def path_to_source_unit_names(self, path: Path) -> FrozenSet[str]:
         return frozenset(self.__paths_to_source_unit_names[path])
 
     def contains_unresolved_file(
         self, files: Iterable[Path], config: WokeConfig
     ) -> bool:
-        unresolved_imports: Set[PurePath] = set()
+        unresolved_imports: Set[str] = set()
         for node in self.__unit_graph.nodes:
             unresolved_imports.update(
                 self.__unit_graph.nodes[node]["unresolved_imports"]
@@ -79,7 +79,7 @@ class CompilationUnit:
         )
 
     @property
-    def source_unit_names(self) -> FrozenSet[PurePath]:
+    def source_unit_names(self) -> FrozenSet[str]:
         return frozenset(self.__unit_graph.nodes)
 
     @property
