@@ -7,7 +7,7 @@ import time
 from collections import defaultdict, deque
 from contextlib import nullcontext
 from json import JSONDecodeError
-from pathlib import Path, PurePath
+from pathlib import Path
 from typing import (
     Callable,
     Collection,
@@ -305,10 +305,10 @@ class SolidityCompiler:
         files: Iterable[Path],
         modified_files: Mapping[Path, str],
         ignore_errors: bool = False,
-    ) -> Tuple[nx.DiGraph, Dict[PurePath, Path]]:
+    ) -> Tuple[nx.DiGraph, Dict[str, Path]]:
         # source unit name, full path, file content
-        source_units_queue: deque[Tuple[PurePath, Path, Optional[str]]] = deque()
-        source_units: Dict[PurePath, Path] = {}
+        source_units_queue: deque[Tuple[str, Path, Optional[str]]] = deque()
+        source_units: Dict[str, Path] = {}
 
         # for every source file resolve a source unit name
         for file in files:
@@ -401,10 +401,10 @@ class SolidityCompiler:
         """
 
         def __build_compilation_unit(
-            graph: nx.DiGraph, start: Iterable[PurePath]
+            graph: nx.DiGraph, start: Iterable[str]
         ) -> CompilationUnit:
             nodes_subset = set()
-            nodes_queue: deque[PurePath] = deque(start)
+            nodes_queue: deque[str] = deque(start)
             versions: SolidityVersionRanges = SolidityVersionRanges(
                 [SolidityVersionRange(None, None, None, None)]
             )
@@ -554,12 +554,12 @@ class SolidityCompiler:
     def _out_edge_bfs(
         cu: CompilationUnit, start: Iterable[Path], out: Set[Path]
     ) -> None:
-        processed: Set[PurePath] = set()
+        processed: Set[str] = set()
         for path in start:
             processed.update(cu.path_to_source_unit_names(path))
         out.update(start)
 
-        queue: Deque[PurePath] = deque(processed)
+        queue: Deque[str] = deque(processed)
         while len(queue):
             node = queue.pop()
             for out_edge in cu.graph.out_edges(node):
@@ -730,26 +730,21 @@ class SolidityCompiler:
 
             compilation_units = self._merge_compilation_units(compilation_units, graph)
         else:
-            source_units_info: Dict[PurePath, SourceUnitInfo] = {
-                PurePath(source_unit_name): self._latest_build_info.source_units_info[
-                    source_unit_name
-                ]
-                for source_unit_name in self._latest_build_info.source_units_info.keys()
-            }
-
             # TODO this is not needed? graph contains hash of modified files
             # files_to_compile = set(modified_files.keys())
             files_to_compile = set()
 
             for source_unit in graph.nodes:
                 if (
-                    source_unit not in source_units_info
-                    or source_units_info[source_unit].blake2b_hash
+                    source_unit not in self._latest_build_info.source_units_info
+                    or self._latest_build_info.source_units_info[
+                        source_unit
+                    ].blake2b_hash
                     != graph.nodes[source_unit]["hash"]
                 ):
                     files_to_compile.add(source_units_to_paths[source_unit])
 
-            for source_unit, info in source_units_info.items():
+            for source_unit, info in self._latest_build_info.source_units_info.items():
                 if source_unit not in graph.nodes:
                     deleted_files.add(info.fs_path)
 
@@ -843,8 +838,7 @@ class SolidityCompiler:
                 self._out_edge_bfs(cu, files_to_compile & cu.files, recompiled_files)
 
                 for source_unit_name, raw_ast in solc_output.sources.items():
-                    source_unit = PurePath(source_unit_name)
-                    path = cu.source_unit_name_to_path(source_unit)
+                    path = cu.source_unit_name_to_path(source_unit_name)
                     ast = AstSolc.parse_obj(raw_ast.ast)
 
                     build.reference_resolver.register_source_file_id(
@@ -858,13 +852,13 @@ class SolidityCompiler:
                         continue
                     processed_files.add(path)
                     assert (
-                        source_unit in graph.nodes
-                    ), f"Source unit {source_unit} not in graph"
+                        source_unit_name in graph.nodes
+                    ), f"Source unit {source_unit_name} not in graph"
 
                     interval_tree = IntervalTree()
                     init = IrInitTuple(
                         path,
-                        graph.nodes[source_unit]["content"].encode("utf-8"),
+                        graph.nodes[source_unit_name]["content"].encode("utf-8"),
                         cu,
                         interval_tree,
                         build.reference_resolver,
@@ -970,9 +964,9 @@ class SolidityCompiler:
         target_version: SolidityVersion,
         build_settings: SolcInputSettings,
     ) -> SolcOutput:
-        # Dict[source_unit_name: PurePath, path: Path]
+        # Dict[source_unit_name: str, path: Path]
         files = {}
-        # Dict[source_unit_name: PurePath, content: str]
+        # Dict[source_unit_name: str, content: str]
         sources = {}
         for source_unit_name, data in compilation_unit.graph.nodes.items():
             path = data["path"]

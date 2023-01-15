@@ -9,7 +9,7 @@ import threading
 from collections import deque
 from copy import deepcopy
 from functools import lru_cache
-from pathlib import Path, PurePath
+from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     AbstractSet,
@@ -89,12 +89,12 @@ def _binary_search(lines: List[Tuple[bytes, int]], x: int) -> int:
 
 
 def _out_edge_bfs(cu: CompilationUnit, start: Iterable[Path], out: Set[Path]) -> None:
-    processed: Set[PurePath] = set()
+    processed: Set[str] = set()
     for path in start:
         processed.update(cu.path_to_source_unit_names(path))
     out.update(start)
 
-    queue: Deque[PurePath] = deque(processed)
+    queue: Deque[str] = deque(processed)
     while len(queue):
         node = queue.pop()
         for out_edge in cu.graph.out_edges(node):
@@ -701,9 +701,7 @@ class LspCompiler:
 
             for error in solc_output.errors:
                 if error.source_location is not None:
-                    path = cu.source_unit_name_to_path(
-                        PurePath(error.source_location.file)
-                    )
+                    path = cu.source_unit_name_to_path(error.source_location.file)
                     errors_per_file[path].add(
                         self.__solc_error_to_diagnostic(error, path)
                     )
@@ -728,7 +726,7 @@ class LspCompiler:
 
             if len(errored_files) == 0:
                 for source_unit_name, raw_ast in solc_output.sources.items():
-                    path = cu.source_unit_name_to_path(PurePath(source_unit_name))
+                    path = cu.source_unit_name_to_path(source_unit_name)
                     if path in errored_files or raw_ast.ast is None:
                         continue
                     ast = AstSolc.parse_obj(raw_ast.ast)
@@ -770,7 +768,7 @@ class LspCompiler:
                         self.__last_successful_compilation_contents[
                             path
                         ] = VersionedFile(
-                            cu.graph.nodes[PurePath(source_unit_name)]["content"], None
+                            cu.graph.nodes[source_unit_name]["content"], None
                         )
 
             self.__ir_reference_resolver.run_post_process_callbacks(

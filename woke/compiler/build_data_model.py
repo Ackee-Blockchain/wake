@@ -47,9 +47,7 @@ class SourceUnitInfo(NamedTuple):
 
 class ProjectBuildInfo(BuildInfoModel):
     compilation_units: Dict[str, CompilationUnitBuildInfo]
-    source_units_info: Dict[
-        str, SourceUnitInfo
-    ]  # actually the key should be a PurePath but pydantic doesn't support it
+    source_units_info: Dict[str, SourceUnitInfo]
     allow_paths: FrozenSet[Path]
     include_paths: FrozenSet[Path]
     settings: SolcInputSettings
