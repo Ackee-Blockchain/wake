@@ -42,7 +42,7 @@ from woke.core.solidity_version import (
     SolidityVersionRange,
     SolidityVersionRanges,
 )
-from woke.regex_parsing import SoliditySourceParser
+from woke.regex_parser import SoliditySourceParser
 from woke.svm import SolcVersionManager
 
 from ..ast.ir.meta.source_unit import SourceUnit
