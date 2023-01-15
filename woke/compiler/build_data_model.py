@@ -7,7 +7,7 @@ from pydantic import BaseModel, Extra
 
 from woke.ast.ir.meta.source_unit import SourceUnit
 from woke.ast.ir.reference_resolver import ReferenceResolver
-from woke.compile.solc_frontend import SolcInputSettings, SolcOutputError
+from woke.compiler.solc_frontend import SolcInputSettings, SolcOutputError
 from woke.core.solidity_version import SolidityVersion
 
 

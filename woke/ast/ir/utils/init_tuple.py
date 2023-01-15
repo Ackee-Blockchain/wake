@@ -7,8 +7,8 @@ from intervaltree import IntervalTree
 
 if TYPE_CHECKING:
     from woke.ast.ir.reference_resolver import ReferenceResolver
-    from woke.compile import SolcOutputContractInfo
-    from woke.compile.compilation_unit import CompilationUnit
+    from woke.compiler import SolcOutputContractInfo
+    from woke.compiler.compilation_unit import CompilationUnit
 
 
 class IrInitTuple(NamedTuple):

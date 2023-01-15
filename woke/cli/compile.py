@@ -7,8 +7,8 @@ import click
 from click.core import Context
 from watchdog.observers import Observer
 
-from woke.compile.compiler import CompilationFileSystemEventHandler, SolidityCompiler
-from woke.compile.solc_frontend.input_data_model import SolcOutputSelectionEnum
+from woke.compiler.compiler import CompilationFileSystemEventHandler, SolidityCompiler
+from woke.compiler.solc_frontend.input_data_model import SolcOutputSelectionEnum
 from woke.config import WokeConfig
 
 from ..utils.file_utils import is_relative_to

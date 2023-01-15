@@ -11,9 +11,9 @@ from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.declaration.contract_definition import ContractDefinition
 from woke.ast.ir.declaration.function_definition import FunctionDefinition
 from woke.ast.ir.meta.source_unit import SourceUnit
-from woke.compile import SolcOutputSelectionEnum, SolidityCompiler
-from woke.compile.build_data_model import BuildInfo
-from woke.compile.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
+from woke.compiler import SolcOutputSelectionEnum, SolidityCompiler
+from woke.compiler.build_data_model import BuildInfo
+from woke.compiler.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
 from woke.config import WokeConfig
 
 SOURCES_PATH = Path(__file__).parent.resolve() / "detectors_sources"
