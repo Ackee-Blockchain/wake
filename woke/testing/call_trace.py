@@ -12,7 +12,7 @@ from rich.tree import Tree
 
 from woke.testing.core import (
     Address,
-    ChainInterface,
+    Chain,
     get_contract_internal_jumpdests,
     get_contract_internal_jumps_in,
     get_contract_internal_jumps_out,
@@ -131,7 +131,7 @@ class CallTrace:
         trace: Dict[str, Any],
         origin_fqn: Optional[str],
         tx_params: TxParams,
-        chain: ChainInterface,
+        chain: Chain,
     ):
         contracts = [origin_fqn]
         values = [0 if "value" not in tx_params else tx_params["value"]]

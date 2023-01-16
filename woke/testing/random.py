@@ -2,14 +2,14 @@ import random
 import string
 from typing import Callable, Optional
 
-from .core import Account, Address, ChainInterface, default_chain
+from .core import Account, Address, Chain, default_chain
 
 
 def random_account(
     lower_bound: int = 0,
     length: Optional[int] = None,
     predicate: Optional[Callable[[Account], bool]] = None,
-    chain: Optional[ChainInterface] = None,
+    chain: Optional[Chain] = None,
 ) -> Account:
     if chain is None:
         chain = default_chain
