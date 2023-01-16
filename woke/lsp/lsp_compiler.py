@@ -636,6 +636,9 @@ class LspCompiler:
             for task in tasks:
                 task.cancel()
             await self.__server.log_message(str(e), MessageType.ERROR)
+            if progress_token is not None:
+                await self.__server.progress_end(progress_token)
+
             for file in self.__discovered_files:
                 # clear diagnostics
                 await self.__diagnostic_queue.put((file, set()))
@@ -674,6 +677,9 @@ class LspCompiler:
             )
             > 0
         ):
+            if progress_token is not None:
+                await self.__server.progress_end(progress_token)
+
             for file in self.__discovered_files:
                 # clear diagnostics
                 await self.__diagnostic_queue.put((file, set()))
