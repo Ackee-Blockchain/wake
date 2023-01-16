@@ -119,6 +119,7 @@ class DetectorsConfig(WokeConfigModel):
 
 
 class LspConfig(WokeConfigModel):
+    compilation_delay: float = 0
     code_lens: CodeLensConfig = Field(default_factory=CodeLensConfig)
     detectors: DetectorsLspConfig = Field(default_factory=DetectorsLspConfig)
     find_references: FindReferencesConfig = Field(default_factory=FindReferencesConfig)

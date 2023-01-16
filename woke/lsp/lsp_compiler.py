@@ -6,6 +6,7 @@ import enum
 import logging
 import re
 import threading
+import time
 from collections import deque
 from copy import deepcopy
 from functools import lru_cache
@@ -868,12 +869,20 @@ class LspCompiler:
 
         while True:
             change = await self.__file_changes_queue.get()
+            start = time.perf_counter()
+            await self._handle_change(change)
             while True:
-                await self._handle_change(change)
                 try:
                     change = self.__file_changes_queue.get_nowait()
+                    start = time.perf_counter()
+                    await self._handle_change(change)
                 except asyncio.QueueEmpty:
-                    break
+                    if (
+                        time.perf_counter() - start
+                        > self.__config.lsp.compilation_delay
+                    ):
+                        break
+                    await asyncio.sleep(0.1)
 
             # run the compilation
             if (
