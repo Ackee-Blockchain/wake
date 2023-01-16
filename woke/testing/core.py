@@ -197,10 +197,10 @@ Address.ZERO = Address(0)
 
 class Account:
     _address: Address
-    _chain: ChainInterface
+    _chain: Chain
 
     def __init__(
-        self, address: Union[Address, str, int], chain: Optional[ChainInterface] = None
+        self, address: Union[Address, str, int], chain: Optional[Chain] = None
     ) -> None:
         if isinstance(address, Address):
             self._address = address
@@ -253,7 +253,7 @@ class Account:
         self._chain.dev_chain.set_code(str(self.address), value)
 
     @property
-    def chain(self) -> ChainInterface:
+    def chain(self) -> Chain:
         return self._chain
 
     @property
@@ -469,7 +469,7 @@ def get_fqn_from_deployment_code(deployment_code: bytes) -> str:
     raise ValueError("Could not find contract definition from deployment code")
 
 
-def get_fqn_from_address(addr: Address, chain: ChainInterface) -> Optional[str]:
+def get_fqn_from_address(addr: Address, chain: Chain) -> Optional[str]:
     code = chain.dev_chain.get_code(str(addr))
     metadata = code[-53:]
     if metadata in contracts_by_metadata:
@@ -478,7 +478,7 @@ def get_fqn_from_address(addr: Address, chain: ChainInterface) -> Optional[str]:
         return None
 
 
-class ChainInterface:
+class Chain:
     _connected: bool
     _dev_chain: DevChainABC
     _accounts: List[Account]
@@ -1301,7 +1301,7 @@ def _signer_account(sender: Account):
             dev_chain.stop_impersonating_account(str(sender))
 
 
-default_chain = ChainInterface()
+default_chain = Chain()
 # selector => (contract_fqn => pytypes_object)
 errors: Dict[bytes, Dict[str, Any]] = {}
 # selector => (contract_fqn => pytypes_object)
@@ -1349,7 +1349,7 @@ class Contract(Account):
     _deployment_code: str
 
     def __init__(
-        self, addr: Union[Account, Address, str], chain: Optional[ChainInterface] = None
+        self, addr: Union[Account, Address, str], chain: Optional[Chain] = None
     ):
         if isinstance(addr, Account):
             if chain is None:
@@ -1401,7 +1401,7 @@ class Contract(Account):
         value: int,
         gas_limit: Union[int, Literal["max"], Literal["auto"]],
         libraries: Dict[bytes, Tuple[Union[Account, Address, None], str]],
-        chain: Optional[ChainInterface],
+        chain: Optional[Chain],
     ) -> Any:
         params = {}
         if chain is None:
@@ -1564,7 +1564,7 @@ class Library(Contract):
         value: int,
         gas_limit: Union[int, Literal["max"], Literal["auto"]],
         libraries: Dict[bytes, Tuple[Union[Account, Address, None], str]],
-        chain: Optional[ChainInterface],
+        chain: Optional[Chain],
     ) -> Any:
         if chain is None:
             chain = default_chain

@@ -1,4 +1,4 @@
-from .core import Abi, Account, Address, ChainInterface, Wei, default_chain
+from .core import Abi, Account, Address, Chain, Wei, default_chain
 from .internal import (
     Error,
     Panic,

@@ -8,7 +8,7 @@ from typing import Any, Callable, Counter, Dict, Tuple, Type
 
 from typing_extensions import get_args, get_origin, get_type_hints
 
-from woke.testing.core import Address, ChainInterface, Wei, default_chain
+from woke.testing.core import Address, Chain, Wei, default_chain
 
 from .coverage import CoverageProvider
 from .primitive_types import *
@@ -116,7 +116,7 @@ class Campaign:
         coverage: Optional[
             Tuple[CoverageProvider, multiprocessing.queues.Queue]
         ] = None,
-        chains: Optional[List[ChainInterface]] = None,
+        chains: Optional[List[Chain]] = None,
     ):
         init_timestamp = datetime.now()
 

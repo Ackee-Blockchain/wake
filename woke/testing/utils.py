@@ -8,10 +8,10 @@ from typing import TYPE_CHECKING, Callable, Iterable, List, Tuple, TypeVar
 from Crypto.Hash import keccak
 
 if TYPE_CHECKING:
-    from woke.testing.core import ChainInterface
+    from woke.testing.core import Chain
 
 
-def snapshot_and_revert(devchain_interface: ChainInterface):
+def snapshot_and_revert(devchain_interface: Chain):
     def decorator(fn):
         @wraps(fn)
         def wrapper(*args, **kwargs):
@@ -23,7 +23,7 @@ def snapshot_and_revert(devchain_interface: ChainInterface):
     return decorator
 
 
-def connect(devchain_interface: ChainInterface, uri: str):
+def connect(devchain_interface: Chain, uri: str):
     def decorator(fn):
         @wraps(fn)
         def wrapper(*args, **kwargs):
@@ -35,7 +35,7 @@ def connect(devchain_interface: ChainInterface, uri: str):
     return decorator
 
 
-def change_automine(devchain_interface: ChainInterface, automine: bool):
+def change_automine(devchain_interface: Chain, automine: bool):
     def decorator(fn):
         @wraps(fn)
         def wrapper(*args, **kwargs):

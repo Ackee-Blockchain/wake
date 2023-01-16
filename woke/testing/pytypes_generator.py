@@ -229,7 +229,7 @@ class TypeGenerator:
         self.add_str_to_types(1, "@classmethod", 1)
         self.add_str_to_types(
             1,
-            f'def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: Literal[False] = False{libraries_str}, chain: Optional[ChainInterface] = None) -> {contract_name}:',
+            f'def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: Literal[False] = False{libraries_str}, chain: Optional[Chain] = None) -> {contract_name}:',
             1,
         )
         self.add_str_to_types(2, "...", 2)
@@ -238,7 +238,7 @@ class TypeGenerator:
         self.add_str_to_types(1, "@classmethod", 1)
         self.add_str_to_types(
             1,
-            f'def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: Literal[True] = True{libraries_str}, chain: Optional[ChainInterface] = None) -> LegacyTransaction[{contract_name}]:',
+            f'def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: Literal[True] = True{libraries_str}, chain: Optional[Chain] = None) -> LegacyTransaction[{contract_name}]:',
             1,
         )
         self.add_str_to_types(2, "...", 2)
@@ -246,7 +246,7 @@ class TypeGenerator:
         self.add_str_to_types(1, "@classmethod", 1)
         self.add_str_to_types(
             1,
-            f'def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: bool = {self.__return_tx_obj}{libraries_str}, chain: Optional[ChainInterface] = None) -> Union[{contract_name}, LegacyTransaction[{contract_name}]]:',
+            f'def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: bool = {self.__return_tx_obj}{libraries_str}, chain: Optional[Chain] = None) -> Union[{contract_name}, LegacyTransaction[{contract_name}]]:',
             1,
         )
 

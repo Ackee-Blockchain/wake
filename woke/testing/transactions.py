@@ -7,7 +7,7 @@ from enum import IntEnum
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 
 from .call_trace import CallTrace
-from .core import Account, ChainInterface, default_chain
+from .core import Account, Chain, default_chain
 from .development_chains import AnvilDevChain, GanacheDevChain, HardhatDevChain
 from .internal import (
     TransactionRevertedError,
@@ -56,7 +56,7 @@ def _fetch_tx_receipt(f):
 class TransactionAbc(ABC, Generic[T]):
     _tx_hash: str
     _tx_params: TxParams
-    _chain: ChainInterface
+    _chain: Chain
     _abi: Optional[Dict]
     _return_type: Type
     _recipient_fqn: Optional[str]
@@ -74,7 +74,7 @@ class TransactionAbc(ABC, Generic[T]):
         abi: Optional[Dict],
         return_type: Type,
         recipient_fqn: Optional[str],
-        chain: Optional[ChainInterface] = None,
+        chain: Optional[Chain] = None,
     ):
         self._tx_hash = tx_hash
         self._tx_params = tx_params
@@ -97,7 +97,7 @@ class TransactionAbc(ABC, Generic[T]):
         return self._tx_hash
 
     @property
-    def chain(self) -> ChainInterface:
+    def chain(self) -> Chain:
         return self._chain
 
     @property
