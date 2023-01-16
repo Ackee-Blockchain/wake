@@ -486,6 +486,9 @@ class LspCompiler:
             if (cu.files & files_to_compile)
             or cu.contains_unresolved_file(self.__deleted_files, self.__config)
         ]
+        if len(compilation_units) == 0:
+            return
+
         build_settings = self.__compiler.create_build_settings(
             [SolcOutputSelectionEnum.AST]
         )
