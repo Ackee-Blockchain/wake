@@ -105,6 +105,12 @@ Related to the `woke.generate.linearized_inheritance_graph` LSP command.
 | `direction`   | Graph direction                        | `LR`          |
 | `vscode_urls` | Attach VS Code URLs to the graph nodes | `true`        |
 
+### `lsp` namespace
+
+| Option              | Description                                                        | Default value |
+|:--------------------|:-------------------------------------------------------------------|:--------------|
+| `compilation_delay` | Delay in seconds before the project is compiled after a keystroke. | `0`           |
+
 ### `lsp.code_lens` namespace
 
 | Option   | Description                            | Default value |
