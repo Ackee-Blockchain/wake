@@ -56,6 +56,7 @@ class SolcConfig(WokeConfigModel):
                 Path.cwd() / "node_modules",
                 Path.cwd() / ".woke-build",
                 Path.cwd() / "venv",
+                Path.cwd() / "lib",
             ]
         )
     )
