@@ -743,6 +743,10 @@ class LspCompiler:
                     self.__ir_reference_resolver.index_nodes(ast, path, cu.hash)
 
                     files_to_recompile.discard(path)
+
+                    # give a chance to other tasks (LSP requests) to be processed
+                    await asyncio.sleep(0)
+
                     if (
                         path in self.__source_units and path not in recompiled_files
                     ) or path in processed_files:
