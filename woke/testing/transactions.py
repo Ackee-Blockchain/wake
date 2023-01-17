@@ -4,7 +4,10 @@ import functools
 import time
 from abc import ABC, abstractmethod
 from enum import IntEnum
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
+from typing import TYPE_CHECKING, Any, Dict, Generic, List, Optional, Type, TypeVar
+
+if TYPE_CHECKING:
+    from .blocks import Block
 
 from .call_trace import CallTrace
 from .core import Account, Chain, default_chain
@@ -111,6 +114,11 @@ class TransactionAbc(ABC, Generic[T]):
         return int(
             self._tx_data["blockNumber"], 16
         )  # pyright: reportOptionalSubscript=false
+
+    @property
+    @_fetch_tx_data
+    def block(self) -> Block:
+        return self._chain.blocks[self.block_number]
 
     @property
     @_fetch_tx_data
