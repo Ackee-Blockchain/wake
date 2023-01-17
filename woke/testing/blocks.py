@@ -33,7 +33,7 @@ class ChainBlocks:
             if data is None:
                 raise KeyError(key)
             block = Block(self._chain, data)
-            if isinstance(key, int):
+            if isinstance(key, int) and key <= self._chain.dev_chain.get_block_number():
                 self._blocks[key] = block
         else:
             block = self._blocks[key]
