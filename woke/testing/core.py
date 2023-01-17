@@ -8,6 +8,7 @@ import re
 from collections import defaultdict
 from contextlib import contextmanager
 from enum import Enum, IntEnum
+from types import MappingProxyType
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -45,7 +46,7 @@ from .json_rpc.communicator import JsonRpcCommunicator, JsonRpcError, TxParams
 from .utils import read_from_memory
 
 if TYPE_CHECKING:
-    from .transactions import LegacyTransaction
+    from .transactions import LegacyTransaction, TransactionAbc
 
 
 class RequestType(str, Enum):
@@ -500,6 +501,7 @@ class Chain:
     _snapshots: Dict[str, Dict]
     _deployed_libraries: DefaultDict[bytes, List[Library]]
     _single_source_errors: Set[bytes]
+    _txs: Dict[str, TransactionAbc]
 
     console_logs_callback: Optional[Callable[[LegacyTransaction, List[Any]], None]]
     events_callback: Optional[
@@ -543,6 +545,7 @@ class Chain:
                 self._accounts[0] if len(self._accounts) > 0 else None
             )
             self._default_tx_account = None
+            self._txs = {}
 
             self._single_source_errors = {
                 selector
@@ -650,6 +653,11 @@ class Chain:
     def dev_chain(self):
         return self._dev_chain
 
+    @property
+    @_check_connected
+    def txs(self) -> MappingProxyType[str, TransactionAbc]:
+        return MappingProxyType(self._txs)
+
     @_check_connected
     def mine(self, timestamp_change: Optional[Callable[[int], int]] = None) -> None:
         if timestamp_change is not None:
@@ -747,6 +755,7 @@ class Chain:
             "default_call_account": self._default_call_account,
             "default_tx_account": self._default_tx_account,
             "block_gas_limit": self._block_gas_limit,
+            "txs": dict(self._txs),
         }
         return snapshot_id
 
@@ -762,6 +771,7 @@ class Chain:
         self._default_call_account = snapshot["default_call_account"]
         self._default_tx_account = snapshot["default_tx_account"]
         self._block_gas_limit = snapshot["block_gas_limit"]
+        self._txs = snapshot["txs"]
         del self._snapshots[snapshot_id]
 
     @property
@@ -1084,6 +1094,7 @@ class Chain:
             deployed_contract_fqn,
             self,
         )
+        self._txs[tx_hash] = tx
 
         if return_tx:
             return tx
@@ -1277,6 +1288,7 @@ class Chain:
             recipient_fqn,
             self,
         )
+        self._txs[tx_hash] = tx
 
         if return_tx:
             return tx
