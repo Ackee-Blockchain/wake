@@ -324,17 +324,25 @@ class Account:
             output = self._chain.dev_chain.call(params)
         except JsonRpcError as e:
             if isinstance(self._chain.dev_chain, AnvilDevChain) and e.data["code"] == 3:
-                # call reverted, try to send as a transaction to get more info
-                # TODO what if auto-mine is off?
-                return self.transact(data, value, from_, gas_limit, False)
+                revert_data = e.data["data"]
+            elif (
+                isinstance(self._chain.dev_chain, GanacheDevChain)
+                and e.data["code"] == -32000
+            ):
+                revert_data = e.data["data"]
             elif (
                 isinstance(self._chain.dev_chain, HardhatDevChain)
                 and e.data["code"] == -32603
             ):
-                # call reverted, try to send as a transaction to get more info
-                # TODO what if auto-mine is off?
-                return self.transact(data, value, from_, gas_limit, False)
-            raise e from None
+                revert_data = e.data["data"]["data"]
+            else:
+                raise
+
+            if revert_data.startswith("0x"):
+                revert_data = revert_data[2:]
+
+            self._chain._process_revert_data(None, bytes.fromhex(revert_data), None)
+            raise
 
         return bytearray(output)
 
@@ -839,13 +847,20 @@ class Chain:
         return tx
 
     def _process_revert_data(
-        self, tx_hash, revert_data: bytes, origin: Union[Address, str]
+        self,
+        tx_hash: Optional[str],
+        revert_data: bytes,
+        origin: Union[Address, str, None],
     ):
         selector = revert_data[0:4]
         if selector not in errors:
             raise UnknownTransactionRevertedError(revert_data)
 
         if selector not in self._single_source_errors:
+            if tx_hash is None:
+                raise UnknownTransactionRevertedError(revert_data)
+            assert origin is not None
+
             # ambiguous error, try to find the source contract
             debug_trace = self._dev_chain.debug_trace_transaction(
                 tx_hash, {"enableMemory": True}
@@ -1098,21 +1113,26 @@ class Chain:
             output = self._dev_chain.call(tx_params)
         except JsonRpcError as e:
             if isinstance(self._dev_chain, AnvilDevChain) and e.data["code"] == 3:
-                # call reverted, try to send as a transaction to get more info
-                # TODO what if auto-mine is off?
-                return self.transact(
-                    selector, abi, arguments, params, False, return_type
-                )
+                revert_data = e.data["data"]
+            elif (
+                isinstance(self._dev_chain, GanacheDevChain)
+                and e.data["code"] == -32000
+            ):
+                revert_data = e.data["data"]
             elif (
                 isinstance(self._dev_chain, HardhatDevChain)
                 and e.data["code"] == -32603
             ):
-                # call reverted, try to send as a transaction to get more info
-                # TODO what if auto-mine is off?
-                return self.transact(
-                    selector, abi, arguments, params, False, return_type
-                )
-            raise e from None
+                revert_data = e.data["data"]["data"]
+            else:
+                raise
+
+            if revert_data.startswith("0x"):
+                revert_data = revert_data[2:]
+
+            self._process_revert_data(None, bytes.fromhex(revert_data), None)
+            raise
+
         return self._process_return_data(output, abi[selector], return_type)
 
     def _process_debug_trace_for_events(
