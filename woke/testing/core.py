@@ -195,6 +195,7 @@ class Address:
 Address.ZERO = Address(0)
 
 
+@functools.total_ordering
 class Account:
     _address: Address
     _chain: Chain
@@ -217,6 +218,20 @@ class Account:
     def __eq__(self, other: Any) -> bool:
         if isinstance(other, Account):
             return self._address == other._address and self._chain == other._chain
+        elif isinstance(other, Address):
+            raise TypeError(
+                "Cannot compare Account to Address. Use Account.address == Address"
+            )
+        return NotImplemented
+
+    def __lt__(self, other):
+        if isinstance(other, Account):
+            if self._chain == other._chain:
+                return self._address < other._address
+            else:
+                raise TypeError(
+                    "Cannot compare Accounts from different chains. Compare Account.address instead"
+                )
         elif isinstance(other, Address):
             raise TypeError(
                 "Cannot compare Account to Address. Use Account.address == Address"
