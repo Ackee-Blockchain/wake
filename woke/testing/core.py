@@ -317,7 +317,11 @@ class Account:
         if gas_limit == "max":
             params["gas"] = self.chain.block_gas_limit
         elif gas_limit == "auto":
-            params["gas"] = self.chain.dev_chain.estimate_gas(params)
+            try:
+                params["gas"] = self.chain.dev_chain.estimate_gas(params)
+            except JsonRpcError as e:
+                self._chain._process_call_revert(e)
+                raise
         elif isinstance(gas_limit, int):
             params["gas"] = gas_limit
         else:
@@ -338,25 +342,7 @@ class Account:
         try:
             output = self._chain.dev_chain.call(params)
         except JsonRpcError as e:
-            if isinstance(self._chain.dev_chain, AnvilDevChain) and e.data["code"] == 3:
-                revert_data = e.data["data"]
-            elif (
-                isinstance(self._chain.dev_chain, GanacheDevChain)
-                and e.data["code"] == -32000
-            ):
-                revert_data = e.data["data"]
-            elif (
-                isinstance(self._chain.dev_chain, HardhatDevChain)
-                and e.data["code"] == -32603
-            ):
-                revert_data = e.data["data"]["data"]
-            else:
-                raise
-
-            if revert_data.startswith("0x"):
-                revert_data = revert_data[2:]
-
-            self._chain._process_revert_data(None, bytes.fromhex(revert_data), None)
+            self._chain._process_call_revert(e)
             raise
 
         return bytearray(output)
@@ -842,7 +828,11 @@ class Chain:
             }
             if "to" in params:
                 estimate_params["to"] = params["to"]
-            gas = self._dev_chain.estimate_gas(estimate_params)
+            try:
+                gas = self._dev_chain.estimate_gas(estimate_params)
+            except JsonRpcError as e:
+                self._process_call_revert(e)
+                raise
 
         tx: TxParams = {
             "type": 0,
@@ -869,11 +859,11 @@ class Chain:
     ):
         selector = revert_data[0:4]
         if selector not in errors:
-            raise UnknownTransactionRevertedError(revert_data)
+            raise UnknownTransactionRevertedError(revert_data) from None
 
         if selector not in self._single_source_errors:
             if tx_hash is None:
-                raise UnknownTransactionRevertedError(revert_data)
+                raise UnknownTransactionRevertedError(revert_data) from None
             assert origin is not None
 
             # ambiguous error, try to find the source contract
@@ -883,7 +873,7 @@ class Chain:
             try:
                 fqn = self._process_debug_trace_for_revert(debug_trace, origin)
             except ValueError:
-                raise UnknownTransactionRevertedError(revert_data)
+                raise UnknownTransactionRevertedError(revert_data) from None
         else:
             fqn = list(errors[selector].keys())[0]
 
@@ -900,7 +890,7 @@ class Chain:
         decoded = Abi.decode(types, revert_data[4:])
         generated_error = self._convert_from_web3_type(decoded, obj)
         # raise native pytypes exception on transaction revert
-        raise generated_error
+        raise generated_error from None
 
     def _process_events(
         self, tx_hash: str, logs: List, origin: Union[Address, str]
@@ -1127,25 +1117,7 @@ class Chain:
         try:
             output = self._dev_chain.call(tx_params)
         except JsonRpcError as e:
-            if isinstance(self._dev_chain, AnvilDevChain) and e.data["code"] == 3:
-                revert_data = e.data["data"]
-            elif (
-                isinstance(self._dev_chain, GanacheDevChain)
-                and e.data["code"] == -32000
-            ):
-                revert_data = e.data["data"]
-            elif (
-                isinstance(self._dev_chain, HardhatDevChain)
-                and e.data["code"] == -32603
-            ):
-                revert_data = e.data["data"]["data"]
-            else:
-                raise
-
-            if revert_data.startswith("0x"):
-                revert_data = revert_data[2:]
-
-            self._process_revert_data(None, bytes.fromhex(revert_data), None)
+            self._process_call_revert(e)
             raise
 
         return self._process_return_data(output, abi[selector], return_type)
@@ -1245,6 +1217,21 @@ class Chain:
         if last_revert_origin is None:
             raise ValueError("Could not find revert origin")
         return last_revert_origin
+
+    def _process_call_revert(self, e: JsonRpcError):
+        if isinstance(self._dev_chain, AnvilDevChain) and e.data["code"] == 3:
+            revert_data = e.data["data"]
+        elif isinstance(self._dev_chain, GanacheDevChain) and e.data["code"] == -32000:
+            revert_data = e.data["data"]
+        elif isinstance(self._dev_chain, HardhatDevChain) and e.data["code"] == -32603:
+            revert_data = e.data["data"]["data"]
+        else:
+            raise e from None
+
+        if revert_data.startswith("0x"):
+            revert_data = revert_data[2:]
+
+        self._process_revert_data(None, bytes.fromhex(revert_data), None)
 
     @_check_connected
     def transact(
