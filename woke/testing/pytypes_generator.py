@@ -1010,10 +1010,10 @@ class TypeGenerator:
             returns_str = f"Tuple[{', '.join(ret[0] for ret in returns)}]"
 
         self.generate_type_hint_stub_func(
-            decl.name, generated_params, returns_str, False
+            decl.name, generated_params, returns_str, False, True
         )
         self.generate_type_hint_stub_func(
-            decl.name, generated_params, f"LegacyTransaction[{returns_str}]", True
+            decl.name, generated_params, f"LegacyTransaction[{returns_str}]", True, True
         )
 
         # getters never modify the state - passing VIEW is ok
@@ -1097,14 +1097,19 @@ class TypeGenerator:
         )
 
     def generate_type_hint_stub_func(
-        self, fn_name: str, params: List[str], returns_str: str, return_tx: bool
+        self,
+        fn_name: str,
+        params: List[str],
+        returns_str: str,
+        return_tx: bool,
+        is_view_or_pure: bool,
     ):
         params_str = "".join(param + ", " for param in params)
 
         self.add_str_to_types(1, "@overload", 1)
         self.add_str_to_types(
             1,
-            f"""def {self.get_name(fn_name)}(self, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, to: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: Literal[{return_tx}] = {return_tx}, request_type: RequestType='tx') -> {returns_str}:""",
+            f"""def {self.get_name(fn_name)}(self, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, to: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: Literal[{return_tx}] = {return_tx}, request_type: RequestType = '{'call' if is_view_or_pure else 'tx'}') -> {returns_str}:""",
             1,
         )
         self.add_str_to_types(2, "...", 2)
@@ -1120,9 +1125,19 @@ class TypeGenerator:
         else:
             returns_str = f"Tuple[{', '.join(ret[0] for ret in returns)}]"
 
-        self.generate_type_hint_stub_func(fn.name, params, returns_str, False)
         self.generate_type_hint_stub_func(
-            fn.name, params, f"LegacyTransaction[{returns_str}]", True
+            fn.name,
+            params,
+            returns_str,
+            False,
+            fn.state_mutability in {StateMutability.VIEW, StateMutability.PURE},
+        )
+        self.generate_type_hint_stub_func(
+            fn.name,
+            params,
+            f"LegacyTransaction[{returns_str}]",
+            True,
+            fn.state_mutability in {StateMutability.VIEW, StateMutability.PURE},
         )
 
         assert fn.function_selector is not None
