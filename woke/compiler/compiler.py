@@ -186,16 +186,28 @@ class CompilationFileSystemEventHandler(FileSystemEventHandler):
             self._config.load_configs()
 
             # find files that were previously ignored but are now included
+            ctx_manager = (
+                self._console.status("[bold green]Searching for *.sol files...[/]")
+                if self._console
+                else nullcontext()
+            )
+            start = time.perf_counter()
             files = set()
-            for file in self._config.project_root_path.rglob("**/*.sol"):
-                if (
-                    not any(
-                        is_relative_to(file, p)
-                        for p in self._config.compiler.solc.ignore_paths
-                    )
-                    and file.is_file()
-                ):
-                    files.add(file)
+            with ctx_manager:
+                for file in self._config.project_root_path.rglob("**/*.sol"):
+                    if (
+                        not any(
+                            is_relative_to(file, p)
+                            for p in self._config.compiler.solc.ignore_paths
+                        )
+                        and file.is_file()
+                    ):
+                        files.add(file)
+            end = time.perf_counter()
+            if self._console is not None:
+                self._console.log(
+                    f"[green]Found {len(files)} *.sol files in [bold green]{end - start:.2f} s[/bold green][/]"
+                )
 
             ignored_files = {
                 unit_info.fs_path
