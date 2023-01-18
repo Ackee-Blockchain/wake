@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import sys
 import time
 from pathlib import Path
 from typing import Set, Tuple
@@ -12,6 +13,7 @@ from woke.compiler.compiler import CompilationFileSystemEventHandler, SolidityCo
 from woke.compiler.solc_frontend.input_data_model import SolcOutputSelectionEnum
 from woke.config import WokeConfig
 
+from ..compiler.solc_frontend import SolcOutputErrorSeverityEnum
 from ..utils.file_utils import is_relative_to
 from .console import console
 
@@ -89,7 +91,7 @@ async def compile(
         compiler.load(console=console)
 
     # TODO Allow choosing build artifacts subset in compile subcommand
-    await compiler.compile(
+    _, errors = await compiler.compile(
         sol_files,
         [SolcOutputSelectionEnum.ALL],
         write_artifacts=not no_artifacts,
@@ -108,6 +110,12 @@ async def compile(
         finally:
             observer.stop()
             observer.join()
+    else:
+        errored = any(
+            error.severity == SolcOutputErrorSeverityEnum.ERROR for error in errors
+        )
+        if errored:
+            sys.exit(1)
 
 
 @click.command(name="compile")

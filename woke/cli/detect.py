@@ -1,4 +1,5 @@
 import asyncio
+import sys
 import time
 from pathlib import Path
 from typing import Set, Tuple
@@ -93,10 +94,10 @@ def run_detect(
     )
 
     errored = any(
-        error for error in errors if error.severity == SolcOutputErrorSeverityEnum.ERROR
+        error.severity == SolcOutputErrorSeverityEnum.ERROR for error in errors
     )
     if errored:
-        return
+        sys.exit(1)
 
     console.record = True
 
