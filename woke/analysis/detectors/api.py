@@ -466,11 +466,13 @@ def detect(
 
     path_to_source_unit_name: Dict[Path, str] = {}
 
-    ctx_manager = (
-        console.status("[bold green]Running detectors...")
-        if console is not None
-        else nullcontext()
-    )
+    if console is not None:
+        original_record = console.record
+        console.record = False
+        ctx_manager = console.status("[bold green]Running detectors...")
+    else:
+        original_record = True
+        ctx_manager = nullcontext()
     with ctx_manager as s:
         for path, source_unit in source_units.items():
             if s is not None:
@@ -481,6 +483,9 @@ def detect(
                     enabled_detectors, enabled_detector_instances
                 ):
                     visit_map[ir_node.__class__](detector_instance, ir_node)
+
+    if console is not None:
+        console.record = original_record
 
     for d, detector_instance in zip(enabled_detectors, enabled_detector_instances):
         for result in detector_instance.report():
