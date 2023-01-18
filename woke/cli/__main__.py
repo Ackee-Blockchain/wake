@@ -6,8 +6,8 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-import click
 import rich.traceback
+import rich_click as click
 from click.core import Context
 from rich.logging import RichHandler
 

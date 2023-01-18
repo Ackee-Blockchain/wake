@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-import click
+import rich_click as click
 
 from woke.config import WokeConfig
 from woke.lsp.server import LspServer

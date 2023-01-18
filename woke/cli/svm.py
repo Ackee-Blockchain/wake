@@ -1,7 +1,7 @@
 import asyncio
 from typing import Tuple
 
-import click
+import rich_click as click
 from click import Context
 from rich.progress import Progress
 

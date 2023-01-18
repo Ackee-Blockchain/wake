@@ -12,6 +12,7 @@ install_requires = [
     "tomli >= 2.0.0, < 3",
     "networkx >= 2.5, < 3",
     "click >= 8, < 9",
+    "rich-click >= 1.6.0, < 2",
     "rich >= 10.16",
     "pathvalidate >= 2.5.0, < 3",
     "intervaltree >= 3.1",

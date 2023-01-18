@@ -4,7 +4,7 @@ import sys
 import time
 from typing import Set
 
-import click
+import rich_click as click
 from click.core import Context
 from watchdog.observers import Observer
 

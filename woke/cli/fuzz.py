@@ -9,7 +9,7 @@ import time
 from pathlib import Path
 from typing import Callable, Iterable, Tuple
 
-import click
+import rich_click as click
 
 from woke.config import WokeConfig
 from woke.testing.fuzzer import fuzz
