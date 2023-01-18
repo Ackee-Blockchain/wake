@@ -55,7 +55,7 @@ class ProjectBuildInfo(BuildInfoModel):
     woke_version: str
 
 
-class BuildInfo(NamedTuple):
+class ProjectBuild(NamedTuple):
     interval_trees: Dict[Path, IntervalTree]
     reference_resolver: ReferenceResolver
     source_units: Dict[Path, SourceUnit]

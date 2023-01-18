@@ -44,7 +44,7 @@ from woke.ast.ir.yul.function_call import FunctionCall as YulFunctionCall
 from woke.ast.ir.yul.if_statement import If as YulIf
 from woke.ast.ir.yul.leave import Leave as YulLeave
 from woke.ast.ir.yul.switch import Switch as YulSwitch
-from woke.compiler.build_data_model import BuildInfo
+from woke.compiler.build_data_model import ProjectBuild
 from woke.compiler.solc_frontend import (
     SolcOutputError,
     SolcOutputErrorSeverityEnum,
@@ -883,7 +883,7 @@ def _find_fn_for_source(
 
 def _compile_project(
     config: Optional[WokeConfig] = None,
-) -> BuildInfo:
+) -> ProjectBuild:
     if config is None:
         config = woke.config.WokeConfig()
         config.load_configs()
@@ -899,7 +899,7 @@ def _compile_project(
     compiler = woke.compiler.SolidityCompiler(config)
     compiler.load()
 
-    build: BuildInfo
+    build: ProjectBuild
     errors: Set[SolcOutputError]
     build, errors = asyncio.run(
         compiler.compile(

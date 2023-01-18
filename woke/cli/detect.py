@@ -10,7 +10,7 @@ from rich.panel import Panel
 
 from ..analysis.detectors.api import detect, print_detection, print_detectors
 from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
-from ..compiler.build_data_model import BuildInfo
+from ..compiler.build_data_model import ProjectBuild
 from ..compiler.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
 from ..config import WokeConfig
 from ..utils.file_utils import is_relative_to
@@ -81,7 +81,7 @@ def run_detect(
     if not force:
         compiler.load(console=console)
 
-    build: BuildInfo
+    build: ProjectBuild
     errors: Set[SolcOutputError]
     build, errors = asyncio.run(
         compiler.compile(

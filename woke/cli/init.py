@@ -12,7 +12,7 @@ from woke.config import WokeConfig
 from woke.utils import file_utils
 
 from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
-from ..compiler.build_data_model import BuildInfo, ProjectBuildInfo
+from ..compiler.build_data_model import ProjectBuild, ProjectBuildInfo
 from ..compiler.compiler import CompilationFileSystemEventHandler
 from ..compiler.solc_frontend import SolcOutputErrorSeverityEnum
 from ..testing.pytypes_generator import TypeGenerator
@@ -32,7 +32,7 @@ def run_init(ctx: Context):
 async def run_init_pytypes(
     config: WokeConfig, return_tx: bool, warnings: bool, watch: bool
 ):
-    def callback(build: BuildInfo, build_info: ProjectBuildInfo):
+    def callback(build: ProjectBuild, build_info: ProjectBuildInfo):
         errored = any(
             any(
                 error.severity == SolcOutputErrorSeverityEnum.ERROR
