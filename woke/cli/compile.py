@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 from typing import Set, Tuple
 
-import click
+import rich_click as click
 from click.core import Context
 from watchdog.observers import Observer
 

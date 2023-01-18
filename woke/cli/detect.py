@@ -4,8 +4,8 @@ import time
 from pathlib import Path
 from typing import Set, Tuple
 
-import click
 import rich.terminal_theme
+import rich_click as click
 from rich.panel import Panel
 
 from ..analysis.detectors.api import detect, print_detection, print_detectors
