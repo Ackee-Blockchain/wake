@@ -98,7 +98,7 @@ def _run_core(
                 args.append(
                     (
                         CoverageProvider(
-                            coverage, default_chain.dev_chain.get_block_number()
+                            coverage, default_chain.chain_interface.get_block_number()
                         ),
                         cov_child_conn,
                     )

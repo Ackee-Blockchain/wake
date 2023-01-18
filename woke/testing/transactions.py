@@ -10,8 +10,12 @@ if TYPE_CHECKING:
     from .blocks import Block
 
 from .call_trace import CallTrace
+from .chain_interfaces import (
+    AnvilChainInterface,
+    GanacheChainInterface,
+    HardhatChainInterface,
+)
 from .core import Account, Chain, default_chain
-from .development_chains import AnvilDevChain, GanacheDevChain, HardhatDevChain
 from .internal import (
     TransactionRevertedError,
     UnknownEvent,
@@ -39,7 +43,7 @@ def _fetch_tx_data(f):
     @functools.wraps(f)
     def wrapper(self: TransactionAbc):
         if self._tx_data is None:
-            self._tx_data = self._chain.dev_chain.get_transaction(self.tx_hash)
+            self._tx_data = self._chain.chain_interface.get_transaction(self.tx_hash)
         return f(self)
 
     return wrapper
@@ -183,7 +187,7 @@ class TransactionAbc(ABC, Generic[T]):
     @property
     def status(self) -> TransactionStatusEnum:
         if self._tx_receipt is None:
-            receipt = self._chain.dev_chain.get_transaction_receipt(self._tx_hash)
+            receipt = self._chain.chain_interface.get_transaction_receipt(self._tx_hash)
             if receipt is None:
                 return TransactionStatusEnum.PENDING
             else:
@@ -204,14 +208,14 @@ class TransactionAbc(ABC, Generic[T]):
 
     def _fetch_trace_transaction(self) -> None:
         if self._trace_transaction is None:
-            dev_chain = self._chain.dev_chain
-            assert isinstance(dev_chain, AnvilDevChain)
-            self._trace_transaction = dev_chain.trace_transaction(self._tx_hash)
+            chain_interface = self._chain.chain_interface
+            assert isinstance(chain_interface, AnvilChainInterface)
+            self._trace_transaction = chain_interface.trace_transaction(self._tx_hash)
 
     def _fetch_debug_trace_transaction(self) -> None:
         if self._debug_trace_transaction is None:
             self._debug_trace_transaction = (
-                self._chain.dev_chain.debug_trace_transaction(
+                self._chain.chain_interface.debug_trace_transaction(
                     self._tx_hash,
                     {"enableMemory": True},
                 )
@@ -220,9 +224,9 @@ class TransactionAbc(ABC, Generic[T]):
     @property
     @_fetch_tx_receipt
     def console_logs(self) -> list:
-        dev_chain = self._chain.dev_chain
+        chain_interface = self._chain.chain_interface
 
-        if isinstance(dev_chain, AnvilDevChain):
+        if isinstance(chain_interface, AnvilChainInterface):
             self._fetch_trace_transaction()
             assert self._trace_transaction is not None
             return self._chain._process_console_logs(self._trace_transaction)
@@ -275,17 +279,19 @@ class TransactionAbc(ABC, Generic[T]):
         if self._error is not None:
             return self._error
 
-        dev_chain = self._chain.dev_chain
+        chain_interface = self._chain.chain_interface
 
         # call with the same parameters should also revert
         try:
-            dev_chain.call(self._tx_params)
+            chain_interface.call(self._tx_params)
             assert False, "Call should have reverted"
         except JsonRpcError as e:
             try:
-                if isinstance(dev_chain, (AnvilDevChain, GanacheDevChain)):
+                if isinstance(
+                    chain_interface, (AnvilChainInterface, GanacheChainInterface)
+                ):
                     revert_data = e.data["data"]
-                elif isinstance(dev_chain, HardhatDevChain):
+                elif isinstance(chain_interface, HardhatChainInterface):
                     revert_data = e.data["data"]["data"]
                 else:
                     raise NotImplementedError
@@ -310,17 +316,19 @@ class TransactionAbc(ABC, Generic[T]):
         if self.status == TransactionStatusEnum.SUCCESS:
             return None
 
-        dev_chain = self._chain.dev_chain
+        chain_interface = self._chain.chain_interface
 
         # call with the same parameters should also revert
         try:
-            dev_chain.call(self._tx_params)
+            chain_interface.call(self._tx_params)
             assert False, "Call should have reverted"
         except JsonRpcError as e:
             try:
-                if isinstance(dev_chain, (AnvilDevChain, GanacheDevChain)):
+                if isinstance(
+                    chain_interface, (AnvilChainInterface, GanacheChainInterface)
+                ):
                     revert_data = e.data["data"]
-                elif isinstance(dev_chain, HardhatDevChain):
+                elif isinstance(chain_interface, HardhatChainInterface):
                     revert_data = e.data["data"]["data"]
                 else:
                     raise NotImplementedError
@@ -347,12 +355,12 @@ class TransactionAbc(ABC, Generic[T]):
         ):
             return self._return_type(self._tx_receipt["contractAddress"], self._chain)
 
-        dev_chain = self._chain.dev_chain
-        if isinstance(dev_chain, AnvilDevChain):
+        chain_interface = self._chain.chain_interface
+        if isinstance(chain_interface, AnvilChainInterface):
             self._fetch_trace_transaction()
             assert self._trace_transaction is not None
             output = bytes.fromhex(self._trace_transaction[0]["result"]["output"][2:])
-        elif isinstance(dev_chain, GanacheDevChain):
+        elif isinstance(chain_interface, GanacheChainInterface):
             self._fetch_debug_trace_transaction()
             assert self._debug_trace_transaction is not None
 

@@ -29,11 +29,14 @@ class ChainBlocks:
         ],
     ) -> Block:
         if key not in self._blocks:
-            data = self._chain.dev_chain.get_block(key)
+            data = self._chain.chain_interface.get_block(key)
             if data is None:
                 raise KeyError(key)
             block = Block(self._chain, data)
-            if isinstance(key, int) and key <= self._chain.dev_chain.get_block_number():
+            if (
+                isinstance(key, int)
+                and key <= self._chain.chain_interface.get_block_number()
+            ):
                 self._blocks[key] = block
         else:
             block = self._blocks[key]

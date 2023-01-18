@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional, Union
 from .json_rpc.communicator import JsonRpcCommunicator, TxParams
 
 
-class DevChainABC(ABC):
+class ChainInterfaceAbc(ABC):
     _communicator: JsonRpcCommunicator
 
     def __init__(self, communicator: JsonRpcCommunicator) -> None:
@@ -104,7 +104,7 @@ class DevChainABC(ABC):
         ...
 
 
-class HardhatDevChain(DevChainABC):
+class HardhatChainInterface(ChainInterfaceAbc):
     def set_balance(self, address: str, value: int) -> None:
         self._communicator.hardhat_set_balance(address, value)
 
@@ -136,7 +136,7 @@ class HardhatDevChain(DevChainABC):
         self._communicator.evm_set_next_block_timestamp(timestamp)
 
 
-class AnvilDevChain(DevChainABC):
+class AnvilChainInterface(ChainInterfaceAbc):
     def trace_transaction(self, tx_hash: Any) -> List:
         return self._communicator.trace_transaction(tx_hash)
 
@@ -172,7 +172,7 @@ class AnvilDevChain(DevChainABC):
         self._communicator.evm_set_next_block_timestamp(timestamp)
 
 
-class GanacheDevChain(DevChainABC):
+class GanacheChainInterface(ChainInterfaceAbc):
     def set_balance(self, address: str, value: int) -> None:
         self._communicator.evm_set_account_balance(address, value)
 
