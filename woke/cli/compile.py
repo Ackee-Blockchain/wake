@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import time
 from pathlib import Path
 from typing import Set, Tuple
 
@@ -48,34 +49,41 @@ async def compile(
         observer = None
 
     sol_files: Set[Path] = set()
-    if len(paths) == 0:
-        for file in config.project_root_path.rglob("**/*.sol"):
-            if (
-                not any(
-                    is_relative_to(file, p) for p in config.compiler.solc.ignore_paths
-                )
-                and file.is_file()
-            ):
-                sol_files.add(file)
-    else:
-        for p in paths:
-            path = Path(p)
-            if path.is_file():
-                if not path.match("*.sol"):
-                    raise ValueError(f"Argument `{p}` is not a Solidity file.")
-                sol_files.add(path)
-            elif path.is_dir():
-                for file in path.rglob("**/*.sol"):
-                    if (
-                        not any(
-                            is_relative_to(file, p)
-                            for p in config.compiler.solc.ignore_paths
-                        )
-                        and file.is_file()
-                    ):
-                        sol_files.add(file)
-            else:
-                raise ValueError(f"Argument `{p}` is not a file or directory.")
+    start = time.perf_counter()
+    with console.status("[bold green]Searching for *.sol files...[/]"):
+        if len(paths) == 0:
+            for file in config.project_root_path.rglob("**/*.sol"):
+                if (
+                    not any(
+                        is_relative_to(file, p)
+                        for p in config.compiler.solc.ignore_paths
+                    )
+                    and file.is_file()
+                ):
+                    sol_files.add(file)
+        else:
+            for p in paths:
+                path = Path(p)
+                if path.is_file():
+                    if not path.match("*.sol"):
+                        raise ValueError(f"Argument `{p}` is not a Solidity file.")
+                    sol_files.add(path)
+                elif path.is_dir():
+                    for file in path.rglob("**/*.sol"):
+                        if (
+                            not any(
+                                is_relative_to(file, p)
+                                for p in config.compiler.solc.ignore_paths
+                            )
+                            and file.is_file()
+                        ):
+                            sol_files.add(file)
+                else:
+                    raise ValueError(f"Argument `{p}` is not a file or directory.")
+    end = time.perf_counter()
+    console.log(
+        f"[green]Found {len(sol_files)} *.sol files in [bold green]{end - start:.2f} s[/bold green][/]"
+    )
 
     if not force:
         compiler.load(console=console)

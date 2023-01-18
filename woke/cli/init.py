@@ -76,12 +76,20 @@ async def run_init_pytypes(
         observer = None
 
     sol_files: Set[pathlib.Path] = set()
-    for file in config.project_root_path.rglob("**/*.sol"):
-        if (
-            not any(is_relative_to(file, p) for p in config.compiler.solc.ignore_paths)
-            and file.is_file()
-        ):
-            sol_files.add(file)
+    start = time.perf_counter()
+    with console.status("[bold green]Searching for *.sol files...[/]"):
+        for file in config.project_root_path.rglob("**/*.sol"):
+            if (
+                not any(
+                    is_relative_to(file, p) for p in config.compiler.solc.ignore_paths
+                )
+                and file.is_file()
+            ):
+                sol_files.add(file)
+    end = time.perf_counter()
+    console.log(
+        f"[green]Found {len(sol_files)} *.sol files in [bold green]{end - start:.2f} s[/bold green][/]"
+    )
 
     compiler.load(console=console)
 
