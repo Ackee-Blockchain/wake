@@ -85,7 +85,7 @@ def run_detect(
     build, errors = asyncio.run(
         compiler.compile(
             sol_files,
-            [SolcOutputSelectionEnum.AST],
+            [SolcOutputSelectionEnum.ALL],
             write_artifacts=not no_artifacts,
             force_recompile=force,
             console=console,
