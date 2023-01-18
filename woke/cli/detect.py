@@ -98,6 +98,8 @@ def run_detect(
     if errored:
         return
 
+    console.record = True
+
     if svg:
         print_detectors(config, theme="vs")
     else:
