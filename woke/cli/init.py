@@ -1,5 +1,6 @@
 import asyncio
 import pathlib
+import sys
 import time
 from typing import Set
 
@@ -102,7 +103,7 @@ async def run_init_pytypes(
         no_warnings=not warnings,
     )
     errored = any(
-        error for error in errors if error.severity == SolcOutputErrorSeverityEnum.ERROR
+        error.severity == SolcOutputErrorSeverityEnum.ERROR for error in errors
     )
     if not errored:
         start = time.perf_counter()
@@ -122,6 +123,9 @@ async def run_init_pytypes(
         finally:
             observer.stop()
             observer.join()
+    else:
+        if errored:
+            sys.exit(1)
 
 
 @run_init.command(name="pytypes")
