@@ -12,18 +12,18 @@ from woke.ast.ir.declaration.contract_definition import ContractDefinition
 from woke.ast.ir.declaration.function_definition import FunctionDefinition
 from woke.ast.ir.meta.source_unit import SourceUnit
 from woke.compiler import SolcOutputSelectionEnum, SolidityCompiler
-from woke.compiler.build_data_model import BuildInfo
+from woke.compiler.build_data_model import ProjectBuild
 from woke.compiler.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
 from woke.config import WokeConfig
 
 SOURCES_PATH = Path(__file__).parent.resolve() / "detectors_sources"
 
 
-def compile_project(sample_path: Path, config: WokeConfig) -> BuildInfo:
+def compile_project(sample_path: Path, config: WokeConfig) -> ProjectBuild:
     sol_files: Set[Path] = {sample_path}
 
     compiler = SolidityCompiler(config)
-    build: BuildInfo
+    build: ProjectBuild
     errors: Set[SolcOutputError]
     build, errors = asyncio.run(
         compiler.compile(

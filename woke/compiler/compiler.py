@@ -52,8 +52,8 @@ from ..ast.nodes import AstSolc
 from ..utils import get_package_version
 from ..utils.file_utils import is_relative_to
 from .build_data_model import (
-    BuildInfo,
     CompilationUnitBuildInfo,
+    ProjectBuild,
     ProjectBuildInfo,
     SourceUnitInfo,
 )
@@ -88,7 +88,7 @@ class CompilationFileSystemEventHandler(FileSystemEventHandler):
     _config_changed: bool
     _loop: asyncio.AbstractEventLoop
     _queue: asyncio.Queue[FileSystemEvent]
-    _callbacks: List[Callable[[BuildInfo, ProjectBuildInfo], None]]
+    _callbacks: List[Callable[[ProjectBuild, ProjectBuildInfo], None]]
 
     TIMEOUT_INTERVAL = 1.0
 
@@ -141,12 +141,12 @@ class CompilationFileSystemEventHandler(FileSystemEventHandler):
                 callback(self._compiler.latest_build, self._compiler.latest_build_info)
 
     def register_callback(
-        self, callback: Callable[[BuildInfo, ProjectBuildInfo], None]
+        self, callback: Callable[[ProjectBuild, ProjectBuildInfo], None]
     ):
         self._callbacks.append(callback)
 
     def unregister_callback(
-        self, callback: Callable[[BuildInfo, ProjectBuildInfo], None]
+        self, callback: Callable[[ProjectBuild, ProjectBuildInfo], None]
     ):
         self._callbacks.remove(callback)
 
@@ -292,7 +292,7 @@ class SolidityCompiler:
     __source_path_resolver: SourcePathResolver
 
     _latest_build_info: Optional[ProjectBuildInfo]
-    _latest_build: Optional[BuildInfo]
+    _latest_build: Optional[ProjectBuild]
 
     def __init__(self, woke_config: WokeConfig):
         self.__config = woke_config
@@ -309,7 +309,7 @@ class SolidityCompiler:
         return self._latest_build_info
 
     @property
-    def latest_build(self) -> Optional[BuildInfo]:
+    def latest_build(self) -> Optional[ProjectBuild]:
         return self._latest_build
 
     def build_graph(
@@ -683,7 +683,7 @@ class SolidityCompiler:
         ] = None,  # files that should be treated as deleted even if they exist
         console: Optional[rich.console.Console] = None,
         no_warnings: bool = False,
-    ) -> Tuple[BuildInfo, Set[SolcOutputError]]:
+    ) -> Tuple[ProjectBuild, Set[SolcOutputError]]:
         if modified_files is None:
             modified_files = {}
         if deleted_files is None:
@@ -731,7 +731,7 @@ class SolidityCompiler:
             or build_settings_changed
         ):
             logger.debug("Performing full recompile")
-            build = BuildInfo(
+            build = ProjectBuild(
                 interval_trees={},
                 reference_resolver=ReferenceResolver(),
                 source_units={},

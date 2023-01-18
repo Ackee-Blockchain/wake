@@ -33,7 +33,7 @@ from ..ast.ir.statement.revert_statement import RevertStatement
 from ..ast.ir.type_name.abc import TypeNameAbc
 from ..ast.ir.type_name.array_type_name import ArrayTypeName
 from ..ast.ir.type_name.user_defined_type_name import UserDefinedTypeName
-from ..compiler.build_data_model import BuildInfo
+from ..compiler.build_data_model import ProjectBuild
 from .constants import DEFAULT_IMPORTS, INIT_CONTENT, TAB_WIDTH
 
 
@@ -1343,7 +1343,7 @@ class TypeGenerator:
             # if unit.source_unit_name == "overloading.sol":
             #    print(self.__func_to_overload)
 
-    def generate_types(self, build: BuildInfo) -> None:
+    def generate_types(self, build: ProjectBuild) -> None:
         self.__interval_trees = build.interval_trees
         self.__source_units = build.source_units
         self.__reference_resolver = build.reference_resolver

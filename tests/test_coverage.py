@@ -8,7 +8,7 @@ from unittest import mock
 import pytest
 
 from woke.compiler import SolcOutputSelectionEnum, SolidityCompiler
-from woke.compiler.build_data_model import BuildInfo
+from woke.compiler.build_data_model import ProjectBuild
 from woke.compiler.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
 from woke.config import WokeConfig
 from woke.testing import coverage
