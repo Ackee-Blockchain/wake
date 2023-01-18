@@ -33,11 +33,11 @@ import eth_utils
 from Crypto.Hash import BLAKE2b, keccak
 from typing_extensions import Literal, get_args, get_origin
 
-from woke.testing.development_chains import (
-    AnvilDevChain,
-    DevChainABC,
-    GanacheDevChain,
-    HardhatDevChain,
+from woke.testing.chain_interfaces import (
+    AnvilChainInterface,
+    ChainInterfaceAbc,
+    GanacheChainInterface,
+    HardhatChainInterface,
 )
 
 from . import hardhat_console
@@ -249,7 +249,7 @@ class Account:
 
     @property
     def balance(self) -> Wei:
-        return Wei(self._chain.dev_chain.get_balance(str(self._address)))
+        return Wei(self._chain.chain_interface.get_balance(str(self._address)))
 
     @balance.setter
     def balance(self, value: int) -> None:
@@ -257,17 +257,17 @@ class Account:
             raise TypeError("value must be an integer")
         if value < 0:
             raise ValueError("value must be non-negative")
-        self._chain.dev_chain.set_balance(str(self.address), value)
+        self._chain.chain_interface.set_balance(str(self.address), value)
 
     @property
     def code(self) -> bytes:
-        return self._chain.dev_chain.get_code(str(self._address))
+        return self._chain.chain_interface.get_code(str(self._address))
 
     @code.setter
     def code(self, value: Union[bytes, bytearray]) -> None:
         if not isinstance(value, (bytes, bytearray)):
             raise TypeError("value must be a bytes object")
-        self._chain.dev_chain.set_code(str(self.address), value)
+        self._chain.chain_interface.set_code(str(self.address), value)
 
     @property
     def chain(self) -> Chain:
@@ -275,7 +275,7 @@ class Account:
 
     @property
     def nonce(self) -> int:
-        return self._chain.dev_chain.get_transaction_count(str(self._address))
+        return self._chain.chain_interface.get_transaction_count(str(self._address))
 
     @nonce.setter
     def nonce(self, value: int) -> None:
@@ -283,7 +283,7 @@ class Account:
             raise TypeError("value must be an integer")
         if value < 0:
             raise ValueError("value must be non-negative")
-        self._chain.dev_chain.set_nonce(str(self.address), value)
+        self._chain.chain_interface.set_nonce(str(self.address), value)
 
     def _prepare_tx_params(
         self,
@@ -320,7 +320,7 @@ class Account:
             params["gas"] = self.chain.block_gas_limit
         elif gas_limit == "auto":
             try:
-                params["gas"] = self.chain.dev_chain.estimate_gas(params)
+                params["gas"] = self.chain.chain_interface.estimate_gas(params)
             except JsonRpcError as e:
                 self._chain._process_call_revert(e)
                 raise
@@ -342,7 +342,7 @@ class Account:
             RequestType.CALL, data, value, from_, gas_limit
         )
         try:
-            output = self._chain.dev_chain.call(params)
+            output = self._chain.chain_interface.call(params)
         except JsonRpcError as e:
             self._chain._process_call_revert(e)
             raise
@@ -386,7 +386,7 @@ class Account:
 
         with _signer_account(sender):
             try:
-                tx_hash = self._chain.dev_chain.send_transaction(tx_params)
+                tx_hash = self._chain.chain_interface.send_transaction(tx_params)
             except (ValueError, JsonRpcError) as e:
                 try:
                     tx_hash = e.args[0]["data"]["txHash"]
@@ -481,7 +481,7 @@ def get_fqn_from_deployment_code(deployment_code: bytes) -> str:
 
 
 def get_fqn_from_address(addr: Address, chain: Chain) -> Optional[str]:
-    code = chain.dev_chain.get_code(str(addr))
+    code = chain.chain_interface.get_code(str(addr))
     metadata = code[-53:]
     if metadata in contracts_by_metadata:
         return contracts_by_metadata[metadata]
@@ -491,7 +491,7 @@ def get_fqn_from_address(addr: Address, chain: Chain) -> Optional[str]:
 
 class Chain:
     _connected: bool
-    _dev_chain: DevChainABC
+    _chain_interface: ChainInterfaceAbc
     _accounts: List[Account]
     _default_call_account: Optional[Account]
     _default_tx_account: Optional[Account]
@@ -525,21 +525,23 @@ class Chain:
 
             client_version = communicator.web3_client_version().lower()
             if "anvil" in client_version:
-                self._dev_chain = AnvilDevChain(communicator)
+                self._chain_interface = AnvilChainInterface(communicator)
             elif "hardhat" in client_version:
-                self._dev_chain = HardhatDevChain(communicator)
+                self._chain_interface = HardhatChainInterface(communicator)
             elif "ethereumjs" in client_version:
-                self._dev_chain = GanacheDevChain(communicator)
+                self._chain_interface = GanacheChainInterface(communicator)
             else:
                 raise NotImplementedError(
                     f"Client version {client_version} not supported"
                 )
-            self._accounts = [Account(acc, self) for acc in self._dev_chain.accounts()]
-            block_info = self._dev_chain.get_block("latest")
+            self._accounts = [
+                Account(acc, self) for acc in self._chain_interface.accounts()
+            ]
+            block_info = self._chain_interface.get_block("latest")
             assert "gasLimit" in block_info
             self._block_gas_limit = int(block_info["gasLimit"], 16)
-            self._chain_id = self._dev_chain.get_chain_id()
-            self._gas_price = self._dev_chain.get_gas_price()
+            self._chain_id = self._chain_interface.get_chain_id()
+            self._gas_price = self._chain_interface.get_gas_price()
             self._nonces = defaultdict(lambda: 0)
             self._snapshots = {}
             self._deployed_libraries = defaultdict(list)
@@ -569,12 +571,12 @@ class Chain:
     def change_automine(self, automine: bool):
         if not self._connected:
             raise NotConnectedError("Not connected to a chain")
-        automine_was = self._dev_chain.get_automine()
-        self._dev_chain.set_automine(automine)
+        automine_was = self._chain_interface.get_automine()
+        self._chain_interface.set_automine(automine)
         try:
             yield
         finally:
-            self._dev_chain.set_automine(automine_was)
+            self._chain_interface.set_automine(automine_was)
 
     @property
     def connected(self) -> bool:
@@ -588,12 +590,12 @@ class Chain:
     @property
     @_check_connected
     def automine(self) -> bool:
-        return self._dev_chain.get_automine()
+        return self._chain_interface.get_automine()
 
     @automine.setter
     @_check_connected
     def automine(self, value: bool) -> None:
-        self._dev_chain.set_automine(value)
+        self._chain_interface.set_automine(value)
 
     @property
     @_check_connected
@@ -638,7 +640,7 @@ class Chain:
     @block_gas_limit.setter
     @_check_connected
     def block_gas_limit(self, value: int) -> None:
-        self._dev_chain.set_block_gas_limit(value)
+        self._chain_interface.set_block_gas_limit(value)
         self._block_gas_limit = value
 
     @property
@@ -653,8 +655,8 @@ class Chain:
 
     @property
     @_check_connected
-    def dev_chain(self):
-        return self._dev_chain
+    def chain_interface(self) -> ChainInterfaceAbc:
+        return self._chain_interface
 
     @property
     @_check_connected
@@ -669,14 +671,14 @@ class Chain:
     @_check_connected
     def mine(self, timestamp_change: Optional[Callable[[int], int]] = None) -> None:
         if timestamp_change is not None:
-            block_info = self._dev_chain.get_block("latest")
+            block_info = self._chain_interface.get_block("latest")
             assert "timestamp" in block_info
             last_timestamp = int(block_info["timestamp"], 16)
             timestamp = timestamp_change(last_timestamp)
         else:
             timestamp = None
 
-        self._dev_chain.mine(timestamp)
+        self._chain_interface.mine(timestamp)
 
     def _convert_to_web3_type(self, value: Any) -> Any:
         if dataclasses.is_dataclass(value):
@@ -751,11 +753,13 @@ class Chain:
 
     @_check_connected
     def update_accounts(self):
-        self._accounts = [Account(acc, self) for acc in self._dev_chain.accounts()]
+        self._accounts = [
+            Account(acc, self) for acc in self._chain_interface.accounts()
+        ]
 
     @_check_connected
     def snapshot(self) -> str:
-        snapshot_id = self._dev_chain.snapshot()
+        snapshot_id = self._chain_interface.snapshot()
 
         self._snapshots[snapshot_id] = {
             "nonces": self._nonces.copy(),
@@ -770,7 +774,7 @@ class Chain:
 
     @_check_connected
     def revert(self, snapshot_id: str) -> None:
-        reverted = self._dev_chain.revert(snapshot_id)
+        reverted = self._chain_interface.revert(snapshot_id)
         if not reverted:
             raise RevertToSnapshotFailedError()
 
@@ -799,11 +803,13 @@ class Chain:
 
     @_check_connected
     def reset(self) -> None:
-        self._dev_chain.reset()
+        self._chain_interface.reset()
 
     def _get_nonce(self, address: Union[str, Address]) -> int:
         if address not in self._nonces:
-            self._nonces[address] = self._dev_chain.get_transaction_count(str(address))
+            self._nonces[address] = self._chain_interface.get_transaction_count(
+                str(address)
+            )
         return self._nonces[address]
 
     def _build_transaction(
@@ -849,7 +855,7 @@ class Chain:
             if "to" in params:
                 estimate_params["to"] = params["to"]
             try:
-                gas = self._dev_chain.estimate_gas(estimate_params)
+                gas = self._chain_interface.estimate_gas(estimate_params)
             except JsonRpcError as e:
                 self._process_call_revert(e)
                 raise
@@ -887,7 +893,7 @@ class Chain:
             assert origin is not None
 
             # ambiguous error, try to find the source contract
-            debug_trace = self._dev_chain.debug_trace_transaction(
+            debug_trace = self._chain_interface.debug_trace_transaction(
                 tx_hash, {"enableMemory": True}
             )
             try:
@@ -938,7 +944,7 @@ class Chain:
                 break
 
         if non_unique:
-            debug_trace = self._dev_chain.debug_trace_transaction(
+            debug_trace = self._chain_interface.debug_trace_transaction(
                 tx_hash, {"enableMemory": True}
             )
             event_traces = self._process_debug_trace_for_events(debug_trace, origin)
@@ -1084,7 +1090,7 @@ class Chain:
 
         with _signer_account(sender):
             try:
-                tx_hash = self._dev_chain.send_transaction(tx_params)
+                tx_hash = self._chain_interface.send_transaction(tx_params)
             except ValueError as e:
                 try:
                     tx_hash = e.args[0]["data"]["txHash"]
@@ -1136,7 +1142,7 @@ class Chain:
             RequestType.CALL, params, selector, arguments, abi[selector]
         )
         try:
-            output = self._dev_chain.call(tx_params)
+            output = self._chain_interface.call(tx_params)
         except JsonRpcError as e:
             self._process_call_revert(e)
             raise
@@ -1240,11 +1246,20 @@ class Chain:
         return last_revert_origin
 
     def _process_call_revert(self, e: JsonRpcError):
-        if isinstance(self._dev_chain, AnvilDevChain) and e.data["code"] == 3:
+        if (
+            isinstance(self._chain_interface, AnvilChainInterface)
+            and e.data["code"] == 3
+        ):
             revert_data = e.data["data"]
-        elif isinstance(self._dev_chain, GanacheDevChain) and e.data["code"] == -32000:
+        elif (
+            isinstance(self._chain_interface, GanacheChainInterface)
+            and e.data["code"] == -32000
+        ):
             revert_data = e.data["data"]
-        elif isinstance(self._dev_chain, HardhatDevChain) and e.data["code"] == -32603:
+        elif (
+            isinstance(self._chain_interface, HardhatChainInterface)
+            and e.data["code"] == -32603
+        ):
             revert_data = e.data["data"]["data"]
         else:
             raise e from None
@@ -1277,7 +1292,7 @@ class Chain:
 
         with _signer_account(sender):
             try:
-                tx_hash = self._dev_chain.send_transaction(tx_params)
+                tx_hash = self._chain_interface.send_transaction(tx_params)
             except (ValueError, JsonRpcError) as e:
                 try:
                     tx_hash = e.args[0]["data"]["txHash"]
@@ -1321,7 +1336,7 @@ class Chain:
 @contextmanager
 def _signer_account(sender: Account):
     chain = sender.chain
-    dev_chain = chain.dev_chain
+    chain_interface = chain.chain_interface
     account_created = True
     if sender not in chain.accounts:
         chain.update_accounts()
@@ -1329,10 +1344,10 @@ def _signer_account(sender: Account):
             account_created = False
 
     if not account_created:
-        if isinstance(dev_chain, (AnvilDevChain, HardhatDevChain)):
-            dev_chain.impersonate_account(str(sender))
-        elif isinstance(dev_chain, GanacheDevChain):
-            dev_chain.add_account(str(sender), "")
+        if isinstance(chain_interface, (AnvilChainInterface, HardhatChainInterface)):
+            chain_interface.impersonate_account(str(sender))
+        elif isinstance(chain_interface, GanacheChainInterface):
+            chain_interface.add_account(str(sender), "")
         else:
             raise NotImplementedError()
 
@@ -1340,9 +1355,9 @@ def _signer_account(sender: Account):
         yield
     finally:
         if not account_created and isinstance(
-            dev_chain, (AnvilDevChain, HardhatDevChain)
+            chain_interface, (AnvilChainInterface, HardhatChainInterface)
         ):
-            dev_chain.stop_impersonating_account(str(sender))
+            chain_interface.stop_impersonating_account(str(sender))
 
 
 default_chain = Chain()

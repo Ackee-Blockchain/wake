@@ -52,12 +52,12 @@ from woke.compiler.solc_frontend import (
 )
 from woke.config import WokeConfig
 from woke.testing import default_chain
+from woke.testing.chain_interfaces import ChainInterfaceAbc
 from woke.testing.core import (
     Address,
     get_fqn_from_address,
     get_fqn_from_deployment_code,
 )
-from woke.testing.development_chains import DevChainABC
 from woke.utils.file_utils import is_relative_to
 
 logger = logging.getLogger(__name__)
@@ -1163,7 +1163,7 @@ class Coverage:
 
 
 class CoverageProvider:
-    _dev_chain: DevChainABC
+    _chain_interface: ChainInterfaceAbc
     _coverage: Coverage
     _next_block_to_cover: int
 
@@ -1172,7 +1172,7 @@ class CoverageProvider:
         coverage: Coverage,
         starter_block: Optional[int] = None,
     ):
-        self._dev_chain = default_chain.dev_chain
+        self._chain_interface = default_chain.chain_interface
         self._coverage = coverage
         self._next_block_to_cover = starter_block if starter_block is not None else 0
 
@@ -1183,19 +1183,19 @@ class CoverageProvider:
         """
         Checks for latest transactions on blockchain and updates coverage
         """
-        last_block = self._dev_chain.get_block_number()
+        last_block = self._chain_interface.get_block_number()
         if (
             self._next_block_to_cover > last_block + 1
         ):  # chain was reset -> reset last_covered_block
             self._next_block_to_cover = 0
         for block_number in range(self._next_block_to_cover, last_block + 1):
             logger.debug("Working on block %d", block_number)
-            block_info = self._dev_chain.get_block(block_number, True)
+            block_info = self._chain_interface.get_block(block_number, True)
             logger.debug(block_info["transactions"])
             for transaction in block_info["transactions"]:
                 logger.debug(transaction)
 
-                trace = self._dev_chain.debug_trace_transaction(
+                trace = self._chain_interface.debug_trace_transaction(
                     transaction["hash"],
                     {
                         "enableMemory": True,

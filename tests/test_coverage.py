@@ -318,13 +318,15 @@ class TestCoverageProvider:
         covered_pcs = random.sample(list(cov.pc_map.keys()), 50)
         trace = {"structLogs": [{"pc": pc, "op": "ADD"} for pc in covered_pcs]}
 
-        basic_coverage_provider._dev_chain.get_block_number.return_value = 0
-        basic_coverage_provider._dev_chain.get_block.return_value = {
+        basic_coverage_provider._chain_interface.get_block_number.return_value = 0
+        basic_coverage_provider._chain_interface.get_block.return_value = {
             "transactions": [
                 {"to": "0xA7910644A290B659B4049848bbe966388D30C0d7", "hash": "0x0"}
             ]
         }
-        basic_coverage_provider._dev_chain.debug_trace_transaction.return_value = trace
+        basic_coverage_provider._chain_interface.debug_trace_transaction.return_value = (
+            trace
+        )
         coverage.get_fqn_from_address = mock.MagicMock(return_value=fqn)
 
         basic_coverage_provider.update_coverage()
@@ -333,9 +335,9 @@ class TestCoverageProvider:
             assert pc in cov.pc_instruction_cov
             assert cov.pc_instruction_cov[pc].hit_count == 1
 
-        basic_coverage_provider._dev_chain.get_block_number.assert_called_once()
-        basic_coverage_provider._dev_chain.get_block.assert_called_once()
-        basic_coverage_provider._dev_chain.debug_trace_transaction.assert_called_once()
+        basic_coverage_provider._chain_interface.get_block_number.assert_called_once()
+        basic_coverage_provider._chain_interface.get_block.assert_called_once()
+        basic_coverage_provider._chain_interface.debug_trace_transaction.assert_called_once()
         coverage.get_fqn_from_address.assert_called_once()
 
     @pytest.mark.slow
@@ -358,13 +360,15 @@ class TestCoverageProvider:
         }
         trace["structLogs"].extend([{"pc": pc, "op": "ADD"} for pc in called.pc_instruction_cov.keys()])  # type: ignore
 
-        calls_coverage_provider._dev_chain.get_block_number.return_value = 0
-        calls_coverage_provider._dev_chain.get_block.return_value = {
+        calls_coverage_provider._chain_interface.get_block_number.return_value = 0
+        calls_coverage_provider._chain_interface.get_block.return_value = {
             "transactions": [
                 {"to": "0xA7910644A290B659B4049848bbe966388D30C0d7", "hash": "0x0"}
             ]
         }
-        calls_coverage_provider._dev_chain.debug_trace_transaction.return_value = trace
+        calls_coverage_provider._chain_interface.debug_trace_transaction.return_value = (
+            trace
+        )
         coverage.get_fqn_from_address = mock.MagicMock()
         coverage.get_fqn_from_address.side_effect = [callee_fqn, called_fqn]
 
@@ -402,12 +406,12 @@ class TestCoverageProvider:
             "structLogs": [{"pc": pc, "op": "ADD"} for pc in undeployed_cov.pc_map]
         }
 
-        parents_coverage_provider._dev_chain.get_block_number.return_value = 0
-        parents_coverage_provider._dev_chain.get_block.return_value = {
+        parents_coverage_provider._chain_interface.get_block_number.return_value = 0
+        parents_coverage_provider._chain_interface.get_block.return_value = {
             "transactions": [{"to": None, "hash": "0x0", "input": "0xABCD"}]
         }
 
-        parents_coverage_provider._dev_chain.debug_trace_transaction.return_value = (
+        parents_coverage_provider._chain_interface.debug_trace_transaction.return_value = (
             trace
         )
         coverage.get_fqn_from_deployment_code = mock.MagicMock(return_value=child_fqn)
@@ -417,7 +421,7 @@ class TestCoverageProvider:
         for pc in undeployed_cov.pc_map:
             assert undeployed_cov.pc_instruction_cov[pc].hit_count == 1
 
-        parents_coverage_provider._dev_chain.get_block_number.assert_called_once()
-        parents_coverage_provider._dev_chain.get_block.assert_called_once()
-        parents_coverage_provider._dev_chain.debug_trace_transaction.assert_called_once()
+        parents_coverage_provider._chain_interface.get_block_number.assert_called_once()
+        parents_coverage_provider._chain_interface.get_block.assert_called_once()
+        parents_coverage_provider._chain_interface.debug_trace_transaction.assert_called_once()
         coverage.get_fqn_from_deployment_code.assert_called_once()
