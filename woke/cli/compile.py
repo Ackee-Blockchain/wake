@@ -31,7 +31,7 @@ async def compile(
             config,
             asyncio.get_event_loop(),
             compiler,
-            [SolcOutputSelectionEnum.AST],
+            [SolcOutputSelectionEnum.ALL],
             write_artifacts=not no_artifacts,
             console=console,
             no_warnings=no_warnings,
@@ -91,7 +91,7 @@ async def compile(
     # TODO Allow choosing build artifacts subset in compile subcommand
     await compiler.compile(
         sol_files,
-        [SolcOutputSelectionEnum.AST],
+        [SolcOutputSelectionEnum.ALL],
         write_artifacts=not no_artifacts,
         force_recompile=force,
         console=console,
