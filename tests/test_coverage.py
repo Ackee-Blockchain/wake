@@ -17,26 +17,6 @@ from woke.testing.coverage import ContractCoverage, Coverage, CoverageProvider
 SOURCES_PATH = Path(__file__).parent.resolve() / "coverage_sources"
 
 
-def compile_project(sample_path: Path, config: WokeConfig) -> BuildInfo:
-    sol_files: Set[Path] = {sample_path}
-
-    compiler = SolidityCompiler(config)
-    build: BuildInfo
-    errors: Set[SolcOutputError]
-    build, errors = asyncio.run(
-        compiler.compile(
-            sol_files,
-            [SolcOutputSelectionEnum.AST],
-            write_artifacts=False,
-        )
-    )
-
-    assert not any(
-        error.severity == SolcOutputErrorSeverityEnum.ERROR for error in errors
-    )
-    return build
-
-
 @pytest.fixture
 def config(tmp_path) -> WokeConfig:
     config_dict = {
@@ -47,36 +27,6 @@ def config(tmp_path) -> WokeConfig:
         woke_root_path=tmp_path,
         project_root_path=tmp_path,
     )
-
-
-def get_contract_and_intervals(config, source_path):
-    build = compile_project(source_path, config)
-    source_unit = build.source_units[source_path]
-    assert len(source_unit.contracts) == 1
-
-    contract = source_unit.contracts[0]
-
-    assert contract.compilation_info is not None
-    assert contract.compilation_info.evm is not None
-    assert contract.compilation_info.evm.deployed_bytecode is not None
-
-    opcodes = contract.compilation_info.evm.deployed_bytecode.opcodes
-    source_map = contract.compilation_info.evm.deployed_bytecode.source_map
-    line_intervals = coverage._get_line_intervals(contract.file.read_text())
-
-    assert opcodes is not None
-    assert source_map is not None
-
-    pc_op_map = coverage._parse_opcodes(opcodes)
-    pc_map = coverage._parse_source_map(
-        build.interval_trees,
-        contract.cu_hash,
-        build.reference_resolver,
-        source_map,
-        pc_op_map,
-    )
-
-    return contract, line_intervals, pc_map
 
 
 class TestContractCoverage:
