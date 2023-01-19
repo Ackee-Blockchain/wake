@@ -1339,15 +1339,12 @@ def _signer_account(sender: Account):
     chain_interface = chain.chain_interface
     account_created = True
     if sender not in chain.accounts:
-        chain.update_accounts()
-        if sender not in chain.accounts:
-            account_created = False
-
-    if not account_created:
+        account_created = False
         if isinstance(chain_interface, (AnvilChainInterface, HardhatChainInterface)):
             chain_interface.impersonate_account(str(sender))
         elif isinstance(chain_interface, GanacheChainInterface):
             chain_interface.add_account(str(sender), "")
+            chain.update_accounts()
         else:
             raise NotImplementedError()
 
