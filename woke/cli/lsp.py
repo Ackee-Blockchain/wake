@@ -4,12 +4,13 @@ import logging
 import rich_click as click
 
 from woke.config import WokeConfig
-from woke.lsp.server import LspServer
 
 logger = logging.getLogger(__name__)
 
 
 async def run_server(config: WokeConfig, port: int) -> None:
+    from woke.lsp.server import LspServer
+
     async def client_callback(
         reader: asyncio.StreamReader, writer: asyncio.StreamWriter
     ) -> None:
