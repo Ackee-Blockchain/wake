@@ -1,8 +1,6 @@
 import asyncio
 import logging
 import platform
-import subprocess
-import sys
 from pathlib import Path
 from typing import Optional
 
@@ -12,8 +10,6 @@ from click.core import Context
 from rich.logging import RichHandler
 
 from woke.config import WokeConfig
-from woke.core.solidity_version import SolidityVersion
-from woke.svm import SolcVersionManager
 
 from .compile import run_compile
 from .console import console
@@ -101,6 +97,12 @@ def config(ctx: Context) -> None:
 
 
 def woke_solc() -> None:
+    import subprocess
+    import sys
+
+    from woke.core.solidity_version import SolidityVersion
+    from woke.svm import SolcVersionManager
+
     logging.basicConfig(level=logging.CRITICAL)
     config = WokeConfig()
     config.load_configs()

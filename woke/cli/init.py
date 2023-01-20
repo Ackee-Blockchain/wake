@@ -6,18 +6,8 @@ from typing import Set
 
 import rich_click as click
 from click.core import Context
-from watchdog.observers import Observer
 
 from woke.config import WokeConfig
-from woke.utils import file_utils
-
-from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
-from ..compiler.build_data_model import ProjectBuild, ProjectBuildInfo
-from ..compiler.compiler import CompilationFileSystemEventHandler
-from ..compiler.solc_frontend import SolcOutputErrorSeverityEnum
-from ..testing.pytypes_generator import TypeGenerator
-from ..utils.file_utils import is_relative_to
-from .console import console
 
 
 @click.group(name="init")
@@ -32,6 +22,16 @@ def run_init(ctx: Context):
 async def run_init_pytypes(
     config: WokeConfig, return_tx: bool, warnings: bool, watch: bool
 ):
+    from watchdog.observers import Observer
+
+    from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
+    from ..compiler.build_data_model import ProjectBuild, ProjectBuildInfo
+    from ..compiler.compiler import CompilationFileSystemEventHandler
+    from ..compiler.solc_frontend import SolcOutputErrorSeverityEnum
+    from ..testing.pytypes_generator import TypeGenerator
+    from ..utils.file_utils import is_relative_to
+    from .console import console
+
     def callback(build: ProjectBuild, build_info: ProjectBuildInfo):
         errored = any(
             any(
@@ -189,10 +189,13 @@ def init_fuzz(
     ctx: Context, force: bool, return_tx: bool, warnings: bool, watch: bool
 ) -> None:
     """Generate Python contract types and create example fuzz tests."""
+
+    from ..utils.file_utils import copy_dir
+
     config: WokeConfig = ctx.obj["config"]
 
     examples_dir = pathlib.Path(__file__).parent.parent.resolve() / "examples/fuzzer"
     tests_dir = config.project_root_path / "tests"
-    file_utils.copy_dir(examples_dir, tests_dir, overwrite=force)
+    copy_dir(examples_dir, tests_dir, overwrite=force)
 
     asyncio.run(run_init_pytypes(config, return_tx, warnings, watch))

@@ -2,17 +2,14 @@ import importlib.resources
 import importlib.util
 import inspect
 import multiprocessing
-import platform
 import shutil
 import sys
-import time
 from pathlib import Path
 from typing import Callable, Iterable, Tuple
 
 import rich_click as click
 
 from woke.config import WokeConfig
-from woke.testing.fuzzer import fuzz
 
 from .console import console
 
@@ -72,6 +69,9 @@ def run_fuzz(
     network: str,
 ) -> None:
     """Run Woke fuzzer."""
+
+    from woke.testing.fuzzer import fuzz
+
     config = WokeConfig(woke_root_path=ctx.obj["woke_root_path"])
     config.load_configs()  # load ~/.woke/config.toml and ./woke.toml
 

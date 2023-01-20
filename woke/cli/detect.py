@@ -6,15 +6,6 @@ from typing import Set, Tuple
 
 import rich.terminal_theme
 import rich_click as click
-from rich.panel import Panel
-
-from ..analysis.detectors.api import detect, print_detection, print_detectors
-from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
-from ..compiler.build_data_model import ProjectBuild
-from ..compiler.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
-from ..config import WokeConfig
-from ..utils.file_utils import is_relative_to
-from .console import console
 
 
 @click.command(name="detect")
@@ -36,6 +27,15 @@ def run_detect(
     ctx: click.Context, paths: Tuple[str], svg: bool, no_artifacts: bool, force: bool
 ) -> None:
     """Run vulnerability detectors on the project."""
+
+    from ..analysis.detectors.api import detect, print_detection, print_detectors
+    from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
+    from ..compiler.build_data_model import ProjectBuild
+    from ..compiler.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
+    from ..config import WokeConfig
+    from ..utils.file_utils import is_relative_to
+    from .console import console
+
     config = WokeConfig(woke_root_path=ctx.obj["woke_root_path"])
     config.load_configs()  # load ~/.woke/config.toml and ./woke.toml
 

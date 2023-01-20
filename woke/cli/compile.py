@@ -1,5 +1,4 @@
 import asyncio
-import logging
 import sys
 import time
 from pathlib import Path
@@ -7,15 +6,8 @@ from typing import Set, Tuple
 
 import rich_click as click
 from click.core import Context
-from watchdog.observers import Observer
 
-from woke.compiler.compiler import CompilationFileSystemEventHandler, SolidityCompiler
-from woke.compiler.solc_frontend.input_data_model import SolcOutputSelectionEnum
 from woke.config import WokeConfig
-
-from ..compiler.solc_frontend import SolcOutputErrorSeverityEnum
-from ..utils.file_utils import is_relative_to
-from .console import console
 
 
 async def compile(
@@ -26,6 +18,18 @@ async def compile(
     force: bool,
     watch: bool,
 ):
+    from watchdog.observers import Observer
+
+    from woke.compiler.compiler import (
+        CompilationFileSystemEventHandler,
+        SolidityCompiler,
+    )
+    from woke.compiler.solc_frontend.input_data_model import SolcOutputSelectionEnum
+
+    from ..compiler.solc_frontend import SolcOutputErrorSeverityEnum
+    from ..utils.file_utils import is_relative_to
+    from .console import console
+
     compiler = SolidityCompiler(config)
 
     if watch:
