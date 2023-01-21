@@ -28,6 +28,8 @@ class ChainBlocks:
             Literal["finalized"],
         ],
     ) -> Block:
+        if isinstance(key, int) and key < 0:
+            key = self._chain.chain_interface.get_block_number() + key + 1
         if key not in self._blocks:
             data = self._chain.chain_interface.get_block(key)
             if data is None:
