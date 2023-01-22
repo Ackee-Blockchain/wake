@@ -25,12 +25,12 @@ install_requires = [
     "websocket-client >= 1.4.0",
     "pywin32 >= 302; platform_system == 'Windows'",
     "watchdog >= 2.2.0, < 3",
+    "pytest >= 7, < 8",
 ]
 
 # Also: [pyright](https://github.com/microsoft/pyright/) (distributed through npm)
 extras_require = dict(
     tests=[
-        "pytest >= 7, < 8",
         "pytest-asyncio >= 0.17, < 1",
         "GitPython >= 3.1.20, < 4",
     ],

@@ -12,15 +12,13 @@ import subprocess
 import sys
 import time
 import types
-from contextlib import closing, redirect_stderr, redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from time import sleep
 from typing import Any, Callable, Dict, Iterable, List, Optional
 from urllib.error import URLError
 
 import rich.progress
-from ipdb.__main__ import _init_pdb
-from IPython.core.debugger import BdbQuit_excepthook
 from IPython.utils.io import Tee
 from pathvalidate import sanitize_filename  # type: ignore
 from rich.traceback import Traceback
@@ -36,6 +34,7 @@ from woke.testing.coverage import (
     IdePosition,
     export_merged_ide_coverage,
 )
+from woke.testing.debugging import attach_debugger, set_exception_handler
 
 
 def _setup(port: int, network_id: str) -> subprocess.Popen:
@@ -59,20 +58,6 @@ def _setup(port: int, network_id: str) -> subprocess.Popen:
         raise ValueError(f"Unknown network ID '{network_id}'")
 
     return subprocess.Popen(args, stdout=subprocess.DEVNULL)
-
-
-def _attach_debugger() -> None:
-    # TODO Implement `ipdb` package functionalities
-    # This function relies on `ipdb` internal functions
-    # We could implement all the `ipdb` functionalities ourselves (it is rather small codebase)
-    if sys.excepthook != BdbQuit_excepthook:
-        BdbQuit_excepthook.excepthook_ori = sys.excepthook
-        sys.excepthook = BdbQuit_excepthook
-    p = _init_pdb(
-        commands=["import IPython", "alias embed() IPython.embed(colors='neutral')"]
-    )
-    p.reset()
-    p.interaction(None, sys.exc_info()[2])
 
 
 def _run_core(
@@ -129,10 +114,34 @@ def _run(
     network_id: str,
     coverage: Optional[Coverage],
 ):
+    def exception_handler(e: Exception) -> None:
+        if tee_obj is not None and not tee_obj._closed:
+            tee_obj.close()
+
+        for ctx_manager in ctx_managers:
+            ctx_manager.__exit__(None, None, None)
+        ctx_managers.clear()
+
+        err_child_conn.send(pickle.dumps(sys.exc_info()))
+        finished_event.set()
+
+        try:
+            attach: bool = err_child_conn.recv()
+            if attach:
+                sys.stdin = os.fdopen(0)
+                attach_debugger(e)
+        finally:
+            finished_event.set()
+
+    tee_obj: Optional[Tee] = None
+    ctx_managers = []
+
     pickling_support.install()
     random.seed(random_seed)
 
     chain_process = _setup(port, network_id)
+
+    set_exception_handler(exception_handler)
 
     start = time.perf_counter()
     while True:
@@ -149,43 +158,36 @@ def _run(
                 raise
 
     try:
-        if not tee:
-            logging.basicConfig(filename=log_file)
-
         if tee:
-            with closing(Tee(log_file)):
-                _run_core(
-                    fuzz_test,
-                    index,
-                    random_seed,
-                    finished_event,
-                    err_child_conn,
-                    cov_child_conn,
-                    coverage,
-                )
+            tee_obj = Tee(log_file)
         else:
-            with log_file.open("w") as f, redirect_stdout(f), redirect_stderr(f):
-                _run_core(
-                    fuzz_test,
-                    index,
-                    random_seed,
-                    finished_event,
-                    err_child_conn,
-                    cov_child_conn,
-                    coverage,
-                )
-    except Exception:
-        err_child_conn.send(pickle.dumps(sys.exc_info()))
-        finished_event.set()
+            logging.basicConfig(filename=log_file)
+            f = open(log_file, "w")
+            ctx_managers.append(f)
+            ctx_managers.append(redirect_stdout(f))
+            ctx_managers.append(redirect_stderr(f))
 
-        try:
-            attach: bool = err_child_conn.recv()
-            if attach:
-                sys.stdin = os.fdopen(0)
-                _attach_debugger()
-        finally:
-            finished_event.set()
+            for ctx_manager in ctx_managers:
+                ctx_manager.__enter__()
+
+        _run_core(
+            fuzz_test,
+            index,
+            random_seed,
+            finished_event,
+            err_child_conn,
+            cov_child_conn,
+            coverage,
+        )
+    except Exception:
+        pass
     finally:
+        if tee_obj is not None and not tee_obj._closed:
+            tee_obj.close()
+
+        for ctx_manager in ctx_managers:
+            ctx_manager.__exit__(None, None, None)
+
         gen.__exit__(None, None, None)
         with log_file.open("a") as f, redirect_stdout(f), redirect_stderr(f):
             chain_process.kill()

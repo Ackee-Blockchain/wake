@@ -18,6 +18,7 @@ from .fuzz import run_fuzz
 from .init import run_init
 from .lsp import run_lsp
 from .svm import run_svm
+from .test import run_test
 
 if platform.system() != "Windows":
     try:
@@ -85,6 +86,7 @@ main.add_command(run_fuzz)
 main.add_command(run_init)
 main.add_command(run_lsp)
 main.add_command(run_svm)
+main.add_command(run_test)
 
 
 @main.command(name="config")
