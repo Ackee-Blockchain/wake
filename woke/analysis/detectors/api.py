@@ -452,7 +452,7 @@ def detect(
     def _detection_ignored(detection: DetectorResult) -> bool:
         return any(
             is_relative_to(detection.ir_node.file, p)
-            for p in config.compiler.solc.ignore_paths
+            for p in config.detectors.ignore_paths
         ) and all(_detection_ignored(d) for d in detection.related_info)
 
     results: DefaultDict[str, DefaultDict[str, List[DetectionResult]]] = defaultdict(

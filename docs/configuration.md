@@ -68,10 +68,11 @@ The resolution order for each configuration option is:
 
 ### `detectors` namespace
 
-| Option    | Description                                                          | Default value |
-|:----------|:---------------------------------------------------------------------|:--------------|
-| `exclude` | List of detector IDs (string or number) that should not be enabled.  | `[]`          |
-| `only`    | List of detector IDs (string or number) that should only be enabled. | `""` (unset)  |
+| Option         | Description                                                          | Default value                                                    |
+|:---------------|:---------------------------------------------------------------------|:-----------------------------------------------------------------|
+| `exclude`      | List of detector IDs (string or number) that should not be enabled.  | `[]`                                                             |
+| `only`         | List of detector IDs (string or number) that should only be enabled. | `""` (unset)                                                     |
+| `ignore_paths` | Detections with subdetections in these paths are ignored.            | `[{CWD}/.woke-build, {CWD}/node_modules, {CWD}/venv, {CWD}/lib]` |
 
 ### `generator.control_flow_graph` namespace
 Related to the `woke.generate.control_flow_graph` LSP command.

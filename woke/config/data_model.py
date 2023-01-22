@@ -116,6 +116,20 @@ class CompilerConfig(WokeConfigModel):
 class DetectorsConfig(WokeConfigModel):
     exclude: FrozenSet[Union[int, str]] = frozenset()
     only: Optional[FrozenSet[Union[int, str]]] = None
+    ignore_paths: FrozenSet[Path] = Field(
+        default_factory=lambda: frozenset(
+            [
+                Path.cwd() / "node_modules",
+                Path.cwd() / ".woke-build",
+                Path.cwd() / "venv",
+                Path.cwd() / "lib",
+            ]
+        )
+    )
+
+    @validator("ignore_paths", pre=True, each_item=True)
+    def set_ignore_paths(cls, v):
+        return Path(v).resolve()
 
 
 class LspConfig(WokeConfigModel):
