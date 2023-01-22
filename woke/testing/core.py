@@ -42,6 +42,7 @@ from woke.testing.chain_interfaces import (
 
 from . import hardhat_console
 from .blocks import ChainBlocks
+from .debugging import get_exception_handler
 from .internal import UnknownEvent, UnknownTransactionRevertedError
 from .json_rpc.communicator import JsonRpcCommunicator, JsonRpcError, TxParams
 from .utils import read_from_memory
@@ -562,6 +563,11 @@ class Chain:
             self.events_callback = None
 
             yield
+        except Exception as e:
+            exception_handler = get_exception_handler()
+            if exception_handler is not None:
+                exception_handler(e)
+            raise
         finally:
             if communicator.connected:
                 communicator.__exit__(None, None, None)
@@ -575,6 +581,11 @@ class Chain:
         self._chain_interface.set_automine(automine)
         try:
             yield
+        except Exception as e:
+            exception_handler = get_exception_handler()
+            if exception_handler is not None:
+                exception_handler(e)
+            raise
         finally:
             self._chain_interface.set_automine(automine_was)
 
@@ -798,6 +809,11 @@ class Chain:
         snapshot_id = self.snapshot()
         try:
             yield
+        except Exception as e:
+            exception_handler = get_exception_handler()
+            if exception_handler is not None:
+                exception_handler(e)
+            raise
         finally:
             self.revert(snapshot_id)
 
