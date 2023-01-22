@@ -133,7 +133,9 @@ class TransactionAbc(ABC, Generic[T]):
 
     @property
     @_fetch_tx_data
-    def to(self) -> Account:
+    def to(self) -> Optional[Account]:
+        if "to" not in self._tx_data or self._tx_data["to"] is None:
+            return None
         return Account(
             self._tx_data["to"], self._chain
         )  # pyright: reportOptionalSubscript=false
