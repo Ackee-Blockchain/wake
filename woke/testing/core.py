@@ -42,7 +42,7 @@ from woke.testing.chain_interfaces import (
 
 from . import hardhat_console
 from .blocks import ChainBlocks
-from .debugging import get_exception_handler
+from .globals import get_exception_handler
 from .internal import UnknownEvent, UnknownTransactionRevertedError
 from .json_rpc.communicator import JsonRpcCommunicator, JsonRpcError, TxParams
 from .utils import read_from_memory

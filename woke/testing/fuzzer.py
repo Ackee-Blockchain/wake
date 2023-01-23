@@ -34,7 +34,7 @@ from woke.testing.coverage import (
     IdePosition,
     export_merged_ide_coverage,
 )
-from woke.testing.debugging import attach_debugger, set_exception_handler
+from woke.testing.globals import attach_debugger, set_exception_handler
 
 
 def _setup(port: int, network_id: str) -> subprocess.Popen:
