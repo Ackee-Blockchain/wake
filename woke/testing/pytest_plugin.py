@@ -1,5 +1,5 @@
 from woke.config import WokeConfig
-from woke.testing.debugging import reset_exception_handled
+from woke.testing.globals import reset_exception_handled
 
 
 class PytestWokePlugin:
