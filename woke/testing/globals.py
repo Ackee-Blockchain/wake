@@ -2,6 +2,8 @@ from pathlib import Path
 from types import TracebackType
 from typing import Callable, Optional
 
+from pdbr import RichPdb
+
 from woke.utils.file_utils import is_relative_to
 
 # must be declared before functions that use it because of a bug in Python (https://bugs.python.org/issue34939)
@@ -40,22 +42,10 @@ def attach_debugger(e: Exception):
             break
         frames_up += 1
 
-    try:
-        from ipdb.__main__ import _init_pdb
-        from IPython.core.debugger import BdbQuit_excepthook
-
-        if sys.excepthook != BdbQuit_excepthook:
-            BdbQuit_excepthook.excepthook_ori = sys.excepthook
-            sys.excepthook = BdbQuit_excepthook
-        p = _init_pdb(commands=["up %d" % frames_up] if frames_up > 0 else [])
-        p.reset()
-        p.interaction(None, tb)
-    except ImportError:
-        from pdb import Pdb
-
-        p = Pdb()
-        p.reset()
-        p.interaction(None, tb)
+    p = RichPdb()
+    p.rcLines.extend(["up %d" % frames_up] if frames_up > 0 else [])
+    p.reset()
+    p.interaction(None, tb)
 
 
 def get_exception_handler() -> Optional[Callable[[Exception], None]]:

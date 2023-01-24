@@ -21,11 +21,11 @@ install_requires = [
     "eth_utils >= 2.0.0, < 3",
     "eth_abi >= 3.0.0, < 4",
     "eth-hash[pycryptodome] >= 0.3.3, < 1",
-    "ipdb",
     "websocket-client >= 1.4.0",
     "pywin32 >= 302; platform_system == 'Windows'",
     "watchdog >= 2.2.0, < 3",
     "pytest >= 7, < 8",
+    "pdbr >= 0.7.7, < 1",
 ]
 
 # Also: [pyright](https://github.com/microsoft/pyright/) (distributed through npm)
@@ -36,7 +36,6 @@ extras_require = dict(
     ],
     dev=[
         "black",
-        "ipython < 8",
         "mkdocs-material >= 8.3.9",
         "mkdocstrings[python]",
         "pymdown-extensions >= 9.0",

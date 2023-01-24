@@ -19,7 +19,6 @@ from typing import Any, Callable, Dict, Iterable, List, Optional
 from urllib.error import URLError
 
 import rich.progress
-from IPython.utils.io import Tee
 from pathvalidate import sanitize_filename  # type: ignore
 from rich.traceback import Traceback
 from tblib import pickling_support
@@ -35,6 +34,7 @@ from woke.testing.coverage import (
     export_merged_ide_coverage,
 )
 from woke.testing.globals import attach_debugger, set_exception_handler
+from woke.utils.tee import StderrTee, StdoutTee
 
 
 def _setup(port: int, network_id: str) -> subprocess.Popen:
@@ -115,9 +115,6 @@ def _run(
     coverage: Optional[Coverage],
 ):
     def exception_handler(e: Exception) -> None:
-        if tee_obj is not None and not tee_obj._closed:
-            tee_obj.close()
-
         for ctx_manager in ctx_managers:
             ctx_manager.__exit__(None, None, None)
         ctx_managers.clear()
@@ -133,7 +130,6 @@ def _run(
         finally:
             finished_event.set()
 
-    tee_obj: Optional[Tee] = None
     ctx_managers = []
 
     pickling_support.install()
@@ -159,7 +155,8 @@ def _run(
 
     try:
         if tee:
-            tee_obj = Tee(log_file)
+            ctx_managers.append(StdoutTee(log_file))
+            ctx_managers.append(StderrTee(log_file))
         else:
             logging.basicConfig(filename=log_file)
             f = open(log_file, "w")
@@ -167,8 +164,8 @@ def _run(
             ctx_managers.append(redirect_stdout(f))
             ctx_managers.append(redirect_stderr(f))
 
-            for ctx_manager in ctx_managers:
-                ctx_manager.__enter__()
+        for ctx_manager in ctx_managers:
+            ctx_manager.__enter__()
 
         _run_core(
             fuzz_test,
@@ -182,9 +179,6 @@ def _run(
     except Exception:
         pass
     finally:
-        if tee_obj is not None and not tee_obj._closed:
-            tee_obj.close()
-
         for ctx_manager in ctx_managers:
             ctx_manager.__exit__(None, None, None)
 
