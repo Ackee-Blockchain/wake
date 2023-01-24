@@ -599,7 +599,7 @@ class SolidityCompiler:
                 if build_info.woke_version != get_package_version("woke"):
                     if console is not None:
                         console.log(
-                            f"[yellow]Woke version changed from {build_info.woke_version} to {get_package_version('woke')} since the last build, rebuilding project[/yellow]"
+                            f"[yellow]Woke version changed from {build_info.woke_version} to {get_package_version('woke')} since the last build[/yellow]"
                         )
                     return
 
