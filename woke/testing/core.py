@@ -5,6 +5,7 @@ import functools
 import importlib
 import inspect
 import re
+from bdb import BdbQuit
 from collections import defaultdict
 from contextlib import contextmanager
 from enum import Enum, IntEnum
@@ -564,10 +565,11 @@ class Chain:
 
             yield
         except Exception as e:
-            exception_handler = get_exception_handler()
-            if exception_handler is not None:
-                exception_handler(e)
-            raise
+            if not isinstance(e, BdbQuit):
+                exception_handler = get_exception_handler()
+                if exception_handler is not None:
+                    exception_handler(e)
+                raise
         finally:
             if communicator.connected:
                 communicator.__exit__(None, None, None)
@@ -582,10 +584,11 @@ class Chain:
         try:
             yield
         except Exception as e:
-            exception_handler = get_exception_handler()
-            if exception_handler is not None:
-                exception_handler(e)
-            raise
+            if not isinstance(e, BdbQuit):
+                exception_handler = get_exception_handler()
+                if exception_handler is not None:
+                    exception_handler(e)
+                raise
         finally:
             self._chain_interface.set_automine(automine_was)
 
@@ -810,10 +813,11 @@ class Chain:
         try:
             yield
         except Exception as e:
-            exception_handler = get_exception_handler()
-            if exception_handler is not None:
-                exception_handler(e)
-            raise
+            if not isinstance(e, BdbQuit):
+                exception_handler = get_exception_handler()
+                if exception_handler is not None:
+                    exception_handler(e)
+                raise
         finally:
             self.revert(snapshot_id)
 
