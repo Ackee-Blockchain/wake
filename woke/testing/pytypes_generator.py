@@ -1567,6 +1567,8 @@ class NameSanitizer:
             "deploy",
             "chain",
             "deployment_code",
+            "transact",
+            "call",
         }
         self.__used_names = set()
         self.__renamed = {}
