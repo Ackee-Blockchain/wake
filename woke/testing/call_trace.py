@@ -38,6 +38,7 @@ class CallTraceKind(str, enum.Enum):
 class CallTrace:
     _contract_name: Optional[str]
     _function_name: str
+    _function_is_special: bool
     _arguments: List
     _status: bool
     _value: int
@@ -54,6 +55,7 @@ class CallTrace:
         value: int,
         kind: CallTraceKind,
         depth: int,
+        function_is_special: bool = False,
     ):
         self._contract_name = contract_name
         self._function_name = function_name
@@ -61,39 +63,49 @@ class CallTrace:
         self._value = value
         self._kind = kind
         self._depth = depth
+        self._function_is_special = function_is_special
         self._status = True
         self._subtraces = []
         self._parent = None
 
     def __str__(self):
-        tree = Tree(self.get_label())
-        self.into_tree(tree)
-
         console = Console()
+        tree = Tree(self.get_label(console))
+        self._into_tree(tree, console)
+
         with console.capture() as capture:
             console.print(tree)
         return capture.get()
 
-    def into_tree(self, tree: Tree):
-        for subtrace in self._subtraces:
-            t = tree.add(subtrace.get_label())
-            subtrace.into_tree(t)
+    __repr__ = __str__
 
-    def get_label(self) -> str:
+    def _into_tree(self, tree: Tree, console: Console):
+        for subtrace in self._subtraces:
+            t = tree.add(subtrace.get_label(console))
+            subtrace._into_tree(t, console)
+
+    def get_label(self, console: Console) -> str:
+        ret = ""
         if self.contract_name is not None:
-            ret = f"{self.contract_name}.{self.function_name}"
+            ret += f"[bright_magenta]{self.contract_name}[/bright_magenta]."
+
+        if self.function_is_special:
+            ret += f"<[bright_magenta]{self.function_name}[/bright_magenta]>"
         else:
-            ret = self.function_name
+            ret += f"[bright_magenta]{self.function_name}[/bright_magenta]"
 
         if self.kind != CallTraceKind.INTERNAL:
-            ret += f"({', '.join([reprlib.repr(arg) for arg in self.arguments])})"
+            args = []
+            for arg in self.arguments:
+                with console.capture() as capture:
+                    console.print(reprlib.repr(arg))
+                args.append(capture.get().strip())
+            ret += f"({', '.join(args)})"
 
         ret += f" {'[green]✓[/green]' if self.status else '[red]✗[/red]'}"
 
         if self.kind != CallTraceKind.CALL:
-            ret += (
-                f" \[{self.kind}]"  # pyright: reportInvalidStringEscapeSequence=false
-            )
+            ret += f" [yellow]\[{self.kind}][/yellow]"  # pyright: reportInvalidStringEscapeSequence=false
 
         return ret
 
@@ -104,6 +116,10 @@ class CallTrace:
     @property
     def function_name(self) -> str:
         return self._function_name
+
+    @property
+    def function_is_special(self) -> bool:
+        return self._function_is_special
 
     @property
     def arguments(self) -> Tuple:
@@ -152,11 +168,12 @@ class CallTrace:
             assert "to" in tx_params
             root_trace = CallTrace(
                 f"Unknown({tx_params['to']})",
-                "<???>",
+                "???",
                 [b"" if "data" not in tx_params else tx_params["data"]],
                 value,
                 CallTraceKind.CALL,
                 1,
+                True,
             )
         else:
             contract_name = origin_fqn.split(":")[-1]
@@ -172,7 +189,7 @@ class CallTrace:
                 and "receive" in contract_abi
             ):
                 root_trace = CallTrace(
-                    contract_name, "<receive>", [], value, CallTraceKind.CALL, 1
+                    contract_name, "receive", [], value, CallTraceKind.CALL, 1, True
                 )
             elif (
                 "data" not in tx_params
@@ -185,20 +202,22 @@ class CallTrace:
                 ):
                     root_trace = CallTrace(
                         contract_name,
-                        "<fallback>",
+                        "fallback",
                         [b"" if "data" not in tx_params else tx_params["data"]],
                         value,
                         CallTraceKind.CALL,
                         1,
+                        True,
                     )
                 else:
                     root_trace = CallTrace(
                         contract_name,
-                        "<???>",
+                        "???",
                         [b"" if "data" not in tx_params else tx_params["data"]],
                         value,
                         CallTraceKind.CALL,
                         1,
+                        True,
                     )
             else:
                 fn_abi = contract_abi[tx_params["data"][:4]]
@@ -286,11 +305,12 @@ class CallTrace:
                     else:
                         call_trace = CallTrace(
                             f"Unknown({Address(addr)})",
-                            "<???>",
+                            "???",
                             [data],
                             value,
                             log["op"],
                             current_trace.depth + 1,
+                            True,
                         )
                 else:
                     contract_name = fqn.split(":")[-1]
@@ -314,28 +334,34 @@ class CallTrace:
                                 eth_abi.abi.decode(output_types, data[4:])
                             )  # pyright: reportGeneralTypeIssues=false
                             fn_name = fn_abi["name"]
+                            is_special = False
                         elif "fallback" in contract_abi and (
                             value == 0
                             or contract_abi["fallback"]["stateMutability"] == "payable"
                         ):
-                            fn_name = "<fallback>"
+                            fn_name = "fallback"
                             arguments = [data]
+                            is_special = True
                         else:
-                            fn_name = "<???>"
+                            fn_name = "???"
                             arguments = [data]
+                            is_special = True
                     else:
                         if args_size == 0 and "receive" in contract_abi:
-                            fn_name = "<receive>"
+                            fn_name = "receive"
                             arguments = []
+                            is_special = True
                         elif "fallback" in contract_abi and (
                             value == 0
                             or contract_abi["fallback"]["stateMutability"] == "payable"
                         ):
-                            fn_name = "<fallback>"
+                            fn_name = "fallback"
                             arguments = [data]
+                            is_special = True
                         else:
-                            fn_name = "<???>"
+                            fn_name = "???"
                             arguments = [data]
+                            is_special = True
 
                     call_trace = CallTrace(
                         contract_name,
@@ -344,6 +370,7 @@ class CallTrace:
                         value,
                         log["op"],
                         current_trace.depth + 1,
+                        is_special,
                     )
 
                 current_trace._subtraces.append(call_trace)
