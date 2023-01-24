@@ -72,6 +72,13 @@ def test_compile_uniswap_v3(setup_project, config):
     output = asyncio.run(compiler.compile(files, [SolcOutputSelectionEnum.ALL]))
     assert len(output)
 
+    (PYTEST_BUILD_PATH / "woke.toml").write_text(
+        """
+        [compiler.solc]
+        ignore_paths = ["node_modules", "audits"]
+        """
+    )
+
     cli_runner = CliRunner()
     with change_cwd(PYTEST_BUILD_PATH):
         cli_result = cli_runner.invoke(
@@ -162,6 +169,13 @@ def test_compile_axelar(setup_project, config):
 
     output = asyncio.run(compiler.compile(files, [SolcOutputSelectionEnum.ALL]))
     assert len(output)
+
+    (PYTEST_BUILD_PATH / "woke.toml").write_text(
+        """
+        [compiler.solc.optimizer]
+        enabled = true
+        """
+    )
 
     cli_runner = CliRunner()
     with change_cwd(PYTEST_BUILD_PATH):
