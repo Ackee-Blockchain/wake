@@ -4,11 +4,14 @@ from typing import Callable, Optional
 
 from pdbr import RichPdb
 
+from woke.config import WokeConfig
 from woke.utils.file_utils import is_relative_to
 
 # must be declared before functions that use it because of a bug in Python (https://bugs.python.org/issue34939)
 _exception_handler: Optional[Callable[[Exception], None]] = None
 _exception_handled = False
+
+_config: Optional[WokeConfig] = None
 
 
 def attach_debugger(e: Exception):
@@ -60,3 +63,16 @@ def set_exception_handler(handler: Callable[[Exception], None]):
 def reset_exception_handled():
     global _exception_handled
     _exception_handled = False
+
+
+def get_config() -> WokeConfig:
+    global _config
+    if _config is None:
+        _config = WokeConfig()
+        _config.load_configs()
+    return _config
+
+
+def set_config(config: WokeConfig):
+    global _config
+    _config = config
