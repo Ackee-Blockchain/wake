@@ -1,4 +1,5 @@
 import logging
+import os
 import platform
 import reprlib
 from copy import deepcopy
@@ -30,8 +31,9 @@ class UnsupportedPlatformError(Exception):
 
 
 class WokeConfig:
-    __woke_root_path: Path
     __project_root_path: Path
+    __global_config_path: Path
+    __global_data_path: Path
     __loaded_files: Set[Path]
     __config_raw: Dict[str, Any]
     __config: TopLevelConfig
@@ -40,20 +42,61 @@ class WokeConfig:
         self,
         *_,
         project_root_path: Optional[Union[str, Path]] = None,
-        woke_root_path: Optional[Union[str, Path]] = None,
     ):
-        if woke_root_path is None:
-            system = platform.system()
+        system = platform.system()
+
+        if system in {"Linux", "Darwin"}:
+            try:
+                self.__global_config_path = Path(os.environ["XDG_CONFIG_HOME"]) / "woke"
+            except KeyError:
+                self.__global_config_path = Path.home() / ".config" / "woke"
+            try:
+                self.__global_data_path = Path(os.environ["XDG_DATA_HOME"]) / "woke"
+            except KeyError:
+                self.__global_data_path = Path.home() / ".local" / "share" / "woke"
+        elif system == "Windows":
+            self.__global_config_path = Path(os.environ["LOCALAPPDATA"]) / "woke"
+            self.__global_data_path = Path(os.environ["LOCALAPPDATA"]) / "woke"
+        else:
+            raise UnsupportedPlatformError(f"Platform `{system}` is not supported.")
+
+        migrate = False
+        if (
+            not self.__global_config_path.exists()
+            and not self.__global_data_path.exists()
+        ):
+            migrate = True
+
+        self.__global_config_path.mkdir(parents=True, exist_ok=True)
+        self.__global_data_path.mkdir(parents=True, exist_ok=True)
+
+        if migrate:
             if system == "Linux":
-                self.__woke_root_path = Path.home() / ".config" / "Woke"
+                old_path = Path.home() / ".config" / "Woke"
             elif system == "Darwin":
-                self.__woke_root_path = Path.home() / ".config" / "Woke"
+                old_path = Path.home() / ".config" / "Woke"
             elif system == "Windows":
-                self.__woke_root_path = Path.home() / "Woke"
+                old_path = Path.home() / "Woke"
             else:
                 raise UnsupportedPlatformError(f"Platform `{system}` is not supported.")
-        else:
-            self.__woke_root_path = Path(woke_root_path)
+
+            config_path = old_path / "config.toml"
+            compilers_path = old_path / "compilers"
+            solc_versions_path = old_path / ".woke_solc_version"
+
+            if config_path.exists():
+                config_path.rename(self.__global_config_path / "config.toml")
+            if compilers_path.exists():
+                compilers_path.rename(self.__global_data_path / "compilers")
+            if solc_versions_path.exists():
+                solc_versions_path.rename(
+                    self.__global_data_path / ".woke_solc_version"
+                )
+
+            try:
+                old_path.rmdir()
+            except OSError:
+                pass
 
         if project_root_path is None:
             self.__project_root_path = Path.cwd().resolve()
@@ -65,10 +108,6 @@ class WokeConfig:
                 f"Project root path '{self.__project_root_path}' is not a directory."
             )
 
-        # make sure that Woke root path exists
-        self.__woke_root_path.mkdir(parents=True, exist_ok=True)
-        self.__woke_root_path = self.__woke_root_path.resolve(strict=True)
-
         self.__loaded_files = set()
         with change_cwd(self.__project_root_path):
             self.__config = TopLevelConfig()
@@ -79,7 +118,7 @@ class WokeConfig:
 
     def __repr__(self) -> str:
         config_dict = reprlib.repr(self.__config_raw)
-        return f"{self.__class__.__name__}.fromdict({config_dict}, project_root_path={repr(self.__project_root_path)}, woke_root_path={repr(self.__woke_root_path)})"
+        return f"{self.__class__.__name__}.fromdict({config_dict}, project_root_path={repr(self.__project_root_path)})"
 
     def __merge_dicts(self, old: Dict[str, Any], new: Dict[str, Any]) -> None:
         for k, v in new.items():
@@ -161,14 +200,11 @@ class WokeConfig:
         config_dict: Dict[str, Any],
         *_,
         project_root_path: Optional[Union[str, Path]] = None,
-        woke_root_path: Optional[Union[str, Path]] = None,
     ) -> "WokeConfig":
         """
         Build `WokeConfig` class from a dictionary and optional Woke root and project root paths.
         """
-        instance = cls(
-            project_root_path=project_root_path, woke_root_path=woke_root_path
-        )
+        instance = cls(project_root_path=project_root_path)
         with change_cwd(instance.project_root_path):
             parsed_config = TopLevelConfig.parse_obj(config_dict)
         instance.__config_raw = parsed_config.dict(by_alias=True, exclude_unset=True)
@@ -231,7 +267,7 @@ class WokeConfig:
             self.__config = TopLevelConfig()
         self.__config_raw = self.__config.dict(by_alias=True)
 
-        self.load(self.woke_root_path / "config.toml")
+        self.load(self.global_config_path / "config.toml")
         self.load(self.project_root_path / "woke.toml")
 
     def load(self, path: Path) -> None:
@@ -257,11 +293,18 @@ class WokeConfig:
         return frozenset(self.__loaded_files)
 
     @property
-    def woke_root_path(self) -> Path:
+    def global_config_path(self) -> Path:
         """
-        Return the system path to the Woke root directory.
+        Return the system path to the global config file.
         """
-        return self.__woke_root_path
+        return self.__global_config_path
+
+    @property
+    def global_data_path(self) -> Path:
+        """
+        Return the system path to the global data directory.
+        """
+        return self.__global_data_path
 
     @property
     def project_root_path(self) -> Path:

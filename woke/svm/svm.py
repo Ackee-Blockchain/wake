@@ -67,7 +67,7 @@ class SolcVersionManager(CompilerVersionManagerAbc):
             raise UnsupportedPlatformError(f"Platform `{system}` is not supported.")
 
         self.__solc_list_url = f"{self.BINARIES_URL}/{self.__platform}/list.json"
-        self.__compilers_path = woke_config.woke_root_path / "compilers"
+        self.__compilers_path = woke_config.global_data_path / "compilers"
         self.__solc_list_path = self.__compilers_path / "solc.json"
         self.__solc_builds = None
 
@@ -237,7 +237,7 @@ class SolcVersionManager(CompilerVersionManagerAbc):
     def __fetch_list_file(self) -> None:
         """
         Download ``list.json`` file from `binaries.soliditylang.org <binaries.soliditylang.org>`_ for the current
-        platform and save it as ``{woke_root_path}/compilers/solc.json``. In case of network issues, try to
+        platform and save it as ``{global_data_path}/compilers/solc.json``. In case of network issues, try to
         use the locally downloaded solc builds file as a fallback.
         """
         if self.__solc_builds is not None:

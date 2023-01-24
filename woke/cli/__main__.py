@@ -30,19 +30,11 @@ if platform.system() != "Windows":
 
 
 @click.group()
-@click.option(
-    "--woke-root-path",
-    required=False,
-    type=click.Path(exists=True),
-    help="Override Woke root path.",
-)
 @click.option("--debug/--no-debug", default=False)
 @click.option("--profile", is_flag=True, default=False)
 @click.version_option(message="%(version)s", package_name="woke")
 @click.pass_context
-def main(
-    ctx: Context, woke_root_path: Optional[str], debug: bool, profile: bool
-) -> None:
+def main(ctx: Context, debug: bool, profile: bool) -> None:
     if profile:
         import atexit
         import cProfile
@@ -63,16 +55,8 @@ def main(
         level=(logging.WARNING if not debug else logging.DEBUG),
     )
 
-    if woke_root_path is not None:
-        root_path = Path(woke_root_path)
-        if not root_path.is_dir():
-            raise ValueError("Woke root path is not a directory.")
-    else:
-        root_path = None
-
     ctx.ensure_object(dict)
     ctx.obj["debug"] = debug
-    ctx.obj["woke_root_path"] = root_path
 
     if platform.system() == "Windows":
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
@@ -110,7 +94,7 @@ def woke_solc() -> None:
     config.load_configs()
     svm = SolcVersionManager(config)
 
-    version_file_path = config.woke_root_path / ".woke_solc_version"
+    version_file_path = config.global_data_path / ".woke_solc_version"
     if not version_file_path.is_file():
         console.print(
             "Target solc version is not configured. Run 'woke svm use' or 'woke svm switch' command."

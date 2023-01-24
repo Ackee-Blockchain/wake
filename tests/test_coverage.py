@@ -1,4 +1,5 @@
 import asyncio
+import os
 import random
 import shutil
 from pathlib import Path, PurePath
@@ -19,12 +20,13 @@ SOURCES_PATH = Path(__file__).parent.resolve() / "coverage_sources"
 
 @pytest.fixture
 def config(tmp_path) -> WokeConfig:
+    os.environ["XDG_CONFIG_HOME"] = str(tmp_path)
+    os.environ["XDG_DATA_HOME"] = str(tmp_path)
     config_dict = {
         "compiler": {"solc": {"include_paths": ["./node_modules"]}},
     }
     return WokeConfig.fromdict(
         config_dict,
-        woke_root_path=tmp_path,
         project_root_path=tmp_path,
     )
 

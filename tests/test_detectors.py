@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 import shutil
 from pathlib import Path
 from typing import Optional, Set
@@ -109,13 +110,14 @@ def check_detected_in_contracts(config, source_path):
 class TestNoReturnDetector:
     @pytest.fixture
     def config(self, tmp_path) -> WokeConfig:
+        os.environ["XDG_CONFIG_HOME"] = str(tmp_path)
+        os.environ["XDG_DATA_HOME"] = str(tmp_path)
         config_dict = {
             "compiler": {"solc": {"include_paths": ["./node_modules"]}},
             "detectors": {"only": {"no-return"}},
         }
         return WokeConfig.fromdict(
             config_dict,
-            woke_root_path=tmp_path,
             project_root_path=tmp_path,
         )
 
@@ -130,13 +132,14 @@ class TestNoReturnDetector:
 class TestBugEmptyByteArrayCopy:
     @pytest.fixture
     def config(self, tmp_path) -> WokeConfig:
+        os.environ["XDG_CONFIG_HOME"] = str(tmp_path)
+        os.environ["XDG_DATA_HOME"] = str(tmp_path)
         config_dict = {
             "compiler": {"solc": {"include_paths": ["./node_modules"]}},
             "detectors": {"only": {"bug-empty-byte-array-copy"}},
         }
         return WokeConfig.fromdict(
             config_dict,
-            woke_root_path=tmp_path,
             project_root_path=tmp_path,
         )
 
@@ -151,13 +154,14 @@ class TestBugEmptyByteArrayCopy:
 class TestUnsafeTxOrigin:
     @pytest.fixture
     def config(self, tmp_path) -> WokeConfig:
+        os.environ["XDG_CONFIG_HOME"] = str(tmp_path)
+        os.environ["XDG_DATA_HOME"] = str(tmp_path)
         config_dict = {
             "compiler": {"solc": {"include_paths": ["./node_modules"]}},
             "detectors": {"only": {"unsafe-tx-origin"}},
         }
         return WokeConfig.fromdict(
             config_dict,
-            woke_root_path=tmp_path,
             project_root_path=tmp_path,
         )
 
@@ -172,13 +176,14 @@ class TestUnsafeTxOrigin:
 class TestNotUsed:
     @pytest.fixture
     def config(self, tmp_path) -> WokeConfig:
+        os.environ["XDG_CONFIG_HOME"] = str(tmp_path)
+        os.environ["XDG_DATA_HOME"] = str(tmp_path)
         config_dict = {
             "compiler": {"solc": {"include_paths": ["./node_modules"]}},
             "detectors": {"only": {"not-used"}},
         }
         return WokeConfig.fromdict(
             config_dict,
-            woke_root_path=tmp_path,
             project_root_path=tmp_path,
         )
 
@@ -193,13 +198,14 @@ class TestNotUsed:
 class TestProxyContractSelectorClashes:
     @pytest.fixture
     def config(self, tmp_path) -> WokeConfig:
+        os.environ["XDG_CONFIG_HOME"] = str(tmp_path)
+        os.environ["XDG_DATA_HOME"] = str(tmp_path)
         config_dict = {
             "compiler": {"solc": {"include_paths": ["./node_modules"]}},
             "detectors": {"only": {"proxy-contract-selector-clashes"}},
         }
         return WokeConfig.fromdict(
             config_dict,
-            woke_root_path=tmp_path,
             project_root_path=tmp_path,
         )
 

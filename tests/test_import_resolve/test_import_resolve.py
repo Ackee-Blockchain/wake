@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import pytest
@@ -12,7 +13,8 @@ current_path = Path(__file__).parent.resolve()
 @pytest.mark.platform_dependent
 def test_simple():
     # no config files loaded => no remappings
-    config = WokeConfig(project_root_path=current_path, woke_root_path=current_path)
+    os.environ["XDG_CONFIG_HOME"] = str(current_path)
+    config = WokeConfig(project_root_path=current_path)
     resolver = SourceUnitNameResolver(config)
 
     assert (
@@ -58,6 +60,7 @@ def test_simple():
 
 @pytest.mark.platform_dependent
 def test_cmdline_args():
+    os.environ["XDG_CONFIG_HOME"] = str(current_path)
     config = WokeConfig.fromdict(
         {
             "compiler": {
@@ -72,7 +75,6 @@ def test_cmdline_args():
             }
         },
         project_root_path=current_path / "project1",
-        woke_root_path=current_path,
     )
     resolver = SourceUnitNameResolver(config)
 
@@ -89,6 +91,7 @@ def test_cmdline_args():
 
 @pytest.mark.platform_dependent
 def test_remappings():
+    os.environ["XDG_CONFIG_HOME"] = str(current_path)
     config = WokeConfig.fromdict(
         {
             "compiler": {
@@ -102,7 +105,6 @@ def test_remappings():
                 }
             }
         },
-        woke_root_path=current_path,
     )
     resolver = SourceUnitNameResolver(config)
 

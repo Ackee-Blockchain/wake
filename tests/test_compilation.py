@@ -20,10 +20,11 @@ PYTEST_BUILD_PATH = Path.home() / ".tmpwoke_rkDv61DDf7"
 
 @pytest.fixture()
 def config():
+    os.environ["XDG_CONFIG_HOME"] = str(PYTEST_BUILD_PATH)
+    os.environ["XDG_DATA_HOME"] = str(PYTEST_BUILD_PATH)
     config_dict = {"compiler": {"solc": {"include_paths": ["./node_modules"]}}}
     return WokeConfig.fromdict(
         config_dict,
-        woke_root_path=PYTEST_BUILD_PATH,
         project_root_path=PYTEST_BUILD_PATH,
     )
 
@@ -37,10 +38,6 @@ def setup_project(request):
         repo = Repo.clone_from(
             clone_url, PYTEST_BUILD_PATH, multi_options=["--depth=1"]
         )
-        (PYTEST_BUILD_PATH / "woke.toml").write_text(
-            '[compiler.solc]\ninclude_paths = ["./node_modules"]'
-        )
-        (PYTEST_BUILD_PATH / "woke_root").mkdir()
         subprocess.run(
             ["yarn", "install"],
             cwd=PYTEST_BUILD_PATH,
@@ -78,7 +75,12 @@ def test_compile_uniswap_v3(setup_project, config):
     cli_runner = CliRunner()
     with change_cwd(PYTEST_BUILD_PATH):
         cli_result = cli_runner.invoke(
-            main, [f"--woke-root-path={PYTEST_BUILD_PATH / 'woke_root'}", "compile"]
+            main,
+            ["compile"],
+            env={
+                "XDG_CONFIG_HOME": str(PYTEST_BUILD_PATH),
+                "XDG_DATA_HOME": str(PYTEST_BUILD_PATH),
+            },
         )
     assert cli_result.exit_code == 0
 
@@ -100,7 +102,12 @@ def test_compile_the_graph(setup_project, config):
     cli_runner = CliRunner()
     with change_cwd(PYTEST_BUILD_PATH):
         cli_result = cli_runner.invoke(
-            main, [f"--woke-root-path={PYTEST_BUILD_PATH / 'woke_root'}", "compile"]
+            main,
+            ["compile"],
+            env={
+                "XDG_CONFIG_HOME": str(PYTEST_BUILD_PATH),
+                "XDG_DATA_HOME": str(PYTEST_BUILD_PATH),
+            },
         )
     assert cli_result.exit_code == 0
 
@@ -131,7 +138,12 @@ def test_compile_trader_joe(setup_project, config):
     cli_runner = CliRunner()
     with change_cwd(PYTEST_BUILD_PATH):
         cli_result = cli_runner.invoke(
-            main, [f"--woke-root-path={PYTEST_BUILD_PATH / 'woke_root'}", "compile"]
+            main,
+            ["compile"],
+            env={
+                "XDG_CONFIG_HOME": str(PYTEST_BUILD_PATH),
+                "XDG_DATA_HOME": str(PYTEST_BUILD_PATH),
+            },
         )
     assert cli_result.exit_code == 0
 
@@ -155,7 +167,10 @@ def test_compile_axelar(setup_project, config):
     with change_cwd(PYTEST_BUILD_PATH):
         cli_result = cli_runner.invoke(
             main,
-            [f"--woke-root-path={PYTEST_BUILD_PATH / 'woke_root'}", "compile"]
-            + [str(file.resolve()) for file in files],
+            ["compile"],
+            env={
+                "XDG_CONFIG_HOME": str(PYTEST_BUILD_PATH),
+                "XDG_DATA_HOME": str(PYTEST_BUILD_PATH),
+            },
         )
     assert cli_result.exit_code == 0

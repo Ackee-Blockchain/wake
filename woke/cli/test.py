@@ -15,7 +15,7 @@ def run_test(context: click.Context, test_path: Tuple[str, ...], debug: bool) ->
     from woke.testing.globals import set_config
     from woke.testing.pytest_plugin import PytestWokePlugin
 
-    config = WokeConfig(woke_root_path=context.obj["woke_root_path"])
+    config = WokeConfig()
     config.load_configs()  # load ~/.woke/config.toml and ./woke.toml
 
     set_config(config)

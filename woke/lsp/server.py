@@ -646,7 +646,6 @@ class LspServer:
                 WokeConfig.fromdict(
                     raw_config,
                     project_root_path=workspace_path,
-                    woke_root_path=self.__cli_config.woke_root_path,
                 )
                 run = False
             except ValidationError as e:
@@ -699,7 +698,6 @@ class LspServer:
         return WokeConfig.fromdict(
             raw_config,
             project_root_path=workspace_path,
-            woke_root_path=self.__cli_config.woke_root_path,
         )
 
     async def _handle_config_change(self, raw_config: dict) -> None:

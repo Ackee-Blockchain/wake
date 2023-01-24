@@ -16,7 +16,7 @@ from .console import console
 @click.pass_context
 def run_svm(ctx: Context):
     """Run Woke solc version manager."""
-    config = WokeConfig(woke_root_path=ctx.obj["woke_root_path"])
+    config = WokeConfig()
     config.load_configs()
     ctx.obj["config"] = config
 
@@ -75,7 +75,7 @@ def svm_switch(ctx: Context, version: str) -> None:
     if not svm.installed(parsed_version):
         raise ValueError(f"solc version {parsed_version} is not installed.")
 
-    (config.woke_root_path / ".woke_solc_version").write_text(str(parsed_version))
+    (config.global_data_path / ".woke_solc_version").write_text(str(parsed_version))
     console.print(f"Using woke-solc version {version}.")
 
 
@@ -100,7 +100,7 @@ def svm_use(ctx: Context, version_range: Tuple[str], force: bool) -> None:
     if not svm.installed(version):
         asyncio.run(run_solc_install(svm, SolidityVersionExpr(str(version)), force))
 
-    (config.woke_root_path / ".woke_solc_version").write_text(str(version))
+    (config.global_data_path / ".woke_solc_version").write_text(str(version))
     console.print(f"Using woke-solc version {version}.")
 
 
