@@ -157,7 +157,7 @@ def run_compile(
     watch: bool,
 ) -> None:
     """Compile the project."""
-    config = WokeConfig(woke_root_path=ctx.obj["woke_root_path"])
+    config = WokeConfig()
     config.load_configs()  # load ~/.woke/config.toml and ./woke.toml
 
     asyncio.run(compile(config, paths, no_artifacts, no_warnings, force, watch))

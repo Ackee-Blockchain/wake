@@ -65,7 +65,7 @@ def run_fuzz(
 
     from woke.testing.fuzzer import fuzz
 
-    config = WokeConfig(woke_root_path=ctx.obj["woke_root_path"])
+    config = WokeConfig()
     config.load_configs()  # load ~/.woke/config.toml and ./woke.toml
 
     if cov_proc_count > process_count:

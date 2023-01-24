@@ -34,7 +34,7 @@ def run_lsp(context: click.Context, port: int):
     """
     Start the LSP server.
     """
-    config = WokeConfig(woke_root_path=context.obj["woke_root_path"])
+    config = WokeConfig()
     config.load_configs()  # load ~/.woke/config.toml and ./woke.toml
 
     asyncio.run(run_server(config, port))

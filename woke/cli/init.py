@@ -14,7 +14,7 @@ from woke.config import WokeConfig
 @click.pass_context
 def run_init(ctx: Context):
     """Create default project skeleton."""
-    config = WokeConfig(woke_root_path=ctx.obj["woke_root_path"])
+    config = WokeConfig()
     config.load_configs()
     ctx.obj["config"] = config
 

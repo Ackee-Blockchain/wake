@@ -1,4 +1,4 @@
-subconfigs = ["../empty.toml"]
+subconfigs = ["../../empty.toml"]
 
 [compiler.solc]
 remappings = [":https://url.com=", ":123=xyz"]

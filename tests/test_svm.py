@@ -1,4 +1,5 @@
 import asyncio
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -27,12 +28,16 @@ def run_cleanup(request):
 
 @pytest.fixture()
 def config():
-    return WokeConfig(woke_root_path=PYTEST_WOKE_PATH)
+    os.environ["XDG_CONFIG_HOME"] = str(PYTEST_WOKE_PATH)
+    os.environ["XDG_DATA_HOME"] = str(PYTEST_WOKE_PATH)
+    return WokeConfig()
 
 
 @pytest.fixture()
 def config2():
-    return WokeConfig(woke_root_path=PYTEST_WOKE_PATH2)
+    os.environ["XDG_CONFIG_HOME"] = str(PYTEST_WOKE_PATH2)
+    os.environ["XDG_DATA_HOME"] = str(PYTEST_WOKE_PATH2)
+    return WokeConfig()
 
 
 @pytest.mark.slow
