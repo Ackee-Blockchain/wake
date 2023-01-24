@@ -45,7 +45,7 @@ from . import hardhat_console
 from .blocks import ChainBlocks
 from .globals import get_exception_handler
 from .internal import UnknownEvent, UnknownTransactionRevertedError
-from .json_rpc.communicator import JsonRpcCommunicator, JsonRpcError, TxParams
+from .json_rpc.communicator import JsonRpcError, TxParams
 from .utils import read_from_memory
 
 if TYPE_CHECKING:
@@ -516,26 +516,18 @@ class Chain:
         self._connected = False
 
     @contextmanager
-    def connect(self, uri: str):
+    def connect(self, uri: Optional[str] = None):
         if self._connected:
             raise AlreadyConnectedError("Already connected to a chain")
 
-        communicator = JsonRpcCommunicator(uri)
+        if uri is None:
+            self._chain_interface = ChainInterfaceAbc.launch()
+        else:
+            self._chain_interface = ChainInterfaceAbc.connect(uri)
+
         try:
-            communicator.__enter__()
             self._connected = True
 
-            client_version = communicator.web3_client_version().lower()
-            if "anvil" in client_version:
-                self._chain_interface = AnvilChainInterface(communicator)
-            elif "hardhat" in client_version:
-                self._chain_interface = HardhatChainInterface(communicator)
-            elif "ethereumjs" in client_version:
-                self._chain_interface = GanacheChainInterface(communicator)
-            else:
-                raise NotImplementedError(
-                    f"Client version {client_version} not supported"
-                )
             self._accounts = [
                 Account(acc, self) for acc in self._chain_interface.accounts()
             ]
@@ -571,8 +563,7 @@ class Chain:
                     exception_handler(e)
                 raise
         finally:
-            if communicator.connected:
-                communicator.__exit__(None, None, None)
+            self._chain_interface.close()
             self._connected = False
 
     @contextmanager

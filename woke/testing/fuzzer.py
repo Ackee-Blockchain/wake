@@ -37,29 +37,6 @@ from woke.testing.globals import attach_debugger, set_exception_handler
 from woke.utils.tee import StderrTee, StdoutTee
 
 
-def _setup(port: int, network_id: str) -> subprocess.Popen:
-    if network_id == "anvil":
-        args = [
-            "anvil",
-            "--port",
-            str(port),
-            "--prune-history",
-            "--gas-price",
-            "0",
-            "--base-fee",
-            "0",
-            "--steps-tracing",
-        ]
-    elif network_id == "ganache":
-        args = ["ganache-cli", "--port", str(port), "-g", "0", "-k", "istanbul"]
-    elif network_id == "hardhat":
-        args = ["npx", "hardhat", "node", "--port", str(port)]
-    else:
-        raise ValueError(f"Unknown network ID '{network_id}'")
-
-    return subprocess.Popen(args, stdout=subprocess.DEVNULL)
-
-
 def _run_core(
     fuzz_test: Callable,
     index: int,
@@ -71,31 +48,7 @@ def _run_core(
 ):
     print(f"Using seed '{random_seed.hex()}' for process #{index}")
 
-    try:
-        default_chain.reset()
-    except NotImplementedError:
-        logging.warning("Development chain does not support resetting")
-
-    args = []
-    for arg in inspect.getfullargspec(fuzz_test).args:
-        if arg == "coverage":
-            if coverage is not None:
-                args.append(
-                    (
-                        CoverageProvider(
-                            coverage, default_chain.chain_interface.get_block_number()
-                        ),
-                        cov_child_conn,
-                    )
-                )
-            else:
-                args.append(None)
-        else:
-            raise ValueError(
-                f"Unable to set value for '{arg}' argument in '{fuzz_test.__name__}' function."
-            )
-
-    fuzz_test(*args)
+    fuzz_test()
 
     err_child_conn.send(None)
     finished_event.set()
@@ -111,7 +64,6 @@ def _run(
     finished_event: multiprocessing.synchronize.Event,
     err_child_conn: multiprocessing.connection.Connection,
     cov_child_conn: multiprocessing.connection.Connection,
-    network_id: str,
     coverage: Optional[Coverage],
 ):
     def exception_handler(e: Exception) -> None:
@@ -135,23 +87,7 @@ def _run(
     pickling_support.install()
     random.seed(random_seed)
 
-    chain_process = _setup(port, network_id)
-
     set_exception_handler(exception_handler)
-
-    start = time.perf_counter()
-    while True:
-        gen = None
-        try:
-            gen = default_chain.connect(f"http://localhost:{port}")
-            gen.__enter__()
-            break
-        except (ConnectionRefusedError, URLError):
-            if gen is not None:
-                gen.__exit__(None, None, None)
-            sleep(0.1)
-            if time.perf_counter() - start > 10:
-                raise
 
     try:
         if tee:
@@ -182,10 +118,6 @@ def _run(
         for ctx_manager in ctx_managers:
             ctx_manager.__exit__(None, None, None)
 
-        gen.__exit__(None, None, None)
-        with log_file.open("a") as f, redirect_stdout(f), redirect_stderr(f):
-            chain_process.kill()
-
 
 def _compute_coverage_per_function(
     ide_cov: Dict[str, List[Dict[str, Any]]]
@@ -214,7 +146,6 @@ def fuzz(
     seeds: Iterable[bytes],
     logs_dir: Path,
     passive: bool,
-    network_id: str,
     cov_proc_num: int,
     verbose_coverage: bool,
 ):
@@ -252,7 +183,6 @@ def fuzz(
                 finished_event,
                 err_child_con,
                 cov_queue,
-                network_id,
                 proc_cov,
             ),
         )

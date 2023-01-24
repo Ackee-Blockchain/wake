@@ -169,12 +169,32 @@ class GeneratorConfig(WokeConfigModel):
     )
 
 
+class AnvilConfig(WokeConfigModel):
+    cmd_args: str = "--prune-history --base-fee 0 --steps-tracing --silent"
+
+
+class GanacheConfig(WokeConfigModel):
+    cmd_args: str = "-g 0 -k istanbul -q"
+
+
+class HardhatConfig(WokeConfigModel):
+    cmd_args: str = ""
+
+
+class TestingConfig(WokeConfigModel):
+    cmd: str = "anvil"
+    anvil: AnvilConfig = Field(default_factory=AnvilConfig)
+    ganache: GanacheConfig = Field(default_factory=GanacheConfig)
+    hardhat: HardhatConfig = Field(default_factory=HardhatConfig)
+
+
 class TopLevelConfig(WokeConfigModel):
     subconfigs: List[Path] = []
     compiler: CompilerConfig = Field(default_factory=CompilerConfig)
     detectors: DetectorsConfig = Field(default_factory=DetectorsConfig)
     generator: GeneratorConfig = Field(default_factory=GeneratorConfig)
     lsp: LspConfig = Field(default_factory=LspConfig)
+    testing: TestingConfig = Field(default_factory=TestingConfig)
 
     @validator("subconfigs", pre=True, each_item=True)
     def set_subconfig(cls, v):
