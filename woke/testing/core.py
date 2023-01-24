@@ -697,7 +697,8 @@ class Chain:
     def _convert_to_web3_type(self, value: Any) -> Any:
         if dataclasses.is_dataclass(value):
             return tuple(
-                self._convert_to_web3_type(v) for v in dataclasses.astuple(value)
+                self._convert_to_web3_type(getattr(value, f.name))
+                for f in dataclasses.fields(value)
             )
         elif isinstance(value, list):
             return [self._convert_to_web3_type(v) for v in value]
