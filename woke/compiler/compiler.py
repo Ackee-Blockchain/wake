@@ -609,6 +609,7 @@ class SolidityCompiler:
                 self._latest_build_info = build_info
             except (
                 AttributeError,
+                ModuleNotFoundError,
                 ValidationError,
                 JSONDecodeError,
                 FileNotFoundError,
