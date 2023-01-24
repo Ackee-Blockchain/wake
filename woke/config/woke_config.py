@@ -16,6 +16,7 @@ from .data_model import (
     DetectorsConfig,
     GeneratorConfig,
     LspConfig,
+    TestingConfig,
     TopLevelConfig,
 )
 
@@ -301,3 +302,10 @@ class WokeConfig:
         Return LSP-specific config options.
         """
         return self.__config.lsp
+
+    @property
+    def testing(self) -> TestingConfig:
+        """
+        Return testing framework-specific config options.
+        """
+        return self.__config.testing

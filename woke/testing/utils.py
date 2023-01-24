@@ -3,7 +3,7 @@ from __future__ import annotations
 import inspect
 import math
 from functools import wraps
-from typing import TYPE_CHECKING, Callable, Iterable, List, Tuple, TypeVar
+from typing import TYPE_CHECKING, Callable, Iterable, List, Optional, Tuple, TypeVar
 
 from Crypto.Hash import keccak
 
@@ -23,7 +23,7 @@ def snapshot_and_revert(devchain_interface: Chain):
     return decorator
 
 
-def connect(devchain_interface: Chain, uri: str):
+def connect(devchain_interface: Chain, uri: Optional[str] = None):
     def decorator(fn):
         @wraps(fn)
         def wrapper(*args, **kwargs):

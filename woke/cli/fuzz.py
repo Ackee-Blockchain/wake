@@ -51,12 +51,6 @@ def _get_module_name(path: Path, root: Path) -> str:
     default=False,
     help="Print one process output into console, run other in background.",
 )
-@click.option(
-    "--network",
-    type=click.Choice(["anvil", "ganache", "hardhat"], case_sensitive=False),
-    default="anvil",
-    help="Choose development chain implementation.",
-)
 @click.pass_context
 def run_fuzz(
     ctx: click.Context,
@@ -66,7 +60,6 @@ def run_fuzz(
     verbose_coverage: bool,
     seeds: Tuple[str],
     passive: bool,
-    network: str,
 ) -> None:
     """Run Woke fuzzer."""
 
@@ -135,7 +128,6 @@ def run_fuzz(
             random_seeds,
             logs_dir,
             passive,
-            network,
             cov_proc_count,
             verbose_coverage,
         )

@@ -1,14 +1,118 @@
+from __future__ import annotations
+
+import subprocess
+import time
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Union
+from urllib.error import URLError
 
+from ..utils.networking import get_free_port
+from .globals import get_config
 from .json_rpc.communicator import JsonRpcCommunicator, TxParams
 
 
 class ChainInterfaceAbc(ABC):
     _communicator: JsonRpcCommunicator
+    _process: Optional[subprocess.Popen]
 
-    def __init__(self, communicator: JsonRpcCommunicator) -> None:
+    def __init__(
+        self,
+        communicator: JsonRpcCommunicator,
+        process: Optional[subprocess.Popen] = None,
+    ) -> None:
         self._communicator = communicator
+        self._process = process
+
+    @classmethod
+    def launch(cls) -> ChainInterfaceAbc:
+        config = get_config()
+
+        if config.testing.cmd == "anvil":
+            args = ["anvil"] + config.testing.anvil.cmd_args.split()
+            constructor = AnvilChainInterface
+        elif config.testing.cmd == "ganache":
+            args = ["ganache"] + config.testing.ganache.cmd_args.split()
+            constructor = GanacheChainInterface
+        elif config.testing.cmd == "hardhat":
+            args = ["npx", "hardhat", "node"] + config.testing.hardhat.cmd_args.split()
+            constructor = HardhatChainInterface
+        else:
+            raise NotImplementedError(f"Network {config.testing.cmd} not supported")
+
+        hostname = "127.0.0.1"
+        port = None
+        for i, arg in enumerate(args):
+            if arg in {"--port", "-p", "--server.port"}:
+                try:
+                    port = args[i + 1]
+                except IndexError:
+                    port = "8545"
+            elif arg in {"--hostname", "-h", "--host", "--server.hostname"}:
+                try:
+                    hostname = args[i + 1]
+                except IndexError:
+                    hostname = "127.0.0.1"
+
+        if port is None:
+            port = str(get_free_port())
+            args += ["--port", port]
+
+        print(f"Launching {' '.join(args)}")
+        process = subprocess.Popen(
+            args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
+
+        try:
+            start = time.perf_counter()
+            while True:
+                try:
+                    comm = JsonRpcCommunicator(f"http://{hostname}:{port}")
+                    comm.__enter__()
+                    comm.web3_client_version()
+                    break
+                except (ConnectionRefusedError, URLError, ValueError):
+                    if time.perf_counter() - start > 5:
+                        raise
+                    time.sleep(0.1)
+
+            return constructor(comm, process)
+        except Exception:
+            if process.returncode is None:
+                process.terminate()
+                try:
+                    process.communicate(timeout=5)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+            raise
+
+    @classmethod
+    def connect(cls, uri: str) -> ChainInterfaceAbc:
+        communicator = JsonRpcCommunicator(uri)
+        communicator.__enter__()
+        try:
+            client_version = communicator.web3_client_version().lower()
+            if "anvil" in client_version:
+                return AnvilChainInterface(communicator)
+            elif "hardhat" in client_version:
+                return HardhatChainInterface(communicator)
+            elif "ethereumjs" in client_version:
+                return GanacheChainInterface(communicator)
+            else:
+                raise NotImplementedError(
+                    f"Client version {client_version} not supported"
+                )
+        except Exception:
+            communicator.__exit__(None, None, None)
+            raise
+
+    def close(self) -> None:
+        self._communicator.__exit__(None, None, None)
+        if self._process is not None:
+            self._process.terminate()
+            try:
+                self._process.communicate(timeout=5)
+            except subprocess.TimeoutExpired:
+                self._process.kill()
 
     def get_balance(self, address: str) -> int:
         return self._communicator.eth_get_balance(address)
