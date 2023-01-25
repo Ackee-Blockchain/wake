@@ -66,7 +66,7 @@ class ChainInterfaceAbc(ABC):
             start = time.perf_counter()
             while True:
                 try:
-                    comm = JsonRpcCommunicator(f"http://{hostname}:{port}")
+                    comm = JsonRpcCommunicator(f"ws://{hostname}:{port}")
                     comm.__enter__()
                     comm.web3_client_version()
                     break
