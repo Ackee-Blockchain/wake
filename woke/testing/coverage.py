@@ -1121,7 +1121,9 @@ class Coverage:
                     deployment_code += bytes.fromhex(struct_log["memory"][end_block])[
                         :end_offset
                     ]
-                new_fqn = get_fqn_from_deployment_code(deployment_code)
+                new_fqn, _ = get_fqn_from_deployment_code(
+                    deployment_code
+                )  # pyright: reportGeneralTypeIssues=false
                 contract_fqn_stack.append(new_fqn)
                 deployment = True
             elif (

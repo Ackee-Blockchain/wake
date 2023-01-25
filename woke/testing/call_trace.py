@@ -18,6 +18,7 @@ from woke.testing.core import (
     get_contract_internal_jumps_out,
     get_contracts_by_fqn,
     get_fqn_from_address,
+    get_fqn_from_deployment_code,
 )
 from woke.testing.json_rpc.communicator import TxParams
 from woke.testing.utils import read_from_memory
@@ -163,7 +164,6 @@ class CallTrace:
         else:
             value = tx_params["value"]
 
-        # TODO contract creation
         if origin_fqn is None or origin_fqn not in contracts_by_fqn:
             assert "to" in tx_params
             root_trace = CallTrace(
@@ -183,7 +183,33 @@ class CallTrace:
                 obj = getattr(obj, attr)
             contract_abi = obj._abi
 
-            if (
+            if "to" not in tx_params or tx_params["to"] is None:
+                if "data" not in tx_params or "constructor" not in contract_abi:
+                    args = []
+                else:
+                    _, constructor_offset = get_fqn_from_deployment_code(
+                        tx_params["data"]
+                    )
+                    fn_abi = contract_abi["constructor"]
+                    output_types = [
+                        eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
+                        for arg in fn_abi["inputs"]
+                    ]
+                    args = list(
+                        eth_abi.abi.decode(
+                            output_types, tx_params["data"][constructor_offset:]
+                        )
+                    )  # pyright: reportGeneralTypeIssues=false
+                root_trace = CallTrace(
+                    contract_name,
+                    "constructor",
+                    args,
+                    value,
+                    CallTraceKind.CREATE,
+                    1,
+                    True,
+                )
+            elif (
                 "data" not in tx_params
                 or len(tx_params["data"]) == 0
                 and "receive" in contract_abi
@@ -442,7 +468,52 @@ class CallTrace:
 
                 contracts.pop()
                 values.pop()
-            elif log["op"] in {"SELFDESTRUCT", "CREATE", "CREATE2"}:
+            elif log["op"] in {"CREATE", "CREATE2"}:
+                value = int(log["stack"][-1], 16)
+                offset = int(log["stack"][-2], 16)
+                length = int(log["stack"][-3], 16)
+
+                deployment_code = read_from_memory(offset, length, log["memory"])
+                fqn, constructor_offset = get_fqn_from_deployment_code(deployment_code)
+
+                contract_name = fqn.split(":")[-1]
+                module_name, attrs = contracts_by_fqn[fqn]
+                obj = getattr(importlib.import_module(module_name), attrs[0])
+                for attr in attrs[1:]:
+                    obj = getattr(obj, attr)
+                contract_abi = obj._abi
+
+                if "constructor" not in contract_abi:
+                    args = []
+                else:
+                    fn_abi = contract_abi["constructor"]
+                    output_types = [
+                        eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
+                        for arg in fn_abi["inputs"]
+                    ]
+                    args = list(
+                        eth_abi.abi.decode(
+                            output_types, deployment_code[constructor_offset:]
+                        )
+                    )  # pyright: reportGeneralTypeIssues=false
+
+                assert current_trace is not None
+                call_trace = CallTrace(
+                    contract_name,
+                    "constructor",
+                    args,
+                    value,
+                    log["op"],
+                    current_trace.depth + 1,
+                    True,
+                )
+
+                current_trace._subtraces.append(call_trace)
+                call_trace._parent = current_trace
+                current_trace = call_trace
+                contracts.append(fqn)
+                values.append(value)
+            elif log["op"] in {"SELFDESTRUCT"}:
                 raise NotImplementedError
 
         return root_trace
