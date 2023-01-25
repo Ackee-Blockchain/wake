@@ -443,7 +443,7 @@ def _check_connected(f):
     return wrapper
 
 
-def get_fqn_from_deployment_code(deployment_code: bytes) -> str:
+def get_fqn_from_deployment_code(deployment_code: bytes) -> Tuple[str, int]:
     for deployment_code_segments, fqn in deployment_code_index:
 
         length, h = deployment_code_segments[0]
@@ -455,6 +455,7 @@ def get_fqn_from_deployment_code(deployment_code: bytes) -> str:
 
         deployment_code = deployment_code[length:]
         found = True
+        constructor_offset = length
 
         for length, h in deployment_code_segments[1:]:
             if length + 20 > len(deployment_code):
@@ -468,9 +469,10 @@ def get_fqn_from_deployment_code(deployment_code: bytes) -> str:
                 found = False
                 break
             deployment_code = deployment_code[length:]
+            constructor_offset += length + 20
 
         if found:
-            return fqn
+            return fqn, constructor_offset
 
     raise ValueError("Could not find contract definition from deployment code")
 
@@ -1099,7 +1101,7 @@ class Chain:
                     raise e
             self._nonces[sender.address] += 1
 
-        deployed_contract_fqn = get_fqn_from_deployment_code(deployment_code)
+        deployed_contract_fqn, _ = get_fqn_from_deployment_code(deployment_code)
 
         from .transactions import LegacyTransaction
 
@@ -1168,7 +1170,7 @@ class Chain:
                 length = int(trace["stack"][-3], 16)
 
                 deployment_code = read_from_memory(offset, length, trace["memory"])
-                fqn = get_fqn_from_deployment_code(deployment_code)
+                fqn, _ = get_fqn_from_deployment_code(deployment_code)
                 addresses.append(fqn)
             elif trace["op"] in {"RETURN", "REVERT", "STOP"}:
                 addresses.pop()
@@ -1220,7 +1222,7 @@ class Chain:
                 length = int(trace["stack"][-3], 16)
 
                 deployment_code = read_from_memory(offset, length, trace["memory"])
-                fqn = get_fqn_from_deployment_code(deployment_code)
+                fqn, _ = get_fqn_from_deployment_code(deployment_code)
                 addresses.append(fqn)
             elif trace["op"] == "REVERT":
                 addr = addresses.pop()
