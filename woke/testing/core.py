@@ -415,15 +415,8 @@ class Account:
 
         tx.wait()
 
-        if self._chain.console_logs_callback is not None:
-            logs = tx.console_logs
-            if len(logs) > 0:
-                self._chain.console_logs_callback(tx, logs)
-
-        if self._chain.events_callback is not None:
-            events = tx.events
-            if len(events) > 0:
-                self._chain.events_callback(tx, events)
+        if self._chain.tx_callback is not None:
+            self._chain.tx_callback(tx)
 
         return tx.return_value
 
@@ -507,10 +500,7 @@ class Chain:
     _txs: Dict[str, TransactionAbc]
     _blocks: ChainBlocks
 
-    console_logs_callback: Optional[Callable[[LegacyTransaction, List[Any]], None]]
-    events_callback: Optional[
-        Callable[[LegacyTransaction, List[Tuple[bytes, Any]]], None]
-    ]
+    tx_callback: Optional[Callable[[TransactionAbc], None]]
 
     def __init__(self):
         self._connected = False
@@ -552,8 +542,7 @@ class Chain:
                 if len({source for fqn, source in sources.items()}) == 1
             }
 
-            self.console_logs_callback = None
-            self.events_callback = None
+            self.tx_callback = None
 
             yield
         except Exception as e:
@@ -1129,15 +1118,8 @@ class Chain:
 
         tx.wait()
 
-        if self.console_logs_callback is not None:
-            logs = tx.console_logs
-            if len(logs) > 0:
-                self.console_logs_callback(tx, logs)
-
-        if self.events_callback is not None:
-            events = tx.events
-            if len(events) > 0:
-                self.events_callback(tx, events)
+        if self.tx_callback is not None:
+            self.tx_callback(tx)
 
         return tx.return_value
 
@@ -1332,15 +1314,8 @@ class Chain:
 
         tx.wait()
 
-        if self.console_logs_callback is not None:
-            logs = tx.console_logs
-            if len(logs) > 0:
-                self.console_logs_callback(tx, logs)
-
-        if self.events_callback is not None:
-            events = tx.events
-            if len(events) > 0:
-                self.events_callback(tx, events)
+        if self.tx_callback is not None:
+            self.tx_callback(tx)
 
         return tx.return_value
 
