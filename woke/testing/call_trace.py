@@ -3,7 +3,7 @@ from __future__ import annotations
 import enum
 import importlib
 import reprlib
-from typing import Any, Dict, List, Optional, Tuple, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, cast
 
 import eth_abi
 import eth_utils
@@ -24,6 +24,9 @@ from woke.testing.json_rpc.communicator import TxParams
 from woke.testing.utils import read_from_memory
 
 from . import hardhat_console
+
+if TYPE_CHECKING:
+    from .transactions import TransactionAbc
 
 
 class CallTraceKind(str, enum.Enum):
@@ -145,11 +148,16 @@ class CallTrace:
     @classmethod
     def from_debug_trace(
         cls,
+        tx: TransactionAbc,
         trace: Dict[str, Any],
-        origin_fqn: Optional[str],
         tx_params: TxParams,
         chain: Chain,
     ):
+        if tx.to is None:
+            origin_fqn, _ = get_fqn_from_deployment_code(tx.data)
+        else:
+            origin_fqn = get_fqn_from_address(tx.to.address, tx.chain)
+
         contracts = [origin_fqn]
         values = [0 if "value" not in tx_params else tx_params["value"]]
         internal_jumps = []

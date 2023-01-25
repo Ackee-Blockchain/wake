@@ -396,9 +396,6 @@ class Account:
                     raise e
             self.chain._nonces[sender.address] += 1
 
-        assert "to" in tx_params
-        recipient_fqn = get_fqn_from_address(Address(tx_params["to"]), self.chain)
-
         from .transactions import LegacyTransaction
 
         tx = LegacyTransaction[bytearray](
@@ -406,7 +403,6 @@ class Account:
             tx_params,
             None,
             bytearray,
-            recipient_fqn,
             self.chain,
         )
 
@@ -882,22 +878,25 @@ class Chain:
 
     def _process_revert_data(
         self,
-        tx_hash: Optional[str],
+        tx: Optional[TransactionAbc],
         revert_data: bytes,
-        origin: Union[Address, str, None],
     ):
         selector = revert_data[0:4]
         if selector not in errors:
             raise UnknownTransactionRevertedError(revert_data) from None
 
         if selector not in self._single_source_errors:
-            if tx_hash is None:
+            if tx is None:
                 raise UnknownTransactionRevertedError(revert_data) from None
-            assert origin is not None
+
+            if tx.to is None:
+                origin, _ = get_fqn_from_deployment_code(tx.data)
+            else:
+                origin = get_fqn_from_address(tx.to.address, tx.chain)
 
             # ambiguous error, try to find the source contract
             debug_trace = self._chain_interface.debug_trace_transaction(
-                tx_hash, {"enableMemory": True}
+                tx.tx_hash, {"enableMemory": True}
             )
             try:
                 fqn = self._process_debug_trace_for_revert(debug_trace, origin)
@@ -921,9 +920,7 @@ class Chain:
         # raise native pytypes exception on transaction revert
         raise generated_error from None
 
-    def _process_events(
-        self, tx_hash: str, logs: List, origin: Union[Address, str]
-    ) -> list:
+    def _process_events(self, tx: TransactionAbc, logs: List) -> list:
         if len(logs) == 0:
             return []
 
@@ -948,8 +945,13 @@ class Chain:
 
         if non_unique:
             debug_trace = self._chain_interface.debug_trace_transaction(
-                tx_hash, {"enableMemory": True}
+                tx.tx_hash, {"enableMemory": True}
             )
+            if tx.to is None:
+                origin, _ = get_fqn_from_deployment_code(tx.data)
+            else:
+                origin = get_fqn_from_address(tx.to.address, tx.chain)
+
             event_traces = self._process_debug_trace_for_events(debug_trace, origin)
             assert len(event_traces) == len(logs)
         else:
@@ -1105,8 +1107,6 @@ class Chain:
                     raise e
             self._nonces[sender.address] += 1
 
-        deployed_contract_fqn, _ = get_fqn_from_deployment_code(deployment_code)
-
         from .transactions import LegacyTransaction
 
         tx = LegacyTransaction[return_type](
@@ -1114,7 +1114,6 @@ class Chain:
             tx_params,
             abi["constructor"] if "constructor" in abi else None,
             return_type,
-            deployed_contract_fqn,
             self,
         )
         self._txs[tx_hash] = tx
@@ -1267,7 +1266,7 @@ class Chain:
         if revert_data.startswith("0x"):
             revert_data = revert_data[2:]
 
-        self._process_revert_data(None, bytes.fromhex(revert_data), None)
+        self._process_revert_data(None, bytes.fromhex(revert_data))
 
     @_check_connected
     def transact(
@@ -1300,9 +1299,6 @@ class Chain:
                     raise e
             self._nonces[sender.address] += 1
 
-        assert "to" in tx_params
-        recipient_fqn = get_fqn_from_address(Address(tx_params["to"]), self)
-
         from .transactions import LegacyTransaction
 
         tx = LegacyTransaction[return_type](
@@ -1310,7 +1306,6 @@ class Chain:
             tx_params,
             abi[selector],
             return_type,
-            recipient_fqn,
             self,
         )
         self._txs[tx_hash] = tx

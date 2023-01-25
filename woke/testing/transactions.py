@@ -66,7 +66,6 @@ class TransactionAbc(ABC, Generic[T]):
     _chain: Chain
     _abi: Optional[Dict]
     _return_type: Type
-    _recipient_fqn: Optional[str]
     _tx_data: Optional[Dict[str, Any]]
     _tx_receipt: Optional[Dict[str, Any]]
     _trace_transaction: Optional[List[Dict[str, Any]]]
@@ -80,14 +79,12 @@ class TransactionAbc(ABC, Generic[T]):
         tx_params: TxParams,
         abi: Optional[Dict],
         return_type: Type,
-        recipient_fqn: Optional[str],
         chain: Optional[Chain] = None,
     ):
         self._tx_hash = tx_hash
         self._tx_params = tx_params
         self._abi = abi
         self._return_type = return_type
-        self._recipient_fqn = recipient_fqn
         if chain is None:
             chain = default_chain
         self._chain = chain
@@ -123,6 +120,10 @@ class TransactionAbc(ABC, Generic[T]):
     @_fetch_tx_data
     def block(self) -> Block:
         return self._chain.blocks[self.block_number]
+
+    @property
+    def data(self) -> bytes:
+        return self._tx_params["data"] if "data" in self._tx_params else b""
 
     @property
     @_fetch_tx_data
@@ -243,14 +244,11 @@ class TransactionAbc(ABC, Generic[T]):
 
         assert self._tx_receipt is not None
 
-        if self._recipient_fqn is None:
-            assert len(self._tx_receipt["logs"]) == 0
+        if len(self._tx_receipt["logs"]) == 0:
             self._events = []
             return self._events
 
-        self._events = self._chain._process_events(
-            self._tx_hash, self._tx_receipt["logs"], self._recipient_fqn
-        )
+        self._events = self._chain._process_events(self, self._tx_receipt["logs"])
         return self._events
 
     @property
@@ -304,10 +302,7 @@ class TransactionAbc(ABC, Generic[T]):
                 raise e from None
 
         try:
-            assert self._recipient_fqn is not None
-            self._chain._process_revert_data(
-                self._tx_hash, bytes.fromhex(revert_data), self._recipient_fqn
-            )
+            self._chain._process_revert_data(self, bytes.fromhex(revert_data))
         except TransactionRevertedError as e:
             self._error = e
             return e
@@ -395,8 +390,8 @@ class TransactionAbc(ABC, Generic[T]):
         assert self._debug_trace_transaction is not None
 
         return CallTrace.from_debug_trace(
+            self,
             self._debug_trace_transaction,
-            self._recipient_fqn,
             self._tx_params,
             self._chain,
         )  # pyright: reportGeneralTypeIssues=false
