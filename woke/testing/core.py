@@ -937,7 +937,7 @@ class Chain:
             selector = log["topics"][0]
             if selector.startswith("0x"):
                 selector = selector[2:]
-            selector = bytes.fromhex(selector)
+            selector = bytes.fromhex(selector.zfill(64))
 
             if selector not in events:
                 continue
@@ -957,7 +957,9 @@ class Chain:
 
         for log, (traced_selector, fqn) in zip(logs, event_traces):
             topics = [
-                bytes.fromhex(t[2:]) if t.startswith("0x") else bytes.fromhex(t)
+                bytes.fromhex(t[2:].zfill(64))
+                if t.startswith("0x")
+                else bytes.fromhex(t.zfill(64))
                 for t in log["topics"]
             ]
             data = (
@@ -1018,8 +1020,10 @@ class Chain:
                     else:
                         topic_type = input["type"]
                     topic_data = log["topics"][topic_index]
+                    if topic_data.startswith("0x"):
+                        topic_data = topic_data[2:]
                     decoded_indexed.append(
-                        Abi.decode([topic_type], bytes.fromhex(topic_data[2:]))[0]
+                        Abi.decode([topic_type], bytes.fromhex(topic_data.zfill(64)))[0]
                     )
                     topic_index += 1
                 else:
@@ -1178,7 +1182,7 @@ class Chain:
                 selector = trace["stack"][-3]
                 if selector.startswith("0x"):
                     selector = selector[2:]
-                selector = bytes.fromhex(selector)
+                selector = bytes.fromhex(selector.zfill(64))
 
                 if not isinstance(addresses[-1], str):
                     if addresses[-1] == "0x000000000000000000636F6e736F6c652e6c6f67":
