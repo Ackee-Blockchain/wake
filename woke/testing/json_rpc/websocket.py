@@ -13,7 +13,7 @@ class WebsocketProtocol(ProtocolAbc):
         self._uri = uri
 
     def __enter__(self):
-        self._ws = create_connection(self._uri, skip_utf8_validation=True)
+        self._ws = create_connection(self._uri, skip_utf8_validation=True, timeout=5)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._ws.close()

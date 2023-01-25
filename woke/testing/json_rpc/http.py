@@ -23,5 +23,5 @@ class HttpProtocol(ProtocolAbc):
             headers={"Content-Type": "application/json"},
         )
 
-        with urlopen(req) as response:
+        with urlopen(req, timeout=5) as response:
             return json.loads(response.read().decode("utf-8"))
