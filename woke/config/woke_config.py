@@ -45,20 +45,25 @@ class WokeConfig:
     ):
         system = platform.system()
 
-        if system in {"Linux", "Darwin"}:
-            try:
-                self.__global_config_path = Path(os.environ["XDG_CONFIG_HOME"]) / "woke"
-            except KeyError:
+        try:
+            self.__global_config_path = Path(os.environ["XDG_CONFIG_HOME"]) / "woke"
+        except KeyError:
+            if system in {"Linux", "Darwin"}:
                 self.__global_config_path = Path.home() / ".config" / "woke"
-            try:
-                self.__global_data_path = Path(os.environ["XDG_DATA_HOME"]) / "woke"
-            except KeyError:
+            elif system == "Windows":
+                self.__global_config_path = Path(os.environ["LOCALAPPDATA"]) / "woke"
+            else:
+                raise UnsupportedPlatformError(f"Platform `{system}` is not supported.")
+
+        try:
+            self.__global_data_path = Path(os.environ["XDG_DATA_HOME"]) / "woke"
+        except KeyError:
+            if system in {"Linux", "Darwin"}:
                 self.__global_data_path = Path.home() / ".local" / "share" / "woke"
-        elif system == "Windows":
-            self.__global_config_path = Path(os.environ["LOCALAPPDATA"]) / "woke"
-            self.__global_data_path = Path(os.environ["LOCALAPPDATA"]) / "woke"
-        else:
-            raise UnsupportedPlatformError(f"Platform `{system}` is not supported.")
+            elif system == "Windows":
+                self.__global_data_path = Path(os.environ["LOCALAPPDATA"]) / "woke"
+            else:
+                raise UnsupportedPlatformError(f"Platform `{system}` is not supported.")
 
         migrate = False
         if (
