@@ -222,6 +222,7 @@ class CompilationFileSystemEventHandler(FileSystemEventHandler):
                     is_relative_to(f, p)
                     for p in self._config.compiler.solc.ignore_paths
                 )
+                or not is_relative_to(f, self._config.project_root_path)
             }
             files.update(self._created_files)
             files.update(self._modified_files)
