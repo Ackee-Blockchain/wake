@@ -808,7 +808,7 @@ class SolidityCompiler:
         end = time.perf_counter()
         if console is not None:
             console.log(
-                f"[green]Compiled {len(files)} files using {len(compilation_units)} solc runs [bold green]{end - start:.2f} s[/bold green][/]"
+                f"[green]Compiled {len(files)} files using {len(compilation_units)} solc runs in [bold green]{end - start:.2f} s[/bold green][/]"
             )
 
         # remove deleted files from the previous build
