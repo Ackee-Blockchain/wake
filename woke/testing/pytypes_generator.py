@@ -34,6 +34,7 @@ from ..ast.ir.type_name.abc import TypeNameAbc
 from ..ast.ir.type_name.array_type_name import ArrayTypeName
 from ..ast.ir.type_name.user_defined_type_name import UserDefinedTypeName
 from ..compiler.build_data_model import ProjectBuild
+from ..utils import get_package_version
 from .constants import DEFAULT_IMPORTS, INIT_CONTENT, TAB_WIDTH
 
 
@@ -1305,6 +1306,7 @@ class TypeGenerator:
         init_path = self.__pytypes_dir / "__init__.py"
         init_path.write_text(
             INIT_CONTENT.format(
+                version=get_package_version("woke"),
                 errors=self.__errors_index,
                 events=self.__events_index,
                 contracts_by_fqn=self.__contracts_index,

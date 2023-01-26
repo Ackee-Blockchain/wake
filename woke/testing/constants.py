@@ -16,6 +16,10 @@ from woke.testing.transactions import LegacyTransaction
 
 INIT_CONTENT: str = """
 import woke.testing.core
+from woke.utils import get_package_version
+
+if get_package_version("woke") != "{version}":
+    raise RuntimeError("Pytypes generated for a different version of woke. Please regenerate.")
 
 woke.testing.core.errors = {errors}
 woke.testing.core.events = {events}
