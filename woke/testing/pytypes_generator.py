@@ -120,9 +120,6 @@ class TypeGenerator:
     # set of function names which should be overloaded
     __func_to_overload: Set[str]
     __contracts_index: Dict[str, Any]
-    __contracts_jump_in: Dict[str, Set[int]]
-    __contracts_jump_out: Dict[str, Set[int]]
-    __contracts_jumpdest: Dict[str, Dict[int, Tuple[Optional[str], str]]]
     __errors_index: Dict[bytes, Dict[str, Any]]
     __events_index: Dict[bytes, Dict[str, Any]]
     __contracts_by_metadata_index: Dict[bytes, str]
@@ -146,9 +143,6 @@ class TypeGenerator:
         self.__init_sol_to_py_types()
         self.__func_to_overload = set()
         self.__contracts_index = {}
-        self.__contracts_jump_in = {}
-        self.__contracts_jump_out = {}
-        self.__contracts_jumpdest = {}
         self.__errors_index = {}
         self.__events_index = {}
         self.__contracts_by_metadata_index = {}
@@ -376,56 +370,6 @@ class TypeGenerator:
                         if fqn not in self.__contracts_revert_index:
                             self.__contracts_revert_index[fqn] = set()
                         self.__contracts_revert_index[fqn].add(pc)
-            elif op in {"JUMP", "JUMPI"} and pc in pc_map:
-                _, _, file_id, jump_type = pc_map[pc]
-                if file_id == -1:
-                    continue
-                if jump_type == "i":
-                    if fqn not in self.__contracts_jump_in:
-                        self.__contracts_jump_in[fqn] = set()
-                    self.__contracts_jump_in[fqn].add(pc)
-                elif jump_type == "o":
-                    if fqn not in self.__contracts_jump_out:
-                        self.__contracts_jump_out[fqn] = set()
-                    self.__contracts_jump_out[fqn].add(pc)
-            elif op == "JUMPDEST" and pc in pc_map:
-                start, end, file_id, _ = pc_map[pc]
-                if file_id == -1:
-                    continue
-
-                try:
-                    path = self.__reference_resolver.resolve_source_file_id(
-                        file_id, contract.cu_hash
-                    )
-                except KeyError:
-                    continue
-
-                intervals = self.__interval_trees[path].envelop(start, end)
-                nodes: List = sorted(
-                    [interval.data for interval in intervals],
-                    key=lambda n: n.ast_tree_depth,
-                    reverse=True,
-                )
-
-                func_defs = [n for n in nodes if isinstance(n, FunctionDefinition)]
-
-                if len(func_defs) == 1:
-                    if fqn not in self.__contracts_jumpdest:
-                        self.__contracts_jumpdest[fqn] = {}
-                    func = func_defs[0]
-                    if isinstance(func.parent, ContractDefinition):
-                        if func.parent.kind == ContractKind.LIBRARY:
-                            self.__contracts_jumpdest[fqn][pc] = (
-                                func.parent.name,
-                                func.name,
-                            )
-                        else:
-                            self.__contracts_jumpdest[fqn][pc] = (
-                                contract.name,
-                                func.name,
-                            )
-                    else:
-                        self.__contracts_jumpdest[fqn][pc] = (None, func.name)
 
         if len(compilation_info.evm.deployed_bytecode.object) > 0:
             metadata = bytes.fromhex(
@@ -1368,9 +1312,6 @@ class TypeGenerator:
                 contracts_inheritance=self.__contracts_inheritance_index,
                 contracts_revert_index=self.__contracts_revert_index,
                 deployment_code_index=self.__deployment_code_index,
-                contract_internal_jumps_in=self.__contracts_jump_in,
-                contract_internal_jumps_out=self.__contracts_jump_out,
-                contract_internal_jumpdests=self.__contracts_jumpdest,
             )
         )
 

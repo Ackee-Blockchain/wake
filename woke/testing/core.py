@@ -1362,27 +1362,11 @@ contracts_revert_index: Dict[str, Set[int]] = {}
 # where deployment code segments is a tuple of (length, BLAKE2b hash)
 deployment_code_index: List[Tuple[Tuple[Tuple[int, bytes], ...], str]] = []
 
-contract_internal_jumps_in: Dict[str, Set[int]] = {}
-contract_internal_jumps_out: Dict[str, Set[int]] = {}
-contract_internal_jumpdests: Dict[str, Dict[int, Tuple[Optional[str], str]]] = {}
-
 LIBRARY_PLACEHOLDER_REGEX = re.compile(r"__\$[0-9a-fA-F]{34}\$__")
 
 
 def get_contracts_by_fqn() -> Dict[str, Any]:
     return contracts_by_fqn
-
-
-def get_contract_internal_jumps_in() -> Dict[str, Set[int]]:
-    return contract_internal_jumps_in
-
-
-def get_contract_internal_jumps_out() -> Dict[str, Set[int]]:
-    return contract_internal_jumps_out
-
-
-def get_contract_internal_jumpdests() -> Dict[str, Dict[int, Tuple[str, str]]]:
-    return contract_internal_jumpdests
 
 
 class Contract(Account):
