@@ -117,8 +117,10 @@ class ChainInterfaceAbc(ABC):
     def get_balance(self, address: str) -> int:
         return self._communicator.eth_get_balance(address)
 
-    def get_code(self, address: str) -> bytes:
-        return self._communicator.eth_get_code(address)
+    def get_code(
+        self, address: str, block_identifier: Union[int, str] = "latest"
+    ) -> bytes:
+        return self._communicator.eth_get_code(address, block_identifier)
 
     def accounts(self) -> List[str]:
         return self._communicator.eth_accounts()

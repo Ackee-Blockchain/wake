@@ -393,7 +393,6 @@ class TransactionAbc(ABC, Generic[T]):
             self,
             self._debug_trace_transaction,
             self._tx_params,
-            self._chain,
         )  # pyright: reportGeneralTypeIssues=false
 
     @property

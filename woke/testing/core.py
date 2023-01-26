@@ -6,7 +6,7 @@ import importlib
 import inspect
 import re
 from bdb import BdbQuit
-from collections import defaultdict
+from collections import ChainMap, defaultdict
 from contextlib import contextmanager
 from enum import Enum, IntEnum
 from types import MappingProxyType
@@ -473,8 +473,10 @@ def get_fqn_from_deployment_code(deployment_code: bytes) -> Tuple[str, int]:
     raise ValueError("Could not find contract definition from deployment code")
 
 
-def get_fqn_from_address(addr: Address, chain: Chain) -> Optional[str]:
-    code = chain.chain_interface.get_code(str(addr))
+def get_fqn_from_address(
+    addr: Address, block_number: Union[int, str], chain: Chain
+) -> Optional[str]:
+    code = chain.chain_interface.get_code(str(addr), block_number)
     metadata = code[-53:]
     if metadata in contracts_by_metadata:
         return contracts_by_metadata[metadata]
@@ -889,17 +891,19 @@ class Chain:
             if tx is None:
                 raise UnknownTransactionRevertedError(revert_data) from None
 
-            if tx.to is None:
-                origin, _ = get_fqn_from_deployment_code(tx.data)
-            else:
-                origin = get_fqn_from_address(tx.to.address, tx.chain)
-
             # ambiguous error, try to find the source contract
             debug_trace = self._chain_interface.debug_trace_transaction(
                 tx.tx_hash, {"enableMemory": True}
             )
             try:
-                fqn = self._process_debug_trace_for_revert(debug_trace, origin)
+                fqn_overrides: ChainMap[Address, Optional[str]] = ChainMap()
+                for i in range(tx.tx_index):
+                    prev_tx = tx.block.txs[i]
+                    prev_tx._fetch_debug_trace_transaction()
+                    process_debug_trace_for_fqn_overrides(
+                        prev_tx, prev_tx._debug_trace_transaction, fqn_overrides
+                    )
+                fqn = process_debug_trace_for_revert(tx, debug_trace, fqn_overrides)
             except ValueError:
                 raise UnknownTransactionRevertedError(revert_data) from None
         else:
@@ -947,12 +951,16 @@ class Chain:
             debug_trace = self._chain_interface.debug_trace_transaction(
                 tx.tx_hash, {"enableMemory": True}
             )
-            if tx.to is None:
-                origin, _ = get_fqn_from_deployment_code(tx.data)
-            else:
-                origin = get_fqn_from_address(tx.to.address, tx.chain)
-
-            event_traces = self._process_debug_trace_for_events(debug_trace, origin)
+            fqn_overrides: ChainMap[Address, Optional[str]] = ChainMap()
+            for i in range(tx.tx_index):
+                prev_tx = tx.block.txs[i]
+                prev_tx._fetch_debug_trace_transaction()
+                process_debug_trace_for_fqn_overrides(
+                    prev_tx, prev_tx._debug_trace_transaction, fqn_overrides
+                )
+            event_traces = process_debug_trace_for_events(
+                tx, debug_trace, fqn_overrides
+            )
             assert len(event_traces) == len(logs)
         else:
             event_traces = [(None, None)] * len(logs)
@@ -1148,102 +1156,6 @@ class Chain:
 
         return self._process_return_data(output, abi[selector], return_type)
 
-    def _process_debug_trace_for_events(
-        self, debug_trace: Dict, origin: Union[Address, str]
-    ) -> List[Tuple[bytes, Optional[str]]]:
-        addresses = [origin]
-        event_fqns = []
-
-        for i, trace in enumerate(debug_trace["structLogs"]):
-            if i > 0:
-                prev_trace = debug_trace["structLogs"][i - 1]
-                if (
-                    prev_trace["op"]
-                    in {"CALL", "CALLCODE", "DELEGATECALL", "STATICCALL"}
-                    and prev_trace["depth"] == trace["depth"]
-                ):
-                    # precompiled contract was called in the previous trace
-                    addresses.pop()
-
-            if trace["op"] in {"CALL", "CALLCODE", "DELEGATECALL", "STATICCALL"}:
-                addr = int(trace["stack"][-2], 16)
-                addresses.append(Address(addr))
-            elif trace["op"] in {"CREATE", "CREATE2"}:
-                offset = int(trace["stack"][-2], 16)
-                length = int(trace["stack"][-3], 16)
-
-                deployment_code = read_from_memory(offset, length, trace["memory"])
-                fqn, _ = get_fqn_from_deployment_code(deployment_code)
-                addresses.append(fqn)
-            elif trace["op"] in {"RETURN", "REVERT", "STOP"}:
-                addresses.pop()
-            elif trace["op"] in {"LOG1", "LOG2", "LOG3", "LOG4"}:
-                selector = trace["stack"][-3]
-                if selector.startswith("0x"):
-                    selector = selector[2:]
-                selector = bytes.fromhex(selector.zfill(64))
-
-                if not isinstance(addresses[-1], str):
-                    if addresses[-1] == "0x000000000000000000636F6e736F6c652e6c6f67":
-                        # skip events from console.log
-                        event_fqns.append((selector, None))
-                        continue
-
-                    address_fqn = get_fqn_from_address(addresses[-1], self)
-                    if address_fqn is None:
-                        raise ValueError(
-                            f"Could not find contract with address {addresses[-1]}"
-                        )
-                    event_fqns.append((selector, address_fqn))
-                else:
-                    event_fqns.append((selector, addresses[-1]))
-
-        return event_fqns
-
-    def _process_debug_trace_for_revert(
-        self, debug_trace: Dict, origin: Union[Address, str]
-    ) -> str:
-        addresses = [origin]
-        last_revert_origin = None
-
-        for i, trace in enumerate(debug_trace["structLogs"]):
-            if i > 0:
-                prev_trace = debug_trace["structLogs"][i - 1]
-                if (
-                    prev_trace["op"]
-                    in {"CALL", "CALLCODE", "DELEGATECALL", "STATICCALL"}
-                    and prev_trace["depth"] == trace["depth"]
-                ):
-                    # precompiled contract was called in the previous trace
-                    addresses.pop()
-
-            if trace["op"] in {"CALL", "CALLCODE", "DELEGATECALL", "STATICCALL"}:
-                addr = int(trace["stack"][-2], 16)
-                addresses.append(Address(addr))
-            elif trace["op"] in {"CREATE", "CREATE2"}:
-                offset = int(trace["stack"][-2], 16)
-                length = int(trace["stack"][-3], 16)
-
-                deployment_code = read_from_memory(offset, length, trace["memory"])
-                fqn, _ = get_fqn_from_deployment_code(deployment_code)
-                addresses.append(fqn)
-            elif trace["op"] == "REVERT":
-                addr = addresses.pop()
-                pc = trace["pc"]
-                if isinstance(addr, str):
-                    fqn = addr
-                else:
-                    fqn = get_fqn_from_address(addr, self)
-
-                if fqn in contracts_revert_index and pc in contracts_revert_index[fqn]:
-                    last_revert_origin = fqn
-            elif trace["op"] in {"RETURN", "STOP"}:
-                addresses.pop()
-
-        if last_revert_origin is None:
-            raise ValueError("Could not find revert origin")
-        return last_revert_origin
-
     def _process_call_revert(self, e: JsonRpcError):
         if (
             isinstance(self._chain_interface, AnvilChainInterface)
@@ -1367,6 +1279,244 @@ LIBRARY_PLACEHOLDER_REGEX = re.compile(r"__\$[0-9a-fA-F]{34}\$__")
 
 def get_contracts_by_fqn() -> Dict[str, Any]:
     return contracts_by_fqn
+
+
+def process_debug_trace_for_fqn_overrides(
+    tx: TransactionAbc,
+    debug_trace: Dict[str, Any],
+    fqn_overrides: ChainMap[Address, Optional[str]],
+) -> None:
+    if tx.status == 0:
+        return
+
+    trace_is_create = [tx.to is None]
+    addresses: List[Optional[Address]] = [tx.to.address if tx.to is not None else None]
+    fqns: List[Optional[str]] = []
+
+    fqn_overrides.maps.insert(0, {})
+
+    if tx.to is None:
+        fqns.append(None)  # contract is not deployed yet
+    else:
+        if tx.to.address in fqn_overrides:
+            fqns.append(fqn_overrides[tx.to.address])
+        else:
+            fqns.append(
+                get_fqn_from_address(tx.to.address, tx.block_number - 1, tx.chain)
+            )
+
+    for i, trace in enumerate(debug_trace["structLogs"]):
+        if i > 0:
+            prev_trace = debug_trace["structLogs"][i - 1]
+            if (
+                prev_trace["op"] in {"CALL", "CALLCODE", "DELEGATECALL", "STATICCALL"}
+                and prev_trace["depth"] == trace["depth"]
+            ):
+                # precompiled contract was called in the previous trace
+                fqn_overrides.maps[1].update(fqn_overrides.maps[0])
+                fqn_overrides.maps.pop(0)
+                trace_is_create.pop()
+                addresses.pop()
+                fqns.pop()
+
+        if trace["op"] in {"CALL", "CALLCODE", "DELEGATECALL", "STATICCALL"}:
+            trace_is_create.append(False)
+            addresses.append(Address(int(trace["stack"][-2], 16)))
+            if addresses[-1] in fqn_overrides:
+                fqns.append(fqn_overrides[addresses[-1]])
+            else:
+                fqns.append(
+                    get_fqn_from_address(addresses[-1], tx.block_number - 1, tx.chain)
+                )
+
+            fqn_overrides.maps.insert(0, {})
+        elif trace["op"] in {"CREATE", "CREATE2"}:
+            offset = int(trace["stack"][-2], 16)
+            length = int(trace["stack"][-3], 16)
+            deployment_code = read_from_memory(offset, length, trace["memory"])
+
+            trace_is_create.append(True)
+            addresses.append(None)
+            fqns.append(get_fqn_from_deployment_code(deployment_code)[0])
+            fqn_overrides.maps.insert(0, {})
+        elif trace["op"] in {"RETURN", "REVERT", "STOP", "SELFDESTRUCT"}:
+            if trace["op"] == "SELFDESTRUCT":
+                fqn_overrides.maps[0][addresses[-1]] = None
+
+            if trace["op"] != "REVERT" and len(fqn_overrides.maps) > 1:
+                fqn_overrides.maps[1].update(fqn_overrides.maps[0])
+            fqn_overrides.maps.pop(0)
+            addresses.pop()
+
+            if trace_is_create.pop():
+                try:
+                    addr = Address(
+                        int(debug_trace["structLogs"][i + 1]["stack"][-1], 16)
+                    )
+                    if addr != Address(0):
+                        fqn_overrides.maps[0][addr] = fqns[-1]
+                except IndexError:
+                    pass
+            fqns.pop()
+
+
+def process_debug_trace_for_revert(
+    tx: TransactionAbc,
+    debug_trace: Dict,
+    fqn_overrides: ChainMap[Address, Optional[str]],
+) -> str:
+    if tx.to is None:
+        origin = get_fqn_from_deployment_code(tx.data)[0]
+    elif tx.to.address in fqn_overrides:
+        origin = fqn_overrides[tx.to.address]
+    else:
+        origin = get_fqn_from_address(tx.to.address, tx.block_number - 1, tx.chain)
+
+    addresses: List[Optional[Address]] = [tx.to.address if tx.to is not None else None]
+    fqns: List[Optional[str]] = [origin]
+    trace_is_create: List[bool] = [tx.to is None]
+    last_revert_origin = None
+
+    for i, trace in enumerate(debug_trace["structLogs"]):
+        if i > 0:
+            prev_trace = debug_trace["structLogs"][i - 1]
+            if (
+                prev_trace["op"] in {"CALL", "CALLCODE", "DELEGATECALL", "STATICCALL"}
+                and prev_trace["depth"] == trace["depth"]
+            ):
+                # precompiled contract was called in the previous trace
+                fqn_overrides.maps[1].update(fqn_overrides.maps[0])
+                fqn_overrides.maps.pop(0)
+                addresses.pop()
+                fqns.pop()
+                trace_is_create.pop()
+
+        if trace["op"] in {"CALL", "CALLCODE", "DELEGATECALL", "STATICCALL"}:
+            trace_is_create.append(False)
+            addresses.append(Address(int(trace["stack"][-2], 16)))
+            if addresses[-1] in fqn_overrides:
+                fqns.append(fqn_overrides[addresses[-1]])
+            else:
+                fqns.append(
+                    get_fqn_from_address(addresses[-1], tx.block_number - 1, tx.chain)
+                )
+
+            fqn_overrides.maps.insert(0, {})
+        elif trace["op"] in {"CREATE", "CREATE2"}:
+            offset = int(trace["stack"][-2], 16)
+            length = int(trace["stack"][-3], 16)
+            deployment_code = read_from_memory(offset, length, trace["memory"])
+
+            trace_is_create.append(True)
+            addresses.append(None)
+            fqns.append(get_fqn_from_deployment_code(deployment_code)[0])
+            fqn_overrides.maps.insert(0, {})
+        elif trace["op"] == "REVERT":
+            pc = trace["pc"]
+            fqn_overrides.maps.pop(0)
+            fqn = fqns.pop()
+            addresses.pop()
+            trace_is_create.pop()
+
+            if fqn in contracts_revert_index and pc in contracts_revert_index[fqn]:
+                last_revert_origin = fqn
+        elif trace["op"] in {"RETURN", "STOP", "SELFDESTRUCT"}:
+            if len(fqn_overrides.maps) > 1:
+                fqn_overrides.maps[1].update(fqn_overrides.maps[0])
+            fqn_overrides.maps.pop(0)
+            addresses.pop()
+
+            if trace_is_create.pop():
+                try:
+                    addr = Address(
+                        int(debug_trace["structLogs"][i + 1]["stack"][-1], 16)
+                    )
+                    if addr != Address(0):
+                        fqn_overrides.maps[0][addr] = fqns[-1]
+                except IndexError:
+                    pass
+            fqns.pop()
+
+    if last_revert_origin is None:
+        raise ValueError("Could not find revert origin")
+    return last_revert_origin
+
+
+def process_debug_trace_for_events(
+    tx: TransactionAbc,
+    debug_trace: Dict,
+    fqn_overrides: ChainMap[Address, Optional[str]],
+) -> List[Tuple[bytes, Optional[str]]]:
+    if tx.to is None:
+        origin = get_fqn_from_deployment_code(tx.data)[0]
+    elif tx.to.address in fqn_overrides:
+        origin = fqn_overrides[tx.to.address]
+    else:
+        origin = get_fqn_from_address(tx.to.address, tx.block_number - 1, tx.chain)
+
+    addresses: List[Optional[Address]] = [tx.to.address if tx.to is not None else None]
+    fqns: List[Optional[str]] = [origin]
+    trace_is_create: List[bool] = [tx.to is None]
+    event_fqns = []
+
+    for i, trace in enumerate(debug_trace["structLogs"]):
+        if i > 0:
+            prev_trace = debug_trace["structLogs"][i - 1]
+            if (
+                prev_trace["op"] in {"CALL", "CALLCODE", "DELEGATECALL", "STATICCALL"}
+                and prev_trace["depth"] == trace["depth"]
+            ):
+                # precompiled contract was called in the previous trace
+                fqn_overrides.maps[1].update(fqn_overrides.maps[0])
+                fqn_overrides.maps.pop(0)
+                trace_is_create.pop()
+                addresses.pop()
+                fqns.pop()
+
+        if trace["op"] in {"CALL", "CALLCODE", "DELEGATECALL", "STATICCALL"}:
+            trace_is_create.append(False)
+            addresses.append(Address(int(trace["stack"][-2], 16)))
+            if addresses[-1] in fqn_overrides:
+                fqns.append(fqn_overrides[addresses[-1]])
+            else:
+                fqns.append(
+                    get_fqn_from_address(addresses[-1], tx.block_number - 1, tx.chain)
+                )
+
+            fqn_overrides.maps.insert(0, {})
+        elif trace["op"] in {"CREATE", "CREATE2"}:
+            offset = int(trace["stack"][-2], 16)
+            length = int(trace["stack"][-3], 16)
+            deployment_code = read_from_memory(offset, length, trace["memory"])
+
+            trace_is_create.append(True)
+            addresses.append(None)
+            fqns.append(get_fqn_from_deployment_code(deployment_code)[0])
+            fqn_overrides.maps.insert(0, {})
+        elif trace["op"] in {"RETURN", "REVERT", "STOP", "SELFDESTRUCT"}:
+            if trace["op"] != "REVERT" and len(fqn_overrides.maps) > 1:
+                fqn_overrides.maps[1].update(fqn_overrides.maps[0])
+            fqn_overrides.maps.pop(0)
+            addresses.pop()
+
+            if trace_is_create.pop():
+                try:
+                    addr = Address(
+                        int(debug_trace["structLogs"][i + 1]["stack"][-1], 16)
+                    )
+                    if addr != Address(0):
+                        fqn_overrides.maps[0][addr] = fqns[-1]
+                except IndexError:
+                    pass
+            fqns.pop()
+        elif trace["op"] in {"LOG1", "LOG2", "LOG3", "LOG4"}:
+            selector = trace["stack"][-3]
+            if selector.startswith("0x"):
+                selector = selector[2:]
+            selector = bytes.fromhex(selector.zfill(64))
+            event_fqns.append((selector, fqns[-1]))
+
+    return event_fqns
 
 
 class Contract(Account):
