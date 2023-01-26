@@ -826,6 +826,7 @@ class SolidityCompiler:
         processed_files: Set[Path] = set()
 
         with ctx_manager:
+            successful_compilation_units = []
             for cu, solc_output in zip(compilation_units, ret):
                 errored: bool = False
                 errors_per_cu[cu.hash] = set()
@@ -836,8 +837,13 @@ class SolidityCompiler:
                         errored = True
 
                 if errored:
-                    continue
+                    for file in cu.files:
+                        build.reference_resolver.run_destroy_callbacks(file)
+                        build.source_units.pop(file)
+                else:
+                    successful_compilation_units.append((cu, solc_output))
 
+            for cu, solc_output in successful_compilation_units:
                 # files requested to be compiled and files that import these files (even indirectly)
                 recompiled_files: Set[Path] = set()
                 self._out_edge_bfs(cu, files_to_compile & cu.files, recompiled_files)
