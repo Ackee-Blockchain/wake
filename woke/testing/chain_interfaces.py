@@ -6,20 +6,25 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Union
 from urllib.error import URLError
 
+from woke.config import WokeConfig
+
 from ..utils.networking import get_free_port
 from .globals import get_config
 from .json_rpc.communicator import JsonRpcCommunicator, TxParams
 
 
 class ChainInterfaceAbc(ABC):
+    _config: WokeConfig
     _communicator: JsonRpcCommunicator
     _process: Optional[subprocess.Popen]
 
     def __init__(
         self,
+        config: WokeConfig,
         communicator: JsonRpcCommunicator,
         process: Optional[subprocess.Popen] = None,
     ) -> None:
+        self._config = config
         self._communicator = communicator
         self._process = process
 
@@ -66,16 +71,16 @@ class ChainInterfaceAbc(ABC):
             start = time.perf_counter()
             while True:
                 try:
-                    comm = JsonRpcCommunicator(f"ws://{hostname}:{port}")
+                    comm = JsonRpcCommunicator(config, f"ws://{hostname}:{port}")
                     comm.__enter__()
                     comm.web3_client_version()
                     break
                 except (ConnectionRefusedError, URLError, ValueError):
-                    if time.perf_counter() - start > 5:
+                    if time.perf_counter() - start > config.testing.timeout:
                         raise
-                    time.sleep(0.1)
+                    time.sleep(0.05)
 
-            return constructor(comm, process)
+            return constructor(config, comm, process)
         except Exception:
             if process.returncode is None:
                 process.terminate()
@@ -87,16 +92,17 @@ class ChainInterfaceAbc(ABC):
 
     @classmethod
     def connect(cls, uri: str) -> ChainInterfaceAbc:
-        communicator = JsonRpcCommunicator(uri)
+        config = get_config()
+        communicator = JsonRpcCommunicator(config, uri)
         communicator.__enter__()
         try:
             client_version = communicator.web3_client_version().lower()
             if "anvil" in client_version:
-                return AnvilChainInterface(communicator)
+                return AnvilChainInterface(config, communicator)
             elif "hardhat" in client_version:
-                return HardhatChainInterface(communicator)
+                return HardhatChainInterface(config, communicator)
             elif "ethereumjs" in client_version:
-                return GanacheChainInterface(communicator)
+                return GanacheChainInterface(config, communicator)
             else:
                 raise NotImplementedError(
                     f"Client version {client_version} not supported"
@@ -110,7 +116,7 @@ class ChainInterfaceAbc(ABC):
         if self._process is not None:
             self._process.terminate()
             try:
-                self._process.communicate(timeout=5)
+                self._process.communicate(timeout=self._config.testing.timeout)
             except subprocess.TimeoutExpired:
                 self._process.kill()
 

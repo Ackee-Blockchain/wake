@@ -6,9 +6,11 @@ from woke.testing.json_rpc.abc import ProtocolAbc
 
 class HttpProtocol(ProtocolAbc):
     _uri: str
+    _timeout: float
 
-    def __init__(self, uri: str):
+    def __init__(self, uri: str, timeout: float):
         self._uri = uri
+        self._timeout = timeout
 
     def __enter__(self):
         pass
@@ -23,5 +25,5 @@ class HttpProtocol(ProtocolAbc):
             headers={"Content-Type": "application/json"},
         )
 
-        with urlopen(req, timeout=5) as response:
+        with urlopen(req, timeout=self._timeout) as response:
             return json.loads(response.read().decode("utf-8"))

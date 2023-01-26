@@ -183,6 +183,7 @@ class HardhatConfig(WokeConfigModel):
 
 class TestingConfig(WokeConfigModel):
     cmd: str = "anvil"
+    timeout: float = 5
     anvil: AnvilConfig = Field(default_factory=AnvilConfig)
     ganache: GanacheConfig = Field(default_factory=GanacheConfig)
     hardhat: HardhatConfig = Field(default_factory=HardhatConfig)

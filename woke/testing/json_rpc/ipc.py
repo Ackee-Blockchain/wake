@@ -9,9 +9,11 @@ if platform.system() == "Windows":
 
     class IpcProtocol(ProtocolAbc):  # pyright: reportGeneralTypeIssues=false
         _uri: str
+        _timeout: float
 
-        def __init__(self, uri: str):
+        def __init__(self, uri: str, timeout: float):
             self._uri = uri
+            self._timeout = timeout
 
         def __enter__(self):
             self._handle = win32file.CreateFile(
@@ -32,7 +34,7 @@ if platform.system() == "Windows":
             received = bytearray()
             start = time.perf_counter()
 
-            while time.perf_counter() - start < 5:
+            while time.perf_counter() - start < self._timeout:
                 res, data = win32file.ReadFile(self._handle, 4096)
                 received += data  # pyright: reportGeneralTypeIssues=false
                 if not received.rstrip().endswith((b"}", b"]")):
@@ -48,10 +50,12 @@ else:
 
     class IpcProtocol(ProtocolAbc):
         _uri: str
+        _timeout: float
         _socket: socket.socket
 
-        def __init__(self, uri: str):
+        def __init__(self, uri: str, timeout: float):
             self._uri = uri
+            self._timeout = timeout
 
         def __enter__(self):
             self._socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -66,7 +70,7 @@ else:
             received = bytearray()
             start = time.perf_counter()
 
-            while time.perf_counter() - start < 5:
+            while time.perf_counter() - start < self._timeout:
                 try:
                     received += self._socket.recv(4096)
                 except socket.timeout:

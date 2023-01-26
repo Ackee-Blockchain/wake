@@ -7,6 +7,8 @@ from typing import Any, Dict, List, Optional, Union
 
 from typing_extensions import TypedDict
 
+from woke.config import WokeConfig
+
 from .abc import ProtocolAbc
 from .http import HttpProtocol
 from .ipc import IpcProtocol
@@ -54,13 +56,13 @@ class JsonRpcCommunicator:
     _request_id: int
     _connected: bool
 
-    def __init__(self, uri: str):
+    def __init__(self, config: WokeConfig, uri: str):
         if uri.startswith(("http://", "https://")):
-            self._protocol = HttpProtocol(uri)
+            self._protocol = HttpProtocol(uri, config.testing.timeout)
         elif uri.startswith("ws://"):
-            self._protocol = WebsocketProtocol(uri)
+            self._protocol = WebsocketProtocol(uri, config.testing.timeout)
         elif Path(uri).is_socket() or platform.system() == "Windows":
-            self._protocol = IpcProtocol(uri)
+            self._protocol = IpcProtocol(uri, config.testing.timeout)
         else:
             raise ValueError(f"Invalid URI: {uri}")
 
