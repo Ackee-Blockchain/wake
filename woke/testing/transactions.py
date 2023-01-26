@@ -126,30 +126,26 @@ class TransactionAbc(ABC, Generic[T]):
         return self._tx_params["data"] if "data" in self._tx_params else b""
 
     @property
-    @_fetch_tx_data
     def from_(self) -> Account:
         return Account(
-            self._tx_data["from"], self._chain
-        )  # pyright: reportOptionalSubscript=false
+            self._tx_params["from"], self._chain
+        )  # pyright: reportTypedDictNotRequiredAccess=false
 
     @property
-    @_fetch_tx_data
     def to(self) -> Optional[Account]:
-        if "to" not in self._tx_data or self._tx_data["to"] is None:
-            return None
-        return Account(
-            self._tx_data["to"], self._chain
-        )  # pyright: reportOptionalSubscript=false
+        if "to" in self._tx_params:
+            return Account(self._tx_params["to"], self._chain)
+        return None
 
     @property
-    @_fetch_tx_data
     def gas(self) -> int:
-        return int(self._tx_data["gas"], 16)  # pyright: reportOptionalSubscript=false
+        return self._tx_params["gas"]  # pyright: reportTypedDictNotRequiredAccess=false
 
     @property
-    @_fetch_tx_data
     def nonce(self) -> int:
-        return int(self._tx_data["nonce"], 16)  # pyright: reportOptionalSubscript=false
+        return self._tx_params[
+            "nonce"
+        ]  # pyright: reportTypedDictNotRequiredAccess=false
 
     @property
     @_fetch_tx_data
@@ -159,9 +155,10 @@ class TransactionAbc(ABC, Generic[T]):
         )  # pyright: reportOptionalSubscript=false
 
     @property
-    @_fetch_tx_data
     def value(self) -> int:
-        return int(self._tx_data["value"], 16)  # pyright: reportOptionalSubscript=false
+        return self._tx_params[
+            "value"
+        ]  # pyright: reportTypedDictNotRequiredAccess=false
 
     @property
     @_fetch_tx_data
@@ -408,16 +405,11 @@ class LegacyTransaction(TransactionAbc[T]):
         return int(self._tx_data["v"], 16)  # pyright: reportOptionalSubscript=false
 
     @property
-    @_fetch_tx_data
     def gas_price(self) -> int:
-        return int(
-            self._tx_data["gasPrice"], 16
-        )  # pyright: reportOptionalSubscript=false
+        assert "gas_price" in self._tx_params
+        return self._tx_params["gas_price"]
 
     @property
-    @_fetch_tx_data
     def type(self) -> TransactionTypeEnum:
-        assert (
-            int(self._tx_data["type"], 16) == 0
-        )  # pyright: reportOptionalSubscript=false
+        assert "type" in self._tx_params and self._tx_params["type"] == 0
         return TransactionTypeEnum.LEGACY
