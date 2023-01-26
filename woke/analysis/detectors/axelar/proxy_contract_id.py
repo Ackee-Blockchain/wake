@@ -97,20 +97,6 @@ class AxelarProxyContractIdDetector(DetectorAbc):
                     )
                 )
 
-        for upgradeables in sorted(upgradeable_contracts.values()):
-            if len(upgradeables) > 1:
-                sorted_upgradeables = sorted(upgradeables, key=lambda c: c.name)
-                ret.append(
-                    DetectorResult(
-                        sorted_upgradeables[0],
-                        "Upgradeable contract ID is shared between multiple contracts",
-                        tuple(
-                            DetectorResult(other, "Other contract")
-                            for other in sorted_upgradeables[1:]
-                        ),
-                    )
-                )
-
         for only_proxy in sorted(proxy_contracts.keys() - upgradeable_contracts.keys()):
             for proxy in sorted(proxy_contracts[only_proxy], key=lambda c: c.name):
                 ret.append(
