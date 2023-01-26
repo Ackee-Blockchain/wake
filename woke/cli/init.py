@@ -33,23 +33,12 @@ async def run_init_pytypes(
     from .console import console
 
     def callback(build: ProjectBuild, build_info: ProjectBuildInfo):
-        errored = any(
-            any(
-                error.severity == SolcOutputErrorSeverityEnum.ERROR
-                for error in cu_info.errors
-            )
-            for cu_info in build_info.compilation_units.values()
-        )
-
-        if not errored:
-            start = time.perf_counter()
-            with console.status("[bold green]Generating pytypes..."):
-                type_generator = TypeGenerator(config, return_tx)
-                type_generator.generate_types(build)
-            end = time.perf_counter()
-            console.log(
-                f"[green]Generated pytypes in [bold green]{end - start:.2f} s[/]"
-            )
+        start = time.perf_counter()
+        with console.status("[bold green]Generating pytypes..."):
+            type_generator = TypeGenerator(config, return_tx)
+            type_generator.generate_types(build)
+        end = time.perf_counter()
+        console.log(f"[green]Generated pytypes in [bold green]{end - start:.2f} s[/]")
 
     compiler = SolidityCompiler(config)
 
@@ -102,16 +91,13 @@ async def run_init_pytypes(
         console=console,
         no_warnings=not warnings,
     )
-    errored = any(
-        error.severity == SolcOutputErrorSeverityEnum.ERROR for error in errors
-    )
-    if not errored:
-        start = time.perf_counter()
-        with console.status("[bold green]Generating pytypes..."):
-            type_generator = TypeGenerator(config, return_tx)
-            type_generator.generate_types(build)
-        end = time.perf_counter()
-        console.log(f"[green]Generated pytypes in [bold green]{end - start:.2f} s[/]")
+
+    start = time.perf_counter()
+    with console.status("[bold green]Generating pytypes..."):
+        type_generator = TypeGenerator(config, return_tx)
+        type_generator.generate_types(build)
+    end = time.perf_counter()
+    console.log(f"[green]Generated pytypes in [bold green]{end - start:.2f} s[/]")
 
     if watch:
         assert fs_handler is not None
@@ -124,6 +110,7 @@ async def run_init_pytypes(
             observer.stop()
             observer.join()
     else:
+        errored = any(e.severity == SolcOutputErrorSeverityEnum.ERROR for e in errors)
         if errored:
             sys.exit(1)
 
