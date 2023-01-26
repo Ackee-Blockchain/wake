@@ -16,7 +16,7 @@ from .overflow_calldata_tuple_reencoding_bug import (
 )
 from .proxy_contract_selector_clashes import ProxyContractSelectorClashDetector
 from .reentrancy import ReentrancyDetector
-from .unchecked_return_value import UncheckedFunctionReturnValueDetector
+from .unchecked_return_value import UncheckedReturnValueDetector
 from .unsafe_delegatecall import UnsafeDelegatecallDetector
 from .unsafe_selfdestruct import UnsafeSelfdestructDetector
 from .unsafe_tx_origin import UnsafeTxOriginDetector
