@@ -1094,7 +1094,7 @@ class Coverage:
             if struct_log["op"] in ("CALL", "CALLCODE", "DELEGATECALL", "STATICCALL"):
                 logger.debug(f"Call {pc} {struct_log['op']} {struct_log['stack']}")
                 addr = Address(int(struct_log["stack"][-2], 16))
-                new_fqn = get_fqn_from_address(addr, default_chain)
+                new_fqn = get_fqn_from_address(addr, "latest", default_chain)  # TODO
                 if new_fqn is None:
                     new_fqn = "Unknown"
                 contract_fqn_stack.append(new_fqn)

@@ -3,6 +3,7 @@ from __future__ import annotations
 import enum
 import importlib
 import reprlib
+from collections import ChainMap
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, cast
 
 import eth_abi
@@ -16,6 +17,7 @@ from woke.testing.core import (
     get_contracts_by_fqn,
     get_fqn_from_address,
     get_fqn_from_deployment_code,
+    process_debug_trace_for_fqn_overrides,
 )
 from woke.testing.json_rpc.communicator import TxParams
 from woke.testing.utils import read_from_memory
@@ -47,11 +49,13 @@ class CallTrace:
     _depth: int
     _subtraces: List[CallTrace]
     _parent: Optional[CallTrace]
+    _address: Optional[Address]
 
     def __init__(
         self,
         contract_name: Optional[str],
         function_name: str,
+        address: Optional[Address],
         arguments: List,
         value: int,
         kind: CallTraceKind,
@@ -60,6 +64,7 @@ class CallTrace:
     ):
         self._contract_name = contract_name
         self._function_name = function_name
+        self._address = address
         self._arguments = arguments
         self._value = value
         self._kind = kind
@@ -123,6 +128,10 @@ class CallTrace:
         return self._function_is_special
 
     @property
+    def address(self) -> Optional[Address]:
+        return self._address
+
+    @property
     def arguments(self) -> Tuple:
         return tuple(self._arguments)
 
@@ -148,12 +157,28 @@ class CallTrace:
         tx: TransactionAbc,
         trace: Dict[str, Any],
         tx_params: TxParams,
-        chain: Chain,
     ):
+        fqn_overrides: ChainMap[Address, Optional[str]] = ChainMap()
+
+        # process fqn_overrides for all txs before this one in the same block
+        for i in range(tx.tx_index):
+            tx_before = tx.block.txs[i]
+            tx_before._fetch_debug_trace_transaction()
+            process_debug_trace_for_fqn_overrides(
+                tx_before, tx_before._debug_trace_transaction, fqn_overrides
+            )
+
+        assert len(fqn_overrides.maps) == 1
+
         if tx.to is None:
             origin_fqn, _ = get_fqn_from_deployment_code(tx.data)
         else:
-            origin_fqn = get_fqn_from_address(tx.to.address, tx.chain)
+            if tx.to.address in fqn_overrides:
+                origin_fqn = fqn_overrides[tx.to.address]
+            else:
+                origin_fqn = get_fqn_from_address(
+                    tx.to.address, tx.block_number - 1, tx.chain
+                )
 
         contracts = [origin_fqn]
         values = [0 if "value" not in tx_params else tx_params["value"]]
@@ -170,6 +195,7 @@ class CallTrace:
             root_trace = CallTrace(
                 f"Unknown({tx_params['to']})",
                 "???",
+                Address(tx_params["to"]),
                 [b"" if "data" not in tx_params else tx_params["data"]],
                 value,
                 CallTraceKind.CALL,
@@ -184,7 +210,7 @@ class CallTrace:
                 obj = getattr(obj, attr)
             contract_abi = obj._abi
 
-            if "to" not in tx_params or tx_params["to"] is None:
+            if tx.to is None:
                 if "data" not in tx_params or "constructor" not in contract_abi:
                     args = []
                 else:
@@ -204,6 +230,7 @@ class CallTrace:
                 root_trace = CallTrace(
                     contract_name,
                     "constructor",
+                    tx.return_value.address if tx.status == 1 else None,
                     args,
                     value,
                     CallTraceKind.CREATE,
@@ -216,7 +243,14 @@ class CallTrace:
                 and "receive" in contract_abi
             ):
                 root_trace = CallTrace(
-                    contract_name, "receive", [], value, CallTraceKind.CALL, 1, True
+                    contract_name,
+                    "receive",
+                    tx.to.address,
+                    [],
+                    value,
+                    CallTraceKind.CALL,
+                    1,
+                    True,
                 )
             elif (
                 "data" not in tx_params
@@ -230,6 +264,7 @@ class CallTrace:
                     root_trace = CallTrace(
                         contract_name,
                         "fallback",
+                        tx.to.address,
                         [b"" if "data" not in tx_params else tx_params["data"]],
                         value,
                         CallTraceKind.CALL,
@@ -240,6 +275,7 @@ class CallTrace:
                     root_trace = CallTrace(
                         contract_name,
                         "???",
+                        tx.to.address,
                         [b"" if "data" not in tx_params else tx_params["data"]],
                         value,
                         CallTraceKind.CALL,
@@ -258,6 +294,7 @@ class CallTrace:
                 root_trace = CallTrace(
                     contract_name,
                     fn_abi["name"],
+                    tx.to.address,
                     decoded_data,
                     value,
                     CallTraceKind.CALL,
@@ -278,6 +315,8 @@ class CallTrace:
                     # precompiled contract was called in the previous step
                     assert current_trace is not None
                     current_trace = current_trace._parent
+                    fqn_overrides.maps[1].update(fqn_overrides.maps[0])
+                    fqn_overrides.maps.pop(0)
                     contracts.pop()
                     values.pop()
                 else:
@@ -301,12 +340,13 @@ class CallTrace:
 
                 assert current_trace is not None
 
-                addr = int(log["stack"][-2], 16)
-                fqn = get_fqn_from_address(Address(addr), chain)
+                addr = Address(int(log["stack"][-2], 16))
+                if addr in fqn_overrides:
+                    fqn = fqn_overrides[addr]
+                else:
+                    fqn = get_fqn_from_address(addr, tx.block_number - 1, tx.chain)
                 if fqn is None:
-                    if Address(addr) == Address(
-                        "0x000000000000000000636F6e736F6c652e6c6f67"
-                    ):
+                    if addr == Address("0x000000000000000000636F6e736F6c652e6c6f67"):
                         if data[:4] in hardhat_console.abis:
                             fn_abi = hardhat_console.abis[data[:4]]
                             output_types = [
@@ -324,6 +364,7 @@ class CallTrace:
                         call_trace = CallTrace(
                             "console",
                             "log",
+                            addr,
                             arguments,
                             value,
                             log["op"],
@@ -331,8 +372,9 @@ class CallTrace:
                         )
                     else:
                         call_trace = CallTrace(
-                            f"Unknown({Address(addr)})",
+                            f"Unknown({addr})",
                             "???",
+                            addr,
                             [data],
                             value,
                             log["op"],
@@ -393,6 +435,7 @@ class CallTrace:
                     call_trace = CallTrace(
                         contract_name,
                         fn_name,
+                        addr,
                         arguments,
                         value,
                         log["op"],
@@ -405,7 +448,8 @@ class CallTrace:
                 current_trace = call_trace
                 contracts.append(fqn)
                 values.append(value)
-            elif log["op"] in {"RETURN", "REVERT", "STOP"}:
+                fqn_overrides.maps.insert(0, {})
+            elif log["op"] in {"RETURN", "REVERT", "STOP", "SELFDESTRUCT"}:
                 if log["op"] == "REVERT":
                     status = False
                 else:
@@ -418,6 +462,21 @@ class CallTrace:
                     assert current_trace is not None
 
                 assert current_trace is not None
+                if log["op"] != "REVERT" and len(fqn_overrides.maps) > 1:
+                    fqn_overrides.maps[1].update(fqn_overrides.maps[0])
+                fqn_overrides.maps.pop(0)
+
+                if current_trace.kind in {CallTraceKind.CREATE, CallTraceKind.CREATE2}:
+                    try:
+                        address = Address(
+                            int(trace["structLogs"][i + 1]["stack"][-1], 16)
+                        )
+                        if address != Address(0):
+                            current_trace._address = address
+                            fqn_overrides.maps[0][current_trace.address] = contracts[-1]
+                    except IndexError:
+                        pass
+
                 current_trace._status = status
                 current_trace = current_trace._parent
 
@@ -456,6 +515,7 @@ class CallTrace:
                 call_trace = CallTrace(
                     contract_name,
                     "constructor",
+                    None,  # to be set later
                     args,
                     value,
                     log["op"],
@@ -468,7 +528,6 @@ class CallTrace:
                 current_trace = call_trace
                 contracts.append(fqn)
                 values.append(value)
-            elif log["op"] in {"SELFDESTRUCT"}:
-                raise NotImplementedError
+                fqn_overrides.maps.insert(0, {})
 
         return root_trace

@@ -170,7 +170,7 @@ class GeneratorConfig(WokeConfigModel):
 
 
 class AnvilConfig(WokeConfigModel):
-    cmd_args: str = "--prune-history --base-fee 0 --steps-tracing --silent"
+    cmd_args: str = "--base-fee 0 --steps-tracing --silent"
 
 
 class GanacheConfig(WokeConfigModel):
