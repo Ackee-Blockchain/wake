@@ -7,13 +7,17 @@ from .abc import ProtocolAbc
 
 class WebsocketProtocol(ProtocolAbc):
     _uri: str
+    _timeout: float
     _ws: WebSocket
 
-    def __init__(self, uri: str):
+    def __init__(self, uri: str, timeout: float):
         self._uri = uri
+        self._timeout = timeout
 
     def __enter__(self):
-        self._ws = create_connection(self._uri, skip_utf8_validation=True, timeout=5)
+        self._ws = create_connection(
+            self._uri, skip_utf8_validation=True, timeout=self._timeout
+        )
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._ws.close()
