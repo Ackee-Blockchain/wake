@@ -13,9 +13,6 @@ from rich.tree import Tree
 from woke.testing.core import (
     Address,
     Chain,
-    get_contract_internal_jumpdests,
-    get_contract_internal_jumps_in,
-    get_contract_internal_jumps_out,
     get_contracts_by_fqn,
     get_fqn_from_address,
     get_fqn_from_deployment_code,
@@ -160,12 +157,8 @@ class CallTrace:
 
         contracts = [origin_fqn]
         values = [0 if "value" not in tx_params else tx_params["value"]]
-        internal_jumps = []
 
         contracts_by_fqn = get_contracts_by_fqn()
-        contract_internal_jumps_in = get_contract_internal_jumps_in()
-        contract_internal_jumps_out = get_contract_internal_jumps_out()
-        contract_internal_jumpdests = get_contract_internal_jumpdests()
 
         if "value" not in tx_params:
             value = 0
@@ -412,52 +405,6 @@ class CallTrace:
                 current_trace = call_trace
                 contracts.append(fqn)
                 values.append(value)
-            elif log["op"] in {"JUMP", "JUMPI"}:
-                continue
-                pc = int(log["stack"][-1], 16)
-                fqn = contracts[-1]
-
-                if (
-                    fqn in contract_internal_jumps_in
-                    and log["pc"] in contract_internal_jumps_in[fqn]
-                ):
-                    if (
-                        fqn in contract_internal_jumpdests
-                        and pc in contract_internal_jumpdests[fqn]
-                    ):
-                        contract_name, function_name = contract_internal_jumpdests[fqn][
-                            pc
-                        ]
-                        assert current_trace is not None
-                        if (
-                            current_trace.contract_name == contract_name
-                            and current_trace.function_name == function_name
-                        ):
-                            internal_jumps.append(False)
-                        else:
-                            jump_trace = CallTrace(
-                                contract_name,
-                                function_name,
-                                [],
-                                current_trace._value,
-                                CallTraceKind.INTERNAL,
-                                current_trace.depth,
-                            )
-                            current_trace._subtraces.append(jump_trace)
-                            jump_trace._parent = current_trace
-                            current_trace = jump_trace
-                            internal_jumps.append(True)
-                    else:
-                        internal_jumps.append(False)
-
-                if (
-                    fqn in contract_internal_jumps_out
-                    and log["pc"] in contract_internal_jumps_out[fqn]
-                ):
-                    valid = internal_jumps.pop()
-                    if valid:
-                        assert current_trace is not None
-                        current_trace = current_trace._parent
             elif log["op"] in {"RETURN", "REVERT", "STOP"}:
                 if log["op"] == "REVERT":
                     status = False

@@ -24,7 +24,4 @@ woke.testing.core.contracts_by_metadata = {contracts_by_metadata}
 woke.testing.core.contracts_inheritance = {contracts_inheritance}
 woke.testing.core.contracts_revert_index = {contracts_revert_index}
 woke.testing.core.deployment_code_index = {deployment_code_index}
-woke.testing.core.contract_internal_jumps_in = {contract_internal_jumps_in}
-woke.testing.core.contract_internal_jumps_out = {contract_internal_jumps_out}
-woke.testing.core.contract_internal_jumpdests = {contract_internal_jumpdests}
 """
