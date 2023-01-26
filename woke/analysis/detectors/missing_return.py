@@ -15,7 +15,7 @@ from woke.ast.ir.yul.expression_statement import (
 from woke.ast.ir.yul.function_call import FunctionCall as YulFunctionCall
 
 
-def check_no_return_statement(node: FunctionDefinition) -> List[DetectorResult]:
+def check_missing_return(node: FunctionDefinition) -> List[DetectorResult]:
     cfg = node.cfg
     assert cfg is not None
     end = cfg.end_block
@@ -86,8 +86,8 @@ def check_no_return_statement(node: FunctionDefinition) -> List[DetectorResult]:
     return detections
 
 
-@detector(-1030, "no-return")
-class NoReturnDetector(DetectorAbc):
+@detector(-1030, "missing-return")
+class MissingReturnDetector(DetectorAbc):
     """
     Detector that checks if all possible paths have a return or revert statement or have all
     return values set
@@ -109,5 +109,5 @@ class NoReturnDetector(DetectorAbc):
         ):
             return
 
-        for det in check_no_return_statement(node):
+        for det in check_missing_return(node):
             self._detections.add(det)
