@@ -733,8 +733,6 @@ class SolidityCompiler:
             files_to_compile = set(
                 source_units_to_paths[source_unit] for source_unit in graph.nodes
             )
-
-            compilation_units = self._merge_compilation_units(compilation_units, graph)
         else:
             # TODO this is not needed? graph contains hash of modified files
             # files_to_compile = set(modified_files.keys())
@@ -753,8 +751,6 @@ class SolidityCompiler:
             for source_unit, info in self._latest_build_info.source_units_info.items():
                 if source_unit not in graph.nodes:
                     deleted_files.add(info.fs_path)
-
-            compilation_units = self._merge_compilation_units(compilation_units, graph)
 
             for cu_hash, cu_data in self._latest_build_info.compilation_units.items():
                 if any(cu.hash.hex() == cu_hash for cu in compilation_units):
@@ -785,10 +781,13 @@ class SolidityCompiler:
             tasks.append(task)
 
         logger.debug(f"Compiling {len(compilation_units)} compilation units")
+        files = set()
+        for cu in compilation_units:
+            files |= cu.files
 
         ctx_manager = (
             console.status(
-                f"[bold green]Compiling {sum(len(cu.files) for cu in compilation_units)} files...[/]"
+                f"[bold green]Compiling {len(files)} files using {len(compilation_units)} solc runs...[/]"
             )
             if console
             else nullcontext()
@@ -809,7 +808,7 @@ class SolidityCompiler:
         end = time.perf_counter()
         if console is not None:
             console.log(
-                f"[green]Compiled {sum(len(cu.files) for cu in compilation_units)} files in [bold green]{end - start:.2f} s[/bold green][/]"
+                f"[green]Compiled {len(files)} files using {len(compilation_units)} solc runs [bold green]{end - start:.2f} s[/bold green][/]"
             )
 
         # remove deleted files from the previous build
