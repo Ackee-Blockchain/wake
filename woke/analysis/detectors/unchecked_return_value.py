@@ -13,8 +13,8 @@ from woke.ast.ir.expression.unary_operation import UnaryOperation
 from woke.ast.ir.statement.expression_statement import ExpressionStatement
 
 
-@detector(-1000, "unchecked-function-return-value")
-class UncheckedFunctionReturnValueDetector(DetectorAbc):
+@detector(-1000, "unchecked-return-value")
+class UncheckedReturnValueDetector(DetectorAbc):
     """
     Return value of a function call is ignored.
     """
