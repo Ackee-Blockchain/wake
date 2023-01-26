@@ -5,8 +5,8 @@ from woke.ast.enums import ContractKind
 from woke.ast.ir.declaration.contract_definition import ContractDefinition
 
 
-@detector(-1040, "not-used")
-class NotUsedDetector(DetectorAbc):
+@detector(-1040, "unused-contract")
+class UnusedContractDetector(DetectorAbc):
     """
     Detects abstract contracts, interfaces and libraries that are not used.
     """
