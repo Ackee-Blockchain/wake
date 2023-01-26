@@ -209,16 +209,7 @@ class CompilationFileSystemEventHandler(FileSystemEventHandler):
                     f"[green]Found {len(files)} *.sol files in [bold green]{end - start:.2f} s[/bold green][/]"
                 )
 
-            ignored_files = {
-                unit_info.fs_path
-                for unit_info in self._compiler.latest_build_info.source_units_info.values()
-                if any(
-                    is_relative_to(unit_info.fs_path, p)
-                    for p in self._config.compiler.solc.ignore_paths
-                )
-            }
-            files.difference_update(ignored_files)
-            deleted_files = self._deleted_files.union(ignored_files)
+            deleted_files = self._deleted_files
         else:
             files = {
                 unit_info.fs_path
