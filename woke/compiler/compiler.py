@@ -677,6 +677,7 @@ class SolidityCompiler:
         ] = None,  # files that should be treated as deleted even if they exist
         console: Optional[rich.console.Console] = None,
         no_warnings: bool = False,
+        merge_compilation_units: bool = False,
     ) -> Tuple[ProjectBuild, Set[SolcOutputError]]:
         if modified_files is None:
             modified_files = {}
@@ -733,6 +734,11 @@ class SolidityCompiler:
             files_to_compile = set(
                 source_units_to_paths[source_unit] for source_unit in graph.nodes
             )
+
+            if merge_compilation_units:
+                compilation_units = self._merge_compilation_units(
+                    compilation_units, graph
+                )
         else:
             # TODO this is not needed? graph contains hash of modified files
             # files_to_compile = set(modified_files.keys())
@@ -751,6 +757,11 @@ class SolidityCompiler:
             for source_unit, info in self._latest_build_info.source_units_info.items():
                 if source_unit not in graph.nodes:
                     deleted_files.add(info.fs_path)
+
+            if merge_compilation_units:
+                compilation_units = self._merge_compilation_units(
+                    compilation_units, graph
+                )
 
             for cu_hash, cu_data in self._latest_build_info.compilation_units.items():
                 if any(cu.hash.hex() == cu_hash for cu in compilation_units):
