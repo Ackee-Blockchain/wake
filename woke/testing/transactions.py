@@ -20,9 +20,9 @@ from .internal import (
     TransactionRevertedError,
     UnknownEvent,
     UnknownTransactionRevertedError,
+    read_from_memory,
 )
 from .json_rpc.communicator import JsonRpcError, TxParams
-from .utils import read_from_memory
 
 T = TypeVar("T")
 
