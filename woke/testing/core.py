@@ -490,7 +490,6 @@ class Chain:
     _accounts: List[Account]
     _default_call_account: Optional[Account]
     _default_tx_account: Optional[Account]
-    _block_gas_limit: int
     _gas_price: int
     _chain_id: int
     _nonces: DefaultDict[Address, int]
@@ -521,9 +520,6 @@ class Chain:
             self._accounts = [
                 Account(acc, self) for acc in self._chain_interface.accounts()
             ]
-            block_info = self._chain_interface.get_block("latest")
-            assert "gasLimit" in block_info
-            self._block_gas_limit = int(block_info["gasLimit"], 16)
             self._chain_id = self._chain_interface.get_chain_id()
             self._gas_price = self._chain_interface.get_gas_price()
             self._nonces = defaultdict(lambda: 0)
@@ -629,13 +625,12 @@ class Chain:
     @property
     @_check_connected
     def block_gas_limit(self) -> int:
-        return self._block_gas_limit
+        return int(self._chain_interface.get_block("pending")["gasLimit"], 16)
 
     @block_gas_limit.setter
     @_check_connected
     def block_gas_limit(self, value: int) -> None:
         self._chain_interface.set_block_gas_limit(value)
-        self._block_gas_limit = value
 
     @property
     @_check_connected
@@ -761,7 +756,6 @@ class Chain:
             "accounts": self._accounts.copy(),
             "default_call_account": self._default_call_account,
             "default_tx_account": self._default_tx_account,
-            "block_gas_limit": self._block_gas_limit,
             "txs": dict(self._txs),
             "blocks": dict(self._blocks._blocks),
         }
