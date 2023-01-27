@@ -131,6 +131,9 @@ class ChainInterfaceAbc(ABC):
     def accounts(self) -> List[str]:
         return self._communicator.eth_accounts()
 
+    def get_coinbase(self) -> str:
+        return self._communicator.eth_coinbase()
+
     def get_block(
         self, block_identifier: Union[int, str], include_transactions: bool = False
     ) -> Dict[str, Any]:
@@ -196,6 +199,10 @@ class ChainInterfaceAbc(ABC):
         ...
 
     @abstractmethod
+    def set_coinbase(self, address: str) -> None:
+        ...
+
+    @abstractmethod
     def set_balance(self, address: str, value: int) -> None:
         ...
 
@@ -232,6 +239,9 @@ class HardhatChainInterface(ChainInterfaceAbc):
     def reset(self) -> None:
         self._communicator.hardhat_reset()
 
+    def set_coinbase(self, address: str) -> None:
+        self._communicator.hardhat_set_coinbase(address)
+
     def get_automine(self) -> bool:
         return self._communicator.hardhat_get_automine()
 
@@ -265,8 +275,10 @@ class AnvilChainInterface(ChainInterfaceAbc):
         self._communicator.evm_set_block_gas_limit(gas_limit)
 
     def reset(self) -> None:
-        raise NotImplementedError("Anvil does not support resetting the chain")
         self._communicator.anvil_reset()
+
+    def set_coinbase(self, address: str) -> None:
+        self._communicator.anvil_set_coinbase(address)
 
     def get_automine(self) -> bool:
         return self._communicator.anvil_get_automine()
@@ -298,6 +310,9 @@ class GanacheChainInterface(ChainInterfaceAbc):
 
     def reset(self) -> None:
         raise NotImplementedError("Ganache does not support resetting the chain")
+
+    def set_coinbase(self, address: str) -> None:
+        raise NotImplementedError("Ganache does not support setting coinbase")
 
     def get_automine(self) -> bool:
         raise NotImplementedError("Ganache does not support automine")

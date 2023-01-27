@@ -164,6 +164,11 @@ class JsonRpcCommunicator:
         text = self._send_request("eth_accounts")
         return self._process_response(text)
 
+    def eth_coinbase(self) -> str:
+        """Returns the coinbase address."""
+        text = self._send_request("eth_coinbase")
+        return self._process_response(text)
+
     def eth_get_code(
         self, address: str, block: Union[int, str] = BlockEnum.LATEST
     ) -> bytes:
@@ -259,6 +264,12 @@ class JsonRpcCommunicator:
         text = self._send_request("hardhat_setBalance", params)
         _ = self._process_response(text)
 
+    def hardhat_set_coinbase(self, address: str) -> None:
+        """Sets the coinbase address."""
+        params = [address]
+        text = self._send_request("hardhat_setCoinbase", params)
+        _ = self._process_response(text)
+
     def hardhat_impersonate_account(self, address: str) -> None:
         """Impersonates an account."""
         params = [address]
@@ -296,6 +307,11 @@ class JsonRpcCommunicator:
     def anvil_set_balance(self, address: str, balance: int) -> None:
         params = [address, hex(balance)]
         text = self._send_request("anvil_setBalance", params)
+        _ = self._process_response(text)
+
+    def anvil_set_coinbase(self, address: str) -> None:
+        params = [address]
+        text = self._send_request("anvil_setCoinbase", params)
         _ = self._process_response(text)
 
     def anvil_impersonate_account(self, address: str) -> None:
