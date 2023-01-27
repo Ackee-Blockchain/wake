@@ -752,7 +752,7 @@ class LspServer:
         if "woke" in params.settings:
             await self._handle_config_change(params.settings["woke"])
 
-    def _get_workspace(self, uri: DocumentUri) -> LspContext:
+    async def _get_workspace(self, uri: DocumentUri) -> LspContext:
         path = uri_to_path(uri)
         matching_workspaces = []
         for workspace in self.__workspaces.values():
@@ -762,8 +762,14 @@ class LspServer:
                 )
             except ValueError:
                 pass
-        assert len(matching_workspaces) >= 1
-        return min(matching_workspaces, key=lambda x: len(x[1].parts))[0]
+
+        if len(matching_workspaces) == 0:
+            context = LspContext(self, await self._create_config(path.parent), False)
+            self.__workspaces[path.parent] = context
+            context.run()
+            return context
+        else:
+            return min(matching_workspaces, key=lambda x: len(x[1].parts))[0]
 
     async def _workspace_route(self, params: Any) -> Any:
         if isinstance(
@@ -773,7 +779,7 @@ class LspServer:
         else:
             uri = params.text_document.uri
 
-        context = self._get_workspace(uri)
+        context = await self._get_workspace(uri)
 
         if isinstance(params, DocumentLinkParams):
             return await document_link(context, params)
@@ -892,13 +898,13 @@ class LspServer:
                 )
             document_uri = DocumentUri(params.arguments[0])
             canonical_name = str(params.arguments[1])
-            context = self._get_workspace(document_uri)
+            context = await self._get_workspace(document_uri)
             return await generate_cfg_handler(context, document_uri, canonical_name)
         elif command == CommandsEnum.GENERATE_INHERITANCE_GRAPH:
             if params.arguments is not None and len(params.arguments) == 2:
                 document_uri = DocumentUri(params.arguments[0])
                 canonical_name = str(params.arguments[1])
-                context = self._get_workspace(document_uri)
+                context = await self._get_workspace(document_uri)
                 return await generate_inheritance_graph_handler(
                     context, (document_uri, canonical_name)
                 )
@@ -923,7 +929,7 @@ class LspServer:
             if params.arguments is not None and len(params.arguments) == 2:
                 document_uri = DocumentUri(params.arguments[0])
                 canonical_name = str(params.arguments[1])
-                context = self._get_workspace(document_uri)
+                context = await self._get_workspace(document_uri)
                 return await generate_linearized_inheritance_graph_handler(
                     context, document_uri, canonical_name
                 )
