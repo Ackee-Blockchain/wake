@@ -70,6 +70,9 @@ class SolcFrontend:
             args.append("--base-path=.")
             for include_path in self.__config.compiler.solc.include_paths:
                 args.append(f"--include-path={include_path}")
+            args.append(
+                f"--include-path={Path(__file__).parent.parent.parent / 'contracts'}"
+            )
 
         # the first argument in this call cannot be `Path` because of https://bugs.python.org/issue35246
         proc = await asyncio.create_subprocess_exec(

@@ -28,7 +28,9 @@ class SourcePathResolver:
         matching_paths = []
 
         for include_path in itertools.chain(
-            [self.__config.project_root_path], self.__config.compiler.solc.include_paths
+            [self.__config.project_root_path],
+            self.__config.compiler.solc.include_paths,
+            [Path(__file__).parent.parent / "contracts"],
         ):
             path = include_path / source_unit_name
             if path.is_file():
@@ -53,7 +55,9 @@ class SourcePathResolver:
         Return True if the given source unit name matches the given file path.
         """
         for include_path in itertools.chain(
-            [self.__config.project_root_path], self.__config.compiler.solc.include_paths
+            [self.__config.project_root_path],
+            self.__config.compiler.solc.include_paths,
+            [Path(__file__).parent.parent / "contracts"],
         ):
             path = include_path / source_unit_name
             if path == file:
