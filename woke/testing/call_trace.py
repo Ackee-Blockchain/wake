@@ -19,8 +19,8 @@ from woke.testing.core import (
     get_fqn_from_deployment_code,
     process_debug_trace_for_fqn_overrides,
 )
+from woke.testing.internal import read_from_memory
 from woke.testing.json_rpc.communicator import TxParams
-from woke.testing.utils import read_from_memory
 
 from . import hardhat_console
 

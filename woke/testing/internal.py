@@ -121,3 +121,30 @@ def may_revert(exceptions=TransactionRevertedError):
         else:
             if not inspect.isclass(exceptions):
                 assert e == exceptions, f"Expected {e} but got {exceptions}"
+
+
+def read_from_memory(offset: int, length: int, memory: List) -> bytearray:
+    start_block = offset // 32
+    start_offset = offset % 32
+    end_block = (offset + length) // 32
+    end_offset = (offset + length) % 32
+
+    if start_block == end_block:
+        if start_block >= len(memory):
+            return bytearray(length)
+        return bytearray.fromhex(memory[start_block])[start_offset:end_offset]
+    else:
+        if start_block >= len(memory):
+            ret = bytearray(32 - start_offset)
+        else:
+            ret = bytearray.fromhex(memory[start_block])[start_offset:]
+        for i in range(start_block + 1, end_block):
+            if i >= len(memory):
+                ret += bytearray(32)
+            else:
+                ret += bytearray.fromhex(memory[i])
+        if end_block >= len(memory):
+            ret += bytearray(end_offset)
+        else:
+            ret += bytearray.fromhex(memory[end_block])[:end_offset]
+        return ret

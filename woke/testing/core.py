@@ -44,9 +44,8 @@ from woke.testing.chain_interfaces import (
 from . import hardhat_console
 from .blocks import ChainBlocks
 from .globals import get_exception_handler
-from .internal import UnknownEvent, UnknownTransactionRevertedError
+from .internal import UnknownEvent, UnknownTransactionRevertedError, read_from_memory
 from .json_rpc.communicator import JsonRpcError, TxParams
-from .utils import read_from_memory
 
 if TYPE_CHECKING:
     from .transactions import LegacyTransaction, TransactionAbc
