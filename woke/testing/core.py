@@ -634,6 +634,21 @@ class Chain:
 
     @property
     @_check_connected
+    def coinbase(self) -> Account:
+        return Account(self._chain_interface.get_coinbase(), self)
+
+    @coinbase.setter
+    @_check_connected
+    def coinbase(self, value: Union[Account, Address, str]) -> None:
+        if isinstance(value, Account):
+            if value.chain != self:
+                raise ValueError("Account is not from this chain")
+            self._chain_interface.set_coinbase(str(value.address))
+        else:
+            self._chain_interface.set_coinbase(str(value))
+
+    @property
+    @_check_connected
     def gas_price(self) -> int:
         return self._gas_price
 
