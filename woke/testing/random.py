@@ -6,66 +6,92 @@ from .core import Account, Address, Chain, default_chain
 
 
 def random_account(
+    *,
     lower_bound: int = 0,
-    length: Optional[int] = None,
+    upper_bound: Optional[int] = None,
     predicate: Optional[Callable[[Account], bool]] = None,
     chain: Optional[Chain] = None,
 ) -> Account:
     if chain is None:
         chain = default_chain
     accounts = chain.accounts
-    if length is None:
-        length = len(accounts)
-    accounts = accounts[lower_bound:length]
+    if upper_bound is None:
+        upper_bound = len(accounts)
+    accounts = accounts[lower_bound:upper_bound]
     if predicate is not None:
         accounts = [acc for acc in accounts if predicate(acc)]
     return random.choice(accounts)
 
 
-def random_address() -> Address:
-    return Address("0x" + random_bytes(20, 20).hex())
+def random_address(*, zero_address_prob: float = 0) -> Address:
+    if zero_address_prob is not None and random.random() < zero_address_prob:
+        return Address(0)
+    ret = Address("0x" + random_bytes(20).hex())
+    while ret == Address(0):
+        ret = Address("0x" + random_bytes(20).hex())
+    return ret
 
 
-def random_int(min: int, max: int) -> int:
-    """like random.randint, but with the following probability distribution:
-    if min < 0 and max > 0:
-        20%: min
-        20%:   0
-        20%: max
-        40%: random.randint(min, max)
+def random_int(
+    min: int,
+    max: int,
+    *,
+    min_prob: Optional[float] = None,
+    zero_prob: Optional[float] = None,
+    max_prob: Optional[float] = None,
+    edge_values_prob: Optional[float] = None,
+) -> int:
+    p = random.random()
+
+    if min_prob is None:
+        if edge_values_prob is not None:
+            min_prob = edge_values_prob
+
+    if min_prob is not None:
+        if p < min_prob:
+            return min
+        p -= min_prob
+        min += 1
+
+    if min < 0 < max:
+        if zero_prob is None:
+            if edge_values_prob is not None:
+                zero_prob = edge_values_prob
     else:
-        20%: min
-        20%: max
-        60%: random.randint(min, max)"""
-    if min < 0 and max > 0:
-        p = random.random()
-        if p < 0.2:
-            res = min
-        elif p < 0.4:
-            res = 0
-        elif p < 0.6:
-            res = max
-        else:
-            res = random.randint(min, max)
-    else:
-        p = random.random()
-        if p < 0.2:
-            res = min
-        elif p < 0.4:
-            res = max
-        else:
-            res = random.randint(min, max)
-    return res
+        zero_prob = None
+
+    if zero_prob is not None:
+        if p < zero_prob:
+            return 0
+        p -= zero_prob
+
+    if max_prob is None:
+        if edge_values_prob is not None:
+            max_prob = edge_values_prob
+
+    if max_prob is not None:
+        if p < max_prob:
+            return max
+        max -= 1
+
+    ret = random.randint(min, max)
+    while zero_prob is not None and ret == 0:
+        ret = random.randint(min, max)
+    return ret
 
 
-def random_bool() -> bool:
-    return random.choice([True, False])
+def random_bool(
+    *,
+    true_prob: float = 0.5,
+) -> bool:
+    return random.random() < true_prob
 
 
 def random_string(
     min: int,
     max: int,
-    alphabet: str = string.ascii_letters,
+    *,
+    alphabet: str = string.printable,
     predicate: Optional[Callable[[str], bool]] = None,
 ) -> str:
     def gen() -> str:
@@ -84,6 +110,7 @@ def random_string(
 def random_bytes(
     min: int,
     max: Optional[int] = None,
+    *,
     predicate: Optional[Callable[[bytes], bool]] = None,
 ) -> bytearray:
     """
