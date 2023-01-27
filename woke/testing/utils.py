@@ -3,12 +3,11 @@ from __future__ import annotations
 import inspect
 import math
 from functools import wraps
-from typing import TYPE_CHECKING, Callable, Iterable, List, Optional, Tuple, TypeVar
+from typing import Callable, Iterable, List, Optional, Tuple, TypeVar, Union
 
 from Crypto.Hash import keccak
 
-if TYPE_CHECKING:
-    from woke.testing.core import Chain
+from woke.testing.core import Account, Address, Chain
 
 
 def snapshot_and_revert(devchain_interface: Chain):
@@ -99,3 +98,47 @@ def negate(fn):
         return not fn(*args, **kwargs)
 
     return inner
+
+
+def get_create_address(deployer: Union[Account, Address, str], nonce: int) -> Address:
+    if isinstance(deployer, Account):
+        deployer = deployer.address
+    deployer_bytes = bytes.fromhex(str(deployer)[2:])
+
+    # see https://ethereum.org/en/developers/docs/data-structures-and-encoding/rlp
+    if nonce < 0:
+        raise ValueError("Nonce must be positive")
+    elif nonce == 0:
+        data = b"\xd6\x94" + deployer_bytes + b"\x80"
+    elif nonce <= 0x7F:
+        data = b"\xd6\x94" + deployer_bytes + bytes([nonce])
+    elif nonce <= 0xFF:
+        data = b"\xd7\x94" + deployer_bytes + b"\x81" + bytes([nonce])
+    elif nonce <= 0xFFFF:
+        data = b"\xd8\x94" + deployer_bytes + b"\x82" + nonce.to_bytes(2, "big")
+    elif nonce <= 0xFFFFFF:
+        data = b"\xd9\x94" + deployer_bytes + b"\x83" + nonce.to_bytes(3, "big")
+    elif nonce <= 0xFFFFFFFF:
+        data = b"\xda\x94" + deployer_bytes + b"\x84" + nonce.to_bytes(4, "big")
+    else:
+        raise ValueError("Nonce too large")
+
+    return Address("0x" + keccak256(data)[-20:].hex())
+
+
+def get_create2_address_from_hash(
+    deployer: Union[Account, Address, str], salt: bytes, code_hash: bytes
+) -> Address:
+    if isinstance(deployer, Account):
+        deployer = deployer.address
+    deployer_bytes = bytes.fromhex(str(deployer)[2:])
+
+    return Address(
+        "0x" + keccak256(b"\xff" + deployer_bytes + salt + code_hash)[-20:].hex()
+    )
+
+
+def get_create2_address_from_code(
+    deployer: Union[Account, Address, str], salt: bytes, code: bytes
+) -> Address:
+    return get_create2_address_from_hash(deployer, salt, keccak256(code))
