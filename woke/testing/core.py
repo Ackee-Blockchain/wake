@@ -41,6 +41,7 @@ from woke.testing.chain_interfaces import (
     HardhatChainInterface,
 )
 
+from ..utils.keyed_default_dict import KeyedDefaultDict
 from . import hardhat_console
 from .blocks import ChainBlocks
 from .globals import get_exception_handler
@@ -285,6 +286,7 @@ class Account:
         if value < 0:
             raise ValueError("value must be non-negative")
         self._chain.chain_interface.set_nonce(str(self.address), value)
+        self._chain._nonces[self.address] = value
 
     def _prepare_tx_params(
         self,
@@ -315,7 +317,7 @@ class Account:
         else:
             params["from"] = str(from_)
 
-        params["nonce"] = self._chain._get_nonce(params["from"])
+        params["nonce"] = self._chain._nonces[Address(params["from"])]
 
         if gas_limit == "max":
             params["gas"] = self.chain.block_gas_limit
@@ -491,7 +493,7 @@ class Chain:
     _default_tx_account: Optional[Account]
     _gas_price: int
     _chain_id: int
-    _nonces: DefaultDict[Address, int]
+    _nonces: KeyedDefaultDict[Address, int]
     _snapshots: Dict[str, Dict]
     _deployed_libraries: DefaultDict[bytes, List[Library]]
     _single_source_errors: Set[bytes]
@@ -521,7 +523,9 @@ class Chain:
             ]
             self._chain_id = self._chain_interface.get_chain_id()
             self._gas_price = self._chain_interface.get_gas_price()
-            self._nonces = defaultdict(lambda: 0)
+            self._nonces = KeyedDefaultDict(
+                lambda addr: self._chain_interface.get_transaction_count(str(addr))
+            )
             self._snapshots = {}
             self._deployed_libraries = defaultdict(list)
             self._default_call_account = (
@@ -809,13 +813,6 @@ class Chain:
     def reset(self) -> None:
         self._chain_interface.reset()
 
-    def _get_nonce(self, address: Union[str, Address]) -> int:
-        if address not in self._nonces:
-            self._nonces[address] = self._chain_interface.get_transaction_count(
-                str(address)
-            )
-        return self._nonces[address]
-
     def _build_transaction(
         self,
         request_type: RequestType,
@@ -835,7 +832,10 @@ class Chain:
             data += Abi.encode(types, arguments)
 
         if "from" in params:
-            sender = params["from"]
+            if isinstance(params["from"], str):
+                sender = Address(params["from"])
+            else:
+                sender = params["from"]
         else:
             if request_type == "call" and self.default_call_account is not None:
                 sender = self.default_call_account.address
@@ -866,7 +866,7 @@ class Chain:
 
         tx: TxParams = {
             "type": 0,
-            "nonce": self._get_nonce(sender),
+            "nonce": self._nonces[sender],
             "from": str(sender),
             "gas": gas,
             "value": params["value"] if "value" in params else 0,
