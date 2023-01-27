@@ -203,6 +203,7 @@ Address.ZERO = Address(0)
 class Account:
     _address: Address
     _chain: Chain
+    _label: Optional[str]
 
     def __init__(
         self, address: Union[Address, str, int], chain: Optional[Chain] = None
@@ -212,12 +213,12 @@ class Account:
         else:
             self._address = Address(address)
         self._chain = chain if chain is not None else default_chain
+        self._label = None
 
     def __str__(self) -> str:
-        return str(self._address)
+        return str(self._address) if self._label is None else self._label
 
-    def __repr__(self) -> str:
-        return str(self._address)
+    __repr__ = __str__
 
     def __eq__(self, other: Any) -> bool:
         if isinstance(other, Account):
@@ -248,6 +249,16 @@ class Account:
     @property
     def address(self) -> Address:
         return self._address
+
+    @property
+    def label(self) -> Optional[str]:
+        return self._label
+
+    @label.setter
+    def label(self, value: Optional[str]) -> None:
+        if value is not None and not isinstance(value, str):
+            raise TypeError("label must be a string or None")
+        self._label = value
 
     @property
     def balance(self) -> Wei:
@@ -1541,10 +1552,13 @@ class Contract(Account):
         super().__init__(addr, chain)
 
     def __str__(self):
-        return f"{self.__class__.__name__}({self._address})"
+        return (
+            f"{self.__class__.__name__}({self._address})"
+            if self._label is None
+            else self._label
+        )
 
-    def __repr__(self):
-        return self.__str__()
+    __repr__ = __str__
 
     @classmethod
     def _get_deployment_code(
