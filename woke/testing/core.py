@@ -783,11 +783,6 @@ class Chain:
         self._blocks._blocks = snapshot["blocks"]
         del self._snapshots[snapshot_id]
 
-    @property
-    @_check_connected
-    def deployed_libraries(self) -> DefaultDict[bytes, List[Library]]:
-        return self._deployed_libraries
-
     @contextmanager
     def snapshot_and_revert(self):
         snapshot_id = self.snapshot()
@@ -1081,7 +1076,7 @@ class Chain:
         return console_logs
 
     @_check_connected
-    def deploy(
+    def _deploy(
         self,
         abi: Dict[Union[bytes, Literal["constructor"]], Any],
         deployment_code: bytes,
@@ -1137,7 +1132,7 @@ class Chain:
         return tx.return_value
 
     @_check_connected
-    def call(
+    def _call(
         self,
         selector: bytes,
         abi: Dict[Union[bytes, Literal["constructor"]], Any],
@@ -1181,7 +1176,7 @@ class Chain:
         self._process_revert_data(None, bytes.fromhex(revert_data))
 
     @_check_connected
-    def transact(
+    def _transact(
         self,
         selector: bytes,
         abi: Dict[Union[bytes, Literal["constructor"]], Any],
@@ -1614,8 +1609,8 @@ class Contract(Account):
                     lib_addr = str(lib.address)[2:]
                 else:
                     lib_addr = str(lib)[2:]
-            elif lib_id in chain.deployed_libraries:
-                lib_addr = str(chain.deployed_libraries[lib_id][-1].address)[2:]
+            elif lib_id in chain._deployed_libraries:
+                lib_addr = str(chain._deployed_libraries[lib_id][-1].address)[2:]
             else:
                 raise ValueError(f"Library {libraries[lib_id][1]} not deployed")
 
@@ -1625,7 +1620,7 @@ class Contract(Account):
                 + deployment_code[match.end() :]
             )
 
-        return chain.deploy(
+        return chain._deploy(
             cls._abi,
             bytes.fromhex(deployment_code),
             arguments,
@@ -1674,7 +1669,7 @@ class Contract(Account):
         else:
             params["to"] = str(self._address)
 
-        return self.chain.transact(
+        return self.chain._transact(
             bytes.fromhex(selector),
             self.__class__._abi,
             arguments,
@@ -1726,7 +1721,9 @@ class Contract(Account):
             params["to"] = str(self._address)
 
         sel = bytes.fromhex(selector)
-        return self.chain.call(sel, self.__class__._abi, arguments, params, return_type)
+        return self.chain._call(
+            sel, self.__class__._abi, arguments, params, return_type
+        )
 
 
 class Library(Contract):
@@ -1750,5 +1747,5 @@ class Library(Contract):
         lib = super()._deploy(
             arguments, return_tx, return_type, from_, value, gas_limit, libraries, chain
         )
-        chain.deployed_libraries[cls._library_id].append(lib)
+        chain._deployed_libraries[cls._library_id].append(lib)
         return lib
