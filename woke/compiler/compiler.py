@@ -849,8 +849,9 @@ class SolidityCompiler:
 
                 if errored:
                     for file in cu.files:
-                        build.reference_resolver.run_destroy_callbacks(file)
-                        build.source_units.pop(file)
+                        if file in build.source_units:
+                            build.reference_resolver.run_destroy_callbacks(file)
+                            build.source_units.pop(file)
                 else:
                     successful_compilation_units.append((cu, solc_output))
 
