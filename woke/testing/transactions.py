@@ -199,12 +199,8 @@ class TransactionAbc(ABC, Generic[T]):
             return TransactionStatusEnum.SUCCESS
 
     def wait(self) -> None:
-        for _ in range(40):
-            if self.status != TransactionStatusEnum.PENDING:
-                return
-
         while self.status == TransactionStatusEnum.PENDING:
-            time.sleep(0.25)
+            pass
 
     def _fetch_trace_transaction(self) -> None:
         if self._trace_transaction is None:
