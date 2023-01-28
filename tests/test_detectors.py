@@ -114,7 +114,7 @@ class TestNoReturnDetector:
         os.environ["XDG_DATA_HOME"] = str(tmp_path)
         config_dict = {
             "compiler": {"solc": {"include_paths": ["./node_modules"]}},
-            "detectors": {"only": {"no-return"}},
+            "detectors": {"only": {"missing-return"}},
         }
         return WokeConfig.fromdict(
             config_dict,
@@ -180,7 +180,7 @@ class TestNotUsed:
         os.environ["XDG_DATA_HOME"] = str(tmp_path)
         config_dict = {
             "compiler": {"solc": {"include_paths": ["./node_modules"]}},
-            "detectors": {"only": {"not-used"}},
+            "detectors": {"only": {"unused-contract"}},
         }
         return WokeConfig.fromdict(
             config_dict,
