@@ -171,12 +171,6 @@ class ChainInterfaceAbc(ABC):
     def debug_trace_transaction(self, tx_hash: str, options: Dict) -> Dict[str, Any]:
         return self._communicator.debug_trace_transaction(tx_hash, options)
 
-    def wait_for_transaction_receipt(self, tx_hash: str) -> Dict[str, Any]:
-        ret = self._communicator.eth_get_transaction_receipt(tx_hash)
-        while ret is None:
-            ret = self._communicator.eth_get_transaction_receipt(tx_hash)
-        return ret
-
     def snapshot(self) -> str:
         return self._communicator.evm_snapshot()
 
