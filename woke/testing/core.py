@@ -533,7 +533,7 @@ class Chain:
             self._accounts = [
                 Account(acc, self) for acc in self._chain_interface.accounts()
             ]
-            block_info = self._chain_interface.get_block("latest")
+            block_info = self._chain_interface.get_block("pending")
             assert "gasLimit" in block_info
             self._block_gas_limit = int(block_info["gasLimit"], 16)
             self._chain_id = self._chain_interface.get_chain_id()
