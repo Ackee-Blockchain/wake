@@ -446,7 +446,7 @@ class TypeGenerator:
                     ).replace("/", ".")
                     self.__errors_index[selector][fqn] = (
                         error_module_name,
-                        (error_decl.parent.name, error_decl.name),
+                        (self.get_name(error_decl.parent), self.get_name(error_decl)),
                     )
                 elif isinstance(error_decl.parent, SourceUnit):
                     error_module_name = "pytypes." + _make_path_alphanum(
@@ -454,7 +454,7 @@ class TypeGenerator:
                     ).replace("/", ".")
                     self.__errors_index[selector][fqn] = (
                         error_module_name,
-                        (error_decl.name,),
+                        (self.get_name(error_decl),),
                     )
                 else:
                     raise Exception("Unknown error parent")
@@ -464,11 +464,23 @@ class TypeGenerator:
                 )  # pyright: reportPrivateImportUsage=false
                 events_abi[selector] = item
 
+                event_decl = None
+                for c in contract.linearized_base_contracts:
+                    for event in c.events:
+                        if event.event_selector == selector:
+                            event_decl = event
+                            break
+                    if event_decl is not None:
+                        break
+                assert (
+                    event_decl is not None
+                ), f"Could not find event {item['name']} in contract {fqn} or its bases"
+
                 if selector not in self.__events_index:
                     self.__events_index[selector] = {}
                 self.__events_index[selector][fqn] = (
                     module_name,
-                    (contract.name, item["name"]),
+                    (self.get_name(contract), self.get_name(event_decl)),
                 )
             elif item["type"] in {"constructor", "fallback", "receive"}:
                 abi_by_selector[item["type"]] = item
