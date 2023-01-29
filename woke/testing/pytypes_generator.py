@@ -1656,7 +1656,11 @@ class NameSanitizer:
             or name in self.__contract_reserved
             or name in set(self.__contract_renames[contract].values())
             or keyword.iskeyword(name)
-            or (name.startswith("__") and name.endswith("__"))
+            or (
+                name.startswith("__")
+                and name.endswith("__")
+                and not name.endswith("___")
+            )
         )
 
     def _check_function(self, name: str, function: FunctionDefinition) -> bool:
@@ -1675,7 +1679,11 @@ class NameSanitizer:
             or name in self.__struct_reserved
             or name in set(self.__struct_renames[struct].values())
             or keyword.iskeyword(name)
-            or (name.startswith("__") and name.endswith("__"))
+            or (
+                name.startswith("__")
+                and name.endswith("__")
+                and not name.endswith("___")
+            )
         )
 
     def _check_event(self, name: str, event: EventDefinition) -> bool:
@@ -1685,7 +1693,11 @@ class NameSanitizer:
             or name in self.__event_reserved
             or name in set(self.__event_renames[event].values())
             or keyword.iskeyword(name)
-            or (name.startswith("__") and name.endswith("__"))
+            or (
+                name.startswith("__")
+                and name.endswith("__")
+                and not name.endswith("___")
+            )
         )
 
     def _check_error(self, name: str, error: ErrorDefinition) -> bool:
@@ -1695,7 +1707,11 @@ class NameSanitizer:
             or name in self.__error_reserved
             or name in set(self.__error_renames[error].values())
             or keyword.iskeyword(name)
-            or (name.startswith("__") and name.endswith("__"))
+            or (
+                name.startswith("__")
+                and name.endswith("__")
+                and not name.endswith("___")
+            )
         )
 
     def _check_enum(self, name: str, enum: EnumDefinition) -> bool:
@@ -1705,7 +1721,11 @@ class NameSanitizer:
             or name in self.__enum_reserved
             or name in set(self.__enum_renames[enum].values())
             or keyword.iskeyword(name)
-            or (name.startswith("__") and name.endswith("__"))
+            or (
+                name.startswith("__")
+                and name.endswith("__")
+                and not name.endswith("___")
+            )
         )
 
     def sanitize_name(self, declaration: DeclarationAbc) -> str:
