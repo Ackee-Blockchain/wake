@@ -1,14 +1,12 @@
 # tab space width for indentation
 TAB_WIDTH = 4
 
-# TODO move to constants file
 DEFAULT_IMPORTS: str = """
-import random 
 from dataclasses import dataclass 
-from typing import List, NewType, Optional, overload, Union
+from typing import List, Optional, overload, Union
 from typing_extensions import Literal
 
-from woke.testing.core import Contract, Library, Address, Wei, Account, Chain, RequestType
+from woke.testing.core import Contract, Library, Address, Account, Chain, RequestType
 from woke.testing.internal import TransactionRevertedError
 from woke.testing.primitive_types import *
 from woke.testing.transactions import LegacyTransaction
