@@ -36,7 +36,7 @@ async def run_init_pytypes(
         start = time.perf_counter()
         with console.status("[bold green]Generating pytypes..."):
             type_generator = TypeGenerator(config, return_tx)
-            type_generator.generate_types(build)
+            type_generator.generate_types(compiler)
         end = time.perf_counter()
         console.log(f"[green]Generated pytypes in [bold green]{end - start:.2f} s[/]")
 
@@ -83,7 +83,7 @@ async def run_init_pytypes(
 
     compiler.load(console=console)
 
-    build, errors = await compiler.compile(
+    _, errors = await compiler.compile(
         sol_files,
         [SolcOutputSelectionEnum.ALL],
         write_artifacts=True,
@@ -95,7 +95,7 @@ async def run_init_pytypes(
     start = time.perf_counter()
     with console.status("[bold green]Generating pytypes..."):
         type_generator = TypeGenerator(config, return_tx)
-        type_generator.generate_types(build)
+        type_generator.generate_types(compiler)
     end = time.perf_counter()
     console.log(f"[green]Generated pytypes in [bold green]{end - start:.2f} s[/]")
 
