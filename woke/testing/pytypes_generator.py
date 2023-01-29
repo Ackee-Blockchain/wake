@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import (
     Any,
     DefaultDict,
-    Deque,
     Dict,
     FrozenSet,
     Iterable,
@@ -43,6 +42,7 @@ from ..ast.ir.declaration.error_definition import ErrorDefinition
 from ..ast.ir.declaration.event_definition import EventDefinition
 from ..ast.ir.declaration.function_definition import FunctionDefinition
 from ..ast.ir.expression.function_call import FunctionCall
+from ..ast.ir.meta.parameter_list import ParameterList
 from ..ast.ir.meta.source_unit import SourceUnit
 from ..ast.ir.reference_resolver import ReferenceResolver
 from ..ast.ir.statement.revert_statement import RevertStatement
@@ -1525,57 +1525,217 @@ class SourceUnitImports:
 
 
 class NameSanitizer:
-    __black_listed: Set[str]
-    __used_names: Set[str]
-    __renames: Dict[DeclarationAbc, str]
+    __global_reserved: Set[str]
+    __contract_reserved: Set[str]
+    __function_reserved: Set[str]
+    __struct_reserved: Set[str]
+    __event_reserved: Set[str]
+    __error_reserved: Set[str]
+    __enum_reserved: Set[str]
+
+    __global_renames: Dict[DeclarationAbc, str]
+    __contract_renames: DefaultDict[ContractDefinition, Dict[DeclarationAbc, str]]
+    __function_renames: DefaultDict[FunctionDefinition, Dict[DeclarationAbc, str]]
+    __struct_renames: DefaultDict[StructDefinition, Dict[DeclarationAbc, str]]
+    __event_renames: DefaultDict[EventDefinition, Dict[DeclarationAbc, str]]
+    __error_renames: DefaultDict[ErrorDefinition, Dict[DeclarationAbc, str]]
+    __enum_renames: DefaultDict[EnumDefinition, Dict[DeclarationAbc, str]]
 
     def __init__(self):
-        # TODO add names
-        self.__black_listed = {
+        self.__global_reserved = {
             "Dict",
             "List",
             "Mapping",
             "Set",
             "Tuple",
             "Union",
+            "Annotated",
+            "Optional",
+            "Literal",
             "Path",
             "bytearray",
             "IntEnum",
             "dataclass",
+            "overload",
             "Contract",
+            "Library",
+            "Address",
+            "Account",
+            "Chain",
+            "RequestType",
+            "TransactionRevertedError",
+            "TransactionAbc",
+            "LegacyTransaction",
+            "ValueRange",
+            "Length",
             "bytes",
-            "map",
-            "__str__",
-            "__call__",
-            "__init__",
+            "int",
+            "uint",
+            "str",
+            "bool",
+        }
+
+        for i in range(8, 257, 8):
+            self.__global_reserved.add(f"uint{i}")
+            self.__global_reserved.add(f"int{i}")
+
+        for i in range(1, 33):
+            self.__global_reserved.add(f"bytes{i}")
+            self.__global_reserved.add(f"List{i}")
+
+        self.__contract_reserved = {
+            "_abi",
+            "_deployment_code",
+            "_address",
+            "_chain",
+            "_label",
+            "_get_deployment_code",
             "_deploy",
             "_transact",
             "_call",
-            "to",
+            "_library_id",
+            "_prepare_tx_params",
+            "address",
+            "label",
+            "balance",
+            "code",
+            "chain",
+            "nonce",
+            "call",
+            "transact",
+            "deploy",
+            "deployment_code",
+        }
+        self.__function_reserved = {
+            "self",
+            "cls",
             "from_",
             "value",
-            "self",
-            "deploy",
+            "gas_limit",
+            "return_tx",
             "chain",
-            "deployment_code",
-            "transact",
-            "call",
+            "to",
+            "request_type",
         }
-        self.__used_names = set()
-        self.__renames = {}
+        self.__struct_reserved = set()
+        self.__event_reserved = {"_abi", "selector"}
+        self.__error_reserved = {"_abi", "selector"}
+        self.__enum_reserved = set()
+
+        self.__global_renames = {}
+        self.__contract_renames = defaultdict(dict)
+        self.__function_renames = defaultdict(dict)
+        self.__struct_renames = defaultdict(dict)
+        self.__event_renames = defaultdict(dict)
+        self.__error_renames = defaultdict(dict)
+        self.__enum_renames = defaultdict(dict)
+
+    def _check_global(self, name: str) -> bool:
+        return (
+            name in self.__global_reserved
+            or name in set(self.__global_renames.values())
+            or keyword.iskeyword(name)
+        )
+
+    def _check_contract(self, name: str, contract: ContractDefinition) -> bool:
+        return (
+            name in self.__global_reserved
+            or name in set(self.__global_renames)
+            or name in self.__contract_reserved
+            or name in set(self.__contract_renames[contract].values())
+            or keyword.iskeyword(name)
+            or (name.startswith("__") and name.endswith("__"))
+        )
+
+    def _check_function(self, name: str, function: FunctionDefinition) -> bool:
+        return (
+            name in self.__global_reserved
+            or name in set(self.__global_renames)
+            or name in self.__function_reserved
+            or name in set(self.__function_renames[function].values())
+            or keyword.iskeyword(name)
+        )
+
+    def _check_struct(self, name: str, struct: StructDefinition) -> bool:
+        return (
+            name in self.__global_reserved
+            or name in set(self.__global_renames)
+            or name in self.__struct_reserved
+            or name in set(self.__struct_renames[struct].values())
+            or keyword.iskeyword(name)
+            or (name.startswith("__") and name.endswith("__"))
+        )
+
+    def _check_event(self, name: str, event: EventDefinition) -> bool:
+        return (
+            name in self.__global_reserved
+            or name in set(self.__global_renames)
+            or name in self.__event_reserved
+            or name in set(self.__event_renames[event].values())
+            or keyword.iskeyword(name)
+            or (name.startswith("__") and name.endswith("__"))
+        )
+
+    def _check_error(self, name: str, error: ErrorDefinition) -> bool:
+        return (
+            name in self.__global_reserved
+            or name in set(self.__global_renames)
+            or name in self.__error_reserved
+            or name in set(self.__error_renames[error].values())
+            or keyword.iskeyword(name)
+            or (name.startswith("__") and name.endswith("__"))
+        )
+
+    def _check_enum(self, name: str, enum: EnumDefinition) -> bool:
+        return (
+            name in self.__global_reserved
+            or name in set(self.__global_renames)
+            or name in self.__enum_reserved
+            or name in set(self.__enum_renames[enum].values())
+            or keyword.iskeyword(name)
+            or (name.startswith("__") and name.endswith("__"))
+        )
 
     def sanitize_name(self, declaration: DeclarationAbc) -> str:
-        if declaration in self.__renames:
-            return self.__renames[declaration]
+        parent = declaration.parent
+        if isinstance(parent, SourceUnit):
+            check = self._check_global
+            renames = self.__global_renames
+        elif isinstance(parent, ContractDefinition):
+            check = lambda name: self._check_contract(name, parent)
+            renames = self.__contract_renames[parent]
+        elif isinstance(parent, StructDefinition):
+            check = lambda name: self._check_struct(name, parent)
+            renames = self.__struct_renames[parent]
+        elif isinstance(parent, EnumDefinition):
+            check = lambda name: self._check_enum(name, parent)
+            renames = self.__enum_renames[parent]
+        elif isinstance(parent, ParameterList):
+            parent_parent = parent.parent
+            if isinstance(parent_parent, FunctionDefinition):
+                check = lambda name: self._check_function(name, parent_parent)
+                renames = self.__function_renames[parent_parent]
+            elif isinstance(parent_parent, EventDefinition):
+                check = lambda name: self._check_event(name, parent_parent)
+                renames = self.__event_renames[parent_parent]
+            elif isinstance(parent_parent, ErrorDefinition):
+                check = lambda name: self._check_error(name, parent_parent)
+                renames = self.__error_renames[parent_parent]
+            else:
+                raise NotImplementedError(
+                    f"Cannot sanitize name for declaration {declaration} with parent {parent} and parent of parent {parent_parent}"
+                )
+        else:
+            raise NotImplementedError(
+                f"Cannot sanitize name for declaration {declaration} with parent {parent}"
+            )
+
+        if declaration in renames:
+            return renames[declaration]
 
         new_name = declaration.name
-        while (
-            new_name in self.__black_listed
-            or new_name in set(self.__renames.values())
-            or keyword.iskeyword(new_name)
-        ):
+        while check(new_name):
             new_name = new_name + "_"
 
-        self.__used_names.add(new_name)
-        self.__renames[declaration] = new_name
+        renames[declaration] = new_name
         return new_name
