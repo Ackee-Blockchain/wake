@@ -14,6 +14,7 @@ from typing import (
     DefaultDict,
     Deque,
     Dict,
+    FrozenSet,
     Iterable,
     List,
     Mapping,
@@ -437,12 +438,20 @@ class SolidityCompiler:
             compilation_units.append(compilation_unit)
 
         # cycles can also be "sinks" in terms of compilation units
-        for cycle in nx.simple_cycles(graph):
-            out_degree_sum = sum(
-                out_degree for *_, out_degree in graph.out_degree(cycle)
-            )
+        generated_cycles: Set[FrozenSet[str]] = set()
 
-            if out_degree_sum == len(cycle):
+        for cycle in nx.simple_cycles(graph):
+            if frozenset(cycle) in generated_cycles:
+                continue
+
+            is_closed_cycle = True
+            for node in cycle:
+                if any(edge[1] not in cycle for edge in graph.out_edges(node)):
+                    is_closed_cycle = False
+                    break
+
+            if is_closed_cycle:
+                generated_cycles.add(frozenset(cycle))
                 compilation_unit = __build_compilation_unit(graph, cycle)
                 compilation_units.append(compilation_unit)
         return compilation_units
