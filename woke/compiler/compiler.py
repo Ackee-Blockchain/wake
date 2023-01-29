@@ -286,6 +286,7 @@ class SolidityCompiler:
 
     _latest_build_info: Optional[ProjectBuildInfo]
     _latest_build: Optional[ProjectBuild]
+    _latest_graph: Optional[nx.DiGraph]
 
     def __init__(self, woke_config: WokeConfig):
         self.__config = woke_config
@@ -296,6 +297,7 @@ class SolidityCompiler:
 
         self._latest_build_info = None
         self._latest_build = None
+        self._latest_graph = None
 
     @property
     def latest_build_info(self) -> Optional[ProjectBuildInfo]:
@@ -304,6 +306,10 @@ class SolidityCompiler:
     @property
     def latest_build(self) -> Optional[ProjectBuild]:
         return self._latest_build
+
+    @property
+    def latest_graph(self) -> Optional[nx.DiGraph]:
+        return self._latest_graph
 
     def build_graph(
         self,
@@ -711,6 +717,8 @@ class SolidityCompiler:
         )
         compilation_units = self.build_compilation_units_maximize(graph)
         build_settings = self.create_build_settings(output_types)
+
+        self._latest_graph = graph
 
         build_settings_changed = False
         if self._latest_build_info is not None:

@@ -1,15 +1,30 @@
 from __future__ import annotations
 
+import heapq
 import keyword
+import logging
 import re
 import shutil
 import string
-from collections import deque
+from collections import defaultdict, deque
 from operator import itemgetter
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import (
+    Any,
+    DefaultDict,
+    Deque,
+    Dict,
+    FrozenSet,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+)
 
 import eth_utils
+import networkx as nx
 from Crypto.Hash import BLAKE2b, keccak
 from intervaltree import IntervalTree
 from typing_extensions import Literal
@@ -22,6 +37,7 @@ from woke.ast.ir.declaration.struct_definition import StructDefinition
 from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
 from woke.config import WokeConfig
 
+from ..ast.ir.declaration.abc import DeclarationAbc
 from ..ast.ir.declaration.contract_definition import ContractDefinition
 from ..ast.ir.declaration.error_definition import ErrorDefinition
 from ..ast.ir.declaration.event_definition import EventDefinition
@@ -33,9 +49,11 @@ from ..ast.ir.statement.revert_statement import RevertStatement
 from ..ast.ir.type_name.abc import TypeNameAbc
 from ..ast.ir.type_name.array_type_name import ArrayTypeName
 from ..ast.ir.type_name.user_defined_type_name import UserDefinedTypeName
-from ..compiler.build_data_model import ProjectBuild
+from ..compiler import SolidityCompiler
 from ..utils import get_package_version
 from .constants import DEFAULT_IMPORTS, INIT_CONTENT, TAB_WIDTH
+
+logger = logging.getLogger(__name__)
 
 
 # TODO ensure that making the path alphanum won't create collisions
@@ -198,8 +216,8 @@ class TypeGenerator:
             num_of_indentation * TAB_WIDTH * " " + string + num_of_newlines * "\n"
         )
 
-    def get_name(self, name: str) -> str:
-        return self.__name_sanitizer.sanitize_name(name)
+    def get_name(self, declaration: DeclarationAbc) -> str:
+        return self.__name_sanitizer.sanitize_name(declaration)
 
     def generate_deploy_func(
         self, contract: ContractDefinition, libraries: Dict[bytes, Tuple[str, str]]
@@ -217,7 +235,7 @@ class TypeGenerator:
             for l in libraries.values()
         )
 
-        contract_name = self.get_name(contract.name)
+        contract_name = self.get_name(contract)
 
         # generate @overload stubs
         self.add_str_to_types(1, "@overload", 1)
@@ -319,11 +337,11 @@ class TypeGenerator:
     ) -> Dict[bytes, Any]:
         if contract.kind == ContractKind.LIBRARY:
             self.add_str_to_types(
-                0, "class " + self.get_name(contract.name) + "(Library):", 1
+                0, "class " + self.get_name(contract) + "(Library):", 1
             )
         else:
             self.add_str_to_types(
-                0, "class " + self.get_name(contract.name) + "(" + base_names + "):", 1
+                0, "class " + self.get_name(contract) + "(" + base_names + "):", 1
             )
         compilation_info = contract.compilation_info
         assert compilation_info is not None
@@ -506,12 +524,10 @@ class TypeGenerator:
 
                     if lib_id in lib_ids:
                         lib_ids.remove(lib_id)
-                        self.__imports.generate_contract_import_name(
-                            c.name, c.parent.source_unit_name
-                        )
+                        self.__imports.generate_contract_import(c)
                         libraries[lib_id] = (
                             c.name[0].lower() + c.name[1:],
-                            self.get_name(c.name),
+                            self.get_name(c),
                         )
 
             source_units_queue.extend(imp.source_unit for imp in source_unit.imports)
@@ -532,13 +548,13 @@ class TypeGenerator:
         for struct in structs:
             members: List[Tuple[str, str, str]] = []
             for member in struct.members:
-                member_name = self.get_name(member.name)
+                member_name = self.get_name(member)
                 member_type = self.parse_type_and_import(member.type, True)
                 member_type_desc = member.type_string
                 members.append((member_name, member_type, member_type_desc))
 
             self.add_str_to_types(indent, "@dataclass", 1)
-            self.add_str_to_types(indent, f"class {self.get_name(struct.name)}:", 1)
+            self.add_str_to_types(indent, f"class {self.get_name(struct)}:", 1)
             self.add_str_to_types(indent + 1, '"""', 1)
             self.add_str_to_types(indent + 1, "Attributes:", 1)
             for member_name, member_type, member_type_desc in members:
@@ -551,17 +567,14 @@ class TypeGenerator:
                 self.add_str_to_types(indent + 1, f"{member_name}: {member_type}", 1)
             self.add_str_to_types(0, "", 2)
 
-    # TODO very similar to generate_types_struct -> refactor
     def generate_types_enum(self, enums: Iterable[EnumDefinition], indent: int) -> None:
         self.__imports.add_python_import("from enum import IntEnum")
         for enum in enums:
-            self.add_str_to_types(
-                indent, f"class {self.get_name(enum.name)}(IntEnum):", 1
-            )
+            self.add_str_to_types(indent, f"class {self.get_name(enum)}(IntEnum):", 1)
             num = 0
             for member in enum.values:
                 self.add_str_to_types(
-                    indent + 1, self.get_name(member.name) + " = " + str(num), 1
+                    indent + 1, self.get_name(member) + " = " + str(num), 1
                 )
                 num += 1
             self.add_str_to_types(0, "", 2)
@@ -597,7 +610,7 @@ class TypeGenerator:
             unnamed_params_index = 1
             for parameter in error.parameters.parameters:
                 if parameter.name:
-                    parameter_name = self.get_name(parameter.name)
+                    parameter_name = self.get_name(parameter)
                 else:
                     parameter_name = f"param{unnamed_params_index}"
                     unnamed_params_index += 1
@@ -608,7 +621,7 @@ class TypeGenerator:
             self.add_str_to_types(indent, "@dataclass", 1)
             self.add_str_to_types(
                 indent,
-                f"class {self.get_name(error.name)}(TransactionRevertedError):",
+                f"class {self.get_name(error)}(TransactionRevertedError):",
                 1,
             )
 
@@ -638,7 +651,7 @@ class TypeGenerator:
             unnamed_params_index = 1
             for parameter in event.parameters.parameters:
                 if parameter.name:
-                    parameter_name = self.get_name(parameter.name)
+                    parameter_name = self.get_name(parameter)
                 else:
                     parameter_name = f"param{unnamed_params_index}"
                     unnamed_params_index += 1
@@ -658,7 +671,7 @@ class TypeGenerator:
                 parameters.append((parameter_name, parameter_type, parameter_type_desc))
 
             self.add_str_to_types(indent, "@dataclass", 1)
-            self.add_str_to_types(indent, f"class {self.get_name(event.name)}:", 1)
+            self.add_str_to_types(indent, f"class {self.get_name(event)}:", 1)
 
             if len(parameters) > 0:
                 self.add_str_to_types(indent + 1, '"""', 1)
@@ -688,23 +701,19 @@ class TypeGenerator:
         if isinstance(expr, types.Struct):
             parent = expr.ir_node.parent
             if isinstance(parent, ContractDefinition):
-                self.__imports.generate_contract_import_name(
-                    parent.name, parent.parent.source_unit_name
-                )
-                return f"{self.get_name(parent.name)}.{self.get_name(expr.name)}"
+                self.__imports.generate_contract_import(parent)
+                return f"{self.get_name(parent)}.{self.get_name(expr.ir_node)}"
             else:
                 self.__imports.generate_struct_import(expr)
-                return self.get_name(expr.name)
+                return self.get_name(expr.ir_node)
         elif isinstance(expr, types.Enum):
             parent = expr.ir_node.parent
             if isinstance(parent, ContractDefinition):
-                self.__imports.generate_contract_import_name(
-                    parent.name, parent.parent.source_unit_name
-                )
-                return f"{self.get_name(parent.name)}.{self.get_name(expr.name)}"
+                self.__imports.generate_contract_import(parent)
+                return f"{self.get_name(parent)}.{self.get_name(expr.ir_node)}"
             else:
                 self.__imports.generate_enum_import(expr)
-                return self.get_name(expr.name)
+                return self.get_name(expr.ir_node)
         elif isinstance(expr, types.UserDefinedValueType):
             return self.parse_type_and_import(
                 expr.ir_node.underlying_type.type, return_types
@@ -719,8 +728,8 @@ class TypeGenerator:
             else:
                 return f"Annotated[List[{self.parse_type_and_import(expr.base_type, return_types)}], Length({expr.length})]"
         elif isinstance(expr, types.Contract):
-            self.__imports.generate_contract_import_expr(expr)
-            return self.get_name(expr.name)
+            self.__imports.generate_contract_import(expr.ir_node)
+            return self.get_name(expr.ir_node)
         elif isinstance(expr, types.FixedBytes):
             return f"bytes{expr.bytes_count}"
         elif isinstance(expr, types.Int):
@@ -739,15 +748,21 @@ class TypeGenerator:
         params = []
         param_names = []
         unnamed_params_identifier: int = 1
-        for par in fn.parameters.parameters:
-            if not par.name:
+        generated_names = {
+            self.get_name(par) for par in fn.parameters.parameters if par.name != ""
+        }
+
+        for param in fn.parameters.parameters:
+            if param.name == "":
                 param_name: str = "arg" + str(unnamed_params_identifier)
                 unnamed_params_identifier += 1
+                while param_name in generated_names:
+                    param_name += "_"
             else:
-                param_name = par.name
-            param_names.append((self.get_name(param_name), par.type_string))
+                param_name = self.get_name(param)
+            param_names.append((param_name, param.type_string))
             params.append(
-                f"{self.get_name(param_name)}: {self.parse_type_and_import(par.type, False)}"
+                f"{param_name}: {self.parse_type_and_import(param.type, False)}"
             )
         return param_names, params
 
@@ -785,18 +800,18 @@ class TypeGenerator:
                 # nothing was excluded -> the whole struct will be used -> add the struct to imports
                 parent = node.parent
                 if isinstance(parent, ContractDefinition):
-                    self.__imports.generate_contract_import_name(
-                        parent.name, parent.parent.source_unit_name
-                    )
+                    self.__imports.generate_contract_import(parent)
                     return [
                         (
-                            f"{self.get_name(parent.name)}.{self.get_name(struct.name)}",
+                            f"{self.get_name(parent)}.{self.get_name(struct.ir_node)}",
                             struct_type_name.type_string,
                         )
                     ]
                 else:
                     self.__imports.generate_struct_import(struct)
-                    return [(self.get_name(struct.name), struct_type_name.type_string)]
+                    return [
+                        (self.get_name(struct.ir_node), struct_type_name.type_string)
+                    ]
             else:
                 self.__imports.add_python_import("from typing import Tuple")
                 return non_excluded
@@ -819,38 +834,34 @@ class TypeGenerator:
                 else:
                     parent = var_type.ir_node.parent
                     if isinstance(parent, ContractDefinition):
-                        self.__imports.generate_contract_import_name(
-                            parent.name, parent.parent.source_unit_name
-                        )
+                        self.__imports.generate_contract_import(parent)
                         parsed.append(
-                            f"{self.get_name(parent.name)}.{self.get_name(var_type.name)}"
+                            f"{self.get_name(parent)}.{self.get_name(var_type.ir_node)}"
                         )
                     else:
                         self.__imports.generate_struct_import(var_type)
-                        parsed.append(self.get_name(var_type.name))
+                        parsed.append(self.get_name(var_type.ir_node))
                 assert isinstance(var_type_name, UserDefinedTypeName)
                 returns = get_struct_return_list(var_type_name)
             elif isinstance(var_type, types.Enum):
                 parent = var_type.ir_node.parent
                 if isinstance(parent, ContractDefinition):
-                    self.__imports.generate_contract_import_name(
-                        parent.name, parent.parent.source_unit_name
-                    )
+                    self.__imports.generate_contract_import(parent)
                     parsed.append(
-                        f"{self.get_name(parent.name)}.{self.get_name(var_type.name)}"
+                        f"{self.get_name(parent)}.{self.get_name(var_type.ir_node)}"
                     )
                     returns = [
                         (
-                            f"{self.get_name(parent.name)}.{self.get_name(var_type.name)}",
+                            f"{self.get_name(parent)}.{self.get_name(var_type.ir_node)}",
                             var_type_name.type_string,
                         )
                     ]
 
                 else:
                     self.__imports.generate_enum_import(var_type)
-                    parsed.append(self.get_name(var_type.name))
+                    parsed.append(self.get_name(var_type.ir_node))
                     returns = [
-                        (self.get_name(var_type.name), var_type_name.type_string)
+                        (self.get_name(var_type.ir_node), var_type_name.type_string)
                     ]
             elif isinstance(var_type, types.UserDefinedValueType):
                 underlying_type = var_type.ir_node.underlying_type.type
@@ -922,9 +933,9 @@ class TypeGenerator:
                         var_type_name.value_type, True, depth + 1
                     )
             elif isinstance(var_type, types.Contract):
-                self.__imports.generate_contract_import_expr(var_type)
-                parsed.append(self.get_name(var_type.name))
-                returns = [(self.get_name(var_type.name), var_type_name.type_string)]
+                self.__imports.generate_contract_import(var_type.ir_node)
+                parsed.append(self.get_name(var_type.ir_node))
+                returns = [(self.get_name(var_type.ir_node), var_type_name.type_string)]
             elif isinstance(var_type, types.FixedBytes):
                 parsed.append(f"bytes{var_type.bytes_count}")
                 returns = [(f"bytes{var_type.bytes_count}", var_type_name.type_string)]
@@ -954,20 +965,13 @@ class TypeGenerator:
         else:
             returns_str = f"Tuple[{', '.join(ret[0] for ret in returns)}]"
 
+        self.generate_type_hint_stub_func(decl, generated_params, returns_str, False)
         self.generate_type_hint_stub_func(
-            decl.name, generated_params, returns_str, False, True
-        )
-        self.generate_type_hint_stub_func(
-            decl.name, generated_params, f"LegacyTransaction[{returns_str}]", True, True
+            decl, generated_params, f"LegacyTransaction[{returns_str}]", True
         )
 
-        # getters never modify the state - passing VIEW is ok
-        assert decl.function_selector is not None
         self.generate_func_implementation(
-            StateMutability.VIEW,
-            decl.canonical_name,
-            decl.name,
-            decl.function_selector.hex(),
+            decl,
             generated_params,
             param_names,
             returns,
@@ -990,18 +994,17 @@ class TypeGenerator:
 
     def generate_func_implementation(
         self,
-        state_mutability: StateMutability,
-        canonical_name: str,
-        fn_name: str,
-        fn_selector: str,
+        declaration: Union[FunctionDefinition, VariableDeclaration],
         params: List[str],
         param_names: List[Tuple[str, str]],
         returns: List[Tuple[str, str]],
     ):
-        is_view_or_pure: bool = (
-            state_mutability == StateMutability.VIEW
-            or state_mutability == StateMutability.PURE
-        )
+        is_view_or_pure: bool = isinstance(
+            declaration, VariableDeclaration
+        ) or declaration.state_mutability in {
+            StateMutability.VIEW,
+            StateMutability.PURE,
+        }
         params_str = "".join(param + ", " for param in params)
         if len(returns) == 0:
             returns_str = None
@@ -1011,7 +1014,7 @@ class TypeGenerator:
             returns_str = f"Tuple[{', '.join(ret[0] for ret in returns)}]"
         self.add_str_to_types(
             1,
-            f"""def {self.get_name(fn_name)}(self, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, to: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: bool = {False if is_view_or_pure else self.__return_tx_obj}, request_type: RequestType='{'call' if is_view_or_pure else 'tx'}') -> Union[{returns_str}, LegacyTransaction[{returns_str}]]:""",
+            f"""def {self.get_name(declaration)}(self, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, to: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: bool = {False if is_view_or_pure else self.__return_tx_obj}, request_type: RequestType='{'call' if is_view_or_pure else 'tx'}') -> Union[{returns_str}, LegacyTransaction[{returns_str}]]:""",
             1,
         )
 
@@ -1035,6 +1038,9 @@ class TypeGenerator:
             return_types = returns[0][0]
         else:
             return_types = f"Tuple[{', '.join(map(itemgetter(0), returns))}]"
+
+        assert declaration.function_selector is not None
+        fn_selector = declaration.function_selector.hex()
         self.add_str_to_types(
             2,
             f'return self._transact("{fn_selector}", [{", ".join(map(itemgetter(0), param_names))}], return_tx, {return_types}, from_, to, value, gas_limit) if not request_type == \'call\' else self._call("{fn_selector}", [{", ".join(map(itemgetter(0), param_names))}], return_tx, {return_types}, from_, to, value, gas_limit)',
@@ -1043,18 +1049,23 @@ class TypeGenerator:
 
     def generate_type_hint_stub_func(
         self,
-        fn_name: str,
+        declaration: Union[FunctionDefinition, VariableDeclaration],
         params: List[str],
         returns_str: str,
         return_tx: bool,
-        is_view_or_pure: bool,
     ):
+        is_view_or_pure: bool = isinstance(
+            declaration, VariableDeclaration
+        ) or declaration.state_mutability in {
+            StateMutability.VIEW,
+            StateMutability.PURE,
+        }
         params_str = "".join(param + ", " for param in params)
 
         self.add_str_to_types(1, "@overload", 1)
         self.add_str_to_types(
             1,
-            f"""def {self.get_name(fn_name)}(self, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, to: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: Literal[{return_tx}] = {return_tx}, request_type: RequestType = '{'call' if is_view_or_pure else 'tx'}') -> {returns_str}:""",
+            f"""def {self.get_name(declaration)}(self, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, to: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: Literal[{return_tx}] = {return_tx}, request_type: RequestType = '{'call' if is_view_or_pure else 'tx'}') -> {returns_str}:""",
             1,
         )
         self.add_str_to_types(2, "...", 2)
@@ -1071,73 +1082,62 @@ class TypeGenerator:
             returns_str = f"Tuple[{', '.join(ret[0] for ret in returns)}]"
 
         self.generate_type_hint_stub_func(
-            fn.name,
+            fn,
             params,
             returns_str,
             False,
-            fn.state_mutability in {StateMutability.VIEW, StateMutability.PURE},
         )
         self.generate_type_hint_stub_func(
-            fn.name,
+            fn,
             params,
             f"LegacyTransaction[{returns_str}]",
             True,
-            fn.state_mutability in {StateMutability.VIEW, StateMutability.PURE},
         )
 
         assert fn.function_selector is not None
         self.generate_func_implementation(
-            fn.state_mutability,
-            fn.canonical_name,
-            fn.name,
-            fn.function_selector.hex(),
+            fn,
             params,
             params_names,
             returns,
         )
 
     def generate_types_contract(self, contract: ContractDefinition) -> None:
-        if contract.name in self.__already_generated_contracts:
+        fqn = f"{contract.parent.source_unit_name}:{contract.name}"
+        if fqn in self.__already_generated_contracts:
             return
         else:
-            self.__already_generated_contracts.add(contract.name)
-        inhertits_contract_class: bool = False if contract.base_contracts else True
-        base_names: str = ""
+            self.__already_generated_contracts.add(fqn)
+
+        base_names: List[str] = []
 
         for base in reversed(contract.base_contracts):
             parent_contract = base.base_name.referenced_declaration
             assert isinstance(parent_contract, ContractDefinition)
+            base_names.append(self.get_name(parent_contract))
             # only the types for contracts in the same source_unit are generated
             if (
                 parent_contract.parent.source_unit_name
                 == contract.parent.source_unit_name
             ):
                 self.generate_types_contract(parent_contract)
-                base_names += self.get_name(parent_contract.name) + ", "
             # contract is not in the same source unit, so it must be imported
             else:
-                base_names += self.get_name(parent_contract.name) + ", "
-                self.__imports.generate_contract_import_name(
-                    parent_contract.name, parent_contract.parent.source_unit_name
-                )
+                self.__imports.generate_contract_import(parent_contract)
 
-        fqn = f"{contract.parent.source_unit_name}:{contract.name}"
         contract_module_name = "pytypes." + _make_path_alphanum(
             contract.parent.source_unit_name[:-3]
         ).replace("/", ".")
         self.__contracts_index[fqn] = (
             contract_module_name,
-            (self.get_name(contract.name),),
+            (self.get_name(contract),),
         )
 
-        if base_names:
-            # remove trailing ", "
-            base_names = base_names[:-2]
-        if inhertits_contract_class:
-            base_names = "Contract, " + base_names if base_names else "Contract"
+        if len(base_names) == 0:
+            base_names = ["Contract"]
 
         self.__imports.generate_default_imports = True
-        events_abi = self.generate_contract_template(contract, base_names)
+        events_abi = self.generate_contract_template(contract, ", ".join(base_names))
 
         if contract.enums:
             self.generate_types_enum(contract.enums, 1)
@@ -1161,18 +1161,18 @@ class TypeGenerator:
                 ):
                     self.generate_getter_for_state_var(var)
                     selector_assignments.append(
-                        (self.get_name(var.name), var.function_selector)
+                        (self.get_name(var), var.function_selector)
                     )
             for fn in contract.functions:
                 if fn.function_selector:
                     self.generate_types_function(fn)
                     selector_assignments.append(
-                        (self.get_name(fn.name), fn.function_selector)
+                        (self.get_name(fn), fn.function_selector)
                     )
 
         for fn_name, selector in selector_assignments:
             self.add_str_to_types(
-                0, f"{self.get_name(contract.name)}.{fn_name}.selector = {selector}", 1
+                0, f"{self.get_name(contract)}.{fn_name}.selector = {selector}", 1
             )
 
     def generate_types_source_unit(self, unit: SourceUnit) -> None:
@@ -1288,20 +1288,84 @@ class TypeGenerator:
             # if unit.source_unit_name == "overloading.sol":
             #    print(self.__func_to_overload)
 
-    def generate_types(self, build: ProjectBuild) -> None:
+    def generate_types(self, compiler: SolidityCompiler) -> None:
+        def generate_source_unit(source_unit: SourceUnit) -> None:
+            self.__current_source_unit = source_unit.source_unit_name
+            self.generate_types_source_unit(source_unit)
+            self.write_source_unit_to_file(source_unit.source_unit_name)
+            self.cleanup_source_unit()
+
+        build = compiler.latest_build
+        build_info = compiler.latest_build_info
+        assert build is not None
+        assert build_info is not None
         self.__interval_trees = build.interval_trees
         self.__source_units = build.source_units
         self.__reference_resolver = build.reference_resolver
 
         self.clean_type_dir()
-        # self.traverse_funcs_to_check_overload()
-        # print(self.__func_to_overload)
-        for _, unit in self.__source_units.items():
-            # print(f"source unit: {unit.source_unit_name}")
-            self.__current_source_unit = unit.source_unit_name
-            self.generate_types_source_unit(unit)
-            self.write_source_unit_to_file(unit.source_unit_name)
-            self.cleanup_source_unit()
+
+        # generate source units in import order, source units with no imports are generated first
+        # also handle cyclic imports
+        assert compiler.latest_graph is not None
+        graph = compiler.latest_graph.copy()
+        paths_to_source_unit_names: DefaultDict[Path, Set[str]] = defaultdict(set)
+        for source_unit_name, info in build_info.source_units_info.items():
+            paths_to_source_unit_names[info.fs_path].add(source_unit_name)
+
+        previous_len = len(graph)
+        cycles_detected = False
+        while len(graph) > 0:
+            # use heapq to make order of source units deterministic
+            sources: List[str] = [
+                node for node, in_degree in graph.in_degree() if in_degree == 0
+            ]
+            heapq.heapify(sources)
+            visited: Set[str] = set(sources)
+
+            while len(sources) > 0:
+                source = heapq.heappop(sources)
+                path = build_info.source_units_info[source].fs_path
+                generate_source_unit(self.__source_units[path])
+
+                for source_unit_name in paths_to_source_unit_names[path]:
+                    visited.add(source_unit_name)
+                    for _, to in graph.out_edges(source_unit_name):
+                        if graph.in_degree(to) == 1:
+                            heapq.heappush(sources, to)
+                            visited.add(to)
+                graph.remove_nodes_from(paths_to_source_unit_names[path])
+
+            generated_cycles: Set[FrozenSet[str]] = set()
+
+            for cycle in nx.simple_cycles(graph):
+                cycles_detected = True
+                if frozenset(cycle) in generated_cycles:
+                    continue
+
+                is_closed_cycle = True
+                for node in cycle:
+                    if any(edge[0] not in cycle for edge in graph.in_edges(node)):
+                        is_closed_cycle = False
+                        break
+
+                if is_closed_cycle:
+                    generated_cycles.add(frozenset(cycle))
+
+            for cycle in sorted(generated_cycles):
+                for source in cycle:
+                    path = build_info.source_units_info[source].fs_path
+                    generate_source_unit(self.__source_units[path])
+                    graph.remove_nodes_from(paths_to_source_unit_names[path])
+
+            if len(graph) == previous_len:
+                break
+            previous_len = len(graph)
+
+        if cycles_detected:
+            logger.warning(
+                "Cyclic imports detected, pytypes may not be working correctly"
+            )
 
         init_path = self.__pytypes_dir / "__init__.py"
         init_path.write_text(
@@ -1395,13 +1459,15 @@ class SourceUnitImports:
         self.__all_imports = ""
 
     # TODO rename to better represent the functionality
-    def generate_import(self, name: str, source_unit_name: str) -> str:
+    def generate_import(
+        self, declaration: DeclarationAbc, source_unit_name: str
+    ) -> str:
         source_unit_name = _make_path_alphanum(source_unit_name)
         return (
             "from pytypes."
             + source_unit_name[:-3].replace("/", ".")
             + " import "
-            + self.__type_gen.get_name(name)
+            + self.__type_gen.get_name(declaration)
         )
 
     def add_str_to_imports(
@@ -1421,55 +1487,37 @@ class SourceUnitImports:
         if source_unit.source_unit_name == self.__type_gen.current_source_unit:
             return
         struct_import = self.generate_import(
-            struct_type.name, source_unit.source_unit_name
+            struct_type.ir_node, source_unit.source_unit_name
         )
 
         if struct_import not in self.__struct_imports:
             # self.add_str_to_imports(0, struct_import, 1)
             self.__struct_imports.add(struct_import)
 
-    # TODO impl of this func is basicaly the same as generate_struct_import -> refactor and remove duplication
+    # only used for top-level enums (not within contracts)
     def generate_enum_import(self, enum_type: types.Enum):
-        node = enum_type.ir_node
-        if isinstance(node.parent, ContractDefinition):
-            source_unit = node.parent.parent
-        else:
-            source_unit = node.parent
+        source_unit = enum_type.ir_node.parent
+        assert isinstance(source_unit, SourceUnit)
+
         # only those structs that are defined in a different source unit should be imported
         if source_unit.source_unit_name == self.__type_gen.current_source_unit:
             return
-        enum_import = self.generate_import(enum_type.name, source_unit.source_unit_name)
+        enum_import = self.generate_import(
+            enum_type.ir_node, source_unit.source_unit_name
+        )
 
         if enum_import not in self.__enum_imports:
             # self.add_str_to_imports(0, struct_import, 1)
             self.__enum_imports.add(enum_import)
 
-    # TODO impl of this func is basicaly the same as generate_struct_import -> refactor and remove duplication
-    def generate_contract_import_expr(self, contract_type: types.Contract):
-        node = contract_type.ir_node
-        source_unit = node.parent
-        # only those contracts that are defined in a different source unit should be imported
+    def generate_contract_import(self, contract: ContractDefinition):
+        source_unit = contract.parent
         if source_unit.source_unit_name == self.__type_gen.current_source_unit:
             return
 
-        contract_import = self.generate_import(
-            contract_type.name, source_unit.source_unit_name
-        )
+        contract_import = self.generate_import(contract, source_unit.source_unit_name)
 
         if contract_import not in self.__contract_imports:
-            # self.add_str_to_imports(0, contract_import, 1)
-            self.__contract_imports.add(contract_import)
-
-    # TODO remove duplication
-    def generate_contract_import_name(self, name: str, source_unit_name: str) -> None:
-        # only those contracts that are defined in a different source unit should be imported
-        if source_unit_name == self.__type_gen.current_source_unit:
-            return
-
-        contract_import = self.generate_import(name, source_unit_name)
-
-        if contract_import not in self.__contract_imports:
-            # self.add_str_to_imports(0, contract_import, 1)
             self.__contract_imports.add(contract_import)
 
     def add_python_import(self, p_import: str) -> None:
@@ -1479,7 +1527,7 @@ class SourceUnitImports:
 class NameSanitizer:
     __black_listed: Set[str]
     __used_names: Set[str]
-    __renamed: Dict[str, str]
+    __renames: Dict[DeclarationAbc, str]
 
     def __init__(self):
         # TODO add names
@@ -1514,21 +1562,20 @@ class NameSanitizer:
             "call",
         }
         self.__used_names = set()
-        self.__renamed = {}
+        self.__renames = {}
 
-    def clean_names(self) -> None:
-        self.__used_names = set()
+    def sanitize_name(self, declaration: DeclarationAbc) -> str:
+        if declaration in self.__renames:
+            return self.__renames[declaration]
 
-    def sanitize_name(self, name: str) -> str:
-        if name in self.__renamed:
-            return self.__renamed[name]
-        renamed = name
+        new_name = declaration.name
         while (
-            renamed in self.__black_listed
-            or renamed in self.__used_names
-            or keyword.iskeyword(renamed)
+            new_name in self.__black_listed
+            or new_name in set(self.__renames.values())
+            or keyword.iskeyword(new_name)
         ):
-            renamed = renamed + "_"
-        self.__used_names.add(renamed)
-        self.__renamed[name] = renamed
-        return renamed
+            new_name = new_name + "_"
+
+        self.__used_names.add(new_name)
+        self.__renames[declaration] = new_name
+        return new_name
