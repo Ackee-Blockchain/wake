@@ -1338,7 +1338,8 @@ class TypeGenerator:
             while len(sources) > 0:
                 source = heapq.heappop(sources)
                 path = build_info.source_units_info[source].fs_path
-                generate_source_unit(self.__source_units[path])
+                if path in self.__source_units:
+                    generate_source_unit(self.__source_units[path])
 
                 for source_unit_name in paths_to_source_unit_names[path]:
                     visited.add(source_unit_name)
@@ -1367,7 +1368,8 @@ class TypeGenerator:
             for cycle in sorted(generated_cycles):
                 for source in cycle:
                     path = build_info.source_units_info[source].fs_path
-                    generate_source_unit(self.__source_units[path])
+                    if path in self.__source_units:
+                        generate_source_unit(self.__source_units[path])
                     graph.remove_nodes_from(paths_to_source_unit_names[path])
 
             if len(graph) == previous_len:
