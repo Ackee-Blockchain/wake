@@ -866,7 +866,7 @@ class SolidityCompiler:
 
                 if errored:
                     for file in cu.files:
-                        if file in build.source_units:
+                        if file in build.source_units and file in files_to_compile:
                             build.reference_resolver.run_destroy_callbacks(file)
                             build.source_units.pop(file)
                 else:
