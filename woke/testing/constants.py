@@ -3,7 +3,7 @@ TAB_WIDTH = 4
 
 DEFAULT_IMPORTS: str = """
 from dataclasses import dataclass 
-from typing import List, Optional, overload, Union
+from typing import List, Optional, overload, Union, Callable
 from typing_extensions import Literal
 
 from woke.testing.core import Contract, Library, Address, Account, Chain, RequestType

@@ -373,7 +373,9 @@ class TransactionAbc(ABC, Generic[T]):
         if self._return_type == type(None):
             assert len(output) == 0
             return None  # type: ignore
-        return self._chain._process_return_data(output, self._abi, self._return_type)
+        return self._chain._process_return_data(
+            self, output, self._abi, self._return_type
+        )
 
     @property
     @_fetch_tx_receipt

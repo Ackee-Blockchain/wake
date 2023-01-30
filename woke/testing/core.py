@@ -719,6 +719,9 @@ class Chain:
             return str(value.address)
         elif isinstance(value, Address):
             return str(value)
+        elif hasattr(value, "selector") and isinstance(value.selector, bytes):
+            instance = value.__self__
+            return bytes.fromhex(str(instance.address)[2:]) + value.selector
         else:
             return value
 
@@ -744,12 +747,38 @@ class Chain:
 
         return decoded_data
 
-    def _convert_from_web3_type(self, value: Any, expected_type: Type) -> Any:
+    def _convert_from_web3_type(
+        self, tx: Optional[TransactionAbc], value: Any, expected_type: Type
+    ) -> Any:
         if isinstance(expected_type, type(None)):
             return None
+        elif expected_type is Callable:
+            assert isinstance(value, bytes)
+            address = Address(value[:20])
+            fqn = get_fqn_from_address(
+                address, tx.block_number - 1 if tx is not None else "latest", self
+            )
+            if fqn not in contracts_by_fqn:
+                raise ValueError(f"Unknown contract: {fqn}")
+
+            module_name, attrs = contracts_by_fqn[fqn]
+            obj = getattr(importlib.import_module(module_name), attrs[0])
+            for attr in attrs[1:]:
+                obj = getattr(obj, attr)
+
+            selector = value[20:24]
+
+            for x in dir(obj):
+                m = getattr(obj, x)
+                if hasattr(m, "selector") and m.selector == selector:
+                    return getattr(obj(address, self), x)
+
+            raise ValueError(
+                f"Unable to find function with selector {selector.hex()} in contract {fqn}"
+            )
         elif get_origin(expected_type) is list:
             return [
-                self._convert_from_web3_type(v, get_args(expected_type)[0])
+                self._convert_from_web3_type(tx, v, get_args(expected_type)[0])
                 for v in value
             ]
         elif dataclasses.is_dataclass(expected_type):
@@ -761,7 +790,8 @@ class Chain:
             ]
             assert len(value) == len(field_types)
             converted_values = [
-                self._convert_from_web3_type(v, t) for v, t in zip(value, field_types)
+                self._convert_from_web3_type(tx, v, t)
+                for v, t in zip(value, field_types)
             ]
             return expected_type(*converted_values)
         elif isinstance(expected_type, type):
@@ -940,7 +970,7 @@ class Chain:
             for arg in abi["inputs"]
         ]
         decoded = Abi.decode(types, revert_data[4:])
-        generated_error = self._convert_from_web3_type(decoded, obj)
+        generated_error = self._convert_from_web3_type(tx, decoded, obj)
         # raise native pytypes exception on transaction revert
         raise generated_error from None
 
@@ -1068,12 +1098,14 @@ class Chain:
                     merged.append(decoded.pop(0))
 
             merged = tuple(merged)
-            generated_event = self._convert_from_web3_type(merged, obj)
+            generated_event = self._convert_from_web3_type(tx, merged, obj)
             generated_events.append(generated_event)
 
         return generated_events
 
-    def _process_return_data(self, output: bytes, abi: Dict, return_type: Type):
+    def _process_return_data(
+        self, tx: Optional[TransactionAbc], output: bytes, abi: Dict, return_type: Type
+    ):
         output_types = [
             eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
             for arg in abi["outputs"]
@@ -1083,7 +1115,7 @@ class Chain:
         )  # pyright: reportGeneralTypeIssues=false
         if isinstance(decoded_data, (list, tuple)) and len(decoded_data) == 1:
             decoded_data = decoded_data[0]
-        return self._convert_from_web3_type(decoded_data, return_type)
+        return self._convert_from_web3_type(tx, decoded_data, return_type)
 
     def _process_console_logs(self, trace_output: List[Dict[str, Any]]) -> List:
         hardhat_console_address = bytes.fromhex(
@@ -1174,7 +1206,7 @@ class Chain:
             self._process_call_revert(e)
             raise
 
-        return self._process_return_data(output, abi[selector], return_type)
+        return self._process_return_data(None, output, abi[selector], return_type)
 
     def _process_call_revert(self, e: JsonRpcError):
         if (

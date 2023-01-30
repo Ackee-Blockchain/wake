@@ -203,7 +203,7 @@ class TypeGenerator:
             "Union[bytearray, bytes]",
             "bytearray",
         )
-        self.__sol_to_py_lookup[types.Function.__name__] = ("Callable", "TODO")
+        self.__sol_to_py_lookup[types.Function.__name__] = ("Callable", "Callable")
 
     @property
     def current_source_unit(self):
@@ -1566,6 +1566,7 @@ class NameSanitizer:
             "Annotated",
             "Optional",
             "Literal",
+            "Callable",
             "Path",
             "bytearray",
             "IntEnum",
