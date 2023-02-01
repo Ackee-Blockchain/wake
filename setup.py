@@ -36,7 +36,7 @@ extras_require = dict(
     ],
     dev=[
         "black",
-        "mkdocs-material >= 8.3.9",
+        "mkdocs-material >= 9.0.0",
         "mkdocstrings[python]",
         "pymdown-extensions >= 9.0",
         "pygments",
