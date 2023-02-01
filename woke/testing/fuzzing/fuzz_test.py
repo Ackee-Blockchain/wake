@@ -72,9 +72,9 @@ class FuzzTest:
         invariant_periods: DefaultDict[Callable[[None], None], int] = defaultdict(int)
 
         for i in range(sequences_count):
+            snapshots = [chain.snapshot() for chain in chains]
             self.pre_sequence()
             self._sequence_num = i
-            snapshots = [chain.snapshot() for chain in chains]
 
             for j in range(flows_count):
                 valid_flows = [
@@ -115,10 +115,10 @@ class FuzzTest:
                     self.post_invariants()
 
             invariant_periods.clear()
+            self.post_sequence()
+
             for snapshot, chain in zip(snapshots, chains):
                 chain.revert(snapshot)
-
-            self.post_sequence()
 
     def pre_sequence(self) -> None:
         pass
