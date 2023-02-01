@@ -34,6 +34,9 @@ theme:
 nav:
   - Installation: 'index.md'
   - Configuration: 'configuration.md'
+  - Testing framework:
+      - Overview: 'testing-framework/overview.md'
+      - Basic usage: 'testing-framework/basic-usage.md'
   - Detectors: 'detectors.md'
   - LSP server: 'language-server.md'
   - Fuzzer: 'fuzzer.md'
@@ -85,8 +88,10 @@ markdown_extensions:
 
 extra_javascript:
   - js/mathjax.js
+  - js/asciinema-player.min.js
   - https://polyfill.io/v3/polyfill.min.js?features=es6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 
 extra_css:
   - stylesheets/extra.css
+  - stylesheets/asciinema-player.css
