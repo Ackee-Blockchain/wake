@@ -1,8 +1,13 @@
+import dataclasses
+import enum
 import random
 import string
-from typing import Callable, Optional
+from typing import Any, Callable, Dict, Optional, Type
 
-from .core import Account, Address, Chain, default_chain
+from typing_extensions import Annotated, get_args, get_origin, get_type_hints
+
+from ..core import Account, Address, Chain, Wei, default_chain
+from ..primitive_types import Length, ValueRange
 
 
 def random_account(
@@ -132,3 +137,64 @@ def random_bytes(
     while not predicate(ret):
         ret = gen()
     return ret
+
+
+generators_map = {
+    bool: lambda: random.choice([True, False]),
+    Address: lambda: random_address(),
+    Wei: lambda: Wei(random.randint(0, 10000000000000000000)),
+}
+
+
+def generate(t: Type, options: Optional[Dict[str, Any]] = None):
+    if options is None:
+        options = {}
+
+    if "min_len" in options:
+        min_len = options["min_len"]
+    else:
+        min_len = 0
+    if "max_len" in options:
+        max_len = options["max_len"]
+    else:
+        max_len = 64
+
+    try:
+        return generators_map[t]()
+    except KeyError:
+        if get_origin(t) is Annotated:
+            args = get_args(t)
+            opt = {}
+
+            for arg in args[1:]:
+                if isinstance(arg, Length):
+                    opt["min_len"] = arg.min
+                    opt["max_len"] = arg.max
+                elif isinstance(arg, ValueRange):
+                    opt["min"] = arg.min
+                    opt["max"] = arg.max
+
+            return generate(args[0], opt)
+        elif get_origin(t) is list:
+            return [
+                generate(get_args(t)[0])
+                for _ in range(random.randint(min_len, max_len))
+            ]
+        elif t is int:
+            min = options.get("min", -(2**255))
+            max = options.get("max", 2**255 - 1)
+            return random.randint(min, max)
+        elif t is bytes:
+            return bytes(random_bytes(min_len, max_len))
+        elif t is bytearray:
+            return random_bytes(min_len, max_len)
+        elif t is str:
+            return random_string(min_len, max_len)
+        elif issubclass(t, enum.Enum):
+            return random.choice(list(t))
+        elif dataclasses.is_dataclass(t):
+            return t(
+                *[generate(h) for h in get_type_hints(t, include_extras=True).values()]
+            )
+        else:
+            raise ValueError(f"No fuzz generator found for type {t}")
