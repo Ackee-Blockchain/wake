@@ -529,6 +529,7 @@ class Chain:
 
         try:
             self._connected = True
+            connected_chains.append(self)
 
             self._accounts = [
                 Account(acc, self) for acc in self._chain_interface.accounts()
@@ -568,6 +569,7 @@ class Chain:
         finally:
             self._chain_interface.close()
             self._connected = False
+            connected_chains.remove(self)
 
     @contextmanager
     def change_automine(self, automine: bool):
@@ -1310,6 +1312,8 @@ def _signer_account(sender: Account):
 
 
 default_chain = Chain()
+connected_chains: List[Chain] = []
+
 # selector => (contract_fqn => pytypes_object)
 errors: Dict[bytes, Dict[str, Any]] = {}
 # selector => (contract_fqn => pytypes_object)
@@ -1327,6 +1331,10 @@ contracts_revert_index: Dict[str, Set[int]] = {}
 deployment_code_index: List[Tuple[Tuple[Tuple[int, bytes], ...], str]] = []
 
 LIBRARY_PLACEHOLDER_REGEX = re.compile(r"__\$[0-9a-fA-F]{34}\$__")
+
+
+def get_connected_chains() -> Tuple[Chain, ...]:
+    return tuple(connected_chains)
 
 
 def get_contracts_by_fqn() -> Dict[str, Any]:
