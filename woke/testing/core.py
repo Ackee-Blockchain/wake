@@ -538,7 +538,8 @@ class Chain:
             assert "gasLimit" in block_info
             self._block_gas_limit = int(block_info["gasLimit"], 16)
             self._chain_id = self._chain_interface.get_chain_id()
-            self._gas_price = self._chain_interface.get_gas_price()
+            self._gas_price = 0
+            # self._gas_price = self._chain_interface.get_gas_price()  TODO does not work with anvil and hardhat
             self._nonces = KeyedDefaultDict(
                 lambda addr: self._chain_interface.get_transaction_count(str(addr))
             )
