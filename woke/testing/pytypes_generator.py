@@ -1306,6 +1306,7 @@ class TypeGenerator:
             self.generate_types_source_unit(source_unit)
             self.write_source_unit_to_file(source_unit.source_unit_name)
             self.cleanup_source_unit()
+            self.__name_sanitizer.clear_global_renames()
 
         build = compiler.latest_build
         build_info = compiler.latest_build_info
@@ -1730,6 +1731,9 @@ class NameSanitizer:
                 and not name.endswith("___")
             )
         )
+
+    def clear_global_renames(self):
+        self.__global_renames = {}
 
     def sanitize_name(self, declaration: DeclarationAbc) -> str:
         parent = declaration.parent
