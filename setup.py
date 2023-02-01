@@ -53,7 +53,7 @@ setup(
     url="https://github.com/Ackee-Blockchain/woke",
     author="Ackee Blockchain",
     version="1.3.1",
-    packages=find_packages(exclude=("tests",)),
+    packages=find_packages(exclude=("examples", "tests",)),
     keywords=[
         "solidity",
         "ethereum",
