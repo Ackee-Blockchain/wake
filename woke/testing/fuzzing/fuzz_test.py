@@ -6,7 +6,7 @@ from typing import Callable, DefaultDict, List, Optional, Set
 
 from typing_extensions import get_type_hints
 
-from ..core import Chain, default_chain
+from ..core import get_connected_chains
 from .generators import generate
 
 
@@ -63,10 +63,8 @@ class FuzzTest:
         flows_count: int,
         *,
         dry_run: bool = False,
-        chains: Optional[List[Chain]] = None,
     ):
-        if chains is None:
-            chains = [default_chain]
+        chains = get_connected_chains()
 
         flows: Set[Callable] = self.__get_methods("flow")
         flows_counter: DefaultDict[Callable, int] = defaultdict(int)
