@@ -133,16 +133,21 @@ class ImportDirective(SolidityAbc):
             )
             processed_source_units: Set[Path] = {self._imported_file}
             referenced_declaration = None
+            searched_name = symbol_alias.foreign.name
 
             while source_units_queue and referenced_declaration is None:
                 imported_source_unit = source_units_queue.pop()
 
                 for declaration in imported_source_unit.declarations_iter():
-                    if declaration.canonical_name == symbol_alias.foreign.name:
+                    if declaration.canonical_name == searched_name:
                         referenced_declaration = declaration
                         break
 
                 for import_ in imported_source_unit.imports:
+                    # handle the case when an imported symbol is an alias of another symbol
+                    for alias in import_.symbol_aliases:
+                        if alias.local == symbol_alias.foreign.name:
+                            searched_name = alias.foreign.name
                     if import_.imported_file not in processed_source_units:
                         source_units_queue.append(
                             callback_params.source_units[import_.imported_file]
