@@ -37,6 +37,7 @@ nav:
   - Testing framework:
       - Overview: 'testing-framework/overview.md'
       - Basic usage: 'testing-framework/basic-usage.md'
+      - Events and errors: 'testing-framework/events-and-errors.md'
   - Detectors: 'detectors.md'
   - LSP server: 'language-server.md'
   - Fuzzer: 'fuzzer.md'

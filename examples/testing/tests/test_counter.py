@@ -29,7 +29,10 @@ def tx_callback(tx: LegacyTransaction):
             print(target, data, destination_chain)
 
 
+# launch a development chain (Anvil, Hardhat or Ganache - depending on the configuration)
 @connect(default_chain)
+# or connect to a running chain
+# @connect(default_chain, "ws://localhost:8545")
 def test_counter():
     # calls (pure and view functions) are executed using default_call_account
     # default_tx_account is unset by default
