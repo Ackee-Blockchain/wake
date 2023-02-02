@@ -10,5 +10,5 @@ from .internal import (
     must_revert,
 )
 from .primitive_types import *
-from .transactions import LegacyTransaction
+from .transactions import LegacyTransaction, TransactionAbc
 from .utils import connect, keccak256, snapshot_and_revert
