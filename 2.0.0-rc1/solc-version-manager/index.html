@@ -21,7 +21,7 @@
         <link rel="next" href="../contributing/">
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.5">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.10">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.558e4712.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.0d440cfe.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.2505c338.min.css">
@@ -285,7 +285,7 @@
       
       
       
-      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
       
       
         
@@ -293,14 +293,18 @@
         
           
         
+          
+        
+          
+        
       
       
-        <label class="md-nav__link" for="__nav_3" tabindex="0" aria-expanded="false">
+        <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
           Testing framework
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" aria-label="Testing framework" data-md-level="1">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_3">
           <span class="md-nav__icon md-icon"></span>
           Testing framework
@@ -329,6 +333,34 @@
     <li class="md-nav__item">
       <a href="../testing-framework/basic-usage/" class="md-nav__link">
         Basic usage
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing-framework/accounts-and-addresses/" class="md-nav__link">
+        Accounts and addresses
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing-framework/events-and-errors/" class="md-nav__link">
+        Events and errors
       </a>
     </li>
   
@@ -397,7 +429,7 @@
   
     <li class="md-nav__item md-nav__item--active">
       
-      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
         
@@ -532,36 +564,36 @@
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Command</th>
-<th style="text-align: left;">Description</th>
-<th style="text-align: left;">Options</th>
+<th align="left">Command</th>
+<th align="left">Description</th>
+<th align="left">Options</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><code>install</code></td>
-<td style="text-align: left;">Install the target version of <em>solc</em>. A version range may be provided which results into installation of the latest version matching the range (i.e. <code>woke svm install 0.7</code> installs the version <code>0.7.6</code>).</td>
-<td style="text-align: left;"><code>--force</code> reinstall the version even if already installed.</td>
+<td align="left"><code>install</code></td>
+<td align="left">Install the target version of <em>solc</em>. A version range may be provided which results into installation of the latest version matching the range (i.e. <code>woke svm install 0.7</code> installs the version <code>0.7.6</code>).</td>
+<td align="left"><code>--force</code> reinstall the version even if already installed.</td>
 </tr>
 <tr>
-<td style="text-align: left;"><code>list</code></td>
-<td style="text-align: left;">List installed versions of <em>solc</em>.</td>
-<td style="text-align: left;"><code>--all</code> list all available versions instead.</td>
+<td align="left"><code>list</code></td>
+<td align="left">List installed versions of <em>solc</em>.</td>
+<td align="left"><code>--all</code> list all available versions instead.</td>
 </tr>
 <tr>
-<td style="text-align: left;"><code>remove</code></td>
-<td style="text-align: left;">Remove the target installed version of <em>solc</em>.</td>
-<td style="text-align: left;"><code>--ignore-missing</code> do not raise an exception if the target  version is not installed.</td>
+<td align="left"><code>remove</code></td>
+<td align="left">Remove the target installed version of <em>solc</em>.</td>
+<td align="left"><code>--ignore-missing</code> do not raise an exception if the target  version is not installed.</td>
 </tr>
 <tr>
-<td style="text-align: left;"><code>switch</code></td>
-<td style="text-align: left;">Change the selected version of <em>solc</em> to the target version.</td>
-<td style="text-align: left;"></td>
+<td align="left"><code>switch</code></td>
+<td align="left">Change the selected version of <em>solc</em> to the target version.</td>
+<td align="left"></td>
 </tr>
 <tr>
-<td style="text-align: left;"><code>use</code></td>
-<td style="text-align: left;">Change the selected version of <em>solc</em> to the target version and install it if not already installed. A version range may be provided resulting into installation of the latest version matching the range.</td>
-<td style="text-align: left;"><code>--force</code> reinstall the version even if already installed.</td>
+<td align="left"><code>use</code></td>
+<td align="left">Change the selected version of <em>solc</em> to the target version and install it if not already installed. A version range may be provided resulting into installation of the latest version matching the range.</td>
+<td align="left"><code>--force</code> reinstall the version even if already installed.</td>
 </tr>
 </tbody>
 </table>
@@ -632,10 +664,10 @@
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "..", "features": ["content.code.copy", "navigation.tracking", "navigation.sections", "navigation.indexes", "navigation.top"], "search": "../assets/javascripts/workers/search.e5c33ebb.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    <script id="__config" type="application/json">{"base": "..", "features": ["content.code.copy", "navigation.tracking", "navigation.sections", "navigation.indexes", "navigation.top"], "search": "../assets/javascripts/workers/search.db81ec45.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.51d95adb.min.js"></script>
+      <script src="../assets/javascripts/bundle.6df46069.min.js"></script>
       
         <script src="../js/mathjax.js"></script>
       

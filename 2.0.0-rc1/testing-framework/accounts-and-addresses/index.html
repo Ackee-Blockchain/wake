@@ -12,20 +12,20 @@
         <meta name="author" content="Ackee Blockchain">
       
       
-        <link rel="canonical" href="https://ackeeblockchain.com/woke/docs/2.0.0-rc1/testing-framework/basic-usage/">
+        <link rel="canonical" href="https://ackeeblockchain.com/woke/docs/2.0.0-rc1/testing-framework/accounts-and-addresses/">
       
       
-        <link rel="prev" href="../overview/">
+        <link rel="prev" href="../basic-usage/">
       
       
-        <link rel="next" href="../accounts-and-addresses/">
+        <link rel="next" href="../events-and-errors/">
       
       <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.10">
     
     
       
-        <title>Basic usage - Woke</title>
+        <title>Accounts and addresses - Woke</title>
       
     
     
@@ -83,7 +83,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#basic-usage" class="md-skip">
+        <a href="#accounts-and-addresses" class="md-skip">
           Skip to content
         </a>
       
@@ -119,7 +119,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Basic usage
+              Accounts and addresses
             
           </span>
         </div>
@@ -331,6 +331,20 @@
               
   
   
+  
+    <li class="md-nav__item">
+      <a href="../basic-usage/" class="md-nav__link">
+        Basic usage
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
     
   
   
@@ -343,12 +357,12 @@
       
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
-          Basic usage
+          Accounts and addresses
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
-        Basic usage
+        Accounts and addresses
       </a>
       
         
@@ -367,37 +381,37 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#generating-pytypes" class="md-nav__link">
-    Generating pytypes
+  <a href="#addresses" class="md-nav__link">
+    Addresses
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#writing-the-first-test" class="md-nav__link">
-    Writing the first test
+  <a href="#accounts" class="md-nav__link">
+    Accounts
   </a>
   
-    <nav class="md-nav" aria-label="Writing the first test">
+    <nav class="md-nav" aria-label="Accounts">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#connecting-to-a-chain" class="md-nav__link">
-    Connecting to a chain
+  <a href="#assigning-labels" class="md-nav__link">
+    Assigning labels
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#deploying-a-contract" class="md-nav__link">
-    Deploying a contract
+  <a href="#account-properties" class="md-nav__link">
+    Account properties
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#interacting-with-a-contract" class="md-nav__link">
-    Interacting with a contract
+  <a href="#low-level-calls-and-transactions" class="md-nav__link">
+    Low-level calls and transactions
   </a>
   
 </li>
@@ -407,24 +421,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#contract-accounts" class="md-nav__link">
+    Contract accounts
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
       
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../accounts-and-addresses/" class="md-nav__link">
-        Accounts and addresses
-      </a>
     </li>
   
 
@@ -552,43 +559,50 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#generating-pytypes" class="md-nav__link">
-    Generating pytypes
+  <a href="#addresses" class="md-nav__link">
+    Addresses
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#writing-the-first-test" class="md-nav__link">
-    Writing the first test
+  <a href="#accounts" class="md-nav__link">
+    Accounts
   </a>
   
-    <nav class="md-nav" aria-label="Writing the first test">
+    <nav class="md-nav" aria-label="Accounts">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#connecting-to-a-chain" class="md-nav__link">
-    Connecting to a chain
+  <a href="#assigning-labels" class="md-nav__link">
+    Assigning labels
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#deploying-a-contract" class="md-nav__link">
-    Deploying a contract
+  <a href="#account-properties" class="md-nav__link">
+    Account properties
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#interacting-with-a-contract" class="md-nav__link">
-    Interacting with a contract
+  <a href="#low-level-calls-and-transactions" class="md-nav__link">
+    Low-level calls and transactions
   </a>
   
 </li>
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contract-accounts" class="md-nav__link">
+    Contract accounts
+  </a>
   
 </li>
       
@@ -611,169 +625,160 @@
 
 
 
-<h1 id="basic-usage">Basic usage<a class="headerlink" href="#basic-usage" title="Permanent link">#</a></h1>
-<p>This guide explains how to run the first test in the Woke testing framework.</p>
-<h2 id="generating-pytypes">Generating pytypes<a class="headerlink" href="#generating-pytypes" title="Permanent link">#</a></h2>
-<p>The first step is to generate <code>pytypes</code> for smart contracts that should be tested. This is done by running the following command:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>woke<span class="w"> </span>init<span class="w"> </span>pytypes<span class="w"> </span>-w
+<h1 id="accounts-and-addresses">Accounts and addresses<a class="headerlink" href="#accounts-and-addresses" title="Permanent link">#</a></h1>
+<p>Woke testing framework strictly distinguishes between accounts and addresses.
+However, in most cases, API functions accept both <code>Account</code> and <code>Address</code> types.</p>
+<h2 id="addresses">Addresses<a class="headerlink" href="#addresses" title="Permanent link">#</a></h2>
+<p><code>Address</code> is a 20-byte value encoded as a hex string. It can be constructed from
+a hex string or an integer:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">woke.testing</span> <span class="kn">import</span> <span class="n">Address</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">Address</span><span class="p">(</span><span class="s2">&quot;0x0000000000000000000000000000000000000000&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">Address</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 </code></pre></div>
-<p>This command will create a <code>pytypes</code> directory in the current working directory. The <code>-w</code> flag tells Woke to watch for changes in the smart contracts and automatically regenerate the <code>pytypes</code> when a change is detected.</p>
-<div id="generating-pytypes-asciinema" style="z-index: 1; position: relative;"></div>
-<script>
-  window.onload = function(){
-    AsciinemaPlayer.create('../generating-pytypes.cast', document.getElementById('generating-pytypes-asciinema'), { preload: true, autoPlay: true, rows: 15 });
-}
-</script>
-
-<p>When a compilation error occurs, Woke generates <code>pytypes</code> for the contracts that were successfully compiled. <code>pytypes</code> for the contracts that failed to compile are not generated.</p>
-<h2 id="writing-the-first-test">Writing the first test<a class="headerlink" href="#writing-the-first-test" title="Permanent link">#</a></h2>
-<div class="admonition tip">
-<p class="admonition-title">Tip</p>
-<p>Source code for this example is available in the <a href="https://github.com/Ackee-Blockchain/woke/tree/ac1b74b97672557cc51fe1c5fa5cff652f872041/examples/testing">Woke repository</a>.</p>
-</div>
-<p>To collect and execute tests, Woke uses the <a href="https://docs.pytest.org/en/stable/">pytest</a> framework under the hood.
-The test files should start with <code>test_</code> or end with <code>_test.py</code> to be collected. It is possible to use all the features of the pytest framework like <a href="https://docs.pytest.org/en/stable/explanation/fixtures.html">fixtures</a>.</p>
-<p>The recommended project structure is as follows:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>.
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>├── contracts
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>│   └── Counter.sol
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>├── pytypes
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>└── tests
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    ├── __init__.py
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    └── test_counter.py
+<p>The hex string does not have to be <a href="https://eips.ethereum.org/EIPS/eip-55">EIP-55</a> compliant.</p>
+<p>Addresses can be compared with each other:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span> <span class="nn">woke.testing</span> <span class="kn">import</span> <span class="n">Address</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="k">assert</span> <span class="n">Address</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">Address</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 </code></pre></div>
-<h3 id="connecting-to-a-chain">Connecting to a chain<a class="headerlink" href="#connecting-to-a-chain" title="Permanent link">#</a></h3>
-<p>In single-chain tests, it is recommended to use the <code>default_chain</code> object that is automatically created by Woke.
-The <code>@connect</code> decorator either launches a new development chain or connects to an existing one, if the second argument is specified.
-It is possible to connect using:</p>
-<ul>
-<li>a HTTP connection (e.g. <code>http://localhost:8545</code>),</li>
-<li>a WebSocket connection (e.g. <code>ws://localhost:8545</code>),</li>
-<li>an IPC socket (e.g. <code>/tmp/anvil.ipc</code>).</li>
-</ul>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">woke.testing</span> <span class="kn">import</span> <span class="o">*</span>
+<h2 id="accounts">Accounts<a class="headerlink" href="#accounts" title="Permanent link">#</a></h2>
+<p><code>Account</code> is an <code>Address</code> bound to a specific <code>Chain</code>. It can be constructed from
+an <code>Address</code>, a hex string or an integer. Optionally, a chain can be specified, otherwise
+the <code>default_chain</code> global object is used:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">woke.testing</span> <span class="kn">import</span> <span class="n">Account</span><span class="p">,</span> <span class="n">Chain</span><span class="p">,</span> <span class="n">default_chain</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># launch a new development chain</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="nd">@connect</span><span class="p">(</span><span class="n">default_chain</span><span class="p">)</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="c1"># or connect to an existing chain</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="c1"># @connect(default_chain, &quot;ws://localhost:8545&quot;)</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="k">def</span> <span class="nf">test_counter</span><span class="p">():</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">default_chain</span><span class="o">.</span><span class="n">chain_id</span><span class="p">)</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">other_chain</span> <span class="o">=</span> <span class="n">Chain</span><span class="p">()</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="k">assert</span> <span class="n">Account</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">==</span> <span class="n">Account</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">default_chain</span><span class="p">)</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="k">assert</span> <span class="n">Account</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">!=</span> <span class="n">Account</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">other_chain</span><span class="p">)</span>
 </code></pre></div>
-<p>To run the test, execute the following command:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>woke<span class="w"> </span><span class="nb">test</span><span class="w"> </span>tests/test_counter.py<span class="w"> </span>-d
+<p><code>Address</code> and <code>Account</code> instances cannot be compared with each other. <code>Account</code> instances belonging to different
+chains cannot be compared using the <code>&lt;</code> and <code>&gt;</code> operators.</p>
+<div class="admonition warning">
+<p class="admonition-title">Using accounts belonging to different chains</p>
+<p>To save users from accidentally using accounts belonging to different chains, Woke testing framework
+does not accept <code>Account</code> instances belonging to different chains in most API functions. To overcome
+this limitation, it is possible to use the <code>address</code> property of an <code>Account</code> instance.</p>
+</div>
+<h3 id="assigning-labels">Assigning labels<a class="headerlink" href="#assigning-labels" title="Permanent link">#</a></h3>
+<p><code>Account</code> instances can be assigned labels. Labels override the default string representation
+of the account:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span> <span class="nn">woke.testing</span> <span class="kn">import</span> <span class="n">Account</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">account</span> <span class="o">=</span> <span class="n">Account</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">account</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;ZERO&quot;</span>
 </code></pre></div>
-<p>The <code>-d</code> flag tells Woke to attach the Python debugger on test failures.</p>
-<h3 id="deploying-a-contract">Deploying a contract<a class="headerlink" href="#deploying-a-contract" title="Permanent link">#</a></h3>
-<p>Every Solidity source file has its equivalent in the <code>pytypes</code> directory. These directories form a module hierarchy that is similar to the one in the <code>contracts</code> directory.
-The <code>Counter</code> contract from the previous example is available in the <code>pytypes.contracts.Counter</code> module.</p>
-<p>Every contract has a <code>deploy</code> method that deploys the contract to the chain.
-The <code>deploy</code> method accepts the arguments that are required by the contract's constructor.
-Additionally, it accepts the following keyword arguments:</p>
+<p>Setting the label to <code>None</code> removes the label.</p>
+<h3 id="account-properties">Account properties<a class="headerlink" href="#account-properties" title="Permanent link">#</a></h3>
+<p><code>Account</code> instances have the following properties:</p>
 <table>
 <thead>
 <tr>
-<th>Argument</th>
+<th>Property</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>from_</code></td>
-<td>the address that will be used to deploy the contract (the transaction sender)</td>
-</tr>
-<tr>
-<td><code>value</code></td>
-<td>the amount of Wei to be sent to the contract</td>
-</tr>
-<tr>
-<td><code>gas_limit</code></td>
-<td>the maximum amount of gas that can be used to deploy the contract (<code>max</code>, <code>auto</code> or number)</td>
-</tr>
-<tr>
-<td><code>return_tx</code></td>
-<td>if set to <code>True</code>, the full transaction object is returned instead of the contract instance</td>
+<td><code>address</code></td>
+<td>The address of the account.</td>
 </tr>
 <tr>
 <td><code>chain</code></td>
-<td>the chain to which the contract should be deployed</td>
+<td>The chain the account is bound to.</td>
+</tr>
+<tr>
+<td><code>label</code></td>
+<td>The label of the account.</td>
+</tr>
+<tr>
+<td><code>balance</code></td>
+<td>The balance of the account in Wei.</td>
+</tr>
+<tr>
+<td><code>code</code></td>
+<td>The code of the account.</td>
+</tr>
+<tr>
+<td><code>nonce</code></td>
+<td>The nonce of the account.</td>
 </tr>
 </tbody>
 </table>
+<p>Except for <code>address</code> and <code>chain</code>, all properties can be assigned to. <code>nonce</code> can only be incremented.</p>
+<h3 id="low-level-calls-and-transactions">Low-level calls and transactions<a class="headerlink" href="#low-level-calls-and-transactions" title="Permanent link">#</a></h3>
+<p>Each <code>Account</code> instance has <code>call</code> and <code>transact</code> methods that can be used to perform arbitrary
+calls and transactions (see <a href="../basic-usage/#interacting-with-a-contract">Interacting with a contract</a>).
+Both methods accept <code>data</code>, <code>value</code>, <code>from_</code> and <code>gas_limit</code> keyword arguments. The <code>transact</code> method
+additionaly accepts the <code>return_tx</code> keyword argument.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span> <span class="nn">woke.testing</span> <span class="kn">import</span> <span class="o">*</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="kn">from</span> <span class="nn">pytypes.contracts.Counter</span> <span class="kn">import</span> <span class="n">Counter</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="nd">@connect</span><span class="p">(</span><span class="n">default_chain</span><span class="p">)</span>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="k">def</span> <span class="nf">test_example</span><span class="p">():</span>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="n">counter</span> <span class="o">=</span> <span class="n">Counter</span><span class="o">.</span><span class="n">deploy</span><span class="p">(</span><span class="n">from_</span><span class="o">=</span><span class="n">default_chain</span><span class="o">.</span><span class="n">accounts</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">counter</span><span class="p">)</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="nd">@connect</span><span class="p">(</span><span class="n">default_chain</span><span class="p">)</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="k">def</span> <span class="nf">test_accounts</span><span class="p">():</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="n">alice</span> <span class="o">=</span> <span class="n">default_chain</span><span class="o">.</span><span class="n">accounts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="n">bob</span> <span class="o">=</span> <span class="n">default_chain</span><span class="o">.</span><span class="n">accounts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    <span class="n">alice</span><span class="o">.</span><span class="n">balance</span> <span class="o">=</span> <span class="mi">100</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    <span class="n">bob</span><span class="o">.</span><span class="n">balance</span> <span class="o">=</span> <span class="mi">0</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>    <span class="n">bob</span><span class="o">.</span><span class="n">transact</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">from_</span><span class="o">=</span><span class="n">alice</span><span class="p">)</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>    <span class="k">assert</span> <span class="n">alice</span><span class="o">.</span><span class="n">balance</span> <span class="o">==</span> <span class="mi">90</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>    <span class="k">assert</span> <span class="n">bob</span><span class="o">.</span><span class="n">balance</span> <span class="o">==</span> <span class="mi">10</span>
 </code></pre></div>
-<h3 id="interacting-with-a-contract">Interacting with a contract<a class="headerlink" href="#interacting-with-a-contract" title="Permanent link">#</a></h3>
-<p>Woke testing framework distinguishes between two types of interactions with a contract:</p>
-<ul>
-<li><strong>calls</strong> - read-only requests that do not change the state of the blockchain,</li>
-<li><strong>transactions</strong> - requests that change the state of the blockchain.</li>
-</ul>
-<p>By default, Woke uses <strong>calls</strong> to execute pure and view functions. It uses <strong>transactions</strong> to execute all other functions.</p>
-<p>There are two more keyword arguments that the <code>deploy</code> method does not accept:</p>
-<table>
-<thead>
-<tr>
-<th>Argument</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>to</code></td>
-<td>the address of the contract to which the request should be sent</td>
-</tr>
-<tr>
-<td><code>request_type</code></td>
-<td>the type of the request (<code>call</code> or <code>tx</code>)</td>
-</tr>
-</tbody>
-</table>
 <div class="admonition tip">
-<p class="admonition-title">Tip</p>
-<p>The <code>to</code> argument can be used to override the address of the contract that is being called.
-This can be useful when a contract should be called through a proxy contract.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">contract</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">to</span><span class="o">=</span><span class="n">proxy</span><span class="p">)</span>
+<p class="admonition-title">Encoding data for low-level calls and transactions</p>
+<p>To prepare the <code>data</code> payload, the <code>Abi</code> helper class can be used. It offers the same ABI encoding
+functions as the <code>abi</code> global object in Solidity.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span> <span class="nn">woke.testing</span> <span class="kn">import</span> <span class="o">*</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kn">from</span> <span class="nn">pytypes.contracts.Counter</span> <span class="kn">import</span> <span class="n">Counter</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="nd">@connect</span><span class="p">(</span><span class="n">default_chain</span><span class="p">)</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="k">def</span> <span class="nf">test_low_level_transact</span><span class="p">():</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">default_chain</span><span class="o">.</span><span class="n">default_tx_account</span> <span class="o">=</span> <span class="n">default_chain</span><span class="o">.</span><span class="n">accounts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="n">counter</span> <span class="o">=</span> <span class="n">Counter</span><span class="o">.</span><span class="n">deploy</span><span class="p">()</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>    <span class="c1"># execute counter.setCount(100) using a low-level transaction</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>    <span class="n">counter</span><span class="o">.</span><span class="n">transact</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">Abi</span><span class="o">.</span><span class="n">encode_call</span><span class="p">(</span><span class="n">Counter</span><span class="o">.</span><span class="n">setCount</span><span class="p">,</span> <span class="p">[</span><span class="mi">100</span><span class="p">]))</span>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>    <span class="k">assert</span> <span class="n">counter</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">==</span> <span class="mi">100</span>
 </code></pre></div>
 </div>
-<p>If no <code>from_</code> argument is specified:</p>
+<h2 id="contract-accounts">Contract accounts<a class="headerlink" href="#contract-accounts" title="Permanent link">#</a></h2>
+<p>Contract accounts are accounts that have non-empty code. Everything that applies to <code>Account</code> instances
+also applies to contract accounts. However, contract accounts have additional methods:</p>
 <ul>
-<li><code>default_chain.default_call_account</code> is used to execute <strong>calls</strong>,</li>
-<li><code>default_chain.default_tx_account</code> is used to execute <strong>transactions</strong>.</li>
+<li><code>deployment_code</code> - returns the code used to deploy the contract, may require addresses of libraries needed by the contract,</li>
+<li><code>deploy</code> - deploys the contract, requires equivalent arguments as the constructor of the contract in Solidity,</li>
+<li>other contract-specific methods generated in <code>pytypes</code>, including getters for public state variables.</li>
 </ul>
-<p><code>default_call_account</code> is initialized to the first account in the chain's account list.
-<code>default_tx_account</code> is left unset by default.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span> <span class="nn">woke.testing</span> <span class="kn">import</span> <span class="o">*</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span> <span class="nn">pytypes.contracts.Counter</span> <span class="kn">import</span> <span class="n">Counter</span>
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="kn">from</span> <span class="nn">pytypes.contracts.Counter</span> <span class="kn">import</span> <span class="n">Counter</span>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="nd">@connect</span><span class="p">(</span><span class="n">default_chain</span><span class="p">)</span>
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="k">def</span> <span class="nf">test_counter</span><span class="p">():</span>
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    <span class="n">default_chain</span><span class="o">.</span><span class="n">default_tx_account</span> <span class="o">=</span> <span class="n">default_chain</span><span class="o">.</span><span class="n">accounts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>
-<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>    <span class="n">counter</span> <span class="o">=</span> <span class="n">Counter</span><span class="o">.</span><span class="n">deploy</span><span class="p">(</span><span class="n">from_</span><span class="o">=</span><span class="n">default_chain</span><span class="o">.</span><span class="n">accounts</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>    <span class="n">counter</span><span class="o">.</span><span class="n">increment</span><span class="p">()</span>
-<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>    <span class="k">assert</span> <span class="n">counter</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span>
-<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>
-<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>    <span class="c1"># increment performed as a call does not change the state</span>
-<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>    <span class="n">counter</span><span class="o">.</span><span class="n">increment</span><span class="p">(</span><span class="n">request_type</span><span class="o">=</span><span class="s2">&quot;call&quot;</span><span class="p">)</span>
-<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>    <span class="k">assert</span> <span class="n">counter</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span>
-<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>
-<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>    <span class="c1"># setCount can only be called by the owner</span>
-<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a>    <span class="n">counter</span><span class="o">.</span><span class="n">setCount</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">from_</span><span class="o">=</span><span class="n">default_chain</span><span class="o">.</span><span class="n">accounts</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a>    <span class="k">assert</span> <span class="n">counter</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">==</span> <span class="mi">10</span>
-<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a>
-<a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a>    <span class="c1"># this will fail because the default account is not the owner</span>
-<a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a>    <span class="k">with</span> <span class="n">must_revert</span><span class="p">():</span>
-<a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a>        <span class="n">counter</span><span class="o">.</span><span class="n">setCount</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
-<a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a>    <span class="k">assert</span> <span class="n">counter</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">==</span> <span class="mi">10</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">Counter</span><span class="o">.</span><span class="n">deployment_code</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">0</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="nb">print</span><span class="p">(</span><span class="n">Counter</span><span class="o">.</span><span class="n">setCount</span><span class="o">.</span><span class="n">selector</span><span class="o">.</span><span class="n">hex</span><span class="p">())</span>
 </code></pre></div>
+<p>Every method of a contract generated in <code>pytypes</code> has a <code>selector</code> property.</p>
+<div class="admonition tip">
+<p class="admonition-title">Constructing contracts from an address</p>
+<p>The ability to construct a contract from an address (and an optional <code>Chain</code> instance) can be very useful
+when interacting with contracts through proxies:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span> <span class="nn">woke.testing</span> <span class="kn">import</span> <span class="o">*</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="kn">from</span> <span class="nn">pytypes.contracts.Counter</span> <span class="kn">import</span> <span class="n">Counter</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="kn">from</span> <span class="nn">pytypes.openzeppelin.contracts.proxy.ERC1967.ERC1967Proxy</span> <span class="kn">import</span> <span class="n">ERC1967Proxy</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="nd">@connect</span><span class="p">(</span><span class="n">default_chain</span><span class="p">)</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="k">def</span> <span class="nf">test_proxy</span><span class="p">():</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>    <span class="n">default_chain</span><span class="o">.</span><span class="n">default_tx_account</span> <span class="o">=</span> <span class="n">default_chain</span><span class="o">.</span><span class="n">accounts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>    <span class="n">impl</span> <span class="o">=</span> <span class="n">Counter</span><span class="o">.</span><span class="n">deploy</span><span class="p">()</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>    <span class="n">proxy</span> <span class="o">=</span> <span class="n">ERC1967Proxy</span><span class="o">.</span><span class="n">deploy</span><span class="p">(</span><span class="n">impl</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>    <span class="c1"># behave as if Counter was deployed at proxy.address</span>
+<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>    <span class="n">counter</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">proxy</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
+<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>    <span class="n">counter</span><span class="o">.</span><span class="n">increment</span><span class="p">()</span>
+<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>    <span class="k">assert</span> <span class="n">counter</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span>
+</code></pre></div>
+</div>
 
 
 

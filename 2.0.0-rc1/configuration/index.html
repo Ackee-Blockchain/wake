@@ -21,7 +21,7 @@
         <link rel="next" href="../testing-framework/overview/">
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.5">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.10">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.558e4712.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.0d440cfe.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.2505c338.min.css">
@@ -266,7 +266,7 @@
   
     <li class="md-nav__item md-nav__item--active">
       
-      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
         
@@ -416,7 +416,7 @@
       
       
       
-      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
       
       
         
@@ -424,14 +424,18 @@
         
           
         
+          
+        
+          
+        
       
       
-        <label class="md-nav__link" for="__nav_3" tabindex="0" aria-expanded="false">
+        <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
           Testing framework
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" aria-label="Testing framework" data-md-level="1">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_3">
           <span class="md-nav__icon md-icon"></span>
           Testing framework
@@ -460,6 +464,34 @@
     <li class="md-nav__item">
       <a href="../testing-framework/basic-usage/" class="md-nav__link">
         Basic usage
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing-framework/accounts-and-addresses/" class="md-nav__link">
+        Accounts and addresses
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing-framework/events-and-errors/" class="md-nav__link">
+        Events and errors
       </a>
     </li>
   
@@ -736,46 +768,46 @@ LSP configuration options are loaded from LSP clients using the <a href="https:/
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Option</th>
-<th style="text-align: left;">Description</th>
-<th style="text-align: left;">Default value</th>
+<th align="left">Option</th>
+<th align="left">Description</th>
+<th align="left">Default value</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><code>allow_paths</code></td>
-<td style="text-align: left;">Allow paths passed to the <code>solc</code> executable</td>
-<td style="text-align: left;"><code>[]</code></td>
+<td align="left"><code>allow_paths</code></td>
+<td align="left">Allow paths passed to the <code>solc</code> executable</td>
+<td align="left"><code>[]</code></td>
 </tr>
 <tr>
-<td style="text-align: left;"><code>evm_version</code></td>
-<td style="text-align: left;">EVM version as specified by the <a href="https://docs.soliditylang.org/en/latest/using-the-compiler.html#target-options">Solidity docs</a></td>
-<td style="text-align: left;"><code>""</code> (let the compiler decide)</td>
+<td align="left"><code>evm_version</code></td>
+<td align="left">EVM version as specified by the <a href="https://docs.soliditylang.org/en/latest/using-the-compiler.html#target-options">Solidity docs</a></td>
+<td align="left"><code>""</code> (let the compiler decide)</td>
 </tr>
 <tr>
-<td style="text-align: left;"><code>ignore_paths</code></td>
-<td style="text-align: left;">Files in these paths are not compiled unless imported from other non-ignored files</td>
-<td style="text-align: left;"><code>[{CWD}/.woke-build, {CWD}/node_modules, {CWD}/venv, {CWD}/lib]</code></td>
+<td align="left"><code>ignore_paths</code></td>
+<td align="left">Files in these paths are not compiled unless imported from other non-ignored files</td>
+<td align="left"><code>[{CWD}/.woke-build, {CWD}/node_modules, {CWD}/venv, {CWD}/lib]</code></td>
 </tr>
 <tr>
-<td style="text-align: left;"><nobr><code>include_paths</code></nobr></td>
-<td style="text-align: left;">Paths (along with <code>{CWD}</code>) where files from non-relative imports are searched</td>
-<td style="text-align: left;"><code>[{CWD}/node_modules]</code></td>
+<td align="left"><nobr><code>include_paths</code></nobr></td>
+<td align="left">Paths (along with <code>{CWD}</code>) where files from non-relative imports are searched</td>
+<td align="left"><code>[{CWD}/node_modules]</code></td>
 </tr>
 <tr>
-<td style="text-align: left;"><code>remappings</code></td>
-<td style="text-align: left;">Compiler remappings as specified by the <a href="https://docs.soliditylang.org/en/latest/path-resolution.html#import-remapping">Solidity docs</a></td>
-<td style="text-align: left;"><code>[]</code></td>
+<td align="left"><code>remappings</code></td>
+<td align="left">Compiler remappings as specified by the <a href="https://docs.soliditylang.org/en/latest/path-resolution.html#import-remapping">Solidity docs</a></td>
+<td align="left"><code>[]</code></td>
 </tr>
 <tr>
-<td style="text-align: left;"><nobr><code>target_version</code></nobr></td>
-<td style="text-align: left;">Target <code>solc</code> version used to compile the project</td>
-<td style="text-align: left;"><code>""</code> (use the latest version for each compilation unit)</td>
+<td align="left"><nobr><code>target_version</code></nobr></td>
+<td align="left">Target <code>solc</code> version used to compile the project</td>
+<td align="left"><code>""</code> (use the latest version for each compilation unit)</td>
 </tr>
 <tr>
-<td style="text-align: left;"><code>via_IR</code></td>
-<td style="text-align: left;">Compile the code via the Yul intermediate language (see the <a href="https://docs.soliditylang.org/en/latest/ir-breaking-changes.html">Solidity docs</a>)</td>
-<td style="text-align: left;"><code>""</code> (let the compiler decide)</td>
+<td align="left"><code>via_IR</code></td>
+<td align="left">Compile the code via the Yul intermediate language (see the <a href="https://docs.soliditylang.org/en/latest/ir-breaking-changes.html">Solidity docs</a>)</td>
+<td align="left"><code>""</code> (let the compiler decide)</td>
 </tr>
 </tbody>
 </table>
@@ -787,21 +819,21 @@ LSP configuration options are loaded from LSP clients using the <a href="https:/
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Option</th>
-<th style="text-align: left;">Description</th>
-<th style="text-align: left;">Default value</th>
+<th align="left">Option</th>
+<th align="left">Description</th>
+<th align="left">Default value</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><code>enabled</code></td>
-<td style="text-align: left;">Compile the project with solc optimizations enabled. Leaving this unset disables most of the available optimizations. Setting this to <code>false</code> disables all optimizations for Solidity &lt;0.8.6 and has the same behavior as leaving this unset for Solidity &gt;=0.8.6.</td>
-<td style="text-align: left;"><code>""</code> (unset)</td>
+<td align="left"><code>enabled</code></td>
+<td align="left">Compile the project with solc optimizations enabled. Leaving this unset disables most of the available optimizations. Setting this to <code>false</code> disables all optimizations for Solidity &lt;0.8.6 and has the same behavior as leaving this unset for Solidity &gt;=0.8.6.</td>
+<td align="left"><code>""</code> (unset)</td>
 </tr>
 <tr>
-<td style="text-align: left;"><code>runs</code></td>
-<td style="text-align: left;">Configuration of the optimizer specifying how many times the code is intended to be run. Lower values optimize more for initial deployment cost, while higher values optimize more for high-frequency usage.</td>
-<td style="text-align: left;"><code>200</code></td>
+<td align="left"><code>runs</code></td>
+<td align="left">Configuration of the optimizer specifying how many times the code is intended to be run. Lower values optimize more for initial deployment cost, while higher values optimize more for high-frequency usage.</td>
+<td align="left"><code>200</code></td>
 </tr>
 </tbody>
 </table>
@@ -809,26 +841,26 @@ LSP configuration options are loaded from LSP clients using the <a href="https:/
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Option</th>
-<th style="text-align: left;">Description</th>
-<th style="text-align: left;">Default value</th>
+<th align="left">Option</th>
+<th align="left">Description</th>
+<th align="left">Default value</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><code>exclude</code></td>
-<td style="text-align: left;">List of detector IDs (string or number) that should not be enabled.</td>
-<td style="text-align: left;"><code>[]</code></td>
+<td align="left"><code>exclude</code></td>
+<td align="left">List of detector IDs (string or number) that should not be enabled.</td>
+<td align="left"><code>[]</code></td>
 </tr>
 <tr>
-<td style="text-align: left;"><code>only</code></td>
-<td style="text-align: left;">List of detector IDs (string or number) that should only be enabled.</td>
-<td style="text-align: left;"><code>""</code> (unset)</td>
+<td align="left"><code>only</code></td>
+<td align="left">List of detector IDs (string or number) that should only be enabled.</td>
+<td align="left"><code>""</code> (unset)</td>
 </tr>
 <tr>
-<td style="text-align: left;"><code>ignore_paths</code></td>
-<td style="text-align: left;">Detections with subdetections in these paths are ignored.</td>
-<td style="text-align: left;"><code>[{CWD}/.woke-build, {CWD}/node_modules, {CWD}/venv, {CWD}/lib]</code></td>
+<td align="left"><code>ignore_paths</code></td>
+<td align="left">Detections with subdetections in these paths are ignored.</td>
+<td align="left"><code>[{CWD}/.woke-build, {CWD}/node_modules, {CWD}/venv, {CWD}/lib]</code></td>
 </tr>
 </tbody>
 </table>
@@ -837,21 +869,21 @@ LSP configuration options are loaded from LSP clients using the <a href="https:/
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Option</th>
-<th style="text-align: left;">Description</th>
-<th style="text-align: left;">Default value</th>
+<th align="left">Option</th>
+<th align="left">Description</th>
+<th align="left">Default value</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><code>direction</code></td>
-<td style="text-align: left;">Graph direction</td>
-<td style="text-align: left;"><code>TB</code></td>
+<td align="left"><code>direction</code></td>
+<td align="left">Graph direction</td>
+<td align="left"><code>TB</code></td>
 </tr>
 <tr>
-<td style="text-align: left;"><code>vscode_urls</code></td>
-<td style="text-align: left;">Attach VS Code URLs to the graph nodes</td>
-<td style="text-align: left;"><code>true</code></td>
+<td align="left"><code>vscode_urls</code></td>
+<td align="left">Attach VS Code URLs to the graph nodes</td>
+<td align="left"><code>true</code></td>
 </tr>
 </tbody>
 </table>
@@ -860,21 +892,21 @@ LSP configuration options are loaded from LSP clients using the <a href="https:/
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Option</th>
-<th style="text-align: left;">Description</th>
-<th style="text-align: left;">Default value</th>
+<th align="left">Option</th>
+<th align="left">Description</th>
+<th align="left">Default value</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><code>direction</code></td>
-<td style="text-align: left;">Graph direction</td>
-<td style="text-align: left;"><code>BT</code></td>
+<td align="left"><code>direction</code></td>
+<td align="left">Graph direction</td>
+<td align="left"><code>BT</code></td>
 </tr>
 <tr>
-<td style="text-align: left;"><code>vscode_urls</code></td>
-<td style="text-align: left;">Attach VS Code URLs to the graph nodes</td>
-<td style="text-align: left;"><code>true</code></td>
+<td align="left"><code>vscode_urls</code></td>
+<td align="left">Attach VS Code URLs to the graph nodes</td>
+<td align="left"><code>true</code></td>
 </tr>
 </tbody>
 </table>
@@ -883,21 +915,21 @@ LSP configuration options are loaded from LSP clients using the <a href="https:/
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Option</th>
-<th style="text-align: left;">Description</th>
-<th style="text-align: left;">Default value</th>
+<th align="left">Option</th>
+<th align="left">Description</th>
+<th align="left">Default value</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><code>direction</code></td>
-<td style="text-align: left;">Graph direction</td>
-<td style="text-align: left;"><code>BT</code></td>
+<td align="left"><code>direction</code></td>
+<td align="left">Graph direction</td>
+<td align="left"><code>BT</code></td>
 </tr>
 <tr>
-<td style="text-align: left;"><code>vscode_urls</code></td>
-<td style="text-align: left;">Attach VS Code URLs to the graph nodes</td>
-<td style="text-align: left;"><code>true</code></td>
+<td align="left"><code>vscode_urls</code></td>
+<td align="left">Attach VS Code URLs to the graph nodes</td>
+<td align="left"><code>true</code></td>
 </tr>
 </tbody>
 </table>
@@ -906,21 +938,21 @@ LSP configuration options are loaded from LSP clients using the <a href="https:/
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Option</th>
-<th style="text-align: left;">Description</th>
-<th style="text-align: left;">Default value</th>
+<th align="left">Option</th>
+<th align="left">Description</th>
+<th align="left">Default value</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><code>direction</code></td>
-<td style="text-align: left;">Graph direction</td>
-<td style="text-align: left;"><code>LR</code></td>
+<td align="left"><code>direction</code></td>
+<td align="left">Graph direction</td>
+<td align="left"><code>LR</code></td>
 </tr>
 <tr>
-<td style="text-align: left;"><code>vscode_urls</code></td>
-<td style="text-align: left;">Attach VS Code URLs to the graph nodes</td>
-<td style="text-align: left;"><code>true</code></td>
+<td align="left"><code>vscode_urls</code></td>
+<td align="left">Attach VS Code URLs to the graph nodes</td>
+<td align="left"><code>true</code></td>
 </tr>
 </tbody>
 </table>
@@ -928,16 +960,16 @@ LSP configuration options are loaded from LSP clients using the <a href="https:/
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Option</th>
-<th style="text-align: left;">Description</th>
-<th style="text-align: left;">Default value</th>
+<th align="left">Option</th>
+<th align="left">Description</th>
+<th align="left">Default value</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><code>compilation_delay</code></td>
-<td style="text-align: left;">Delay in seconds before the project is compiled after a keystroke.</td>
-<td style="text-align: left;"><code>0</code></td>
+<td align="left"><code>compilation_delay</code></td>
+<td align="left">Delay in seconds before the project is compiled after a keystroke.</td>
+<td align="left"><code>0</code></td>
 </tr>
 </tbody>
 </table>
@@ -945,16 +977,16 @@ LSP configuration options are loaded from LSP clients using the <a href="https:/
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Option</th>
-<th style="text-align: left;">Description</th>
-<th style="text-align: left;">Default value</th>
+<th align="left">Option</th>
+<th align="left">Description</th>
+<th align="left">Default value</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><code>enable</code></td>
-<td style="text-align: left;">Enable LSP code lens language feature.</td>
-<td style="text-align: left;"><code>true</code></td>
+<td align="left"><code>enable</code></td>
+<td align="left">Enable LSP code lens language feature.</td>
+<td align="left"><code>true</code></td>
 </tr>
 </tbody>
 </table>
@@ -962,16 +994,16 @@ LSP configuration options are loaded from LSP clients using the <a href="https:/
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Option</th>
-<th style="text-align: left;">Description</th>
-<th style="text-align: left;">Default value</th>
+<th align="left">Option</th>
+<th align="left">Description</th>
+<th align="left">Default value</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><code>enable</code></td>
-<td style="text-align: left;">Enable vulnerability detectors in the LSP server.</td>
-<td style="text-align: left;"><code>true</code></td>
+<td align="left"><code>enable</code></td>
+<td align="left">Enable vulnerability detectors in the LSP server.</td>
+<td align="left"><code>true</code></td>
 </tr>
 </tbody>
 </table>
@@ -980,16 +1012,16 @@ LSP configuration options are loaded from LSP clients using the <a href="https:/
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Option</th>
-<th style="text-align: left;">Description</th>
-<th style="text-align: left;">Default value</th>
+<th align="left">Option</th>
+<th align="left">Description</th>
+<th align="left">Default value</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><code>include_declarations</code></td>
-<td style="text-align: left;">Also include declarations in <code>Find references</code> request results.</td>
-<td style="text-align: left;"><code>false</code></td>
+<td align="left"><code>include_declarations</code></td>
+<td align="left">Also include declarations in <code>Find references</code> request results.</td>
+<td align="left"><code>false</code></td>
 </tr>
 </tbody>
 </table>
@@ -1060,10 +1092,10 @@ LSP configuration options are loaded from LSP clients using the <a href="https:/
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "..", "features": ["content.code.copy", "navigation.tracking", "navigation.sections", "navigation.indexes", "navigation.top"], "search": "../assets/javascripts/workers/search.e5c33ebb.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    <script id="__config" type="application/json">{"base": "..", "features": ["content.code.copy", "navigation.tracking", "navigation.sections", "navigation.indexes", "navigation.top"], "search": "../assets/javascripts/workers/search.db81ec45.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.51d95adb.min.js"></script>
+      <script src="../assets/javascripts/bundle.6df46069.min.js"></script>
       
         <script src="../js/mathjax.js"></script>
       
