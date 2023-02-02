@@ -127,7 +127,11 @@ class ImportDirective(SolidityAbc):
         # referenced declaration ID is missing (for whatever reason) in import directive symbol aliases
         # for example `import { SafeType } from "SafeLib.sol";`
         # fix: find these reference IDs manually
+        # seems to be fixed in solc >= 0.8.12
         for symbol_alias in self._symbol_aliases:
+            if symbol_alias.foreign._referenced_declaration_id is not None:
+                continue
+
             source_units_queue: Deque[SourceUnit] = deque(
                 [callback_params.source_units[self._imported_file]]
             )
