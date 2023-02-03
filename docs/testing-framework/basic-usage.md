@@ -2,6 +2,10 @@
 
 This guide explains how to run the first test in the Woke testing framework.
 
+!!! warning
+    Before getting started, make sure to have the latest version of a development chain installed.
+    This is especially important in case of the Anvil development chain, because it is under active development.
+
 ## Generating pytypes
 
 The first step is to generate `pytypes` for smart contracts that should be tested. This is done by running the following command:
@@ -79,13 +83,13 @@ Every contract has a `deploy` method that deploys the contract to the chain.
 The `deploy` method accepts the arguments that are required by the contract's constructor.
 Additionally, it accepts the following keyword arguments:
 
-| Argument    | Description                                                                                 |
-|-------------|---------------------------------------------------------------------------------------------|
-| `from_`     | the address that will be used to deploy the contract (the transaction sender)               |
-| `value`     | the amount of Wei to be sent to the contract                                                |
-| `gas_limit` | the maximum amount of gas that can be used to deploy the contract (`max`, `auto` or number) |
-| `return_tx` | if set to `True`, the full transaction object is returned instead of the contract instance  |
-| `chain`     | the chain to which the contract should be deployed                                          |
+| Argument    | Description                                                                                                    |
+|-------------|----------------------------------------------------------------------------------------------------------------|
+| `from_`     | `Address`, `Account` or a hex address string that will be used to deploy the contract (the transaction sender) |
+| `value`     | amount of Wei to be sent to the contract                                                                       |
+| `gas_limit` | maximum amount of gas that can be used in the transaction (`max`, `auto` or number)                            |
+| `return_tx` | `True` to return the full transaction object, `False` to return the return value (contract instance)           |
+| `chain`     | `Chain` to which the contract should be deployed                                                               |
 
 ```python
 from woke.testing import *
@@ -109,10 +113,10 @@ By default, Woke uses **calls** to execute pure and view functions. It uses **tr
 
 There are two more keyword arguments that the `deploy` method does not accept:
 
-| Argument       | Description                                                     |
-|----------------|-----------------------------------------------------------------|
-| `to`           | the address of the contract to which the request should be sent |
-| `request_type` | the type of the request (`call` or `tx`)                        |
+| Argument       | Description                                                                                      |
+|----------------|--------------------------------------------------------------------------------------------------|
+| `to`           | `Address`, `Account` or a hex address string of the contract to which the request should be sent |
+| `request_type` | type of the request (`call` or `tx`)                                                         |
 
 !!! tip
     The `to` argument can be used to override the address of the contract that is being called.

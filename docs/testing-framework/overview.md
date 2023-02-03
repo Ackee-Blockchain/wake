@@ -12,6 +12,6 @@ It utilizes `pytypes`, Python equivalents of Solidity types, to maximize the tes
 
 The currently supported development chain implementations are:
 
-- [Anvil](https://github.com/foundry-rs/foundry/tree/master/anvil)
+- [Anvil](https://github.com/foundry-rs/foundry/tree/master/anvil) (recommended)
 - [Ganache](https://github.com/trufflesuite/ganache)
 - [Hardhat](https://github.com/NomicFoundation/hardhat)
