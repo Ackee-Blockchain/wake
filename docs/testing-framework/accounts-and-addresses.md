@@ -66,14 +66,14 @@ Setting the label to `None` removes the label.
 
 `Account` instances have the following properties:
 
-| Property  | Description                        |
-|-----------|------------------------------------|
-| `address` | The address of the account.        |
-| `chain`   | The chain the account is bound to. |
-| `label`   | The label of the account.          |
-| `balance` | The balance of the account in Wei. |
-| `code`    | The code of the account.           |
-| `nonce`   | The nonce of the account.          |
+| Property  | Description                     |
+|-----------|---------------------------------|
+| `address` | `Address` of the account        |
+| `chain`   | `Chain` the account is bound to |
+| `label`   | string label of the account     |
+| `balance` | balance of the account in Wei   |
+| `code`    | code of the account             |
+| `nonce`   | nonce of the account            |
 
 Except for `address` and `chain`, all properties can be assigned to. `nonce` can only be incremented.
 
@@ -99,6 +99,8 @@ def test_accounts():
     assert alice.balance == 90
     assert bob.balance == 10
 ```
+
+The previous example shows how to transfer Wei from one account to another.
 
 !!! tip "Encoding data for low-level calls and transactions"
     To prepare the `data` payload, the `Abi` helper class can be used. It offers the same ABI encoding
