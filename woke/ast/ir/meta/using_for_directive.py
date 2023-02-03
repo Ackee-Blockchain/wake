@@ -43,6 +43,7 @@ class UsingForDirective(SolidityAbc):
         }
         ```
     """
+
     _ast_node: SolcUsingForDirective
     _parent: Union[ContractDefinition, SourceUnit]
 
@@ -107,7 +108,7 @@ class UsingForDirective(SolidityAbc):
         """
         Is only set in the case of `:::solidity using {function1, function2} for TypeName;` directive type.
         Returns:
-            List of functions that are bound to the target type.
+            List of functions that are attached to the target type.
         """
         if self._functions is None:
             return None
@@ -118,7 +119,7 @@ class UsingForDirective(SolidityAbc):
         """
         Is only set in the case of `:::solidity using LibraryName for TypeName;` directive type.
         Returns:
-            IR node referencing the library ([ContractDefinition][woke.ast.ir.declaration.contract_definition.ContractDefinition] of the [ContractKind.LIBRARY][woke.ast.enums.ContractKind.LIBRARY] kind) that is bound to the target type.
+            IR node referencing the library ([ContractDefinition][woke.ast.ir.declaration.contract_definition.ContractDefinition] of the [ContractKind.LIBRARY][woke.ast.enums.ContractKind.LIBRARY] kind) that is attached to the target type.
         """
         return self._library_name
 
@@ -127,6 +128,6 @@ class UsingForDirective(SolidityAbc):
         """
         Is `None` in the case of `:::solidity using Lib for *;`.
         Returns:
-            Type name that is bound to the functions or library.
+            Type name that is attached to the functions or library.
         """
         return self._type_name

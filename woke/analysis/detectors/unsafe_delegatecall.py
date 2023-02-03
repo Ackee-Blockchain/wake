@@ -145,7 +145,7 @@ class UnsafeDelegatecallDetector(DetectorAbc):
                 FunctionTypeKind.DELEGATE_CALL,
                 FunctionTypeKind.BARE_DELEGATE_CALL,
             }
-            or t.bound_to is not None
+            or t.attached_to is not None
         ):
             return
 

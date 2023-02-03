@@ -190,7 +190,7 @@ class OverflowCalldataTupleReencodingBugDetector(DetectorAbc):
             return
 
         if t.kind == FunctionTypeKind.EXTERNAL:
-            assert t.bound_to is None
+            assert t.attached_to is None
             encoded_types = [arg.type for arg in node.arguments]
         elif t.kind in {FunctionTypeKind.ERROR, FunctionTypeKind.EVENT}:
             encoded_types = [arg.type for arg in node.arguments]

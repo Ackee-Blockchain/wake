@@ -11,3 +11,4 @@ class EvmVersionEnum(str, enum.Enum):
     ISTANBUL = "istanbul"
     BERLIN = "berlin"
     LONDON = "london"
+    PARIS = "paris"

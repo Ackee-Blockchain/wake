@@ -562,7 +562,7 @@ class Function(TypeAbc):
     __gas_set: bool
     __value_set: bool
     __salt_set: bool
-    __bound_to: typ.Optional[typ.Tuple[TypeAbc, ...]]
+    __attached_to: typ.Optional[typ.Tuple[TypeAbc, ...]]
 
     def __init__(
         self,
@@ -626,9 +626,16 @@ class Function(TypeAbc):
             type_identifier.read("bound_to")
             bound_to = _parse_list(type_identifier, reference_resolver, cu_hash)
             assert not any(param is None for param in bound_to)
-            self.__bound_to = bound_to  # type: ignore
+            self.__attached_to = bound_to  # type: ignore
+        elif type_identifier.startswith(
+            "attached_to"
+        ):  # bound_to was renamed to attached_to in 0.8.18
+            type_identifier.read("attached_to")
+            attached_to = _parse_list(type_identifier, reference_resolver, cu_hash)
+            assert not any(param is None for param in attached_to)
+            self.__attached_to = attached_to  # type: ignore
         else:
-            self.__bound_to = None
+            self.__attached_to = None
 
     def abi_type(self) -> str:
         return "function"
@@ -715,11 +722,11 @@ class Function(TypeAbc):
         return self.__salt_set
 
     @property
-    def bound_to(self) -> typ.Optional[typ.Tuple[TypeAbc, ...]]:
+    def attached_to(self) -> typ.Optional[typ.Tuple[TypeAbc, ...]]:
         """
-        A function type can be bound to a type using the [UsingForDirective][woke.ast.ir.meta.using_for_directive.UsingForDirective] or internally in the case of a Solidity global symbol.
+        A function type can be attached to a type using the [UsingForDirective][woke.ast.ir.meta.using_for_directive.UsingForDirective] or internally in the case of a Solidity global symbol.
         !!! example
-            In the following example, the `add` [MemberAccess][woke.ast.ir.expression.member_access.MemberAccess] expression on line 9 is of the [Function][woke.ast.types.Function] type and is bound to the [UInt][woke.ast.types.UInt] type.
+            In the following example, the `add` [MemberAccess][woke.ast.ir.expression.member_access.MemberAccess] expression on line 9 is of the [Function][woke.ast.types.Function] type and is attached to the [UInt][woke.ast.types.UInt] type.
             ```solidity linenums="1"
             function add(uint a, uint b) pure returns (uint) {
                 return a + b;
@@ -734,15 +741,15 @@ class Function(TypeAbc):
             }
             ```
 
-            In this example, the `push` [MemberAccess][woke.ast.ir.expression.member_access.MemberAccess] expression on line 9 is of the [Function][woke.ast.types.Function] type and is bound to the [Array][woke.ast.types.Array] type.
+            In this example, the `push` [MemberAccess][woke.ast.ir.expression.member_access.MemberAccess] expression on line 9 is of the [Function][woke.ast.types.Function] type and is attached to the [Array][woke.ast.types.Array] type.
             ```solidity
             arr.push(1);
             ```
 
         Returns:
-            Type to which the function is bound to.
+            Type to which the function is attached to.
         """
-        return self.__bound_to
+        return self.__attached_to
 
 
 class Tuple(TypeAbc):
