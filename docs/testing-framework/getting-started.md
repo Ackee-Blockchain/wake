@@ -1,4 +1,4 @@
-# Basic usage
+# Getting started
 
 This guide explains how to run the first test in the Woke testing framework.
 

@@ -36,10 +36,11 @@ nav:
   - Configuration: 'configuration.md'
   - Testing framework:
       - Overview: 'testing-framework/overview.md'
-      - Basic usage: 'testing-framework/basic-usage.md'
-      - Accounts and addresses: 'testing-framework/accounts-and-addresses.md'
-      - Transaction objects: 'testing-framework/transaction-objects.md'
-      - Events and errors: 'testing-framework/events-and-errors.md'
+      - Basics:
+        - Getting started: 'testing-framework/getting-started.md'
+        - Accounts and addresses: 'testing-framework/accounts-and-addresses.md'
+        - Transaction objects: 'testing-framework/transaction-objects.md'
+        - Events and errors: 'testing-framework/events-and-errors.md'
   - Detectors: 'detectors.md'
   - LSP server: 'language-server.md'
   - Fuzzer: 'fuzzer.md'
