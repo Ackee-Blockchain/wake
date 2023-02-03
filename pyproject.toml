@@ -34,18 +34,20 @@ watchdog = "^2.2"
 pytest = "^7"
 pdbr = "^0.7.7"
 
-[tool.poetry.group.tests.dependencies]
-pytest-asyncio = "^0.17"
-GitPython = "^3.1.20"
+pytest-asyncio = { version = "^0.17", optional = true }
+GitPython = { version = "^3.1.20", optional = true }
 
-[tool.poetry.group.dev.dependencies]
-black = "^22"
-mkdocs-material = "^9"
-mkdocstrings = { version = "^0.19", extras = ["python"] }
-pymdown-extensions = "^9"
-pygments = "^2"
-mike = "^1"
-isort = "^5"
+black = { version = "^22", optional = true }
+mkdocs-material = { version = "^9", optional = true }
+mkdocstrings = { version = "^0.19", extras = ["python"], optional = true }
+pymdown-extensions = { version = "^9", optional = true }
+pygments = { version = "^2", optional = true }
+mike = { version = "^1", optional = true }
+isort = { version = "^5", optional = true }
+
+[tool.poetry.extras]
+tests = ["pytest-asyncio", "GitPython"]
+dev = ["black", "mkdocs-material", "mkdocstrings", "pymdown-extensions", "pygments", "mike", "isort"]
 
 [tool.poetry.scripts]
 woke = "woke.cli.__main__:main"
