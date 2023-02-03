@@ -38,6 +38,7 @@ nav:
       - Overview: 'testing-framework/overview.md'
       - Basic usage: 'testing-framework/basic-usage.md'
       - Accounts and addresses: 'testing-framework/accounts-and-addresses.md'
+      - Transaction objects: 'testing-framework/transaction-objects.md'
       - Events and errors: 'testing-framework/events-and-errors.md'
   - Detectors: 'detectors.md'
   - LSP server: 'language-server.md'
