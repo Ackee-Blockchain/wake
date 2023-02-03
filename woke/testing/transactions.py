@@ -106,20 +106,8 @@ class TransactionAbc(ABC, Generic[T]):
 
     @property
     @_fetch_tx_data
-    def block_hash(self) -> str:
-        return self._tx_data["blockHash"]  # pyright: reportOptionalSubscript=false
-
-    @property
-    @_fetch_tx_data
-    def block_number(self) -> int:
-        return int(
-            self._tx_data["blockNumber"], 16
-        )  # pyright: reportOptionalSubscript=false
-
-    @property
-    @_fetch_tx_data
     def block(self) -> Block:
-        return self._chain.blocks[self.block_number]
+        return self._chain.blocks[int(self._tx_data["blockNumber"], 16)]
 
     @property
     def data(self) -> bytes:

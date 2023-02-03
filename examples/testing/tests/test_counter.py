@@ -75,7 +75,7 @@ def test_counter():
     tx2.wait()
 
     assert tx1.status == tx2.status == 1
-    assert tx1.block_number == tx2.block_number
+    assert tx1.block == tx2.block
     assert len(tx1.block.txs) == 2
 
     # it is possible to execute any function as a transaction (even pure and view functions)

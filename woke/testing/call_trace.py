@@ -177,7 +177,7 @@ class CallTrace:
                 origin_fqn = fqn_overrides[tx.to.address]
             else:
                 origin_fqn = get_fqn_from_address(
-                    tx.to.address, tx.block_number - 1, tx.chain
+                    tx.to.address, tx.block.number - 1, tx.chain
                 )
 
         contracts = [origin_fqn]
@@ -344,7 +344,7 @@ class CallTrace:
                 if addr in fqn_overrides:
                     fqn = fqn_overrides[addr]
                 else:
-                    fqn = get_fqn_from_address(addr, tx.block_number - 1, tx.chain)
+                    fqn = get_fqn_from_address(addr, tx.block.number - 1, tx.chain)
                 if fqn is None:
                     if addr == Address("0x000000000000000000636F6e736F6c652e6c6f67"):
                         if data[:4] in hardhat_console.abis:
