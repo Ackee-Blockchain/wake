@@ -80,7 +80,7 @@ Except for `address` and `chain`, all properties can be assigned to. `nonce` can
 ### Low-level calls and transactions
 
 Each `Account` instance has `call` and `transact` methods that can be used to perform arbitrary
-calls and transactions (see [Interacting with a contract](basic-usage.md#interacting-with-a-contract)).
+calls and transactions (see [Interacting with a contract](getting-started.md#interacting-with-a-contract)).
 Both methods accept `data`, `value`, `from_` and `gas_limit` keyword arguments. The `transact` method
 additionaly accepts the `return_tx` keyword argument.
 
