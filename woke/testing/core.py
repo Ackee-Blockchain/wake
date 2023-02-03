@@ -759,7 +759,7 @@ class Chain:
             assert isinstance(value, bytes)
             address = Address(value[:20])
             fqn = get_fqn_from_address(
-                address, tx.block_number - 1 if tx is not None else "latest", self
+                address, tx.block.number - 1 if tx is not None else "latest", self
             )
             if fqn not in contracts_by_fqn:
                 raise ValueError(f"Unknown contract: {fqn}")
@@ -1363,7 +1363,7 @@ def process_debug_trace_for_fqn_overrides(
             fqns.append(fqn_overrides[tx.to.address])
         else:
             fqns.append(
-                get_fqn_from_address(tx.to.address, tx.block_number - 1, tx.chain)
+                get_fqn_from_address(tx.to.address, tx.block.number - 1, tx.chain)
             )
 
     for i, trace in enumerate(debug_trace["structLogs"]):
@@ -1387,7 +1387,7 @@ def process_debug_trace_for_fqn_overrides(
                 fqns.append(fqn_overrides[addresses[-1]])
             else:
                 fqns.append(
-                    get_fqn_from_address(addresses[-1], tx.block_number - 1, tx.chain)
+                    get_fqn_from_address(addresses[-1], tx.block.number - 1, tx.chain)
                 )
 
             fqn_overrides.maps.insert(0, {})
@@ -1431,7 +1431,7 @@ def process_debug_trace_for_revert(
     elif tx.to.address in fqn_overrides:
         origin = fqn_overrides[tx.to.address]
     else:
-        origin = get_fqn_from_address(tx.to.address, tx.block_number - 1, tx.chain)
+        origin = get_fqn_from_address(tx.to.address, tx.block.number - 1, tx.chain)
 
     addresses: List[Optional[Address]] = [tx.to.address if tx.to is not None else None]
     fqns: List[Optional[str]] = [origin]
@@ -1459,7 +1459,7 @@ def process_debug_trace_for_revert(
                 fqns.append(fqn_overrides[addresses[-1]])
             else:
                 fqns.append(
-                    get_fqn_from_address(addresses[-1], tx.block_number - 1, tx.chain)
+                    get_fqn_from_address(addresses[-1], tx.block.number - 1, tx.chain)
                 )
 
             fqn_overrides.maps.insert(0, {})
@@ -1513,7 +1513,7 @@ def process_debug_trace_for_events(
     elif tx.to.address in fqn_overrides:
         origin = fqn_overrides[tx.to.address]
     else:
-        origin = get_fqn_from_address(tx.to.address, tx.block_number - 1, tx.chain)
+        origin = get_fqn_from_address(tx.to.address, tx.block.number - 1, tx.chain)
 
     addresses: List[Optional[Address]] = [tx.to.address if tx.to is not None else None]
     fqns: List[Optional[str]] = [origin]
@@ -1541,7 +1541,7 @@ def process_debug_trace_for_events(
                 fqns.append(fqn_overrides[addresses[-1]])
             else:
                 fqns.append(
-                    get_fqn_from_address(addresses[-1], tx.block_number - 1, tx.chain)
+                    get_fqn_from_address(addresses[-1], tx.block.number - 1, tx.chain)
                 )
 
             fqn_overrides.maps.insert(0, {})
