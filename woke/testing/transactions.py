@@ -126,7 +126,7 @@ class TransactionAbc(ABC, Generic[T]):
         return None
 
     @property
-    def gas(self) -> int:
+    def gas_limit(self) -> int:
         return self._tx_params["gas"]  # pyright: reportTypedDictNotRequiredAccess=false
 
     @property
