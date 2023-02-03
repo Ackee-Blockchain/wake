@@ -2,3 +2,4 @@ __pycache__/
 pytypes/
 .woke-build/
 .woke-logs/
+node_modules/
