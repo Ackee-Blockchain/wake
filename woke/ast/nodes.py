@@ -606,6 +606,10 @@ class SolcMapping(SolcNode):
     key_type: SolcTypeNameUnion
     value_type: SolcTypeNameUnion
     # optional
+    key_name: Optional[StrictStr]  # new in 0.8.18
+    key_name_location: Optional[Src]  # new in 0.8.18
+    value_name: Optional[StrictStr]  # new in 0.8.18
+    value_name_location: Optional[Src]  # new in 0.8.18
 
 
 class SolcUserDefinedTypeName(SolcNode):

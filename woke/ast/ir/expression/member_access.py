@@ -197,6 +197,10 @@ class MemberAccess(ExpressionAbc):
                         self._referenced_declaration_id = AstNodeId(
                             GlobalSymbolsEnum.BLOCK_TIMESTAMP
                         )
+                    elif self.member_name == "prevrandao":
+                        self._referenced_declaration_id = AstNodeId(
+                            GlobalSymbolsEnum.BLOCK_PREVRANDAO
+                        )
                     else:
                         assert False, f"Unknown block member {self.member_name}"
                 elif expr_type.kind == MagicTypeKind.MESSAGE:

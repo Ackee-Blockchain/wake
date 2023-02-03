@@ -38,6 +38,7 @@ class GlobalSymbolsEnum(enum.IntEnum):
     BLOCK_GASLIMIT = -104
     BLOCK_NUMBER = -105
     BLOCK_TIMESTAMP = -106
+    BLOCK_PREVRANDAO = -107
 
     MSG_DATA = -200
     MSG_SENDER = -201
@@ -297,6 +298,7 @@ class InlineAssemblyEvmVersion(str, enum.Enum):
     ISTANBUL = "istanbul"
     BERLIN = "berlin"
     LONDON = "london"
+    PARIS = "paris"
 
 
 class InlineAssemblySuffix(str, enum.Enum):
