@@ -1,3 +1,8 @@
+Install `@openzeppelin`:
+```bash
+npm install
+```
+
 Run
 ```bash
 woke init pytypes
