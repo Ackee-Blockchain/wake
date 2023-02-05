@@ -41,6 +41,7 @@ nav:
         - Accounts and addresses: 'testing-framework/accounts-and-addresses.md'
         - Transaction objects: 'testing-framework/transaction-objects.md'
         - Events and errors: 'testing-framework/events-and-errors.md'
+      - Fuzzing: 'testing-framework/fuzzing.md'
   - Detectors: 'detectors.md'
   - LSP server: 'language-server.md'
   - Fuzzer: 'fuzzer.md'
