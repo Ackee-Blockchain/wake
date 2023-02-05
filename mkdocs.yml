@@ -43,6 +43,7 @@ nav:
         - Events and errors: 'testing-framework/events-and-errors.md'
       - Fuzzing: 'testing-framework/fuzzing.md'
       - Cross-chain testing: 'testing-framework/cross-chain-testing.md'
+      - Performance considerations: 'testing-framework/performance-considerations.md'
   - Detectors: 'detectors.md'
   - LSP server: 'language-server.md'
   - Fuzzer: 'fuzzer.md'
