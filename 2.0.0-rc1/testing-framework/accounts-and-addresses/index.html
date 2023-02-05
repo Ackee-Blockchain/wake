@@ -15,10 +15,10 @@
         <link rel="canonical" href="https://ackeeblockchain.com/woke/docs/2.0.0-rc1/testing-framework/accounts-and-addresses/">
       
       
-        <link rel="prev" href="../basic-usage/">
+        <link rel="prev" href="../getting-started/">
       
       
-        <link rel="next" href="../events-and-errors/">
+        <link rel="next" href="../transaction-objects/">
       
       <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.10">
@@ -299,6 +299,8 @@
         
           
         
+          
+        
       
       
         <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
@@ -331,10 +333,49 @@
               
   
   
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" checked>
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+          Basics
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="true">
+        <label class="md-nav__title" for="__nav_3_2">
+          <span class="md-nav__icon md-icon"></span>
+          Basics
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
   
     <li class="md-nav__item">
-      <a href="../basic-usage/" class="md-nav__link">
-        Basic usage
+      <a href="../getting-started/" class="md-nav__link">
+        Getting started
       </a>
     </li>
   
@@ -443,8 +484,71 @@
   
   
     <li class="md-nav__item">
+      <a href="../transaction-objects/" class="md-nav__link">
+        Transaction objects
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../events-and-errors/" class="md-nav__link">
         Events and errors
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fuzzing/" class="md-nav__link">
+        Fuzzing
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cross-chain-testing/" class="md-nav__link">
+        Cross-chain testing
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../performance-considerations/" class="md-nav__link">
+        Performance considerations
       </a>
     </li>
   
@@ -682,34 +786,34 @@ of the account:</p>
 <tbody>
 <tr>
 <td><code>address</code></td>
-<td>The address of the account.</td>
+<td><code>Address</code> of the account</td>
 </tr>
 <tr>
 <td><code>chain</code></td>
-<td>The chain the account is bound to.</td>
+<td><code>Chain</code> the account is bound to</td>
 </tr>
 <tr>
 <td><code>label</code></td>
-<td>The label of the account.</td>
+<td>string label of the account</td>
 </tr>
 <tr>
 <td><code>balance</code></td>
-<td>The balance of the account in Wei.</td>
+<td>balance of the account in Wei</td>
 </tr>
 <tr>
 <td><code>code</code></td>
-<td>The code of the account.</td>
+<td>code of the account</td>
 </tr>
 <tr>
 <td><code>nonce</code></td>
-<td>The nonce of the account.</td>
+<td>nonce of the account</td>
 </tr>
 </tbody>
 </table>
 <p>Except for <code>address</code> and <code>chain</code>, all properties can be assigned to. <code>nonce</code> can only be incremented.</p>
 <h3 id="low-level-calls-and-transactions">Low-level calls and transactions<a class="headerlink" href="#low-level-calls-and-transactions" title="Permanent link">#</a></h3>
 <p>Each <code>Account</code> instance has <code>call</code> and <code>transact</code> methods that can be used to perform arbitrary
-calls and transactions (see <a href="../basic-usage/#interacting-with-a-contract">Interacting with a contract</a>).
+calls and transactions (see <a href="../getting-started/#interacting-with-a-contract">Interacting with a contract</a>).
 Both methods accept <code>data</code>, <code>value</code>, <code>from_</code> and <code>gas_limit</code> keyword arguments. The <code>transact</code> method
 additionaly accepts the <code>return_tx</code> keyword argument.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span> <span class="nn">woke.testing</span> <span class="kn">import</span> <span class="o">*</span>
@@ -726,6 +830,7 @@ additionaly accepts the <code>return_tx</code> keyword argument.</p>
 <a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>    <span class="k">assert</span> <span class="n">alice</span><span class="o">.</span><span class="n">balance</span> <span class="o">==</span> <span class="mi">90</span>
 <a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>    <span class="k">assert</span> <span class="n">bob</span><span class="o">.</span><span class="n">balance</span> <span class="o">==</span> <span class="mi">10</span>
 </code></pre></div>
+<p>The previous example shows how to transfer Wei from one account to another.</p>
 <div class="admonition tip">
 <p class="admonition-title">Encoding data for low-level calls and transactions</p>
 <p>To prepare the <code>data</code> payload, the <code>Abi</code> helper class can be used. It offers the same ABI encoding
