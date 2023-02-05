@@ -10,6 +10,10 @@
     --md-primary-fg-color: #00FFFF;
 }
 
+[data-md-color-scheme="slate"] .excalidraw svg {
+    filter: invert(1) hue-rotate(90deg);
+}
+
 @media screen and (max-width: 76.1875em) {
     .md-nav--primary
     .md-nav__title[for=__drawer] {
