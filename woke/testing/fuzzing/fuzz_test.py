@@ -92,8 +92,9 @@ class FuzzTest:
                 weights = [getattr(f, "weight") for f in valid_flows]
                 flow = random.choices(valid_flows, weights=weights)[0]
                 flow_params = [
-                    generate(h)
-                    for h in get_type_hints(flow, include_extras=True).values()
+                    generate(v)
+                    for k, v in get_type_hints(flow, include_extras=True).items()
+                    if k != "return"
                 ]
 
                 self.pre_flow(flow)
