@@ -4,7 +4,7 @@ This guide explains how to run the first test in the Woke testing framework.
 
 !!! warning
     Before getting started, make sure to have the latest version of a development chain installed.
-    This is especially important in case of the Anvil development chain, because it is under active development.
+    This is especially important in case of the [Anvil](https://github.com/foundry-rs/foundry/tree/master/anvil) development chain, because it is under active development.
 
 ## Generating pytypes
 
@@ -28,7 +28,7 @@ When a compilation error occurs, Woke generates `pytypes` for the contracts that
 ## Writing the first test
 
 !!! tip
-    Source code for this example is available in the [Woke repository](https://github.com/Ackee-Blockchain/woke/tree/ac1b74b97672557cc51fe1c5fa5cff652f872041/examples/testing).
+    Solidity source code for all examples in this guide is available in the [Woke repository](https://github.com/Ackee-Blockchain/woke/tree/main/examples/testing).
 
 To collect and execute tests, Woke uses the [pytest](https://docs.pytest.org/en/stable/) framework under the hood.
 The test files should start with `test_` or end with `_test.py` to be collected. It is possible to use all the features of the pytest framework like [fixtures](https://docs.pytest.org/en/stable/explanation/fixtures.html).
@@ -90,6 +90,12 @@ Additionally, it accepts the following keyword arguments:
 | `gas_limit` | maximum amount of gas that can be used in the transaction (`max`, `auto` or number)                            |
 | `return_tx` | `True` to return the full transaction object, `False` to return the return value (contract instance)           |
 | `chain`     | `Chain` to which the contract should be deployed                                                               |
+
+!!! warning "Sending transactions from any account"
+    The `from_` argument can be used to send transactions from any account (including contract) or address.
+    However, this may come at a cost of decreased performance (see [Performance considerations](performance-considerations.md)).
+
+    **When sending transactions from an account with code (contract), the contract behaves as if it had no code during the execution of the transaction!**
 
 ```python
 from woke.testing import *
