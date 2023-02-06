@@ -9,11 +9,12 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, cast
 import eth_abi
 import eth_utils
 from rich.console import Console
+from rich.highlighter import ReprHighlighter
+from rich.text import Text
 from rich.tree import Tree
 
 from woke.testing.core import (
     Address,
-    Chain,
     get_contracts_by_fqn,
     get_fqn_from_address,
     get_fqn_from_deployment_code,
@@ -76,42 +77,64 @@ class CallTrace:
 
     def __str__(self):
         console = Console()
-        tree = Tree(self.get_label(console))
-        self._into_tree(tree, console)
-
         with console.capture() as capture:
-            console.print(tree)
+            console.print(self)
         return capture.get()
 
     __repr__ = __str__
 
-    def _into_tree(self, tree: Tree, console: Console):
-        for subtrace in self._subtraces:
-            t = tree.add(subtrace.get_label(console))
-            subtrace._into_tree(t, console)
+    def __rich__(self):
+        tree = Tree(self._get_label())
+        self._into_tree(tree)
+        return tree
 
-    def get_label(self, console: Console) -> str:
-        ret = ""
+    def _into_tree(self, tree: Tree):
+        for subtrace in self._subtraces:
+            t = tree.add(subtrace._get_label())
+            subtrace._into_tree(t)
+
+    def _get_label(self) -> Text:
+        ret = Text()
         if self.contract_name is not None:
-            ret += f"[bright_magenta]{self.contract_name}[/bright_magenta]."
+            ret.append_text(
+                Text.from_markup(
+                    f"[bright_magenta]{self.contract_name}[/bright_magenta]."
+                )
+            )
 
         if self.function_is_special:
-            ret += f"<[bright_magenta]{self.function_name}[/bright_magenta]>"
+            ret.append_text(
+                Text.from_markup(
+                    f"<[bright_magenta]{self.function_name}[/bright_magenta]>"
+                )
+            )
         else:
-            ret += f"[bright_magenta]{self.function_name}[/bright_magenta]"
+            ret.append_text(
+                Text.from_markup(
+                    f"[bright_magenta]{self.function_name}[/bright_magenta]"
+                )
+            )
 
         if self.kind != CallTraceKind.INTERNAL:
-            args = []
-            for arg in self.arguments:
-                with console.capture() as capture:
-                    console.print(reprlib.repr(arg))
-                args.append(capture.get().strip())
-            ret += f"({', '.join(args)})"
+            ret.append("(")
+            for i, arg in enumerate(self.arguments):
+                t = Text(reprlib.repr(arg))
+                ReprHighlighter().highlight(t)
+                ret.append_text(t)
+                if i < len(self.arguments) - 1:
+                    ret.append(", ")
+            ret.append(")")
 
-        ret += f" {'[green]✓[/green]' if self.status else '[red]✗[/red]'}"
+        ret.append_text(
+            Text.from_markup(
+                f" {'[green]✓[/green]' if self.status else '[red]✗[/red]'}"
+            )
+        )
 
         if self.kind != CallTraceKind.CALL:
-            ret += f" [yellow]\[{self.kind}][/yellow]"  # pyright: reportInvalidStringEscapeSequence=false
+            ret.append_text(
+                Text.from_markup(f" [yellow]\[{self.kind}][/yellow]")
+            )  # pyright: reportInvalidStringEscapeSequence=false
 
         return ret
 
