@@ -47,7 +47,6 @@ nav:
       - Performance considerations: 'testing-framework/performance-considerations.md'
   - Detectors: 'detectors.md'
   - LSP server: 'language-server.md'
-  - Fuzzer: 'fuzzer.md'
   - Solc Version Manager: 'solc-version-manager.md'
   - Contributing: 'contributing.md'
 
