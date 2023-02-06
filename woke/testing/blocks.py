@@ -34,12 +34,14 @@ class ChainBlocks:
             data = self._chain.chain_interface.get_block(key)
             if data is None:
                 raise KeyError(key)
+
+            block_number = int(data["number"], 16)
+            if block_number in self._blocks:
+                return self._blocks[block_number]
+
             block = Block(self._chain, data)
-            if (
-                isinstance(key, int)
-                and key <= self._chain.chain_interface.get_block_number()
-            ):
-                self._blocks[key] = block
+            if block.number <= self._chain.chain_interface.get_block_number():
+                self._blocks[block.number] = block
         else:
             block = self._blocks[key]
         return block
