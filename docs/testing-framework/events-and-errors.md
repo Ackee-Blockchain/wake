@@ -42,7 +42,7 @@ Transaction objects can be either obtained directly as a return value for functi
 from woke.testing import *
 from pytypes.contracts.Counter import Counter
 
-@connect(default_chain)
+@default_chain.connect()
 def test_events():
     default_chain.default_tx_account = default_chain.accounts[0]
 
@@ -62,7 +62,7 @@ def tx_callback(tx: TransactionAbc):
         if isinstance(event, Counter.CountSet):
             print(f"Count of Counter({tx.to}) was set to {event.count}")
 
-@connect(default_chain)
+@default_chain.connect()
 def test_events():
     default_chain.default_tx_account = default_chain.accounts[0]
     default_chain.tx_callback = tx_callback
@@ -120,7 +120,7 @@ If the transaction did not revert, `error` is `None`.
 from woke.testing import *
 from pytypes.contracts.Counter import Counter
 
-@connect(default_chain)
+@default_chain.connect()
 def test_errors():
     counter = Counter.deploy(from_=default_chain.accounts[0])
     tx = counter.addToWhitelist(
@@ -144,7 +144,7 @@ There are two types of internal errors in Solidity:
 from woke.testing import *
 from pytypes.contracts.Counter import Counter
 
-@connect(default_chain)
+@default_chain.connect()
 def test_errors():
     default_chain.default_tx_account = default_chain.accounts[0]
 

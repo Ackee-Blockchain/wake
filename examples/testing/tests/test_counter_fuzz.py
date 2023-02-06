@@ -50,7 +50,7 @@ class CounterTest(FuzzTest):
         assert self._counter.count() == self._count
 
 
-@connect(default_chain)
+@default_chain.connect()
 def test_counter_fuzz():
     # run 10 independent test sequences (the chain is reset between each sequence) with 100 flows in each
     CounterTest().run(sequences_count=10, flows_count=100)
