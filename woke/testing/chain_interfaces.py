@@ -216,6 +216,10 @@ class ChainInterfaceAbc(ABC):
     def set_next_block_timestamp(self, timestamp: int) -> None:
         ...
 
+    @abstractmethod
+    def send_unsigned_transaction(self, params: TxParams) -> str:
+        ...
+
 
 class HardhatChainInterface(ChainInterfaceAbc):
     def set_balance(self, address: str, value: int) -> None:
@@ -250,6 +254,11 @@ class HardhatChainInterface(ChainInterfaceAbc):
 
     def set_next_block_timestamp(self, timestamp: int) -> None:
         self._communicator.evm_set_next_block_timestamp(timestamp)
+
+    def send_unsigned_transaction(self, params: TxParams) -> str:
+        raise NotImplementedError(
+            "Hardhat does not support sending unsigned transactions"
+        )
 
 
 class AnvilChainInterface(ChainInterfaceAbc):
@@ -289,6 +298,9 @@ class AnvilChainInterface(ChainInterfaceAbc):
     def set_next_block_timestamp(self, timestamp: int) -> None:
         self._communicator.evm_set_next_block_timestamp(timestamp)
 
+    def send_unsigned_transaction(self, params: TxParams) -> str:
+        return self._communicator.eth_send_unsigned_transaction(params)
+
 
 class GanacheChainInterface(ChainInterfaceAbc):
     def set_balance(self, address: str, value: int) -> None:
@@ -323,4 +335,9 @@ class GanacheChainInterface(ChainInterfaceAbc):
     def set_next_block_timestamp(self, timestamp: int) -> None:
         raise NotImplementedError(
             "Ganache does not support setting next block timestamp"
+        )
+
+    def send_unsigned_transaction(self, params: TxParams) -> str:
+        raise NotImplementedError(
+            "Ganache does not support sending unsigned transactions"
         )

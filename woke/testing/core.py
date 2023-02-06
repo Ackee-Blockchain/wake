@@ -396,17 +396,8 @@ class Account:
         tx_params = self._prepare_tx_params(
             RequestType.TX, data, value, from_, gas_limit
         )
-        sender = Account(tx_params["from"], self._chain)
 
-        with _signer_account(sender):
-            try:
-                tx_hash = self._chain.chain_interface.send_transaction(tx_params)
-            except (ValueError, JsonRpcError) as e:
-                try:
-                    tx_hash = e.args[0]["data"]["txHash"]
-                except Exception:
-                    raise e
-            self.chain._nonces[sender.address] += 1
+        tx_hash = self._chain._send_transaction(tx_params)
 
         from .transactions import LegacyTransaction
 
@@ -1152,23 +1143,8 @@ class Chain:
             arguments,
             abi["constructor"] if "constructor" in abi else None,
         )
-        sender = (
-            Account(params["from"], self)
-            if "from" in params
-            else self.default_tx_account
-        )
-        if sender is None:
-            raise ValueError("No from_ account specified and no default account set")
 
-        with _signer_account(sender):
-            try:
-                tx_hash = self._chain_interface.send_transaction(tx_params)
-            except ValueError as e:
-                try:
-                    tx_hash = e.args[0]["data"]["txHash"]
-                except Exception:
-                    raise e
-            self._nonces[sender.address] += 1
+        tx_hash = self._send_transaction(tx_params)
 
         from .transactions import LegacyTransaction
 
@@ -1248,23 +1224,8 @@ class Chain:
         tx_params = self._build_transaction(
             RequestType.TX, params, selector, arguments, abi[selector]
         )
-        sender = (
-            Account(params["from"], self)
-            if "from" in params
-            else self.default_tx_account
-        )
-        if sender is None:
-            raise ValueError("No from_ account specified and no default account set")
 
-        with _signer_account(sender):
-            try:
-                tx_hash = self._chain_interface.send_transaction(tx_params)
-            except (ValueError, JsonRpcError) as e:
-                try:
-                    tx_hash = e.args[0]["data"]["txHash"]
-                except Exception:
-                    raise e
-            self._nonces[sender.address] += 1
+        tx_hash = self._send_transaction(tx_params)
 
         from .transactions import LegacyTransaction
 
@@ -1286,6 +1247,32 @@ class Chain:
             self.tx_callback(tx)
 
         return tx.return_value
+
+    def _send_transaction(self, tx_params: TxParams) -> str:
+        assert "from" in tx_params
+
+        if isinstance(self.chain_interface, AnvilChainInterface):
+            try:
+                tx_hash = self.chain_interface.send_unsigned_transaction(tx_params)
+            except (ValueError, JsonRpcError) as e:
+                try:
+                    tx_hash = e.args[0]["data"]["txHash"]
+                except Exception:
+                    raise e
+            self._nonces[Address(tx_params["from"])] += 1
+        else:
+            sender = Account(tx_params["from"], self)
+
+            with _signer_account(sender):
+                try:
+                    tx_hash = self._chain_interface.send_transaction(tx_params)
+                except (ValueError, JsonRpcError) as e:
+                    try:
+                        tx_hash = e.args[0]["data"]["txHash"]
+                    except Exception:
+                        raise e
+                self._nonces[sender.address] += 1
+        return tx_hash
 
 
 @contextmanager

@@ -258,6 +258,13 @@ class JsonRpcCommunicator:
         text = self._send_request("eth_getTransactionReceipt", [tx_hash])
         return self._process_response(text)
 
+    def eth_send_unsigned_transaction(self, transaction: TxParams) -> str:
+        """Submits an unsigned transaction."""
+        text = self._send_request(
+            "eth_sendUnsignedTransaction", [self._encode_transaction(transaction)]
+        )
+        return self._process_response(text)
+
     def hardhat_set_balance(self, address: str, balance: int) -> None:
         """Sets the balance of the account of given address."""
         params = [address, hex(balance)]
