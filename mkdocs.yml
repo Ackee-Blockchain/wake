@@ -39,6 +39,7 @@ nav:
       - Basics:
         - Getting started: 'testing-framework/getting-started.md'
         - Accounts and addresses: 'testing-framework/accounts-and-addresses.md'
+        - Chains and blocks: 'testing-framework/chains-and-blocks.md'
         - Transaction objects: 'testing-framework/transaction-objects.md'
         - Events and errors: 'testing-framework/events-and-errors.md'
         - Helper functions: 'testing-framework/helper-functions.md'
