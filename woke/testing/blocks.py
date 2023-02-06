@@ -35,13 +35,15 @@ class ChainBlocks:
             if data is None:
                 raise KeyError(key)
 
-            block_number = int(data["number"], 16)
-            if block_number in self._blocks:
-                return self._blocks[block_number]
-
             block = Block(self._chain, data)
-            if block.number <= self._chain.chain_interface.get_block_number():
-                self._blocks[block.number] = block
+
+            if "number" in data and data["number"] is not None:
+                block_number = int(data["number"], 16)
+                if block_number in self._blocks:
+                    return self._blocks[block_number]
+
+                if block.number <= self._chain.chain_interface.get_block_number():
+                    self._blocks[block.number] = block
         else:
             block = self._blocks[key]
         return block
