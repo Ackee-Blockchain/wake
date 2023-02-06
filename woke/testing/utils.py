@@ -2,48 +2,11 @@ from __future__ import annotations
 
 import inspect
 import math
-from functools import wraps
-from typing import Callable, Iterable, List, Optional, Tuple, TypeVar, Union
+from typing import Callable, Iterable, List, Tuple, TypeVar, Union
 
 from Crypto.Hash import keccak
 
-from woke.testing.core import Account, Address, Chain
-
-
-def snapshot_and_revert(devchain_interface: Chain):
-    def decorator(fn):
-        @wraps(fn)
-        def wrapper(*args, **kwargs):
-            with devchain_interface.snapshot_and_revert():
-                return fn(*args, **kwargs)
-
-        return wrapper
-
-    return decorator
-
-
-def connect(devchain_interface: Chain, uri: Optional[str] = None):
-    def decorator(fn):
-        @wraps(fn)
-        def wrapper(*args, **kwargs):
-            with devchain_interface.connect(uri):
-                return fn(*args, **kwargs)
-
-        return wrapper
-
-    return decorator
-
-
-def change_automine(devchain_interface: Chain, automine: bool):
-    def decorator(fn):
-        @wraps(fn)
-        def wrapper(*args, **kwargs):
-            with devchain_interface.change_automine(automine):
-                return fn(*args, **kwargs)
-
-        return wrapper
-
-    return decorator
+from woke.testing.core import Account, Address
 
 
 def format_int(x: int) -> str:

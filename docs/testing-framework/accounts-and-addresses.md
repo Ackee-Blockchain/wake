@@ -87,7 +87,7 @@ additionaly accepts the `return_tx` keyword argument.
 ```python
 from woke.testing import *
 
-@connect(default_chain)
+@default_chain.connect()
 def test_accounts():
     alice = default_chain.accounts[0]
     bob = default_chain.accounts[1]
@@ -110,7 +110,7 @@ The previous example shows how to transfer Wei from one account to another.
     from woke.testing import *
     from pytypes.contracts.Counter import Counter
 
-    @connect(default_chain)
+    @default_chain.connect()
     def test_low_level_transact():
         default_chain.default_tx_account = default_chain.accounts[0]
 
@@ -148,7 +148,7 @@ Every method of a contract generated in `pytypes` has a `selector` property.
     from pytypes.contracts.Counter import Counter
     from pytypes.openzeppelin.contracts.proxy.ERC1967.ERC1967Proxy import ERC1967Proxy
 
-    @connect(default_chain)
+    @default_chain.connect()
     def test_proxy():
         default_chain.default_tx_account = default_chain.accounts[0]
 

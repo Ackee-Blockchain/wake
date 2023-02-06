@@ -551,7 +551,7 @@ class Chain:
 
             self.tx_callback = None
 
-            yield
+            yield self
         except Exception as e:
             if not isinstance(e, BdbQuit):
                 exception_handler = get_exception_handler()

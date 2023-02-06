@@ -48,7 +48,7 @@ The recommended project structure is as follows:
 ### Connecting to a chain
 
 In single-chain tests, it is recommended to use the `default_chain` object that is automatically created by Woke.
-The `@connect` decorator either launches a new development chain or connects to an existing one, if the second argument is specified.
+The `connect` decorator either launches a new development chain or connects to an existing one, if the second argument is specified.
 It is possible to connect using:
 
 - a HTTP connection (e.g. `http://localhost:8545`),
@@ -59,9 +59,9 @@ It is possible to connect using:
 from woke.testing import *
 
 # launch a new development chain
-@connect(default_chain)
+@default_chain.connect()
 # or connect to an existing chain
-# @connect(default_chain, "ws://localhost:8545")
+# @default_chain.connect("ws://localhost:8545")
 def test_counter():
     print(default_chain.chain_id)
 ```
@@ -102,7 +102,7 @@ from woke.testing import *
 
 from pytypes.contracts.Counter import Counter
 
-@connect(default_chain)
+@default_chain.connect()
 def test_example():
     counter = Counter.deploy(from_=default_chain.accounts[0])
     print(counter)
@@ -148,7 +148,7 @@ from woke.testing import *
 
 from pytypes.contracts.Counter import Counter
 
-@connect(default_chain)
+@default_chain.connect()
 def test_counter():
     default_chain.default_tx_account = default_chain.accounts[1]
 

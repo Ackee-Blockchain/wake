@@ -124,7 +124,7 @@ class CounterTest(FuzzTest):
     def invariant_count(self) -> None:
         assert self.counter.count() == self.count
 
-@connect(default_chain)
+@default_chain.connect()
 def test_counter():
     default_chain.default_tx_account = default_chain.accounts[0]
     CounterTest().run(sequences_count=30, flows_count=100)

@@ -91,7 +91,7 @@ class CrosschainTest(FuzzTest):
         assert self.c1.count() == self.c2.count()
 
 
-@connect(chain1)
-@connect(chain2)
+@chain1.connect()
+@chain2.connect()
 def test_crosschain():
     CrosschainTest().run(sequences_count=10, flows_count=100)

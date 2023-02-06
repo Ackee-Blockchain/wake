@@ -28,8 +28,8 @@ from pytypes.contracts.Counter import Counter
 chain1 = Chain()
 chain2 = Chain()
 
-@connect(chain1)
-@connect(chain2)
+@chain1.connect()
+@chain2.connect()
 def test_cross_chain():
     owner = random_account(chain=chain2)
     counter1 = Counter.deploy(from_=owner, chain=chain1)
@@ -65,8 +65,8 @@ def relay(other_counter: Counter, events: List):
         elif isinstance(event, Counter.CountSet):
             other_counter.setCount(event.count)
 
-@connect(chain1)
-@connect(chain2)
+@chain1.connect()
+@chain2.connect()
 def test_relay():
     chain1.default_tx_account = chain1.accounts[0]
     chain2.default_tx_account = chain2.accounts[0]

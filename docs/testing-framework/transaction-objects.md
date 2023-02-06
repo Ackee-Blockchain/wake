@@ -35,7 +35,7 @@ from pytypes.contracts.Counter import Counter
 def tx_callback(tx: TransactionAbc):
     print(tx.console_logs)
 
-@connect(default_chain)
+@default_chain.connect()
 def test_callback():
     default_chain.tx_callback = tx_callback
 
@@ -101,7 +101,7 @@ can be achieved in the following steps:
 from woke.testing import *
 from pytypes.contracts.Counter import Counter
 
-@connect(default_chain)
+@default_chain.connect()
 def test_multiple_txs():
     default_chain.default_tx_account = default_chain.accounts[0]
     counter = Counter.deploy()

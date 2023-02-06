@@ -12,10 +12,8 @@ from .internal import (
 from .primitive_types import *
 from .transactions import LegacyTransaction, TransactionAbc
 from .utils import (
-    connect,
     get_create2_address_from_code,
     get_create2_address_from_hash,
     get_create_address,
     keccak256,
-    snapshot_and_revert,
 )
