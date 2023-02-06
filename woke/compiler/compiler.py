@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import pickle
 import time
 from collections import defaultdict, deque
@@ -27,6 +28,7 @@ import networkx as nx
 import rich
 import rich.console
 import rich.panel
+from Crypto.Hash import BLAKE2b
 from intervaltree import IntervalTree
 from pathvalidate import sanitize_filename  # type: ignore
 from pydantic import ValidationError
@@ -602,6 +604,7 @@ class SolidityCompiler:
                 build_info = ProjectBuildInfo.parse_file(
                     latest_build_path / "build.json"
                 )
+                build_data = (latest_build_path / "build.bin").read_bytes()
 
                 if build_info.woke_version != get_package_version("woke"):
                     if console is not None:
@@ -610,9 +613,27 @@ class SolidityCompiler:
                         )
                     return
 
-                self._latest_build = pickle.load(
-                    (latest_build_path / "build.bin").open("rb")
-                )
+                build_key_path = self.__config.global_data_path / "build.key"
+                if not build_key_path.is_file():
+                    if console is not None:
+                        console.log(
+                            f"[yellow]No build key found, cannot verify build signature.[/yellow]"
+                        )
+                build_key = build_key_path.read_bytes()
+                if len(build_key) != 64:
+                    if console is not None:
+                        console.log(
+                            f"[yellow]Loaded build key with incorrect length, cannot verify build signature.[/yellow]"
+                        )
+                    return
+
+                build_sig = (latest_build_path / "build.bin.sig").read_bytes()
+
+                h = BLAKE2b.new(digest_bits=512, key=build_key)
+                h.update(build_data)
+                h.verify(build_sig)
+
+                self._latest_build = pickle.loads(build_data)
                 self._latest_build_info = build_info
             except (
                 AttributeError,
@@ -621,6 +642,7 @@ class SolidityCompiler:
                 JSONDecodeError,
                 FileNotFoundError,
                 pickle.UnpicklingError,
+                ValueError,
             ):
                 if console is not None:
                     console.log("[red]Failed to load previous build artifacts[/red]")
@@ -982,6 +1004,14 @@ class SolidityCompiler:
         )
         start = time.perf_counter()
 
+        build_key_path = self.__config.global_data_path / "build.key"
+        build_key = b""
+        if build_key_path.is_file():
+            build_key = build_key_path.read_bytes()
+        if len(build_key) != 64:
+            build_key = os.urandom(64)
+            build_key_path.write_bytes(build_key)
+
         with ctx_manager:
             build_path = self.__config.project_root_path / ".woke-build"
             build_path.mkdir(exist_ok=True)
@@ -989,8 +1019,15 @@ class SolidityCompiler:
             with (build_path / "build.json").open("w") as f:
                 f.write(self._latest_build_info.json(by_alias=True, exclude_none=True))
 
-            with (build_path / "build.bin").open("wb") as f:
-                pickle.dump(self._latest_build, f)
+            with (build_path / "build.bin").open("wb") as data_file, (
+                build_path / "build.bin.sig"
+            ).open("wb") as sig_file:
+                build_data = pickle.dumps(self._latest_build)
+                h = BLAKE2b.new(digest_bits=512, key=build_key)
+                h.update(build_data)
+
+                data_file.write(build_data)
+                sig_file.write(h.digest())
 
         if console is not None:
             end = time.perf_counter()
