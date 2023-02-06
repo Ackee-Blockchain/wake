@@ -333,6 +333,9 @@ class TransactionAbc(ABC, Generic[T]):
         ):
             return self._return_type(self._tx_receipt["contractAddress"], self._chain)
 
+        if self._return_type is type(None):
+            return None
+
         chain_interface = self._chain.chain_interface
         if isinstance(chain_interface, AnvilChainInterface):
             self._fetch_trace_transaction()
@@ -358,9 +361,6 @@ class TransactionAbc(ABC, Generic[T]):
         if self._abi is None:
             return self._return_type(output)
 
-        if self._return_type == type(None):
-            assert len(output) == 0
-            return None  # type: ignore
         return self._chain._process_return_data(
             self, output, self._abi, self._return_type
         )
