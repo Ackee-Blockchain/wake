@@ -18,7 +18,7 @@ source env/bin/activate
 ## Installation
 
 ```bash
-pip install -e ".[fuzzer,tests,dev]"
+pip install -e ".[tests,dev]"
 ```
 
 Pyright, our static type checker, is distributed through npm:

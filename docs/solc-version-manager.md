@@ -1,9 +1,10 @@
 # Solc Version Manager (SVM)
 
-Woke implements Solc Version Manager (SVM) to manage multiple installations of the *solc* compiler. Compiler versions are located in:
+Woke implements Solc Version Manager (SVM) to manage multiple installations of the *solc* compiler. Compiler versions are located in
+`$XDG_DATA_HOME/woke/compilers`. The default value of `$XDG_DATA_HOME` is:
 
-- `$HOME/.config/Woke/compilers` on Linux/MacOS,
-- `%USERPROFILE%\Woke\compilers` on Windows.
+- `$HOME/.local/share` on Linux/MacOS,
+- `%LOCALAPPDATA%\woke` on Windows.
 
 The chosen version of *solc* is available under the `woke-solc` executable which acts as a wrapper for the *solc* executable.
 
