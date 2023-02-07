@@ -94,7 +94,9 @@ class Abi:
     def encode_with_signature(
         cls, signature: str, types: Iterable, arguments: Iterable
     ) -> bytes:
-        selector = keccak.new(signature.encode("utf-8")).digest()[:4]
+        selector = keccak.new(data=signature.encode("utf-8"), digest_bits=256).digest()[
+            :4
+        ]
         return cls.encode_with_selector(selector, types, arguments)
 
     @classmethod
