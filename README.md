@@ -26,6 +26,12 @@ via `pip`
 pip3 install woke
 ```
 
+## Documentation & Contribution
+
+Woke documentation can be found [here](https://ackeeblockchain.com/woke/docs/latest).
+
+There you can also find a section on [contributing](https://ackeeblockchain.com/woke/docs/latest/contributing/).
+
 ## Features
 
 ### Testing framework
@@ -112,12 +118,6 @@ woke lsp --port 1234
 ```
 
 All LSP server features can be found in the [documentation](https://ackeeblockchain.com/woke/docs/latest/language-server/).
-
-## Documentation & Contribution
-
-Woke documentation can be found [here](https://ackeeblockchain.com/woke/docs/latest).
-
-There you can also find a section on [contributing](https://ackeeblockchain.com/woke/docs/latest/contributing/).
 
 ## License
 
