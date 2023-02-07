@@ -44,7 +44,7 @@ def run_fuzz(
 ) -> None:
     """Run Woke fuzzer."""
 
-    from woke.testing.fuzzer import fuzz
+    from woke.testing.fuzzing.fuzzer import fuzz
 
     config = WokeConfig()
     config.load_configs()  # load ~/.woke/config.toml and ./woke.toml
