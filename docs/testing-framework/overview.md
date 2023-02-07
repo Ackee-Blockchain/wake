@@ -10,7 +10,7 @@ It utilizes `pytypes`, Python equivalents of Solidity types, to maximize the tes
 - call traces and `console.log` support for easier debugging
 - better performance than other Python or JavaScript testing frameworks
 
-The currently supported development chain implementations are:
+The currently supported development chains are:
 
 - [Anvil](https://github.com/foundry-rs/foundry/tree/master/anvil) (recommended)
 - [Ganache](https://github.com/trufflesuite/ganache)
