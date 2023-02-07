@@ -67,14 +67,18 @@ class FuzzTest:
         chains = get_connected_chains()
 
         flows: Set[Callable] = self.__get_methods("flow")
-        flows_counter: DefaultDict[Callable, int] = defaultdict(int)
         invariants: Set[Callable] = self.__get_methods("invariant")
-        invariant_periods: DefaultDict[Callable[[None], None], int] = defaultdict(int)
 
         for i in range(sequences_count):
+            flows_counter: DefaultDict[Callable, int] = defaultdict(int)
+            invariant_periods: DefaultDict[Callable[[None], None], int] = defaultdict(
+                int
+            )
+
             snapshots = [chain.snapshot() for chain in chains]
-            self.pre_sequence()
+            self._flow_num = 0
             self._sequence_num = i
+            self.pre_sequence()
 
             for j in range(flows_count):
                 valid_flows = [
@@ -97,9 +101,10 @@ class FuzzTest:
                     if k != "return"
                 ]
 
-                self.pre_flow(flow)
                 self._flow_num = j
+                self.pre_flow(flow)
                 flow(self, *flow_params)
+                flows_counter[flow] += 1
                 self.post_flow(flow)
 
                 if not dry_run:
@@ -115,7 +120,6 @@ class FuzzTest:
                             invariant_periods[inv] = 0
                     self.post_invariants()
 
-            invariant_periods.clear()
             self.post_sequence()
 
             for snapshot, chain in zip(snapshots, chains):
