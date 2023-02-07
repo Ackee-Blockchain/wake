@@ -2,17 +2,30 @@
 
 This guide explains how to run the first test in the Woke testing framework.
 
-!!! warning
+!!! warning "Important"
     Before getting started, make sure to have the latest version of a development chain installed.
-    This is especially important in case of the [Anvil](https://github.com/foundry-rs/foundry/tree/master/anvil) development chain, because it is under active development.
+
+    This is especially important in the case of [Anvil](https://github.com/foundry-rs/foundry/tree/master/anvil), because it is under active development.
+    To install the latest version of Anvil, run the following command:
+
+    ```shell
+    foundryup
+    ```
 
 ## Generating pytypes
 
-The first step is to generate `pytypes` for smart contracts that should be tested. This is done by running the following command:
+`pytypes` are Python-native equivalents of Solidity types. They are generated from a Solidity source code and are used in tests to interact with smart contracts.
+
+The first step is to generate `pytypes` by running the following command:
 
 ```shell
 woke init pytypes -w
 ```
+
+!!! note "Configuring compilation"
+    Woke uses default configuration options that should work for most projects.
+    However, in some cases, it may be necessary to configure the compilation process.
+    For more information, see the [Configuration](../configuration.md) page.
 
 This command will create a `pytypes` directory in the current working directory. The `-w` flag tells Woke to watch for changes in the smart contracts and automatically regenerate the `pytypes` when a change is detected.
 
