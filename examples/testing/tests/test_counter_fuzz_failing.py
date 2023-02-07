@@ -26,6 +26,7 @@ class CounterTest(FuzzTest):
     def flow_decrement(self):
         # fails if count is 0
         self._counter.decrement(from_=random_account())
+        self._count -= 1
 
     # check the invariant every 10 flows (starting after the 1st flow)
     @invariant(period=10)
