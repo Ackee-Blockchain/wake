@@ -4,19 +4,21 @@ Woke is a Python-based development and testing framework for Solidity.
 
 Features:
 
+- **Testing framework** - a testing framework for Solidity smart contracts with Python-native equivalents of Solidity types and blazing fast execution.
+
+- **Fuzzer** - a property-based fuzzer for Solidity smart contracts that allows testers to write their fuzz tests in Python.
+
 - **Vulnerability detectors**
 
 - **LSP server**
-
-- **Fuzzer** - a property-based fuzzer for Solidity smart contracts that allows testers to write their fuzz tests in Python.
 
 ## Dependencies
 
 - [Python](https://www.python.org/downloads/release/python-3910/) (version 3.7 or higher)
 
-## Installation
+> :warning: Python 3.11 is not supported yet.
 
-> :warning: **Woke has been moved from `abch-woke` PyPi package to `woke`.**
+## Installation
 
 via `pip`
 
@@ -25,6 +27,66 @@ pip3 install woke
 ```
 
 ## Features
+
+### Testing framework
+
+See [examples](examples/testing) and [documentation](https://ackeeblockchain.com/woke/docs/latest/testing-framework/overview) for more information.
+
+Writing tests is as simple as:
+
+```python
+from woke.testing import *
+from pytypes.contracts.Counter import Counter
+
+@default_chain.connect()
+def test_counter():
+    default_chain.default_tx_account = default_chain.accounts[0]
+
+    counter = Counter.deploy()
+    assert counter.count() == 0
+
+    counter.increment()
+    assert counter.count() == 1
+```
+
+### Fuzzer
+
+Fuzzer builds on top of the testing framework and allows efficient fuzz testing of Solidity smart contracts.
+
+```python
+from woke.testing import *
+from woke.testing.fuzzing import *
+from pytypes.contracts.Counter import Counter
+
+class CounterTest(FuzzTest):
+    def pre_sequence(self) -> None:
+        self.counter = Counter.deploy()
+        self.count = 0
+
+    @flow()
+    def increment(self) -> None:
+        self.counter.increment()
+        self.count += 1
+
+    @flow()
+    def decrement(self) -> None:
+        with may_revert(Panic(PanicCodeEnum.UNDERFLOW_OVERFLOW)) as e:
+            self.counter.decrement()
+
+        if e.value is not None:
+            assert self.count == 0
+        else:
+            self.count -= 1
+
+    @invariant(period=10)
+    def count(self) -> None:
+        assert self.counter.count() == self.count
+
+@default_chain.connect()
+def test_counter():
+    default_chain.default_tx_account = default_chain.accounts[0]
+    CounterTest().run(sequences_count=30, flows_count=100)
+```
 
 ### Vulnerability detectors
 
@@ -51,17 +113,9 @@ woke lsp --port 1234
 
 All LSP server features can be found in the [documentation](https://ackeeblockchain.com/woke/docs/latest/language-server/).
 
-### Fuzzer
-
-The property-based fuzzer can be installed as an extra dependency. Due to the dependency on [eth-brownie](https://eth-brownie.readthedocs.io/en/stable/), it is recommended to install it into a [virtual environment](https://docs.python.org/3/library/venv.html).
-
-```shell
-pip3 install woke[fuzzer]
-```
-
 ## Documentation & Contribution
 
-Woke documentation can be found [here](https://ackeeblockchain.com/woke/docs).
+Woke documentation can be found [here](https://ackeeblockchain.com/woke/docs/latest).
 
 There you can also find a section on [contributing](https://ackeeblockchain.com/woke/docs/latest/contributing/).
 
