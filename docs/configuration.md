@@ -1,9 +1,10 @@
 # Configuration
 
-Woke can be configured using optional configuration files. The global configuration file is located in:
+Woke can be configured using optional configuration files. The global configuration file is loaded from `$XDG_CONFIG_HOME/woke/config.toml`.
+If `$XDG_CONFIG_HOME` is not set, the global configuration file is loaded from:
 
-- `$HOME/.config/Woke/config.toml` on Linux/MacOS,
-- `%USERPROFILE%\Woke\config.toml` on Windows.
+- `$HOME/.config/woke/config.toml` on Linux/MacOS,
+- `%LOCALAPPDATA%\woke\config.toml` on Windows.
 
 Additionally, the configuration file for each project can be located in `{PROJECT_PATH}/woke.toml`.
 
@@ -27,52 +28,75 @@ The resolution order for each configuration option is:
 - value in the global configuration file,
 - value in the project configuration file.
 
-???+ example "Example woke.toml"
+The latter overrides the former.
+
+
+???+ info "Default woke.toml"
+    Configuration options related to the LSP server are not shown here.
     ```toml
-    subconfigs = ["./config1.toml", "config2.toml"]
+    subconfigs = []
 
     [compiler.solc]
-    evm_version = "london"
-    include_paths = ["node_modules", "lib"]
-    remappings = ["@openzeppelin/=node_modules/@openzeppelin/"]
-    target_version = "0.8.10"
-    via_IR = true
+    allow_paths = []
+    # evm_version = "" (unset - let the compiler decide)
+    ignore_paths = ["node_modules", ".woke-build", "venv", "lib"]
+    include_paths = ["node_modules"]
+    remappings = []
+    # target_version = "" (unset - use the latest version
+    # via_IR = "" (unset - let the compiler decide)
 
     [compiler.solc.optimizer]
-    enabled = true
-    runs = 1000
+    # enabled = "" (unset - let the compiler decide)
+    runs = 200
+
+    [detectors]
+    exclude = []
+    ignore_paths = ["node_modules", ".woke-build", "venv", "lib"]
+    only = []
+
+    [testing]
+    cmd = "anvil"
+    timeout = 5
+
+    [testing.anvil]
+    cmd_args = "--prune-history 100 --base-fee 0 --steps-tracing --silent"
+
+    [testing.ganache]
+    cmd_args = "-g 0 -k istanbul -q"
+
+    [testing.hardhat]
+    cmd_args = ""
     ```
 
 ### `compiler.solc` namespace
-`{CWD}` in the following table represents the current working directory (i.e. the directory from which the `woke` command is being executed).
 
-| Option                        | Description                                                                                                                                    | Default value                                                    |
-|:------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------|:-----------------------------------------------------------------|
-| `allow_paths`                 | Allow paths passed to the `solc` executable                                                                                                    | `[]`                                                             |
-| `evm_version`                 | EVM version as specified by the [Solidity docs](https://docs.soliditylang.org/en/latest/using-the-compiler.html#target-options)                | `""` (let the compiler decide)                                   |
-| `ignore_paths`                | Files in these paths are not compiled unless imported from other non-ignored files                                                             | `[{CWD}/.woke-build, {CWD}/node_modules, {CWD}/venv, {CWD}/lib]` |
-| <nobr>`include_paths`</nobr>  | Paths (along with `{CWD}`) where files from non-relative imports are searched                                                                  | `[{CWD}/node_modules]`                                           |
-| `remappings`                  | Compiler remappings as specified by the [Solidity docs](https://docs.soliditylang.org/en/latest/path-resolution.html#import-remapping)         | `[]`                                                             |
-| <nobr>`target_version`</nobr> | Target `solc` version used to compile the project                                                                                              | `""` (use the latest version for each compilation unit)          |
-| `via_IR`                      | Compile the code via the Yul intermediate language (see the [Solidity docs](https://docs.soliditylang.org/en/latest/ir-breaking-changes.html)) | `""` (let the compiler decide)                                   |
+| Option                        | Description                                                                                                                                    |
+|:------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------|
+| `allow_paths`                 | Allow paths passed to the `solc` executable                                                                                                    |
+| `evm_version`                 | EVM version as specified by the [Solidity docs](https://docs.soliditylang.org/en/latest/using-the-compiler.html#target-options)                |
+| `ignore_paths`                | Files in these paths are not compiled unless imported from other non-ignored files                                                             |
+| <nobr>`include_paths`</nobr>  | Paths (along with the current working directory) where files from non-relative imports are searched                                            |
+| `remappings`                  | Compiler remappings as specified by the [Solidity docs](https://docs.soliditylang.org/en/latest/path-resolution.html#import-remapping)         |
+| <nobr>`target_version`</nobr> | Target `solc` version used to compile the project                                                                                              |
+| `via_IR`                      | Compile the code via the Yul intermediate language (see the [Solidity docs](https://docs.soliditylang.org/en/latest/ir-breaking-changes.html)) |
 
 !!! info
     The `include_paths` option is the preferred way to handle imports of libraries. Remappings should be used only when `include_paths` cannot be used (e.g. when the import path differs from the system path of the imported file).
 
 ### `compiler.solc.optimizer` namespace
 
-| Option    | Description                                                                                                                                                                                                                                                        | Default value |
-|:----------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:--------------|
-| `enabled` | Compile the project with solc optimizations enabled. Leaving this unset disables most of the available optimizations. Setting this to `false` disables all optimizations for Solidity <0.8.6 and has the same behavior as leaving this unset for Solidity >=0.8.6. | `""` (unset)  |
-| `runs`    | Configuration of the optimizer specifying how many times the code is intended to be run. Lower values optimize more for initial deployment cost, while higher values optimize more for high-frequency usage.                                                       | `200`         |
+| Option    | Description                                                                                                                                                                                                                                                        |
+|:----------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `enabled` | Compile the project with solc optimizations enabled. Leaving this unset disables most of the available optimizations. Setting this to `false` disables all optimizations for Solidity <0.8.6 and has the same behavior as leaving this unset for Solidity >=0.8.6. |
+| `runs`    | Configuration of the optimizer specifying how many times the code is intended to be run. Lower values optimize more for initial deployment cost, while higher values optimize more for high-frequency usage.                                                       |
 
 ### `detectors` namespace
 
-| Option         | Description                                                          | Default value                                                    |
-|:---------------|:---------------------------------------------------------------------|:-----------------------------------------------------------------|
-| `exclude`      | List of detector IDs (string or number) that should not be enabled.  | `[]`                                                             |
-| `only`         | List of detector IDs (string or number) that should only be enabled. | `""` (unset)                                                     |
-| `ignore_paths` | Detections with subdetections in these paths are ignored.            | `[{CWD}/.woke-build, {CWD}/node_modules, {CWD}/venv, {CWD}/lib]` |
+| Option         | Description                                                          |
+|:---------------|:---------------------------------------------------------------------|
+| `exclude`      | List of detector IDs (string or number) that should not be enabled.  |
+| `only`         | List of detector IDs (string or number) that should only be enabled. |
+| `ignore_paths` | Detections with subdetections in these paths are ignored.            |
 
 ### `generator.control_flow_graph` namespace
 Related to the `woke.generate.control_flow_graph` LSP command.
@@ -130,3 +154,28 @@ Configuration options specific to the LSP `Find references` request.
 | Option                 | Description                                                     | Default value |
 |:-----------------------|:----------------------------------------------------------------|:--------------|
 | `include_declarations` | Also include declarations in `Find references` request results. | `false`       |
+
+### `testing` namespace
+
+| Option    | Description                                                                      |
+|:----------|:---------------------------------------------------------------------------------|
+| `cmd`     | Development chain implementation to use. May be `anvil`, `hardhat` or `ganache`. |
+| `timeout` | Timeout in seconds applied when communicating with the development chain.        |
+
+### `testing.anvil` namespace
+
+| Option     | Description                                                                |
+|:-----------|:---------------------------------------------------------------------------|
+| `cmd_args` | Command line arguments passed to the `anvil` executable when launching it. |
+
+### `testing.ganache` namespace
+
+| Option     | Description                                                                  |
+|:-----------|:-----------------------------------------------------------------------------|
+| `cmd_args` | Command line arguments passed to the `ganache` executable when launching it. |
+
+### `testing.hardhat` namespace
+
+| Option     | Description                                                                        |
+|:-----------|:-----------------------------------------------------------------------------------|
+| `cmd_args` | Command line arguments passed to the `npx hardhat node` command when launching it. |
