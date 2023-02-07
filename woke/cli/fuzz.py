@@ -27,23 +27,6 @@ def _get_module_name(path: Path, root: Path) -> str:
     default=(multiprocessing.cpu_count()),
     help="Number of processes to create for fuzzing.",
 )
-@click.option(
-    "--cov-proc-count",
-    "-c",
-    type=int,
-    default=0,
-    show_default=True,
-    help="Number of processes that will track coverage.",
-)
-@click.option(
-    "--verbose-coverage",
-    "-v",
-    type=bool,
-    is_flag=True,
-    default=False,
-    show_default=True,
-    help="Verbose coverage info for funcions",
-)
 @click.option("--seed", "-s", "seeds", multiple=True, type=str, help="Random seeds")
 @click.option(
     "--passive",
@@ -56,8 +39,6 @@ def run_fuzz(
     ctx: click.Context,
     paths: Tuple[str],
     process_count: int,
-    cov_proc_count: int,
-    verbose_coverage: bool,
     seeds: Tuple[str],
     passive: bool,
 ) -> None:
@@ -67,11 +48,6 @@ def run_fuzz(
 
     config = WokeConfig()
     config.load_configs()  # load ~/.woke/config.toml and ./woke.toml
-
-    if cov_proc_count > process_count:
-        raise click.exceptions.BadParameter(
-            "cov-proc-count can't be bigger than process-count"
-        )
 
     random_seeds = [bytes.fromhex(seed) for seed in seeds]
     if len(paths) == 0:
@@ -128,6 +104,6 @@ def run_fuzz(
             random_seeds,
             logs_dir,
             passive,
-            cov_proc_count,
-            verbose_coverage,
+            0,
+            False,
         )
