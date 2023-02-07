@@ -45,6 +45,7 @@ nav:
         - Helper functions: 'testing-framework/helper-functions.md'
       - Fuzzing: 'testing-framework/fuzzing.md'
       - Cross-chain testing: 'testing-framework/cross-chain-testing.md'
+      - Debugging: 'testing-framework/debugging.md'
       - Performance considerations: 'testing-framework/performance-considerations.md'
   - Detectors: 'detectors.md'
   - LSP server: 'language-server.md'
