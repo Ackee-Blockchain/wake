@@ -398,7 +398,9 @@ class TypeGenerator:
             assert metadata not in self.__contracts_by_metadata_index
             self.__contracts_by_metadata_index[metadata] = fqn
 
-        assert fqn not in self.__contracts_inheritance_index
+        assert (
+            fqn not in self.__contracts_inheritance_index
+        ), f"Generating contract {fqn} twice"
         self.__contracts_inheritance_index[fqn] = tuple(
             f"{base.parent.source_unit_name}:{base.name}"
             for base in contract.linearized_base_contracts
@@ -1221,7 +1223,6 @@ class TypeGenerator:
     def cleanup_source_unit(self):
         self.__source_unit_types = ""
         self.__imports.cleanup_imports()
-        self.__already_generated_contracts = set()
 
     def add_func_overload_if_match(
         self, fn: FunctionDefinition, contract: ContractDefinition
