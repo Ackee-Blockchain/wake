@@ -69,6 +69,11 @@ async def _get_document_links_from_cache(path: Path, context: LspContext):
 
     for import_directive in source_unit.imports:
         location = import_directive.import_string_pos
+
+        if len(forward_changes[location[0] : location[1]]) > 0:
+            # change at range, skip import
+            continue
+
         new_start = (
             changes_to_byte_offset(forward_changes[0 : location[0]]) + location[0]
         )
