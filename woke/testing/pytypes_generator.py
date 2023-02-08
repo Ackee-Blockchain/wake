@@ -548,7 +548,6 @@ class TypeGenerator:
 
         assert len(lib_ids) == 0, "Not all libraries were found"
 
-        self.__imports.add_python_import("from __future__ import annotations")
         self.generate_deploy_func(contract, libraries)
         self.add_str_to_types(0, "", 1)
         self.generate_deployment_code_func(contract, libraries)
@@ -1150,7 +1149,6 @@ class TypeGenerator:
         if len(base_names) == 0:
             base_names = ["Contract"]
 
-        self.__imports.generate_default_imports = True
         events_abi = self.generate_contract_template(contract, ", ".join(base_names))
 
         if contract.enums:
@@ -1408,7 +1406,6 @@ class SourceUnitImports:
     __enum_imports: Set[str]
     __contract_imports: Set[str]
     __python_imports: Set[str]
-    __generate_default_imports: bool
     __type_gen: TypeGenerator
 
     def __init__(self, outer: TypeGenerator):
@@ -1417,25 +1414,10 @@ class SourceUnitImports:
         self.__all_imports = ""
         self.__contract_imports = set()
         self.__python_imports = set()
-        self.__generate_default_imports = False
         self.__type_gen = outer
 
-    @property
-    def generate_default_imports(self):
-        return self.__generate_default_imports
-
-    @generate_default_imports.setter
-    def generate_default_imports(self, value: bool):
-        self.__generate_default_imports = value
-
     def __str__(self) -> str:
-        # __future__ has to be at the beginning of the file
-        if "from __future__ import annotations" in self.__python_imports:
-            self.add_str_to_imports(0, "from __future__ import annotations", 1)
-            self.__python_imports.remove("from __future__ import annotations")
-
-        if self.__generate_default_imports:
-            self.add_str_to_imports(0, DEFAULT_IMPORTS, 1)
+        self.add_str_to_imports(0, DEFAULT_IMPORTS, 1)
 
         for python_import in sorted(self.__python_imports):
             self.add_str_to_imports(0, python_import, 1)
@@ -1461,13 +1443,7 @@ class SourceUnitImports:
         if self.__enum_imports:
             self.add_str_to_imports(0, "", 1)
 
-        if (
-            self.generate_default_imports
-            or self.__python_imports
-            or self.__contract_imports
-            or self.__struct_imports
-        ):
-            self.add_str_to_imports(0, "", 2)
+        self.add_str_to_imports(0, "", 2)
 
         return self.__all_imports
 

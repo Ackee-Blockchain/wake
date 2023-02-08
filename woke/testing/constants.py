@@ -2,6 +2,8 @@
 TAB_WIDTH = 4
 
 DEFAULT_IMPORTS: str = """
+from __future__ import annotations
+
 from dataclasses import dataclass 
 from typing import List, Optional, overload, Union, Callable
 from typing_extensions import Literal
