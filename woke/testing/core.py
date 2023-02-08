@@ -153,13 +153,15 @@ class Address:
 
     def __init__(self, address: Union[str, int]) -> None:
         if isinstance(address, int):
-            self._address = eth_utils.to_checksum_address(
-                format(address, "#042x")
-            )  # pyright: reportPrivateImportUsage=false
-        else:
-            self._address = eth_utils.to_checksum_address(
+            self._address = format(address, "#042x")
+        elif isinstance(address, str):
+            if not eth_utils.is_address(
                 address
-            )  # pyright: reportPrivateImportUsage=false
+            ):  # pyright: reportPrivateImportUsage=false
+                raise ValueError(f"{address} is not a valid address")
+            self._address = address
+        else:
+            raise TypeError("Expected a string or int")
 
     def __str__(self) -> str:
         return self._address
@@ -169,11 +171,9 @@ class Address:
 
     def __eq__(self, other: Any) -> bool:
         if isinstance(other, Address):
-            return self._address == other._address
+            return self._address.lower() == other._address.lower()
         elif isinstance(other, str):
-            return self._address == eth_utils.to_checksum_address(
-                other
-            )  # pyright: reportPrivateImportUsage=false
+            return self._address == other.lower()
         elif isinstance(other, Account):
             raise TypeError(
                 "Cannot compare Address and Account. Use Account.address instead"
@@ -185,9 +185,7 @@ class Address:
         if isinstance(other, Address):
             return int(self._address, 16) < int(other._address, 16)
         elif isinstance(other, str):
-            return int(self._address, 16) < int(
-                eth_utils.to_checksum_address(other), 16
-            )
+            return int(self._address, 16) < int(other, 16)
         elif isinstance(other, Account):
             raise TypeError(
                 "Cannot compare Address and Account. Use Account.address instead"
