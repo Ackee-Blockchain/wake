@@ -1329,6 +1329,8 @@ class TypeGenerator:
 
         previous_len = len(graph)
         cycles_detected = False
+        cycles: Set[FrozenSet[str]] = set()
+
         while len(graph) > 0:
             # use heapq to make order of source units deterministic
             sources: List[str] = [
@@ -1355,6 +1357,7 @@ class TypeGenerator:
 
             for cycle in nx.simple_cycles(graph):
                 cycles_detected = True
+                cycles.add(frozenset(cycle))
                 if frozenset(cycle) in generated_cycles:
                     continue
 
@@ -1380,7 +1383,8 @@ class TypeGenerator:
 
         if cycles_detected:
             logger.warning(
-                "Cyclic imports detected, pytypes may not be working correctly"
+                "Cyclic imports detected, pytypes may not be working correctly:\n"
+                + "\n".join(str(set(cycle)) for cycle in cycles)
             )
 
         init_path = self.__pytypes_dir / "__init__.py"
