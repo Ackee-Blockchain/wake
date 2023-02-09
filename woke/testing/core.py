@@ -699,6 +699,10 @@ class Chain:
 
         self._chain_interface.mine(timestamp)
 
+    @_check_connected
+    def set_next_block_base_fee_per_gas(self, value: int) -> None:
+        self._chain_interface.set_next_block_base_fee_per_gas(value)
+
     def _convert_to_web3_type(self, value: Any) -> Any:
         if dataclasses.is_dataclass(value):
             return tuple(
