@@ -311,6 +311,12 @@ class JsonRpcCommunicator:
         text = self._send_request("hardhat_setNonce", params)
         _ = self._process_response(text)
 
+    def hardhat_set_next_block_base_fee_per_gas(self, base_fee_per_gas: int) -> None:
+        """Sets the base fee per gas for the next block."""
+        params = [hex(base_fee_per_gas)]
+        text = self._send_request("hardhat_setNextBlockBaseFeePerGas", params)
+        _ = self._process_response(text)
+
     def anvil_set_balance(self, address: str, balance: int) -> None:
         params = [address, hex(balance)]
         text = self._send_request("anvil_setBalance", params)
@@ -349,6 +355,11 @@ class JsonRpcCommunicator:
     def anvil_set_nonce(self, address: str, nonce: int) -> None:
         params = [address, hex(nonce)]
         text = self._send_request("anvil_setNonce", params)
+        _ = self._process_response(text)
+
+    def anvil_set_next_block_base_fee_per_gas(self, base_fee_per_gas: int) -> None:
+        params = [hex(base_fee_per_gas)]
+        text = self._send_request("anvil_setNextBlockBaseFeePerGas", params)
         _ = self._process_response(text)
 
     def evm_set_account_balance(self, address: str, balance: int) -> None:

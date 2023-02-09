@@ -220,6 +220,10 @@ class ChainInterfaceAbc(ABC):
     def send_unsigned_transaction(self, params: TxParams) -> str:
         ...
 
+    @abstractmethod
+    def set_next_block_base_fee_per_gas(self, value: int) -> None:
+        ...
+
 
 class HardhatChainInterface(ChainInterfaceAbc):
     def set_balance(self, address: str, value: int) -> None:
@@ -259,6 +263,9 @@ class HardhatChainInterface(ChainInterfaceAbc):
         raise NotImplementedError(
             "Hardhat does not support sending unsigned transactions"
         )
+
+    def set_next_block_base_fee_per_gas(self, value: int) -> None:
+        self._communicator.hardhat_set_next_block_base_fee_per_gas(value)
 
 
 class AnvilChainInterface(ChainInterfaceAbc):
@@ -301,6 +308,9 @@ class AnvilChainInterface(ChainInterfaceAbc):
     def send_unsigned_transaction(self, params: TxParams) -> str:
         return self._communicator.eth_send_unsigned_transaction(params)
 
+    def set_next_block_base_fee_per_gas(self, value: int) -> None:
+        self._communicator.anvil_set_next_block_base_fee_per_gas(value)
+
 
 class GanacheChainInterface(ChainInterfaceAbc):
     def set_balance(self, address: str, value: int) -> None:
@@ -340,4 +350,9 @@ class GanacheChainInterface(ChainInterfaceAbc):
     def send_unsigned_transaction(self, params: TxParams) -> str:
         raise NotImplementedError(
             "Ganache does not support sending unsigned transactions"
+        )
+
+    def set_next_block_base_fee_per_gas(self, value: int) -> None:
+        raise NotImplementedError(
+            "Ganache does not support setting next block base fee per gas"
         )

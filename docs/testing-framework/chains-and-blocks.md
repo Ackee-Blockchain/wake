@@ -31,16 +31,17 @@ The `Chain` object has the following properties:
 
 The `Chain` object has the following methods:
 
-| Method                             | Description                                                                                |
-|------------------------------------|--------------------------------------------------------------------------------------------|
-| `change_automine`                  | context manager to temporarily change the `automine` property                              |
-| `connect`                          | context manager to launch a chain and connect to it or connect to an already running chain |
-| `mine`                             | mine a block with an optional callback function to set the next block timestamp            |
-| `reset`                            | reset the chain to its initial state                                                       |
-| `revert`                           | revert the chain to a previous state given by a snapshot ID                                |
-| `snapshot`                         | take a snapshot of the chain state; return a snapshot ID                                   |
-| <nobr>`snapshot_and_revert`</nobr> | context manager to take a snapshot and revert to it after the context ends                 |
-| `update_accounts`                  | update the accounts list                                                                   |
+| Method                                         | Description                                                                                |
+|------------------------------------------------|--------------------------------------------------------------------------------------------|
+| `change_automine`                              | context manager to temporarily change the `automine` property                              |
+| `connect`                                      | context manager to launch a chain and connect to it or connect to an already running chain |
+| `mine`                                         | mine a block with an optional callback function to set the next block timestamp            |
+| `reset`                                        | reset the chain to its initial state                                                       |
+| `revert`                                       | revert the chain to a previous state given by a snapshot ID                                |
+| <nobr>`set_next_block_base_fee_per_gas`</nobr> | set the base fee per gas for the next block                                                |
+| `snapshot`                                     | take a snapshot of the chain state; return a snapshot ID                                   |
+| <nobr>`snapshot_and_revert`</nobr>             | context manager to take a snapshot and revert to it after the context ends                 |
+| `update_accounts`                              | update the accounts list                                                                   |
 
 It is recommended to use the context managers `change_automine` and `snapshot_and_revert` instead of setting the `automine` property directly or calling `snapshot` and `revert` manually.
 
