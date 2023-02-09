@@ -8,6 +8,7 @@ import re
 from bdb import BdbQuit
 from collections import ChainMap, defaultdict
 from contextlib import contextmanager
+from copy import deepcopy
 from enum import Enum, IntEnum
 from types import MappingProxyType
 from typing import (
@@ -128,7 +129,7 @@ class Abi:
         assert selector in contract._abi  # pyright: reportOptionalMemberAccess=false
         types = [
             eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
-            for arg in contract._abi[selector]["inputs"]
+            for arg in fix_library_abi(contract._abi[selector]["inputs"])
         ]
         return cls.encode_with_selector(selector, types, arguments)
 
@@ -733,7 +734,8 @@ class Chain:
         abi = hardhat_console.abis[selector]
 
         output_types = [
-            eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg)) for arg in abi
+            eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
+            for arg in fix_library_abi(abi)
         ]
         decoded_data = list(
             eth_abi.abi.decode(output_types, data[4:])
@@ -874,7 +876,7 @@ class Chain:
             arguments = [self._convert_to_web3_type(arg) for arg in arguments]
             types = [
                 eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
-                for arg in abi["inputs"]
+                for arg in fix_library_abi(abi["inputs"])
             ]
             data += Abi.encode(types, arguments)
 
@@ -967,7 +969,7 @@ class Chain:
 
         types = [
             eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
-            for arg in abi["inputs"]
+            for arg in fix_library_abi(abi["inputs"])
         ]
         decoded = Abi.decode(types, revert_data[4:])
         generated_error = self._convert_from_web3_type(tx, decoded, obj)
@@ -1069,7 +1071,7 @@ class Chain:
 
             decoded_indexed = []
 
-            for input in abi["inputs"]:
+            for input in fix_library_abi(abi["inputs"]):
                 if input["indexed"]:
                     if (
                         input["type"] in {"string", "bytes"}
@@ -1108,7 +1110,7 @@ class Chain:
     ):
         output_types = [
             eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
-            for arg in abi["outputs"]
+            for arg in fix_library_abi(abi["outputs"])
         ]
         decoded_data = eth_abi.abi.decode(
             output_types, output
@@ -1333,6 +1335,20 @@ def get_connected_chains() -> Tuple[Chain, ...]:
 
 def get_contracts_by_fqn() -> Dict[str, Any]:
     return contracts_by_fqn
+
+
+def fix_library_abi(args: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    ret = []
+    for arg in args:
+        arg = deepcopy(arg)
+        if arg["type"] == "tuple":
+            fix_library_abi(arg["components"])
+        elif arg["internalType"].startswith("contract "):
+            arg["type"] = "address"
+        elif arg["internalType"].startswith("enum "):
+            arg["type"] = "uint8"
+        ret.append(arg)
+    return ret
 
 
 def process_debug_trace_for_fqn_overrides(
