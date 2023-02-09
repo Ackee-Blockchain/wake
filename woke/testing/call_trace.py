@@ -15,6 +15,7 @@ from rich.tree import Tree
 
 from woke.testing.core import (
     Address,
+    fix_library_abi,
     get_contracts_by_fqn,
     get_fqn_from_address,
     get_fqn_from_deployment_code,
@@ -243,7 +244,7 @@ class CallTrace:
                     fn_abi = contract_abi["constructor"]
                     output_types = [
                         eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
-                        for arg in fn_abi["inputs"]
+                        for arg in fix_library_abi(fn_abi["inputs"])
                     ]
                     args = list(
                         eth_abi.abi.decode(
@@ -309,7 +310,7 @@ class CallTrace:
                 fn_abi = contract_abi[tx_params["data"][:4]]
                 output_types = [
                     eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
-                    for arg in fn_abi["inputs"]
+                    for arg in fix_library_abi(fn_abi["inputs"])
                 ]
                 decoded_data = list(
                     eth_abi.abi.decode(output_types, tx_params["data"][4:])
@@ -376,7 +377,7 @@ class CallTrace:
                                 eth_utils.abi.collapse_if_tuple(
                                     cast(Dict[str, Any], arg)
                                 )
-                                for arg in fn_abi
+                                for arg in fix_library_abi(fn_abi)
                             ]
                             arguments = list(
                                 eth_abi.abi.decode(output_types, data[4:])
@@ -420,7 +421,7 @@ class CallTrace:
                                 eth_utils.abi.collapse_if_tuple(
                                     cast(Dict[str, Any], arg)
                                 )
-                                for arg in fn_abi["inputs"]
+                                for arg in fix_library_abi(fn_abi["inputs"])
                             ]
                             arguments = list(
                                 eth_abi.abi.decode(output_types, data[4:])
@@ -526,7 +527,7 @@ class CallTrace:
                     fn_abi = contract_abi["constructor"]
                     output_types = [
                         eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
-                        for arg in fn_abi["inputs"]
+                        for arg in fix_library_abi(fn_abi["inputs"])
                     ]
                     args = list(
                         eth_abi.abi.decode(
