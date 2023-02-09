@@ -7,6 +7,7 @@ import re
 import shutil
 import string
 from collections import defaultdict, deque
+from copy import deepcopy
 from operator import itemgetter
 from pathlib import Path
 from typing import (
@@ -421,9 +422,21 @@ class TypeGenerator:
 
         for item in compilation_info.abi:
             if item["type"] == "function":
-                selector = eth_utils.function_abi_to_4byte_selector(
-                    item
-                )  # pyright: reportPrivateImportUsage=false
+                if contract.kind == ContractKind.LIBRARY:
+                    item_copy = deepcopy(item)
+                    for arg in item_copy["inputs"]:
+                        if arg["internalType"].startswith("contract "):
+                            arg["type"] = arg["internalType"][9:]
+                        elif arg["internalType"].startswith("struct "):
+                            arg["type"] = arg["internalType"][7:]
+                        elif arg["internalType"].startswith("enum "):
+                            arg["type"] = arg["internalType"][5:]
+
+                    selector = eth_utils.function_abi_to_4byte_selector(
+                        item_copy
+                    )  # pyright: reportPrivateImportUsage=false
+                else:
+                    selector = eth_utils.function_abi_to_4byte_selector(item)
                 abi_by_selector[selector] = item
             elif item["type"] == "error":
                 selector = eth_utils.function_abi_to_4byte_selector(
@@ -1165,18 +1178,19 @@ class TypeGenerator:
 
         selector_assignments = []
 
-        if contract.kind != ContractKind.LIBRARY:
-            for var in contract.declared_variables:
-                if (
-                    var.visibility == Visibility.EXTERNAL
-                    or var.visibility == Visibility.PUBLIC
-                ):
-                    self.generate_getter_for_state_var(var)
-                    selector_assignments.append(
-                        (self.get_name(var), var.function_selector)
-                    )
-            for fn in contract.functions:
-                if fn.function_selector:
+        for var in contract.declared_variables:
+            if (
+                var.visibility == Visibility.EXTERNAL
+                or var.visibility == Visibility.PUBLIC
+            ):
+                self.generate_getter_for_state_var(var)
+                selector_assignments.append((self.get_name(var), var.function_selector))
+        for fn in contract.functions:
+            if fn.function_selector:
+                if contract.kind != ContractKind.LIBRARY or fn.state_mutability in {
+                    StateMutability.VIEW,
+                    StateMutability.PURE,
+                }:
                     self.generate_types_function(fn)
                     selector_assignments.append(
                         (self.get_name(fn), fn.function_selector)
