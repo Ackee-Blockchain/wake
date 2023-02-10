@@ -173,12 +173,12 @@ class TypeGenerator:
         error_abi = {
             "name": "Error",
             "type": "error",
-            "inputs": [{"name": "message", "type": "string"}],
+            "inputs": [{"internalType": "string", "name": "message", "type": "string"}],
         }
         panic_abi = {
             "name": "Panic",
             "type": "error",
-            "inputs": [{"name": "code", "type": "uint256"}],
+            "inputs": [{"internalType": "uint256", "name": "code", "type": "uint256"}],
         }
 
         for item in [error_abi, panic_abi]:

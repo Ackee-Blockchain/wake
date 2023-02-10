@@ -28,7 +28,7 @@ class Error(TransactionRevertedError):
     _abi = {
         "name": "Error",
         "type": "error",
-        "inputs": [{"name": "message", "type": "string"}],
+        "inputs": [{"internalType": "string", "name": "message", "type": "string"}],
     }
     message: str
 
@@ -61,7 +61,7 @@ class Panic(TransactionRevertedError):
     _abi = {
         "name": "Panic",
         "type": "error",
-        "inputs": [{"name": "code", "type": "uint256"}],
+        "inputs": [{"internalType": "uint256", "name": "code", "type": "uint256"}],
     }
     code: "PanicCodeEnum"
 
