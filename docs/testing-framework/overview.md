@@ -1,3 +1,7 @@
+---
+title: Testing Framework
+---
+
 Woke testing framework is a Python-based framework for testing Solidity smart contracts.
 It utilizes `pytypes`, Python equivalents of Solidity types, to maximize the tester's performance.
 
