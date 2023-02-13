@@ -52,7 +52,7 @@ The latter overrides the former.
     [detectors]
     exclude = []
     ignore_paths = ["node_modules", ".woke-build", "venv", "lib"]
-    only = []
+    # only = [] (unset - all detectors are enabled)
 
     [testing]
     cmd = "anvil"
