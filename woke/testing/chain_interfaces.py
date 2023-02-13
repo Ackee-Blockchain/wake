@@ -63,9 +63,7 @@ class ChainInterfaceAbc(ABC):
             args += ["--port", port]
 
         print(f"Launching {' '.join(args)}")
-        process = subprocess.Popen(
-            args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-        )
+        process = subprocess.Popen(args, stdout=subprocess.DEVNULL)
 
         try:
             start = time.perf_counter()
