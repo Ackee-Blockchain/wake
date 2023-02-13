@@ -168,6 +168,8 @@ For generating fine-tuned random data, it is recommended to use the random funct
 
 Woke testing framework provides a set of random functions that can be used to generate random data.
 
+#### random_account()
+
 `random_account()` returns a random account from a given chain. It accepts the following keyword arguments:
 
 | Argument                   | Description                                          | Default value                       |
@@ -177,11 +179,15 @@ Woke testing framework provides a set of random functions that can be used to ge
 | `predicate`                | predicate that the account must satisfy              | `None` (i.e. no predicate)          |
 | `chain`                    | chain to choose the account from                     | `default_chain`                     |
 
+#### random_address()
+
 `random_address()` returns a random address. It accepts the following keyword arguments:
 
 | Argument            | Description                                | Default value |
 |---------------------|--------------------------------------------|---------------|
 | `zero_address_prob` | probability of generating the zero address | `0`           |
+
+#### random_int(min, max)
 
 `random_int(min, max)` returns a random integer in the range `min` to `max`. It accepts the following keyword arguments:
 
@@ -192,11 +198,15 @@ Woke testing framework provides a set of random functions that can be used to ge
 | `zero_prob`                     | probability of generating `0`, if `min` < `0` < `max`                  | `None` (i.e. `1 / (max - min + 1))` |
 | <nobr>`edge_values_prob`</nobr> | value to use for `min_prob`, `max_prob` and<br> `zero_prob` if not set | `None`                              |
 
+#### random_bool()
+
 `random_bool()` returns a random boolean value. It accepts the following keyword arguments:
 
 | Argument            | Description                                | Default value |
 |---------------------|--------------------------------------------|---------------|
 | `true_prob`         | probability of generating `True`           | `0.5`         |
+
+#### random_string(min, max)
 
 `random_string(min, max)` returns a random string of length in the range `min` to `max`. It accepts the following keyword arguments:
 
@@ -204,6 +214,8 @@ Woke testing framework provides a set of random functions that can be used to ge
 |---------------------------------|--------------------------------------------------------------------|----------------------------|
 | `alphabet`                      | alphabet to choose characters from                                 | `string.printable`         |
 | `predicate`                     | predicate that the string must satisfy                             | `None` (i.e. no predicate) |
+
+#### random_bytes(min, max)
 
 `random_bytes(min, max)` returns a random byte array of length in the range `min` to `max`. If `max` is not specified, it generates exactly `min` bytes.
 It accepts the following keyword arguments:
