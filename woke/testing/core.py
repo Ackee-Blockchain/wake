@@ -510,13 +510,37 @@ class Chain:
         self._connected = False
 
     @contextmanager
-    def connect(self, uri: Optional[str] = None):
+    def connect(
+        self,
+        uri: Optional[str] = None,
+        *,
+        accounts: Optional[int] = None,
+        chain_id: Optional[int] = None,
+        fork: Optional[str] = None,
+        hardfork: Optional[str] = None,
+        # min_gas_price: Optional[int] = None,
+        # block_base_fee_per_gas: Optional[int] = None,
+    ):
         if self._connected:
             raise AlreadyConnectedError("Already connected to a chain")
 
         if uri is None:
-            self._chain_interface = ChainInterfaceAbc.launch()
+            self._chain_interface = ChainInterfaceAbc.launch(
+                accounts=accounts,
+                chain_id=chain_id,
+                fork=fork,
+                hardfork=hardfork,
+            )
         else:
+            if (
+                accounts is not None
+                or chain_id is not None
+                or fork is not None
+                or hardfork is not None
+            ):
+                raise ValueError(
+                    "Cannot specify accounts, chain_id, fork or hardfork when connecting to a running chain"
+                )
             self._chain_interface = ChainInterfaceAbc.connect(uri)
 
         try:
