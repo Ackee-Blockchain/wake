@@ -70,6 +70,33 @@ def test_chain():
     default_chain.mine(lambda x: x + 1)
 ```
 
+### `connect` keyword arguments
+
+The `connect` context manager accepts keyword arguments that can override the command line arguments set in [configuration](../configuration.md#testing-namespace) files:
+
+| Keyword argument | Description                    | Default value            |
+|------------------|--------------------------------|--------------------------|
+| `accounts`       | number of accounts to generate | `None` (do not override) |
+| `chain_id`       | chain ID assigned to the chain | `None` (do not override) |
+| `fork`           | URL of the chain to fork from  | `None` (do not override) |
+| `hardfork`       | hardfork to use                | `None` (do not override) |
+
+!!! warning
+    `accounts`, `chain_id`, `fork` and `hardfork` can only be used when launching a new development chain.
+    Also, it is not possible to set these keyword arguments when working with Hardhat.
+
+```python
+from woke.testing import default_chain
+
+@default_chain.connect(
+    accounts=15,
+    chain_id=1020,
+)
+def test_chain():
+    assert len(default_chain.accounts) == 15
+    assert default_chain.chain_id == 1020
+```
+
 ## Accessing chain blocks
 
 The `chain.blocks` property can be used to access up-to-date chain blocks data.

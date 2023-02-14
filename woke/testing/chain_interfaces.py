@@ -29,7 +29,14 @@ class ChainInterfaceAbc(ABC):
         self._process = process
 
     @classmethod
-    def launch(cls) -> ChainInterfaceAbc:
+    def launch(
+        cls,
+        *,
+        accounts: Optional[int] = None,
+        chain_id: Optional[int] = None,
+        fork: Optional[str] = None,
+        hardfork: Optional[str] = None,
+    ) -> ChainInterfaceAbc:
         config = get_config()
 
         if config.testing.cmd == "anvil":
@@ -39,6 +46,16 @@ class ChainInterfaceAbc(ABC):
             args = ["ganache"] + config.testing.ganache.cmd_args.split()
             constructor = GanacheChainInterface
         elif config.testing.cmd == "hardhat":
+            if (
+                accounts is not None
+                or chain_id is not None
+                or fork is not None
+                or hardfork is not None
+            ):
+                raise ValueError(
+                    "Setting accounts, chain_id, fork and hardfork is not supported for hardhat"
+                )
+
             args = ["npx", "hardhat", "node"] + config.testing.hardhat.cmd_args.split()
             constructor = HardhatChainInterface
         else:
@@ -46,6 +63,11 @@ class ChainInterfaceAbc(ABC):
 
         hostname = "127.0.0.1"
         port = None
+        accounts_set = False
+        chain_id_set = False
+        fork_set = False
+        hardfork_set = False
+
         for i, arg in enumerate(args):
             if arg in {"--port", "-p", "--server.port"}:
                 try:
@@ -57,10 +79,56 @@ class ChainInterfaceAbc(ABC):
                     hostname = args[i + 1]
                 except IndexError:
                     hostname = "127.0.0.1"
+            elif (
+                arg in {"-a", "--accounts", "--wallet.accounts"}
+                and accounts is not None
+            ):
+                accounts_set = True
+                try:
+                    args[i + 1] = str(accounts)
+                except IndexError:
+                    args += [str(accounts)]
+            elif arg in {"--chain-id", "--chain.chainId"} and chain_id is not None:
+                chain_id_set = True
+                try:
+                    args[i + 1] = str(chain_id)
+                except IndexError:
+                    args += [str(chain_id)]
+            elif (
+                arg in {"-f", "--fork-url", "--fork.url", "--rpc-url"}
+                and fork is not None
+            ):
+                fork_set = True
+                try:
+                    args[i + 1] = fork
+                except IndexError:
+                    args += [fork]
+            elif (
+                arg in {"--hardfork", "-k", "--chain.hardfork"} and hardfork is not None
+            ):
+                hardfork_set = True
+                try:
+                    args[i + 1] = hardfork
+                except IndexError:
+                    args += [hardfork]
 
         if port is None:
             port = str(get_free_port())
             args += ["--port", port]
+        if accounts is not None and not accounts_set:
+            args += ["-a", str(accounts)]
+        if chain_id is not None and not chain_id_set:
+            if config.testing.cmd == "anvil":
+                args += ["--chain-id", str(chain_id)]
+            elif config.testing.cmd == "ganache":
+                args += ["--chain.chainId", str(chain_id)]
+        if fork is not None and not fork_set:
+            args += ["-f", fork]
+        if hardfork is not None and not hardfork_set:
+            if config.testing.cmd == "anvil":
+                args += ["--hardfork", hardfork]
+            elif config.testing.cmd == "ganache":
+                args += ["-k", hardfork]
 
         print(f"Launching {' '.join(args)}")
         process = subprocess.Popen(args, stdout=subprocess.DEVNULL)
