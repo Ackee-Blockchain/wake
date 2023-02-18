@@ -2,6 +2,7 @@ import json
 from urllib.request import Request, urlopen
 
 from woke.testing.json_rpc.abc import ProtocolAbc
+from woke.utils import get_package_version
 
 
 class HttpProtocol(ProtocolAbc):
@@ -22,7 +23,10 @@ class HttpProtocol(ProtocolAbc):
         req = Request(
             self._uri,
             data.encode("utf-8"),
-            headers={"Content-Type": "application/json"},
+            headers={
+                "Content-Type": "application/json",
+                "User-Agent": f"woke/{get_package_version('woke')}",
+            },
         )
 
         with urlopen(req, timeout=self._timeout) as response:
