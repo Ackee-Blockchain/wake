@@ -59,7 +59,7 @@ class JsonRpcCommunicator:
     def __init__(self, config: WokeConfig, uri: str):
         if uri.startswith(("http://", "https://")):
             self._protocol = HttpProtocol(uri, config.testing.timeout)
-        elif uri.startswith("ws://"):
+        elif uri.startswith(("ws://", "wss://")):
             self._protocol = WebsocketProtocol(uri, config.testing.timeout)
         elif Path(uri).is_socket() or platform.system() == "Windows":
             self._protocol = IpcProtocol(uri, config.testing.timeout)
