@@ -322,6 +322,7 @@ class LspCompiler:
                     await self.__diagnostic_queue.put((file, set()))
 
                 self.__discovered_files.clear()
+                self.__compilation_errors.clear()
                 if self.__perform_files_discovery:
                     for file in self.__config.project_root_path.rglob("**/*.sol"):
                         if not self.__file_ignored(file) and file.is_file():
