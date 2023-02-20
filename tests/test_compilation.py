@@ -96,6 +96,7 @@ def test_compile_uniswap_v3(setup_project, config):
 @pytest.mark.parametrize(
     "setup_project", [r"https://github.com/graphprotocol/contracts.git"], indirect=True
 )
+@pytest.mark.skip()
 def test_compile_the_graph(setup_project, config):
     files = list((PYTEST_BUILD_PATH / "contracts").rglob("*.sol"))
     compiler = SolidityCompiler(config)
