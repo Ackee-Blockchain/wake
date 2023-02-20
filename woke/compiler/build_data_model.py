@@ -49,6 +49,7 @@ class ProjectBuildInfo(BuildInfoModel):
     compilation_units: Dict[str, CompilationUnitBuildInfo]
     source_units_info: Dict[str, SourceUnitInfo]
     allow_paths: FrozenSet[Path]
+    ignore_paths: FrozenSet[Path]
     include_paths: FrozenSet[Path]
     settings: SolcInputSettings
     target_solidity_version: Optional[SolidityVersion]
