@@ -747,6 +747,8 @@ class SolidityCompiler:
             if (
                 self._latest_build_info.allow_paths
                 != self.__config.compiler.solc.allow_paths
+                or self._latest_build_info.ignore_paths
+                != self.__config.compiler.solc.ignore_paths
                 or self._latest_build_info.include_paths
                 != self.__config.compiler.solc.include_paths
                 or self._latest_build_info.settings != build_settings
@@ -951,6 +953,7 @@ class SolidityCompiler:
                 for cu_hash, errors in errors_per_cu.items()
             },
             allow_paths=self.__config.compiler.solc.allow_paths,
+            ignore_paths=self.__config.compiler.solc.ignore_paths,
             include_paths=self.__config.compiler.solc.include_paths,
             settings=build_settings,
             source_units_info={
