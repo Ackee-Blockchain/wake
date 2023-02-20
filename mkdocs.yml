@@ -26,6 +26,7 @@ theme:
 
   features:
     - content.code.copy
+    - content.tabs.link
     - navigation.tracking
     - navigation.sections
     - navigation.indexes
@@ -94,6 +95,8 @@ markdown_extensions:
   - pymdownx.superfences
   - pymdownx.arithmatex:
       generic: true
+  - pymdownx.tabbed:
+      alternate_style: true
 
 extra_javascript:
   - js/mathjax.js
