@@ -1,4 +1,5 @@
 from .generate_control_flow_graph import generate_cfg_handler
+from .generate_imports_graph import generate_imports_graph_handler
 from .generate_inheritance_graph import generate_inheritance_graph_handler
 from .generate_linearized_inheritance_graph import (
     generate_linearized_inheritance_graph_handler,

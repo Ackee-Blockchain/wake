@@ -40,6 +40,11 @@ class GraphsDirection(str, enum.Enum):
     RightLeft = "RL"
 
 
+class ImportsDirection(str, enum.Enum):
+    ImportedToImporting = "imported-to-importing"
+    ImportingToImported = "importing-to-imported"
+
+
 class SolcOptimizerConfig(WokeConfigModel):
     enabled: Optional[bool] = None
     runs: int = 200
@@ -144,6 +149,12 @@ class ControlFlowGraphConfig(WokeConfigModel):
     vscode_urls: bool = True
 
 
+class ImportsGraphConfig(WokeConfigModel):
+    direction: GraphsDirection = GraphsDirection.TopBottom
+    imports_direction: ImportsDirection = ImportsDirection.ImportedToImporting
+    vscode_urls: bool = True
+
+
 class InheritanceGraphConfig(WokeConfigModel):
     direction: GraphsDirection = GraphsDirection.BottomTop
     vscode_urls: bool = True
@@ -158,6 +169,7 @@ class GeneratorConfig(WokeConfigModel):
     control_flow_graph: ControlFlowGraphConfig = Field(
         default_factory=ControlFlowGraphConfig
     )
+    imports_graph: ImportsGraphConfig = Field(default_factory=ImportsGraphConfig)
     inheritance_graph: InheritanceGraphConfig = Field(
         default_factory=InheritanceGraphConfig
     )

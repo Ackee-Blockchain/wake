@@ -135,6 +135,7 @@ class LspCompiler:
     __source_units: Dict[Path, SourceUnit]
     __last_compilation_interval_trees: Dict[Path, IntervalTree]
     __last_compilation_source_units: Dict[Path, SourceUnit]
+    __last_graph: nx.DiGraph
     __line_indexes: Dict[Path, List[Tuple[bytes, int]]]
     __perform_files_discovery: bool
     __force_run_detectors: bool
@@ -162,6 +163,7 @@ class LspCompiler:
         self.__source_units = {}
         self.__last_compilation_interval_trees = {}
         self.__last_compilation_source_units = {}
+        self.__last_graph = nx.DiGraph()
         self.__line_indexes = {}
         self.__output_contents = dict()
         self.__compilation_errors = dict()
@@ -201,6 +203,10 @@ class LspCompiler:
     @property
     def last_compilation_source_units(self) -> Dict[Path, SourceUnit]:
         return self.__last_compilation_source_units
+
+    @property
+    def last_graph(self) -> nx.DiGraph:
+        return self.__last_graph
 
     @lru_cache(maxsize=128)
     def _compute_diff_interval_tree(
@@ -463,6 +469,7 @@ class LspCompiler:
                     {path: info.text for path, info in self.__opened_files.items()},
                     True,
                 )
+                self.__last_graph = graph
             else:
                 graph, _ = self.__compiler.build_graph(
                     files_to_compile,

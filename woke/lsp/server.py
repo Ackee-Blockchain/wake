@@ -23,6 +23,7 @@ from pydantic.error_wrappers import ValidationError
 from ..config import WokeConfig
 from .commands import (
     generate_cfg_handler,
+    generate_imports_graph_handler,
     generate_inheritance_graph_handler,
     generate_linearized_inheritance_graph_handler,
 )
@@ -121,6 +122,7 @@ ConfigPath = Tuple[Union[str, int], ...]
 
 class CommandsEnum(str, Enum):
     GENERATE_CFG = "woke.generate.control_flow_graph"
+    GENERATE_IMPORTS_GRAPH = "woke.generate.imports_graph"
     GENERATE_INHERITANCE_GRAPH = "woke.generate.inheritance_graph"
     GENERATE_INHERITANCE_GRAPH_FULL = "woke.generate.inheritance_graph_full"
     GENERATE_LINEARIZED_INHERITANCE_GRAPH = "woke.generate.linearized_inheritance_graph"
@@ -900,6 +902,16 @@ class LspServer:
             canonical_name = str(params.arguments[1])
             context = await self._get_workspace(document_uri)
             return await generate_cfg_handler(context, document_uri, canonical_name)
+        elif command == CommandsEnum.GENERATE_IMPORTS_GRAPH:
+            if params.arguments is None or len(params.arguments) == 0:
+                if self.__main_workspace is None:
+                    raise LspError(ErrorCodes.RequestFailed, "No workspace open")
+                return await generate_imports_graph_handler(self.__main_workspace)
+            else:
+                raise LspError(
+                    ErrorCodes.InvalidParams,
+                    f"Expected 0 arguments for `{CommandsEnum.GENERATE_IMPORTS_GRAPH}` command",
+                )
         elif command == CommandsEnum.GENERATE_INHERITANCE_GRAPH:
             if params.arguments is not None and len(params.arguments) == 2:
                 document_uri = DocumentUri(params.arguments[0])
