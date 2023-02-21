@@ -114,5 +114,5 @@ def woke_solc() -> None:
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )
-    print(proc.stdout.decode("utf-8"))
+    print(proc.stdout.decode("utf-8"), end="")
     sys.exit(proc.returncode)
