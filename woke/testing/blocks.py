@@ -128,7 +128,10 @@ class Block:
 
     @property
     def seal_fields(self) -> Optional[List[str]]:
-        if "sealFields" in self._block_data:
+        if (
+            "sealFields" in self._block_data
+            and self._block_data["sealFields"] is not None
+        ):
             return list(self._block_data["sealFields"])
         return None
 
@@ -158,6 +161,9 @@ class Block:
 
     @property
     def base_fee_per_gas(self) -> Optional[int]:
-        if "baseFeePerGas" in self._block_data:
+        if (
+            "baseFeePerGas" in self._block_data
+            and self._block_data["baseFeePerGas"] is not None
+        ):
             return int(self._block_data["baseFeePerGas"], 16)
         return None
