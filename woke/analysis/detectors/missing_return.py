@@ -60,7 +60,9 @@ def check_missing_return(node: FunctionDefinition) -> List[DetectorResult]:
             if not has_return_params_named:
                 detections.append(
                     DetectorResult(
-                        node, "Not all paths have return or revert statement"
+                        node,
+                        "Not all code paths have return or revert statement",
+                        lsp_range=node.name_location,
                     )
                 )
             else:
@@ -71,16 +73,9 @@ def check_missing_return(node: FunctionDefinition) -> List[DetectorResult]:
                     detections.append(
                         DetectorResult(
                             node,
-                            "Not all paths have return or revert statement and the return values "
+                            "Not all code paths have return or revert statement and the return values "
                             "are not set either",
-                            related_info=(
-                                DetectorResult(
-                                    block.statements[0].parent,
-                                    "Block where return is missing or return values are not set",
-                                ),
-                            )
-                            if len(block.statements) > 0
-                            else (),
+                            lsp_range=node.name_location,
                         )
                     )
     return detections

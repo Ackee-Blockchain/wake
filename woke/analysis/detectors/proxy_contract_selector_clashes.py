@@ -92,6 +92,7 @@ def _detect_implementation_fn(fn: FunctionDefinition) -> List[DetectorResult]:
                         fn,
                         "Detected slot usage in implementation function",
                         related_info=(det,),
+                        lsp_range=fn.name_location,
                     )
                 )
         elif isinstance(node, FunctionCall) and isinstance(
@@ -103,6 +104,7 @@ def _detect_implementation_fn(fn: FunctionDefinition) -> List[DetectorResult]:
                         fn,
                         "Detected implementation function",
                         related_info=(det,),
+                        lsp_range=fn.name_location,
                     )
                 )
         elif isinstance(node, InlineAssembly) and node.yul_block is not None:
@@ -112,6 +114,7 @@ def _detect_implementation_fn(fn: FunctionDefinition) -> List[DetectorResult]:
                         fn,
                         "Detected slot usage in implementation function",
                         related_info=(det,),
+                        lsp_range=fn.name_location,
                     )
                 )
     return dets
@@ -257,6 +260,7 @@ def _detect_delegatecall_to_slot_variable(
                                         node, "Detected call", related_info=(det,)
                                     ),
                                 ),
+                                lsp_range=fn.name_location,
                             )
                         )
         elif (
@@ -297,6 +301,7 @@ def _detect_delegatecall_to_slot_variable(
                                     ),
                                 ),
                             ),
+                            lsp_range=fn.name_location,
                         )
                     )
     return dets
@@ -337,6 +342,7 @@ def detect_fallback(fn: FunctionDefinition) -> List[DetectorResult]:
                 fn,
                 "Detected fallback function with delegate call to an implementation slot",
                 related_info=(det,),
+                lsp_range=fn.name_location,
             )
         )
     return dets
@@ -432,9 +438,13 @@ def detect_selector_clashes(
                             impl_selectors[proxy_sel],
                             "Implementation function with same selector",
                             related_info=(impl_detection,),
+                            lsp_range=impl_selectors[proxy_sel].name_location
+                            if isinstance(impl_selectors[proxy_sel], FunctionDefinition)
+                            else None,
                         ),
                         proxy_detection,
                     ),
+                    lsp_range=proxy_fn.name_location,
                 )
             )
     return clashes
@@ -506,6 +516,7 @@ class ProxyContractSelectorClashDetector(DetectorAbc):
                         contract,
                         f"Detected implementation contract with slot used in proxy contract {proxy_contract.name}",
                         related_info=(det,),
+                        lsp_range=contract.name_location,
                     )
 
                     dets = detect_selector_clashes(
@@ -534,6 +545,7 @@ class ProxyContractSelectorClashDetector(DetectorAbc):
                                         node,
                                         "Detected proxy contract",
                                         related_info=tuple(dets),
+                                        lsp_range=node.name_location,
                                     ),
                                 )
                             )

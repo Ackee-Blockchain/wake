@@ -22,8 +22,20 @@ class UnusedContractDetector(DetectorAbc):
     def visit_contract_definition(self, node: ContractDefinition):
         if len(node.references) == 0:
             if node.abstract:
-                self._detections.add(DetectorResult(node, "Contract not used"))
+                self._detections.add(
+                    DetectorResult(
+                        node, "Contract not used", lsp_range=node.name_location
+                    )
+                )
             elif node.kind == ContractKind.INTERFACE:
-                self._detections.add(DetectorResult(node, "Interface not used"))
+                self._detections.add(
+                    DetectorResult(
+                        node, "Interface not used", lsp_range=node.name_location
+                    )
+                )
             elif node.kind == ContractKind.LIBRARY:
-                self._detections.add(DetectorResult(node, "Library not used"))
+                self._detections.add(
+                    DetectorResult(
+                        node, "Library not used", lsp_range=node.name_location
+                    )
+                )
