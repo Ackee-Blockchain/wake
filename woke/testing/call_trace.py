@@ -14,7 +14,10 @@ from rich.text import Text
 from rich.tree import Tree
 
 from woke.testing.core import (
+    Account,
     Address,
+    Chain,
+    Contract,
     fix_library_abi,
     get_contracts_by_fqn,
     get_fqn_from_address,
@@ -37,40 +40,49 @@ class CallTraceKind(str, enum.Enum):
     CALLCODE = "CALLCODE"
     CREATE = "CREATE"
     CREATE2 = "CREATE2"
-    INTERNAL = "INTERNAL"
+    INTERNAL = "INTERNAL"  # unused
 
 
 class CallTrace:
+    _contract: Optional[Contract]
     _contract_name: Optional[str]
-    _function_name: str
+    _function_name: Optional[str]
+    _selector: Optional[bytes]
     _function_is_special: bool
     _arguments: List
     _status: bool
     _value: int
     _kind: CallTraceKind
     _depth: int
+    _chain: Chain
     _subtraces: List[CallTrace]
     _parent: Optional[CallTrace]
     _address: Optional[Address]
 
     def __init__(
         self,
+        contract: Optional[Contract],
         contract_name: Optional[str],
-        function_name: str,
+        function_name: Optional[str],
+        selector: Optional[bytes],
         address: Optional[Address],
         arguments: List,
         value: int,
         kind: CallTraceKind,
         depth: int,
+        chain: Chain,
         function_is_special: bool = False,
     ):
+        self._contract = contract
         self._contract_name = contract_name
         self._function_name = function_name
+        self._selector = selector
         self._address = address
         self._arguments = arguments
         self._value = value
         self._kind = kind
         self._depth = depth
+        self._chain = chain
         self._function_is_special = function_is_special
         self._status = True
         self._subtraces = []
@@ -96,18 +108,30 @@ class CallTrace:
 
     def _get_label(self) -> Text:
         ret = Text()
-        if self.contract_name is not None:
-            ret.append_text(
-                Text.from_markup(
-                    f"[bright_magenta]{self.contract_name}[/bright_magenta]."
-                )
-            )
+
+        label = None
+        if self.address is not None:
+            label = Account(self.address, self.chain).label
+
+        if label is not None:
+            contract_name = label
+        elif self.contract_name is not None:
+            contract_name = self.contract_name
+        else:
+            contract_name = f"Unknown({self.address})"
+
+        ret.append_text(
+            Text.from_markup(f"[bright_magenta]{contract_name}[/bright_magenta].")
+        )
+
+        if self.function_name is not None:
+            function_name = self.function_name
+        else:
+            function_name = "???"
 
         if self.function_is_special:
             ret.append_text(
-                Text.from_markup(
-                    f"<[bright_magenta]{self.function_name}[/bright_magenta]>"
-                )
+                Text.from_markup(f"<[bright_magenta]{function_name}[/bright_magenta]>")
             )
         else:
             ret.append_text(
@@ -140,11 +164,19 @@ class CallTrace:
         return ret
 
     @property
+    def subtraces(self) -> Tuple[CallTrace]:
+        return tuple(self._subtraces)
+
+    @property
+    def contract(self) -> Optional[Contract]:
+        return self._contract
+
+    @property
     def contract_name(self) -> Optional[str]:
         return self._contract_name
 
     @property
-    def function_name(self) -> str:
+    def function_name(self) -> Optional[str]:
         return self._function_name
 
     @property
@@ -174,6 +206,10 @@ class CallTrace:
     @property
     def depth(self) -> int:
         return self._depth
+
+    @property
+    def chain(self) -> Chain:
+        return self._chain
 
     @classmethod
     def from_debug_trace(
@@ -217,13 +253,16 @@ class CallTrace:
         if origin_fqn is None or origin_fqn not in contracts_by_fqn:
             assert "to" in tx_params
             root_trace = CallTrace(
-                f"Unknown({tx_params['to']})",
-                "???",
+                None,
+                None,
+                None,
+                None,
                 Address(tx_params["to"]),
                 [b"" if "data" not in tx_params else tx_params["data"]],
                 value,
                 CallTraceKind.CALL,
                 1,
+                tx.chain,
                 True,
             )
         else:
@@ -252,13 +291,16 @@ class CallTrace:
                         )
                     )  # pyright: reportGeneralTypeIssues=false
                 root_trace = CallTrace(
+                    obj,
                     contract_name,
                     "constructor",
+                    None,
                     tx.return_value.address if tx.status == 1 else None,
                     args,
                     value,
                     CallTraceKind.CREATE,
                     1,
+                    tx.chain,
                     True,
                 )
             elif (
@@ -267,13 +309,16 @@ class CallTrace:
                 and "receive" in contract_abi
             ):
                 root_trace = CallTrace(
+                    obj,
                     contract_name,
                     "receive",
+                    None,
                     tx.to.address,
                     [],
                     value,
                     CallTraceKind.CALL,
                     1,
+                    tx.chain,
                     True,
                 )
             elif (
@@ -286,24 +331,30 @@ class CallTrace:
                     or contract_abi["fallback"]["stateMutability"] == "payable"
                 ):
                     root_trace = CallTrace(
+                        obj,
                         contract_name,
                         "fallback",
+                        None,
                         tx.to.address,
                         [b"" if "data" not in tx_params else tx_params["data"]],
                         value,
                         CallTraceKind.CALL,
                         1,
+                        tx.chain,
                         True,
                     )
                 else:
                     root_trace = CallTrace(
+                        obj,
                         contract_name,
-                        "???",
+                        None,
+                        None,
                         tx.to.address,
                         [b"" if "data" not in tx_params else tx_params["data"]],
                         value,
                         CallTraceKind.CALL,
                         1,
+                        tx.chain,
                         True,
                     )
             else:
@@ -316,13 +367,16 @@ class CallTrace:
                     eth_abi.abi.decode(output_types, tx_params["data"][4:])
                 )  # pyright: reportGeneralTypeIssues=false
                 root_trace = CallTrace(
+                    obj,
                     contract_name,
                     fn_abi["name"],
+                    tx_params["data"][:4],
                     tx.to.address,
                     decoded_data,
                     value,
                     CallTraceKind.CALL,
                     1,
+                    tx.chain,
                 )
 
         current_trace = root_trace
@@ -386,23 +440,29 @@ class CallTrace:
                             arguments = [data]
 
                         call_trace = CallTrace(
+                            None,
                             "console",
                             "log",
+                            data[:4],
                             addr,
                             arguments,
                             value,
                             log["op"],
                             current_trace.depth + 1,
+                            tx.chain,
                         )
                     else:
                         call_trace = CallTrace(
-                            f"Unknown({addr})",
-                            "???",
+                            None,
+                            None,
+                            None,
+                            None,
                             addr,
                             [data],
                             value,
                             log["op"],
                             current_trace.depth + 1,
+                            tx.chain,
                             True,
                         )
                 else:
@@ -432,14 +492,17 @@ class CallTrace:
                             value == 0
                             or contract_abi["fallback"]["stateMutability"] == "payable"
                         ):
+                            selector = None
                             fn_name = "fallback"
                             arguments = [data]
                             is_special = True
                         else:
-                            fn_name = "???"
+                            selector = None
+                            fn_name = None
                             arguments = [data]
                             is_special = True
                     else:
+                        selector = None
                         if args_size == 0 and "receive" in contract_abi:
                             fn_name = "receive"
                             arguments = []
@@ -452,18 +515,21 @@ class CallTrace:
                             arguments = [data]
                             is_special = True
                         else:
-                            fn_name = "???"
+                            fn_name = None
                             arguments = [data]
                             is_special = True
 
                     call_trace = CallTrace(
+                        obj,
                         contract_name,
                         fn_name,
+                        selector,
                         addr,
                         arguments,
                         value,
                         log["op"],
                         current_trace.depth + 1,
+                        tx.chain,
                         is_special,
                     )
 
@@ -537,13 +603,16 @@ class CallTrace:
 
                 assert current_trace is not None
                 call_trace = CallTrace(
+                    obj,
                     contract_name,
                     "constructor",
+                    None,
                     None,  # to be set later
                     args,
                     value,
                     log["op"],
                     current_trace.depth + 1,
+                    tx.chain,
                     True,
                 )
 

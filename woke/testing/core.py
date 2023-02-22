@@ -204,7 +204,6 @@ Address.ZERO = Address(0)
 class Account:
     _address: Address
     _chain: Chain
-    _label: Optional[str]
 
     def __init__(
         self, address: Union[Address, str, int], chain: Optional[Chain] = None
@@ -214,10 +213,9 @@ class Account:
         else:
             self._address = Address(address)
         self._chain = chain if chain is not None else default_chain
-        self._label = None
 
     def __str__(self) -> str:
-        return str(self._address) if self._label is None else self._label
+        return self._chain._labels.get(self._address, str(self._address))
 
     __repr__ = __str__
 
@@ -253,13 +251,16 @@ class Account:
 
     @property
     def label(self) -> Optional[str]:
-        return self._label
+        return self._chain._labels.get(self._address, None)
 
     @label.setter
     def label(self, value: Optional[str]) -> None:
         if value is not None and not isinstance(value, str):
             raise TypeError("label must be a string or None")
-        self._label = value
+        if value is None:
+            del self._chain._labels[self._address]
+        else:
+            self._chain._labels[self._address] = value
 
     @property
     def balance(self) -> Wei:
@@ -503,6 +504,7 @@ class Chain:
     _single_source_errors: Set[bytes]
     _txs: Dict[str, TransactionAbc]
     _blocks: ChainBlocks
+    _labels: Dict[Address, str]
 
     tx_callback: Optional[Callable[[TransactionAbc], None]]
 
@@ -567,6 +569,7 @@ class Chain:
             self._default_tx_account = None
             self._txs = {}
             self._blocks = ChainBlocks(self)
+            self._labels = {}
 
             self._single_source_errors = {
                 selector
@@ -1630,10 +1633,8 @@ class Contract(Account):
         super().__init__(addr, chain)
 
     def __str__(self):
-        return (
-            f"{self.__class__.__name__}({self._address})"
-            if self._label is None
-            else self._label
+        return self._chain._labels.get(
+            self.address, f"{self.__class__.__name__}({self.address})"
         )
 
     __repr__ = __str__
