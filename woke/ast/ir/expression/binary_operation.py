@@ -1,11 +1,12 @@
 from functools import lru_cache
-from typing import Iterator, Set, Tuple
+from typing import Iterator, Optional, Set, Tuple
 
 from woke.ast.enums import BinaryOpOperator, ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.utils import IrInitTuple
-from woke.ast.nodes import SolcBinaryOperation
+from woke.ast.nodes import AstNodeId, SolcBinaryOperation
 
+from ..declaration.function_definition import FunctionDefinition
 from .abc import ExpressionAbc
 
 
@@ -20,6 +21,7 @@ class BinaryOperation(ExpressionAbc):
     _left_expression: ExpressionAbc
     _operator: BinaryOpOperator
     _right_expression: ExpressionAbc
+    _function_id: Optional[AstNodeId]
 
     def __init__(
         self,
@@ -35,6 +37,7 @@ class BinaryOperation(ExpressionAbc):
         self._right_expression = ExpressionAbc.from_ast(
             init, binary_operation.right_expression, self
         )
+        self._function_id = binary_operation.function
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
@@ -67,3 +70,11 @@ class BinaryOperation(ExpressionAbc):
         return (
             self.left_expression.modifies_state | self.right_expression.modifies_state
         )
+
+    @property
+    def function(self) -> Optional[FunctionDefinition]:
+        if self._function_id is None:
+            return None
+        node = self._reference_resolver.resolve_node(self._function_id, self._cu_hash)
+        assert isinstance(node, FunctionDefinition)
+        return node
