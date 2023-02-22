@@ -828,13 +828,16 @@ class LspCompiler:
         if self.__config.lsp.detectors.enable:
             for detection in detect(self.__config, self.__source_units):
                 file = detection.result.ir_node.file
-                if detection.result.related_info is not None:
+                if len(detection.result.related_info) > 0:
                     related_info = [
                         DiagnosticRelatedInformation(
                             location=Location(
                                 uri=DocumentUri(path_to_uri(info.ir_node.file)),
                                 range=self.get_range_from_byte_offsets(
-                                    info.ir_node.file, info.ir_node.byte_location
+                                    info.ir_node.file,
+                                    info.lsp_range
+                                    if info.lsp_range is not None
+                                    else info.ir_node.byte_location,
                                 ),
                             ),
                             message=info.message,
@@ -849,7 +852,10 @@ class LspCompiler:
                 errors_per_file[file].add(
                     Diagnostic(
                         range=self.get_range_from_byte_offsets(
-                            file, detection.result.ir_node.byte_location
+                            file,
+                            detection.result.lsp_range
+                            if detection.result.lsp_range is not None
+                            else detection.result.ir_node.byte_location,
                         ),
                         severity=DiagnosticSeverity.WARNING,
                         source="Woke",

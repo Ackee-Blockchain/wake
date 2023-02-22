@@ -91,9 +91,12 @@ class AxelarProxyContractIdDetector(DetectorAbc):
                         sorted_proxies[0],
                         "Proxy contract ID is shared between multiple contracts",
                         tuple(
-                            DetectorResult(other, "Other contract")
+                            DetectorResult(
+                                other, "Other contract", lsp_range=other.name_location
+                            )
                             for other in sorted_proxies[1:]
                         ),
+                        lsp_range=sorted_proxies[0].name_location,
                     )
                 )
 
@@ -103,6 +106,7 @@ class AxelarProxyContractIdDetector(DetectorAbc):
                     DetectorResult(
                         proxy,
                         "Found a proxy contract without an upgradeable contract with the same contract ID",
+                        lsp_range=proxy.name_location,
                     )
                 )
         for only_upgradeable in sorted(
@@ -115,6 +119,7 @@ class AxelarProxyContractIdDetector(DetectorAbc):
                     DetectorResult(
                         upgradeable,
                         "Found an upgradeable contract without a proxy contract with the same contract ID",
+                        lsp_range=upgradeable.name_location,
                     )
                 )
 
@@ -167,16 +172,27 @@ class AxelarProxyContractIdDetector(DetectorAbc):
                                 proxy,
                                 "Found a proxy contract and an upgradeable contract with a function with the same function selector",
                                 (
-                                    DetectorResult(upgradeable, "Upgradeable contract"),
+                                    DetectorResult(
+                                        upgradeable,
+                                        "Upgradeable contract",
+                                        lsp_range=upgradeable.name_location,
+                                    ),
                                     DetectorResult(
                                         proxy_functions[common_selector],
                                         f"Proxy contract function (selector: {common_selector.hex()})",
+                                        lsp_range=proxy_functions[
+                                            common_selector
+                                        ].name_location,
                                     ),
                                     DetectorResult(
                                         upgradeable_functions[common_selector],
                                         f"Upgradeable contract function (selector: {common_selector.hex()})",
+                                        lsp_range=upgradeable_functions[
+                                            common_selector
+                                        ].name_location,
                                     ),
                                 ),
+                                lsp_range=proxy.name_location,
                             )
                         )
 

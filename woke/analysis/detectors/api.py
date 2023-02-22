@@ -181,6 +181,7 @@ class DetectorResult:
     ir_node: IrAbc
     message: str
     related_info: Tuple[DetectorResult, ...] = field(default_factory=tuple)
+    lsp_range: Optional[Tuple[int, int]] = field(default=None)
 
 
 @dataclass
