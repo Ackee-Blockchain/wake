@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import subprocess
 from pathlib import Path
 from typing import Dict
@@ -15,6 +16,8 @@ from .input_data_model import (
     SolcInputSource,
 )
 from .output_data_model import SolcOutput
+
+logger = logging.getLogger(__name__)
 
 
 class SolcFrontend:
@@ -74,6 +77,8 @@ class SolcFrontend:
                 f"--include-path={Path(__file__).parent.parent.parent / 'contracts'}"
             )
 
+        logger.debug(f"Running solc: {' '.join(args)}")
+
         # the first argument in this call cannot be `Path` because of https://bugs.python.org/issue35246
         proc = await asyncio.create_subprocess_exec(
             *args,
@@ -83,6 +88,8 @@ class SolcFrontend:
             stderr=subprocess.PIPE,
         )
         standard_input_json = standard_input.json(by_alias=True, exclude_none=True)
+        logger.debug(f"solc input: {standard_input_json}")
+
         out, err = await proc.communicate(standard_input_json.encode("utf-8"))
         if proc.returncode != 0:
             raise SolcCompilationError(err)
