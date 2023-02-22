@@ -31,7 +31,7 @@ class UsingForDirective(SolidityAbc):
         }
 
         library SafeMath {
-            function sub(uint a, uint b) pure returns (uint) {
+            function sub(uint a, uint b) public pure returns (uint) {
                 require(b <= a);
                 return a - b;
             }
@@ -39,7 +39,7 @@ class UsingForDirective(SolidityAbc):
 
         contract C {
             using SafeMath for uint;
-            using {add as add2} for uint;
+            using {add} for uint;
         }
         ```
     """
