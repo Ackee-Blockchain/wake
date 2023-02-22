@@ -1,11 +1,12 @@
 from functools import lru_cache
-from typing import Iterator, Set, Tuple
+from typing import Iterator, Optional, Set, Tuple
 
 from woke.ast.enums import ModifiesStateFlag, UnaryOpOperator
 from woke.ast.ir.abc import IrAbc, SolidityAbc
+from woke.ast.ir.declaration.function_definition import FunctionDefinition
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.utils import IrInitTuple
-from woke.ast.nodes import SolcUnaryOperation
+from woke.ast.nodes import AstNodeId, SolcUnaryOperation
 
 
 class UnaryOperation(ExpressionAbc):
@@ -19,6 +20,7 @@ class UnaryOperation(ExpressionAbc):
     _operator: UnaryOpOperator
     _prefix: bool
     _sub_expression: ExpressionAbc
+    _function_id: Optional[AstNodeId]
 
     def __init__(
         self,
@@ -32,6 +34,7 @@ class UnaryOperation(ExpressionAbc):
         self._sub_expression = ExpressionAbc.from_ast(
             init, unary_operation.sub_expression, self
         )
+        self._function_id = unary_operation.function
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
@@ -73,3 +76,11 @@ class UnaryOperation(ExpressionAbc):
         ):
             ret |= {(self, ModifiesStateFlag.MODIFIES_STATE_VAR)}
         return ret
+
+    @property
+    def function(self) -> Optional[FunctionDefinition]:
+        if self._function_id is None:
+            return None
+        node = self._reference_resolver.resolve_node(self._function_id, self._cu_hash)
+        assert isinstance(node, FunctionDefinition)
+        return node

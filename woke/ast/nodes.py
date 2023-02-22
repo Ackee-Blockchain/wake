@@ -540,7 +540,9 @@ class SolcModifierDefinition(SolcNode):
 
 
 class UsingForDirectiveFunction(AstModel):
-    function: "SolcIdentifierPath"
+    function: Optional["SolcIdentifierPath"]
+    definition: Optional["SolcIdentifierPath"]  # added in 0.8.19
+    operator: Optional[Union[UnaryOpOperator, BinaryOpOperator]]  # added in 0.8.19
 
 
 class SolcUsingForDirective(SolcNode):
@@ -556,8 +558,12 @@ class SolcUsingForDirective(SolcNode):
     def __iter__(self):
         if self.function_list is not None:
             for function in self.function_list:
-                yield function.function
-                yield from function.function
+                if function.function is not None:
+                    yield function.function
+                    yield from function.function
+                if function.definition is not None:
+                    yield function.definition
+                    yield from function.definition
         if self.library_name is not None:
             yield self.library_name
             yield from self.library_name
@@ -811,6 +817,7 @@ class SolcBinaryOperation(SolcNode):
     right_expression: SolcExpressionUnion
     # optional
     argument_types: Optional[List[TypeDescriptionsModel]]
+    function: Optional[AstNodeId]  # added in 0.8.19
 
 
 class SolcConditional(SolcNode):
@@ -1001,6 +1008,7 @@ class SolcUnaryOperation(SolcNode):
     sub_expression: SolcExpressionUnion
     # optional
     argument_types: Optional[List[TypeDescriptionsModel]]
+    function: Optional[AstNodeId]  # added in 0.8.19
 
 
 class SolcOverrideSpecifier(SolcNode):

@@ -7,6 +7,8 @@ from woke.ast.ir.type_name.abc import TypeNameAbc
 from woke.ast.ir.type_name.user_defined_type_name import UserDefinedTypeName
 from woke.ast.ir.utils import IrInitTuple
 
+from ...enums import BinaryOpOperator, UnaryOpOperator
+
 if TYPE_CHECKING:
     from woke.ast.ir.declaration.contract_definition import ContractDefinition
     from .source_unit import SourceUnit
@@ -22,12 +24,18 @@ from woke.ast.nodes import (
 class UsingForDirective(SolidityAbc):
     """
     !!! note
-        Either [functions][woke.ast.ir.meta.using_for_directive.UsingForDirective.functions] or [library_name][woke.ast.ir.meta.using_for_directive.UsingForDirective.library_name] must be set.
+        Either [library_name][woke.ast.ir.meta.using_for_directive.UsingForDirective.library_name] must be set or one of [functions][woke.ast.ir.meta.using_for_directive.UsingForDirective.functions] or [operator_functions][woke.ast.ir.meta.using_for_directive.UsingForDirective.operator_functions] must be non-empty.
     !!! example
         Lines 13 and 14 in the following example:
         ```solidity linenums="1"
+        type I8 is int8;
+
         function add(uint a, uint b) pure returns (uint) {
             return a + b;
+        }
+
+        function sub(I8 a, I8 b) pure returns (I8) {
+            return a - b;
         }
 
         library SafeMath {
@@ -40,6 +48,7 @@ class UsingForDirective(SolidityAbc):
         contract C {
             using SafeMath for uint;
             using {add} for uint;
+            using {sub as -} for I8;
         }
         ```
     """
@@ -47,9 +56,13 @@ class UsingForDirective(SolidityAbc):
     _ast_node: SolcUsingForDirective
     _parent: Union[ContractDefinition, SourceUnit]
 
-    _functions: Optional[List[IdentifierPath]]
+    _functions: List[IdentifierPath]
+    _operator_functions: List[
+        Tuple[IdentifierPath, Union[UnaryOpOperator, BinaryOpOperator]]
+    ]
     _library_name: Optional[Union[IdentifierPath, UserDefinedTypeName]]
     _type_name: Optional[TypeNameAbc]
+    # TODO add _global
 
     def __init__(
         self,
@@ -60,11 +73,21 @@ class UsingForDirective(SolidityAbc):
         super().__init__(init, using_for_directive, parent)
 
         if using_for_directive.function_list is None:
-            self._functions = None
+            self._functions = []
+            self._operator_functions = []
         else:
             self._functions = [
                 IdentifierPath(init, function.function, self)
                 for function in using_for_directive.function_list
+                if function.function is not None
+            ]
+            self._operator_functions = [
+                (
+                    IdentifierPath(init, function.definition, self),
+                    function.operator,
+                )
+                for function in using_for_directive.function_list
+                if function.definition is not None and function.operator is not None
             ]
 
         if using_for_directive.library_name is None:
@@ -87,9 +110,10 @@ class UsingForDirective(SolidityAbc):
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        if self._functions is not None:
-            for function in self._functions:
-                yield from function
+        for function in self._functions:
+            yield from function
+        for function, _ in self._operator_functions:
+            yield from function
         if self._library_name is not None:
             yield from self._library_name
         if self._type_name is not None:
@@ -104,15 +128,22 @@ class UsingForDirective(SolidityAbc):
         return self._parent
 
     @property
-    def functions(self) -> Optional[Tuple[IdentifierPath]]:
+    def functions(self) -> Tuple[IdentifierPath, ...]:
         """
-        Is only set in the case of `:::solidity using {function1, function2} for TypeName;` directive type.
         Returns:
             List of functions that are attached to the target type.
         """
-        if self._functions is None:
-            return None
         return tuple(self._functions)
+
+    @property
+    def operator_functions(
+        self,
+    ) -> Tuple[Tuple[IdentifierPath, Union[UnaryOpOperator, BinaryOpOperator]], ...]:
+        """
+        Returns:
+            List of operator functions and their operators that are attached to the target type.
+        """
+        return tuple(self._operator_functions)
 
     @property
     def library_name(self) -> Optional[Union[IdentifierPath, UserDefinedTypeName]]:
