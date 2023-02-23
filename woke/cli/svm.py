@@ -15,7 +15,7 @@ from .console import console
 @click.group(name="svm")
 @click.pass_context
 def run_svm(ctx: Context):
-    """Run Woke solc version manager."""
+    """Run Woke Solc Version Manager."""
     config = WokeConfig()
     config.load_configs()
     ctx.obj["config"] = config
