@@ -30,6 +30,8 @@ if TYPE_CHECKING:
     from ..meta.identifier_path import IdentifierPathPart
     from ..meta.source_unit import SourceUnit
     from ..statement.inline_assembly import ExternalReference
+    from ..expression.unary_operation import UnaryOperation
+    from ..expression.binary_operation import BinaryOperation
 
 from woke.ast.enums import FunctionKind, StateMutability, Visibility
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -224,6 +226,8 @@ class FunctionDefinition(DeclarationAbc):
             IdentifierPathPart,
             MemberAccess,
             ExternalReference,
+            UnaryOperation,
+            BinaryOperation,
         ]
     ]:
         from .variable_declaration import VariableDeclaration

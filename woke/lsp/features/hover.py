@@ -8,8 +8,10 @@ from ...ast.enums import GlobalSymbolsEnum
 from ...ast.ir.abc import IrAbc
 from ...ast.ir.declaration.abc import DeclarationAbc
 from ...ast.ir.declaration.contract_definition import ContractDefinition
+from ...ast.ir.expression.binary_operation import BinaryOperation
 from ...ast.ir.expression.identifier import Identifier
 from ...ast.ir.expression.member_access import MemberAccess
+from ...ast.ir.expression.unary_operation import UnaryOperation
 from ...ast.ir.meta.identifier_path import IdentifierPath
 from ...ast.ir.type_name.user_defined_type_name import UserDefinedTypeName
 from ...core.solidity_version import SemanticVersion
@@ -182,6 +184,11 @@ def _get_results_from_node(
             return None
         node = external_reference.referenced_declaration
         original_node_location = external_reference.byte_location
+    elif (
+        isinstance(original_node, (UnaryOperation, BinaryOperation))
+        and original_node.function is not None
+    ):
+        node = original_node.function
     else:
         node = original_node
 

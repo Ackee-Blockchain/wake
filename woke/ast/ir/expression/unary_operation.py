@@ -1,10 +1,11 @@
-from functools import lru_cache
+from functools import lru_cache, partial
 from typing import Iterator, Optional, Set, Tuple
 
 from woke.ast.enums import ModifiesStateFlag, UnaryOpOperator
 from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.declaration.function_definition import FunctionDefinition
 from woke.ast.ir.expression.abc import ExpressionAbc
+from woke.ast.ir.reference_resolver import CallbackParams
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import AstNodeId, SolcUnaryOperation
 
@@ -35,10 +36,23 @@ class UnaryOperation(ExpressionAbc):
             init, unary_operation.sub_expression, self
         )
         self._function_id = unary_operation.function
+        if self._function_id is not None:
+            init.reference_resolver.register_post_process_callback(self._post_process)
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
         yield from self._sub_expression
+
+    def _post_process(self, callback_params: CallbackParams):
+        function = self.function
+        assert function is not None
+        function.register_reference(self)
+        self._reference_resolver.register_destroy_callback(
+            self.file, partial(self._destroy, function)
+        )
+
+    def _destroy(self, function: FunctionDefinition) -> None:
+        function.unregister_reference(self)
 
     @property
     def parent(self) -> SolidityAbc:

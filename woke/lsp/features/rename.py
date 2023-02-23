@@ -7,8 +7,10 @@ from typing import DefaultDict, List, Optional, Union
 import woke.ast.ir.yul as yul
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.declaration.abc import DeclarationAbc
+from woke.ast.ir.expression.binary_operation import BinaryOperation
 from woke.ast.ir.expression.identifier import Identifier
 from woke.ast.ir.expression.member_access import MemberAccess
+from woke.ast.ir.expression.unary_operation import UnaryOperation
 from woke.ast.ir.meta.identifier_path import IdentifierPath, IdentifierPathPart
 from woke.ast.ir.statement.inline_assembly import ExternalReference
 from woke.ast.ir.type_name.user_defined_type_name import UserDefinedTypeName
@@ -84,12 +86,13 @@ def _generate_workspace_edit(
     changes_by_file: DefaultDict[Path, List[TextEdit]] = defaultdict(list)
 
     for reference in declaration.get_all_references(True):
-        changes_by_file[reference.file].append(
-            TextEdit(
-                range=_generate_reference_location(reference, context),
-                new_text=new_name,
+        if not isinstance(reference, (UnaryOperation, BinaryOperation)):
+            changes_by_file[reference.file].append(
+                TextEdit(
+                    range=_generate_reference_location(reference, context),
+                    new_text=new_name,
+                )
             )
-        )
 
     changes: DefaultDict[DocumentUri, List[TextEdit]] = defaultdict(list)
     document_changes = []

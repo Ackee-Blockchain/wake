@@ -9,8 +9,10 @@ from woke.ast.ir.declaration.abc import DeclarationAbc
 from woke.ast.ir.declaration.function_definition import FunctionDefinition
 from woke.ast.ir.declaration.modifier_definition import ModifierDefinition
 from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
+from woke.ast.ir.expression.binary_operation import BinaryOperation
 from woke.ast.ir.expression.identifier import Identifier
 from woke.ast.ir.expression.member_access import MemberAccess
+from woke.ast.ir.expression.unary_operation import UnaryOperation
 from woke.ast.ir.meta.identifier_path import IdentifierPath
 from woke.ast.ir.type_name.user_defined_type_name import UserDefinedTypeName
 from woke.lsp.common_structures import (
@@ -85,6 +87,11 @@ def _get_results_from_node(
         if external_reference is None:
             return None
         node = external_reference.referenced_declaration
+    elif (
+        isinstance(original_node, (UnaryOperation, BinaryOperation))
+        and original_node.function is not None
+    ):
+        node = original_node.function
     else:
         node = original_node
 
