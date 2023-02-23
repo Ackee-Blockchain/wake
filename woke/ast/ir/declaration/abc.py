@@ -8,6 +8,8 @@ if TYPE_CHECKING:
     from ..meta.identifier_path import IdentifierPathPart
     from ..expression.member_access import MemberAccess
     from ..statement.inline_assembly import ExternalReference
+    from ..expression.unary_operation import UnaryOperation
+    from ..expression.binary_operation import BinaryOperation
 
 from woke.ast.ir.abc import SolidityAbc
 from woke.ast.ir.utils import IrInitTuple
@@ -42,9 +44,19 @@ class DeclarationAbc(SolidityAbc, ABC):
     """
     Abstract base class for all Solidity declarations.
     """
+
     _name: str
     _name_location: Optional[Tuple[int, int]]
-    _references: Set[Union[Identifier, IdentifierPathPart, MemberAccess, ExternalReference]]
+    _references: Set[
+        Union[
+            Identifier,
+            IdentifierPathPart,
+            MemberAccess,
+            ExternalReference,
+            UnaryOperation,
+            BinaryOperation,
+        ]
+    ]
 
     def __init__(
         self, init: IrInitTuple, solc_node: SolcDeclarationUnion, parent: SolidityAbc
@@ -61,15 +73,47 @@ class DeclarationAbc(SolidityAbc, ABC):
             )
         self._references = set()
 
-    def register_reference(self, reference: Union[Identifier, IdentifierPathPart, MemberAccess, ExternalReference]):
+    def register_reference(
+        self,
+        reference: Union[
+            Identifier,
+            IdentifierPathPart,
+            MemberAccess,
+            ExternalReference,
+            UnaryOperation,
+            BinaryOperation,
+        ],
+    ):
         self._references.add(reference)
 
-    def unregister_reference(self, reference: Union[Identifier, IdentifierPathPart, MemberAccess, ExternalReference]):
+    def unregister_reference(
+        self,
+        reference: Union[
+            Identifier,
+            IdentifierPathPart,
+            MemberAccess,
+            ExternalReference,
+            UnaryOperation,
+            BinaryOperation,
+        ],
+    ):
         self._references.remove(reference)
 
     def get_all_references(
         self, include_declarations: bool
-    ) -> Iterator[Union[DeclarationAbc, Union[Identifier, IdentifierPathPart, MemberAccess, ExternalReference]]]:
+    ) -> Iterator[
+        Union[
+            DeclarationAbc,
+            Union[
+                Identifier,
+                IdentifierPathPart,
+                MemberAccess,
+                ExternalReference,
+                UnaryOperation,
+                BinaryOperation,
+            ],
+        ]
+    ]:
         if include_declarations:
             yield self
         yield from self.references
@@ -134,7 +178,18 @@ class DeclarationAbc(SolidityAbc, ABC):
         return self._name_location
 
     @property
-    def references(self) -> FrozenSet[Union[Identifier, IdentifierPathPart, MemberAccess, ExternalReference]]:
+    def references(
+        self,
+    ) -> FrozenSet[
+        Union[
+            Identifier,
+            IdentifierPathPart,
+            MemberAccess,
+            ExternalReference,
+            UnaryOperation,
+            BinaryOperation,
+        ]
+    ]:
         """
         Returns:
             Set of all IR nodes referencing to this declaration.

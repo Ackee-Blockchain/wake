@@ -27,6 +27,8 @@ if TYPE_CHECKING:
     from ..expression.member_access import MemberAccess
     from ..meta.identifier_path import IdentifierPathPart
     from ..statement.inline_assembly import ExternalReference
+    from ..expression.unary_operation import UnaryOperation
+    from ..expression.binary_operation import BinaryOperation
 
 from woke.ast.enums import Visibility
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -143,6 +145,8 @@ class ModifierDefinition(DeclarationAbc):
             IdentifierPathPart,
             MemberAccess,
             ExternalReference,
+            UnaryOperation,
+            BinaryOperation,
         ]
     ]:
         processed_declarations: Set[ModifierDefinition] = {self}

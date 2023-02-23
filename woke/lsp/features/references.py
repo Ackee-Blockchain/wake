@@ -5,8 +5,10 @@ import woke.ast.ir.yul as yul
 from woke.ast.enums import GlobalSymbolsEnum
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.declaration.abc import DeclarationAbc
+from woke.ast.ir.expression.binary_operation import BinaryOperation
 from woke.ast.ir.expression.identifier import Identifier
 from woke.ast.ir.expression.member_access import MemberAccess
+from woke.ast.ir.expression.unary_operation import UnaryOperation
 from woke.ast.ir.meta.identifier_path import IdentifierPath, IdentifierPathPart
 from woke.ast.ir.statement.inline_assembly import ExternalReference
 from woke.ast.ir.type_name.user_defined_type_name import UserDefinedTypeName
@@ -50,6 +52,8 @@ def _generate_reference_location(
         IdentifierPathPart,
         MemberAccess,
         ExternalReference,
+        UnaryOperation,
+        BinaryOperation,
         DeclarationAbc,
     ],
     context: LspContext,
@@ -132,6 +136,11 @@ async def references(
         if external_reference is None:
             return None
         node = external_reference.referenced_declaration
+    elif (
+        isinstance(node, (UnaryOperation, BinaryOperation))
+        and node.function is not None
+    ):
+        node = node.function
 
     if not isinstance(node, DeclarationAbc):
         return None
