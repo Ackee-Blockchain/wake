@@ -31,7 +31,9 @@ if platform.system() != "Windows":
 
 @click.group()
 @click.option("--debug/--no-debug", default=False)
-@click.option("--profile", is_flag=True, default=False)
+@click.option(
+    "--profile", is_flag=True, default=False, help="Enable profiling using cProfile."
+)
 @click.version_option(message="%(version)s", package_name="woke")
 @click.pass_context
 def main(ctx: Context, debug: bool, profile: bool) -> None:

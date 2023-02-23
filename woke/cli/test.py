@@ -6,9 +6,21 @@ import rich_click as click
 
 @click.command(name="test")
 @click.argument("test_path", nargs=-1, type=click.Path(exists=True))
-@click.option("--debug", "-d", is_flag=True, default=False)
+@click.option(
+    "--debug", "-d", is_flag=True, default=False, help="Attach debugger on exception."
+)
+@click.option(
+    "--s/--no-s",
+    "-s",
+    is_flag=True,
+    default=True,
+    help="Show stdout and stderr of test.",
+)
 @click.pass_context
-def run_test(context: click.Context, test_path: Tuple[str, ...], debug: bool) -> None:
+def run_test(
+    context: click.Context, test_path: Tuple[str, ...], debug: bool, s: bool
+) -> None:
+    """Execute Woke tests using pytest."""
     import pytest
 
     from woke.config import WokeConfig
@@ -28,4 +40,8 @@ def run_test(context: click.Context, test_path: Tuple[str, ...], debug: bool) ->
 
         set_exception_handler(attach_debugger)
 
-    sys.exit(pytest.main(list(test_path) + ["-s"], plugins=[PytestWokePlugin(config)]))
+    args = list(test_path)
+    if s:
+        args.append("-s")
+
+    sys.exit(pytest.main(args, plugins=[PytestWokePlugin(config)]))

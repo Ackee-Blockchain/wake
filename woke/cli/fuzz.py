@@ -42,7 +42,7 @@ def run_fuzz(
     seeds: Tuple[str],
     passive: bool,
 ) -> None:
-    """Run Woke fuzzer."""
+    """Run a Woke test using multiple processes."""
 
     from woke.testing.fuzzing.fuzzer import fuzz
 

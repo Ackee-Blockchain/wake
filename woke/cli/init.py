@@ -138,6 +138,6 @@ async def run_init_pytypes(
 )
 @click.pass_context
 def init_pytypes(ctx: Context, return_tx: bool, warnings: bool, watch: bool) -> None:
-    """Generate Python types from Solidity sources"""
+    """Generate Python types from Solidity sources."""
     config: WokeConfig = ctx.obj["config"]
     asyncio.run(run_init_pytypes(config, return_tx, warnings, watch))
