@@ -35,7 +35,7 @@ class UsingForDirective(SolidityAbc):
         }
 
         function sub(I8 a, I8 b) pure returns (I8) {
-            return a - b;
+            return I8.wrap(I8.unwrap(a) - I8.unwrap(b));
         }
 
         library SafeMath {
@@ -45,10 +45,11 @@ class UsingForDirective(SolidityAbc):
             }
         }
 
+        using {sub as -} for I8 global;
+
         contract C {
             using SafeMath for uint;
             using {add} for uint;
-            using {sub as -} for I8;
         }
         ```
     """
