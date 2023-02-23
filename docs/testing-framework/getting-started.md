@@ -38,6 +38,11 @@ This command will create a `pytypes` directory in the current working directory.
 
 When a compilation error occurs, Woke generates `pytypes` for the contracts that were successfully compiled. `pytypes` for the contracts that failed to compile are not generated.
 
+!!! warning "Name collisions in `pytypes`"
+    In some cases, names of Solidity types may be a keyword in Python or otherwise reserved name. In such cases, Woke will append an underscore to the name of the type. For example, `class` will be renamed to `class_`.
+
+    This also applies to overloaded functions. For example, if a contract has a function `foo` that takes an argument of type `uint256` and another function `foo` that takes an argument of type `uint8`, the generated `pytypes` will contain two functions `foo` and `foo_`.
+
 ## Writing the first test
 
 !!! tip
