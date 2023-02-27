@@ -35,6 +35,7 @@ theme:
 nav:
   - Installation: 'index.md'
   - Configuration: 'configuration.md'
+  - Compilation: 'compilation.md'
   - Testing framework:
       - Overview: 'testing-framework/overview.md'
       - Basics:
