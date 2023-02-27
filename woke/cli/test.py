@@ -44,4 +44,12 @@ def run_test(
     if s:
         args.append("-s")
 
+    # disable pytest-brownie
+    args.append("-p")
+    args.append("no:pytest-brownie")
+
+    # disable ape_test
+    args.append("-p")
+    args.append("no:ape_test")
+
     sys.exit(pytest.main(args, plugins=[PytestWokePlugin(config)]))
