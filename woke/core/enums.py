@@ -1,7 +1,7 @@
-import enum
+from woke.utils import StrEnum
 
 
-class EvmVersionEnum(str, enum.Enum):
+class EvmVersionEnum(StrEnum):
     HOMESTEAD = "homestead"
     TANGERINE_WHISTLE = "tangerineWhistle"
     SPURIOUS_DRAGON = "spuriousDragon"

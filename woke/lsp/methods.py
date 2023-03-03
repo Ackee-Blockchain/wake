@@ -1,7 +1,7 @@
-import enum
+from woke.utils import StrEnum
 
 
-class RequestMethodEnum(str, enum.Enum):
+class RequestMethodEnum(StrEnum):
     # General
     INITIALIZE = "initialize"
     INITIALIZED = "initialized"  # Notification

@@ -1,8 +1,8 @@
-from enum import Enum
 from typing import Any, List, Optional, Union
 
 from woke.lsp.common_structures import ExecuteCommandOptions, WorkspaceSymbolOptions
 from woke.lsp.document_sync import TextDocumentSyncKind, TextDocumentSyncOptions
+from woke.utils import StrEnum
 
 from .features.code_lens import CodeLensOptions
 from .features.definition import DefinitionOptions
@@ -26,7 +26,7 @@ from .features.type_hierarchy import (
 from .lsp_data_model import LspModel
 
 
-class PositionEncodingKind(str, Enum):
+class PositionEncodingKind(StrEnum):
     UTF8 = "utf-8"
     UTF16 = "utf-16"
     UTF32 = "utf-32"
@@ -37,7 +37,7 @@ class WorkspaceFoldersServerCapabilities(LspModel):
     change_notifications: Optional[Union[str, bool]] = None
 
 
-class FileOperationPatternKind(Enum):
+class FileOperationPatternKind(StrEnum):
     FILE = "file"
     FOLDER = "folder"
 

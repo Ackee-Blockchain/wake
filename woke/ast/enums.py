@@ -1,7 +1,9 @@
-import enum
+from enum import IntEnum, IntFlag
+
+from woke.utils import StrEnum
 
 
-class GlobalSymbolsEnum(enum.IntEnum):
+class GlobalSymbolsEnum(IntEnum):
     """
     Global symbols of the Solidity language. Symbols with identifiers from `-1` to `-99` are codified by the compiler and can only be referenced by [Identifier][woke.ast.ir.expression.identifier.Identifier] nodes.
     Other symbols are not officially codified by the compiler, but Woke also defines identifiers for them. These symbols can only be referenced by [MemberAccess][woke.ast.ir.expression.member_access.MemberAccess] nodes.
@@ -94,7 +96,7 @@ class GlobalSymbolsEnum(enum.IntEnum):
 
 
 # Contracts
-class ContractKind(str, enum.Enum):
+class ContractKind(StrEnum):
     """
     Kind of a [ContractDefinition][woke.ast.ir.declaration.contract_definition.ContractDefinition] declaration node.
     """
@@ -105,7 +107,7 @@ class ContractKind(str, enum.Enum):
 
 
 # State variables
-class Mutability(str, enum.Enum):
+class Mutability(StrEnum):
     """
     Mutability of a [VariableDeclaration][woke.ast.ir.declaration.variable_declaration.VariableDeclaration] declaration node.
     """
@@ -116,7 +118,7 @@ class Mutability(str, enum.Enum):
 
 
 # Functions
-class FunctionKind(str, enum.Enum):
+class FunctionKind(StrEnum):
     """
     Kind of a [FunctionDefinition][woke.ast.ir.declaration.function_definition.FunctionDefinition] declaration node.
     """
@@ -131,7 +133,7 @@ class FunctionKind(str, enum.Enum):
     """
 
 
-class Visibility(str, enum.Enum):
+class Visibility(StrEnum):
     """
     Visibility of:
 
@@ -145,7 +147,7 @@ class Visibility(str, enum.Enum):
     PRIVATE = "private"
 
 
-class StateMutability(str, enum.Enum):
+class StateMutability(StrEnum):
     """
     State mutability of:
 
@@ -162,7 +164,7 @@ class StateMutability(str, enum.Enum):
     VIEW = "view"
 
 
-class ModifierInvocationKind(str, enum.Enum):
+class ModifierInvocationKind(StrEnum):
     """
     Kind of a [ModifierInvocation][woke.ast.ir.meta.modifier_invocation.ModifierInvocation] meta node.
     """
@@ -172,7 +174,7 @@ class ModifierInvocationKind(str, enum.Enum):
 
 
 # Literals
-class LiteralKind(str, enum.Enum):
+class LiteralKind(StrEnum):
     """
     Kind of a [Literal][woke.ast.ir.expression.literal.Literal] expression node.
     """
@@ -184,7 +186,7 @@ class LiteralKind(str, enum.Enum):
     UNICODE_STRING = "unicodeString"
 
 
-class YulLiteralValueKind(str, enum.Enum):
+class YulLiteralValueKind(StrEnum):
     """
     Kind of a Yul [Literal][woke.ast.ir.yul.literal.Literal] node.
     """
@@ -195,7 +197,7 @@ class YulLiteralValueKind(str, enum.Enum):
 
 
 # Function call
-class FunctionCallKind(str, enum.Enum):
+class FunctionCallKind(StrEnum):
     """
     Kind of a [FunctionCall][woke.ast.ir.expression.function_call.FunctionCall] expression node.
     """
@@ -209,7 +211,7 @@ class FunctionCallKind(str, enum.Enum):
 
 
 # Compound types
-class DataLocation(str, enum.Enum):
+class DataLocation(StrEnum):
     """
     Data location of a [VariableDeclaration][woke.ast.ir.declaration.variable_declaration.VariableDeclaration] node.
     It also specifies the data location of the following types:
@@ -230,7 +232,7 @@ class DataLocation(str, enum.Enum):
 
 
 # Operations
-class UnaryOpOperator(str, enum.Enum):
+class UnaryOpOperator(StrEnum):
     """
     Unary operation operator used in an [UnaryOperation][woke.ast.ir.expression.unary_operation.UnaryOperation] expression.
     """
@@ -243,7 +245,7 @@ class UnaryOpOperator(str, enum.Enum):
     DELETE = "delete"
 
 
-class AssignmentOperator(str, enum.Enum):
+class AssignmentOperator(StrEnum):
     """
     Assignment operator used in an [Assignment][woke.ast.ir.expression.assignment.Assignment] expression.
     """
@@ -261,7 +263,7 @@ class AssignmentOperator(str, enum.Enum):
     LEFT_SHIFT_EQUALS = r"<<="
 
 
-class BinaryOpOperator(str, enum.Enum):
+class BinaryOpOperator(StrEnum):
     """
     Binary operation operator used in a [BinaryOperation][woke.ast.ir.expression.binary_operation.BinaryOperation] expression.
     """
@@ -288,7 +290,7 @@ class BinaryOpOperator(str, enum.Enum):
 
 
 # Inline assembly
-class InlineAssemblyEvmVersion(str, enum.Enum):
+class InlineAssemblyEvmVersion(StrEnum):
     HOMESTEAD = "homestead"
     TANGERINE_WHISTLE = "tangerineWhistle"
     SPURIOUS_DRAGON = "spuriousDragon"
@@ -301,7 +303,7 @@ class InlineAssemblyEvmVersion(str, enum.Enum):
     PARIS = "paris"
 
 
-class InlineAssemblySuffix(str, enum.Enum):
+class InlineAssemblySuffix(StrEnum):
     SLOT = "slot"
     OFFSET = "offset"
     LENGTH = "length"
@@ -309,11 +311,11 @@ class InlineAssemblySuffix(str, enum.Enum):
     SELECTOR = "selector"
 
 
-class InlineAssemblyFlag(str, enum.Enum):
+class InlineAssemblyFlag(StrEnum):
     MEMORY_SAFE = "memory-safe"
 
 
-class ModifiesStateFlag(enum.IntFlag):
+class ModifiesStateFlag(IntFlag):
     """
     Flag enum describing how an expression ([ExpressionAbc][woke.ast.ir.expression.abc.ExpressionAbc]) or statement ([StatementAbc][woke.ast.ir.statement.abc.StatementAbc]) modifies the blockchain state.
     """
@@ -337,7 +339,7 @@ class ModifiesStateFlag(enum.IntFlag):
     __str__ = __repr__
 
 
-class FunctionTypeKind(str, enum.Enum):
+class FunctionTypeKind(StrEnum):
     """
     Kind of a [Function][woke.ast.types.Function] type.
     """
@@ -391,7 +393,7 @@ class FunctionTypeKind(str, enum.Enum):
     META_TYPE = "metatype"
 
 
-class MagicTypeKind(str, enum.Enum):
+class MagicTypeKind(StrEnum):
     """
     Kind of a [Magic][woke.ast.types.Magic] type.
     """

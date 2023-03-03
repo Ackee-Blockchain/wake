@@ -1,4 +1,3 @@
-import enum
 import json
 import logging
 import platform
@@ -8,6 +7,7 @@ from typing import Any, Dict, List, Optional, Union
 from typing_extensions import TypedDict
 
 from woke.config import WokeConfig
+from woke.utils import StrEnum
 
 from .abc import ProtocolAbc
 from .http import HttpProtocol
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
 
 
-class BlockEnum(str, enum.Enum):
+class BlockEnum(StrEnum):
     EARLIEST = "earliest"
     FINALIZED = "finalized"
     SAFE = "safe"

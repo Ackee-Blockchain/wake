@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import enum
 import logging
 from typing import Dict, List, Optional, Tuple, Union
 
@@ -23,11 +22,12 @@ from woke.ast.ir.statement.revert_statement import RevertStatement
 from woke.ast.ir.statement.try_statement import TryStatement
 from woke.ast.ir.statement.unchecked_block import UncheckedBlock
 from woke.ast.ir.statement.while_statement import WhileStatement
+from woke.utils import StrEnum
 
 logger = logging.getLogger(__name__)
 
 
-class TransitionCondition(str, enum.Enum):
+class TransitionCondition(StrEnum):
     IS_TRUE = "is true"
     IS_FALSE = "is false"
     ALWAYS = "always"
