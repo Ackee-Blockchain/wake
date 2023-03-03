@@ -52,4 +52,8 @@ def run_test(
     args.append("-p")
     args.append("no:ape_test")
 
+    # disable pytest_ethereum
+    args.append("-p")
+    args.append("no:pytest_ethereum")
+
     sys.exit(pytest.main(args, plugins=[PytestWokePlugin(config)]))
