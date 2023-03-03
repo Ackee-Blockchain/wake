@@ -1,4 +1,3 @@
-import enum
 import re
 from dataclasses import astuple
 from pathlib import Path
@@ -9,6 +8,7 @@ from pydantic.dataclasses import dataclass
 
 from woke.core.enums import EvmVersionEnum
 from woke.core.solidity_version import SolidityVersion
+from woke.utils import StrEnum
 
 
 class WokeConfigModel(BaseModel):
@@ -33,14 +33,14 @@ class SolcRemapping:
         return f"{self.context or ''}:{self.prefix}={self.target or ''}"
 
 
-class GraphsDirection(str, enum.Enum):
+class GraphsDirection(StrEnum):
     TopBottom = "TB"
     BottomTop = "BT"
     LeftRight = "LR"
     RightLeft = "RL"
 
 
-class ImportsDirection(str, enum.Enum):
+class ImportsDirection(StrEnum):
     ImportedToImporting = "imported-to-importing"
     ImportingToImported = "importing-to-imported"
 

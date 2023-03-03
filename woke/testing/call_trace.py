@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import enum
 import importlib
 import reprlib
 from collections import ChainMap
@@ -26,6 +25,7 @@ from woke.testing.core import (
 )
 from woke.testing.internal import read_from_memory
 from woke.testing.json_rpc.communicator import TxParams
+from woke.utils import StrEnum
 
 from . import hardhat_console
 
@@ -33,7 +33,7 @@ if TYPE_CHECKING:
     from .transactions import TransactionAbc
 
 
-class CallTraceKind(str, enum.Enum):
+class CallTraceKind(StrEnum):
     CALL = "CALL"
     DELEGATECALL = "DELEGATECALL"
     STATICCALL = "STATICCALL"

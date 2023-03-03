@@ -1,29 +1,29 @@
-import enum
 from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Extra, Field, root_validator
 
 from woke.core.enums import EvmVersionEnum
+from woke.utils import StrEnum
 
 __doc__ = """Solc standard JSON input data model as described by https://docs.soliditylang.org/en/v0.8.12/using-the-compiler.html#input-description"""
 
 
-class SolcInputLanguageEnum(str, enum.Enum):
+class SolcInputLanguageEnum(StrEnum):
     SOLIDITY = "Solidity"
     YUL = "Yul"
 
 
-class SolcStopAfterEnum(str, enum.Enum):
+class SolcStopAfterEnum(StrEnum):
     PARSING = "parsing"
 
 
-class MetadataBytecodeHashEnum(str, enum.Enum):
+class MetadataBytecodeHashEnum(StrEnum):
     NONE = "none"
     IPFS = "ipfs"
     BZZR1 = "bzzr1"
 
 
-class SolcOutputSelectionEnum(str, enum.Enum):
+class SolcOutputSelectionEnum(StrEnum):
     AST = "ast"
     ABI = "abi"
     DEVDOC = "devdoc"
@@ -89,25 +89,25 @@ class SolcOutputSelectionEnum(str, enum.Enum):
     """All solc outputs including AST"""
 
 
-class ModelCheckerEngineEnum(str, enum.Enum):
+class ModelCheckerEngineEnum(StrEnum):
     ALL = "all"
     BMC = "bmc"
     CHC = "chc"
     NONE = "none"
 
 
-class ModelCheckerInvariantsEnum(str, enum.Enum):
+class ModelCheckerInvariantsEnum(StrEnum):
     CONTRACT = "contract"
     REENTRANCY = "reentrancy"
 
 
-class ModelCheckerSolversEnum(str, enum.Enum):
+class ModelCheckerSolversEnum(StrEnum):
     CVC4 = "cvc4"
     SMTLIB2 = "smtlib2"
     Z3 = "z3"
 
 
-class ModelCheckerTargetsEnum(str, enum.Enum):
+class ModelCheckerTargetsEnum(StrEnum):
     CONSTANT_CONDITION = "constantCondition"
     UNDERFLOW = "underflow"
     OVERFLOW = "overflow"
@@ -166,7 +166,7 @@ class SolcInputOptimizerSettings(SolcInputModel):
     details: Optional[SolcInputOptimizerDetailsSettings] = None
 
 
-class SolcInputDebugRevertStringsSettingsEnum(str, enum.Enum):
+class SolcInputDebugRevertStringsSettingsEnum(StrEnum):
     """How to treat revert (and require) reason strings."""
 
     DEFAULT = "default"
@@ -179,7 +179,7 @@ class SolcInputDebugRevertStringsSettingsEnum(str, enum.Enum):
     """Even append further information to user-supplied revert strings (not yet implemented)"""
 
 
-class SolcInputDebugInfoSettingsEnum(str, enum.Enum):
+class SolcInputDebugInfoSettingsEnum(StrEnum):
     """How much extra debug information to include in comments in the produced EVM assembly and Yul code."""
 
     LOCATION = "location"

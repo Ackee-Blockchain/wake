@@ -9,7 +9,7 @@ from bdb import BdbQuit
 from collections import ChainMap, defaultdict
 from contextlib import contextmanager
 from copy import deepcopy
-from enum import Enum, IntEnum
+from enum import IntEnum
 from types import MappingProxyType
 from typing import (
     TYPE_CHECKING,
@@ -41,6 +41,7 @@ from woke.testing.chain_interfaces import (
     GanacheChainInterface,
     HardhatChainInterface,
 )
+from woke.utils import StrEnum
 
 from ..utils.keyed_default_dict import KeyedDefaultDict
 from . import hardhat_console
@@ -53,7 +54,7 @@ if TYPE_CHECKING:
     from .transactions import LegacyTransaction, TransactionAbc
 
 
-class RequestType(str, Enum):
+class RequestType(StrEnum):
     CALL = "call"
     TX = "tx"
 

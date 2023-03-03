@@ -1,7 +1,7 @@
-import enum
+from woke.utils import StrEnum
 
 
-class TraceValueEnum(str, enum.Enum):
+class TraceValueEnum(StrEnum):
     OFF = "off"
     MESSAGES = "messages"
     VERBOSE = "verbose"

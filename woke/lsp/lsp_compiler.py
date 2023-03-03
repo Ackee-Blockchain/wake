@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import difflib
-import enum
 import logging
 import re
 import threading
@@ -29,6 +28,7 @@ from woke.compiler.exceptions import CompilationError
 
 from ..analysis.detectors import detect
 from ..core.solidity_version import SolidityVersionRange, SolidityVersionRanges
+from ..utils import StrEnum
 from ..utils.file_utils import is_relative_to
 
 if TYPE_CHECKING:
@@ -111,7 +111,7 @@ class VersionedFile(NamedTuple):
     version: Optional[int]
 
 
-class CustomFileChangeCommand(str, enum.Enum):
+class CustomFileChangeCommand(StrEnum):
     FORCE_RECOMPILE = "force_recompile"
     FORCE_RERUN_DETECTORS = "force_rerun_detectors"
 

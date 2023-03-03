@@ -1,5 +1,7 @@
-from enum import Enum, IntEnum
+from enum import IntEnum
 from typing import Any, Dict, List, NewType, Optional, Tuple, Union
+
+from woke.utils import StrEnum
 
 from .lsp_data_model import LspModel
 
@@ -458,13 +460,13 @@ class WorkspaceEdit(LspModel):
     """
 
 
-class ResourceOperationKind(Enum):
+class ResourceOperationKind(StrEnum):
     CREATE = "create"
     RENAME = "rename"
     DELETE = "delete"
 
 
-class FailureHandlingKind(Enum):
+class FailureHandlingKind(StrEnum):
     ABORT = "abort"
     TRANSACTIONAL = "transactional"
     TEXT_ONLY_TRANSACTIONAL = "textOnlyTransactional"
@@ -582,7 +584,7 @@ class TextDocumentRegistrationOptions(LspModel):
     """
 
 
-class MarkupKind(str, Enum):
+class MarkupKind(StrEnum):
     PLAIN_TEXT = "plaintext"
     MARKDOWN = "markdown"
 

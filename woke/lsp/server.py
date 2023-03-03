@@ -3,7 +3,6 @@ import logging
 import traceback
 import uuid
 from copy import deepcopy
-from enum import Enum
 from pathlib import Path
 from typing import (
     Any,
@@ -19,6 +18,8 @@ from typing import (
 )
 
 from pydantic.error_wrappers import ValidationError
+
+from woke.utils import StrEnum
 
 from ..config import WokeConfig
 from .commands import (
@@ -120,7 +121,7 @@ logger = logging.getLogger(__name__)
 ConfigPath = Tuple[Union[str, int], ...]
 
 
-class CommandsEnum(str, Enum):
+class CommandsEnum(StrEnum):
     GENERATE_CFG = "woke.generate.control_flow_graph"
     GENERATE_IMPORTS_GRAPH = "woke.generate.imports_graph"
     GENERATE_INHERITANCE_GRAPH = "woke.generate.inheritance_graph"
