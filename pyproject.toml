@@ -43,7 +43,7 @@ mkdocs-material = { version = "^9", optional = true }
 mkdocstrings = { version = "^0.19", extras = ["python"], optional = true }
 pymdown-extensions = { version = "^9", optional = true }
 pygments = { version = "^2", optional = true }
-mike = { version = "^1", optional = true }
+mike = { git = "https://github.com/jimporter/mike.git" }
 isort = { version = "^5", optional = true }
 
 [tool.poetry.extras]
