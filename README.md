@@ -16,7 +16,7 @@ Features:
 
 - [Python](https://www.python.org/downloads/release/python-3910/) (version 3.7 or higher)
 
-> :warning: Python 3.11 is not supported yet.
+> :warning: Python 3.11 is experimentally supported.
 
 ## Installation
 

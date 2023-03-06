@@ -12,7 +12,7 @@ Woke is a Python-based development and testing framework for Solidity.
 Woke requires Python 3.7 or higher.
 
 !!! warning
-    Python 3.11 is not currently supported.
+    Python 3.11 is experimentally supported.
 
 ### Using pip
 
