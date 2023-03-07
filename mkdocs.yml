@@ -80,7 +80,8 @@ plugins:
           - https://networkx.org/documentation/stable/objects.inv
         options:
           show_root_heading: true
-- mike
+- mike:
+    canonical_version: latest
 
 markdown_extensions:
   - def_list
