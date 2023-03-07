@@ -49,6 +49,7 @@ nav:
       - Cross-chain testing: 'testing-framework/cross-chain-testing.md'
       - Debugging: 'testing-framework/debugging.md'
       - Performance considerations: 'testing-framework/performance-considerations.md'
+      - Migrating from Ape & Brownie: 'testing-framework/migrating-from-ape-and-brownie.md'
   - Detectors: 'detectors.md'
   - LSP server: 'language-server.md'
   - Solc Version Manager: 'solc-version-manager.md'
