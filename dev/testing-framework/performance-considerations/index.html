@@ -18,7 +18,7 @@
         <link rel="prev" href="../debugging/">
       
       
-        <link rel="next" href="../../detectors/">
+        <link rel="next" href="../migrating-from-ape-and-brownie/">
       
       <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.11">
@@ -318,6 +318,8 @@
         
           
         
+          
+        
       
       
         <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
@@ -575,6 +577,20 @@
 
             
           
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../migrating-from-ape-and-brownie/" class="md-nav__link">
+        Migrating from Ape & Brownie
+      </a>
+    </li>
+  
+
+            
+          
         </ul>
       </nav>
     </li>
@@ -704,7 +720,7 @@
 </ol>
 <h2 id="profiling-tests">Profiling tests<a class="headerlink" href="#profiling-tests" title="Permanent link">#</a></h2>
 <p>Every Woke command has a <code>--profile</code> flag that can be used to profile the test execution. The profiling results are saved into the <code>woke.prof</code> file.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>woke --profile <span class="nb">test</span> tests/test_counter.py
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>woke<span class="w"> </span>--profile<span class="w"> </span><span class="nb">test</span><span class="w"> </span>tests/test_counter.py
 </code></pre></div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -716,7 +732,7 @@
 <p class="admonition-title">Analyzing <code>woke.prof</code></p>
 <p><a href="https://github.com/jrfonseca/gprof2dot">gprof2dot</a> is a great tool for visualizing the profiling results.
 Together with <a href="https://graphviz.org/">Graphviz</a>, it can be used to generate a call graph of the test execution.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>gprof2dot -f pstats woke.prof <span class="p">|</span> dot -Tsvg -o woke.prof.svg
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>gprof2dot<span class="w"> </span>-f<span class="w"> </span>pstats<span class="w"> </span>woke.prof<span class="w"> </span><span class="p">|</span><span class="w"> </span>dot<span class="w"> </span>-Tsvg<span class="w"> </span>-o<span class="w"> </span>woke.prof.svg
 </code></pre></div>
 </div>
 

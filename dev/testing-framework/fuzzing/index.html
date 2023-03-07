@@ -318,6 +318,8 @@
         
           
         
+          
+        
       
       
         <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
@@ -685,6 +687,20 @@
     <li class="md-nav__item">
       <a href="../performance-considerations/" class="md-nav__link">
         Performance considerations
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../migrating-from-ape-and-brownie/" class="md-nav__link">
+        Migrating from Ape & Brownie
       </a>
     </li>
   
@@ -1234,7 +1250,7 @@ It accepts the following keyword arguments:</p>
 <h2 id="launching-tests-in-parallel">Launching tests in parallel<a class="headerlink" href="#launching-tests-in-parallel" title="Permanent link">#</a></h2>
 <p>Woke testing framework allows running the same test in parallel with different random seeds.
 Multiprocess tests are launched using the <code>woke fuzz</code> command:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>woke fuzz tests/test_counter_fuzz.py -n <span class="m">5</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>woke<span class="w"> </span>fuzz<span class="w"> </span>tests/test_counter_fuzz.py<span class="w"> </span>-n<span class="w"> </span><span class="m">5</span>
 </code></pre></div>
 <div class="admonition info">
 <p class="admonition-title">Info</p>
@@ -1257,7 +1273,7 @@ Standard output and standard error of all processes are redirected to the <code>
 <p class="admonition-title">Reproducing a failed test</p>
 <p>For every process, Woke generates a random seed that is used to initialize the random number generator.
 The seed is printed to the console and can be used to reproduce the test failure:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>woke fuzz tests/test_counter_fuzz.py -n <span class="m">5</span> -s 62061e838798ad0f
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>woke<span class="w"> </span>fuzz<span class="w"> </span>tests/test_counter_fuzz.py<span class="w"> </span>-n<span class="w"> </span><span class="m">5</span><span class="w"> </span>-s<span class="w"> </span>62061e838798ad0f
 </code></pre></div>
 <p>A random seed can be specified using the <code>-s</code> flag. Multiple <code>-s</code> flags are allowed.</p>
 </div>

@@ -312,6 +312,8 @@
         
           
         
+          
+        
       
       
         <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
@@ -528,6 +530,20 @@
 
             
           
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../testing-framework/migrating-from-ape-and-brownie/" class="md-nav__link">
+        Migrating from Ape & Brownie
+      </a>
+    </li>
+  
+
+            
+          
         </ul>
       </nav>
     </li>
@@ -723,7 +739,7 @@
 <div class="admonition example">
 <p class="admonition-title">Example</p>
 <p><code>GoLeft</code>, <code>GoRight</code>, <code>GoStraight</code>, <code>SitStill</code> in the following enum definition:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kt">enum</span><span class="w"> </span><span class="nv">ActionChoices</span><span class="w"> </span><span class="p">{</span><span class="w"> </span>GoLeft<span class="p">,</span><span class="w"> </span>GoRight<span class="p">,</span><span class="w"> </span>GoStraight<span class="p">,</span><span class="w"> </span>SitStill<span class="w"> </span><span class="p">}</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kt">enum</span><span class="w"> </span><span class="nv">ActionChoices</span><span class="w"> </span><span class="p">{</span><span class="w"> </span>GoLeft<span class="p">,</span><span class="w"> </span>GoRight<span class="p">,</span><span class="w"> </span>GoStraight<span class="p">,</span><span class="w"> </span>SitStill<span class="w"> </span><span class="p">}</span>
 </code></pre></div></p>
 </div>
 
@@ -765,7 +781,7 @@
 <span class="normal"><a href="#__codelineno-0-50">50</a></span>
 <span class="normal"><a href="#__codelineno-0-51">51</a></span>
 <span class="normal"><a href="#__codelineno-0-52">52</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-18" name="__codelineno-0-18"></a><span class="k">class</span> <span class="nc">EnumValue</span><span class="p">(</span><span class="n">DeclarationAbc</span><span class="p">):</span>
-<a id="__codelineno-0-19" name="__codelineno-0-19"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-20" name="__codelineno-0-20"></a><span class="sd">    Definition of an enum value inside an enum definition.</span>
 <a id="__codelineno-0-21" name="__codelineno-0-21"></a>
 <a id="__codelineno-0-22" name="__codelineno-0-22"></a><span class="sd">    !!! example</span>
@@ -786,7 +802,7 @@
 <a id="__codelineno-0-37" name="__codelineno-0-37"></a>
 <a id="__codelineno-0-38" name="__codelineno-0-38"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-39" name="__codelineno-0-39"></a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EnumDefinition</span><span class="p">:</span>
-<a id="__codelineno-0-40" name="__codelineno-0-40"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-41" name="__codelineno-0-41"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-42" name="__codelineno-0-42"></a><span class="sd">            Parent IR node.</span>
 <a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="sd">        &quot;&quot;&quot;</span>

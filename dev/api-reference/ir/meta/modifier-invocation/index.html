@@ -312,6 +312,8 @@
         
           
         
+          
+        
       
       
         <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
@@ -522,6 +524,20 @@
     <li class="md-nav__item">
       <a href="../../../../testing-framework/performance-considerations/" class="md-nav__link">
         Performance considerations
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../testing-framework/migrating-from-ape-and-brownie/" class="md-nav__link">
+        Migrating from Ape & Brownie
       </a>
     </li>
   
@@ -747,17 +763,17 @@
 <div class="admonition example">
 <p class="admonition-title">Example</p>
 <ul>
-<li><code class="highlight">IERC20<span class="p">(</span><span class="s2">&quot;MyToken&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;MTK&quot;</span><span class="p">)</span><span class="w"></span></code> (<a class="autorefs autorefs-internal" href="../../enums/#woke.ast.enums.ModifierInvocationKind.BASE_CONSTRUCTOR_SPECIFIER">ModifierInvocationKind.BASE_CONSTRUCTOR_SPECIFIER</a>),</li>
-<li><code class="highlight">initializer<span class="w"></span></code> (<a class="autorefs autorefs-internal" href="../../enums/#woke.ast.enums.ModifierInvocationKind.MODIFIER_INVOCATION">ModifierInvocationKind.MODIFIER_INVOCATION</a>)</li>
+<li><code class="highlight">IERC20<span class="p">(</span><span class="s2">&quot;MyToken&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;MTK&quot;</span><span class="p">)</span></code> (<a class="autorefs autorefs-internal" href="../../enums/#woke.ast.enums.ModifierInvocationKind.BASE_CONSTRUCTOR_SPECIFIER">ModifierInvocationKind.BASE_CONSTRUCTOR_SPECIFIER</a>),</li>
+<li><code class="highlight">initializer</code> (<a class="autorefs autorefs-internal" href="../../enums/#woke.ast.enums.ModifierInvocationKind.MODIFIER_INVOCATION">ModifierInvocationKind.MODIFIER_INVOCATION</a>)</li>
 </ul>
 <p>in the following code:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kt">import</span><span class="w"> </span>Initializable<span class="w"> </span>from<span class="w"> </span><span class="s2">&quot;@openzeppelin/contracts/proxy/utils/Initializable.sol&quot;</span><span class="p">;</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kt">import</span><span class="w"> </span>Initializable<span class="w"> </span>from<span class="w"> </span><span class="s2">&quot;@openzeppelin/contracts/proxy/utils/Initializable.sol&quot;</span><span class="p">;</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="k">contract</span><span class="w"> </span><span class="ni">MyContract</span><span class="w"> </span><span class="kt">is</span><span class="w"> </span>ERC20<span class="p">,</span><span class="w"> </span>Initializable<span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="kt">constructor</span><span class="p">()</span><span class="w"> </span>ERC20<span class="p">(</span><span class="s2">&quot;MyToken&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;MTK&quot;</span><span class="p">)</span><span class="w"> </span>initializer<span class="w"> </span><span class="p">{</span><span class="w"></span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="k">contract</span><span class="w"> </span><span class="ni">MyContract</span><span class="w"> </span><span class="kt">is</span><span class="w"> </span>ERC20<span class="p">,</span><span class="w"> </span>Initializable<span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="kt">constructor</span><span class="p">()</span><span class="w"> </span>ERC20<span class="p">(</span><span class="s2">&quot;MyToken&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;MTK&quot;</span><span class="p">)</span><span class="w"> </span>initializer<span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">        </span><span class="c1">// ...</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="p">}</span><span class="w"></span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="p">}</span><span class="w"></span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="p">}</span>
 </code></pre></div></p>
 </div>
 
@@ -894,7 +910,7 @@
 <span class="normal"><a href="#__codelineno-0-146">146</a></span>
 <span class="normal"><a href="#__codelineno-0-147">147</a></span>
 <span class="normal"><a href="#__codelineno-0-148">148</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-19" name="__codelineno-0-19"></a><span class="k">class</span> <span class="nc">ModifierInvocation</span><span class="p">(</span><span class="n">SolidityAbc</span><span class="p">):</span>
-<a id="__codelineno-0-20" name="__codelineno-0-20"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-21" name="__codelineno-0-21"></a><span class="sd">    !!! warning</span>
 <a id="__codelineno-0-22" name="__codelineno-0-22"></a><span class="sd">        Also represents a base constructor invocation.</span>
 <a id="__codelineno-0-23" name="__codelineno-0-23"></a><span class="sd">    !!! example</span>
@@ -967,7 +983,7 @@
 <a id="__codelineno-0-90" name="__codelineno-0-90"></a>
 <a id="__codelineno-0-91" name="__codelineno-0-91"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-92" name="__codelineno-0-92"></a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FunctionDefinition</span><span class="p">:</span>
-<a id="__codelineno-0-93" name="__codelineno-0-93"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-93" name="__codelineno-0-93"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-94" name="__codelineno-0-94"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-95" name="__codelineno-0-95"></a><span class="sd">            Parent IR node.</span>
 <a id="__codelineno-0-96" name="__codelineno-0-96"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -975,7 +991,7 @@
 <a id="__codelineno-0-98" name="__codelineno-0-98"></a>
 <a id="__codelineno-0-99" name="__codelineno-0-99"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-100" name="__codelineno-0-100"></a>    <span class="k">def</span> <span class="nf">kind</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModifierInvocationKind</span><span class="p">:</span>
-<a id="__codelineno-0-101" name="__codelineno-0-101"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-101" name="__codelineno-0-101"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-102" name="__codelineno-0-102"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-103" name="__codelineno-0-103"></a><span class="sd">            Kind of the modifier invocation.</span>
 <a id="__codelineno-0-104" name="__codelineno-0-104"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -984,7 +1000,7 @@
 <a id="__codelineno-0-107" name="__codelineno-0-107"></a>
 <a id="__codelineno-0-108" name="__codelineno-0-108"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-109" name="__codelineno-0-109"></a>    <span class="k">def</span> <span class="nf">modifier_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Identifier</span><span class="p">,</span> <span class="n">IdentifierPath</span><span class="p">]:</span>
-<a id="__codelineno-0-110" name="__codelineno-0-110"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-110" name="__codelineno-0-110"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-111" name="__codelineno-0-111"></a><span class="sd">        The returned IR node holds a reference to the [ModifierDefinition][woke.ast.ir.declaration.modifier_definition.ModifierDefinition] declaration of the modifier being invoked in the case of the [ModifierInvocationKind.MODIFIER_INVOCATION][woke.ast.enums.ModifierInvocationKind.MODIFIER_INVOCATION] kind.</span>
 <a id="__codelineno-0-112" name="__codelineno-0-112"></a><span class="sd">        In the case of the [ModifierInvocationKind.BASE_CONSTRUCTOR_SPECIFIER][woke.ast.enums.ModifierInvocationKind.BASE_CONSTRUCTOR_SPECIFIER] kind, the returned IR node holds a reference to the [ContractDefinition][woke.ast.ir.declaration.contract_definition.ContractDefinition] whose constructor is being invoked.</span>
 <a id="__codelineno-0-113" name="__codelineno-0-113"></a><span class="sd">        !!! example</span>
@@ -1001,7 +1017,7 @@
 <a id="__codelineno-0-124" name="__codelineno-0-124"></a>
 <a id="__codelineno-0-125" name="__codelineno-0-125"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-126" name="__codelineno-0-126"></a>    <span class="k">def</span> <span class="nf">arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">ExpressionAbc</span><span class="p">]]:</span>
-<a id="__codelineno-0-127" name="__codelineno-0-127"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-127" name="__codelineno-0-127"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-128" name="__codelineno-0-128"></a><span class="sd">        !!! warning</span>
 <a id="__codelineno-0-129" name="__codelineno-0-129"></a><span class="sd">            Is `None` when there are no curly braces after the modifier name.</span>
 <a id="__codelineno-0-130" name="__codelineno-0-130"></a><span class="sd">            ```solidity</span>
@@ -1055,18 +1071,18 @@
       <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Is <code>None</code> when there are no curly braces after the modifier name.
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kt">constructor</span><span class="p">()</span><span class="w"> </span>initializer<span class="w"> </span><span class="p">{}</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kt">constructor</span><span class="p">()</span><span class="w"> </span>initializer<span class="w"> </span><span class="p">{}</span>
 </code></pre></div></p>
 <p>Is an empty list when there are curly braces but no arguments.
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kt">constructor</span><span class="p">()</span><span class="w"> </span>initializer<span class="p">()</span><span class="w"> </span><span class="p">{}</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kt">constructor</span><span class="p">()</span><span class="w"> </span>initializer<span class="p">()</span><span class="w"> </span><span class="p">{}</span>
 </code></pre></div></p>
 </div>
 <div class="admonition example">
 <p class="admonition-title">Example</p>
-<p><code class="highlight"><span class="s2">&quot;MyToken&quot;</span><span class="w"></span></code> and <code class="highlight"><span class="s2">&quot;MTK&quot;</span><span class="w"></span></code> in the following code:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kt">constructor</span><span class="p">()</span><span class="w"> </span>ERC20<span class="p">(</span><span class="s2">&quot;MyToken&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;MTK&quot;</span><span class="p">)</span><span class="w"> </span>initializer<span class="w"> </span><span class="p">{</span><span class="w"></span>
+<p><code class="highlight"><span class="s2">&quot;MyToken&quot;</span></code> and <code class="highlight"><span class="s2">&quot;MTK&quot;</span></code> in the following code:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kt">constructor</span><span class="p">()</span><span class="w"> </span>ERC20<span class="p">(</span><span class="s2">&quot;MyToken&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;MTK&quot;</span><span class="p">)</span><span class="w"> </span>initializer<span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="c1">// ...</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="p">}</span><span class="w"></span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="p">}</span>
 </code></pre></div></p>
 </div>
 
@@ -1150,9 +1166,9 @@ In the case of the <a class="autorefs autorefs-internal" href="../../enums/#woke
 <div class="admonition example">
 <p class="admonition-title">Example</p>
 <p><code>ERC20</code> and <code>initializer</code> in the following code:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kt">constructor</span><span class="p">()</span><span class="w"> </span>ERC20<span class="p">(</span><span class="s2">&quot;MyToken&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;MTK&quot;</span><span class="p">)</span><span class="w"> </span>initializer<span class="w"> </span><span class="p">{</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kt">constructor</span><span class="p">()</span><span class="w"> </span>ERC20<span class="p">(</span><span class="s2">&quot;MyToken&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;MTK&quot;</span><span class="p">)</span><span class="w"> </span>initializer<span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="c1">// ...</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">}</span><span class="w"></span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">}</span>
 </code></pre></div></p>
 </div>
 

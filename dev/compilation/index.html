@@ -398,6 +398,8 @@
         
           
         
+          
+        
       
       
         <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
@@ -614,6 +616,20 @@
 
             
           
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing-framework/migrating-from-ape-and-brownie/" class="md-nav__link">
+        Migrating from Ape & Brownie
+      </a>
+    </li>
+  
+
+            
+          
         </ul>
       </nav>
     </li>
@@ -777,17 +793,17 @@
 <p>Woke comes with default compilation settings that should work for many projects.
 However, in some cases, it may be necessary to customize the compilation settings.</p>
 <p>To run the compiler, use:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>woke compile
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>woke<span class="w"> </span>compile
 </code></pre></div></p>
 <p>The <code>--help</code> flag can be used to display additional options.</p>
 <h2 id="include-paths">Include paths<a class="headerlink" href="#include-paths" title="Permanent link">#</a></h2>
 <p>Include paths define locations where to search for Solidity files imported using direct (non-relative) import strings.
 An example of a direct import string is:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kt">import</span><span class="w"> </span><span class="s2">&quot;openzeppelin/contracts/token/ERC20/ERC20.sol&quot;</span><span class="p">;</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kt">import</span><span class="w"> </span><span class="s2">&quot;openzeppelin/contracts/token/ERC20/ERC20.sol&quot;</span><span class="p">;</span>
 </code></pre></div></p>
 <p>The default settings for include paths are:
-<div class="highlight"><span class="filename">woke.toml</span><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">[compiler.solc]</span><span class="w"></span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">include_paths</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s">&quot;node_modules&quot;</span><span class="p">]</span><span class="w"></span>
+<div class="highlight"><span class="filename">woke.toml</span><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">[compiler.solc]</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">include_paths</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s">&quot;node_modules&quot;</span><span class="p">]</span>
 </code></pre></div></p>
 <div class="admonition info">
 <p class="admonition-title">Info</p>
@@ -802,34 +818,34 @@ An example of a direct import string is:
 </div>
 <h3 id="foundry-projects">Foundry projects<a class="headerlink" href="#foundry-projects" title="Permanent link">#</a></h3>
 <p>Include paths typically cannot be used in Foundry projects. The <code>forge remappings</code> command can generate remappings that can be copied into the <code>woke.toml</code> file:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="gp">$ </span>forge remappings
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="gp">$ </span>forge<span class="w"> </span>remappings
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="go">@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/</span>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="go">@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/</span>
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="go">ds-test/=lib/forge-std/lib/ds-test/src/</span>
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="go">forge-std/=lib/forge-std/src/</span>
 </code></pre></div></p>
-<div class="highlight"><span class="filename">woke.toml</span><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">[compiler.solc]</span><span class="w"></span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">remappings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="s">&quot;@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/&quot;</span><span class="p">,</span><span class="w"></span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span><span class="s">&quot;@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/&quot;</span><span class="p">,</span><span class="w"></span>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span><span class="s">&quot;ds-test/=lib/forge-std/lib/ds-test/src/&quot;</span><span class="p">,</span><span class="w"></span>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span><span class="s">&quot;forge-std/=lib/forge-std/src/&quot;</span><span class="w"></span>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="p">]</span><span class="w"></span>
+<div class="highlight"><span class="filename">woke.toml</span><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">[compiler.solc]</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">remappings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="s">&quot;@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span><span class="s">&quot;@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span><span class="s">&quot;ds-test/=lib/forge-std/lib/ds-test/src/&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span><span class="s">&quot;forge-std/=lib/forge-std/src/&quot;</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="p">]</span>
 </code></pre></div>
 <h2 id="ignore-paths">Ignore paths<a class="headerlink" href="#ignore-paths" title="Permanent link">#</a></h2>
 <p>Ignore paths define locations where to ignore Solidity files when searching for contracts to compile.
 Solidity files in these locations will not be compiled unless imported from another non-ignored file.</p>
 <p>The default settings for ignore paths are:
-<div class="highlight"><span class="filename">woke.toml</span><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">[compiler.solc]</span><span class="w"></span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">ignore_paths</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s">&quot;node_modules&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;.woke-build&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;venv&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;lib&quot;</span><span class="p">]</span><span class="w"></span>
+<div class="highlight"><span class="filename">woke.toml</span><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">[compiler.solc]</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">ignore_paths</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s">&quot;node_modules&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;.woke-build&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;venv&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;lib&quot;</span><span class="p">]</span>
 </code></pre></div></p>
 <h2 id="via-ir">Via IR<a class="headerlink" href="#via-ir" title="Permanent link">#</a></h2>
 <p>The compiler can can generate bytecode by converting the sources to Yul first (<code>Solidity -&gt; Yul -&gt; EVM bytecode</code>) instead of the traditional <code>Solidity -&gt; EVM bytecode</code> approach.
 See the <a href="">Solidity documentation</a> for more information.</p>
 <p>By default, the <code>via_IR</code> config option is left unset, which leaves the decision to the compiler.
 It can be enabled by setting the option to <code>true</code>:
-<div class="highlight"><span class="filename">woke.toml</span><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">[compiler.solc]</span><span class="w"></span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">via_IR</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w"></span>
+<div class="highlight"><span class="filename">woke.toml</span><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">[compiler.solc]</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">via_IR</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
 </code></pre></div></p>
 <div class="admonition note">
 <p class="admonition-title"><code>Stack too deep</code> errors</p>
@@ -841,9 +857,9 @@ It can be enabled by setting the option to <code>true</code>:
 This allows managing a tradeoff between code size and code execution cost.</p>
 <p>By default, Woke leaves the <code>enabled</code> option unset, which leaves the decision to the compiler.
 It can be enabled by setting the option to <code>true</code>:
-<div class="highlight"><span class="filename">woke.toml</span><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">[compiler.solc.optimizer]</span><span class="w"></span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w"></span>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">runs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">200</span><span class="w"></span>
+<div class="highlight"><span class="filename">woke.toml</span><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">[compiler.solc.optimizer]</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">runs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">200</span>
 </code></pre></div></p>
 
 

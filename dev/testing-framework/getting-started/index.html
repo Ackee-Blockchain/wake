@@ -318,6 +318,8 @@
         
           
         
+          
+        
       
       
         <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
@@ -611,6 +613,20 @@
 
             
           
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../migrating-from-ape-and-brownie/" class="md-nav__link">
+        Migrating from Ape & Brownie
+      </a>
+    </li>
+  
+
+            
+          
         </ul>
       </nav>
     </li>
@@ -776,7 +792,7 @@ To install the latest version of Anvil, run the following command:</p>
 <h2 id="generating-pytypes">Generating pytypes<a class="headerlink" href="#generating-pytypes" title="Permanent link">#</a></h2>
 <p><code>pytypes</code> are Python-native equivalents of Solidity types. They are generated from a Solidity source code and are used in tests to interact with smart contracts.</p>
 <p>The first step is to generate <code>pytypes</code> by running the following command:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>woke init pytypes -w
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>woke<span class="w"> </span>init<span class="w"> </span>pytypes<span class="w"> </span>-w
 </code></pre></div>
 <div class="admonition note">
 <p class="admonition-title">Configuring compilation</p>
@@ -833,7 +849,7 @@ It is possible to connect using:</p>
 <a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">default_chain</span><span class="o">.</span><span class="n">chain_id</span><span class="p">)</span>
 </code></pre></div>
 <p>To run the test, execute the following command:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>woke <span class="nb">test</span> tests/test_counter.py -d
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>woke<span class="w"> </span><span class="nb">test</span><span class="w"> </span>tests/test_counter.py<span class="w"> </span>-d
 </code></pre></div>
 <p>The <code>-d</code> flag tells Woke to attach the Python debugger on test failures.</p>
 <h3 id="deploying-a-contract">Deploying a contract<a class="headerlink" href="#deploying-a-contract" title="Permanent link">#</a></h3>

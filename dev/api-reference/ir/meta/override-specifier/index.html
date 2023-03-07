@@ -312,6 +312,8 @@
         
           
         
+          
+        
       
       
         <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
@@ -528,6 +530,20 @@
 
             
           
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../testing-framework/migrating-from-ape-and-brownie/" class="md-nav__link">
+        Migrating from Ape & Brownie
+      </a>
+    </li>
+  
+
+            
+          
         </ul>
       </nav>
     </li>
@@ -731,15 +747,15 @@
 <p>An override specifier can be used:</p>
 <ul>
 <li>in a <a class="autorefs autorefs-internal" href="../../declarations/function-definition/#woke.ast.ir.declaration.function_definition.FunctionDefinition">FunctionDefinition</a>:<ul>
-<li><code class="highlight">override<span class="w"></span></code> in line 19,</li>
+<li><code class="highlight">override</code> in line 19,</li>
 </ul>
 </li>
 <li>in a <a class="autorefs autorefs-internal" href="../../declarations/modifier-definition/#woke.ast.ir.declaration.modifier_definition.ModifierDefinition">ModifierDefinition</a>:<ul>
-<li><code class="highlight">override<span class="w"></span></code> in line 12,</li>
+<li><code class="highlight">override</code> in line 12,</li>
 </ul>
 </li>
 <li>in a <a class="autorefs autorefs-internal" href="../../declarations/variable-declaration/#woke.ast.ir.declaration.variable_declaration.VariableDeclaration">VariableDeclaration</a>:<ul>
-<li><code class="highlight">override<span class="p">(</span>IERC20<span class="p">)</span><span class="w"></span></code> in line 17.</li>
+<li><code class="highlight">override<span class="p">(</span>IERC20<span class="p">)</span></code> in line 17.</li>
 </ul>
 </li>
 </ul>
@@ -764,28 +780,28 @@
 <span class="normal"><a href="#__codelineno-0-19">19</a></span>
 <span class="normal"><a href="#__codelineno-0-20">20</a></span>
 <span class="normal"><a href="#__codelineno-0-21">21</a></span>
-<span class="normal"><a href="#__codelineno-0-22">22</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1"></a>interface<span class="w"> </span>IERC20<span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">transfer</span><span class="p">(</span><span class="kt">address</span><span class="w"> </span><span class="nv">to</span><span class="p">,</span><span class="w"> </span><span class="kt">uint256</span><span class="w"> </span><span class="nv">value</span><span class="p">)</span><span class="w"> </span><span class="kt">external</span><span class="w"> </span><span class="kt">returns</span><span class="w"> </span><span class="p">(</span><span class="kt">bool</span><span class="p">);</span><span class="w"></span>
+<span class="normal"><a href="#__codelineno-0-22">22</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1"></a>interface<span class="w"> </span>IERC20<span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">transfer</span><span class="p">(</span><span class="kt">address</span><span class="w"> </span><span class="nv">to</span><span class="p">,</span><span class="w"> </span><span class="kt">uint256</span><span class="w"> </span><span class="nv">value</span><span class="p">)</span><span class="w"> </span><span class="kt">external</span><span class="w"> </span><span class="kt">returns</span><span class="w"> </span><span class="p">(</span><span class="kt">bool</span><span class="p">);</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3"></a>
-<a id="__codelineno-0-4" name="__codelineno-0-4"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">allowance</span><span class="p">(</span><span class="kt">address</span><span class="w"> </span><span class="nv">owner</span><span class="p">,</span><span class="w"> </span><span class="kt">address</span><span class="w"> </span><span class="nv">spender</span><span class="p">)</span><span class="w"> </span><span class="kt">external</span><span class="w"> </span>view<span class="w"> </span><span class="kt">returns</span><span class="w"> </span><span class="p">(</span><span class="kt">uint256</span><span class="p">);</span><span class="w"></span>
-<a id="__codelineno-0-5" name="__codelineno-0-5"></a><span class="p">}</span><span class="w"></span>
+<a id="__codelineno-0-4" name="__codelineno-0-4"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">allowance</span><span class="p">(</span><span class="kt">address</span><span class="w"> </span><span class="nv">owner</span><span class="p">,</span><span class="w"> </span><span class="kt">address</span><span class="w"> </span><span class="nv">spender</span><span class="p">)</span><span class="w"> </span><span class="kt">external</span><span class="w"> </span>view<span class="w"> </span><span class="kt">returns</span><span class="w"> </span><span class="p">(</span><span class="kt">uint256</span><span class="p">);</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5"></a><span class="p">}</span>
 <a id="__codelineno-0-6" name="__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7"></a>abstract<span class="w"> </span><span class="k">contract</span><span class="w"> </span><span class="ni">ERC20</span><span class="w"> </span><span class="kt">is</span><span class="w"> </span>IERC20<span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-8" name="__codelineno-0-8"></a><span class="w">    </span><span class="kt">modifier</span><span class="w"> </span>EOA<span class="p">()</span><span class="w"> </span>virtual<span class="p">;</span><span class="w"></span>
-<a id="__codelineno-0-9" name="__codelineno-0-9"></a><span class="p">}</span><span class="w"></span>
+<a id="__codelineno-0-7" name="__codelineno-0-7"></a>abstract<span class="w"> </span><span class="k">contract</span><span class="w"> </span><span class="ni">ERC20</span><span class="w"> </span><span class="kt">is</span><span class="w"> </span>IERC20<span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8"></a><span class="w">    </span><span class="kt">modifier</span><span class="w"> </span>EOA<span class="p">()</span><span class="w"> </span>virtual<span class="p">;</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9"></a><span class="p">}</span>
 <a id="__codelineno-0-10" name="__codelineno-0-10"></a>
-<a id="__codelineno-0-11" name="__codelineno-0-11"></a><span class="k">contract</span><span class="w"> </span><span class="ni">C</span><span class="w"> </span><span class="kt">is</span><span class="w"> </span>ERC20<span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-12" name="__codelineno-0-12"></a><span class="w">    </span><span class="kt">modifier</span><span class="w"> </span>EOA<span class="p">()</span><span class="w"> </span>override<span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-13" name="__codelineno-0-13"></a><span class="w">        </span><span class="kt">require</span><span class="p">(</span><span class="k">msg.sender</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="k">tx.origin</span><span class="p">);</span><span class="w"></span>
-<a id="__codelineno-0-14" name="__codelineno-0-14"></a><span class="w">        </span>_<span class="p">;</span><span class="w"></span>
-<a id="__codelineno-0-15" name="__codelineno-0-15"></a><span class="w">    </span><span class="p">}</span><span class="w"></span>
+<a id="__codelineno-0-11" name="__codelineno-0-11"></a><span class="k">contract</span><span class="w"> </span><span class="ni">C</span><span class="w"> </span><span class="kt">is</span><span class="w"> </span>ERC20<span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12"></a><span class="w">    </span><span class="kt">modifier</span><span class="w"> </span>EOA<span class="p">()</span><span class="w"> </span>override<span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13"></a><span class="w">        </span><span class="kt">require</span><span class="p">(</span><span class="k">msg.sender</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="k">tx.origin</span><span class="p">);</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14"></a><span class="w">        </span>_<span class="p">;</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15"></a><span class="w">    </span><span class="p">}</span>
 <a id="__codelineno-0-16" name="__codelineno-0-16"></a>
-<a id="__codelineno-0-17" name="__codelineno-0-17"></a><span class="w">    </span><span class="kt">mapping</span><span class="p">(</span><span class="kt">address</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="kt">mapping</span><span class="p">(</span><span class="kt">address</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="kt">uint256</span><span class="p">))</span><span class="w"> </span><span class="kt">public</span><span class="w"> </span>override<span class="p">(</span>IERC20<span class="p">)</span><span class="w"> </span>allowance<span class="p">;</span><span class="w"></span>
+<a id="__codelineno-0-17" name="__codelineno-0-17"></a><span class="w">    </span><span class="kt">mapping</span><span class="p">(</span><span class="kt">address</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="kt">mapping</span><span class="p">(</span><span class="kt">address</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="kt">uint256</span><span class="p">))</span><span class="w"> </span><span class="kt">public</span><span class="w"> </span>override<span class="p">(</span>IERC20<span class="p">)</span><span class="w"> </span>allowance<span class="p">;</span>
 <a id="__codelineno-0-18" name="__codelineno-0-18"></a>
-<a id="__codelineno-0-19" name="__codelineno-0-19"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">transfer</span><span class="p">(</span><span class="kt">address</span><span class="w"> </span><span class="nv">to</span><span class="p">,</span><span class="w"> </span><span class="kt">uint256</span><span class="w"> </span><span class="nv">value</span><span class="p">)</span><span class="w"> </span><span class="kt">external</span><span class="w"> </span>override<span class="w"> </span><span class="kt">returns</span><span class="w"> </span><span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<a id="__codelineno-0-19" name="__codelineno-0-19"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">transfer</span><span class="p">(</span><span class="kt">address</span><span class="w"> </span><span class="nv">to</span><span class="p">,</span><span class="w"> </span><span class="kt">uint256</span><span class="w"> </span><span class="nv">value</span><span class="p">)</span><span class="w"> </span><span class="kt">external</span><span class="w"> </span>override<span class="w"> </span><span class="kt">returns</span><span class="w"> </span><span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-0-20" name="__codelineno-0-20"></a><span class="w">        </span><span class="c1">// ...</span>
-<a id="__codelineno-0-21" name="__codelineno-0-21"></a><span class="w">    </span><span class="p">}</span><span class="w"></span>
-<a id="__codelineno-0-22" name="__codelineno-0-22"></a><span class="p">}</span><span class="w"></span>
+<a id="__codelineno-0-21" name="__codelineno-0-21"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22"></a><span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
 
@@ -873,7 +889,7 @@
 <span class="normal"><a href="#__codelineno-0-100">100</a></span>
 <span class="normal"><a href="#__codelineno-0-101">101</a></span>
 <span class="normal"><a href="#__codelineno-0-102">102</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-22" name="__codelineno-0-22"></a><span class="k">class</span> <span class="nc">OverrideSpecifier</span><span class="p">(</span><span class="n">SolidityAbc</span><span class="p">):</span>
-<a id="__codelineno-0-23" name="__codelineno-0-23"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-24" name="__codelineno-0-24"></a><span class="sd">    !!! example</span>
 <a id="__codelineno-0-25" name="__codelineno-0-25"></a><span class="sd">        An override specifier can be used:</span>
 <a id="__codelineno-0-26" name="__codelineno-0-26"></a>
@@ -938,7 +954,7 @@
 <a id="__codelineno-0-85" name="__codelineno-0-85"></a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span>
 <a id="__codelineno-0-86" name="__codelineno-0-86"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-87" name="__codelineno-0-87"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">FunctionDefinition</span><span class="p">,</span> <span class="n">ModifierDefinition</span><span class="p">,</span> <span class="n">VariableDeclaration</span><span class="p">]:</span>
-<a id="__codelineno-0-88" name="__codelineno-0-88"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-88" name="__codelineno-0-88"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-89" name="__codelineno-0-89"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-90" name="__codelineno-0-90"></a><span class="sd">            Parent IR node.</span>
 <a id="__codelineno-0-91" name="__codelineno-0-91"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -946,7 +962,7 @@
 <a id="__codelineno-0-93" name="__codelineno-0-93"></a>
 <a id="__codelineno-0-94" name="__codelineno-0-94"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-95" name="__codelineno-0-95"></a>    <span class="k">def</span> <span class="nf">overrides</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">IdentifierPath</span><span class="p">,</span> <span class="n">UserDefinedTypeName</span><span class="p">]]:</span>
-<a id="__codelineno-0-96" name="__codelineno-0-96"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-96" name="__codelineno-0-96"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-97" name="__codelineno-0-97"></a><span class="sd">        !!! note</span>
 <a id="__codelineno-0-98" name="__codelineno-0-98"></a><span class="sd">            Is empty when there are no curly braces after the `:::solidity override` keyword.</span>
 <a id="__codelineno-0-99" name="__codelineno-0-99"></a><span class="sd">        Returns:</span>
@@ -984,7 +1000,7 @@
   
       <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Is empty when there are no curly braces after the <code class="highlight">override<span class="w"></span></code> keyword.</p>
+<p>Is empty when there are no curly braces after the <code class="highlight">override</code> keyword.</p>
 </div>
 
   <p><strong>Returns:</strong></p>

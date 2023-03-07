@@ -314,6 +314,8 @@
         
           
         
+          
+        
       
       
         <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
@@ -524,6 +526,20 @@
     <li class="md-nav__item">
       <a href="../testing-framework/performance-considerations/" class="md-nav__link">
         Performance considerations
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing-framework/migrating-from-ape-and-brownie/" class="md-nav__link">
+        Migrating from Ape & Brownie
       </a>
     </li>
   
@@ -760,22 +776,22 @@
 <h1 id="contributing">Contributing<a class="headerlink" href="#contributing" title="Permanent link">#</a></h1>
 <h2 id="creating-a-virtual-environment">Creating a virtual environment<a class="headerlink" href="#creating-a-virtual-environment" title="Permanent link">#</a></h2>
 <h3 id="using-virtualenvwrapper">Using <a href="https://virtualenvwrapper.readthedocs.io">virtualenvwrapper</a><a class="headerlink" href="#using-virtualenvwrapper" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>mkvirtualenv woke
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>mkvirtualenv<span class="w"> </span>woke
 </code></pre></div>
 <h3 id="using-venv">Using <a href="https://docs.python.org/3/library/venv.html">venv</a><a class="headerlink" href="#using-venv" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>python3 -m venv env
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nb">source</span> env/bin/activate
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>env
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nb">source</span><span class="w"> </span>env/bin/activate
 </code></pre></div>
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">#</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pip install -e <span class="s2">&quot;.[tests,dev]&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[tests,dev]&quot;</span>
 </code></pre></div>
 <p>Pyright, our static type checker, is distributed through npm:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>npm i -g pyright
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>npm<span class="w"> </span>i<span class="w"> </span>-g<span class="w"> </span>pyright
 </code></pre></div>
 <h2 id="git-hooks">Git hooks<a class="headerlink" href="#git-hooks" title="Permanent link">#</a></h2>
 <p>For Unix-like platforms, we provide up git hooks to help with development.</p>
 <p>After cloning, execute.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>chmod +x ./setup-githooks.sh
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>chmod<span class="w"> </span>+x<span class="w"> </span>./setup-githooks.sh
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>./setup-githooks.sh
 </code></pre></div>
 <p>Git hooks automatically run these commands when you commit:</p>

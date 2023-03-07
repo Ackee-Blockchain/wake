@@ -312,6 +312,8 @@
         
           
         
+          
+        
       
       
         <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
@@ -522,6 +524,20 @@
     <li class="md-nav__item">
       <a href="../../../../testing-framework/performance-considerations/" class="md-nav__link">
         Performance considerations
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../testing-framework/migrating-from-ape-and-brownie/" class="md-nav__link">
+        Migrating from Ape & Brownie
       </a>
     </li>
   
@@ -768,33 +784,33 @@ In Solidity 0.8.0 a new IR node (<a class="autorefs autorefs-internal" href="../
 <p>A user defined type name can be used:</p>
 <ul>
 <li>inside a <a class="autorefs autorefs-internal" href="../../declarations/variable-declaration/#woke.ast.ir.declaration.variable_declaration.VariableDeclaration">VariableDeclaration</a>:<ul>
-<li><code class="highlight">Interface<span class="p">.</span>Struct<span class="w"></span></code> in line 18,</li>
-<li><code class="highlight">Interface<span class="p">.</span>Enum<span class="w"></span></code> in line 26,</li>
+<li><code class="highlight">Interface<span class="p">.</span>Struct</code> in line 18,</li>
+<li><code class="highlight">Interface<span class="p">.</span>Enum</code> in line 26,</li>
 </ul>
 </li>
 <li>inside a <a class="autorefs autorefs-internal" href="../../expressions/new-expression/#woke.ast.ir.expression.new_expression.NewExpression">NewExpression</a>:<ul>
-<li><code class="highlight">Contract<span class="w"></span></code> in line 20,</li>
+<li><code class="highlight">Contract</code> in line 20,</li>
 </ul>
 </li>
 <li>inside an <a class="autorefs autorefs-internal" href="../../meta/inheritance-specifier/#woke.ast.ir.meta.inheritance_specifier.InheritanceSpecifier">InheritanceSpecifier</a>:<ul>
-<li><code class="highlight">Interface<span class="w"></span></code> in line 23,</li>
+<li><code class="highlight">Interface</code> in line 23,</li>
 </ul>
 </li>
 <li>inside an <a class="autorefs autorefs-internal" href="../../meta/override-specifier/#woke.ast.ir.meta.override_specifier.OverrideSpecifier">OverrideSpecifier</a>:<ul>
-<li><code class="highlight">Interface<span class="w"></span></code> in line 30,</li>
+<li><code class="highlight">Interface</code> in line 30,</li>
 </ul>
 </li>
 <li>inside a <a class="autorefs autorefs-internal" href="../../meta/using-for-directive/#woke.ast.ir.meta.using_for_directive.UsingForDirective">UsingForDirective</a>:<ul>
-<li><code class="highlight">Lib<span class="w"></span></code> in line 24,</li>
-<li><code class="highlight">Interface<span class="p">.</span>Struct<span class="w"></span></code> in line 24,</li>
+<li><code class="highlight">Lib</code> in line 24,</li>
+<li><code class="highlight">Interface<span class="p">.</span>Struct</code> in line 24,</li>
 </ul>
 </li>
 <li>inside an <a class="autorefs autorefs-internal" href="../array-type-name/#woke.ast.ir.type_name.array_type_name.ArrayTypeName">ArrayTypeName</a>:<ul>
-<li><code class="highlight">Interface<span class="p">.</span>Enum<span class="w"></span></code> in line 27,</li>
+<li><code class="highlight">Interface<span class="p">.</span>Enum</code> in line 27,</li>
 </ul>
 </li>
 <li>inside a <a class="autorefs autorefs-internal" href="../mapping/#woke.ast.ir.type_name.mapping.Mapping">Mapping</a>:<ul>
-<li>both occurrences of <code class="highlight">Interface<span class="p">.</span>Enum<span class="w"></span></code> in line 28.</li>
+<li>both occurrences of <code class="highlight">Interface<span class="p">.</span>Enum</code> in line 28.</li>
 </ul>
 </li>
 </ul>
@@ -829,38 +845,38 @@ In Solidity 0.8.0 a new IR node (<a class="autorefs autorefs-internal" href="../
 <span class="normal"><a href="#__codelineno-0-29">29</a></span>
 <span class="normal"><a href="#__codelineno-0-30">30</a></span>
 <span class="normal"><a href="#__codelineno-0-31">31</a></span>
-<span class="normal"><a href="#__codelineno-0-32">32</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="k">pragma solidity</span><span class="w"> </span><span class="err">0.7</span><span class="p">;</span><span class="w"></span>
+<span class="normal"><a href="#__codelineno-0-32">32</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="k">pragma solidity</span><span class="w"> </span><span class="err">0.7</span><span class="p">;</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3"></a>interface<span class="w"> </span>Interface<span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-4" name="__codelineno-0-4"></a><span class="w">    </span><span class="kt">enum</span><span class="w"> </span><span class="nv">Enum</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-5" name="__codelineno-0-5"></a><span class="w">        </span>READY<span class="p">,</span><span class="w"></span>
-<a id="__codelineno-0-6" name="__codelineno-0-6"></a><span class="w">        </span>WAITING<span class="w"></span>
-<a id="__codelineno-0-7" name="__codelineno-0-7"></a><span class="w">    </span><span class="p">}</span><span class="w"></span>
+<a id="__codelineno-0-3" name="__codelineno-0-3"></a>interface<span class="w"> </span>Interface<span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4"></a><span class="w">    </span><span class="kt">enum</span><span class="w"> </span><span class="nv">Enum</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5"></a><span class="w">        </span>READY<span class="p">,</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6"></a><span class="w">        </span>WAITING
+<a id="__codelineno-0-7" name="__codelineno-0-7"></a><span class="w">    </span><span class="p">}</span>
 <a id="__codelineno-0-8" name="__codelineno-0-8"></a>
-<a id="__codelineno-0-9" name="__codelineno-0-9"></a><span class="w">    </span><span class="kt">struct</span><span class="w"> </span><span class="nv">Struct</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-10" name="__codelineno-0-10"></a><span class="w">        </span><span class="kt">uint</span><span class="w"> </span><span class="nv">a</span><span class="p">;</span><span class="w"></span>
-<a id="__codelineno-0-11" name="__codelineno-0-11"></a><span class="w">    </span><span class="p">}</span><span class="w"></span>
+<a id="__codelineno-0-9" name="__codelineno-0-9"></a><span class="w">    </span><span class="kt">struct</span><span class="w"> </span><span class="nv">Struct</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10"></a><span class="w">        </span><span class="kt">uint</span><span class="w"> </span><span class="nv">a</span><span class="p">;</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11"></a><span class="w">    </span><span class="p">}</span>
 <a id="__codelineno-0-12" name="__codelineno-0-12"></a>
-<a id="__codelineno-0-13" name="__codelineno-0-13"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">foo</span><span class="p">()</span><span class="w"> </span><span class="kt">external</span><span class="p">;</span><span class="w"></span>
-<a id="__codelineno-0-14" name="__codelineno-0-14"></a><span class="p">}</span><span class="w"></span>
+<a id="__codelineno-0-13" name="__codelineno-0-13"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">foo</span><span class="p">()</span><span class="w"> </span><span class="kt">external</span><span class="p">;</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14"></a><span class="p">}</span>
 <a id="__codelineno-0-15" name="__codelineno-0-15"></a>
-<a id="__codelineno-0-16" name="__codelineno-0-16"></a><span class="kt">library</span><span class="w"> </span>Lib<span class="w"> </span><span class="p">{}</span><span class="w"></span>
+<a id="__codelineno-0-16" name="__codelineno-0-16"></a><span class="kt">library</span><span class="w"> </span>Lib<span class="w"> </span><span class="p">{}</span>
 <a id="__codelineno-0-17" name="__codelineno-0-17"></a>
-<a id="__codelineno-0-18" name="__codelineno-0-18"></a><span class="kt">function</span><span class="w"> </span><span class="nv">tmp</span><span class="p">(</span>Interface<span class="p">.</span>Struct<span class="w"> </span><span class="kt">memory</span><span class="w"> </span>s<span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-19" name="__codelineno-0-19"></a><span class="w">    </span>s<span class="p">.</span>a<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m m-Decimal">5</span><span class="p">;</span><span class="w"></span>
-<a id="__codelineno-0-20" name="__codelineno-0-20"></a><span class="w">    </span><span class="kt">new</span><span class="w"> </span>Contract<span class="p">();</span><span class="w"></span>
-<a id="__codelineno-0-21" name="__codelineno-0-21"></a><span class="p">}</span><span class="w"></span>
+<a id="__codelineno-0-18" name="__codelineno-0-18"></a><span class="kt">function</span><span class="w"> </span><span class="nv">tmp</span><span class="p">(</span>Interface<span class="p">.</span>Struct<span class="w"> </span><span class="kt">memory</span><span class="w"> </span>s<span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19"></a><span class="w">    </span>s<span class="p">.</span>a<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m m-Decimal">5</span><span class="p">;</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20"></a><span class="w">    </span><span class="kt">new</span><span class="w"> </span>Contract<span class="p">();</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21"></a><span class="p">}</span>
 <a id="__codelineno-0-22" name="__codelineno-0-22"></a>
-<a id="__codelineno-0-23" name="__codelineno-0-23"></a><span class="k">contract</span><span class="w"> </span><span class="ni">Contract</span><span class="w"> </span><span class="kt">is</span><span class="w"> </span>Interface<span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-24" name="__codelineno-0-24"></a><span class="w">    </span>using<span class="w"> </span>Lib<span class="w"> </span><span class="kt">for</span><span class="w"> </span>Interface<span class="p">.</span>Struct<span class="p">;</span><span class="w"></span>
+<a id="__codelineno-0-23" name="__codelineno-0-23"></a><span class="k">contract</span><span class="w"> </span><span class="ni">Contract</span><span class="w"> </span><span class="kt">is</span><span class="w"> </span>Interface<span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-24" name="__codelineno-0-24"></a><span class="w">    </span>using<span class="w"> </span>Lib<span class="w"> </span><span class="kt">for</span><span class="w"> </span>Interface<span class="p">.</span>Struct<span class="p">;</span>
 <a id="__codelineno-0-25" name="__codelineno-0-25"></a>
-<a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="w">    </span>Interface<span class="p">.</span>Enum<span class="w"> </span>state<span class="p">;</span><span class="w"></span>
-<a id="__codelineno-0-27" name="__codelineno-0-27"></a><span class="w">    </span>Interface<span class="p">.</span>Enum<span class="p">[]</span><span class="w"> </span>states<span class="p">;</span><span class="w"></span>
-<a id="__codelineno-0-28" name="__codelineno-0-28"></a><span class="w">    </span><span class="kt">mapping</span><span class="p">(</span>Interface<span class="p">.</span>Enum<span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span>Interface<span class="p">.</span>Enum<span class="p">)</span><span class="w"> </span>map<span class="p">;</span><span class="w"></span>
+<a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="w">    </span>Interface<span class="p">.</span>Enum<span class="w"> </span>state<span class="p">;</span>
+<a id="__codelineno-0-27" name="__codelineno-0-27"></a><span class="w">    </span>Interface<span class="p">.</span>Enum<span class="p">[]</span><span class="w"> </span>states<span class="p">;</span>
+<a id="__codelineno-0-28" name="__codelineno-0-28"></a><span class="w">    </span><span class="kt">mapping</span><span class="p">(</span>Interface<span class="p">.</span>Enum<span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span>Interface<span class="p">.</span>Enum<span class="p">)</span><span class="w"> </span>map<span class="p">;</span>
 <a id="__codelineno-0-29" name="__codelineno-0-29"></a>
-<a id="__codelineno-0-30" name="__codelineno-0-30"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">foo</span><span class="p">()</span><span class="w"> </span><span class="kt">external</span><span class="w"> </span>override<span class="p">(</span>Interface<span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-31" name="__codelineno-0-31"></a><span class="w">    </span><span class="p">}</span><span class="w"></span>
-<a id="__codelineno-0-32" name="__codelineno-0-32"></a><span class="p">}</span><span class="w"></span>
+<a id="__codelineno-0-30" name="__codelineno-0-30"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">foo</span><span class="p">()</span><span class="w"> </span><span class="kt">external</span><span class="w"> </span>override<span class="p">(</span>Interface<span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-31" name="__codelineno-0-31"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-0-32" name="__codelineno-0-32"></a><span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
 
@@ -1076,7 +1092,7 @@ In Solidity 0.8.0 a new IR node (<a class="autorefs autorefs-internal" href="../
 <span class="normal"><a href="#__codelineno-0-236">236</a></span>
 <span class="normal"><a href="#__codelineno-0-237">237</a></span>
 <span class="normal"><a href="#__codelineno-0-238">238</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-30" name="__codelineno-0-30"></a><span class="k">class</span> <span class="nc">UserDefinedTypeName</span><span class="p">(</span><span class="n">TypeNameAbc</span><span class="p">):</span>
-<a id="__codelineno-0-31" name="__codelineno-0-31"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-31" name="__codelineno-0-31"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-32" name="__codelineno-0-32"></a><span class="sd">    User defined type name represents a name path to a user defined type. Path parts are separated by dots.</span>
 <a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="sd">    In Solidity 0.8.0 a new IR node ([IdentifierPath][woke.ast.ir.meta.identifier_path.IdentifierPath]) was introduced to replace [UserDefinedTypeName][woke.ast.ir.type_name.user_defined_type_name.UserDefinedTypeName] in some cases.</span>
 <a id="__codelineno-0-34" name="__codelineno-0-34"></a>
@@ -1206,7 +1222,7 @@ In Solidity 0.8.0 a new IR node (<a class="autorefs autorefs-internal" href="../
 <a id="__codelineno-0-158" name="__codelineno-0-158"></a>        <span class="n">ArrayTypeName</span><span class="p">,</span>
 <a id="__codelineno-0-159" name="__codelineno-0-159"></a>        <span class="n">Mapping</span><span class="p">,</span>
 <a id="__codelineno-0-160" name="__codelineno-0-160"></a>    <span class="p">]:</span>
-<a id="__codelineno-0-161" name="__codelineno-0-161"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-161" name="__codelineno-0-161"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-162" name="__codelineno-0-162"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-163" name="__codelineno-0-163"></a><span class="sd">            Parent IR node.</span>
 <a id="__codelineno-0-164" name="__codelineno-0-164"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1214,7 +1230,7 @@ In Solidity 0.8.0 a new IR node (<a class="autorefs autorefs-internal" href="../
 <a id="__codelineno-0-166" name="__codelineno-0-166"></a>
 <a id="__codelineno-0-167" name="__codelineno-0-167"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-168" name="__codelineno-0-168"></a>    <span class="k">def</span> <span class="nf">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Contract</span><span class="p">,</span> <span class="n">Struct</span><span class="p">,</span> <span class="n">Enum</span><span class="p">,</span> <span class="n">UserDefinedValueType</span><span class="p">]:</span>
-<a id="__codelineno-0-169" name="__codelineno-0-169"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-169" name="__codelineno-0-169"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-170" name="__codelineno-0-170"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-171" name="__codelineno-0-171"></a><span class="sd">            Type description.</span>
 <a id="__codelineno-0-172" name="__codelineno-0-172"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1224,7 +1240,7 @@ In Solidity 0.8.0 a new IR node (<a class="autorefs autorefs-internal" href="../
 <a id="__codelineno-0-176" name="__codelineno-0-176"></a>
 <a id="__codelineno-0-177" name="__codelineno-0-177"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-178" name="__codelineno-0-178"></a>    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<a id="__codelineno-0-179" name="__codelineno-0-179"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-179" name="__codelineno-0-179"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-180" name="__codelineno-0-180"></a><span class="sd">        !!! note</span>
 <a id="__codelineno-0-181" name="__codelineno-0-181"></a><span class="sd">            Should be the same as [source][woke.ast.ir.abc.IrAbc.source] and is the same as [path_node.name][woke.ast.ir.meta.identifier_path.IdentifierPath.name] if [path_node][woke.ast.ir.type_name.user_defined_type_name.UserDefinedTypeName.path_node] is not `None`.</span>
 <a id="__codelineno-0-182" name="__codelineno-0-182"></a><span class="sd">        Returns:</span>
@@ -1237,7 +1253,7 @@ In Solidity 0.8.0 a new IR node (<a class="autorefs autorefs-internal" href="../
 <a id="__codelineno-0-189" name="__codelineno-0-189"></a>
 <a id="__codelineno-0-190" name="__codelineno-0-190"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-191" name="__codelineno-0-191"></a>    <span class="k">def</span> <span class="nf">identifier_path_parts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">IdentifierPathPart</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-<a id="__codelineno-0-192" name="__codelineno-0-192"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-192" name="__codelineno-0-192"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-193" name="__codelineno-0-193"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-194" name="__codelineno-0-194"></a><span class="sd">            Parts of the user defined type name.</span>
 <a id="__codelineno-0-195" name="__codelineno-0-195"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1248,7 +1264,7 @@ In Solidity 0.8.0 a new IR node (<a class="autorefs autorefs-internal" href="../
 <a id="__codelineno-0-200" name="__codelineno-0-200"></a>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">interval</span><span class="o">.</span><span class="n">data</span> <span class="k">for</span> <span class="n">interval</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parts</span><span class="p">))</span>
 <a id="__codelineno-0-201" name="__codelineno-0-201"></a>
 <a id="__codelineno-0-202" name="__codelineno-0-202"></a>    <span class="k">def</span> <span class="nf">identifier_path_part_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">byte_offset</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">IdentifierPathPart</span><span class="p">]:</span>
-<a id="__codelineno-0-203" name="__codelineno-0-203"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-203" name="__codelineno-0-203"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-204" name="__codelineno-0-204"></a><span class="sd">        Args:</span>
 <a id="__codelineno-0-205" name="__codelineno-0-205"></a><span class="sd">            byte_offset: Byte offset in the source file.</span>
 <a id="__codelineno-0-206" name="__codelineno-0-206"></a><span class="sd">        Returns:</span>
@@ -1266,7 +1282,7 @@ In Solidity 0.8.0 a new IR node (<a class="autorefs autorefs-internal" href="../
 <a id="__codelineno-0-218" name="__codelineno-0-218"></a>
 <a id="__codelineno-0-219" name="__codelineno-0-219"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-220" name="__codelineno-0-220"></a>    <span class="k">def</span> <span class="nf">referenced_declaration</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DeclarationAbc</span><span class="p">:</span>
-<a id="__codelineno-0-221" name="__codelineno-0-221"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-221" name="__codelineno-0-221"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-222" name="__codelineno-0-222"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-223" name="__codelineno-0-223"></a><span class="sd">            Declaration IR node referenced by this user defined type name.</span>
 <a id="__codelineno-0-224" name="__codelineno-0-224"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1278,7 +1294,7 @@ In Solidity 0.8.0 a new IR node (<a class="autorefs autorefs-internal" href="../
 <a id="__codelineno-0-230" name="__codelineno-0-230"></a>
 <a id="__codelineno-0-231" name="__codelineno-0-231"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-232" name="__codelineno-0-232"></a>    <span class="k">def</span> <span class="nf">path_node</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">IdentifierPath</span><span class="p">]:</span>
-<a id="__codelineno-0-233" name="__codelineno-0-233"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-233" name="__codelineno-0-233"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-234" name="__codelineno-0-234"></a><span class="sd">        Always present since Solidity 0.8.0. If not `None`, it represents the same source code as this node ([byte_location][woke.ast.ir.abc.IrAbc.byte_location] properties are the same) and references the same declaration.</span>
 <a id="__codelineno-0-235" name="__codelineno-0-235"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-236" name="__codelineno-0-236"></a><span class="sd">            Identifier path IR node.</span>
@@ -1605,7 +1621,7 @@ In Solidity 0.8.0 a new IR node (<a class="autorefs autorefs-internal" href="../
 <span class="normal"><a href="#__codelineno-0-215">215</a></span>
 <span class="normal"><a href="#__codelineno-0-216">216</a></span>
 <span class="normal"><a href="#__codelineno-0-217">217</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-202" name="__codelineno-0-202"></a><span class="k">def</span> <span class="nf">identifier_path_part_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">byte_offset</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">IdentifierPathPart</span><span class="p">]:</span>
-<a id="__codelineno-0-203" name="__codelineno-0-203"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-203" name="__codelineno-0-203"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-204" name="__codelineno-0-204"></a><span class="sd">    Args:</span>
 <a id="__codelineno-0-205" name="__codelineno-0-205"></a><span class="sd">        byte_offset: Byte offset in the source file.</span>
 <a id="__codelineno-0-206" name="__codelineno-0-206"></a><span class="sd">    Returns:</span>

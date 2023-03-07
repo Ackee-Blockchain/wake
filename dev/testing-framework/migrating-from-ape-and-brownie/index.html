@@ -12,20 +12,20 @@
         <meta name="author" content="Ackee Blockchain">
       
       
-        <link rel="canonical" href="https://ackeeblockchain.com/woke/docs/dev/testing-framework/helper-functions/">
+        <link rel="canonical" href="https://ackeeblockchain.com/woke/docs/dev/testing-framework/migrating-from-ape-and-brownie/">
       
       
-        <link rel="prev" href="../events-and-errors/">
+        <link rel="prev" href="../performance-considerations/">
       
       
-        <link rel="next" href="../fuzzing/">
+        <link rel="next" href="../../detectors/">
       
       <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.11">
     
     
       
-        <title>Helper functions - Woke</title>
+        <title>Migrating from Ape & Brownie - Woke</title>
       
     
     
@@ -83,7 +83,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#helper-functions" class="md-skip">
+        <a href="#migrating-from-ape-brownie" class="md-skip">
           Skip to content
         </a>
       
@@ -119,7 +119,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Helper functions
+              Migrating from Ape & Brownie
             
           </span>
         </div>
@@ -352,16 +352,14 @@
               
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" checked>
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
       
       
         
@@ -384,7 +382,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="true">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_4_2">
           <span class="md-nav__icon md-icon"></span>
           Basics
@@ -465,141 +463,11 @@
               
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          Helper functions
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../helper-functions/" class="md-nav__link">
         Helper functions
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#abi-encoding-and-decoding" class="md-nav__link">
-    ABI encoding and decoding
-  </a>
-  
-    <nav class="md-nav" aria-label="ABI encoding and decoding">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#abiencode" class="md-nav__link">
-    Abi.encode
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#abiencode_packed" class="md-nav__link">
-    Abi.encode_packed
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#abiencode_with_selector" class="md-nav__link">
-    Abi.encode_with_selector
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#abiencode_with_signature" class="md-nav__link">
-    Abi.encode_with_signature
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#abiencode_call" class="md-nav__link">
-    Abi.encode_call
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#abidecode" class="md-nav__link">
-    Abi.decode
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#keccak-256" class="md-nav__link">
-    Keccak-256
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#computing-create-and-create2-address" class="md-nav__link">
-    Computing CREATE and CREATE2 address
-  </a>
-  
-    <nav class="md-nav" aria-label="Computing CREATE and CREATE2 address">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#get_create_address" class="md-nav__link">
-    get_create_address
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#get_create2_address_from_code" class="md-nav__link">
-    get_create2_address_from_code
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#get_create2_address_from_hash" class="md-nav__link">
-    get_create2_address_from_hash
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -672,11 +540,101 @@
               
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="../migrating-from-ape-and-brownie/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Migrating from Ape & Brownie
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         Migrating from Ape & Brownie
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#importing-contracts" class="md-nav__link">
+    Importing contracts
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#accessing-accounts" class="md-nav__link">
+    Accessing accounts
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuring-networks" class="md-nav__link">
+    Configuring networks
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#transaction-return-values" class="md-nav__link">
+    Transaction return values
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#events-and-user-defined-errors" class="md-nav__link">
+    Events and user-defined errors
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#transaction-parameters" class="md-nav__link">
+    Transaction parameters
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#expecting-reverts" class="md-nav__link">
+    Expecting reverts
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#multi-chain-testing" class="md-nav__link">
+    Multi-chain testing
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -775,98 +733,58 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#abi-encoding-and-decoding" class="md-nav__link">
-    ABI encoding and decoding
-  </a>
-  
-    <nav class="md-nav" aria-label="ABI encoding and decoding">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#abiencode" class="md-nav__link">
-    Abi.encode
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#abiencode_packed" class="md-nav__link">
-    Abi.encode_packed
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#abiencode_with_selector" class="md-nav__link">
-    Abi.encode_with_selector
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#abiencode_with_signature" class="md-nav__link">
-    Abi.encode_with_signature
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#abiencode_call" class="md-nav__link">
-    Abi.encode_call
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#abidecode" class="md-nav__link">
-    Abi.decode
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#keccak-256" class="md-nav__link">
-    Keccak-256
+  <a href="#importing-contracts" class="md-nav__link">
+    Importing contracts
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#computing-create-and-create2-address" class="md-nav__link">
-    Computing CREATE and CREATE2 address
-  </a>
-  
-    <nav class="md-nav" aria-label="Computing CREATE and CREATE2 address">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#get_create_address" class="md-nav__link">
-    get_create_address
+  <a href="#accessing-accounts" class="md-nav__link">
+    Accessing accounts
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#get_create2_address_from_code" class="md-nav__link">
-    get_create2_address_from_code
+      
+        <li class="md-nav__item">
+  <a href="#configuring-networks" class="md-nav__link">
+    Configuring networks
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#get_create2_address_from_hash" class="md-nav__link">
-    get_create2_address_from_hash
+      
+        <li class="md-nav__item">
+  <a href="#transaction-return-values" class="md-nav__link">
+    Transaction return values
   </a>
   
 </li>
-        
-      </ul>
-    </nav>
+      
+        <li class="md-nav__item">
+  <a href="#events-and-user-defined-errors" class="md-nav__link">
+    Events and user-defined errors
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#transaction-parameters" class="md-nav__link">
+    Transaction parameters
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#expecting-reverts" class="md-nav__link">
+    Expecting reverts
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#multi-chain-testing" class="md-nav__link">
+    Multi-chain testing
+  </a>
   
 </li>
       
@@ -889,99 +807,111 @@
 
 
 
-<h1 id="helper-functions">Helper functions<a class="headerlink" href="#helper-functions" title="Permanent link">#</a></h1>
-<p>Woke testing framework provides a set of helper functions to make testing easier.</p>
-<h2 id="abi-encoding-and-decoding">ABI encoding and decoding<a class="headerlink" href="#abi-encoding-and-decoding" title="Permanent link">#</a></h2>
-<p>The <code>Abi</code> class provides functions to encode and decode data according to the ABI specification.</p>
-<h3 id="abiencode">Abi.encode<a class="headerlink" href="#abiencode" title="Permanent link">#</a></h3>
-<p><code>Abi.encode</code> encodes a list of values given a list of types. It returns <code>bytes</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">woke.testing</span> <span class="kn">import</span> <span class="n">Abi</span><span class="p">,</span> <span class="n">Address</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">Abi</span><span class="o">.</span><span class="n">encode</span><span class="p">([</span><span class="s1">&#39;uint8&#39;</span><span class="p">,</span> <span class="s1">&#39;address&#39;</span><span class="p">],</span> <span class="p">[</span><span class="mh">0xff</span><span class="p">,</span> <span class="n">Address</span><span class="p">(</span><span class="mi">0</span><span class="p">)])</span>
+<h1 id="migrating-from-ape-brownie">Migrating from Ape &amp; Brownie<a class="headerlink" href="#migrating-from-ape-brownie" title="Permanent link">#</a></h1>
+<h2 id="importing-contracts">Importing contracts<a class="headerlink" href="#importing-contracts" title="Permanent link">#</a></h2>
+<p>In Woke, contract types must be imported from <code>pytypes</code>, a directory generated using:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>woke<span class="w"> </span>init<span class="w"> </span>pytypes
 </code></pre></div>
-<h3 id="abiencode_packed">Abi.encode_packed<a class="headerlink" href="#abiencode_packed" title="Permanent link">#</a></h3>
-<p><code>Abi.encode_packed</code> encodes a list of values given a list of types. It returns <code>bytes</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span> <span class="nn">woke.testing</span> <span class="kn">import</span> <span class="n">Abi</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">Abi</span><span class="o">.</span><span class="n">encode_packed</span><span class="p">([</span><span class="s1">&#39;bytes&#39;</span><span class="p">,</span> <span class="s1">&#39;string&#39;</span><span class="p">],</span> <span class="p">[</span><span class="sa">b</span><span class="s1">&#39;abc&#39;</span><span class="p">,</span> <span class="s1">&#39;def&#39;</span><span class="p">])</span>
+<p>An optional <code>-w</code> flag can be used to generate <code>pytypes</code> in a watch mode.</p>
+<p>If there is a <code>Counter</code> contract in <code>contracts/Counter.sol</code>, then the following import statement can be used:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span> <span class="nn">pytypes.contracts.Counter</span> <span class="kn">import</span> <span class="n">Counter</span>
 </code></pre></div>
-<h3 id="abiencode_with_selector">Abi.encode_with_selector<a class="headerlink" href="#abiencode_with_selector" title="Permanent link">#</a></h3>
-<p><code>Abi.encode_with_selector</code> encodes a list of values and a selector given a list of types and the selector. It returns <code>bytes</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">woke.testing</span> <span class="kn">import</span> <span class="n">Abi</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kn">from</span> <span class="nn">pytypes.contracts.Counter</span> <span class="kn">import</span> <span class="n">Counter</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">Abi</span><span class="o">.</span><span class="n">encode_with_selector</span><span class="p">(</span><span class="n">Counter</span><span class="o">.</span><span class="n">setCount</span><span class="o">.</span><span class="n">selector</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;uint256&#39;</span><span class="p">],</span> <span class="p">[</span><span class="mh">0xff</span><span class="p">])</span>
+<p>A contract named <code>ERC1967Proxy</code> in <code>node_modules/@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol</code> can be imported using:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">pytypes.node_modules.openzeppelin.contracts.proxy.ERC1967.ERC1967Proxy</span> <span class="kn">import</span> <span class="n">ERC1967Proxy</span>
 </code></pre></div>
-<h3 id="abiencode_with_signature">Abi.encode_with_signature<a class="headerlink" href="#abiencode_with_signature" title="Permanent link">#</a></h3>
-<p><code>Abi.encode_with_signature</code> encodes a list of values and a selector given a list of types and a signature. It returns <code>bytes</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span> <span class="nn">woke.testing</span> <span class="kn">import</span> <span class="n">Abi</span>
+<h2 id="accessing-accounts">Accessing accounts<a class="headerlink" href="#accessing-accounts" title="Permanent link">#</a></h2>
+<p>In Woke, accounts are a property of a chain. With the default chain instance named <code>default_chain</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span> <span class="nn">woke.testing</span> <span class="kn">import</span> <span class="o">*</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">Abi</span><span class="o">.</span><span class="n">encode_with_signature</span><span class="p">(</span><span class="s2">&quot;setCount(uint256)&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;uint256&#39;</span><span class="p">],</span> <span class="p">[</span><span class="mh">0xff</span><span class="p">])</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nd">@default_chain</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="k">def</span> <span class="nf">test_accounts</span><span class="p">():</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">default_chain</span><span class="o">.</span><span class="n">accounts</span><span class="p">)</span>
 </code></pre></div>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>The signature string must conform to the <a href="https://docs.soliditylang.org/en/latest/abi-spec.html#function-selector">ABI specification</a>.
-The common mistakes are:</p>
+<h2 id="configuring-networks">Configuring networks<a class="headerlink" href="#configuring-networks" title="Permanent link">#</a></h2>
+<p>Woke does not support configuring networks in configuration files. Instead, a chain instance can be created:</p>
 <ul>
-<li><code>uint</code> or <code>int</code> used instead of <code>uint256</code> or <code>int256</code>,</li>
-<li>return type specified,</li>
-<li>spaces in the signature string.</li>
+<li>without a URI (<code>@default_chain.connect()</code>), which will launch a new development chain,</li>
+<li>with a URI (<code>@default_chain.connect("http://localhost:8545")</code>), which will connect to an existing chain.</li>
 </ul>
-</div>
-<h3 id="abiencode_call">Abi.encode_call<a class="headerlink" href="#abiencode_call" title="Permanent link">#</a></h3>
-<p><code>Abi.encode_call</code> encodes a list of values and a selector given a reference to a function. It returns <code>bytes</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span> <span class="nn">woke.testing</span> <span class="kn">import</span> <span class="n">Abi</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kn">from</span> <span class="nn">pytypes.contracts.Counter</span> <span class="kn">import</span> <span class="n">Counter</span>
+<p>A development chain executable and its arguments can be configured in <code>woke.toml</code> in the project root:</p>
+<div class="highlight"><span class="filename">woke.toml</span><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">[testing]</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">cmd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;anvil&quot;</span><span class="w">  </span><span class="c1"># other options: &quot;hardhat&quot;, &quot;ganache&quot;</span>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">Abi</span><span class="o">.</span><span class="n">encode_call</span><span class="p">(</span><span class="n">Counter</span><span class="o">.</span><span class="n">setCount</span><span class="p">,</span> <span class="p">[</span><span class="mh">0xff</span><span class="p">])</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="k">[testing.anvil]</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="n">cmd_args</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;--prune-history 100 --steps-tracing --silent&quot;</span>
 </code></pre></div>
-<h3 id="abidecode">Abi.decode<a class="headerlink" href="#abidecode" title="Permanent link">#</a></h3>
-<p><code>Abi.decode</code> decodes a <code>bytes</code> object given a list of types. It returns a list of values:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span> <span class="nn">woke.testing</span> <span class="kn">import</span> <span class="n">Abi</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">Abi</span><span class="o">.</span><span class="n">decode</span><span class="p">([</span><span class="s1">&#39;uint8&#39;</span><span class="p">,</span> <span class="s1">&#39;address&#39;</span><span class="p">],</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00</span><span class="s1">&#39;</span><span class="p">)</span>
+<p>Commonly used parameters can be set as keyword arguments in <code>@default_chain.connect()</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nd">@default_chain</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="n">accounts</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>  <span class="c1"># number of accounts to generate</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="n">chain_id</span><span class="o">=</span><span class="mi">1337</span><span class="p">,</span>  <span class="c1"># chain ID</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">fork</span><span class="o">=</span><span class="s2">&quot;https://eth-mainnet.alchemyapi.io/v2/...@12345678&quot;</span><span class="p">,</span>  <span class="c1"># fork from a block</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">hardfork</span><span class="o">=</span><span class="s2">&quot;london&quot;</span><span class="p">,</span>  <span class="c1"># hardfork to use</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="p">)</span>
 </code></pre></div>
-<h2 id="keccak-256">Keccak-256<a class="headerlink" href="#keccak-256" title="Permanent link">#</a></h2>
-<p>The <code>keccak256</code> function computes the Keccak-256 hash of a <code>bytes</code> object:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span> <span class="nn">woke.testing</span> <span class="kn">import</span> <span class="n">keccak256</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">keccak256</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;abc&#39;</span><span class="p">)</span>
+<h2 id="transaction-return-values">Transaction return values<a class="headerlink" href="#transaction-return-values" title="Permanent link">#</a></h2>
+<p>As opposed to Ape and Brownie, Woke returns a transaction return value instead of a transaction receipt.
+To get the transaction receipt, <code>return_tx=True</code> can be passed to the transaction call:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">tx</span> <span class="o">=</span> <span class="n">counter</span><span class="o">.</span><span class="n">increment</span><span class="p">(</span><span class="n">return_tx</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </code></pre></div>
-<h2 id="computing-create-and-create2-address">Computing <code>CREATE</code> and <code>CREATE2</code> address<a class="headerlink" href="#computing-create-and-create2-address" title="Permanent link">#</a></h2>
-<p>In some cases, it may be useful to compute the address of a contract before it is deployed. Woke testing framework provides three functions to do so.</p>
-<h3 id="get_create_address">get_create_address<a class="headerlink" href="#get_create_address" title="Permanent link">#</a></h3>
-<p><code>get_create_address</code> computes the address of a contract deployed in a transaction or in a contract using the <code>CREATE</code> opcode.
-It accepts a deployer (<code>Account</code>, <code>Address</code> or a hex string address) and its nonce.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span> <span class="nn">woke.testing</span> <span class="kn">import</span> <span class="n">Account</span><span class="p">,</span> <span class="n">get_create_address</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">deployer</span> <span class="o">=</span> <span class="n">Account</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="n">get_create_address</span><span class="p">(</span><span class="n">deployer</span><span class="p">,</span> <span class="n">deployer</span><span class="o">.</span><span class="n">nonce</span><span class="p">)</span>
+<p>To make this the default behavior, <code>pytypes</code> can be generated with the <code>--return-tx</code> flag:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>woke<span class="w"> </span>init<span class="w"> </span>pytypes<span class="w"> </span>--return-tx
 </code></pre></div>
-<h3 id="get_create2_address_from_code">get_create2_address_from_code<a class="headerlink" href="#get_create2_address_from_code" title="Permanent link">#</a></h3>
-<p><code>get_create2_address_from_code</code> computes the address of a contract deployed using the <code>CREATE2</code> opcode.
-It accepts a deployer (<code>Account</code>, <code>Address</code> or a hex string address), a salt and the contract deployment code.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">from</span> <span class="nn">woke.testing</span> <span class="kn">import</span> <span class="n">Account</span><span class="p">,</span> <span class="n">get_create2_address_from_code</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="kn">from</span> <span class="nn">woke.testing.fuzzing</span> <span class="kn">import</span> <span class="n">random_bytes</span>
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="kn">from</span> <span class="nn">pytypes.contracts.Counter</span> <span class="kn">import</span> <span class="n">Counter</span>
-<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>
-<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="n">get_create2_address_from_code</span><span class="p">(</span>
-<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>    <span class="n">Account</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
-<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>    <span class="n">random_bytes</span><span class="p">(</span><span class="mi">32</span><span class="p">),</span>
-<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>    <span class="n">Counter</span><span class="o">.</span><span class="n">deployment_code</span><span class="p">()</span>
-<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="p">)</span>
+<h2 id="events-and-user-defined-errors">Events and user-defined errors<a class="headerlink" href="#events-and-user-defined-errors" title="Permanent link">#</a></h2>
+<p>Events and user-defined errors are generated in <code>pytypes</code> in a form of dataclasses.</p>
+<p>If there is an event named <code>Incremented</code> and error named <code>NotOwner</code> in <code>contracts/Counter.sol</code>, then the following can be used to test the contract:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">from</span> <span class="nn">woke.testing</span> <span class="kn">import</span> <span class="o">*</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="kn">from</span> <span class="nn">pytypes.contracts.Counter</span> <span class="kn">import</span> <span class="n">Counter</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="nd">@default_chain</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="k">def</span> <span class="nf">test_counter</span><span class="p">():</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>    <span class="n">default_chain</span><span class="o">.</span><span class="n">default_tx_account</span> <span class="o">=</span> <span class="n">default_chain</span><span class="o">.</span><span class="n">accounts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>    <span class="n">counter</span> <span class="o">=</span> <span class="n">Counter</span><span class="o">.</span><span class="n">deploy</span><span class="p">()</span>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>    <span class="n">tx</span> <span class="o">=</span> <span class="n">counter</span><span class="o">.</span><span class="n">increment</span><span class="p">(</span><span class="n">return_tx</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>    <span class="k">assert</span> <span class="n">Counter</span><span class="o">.</span><span class="n">Incremented</span><span class="p">()</span> <span class="ow">in</span> <span class="n">tx</span><span class="o">.</span><span class="n">events</span>
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>    <span class="n">acc</span> <span class="o">=</span> <span class="n">default_chain</span><span class="o">.</span><span class="n">accounts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>    <span class="n">tx</span> <span class="o">=</span> <span class="n">counter</span><span class="o">.</span><span class="n">addToWhitelist</span><span class="p">(</span><span class="n">acc</span><span class="p">,</span> <span class="n">from_</span><span class="o">=</span><span class="n">acc</span><span class="p">,</span> <span class="n">return_tx</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a>    <span class="k">assert</span> <span class="n">tx</span><span class="o">.</span><span class="n">error</span> <span class="o">==</span> <span class="n">Counter</span><span class="o">.</span><span class="n">NotOwner</span><span class="p">()</span>
 </code></pre></div>
-<h3 id="get_create2_address_from_hash">get_create2_address_from_hash<a class="headerlink" href="#get_create2_address_from_hash" title="Permanent link">#</a></h3>
-<p><code>get_create2_address_from_hash</code> computes the address of a contract deployed using the <code>CREATE2</code> opcode.
-It accepts a deployer (<code>Account</code>, <code>Address</code> or a hex string address), a salt and the hash of the contract deployment code.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span> <span class="nn">woke.testing</span> <span class="kn">import</span> <span class="n">Account</span><span class="p">,</span> <span class="n">get_create2_address_from_hash</span><span class="p">,</span> <span class="n">keccak256</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="kn">from</span> <span class="nn">woke.testing.fuzzing</span> <span class="kn">import</span> <span class="n">random_bytes</span>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="kn">from</span> <span class="nn">pytypes.contracts.Counter</span> <span class="kn">import</span> <span class="n">Counter</span>
-<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>
-<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="n">get_create2_address_from_hash</span><span class="p">(</span>
-<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>    <span class="n">Account</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
-<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>    <span class="n">random_bytes</span><span class="p">(</span><span class="mi">32</span><span class="p">),</span>
-<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>    <span class="n">keccak256</span><span class="p">(</span><span class="n">Counter</span><span class="o">.</span><span class="n">deployment_code</span><span class="p">())</span>
-<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="p">)</span>
+<h2 id="transaction-parameters">Transaction parameters<a class="headerlink" href="#transaction-parameters" title="Permanent link">#</a></h2>
+<p>Like in Ape, Woke uses keyword arguments to specify transaction parameters. A transaction sender can be specified using <code>from_</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># Ape</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">counter</span><span class="o">.</span><span class="n">increment</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">acc</span><span class="p">)</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="c1"># Brownie</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="n">counter</span><span class="o">.</span><span class="n">increment</span><span class="p">({</span><span class="s1">&#39;from&#39;</span><span class="p">:</span> <span class="n">acc</span><span class="p">})</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="c1"># Woke</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="n">counter</span><span class="o">.</span><span class="n">increment</span><span class="p">(</span><span class="n">from_</span><span class="o">=</span><span class="n">acc</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="expecting-reverts">Expecting reverts<a class="headerlink" href="#expecting-reverts" title="Permanent link">#</a></h2>
+<p>Woke uses <code>may_revert</code> and <code>must_revert</code> context managers to expect reverts:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># Ape</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="k">with</span> <span class="n">ape</span><span class="o">.</span><span class="n">reverts</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;b&#39;NH{q\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x11&#39;&quot;</span><span class="p">):</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>    <span class="n">counter</span><span class="o">.</span><span class="n">decrement</span><span class="p">()</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="c1"># Brownie</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="k">with</span> <span class="n">brownie</span><span class="o">.</span><span class="n">reverts</span><span class="p">(</span><span class="s2">&quot;Integer overflow&quot;</span><span class="p">):</span>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>    <span class="n">counter</span><span class="o">.</span><span class="n">decrement</span><span class="p">()</span>
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="c1"># Woke</span>
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="k">with</span> <span class="n">must_revert</span><span class="p">(</span><span class="n">Panic</span><span class="p">(</span><span class="n">PanicCodeEnum</span><span class="o">.</span><span class="n">UNDERFLOW_OVERFLOW</span><span class="p">)):</span>
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>    <span class="n">counter</span><span class="o">.</span><span class="n">decrement</span><span class="p">()</span>
+</code></pre></div>
+<h2 id="multi-chain-testing">Multi-chain testing<a class="headerlink" href="#multi-chain-testing" title="Permanent link">#</a></h2>
+<p>Woke does not use context managers to change the current chain interface. Instead, the <code>chain</code> keyword argument can be passed when deploying a contract:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kn">from</span> <span class="nn">woke.testing</span> <span class="kn">import</span> <span class="o">*</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="kn">from</span> <span class="nn">pytypes.contracts.Counter</span> <span class="kn">import</span> <span class="n">Counter</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="n">chain1</span> <span class="o">=</span> <span class="n">Chain</span><span class="p">()</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="n">chain2</span> <span class="o">=</span> <span class="n">Chain</span><span class="p">()</span>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="nd">@chain1</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="nd">@chain2</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="k">def</span> <span class="nf">test_counter</span><span class="p">():</span>
+<a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>    <span class="n">counter1</span> <span class="o">=</span> <span class="n">Counter</span><span class="o">.</span><span class="n">deploy</span><span class="p">(</span><span class="n">from_</span><span class="o">=</span><span class="n">chain1</span><span class="o">.</span><span class="n">accounts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">chain</span><span class="o">=</span><span class="n">chain1</span><span class="p">)</span>
+<a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a>    <span class="n">counter2</span> <span class="o">=</span> <span class="n">Counter</span><span class="o">.</span><span class="n">deploy</span><span class="p">(</span><span class="n">from_</span><span class="o">=</span><span class="n">chain2</span><span class="o">.</span><span class="n">accounts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">chain</span><span class="o">=</span><span class="n">chain2</span><span class="p">)</span>
 </code></pre></div>
 
 

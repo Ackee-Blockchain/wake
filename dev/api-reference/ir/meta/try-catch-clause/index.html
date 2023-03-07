@@ -312,6 +312,8 @@
         
           
         
+          
+        
       
       
         <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
@@ -522,6 +524,20 @@
     <li class="md-nav__item">
       <a href="../../../../testing-framework/performance-considerations/" class="md-nav__link">
         Performance considerations
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../testing-framework/migrating-from-ape-and-brownie/" class="md-nav__link">
+        Migrating from Ape & Brownie
       </a>
     </li>
   
@@ -743,22 +759,22 @@
       <div class="admonition example">
 <p class="admonition-title">Example</p>
 <ul>
-<li><code class="highlight"><span class="kt">returns</span><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span><span class="w"></span></code>,</li>
-<li><code class="highlight">catch<span class="w"> </span>Error<span class="p">(</span><span class="kt">string</span><span class="w"> </span><span class="nv">memory</span><span class="w"> </span>reason<span class="p">)</span><span class="w"> </span><span class="p">{}</span><span class="w"></span></code>,</li>
-<li><code class="highlight">catch<span class="w"> </span>Panic<span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">errorCode</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span><span class="w"></span></code>,</li>
-<li><code class="highlight">catch<span class="w"> </span><span class="p">(</span><span class="kt">bytes</span><span class="w"> </span><span class="nv">memory</span><span class="w"> </span>lowLevelData<span class="p">)</span><span class="w"> </span><span class="p">{}</span><span class="w"></span></code> are all try/catch clauses in the following example:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">contract</span><span class="w"> </span><span class="ni">C</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">foo</span><span class="p">()</span><span class="w"> </span><span class="kt">public</span><span class="w"> </span>view<span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">        </span>try<span class="w"> </span><span class="kt">this</span><span class="p">.</span>bar<span class="p">(</span><span class="m m-Decimal">10</span><span class="p">)</span><span class="w"> </span><span class="kt">returns</span><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span><span class="w"></span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">        </span>catch<span class="w"> </span>Error<span class="p">(</span><span class="kt">string</span><span class="w"> </span><span class="nv">memory</span><span class="w"> </span>reason<span class="p">)</span><span class="w"> </span><span class="p">{}</span><span class="w"></span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">        </span>catch<span class="w"> </span>Panic<span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">errorCode</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span><span class="w"></span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">        </span>catch<span class="w"> </span><span class="p">(</span><span class="kt">bytes</span><span class="w"> </span><span class="nv">memory</span><span class="w"> </span>lowLevelData<span class="p">)</span><span class="w"> </span><span class="p">{}</span><span class="w"></span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">    </span><span class="p">}</span><span class="w"></span>
+<li><code class="highlight"><span class="kt">returns</span><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span></code>,</li>
+<li><code class="highlight">catch<span class="w"> </span>Error<span class="p">(</span><span class="kt">string</span><span class="w"> </span><span class="nv">memory</span><span class="w"> </span>reason<span class="p">)</span><span class="w"> </span><span class="p">{}</span></code>,</li>
+<li><code class="highlight">catch<span class="w"> </span>Panic<span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">errorCode</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span></code>,</li>
+<li><code class="highlight">catch<span class="w"> </span><span class="p">(</span><span class="kt">bytes</span><span class="w"> </span><span class="nv">memory</span><span class="w"> </span>lowLevelData<span class="p">)</span><span class="w"> </span><span class="p">{}</span></code> are all try/catch clauses in the following example:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">contract</span><span class="w"> </span><span class="ni">C</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">foo</span><span class="p">()</span><span class="w"> </span><span class="kt">public</span><span class="w"> </span>view<span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">        </span>try<span class="w"> </span><span class="kt">this</span><span class="p">.</span>bar<span class="p">(</span><span class="m m-Decimal">10</span><span class="p">)</span><span class="w"> </span><span class="kt">returns</span><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">        </span>catch<span class="w"> </span>Error<span class="p">(</span><span class="kt">string</span><span class="w"> </span><span class="nv">memory</span><span class="w"> </span>reason<span class="p">)</span><span class="w"> </span><span class="p">{}</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">        </span>catch<span class="w"> </span>Panic<span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">errorCode</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">        </span>catch<span class="w"> </span><span class="p">(</span><span class="kt">bytes</span><span class="w"> </span><span class="nv">memory</span><span class="w"> </span>lowLevelData<span class="p">)</span><span class="w"> </span><span class="p">{}</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">    </span><span class="p">}</span>
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">bar</span><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="kt">external</span><span class="w"> </span>pure<span class="w"> </span><span class="kt">returns</span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">        </span><span class="kt">return</span><span class="w"> </span>x<span class="p">;</span><span class="w"></span>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">    </span><span class="p">}</span><span class="w"></span>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="p">}</span><span class="w"></span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">bar</span><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="kt">external</span><span class="w"> </span>pure<span class="w"> </span><span class="kt">returns</span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">        </span><span class="kt">return</span><span class="w"> </span>x<span class="p">;</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="p">}</span>
 </code></pre></div></li>
 </ul>
 </div>
@@ -896,7 +912,7 @@
 <span class="normal"><a href="#__codelineno-0-145">145</a></span>
 <span class="normal"><a href="#__codelineno-0-146">146</a></span>
 <span class="normal"><a href="#__codelineno-0-147">147</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-18" name="__codelineno-0-18"></a><span class="k">class</span> <span class="nc">TryCatchClause</span><span class="p">(</span><span class="n">SolidityAbc</span><span class="p">):</span>
-<a id="__codelineno-0-19" name="__codelineno-0-19"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-20" name="__codelineno-0-20"></a><span class="sd">    !!! example</span>
 <a id="__codelineno-0-21" name="__codelineno-0-21"></a><span class="sd">        - `:::solidity returns(uint x) {}`,</span>
 <a id="__codelineno-0-22" name="__codelineno-0-22"></a><span class="sd">        - `:::solidity catch Error(string memory reason) {}`,</span>
@@ -948,7 +964,7 @@
 <a id="__codelineno-0-68" name="__codelineno-0-68"></a>
 <a id="__codelineno-0-69" name="__codelineno-0-69"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-70" name="__codelineno-0-70"></a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TryStatement</span><span class="p">:</span>
-<a id="__codelineno-0-71" name="__codelineno-0-71"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-71" name="__codelineno-0-71"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-72" name="__codelineno-0-72"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-73" name="__codelineno-0-73"></a><span class="sd">            Parent IR node.</span>
 <a id="__codelineno-0-74" name="__codelineno-0-74"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -956,7 +972,7 @@
 <a id="__codelineno-0-76" name="__codelineno-0-76"></a>
 <a id="__codelineno-0-77" name="__codelineno-0-77"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-78" name="__codelineno-0-78"></a>    <span class="k">def</span> <span class="nf">block</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Block</span><span class="p">:</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-80" name="__codelineno-0-80"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-81" name="__codelineno-0-81"></a><span class="sd">            Body of the try/catch clause.</span>
 <a id="__codelineno-0-82" name="__codelineno-0-82"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -964,7 +980,7 @@
 <a id="__codelineno-0-84" name="__codelineno-0-84"></a>
 <a id="__codelineno-0-85" name="__codelineno-0-85"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-86" name="__codelineno-0-86"></a>    <span class="k">def</span> <span class="nf">error_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<a id="__codelineno-0-87" name="__codelineno-0-87"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-87" name="__codelineno-0-87"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-88" name="__codelineno-0-88"></a><span class="sd">        !!! example</span>
 <a id="__codelineno-0-89" name="__codelineno-0-89"></a><span class="sd">            For the following snippet:</span>
 <a id="__codelineno-0-90" name="__codelineno-0-90"></a><span class="sd">            ```solidity</span>
@@ -990,7 +1006,7 @@
 <a id="__codelineno-0-110" name="__codelineno-0-110"></a>
 <a id="__codelineno-0-111" name="__codelineno-0-111"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-112" name="__codelineno-0-112"></a>    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ParameterList</span><span class="p">]:</span>
-<a id="__codelineno-0-113" name="__codelineno-0-113"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-113" name="__codelineno-0-113"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-114" name="__codelineno-0-114"></a><span class="sd">        Can be `None` if the try clause does not have return parameters or if the catch clause does not accept parameters.</span>
 <a id="__codelineno-0-115" name="__codelineno-0-115"></a><span class="sd">        !!! example</span>
 <a id="__codelineno-0-116" name="__codelineno-0-116"></a><span class="sd">            Both clauses in the following example do not have parameters:</span>
@@ -1095,15 +1111,15 @@
       <div class="admonition example">
 <p class="admonition-title">Example</p>
 <p>For the following snippet:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>try<span class="w"> </span><span class="kt">this</span><span class="p">.</span>f<span class="p">()</span><span class="w"> </span><span class="kt">returns</span><span class="w"> </span><span class="p">(</span><span class="kt">uint256</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>try<span class="w"> </span><span class="kt">this</span><span class="p">.</span>f<span class="p">()</span><span class="w"> </span><span class="kt">returns</span><span class="w"> </span><span class="p">(</span><span class="kt">uint256</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="c1">// ...</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">}</span><span class="w"> </span>catch<span class="w"> </span>Error<span class="p">(</span><span class="kt">string</span><span class="w"> </span><span class="nv">memory</span><span class="w"> </span>reason<span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">}</span><span class="w"> </span>catch<span class="w"> </span>Error<span class="p">(</span><span class="kt">string</span><span class="w"> </span><span class="nv">memory</span><span class="w"> </span>reason<span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="c1">// ...</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">}</span><span class="w"> </span>catch<span class="w"> </span>Panic<span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">errorCode</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">}</span><span class="w"> </span>catch<span class="w"> </span>Panic<span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">errorCode</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="c1">// ...</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="p">}</span><span class="w"> </span>catch<span class="w"> </span><span class="p">(</span><span class="kt">bytes</span><span class="w"> </span><span class="nv">memory</span><span class="w"> </span>lowLevelData<span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="p">}</span><span class="w"> </span>catch<span class="w"> </span><span class="p">(</span><span class="kt">bytes</span><span class="w"> </span><span class="nv">memory</span><span class="w"> </span>lowLevelData<span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="c1">// ...</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="p">}</span><span class="w"></span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="p">}</span>
 </code></pre></div></p>
 <ul>
 <li>the <code>error_name</code> of the first (try) clause is empty,</li>
@@ -1154,25 +1170,25 @@
 <div class="admonition example">
 <p class="admonition-title">Example</p>
 <p>Both clauses in the following example do not have parameters:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>try<span class="w"> </span><span class="kt">this</span><span class="p">.</span>f<span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>try<span class="w"> </span><span class="kt">this</span><span class="p">.</span>f<span class="p">()</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="c1">// ...</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">}</span><span class="w"> </span>catch<span class="w"> </span><span class="p">{</span><span class="w"></span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">}</span><span class="w"> </span>catch<span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="c1">// ...</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">}</span><span class="w"></span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">}</span>
 </code></pre></div></p>
 </div>
 <div class="admonition example">
 <p class="admonition-title">Example</p>
-<p><code class="highlight"><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"></span></code>, <code class="highlight"><span class="p">(</span><span class="kt">string</span><span class="w"> </span><span class="nv">memory</span><span class="w"> </span>reason<span class="p">)</span><span class="w"></span></code>, <code class="highlight"><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">errorCode</span><span class="p">)</span><span class="w"></span></code> and <code class="highlight"><span class="p">(</span><span class="kt">bytes</span><span class="w"> </span><span class="nv">memory</span><span class="w"> </span>lowLevelData<span class="p">)</span><span class="w"></span></code> are the parameters of the try/catch clauses in the following example:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>try<span class="w"> </span><span class="kt">this</span><span class="p">.</span>f<span class="p">()</span><span class="w"> </span><span class="kt">returns</span><span class="w"> </span><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<p><code class="highlight"><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span></code>, <code class="highlight"><span class="p">(</span><span class="kt">string</span><span class="w"> </span><span class="nv">memory</span><span class="w"> </span>reason<span class="p">)</span></code>, <code class="highlight"><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">errorCode</span><span class="p">)</span></code> and <code class="highlight"><span class="p">(</span><span class="kt">bytes</span><span class="w"> </span><span class="nv">memory</span><span class="w"> </span>lowLevelData<span class="p">)</span></code> are the parameters of the try/catch clauses in the following example:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>try<span class="w"> </span><span class="kt">this</span><span class="p">.</span>f<span class="p">()</span><span class="w"> </span><span class="kt">returns</span><span class="w"> </span><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="c1">// ...</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="p">}</span><span class="w"> </span>catch<span class="w"> </span>Error<span class="p">(</span><span class="kt">string</span><span class="w"> </span><span class="nv">memory</span><span class="w"> </span>reason<span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="p">}</span><span class="w"> </span>catch<span class="w"> </span>Error<span class="p">(</span><span class="kt">string</span><span class="w"> </span><span class="nv">memory</span><span class="w"> </span>reason<span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="c1">// ...</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="p">}</span><span class="w"> </span>catch<span class="w"> </span>Panic<span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">errorCode</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="p">}</span><span class="w"> </span>catch<span class="w"> </span>Panic<span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">errorCode</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span><span class="c1">// ...</span>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="p">}</span><span class="w"> </span>catch<span class="w"> </span><span class="p">(</span><span class="kt">bytes</span><span class="w"> </span><span class="nv">memory</span><span class="w"> </span>lowLevelData<span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="p">}</span><span class="w"> </span>catch<span class="w"> </span><span class="p">(</span><span class="kt">bytes</span><span class="w"> </span><span class="nv">memory</span><span class="w"> </span>lowLevelData<span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="c1">// ...</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="p">}</span><span class="w"></span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="p">}</span>
 </code></pre></div></p>
 </div>
 

@@ -312,6 +312,8 @@
         
           
         
+          
+        
       
       
         <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
@@ -522,6 +524,20 @@
     <li class="md-nav__item">
       <a href="../../../../testing-framework/performance-considerations/" class="md-nav__link">
         Performance considerations
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../testing-framework/migrating-from-ape-and-brownie/" class="md-nav__link">
+        Migrating from Ape & Brownie
       </a>
     </li>
   
@@ -777,13 +793,13 @@
   
       <div class="admonition example">
 <p class="admonition-title">Example</p>
-<p><div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kt">import</span><span class="w"> </span><span class="s2">&quot;SafeLib.sol&quot;</span><span class="p">;</span><span class="w"></span>
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kt">import</span><span class="w"> </span><span class="s2">&quot;SafeLib.sol&quot;</span><span class="p">;</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kt">import</span><span class="w"> </span><span class="s2">&quot;SafeLib.sol&quot;</span><span class="w"> </span>as<span class="w"> </span>SafeLib<span class="p">;</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kt">import</span><span class="w"> </span><span class="s2">&quot;SafeLib.sol&quot;</span><span class="w"> </span>as<span class="w"> </span>SafeLib<span class="p">;</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kt">import</span><span class="w"> </span><span class="o">*</span><span class="w"> </span>as<span class="w"> </span>SafeLib<span class="w"> </span>from<span class="w"> </span><span class="s2">&quot;SafeLib.sol&quot;</span><span class="p">;</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kt">import</span><span class="w"> </span><span class="o">*</span><span class="w"> </span>as<span class="w"> </span>SafeLib<span class="w"> </span>from<span class="w"> </span><span class="s2">&quot;SafeLib.sol&quot;</span><span class="p">;</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kt">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span>SafeType<span class="w"> </span>as<span class="w"> </span>CustomSafeType<span class="w"> </span><span class="p">}</span><span class="w"> </span>from<span class="w"> </span><span class="s2">&quot;SafeLib.sol&quot;</span><span class="p">;</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kt">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span>SafeType<span class="w"> </span>as<span class="w"> </span>CustomSafeType<span class="w"> </span><span class="p">}</span><span class="w"> </span>from<span class="w"> </span><span class="s2">&quot;SafeLib.sol&quot;</span><span class="p">;</span>
 </code></pre></div></p>
 </div>
 
@@ -994,7 +1010,7 @@
 <span class="normal"><a href="#__codelineno-0-270">270</a></span>
 <span class="normal"><a href="#__codelineno-0-271">271</a></span>
 <span class="normal"><a href="#__codelineno-0-272">272</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-69" name="__codelineno-0-69"></a><span class="k">class</span> <span class="nc">ImportDirective</span><span class="p">(</span><span class="n">SolidityAbc</span><span class="p">):</span>
-<a id="__codelineno-0-70" name="__codelineno-0-70"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-70" name="__codelineno-0-70"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-71" name="__codelineno-0-71"></a><span class="sd">    !!! example</span>
 <a id="__codelineno-0-72" name="__codelineno-0-72"></a><span class="sd">        ```solidity</span>
 <a id="__codelineno-0-73" name="__codelineno-0-73"></a><span class="sd">        import &quot;SafeLib.sol&quot;;</span>
@@ -1099,7 +1115,7 @@
 <a id="__codelineno-0-172" name="__codelineno-0-172"></a>
 <a id="__codelineno-0-173" name="__codelineno-0-173"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-174" name="__codelineno-0-174"></a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SourceUnit</span><span class="p">:</span>
-<a id="__codelineno-0-175" name="__codelineno-0-175"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-175" name="__codelineno-0-175"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-176" name="__codelineno-0-176"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-177" name="__codelineno-0-177"></a><span class="sd">            Parent IR node.</span>
 <a id="__codelineno-0-178" name="__codelineno-0-178"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1107,7 +1123,7 @@
 <a id="__codelineno-0-180" name="__codelineno-0-180"></a>
 <a id="__codelineno-0-181" name="__codelineno-0-181"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-182" name="__codelineno-0-182"></a>    <span class="k">def</span> <span class="nf">source_unit_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<a id="__codelineno-0-183" name="__codelineno-0-183"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-183" name="__codelineno-0-183"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-184" name="__codelineno-0-184"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-185" name="__codelineno-0-185"></a><span class="sd">            Source unit name of the imported file.</span>
 <a id="__codelineno-0-186" name="__codelineno-0-186"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1115,7 +1131,7 @@
 <a id="__codelineno-0-188" name="__codelineno-0-188"></a>
 <a id="__codelineno-0-189" name="__codelineno-0-189"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-190" name="__codelineno-0-190"></a>    <span class="k">def</span> <span class="nf">imported_file</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-<a id="__codelineno-0-191" name="__codelineno-0-191"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-191" name="__codelineno-0-191"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-192" name="__codelineno-0-192"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-193" name="__codelineno-0-193"></a><span class="sd">            Absolute path of the imported file.</span>
 <a id="__codelineno-0-194" name="__codelineno-0-194"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1123,7 +1139,7 @@
 <a id="__codelineno-0-196" name="__codelineno-0-196"></a>
 <a id="__codelineno-0-197" name="__codelineno-0-197"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-198" name="__codelineno-0-198"></a>    <span class="k">def</span> <span class="nf">import_string</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<a id="__codelineno-0-199" name="__codelineno-0-199"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-199" name="__codelineno-0-199"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-200" name="__codelineno-0-200"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-201" name="__codelineno-0-201"></a><span class="sd">            Import string as it appears in the source code.</span>
 <a id="__codelineno-0-202" name="__codelineno-0-202"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1131,7 +1147,7 @@
 <a id="__codelineno-0-204" name="__codelineno-0-204"></a>
 <a id="__codelineno-0-205" name="__codelineno-0-205"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-206" name="__codelineno-0-206"></a>    <span class="k">def</span> <span class="nf">source_unit</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SourceUnit</span><span class="p">:</span>
-<a id="__codelineno-0-207" name="__codelineno-0-207"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-207" name="__codelineno-0-207"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-208" name="__codelineno-0-208"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-209" name="__codelineno-0-209"></a><span class="sd">            Source unit imported by this import directive.</span>
 <a id="__codelineno-0-210" name="__codelineno-0-210"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1145,7 +1161,7 @@
 <a id="__codelineno-0-218" name="__codelineno-0-218"></a>
 <a id="__codelineno-0-219" name="__codelineno-0-219"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-220" name="__codelineno-0-220"></a>    <span class="k">def</span> <span class="nf">symbol_aliases</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">SymbolAlias</span><span class="p">]:</span>
-<a id="__codelineno-0-221" name="__codelineno-0-221"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-221" name="__codelineno-0-221"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-222" name="__codelineno-0-222"></a><span class="sd">        Is only set in the case of `:::solidity import { SafeType as CustomSafeType } from &quot;SafeLib.sol&quot;;` import directive type.</span>
 <a id="__codelineno-0-223" name="__codelineno-0-223"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-224" name="__codelineno-0-224"></a><span class="sd">            Symbol aliases present in the import directive.</span>
@@ -1154,7 +1170,7 @@
 <a id="__codelineno-0-227" name="__codelineno-0-227"></a>
 <a id="__codelineno-0-228" name="__codelineno-0-228"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-229" name="__codelineno-0-229"></a>    <span class="k">def</span> <span class="nf">unit_alias</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<a id="__codelineno-0-230" name="__codelineno-0-230"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-230" name="__codelineno-0-230"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-231" name="__codelineno-0-231"></a><span class="sd">        !!! example</span>
 <a id="__codelineno-0-232" name="__codelineno-0-232"></a><span class="sd">            Is `SafeLib` in the case of these import directives:</span>
 <a id="__codelineno-0-233" name="__codelineno-0-233"></a><span class="sd">            ```solidity</span>
@@ -1179,7 +1195,7 @@
 <a id="__codelineno-0-252" name="__codelineno-0-252"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-253" name="__codelineno-0-253"></a>    <span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>
 <a id="__codelineno-0-254" name="__codelineno-0-254"></a>    <span class="k">def</span> <span class="nf">import_string_pos</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
-<a id="__codelineno-0-255" name="__codelineno-0-255"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-255" name="__codelineno-0-255"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-256" name="__codelineno-0-256"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-257" name="__codelineno-0-257"></a><span class="sd">            Byte offsets (start, end) of the import string in the source file.</span>
 <a id="__codelineno-0-258" name="__codelineno-0-258"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1256,8 +1272,8 @@
 <code class="highlight language-python"><span class="n">import_string_pos</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-cached"><code>cached</code></small>
       <small class="doc doc-label doc-label-property"><code>property</code></small>
+      <small class="doc doc-label doc-label-cached"><code>cached</code></small>
   </span>
 
 <a class="headerlink" href="#woke.ast.ir.meta.import_directive.ImportDirective.import_string_pos" title="Permanent link">#</a></h4>
@@ -1455,7 +1471,7 @@
 
   <div class="doc doc-contents ">
   
-      <p>Is only set in the case of <code class="highlight"><span class="kt">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span>SafeType<span class="w"> </span>as<span class="w"> </span>CustomSafeType<span class="w"> </span><span class="p">}</span><span class="w"> </span>from<span class="w"> </span><span class="s2">&quot;SafeLib.sol&quot;</span><span class="p">;</span><span class="w"></span></code> import directive type.</p>
+      <p>Is only set in the case of <code class="highlight"><span class="kt">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span>SafeType<span class="w"> </span>as<span class="w"> </span>CustomSafeType<span class="w"> </span><span class="p">}</span><span class="w"> </span>from<span class="w"> </span><span class="s2">&quot;SafeLib.sol&quot;</span><span class="p">;</span></code> import directive type.</p>
 
   <p><strong>Returns:</strong></p>
   <table>
@@ -1497,14 +1513,14 @@
       <div class="admonition example">
 <p class="admonition-title">Example</p>
 <p>Is <code>SafeLib</code> in the case of these import directives:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kt">import</span><span class="w"> </span><span class="s2">&quot;SafeLib.sol&quot;</span><span class="w"> </span>as<span class="w"> </span>SafeLib<span class="p">;</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kt">import</span><span class="w"> </span><span class="s2">&quot;SafeLib.sol&quot;</span><span class="w"> </span>as<span class="w"> </span>SafeLib<span class="p">;</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kt">import</span><span class="w"> </span><span class="o">*</span><span class="w"> </span>as<span class="w"> </span>SafeLib<span class="w"> </span>from<span class="w"> </span><span class="s2">&quot;SafeLib.sol&quot;</span><span class="p">;</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kt">import</span><span class="w"> </span><span class="o">*</span><span class="w"> </span>as<span class="w"> </span>SafeLib<span class="w"> </span>from<span class="w"> </span><span class="s2">&quot;SafeLib.sol&quot;</span><span class="p">;</span>
 </code></pre></div></p>
 <p>Is <code>None</code> in the case of these import directives:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kt">import</span><span class="w"> </span><span class="s2">&quot;SafeLib.sol&quot;</span><span class="p">;</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kt">import</span><span class="w"> </span><span class="s2">&quot;SafeLib.sol&quot;</span><span class="p">;</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kt">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span>SafeType<span class="w"> </span>as<span class="w"> </span>CustomSafeType<span class="w"> </span><span class="p">}</span><span class="w"> </span>from<span class="w"> </span><span class="s2">&quot;SafeLib.sol&quot;</span><span class="p">;</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kt">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span>SafeType<span class="w"> </span>as<span class="w"> </span>CustomSafeType<span class="w"> </span><span class="p">}</span><span class="w"> </span>from<span class="w"> </span><span class="s2">&quot;SafeLib.sol&quot;</span><span class="p">;</span>
 </code></pre></div></p>
 </div>
 
@@ -1557,11 +1573,11 @@
   <div class="doc doc-contents ">
 
   
-      <p>Helper class representing a symbol alias in an import directive of the<code class="highlight"><span class="kt">import</span><span class="w"> </span><span class="p">{</span>symbol<span class="w"> </span>as<span class="w"> </span>alias<span class="p">}</span><span class="w"> </span>from<span class="w"> </span><span class="s2">&quot;file.sol&quot;</span><span class="p">;</span><span class="w"></span></code> form.</p>
+      <p>Helper class representing a symbol alias in an import directive of the<code class="highlight"><span class="kt">import</span><span class="w"> </span><span class="p">{</span>symbol<span class="w"> </span>as<span class="w"> </span>alias<span class="p">}</span><span class="w"> </span>from<span class="w"> </span><span class="s2">&quot;file.sol&quot;</span><span class="p">;</span></code> form.</p>
 <div class="admonition example">
 <p class="admonition-title">Example</p>
 <p><code>symbol</code> is the <code>foreign</code> attribute and <code>alias</code> is the <code>local</code> attribute in the following example:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kt">import</span><span class="w"> </span><span class="p">{</span>symbol<span class="w"> </span>as<span class="w"> </span>alias<span class="p">}</span><span class="w"> </span>from<span class="w"> </span><span class="s2">&quot;file.sol&quot;</span><span class="p">;</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kt">import</span><span class="w"> </span><span class="p">{</span>symbol<span class="w"> </span>as<span class="w"> </span>alias<span class="p">}</span><span class="w"> </span>from<span class="w"> </span><span class="s2">&quot;file.sol&quot;</span><span class="p">;</span>
 </code></pre></div></p>
 </div>
 
@@ -1614,7 +1630,7 @@
 <span class="normal"><a href="#__codelineno-0-65">65</a></span>
 <span class="normal"><a href="#__codelineno-0-66">66</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="nd">@dataclass</span>
 <a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="k">class</span> <span class="nc">SymbolAlias</span><span class="p">:</span>
-<a id="__codelineno-0-51" name="__codelineno-0-51"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-52" name="__codelineno-0-52"></a><span class="sd">    Helper class representing a symbol alias in an import directive of the`:::solidity import {symbol as alias} from &quot;file.sol&quot;;` form.</span>
 <a id="__codelineno-0-53" name="__codelineno-0-53"></a>
 <a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="sd">    !!! example</span>

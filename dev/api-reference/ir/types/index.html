@@ -312,6 +312,8 @@
         
           
         
+          
+        
       
       
         <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
@@ -522,6 +524,20 @@
     <li class="md-nav__item">
       <a href="../../../testing-framework/performance-considerations/" class="md-nav__link">
         Performance considerations
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../testing-framework/migrating-from-ape-and-brownie/" class="md-nav__link">
+        Migrating from Ape & Brownie
       </a>
     </li>
   
@@ -1385,7 +1401,7 @@
 <span class="normal"><a href="#__codelineno-0-94">94</a></span>
 <span class="normal"><a href="#__codelineno-0-95">95</a></span>
 <span class="normal"><a href="#__codelineno-0-96">96</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-30" name="__codelineno-0-30"></a><span class="k">class</span> <span class="nc">TypeAbc</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-<a id="__codelineno-0-31" name="__codelineno-0-31"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-31" name="__codelineno-0-31"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-32" name="__codelineno-0-32"></a><span class="sd">    Abstract base class for all types.</span>
 <a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="sd">    &quot;&quot;&quot;</span>
 <a id="__codelineno-0-34" name="__codelineno-0-34"></a>
@@ -1525,7 +1541,7 @@
 <span class="normal"><a href="#__codelineno-0-169">169</a></span>
 <span class="normal"><a href="#__codelineno-0-170">170</a></span>
 <span class="normal"><a href="#__codelineno-0-171">171</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-146" name="__codelineno-0-146"></a><span class="k">class</span> <span class="nc">Address</span><span class="p">(</span><span class="n">TypeAbc</span><span class="p">):</span>
-<a id="__codelineno-0-147" name="__codelineno-0-147"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-147" name="__codelineno-0-147"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-148" name="__codelineno-0-148"></a><span class="sd">    Address type.</span>
 <a id="__codelineno-0-149" name="__codelineno-0-149"></a><span class="sd">    &quot;&quot;&quot;</span>
 <a id="__codelineno-0-150" name="__codelineno-0-150"></a>
@@ -1545,7 +1561,7 @@
 <a id="__codelineno-0-164" name="__codelineno-0-164"></a>
 <a id="__codelineno-0-165" name="__codelineno-0-165"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-166" name="__codelineno-0-166"></a>    <span class="k">def</span> <span class="nf">is_payable</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-167" name="__codelineno-0-167"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-167" name="__codelineno-0-167"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-168" name="__codelineno-0-168"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-169" name="__codelineno-0-169"></a><span class="sd">            `True` if the address is payable, `False` otherwise.</span>
 <a id="__codelineno-0-170" name="__codelineno-0-170"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1646,7 +1662,7 @@
 <span class="normal"><a href="#__codelineno-0-181">181</a></span>
 <span class="normal"><a href="#__codelineno-0-182">182</a></span>
 <span class="normal"><a href="#__codelineno-0-183">183</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-174" name="__codelineno-0-174"></a><span class="k">class</span> <span class="nc">Bool</span><span class="p">(</span><span class="n">TypeAbc</span><span class="p">):</span>
-<a id="__codelineno-0-175" name="__codelineno-0-175"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-175" name="__codelineno-0-175"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-176" name="__codelineno-0-176"></a><span class="sd">    Boolean type.</span>
 <a id="__codelineno-0-177" name="__codelineno-0-177"></a><span class="sd">    &quot;&quot;&quot;</span>
 <a id="__codelineno-0-178" name="__codelineno-0-178"></a>
@@ -1718,7 +1734,7 @@
 <span class="normal"><a href="#__codelineno-0-198">198</a></span>
 <span class="normal"><a href="#__codelineno-0-199">199</a></span>
 <span class="normal"><a href="#__codelineno-0-200">200</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-186" name="__codelineno-0-186"></a><span class="k">class</span> <span class="nc">IntAbc</span><span class="p">(</span><span class="n">TypeAbc</span><span class="p">):</span>
-<a id="__codelineno-0-187" name="__codelineno-0-187"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-187" name="__codelineno-0-187"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-188" name="__codelineno-0-188"></a><span class="sd">    Base class for [Int][woke.ast.types.Int] and [UInt][woke.ast.types.UInt] types.</span>
 <a id="__codelineno-0-189" name="__codelineno-0-189"></a><span class="sd">    &quot;&quot;&quot;</span>
 <a id="__codelineno-0-190" name="__codelineno-0-190"></a>
@@ -1726,7 +1742,7 @@
 <a id="__codelineno-0-192" name="__codelineno-0-192"></a>
 <a id="__codelineno-0-193" name="__codelineno-0-193"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-194" name="__codelineno-0-194"></a>    <span class="k">def</span> <span class="nf">bits_count</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<a id="__codelineno-0-195" name="__codelineno-0-195"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-195" name="__codelineno-0-195"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-196" name="__codelineno-0-196"></a><span class="sd">        Can only be a multiple of 8, with a minimum of 8 and a maximum of 256.</span>
 <a id="__codelineno-0-197" name="__codelineno-0-197"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-198" name="__codelineno-0-198"></a><span class="sd">            Number of bits used to represent this integer.</span>
@@ -1834,7 +1850,7 @@
 <span class="normal"><a href="#__codelineno-0-215">215</a></span>
 <span class="normal"><a href="#__codelineno-0-216">216</a></span>
 <span class="normal"><a href="#__codelineno-0-217">217</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-203" name="__codelineno-0-203"></a><span class="k">class</span> <span class="nc">Int</span><span class="p">(</span><span class="n">IntAbc</span><span class="p">):</span>
-<a id="__codelineno-0-204" name="__codelineno-0-204"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-204" name="__codelineno-0-204"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-205" name="__codelineno-0-205"></a><span class="sd">    Signed integer type.</span>
 <a id="__codelineno-0-206" name="__codelineno-0-206"></a><span class="sd">    &quot;&quot;&quot;</span>
 <a id="__codelineno-0-207" name="__codelineno-0-207"></a>
@@ -1911,7 +1927,7 @@
 <span class="normal"><a href="#__codelineno-0-232">232</a></span>
 <span class="normal"><a href="#__codelineno-0-233">233</a></span>
 <span class="normal"><a href="#__codelineno-0-234">234</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-220" name="__codelineno-0-220"></a><span class="k">class</span> <span class="nc">UInt</span><span class="p">(</span><span class="n">IntAbc</span><span class="p">):</span>
-<a id="__codelineno-0-221" name="__codelineno-0-221"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-221" name="__codelineno-0-221"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-222" name="__codelineno-0-222"></a><span class="sd">    Unsigned integer type.</span>
 <a id="__codelineno-0-223" name="__codelineno-0-223"></a><span class="sd">    &quot;&quot;&quot;</span>
 <a id="__codelineno-0-224" name="__codelineno-0-224"></a>
@@ -2002,7 +2018,7 @@
 <span class="normal"><a href="#__codelineno-0-259">259</a></span>
 <span class="normal"><a href="#__codelineno-0-260">260</a></span>
 <span class="normal"><a href="#__codelineno-0-261">261</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-237" name="__codelineno-0-237"></a><span class="k">class</span> <span class="nc">FixedAbc</span><span class="p">(</span><span class="n">TypeAbc</span><span class="p">):</span>
-<a id="__codelineno-0-238" name="__codelineno-0-238"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-238" name="__codelineno-0-238"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-239" name="__codelineno-0-239"></a><span class="sd">    Base class for [Fixed][woke.ast.types.Fixed] and [UFixed][woke.ast.types.UFixed] types.</span>
 <a id="__codelineno-0-240" name="__codelineno-0-240"></a><span class="sd">    !!! info</span>
 <a id="__codelineno-0-241" name="__codelineno-0-241"></a><span class="sd">        Currently not fully implemented in Solidity.</span>
@@ -2013,7 +2029,7 @@
 <a id="__codelineno-0-246" name="__codelineno-0-246"></a>
 <a id="__codelineno-0-247" name="__codelineno-0-247"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-248" name="__codelineno-0-248"></a>    <span class="k">def</span> <span class="nf">total_bits</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<a id="__codelineno-0-249" name="__codelineno-0-249"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-249" name="__codelineno-0-249"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-250" name="__codelineno-0-250"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-251" name="__codelineno-0-251"></a><span class="sd">            Total number of bits used to represent this fixed point number.</span>
 <a id="__codelineno-0-252" name="__codelineno-0-252"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -2021,7 +2037,7 @@
 <a id="__codelineno-0-254" name="__codelineno-0-254"></a>
 <a id="__codelineno-0-255" name="__codelineno-0-255"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-256" name="__codelineno-0-256"></a>    <span class="k">def</span> <span class="nf">fractional_digits</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<a id="__codelineno-0-257" name="__codelineno-0-257"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-257" name="__codelineno-0-257"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-258" name="__codelineno-0-258"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-259" name="__codelineno-0-259"></a><span class="sd">            Number of decimal places available.</span>
 <a id="__codelineno-0-260" name="__codelineno-0-260"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -2179,7 +2195,7 @@
 <span class="normal"><a href="#__codelineno-0-286">286</a></span>
 <span class="normal"><a href="#__codelineno-0-287">287</a></span>
 <span class="normal"><a href="#__codelineno-0-288">288</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-264" name="__codelineno-0-264"></a><span class="k">class</span> <span class="nc">Fixed</span><span class="p">(</span><span class="n">FixedAbc</span><span class="p">):</span>
-<a id="__codelineno-0-265" name="__codelineno-0-265"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-265" name="__codelineno-0-265"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-266" name="__codelineno-0-266"></a><span class="sd">    Signed fixed-point number type as specified by the [Solidity docs](https://docs.soliditylang.org/en/latest/types.html?highlight=fixed#fixed-point-numbers).</span>
 <a id="__codelineno-0-267" name="__codelineno-0-267"></a><span class="sd">    !!! info</span>
 <a id="__codelineno-0-268" name="__codelineno-0-268"></a><span class="sd">        Currently not fully implemented in Solidity.</span>
@@ -2280,7 +2296,7 @@
 <span class="normal"><a href="#__codelineno-0-313">313</a></span>
 <span class="normal"><a href="#__codelineno-0-314">314</a></span>
 <span class="normal"><a href="#__codelineno-0-315">315</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-291" name="__codelineno-0-291"></a><span class="k">class</span> <span class="nc">UFixed</span><span class="p">(</span><span class="n">FixedAbc</span><span class="p">):</span>
-<a id="__codelineno-0-292" name="__codelineno-0-292"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-292" name="__codelineno-0-292"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-293" name="__codelineno-0-293"></a><span class="sd">    Unsigned fixed point number type as specified by the [Solidity docs](https://docs.soliditylang.org/en/latest/types.html?highlight=ufixed#fixed-point-numbers).</span>
 <a id="__codelineno-0-294" name="__codelineno-0-294"></a><span class="sd">    !!! info</span>
 <a id="__codelineno-0-295" name="__codelineno-0-295"></a><span class="sd">        Currently not fully implemented in Solidity.</span>
@@ -2351,10 +2367,10 @@
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>This expression is of the <a class="autorefs autorefs-internal" href="#woke.ast.types.StringLiteral">StringLiteral</a> type:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="s2">&quot;Hello, world!&quot;</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="s2">&quot;Hello, world!&quot;</span>
 </code></pre></div></p>
 <p>However, this expression is of the <a class="autorefs autorefs-internal" href="#woke.ast.types.String">String</a> type and contains a child expression of the <a class="autorefs autorefs-internal" href="#woke.ast.types.StringLiteral">StringLiteral</a> type:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kt">string</span><span class="p">(</span><span class="s2">&quot;Hello, world!&quot;</span><span class="p">)</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kt">string</span><span class="p">(</span><span class="s2">&quot;Hello, world!&quot;</span><span class="p">)</span>
 </code></pre></div></p>
 </div>
 
@@ -2396,7 +2412,7 @@
 <span class="normal"><a href="#__codelineno-0-350">350</a></span>
 <span class="normal"><a href="#__codelineno-0-351">351</a></span>
 <span class="normal"><a href="#__codelineno-0-352">352</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-318" name="__codelineno-0-318"></a><span class="k">class</span> <span class="nc">StringLiteral</span><span class="p">(</span><span class="n">TypeAbc</span><span class="p">):</span>
-<a id="__codelineno-0-319" name="__codelineno-0-319"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-319" name="__codelineno-0-319"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-320" name="__codelineno-0-320"></a><span class="sd">    String literal type.</span>
 <a id="__codelineno-0-321" name="__codelineno-0-321"></a><span class="sd">    !!! warning</span>
 <a id="__codelineno-0-322" name="__codelineno-0-322"></a><span class="sd">        This expression is of the [StringLiteral][woke.ast.types.StringLiteral] type:</span>
@@ -2425,7 +2441,7 @@
 <a id="__codelineno-0-345" name="__codelineno-0-345"></a>
 <a id="__codelineno-0-346" name="__codelineno-0-346"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-347" name="__codelineno-0-347"></a>    <span class="k">def</span> <span class="nf">keccak256_hash</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-<a id="__codelineno-0-348" name="__codelineno-0-348"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-348" name="__codelineno-0-348"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-349" name="__codelineno-0-349"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-350" name="__codelineno-0-350"></a><span class="sd">            Keccak256 hash of the string literal.</span>
 <a id="__codelineno-0-351" name="__codelineno-0-351"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -2592,7 +2608,7 @@
 <span class="normal"><a href="#__codelineno-0-428">428</a></span>
 <span class="normal"><a href="#__codelineno-0-429">429</a></span>
 <span class="normal"><a href="#__codelineno-0-430">430</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-355" name="__codelineno-0-355"></a><span class="k">class</span> <span class="nc">String</span><span class="p">(</span><span class="n">TypeAbc</span><span class="p">):</span>
-<a id="__codelineno-0-356" name="__codelineno-0-356"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-356" name="__codelineno-0-356"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-357" name="__codelineno-0-357"></a><span class="sd">    String type.</span>
 <a id="__codelineno-0-358" name="__codelineno-0-358"></a><span class="sd">    &quot;&quot;&quot;</span>
 <a id="__codelineno-0-359" name="__codelineno-0-359"></a>
@@ -2631,7 +2647,7 @@
 <a id="__codelineno-0-392" name="__codelineno-0-392"></a>
 <a id="__codelineno-0-393" name="__codelineno-0-393"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-394" name="__codelineno-0-394"></a>    <span class="k">def</span> <span class="nf">data_location</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataLocation</span><span class="p">:</span>
-<a id="__codelineno-0-395" name="__codelineno-0-395"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-395" name="__codelineno-0-395"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-396" name="__codelineno-0-396"></a><span class="sd">        Can be either [CALLDATA][woke.ast.enums.DataLocation.CALLDATA], [MEMORY][woke.ast.enums.DataLocation.MEMORY] or [STORAGE][woke.ast.enums.DataLocation.STORAGE]</span>
 <a id="__codelineno-0-397" name="__codelineno-0-397"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-398" name="__codelineno-0-398"></a><span class="sd">            Data location of the string expression.</span>
@@ -2640,7 +2656,7 @@
 <a id="__codelineno-0-401" name="__codelineno-0-401"></a>
 <a id="__codelineno-0-402" name="__codelineno-0-402"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-403" name="__codelineno-0-403"></a>    <span class="k">def</span> <span class="nf">is_pointer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-404" name="__codelineno-0-404"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-404" name="__codelineno-0-404"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-405" name="__codelineno-0-405"></a><span class="sd">        Storage references can be pointers or bound references. In general, local variables are of</span>
 <a id="__codelineno-0-406" name="__codelineno-0-406"></a><span class="sd">        pointer type, state variables are bound references. Assignments to pointers or deleting</span>
 <a id="__codelineno-0-407" name="__codelineno-0-407"></a><span class="sd">        them will not modify storage (that will only change the pointer). Assignment from</span>
@@ -2656,7 +2672,7 @@
 <a id="__codelineno-0-417" name="__codelineno-0-417"></a>
 <a id="__codelineno-0-418" name="__codelineno-0-418"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-419" name="__codelineno-0-419"></a>    <span class="k">def</span> <span class="nf">is_slice</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-420" name="__codelineno-0-420"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-420" name="__codelineno-0-420"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-421" name="__codelineno-0-421"></a><span class="sd">        !!! example</span>
 <a id="__codelineno-0-422" name="__codelineno-0-422"></a><span class="sd">            ```solidity</span>
 <a id="__codelineno-0-423" name="__codelineno-0-423"></a><span class="sd">            function foo(string calldata s) public pure {</span>
@@ -2781,9 +2797,9 @@ never change the contents of the original value.</p>
   
       <div class="admonition example">
 <p class="admonition-title">Example</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kt">function</span><span class="w"> </span><span class="nv">foo</span><span class="p">(</span><span class="kt">string</span><span class="w"> </span><span class="nv">calldata</span><span class="w"> </span>s<span class="p">)</span><span class="w"> </span><span class="kt">public</span><span class="w"> </span>pure<span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span>s<span class="p">[</span><span class="m m-Decimal">0</span><span class="p">:</span><span class="m m-Decimal">5</span><span class="p">];</span><span class="w"> </span><span class="c1">// s[0:5] is a string slice</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">}</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kt">function</span><span class="w"> </span><span class="nv">foo</span><span class="p">(</span><span class="kt">string</span><span class="w"> </span><span class="nv">calldata</span><span class="w"> </span>s<span class="p">)</span><span class="w"> </span><span class="kt">public</span><span class="w"> </span>pure<span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span>s<span class="p">[</span><span class="m m-Decimal">0</span><span class="o">:</span><span class="m m-Decimal">5</span><span class="p">];</span><span class="w"> </span><span class="c1">// s[0:5] is a string slice</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">}</span>
 </code></pre></div>
 </div>
 
@@ -2919,7 +2935,7 @@ never change the contents of the original value.</p>
 <span class="normal"><a href="#__codelineno-0-506">506</a></span>
 <span class="normal"><a href="#__codelineno-0-507">507</a></span>
 <span class="normal"><a href="#__codelineno-0-508">508</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-433" name="__codelineno-0-433"></a><span class="k">class</span> <span class="nc">Bytes</span><span class="p">(</span><span class="n">TypeAbc</span><span class="p">):</span>
-<a id="__codelineno-0-434" name="__codelineno-0-434"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-434" name="__codelineno-0-434"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-435" name="__codelineno-0-435"></a><span class="sd">    Bytes type.</span>
 <a id="__codelineno-0-436" name="__codelineno-0-436"></a><span class="sd">    &quot;&quot;&quot;</span>
 <a id="__codelineno-0-437" name="__codelineno-0-437"></a>
@@ -2958,7 +2974,7 @@ never change the contents of the original value.</p>
 <a id="__codelineno-0-470" name="__codelineno-0-470"></a>
 <a id="__codelineno-0-471" name="__codelineno-0-471"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-472" name="__codelineno-0-472"></a>    <span class="k">def</span> <span class="nf">data_location</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataLocation</span><span class="p">:</span>
-<a id="__codelineno-0-473" name="__codelineno-0-473"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-473" name="__codelineno-0-473"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-474" name="__codelineno-0-474"></a><span class="sd">        Can be either [CALLDATA][woke.ast.enums.DataLocation.CALLDATA], [MEMORY][woke.ast.enums.DataLocation.MEMORY] or [STORAGE][woke.ast.enums.DataLocation.STORAGE]</span>
 <a id="__codelineno-0-475" name="__codelineno-0-475"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-476" name="__codelineno-0-476"></a><span class="sd">            Data location of the bytes expression.</span>
@@ -2967,7 +2983,7 @@ never change the contents of the original value.</p>
 <a id="__codelineno-0-479" name="__codelineno-0-479"></a>
 <a id="__codelineno-0-480" name="__codelineno-0-480"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-481" name="__codelineno-0-481"></a>    <span class="k">def</span> <span class="nf">is_pointer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-482" name="__codelineno-0-482"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-482" name="__codelineno-0-482"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-483" name="__codelineno-0-483"></a><span class="sd">        Storage references can be pointers or bound references. In general, local variables are of</span>
 <a id="__codelineno-0-484" name="__codelineno-0-484"></a><span class="sd">        pointer type, state variables are bound references. Assignments to pointers or deleting</span>
 <a id="__codelineno-0-485" name="__codelineno-0-485"></a><span class="sd">        them will not modify storage (that will only change the pointer). Assignment from</span>
@@ -2983,7 +2999,7 @@ never change the contents of the original value.</p>
 <a id="__codelineno-0-495" name="__codelineno-0-495"></a>
 <a id="__codelineno-0-496" name="__codelineno-0-496"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-497" name="__codelineno-0-497"></a>    <span class="k">def</span> <span class="nf">is_slice</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-498" name="__codelineno-0-498"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-498" name="__codelineno-0-498"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-499" name="__codelineno-0-499"></a><span class="sd">        !!! example</span>
 <a id="__codelineno-0-500" name="__codelineno-0-500"></a><span class="sd">            ```solidity</span>
 <a id="__codelineno-0-501" name="__codelineno-0-501"></a><span class="sd">            function foo(bytes calldata b) public pure {</span>
@@ -3108,9 +3124,9 @@ never change the contents of the original value.</p>
   
       <div class="admonition example">
 <p class="admonition-title">Example</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kt">function</span><span class="w"> </span><span class="nv">foo</span><span class="p">(</span><span class="kt">bytes</span><span class="w"> </span><span class="nv">calldata</span><span class="w"> </span>b<span class="p">)</span><span class="w"> </span><span class="kt">public</span><span class="w"> </span>pure<span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span>b<span class="p">[</span><span class="m m-Decimal">0</span><span class="p">:</span><span class="m m-Decimal">5</span><span class="p">];</span><span class="w"> </span><span class="c1">// s[0:5] is a bytes slice</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">}</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kt">function</span><span class="w"> </span><span class="nv">foo</span><span class="p">(</span><span class="kt">bytes</span><span class="w"> </span><span class="nv">calldata</span><span class="w"> </span>b<span class="p">)</span><span class="w"> </span><span class="kt">public</span><span class="w"> </span>pure<span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span>b<span class="p">[</span><span class="m m-Decimal">0</span><span class="o">:</span><span class="m m-Decimal">5</span><span class="p">];</span><span class="w"> </span><span class="c1">// s[0:5] is a bytes slice</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">}</span>
 </code></pre></div>
 </div>
 
@@ -3196,7 +3212,7 @@ never change the contents of the original value.</p>
 <span class="normal"><a href="#__codelineno-0-534">534</a></span>
 <span class="normal"><a href="#__codelineno-0-535">535</a></span>
 <span class="normal"><a href="#__codelineno-0-536">536</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-511" name="__codelineno-0-511"></a><span class="k">class</span> <span class="nc">FixedBytes</span><span class="p">(</span><span class="n">TypeAbc</span><span class="p">):</span>
-<a id="__codelineno-0-512" name="__codelineno-0-512"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-512" name="__codelineno-0-512"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-513" name="__codelineno-0-513"></a><span class="sd">    Fixed-size byte array type.</span>
 <a id="__codelineno-0-514" name="__codelineno-0-514"></a><span class="sd">    &quot;&quot;&quot;</span>
 <a id="__codelineno-0-515" name="__codelineno-0-515"></a>
@@ -3215,7 +3231,7 @@ never change the contents of the original value.</p>
 <a id="__codelineno-0-528" name="__codelineno-0-528"></a>
 <a id="__codelineno-0-529" name="__codelineno-0-529"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-530" name="__codelineno-0-530"></a>    <span class="k">def</span> <span class="nf">bytes_count</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<a id="__codelineno-0-531" name="__codelineno-0-531"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-531" name="__codelineno-0-531"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-532" name="__codelineno-0-532"></a><span class="sd">        Is at least 1 and at most 32.</span>
 <a id="__codelineno-0-533" name="__codelineno-0-533"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-534" name="__codelineno-0-534"></a><span class="sd">            Number of bytes used to represent this fixed-size byte array.</span>
@@ -3307,14 +3323,14 @@ never change the contents of the original value.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Given the following function:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kt">function</span><span class="w"> </span><span class="nv">foo</span><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">a</span><span class="p">,</span><span class="w"> </span><span class="kt">uint</span><span class="w"> </span><span class="nv">b</span><span class="p">)</span><span class="w"> </span><span class="kt">public</span><span class="w"> </span>pure<span class="w"> </span><span class="kt">returns</span><span class="p">(</span><span class="kt">uint</span><span class="p">,</span><span class="w"> </span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kt">return</span><span class="w"> </span><span class="p">(</span>a<span class="w"> </span><span class="o">+</span><span class="w"> </span>b<span class="p">,</span><span class="w"> </span>a<span class="w"> </span><span class="o">-</span><span class="w"> </span>b<span class="p">);</span><span class="w"></span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">}</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kt">function</span><span class="w"> </span><span class="nv">foo</span><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">a</span><span class="p">,</span><span class="w"> </span><span class="kt">uint</span><span class="w"> </span><span class="nv">b</span><span class="p">)</span><span class="w"> </span><span class="kt">public</span><span class="w"> </span>pure<span class="w"> </span><span class="kt">returns</span><span class="p">(</span><span class="kt">uint</span><span class="p">,</span><span class="w"> </span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kt">return</span><span class="w"> </span><span class="p">(</span>a<span class="w"> </span><span class="o">+</span><span class="w"> </span>b<span class="p">,</span><span class="w"> </span>a<span class="w"> </span><span class="o">-</span><span class="w"> </span>b<span class="p">);</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">}</span>
 </code></pre></div>
 and the following call:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>foo<span class="p">(</span><span class="m m-Decimal">1</span><span class="p">,</span><span class="w"> </span><span class="m m-Decimal">2</span><span class="p">);</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>foo<span class="p">(</span><span class="m m-Decimal">1</span><span class="p">,</span><span class="w"> </span><span class="m m-Decimal">2</span><span class="p">);</span>
 </code></pre></div>
-the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#woke.ast.types.Function">Function</a>, but the type of <code class="highlight">foo<span class="p">(</span><span class="m m-Decimal">1</span><span class="p">,</span><span class="w"> </span><span class="m m-Decimal">2</span><span class="p">)</span><span class="w"></span></code> is <a class="autorefs autorefs-internal" href="#woke.ast.types.Tuple">Tuple</a>.</p>
+the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#woke.ast.types.Function">Function</a>, but the type of <code class="highlight">foo<span class="p">(</span><span class="m m-Decimal">1</span><span class="p">,</span><span class="w"> </span><span class="m m-Decimal">2</span><span class="p">)</span></code> is <a class="autorefs autorefs-internal" href="#woke.ast.types.Tuple">Tuple</a>.</p>
 </div>
 
 
@@ -3534,7 +3550,7 @@ the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#wok
 <span class="normal"><a href="#__codelineno-0-750">750</a></span>
 <span class="normal"><a href="#__codelineno-0-751">751</a></span>
 <span class="normal"><a href="#__codelineno-0-752">752</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-539" name="__codelineno-0-539"></a><span class="k">class</span> <span class="nc">Function</span><span class="p">(</span><span class="n">TypeAbc</span><span class="p">):</span>
-<a id="__codelineno-0-540" name="__codelineno-0-540"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-540" name="__codelineno-0-540"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-541" name="__codelineno-0-541"></a><span class="sd">    Function type.</span>
 <a id="__codelineno-0-542" name="__codelineno-0-542"></a>
 <a id="__codelineno-0-543" name="__codelineno-0-543"></a><span class="sd">    !!! warning</span>
@@ -3639,7 +3655,7 @@ the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#wok
 <a id="__codelineno-0-642" name="__codelineno-0-642"></a>
 <a id="__codelineno-0-643" name="__codelineno-0-643"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-644" name="__codelineno-0-644"></a>    <span class="k">def</span> <span class="nf">kind</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FunctionTypeKind</span><span class="p">:</span>
-<a id="__codelineno-0-645" name="__codelineno-0-645"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-645" name="__codelineno-0-645"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-646" name="__codelineno-0-646"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-647" name="__codelineno-0-647"></a><span class="sd">            Kind of the function type.</span>
 <a id="__codelineno-0-648" name="__codelineno-0-648"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -3647,7 +3663,7 @@ the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#wok
 <a id="__codelineno-0-650" name="__codelineno-0-650"></a>
 <a id="__codelineno-0-651" name="__codelineno-0-651"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-652" name="__codelineno-0-652"></a>    <span class="k">def</span> <span class="nf">state_mutability</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StateMutability</span><span class="p">:</span>
-<a id="__codelineno-0-653" name="__codelineno-0-653"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-653" name="__codelineno-0-653"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-654" name="__codelineno-0-654"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-655" name="__codelineno-0-655"></a><span class="sd">            State mutability of the function type.</span>
 <a id="__codelineno-0-656" name="__codelineno-0-656"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -3655,7 +3671,7 @@ the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#wok
 <a id="__codelineno-0-658" name="__codelineno-0-658"></a>
 <a id="__codelineno-0-659" name="__codelineno-0-659"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-660" name="__codelineno-0-660"></a>    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typ</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="n">TypeAbc</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-<a id="__codelineno-0-661" name="__codelineno-0-661"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-661" name="__codelineno-0-661"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-662" name="__codelineno-0-662"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-663" name="__codelineno-0-663"></a><span class="sd">            Expression types of the parameters of the function type.</span>
 <a id="__codelineno-0-664" name="__codelineno-0-664"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -3663,7 +3679,7 @@ the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#wok
 <a id="__codelineno-0-666" name="__codelineno-0-666"></a>
 <a id="__codelineno-0-667" name="__codelineno-0-667"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-668" name="__codelineno-0-668"></a>    <span class="k">def</span> <span class="nf">return_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typ</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="n">TypeAbc</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-<a id="__codelineno-0-669" name="__codelineno-0-669"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-669" name="__codelineno-0-669"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-670" name="__codelineno-0-670"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-671" name="__codelineno-0-671"></a><span class="sd">            Expression types of the return parameters of the function type.</span>
 <a id="__codelineno-0-672" name="__codelineno-0-672"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -3671,7 +3687,7 @@ the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#wok
 <a id="__codelineno-0-674" name="__codelineno-0-674"></a>
 <a id="__codelineno-0-675" name="__codelineno-0-675"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-676" name="__codelineno-0-676"></a>    <span class="k">def</span> <span class="nf">gas_set</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-677" name="__codelineno-0-677"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-677" name="__codelineno-0-677"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-678" name="__codelineno-0-678"></a><span class="sd">        !!! example</span>
 <a id="__codelineno-0-679" name="__codelineno-0-679"></a><span class="sd">            In the case of the old syntax (deprecated), the `gas` [MemberAccess][woke.ast.ir.expression.member_access.MemberAccess] expression is of the [Function][woke.ast.types.Function] type which returns a [Function][woke.ast.types.Function] with `gas_set` set to `True`.</span>
 <a id="__codelineno-0-680" name="__codelineno-0-680"></a><span class="sd">            ```solidity</span>
@@ -3689,7 +3705,7 @@ the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#wok
 <a id="__codelineno-0-692" name="__codelineno-0-692"></a>
 <a id="__codelineno-0-693" name="__codelineno-0-693"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-694" name="__codelineno-0-694"></a>    <span class="k">def</span> <span class="nf">value_set</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-695" name="__codelineno-0-695"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-695" name="__codelineno-0-695"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-696" name="__codelineno-0-696"></a><span class="sd">        !!! example</span>
 <a id="__codelineno-0-697" name="__codelineno-0-697"></a><span class="sd">            In the case of the old syntax (deprecated), the `value` [MemberAccess][woke.ast.ir.expression.member_access.MemberAccess] expression is of the [Function][woke.ast.types.Function] type which returns a [Function][woke.ast.types.Function] with `value_set` set to `True`.</span>
 <a id="__codelineno-0-698" name="__codelineno-0-698"></a><span class="sd">            ```solidity</span>
@@ -3707,7 +3723,7 @@ the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#wok
 <a id="__codelineno-0-710" name="__codelineno-0-710"></a>
 <a id="__codelineno-0-711" name="__codelineno-0-711"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-712" name="__codelineno-0-712"></a>    <span class="k">def</span> <span class="nf">salt_set</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-713" name="__codelineno-0-713"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-713" name="__codelineno-0-713"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-714" name="__codelineno-0-714"></a><span class="sd">        !!! example</span>
 <a id="__codelineno-0-715" name="__codelineno-0-715"></a><span class="sd">            In the following example, the `{salt: salt}` [FunctionCallOptions][woke.ast.ir.expression.function_call_options.FunctionCallOptions] expression is of the [Function][woke.ast.types.Function] type with `salt_set` set to `True`.</span>
 <a id="__codelineno-0-716" name="__codelineno-0-716"></a><span class="sd">            ```solidity</span>
@@ -3720,7 +3736,7 @@ the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#wok
 <a id="__codelineno-0-723" name="__codelineno-0-723"></a>
 <a id="__codelineno-0-724" name="__codelineno-0-724"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-725" name="__codelineno-0-725"></a>    <span class="k">def</span> <span class="nf">attached_to</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typ</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">typ</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="n">TypeAbc</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
-<a id="__codelineno-0-726" name="__codelineno-0-726"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-726" name="__codelineno-0-726"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-727" name="__codelineno-0-727"></a><span class="sd">        A function type can be attached to a type using the [UsingForDirective][woke.ast.ir.meta.using_for_directive.UsingForDirective] or internally in the case of a Solidity global symbol.</span>
 <a id="__codelineno-0-728" name="__codelineno-0-728"></a><span class="sd">        !!! example</span>
 <a id="__codelineno-0-729" name="__codelineno-0-729"></a><span class="sd">            In the following example, the `add` [MemberAccess][woke.ast.ir.expression.member_access.MemberAccess] expression on line 9 is of the [Function][woke.ast.types.Function] type and is attached to the [UInt][woke.ast.types.UInt] type.</span>
@@ -3931,10 +3947,10 @@ the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#wok
       <div class="admonition example">
 <p class="admonition-title">Example</p>
 <p>In the case of the old syntax (deprecated), the <code>gas</code> <a class="autorefs autorefs-internal" href="../expressions/member-access/#woke.ast.ir.expression.member_access.MemberAccess">MemberAccess</a> expression is of the <a class="autorefs autorefs-internal" href="#woke.ast.types.Function">Function</a> type which returns a <a class="autorefs autorefs-internal" href="#woke.ast.types.Function">Function</a> with <code>gas_set</code> set to <code>True</code>.
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>foo<span class="p">.</span>gas<span class="p">(</span><span class="m m-Decimal">10</span><span class="p">)(</span><span class="m m-Decimal">1</span><span class="p">,</span><span class="w"> </span><span class="m m-Decimal">2</span><span class="p">);</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>foo<span class="p">.</span>gas<span class="p">(</span><span class="m m-Decimal">10</span><span class="p">)(</span><span class="m m-Decimal">1</span><span class="p">,</span><span class="w"> </span><span class="m m-Decimal">2</span><span class="p">);</span>
 </code></pre></div></p>
 <p>In the case of the new syntax, the <code>{gas: 10}</code> <a class="autorefs autorefs-internal" href="../expressions/function-call-options/#woke.ast.ir.expression.function_call_options.FunctionCallOptions">FunctionCallOptions</a> expression is of the <a class="autorefs autorefs-internal" href="#woke.ast.types.Function">Function</a> type with <code>gas_set</code> set to <code>True</code>.
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>foo<span class="p">{</span>gas<span class="p">:</span><span class="w"> </span><span class="m m-Decimal">10</span><span class="p">}(</span><span class="m m-Decimal">1</span><span class="p">,</span><span class="w"> </span><span class="m m-Decimal">2</span><span class="p">);</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>foo<span class="p">{</span>gas<span class="o">:</span><span class="w"> </span><span class="m m-Decimal">10</span><span class="p">}(</span><span class="m m-Decimal">1</span><span class="p">,</span><span class="w"> </span><span class="m m-Decimal">2</span><span class="p">);</span>
 </code></pre></div></p>
 </div>
 
@@ -3978,10 +3994,10 @@ the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#wok
       <div class="admonition example">
 <p class="admonition-title">Example</p>
 <p>In the case of the old syntax (deprecated), the <code>value</code> <a class="autorefs autorefs-internal" href="../expressions/member-access/#woke.ast.ir.expression.member_access.MemberAccess">MemberAccess</a> expression is of the <a class="autorefs autorefs-internal" href="#woke.ast.types.Function">Function</a> type which returns a <a class="autorefs autorefs-internal" href="#woke.ast.types.Function">Function</a> with <code>value_set</code> set to <code>True</code>.
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>foo<span class="p">.</span>value<span class="p">(</span><span class="m m-Decimal">1</span><span class="p">)(</span><span class="m m-Decimal">1</span><span class="p">,</span><span class="w"> </span><span class="m m-Decimal">2</span><span class="p">);</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>foo<span class="p">.</span>value<span class="p">(</span><span class="m m-Decimal">1</span><span class="p">)(</span><span class="m m-Decimal">1</span><span class="p">,</span><span class="w"> </span><span class="m m-Decimal">2</span><span class="p">);</span>
 </code></pre></div></p>
 <p>In the case of the new syntax, the <code>{value: 1}</code> <a class="autorefs autorefs-internal" href="../expressions/function-call-options/#woke.ast.ir.expression.function_call_options.FunctionCallOptions">FunctionCallOptions</a> expression is of the <a class="autorefs autorefs-internal" href="#woke.ast.types.Function">Function</a> type with <code>value_set</code> set to <code>True</code>.
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>foo<span class="p">{</span>value<span class="p">:</span><span class="w"> </span><span class="m m-Decimal">1</span><span class="p">}(</span><span class="m m-Decimal">1</span><span class="p">,</span><span class="w"> </span><span class="m m-Decimal">2</span><span class="p">);</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>foo<span class="p">{</span>value<span class="o">:</span><span class="w"> </span><span class="m m-Decimal">1</span><span class="p">}(</span><span class="m m-Decimal">1</span><span class="p">,</span><span class="w"> </span><span class="m m-Decimal">2</span><span class="p">);</span>
 </code></pre></div></p>
 </div>
 
@@ -4025,7 +4041,7 @@ the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#wok
       <div class="admonition example">
 <p class="admonition-title">Example</p>
 <p>In the following example, the <code>{salt: salt}</code> <a class="autorefs autorefs-internal" href="../expressions/function-call-options/#woke.ast.ir.expression.function_call_options.FunctionCallOptions">FunctionCallOptions</a> expression is of the <a class="autorefs autorefs-internal" href="#woke.ast.types.Function">Function</a> type with <code>salt_set</code> set to <code>True</code>.
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kt">new</span><span class="w"> </span>Foo<span class="p">{</span>salt<span class="p">:</span><span class="w"> </span>salt<span class="p">}();</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kt">new</span><span class="w"> </span>Foo<span class="p">{</span>salt<span class="o">:</span><span class="w"> </span>salt<span class="p">}();</span>
 </code></pre></div></p>
 </div>
 
@@ -4080,20 +4096,20 @@ the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#wok
 <span class="normal"><a href="#__codelineno-0-8"> 8</a></span>
 <span class="normal"><a href="#__codelineno-0-9"> 9</a></span>
 <span class="normal"><a href="#__codelineno-0-10">10</a></span>
-<span class="normal"><a href="#__codelineno-0-11">11</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="kt">function</span><span class="w"> </span><span class="nv">add</span><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">a</span><span class="p">,</span><span class="w"> </span><span class="kt">uint</span><span class="w"> </span><span class="nv">b</span><span class="p">)</span><span class="w"> </span>pure<span class="w"> </span><span class="kt">returns</span><span class="w"> </span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="w">    </span><span class="kt">return</span><span class="w"> </span>a<span class="w"> </span><span class="o">+</span><span class="w"> </span>b<span class="p">;</span><span class="w"></span>
-<a id="__codelineno-0-3" name="__codelineno-0-3"></a><span class="p">}</span><span class="w"></span>
+<span class="normal"><a href="#__codelineno-0-11">11</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="kt">function</span><span class="w"> </span><span class="nv">add</span><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">a</span><span class="p">,</span><span class="w"> </span><span class="kt">uint</span><span class="w"> </span><span class="nv">b</span><span class="p">)</span><span class="w"> </span>pure<span class="w"> </span><span class="kt">returns</span><span class="w"> </span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="w">    </span><span class="kt">return</span><span class="w"> </span>a<span class="w"> </span><span class="o">+</span><span class="w"> </span>b<span class="p">;</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3"></a><span class="p">}</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5"></a>using<span class="w"> </span><span class="p">{</span>add<span class="p">}</span><span class="w"> </span><span class="kt">for</span><span class="w"> </span><span class="kt">uint</span><span class="p">;</span><span class="w"></span>
+<a id="__codelineno-0-5" name="__codelineno-0-5"></a>using<span class="w"> </span><span class="p">{</span>add<span class="p">}</span><span class="w"> </span><span class="kt">for</span><span class="w"> </span><span class="kt">uint</span><span class="p">;</span>
 <a id="__codelineno-0-6" name="__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7"></a><span class="k">contract</span><span class="w"> </span><span class="ni">Foo</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-8" name="__codelineno-0-8"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">bar</span><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="kt">public</span><span class="w"> </span>pure<span class="w"> </span><span class="kt">returns</span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-9" name="__codelineno-0-9"></a><span class="w">        </span><span class="kt">return</span><span class="w"> </span>x<span class="p">.</span>add<span class="p">(</span><span class="m m-Decimal">1</span><span class="p">);</span><span class="w"></span>
-<a id="__codelineno-0-10" name="__codelineno-0-10"></a><span class="w">    </span><span class="p">}</span><span class="w"></span>
-<a id="__codelineno-0-11" name="__codelineno-0-11"></a><span class="p">}</span><span class="w"></span>
+<a id="__codelineno-0-7" name="__codelineno-0-7"></a><span class="k">contract</span><span class="w"> </span><span class="ni">Foo</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">bar</span><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="kt">public</span><span class="w"> </span>pure<span class="w"> </span><span class="kt">returns</span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9"></a><span class="w">        </span><span class="kt">return</span><span class="w"> </span>x<span class="p">.</span>add<span class="p">(</span><span class="m m-Decimal">1</span><span class="p">);</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11"></a><span class="p">}</span>
 </code></pre></div></td></tr></table></div></p>
 <p>In this example, the <code>push</code> <a class="autorefs autorefs-internal" href="../expressions/member-access/#woke.ast.ir.expression.member_access.MemberAccess">MemberAccess</a> expression on line 9 is of the <a class="autorefs autorefs-internal" href="#woke.ast.types.Function">Function</a> type and is attached to the <a class="autorefs autorefs-internal" href="#woke.ast.types.Array">Array</a> type.
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>arr<span class="p">.</span>push<span class="p">(</span><span class="m m-Decimal">1</span><span class="p">);</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>arr<span class="p">.</span>push<span class="p">(</span><span class="m m-Decimal">1</span><span class="p">);</span>
 </code></pre></div></p>
 </div>
 
@@ -4193,7 +4209,7 @@ the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#wok
 <span class="normal"><a href="#__codelineno-0-792">792</a></span>
 <span class="normal"><a href="#__codelineno-0-793">793</a></span>
 <span class="normal"><a href="#__codelineno-0-794">794</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-755" name="__codelineno-0-755"></a><span class="k">class</span> <span class="nc">Tuple</span><span class="p">(</span><span class="n">TypeAbc</span><span class="p">):</span>
-<a id="__codelineno-0-756" name="__codelineno-0-756"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-756" name="__codelineno-0-756"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-757" name="__codelineno-0-757"></a><span class="sd">    Tuple type.</span>
 <a id="__codelineno-0-758" name="__codelineno-0-758"></a><span class="sd">    &quot;&quot;&quot;</span>
 <a id="__codelineno-0-759" name="__codelineno-0-759"></a>
@@ -4219,7 +4235,7 @@ the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#wok
 <a id="__codelineno-0-779" name="__codelineno-0-779"></a>
 <a id="__codelineno-0-780" name="__codelineno-0-780"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-781" name="__codelineno-0-781"></a>    <span class="k">def</span> <span class="nf">components</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typ</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="n">typ</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">TypeAbc</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
-<a id="__codelineno-0-782" name="__codelineno-0-782"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-782" name="__codelineno-0-782"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-783" name="__codelineno-0-783"></a><span class="sd">        A component type can be `None` in the case of a tuple with a missing component.</span>
 <a id="__codelineno-0-784" name="__codelineno-0-784"></a><span class="sd">        !!! example</span>
 <a id="__codelineno-0-785" name="__codelineno-0-785"></a><span class="sd">            In the following example, the `(success, )` expression is of the [Tuple][woke.ast.types.Tuple] type with the components of the type [Bool][woke.ast.types.Bool] and `None`.</span>
@@ -4265,8 +4281,8 @@ the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#wok
 <div class="admonition example">
 <p class="admonition-title">Example</p>
 <p>In the following example, the <code>(success, )</code> expression is of the <a class="autorefs autorefs-internal" href="#woke.ast.types.Tuple">Tuple</a> type with the components of the type <a class="autorefs autorefs-internal" href="#woke.ast.types.Bool">Bool</a> and <code>None</code>.
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kt">bool</span><span class="w"> </span><span class="nv">success</span><span class="p">;</span><span class="w"></span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="p">(</span>success<span class="p">,</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">address</span><span class="p">(</span>addr<span class="p">).</span>call<span class="p">{</span>value<span class="p">:</span><span class="w"> </span><span class="m m-Decimal">1</span><span class="p">}(</span><span class="s2">&quot;&quot;</span><span class="p">);</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kt">bool</span><span class="w"> </span><span class="nv">success</span><span class="p">;</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="p">(</span>success<span class="p">,</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">address</span><span class="p">(</span>addr<span class="p">).</span>call<span class="p">{</span>value<span class="o">:</span><span class="w"> </span><span class="m m-Decimal">1</span><span class="p">}(</span><span class="s2">&quot;&quot;</span><span class="p">);</span>
 </code></pre></div></p>
 </div>
 
@@ -4379,7 +4395,7 @@ the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#wok
 <span class="normal"><a href="#__codelineno-0-847">847</a></span>
 <span class="normal"><a href="#__codelineno-0-848">848</a></span>
 <span class="normal"><a href="#__codelineno-0-849">849</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-797" name="__codelineno-0-797"></a><span class="k">class</span> <span class="nc">Type</span><span class="p">(</span><span class="n">TypeAbc</span><span class="p">):</span>
-<a id="__codelineno-0-798" name="__codelineno-0-798"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-798" name="__codelineno-0-798"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-799" name="__codelineno-0-799"></a><span class="sd">    Type type. As opposed to other types, this type describes the type of a type, not the type of an instance of a type.</span>
 <a id="__codelineno-0-800" name="__codelineno-0-800"></a><span class="sd">    &quot;&quot;&quot;</span>
 <a id="__codelineno-0-801" name="__codelineno-0-801"></a>
@@ -4401,7 +4417,7 @@ the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#wok
 <a id="__codelineno-0-817" name="__codelineno-0-817"></a>
 <a id="__codelineno-0-818" name="__codelineno-0-818"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-819" name="__codelineno-0-819"></a>    <span class="k">def</span> <span class="nf">actual_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TypeAbc</span><span class="p">:</span>
-<a id="__codelineno-0-820" name="__codelineno-0-820"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-820" name="__codelineno-0-820"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-821" name="__codelineno-0-821"></a><span class="sd">        !!! example</span>
 <a id="__codelineno-0-822" name="__codelineno-0-822"></a><span class="sd">            `payable` in the following example is of the [Type][woke.ast.types.Type] type with the [Address][woke.ast.types.Address] actual type.</span>
 <a id="__codelineno-0-823" name="__codelineno-0-823"></a><span class="sd">            ```solidity</span>
@@ -4463,24 +4479,24 @@ the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#wok
       <div class="admonition example">
 <p class="admonition-title">Example</p>
 <p><code>payable</code> in the following example is of the <a class="autorefs autorefs-internal" href="#woke.ast.types.Type">Type</a> type with the <a class="autorefs autorefs-internal" href="#woke.ast.types.Address">Address</a> actual type.
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kt">payable</span><span class="p">(</span>addr<span class="p">);</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kt">payable</span><span class="p">(</span>addr<span class="p">);</span>
 </code></pre></div></p>
 <p><code>super</code> in the following example is of the <a class="autorefs autorefs-internal" href="#woke.ast.types.Type">Type</a> type with the <a class="autorefs autorefs-internal" href="#woke.ast.types.Contract">Contract</a> actual type.
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>super<span class="p">.</span>foo<span class="p">();</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>super<span class="p">.</span>foo<span class="p">();</span>
 </code></pre></div></p>
 <p><code>string</code> in the following example is of the <a class="autorefs autorefs-internal" href="#woke.ast.types.Type">Type</a> type with the <a class="autorefs autorefs-internal" href="#woke.ast.types.String">String</a> actual type.
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kt">string</span><span class="p">.</span>concat<span class="p">(</span><span class="s2">&quot;foo&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;bar&quot;</span><span class="p">);</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kt">string</span><span class="p">.</span>concat<span class="p">(</span><span class="s2">&quot;foo&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;bar&quot;</span><span class="p">);</span>
 </code></pre></div></p>
 <p><code>Foo</code> in the following example on line 4 is of the <a class="autorefs autorefs-internal" href="#woke.ast.types.Type">Type</a> type with the <a class="autorefs autorefs-internal" href="#woke.ast.types.Enum">Enum</a> actual type.
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-3-1">1</a></span>
 <span class="normal"><a href="#__codelineno-3-2">2</a></span>
 <span class="normal"><a href="#__codelineno-3-3">3</a></span>
 <span class="normal"><a href="#__codelineno-3-4">4</a></span>
-<span class="normal"><a href="#__codelineno-3-5">5</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1"></a><span class="kt">enum</span><span class="w"> </span><span class="nv">Foo</span><span class="w"> </span><span class="p">{</span><span class="w"> </span>A<span class="p">,</span><span class="w"> </span>B<span class="w"> </span><span class="p">}</span><span class="w"></span>
+<span class="normal"><a href="#__codelineno-3-5">5</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1"></a><span class="kt">enum</span><span class="w"> </span><span class="nv">Foo</span><span class="w"> </span><span class="p">{</span><span class="w"> </span>A<span class="p">,</span><span class="w"> </span>B<span class="w"> </span><span class="p">}</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2"></a>
-<a id="__codelineno-3-3" name="__codelineno-3-3"></a><span class="kt">function</span><span class="w"> </span><span class="nv">bar</span><span class="p">()</span><span class="w"> </span>pure<span class="w"> </span><span class="kt">returns</span><span class="w"> </span><span class="p">(</span>Foo<span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-3-4" name="__codelineno-3-4"></a><span class="w">    </span><span class="kt">return</span><span class="w"> </span>Foo<span class="p">.</span>A<span class="p">;</span><span class="w"></span>
-<a id="__codelineno-3-5" name="__codelineno-3-5"></a><span class="p">}</span><span class="w"></span>
+<a id="__codelineno-3-3" name="__codelineno-3-3"></a><span class="kt">function</span><span class="w"> </span><span class="nv">bar</span><span class="p">()</span><span class="w"> </span>pure<span class="w"> </span><span class="kt">returns</span><span class="w"> </span><span class="p">(</span>Foo<span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4"></a><span class="w">    </span><span class="kt">return</span><span class="w"> </span>Foo<span class="p">.</span>A<span class="p">;</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5"></a><span class="p">}</span>
 </code></pre></div></td></tr></table></div></p>
 </div>
 
@@ -4538,7 +4554,7 @@ the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#wok
       <p>Rational type. Represents the type of constants or expressions with constants.</p>
 <div class="admonition example">
 <p class="admonition-title">Example</p>
-<p><code class="highlight"><span class="m m-Decimal">1</span><span class="w"></span></code>, <code class="highlight"><span class="mh">0x1234</span><span class="w"></span></code>, <code class="highlight"><span class="err">1</span>e18<span class="w"></span></code>, <code class="highlight"><span class="m m-Decimal">1</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="m m-Decimal">2</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="m m-Decimal">3</span><span class="w"></span></code> are all of the <a class="autorefs autorefs-internal" href="#woke.ast.types.Rational">Rational</a> type.</p>
+<p><code class="highlight"><span class="m m-Decimal">1</span></code>, <code class="highlight"><span class="mh">0x1234</span></code>, <code class="highlight"><span class="err">1</span>e18</code>, <code class="highlight"><span class="m m-Decimal">1</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="m m-Decimal">2</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="m m-Decimal">3</span></code> are all of the <a class="autorefs autorefs-internal" href="#woke.ast.types.Rational">Rational</a> type.</p>
 </div>
 
 
@@ -4597,7 +4613,7 @@ the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#wok
 <span class="normal"><a href="#__codelineno-0-902">902</a></span>
 <span class="normal"><a href="#__codelineno-0-903">903</a></span>
 <span class="normal"><a href="#__codelineno-0-904">904</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-852" name="__codelineno-0-852"></a><span class="k">class</span> <span class="nc">Rational</span><span class="p">(</span><span class="n">TypeAbc</span><span class="p">):</span>
-<a id="__codelineno-0-853" name="__codelineno-0-853"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-853" name="__codelineno-0-853"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-854" name="__codelineno-0-854"></a><span class="sd">    Rational type. Represents the type of constants or expressions with constants.</span>
 <a id="__codelineno-0-855" name="__codelineno-0-855"></a>
 <a id="__codelineno-0-856" name="__codelineno-0-856"></a><span class="sd">    !!! example</span>
@@ -4635,7 +4651,7 @@ the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#wok
 <a id="__codelineno-0-888" name="__codelineno-0-888"></a>
 <a id="__codelineno-0-889" name="__codelineno-0-889"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-890" name="__codelineno-0-890"></a>    <span class="k">def</span> <span class="nf">numerator</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<a id="__codelineno-0-891" name="__codelineno-0-891"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-891" name="__codelineno-0-891"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-892" name="__codelineno-0-892"></a><span class="sd">        If the rational is negative, the numerator will be negative.</span>
 <a id="__codelineno-0-893" name="__codelineno-0-893"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-894" name="__codelineno-0-894"></a><span class="sd">            Numerator of the rational number.</span>
@@ -4644,7 +4660,7 @@ the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#wok
 <a id="__codelineno-0-897" name="__codelineno-0-897"></a>
 <a id="__codelineno-0-898" name="__codelineno-0-898"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-899" name="__codelineno-0-899"></a>    <span class="k">def</span> <span class="nf">denominator</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<a id="__codelineno-0-900" name="__codelineno-0-900"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-900" name="__codelineno-0-900"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-901" name="__codelineno-0-901"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-902" name="__codelineno-0-902"></a><span class="sd">            Denominator of the rational number.</span>
 <a id="__codelineno-0-903" name="__codelineno-0-903"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -4802,7 +4818,7 @@ the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#wok
 <span class="normal"><a href="#__codelineno-0-932">932</a></span>
 <span class="normal"><a href="#__codelineno-0-933">933</a></span>
 <span class="normal"><a href="#__codelineno-0-934">934</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-907" name="__codelineno-0-907"></a><span class="k">class</span> <span class="nc">Modifier</span><span class="p">(</span><span class="n">TypeAbc</span><span class="p">):</span>
-<a id="__codelineno-0-908" name="__codelineno-0-908"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-908" name="__codelineno-0-908"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-909" name="__codelineno-0-909"></a><span class="sd">    Modifier type.</span>
 <a id="__codelineno-0-910" name="__codelineno-0-910"></a><span class="sd">    &quot;&quot;&quot;</span>
 <a id="__codelineno-0-911" name="__codelineno-0-911"></a>
@@ -4824,7 +4840,7 @@ the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#wok
 <a id="__codelineno-0-927" name="__codelineno-0-927"></a>
 <a id="__codelineno-0-928" name="__codelineno-0-928"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-929" name="__codelineno-0-929"></a>    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typ</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="n">TypeAbc</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-<a id="__codelineno-0-930" name="__codelineno-0-930"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-930" name="__codelineno-0-930"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-931" name="__codelineno-0-931"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-932" name="__codelineno-0-932"></a><span class="sd">            Expression types of the parameters of the modifier.</span>
 <a id="__codelineno-0-933" name="__codelineno-0-933"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -5031,7 +5047,7 @@ the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#wok
 <span class="normal"><a href="#__codelineno-0-1050">1050</a></span>
 <span class="normal"><a href="#__codelineno-0-1051">1051</a></span>
 <span class="normal"><a href="#__codelineno-0-1052">1052</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-937" name="__codelineno-0-937"></a><span class="k">class</span> <span class="nc">Array</span><span class="p">(</span><span class="n">TypeAbc</span><span class="p">):</span>
-<a id="__codelineno-0-938" name="__codelineno-0-938"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-938" name="__codelineno-0-938"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-939" name="__codelineno-0-939"></a><span class="sd">    Array type.</span>
 <a id="__codelineno-0-940" name="__codelineno-0-940"></a><span class="sd">    &quot;&quot;&quot;</span>
 <a id="__codelineno-0-941" name="__codelineno-0-941"></a>
@@ -5095,7 +5111,7 @@ the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#wok
 <a id="__codelineno-0-999" name="__codelineno-0-999"></a>
 <a id="__codelineno-0-1000" name="__codelineno-0-1000"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-1001" name="__codelineno-0-1001"></a>    <span class="k">def</span> <span class="nf">base_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TypeAbc</span><span class="p">:</span>
-<a id="__codelineno-0-1002" name="__codelineno-0-1002"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-1002" name="__codelineno-0-1002"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-1003" name="__codelineno-0-1003"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-1004" name="__codelineno-0-1004"></a><span class="sd">            Base type of the array.</span>
 <a id="__codelineno-0-1005" name="__codelineno-0-1005"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -5103,7 +5119,7 @@ the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#wok
 <a id="__codelineno-0-1007" name="__codelineno-0-1007"></a>
 <a id="__codelineno-0-1008" name="__codelineno-0-1008"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-1009" name="__codelineno-0-1009"></a>    <span class="k">def</span> <span class="nf">length</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typ</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
-<a id="__codelineno-0-1010" name="__codelineno-0-1010"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-1010" name="__codelineno-0-1010"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-1011" name="__codelineno-0-1011"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-1012" name="__codelineno-0-1012"></a><span class="sd">            Length of the array. `None` if the array is dynamic (not fixed size).</span>
 <a id="__codelineno-0-1013" name="__codelineno-0-1013"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -5111,7 +5127,7 @@ the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#wok
 <a id="__codelineno-0-1015" name="__codelineno-0-1015"></a>
 <a id="__codelineno-0-1016" name="__codelineno-0-1016"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-1017" name="__codelineno-0-1017"></a>    <span class="k">def</span> <span class="nf">data_location</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataLocation</span><span class="p">:</span>
-<a id="__codelineno-0-1018" name="__codelineno-0-1018"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-1018" name="__codelineno-0-1018"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-1019" name="__codelineno-0-1019"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-1020" name="__codelineno-0-1020"></a><span class="sd">            Data location of the array.</span>
 <a id="__codelineno-0-1021" name="__codelineno-0-1021"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -5119,7 +5135,7 @@ the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#wok
 <a id="__codelineno-0-1023" name="__codelineno-0-1023"></a>
 <a id="__codelineno-0-1024" name="__codelineno-0-1024"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-1025" name="__codelineno-0-1025"></a>    <span class="k">def</span> <span class="nf">is_pointer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-1026" name="__codelineno-0-1026"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-1026" name="__codelineno-0-1026"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-1027" name="__codelineno-0-1027"></a><span class="sd">        Storage references can be pointers or bound references. In general, local variables are of</span>
 <a id="__codelineno-0-1028" name="__codelineno-0-1028"></a><span class="sd">        pointer type, state variables are bound references. Assignments to pointers or deleting</span>
 <a id="__codelineno-0-1029" name="__codelineno-0-1029"></a><span class="sd">        them will not modify storage (that will only change the pointer). Assignment from</span>
@@ -5135,7 +5151,7 @@ the type of <code>foo</code> is <a class="autorefs autorefs-internal" href="#wok
 <a id="__codelineno-0-1039" name="__codelineno-0-1039"></a>
 <a id="__codelineno-0-1040" name="__codelineno-0-1040"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-1041" name="__codelineno-0-1041"></a>    <span class="k">def</span> <span class="nf">is_slice</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-1042" name="__codelineno-0-1042"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-1042" name="__codelineno-0-1042"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-1043" name="__codelineno-0-1043"></a><span class="sd">        !!! example</span>
 <a id="__codelineno-0-1044" name="__codelineno-0-1044"></a><span class="sd">            ```solidity</span>
 <a id="__codelineno-0-1045" name="__codelineno-0-1045"></a><span class="sd">            function foo(uint[] calldata arr) public pure {</span>
@@ -5335,9 +5351,9 @@ never change the contents of the original value.</p>
   
       <div class="admonition example">
 <p class="admonition-title">Example</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kt">function</span><span class="w"> </span><span class="nv">foo</span><span class="p">(</span><span class="kt">uint</span><span class="p">[]</span><span class="w"> </span>calldata<span class="w"> </span>arr<span class="p">)</span><span class="w"> </span><span class="kt">public</span><span class="w"> </span>pure<span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span>arr<span class="p">[</span><span class="m m-Decimal">0</span><span class="p">:</span><span class="m m-Decimal">5</span><span class="p">];</span><span class="w"> </span><span class="c1">// arr[0:5] is an array slice</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">}</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kt">function</span><span class="w"> </span><span class="nv">foo</span><span class="p">(</span><span class="kt">uint</span><span class="p">[]</span><span class="w"> </span>calldata<span class="w"> </span>arr<span class="p">)</span><span class="w"> </span><span class="kt">public</span><span class="w"> </span>pure<span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span>arr<span class="p">[</span><span class="m m-Decimal">0</span><span class="o">:</span><span class="m m-Decimal">5</span><span class="p">];</span><span class="w"> </span><span class="c1">// arr[0:5] is an array slice</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">}</span>
 </code></pre></div>
 </div>
 
@@ -5437,7 +5453,7 @@ never change the contents of the original value.</p>
 <span class="normal"><a href="#__codelineno-0-1092">1092</a></span>
 <span class="normal"><a href="#__codelineno-0-1093">1093</a></span>
 <span class="normal"><a href="#__codelineno-0-1094">1094</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-1055" name="__codelineno-0-1055"></a><span class="k">class</span> <span class="nc">Mapping</span><span class="p">(</span><span class="n">TypeAbc</span><span class="p">):</span>
-<a id="__codelineno-0-1056" name="__codelineno-0-1056"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-1056" name="__codelineno-0-1056"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-1057" name="__codelineno-0-1057"></a><span class="sd">    Mapping type.</span>
 <a id="__codelineno-0-1058" name="__codelineno-0-1058"></a><span class="sd">    &quot;&quot;&quot;</span>
 <a id="__codelineno-0-1059" name="__codelineno-0-1059"></a>
@@ -5463,7 +5479,7 @@ never change the contents of the original value.</p>
 <a id="__codelineno-0-1079" name="__codelineno-0-1079"></a>
 <a id="__codelineno-0-1080" name="__codelineno-0-1080"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-1081" name="__codelineno-0-1081"></a>    <span class="k">def</span> <span class="nf">key_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TypeAbc</span><span class="p">:</span>
-<a id="__codelineno-0-1082" name="__codelineno-0-1082"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-1082" name="__codelineno-0-1082"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-1083" name="__codelineno-0-1083"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-1084" name="__codelineno-0-1084"></a><span class="sd">            Key type of the mapping.</span>
 <a id="__codelineno-0-1085" name="__codelineno-0-1085"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -5471,7 +5487,7 @@ never change the contents of the original value.</p>
 <a id="__codelineno-0-1087" name="__codelineno-0-1087"></a>
 <a id="__codelineno-0-1088" name="__codelineno-0-1088"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-1089" name="__codelineno-0-1089"></a>    <span class="k">def</span> <span class="nf">value_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TypeAbc</span><span class="p">:</span>
-<a id="__codelineno-0-1090" name="__codelineno-0-1090"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-1090" name="__codelineno-0-1090"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-1091" name="__codelineno-0-1091"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-1092" name="__codelineno-0-1092"></a><span class="sd">            Value type of the mapping.</span>
 <a id="__codelineno-0-1093" name="__codelineno-0-1093"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -5711,7 +5727,7 @@ never change the contents of the original value.</p>
 <a id="__codelineno-0-1130" name="__codelineno-0-1130"></a>
 <a id="__codelineno-0-1131" name="__codelineno-0-1131"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-1132" name="__codelineno-0-1132"></a>    <span class="k">def</span> <span class="nf">is_super</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-1133" name="__codelineno-0-1133"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-1133" name="__codelineno-0-1133"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-1134" name="__codelineno-0-1134"></a><span class="sd">        !!! warning</span>
 <a id="__codelineno-0-1135" name="__codelineno-0-1135"></a><span class="sd">            Until 0.7.6, the `super` keyword ([Identifier][woke.ast.ir.expression.identifier.Identifier]) was of the [Contract][woke.ast.types.Contract] type with `is_super` set to `True`.</span>
 <a id="__codelineno-0-1136" name="__codelineno-0-1136"></a><span class="sd">            Since 0.8.0, the `super` keyword is of the [Type][woke.ast.types.Type] type with [Contract][woke.ast.types.Contract] as the `actual_type` and `is_super` set to `True`.</span>
@@ -5736,7 +5752,7 @@ never change the contents of the original value.</p>
 <a id="__codelineno-0-1155" name="__codelineno-0-1155"></a>
 <a id="__codelineno-0-1156" name="__codelineno-0-1156"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-1157" name="__codelineno-0-1157"></a>    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<a id="__codelineno-0-1158" name="__codelineno-0-1158"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-1158" name="__codelineno-0-1158"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-1159" name="__codelineno-0-1159"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-1160" name="__codelineno-0-1160"></a><span class="sd">            Name of the contract.</span>
 <a id="__codelineno-0-1161" name="__codelineno-0-1161"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -5744,7 +5760,7 @@ never change the contents of the original value.</p>
 <a id="__codelineno-0-1163" name="__codelineno-0-1163"></a>
 <a id="__codelineno-0-1164" name="__codelineno-0-1164"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-1165" name="__codelineno-0-1165"></a>    <span class="k">def</span> <span class="nf">ir_node</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ContractDefinition</span><span class="p">:</span>
-<a id="__codelineno-0-1166" name="__codelineno-0-1166"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-1166" name="__codelineno-0-1166"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-1167" name="__codelineno-0-1167"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-1168" name="__codelineno-0-1168"></a><span class="sd">            Contract definition IR node.</span>
 <a id="__codelineno-0-1169" name="__codelineno-0-1169"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -5794,11 +5810,11 @@ Since 0.8.0, the <code>super</code> keyword is of the <a class="autorefs autoref
 <div class="admonition example">
 <p class="admonition-title">Example</p>
 <p>The <code>name</code> and <code>ir_node</code> properties of the <a class="autorefs autorefs-internal" href="#woke.ast.types.Contract">Contract</a> type of the <code>super</code> expression in the following example refer to the <code>Foo</code> contract, not the <code>Bar</code> contract.
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">contract</span><span class="w"> </span><span class="ni">Foo</span><span class="w"> </span><span class="kt">is</span><span class="w"> </span>Bar<span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">foo</span><span class="p">()</span><span class="w"> </span><span class="kt">public</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">        </span>super<span class="p">.</span>foo<span class="p">();</span><span class="w"></span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="p">}</span><span class="w"></span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">}</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">contract</span><span class="w"> </span><span class="ni">Foo</span><span class="w"> </span><span class="kt">is</span><span class="w"> </span>Bar<span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">foo</span><span class="p">()</span><span class="w"> </span><span class="kt">public</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">        </span>super<span class="p">.</span>foo<span class="p">();</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">}</span>
 </code></pre></div></p>
 </div>
 
@@ -6031,7 +6047,7 @@ Since 0.8.0, the <code>super</code> keyword is of the <a class="autorefs autoref
 <span class="normal"><a href="#__codelineno-0-1271">1271</a></span>
 <span class="normal"><a href="#__codelineno-0-1272">1272</a></span>
 <span class="normal"><a href="#__codelineno-0-1273">1273</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-1177" name="__codelineno-0-1177"></a><span class="k">class</span> <span class="nc">Struct</span><span class="p">(</span><span class="n">TypeAbc</span><span class="p">):</span>
-<a id="__codelineno-0-1178" name="__codelineno-0-1178"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-1178" name="__codelineno-0-1178"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-1179" name="__codelineno-0-1179"></a><span class="sd">    Struct type.</span>
 <a id="__codelineno-0-1180" name="__codelineno-0-1180"></a><span class="sd">    &quot;&quot;&quot;</span>
 <a id="__codelineno-0-1181" name="__codelineno-0-1181"></a>
@@ -6086,7 +6102,7 @@ Since 0.8.0, the <code>super</code> keyword is of the <a class="autorefs autoref
 <a id="__codelineno-0-1230" name="__codelineno-0-1230"></a>
 <a id="__codelineno-0-1231" name="__codelineno-0-1231"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-1232" name="__codelineno-0-1232"></a>    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<a id="__codelineno-0-1233" name="__codelineno-0-1233"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-1233" name="__codelineno-0-1233"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-1234" name="__codelineno-0-1234"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-1235" name="__codelineno-0-1235"></a><span class="sd">            Name of the struct.</span>
 <a id="__codelineno-0-1236" name="__codelineno-0-1236"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -6094,7 +6110,7 @@ Since 0.8.0, the <code>super</code> keyword is of the <a class="autorefs autoref
 <a id="__codelineno-0-1238" name="__codelineno-0-1238"></a>
 <a id="__codelineno-0-1239" name="__codelineno-0-1239"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-1240" name="__codelineno-0-1240"></a>    <span class="k">def</span> <span class="nf">data_location</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataLocation</span><span class="p">:</span>
-<a id="__codelineno-0-1241" name="__codelineno-0-1241"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-1241" name="__codelineno-0-1241"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-1242" name="__codelineno-0-1242"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-1243" name="__codelineno-0-1243"></a><span class="sd">            Data location of the struct.</span>
 <a id="__codelineno-0-1244" name="__codelineno-0-1244"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -6102,7 +6118,7 @@ Since 0.8.0, the <code>super</code> keyword is of the <a class="autorefs autoref
 <a id="__codelineno-0-1246" name="__codelineno-0-1246"></a>
 <a id="__codelineno-0-1247" name="__codelineno-0-1247"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-1248" name="__codelineno-0-1248"></a>    <span class="k">def</span> <span class="nf">is_pointer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-1249" name="__codelineno-0-1249"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-1249" name="__codelineno-0-1249"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-1250" name="__codelineno-0-1250"></a><span class="sd">        Storage references can be pointers or bound references. In general, local variables are of</span>
 <a id="__codelineno-0-1251" name="__codelineno-0-1251"></a><span class="sd">        pointer type, state variables are bound references. Assignments to pointers or deleting</span>
 <a id="__codelineno-0-1252" name="__codelineno-0-1252"></a><span class="sd">        them will not modify storage (that will only change the pointer). Assignment from</span>
@@ -6118,7 +6134,7 @@ Since 0.8.0, the <code>super</code> keyword is of the <a class="autorefs autoref
 <a id="__codelineno-0-1262" name="__codelineno-0-1262"></a>
 <a id="__codelineno-0-1263" name="__codelineno-0-1263"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-1264" name="__codelineno-0-1264"></a>    <span class="k">def</span> <span class="nf">ir_node</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StructDefinition</span><span class="p">:</span>
-<a id="__codelineno-0-1265" name="__codelineno-0-1265"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-1265" name="__codelineno-0-1265"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-1266" name="__codelineno-0-1266"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-1267" name="__codelineno-0-1267"></a><span class="sd">            Struct definition IR node.</span>
 <a id="__codelineno-0-1268" name="__codelineno-0-1268"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -6389,7 +6405,7 @@ never change the contents of the original value.</p>
 <span class="normal"><a href="#__codelineno-0-1325">1325</a></span>
 <span class="normal"><a href="#__codelineno-0-1326">1326</a></span>
 <span class="normal"><a href="#__codelineno-0-1327">1327</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-1276" name="__codelineno-0-1276"></a><span class="k">class</span> <span class="nc">Enum</span><span class="p">(</span><span class="n">TypeAbc</span><span class="p">):</span>
-<a id="__codelineno-0-1277" name="__codelineno-0-1277"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-1277" name="__codelineno-0-1277"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-1278" name="__codelineno-0-1278"></a><span class="sd">    Enum type.</span>
 <a id="__codelineno-0-1279" name="__codelineno-0-1279"></a>
 <a id="__codelineno-0-1280" name="__codelineno-0-1280"></a><span class="sd">    !!! warning</span>
@@ -6423,7 +6439,7 @@ never change the contents of the original value.</p>
 <a id="__codelineno-0-1308" name="__codelineno-0-1308"></a>
 <a id="__codelineno-0-1309" name="__codelineno-0-1309"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-1310" name="__codelineno-0-1310"></a>    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<a id="__codelineno-0-1311" name="__codelineno-0-1311"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-1311" name="__codelineno-0-1311"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-1312" name="__codelineno-0-1312"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-1313" name="__codelineno-0-1313"></a><span class="sd">            Name of the enum.</span>
 <a id="__codelineno-0-1314" name="__codelineno-0-1314"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -6431,7 +6447,7 @@ never change the contents of the original value.</p>
 <a id="__codelineno-0-1316" name="__codelineno-0-1316"></a>
 <a id="__codelineno-0-1317" name="__codelineno-0-1317"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-1318" name="__codelineno-0-1318"></a>    <span class="k">def</span> <span class="nf">ir_node</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EnumDefinition</span><span class="p">:</span>
-<a id="__codelineno-0-1319" name="__codelineno-0-1319"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-1319" name="__codelineno-0-1319"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-1320" name="__codelineno-0-1320"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-1321" name="__codelineno-0-1321"></a><span class="sd">            Enum definition IR node.</span>
 <a id="__codelineno-0-1322" name="__codelineno-0-1322"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -6621,7 +6637,7 @@ never change the contents of the original value.</p>
 <span class="normal"><a href="#__codelineno-0-1384">1384</a></span>
 <span class="normal"><a href="#__codelineno-0-1385">1385</a></span>
 <span class="normal"><a href="#__codelineno-0-1386">1386</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-1330" name="__codelineno-0-1330"></a><span class="k">class</span> <span class="nc">Magic</span><span class="p">(</span><span class="n">TypeAbc</span><span class="p">):</span>
-<a id="__codelineno-0-1331" name="__codelineno-0-1331"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-1331" name="__codelineno-0-1331"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-1332" name="__codelineno-0-1332"></a><span class="sd">    Magic type represents Solidity language built-in objects.</span>
 <a id="__codelineno-0-1333" name="__codelineno-0-1333"></a><span class="sd">    &quot;&quot;&quot;</span>
 <a id="__codelineno-0-1334" name="__codelineno-0-1334"></a>
@@ -6660,7 +6676,7 @@ never change the contents of the original value.</p>
 <a id="__codelineno-0-1367" name="__codelineno-0-1367"></a>
 <a id="__codelineno-0-1368" name="__codelineno-0-1368"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-1369" name="__codelineno-0-1369"></a>    <span class="k">def</span> <span class="nf">kind</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MagicTypeKind</span><span class="p">:</span>
-<a id="__codelineno-0-1370" name="__codelineno-0-1370"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-1370" name="__codelineno-0-1370"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-1371" name="__codelineno-0-1371"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-1372" name="__codelineno-0-1372"></a><span class="sd">            Kind of the magic type.</span>
 <a id="__codelineno-0-1373" name="__codelineno-0-1373"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -6668,7 +6684,7 @@ never change the contents of the original value.</p>
 <a id="__codelineno-0-1375" name="__codelineno-0-1375"></a>
 <a id="__codelineno-0-1376" name="__codelineno-0-1376"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-1377" name="__codelineno-0-1377"></a>    <span class="k">def</span> <span class="nf">meta_argument_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typ</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">TypeAbc</span><span class="p">]:</span>
-<a id="__codelineno-0-1378" name="__codelineno-0-1378"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-1378" name="__codelineno-0-1378"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-1379" name="__codelineno-0-1379"></a><span class="sd">        Is only set for [MagicTypeKind.META_TYPE][woke.ast.enums.MagicTypeKind.META_TYPE] kind.</span>
 <a id="__codelineno-0-1380" name="__codelineno-0-1380"></a><span class="sd">        !!! example</span>
 <a id="__codelineno-0-1381" name="__codelineno-0-1381"></a><span class="sd">            [Contract][woke.ast.types.Contract] in `:::solidity type(IERC20)`, [UInt][woke.ast.types.UInt] in `:::solidity type(uint)`.</span>
@@ -6747,7 +6763,7 @@ never change the contents of the original value.</p>
       <p>Is only set for <a class="autorefs autorefs-internal" href="../enums/#woke.ast.enums.MagicTypeKind.META_TYPE">MagicTypeKind.META_TYPE</a> kind.</p>
 <div class="admonition example">
 <p class="admonition-title">Example</p>
-<p><a class="autorefs autorefs-internal" href="#woke.ast.types.Contract">Contract</a> in <code class="highlight">type<span class="p">(</span>IERC20<span class="p">)</span><span class="w"></span></code>, <a class="autorefs autorefs-internal" href="#woke.ast.types.UInt">UInt</a> in <code class="highlight">type<span class="p">(</span><span class="kt">uint</span><span class="p">)</span><span class="w"></span></code>.</p>
+<p><a class="autorefs autorefs-internal" href="#woke.ast.types.Contract">Contract</a> in <code class="highlight">type<span class="p">(</span>IERC20<span class="p">)</span></code>, <a class="autorefs autorefs-internal" href="#woke.ast.types.UInt">UInt</a> in <code class="highlight">type<span class="p">(</span><span class="kt">uint</span><span class="p">)</span></code>.</p>
 </div>
 
   <p><strong>Returns:</strong></p>
@@ -6878,7 +6894,7 @@ never change the contents of the original value.</p>
 <a id="__codelineno-0-1414" name="__codelineno-0-1414"></a>
 <a id="__codelineno-0-1415" name="__codelineno-0-1415"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-1416" name="__codelineno-0-1416"></a>    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<a id="__codelineno-0-1417" name="__codelineno-0-1417"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-1417" name="__codelineno-0-1417"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-1418" name="__codelineno-0-1418"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-1419" name="__codelineno-0-1419"></a><span class="sd">            Name of the user defined value type.</span>
 <a id="__codelineno-0-1420" name="__codelineno-0-1420"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -6886,7 +6902,7 @@ never change the contents of the original value.</p>
 <a id="__codelineno-0-1422" name="__codelineno-0-1422"></a>
 <a id="__codelineno-0-1423" name="__codelineno-0-1423"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-1424" name="__codelineno-0-1424"></a>    <span class="k">def</span> <span class="nf">ir_node</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">UserDefinedValueTypeDefinition</span><span class="p">:</span>
-<a id="__codelineno-0-1425" name="__codelineno-0-1425"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-1425" name="__codelineno-0-1425"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-1426" name="__codelineno-0-1426"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-1427" name="__codelineno-0-1427"></a><span class="sd">            User defined value type definition IR node.</span>
 <a id="__codelineno-0-1428" name="__codelineno-0-1428"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -7046,7 +7062,7 @@ never change the contents of the original value.</p>
 <span class="normal"><a href="#__codelineno-0-1456">1456</a></span>
 <span class="normal"><a href="#__codelineno-0-1457">1457</a></span>
 <span class="normal"><a href="#__codelineno-0-1458">1458</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-1438" name="__codelineno-0-1438"></a><span class="k">class</span> <span class="nc">Module</span><span class="p">(</span><span class="n">TypeAbc</span><span class="p">):</span>
-<a id="__codelineno-0-1439" name="__codelineno-0-1439"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-1439" name="__codelineno-0-1439"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-1440" name="__codelineno-0-1440"></a><span class="sd">    Module type.</span>
 <a id="__codelineno-0-1441" name="__codelineno-0-1441"></a><span class="sd">    !!! note</span>
 <a id="__codelineno-0-1442" name="__codelineno-0-1442"></a><span class="sd">        It is probably currently not possible to create an expression of this type.</span>
