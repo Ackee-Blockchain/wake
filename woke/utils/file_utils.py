@@ -19,18 +19,22 @@ def is_relative_to(path: pathlib.PurePath, *other: Union[str, PathLike[str]]):
 
 
 def copy_dir(
-    src_dir: pathlib.Path, dst_dir: pathlib.Path, overwrite: bool = False
+    src_dir: pathlib.Path,
+    dst_dir: pathlib.Path,
+    *,
+    overwrite: bool = False,
+    raise_on_existing: bool = False,
 ) -> None:
     """
-    Copies contents of directory and creates dst_dir if it doesn't exist.
-    Overwrites files if overwrite is True, otherwise raises FileExistsError if existing files
-    are found
+    Copy contents of src_dir and create dst_dir if it doesn't exist.
+    Overwrite files if overwrite is True. Raise FileExistsError if raise_on_existing is True and
+    existing files are found.
     """
     dst_dir.mkdir(exist_ok=True)
     src_dst_paths = [
         (p.absolute(), dst_dir / p.relative_to(src_dir)) for p in src_dir.rglob("*")
     ]
-    if not overwrite:
+    if not overwrite and raise_on_existing:
         existing_files = []
         for _, dst_path in src_dst_paths:
             if dst_path.exists():
@@ -44,4 +48,5 @@ def copy_dir(
         else:
             if not dst_path.parent.exists():
                 dst_path.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy(str(src_path), str(dst_path))
+            if overwrite or not dst_path.exists():
+                shutil.copy(str(src_path), str(dst_path))

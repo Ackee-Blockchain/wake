@@ -45,7 +45,7 @@ def test_config_simple():
     assert config.compiler.solc.remappings[0] == SolcRemapping(
         context=None, prefix="xyz", target=None
     )
-    assert str(config.compiler.solc.remappings[0]) == ":xyz="
+    assert str(config.compiler.solc.remappings[0]) == "xyz="
     assert len(config.compiler.solc.include_paths) == 1
     assert sources_path in config.compiler.solc.include_paths
     assert len(config.compiler.solc.allow_paths) == 1

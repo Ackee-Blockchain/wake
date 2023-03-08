@@ -30,7 +30,10 @@ class SolcRemapping:
         return iter(astuple(self))
 
     def __str__(self):
-        return f"{self.context or ''}:{self.prefix}={self.target or ''}"
+        if self.context is None:
+            return f"{self.prefix}={self.target or ''}"
+        else:
+            return f"{self.context}:{self.prefix}={self.target or ''}"
 
 
 class GraphsDirection(StrEnum):
