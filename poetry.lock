@@ -2025,14 +2025,14 @@ dev = ["pre-commit"]
 
 [[package]]
 name = "setuptools"
-version = "67.5.1"
+version = "67.6.0"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "setuptools-67.5.1-py3-none-any.whl", hash = "sha256:1c39d42bda4cb89f7fdcad52b6762e3c309ec8f8715b27c684176b7d71283242"},
-    {file = "setuptools-67.5.1.tar.gz", hash = "sha256:15136a251127da2d2e77ac7a1bc231eb504654f7e3346d93613a13f2e2787535"},
+    {file = "setuptools-67.6.0-py3-none-any.whl", hash = "sha256:b78aaa36f6b90a074c1fa651168723acbf45d14cb1196b6f02c0fd07f17623b2"},
+    {file = "setuptools-67.6.0.tar.gz", hash = "sha256:2ee892cd5f29f3373097f5a814697e397cf3ce313616df0af11231e2ad118077"},
 ]
 
 [package.extras]
@@ -2400,4 +2400,4 @@ tests = ["pytest-asyncio", "GitPython"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7.9"
-content-hash = "f0d990b35165c810dd79d30bad48a5e8e5992771e70c256a461f081b7a930ceb"
+content-hash = "819a986017dec7d195d37ec64368e944dac529de5abf0956c90c1771217a2fe4"
