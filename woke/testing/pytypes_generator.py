@@ -1076,32 +1076,7 @@ class TypeGenerator:
         fn_selector = declaration.function_selector.hex()
         self.add_str_to_types(
             2,
-            f'if request_type == "tx":',
-            1,
-        )
-        self.add_str_to_types(
-            3,
-            f'return self._transact("{fn_selector}", [{", ".join(map(itemgetter(0), param_names))}], return_tx, {return_types}, from_, to, value, gas_limit, gas_price, max_fee_per_gas, max_priority_fee_per_gas, access_list, block)',
-            1,
-        )
-        self.add_str_to_types(
-            2,
-            f'elif request_type == "call":',
-            1,
-        )
-        self.add_str_to_types(
-            3,
-            f'return self._call("{fn_selector}", [{", ".join(map(itemgetter(0), param_names))}], return_tx, {return_types}, from_, to, value, gas_limit, gas_price, max_fee_per_gas, max_priority_fee_per_gas, access_list, block)',
-            1,
-        )
-        self.add_str_to_types(
-            2,
-            f"else:",
-            1,
-        )
-        self.add_str_to_types(
-            3,
-            f'return self._estimate("{fn_selector}", [{", ".join(map(itemgetter(0), param_names))}], return_tx, from_, to, value, gas_limit, gas_price, max_fee_per_gas, max_priority_fee_per_gas, access_list, block)',
+            f'return self._execute(request_type, "{fn_selector}", [{", ".join(map(itemgetter(0), param_names))}], return_tx, {return_types}, from_, to, value, gas_limit, gas_price, max_fee_per_gas, max_priority_fee_per_gas, access_list, block)',
             2,
         )
 
@@ -1647,9 +1622,7 @@ class NameSanitizer:
             "_label",
             "_get_deployment_code",
             "_deploy",
-            "_transact",
-            "_call",
-            "_estimate",
+            "_execute",
             "_library_id",
             "_prepare_tx_params",
             "address",
