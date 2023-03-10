@@ -173,6 +173,13 @@ class TransactionAbc(ABC, Generic[T]):
         )  # pyright: reportOptionalSubscript=false
 
     @property
+    @_fetch_tx_receipt
+    def effective_gas_price(self) -> int:
+        return int(
+            self._tx_receipt["effectiveGasPrice"], 16
+        )  # pyright: reportOptionalSubscript=false
+
+    @property
     def status(self) -> TransactionStatusEnum:
         if self._tx_receipt is None:
             receipt = self._chain.chain_interface.get_transaction_receipt(self._tx_hash)
