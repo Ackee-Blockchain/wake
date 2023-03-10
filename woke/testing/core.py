@@ -346,11 +346,13 @@ class Account:
             access_list = {}
 
         params: TxParams = {
-            "type": tx_type,
             "value": value,
             "data": data,
             "to": str(self.address),
         }
+        if tx_type != 0:
+            params["type"] = tx_type
+
         if tx_type == 0:
             params["gasPrice"] = (
                 gas_price if gas_price is not None else self._chain.gas_price
@@ -541,8 +543,7 @@ class Account:
 
         tx_hash = self._chain._send_transaction(tx_params)
 
-        assert "type" in tx_params
-        if tx_params["type"] == 0:
+        if "type" not in tx_params:
             from .transactions import LegacyTransaction
 
             tx_type = LegacyTransaction[bytearray]
@@ -1166,12 +1167,13 @@ class Chain:
             data += Abi.encode(types, arguments)
 
         tx: TxParams = {
-            "type": tx_type,
             "nonce": self._nonces[sender],
             "from": sender,
             "value": params["value"] if "value" in params else 0,
             "data": data,
         }
+        if tx_type != 0:
+            tx["type"] = tx_type
 
         if "to" in params:
             tx["to"] = params["to"]
@@ -1497,8 +1499,7 @@ class Chain:
 
         tx_hash = self._send_transaction(tx_params)
 
-        assert "type" in tx_params
-        if tx_params["type"] == 0:
+        if "type" not in tx_params:
             from .transactions import LegacyTransaction
 
             tx_type = LegacyTransaction[return_type]
