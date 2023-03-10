@@ -1416,7 +1416,7 @@ class Chain:
     def _call(
         self,
         data: bytes,
-        abi: Dict,
+        abi: Optional[Dict],
         arguments: Iterable,
         params: TxParams,
         return_type: Type,
@@ -1431,13 +1431,18 @@ class Chain:
             self._process_call_revert(e)
             raise
 
+        # deploy
+        if "to" not in params:
+            return bytearray(output)
+
+        assert abi is not None
         return self._process_return_data(None, output, abi, return_type)
 
     @_check_connected
     def _estimate(
         self,
         data: bytes,
-        abi: Dict,
+        abi: Optional[Dict],
         arguments: Iterable,
         params: TxParams,
         block: Union[int, str],
@@ -1913,6 +1918,7 @@ class Contract(Account):
     @classmethod
     def _deploy(
         cls,
+        request_type: RequestType,
         arguments: Iterable,
         return_tx: bool,
         return_type: Type,
@@ -1925,57 +1931,10 @@ class Contract(Account):
         max_fee_per_gas: Optional[int],
         max_priority_fee_per_gas: Optional[int],
         access_list: Optional[Dict[Union[Account, Address, str], List[int]]],
+        block: Optional[Union[int, str]],
     ) -> Any:
-        params: TxParams = {}
         if chain is None:
             chain = default_chain
-
-        if from_ is not None:
-            if isinstance(from_, Account):
-                if from_.chain != chain:
-                    raise ValueError("from_ account must belong to the chain")
-                params["from"] = str(from_.address)
-            else:
-                params["from"] = str(from_)
-        params["value"] = value
-
-        if gas_limit == "max":
-            params["gas"] = chain.block_gas_limit
-        elif gas_limit == "auto":
-            pass
-        elif isinstance(gas_limit, int):
-            params["gas"] = gas_limit
-        else:
-            raise ValueError("invalid gas limit")
-
-        if gas_price is not None:
-            params["gas_price"] = gas_price
-
-        if max_fee_per_gas is not None:
-            params["max_fee_per_gas"] = max_fee_per_gas
-
-        if max_priority_fee_per_gas is not None:
-            params["max_priority_fee_per_gas"] = max_priority_fee_per_gas
-
-        if access_list is not None:
-            # normalize access_list, all keys should be Address
-            if access_list is not None:
-                tmp_access_list = defaultdict(list)
-                for k, v in access_list.items():
-                    if isinstance(k, Account):
-                        k = k.address
-                    elif isinstance(k, str):
-                        k = Address(k)
-                    elif not isinstance(k, Address):
-                        raise TypeError(
-                            "access_list keys must be Account, Address or str"
-                        )
-                    tmp_access_list[k].extend(v)
-                access_list = tmp_access_list
-            params["access_list"] = [
-                {"address": str(k), "storageKeys": [hex(i) for i in v]}
-                for k, v in access_list.items()
-            ]
 
         deployment_code = cls._deployment_code
         for match in LIBRARY_PLACEHOLDER_REGEX.finditer(deployment_code):
@@ -1999,19 +1958,30 @@ class Contract(Account):
                 + deployment_code[match.end() :]
             )
 
-        return chain._transact(
-            bytes.fromhex(deployment_code),
-            cls._abi["constructor"] if "constructor" in cls._abi else None,
+        return cls._execute(
+            chain,
+            request_type,
+            deployment_code,
             arguments,
-            params,
             return_tx,
             return_type,
+            from_,
+            None,
+            value,
+            gas_limit,
+            gas_price,
+            max_fee_per_gas,
+            max_priority_fee_per_gas,
+            access_list,
+            block,
         )
 
+    @classmethod
     def _execute(
-        self,
+        cls,
+        chain: Chain,
         request_type: RequestType,
-        selector: str,
+        data: str,
         arguments: Iterable,
         return_tx: bool,
         return_type: Type,
@@ -2033,7 +2003,7 @@ class Contract(Account):
         params: TxParams = {}
         if from_ is not None:
             if isinstance(from_, Account):
-                if from_.chain != self.chain:
+                if from_.chain != chain:
                     raise ValueError("`from_` account must belong to this chain")
                 params["from"] = str(from_.address)
             else:
@@ -2041,7 +2011,7 @@ class Contract(Account):
         params["value"] = value
 
         if gas_limit == "max":
-            params["gas"] = self.chain.block_gas_limit
+            params["gas"] = chain.block_gas_limit
         elif gas_limit == "auto":
             pass
         elif isinstance(gas_limit, int):
@@ -2051,13 +2021,11 @@ class Contract(Account):
 
         if to is not None:
             if isinstance(to, Account):
-                if to.chain != self.chain:
+                if to.chain != chain:
                     raise ValueError("`to` account must belong to this chain")
                 params["to"] = str(to.address)
             else:
                 params["to"] = str(to)
-        else:
-            params["to"] = str(self._address)
 
         if gas_price is not None:
             params["gas_price"] = gas_price
@@ -2088,12 +2056,16 @@ class Contract(Account):
                 for k, v in access_list.items()
             ]
 
-        sel = bytes.fromhex(selector)
+        d = bytes.fromhex(data)
+        if to is None:
+            abi = cls._abi["constructor"] if "constructor" in cls._abi else None
+        else:
+            abi = cls._abi[d]
 
         if request_type == RequestType.TX:
-            return self.chain._transact(
-                sel,
-                self.__class__._abi[sel],
+            return chain._transact(
+                d,
+                abi,
                 arguments,
                 params,
                 return_tx,
@@ -2102,16 +2074,12 @@ class Contract(Account):
         elif request_type == RequestType.CALL:
             if block is None:
                 block = "latest"
-            return self.chain._call(
-                sel, self.__class__._abi[sel], arguments, params, return_type, block
-            )
+            return chain._call(d, abi, arguments, params, return_type, block)
         elif request_type == RequestType.ESTIMATE:
             if block is None:
                 block = "pending"
 
-            return self.chain._estimate(
-                sel, self.__class__._abi[sel], arguments, params, block
-            )
+            return chain._estimate(d, abi, arguments, params, block)
         else:
             raise ValueError("invalid request type")
 
@@ -2122,6 +2090,7 @@ class Library(Contract):
     @classmethod
     def _deploy(
         cls,
+        request_type: RequestType,
         arguments: Iterable,
         return_tx: bool,
         return_type: Type,
@@ -2134,11 +2103,13 @@ class Library(Contract):
         max_fee_per_gas: Optional[int],
         max_priority_fee_per_gas: Optional[int],
         access_list: Optional[Dict[Union[Account, Address, str], List[int]]],
+        block: Optional[Union[int, str]],
     ) -> Any:
         if chain is None:
             chain = default_chain
 
         lib = super()._deploy(
+            request_type,
             arguments,
             return_tx,
             return_type,
@@ -2151,6 +2122,7 @@ class Library(Contract):
             max_fee_per_gas,
             max_priority_fee_per_gas,
             access_list,
+            block,
         )
         chain._deployed_libraries[cls._library_id].append(lib)
         return lib
