@@ -228,8 +228,10 @@ class ChainInterfaceAbc(ABC):
     def call(self, params: TxParams) -> bytes:
         return self._communicator.eth_call(params)
 
-    def estimate_gas(self, params: TxParams) -> int:
-        return self._communicator.eth_estimate_gas(params)
+    def estimate_gas(
+        self, params: TxParams, block_identifier: Union[int, str] = "pending"
+    ) -> int:
+        return self._communicator.eth_estimate_gas(params, block_identifier)
 
     def send_transaction(self, params: TxParams) -> str:
         return self._communicator.eth_send_transaction(params)
