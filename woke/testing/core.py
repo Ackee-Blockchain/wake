@@ -351,11 +351,11 @@ class Account:
             "data": data,
             "to": str(self.address),
         }
-        if params["type"] == 0:
+        if tx_type == 0:
             params["gas_price"] = (
                 gas_price if gas_price is not None else self._chain.gas_price
             )
-        elif params["type"] == 1:
+        elif tx_type == 1:
             params["access_list"] = [
                 {"address": str(k), "storageKeys": [hex(i) for i in v]}
                 for k, v in access_list.items()
@@ -365,7 +365,7 @@ class Account:
             params["gas_price"] = (
                 gas_price if gas_price is not None else self._chain.gas_price
             )
-        elif params["type"] == 2:
+        elif tx_type == 2:
             params["access_list"] = [
                 {"address": str(k), "storageKeys": [hex(i) for i in v]}
                 for k, v in access_list.items()
@@ -1175,17 +1175,17 @@ class Chain:
         if "to" in params:
             tx["to"] = params["to"]
 
-        if self._tx_type == 0:
+        if tx_type == 0:
             tx["gas_price"] = (
                 params["gas_price"] if "gas_price" in params else self._gas_price
             )
-        elif self._tx_type == 1:
+        elif tx_type == 1:
             tx["access_list"] = params["access_list"] if "access_list" in params else []
             tx["chain_id"] = self._chain_id
             tx["gas_price"] = (
                 params["gas_price"] if "gas_price" in params else self._gas_price
             )
-        elif self._tx_type == 2:
+        elif tx_type == 2:
             tx["access_list"] = params["access_list"] if "access_list" in params else []
             tx["chain_id"] = self._chain_id
             tx["max_priority_fee_per_gas"] = (
