@@ -56,6 +56,7 @@ if TYPE_CHECKING:
 
 class RequestType(StrEnum):
     CALL = "call"
+    ESTIMATE = "estimate"
     TX = "tx"
 
 
@@ -447,6 +448,42 @@ class Account:
             raise
 
         return bytearray(output)
+
+    def estimate(
+        self,
+        data: Union[bytes, bytearray] = b"",
+        value: int = 0,
+        from_: Optional[Union[Account, Address, str]] = None,
+        gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max",
+        gas_price: Optional[int] = None,
+        max_fee_per_gas: Optional[int] = None,
+        max_priority_fee_per_gas: Optional[int] = None,
+        access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None,
+        block: Union[
+            int,
+            Literal["latest"],
+            Literal["pending"],
+            Literal["earliest"],
+            Literal["safe"],
+            Literal["finalized"],
+        ] = "pending",
+    ) -> int:
+        params = self._prepare_tx_params(
+            RequestType.ESTIMATE,
+            data,
+            value,
+            from_,
+            gas_limit,
+            gas_price,
+            max_fee_per_gas,
+            max_priority_fee_per_gas,
+            access_list,
+        )
+        try:
+            return self._chain.chain_interface.estimate_gas(params, block)
+        except JsonRpcError as e:
+            self._chain._process_call_revert(e)
+            raise
 
     @overload
     def transact(
@@ -1451,6 +1488,24 @@ class Chain:
 
         return self._process_return_data(None, output, abi[selector], return_type)
 
+    @_check_connected
+    def _estimate(
+        self,
+        selector: bytes,
+        abi: Dict[Union[bytes, Literal["constructor"]], Any],
+        arguments: Iterable,
+        params: TxParams,
+        block: Union[int, str],
+    ) -> int:
+        tx_params = self._build_transaction(
+            RequestType.ESTIMATE, params, selector, arguments, abi[selector]
+        )
+        try:
+            return self._chain_interface.estimate_gas(tx_params, block)
+        except JsonRpcError as e:
+            self._process_call_revert(e)
+            raise
+
     def _process_call_revert(self, e: JsonRpcError):
         if (
             isinstance(self._chain_interface, AnvilChainInterface)
@@ -2176,6 +2231,87 @@ class Contract(Account):
         return self.chain._call(
             sel, self.__class__._abi, arguments, params, return_type, block
         )
+
+    def _estimate(
+        self,
+        selector: str,
+        arguments: Iterable,
+        return_tx: bool,
+        from_: Optional[Union[Account, Address, str]],
+        to: Optional[Union[Account, Address, str]],
+        value: int,
+        gas_limit: Union[int, Literal["max"], Literal["auto"]],
+        gas_price: Optional[int],
+        max_fee_per_gas: Optional[int],
+        max_priority_fee_per_gas: Optional[int],
+        access_list: Optional[Dict[Union[Account, Address, str], List[int]]],
+        block: Optional[Union[int, str]],
+    ) -> int:
+        if return_tx:
+            raise ValueError("Transaction cannot be returned from an estimate")
+        params: TxParams = {}
+        if from_ is not None:
+            if isinstance(from_, Account):
+                if from_.chain != self.chain:
+                    raise ValueError("`from_` account must belong to this chain")
+                params["from"] = str(from_.address)
+            else:
+                params["from"] = str(from_)
+        params["value"] = value
+
+        if gas_limit == "max":
+            params["gas"] = self.chain.block_gas_limit
+        elif gas_limit == "auto":
+            pass
+        elif isinstance(gas_limit, int):
+            params["gas"] = gas_limit
+        else:
+            raise ValueError("invalid gas limit")
+
+        if to is not None:
+            if isinstance(to, Account):
+                if to.chain != self.chain:
+                    raise ValueError("`to` account must belong to this chain")
+                params["to"] = str(to.address)
+            else:
+                params["to"] = str(to)
+        else:
+            params["to"] = str(self._address)
+
+        if gas_price is not None:
+            params["gas_price"] = gas_price
+
+        if max_fee_per_gas is not None:
+            params["max_fee_per_gas"] = max_fee_per_gas
+
+        if max_priority_fee_per_gas is not None:
+            params["max_priority_fee_per_gas"] = max_priority_fee_per_gas
+
+        if access_list is not None:
+            # normalize access_list, all keys should be Address
+            if access_list is not None:
+                tmp_access_list = defaultdict(list)
+                for k, v in access_list.items():
+                    if isinstance(k, Account):
+                        k = k.address
+                    elif isinstance(k, str):
+                        k = Address(k)
+                    elif not isinstance(k, Address):
+                        raise TypeError(
+                            "access_list keys must be Account, Address or str"
+                        )
+                    tmp_access_list[k].extend(v)
+                access_list = tmp_access_list
+            params["access_list"] = [
+                {"address": str(k), "storageKeys": [hex(i) for i in v]}
+                for k, v in access_list.items()
+            ]
+
+        if block is None:
+            block = "pending"
+
+        sel = bytes.fromhex(selector)
+        return self.chain._estimate(sel, self.__class__._abi, arguments, params, block)
 
 
 class Library(Contract):
