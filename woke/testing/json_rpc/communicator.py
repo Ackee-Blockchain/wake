@@ -36,11 +36,11 @@ TxParams = TypedDict(
         "gas": int,
         "value": int,
         "data": bytes,
-        "gas_price": int,
-        "max_priority_fee_per_gas": int,
-        "max_fee_per_gas": int,
-        "access_list": List,
-        "chain_id": int,
+        "gasPrice": int,
+        "maxPriorityFeePerGas": int,
+        "maxFeePerGas": int,
+        "accessList": List,
+        "chainId": int,
     },
     total=False,
 )
@@ -119,16 +119,16 @@ class JsonRpcCommunicator:
             tx["value"] = hex(transaction["value"])
         if "data" in transaction:
             tx["data"] = "0x" + transaction["data"].hex()
-        if "gas_price" in transaction:
-            tx["gasPrice"] = hex(transaction["gas_price"])
-        if "max_priority_fee_per_gas" in transaction:
-            tx["maxPriorityFeePerGas"] = hex(transaction["max_priority_fee_per_gas"])
-        if "max_fee_per_gas" in transaction:
-            tx["maxFeePerGas"] = hex(transaction["max_fee_per_gas"])
-        if "access_list" in transaction:
-            tx["accessList"] = transaction["access_list"]
-        if "chain_id" in transaction:
-            tx["chainId"] = hex(transaction["chain_id"])
+        if "gasPrice" in transaction:
+            tx["gasPrice"] = hex(transaction["gasPrice"])
+        if "maxPriorityFeePerGas" in transaction:
+            tx["maxPriorityFeePerGas"] = hex(transaction["maxPriorityFeePerGas"])
+        if "maxFeePerGas" in transaction:
+            tx["maxFeePerGas"] = hex(transaction["maxFeePerGas"])
+        if "accessList" in transaction:
+            tx["accessList"] = transaction["accessList"]
+        if "chainId" in transaction:
+            tx["chainId"] = hex(transaction["chainId"])
         return tx
 
     def eth_get_block_by_number(

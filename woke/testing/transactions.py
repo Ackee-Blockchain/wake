@@ -400,7 +400,7 @@ class LegacyTransaction(TransactionAbc[T]):
     @property
     def gas_price(self) -> int:
         assert "gas_price" in self._tx_params
-        return self._tx_params["gas_price"]
+        return self._tx_params["gasPrice"]
 
     @property
     def type(self) -> TransactionTypeEnum:
@@ -412,13 +412,13 @@ class Eip2930Transaction(TransactionAbc[T]):
     @property
     def chain_id(self) -> int:
         assert "chain_id" in self._tx_params
-        return self._tx_params["chain_id"]
+        return self._tx_params["chainId"]
 
     @property
     def access_list(self) -> Dict[Account, List[int]]:
         assert "access_list" in self._tx_params
         ret = {}
-        for entry in self._tx_params["access_list"]:
+        for entry in self._tx_params["accessList"]:
             account = Account(entry[0])
             if account not in ret:
                 ret[account] = []
@@ -440,7 +440,7 @@ class Eip1559Transaction(TransactionAbc[T]):
     @property
     def chain_id(self) -> int:
         assert "chain_id" in self._tx_params
-        return self._tx_params["chain_id"]
+        return self._tx_params["chainId"]
 
     @property
     def max_fee_per_gas(self) -> int:
@@ -450,7 +450,7 @@ class Eip1559Transaction(TransactionAbc[T]):
                     self.tx_hash
                 )
             return int(self._tx_data["maxFeePerGas"], 16)
-        return self._tx_params["max_fee_per_gas"]
+        return self._tx_params["maxFeePerGas"]
 
     @property
     def max_priority_fee_per_gas(self) -> int:
@@ -460,13 +460,13 @@ class Eip1559Transaction(TransactionAbc[T]):
                     self.tx_hash
                 )
             return int(self._tx_data["maxPriorityFeePerGas"], 16)
-        return self._tx_params["max_priority_fee_per_gas"]
+        return self._tx_params["maxPriorityFeePerGas"]
 
     @property
     def access_list(self) -> Dict[Account, List[int]]:
         assert "access_list" in self._tx_params
         ret = {}
-        for entry in self._tx_params["access_list"]:
+        for entry in self._tx_params["accessList"]:
             account = Account(entry[0])
             if account not in ret:
                 ret[account] = []
