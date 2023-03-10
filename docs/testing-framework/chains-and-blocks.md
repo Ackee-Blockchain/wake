@@ -38,6 +38,7 @@ The `Chain` object has the following methods:
 | `mine`                                         | mine a block with an optional callback function to set the next block timestamp            |
 | `reset`                                        | reset the chain to its initial state                                                       |
 | `revert`                                       | revert the chain to a previous state given by a snapshot ID                                |
+| `set_min_gas_price`                            | set the minimum gas price accepted by the chain                                            |
 | <nobr>`set_next_block_base_fee_per_gas`</nobr> | set the base fee per gas for the next block                                                |
 | `snapshot`                                     | take a snapshot of the chain state; return a snapshot ID                                   |
 | <nobr>`snapshot_and_revert`</nobr>             | context manager to take a snapshot and revert to it after the context ends                 |

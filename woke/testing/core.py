@@ -741,6 +741,11 @@ class Chain:
     def set_next_block_base_fee_per_gas(self, value: int) -> None:
         self._chain_interface.set_next_block_base_fee_per_gas(value)
 
+    @_check_connected
+    def set_min_gas_price(self, value: int) -> None:
+        self._chain_interface.set_min_gas_price(value)
+        self._gas_price = value
+
     def _convert_to_web3_type(self, value: Any) -> Any:
         if dataclasses.is_dataclass(value):
             return tuple(
