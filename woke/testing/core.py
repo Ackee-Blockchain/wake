@@ -314,7 +314,7 @@ class Account:
         max_fee_per_gas: Optional[int] = None,
         max_priority_fee_per_gas: Optional[int] = None,
         access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None,
-    ):
+    ) -> TxParams:
         if gas_price is not None and (
             max_fee_per_gas is not None or max_priority_fee_per_gas is not None
         ):
@@ -352,33 +352,33 @@ class Account:
             "to": str(self.address),
         }
         if tx_type == 0:
-            params["gas_price"] = (
+            params["gasPrice"] = (
                 gas_price if gas_price is not None else self._chain.gas_price
             )
         elif tx_type == 1:
-            params["access_list"] = [
+            params["accessList"] = [
                 {"address": str(k), "storageKeys": [hex(i) for i in v]}
                 for k, v in access_list.items()
                 if v
             ]
-            params["chain_id"] = self._chain.chain_id
-            params["gas_price"] = (
+            params["chainId"] = self._chain.chain_id
+            params["gasPrice"] = (
                 gas_price if gas_price is not None else self._chain.gas_price
             )
         elif tx_type == 2:
-            params["access_list"] = [
+            params["accessList"] = [
                 {"address": str(k), "storageKeys": [hex(i) for i in v]}
                 for k, v in access_list.items()
                 if v
             ]
-            params["chain_id"] = self._chain.chain_id
-            params["max_priority_fee_per_gas"] = (
+            params["chainId"] = self._chain.chain_id
+            params["maxPriorityFeePerGas"] = (
                 max_priority_fee_per_gas
                 if max_priority_fee_per_gas is not None
                 else self._chain.max_priority_fee_per_gas
             )
             if max_fee_per_gas is not None:
-                params["max_fee_per_gas"] = max_fee_per_gas
+                params["maxFeePerGas"] = max_fee_per_gas
 
         if from_ is None:
             if request_type == "call" and self._chain.default_call_account is not None:
@@ -541,6 +541,7 @@ class Account:
 
         tx_hash = self._chain._send_transaction(tx_params)
 
+        assert "type" in tx_params
         if tx_params["type"] == 0:
             from .transactions import LegacyTransaction
 
@@ -731,7 +732,7 @@ class Chain:
                     self._chain_interface.call(
                         {
                             "type": 2,
-                            "max_priority_fee_per_gas": 0,
+                            "maxPriorityFeePerGas": 0,
                         }
                     )
                     self._tx_type = 2
@@ -740,7 +741,7 @@ class Chain:
                         self._chain_interface.call(
                             {
                                 "type": 1,
-                                "access_list": [],
+                                "accessList": [],
                             }
                         )
                         self._tx_type = 1
@@ -1127,17 +1128,17 @@ class Chain:
         arguments: Iterable,
         abi: Optional[Dict],
     ) -> TxParams:
-        if "gas_price" in params and (
-            "max_fee_per_gas" in params or "max_priority_fee_per_gas" in params
+        if "gasPrice" in params and (
+            "maxFeePerGas" in params or "maxPriorityFeePerGas" in params
         ):
             raise ValueError(
                 "Cannot specify both gas_price and max_fee_per_gas/max_priority_fee_per_gas"
             )
-        if "max_fee_per_gas" in params or "max_priority_fee_per_gas" in params:
+        if "maxFeePerGas" in params or "maxPriorityFeePerGas" in params:
             tx_type = 2
-        elif "access_list" in params:
+        elif "accessList" in params:
             tx_type = 1
-        elif "gas_price" in params:
+        elif "gasPrice" in params:
             tx_type = 0
         else:
             tx_type = self._tx_type
@@ -1176,25 +1177,25 @@ class Chain:
             tx["to"] = params["to"]
 
         if tx_type == 0:
-            tx["gas_price"] = (
-                params["gas_price"] if "gas_price" in params else self._gas_price
+            tx["gasPrice"] = (
+                params["gasPrice"] if "gasPrice" in params else self._gas_price
             )
         elif tx_type == 1:
-            tx["access_list"] = params["access_list"] if "access_list" in params else []
-            tx["chain_id"] = self._chain_id
-            tx["gas_price"] = (
-                params["gas_price"] if "gas_price" in params else self._gas_price
+            tx["accessList"] = params["accessList"] if "accessList" in params else []
+            tx["chainId"] = self._chain_id
+            tx["gasPrice"] = (
+                params["gasPrice"] if "gasPrice" in params else self._gas_price
             )
         elif tx_type == 2:
-            tx["access_list"] = params["access_list"] if "access_list" in params else []
-            tx["chain_id"] = self._chain_id
-            tx["max_priority_fee_per_gas"] = (
-                params["max_priority_fee_per_gas"]
-                if "max_priority_fee_per_gas" in params
+            tx["accessList"] = params["accessList"] if "accessList" in params else []
+            tx["chainId"] = self._chain_id
+            tx["maxPriorityFeePerGas"] = (
+                params["maxPriorityFeePerGas"]
+                if "maxPriorityFeePerGas" in params
                 else self._max_priority_fee_per_gas
             )
-            if "max_fee_per_gas" in params:
-                tx["max_fee_per_gas"] = params["max_fee_per_gas"]
+            if "maxFeePerGas" in params:
+                tx["maxFeePerGas"] = params["maxFeePerGas"]
 
         if "gas" in params:
             tx["gas"] = params["gas"]
@@ -2028,13 +2029,13 @@ class Contract(Account):
                 params["to"] = str(to)
 
         if gas_price is not None:
-            params["gas_price"] = gas_price
+            params["gasPrice"] = gas_price
 
         if max_fee_per_gas is not None:
-            params["max_fee_per_gas"] = max_fee_per_gas
+            params["maxFeePerGas"] = max_fee_per_gas
 
         if max_priority_fee_per_gas is not None:
-            params["max_priority_fee_per_gas"] = max_priority_fee_per_gas
+            params["maxPriorityFeePerGas"] = max_priority_fee_per_gas
 
         if access_list is not None:
             # normalize access_list, all keys should be Address
@@ -2051,7 +2052,7 @@ class Contract(Account):
                         )
                     tmp_access_list[k].extend(v)
                 access_list = tmp_access_list
-            params["access_list"] = [
+            params["accessList"] = [
                 {"address": str(k), "storageKeys": [hex(i) for i in v]}
                 for k, v in access_list.items()
             ]
