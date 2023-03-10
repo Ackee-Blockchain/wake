@@ -404,7 +404,6 @@ class LegacyTransaction(TransactionAbc[T]):
 
     @property
     def type(self) -> TransactionTypeEnum:
-        assert "type" in self._tx_params and self._tx_params["type"] == 0
         return TransactionTypeEnum.LEGACY
 
 
