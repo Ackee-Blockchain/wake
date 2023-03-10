@@ -521,8 +521,8 @@ class Chain:
         chain_id: Optional[int] = None,
         fork: Optional[str] = None,
         hardfork: Optional[str] = None,
-        # min_gas_price: Optional[int] = None,
-        # block_base_fee_per_gas: Optional[int] = None,
+        min_gas_price: Optional[int] = 0,
+        block_base_fee_per_gas: Optional[int] = 0,
     ):
         if self._connected:
             raise AlreadyConnectedError("Already connected to a chain")
@@ -550,6 +550,19 @@ class Chain:
             self._connected = True
             connected_chains.append(self)
 
+            if min_gas_price is not None:
+                self._chain_interface.set_min_gas_price(min_gas_price)
+                self._gas_price = min_gas_price
+            else:
+                self._gas_price = self._chain_interface.get_gas_price()
+
+            if block_base_fee_per_gas is not None and not isinstance(
+                self._chain_interface, GanacheChainInterface
+            ):
+                self._chain_interface.set_next_block_base_fee_per_gas(
+                    block_base_fee_per_gas
+                )
+
             self._accounts = [
                 Account(acc, self) for acc in self._chain_interface.accounts()
             ]
@@ -557,8 +570,6 @@ class Chain:
             assert "gasLimit" in block_info
             self._block_gas_limit = int(block_info["gasLimit"], 16)
             self._chain_id = self._chain_interface.get_chain_id()
-            self._gas_price = 0
-            # self._gas_price = self._chain_interface.get_gas_price()  TODO does not work with anvil and hardhat
             self._nonces = KeyedDefaultDict(
                 lambda addr: self._chain_interface.get_transaction_count(str(addr))
             )

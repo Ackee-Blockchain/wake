@@ -185,11 +185,11 @@ class GeneratorConfig(WokeConfigModel):
 
 
 class AnvilConfig(WokeConfigModel):
-    cmd_args: str = "--prune-history 100 --base-fee 0 --steps-tracing --silent"
+    cmd_args: str = "--prune-history 100 --steps-tracing --silent"
 
 
 class GanacheConfig(WokeConfigModel):
-    cmd_args: str = "-g 0 -k istanbul -q"
+    cmd_args: str = "-k istanbul -q"
 
 
 class HardhatConfig(WokeConfigModel):

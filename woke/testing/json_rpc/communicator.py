@@ -317,6 +317,12 @@ class JsonRpcCommunicator:
         text = self._send_request("hardhat_setNextBlockBaseFeePerGas", params)
         _ = self._process_response(text)
 
+    def hardhat_set_min_gas_price(self, min_gas_price: int) -> None:
+        """Sets the minimum gas price."""
+        params = [hex(min_gas_price)]
+        text = self._send_request("hardhat_setMinGasPrice", params)
+        _ = self._process_response(text)
+
     def anvil_set_balance(self, address: str, balance: int) -> None:
         params = [address, hex(balance)]
         text = self._send_request("anvil_setBalance", params)
@@ -360,6 +366,11 @@ class JsonRpcCommunicator:
     def anvil_set_next_block_base_fee_per_gas(self, base_fee_per_gas: int) -> None:
         params = [hex(base_fee_per_gas)]
         text = self._send_request("anvil_setNextBlockBaseFeePerGas", params)
+        _ = self._process_response(text)
+
+    def anvil_set_min_gas_price(self, min_gas_price: int) -> None:
+        params = [hex(min_gas_price)]
+        text = self._send_request("anvil_setMinGasPrice", params)
         _ = self._process_response(text)
 
     def evm_set_account_balance(self, address: str, balance: int) -> None:
@@ -436,3 +447,8 @@ class JsonRpcCommunicator:
         params = [address, passphrase, hex(duration)]
         text = self._send_request("personal_unlockAccount", params)
         return self._process_response(text)
+
+    def miner_set_gas_price(self, gas_price: int) -> None:
+        params = [hex(gas_price)]
+        text = self._send_request("miner_setGasPrice", params)
+        _ = self._process_response(text)

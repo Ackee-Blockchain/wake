@@ -290,6 +290,10 @@ class ChainInterfaceAbc(ABC):
     def set_next_block_base_fee_per_gas(self, value: int) -> None:
         ...
 
+    @abstractmethod
+    def set_min_gas_price(self, value: int) -> None:
+        ...
+
 
 class HardhatChainInterface(ChainInterfaceAbc):
     def set_balance(self, address: str, value: int) -> None:
@@ -332,6 +336,9 @@ class HardhatChainInterface(ChainInterfaceAbc):
 
     def set_next_block_base_fee_per_gas(self, value: int) -> None:
         self._communicator.hardhat_set_next_block_base_fee_per_gas(value)
+
+    def set_min_gas_price(self, value: int) -> None:
+        self._communicator.hardhat_set_min_gas_price(value)
 
 
 class AnvilChainInterface(ChainInterfaceAbc):
@@ -376,6 +383,9 @@ class AnvilChainInterface(ChainInterfaceAbc):
 
     def set_next_block_base_fee_per_gas(self, value: int) -> None:
         self._communicator.anvil_set_next_block_base_fee_per_gas(value)
+
+    def set_min_gas_price(self, value: int) -> None:
+        self._communicator.anvil_set_min_gas_price(value)
 
 
 class GanacheChainInterface(ChainInterfaceAbc):
@@ -422,3 +432,6 @@ class GanacheChainInterface(ChainInterfaceAbc):
         raise NotImplementedError(
             "Ganache does not support setting next block base fee per gas"
         )
+
+    def set_min_gas_price(self, value: int) -> None:
+        self._communicator.miner_set_gas_price(value)
