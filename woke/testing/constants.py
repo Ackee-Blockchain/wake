@@ -5,7 +5,7 @@ DEFAULT_IMPORTS: str = """
 from __future__ import annotations
 
 from dataclasses import dataclass 
-from typing import List, Optional, overload, Union, Callable
+from typing import List, Dict, Optional, overload, Union, Callable
 from typing_extensions import Literal
 
 from woke.testing.core import Contract, Library, Address, Account, Chain, RequestType

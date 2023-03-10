@@ -309,23 +309,75 @@ class Account:
         value: int = 0,
         from_: Optional[Union[Account, Address, str]] = None,
         gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max",
+        gas_price: Optional[int] = None,
+        max_fee_per_gas: Optional[int] = None,
+        max_priority_fee_per_gas: Optional[int] = None,
+        access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None,
     ):
+        if gas_price is not None and (
+            max_fee_per_gas is not None or max_priority_fee_per_gas is not None
+        ):
+            raise ValueError(
+                "Cannot specify both gas_price and max_fee_per_gas/max_priority_fee_per_gas"
+            )
+        if max_fee_per_gas is not None or max_priority_fee_per_gas is not None:
+            tx_type = 2
+        elif access_list is not None:
+            tx_type = 1
+        elif gas_price is not None:
+            tx_type = 0
+        else:
+            tx_type = self._chain._tx_type
+
+        # normalize access_list, all keys should be Address
+        if access_list is not None:
+            tmp_access_list = defaultdict(list)
+            for k, v in access_list.items():
+                if isinstance(k, Account):
+                    k = k.address
+                elif isinstance(k, str):
+                    k = Address(k)
+                elif not isinstance(k, Address):
+                    raise TypeError("access_list keys must be Account, Address or str")
+                tmp_access_list[k].extend(v)
+            access_list = tmp_access_list
+        else:
+            access_list = {}
+
         params: TxParams = {
-            "type": self._chain._tx_type,
+            "type": tx_type,
             "value": value,
             "data": data,
             "to": str(self.address),
         }
         if params["type"] == 0:
-            params["gas_price"] = self._chain.gas_price
+            params["gas_price"] = (
+                gas_price if gas_price is not None else self._chain.gas_price
+            )
         elif params["type"] == 1:
-            params["access_list"] = []
+            params["access_list"] = [
+                {"address": str(k), "storageKeys": [hex(i) for i in v]}
+                for k, v in access_list.items()
+                if v
+            ]
             params["chain_id"] = self._chain.chain_id
-            params["gas_price"] = self._chain.gas_price
+            params["gas_price"] = (
+                gas_price if gas_price is not None else self._chain.gas_price
+            )
         elif params["type"] == 2:
-            params["access_list"] = []
+            params["access_list"] = [
+                {"address": str(k), "storageKeys": [hex(i) for i in v]}
+                for k, v in access_list.items()
+                if v
+            ]
             params["chain_id"] = self._chain.chain_id
-            params["max_priority_fee_per_gas"] = self._chain.max_priority_fee_per_gas
+            params["max_priority_fee_per_gas"] = (
+                max_priority_fee_per_gas
+                if max_priority_fee_per_gas is not None
+                else self._chain.max_priority_fee_per_gas
+            )
+            if max_fee_per_gas is not None:
+                params["max_fee_per_gas"] = max_fee_per_gas
 
         if from_ is None:
             if request_type == "call" and self._chain.default_call_account is not None:
@@ -364,9 +416,21 @@ class Account:
         value: int = 0,
         from_: Optional[Union[Account, Address, str]] = None,
         gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max",
+        gas_price: Optional[int] = None,
+        max_fee_per_gas: Optional[int] = None,
+        max_priority_fee_per_gas: Optional[int] = None,
+        access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None,
     ) -> bytearray:
         params = self._prepare_tx_params(
-            RequestType.CALL, data, value, from_, gas_limit
+            RequestType.CALL,
+            data,
+            value,
+            from_,
+            gas_limit,
+            gas_price,
+            max_fee_per_gas,
+            max_priority_fee_per_gas,
+            access_list,
         )
         try:
             output = self._chain.chain_interface.call(params)
@@ -383,6 +447,10 @@ class Account:
         value: int = 0,
         from_: Optional[Union[Account, Address, str]] = None,
         gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max",
+        gas_price: Optional[int] = None,
+        max_fee_per_gas: Optional[int] = None,
+        max_priority_fee_per_gas: Optional[int] = None,
+        access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None,
         return_tx: Literal[False] = False,
     ) -> bytearray:
         ...
@@ -394,6 +462,10 @@ class Account:
         value: int = 0,
         from_: Optional[Union[Account, Address, str]] = None,
         gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max",
+        gas_price: Optional[int] = None,
+        max_fee_per_gas: Optional[int] = None,
+        max_priority_fee_per_gas: Optional[int] = None,
+        access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None,
         return_tx: Literal[True] = True,
     ) -> TransactionAbc[bytearray]:
         ...
@@ -404,10 +476,22 @@ class Account:
         value: int = 0,
         from_: Optional[Union[Account, Address, str]] = None,
         gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max",
+        gas_price: Optional[int] = None,
+        max_fee_per_gas: Optional[int] = None,
+        max_priority_fee_per_gas: Optional[int] = None,
+        access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None,
         return_tx: bool = False,
     ) -> Union[bytearray, TransactionAbc[bytearray]]:
         tx_params = self._prepare_tx_params(
-            RequestType.TX, data, value, from_, gas_limit
+            RequestType.TX,
+            data,
+            value,
+            from_,
+            gas_limit,
+            gas_price,
+            max_fee_per_gas,
+            max_priority_fee_per_gas,
+            access_list,
         )
 
         tx_hash = self._chain._send_transaction(tx_params)
@@ -993,11 +1077,38 @@ class Chain:
     def _build_transaction(
         self,
         request_type: RequestType,
-        params: Dict,
+        params: TxParams,
         data: bytes,
         arguments: Iterable,
         abi: Optional[Dict],
     ) -> TxParams:
+        if "gas_price" in params and (
+            "max_fee_per_gas" in params or "max_priority_fee_per_gas" in params
+        ):
+            raise ValueError(
+                "Cannot specify both gas_price and max_fee_per_gas/max_priority_fee_per_gas"
+            )
+        if "max_fee_per_gas" in params or "max_priority_fee_per_gas" in params:
+            tx_type = 2
+        elif "access_list" in params:
+            tx_type = 1
+        elif "gas_price" in params:
+            tx_type = 0
+        else:
+            tx_type = self._tx_type
+
+        if "from" in params:
+            sender = params["from"]
+        else:
+            if request_type == "call" and self.default_call_account is not None:
+                sender = str(self.default_call_account.address)
+            elif request_type == "tx" and self.default_tx_account is not None:
+                sender = str(self.default_tx_account.address)
+            else:
+                raise ValueError(
+                    "No from_ account specified and no default account set"
+                )
+
         if abi is None:
             data += Abi.encode([], [])
         else:
@@ -1008,74 +1119,48 @@ class Chain:
             ]
             data += Abi.encode(types, arguments)
 
-        if "from" in params:
-            if isinstance(params["from"], str):
-                sender = Address(params["from"])
-            else:
-                sender = params["from"]
-        else:
-            if request_type == "call" and self.default_call_account is not None:
-                sender = self.default_call_account.address
-            elif request_type == "tx" and self.default_tx_account is not None:
-                sender = self.default_tx_account.address
-            else:
-                raise ValueError(
-                    "No from_ account specified and no default account set"
-                )
+        tx: TxParams = {
+            "type": tx_type,
+            "nonce": self._nonces[sender],
+            "from": sender,
+            "value": params["value"] if "value" in params else 0,
+            "data": data,
+        }
+
+        if "to" in params:
+            tx["to"] = params["to"]
+
+        if self._tx_type == 0:
+            tx["gas_price"] = (
+                params["gas_price"] if "gas_price" in params else self._gas_price
+            )
+        elif self._tx_type == 1:
+            tx["access_list"] = params["access_list"] if "access_list" in params else []
+            tx["chain_id"] = self._chain_id
+            tx["gas_price"] = (
+                params["gas_price"] if "gas_price" in params else self._gas_price
+            )
+        elif self._tx_type == 2:
+            tx["access_list"] = params["access_list"] if "access_list" in params else []
+            tx["chain_id"] = self._chain_id
+            tx["max_priority_fee_per_gas"] = (
+                params["max_priority_fee_per_gas"]
+                if "max_priority_fee_per_gas" in params
+                else self._max_priority_fee_per_gas
+            )
+            if "max_fee_per_gas" in params:
+                tx["max_fee_per_gas"] = params["max_fee_per_gas"]
 
         if "gas" in params:
-            gas = params["gas"]
+            tx["gas"] = params["gas"]
         else:
             # auto
-            estimate_params = {
-                "type": self._tx_type,
-                "from": str(sender),
-                "value": params["value"] if "value" in params else 0,
-                "data": data,
-                "gas_price": self._gas_price,
-            }
-            if self._tx_type == 0:
-                estimate_params["gas_price"] = self._gas_price
-            elif self._tx_type == 1:
-                estimate_params["access_list"] = []
-                estimate_params["chain_id"] = self._chain_id
-                estimate_params["gas_price"] = self._gas_price
-            elif self._tx_type == 2:
-                estimate_params["access_list"] = []
-                estimate_params["chain_id"] = self._chain_id
-                estimate_params[
-                    "max_priority_fee_per_gas"
-                ] = self._max_priority_fee_per_gas
-
-            if "to" in params:
-                estimate_params["to"] = params["to"]
             try:
-                gas = self._chain_interface.estimate_gas(estimate_params)
+                tx["gas"] = self._chain_interface.estimate_gas(tx)
             except JsonRpcError as e:
                 self._process_call_revert(e)
                 raise
 
-        tx: TxParams = {
-            "type": self._tx_type,
-            "nonce": self._nonces[sender],
-            "from": str(sender),
-            "gas": gas,
-            "value": params["value"] if "value" in params else 0,
-            "data": data,
-        }
-        if self._tx_type == 0:
-            tx["gas_price"] = self._gas_price
-        elif self._tx_type == 1:
-            tx["access_list"] = []
-            tx["chain_id"] = self._chain_id
-            tx["gas_price"] = self._gas_price
-        elif self._tx_type == 2:
-            tx["access_list"] = []
-            tx["chain_id"] = self._chain_id
-            tx["max_priority_fee_per_gas"] = self._max_priority_fee_per_gas
-
-        if "to" in params:
-            tx["to"] = params["to"]
         return tx
 
     def _process_revert_data(
@@ -1827,8 +1912,12 @@ class Contract(Account):
         gas_limit: Union[int, Literal["max"], Literal["auto"]],
         libraries: Dict[bytes, Tuple[Union[Account, Address, None], str]],
         chain: Optional[Chain],
+        gas_price: Optional[int],
+        max_fee_per_gas: Optional[int],
+        max_priority_fee_per_gas: Optional[int],
+        access_list: Optional[Dict[Union[Account, Address, str], List[int]]],
     ) -> Any:
-        params = {}
+        params: TxParams = {}
         if chain is None:
             chain = default_chain
 
@@ -1849,6 +1938,35 @@ class Contract(Account):
             params["gas"] = gas_limit
         else:
             raise ValueError("invalid gas limit")
+
+        if gas_price is not None:
+            params["gas_price"] = gas_price
+
+        if max_fee_per_gas is not None:
+            params["max_fee_per_gas"] = max_fee_per_gas
+
+        if max_priority_fee_per_gas is not None:
+            params["max_priority_fee_per_gas"] = max_priority_fee_per_gas
+
+        if access_list is not None:
+            # normalize access_list, all keys should be Address
+            if access_list is not None:
+                tmp_access_list = defaultdict(list)
+                for k, v in access_list.items():
+                    if isinstance(k, Account):
+                        k = k.address
+                    elif isinstance(k, str):
+                        k = Address(k)
+                    elif not isinstance(k, Address):
+                        raise TypeError(
+                            "access_list keys must be Account, Address or str"
+                        )
+                    tmp_access_list[k].extend(v)
+                access_list = tmp_access_list
+            params["access_list"] = [
+                {"address": str(k), "storageKeys": [hex(i) for i in v]}
+                for k, v in access_list.items()
+            ]
 
         deployment_code = cls._deployment_code
         for match in LIBRARY_PLACEHOLDER_REGEX.finditer(deployment_code):
@@ -1891,8 +2009,12 @@ class Contract(Account):
         to: Optional[Union[Account, Address, str]],
         value: int,
         gas_limit: Union[int, Literal["max"], Literal["auto"]],
+        gas_price: Optional[int],
+        max_fee_per_gas: Optional[int],
+        max_priority_fee_per_gas: Optional[int],
+        access_list: Optional[Dict[Union[Account, Address, str], List[int]]],
     ) -> Any:
-        params = {}
+        params: TxParams = {}
         if from_ is not None:
             if isinstance(from_, Account):
                 if from_.chain != self.chain:
@@ -1920,6 +2042,35 @@ class Contract(Account):
                 params["to"] = str(to)
         else:
             params["to"] = str(self._address)
+
+        if gas_price is not None:
+            params["gas_price"] = gas_price
+
+        if max_fee_per_gas is not None:
+            params["max_fee_per_gas"] = max_fee_per_gas
+
+        if max_priority_fee_per_gas is not None:
+            params["max_priority_fee_per_gas"] = max_priority_fee_per_gas
+
+        if access_list is not None:
+            # normalize access_list, all keys should be Address
+            if access_list is not None:
+                tmp_access_list = defaultdict(list)
+                for k, v in access_list.items():
+                    if isinstance(k, Account):
+                        k = k.address
+                    elif isinstance(k, str):
+                        k = Address(k)
+                    elif not isinstance(k, Address):
+                        raise TypeError(
+                            "access_list keys must be Account, Address or str"
+                        )
+                    tmp_access_list[k].extend(v)
+                access_list = tmp_access_list
+            params["access_list"] = [
+                {"address": str(k), "storageKeys": [hex(i) for i in v]}
+                for k, v in access_list.items()
+            ]
 
         return self.chain._transact(
             bytes.fromhex(selector),
@@ -1940,10 +2091,14 @@ class Contract(Account):
         to: Optional[Union[Account, Address, str]],
         value: int,
         gas_limit: Union[int, Literal["max"], Literal["auto"]],
+        gas_price: Optional[int],
+        max_fee_per_gas: Optional[int],
+        max_priority_fee_per_gas: Optional[int],
+        access_list: Optional[Dict[Union[Account, Address, str], List[int]]],
     ) -> Any:
         if return_tx:
             raise ValueError("Transaction cannot be returned from a call")
-        params = {}
+        params: TxParams = {}
         if from_ is not None:
             if isinstance(from_, Account):
                 if from_.chain != self.chain:
@@ -1971,6 +2126,35 @@ class Contract(Account):
                 params["to"] = str(to)
         else:
             params["to"] = str(self._address)
+
+        if gas_price is not None:
+            params["gas_price"] = gas_price
+
+        if max_fee_per_gas is not None:
+            params["max_fee_per_gas"] = max_fee_per_gas
+
+        if max_priority_fee_per_gas is not None:
+            params["max_priority_fee_per_gas"] = max_priority_fee_per_gas
+
+        if access_list is not None:
+            # normalize access_list, all keys should be Address
+            if access_list is not None:
+                tmp_access_list = defaultdict(list)
+                for k, v in access_list.items():
+                    if isinstance(k, Account):
+                        k = k.address
+                    elif isinstance(k, str):
+                        k = Address(k)
+                    elif not isinstance(k, Address):
+                        raise TypeError(
+                            "access_list keys must be Account, Address or str"
+                        )
+                    tmp_access_list[k].extend(v)
+                access_list = tmp_access_list
+            params["access_list"] = [
+                {"address": str(k), "storageKeys": [hex(i) for i in v]}
+                for k, v in access_list.items()
+            ]
 
         sel = bytes.fromhex(selector)
         return self.chain._call(
@@ -1992,12 +2176,27 @@ class Library(Contract):
         gas_limit: Union[int, Literal["max"], Literal["auto"]],
         libraries: Dict[bytes, Tuple[Union[Account, Address, None], str]],
         chain: Optional[Chain],
+        gas_price: Optional[int],
+        max_fee_per_gas: Optional[int],
+        max_priority_fee_per_gas: Optional[int],
+        access_list: Optional[Dict[Union[Account, Address, str], List[int]]],
     ) -> Any:
         if chain is None:
             chain = default_chain
 
         lib = super()._deploy(
-            arguments, return_tx, return_type, from_, value, gas_limit, libraries, chain
+            arguments,
+            return_tx,
+            return_type,
+            from_,
+            value,
+            gas_limit,
+            libraries,
+            chain,
+            gas_price,
+            max_fee_per_gas,
+            max_priority_fee_per_gas,
+            access_list,
         )
         chain._deployed_libraries[cls._library_id].append(lib)
         return lib
