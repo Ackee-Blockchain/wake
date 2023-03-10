@@ -238,6 +238,9 @@ class ChainInterfaceAbc(ABC):
     def send_transaction(self, params: TxParams) -> str:
         return self._communicator.eth_send_transaction(params)
 
+    def send_raw_transaction(self, raw_tx: bytes) -> str:
+        return self._communicator.eth_send_raw_transaction(raw_tx)
+
     def debug_trace_transaction(self, tx_hash: str, options: Dict) -> Dict[str, Any]:
         return self._communicator.debug_trace_transaction(tx_hash, options)
 

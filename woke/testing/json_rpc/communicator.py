@@ -253,6 +253,11 @@ class JsonRpcCommunicator:
         )
         return self._process_response(text)
 
+    def eth_send_raw_transaction(self, raw_transaction: bytes) -> str:
+        """Submits a raw transaction."""
+        text = self._send_request("eth_sendRawTransaction", [raw_transaction.hex()])
+        return self._process_response(text)
+
     def eth_get_transaction_receipt(self, tx_hash: str) -> Optional[Dict]:
         """Returns the receipt of a transaction by transaction hash."""
         text = self._send_request("eth_getTransactionReceipt", [tx_hash])
