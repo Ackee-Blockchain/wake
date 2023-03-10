@@ -225,8 +225,10 @@ class ChainInterfaceAbc(ABC):
     def get_transaction_receipt(self, tx_hash: str) -> Optional[Dict[str, Any]]:
         return self._communicator.eth_get_transaction_receipt(tx_hash)
 
-    def call(self, params: TxParams) -> bytes:
-        return self._communicator.eth_call(params)
+    def call(
+        self, params: TxParams, block_identifier: Union[int, str] = "latest"
+    ) -> bytes:
+        return self._communicator.eth_call(params, block_identifier)
 
     def estimate_gas(
         self, params: TxParams, block_identifier: Union[int, str] = "pending"
