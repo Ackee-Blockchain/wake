@@ -200,7 +200,7 @@ class JsonRpcCommunicator:
         return bytes.fromhex(self._process_response(text)[2:])
 
     def eth_estimate_gas(
-        self, transaction: TxParams, block: Union[int, str] = BlockEnum.LATEST
+        self, transaction: TxParams, block: Union[int, str] = BlockEnum.PENDING
     ) -> int:
         """Generates and returns an estimate of how much gas is necessary to allow the transaction to complete."""
         params: List[Any] = [self._encode_transaction(transaction)]
