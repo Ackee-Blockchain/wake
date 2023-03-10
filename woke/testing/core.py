@@ -1413,72 +1413,17 @@ class Chain:
         return console_logs
 
     @_check_connected
-    def _deploy(
-        self,
-        abi: Dict[Union[bytes, Literal["constructor"]], Any],
-        deployment_code: bytes,
-        arguments: Iterable,
-        params: TxParams,
-        return_tx: bool,
-        return_type: Type,
-    ) -> Any:
-        tx_params = self._build_transaction(
-            RequestType.TX,
-            params,
-            deployment_code,
-            arguments,
-            abi["constructor"] if "constructor" in abi else None,
-        )
-
-        tx_hash = self._send_transaction(tx_params)
-
-        assert "type" in tx_params
-        if tx_params["type"] == 0:
-            from .transactions import LegacyTransaction
-
-            tx_type = LegacyTransaction[return_type]
-        elif tx_params["type"] == 1:
-            from .transactions import Eip2930Transaction
-
-            tx_type = Eip2930Transaction[return_type]
-        elif tx_params["type"] == 2:
-            from .transactions import Eip1559Transaction
-
-            tx_type = Eip1559Transaction[return_type]
-        else:
-            raise ValueError(f"Unknown transaction type {tx_params['type']}")
-
-        tx = tx_type(
-            tx_hash,
-            tx_params,
-            abi["constructor"] if "constructor" in abi else None,
-            return_type,
-            self,
-        )
-        self._txs[tx_hash] = tx
-
-        if return_tx:
-            return tx
-
-        tx.wait()
-
-        if self.tx_callback is not None:
-            self.tx_callback(tx)
-
-        return tx.return_value
-
-    @_check_connected
     def _call(
         self,
-        selector: bytes,
-        abi: Dict[Union[bytes, Literal["constructor"]], Any],
+        data: bytes,
+        abi: Dict,
         arguments: Iterable,
         params: TxParams,
         return_type: Type,
         block: Union[int, str],
     ) -> Any:
         tx_params = self._build_transaction(
-            RequestType.CALL, params, selector, arguments, abi[selector]
+            RequestType.CALL, params, data, arguments, abi
         )
         try:
             output = self._chain_interface.call(tx_params, block)
@@ -1486,19 +1431,19 @@ class Chain:
             self._process_call_revert(e)
             raise
 
-        return self._process_return_data(None, output, abi[selector], return_type)
+        return self._process_return_data(None, output, abi, return_type)
 
     @_check_connected
     def _estimate(
         self,
-        selector: bytes,
-        abi: Dict[Union[bytes, Literal["constructor"]], Any],
+        data: bytes,
+        abi: Dict,
         arguments: Iterable,
         params: TxParams,
         block: Union[int, str],
     ) -> int:
         tx_params = self._build_transaction(
-            RequestType.ESTIMATE, params, selector, arguments, abi[selector]
+            RequestType.ESTIMATE, params, data, arguments, abi
         )
         try:
             return self._chain_interface.estimate_gas(tx_params, block)
@@ -1533,15 +1478,15 @@ class Chain:
     @_check_connected
     def _transact(
         self,
-        selector: bytes,
-        abi: Dict[Union[bytes, Literal["constructor"]], Any],
+        data: bytes,
+        abi: Optional[Dict],
         arguments: Iterable,
         params: TxParams,
         return_tx: bool,
         return_type: Type,
     ) -> Any:
         tx_params = self._build_transaction(
-            RequestType.TX, params, selector, arguments, abi[selector]
+            RequestType.TX, params, data, arguments, abi
         )
 
         tx_hash = self._send_transaction(tx_params)
@@ -1565,7 +1510,7 @@ class Chain:
         tx = tx_type(
             tx_hash,
             tx_params,
-            abi[selector],
+            abi,
             return_type,
             self,
         )
@@ -2054,9 +1999,9 @@ class Contract(Account):
                 + deployment_code[match.end() :]
             )
 
-        return chain._deploy(
-            cls._abi,
+        return chain._transact(
             bytes.fromhex(deployment_code),
+            cls._abi["constructor"] if "constructor" in cls._abi else None,
             arguments,
             params,
             return_tx,
@@ -2139,9 +2084,10 @@ class Contract(Account):
                 for k, v in access_list.items()
             ]
 
+        sel = bytes.fromhex(selector)
         return self.chain._transact(
-            bytes.fromhex(selector),
-            self.__class__._abi,
+            sel,
+            self.__class__._abi[sel],
             arguments,
             params,
             return_tx,
@@ -2229,7 +2175,7 @@ class Contract(Account):
 
         sel = bytes.fromhex(selector)
         return self.chain._call(
-            sel, self.__class__._abi, arguments, params, return_type, block
+            sel, self.__class__._abi[sel], arguments, params, return_type, block
         )
 
     def _estimate(
@@ -2311,7 +2257,9 @@ class Contract(Account):
             block = "pending"
 
         sel = bytes.fromhex(selector)
-        return self.chain._estimate(sel, self.__class__._abi, arguments, params, block)
+        return self.chain._estimate(
+            sel, self.__class__._abi[sel], arguments, params, block
+        )
 
 
 class Library(Contract):
