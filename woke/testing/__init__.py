@@ -12,7 +12,12 @@ from .internal import (
     must_revert,
 )
 from .primitive_types import *
-from .transactions import LegacyTransaction, TransactionAbc
+from .transactions import (
+    Eip1559Transaction,
+    Eip2930Transaction,
+    LegacyTransaction,
+    TransactionAbc,
+)
 from .utils import (
     get_create2_address_from_code,
     get_create2_address_from_hash,

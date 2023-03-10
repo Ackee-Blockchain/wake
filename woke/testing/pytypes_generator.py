@@ -252,7 +252,7 @@ class TypeGenerator:
         self.add_str_to_types(1, "@classmethod", 1)
         self.add_str_to_types(
             1,
-            f'def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: Literal[True] = True{libraries_str}, chain: Optional[Chain] = None) -> LegacyTransaction[{contract_name}]:',
+            f'def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: Literal[True] = True{libraries_str}, chain: Optional[Chain] = None) -> TransactionAbc[{contract_name}]:',
             1,
         )
         self.add_str_to_types(2, "...", 2)
@@ -260,7 +260,7 @@ class TypeGenerator:
         self.add_str_to_types(1, "@classmethod", 1)
         self.add_str_to_types(
             1,
-            f'def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: bool = {self.__return_tx_obj}{libraries_str}, chain: Optional[Chain] = None) -> Union[{contract_name}, LegacyTransaction[{contract_name}]]:',
+            f'def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: bool = {self.__return_tx_obj}{libraries_str}, chain: Optional[Chain] = None) -> Union[{contract_name}, TransactionAbc[{contract_name}]]:',
             1,
         )
 
@@ -993,7 +993,7 @@ class TypeGenerator:
 
         self.generate_type_hint_stub_func(decl, generated_params, returns_str, False)
         self.generate_type_hint_stub_func(
-            decl, generated_params, f"LegacyTransaction[{returns_str}]", True
+            decl, generated_params, f"TransactionAbc[{returns_str}]", True
         )
 
         self.generate_func_implementation(
@@ -1040,7 +1040,7 @@ class TypeGenerator:
             returns_str = f"Tuple[{', '.join(ret[0] for ret in returns)}]"
         self.add_str_to_types(
             1,
-            f"""def {self.get_name(declaration)}(self, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, to: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: bool = {False if is_view_or_pure else self.__return_tx_obj}, request_type: RequestType='{'call' if is_view_or_pure else 'tx'}') -> Union[{returns_str}, LegacyTransaction[{returns_str}]]:""",
+            f"""def {self.get_name(declaration)}(self, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, to: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: bool = {False if is_view_or_pure else self.__return_tx_obj}, request_type: RequestType='{'call' if is_view_or_pure else 'tx'}') -> Union[{returns_str}, TransactionAbc[{returns_str}]]:""",
             1,
         )
 
@@ -1116,7 +1116,7 @@ class TypeGenerator:
         self.generate_type_hint_stub_func(
             fn,
             params,
-            f"LegacyTransaction[{returns_str}]",
+            f"TransactionAbc[{returns_str}]",
             True,
         )
 
@@ -1577,6 +1577,8 @@ class NameSanitizer:
             "TransactionRevertedError",
             "TransactionAbc",
             "LegacyTransaction",
+            "Eip2930Transaction",
+            "Eip1559Transaction",
             "ValueRange",
             "Length",
             "bytes",

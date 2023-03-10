@@ -51,7 +51,7 @@ from .internal import UnknownEvent, UnknownTransactionRevertedError, read_from_m
 from .json_rpc.communicator import JsonRpcError, TxParams
 
 if TYPE_CHECKING:
-    from .transactions import LegacyTransaction, TransactionAbc
+    from .transactions import TransactionAbc
 
 
 class RequestType(StrEnum):
@@ -311,12 +311,22 @@ class Account:
         gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max",
     ):
         params: TxParams = {
-            "type": 0,
+            "type": self._chain._tx_type,
             "value": value,
             "data": data,
-            "gas_price": self._chain.gas_price,
             "to": str(self.address),
         }
+        if params["type"] == 0:
+            params["gas_price"] = self._chain.gas_price
+        elif params["type"] == 1:
+            params["access_list"] = []
+            params["chain_id"] = self._chain.chain_id
+            params["gas_price"] = self._chain.gas_price
+        elif params["type"] == 2:
+            params["access_list"] = []
+            params["chain_id"] = self._chain.chain_id
+            params["max_priority_fee_per_gas"] = self._chain.max_priority_fee_per_gas
+
         if from_ is None:
             if request_type == "call" and self._chain.default_call_account is not None:
                 params["from"] = str(self._chain.default_call_account.address)
@@ -385,7 +395,7 @@ class Account:
         from_: Optional[Union[Account, Address, str]] = None,
         gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max",
         return_tx: Literal[True] = True,
-    ) -> LegacyTransaction[bytearray]:
+    ) -> TransactionAbc[bytearray]:
         ...
 
     def transact(
@@ -395,16 +405,29 @@ class Account:
         from_: Optional[Union[Account, Address, str]] = None,
         gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max",
         return_tx: bool = False,
-    ) -> Union[bytearray, LegacyTransaction[bytearray]]:
+    ) -> Union[bytearray, TransactionAbc[bytearray]]:
         tx_params = self._prepare_tx_params(
             RequestType.TX, data, value, from_, gas_limit
         )
 
         tx_hash = self._chain._send_transaction(tx_params)
 
-        from .transactions import LegacyTransaction
+        if tx_params["type"] == 0:
+            from .transactions import LegacyTransaction
 
-        tx = LegacyTransaction[bytearray](
+            tx_type = LegacyTransaction[bytearray]
+        elif tx_params["type"] == 1:
+            from .transactions import Eip2930Transaction
+
+            tx_type = Eip2930Transaction[bytearray]
+        elif tx_params["type"] == 2:
+            from .transactions import Eip1559Transaction
+
+            tx_type = Eip1559Transaction[bytearray]
+        else:
+            raise ValueError(f"Unknown transaction type {tx_params['type']}")
+
+        tx = tx_type(
             tx_hash,
             tx_params,
             None,
@@ -498,6 +521,8 @@ class Chain:
     _default_tx_account: Optional[Account]
     _block_gas_limit: int
     _gas_price: int
+    _max_priority_fee_per_gas: int
+    _tx_type: int
     _chain_id: int
     _nonces: KeyedDefaultDict[Address, int]
     _snapshots: Dict[str, Dict]
@@ -550,18 +575,69 @@ class Chain:
             self._connected = True
             connected_chains.append(self)
 
+            self._gas_price = 0
+            self._max_priority_fee_per_gas = 0
+
+            # determine the chain hardfork to set the default tx type
+            if isinstance(self._chain_interface, AnvilChainInterface):
+                hardfork = self._chain_interface.node_info()["hardFork"]
+                if hardfork in {
+                    "FRONTIER",
+                    "HOMESTEAD",
+                    "TANGERINE",
+                    "SPURIOUS_DRAGON",
+                    "BYZANTIUM",
+                    "CONSTANTINOPLE",
+                    "PETERSBURG",
+                    "ISTANBUL",
+                    "MUIR_GLACIER",
+                }:
+                    self._tx_type = 0
+                elif hardfork == "BERLIN":
+                    self._tx_type = 1
+                else:
+                    self._tx_type = 2
+            elif isinstance(self._chain_interface, HardhatChainInterface):
+                try:
+                    self._chain_interface.call(
+                        {
+                            "type": 2,
+                            "max_priority_fee_per_gas": 0,
+                        }
+                    )
+                    self._tx_type = 2
+                except JsonRpcError:
+                    try:
+                        self._chain_interface.call(
+                            {
+                                "type": 1,
+                                "access_list": [],
+                            }
+                        )
+                        self._tx_type = 1
+                    except JsonRpcError:
+                        self._tx_type = 0
+            else:
+                self._tx_type = 0
+
             if min_gas_price is not None:
-                self._chain_interface.set_min_gas_price(min_gas_price)
-                self._gas_price = min_gas_price
+                try:
+                    self._chain_interface.set_min_gas_price(min_gas_price)
+                    self._gas_price = min_gas_price
+                except JsonRpcError:
+                    pass
             else:
                 self._gas_price = self._chain_interface.get_gas_price()
 
             if block_base_fee_per_gas is not None and not isinstance(
                 self._chain_interface, GanacheChainInterface
             ):
-                self._chain_interface.set_next_block_base_fee_per_gas(
-                    block_base_fee_per_gas
-                )
+                try:
+                    self._chain_interface.set_next_block_base_fee_per_gas(
+                        block_base_fee_per_gas
+                    )
+                except JsonRpcError:
+                    pass
 
             self._accounts = [
                 Account(acc, self) for acc in self._chain_interface.accounts()
@@ -709,6 +785,16 @@ class Chain:
     @_check_connected
     def gas_price(self, value: int) -> None:
         self._gas_price = value
+
+    @property
+    @_check_connected
+    def max_priority_fee_per_gas(self) -> int:
+        return self._max_priority_fee_per_gas
+
+    @max_priority_fee_per_gas.setter
+    @_check_connected
+    def max_priority_fee_per_gas(self, value: int) -> None:
+        self._max_priority_fee_per_gas = value
 
     @property
     @_check_connected
@@ -942,11 +1028,25 @@ class Chain:
         else:
             # auto
             estimate_params = {
+                "type": self._tx_type,
                 "from": str(sender),
                 "value": params["value"] if "value" in params else 0,
                 "data": data,
                 "gas_price": self._gas_price,
             }
+            if self._tx_type == 0:
+                estimate_params["gas_price"] = self._gas_price
+            elif self._tx_type == 1:
+                estimate_params["access_list"] = []
+                estimate_params["chain_id"] = self._chain_id
+                estimate_params["gas_price"] = self._gas_price
+            elif self._tx_type == 2:
+                estimate_params["access_list"] = []
+                estimate_params["chain_id"] = self._chain_id
+                estimate_params[
+                    "max_priority_fee_per_gas"
+                ] = self._max_priority_fee_per_gas
+
             if "to" in params:
                 estimate_params["to"] = params["to"]
             try:
@@ -956,18 +1056,24 @@ class Chain:
                 raise
 
         tx: TxParams = {
-            "type": 0,
+            "type": self._tx_type,
             "nonce": self._nonces[sender],
             "from": str(sender),
             "gas": gas,
             "value": params["value"] if "value" in params else 0,
             "data": data,
-            "gas_price": self._gas_price,
-            # "max_priority_fee_per_gas": 0,
-            # "max_fee_per_gas": 0,
-            # "access_list": [],
-            # "chain_id": self.__chain_id
         }
+        if self._tx_type == 0:
+            tx["gas_price"] = self._gas_price
+        elif self._tx_type == 1:
+            tx["access_list"] = []
+            tx["chain_id"] = self._chain_id
+            tx["gas_price"] = self._gas_price
+        elif self._tx_type == 2:
+            tx["access_list"] = []
+            tx["chain_id"] = self._chain_id
+            tx["max_priority_fee_per_gas"] = self._max_priority_fee_per_gas
+
         if "to" in params:
             tx["to"] = params["to"]
         return tx
@@ -1196,9 +1302,23 @@ class Chain:
 
         tx_hash = self._send_transaction(tx_params)
 
-        from .transactions import LegacyTransaction
+        assert "type" in tx_params
+        if tx_params["type"] == 0:
+            from .transactions import LegacyTransaction
 
-        tx = LegacyTransaction[return_type](
+            tx_type = LegacyTransaction[return_type]
+        elif tx_params["type"] == 1:
+            from .transactions import Eip2930Transaction
+
+            tx_type = Eip2930Transaction[return_type]
+        elif tx_params["type"] == 2:
+            from .transactions import Eip1559Transaction
+
+            tx_type = Eip1559Transaction[return_type]
+        else:
+            raise ValueError(f"Unknown transaction type {tx_params['type']}")
+
+        tx = tx_type(
             tx_hash,
             tx_params,
             abi["constructor"] if "constructor" in abi else None,
@@ -1277,9 +1397,23 @@ class Chain:
 
         tx_hash = self._send_transaction(tx_params)
 
-        from .transactions import LegacyTransaction
+        assert "type" in tx_params
+        if tx_params["type"] == 0:
+            from .transactions import LegacyTransaction
 
-        tx = LegacyTransaction[return_type](
+            tx_type = LegacyTransaction[return_type]
+        elif tx_params["type"] == 1:
+            from .transactions import Eip2930Transaction
+
+            tx_type = Eip2930Transaction[return_type]
+        elif tx_params["type"] == 2:
+            from .transactions import Eip1559Transaction
+
+            tx_type = Eip1559Transaction[return_type]
+        else:
+            raise ValueError(f"Unknown transaction type {tx_params['type']}")
+
+        tx = tx_type(
             tx_hash,
             tx_params,
             abi[selector],

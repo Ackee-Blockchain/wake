@@ -399,3 +399,79 @@ class LegacyTransaction(TransactionAbc[T]):
     def type(self) -> TransactionTypeEnum:
         assert "type" in self._tx_params and self._tx_params["type"] == 0
         return TransactionTypeEnum.LEGACY
+
+
+class Eip2930Transaction(TransactionAbc[T]):
+    @property
+    def chain_id(self) -> int:
+        assert "chain_id" in self._tx_params
+        return self._tx_params["chain_id"]
+
+    @property
+    def access_list(self) -> Dict[Account, List[int]]:
+        assert "access_list" in self._tx_params
+        ret = {}
+        for entry in self._tx_params["access_list"]:
+            account = Account(entry[0])
+            if account not in ret:
+                ret[account] = []
+            ret[account].append(entry[1])
+        return ret
+
+    @property
+    @_fetch_tx_data
+    def y_parity(self) -> bool:
+        return bool(int(self._tx_data["v"], 16) & 1)
+
+    @property
+    def type(self) -> TransactionTypeEnum:
+        assert "type" in self._tx_params and self._tx_params["type"] == 1
+        return TransactionTypeEnum.EIP2930
+
+
+class Eip1559Transaction(TransactionAbc[T]):
+    @property
+    def chain_id(self) -> int:
+        assert "chain_id" in self._tx_params
+        return self._tx_params["chain_id"]
+
+    @property
+    def max_fee_per_gas(self) -> int:
+        if "max_fee_per_gas" not in self._tx_params:
+            if self._tx_data is None:
+                self._tx_data = self._chain.chain_interface.get_transaction(
+                    self.tx_hash
+                )
+            return int(self._tx_data["maxFeePerGas"], 16)
+        return self._tx_params["max_fee_per_gas"]
+
+    @property
+    def max_priority_fee_per_gas(self) -> int:
+        if "max_priority_fee_per_gas" not in self._tx_params:
+            if self._tx_data is None:
+                self._tx_data = self._chain.chain_interface.get_transaction(
+                    self.tx_hash
+                )
+            return int(self._tx_data["maxPriorityFeePerGas"], 16)
+        return self._tx_params["max_priority_fee_per_gas"]
+
+    @property
+    def access_list(self) -> Dict[Account, List[int]]:
+        assert "access_list" in self._tx_params
+        ret = {}
+        for entry in self._tx_params["access_list"]:
+            account = Account(entry[0])
+            if account not in ret:
+                ret[account] = []
+            ret[account].append(entry[1])
+        return ret
+
+    @property
+    @_fetch_tx_data
+    def y_parity(self) -> bool:
+        return bool(int(self._tx_data["v"], 16) & 1)
+
+    @property
+    def type(self) -> TransactionTypeEnum:
+        assert "type" in self._tx_params and self._tx_params["type"] == 2
+        return TransactionTypeEnum.EIP1559
