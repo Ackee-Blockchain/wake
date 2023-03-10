@@ -4,12 +4,15 @@ import dataclasses
 import functools
 import importlib
 import inspect
+import json
 import re
 from bdb import BdbQuit
 from collections import ChainMap, defaultdict
 from contextlib import contextmanager
 from copy import deepcopy
 from enum import IntEnum
+from os import PathLike
+from pathlib import Path
 from types import MappingProxyType
 from typing import (
     TYPE_CHECKING,
@@ -31,8 +34,10 @@ from typing import (
 
 import eth_abi
 import eth_abi.packed
+import eth_account
 import eth_utils
 from Crypto.Hash import BLAKE2b, keccak
+from eth_utils import to_checksum_address
 from typing_extensions import Literal, get_args, get_origin
 
 from woke.testing.chain_interfaces import (
@@ -46,7 +51,7 @@ from woke.utils import StrEnum
 from ..utils.keyed_default_dict import KeyedDefaultDict
 from . import hardhat_console
 from .blocks import ChainBlocks
-from .globals import get_exception_handler
+from .globals import get_config, get_exception_handler
 from .internal import UnknownEvent, UnknownTransactionRevertedError, read_from_memory
 from .json_rpc.communicator import JsonRpcError, TxParams
 
@@ -247,6 +252,70 @@ class Account:
     def __hash__(self) -> int:
         return hash((self._address, self._chain))
 
+    @classmethod
+    def from_key(
+        cls, private_key: Union[str, int, bytes], chain: Optional[Chain] = None
+    ) -> Account:
+        acc = eth_account.Account.from_key(private_key)
+        ret = cls(acc.address, chain)
+        ret._private_key = acc.key
+        return ret
+
+    @classmethod
+    def from_mnemonic(
+        cls,
+        mnemonic: str,
+        passphrase: str = "",
+        path: str = "m/44'/60'/0'/0/0",
+        chain: Optional[Chain] = None,
+    ) -> Account:
+        acc = eth_account.Account.from_mnemonic(mnemonic, passphrase, path)
+        ret = cls(acc.address, chain)
+        ret._private_key = acc.key
+        return ret
+
+    @classmethod
+    def from_alias(
+        cls,
+        alias: str,
+        keystore: Optional[PathLike] = None,
+        chain: Optional[Chain] = None,
+    ) -> Account:
+        if chain is None:
+            chain = default_chain
+
+        if keystore is None:
+            path = Path(get_config().global_data_path) / "keystore"
+        else:
+            path = Path(keystore)
+        if not path.is_dir():
+            raise ValueError(f"Keystore path {path} is not a directory")
+
+        path = path / f"{alias}.json"
+        if not path.exists():
+            raise ValueError(f"Alias {alias} not found in keystore {path}")
+
+        with path.open() as f:
+            data = json.load(f)
+
+        if not data["address"].startswith("0x"):
+            data["address"] = "0x" + data["address"]
+        addr = Address(data["address"])
+
+        import click
+
+        key = eth_account.Account.decrypt(
+            data,
+            click.prompt(f"Password for account {alias}", default="", hide_input=True),
+        )
+
+        chain._private_keys[addr] = key
+        return cls(data["address"], chain)
+
+    @property
+    def private_key(self) -> Optional[bytes]:
+        return self._chain._private_keys.get(self._address, None)
+
     @property
     def address(self) -> Address:
         return self._address
@@ -381,6 +450,14 @@ class Account:
             )
             if max_fee_per_gas is not None:
                 params["maxFeePerGas"] = max_fee_per_gas
+            else:
+                if self._chain.require_signed_txs:
+                    params["maxFeePerGas"] = params["maxPriorityFeePerGas"] + int(
+                        self._chain.chain_interface.get_block("pending")[
+                            "baseFeePerGas"
+                        ],
+                        16,
+                    )
 
         if from_ is None:
             if request_type == "call" and self._chain.default_call_account is not None:
@@ -662,6 +739,8 @@ class Chain:
     _txs: Dict[str, TransactionAbc]
     _blocks: ChainBlocks
     _labels: Dict[Address, str]
+    _private_keys: Dict[Address, bytes]
+    _require_signed_txs: bool
 
     tx_callback: Optional[Callable[[TransactionAbc], None]]
 
@@ -789,6 +868,8 @@ class Chain:
             self._txs = {}
             self._blocks = ChainBlocks(self)
             self._labels = {}
+            self._private_keys = {}
+            self._require_signed_txs = False
 
             self._single_source_errors = {
                 selector
@@ -941,6 +1022,16 @@ class Chain:
     @_check_connected
     def blocks(self) -> ChainBlocks:
         return self._blocks
+
+    @property
+    @_check_connected
+    def require_signed_txs(self) -> bool:
+        return self._require_signed_txs
+
+    @require_signed_txs.setter
+    @_check_connected
+    def require_signed_txs(self, value: bool) -> None:
+        self._require_signed_txs = value
 
     @_check_connected
     def mine(self, timestamp_change: Optional[Callable[[int], int]] = None) -> None:
@@ -1198,6 +1289,11 @@ class Chain:
             )
             if "maxFeePerGas" in params:
                 tx["maxFeePerGas"] = params["maxFeePerGas"]
+            else:
+                if self.require_signed_txs:
+                    tx["maxFeePerGas"] = tx["maxPriorityFeePerGas"] + int(
+                        self.chain_interface.get_block("pending")["baseFeePerGas"], 16
+                    )
 
         if "gas" in params:
             tx["gas"] = params["gas"]
@@ -1536,19 +1632,25 @@ class Chain:
     def _send_transaction(self, tx_params: TxParams) -> str:
         assert "from" in tx_params
 
-        if isinstance(self.chain_interface, AnvilChainInterface):
-            try:
-                tx_hash = self.chain_interface.send_unsigned_transaction(tx_params)
-            except (ValueError, JsonRpcError) as e:
-                try:
-                    tx_hash = e.args[0]["data"]["txHash"]
-                except Exception:
-                    raise e
-            self._nonces[Address(tx_params["from"])] += 1
-        else:
-            sender = Account(tx_params["from"], self)
+        if self.require_signed_txs:
+            key = self._private_keys.get(Address(tx_params["from"]), None)
+            tx_params["from"] = to_checksum_address(tx_params["from"])
 
-            with _signer_account(sender):
+            if "to" in tx_params:
+                tx_params["to"] = to_checksum_address(tx_params["to"])
+
+            if key is not None:
+                signed_tx = eth_account.Account.sign_transaction(
+                    tx_params, key
+                ).rawTransaction
+                try:
+                    tx_hash = self._chain_interface.send_raw_transaction(signed_tx)
+                except (ValueError, JsonRpcError) as e:
+                    try:
+                        tx_hash = e.args[0]["data"]["txHash"]
+                    except Exception:
+                        raise e
+            else:
                 try:
                     tx_hash = self._chain_interface.send_transaction(tx_params)
                 except (ValueError, JsonRpcError) as e:
@@ -1556,7 +1658,29 @@ class Chain:
                         tx_hash = e.args[0]["data"]["txHash"]
                     except Exception:
                         raise e
-                self._nonces[sender.address] += 1
+            self._nonces[Address(tx_params["from"])] += 1
+        else:
+            if isinstance(self.chain_interface, AnvilChainInterface):
+                try:
+                    tx_hash = self.chain_interface.send_unsigned_transaction(tx_params)
+                except (ValueError, JsonRpcError) as e:
+                    try:
+                        tx_hash = e.args[0]["data"]["txHash"]
+                    except Exception:
+                        raise e
+                self._nonces[Address(tx_params["from"])] += 1
+            else:
+                sender = Account(tx_params["from"], self)
+
+                with _signer_account(sender):
+                    try:
+                        tx_hash = self._chain_interface.send_transaction(tx_params)
+                    except (ValueError, JsonRpcError) as e:
+                        try:
+                            tx_hash = e.args[0]["data"]["txHash"]
+                        except Exception:
+                            raise e
+                    self._nonces[sender.address] += 1
         return tx_hash
 
 
