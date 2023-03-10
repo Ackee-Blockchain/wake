@@ -11,6 +11,7 @@ from rich.logging import RichHandler
 
 from woke.config import WokeConfig
 
+from .accounts import run_accounts
 from .compile import run_compile
 from .console import console
 from .detect import run_detect
@@ -66,6 +67,7 @@ def main(ctx: Context, debug: bool, profile: bool) -> None:
         asyncio.get_event_loop_policy().set_child_watcher(ThreadedChildWatcher())
 
 
+main.add_command(run_accounts)
 main.add_command(run_compile)
 main.add_command(run_detect)
 main.add_command(run_fuzz)
