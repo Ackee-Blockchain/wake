@@ -387,6 +387,9 @@ class AnvilChainInterface(ChainInterfaceAbc):
     def set_min_gas_price(self, value: int) -> None:
         self._communicator.anvil_set_min_gas_price(value)
 
+    def node_info(self) -> Dict[str, Any]:
+        return self._communicator.anvil_node_info()
+
 
 class GanacheChainInterface(ChainInterfaceAbc):
     def set_balance(self, address: str, value: int) -> None:

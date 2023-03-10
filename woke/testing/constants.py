@@ -11,7 +11,7 @@ from typing_extensions import Literal
 from woke.testing.core import Contract, Library, Address, Account, Chain, RequestType
 from woke.testing.internal import TransactionRevertedError
 from woke.testing.primitive_types import *
-from woke.testing.transactions import LegacyTransaction
+from woke.testing.transactions import TransactionAbc
 """
 
 INIT_CONTENT: str = """

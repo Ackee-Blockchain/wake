@@ -37,13 +37,13 @@ class CrosschainTest(FuzzTest):
     @flow()
     def flow_increment(self):
         c = self.c1 if self.first_chain else self.c2
-        c.increment(from_=random_address())
+        c.increment(from_=random_account(chain=c.chain))
 
     @flow()
     def flow_decrement(self):
         c = self.c1 if self.first_chain else self.c2
         with may_revert(Panic(PanicCodeEnum.UNDERFLOW_OVERFLOW)) as e:
-            c.decrement(from_=random_address())
+            c.decrement(from_=random_account(chain=c.chain))
 
         if e.value is not None:
             assert c.count() == 0
@@ -77,7 +77,7 @@ class CrosschainTest(FuzzTest):
 
         # encode the call to set the count on the other chain
         payload = Abi.encode_call(Counter.setCount, [counter.count()])
-        tx = gw.relay(other_counter.address, payload, dest_chain, from_=random_address(), return_tx=True)
+        tx = gw.relay(other_counter.address, payload, dest_chain, from_=random_account(chain=gw.chain), return_tx=True)
         assert tx.error is None
 
         # relay the data (command) based on the events emitted by the gateway

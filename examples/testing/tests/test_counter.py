@@ -5,7 +5,7 @@ from pytypes.contracts.Counter import Counter
 from pytypes.contracts.Gateway import Gateway
 
 
-def tx_callback(tx: LegacyTransaction):
+def tx_callback(tx: TransactionAbc):
     print(tx.tx_hash)
     # console logs are not currently supported with Ganache and Hardhat
     print(tx.console_logs)

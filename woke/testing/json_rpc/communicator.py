@@ -373,6 +373,10 @@ class JsonRpcCommunicator:
         text = self._send_request("anvil_setMinGasPrice", params)
         _ = self._process_response(text)
 
+    def anvil_node_info(self) -> Dict:
+        text = self._send_request("anvil_nodeInfo")
+        return self._process_response(text)
+
     def evm_set_account_balance(self, address: str, balance: int) -> None:
         """Sets the given account's balance to the specified WEI value. Mines a new block before returning."""
         params = [address, hex(balance)]
