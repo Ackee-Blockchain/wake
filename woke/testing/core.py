@@ -420,6 +420,14 @@ class Account:
         max_fee_per_gas: Optional[int] = None,
         max_priority_fee_per_gas: Optional[int] = None,
         access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None,
+        block: Union[
+            int,
+            Literal["latest"],
+            Literal["pending"],
+            Literal["earliest"],
+            Literal["safe"],
+            Literal["finalized"],
+        ] = "latest",
     ) -> bytearray:
         params = self._prepare_tx_params(
             RequestType.CALL,
@@ -433,7 +441,7 @@ class Account:
             access_list,
         )
         try:
-            output = self._chain.chain_interface.call(params)
+            output = self._chain.chain_interface.call(params, block)
         except JsonRpcError as e:
             self._chain._process_call_revert(e)
             raise
@@ -1430,12 +1438,13 @@ class Chain:
         arguments: Iterable,
         params: TxParams,
         return_type: Type,
+        block: Union[int, str],
     ) -> Any:
         tx_params = self._build_transaction(
             RequestType.CALL, params, selector, arguments, abi[selector]
         )
         try:
-            output = self._chain_interface.call(tx_params)
+            output = self._chain_interface.call(tx_params, block)
         except JsonRpcError as e:
             self._process_call_revert(e)
             raise
@@ -2013,7 +2022,10 @@ class Contract(Account):
         max_fee_per_gas: Optional[int],
         max_priority_fee_per_gas: Optional[int],
         access_list: Optional[Dict[Union[Account, Address, str], List[int]]],
+        block: Optional[Union[int, str]],
     ) -> Any:
+        if block is not None:
+            raise ValueError("block cannot be specified for contract transactions")
         params: TxParams = {}
         if from_ is not None:
             if isinstance(from_, Account):
@@ -2095,6 +2107,7 @@ class Contract(Account):
         max_fee_per_gas: Optional[int],
         max_priority_fee_per_gas: Optional[int],
         access_list: Optional[Dict[Union[Account, Address, str], List[int]]],
+        block: Optional[Union[int, str]],
     ) -> Any:
         if return_tx:
             raise ValueError("Transaction cannot be returned from a call")
@@ -2156,9 +2169,12 @@ class Contract(Account):
                 for k, v in access_list.items()
             ]
 
+        if block is None:
+            block = "latest"
+
         sel = bytes.fromhex(selector)
         return self.chain._call(
-            sel, self.__class__._abi, arguments, params, return_type
+            sel, self.__class__._abi, arguments, params, return_type, block
         )
 
 

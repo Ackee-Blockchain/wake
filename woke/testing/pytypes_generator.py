@@ -1039,7 +1039,7 @@ class TypeGenerator:
             returns_str = f"Tuple[{', '.join(ret[0] for ret in returns)}]"
         self.add_str_to_types(
             1,
-            f"""def {self.get_name(declaration)}(self, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, to: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: bool = {False if is_view_or_pure else self.__return_tx_obj}, request_type: RequestType='{'call' if is_view_or_pure else 'tx'}', gas_price: Optional[int] = None, max_fee_per_gas: Optional[int] = None, max_priority_fee_per_gas: Optional[int] = None, access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None) -> Union[{returns_str}, TransactionAbc[{returns_str}]]:""",
+            f"""def {self.get_name(declaration)}(self, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, to: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: bool = {False if is_view_or_pure else self.__return_tx_obj}, request_type: RequestType='{'call' if is_view_or_pure else 'tx'}', gas_price: Optional[int] = None, max_fee_per_gas: Optional[int] = None, max_priority_fee_per_gas: Optional[int] = None, access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None, block: Optional[Union[int, Literal["latest"], Literal["pending"], Literal["earliest"], Literal["safe"], Literal["finalized"]]] = None) -> Union[{returns_str}, TransactionAbc[{returns_str}]]:""",
             1,
         )
 
@@ -1068,7 +1068,7 @@ class TypeGenerator:
         fn_selector = declaration.function_selector.hex()
         self.add_str_to_types(
             2,
-            f'return self._transact("{fn_selector}", [{", ".join(map(itemgetter(0), param_names))}], return_tx, {return_types}, from_, to, value, gas_limit, gas_price, max_fee_per_gas, max_priority_fee_per_gas, access_list) if not request_type == \'call\' else self._call("{fn_selector}", [{", ".join(map(itemgetter(0), param_names))}], return_tx, {return_types}, from_, to, value, gas_limit, gas_price, max_fee_per_gas, max_priority_fee_per_gas, access_list)',
+            f'return self._transact("{fn_selector}", [{", ".join(map(itemgetter(0), param_names))}], return_tx, {return_types}, from_, to, value, gas_limit, gas_price, max_fee_per_gas, max_priority_fee_per_gas, access_list, block) if not request_type == \'call\' else self._call("{fn_selector}", [{", ".join(map(itemgetter(0), param_names))}], return_tx, {return_types}, from_, to, value, gas_limit, gas_price, max_fee_per_gas, max_priority_fee_per_gas, access_list, block)',
             2,
         )
 
@@ -1090,7 +1090,7 @@ class TypeGenerator:
         self.add_str_to_types(1, "@overload", 1)
         self.add_str_to_types(
             1,
-            f"""def {self.get_name(declaration)}(self, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, to: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: Literal[{return_tx}] = {return_tx}, request_type: RequestType = '{'call' if is_view_or_pure else 'tx'}', gas_price: Optional[int] = None, max_fee_per_gas: Optional[int] = None, max_priority_fee_per_gas: Optional[int] = None, access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None) -> {returns_str}:""",
+            f"""def {self.get_name(declaration)}(self, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, to: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: Literal[{return_tx}] = {return_tx}, request_type: RequestType = '{'call' if is_view_or_pure else 'tx'}', gas_price: Optional[int] = None, max_fee_per_gas: Optional[int] = None, max_priority_fee_per_gas: Optional[int] = None, access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None, block: Optional[Union[int, Literal["latest"], Literal["pending"], Literal["earliest"], Literal["safe"], Literal["finalized"]]] = None) -> {returns_str}:""",
             1,
         )
         self.add_str_to_types(2, "...", 2)
@@ -1632,6 +1632,7 @@ class NameSanitizer:
             "max_fee_per_gas",
             "max_priority_fee_per_gas",
             "access_list",
+            "block",
         }
         self.__struct_reserved = set()
         self.__event_reserved = {"_abi", "selector"}
