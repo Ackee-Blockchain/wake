@@ -243,7 +243,7 @@ class TypeGenerator:
         self.add_str_to_types(1, "@classmethod", 1)
         self.add_str_to_types(
             1,
-            f'def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: Literal[False] = False{libraries_str}, chain: Optional[Chain] = None, gas_price: Optional[int] = None, max_fee_per_gas: Optional[int] = None, max_priority_fee_per_gas: Optional[int] = None, access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None) -> {contract_name}:',
+            f'def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: Literal[False] = False{libraries_str}, request_type: Literal["call"] = "call", chain: Optional[Chain] = None, gas_price: Optional[int] = None, max_fee_per_gas: Optional[int] = None, max_priority_fee_per_gas: Optional[int] = None, access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None, block: Optional[Union[int, Literal["latest"], Literal["pending"], Literal["earliest"], Literal["safe"], Literal["finalized"]]] = None) -> bytearray:',
             1,
         )
         self.add_str_to_types(2, "...", 2)
@@ -252,7 +252,25 @@ class TypeGenerator:
         self.add_str_to_types(1, "@classmethod", 1)
         self.add_str_to_types(
             1,
-            f'def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: Literal[True] = True{libraries_str}, chain: Optional[Chain] = None, gas_price: Optional[int] = None, max_fee_per_gas: Optional[int] = None, max_priority_fee_per_gas: Optional[int] = None, access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None) -> TransactionAbc[{contract_name}]:',
+            f'def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: Literal[False] = False{libraries_str}, request_type: Literal["tx"] = "tx", chain: Optional[Chain] = None, gas_price: Optional[int] = None, max_fee_per_gas: Optional[int] = None, max_priority_fee_per_gas: Optional[int] = None, access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None, block: Optional[Union[int, Literal["latest"], Literal["pending"], Literal["earliest"], Literal["safe"], Literal["finalized"]]] = None) -> {contract_name}:',
+            1,
+        )
+        self.add_str_to_types(2, "...", 2)
+
+        self.add_str_to_types(1, "@overload", 1)
+        self.add_str_to_types(1, "@classmethod", 1)
+        self.add_str_to_types(
+            1,
+            f'def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: Literal[False] = False{libraries_str}, request_type: Literal["estimate"] = "estimate", chain: Optional[Chain] = None, gas_price: Optional[int] = None, max_fee_per_gas: Optional[int] = None, max_priority_fee_per_gas: Optional[int] = None, access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None, block: Optional[Union[int, Literal["latest"], Literal["pending"], Literal["earliest"], Literal["safe"], Literal["finalized"]]] = None) -> int:',
+            1,
+        )
+        self.add_str_to_types(2, "...", 2)
+
+        self.add_str_to_types(1, "@overload", 1)
+        self.add_str_to_types(1, "@classmethod", 1)
+        self.add_str_to_types(
+            1,
+            f'def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: Literal[True] = True{libraries_str}, request_type: Literal["tx"] = "tx", chain: Optional[Chain] = None, gas_price: Optional[int] = None, max_fee_per_gas: Optional[int] = None, max_priority_fee_per_gas: Optional[int] = None, access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None, block: Optional[Union[int, Literal["latest"], Literal["pending"], Literal["earliest"], Literal["safe"], Literal["finalized"]]] = None) -> TransactionAbc[{contract_name}]:',
             1,
         )
         self.add_str_to_types(2, "...", 2)
@@ -260,7 +278,7 @@ class TypeGenerator:
         self.add_str_to_types(1, "@classmethod", 1)
         self.add_str_to_types(
             1,
-            f'def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: bool = {self.__return_tx_obj}{libraries_str}, chain: Optional[Chain] = None, gas_price: Optional[int] = None, max_fee_per_gas: Optional[int] = None, max_priority_fee_per_gas: Optional[int] = None, access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None) -> Union[{contract_name}, TransactionAbc[{contract_name}]]:',
+            f'def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Union[int, Literal["max"], Literal["auto"]] = "max", return_tx: bool = {self.__return_tx_obj}{libraries_str}, request_type: RequestType = "tx", chain: Optional[Chain] = None, gas_price: Optional[int] = None, max_fee_per_gas: Optional[int] = None, max_priority_fee_per_gas: Optional[int] = None, access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None, block: Optional[Union[int, Literal["latest"], Literal["pending"], Literal["earliest"], Literal["safe"], Literal["finalized"]]] = None) -> Union[{contract_name}, TransactionAbc[{contract_name}]]:',
             1,
         )
 
@@ -283,7 +301,7 @@ class TypeGenerator:
                 )
                 self.add_str_to_types(
                     2,
-                    f"return cls._deploy([{', '.join(map(itemgetter(0), param_names))}], return_tx, {contract_name}, from_, value, gas_limit, {libs_arg}, chain, gas_price, max_fee_per_gas, max_priority_fee_per_gas, access_list)",
+                    f"return cls._deploy(request_type, [{', '.join(map(itemgetter(0), param_names))}], return_tx, {contract_name}, from_, value, gas_limit, {libs_arg}, chain, gas_price, max_fee_per_gas, max_priority_fee_per_gas, access_list, block)",
                     1,
                 )
             else:
@@ -1076,7 +1094,7 @@ class TypeGenerator:
         fn_selector = declaration.function_selector.hex()
         self.add_str_to_types(
             2,
-            f'return self._execute(request_type, "{fn_selector}", [{", ".join(map(itemgetter(0), param_names))}], return_tx, {return_types}, from_, to, value, gas_limit, gas_price, max_fee_per_gas, max_priority_fee_per_gas, access_list, block)',
+            f'return self._execute(self.chain, request_type, "{fn_selector}", [{", ".join(map(itemgetter(0), param_names))}], return_tx, {return_types}, from_, to if to is not None else str(self.address), value, gas_limit, gas_price, max_fee_per_gas, max_priority_fee_per_gas, access_list, block)',
             2,
         )
 
