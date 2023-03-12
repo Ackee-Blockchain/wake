@@ -125,20 +125,26 @@ class Chain(woke.development.core.Chain):
         arguments: Iterable,
         abi: Optional[Dict],
     ) -> TxParams:
-        if "gasPrice" in params and (
+        tx_type = params.get("type", self._tx_type)
+        if tx_type not in {0, 1, 2}:
+            raise ValueError("Invalid transaction type")
+
+        if tx_type == 0 and (
+            "accessList" in params
+            or "maxFeePerGas" in params
+            or "maxPriorityFeePerGas" in params
+        ):
+            raise ValueError(
+                "Cannot specify accessList, maxFeePerGas, or maxPriorityFeePerGas for type 0 transaction"
+            )
+        elif tx_type == 1 and (
             "maxFeePerGas" in params or "maxPriorityFeePerGas" in params
         ):
             raise ValueError(
-                "Cannot specify both gas_price and max_fee_per_gas/max_priority_fee_per_gas"
+                "Cannot specify maxFeePerGas or maxPriorityFeePerGas for type 1 transaction"
             )
-        if "maxFeePerGas" in params or "maxPriorityFeePerGas" in params:
-            tx_type = 2
-        elif "accessList" in params:
-            tx_type = 1
-        elif "gasPrice" in params:
-            tx_type = 0
-        else:
-            tx_type = self._tx_type
+        elif tx_type == 2 and "gasPrice" in params:
+            raise ValueError("Cannot specify gasPrice for type 2 transaction")
 
         if "from" in params:
             sender = params["from"]

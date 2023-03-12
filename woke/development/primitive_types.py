@@ -31,6 +31,9 @@ class Length:
         return self._length
 
 
+NoneType = type(None)
+
+
 uint8 = Annotated[int, ValueRange(0, 2**8 - 1)]
 uint16 = Annotated[int, ValueRange(0, 2**16 - 1)]
 uint24 = Annotated[int, ValueRange(0, 2**24 - 1)]

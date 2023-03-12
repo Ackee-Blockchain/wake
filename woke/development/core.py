@@ -466,6 +466,7 @@ class Account:
         access_list: Optional[
             Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
         ],
+        type: Optional[int],
     ):
         params: TxParams = {
             "data": data,
@@ -528,6 +529,9 @@ class Account:
                 for k, v in access_list.items()
             ]
 
+        if type is not None:
+            params["type"] = type
+
         return params
 
     def call(
@@ -542,6 +546,7 @@ class Account:
         access_list: Optional[
             Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
         ] = None,
+        type: Optional[int] = None,
         block: Union[
             int,
             Literal["latest"],
@@ -561,6 +566,7 @@ class Account:
             max_fee_per_gas,
             max_priority_fee_per_gas,
             access_list,
+            type,
         )
         params = self._chain._build_transaction(RequestType.CALL, params, [], None)
 
@@ -584,6 +590,7 @@ class Account:
         access_list: Optional[
             Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
         ] = None,
+        type: Optional[int] = None,
         block: Union[
             int,
             Literal["latest"],
@@ -603,6 +610,7 @@ class Account:
             max_fee_per_gas,
             max_priority_fee_per_gas,
             access_list,
+            type,
         )
         params = self._chain._build_transaction(RequestType.CALL, params, [], None)
 
@@ -625,6 +633,7 @@ class Account:
         access_list: Optional[
             Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
         ] = None,
+        type: Optional[int] = None,
         return_tx: Literal[False] = False,
     ) -> bytearray:
         ...
@@ -642,6 +651,7 @@ class Account:
         access_list: Optional[
             Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
         ] = None,
+        type: Optional[int] = None,
         return_tx: Literal[True] = True,
     ) -> TransactionAbc[bytearray]:
         ...
@@ -658,6 +668,7 @@ class Account:
         access_list: Optional[
             Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
         ] = None,
+        type: Optional[int] = None,
         return_tx: bool = False,
     ) -> Union[bytearray, TransactionAbc[bytearray]]:
         tx_params = self._setup_tx_params(
@@ -670,6 +681,7 @@ class Account:
             max_fee_per_gas,
             max_priority_fee_per_gas,
             access_list,
+            type,
         )
         tx_params = self._chain._build_transaction(
             RequestType.CALL, tx_params, [], None
@@ -2191,6 +2203,7 @@ class Contract(Account):
         max_fee_per_gas: Optional[int],
         max_priority_fee_per_gas: Optional[int],
         access_list: Optional[Dict[Union[Account, Address, str], List[int]]],
+        type: Optional[int],
         block: Optional[Union[int, str]],
     ) -> Any:
         if chain is None:
@@ -2248,6 +2261,7 @@ class Contract(Account):
             max_fee_per_gas,
             max_priority_fee_per_gas,
             access_list,
+            type,
             block,
         )
 
@@ -2268,6 +2282,7 @@ class Contract(Account):
         max_fee_per_gas: Optional[int],
         max_priority_fee_per_gas: Optional[int],
         access_list: Optional[Dict[Union[Account, Address, str], List[int]]],
+        type: Optional[int],
         block: Optional[Union[int, str]],
     ):
         if request_type == RequestType.TX and block is not None:
@@ -2332,6 +2347,9 @@ class Contract(Account):
                 for k, v in access_list.items()
             ]
 
+        if type is not None:
+            params["type"] = type
+
         params["data"] = bytes.fromhex(data)
 
         if to is None:
@@ -2379,6 +2397,7 @@ class Library(Contract):
         max_fee_per_gas: Optional[int],
         max_priority_fee_per_gas: Optional[int],
         access_list: Optional[Dict[Union[Account, Address, str], List[int]]],
+        type: Optional[int],
         block: Optional[Union[int, str]],
     ) -> Any:
         if chain is None:
@@ -2413,6 +2432,7 @@ class Library(Contract):
             max_fee_per_gas,
             max_priority_fee_per_gas,
             access_list,
+            type,
             block,
         )
         chain._deployed_libraries[cls._library_id].append(lib)
