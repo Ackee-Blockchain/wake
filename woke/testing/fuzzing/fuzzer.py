@@ -1,5 +1,4 @@
 import copy
-import inspect
 import json
 import logging
 import multiprocessing
@@ -8,15 +7,11 @@ import multiprocessing.synchronize
 import os
 import pickle
 import random
-import subprocess
 import sys
-import time
 import types
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
-from time import sleep
 from typing import Any, Callable, Dict, Iterable, List, Optional
-from urllib.error import URLError
 
 import rich.progress
 from pathvalidate import sanitize_filename  # type: ignore
@@ -25,15 +20,13 @@ from tblib import pickling_support
 
 from woke.cli.console import console
 from woke.config import WokeConfig
-from woke.testing.core import default_chain
+from woke.development.globals import attach_debugger, set_exception_handler
 from woke.testing.coverage import (
     Coverage,
-    CoverageProvider,
     IdeFunctionCoverageRecord,
     IdePosition,
     export_merged_ide_coverage,
 )
-from woke.testing.globals import attach_debugger, set_exception_handler
 from woke.utils.tee import StderrTee, StdoutTee
 
 

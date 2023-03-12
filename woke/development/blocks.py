@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Union
 from typing_extensions import Literal
 
 if TYPE_CHECKING:
-    from woke.testing.core import Account, Chain
-    from woke.testing.transactions import TransactionAbc
+    from .core import Account, Chain
+    from .transactions import TransactionAbc
 
 
 class ChainBlocks:
@@ -82,7 +82,7 @@ class Block:
 
     @property
     def miner(self) -> Account:
-        from woke.testing.core import Account
+        from .core import Account
 
         return Account(self._block_data["miner"], self._chain)
 

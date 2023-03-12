@@ -270,6 +270,11 @@ class JsonRpcCommunicator:
         )
         return self._process_response(text)
 
+    def eth_max_priority_fee_per_gas(self) -> int:
+        """Returns the current max priority fee per gas in wei."""
+        text = self._send_request("eth_maxPriorityFeePerGas")
+        return int(self._process_response(text), 16)
+
     def hardhat_set_balance(self, address: str, balance: int) -> None:
         """Sets the balance of the account of given address."""
         params = [address, hex(balance)]

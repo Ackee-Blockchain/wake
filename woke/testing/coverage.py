@@ -17,7 +17,7 @@ from woke.ast.ir.declaration.function_definition import FunctionDefinition
 from woke.ast.ir.declaration.modifier_definition import ModifierDefinition
 from woke.ast.ir.expression.function_call import FunctionCall
 from woke.ast.ir.meta.source_unit import SourceUnit
-from woke.ast.ir.reference_resolver import CallbackParams, ReferenceResolver
+from woke.ast.ir.reference_resolver import ReferenceResolver
 from woke.ast.ir.statement.abc import StatementAbc
 from woke.ast.ir.statement.block import Block
 from woke.ast.ir.statement.break_statement import Break
@@ -31,7 +31,6 @@ from woke.ast.ir.statement.placeholder_statement import PlaceholderStatement
 from woke.ast.ir.statement.return_statement import Return
 from woke.ast.ir.statement.revert_statement import RevertStatement
 from woke.ast.ir.statement.while_statement import WhileStatement
-from woke.ast.ir.utils import IrInitTuple
 from woke.ast.ir.yul.abc import YulAbc
 from woke.ast.ir.yul.block import Block as YulBlock
 from woke.ast.ir.yul.break_statement import Break as YulBreak
@@ -51,13 +50,13 @@ from woke.compiler.solc_frontend import (
     SolcOutputSelectionEnum,
 )
 from woke.config import WokeConfig
-from woke.testing import default_chain
-from woke.testing.chain_interfaces import ChainInterfaceAbc
-from woke.testing.core import (
+from woke.development.chain_interfaces import ChainInterfaceAbc
+from woke.development.core import (
     Address,
     get_fqn_from_address,
     get_fqn_from_deployment_code,
 )
+from woke.testing import default_chain
 from woke.utils.file_utils import is_relative_to
 
 logger = logging.getLogger(__name__)

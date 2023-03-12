@@ -2,7 +2,7 @@ import json
 import platform
 import time
 
-from woke.testing.json_rpc.abc import ProtocolAbc
+from .abc import ProtocolAbc
 
 if platform.system() == "Windows":
     import win32file  # pyright: reportMissingImports=false

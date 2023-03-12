@@ -90,7 +90,7 @@ def run_init(ctx: Context, force: bool):
 
         from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
         from ..compiler.solc_frontend import SolcOutputErrorSeverityEnum
-        from ..testing.pytypes_generator import TypeGenerator
+        from ..development.pytypes_generator import TypeGenerator
         from ..utils.file_utils import copy_dir, is_relative_to
         from .console import console
 
@@ -228,7 +228,7 @@ async def run_init_pytypes(
     from ..compiler.build_data_model import ProjectBuild, ProjectBuildInfo
     from ..compiler.compiler import CompilationFileSystemEventHandler
     from ..compiler.solc_frontend import SolcOutputErrorSeverityEnum
-    from ..testing.pytypes_generator import TypeGenerator
+    from ..development.pytypes_generator import TypeGenerator
     from ..utils.file_utils import is_relative_to
     from .console import console
 

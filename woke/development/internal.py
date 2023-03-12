@@ -2,7 +2,7 @@ import inspect
 from contextlib import contextmanager
 from dataclasses import dataclass, fields
 from enum import IntEnum
-from typing import Any, List, Optional
+from typing import List, Optional
 
 
 @dataclass

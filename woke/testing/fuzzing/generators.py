@@ -6,8 +6,10 @@ from typing import Any, Callable, Dict, Optional, Type
 
 from typing_extensions import Annotated, get_args, get_origin, get_type_hints
 
-from ..core import Account, Address, Chain, Wei, default_chain
-from ..primitive_types import Length, ValueRange
+import woke.deployment
+import woke.testing
+from woke.development.core import Account, Address, Chain, NotConnectedError, Wei
+from woke.development.primitive_types import Length, ValueRange
 
 
 def random_account(
@@ -18,7 +20,20 @@ def random_account(
     chain: Optional[Chain] = None,
 ) -> Account:
     if chain is None:
-        chain = default_chain
+        if (
+            woke.deployment.default_chain.connected
+            and woke.testing.default_chain.connected
+        ):
+            raise ValueError(
+                "Both default_chain and woke.deployment.default_chain are connected. Please specify which chain to use."
+            )
+        if woke.deployment.default_chain.connected:
+            chain = woke.deployment.default_chain
+        elif woke.testing.default_chain.connected:
+            chain = woke.testing.default_chain
+        else:
+            raise NotConnectedError("default_chain not connected")
+
     accounts = chain.accounts
     if upper_bound is None:
         upper_bound = len(accounts)
