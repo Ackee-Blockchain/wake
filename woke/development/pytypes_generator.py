@@ -590,25 +590,37 @@ class TypeGenerator:
         self, structs: Iterable[StructDefinition], indent: int
     ) -> None:
         for struct in structs:
-            members: List[Tuple[str, str, str]] = []
+            members: List[Tuple[str, str, str, str]] = []
             for member in struct.members:
                 member_name = self.get_name(member)
                 member_type = self.parse_type_and_import(member.type, True)
                 member_type_desc = member.type_string
-                members.append((member_name, member_type, member_type_desc))
+                members.append(
+                    (member_name, member_type, member_type_desc, member.name)
+                )
 
-            self.add_str_to_types(indent, "@dataclass", 1)
+            self.add_str_to_types(indent, "@dataclasses.dataclass", 1)
             self.add_str_to_types(indent, f"class {self.get_name(struct)}:", 1)
             self.add_str_to_types(indent + 1, '"""', 1)
             self.add_str_to_types(indent + 1, "Attributes:", 1)
-            for member_name, member_type, member_type_desc in members:
+            for member_name, member_type, member_type_desc, _ in members:
                 self.add_str_to_types(
                     indent + 2, f"{member_name} ({member_type}): {member_type_desc}", 1
                 )
             self.add_str_to_types(indent + 1, '"""', 1)
+            self.add_str_to_types(indent + 1, f"original_name = '{struct.name}'", 2)
 
-            for member_name, member_type, _ in members:
-                self.add_str_to_types(indent + 1, f"{member_name}: {member_type}", 1)
+            for member_name, member_type, _, original_name in members:
+                if member_name == original_name:
+                    self.add_str_to_types(
+                        indent + 1, f"{member_name}: {member_type}", 1
+                    )
+                else:
+                    self.add_str_to_types(
+                        indent + 1,
+                        f'{member_name}: {member_type} = dataclasses.field(metadata={{"original_name": "{original_name}"}})',
+                        1,
+                    )
             self.add_str_to_types(0, "", 2)
 
     def generate_types_enum(self, enums: Iterable[EnumDefinition], indent: int) -> None:
@@ -650,7 +662,7 @@ class TypeGenerator:
 
             assert error_abi is not None
 
-            parameters: List[Tuple[str, str, str]] = []
+            parameters: List[Tuple[str, str, str, str]] = []
             unnamed_params_index = 1
             for parameter in error.parameters.parameters:
                 if parameter.name:
@@ -660,9 +672,16 @@ class TypeGenerator:
                     unnamed_params_index += 1
                 parameter_type = self.parse_type_and_import(parameter.type, True)
                 parameter_type_desc = parameter.type_string
-                parameters.append((parameter_name, parameter_type, parameter_type_desc))
+                parameters.append(
+                    (
+                        parameter_name,
+                        parameter_type,
+                        parameter_type_desc,
+                        parameter.name,
+                    )
+                )
 
-            self.add_str_to_types(indent, "@dataclass", 1)
+            self.add_str_to_types(indent, "@dataclasses.dataclass", 1)
             self.add_str_to_types(
                 indent,
                 f"class {self.get_name(error)}(TransactionRevertedError):",
@@ -672,16 +691,24 @@ class TypeGenerator:
             if len(parameters) > 0:
                 self.add_str_to_types(indent + 1, '"""', 1)
                 self.add_str_to_types(indent + 1, "Attributes:", 1)
-                for param_name, param_type, param_type_desc in parameters:
+                for param_name, param_type, param_type_desc, _ in parameters:
                     self.add_str_to_types(
                         indent + 2, f"{param_name} ({param_type}): {param_type_desc}", 1
                     )
                 self.add_str_to_types(indent + 1, '"""', 1)
 
             self.add_str_to_types(indent + 1, f"_abi = {error_abi}", 1)
+            self.add_str_to_types(indent + 1, f"original_name = '{error.name}'", 1)
             self.add_str_to_types(indent + 1, f"selector = {error.error_selector}", 2)
-            for param_name, param_type, _ in parameters:
-                self.add_str_to_types(indent + 1, f"{param_name}: {param_type}", 1)
+            for param_name, param_type, _, original_name in parameters:
+                if param_name == original_name:
+                    self.add_str_to_types(indent + 1, f"{param_name}: {param_type}", 1)
+                else:
+                    self.add_str_to_types(
+                        indent + 1,
+                        f'{param_name}: {param_type} = dataclasses.field(metadata={{"original_name": "{original_name}"}})',
+                        1,
+                    )
             self.add_str_to_types(0, "", 2)
 
     def generate_types_event(
@@ -691,7 +718,7 @@ class TypeGenerator:
         events_abi: Dict[bytes, Any],
     ) -> None:
         for event in events:
-            parameters: List[Tuple[str, str, str]] = []
+            parameters: List[Tuple[str, str, str, str]] = []
             unnamed_params_index = 1
             for parameter in event.parameters.parameters:
                 if parameter.name:
@@ -712,15 +739,22 @@ class TypeGenerator:
                     parameter_type_desc = "indexed " + parameter.type_string
                 else:
                     parameter_type_desc = parameter.type_string
-                parameters.append((parameter_name, parameter_type, parameter_type_desc))
+                parameters.append(
+                    (
+                        parameter_name,
+                        parameter_type,
+                        parameter_type_desc,
+                        parameter.name,
+                    )
+                )
 
-            self.add_str_to_types(indent, "@dataclass", 1)
+            self.add_str_to_types(indent, "@dataclasses.dataclass", 1)
             self.add_str_to_types(indent, f"class {self.get_name(event)}:", 1)
 
             if len(parameters) > 0:
                 self.add_str_to_types(indent + 1, '"""', 1)
                 self.add_str_to_types(indent + 1, "Attributes:", 1)
-                for param_name, param_type, param_type_desc in parameters:
+                for param_name, param_type, param_type_desc, _ in parameters:
                     self.add_str_to_types(
                         indent + 2, f"{param_name} ({param_type}): {param_type_desc}", 1
                     )
@@ -729,9 +763,17 @@ class TypeGenerator:
             self.add_str_to_types(
                 indent + 1, f"_abi = {events_abi[event.event_selector]}", 1
             )
+            self.add_str_to_types(indent + 1, f"original_name = '{event.name}'", 1)
             self.add_str_to_types(indent + 1, f"selector = {event.event_selector}", 2)
-            for param_name, param_type, _ in parameters:
-                self.add_str_to_types(indent + 1, f"{param_name}: {param_type}", 1)
+            for param_name, param_type, _, original_name in parameters:
+                if param_name == original_name:
+                    self.add_str_to_types(indent + 1, f"{param_name}: {param_type}", 1)
+                else:
+                    self.add_str_to_types(
+                        indent + 1,
+                        f'{param_name}: {param_type} = dataclasses.field(metadata={{"original_name": "{original_name}"}})',
+                        1,
+                    )
             self.add_str_to_types(0, "", 2)
 
     # parses the expr to string
@@ -1623,7 +1665,7 @@ class NameSanitizer:
             "Path",
             "bytearray",
             "IntEnum",
-            "dataclass",
+            "dataclasses",
             "overload",
             "Contract",
             "Library",
@@ -1692,9 +1734,9 @@ class NameSanitizer:
             "access_list",
             "block",
         }
-        self.__struct_reserved = set()
-        self.__event_reserved = {"_abi", "selector"}
-        self.__error_reserved = {"_abi", "selector"}
+        self.__struct_reserved = {"original_name"}
+        self.__event_reserved = {"_abi", "selector", "original_name"}
+        self.__error_reserved = {"_abi", "selector", "original_name"}
         self.__enum_reserved = set()
 
         self.__global_renames = {}
