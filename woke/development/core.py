@@ -687,6 +687,24 @@ class Account:
                 ).signature
             )
 
+    def sign_hash(self, data_hash: bytes) -> bytes:
+        """
+        Sign any 32B data (typically keccak256 hash) without prepending any prefix (non EIP-191 compliant).
+        This is not recommended for most use cases.
+        Specifically, sign(data_hash) is returned.
+        """
+        if self._address not in self._chain._private_keys:
+            raise NotImplementedError(
+                "Signing data hash without prefix (non EIP-191 compliant) is not supported for accounts without supplied private key"
+            )
+        else:
+            return bytes(
+                eth_account.Account.signHash(
+                    data_hash,
+                    self._chain._private_keys[self._address],
+                ).signature
+            )
+
 
 def check_connected(f):
     @functools.wraps(f)
