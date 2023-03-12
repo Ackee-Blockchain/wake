@@ -263,6 +263,9 @@ class Address:
     def __hash__(self) -> int:
         return hash(self._address)
 
+    def __bytes__(self) -> bytes:
+        return bytes.fromhex(self._address[2:])
+
 
 Address.ZERO = Address(0)
 
