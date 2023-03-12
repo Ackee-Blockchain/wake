@@ -174,15 +174,17 @@ class Chain(woke.development.core.Chain):
                         self.chain_interface.get_block("pending")["baseFeePerGas"], 16
                     )
 
-        if "gas" in params:
-            tx["gas"] = params["gas"]
-        else:
-            # auto
+        if "gas" not in params or params["gas"] == "auto":
+            # use "auto when unset
             try:
                 tx["gas"] = self._chain_interface.estimate_gas(tx)
             except JsonRpcError as e:
                 self._process_call_revert(e)
                 raise
+        elif isinstance(params["gas"], int):
+            tx["gas"] = params["gas"]
+        else:
+            raise ValueError(f"Invalid gas value: {params['gas']}")
 
         return tx
 

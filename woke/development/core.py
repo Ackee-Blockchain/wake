@@ -464,12 +464,14 @@ class Account:
 
         if gas_limit == "max":
             params["gas"] = self._chain.block_gas_limit
-        elif gas_limit == "auto" or gas_limit is None:
-            pass
+        elif gas_limit == "auto":
+            params["gas"] = "auto"
         elif isinstance(gas_limit, int):
             params["gas"] = gas_limit
+        elif gas_limit is None:
+            pass
         else:
-            raise TypeError("`gas_limit` must be an int, 'max', or 'auto'")
+            raise TypeError("`gas_limit` must be an int, 'max', 'auto', or None")
 
         if gas_price is not None:
             params["gasPrice"] = gas_price
@@ -2002,12 +2004,14 @@ class Contract(Account):
 
         if gas_limit == "max":
             params["gas"] = chain.block_gas_limit
-        elif gas_limit == "auto" or gas_limit is None:
-            pass
+        elif gas_limit == "auto":
+            params["gas"] = "auto"
         elif isinstance(gas_limit, int):
             params["gas"] = gas_limit
+        elif gas_limit is None:
+            pass
         else:
-            raise ValueError("invalid gas limit")
+            raise TypeError("`gas_limit` must be an int, 'max', 'auto', or None")
 
         if to is not None:
             if isinstance(to, Account):
