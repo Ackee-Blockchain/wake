@@ -6,7 +6,7 @@ from typing import Callable, Iterable, List, Tuple, TypeVar, Union
 
 from Crypto.Hash import keccak
 
-from woke.testing.core import Account, Address
+from .core import Account, Address
 
 
 def format_int(x: int) -> str:

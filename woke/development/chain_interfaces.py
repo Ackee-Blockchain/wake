@@ -7,9 +7,9 @@ from typing import Any, Dict, List, Optional, Union
 from urllib.error import URLError
 
 from woke.config import WokeConfig
+from woke.development.globals import get_config
+from woke.utils.networking import get_free_port
 
-from ..utils.networking import get_free_port
-from .globals import get_config
 from .json_rpc.communicator import JsonRpcCommunicator, TxParams
 
 
@@ -252,6 +252,9 @@ class ChainInterfaceAbc(ABC):
 
     def mine(self, timestamp: Optional[int]) -> None:
         self._communicator.evm_mine(timestamp)
+
+    def get_max_priority_fee_per_gas(self) -> int:
+        return self._communicator.eth_max_priority_fee_per_gas()
 
     @abstractmethod
     def get_automine(self) -> bool:

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import functools
-import time
 from abc import ABC, abstractmethod
 from enum import IntEnum
 from typing import TYPE_CHECKING, Any, Dict, Generic, List, Optional, Type, TypeVar
@@ -15,14 +14,14 @@ from .chain_interfaces import (
     GanacheChainInterface,
     HardhatChainInterface,
 )
-from .core import Account, Chain, default_chain
+from .core import Account, Chain
 from .internal import (
     TransactionRevertedError,
     UnknownEvent,
     UnknownTransactionRevertedError,
     read_from_memory,
 )
-from .json_rpc.communicator import JsonRpcError, TxParams
+from .json_rpc import JsonRpcError, TxParams
 
 T = TypeVar("T")
 
@@ -79,14 +78,12 @@ class TransactionAbc(ABC, Generic[T]):
         tx_params: TxParams,
         abi: Optional[Dict],
         return_type: Type,
-        chain: Optional[Chain] = None,
+        chain: Chain,
     ):
         self._tx_hash = tx_hash
         self._tx_params = tx_params
         self._abi = abi
         self._return_type = return_type
-        if chain is None:
-            chain = default_chain
         self._chain = chain
 
         self._tx_data = None

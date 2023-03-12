@@ -1,60 +1,39 @@
-from __future__ import annotations
-
-from typing import Any, Dict, Iterable, List, Optional, Tuple, cast
+from typing import Any, Dict, Iterable, Optional, cast
 
 import eth_utils
 
 import woke.development.core
 from woke.development.core import (
     Abi,
+    Account,
     Address,
     RequestType,
     RevertToSnapshotFailedError,
     check_connected,
     fix_library_abi,
 )
-from woke.development.json_rpc import JsonRpcError, TxParams
-
-from ..utils.keyed_default_dict import KeyedDefaultDict
+from woke.development.json_rpc.communicator import JsonRpcError, TxParams
 
 
 class Chain(woke.development.core.Chain):
-    _block_gas_limit: int
-    _gas_price: int
-    _max_priority_fee_per_gas: int
-    _nonces: KeyedDefaultDict[Address, int]  # pyright: reportGeneralTypeIssues=false
-
     def _connect_setup(self) -> None:
-        connected_chains.append(self)
-
-        self._require_signed_txs = False
-        self._gas_price = 0
-        self._max_priority_fee_per_gas = 0
-        self._nonces = KeyedDefaultDict(
-            lambda addr: self._chain_interface.get_transaction_count(
-                str(addr)
-            )  # pyright: reportGeneralTypeIssues=false
-        )
-        block_info = self._chain_interface.get_block("pending")
-        assert "gasLimit" in block_info
-        self._block_gas_limit = int(block_info["gasLimit"], 16)
+        self._require_signed_txs = True
 
     def _connect_finalize(self) -> None:
-        connected_chains.remove(self)
+        pass
 
     def _update_nonce(self, address: Address, nonce: int) -> None:
-        self._nonces[address] = nonce
+        # nothing to do
+        pass
 
     @check_connected
     def snapshot(self) -> str:
         snapshot_id = self._chain_interface.snapshot()
 
         self._snapshots[snapshot_id] = {
-            "nonces": self._nonces.copy(),
             "accounts": self._accounts.copy(),
             "default_call_account": self._default_call_account,
             "default_tx_account": self._default_tx_account,
-            "block_gas_limit": self._block_gas_limit,
             "txs": dict(self._txs),
             "blocks": dict(self._blocks._blocks),
         }
@@ -67,11 +46,9 @@ class Chain(woke.development.core.Chain):
             raise RevertToSnapshotFailedError()
 
         snapshot = self._snapshots[snapshot_id]
-        self._nonces = snapshot["nonces"]
         self._accounts = snapshot["accounts"]
         self._default_call_account = snapshot["default_call_account"]
         self._default_tx_account = snapshot["default_tx_account"]
-        self._block_gas_limit = snapshot["block_gas_limit"]
         self._txs = snapshot["txs"]
         self._blocks._blocks = snapshot["blocks"]
         del self._snapshots[snapshot_id]
@@ -79,33 +56,38 @@ class Chain(woke.development.core.Chain):
     @property
     @check_connected
     def block_gas_limit(self) -> int:
-        return self._block_gas_limit
+        return self._blocks["pending"].gas_limit
 
     @block_gas_limit.setter
     @check_connected
     def block_gas_limit(self, value: int) -> None:
-        self._chain_interface.set_block_gas_limit(value)
-        self._block_gas_limit = value
+        raise NotImplementedError(
+            "Cannot set block gas limit in deployment"
+        )  # TODO do nothing instead?
 
     @property
     @check_connected
     def gas_price(self) -> int:
-        return self._gas_price
+        return self.chain_interface.get_gas_price()
 
     @gas_price.setter
     @check_connected
     def gas_price(self, value: int) -> None:
-        self._gas_price = value
+        raise NotImplementedError(
+            "Cannot set gas price in deployment"
+        )  # TODO do nothing instead?
 
     @property
     @check_connected
     def max_priority_fee_per_gas(self) -> int:
-        return self._max_priority_fee_per_gas
+        return self.chain_interface.get_max_priority_fee_per_gas()
 
     @max_priority_fee_per_gas.setter
     @check_connected
     def max_priority_fee_per_gas(self, value: int) -> None:
-        self._max_priority_fee_per_gas = value
+        raise NotImplementedError(
+            "Cannot set max priority fee per gas in deployment"
+        )  # TODO do nothing instead?
 
     def _build_transaction(
         self,
@@ -155,7 +137,7 @@ class Chain(woke.development.core.Chain):
             params["data"] += Abi.encode(types, arguments)
 
         tx: TxParams = {
-            "nonce": self._nonces[sender],
+            "nonce": Account(sender, self).nonce,
             "from": sender,
             "value": params["value"] if "value" in params else 0,
             "data": params["data"],
@@ -168,13 +150,13 @@ class Chain(woke.development.core.Chain):
 
         if tx_type == 0:
             tx["gasPrice"] = (
-                params["gasPrice"] if "gasPrice" in params else self._gas_price
+                params["gasPrice"] if "gasPrice" in params else self.gas_price
             )
         elif tx_type == 1:
             tx["accessList"] = params["accessList"] if "accessList" in params else []
             tx["chainId"] = self._chain_id
             tx["gasPrice"] = (
-                params["gasPrice"] if "gasPrice" in params else self._gas_price
+                params["gasPrice"] if "gasPrice" in params else self.gas_price
             )
         elif tx_type == 2:
             tx["accessList"] = params["accessList"] if "accessList" in params else []
@@ -182,7 +164,7 @@ class Chain(woke.development.core.Chain):
             tx["maxPriorityFeePerGas"] = (
                 params["maxPriorityFeePerGas"]
                 if "maxPriorityFeePerGas" in params
-                else self._max_priority_fee_per_gas
+                else self.max_priority_fee_per_gas
             )
             if "maxFeePerGas" in params:
                 tx["maxFeePerGas"] = params["maxFeePerGas"]
@@ -206,8 +188,3 @@ class Chain(woke.development.core.Chain):
 
 
 default_chain = Chain()
-connected_chains: List[Chain] = []
-
-
-def get_connected_chains() -> Tuple[Chain, ...]:
-    return tuple(connected_chains)

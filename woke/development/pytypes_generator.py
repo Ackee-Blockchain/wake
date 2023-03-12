@@ -32,26 +32,26 @@ from typing_extensions import Literal
 import woke.ast.ir.type_name.mapping
 import woke.ast.types as types
 from woke.ast.enums import *
+from woke.ast.ir.declaration.abc import DeclarationAbc
+from woke.ast.ir.declaration.contract_definition import ContractDefinition
 from woke.ast.ir.declaration.enum_definition import EnumDefinition
+from woke.ast.ir.declaration.error_definition import ErrorDefinition
+from woke.ast.ir.declaration.event_definition import EventDefinition
+from woke.ast.ir.declaration.function_definition import FunctionDefinition
 from woke.ast.ir.declaration.struct_definition import StructDefinition
 from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
+from woke.ast.ir.expression.function_call import FunctionCall
+from woke.ast.ir.meta.parameter_list import ParameterList
+from woke.ast.ir.meta.source_unit import SourceUnit
+from woke.ast.ir.reference_resolver import ReferenceResolver
+from woke.ast.ir.statement.revert_statement import RevertStatement
+from woke.ast.ir.type_name.abc import TypeNameAbc
+from woke.ast.ir.type_name.array_type_name import ArrayTypeName
+from woke.ast.ir.type_name.user_defined_type_name import UserDefinedTypeName
+from woke.compiler import SolidityCompiler
 from woke.config import WokeConfig
+from woke.utils import get_package_version
 
-from ..ast.ir.declaration.abc import DeclarationAbc
-from ..ast.ir.declaration.contract_definition import ContractDefinition
-from ..ast.ir.declaration.error_definition import ErrorDefinition
-from ..ast.ir.declaration.event_definition import EventDefinition
-from ..ast.ir.declaration.function_definition import FunctionDefinition
-from ..ast.ir.expression.function_call import FunctionCall
-from ..ast.ir.meta.parameter_list import ParameterList
-from ..ast.ir.meta.source_unit import SourceUnit
-from ..ast.ir.reference_resolver import ReferenceResolver
-from ..ast.ir.statement.revert_statement import RevertStatement
-from ..ast.ir.type_name.abc import TypeNameAbc
-from ..ast.ir.type_name.array_type_name import ArrayTypeName
-from ..ast.ir.type_name.user_defined_type_name import UserDefinedTypeName
-from ..compiler import SolidityCompiler
-from ..utils import get_package_version
 from .constants import DEFAULT_IMPORTS, INIT_CONTENT, TAB_WIDTH
 
 logger = logging.getLogger(__name__)
@@ -188,7 +188,7 @@ class TypeGenerator:
             )  # pyright: reportPrivateImportUsage=false
             self.__errors_index[selector] = {}
             self.__errors_index[selector][""] = (
-                "woke.testing.internal",
+                "woke.development.internal",
                 (item["name"],),
             )
 

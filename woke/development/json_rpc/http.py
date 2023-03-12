@@ -1,8 +1,9 @@
 import json
 from urllib.request import Request, urlopen
 
-from woke.testing.json_rpc.abc import ProtocolAbc
 from woke.utils import get_package_version
+
+from .abc import ProtocolAbc
 
 
 class HttpProtocol(ProtocolAbc):

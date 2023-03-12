@@ -24,7 +24,7 @@ def run_test(
     import pytest
 
     from woke.config import WokeConfig
-    from woke.testing.globals import set_config
+    from woke.development.globals import set_config
     from woke.testing.pytest_plugin import PytestWokePlugin
 
     config = WokeConfig()
@@ -36,7 +36,7 @@ def run_test(
         test_path = ("tests/",)
 
     if debug:
-        from woke.testing.globals import attach_debugger, set_exception_handler
+        from woke.development.globals import attach_debugger, set_exception_handler
 
         set_exception_handler(attach_debugger)
 
