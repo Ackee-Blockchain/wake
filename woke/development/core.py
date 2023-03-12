@@ -356,6 +356,7 @@ class Account:
     def from_alias(
         cls,
         alias: str,
+        password: Optional[str] = None,
         keystore: Optional[PathLike] = None,
         chain: Optional[Chain] = None,
     ) -> Account:
@@ -376,12 +377,14 @@ class Account:
         if not data["address"].startswith("0x"):
             data["address"] = "0x" + data["address"]
 
-        import click
+        if password is None:
+            import click
 
-        key = eth_account.Account.decrypt(
-            data,
-            click.prompt(f"Password for account {alias}", default="", hide_input=True),
-        )
+            password = click.prompt(
+                f"Password for account {alias}", default="", hide_input=True
+            )
+
+        key = eth_account.Account.decrypt(data, password)
 
         ret = cls(data["address"], chain)
         ret.chain._private_keys[ret.address] = bytes(key)
