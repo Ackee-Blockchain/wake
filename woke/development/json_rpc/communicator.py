@@ -39,7 +39,7 @@ TxParams = TypedDict(
         "gasPrice": int,
         "maxPriorityFeePerGas": int,
         "maxFeePerGas": int,
-        "accessList": List,
+        "accessList": Union[List, Literal["auto"]],
         "chainId": int,
     },
     total=False,
@@ -127,6 +127,7 @@ class JsonRpcCommunicator:
         if "maxFeePerGas" in transaction:
             tx["maxFeePerGas"] = hex(transaction["maxFeePerGas"])
         if "accessList" in transaction:
+            assert transaction["accessList"] != "auto"
             tx["accessList"] = transaction["accessList"]
         if "chainId" in transaction:
             tx["chainId"] = hex(transaction["chainId"])
@@ -291,6 +292,19 @@ class JsonRpcCommunicator:
         if processed.startswith("0x"):
             processed = processed[2:]
         return bytes.fromhex(processed)
+
+    def eth_create_access_list(
+        self, transaction: TxParams, block: Union[int, str] = BlockEnum.PENDING
+    ) -> Dict[str, Any]:
+        params: List[Any] = [self._encode_transaction(transaction)]
+        if isinstance(block, int):
+            params.append(hex(block))
+        elif isinstance(block, str):
+            params.append(block)
+        else:
+            raise TypeError("block must be either int or BlockEnum")
+        text = self._send_request("eth_createAccessList", params)
+        return self._process_response(text)
 
     def hardhat_set_balance(self, address: str, balance: int) -> None:
         """Sets the balance of the account of given address."""

@@ -243,7 +243,7 @@ class TypeGenerator:
         self.add_str_to_types(1, "@classmethod", 1)
         self.add_str_to_types(
             1,
-            f"""def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]] = None, return_tx: Literal[False]{'' if self.__return_tx_obj else ' = False'}{libraries_str}, request_type: Literal["call"], chain: Optional[Chain] = None, gas_price: Optional[int] = None, max_fee_per_gas: Optional[int] = None, max_priority_fee_per_gas: Optional[int] = None, access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None, block: Optional[Union[int, Literal["latest"], Literal["pending"], Literal["earliest"], Literal["safe"], Literal["finalized"]]] = None) -> bytearray:""",
+            f"""def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]] = None, return_tx: Literal[False]{'' if self.__return_tx_obj else ' = False'}{libraries_str}, request_type: Literal["call"], chain: Optional[Chain] = None, gas_price: Optional[int] = None, max_fee_per_gas: Optional[int] = None, max_priority_fee_per_gas: Optional[int] = None, access_list: Optional[Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]] = None, block: Optional[Union[int, Literal["latest"], Literal["pending"], Literal["earliest"], Literal["safe"], Literal["finalized"]]] = None) -> bytearray:""",
             1,
         )
         self.add_str_to_types(2, "...", 2)
@@ -252,7 +252,7 @@ class TypeGenerator:
         self.add_str_to_types(1, "@classmethod", 1)
         self.add_str_to_types(
             1,
-            f"""def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]] = None, return_tx: Literal[False]{'' if self.__return_tx_obj else ' = False'}{libraries_str}, request_type: Literal["tx"] = "tx", chain: Optional[Chain] = None, gas_price: Optional[int] = None, max_fee_per_gas: Optional[int] = None, max_priority_fee_per_gas: Optional[int] = None, access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None, block: Optional[Union[int, Literal["latest"], Literal["pending"], Literal["earliest"], Literal["safe"], Literal["finalized"]]] = None) -> {contract_name}:""",
+            f"""def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]] = None, return_tx: Literal[False]{'' if self.__return_tx_obj else ' = False'}{libraries_str}, request_type: Literal["tx"] = "tx", chain: Optional[Chain] = None, gas_price: Optional[int] = None, max_fee_per_gas: Optional[int] = None, max_priority_fee_per_gas: Optional[int] = None, access_list: Optional[Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]] = None, block: Optional[Union[int, Literal["latest"], Literal["pending"], Literal["earliest"], Literal["safe"], Literal["finalized"]]] = None) -> {contract_name}:""",
             1,
         )
         self.add_str_to_types(2, "...", 2)
@@ -261,7 +261,7 @@ class TypeGenerator:
         self.add_str_to_types(1, "@classmethod", 1)
         self.add_str_to_types(
             1,
-            f"""def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]] = None, return_tx: Literal[False]{'' if self.__return_tx_obj else ' = False'}{libraries_str}, request_type: Literal["estimate"], chain: Optional[Chain] = None, gas_price: Optional[int] = None, max_fee_per_gas: Optional[int] = None, max_priority_fee_per_gas: Optional[int] = None, access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None, block: Optional[Union[int, Literal["latest"], Literal["pending"], Literal["earliest"], Literal["safe"], Literal["finalized"]]] = None) -> int:""",
+            f"""def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]] = None, return_tx: Literal[False]{'' if self.__return_tx_obj else ' = False'}{libraries_str}, request_type: Literal["estimate"], chain: Optional[Chain] = None, gas_price: Optional[int] = None, max_fee_per_gas: Optional[int] = None, max_priority_fee_per_gas: Optional[int] = None, access_list: Optional[Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]] = None, block: Optional[Union[int, Literal["latest"], Literal["pending"], Literal["earliest"], Literal["safe"], Literal["finalized"]]] = None) -> int:""",
             1,
         )
         self.add_str_to_types(2, "...", 2)
@@ -270,7 +270,7 @@ class TypeGenerator:
         self.add_str_to_types(1, "@classmethod", 1)
         self.add_str_to_types(
             1,
-            f"""def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]] = None, return_tx: Literal[True]{' = True' if self.__return_tx_obj else ''}{libraries_str}, request_type: Literal["tx"] = "tx", chain: Optional[Chain] = None, gas_price: Optional[int] = None, max_fee_per_gas: Optional[int] = None, max_priority_fee_per_gas: Optional[int] = None, access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None, block: Optional[Union[int, Literal["latest"], Literal["pending"], Literal["earliest"], Literal["safe"], Literal["finalized"]]] = None) -> TransactionAbc[{contract_name}]:""",
+            f"""def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]] = None, return_tx: Literal[True]{' = True' if self.__return_tx_obj else ''}{libraries_str}, request_type: Literal["tx"] = "tx", chain: Optional[Chain] = None, gas_price: Optional[int] = None, max_fee_per_gas: Optional[int] = None, max_priority_fee_per_gas: Optional[int] = None, access_list: Optional[Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]] = None, block: Optional[Union[int, Literal["latest"], Literal["pending"], Literal["earliest"], Literal["safe"], Literal["finalized"]]] = None) -> TransactionAbc[{contract_name}]:""",
             1,
         )
         self.add_str_to_types(2, "...", 2)
@@ -278,7 +278,7 @@ class TypeGenerator:
         self.add_str_to_types(1, "@classmethod", 1)
         self.add_str_to_types(
             1,
-            f'def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]] = None, return_tx: bool = {self.__return_tx_obj}{libraries_str}, request_type: RequestType = "tx", chain: Optional[Chain] = None, gas_price: Optional[int] = None, max_fee_per_gas: Optional[int] = None, max_priority_fee_per_gas: Optional[int] = None, access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None, block: Optional[Union[int, Literal["latest"], Literal["pending"], Literal["earliest"], Literal["safe"], Literal["finalized"]]] = None) -> Union[{contract_name}, TransactionAbc[{contract_name}]]:',
+            f'def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]] = None, return_tx: bool = {self.__return_tx_obj}{libraries_str}, request_type: RequestType = "tx", chain: Optional[Chain] = None, gas_price: Optional[int] = None, max_fee_per_gas: Optional[int] = None, max_priority_fee_per_gas: Optional[int] = None, access_list: Optional[Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]] = None, block: Optional[Union[int, Literal["latest"], Literal["pending"], Literal["earliest"], Literal["safe"], Literal["finalized"]]] = None) -> Union[{contract_name}, TransactionAbc[{contract_name}]]:',
             1,
         )
 
@@ -1113,7 +1113,7 @@ class TypeGenerator:
             returns_str = f"Tuple[{', '.join(ret[0] for ret in returns)}]"
         self.add_str_to_types(
             1,
-            f"""def {self.get_name(declaration)}(self, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, to: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]] = None, return_tx: bool = {False if is_view_or_pure else self.__return_tx_obj}, request_type: RequestType = '{'call' if is_view_or_pure else 'tx'}', gas_price: Optional[int] = None, max_fee_per_gas: Optional[int] = None, max_priority_fee_per_gas: Optional[int] = None, access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None, block: Optional[Union[int, Literal["latest"], Literal["pending"], Literal["earliest"], Literal["safe"], Literal["finalized"]]] = None) -> Union[{returns_str}, TransactionAbc[{returns_str}], int]:""",
+            f"""def {self.get_name(declaration)}(self, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, to: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]] = None, return_tx: bool = {False if is_view_or_pure else self.__return_tx_obj}, request_type: RequestType = '{'call' if is_view_or_pure else 'tx'}', gas_price: Optional[int] = None, max_fee_per_gas: Optional[int] = None, max_priority_fee_per_gas: Optional[int] = None, access_list: Optional[Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]] = None, block: Optional[Union[int, Literal["latest"], Literal["pending"], Literal["earliest"], Literal["safe"], Literal["finalized"]]] = None) -> Union[{returns_str}, TransactionAbc[{returns_str}], int]:""",
             1,
         )
 
@@ -1161,7 +1161,7 @@ class TypeGenerator:
         self.add_str_to_types(1, "@overload", 1)
         self.add_str_to_types(
             1,
-            f"""def {self.get_name(declaration)}(self, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, to: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]] = None, return_tx: Literal[{return_tx}]{' = ' + str(return_tx) if return_tx_is_default else ''}, request_type: Literal["{request_type}"]{' = "' + request_type + '"' if request_type_is_default else ''}, gas_price: Optional[int] = None, max_fee_per_gas: Optional[int] = None, max_priority_fee_per_gas: Optional[int] = None, access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None, block: Optional[Union[int, Literal["latest"], Literal["pending"], Literal["earliest"], Literal["safe"], Literal["finalized"]]] = None) -> {returns_str}:""",
+            f"""def {self.get_name(declaration)}(self, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, to: Optional[Union[Account, Address, str]] = None, value: int = 0, gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]] = None, return_tx: Literal[{return_tx}]{' = ' + str(return_tx) if return_tx_is_default else ''}, request_type: Literal["{request_type}"]{' = "' + request_type + '"' if request_type_is_default else ''}, gas_price: Optional[int] = None, max_fee_per_gas: Optional[int] = None, max_priority_fee_per_gas: Optional[int] = None, access_list: Optional[Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]] = None, block: Optional[Union[int, Literal["latest"], Literal["pending"], Literal["earliest"], Literal["safe"], Literal["finalized"]]] = None) -> {returns_str}:""",
             1,
         )
         self.add_str_to_types(2, "...", 2)

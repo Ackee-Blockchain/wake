@@ -463,7 +463,9 @@ class Account:
         gas_price: Optional[int],
         max_fee_per_gas: Optional[int],
         max_priority_fee_per_gas: Optional[int],
-        access_list: Optional[Dict[Union[Account, Address, str], List[int]]],
+        access_list: Optional[
+            Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
+        ],
     ):
         params: TxParams = {
             "data": data,
@@ -507,21 +509,20 @@ class Account:
         if max_priority_fee_per_gas is not None:
             params["maxPriorityFeePerGas"] = max_priority_fee_per_gas
 
-        if access_list is not None:
+        if access_list == "auto":
+            params["accessList"] = "auto"
+        elif access_list is not None:
             # normalize access_list, all keys should be Address
-            if access_list is not None:
-                tmp_access_list = defaultdict(list)
-                for k, v in access_list.items():
-                    if isinstance(k, Account):
-                        k = k.address
-                    elif isinstance(k, str):
-                        k = Address(k)
-                    elif not isinstance(k, Address):
-                        raise TypeError(
-                            "access_list keys must be Account, Address or str"
-                        )
-                    tmp_access_list[k].extend(v)
-                access_list = tmp_access_list
+            tmp_access_list = defaultdict(list)
+            for k, v in access_list.items():
+                if isinstance(k, Account):
+                    k = k.address
+                elif isinstance(k, str):
+                    k = Address(k)
+                elif not isinstance(k, Address):
+                    raise TypeError("access_list keys must be Account, Address or str")
+                tmp_access_list[k].extend(v)
+            access_list = tmp_access_list
             params["accessList"] = [
                 {"address": str(k), "storageKeys": [hex(i) for i in v]}
                 for k, v in access_list.items()
@@ -538,7 +539,9 @@ class Account:
         gas_price: Optional[int] = None,
         max_fee_per_gas: Optional[int] = None,
         max_priority_fee_per_gas: Optional[int] = None,
-        access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None,
+        access_list: Optional[
+            Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
+        ] = None,
         block: Union[
             int,
             Literal["latest"],
@@ -578,7 +581,9 @@ class Account:
         gas_price: Optional[int] = None,
         max_fee_per_gas: Optional[int] = None,
         max_priority_fee_per_gas: Optional[int] = None,
-        access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None,
+        access_list: Optional[
+            Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
+        ] = None,
         block: Union[
             int,
             Literal["latest"],
@@ -617,7 +622,9 @@ class Account:
         gas_price: Optional[int] = None,
         max_fee_per_gas: Optional[int] = None,
         max_priority_fee_per_gas: Optional[int] = None,
-        access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None,
+        access_list: Optional[
+            Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
+        ] = None,
         return_tx: Literal[False] = False,
     ) -> bytearray:
         ...
@@ -632,7 +639,9 @@ class Account:
         gas_price: Optional[int] = None,
         max_fee_per_gas: Optional[int] = None,
         max_priority_fee_per_gas: Optional[int] = None,
-        access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None,
+        access_list: Optional[
+            Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
+        ] = None,
         return_tx: Literal[True] = True,
     ) -> TransactionAbc[bytearray]:
         ...
@@ -646,7 +655,9 @@ class Account:
         gas_price: Optional[int] = None,
         max_fee_per_gas: Optional[int] = None,
         max_priority_fee_per_gas: Optional[int] = None,
-        access_list: Optional[Dict[Union[Account, Address, str], List[int]]] = None,
+        access_list: Optional[
+            Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
+        ] = None,
         return_tx: bool = False,
     ) -> Union[bytearray, TransactionAbc[bytearray]]:
         tx_params = self._setup_tx_params(
@@ -2302,21 +2313,20 @@ class Contract(Account):
         if max_priority_fee_per_gas is not None:
             params["maxPriorityFeePerGas"] = max_priority_fee_per_gas
 
-        if access_list is not None:
+        if access_list == "auto":
+            params["accessList"] = "auto"
+        elif access_list is not None:
             # normalize access_list, all keys should be Address
-            if access_list is not None:
-                tmp_access_list = defaultdict(list)
-                for k, v in access_list.items():
-                    if isinstance(k, Account):
-                        k = k.address
-                    elif isinstance(k, str):
-                        k = Address(k)
-                    elif not isinstance(k, Address):
-                        raise TypeError(
-                            "access_list keys must be Account, Address or str"
-                        )
-                    tmp_access_list[k].extend(v)
-                access_list = tmp_access_list
+            tmp_access_list = defaultdict(list)
+            for k, v in access_list.items():
+                if isinstance(k, Account):
+                    k = k.address
+                elif isinstance(k, str):
+                    k = Address(k)
+                elif not isinstance(k, Address):
+                    raise TypeError("access_list keys must be Account, Address or str")
+                tmp_access_list[k].extend(v)
+            access_list = tmp_access_list
             params["accessList"] = [
                 {"address": str(k), "storageKeys": [hex(i) for i in v]}
                 for k, v in access_list.items()
