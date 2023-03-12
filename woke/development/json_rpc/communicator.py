@@ -4,7 +4,7 @@ import platform
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
-from typing_extensions import TypedDict
+from typing_extensions import Literal, TypedDict
 
 from woke.config import WokeConfig
 from woke.utils import StrEnum
@@ -33,7 +33,7 @@ TxParams = TypedDict(
         "nonce": int,
         "to": str,
         "from": str,
-        "gas": int,
+        "gas": Union[int, Literal["auto"]],
         "value": int,
         "data": bytes,
         "gasPrice": int,
@@ -114,6 +114,7 @@ class JsonRpcCommunicator:
         if "from" in transaction:
             tx["from"] = transaction["from"]
         if "gas" in transaction:
+            assert transaction["gas"] != "auto"
             tx["gas"] = hex(transaction["gas"])
         if "value" in transaction:
             tx["value"] = hex(transaction["value"])
