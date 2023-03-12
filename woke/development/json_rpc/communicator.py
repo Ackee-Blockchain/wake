@@ -284,6 +284,14 @@ class JsonRpcCommunicator:
             processed = processed[2:]
         return bytes.fromhex(processed)
 
+    def eth_sign_typed_data(self, address: str, message: Dict) -> bytes:
+        """Signs typed data according to EIP-712."""
+        text = self._send_request("eth_signTypedData_v4", [address, message])
+        processed = self._process_response(text)
+        if processed.startswith("0x"):
+            processed = processed[2:]
+        return bytes.fromhex(processed)
+
     def hardhat_set_balance(self, address: str, balance: int) -> None:
         """Sets the balance of the account of given address."""
         params = [address, hex(balance)]

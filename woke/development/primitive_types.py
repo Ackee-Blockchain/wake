@@ -21,24 +21,14 @@ class ValueRange:
 
 
 class Length:
-    _min: int
-    _max: int
+    _length: int
 
-    def __init__(self, a: int, b: Optional[int] = None) -> None:
-        if b is None:
-            self._min = a
-            self._max = a
-        else:
-            self._min = min(a, b)
-            self._max = max(a, b)
+    def __init__(self, length: int):
+        self._length = length
 
     @property
-    def min(self) -> int:
-        return self._min
-
-    @property
-    def max(self) -> int:
-        return self._max
+    def length(self) -> int:
+        return self._length
 
 
 uint8 = Annotated[int, ValueRange(0, 2**8 - 1)]
