@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import collections
 import dataclasses
 import functools
 import importlib
 import inspect
 import json
+import math
 import re
 from abc import ABC, abstractmethod
 from bdb import BdbQuit
@@ -29,7 +31,6 @@ from typing import (
     Type,
     Union,
     cast,
-    get_type_hints,
     overload,
 )
 
@@ -39,7 +40,14 @@ import eth_account
 import eth_account.messages
 import eth_utils
 from Crypto.Hash import BLAKE2b, keccak
-from typing_extensions import Literal, get_args, get_origin
+from typing_extensions import (
+    Annotated,
+    Literal,
+    TypedDict,
+    get_args,
+    get_origin,
+    get_type_hints,
+)
 
 from woke.utils import StrEnum
 
@@ -54,6 +62,7 @@ from .chain_interfaces import (
 from .globals import get_config, get_exception_handler
 from .internal import UnknownEvent, UnknownTransactionRevertedError, read_from_memory
 from .json_rpc.communicator import JsonRpcError, TxParams
+from .primitive_types import Length, ValueRange
 
 if TYPE_CHECKING:
     from .transactions import TransactionAbc
@@ -704,6 +713,195 @@ class Account:
                     self._chain._private_keys[self._address],
                 ).signature
             )
+
+    def _prepare_eip712_dict(
+        self, message: Any, domain: Eip712Domain, client_signing: bool
+    ) -> Dict[str, Any]:
+        def _get_type(t: Type, options: Optional[Dict[str, Any]] = None) -> str:
+            if options is None:
+                options = {}
+
+            if get_origin(t) is Annotated:
+                args = get_args(t)
+                opt = {}
+
+                for arg in args[1:]:
+                    if isinstance(arg, Length):
+                        opt["length"] = arg.length
+                    elif isinstance(arg, ValueRange):
+                        opt["min"] = arg.min
+                        opt["max"] = arg.max
+
+                return _get_type(args[0], opt)
+            elif get_origin(t) is list:
+                if "length" in options:
+                    return f"{_get_type(get_args(t)[0])}[{options['length']}]"
+                else:
+                    return f"{_get_type(get_args(t)[0])}[]"
+            elif t is int:
+                if "min" in options and "max" in options:
+                    if options["min"] == 0:
+                        bits = math.ceil(math.log2(options["max"] + 1))
+                        return f"uint{bits}"
+                    else:
+                        bits = math.ceil(math.log2(options["max"] - options["min"] + 1))
+                        return f"int{bits}"
+                else:
+                    # kind of fallback, but it's better than nothing
+                    return "int256"
+            elif t is bytes or t is bytearray:
+                if "length" in options:
+                    return f"bytes{options['length']}"
+                else:
+                    return "bytes"
+            elif t is str:
+                return "string"
+            elif issubclass(t, Enum):
+                return "uint8"
+            elif t is bool:
+                return "bool"
+            elif issubclass(t, (Account, Address)):
+                return "address"
+            elif dataclasses.is_dataclass(t):
+                return getattr(t, "original_name", t.__name__)
+            else:
+                raise ValueError(f"Unsupported type {t}")
+
+        def _get_types(t: Type, types: Dict[str, List[Dict[str, str]]]) -> None:
+            if not dataclasses.is_dataclass(t):
+                return
+
+            name = getattr(t, "original_name", t.__name__)
+            if name in types:
+                return
+
+            fields = []
+            hints = get_type_hints(t, include_extras=True)
+            for f in dataclasses.fields(t):
+                assert f.name in hints
+                fields.append(
+                    {
+                        "name": f.metadata.get("original_name", f.name),
+                        "type": _get_type(hints[f.name]),
+                    }
+                )
+
+            types[name] = fields
+
+            for f in dataclasses.fields(t):
+                assert f.name in hints
+                field_type = hints[f.name]
+                while (
+                    get_origin(field_type) is Annotated
+                    or get_origin(field_type) is list
+                ):
+                    field_type = get_args(field_type)[0]
+                if dataclasses.is_dataclass(field_type):
+                    _get_types(field_type, types)
+
+        def _get_value(value: Any) -> Any:
+            if dataclasses.is_dataclass(value):
+                ret = {}
+                for f in dataclasses.fields(value):
+                    name = f.metadata.get("original_name", f.name)
+                    ret[name] = _get_value(getattr(value, f.name))
+                return ret
+            elif isinstance(value, (list, tuple)):
+                return [_get_value(v) for v in value]
+            elif isinstance(value, Account):
+                return str(value.address)
+            elif isinstance(value, Address):
+                return str(value)
+            elif isinstance(value, IntEnum):
+                return int(value)
+            elif isinstance(value, (bytes, bytearray)):
+                if client_signing:
+                    return "0x" + value.hex()
+                else:
+                    return value
+            else:
+                return value
+
+        types = {}
+        _get_types(type(message), types)
+
+        ret = {
+            "types": types,
+            "domain": {},
+            "primaryType": _get_type(type(message)),
+            "message": _get_value(message),
+        }
+
+        domain_type = []
+        if "name" in domain:
+            ret["domain"]["name"] = domain["name"]
+            domain_type.append({"name": "name", "type": "string"})
+        if "version" in domain:
+            ret["domain"]["version"] = domain["version"]
+            domain_type.append({"name": "version", "type": "string"})
+        if "chainId" in domain:
+            ret["domain"]["chainId"] = domain["chainId"]
+            domain_type.append({"name": "chainId", "type": "uint256"})
+        if "verifyingContract" in domain:
+            if isinstance(domain["verifyingContract"], Account):
+                ret["domain"]["verifyingContract"] = str(
+                    domain["verifyingContract"].address
+                )
+            else:
+                ret["domain"]["verifyingContract"] = str(domain["verifyingContract"])
+            domain_type.append({"name": "verifyingContract", "type": "address"})
+        if "salt" in domain:
+            ret["domain"]["salt"] = "0x" + domain["salt"].hex()
+            domain_type.append({"name": "salt", "type": "bytes32"})
+
+        ret["types"]["EIP712Domain"] = domain_type
+
+        return ret
+
+    def sign_structured(
+        self, message: Any, domain: Optional[Eip712Domain] = None
+    ) -> bytes:
+        """
+        Sign structured data according to EIP-712. Message can be either a raw dictionary as described in the EIP
+        (https://eips.ethereum.org/EIPS/eip-712), or any ABI-compatible dataclass.
+        """
+
+        client_signing = self._address not in self._chain._private_keys
+
+        if isinstance(message, collections.MutableMapping):
+            if domain is not None:
+                raise ValueError(
+                    "Domain cannot be specified when message is a dictionary"
+                )
+        else:
+            if domain is None:
+                raise ValueError(
+                    "Domain must be specified when message is not a dictionary"
+                )
+            message = self._prepare_eip712_dict(message, domain, client_signing)
+
+        if client_signing:
+            return self._chain.chain_interface.sign_typed(str(self._address), message)
+        else:
+            return bytes(
+                eth_account.Account.sign_message(
+                    eth_account.messages.encode_structured_data(message),
+                    self._chain._private_keys[self._address],
+                ).signature
+            )
+
+
+Eip712Domain = TypedDict(
+    "Eip712Domain",
+    {
+        "name": str,
+        "version": str,
+        "chainId": int,
+        "verifyingContract": Union[Account, Address, str],
+        "salt": bytes,
+    },
+    total=False,
+)
 
 
 def check_connected(f):

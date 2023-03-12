@@ -259,6 +259,9 @@ class ChainInterfaceAbc(ABC):
     def sign(self, address: str, message: bytes) -> bytes:
         return self._communicator.eth_sign(address, message)
 
+    def sign_typed(self, address: str, message: Dict) -> bytes:
+        return self._communicator.eth_sign_typed_data(address, message)
+
     @abstractmethod
     def get_automine(self) -> bool:
         ...

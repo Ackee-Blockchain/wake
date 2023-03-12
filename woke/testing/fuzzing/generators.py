@@ -165,13 +165,11 @@ def generate(t: Type, options: Optional[Dict[str, Any]] = None):
     if options is None:
         options = {}
 
-    if "min_len" in options:
-        min_len = options["min_len"]
+    if "length" in options:
+        min_len = options["length"]
+        max_len = options["length"]
     else:
         min_len = 0
-    if "max_len" in options:
-        max_len = options["max_len"]
-    else:
         max_len = 64
 
     try:
@@ -183,8 +181,7 @@ def generate(t: Type, options: Optional[Dict[str, Any]] = None):
 
             for arg in args[1:]:
                 if isinstance(arg, Length):
-                    opt["min_len"] = arg.min
-                    opt["max_len"] = arg.max
+                    opt["length"] = arg.length
                 elif isinstance(arg, ValueRange):
                     opt["min"] = arg.min
                     opt["max"] = arg.max
