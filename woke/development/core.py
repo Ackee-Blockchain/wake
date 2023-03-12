@@ -36,6 +36,7 @@ from typing import (
 import eth_abi
 import eth_abi.packed
 import eth_account
+import eth_account.messages
 import eth_utils
 from Crypto.Hash import BLAKE2b, keccak
 from typing_extensions import Literal, get_args, get_origin
@@ -670,6 +671,21 @@ class Account:
             self._chain.tx_callback(tx)
 
         return tx.return_value
+
+    def sign(self, data: bytes) -> bytes:
+        """
+        Sign raw data according to EIP-191 type 0x45.
+        Specifically, sign(keccak256(b"\x19Ethereum Signed Message:\n" + len(data) + data)) is returned.
+        """
+        if self._address not in self._chain._private_keys:
+            return self._chain.chain_interface.sign(str(self._address), data)
+        else:
+            return bytes(
+                eth_account.Account.sign_message(
+                    eth_account.messages.encode_defunct(data),
+                    self._chain._private_keys[self._address],
+                ).signature
+            )
 
 
 def check_connected(f):

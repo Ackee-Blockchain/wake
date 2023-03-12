@@ -256,6 +256,9 @@ class ChainInterfaceAbc(ABC):
     def get_max_priority_fee_per_gas(self) -> int:
         return self._communicator.eth_max_priority_fee_per_gas()
 
+    def sign(self, address: str, message: bytes) -> bytes:
+        return self._communicator.eth_sign(address, message)
+
     @abstractmethod
     def get_automine(self) -> bool:
         ...
