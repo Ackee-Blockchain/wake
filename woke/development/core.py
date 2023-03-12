@@ -452,6 +452,7 @@ class Account:
 
     def _setup_tx_params(
         self,
+        request_type: RequestType,
         data: Union[bytes, bytearray],
         value: int,
         from_: Optional[Union[Account, Address, str]],
@@ -466,6 +467,12 @@ class Account:
             "value": value,
             "to": str(self._address),
         }
+        if from_ is None:
+            if request_type == RequestType.CALL:
+                from_ = self._chain.default_call_account
+            elif request_type == RequestType.TX:
+                from_ = self._chain.default_tx_account
+
         if isinstance(from_, Account):
             if from_.chain != self._chain:
                 raise ValueError("`from_` account must belong to this chain")
@@ -537,6 +544,7 @@ class Account:
         ] = "latest",
     ) -> bytearray:
         params = self._setup_tx_params(
+            RequestType.CALL,
             data,
             value,
             from_,
@@ -576,6 +584,7 @@ class Account:
         ] = "pending",
     ) -> int:
         params = self._setup_tx_params(
+            RequestType.ESTIMATE,
             data,
             value,
             from_,
@@ -636,6 +645,7 @@ class Account:
         return_tx: bool = False,
     ) -> Union[bytearray, TransactionAbc[bytearray]]:
         tx_params = self._setup_tx_params(
+            RequestType.TX,
             data,
             value,
             from_,
