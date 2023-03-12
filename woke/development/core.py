@@ -702,7 +702,7 @@ class Chain(ABC):
     tx_callback: Optional[Callable[[TransactionAbc], None]]
 
     @abstractmethod
-    def _connect_setup(self) -> None:
+    def _connect_setup(self, min_gas_price: Optional[int]) -> None:
         ...
 
     @abstractmethod
@@ -761,10 +761,8 @@ class Chain(ABC):
     def max_priority_fee_per_gas(self, value: int) -> None:
         ...
 
-    def __init__(self):
-        self._connected = False
-
     @contextmanager
+    @abstractmethod
     def connect(
         self,
         uri: Optional[str] = None,
@@ -773,8 +771,24 @@ class Chain(ABC):
         chain_id: Optional[int] = None,
         fork: Optional[str] = None,
         hardfork: Optional[str] = None,
-        min_gas_price: Optional[int] = 0,
-        block_base_fee_per_gas: Optional[int] = 0,
+        min_gas_price: Optional[int],
+        block_base_fee_per_gas: Optional[int],
+    ):
+        ...
+
+    def __init__(self):
+        self._connected = False
+
+    def _connect(
+        self,
+        uri: Optional[str] = None,
+        *,
+        accounts: Optional[int],
+        chain_id: Optional[int],
+        fork: Optional[str],
+        hardfork: Optional[str],
+        min_gas_price: Optional[int],
+        block_base_fee_per_gas: Optional[int],
     ):
         if self._connected:
             raise AlreadyConnectedError("Already connected to a chain")
@@ -847,15 +861,6 @@ class Chain(ABC):
                     f"Unknown chain interface type: {type(self._chain_interface)}"
                 )
 
-            if min_gas_price is not None:
-                try:
-                    self._chain_interface.set_min_gas_price(min_gas_price)
-                    self.gas_price = min_gas_price
-                except JsonRpcError:
-                    pass
-            else:
-                self.gas_price = self._chain_interface.get_gas_price()
-
             if block_base_fee_per_gas is not None and not isinstance(
                 self._chain_interface, GanacheChainInterface
             ):
@@ -889,7 +894,7 @@ class Chain(ABC):
 
             self.tx_callback = None
 
-            self._connect_setup()
+            self._connect_setup(min_gas_price)
 
             yield self
         except Exception as e:

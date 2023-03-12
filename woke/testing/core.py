@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from contextlib import contextmanager
 from typing import Any, Dict, Iterable, List, Optional, Tuple, cast
 
 import eth_utils
@@ -24,7 +25,29 @@ class Chain(woke.development.core.Chain):
     _max_priority_fee_per_gas: int
     _nonces: KeyedDefaultDict[Address, int]  # pyright: reportGeneralTypeIssues=false
 
-    def _connect_setup(self) -> None:
+    @contextmanager
+    def connect(
+        self,
+        uri: Optional[str] = None,
+        *,
+        accounts: Optional[int] = None,
+        chain_id: Optional[int] = None,
+        fork: Optional[str] = None,
+        hardfork: Optional[str] = None,
+        min_gas_price: Optional[int] = 0,
+        block_base_fee_per_gas: Optional[int] = 0,
+    ):
+        yield from self._connect(
+            uri,
+            accounts=accounts,
+            chain_id=chain_id,
+            fork=fork,
+            hardfork=hardfork,
+            min_gas_price=min_gas_price,
+            block_base_fee_per_gas=block_base_fee_per_gas,
+        )
+
+    def _connect_setup(self, min_gas_price: Optional[int]) -> None:
         connected_chains.append(self)
 
         self._require_signed_txs = False
@@ -38,6 +61,15 @@ class Chain(woke.development.core.Chain):
         block_info = self._chain_interface.get_block("pending")
         assert "gasLimit" in block_info
         self._block_gas_limit = int(block_info["gasLimit"], 16)
+
+        if min_gas_price is not None:
+            try:
+                self._chain_interface.set_min_gas_price(min_gas_price)
+                self.gas_price = min_gas_price
+            except JsonRpcError:
+                pass
+        else:
+            self.gas_price = self._chain_interface.get_gas_price()
 
     def _connect_finalize(self) -> None:
         connected_chains.remove(self)

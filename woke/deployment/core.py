@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from typing import Any, Dict, Iterable, Optional, cast
 
 import eth_utils
@@ -16,8 +17,36 @@ from woke.development.json_rpc.communicator import JsonRpcError, TxParams
 
 
 class Chain(woke.development.core.Chain):
-    def _connect_setup(self) -> None:
+    @contextmanager
+    def connect(
+        self,
+        uri: Optional[str] = None,
+        *,
+        accounts: Optional[int] = None,
+        chain_id: Optional[int] = None,
+        fork: Optional[str] = None,
+        hardfork: Optional[str] = None,
+        min_gas_price: Optional[int] = None,
+        block_base_fee_per_gas: Optional[int] = None,
+    ):
+        yield from self._connect(
+            uri,
+            accounts=accounts,
+            chain_id=chain_id,
+            fork=fork,
+            hardfork=hardfork,
+            min_gas_price=min_gas_price,
+            block_base_fee_per_gas=block_base_fee_per_gas,
+        )
+
+    def _connect_setup(self, min_gas_price: Optional[int]) -> None:
         self._require_signed_txs = True
+
+        if min_gas_price is not None:
+            try:
+                self._chain_interface.set_min_gas_price(min_gas_price)
+            except JsonRpcError:
+                pass
 
     def _connect_finalize(self) -> None:
         pass
