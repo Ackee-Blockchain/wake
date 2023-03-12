@@ -168,6 +168,10 @@ class Chain(woke.development.core.Chain):
                 sender = str(self.default_call_account.address)
             elif request_type == "tx" and self.default_tx_account is not None:
                 sender = str(self.default_tx_account.address)
+            elif (
+                request_type == "estimate" and self.default_estimate_account is not None
+            ):
+                sender = str(self.default_estimate_account.address)
             else:
                 raise ValueError(
                     "No from_ account specified and no default account set"
