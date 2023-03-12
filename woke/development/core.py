@@ -327,7 +327,7 @@ class Account:
     ) -> Account:
         acc = eth_account.Account.from_key(private_key)
         ret = cls(acc.address, chain)
-        ret.chain._private_keys[ret.address] = acc.key
+        ret.chain._private_keys[ret.address] = bytes(acc.key)
         return ret
 
     @classmethod
@@ -340,7 +340,7 @@ class Account:
     ) -> Account:
         acc = eth_account.Account.from_mnemonic(mnemonic, passphrase, path)
         ret = cls(acc.address, chain)
-        ret.chain._private_keys[ret.address] = acc.key
+        ret.chain._private_keys[ret.address] = bytes(acc.key)
         return ret
 
     @classmethod
@@ -375,7 +375,7 @@ class Account:
         )
 
         ret = cls(data["address"], chain)
-        ret.chain._private_keys[ret.address] = key
+        ret.chain._private_keys[ret.address] = bytes(key)
         return ret
 
     @property
