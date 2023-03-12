@@ -186,13 +186,11 @@ class Chain(woke.development.core.Chain):
                 params["gasPrice"] if "gasPrice" in params else self.gas_price
             )
         elif tx_type == 1:
-            tx["accessList"] = params["accessList"] if "accessList" in params else []
             tx["chainId"] = self._chain_id
             tx["gasPrice"] = (
                 params["gasPrice"] if "gasPrice" in params else self.gas_price
             )
         elif tx_type == 2:
-            tx["accessList"] = params["accessList"] if "accessList" in params else []
             tx["chainId"] = self._chain_id
             tx["maxPriorityFeePerGas"] = (
                 params["maxPriorityFeePerGas"]
@@ -218,6 +216,19 @@ class Chain(woke.development.core.Chain):
             tx["gas"] = params["gas"]
         else:
             raise ValueError(f"Invalid gas value: {params['gas']}")
+
+        if tx_type in {1, 2} and (
+            "accessList" not in params or params["accessList"] == "auto"
+        ):
+            try:
+                response = self._chain_interface.create_access_list(tx)
+                tx["accessList"] = response["accessList"]
+
+                if "gas" not in params or params["gas"] == "auto":
+                    tx["gas"] = int(response["gasUsed"], 16)
+            except JsonRpcError as e:
+                self._process_call_revert(e)
+                raise
 
         return tx
 

@@ -262,6 +262,11 @@ class ChainInterfaceAbc(ABC):
     def sign_typed(self, address: str, message: Dict) -> bytes:
         return self._communicator.eth_sign_typed_data(address, message)
 
+    def create_access_list(
+        self, params: TxParams, block_identifier: Union[int, str] = "pending"
+    ) -> Dict[str, Any]:
+        return self._communicator.eth_create_access_list(params, block_identifier)
+
     @abstractmethod
     def get_automine(self) -> bool:
         ...
