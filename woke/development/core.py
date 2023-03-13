@@ -1389,6 +1389,19 @@ class Chain(ABC):
         self.gas_price = value
 
     @check_connected
+    def set_default_accounts(self, account: Union[Account, Address, str]) -> None:
+        if isinstance(account, Account):
+            if account.chain != self:
+                raise ValueError("Account is not from this chain")
+        else:
+            account = Account(account, self)
+
+        self._default_call_account = account
+        self._default_tx_account = account
+        self._default_estimate_account = account
+        self._default_access_list_account = account
+
+    @check_connected
     def reset(self) -> None:
         self._chain_interface.reset()
 
