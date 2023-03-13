@@ -102,6 +102,7 @@ class AlreadyConnectedError(Exception):
 
 
 class RequestType(StrEnum):
+    ACCESS_LIST = "access_list"
     CALL = "call"
     ESTIMATE = "estimate"
     TX = "tx"
@@ -616,6 +617,54 @@ class Account:
 
         try:
             return self._chain.chain_interface.estimate_gas(params, block)
+        except JsonRpcError as e:
+            self._chain._process_call_revert(e)
+            raise
+
+    def access_list(
+        self,
+        data: Union[bytes, bytearray] = b"",
+        value: int = 0,
+        from_: Optional[Union[Account, Address, str]] = None,
+        gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]] = None,
+        gas_price: Optional[int] = None,
+        max_fee_per_gas: Optional[int] = None,
+        max_priority_fee_per_gas: Optional[int] = None,
+        access_list: Optional[
+            Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
+        ] = None,
+        type: Optional[int] = None,
+        block: Union[
+            int,
+            Literal["latest"],
+            Literal["pending"],
+            Literal["earliest"],
+            Literal["safe"],
+            Literal["finalized"],
+        ] = "pending",
+    ):
+        params = self._setup_tx_params(
+            RequestType.ACCESS_LIST,
+            data,
+            value,
+            from_,
+            gas_limit,
+            gas_price,
+            max_fee_per_gas,
+            max_priority_fee_per_gas,
+            access_list,
+            type,
+        )
+        params = self._chain._build_transaction(
+            RequestType.ACCESS_LIST, params, [], None
+        )
+
+        try:
+            response = self._chain.chain_interface.create_access_list(params, block)
+            return {
+                Address(e["address"]): [int(s, 16) for s in e["storageKeys"]]
+                for e in response["accessList"]
+            }, int(response["gasUsed"], 16)
         except JsonRpcError as e:
             self._chain._process_call_revert(e)
             raise
@@ -1781,6 +1830,27 @@ class Chain(ABC):
             raise
 
     @check_connected
+    def _access_list(
+        self,
+        abi: Optional[Dict],
+        arguments: Iterable,
+        params: TxParams,
+        block: Union[int, str],
+    ):
+        tx_params = self._build_transaction(
+            RequestType.ACCESS_LIST, params, arguments, abi
+        )
+        try:
+            response = self._chain_interface.create_access_list(tx_params, block)
+            return {
+                Address(e["address"]): [int(s, 16) for s in e["storageKeys"]]
+                for e in response["accessList"]
+            }, int(response["gasUsed"], 16)
+        except JsonRpcError as e:
+            self._process_call_revert(e)
+            raise
+
+    @check_connected
     def _transact(
         self,
         abi: Optional[Dict],
@@ -2374,6 +2444,11 @@ class Contract(Account):
                 block = "pending"
 
             return chain._estimate(abi, arguments, params, block)
+        elif request_type == RequestType.ACCESS_LIST:
+            if block is None:
+                block = "pending"
+
+            return chain._access_list(abi, arguments, params, block)
         else:
             raise ValueError("invalid request type")
 
