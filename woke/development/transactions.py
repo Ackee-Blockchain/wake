@@ -70,6 +70,7 @@ class TransactionAbc(ABC, Generic[T]):
     _trace_transaction: Optional[List[Dict[str, Any]]]
     _debug_trace_transaction = Optional[Dict[str, Any]]
     _error: Optional[TransactionRevertedError]
+    _raw_error: Optional[UnknownTransactionRevertedError]
     _events: Optional[List]
 
     def __init__(
@@ -91,6 +92,7 @@ class TransactionAbc(ABC, Generic[T]):
         self._trace_transaction = None
         self._debug_trace_transaction = None
         self._error = None
+        self._raw_error = None
         self._events = None
 
     @property
@@ -263,30 +265,11 @@ class TransactionAbc(ABC, Generic[T]):
         if self._error is not None:
             return self._error
 
-        chain_interface = self._chain.chain_interface
-
-        # call with the same parameters should also revert
-        try:
-            chain_interface.call(self._tx_params)
-            assert False, "Call should have reverted"
-        except JsonRpcError as e:
-            try:
-                if isinstance(
-                    chain_interface, (AnvilChainInterface, GanacheChainInterface)
-                ):
-                    revert_data = e.data["data"]
-                elif isinstance(chain_interface, HardhatChainInterface):
-                    revert_data = e.data["data"]["data"]
-                else:
-                    raise NotImplementedError
-
-                if revert_data.startswith("0x"):
-                    revert_data = revert_data[2:]
-            except Exception:
-                raise e from None
+        raw_error = self.raw_error
+        assert raw_error is not None
 
         try:
-            self._chain._process_revert_data(self, bytes.fromhex(revert_data))
+            self._chain._process_revert_data(self, raw_error.data)
         except TransactionRevertedError as e:
             self._error = e
             return e
@@ -297,29 +280,37 @@ class TransactionAbc(ABC, Generic[T]):
         if self.status == TransactionStatusEnum.SUCCESS:
             return None
 
+        if self._raw_error is not None:
+            return self._raw_error
+
         chain_interface = self._chain.chain_interface
 
-        # call with the same parameters should also revert
-        try:
-            chain_interface.call(self._tx_params)
-            assert False, "Call should have reverted"
-        except JsonRpcError as e:
-            try:
-                if isinstance(
-                    chain_interface, (AnvilChainInterface, GanacheChainInterface)
-                ):
-                    revert_data = e.data["data"]
-                elif isinstance(chain_interface, HardhatChainInterface):
-                    revert_data = e.data["data"]["data"]
-                else:
-                    raise NotImplementedError
+        if isinstance(chain_interface, AnvilChainInterface):
+            self._fetch_trace_transaction()
+            revert_data = bytes.fromhex(
+                self._trace_transaction[0]["result"]["output"][2:]
+            )
+        elif isinstance(chain_interface, GanacheChainInterface):
+            self._fetch_debug_trace_transaction()
+            assert self._debug_trace_transaction is not None
 
-                if revert_data.startswith("0x"):
-                    revert_data = revert_data[2:]
-            except Exception:
-                raise e from None
+            if len(self._debug_trace_transaction["structLogs"]) == 0 or self._debug_trace_transaction["structLogs"][-1]["op"] != "REVERT":  # type: ignore
+                revert_data = b""
+            else:
+                trace: Any = self._debug_trace_transaction["structLogs"][-1]  # type: ignore
+                offset = int(trace["stack"][-1], 16)
+                length = int(trace["stack"][-2], 16)
 
-        return UnknownTransactionRevertedError(bytes.fromhex(revert_data))
+                revert_data = bytes(read_from_memory(offset, length, trace["memory"]))
+        elif isinstance(chain_interface, HardhatChainInterface):
+            self._fetch_debug_trace_transaction()
+            assert self._debug_trace_transaction is not None
+            revert_data = bytes.fromhex(self._debug_trace_transaction["returnValue"])  # type: ignore
+        else:
+            raise NotImplementedError
+
+        self._raw_error = UnknownTransactionRevertedError(revert_data)
+        return self._raw_error
 
     @property
     @_fetch_tx_receipt
@@ -356,10 +347,12 @@ class TransactionAbc(ABC, Generic[T]):
                 length = int(trace["stack"][-2], 16)
 
                 output = read_from_memory(offset, length, trace["memory"])
-        else:
+        elif isinstance(chain_interface, HardhatChainInterface):
             self._fetch_debug_trace_transaction()
             assert self._debug_trace_transaction is not None
             output = bytes.fromhex(self._debug_trace_transaction["returnValue"])  # type: ignore
+        else:
+            raise NotImplementedError
 
         if self._abi is None:
             return self._return_type(output)
