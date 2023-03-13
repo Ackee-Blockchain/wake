@@ -395,7 +395,7 @@ class LegacyTransaction(TransactionAbc[T]):
 
     @property
     def gas_price(self) -> Wei:
-        assert "gas_price" in self._tx_params
+        assert "gasPrice" in self._tx_params
         return Wei(self._tx_params["gasPrice"])
 
     @property
@@ -406,12 +406,12 @@ class LegacyTransaction(TransactionAbc[T]):
 class Eip2930Transaction(TransactionAbc[T]):
     @property
     def chain_id(self) -> int:
-        assert "chain_id" in self._tx_params
+        assert "chainId" in self._tx_params
         return self._tx_params["chainId"]
 
     @property
     def access_list(self) -> Dict[Account, List[int]]:
-        assert "access_list" in self._tx_params
+        assert "accessList" in self._tx_params
         ret = {}
         for entry in self._tx_params["accessList"]:
             account = Account(entry[0])
@@ -434,12 +434,12 @@ class Eip2930Transaction(TransactionAbc[T]):
 class Eip1559Transaction(TransactionAbc[T]):
     @property
     def chain_id(self) -> int:
-        assert "chain_id" in self._tx_params
+        assert "chainId" in self._tx_params
         return self._tx_params["chainId"]
 
     @property
     def max_fee_per_gas(self) -> Wei:
-        if "max_fee_per_gas" not in self._tx_params:
+        if "maxFeePerGas" not in self._tx_params:
             if self._tx_data is None:
                 self._tx_data = self._chain.chain_interface.get_transaction(
                     self.tx_hash
@@ -449,7 +449,7 @@ class Eip1559Transaction(TransactionAbc[T]):
 
     @property
     def max_priority_fee_per_gas(self) -> Wei:
-        if "max_priority_fee_per_gas" not in self._tx_params:
+        if "maxPriorityFeePerGas" not in self._tx_params:
             if self._tx_data is None:
                 self._tx_data = self._chain.chain_interface.get_transaction(
                     self.tx_hash
@@ -459,7 +459,7 @@ class Eip1559Transaction(TransactionAbc[T]):
 
     @property
     def access_list(self) -> Dict[Account, List[int]]:
-        assert "access_list" in self._tx_params
+        assert "accessList" in self._tx_params
         ret = {}
         for entry in self._tx_params["accessList"]:
             account = Account(entry[0])
