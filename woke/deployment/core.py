@@ -11,6 +11,7 @@ from woke.development.core import (
     Address,
     RequestType,
     RevertToSnapshotFailedError,
+    Wei,
     check_connected,
     fix_library_abi,
 )
@@ -98,8 +99,8 @@ class Chain(woke.development.core.Chain):
 
     @property
     @check_connected
-    def gas_price(self) -> int:
-        return self.chain_interface.get_gas_price()
+    def gas_price(self) -> Wei:
+        return Wei(self.chain_interface.get_gas_price())
 
     @gas_price.setter
     @check_connected
@@ -110,8 +111,8 @@ class Chain(woke.development.core.Chain):
 
     @property
     @check_connected
-    def max_priority_fee_per_gas(self) -> int:
-        return self.chain_interface.get_max_priority_fee_per_gas()
+    def max_priority_fee_per_gas(self) -> Wei:
+        return Wei(self.chain_interface.get_max_priority_fee_per_gas())
 
     @max_priority_fee_per_gas.setter
     @check_connected

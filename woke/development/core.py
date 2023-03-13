@@ -1047,7 +1047,7 @@ class Chain(ABC):
 
     @property
     @abstractmethod
-    def gas_price(self) -> int:
+    def gas_price(self) -> Wei:
         ...
 
     @gas_price.setter
@@ -1057,7 +1057,7 @@ class Chain(ABC):
 
     @property
     @abstractmethod
-    def max_priority_fee_per_gas(self) -> int:
+    def max_priority_fee_per_gas(self) -> Wei:
         ...
 
     @max_priority_fee_per_gas.setter
