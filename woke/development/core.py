@@ -61,7 +61,7 @@ from .chain_interfaces import (
     HardhatChainInterface,
 )
 from .globals import get_config, get_exception_handler
-from .internal import UnknownEvent, UnknownTransactionRevertedError, read_from_memory
+from .internal import UnknownEvent, read_from_memory
 from .json_rpc.communicator import JsonRpcError, TxParams
 from .primitive_types import Length, ValueRange
 
@@ -1541,6 +1541,7 @@ class Chain(ABC):
             field_types = [
                 resolved_types[field.name]
                 for field in dataclasses.fields(expected_type)
+                if field.init
             ]
             assert len(value) == len(field_types)
             converted_values = [
@@ -1564,13 +1565,19 @@ class Chain(ABC):
         tx: Optional[TransactionAbc],
         revert_data: bytes,
     ):
+        from .transactions import UnknownTransactionRevertedError
+
         selector = revert_data[0:4]
         if selector not in errors:
-            raise UnknownTransactionRevertedError(revert_data) from None
+            e = UnknownTransactionRevertedError(revert_data)
+            e.tx = tx
+            raise e from None
 
         if selector not in self._single_source_errors:
             if tx is None:
-                raise UnknownTransactionRevertedError(revert_data) from None
+                e = UnknownTransactionRevertedError(revert_data)
+                e.tx = tx
+                raise e from None
 
             # ambiguous error, try to find the source contract
             debug_trace = self._chain_interface.debug_trace_transaction(
@@ -1604,6 +1611,7 @@ class Chain(ABC):
         ]
         decoded = Abi.decode(types, revert_data[4:])
         generated_error = self._convert_from_web3_type(tx, decoded, obj)
+        generated_error.tx = tx
         # raise native pytypes exception on transaction revert
         raise generated_error from None
 

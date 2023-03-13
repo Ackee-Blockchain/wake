@@ -9,9 +9,8 @@ from typing import List, Dict, Optional, overload, Union, Callable, Tuple
 from typing_extensions import Literal
 
 from woke.development.core import Contract, Library, Address, Account, Chain, RequestType
-from woke.development.internal import TransactionRevertedError
 from woke.development.primitive_types import *
-from woke.development.transactions import TransactionAbc
+from woke.development.transactions import TransactionAbc, TransactionRevertedError
 """
 
 INIT_CONTENT: str = """
