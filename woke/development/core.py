@@ -219,6 +219,11 @@ class Wei(int):
     def from_gwei(cls, value: Union[int, float]) -> Wei:
         return cls(int(value * 10**9))
 
+    @classmethod
+    def from_str(cls, value: str) -> Wei:
+        count, unit = value.split()
+        return cls(eth_utils.to_wei(float(count), unit))
+
 
 @functools.total_ordering
 class Address:
@@ -465,17 +470,20 @@ class Account:
         self,
         request_type: RequestType,
         data: Union[bytes, bytearray],
-        value: int,
+        value: Union[int, str],
         from_: Optional[Union[Account, Address, str]],
         gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]],
-        gas_price: Optional[int],
-        max_fee_per_gas: Optional[int],
-        max_priority_fee_per_gas: Optional[int],
+        gas_price: Optional[Union[int, str]],
+        max_fee_per_gas: Optional[Union[int, str]],
+        max_priority_fee_per_gas: Optional[Union[int, str]],
         access_list: Optional[
             Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
         ],
         type: Optional[int],
     ):
+        if isinstance(value, str):
+            value = Wei.from_str(value)
+
         params: TxParams = {
             "data": data,
             "value": value,
@@ -512,12 +520,18 @@ class Account:
             raise TypeError("`gas_limit` must be an int, 'max', 'auto', or None")
 
         if gas_price is not None:
+            if isinstance(gas_price, str):
+                gas_price = Wei.from_str(gas_price)
             params["gasPrice"] = gas_price
 
         if max_fee_per_gas is not None:
+            if isinstance(max_fee_per_gas, str):
+                max_fee_per_gas = Wei.from_str(max_fee_per_gas)
             params["maxFeePerGas"] = max_fee_per_gas
 
         if max_priority_fee_per_gas is not None:
+            if isinstance(max_priority_fee_per_gas, str):
+                max_priority_fee_per_gas = Wei.from_str(max_priority_fee_per_gas)
             params["maxPriorityFeePerGas"] = max_priority_fee_per_gas
 
         if access_list == "auto":
@@ -547,12 +561,12 @@ class Account:
     def call(
         self,
         data: Union[bytes, bytearray] = b"",
-        value: int = 0,
+        value: Union[int, str] = 0,
         from_: Optional[Union[Account, Address, str]] = None,
         gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]] = None,
-        gas_price: Optional[int] = None,
-        max_fee_per_gas: Optional[int] = None,
-        max_priority_fee_per_gas: Optional[int] = None,
+        gas_price: Optional[Union[int, str]] = None,
+        max_fee_per_gas: Optional[Union[int, str]] = None,
+        max_priority_fee_per_gas: Optional[Union[int, str]] = None,
         access_list: Optional[
             Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
         ] = None,
@@ -591,12 +605,12 @@ class Account:
     def estimate(
         self,
         data: Union[bytes, bytearray] = b"",
-        value: int = 0,
+        value: Union[int, str] = 0,
         from_: Optional[Union[Account, Address, str]] = None,
         gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]] = None,
-        gas_price: Optional[int] = None,
-        max_fee_per_gas: Optional[int] = None,
-        max_priority_fee_per_gas: Optional[int] = None,
+        gas_price: Optional[Union[int, str]] = None,
+        max_fee_per_gas: Optional[Union[int, str]] = None,
+        max_priority_fee_per_gas: Optional[Union[int, str]] = None,
         access_list: Optional[
             Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
         ] = None,
@@ -633,12 +647,12 @@ class Account:
     def access_list(
         self,
         data: Union[bytes, bytearray] = b"",
-        value: int = 0,
+        value: Union[int, str] = 0,
         from_: Optional[Union[Account, Address, str]] = None,
         gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]] = None,
-        gas_price: Optional[int] = None,
-        max_fee_per_gas: Optional[int] = None,
-        max_priority_fee_per_gas: Optional[int] = None,
+        gas_price: Optional[Union[int, str]] = None,
+        max_fee_per_gas: Optional[Union[int, str]] = None,
+        max_priority_fee_per_gas: Optional[Union[int, str]] = None,
         access_list: Optional[
             Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
         ] = None,
@@ -681,12 +695,12 @@ class Account:
     def transact(
         self,
         data: Union[bytes, bytearray] = b"",
-        value: int = 0,
+        value: Union[int, str] = 0,
         from_: Optional[Union[Account, Address, str]] = None,
         gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]] = None,
-        gas_price: Optional[int] = None,
-        max_fee_per_gas: Optional[int] = None,
-        max_priority_fee_per_gas: Optional[int] = None,
+        gas_price: Optional[Union[int, str]] = None,
+        max_fee_per_gas: Optional[Union[int, str]] = None,
+        max_priority_fee_per_gas: Optional[Union[int, str]] = None,
         access_list: Optional[
             Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
         ] = None,
@@ -1075,8 +1089,8 @@ class Chain(ABC):
         chain_id: Optional[int] = None,
         fork: Optional[str] = None,
         hardfork: Optional[str] = None,
-        min_gas_price: Optional[int],
-        block_base_fee_per_gas: Optional[int],
+        min_gas_price: Optional[Union[int, str]],
+        block_base_fee_per_gas: Optional[Union[int, str]],
     ):
         ...
 
@@ -1091,11 +1105,16 @@ class Chain(ABC):
         chain_id: Optional[int],
         fork: Optional[str],
         hardfork: Optional[str],
-        min_gas_price: Optional[int],
-        block_base_fee_per_gas: Optional[int],
+        min_gas_price: Optional[Union[int, str]],
+        block_base_fee_per_gas: Optional[Union[int, str]],
     ):
         if self._connected:
             raise AlreadyConnectedError("Already connected to a chain")
+
+        if isinstance(min_gas_price, str):
+            min_gas_price = Wei.from_str(min_gas_price)
+        if isinstance(block_base_fee_per_gas, str):
+            block_base_fee_per_gas = Wei.from_str(block_base_fee_per_gas)
 
         if uri is None:
             self._chain_interface = ChainInterfaceAbc.launch(
@@ -1358,11 +1377,15 @@ class Chain(ABC):
         self._chain_interface.set_automine(value)
 
     @check_connected
-    def set_next_block_base_fee_per_gas(self, value: int) -> None:
+    def set_next_block_base_fee_per_gas(self, value: Union[int, str]) -> None:
+        if isinstance(value, str):
+            value = Wei.from_str(value)
         self._chain_interface.set_next_block_base_fee_per_gas(value)
 
     @check_connected
-    def set_min_gas_price(self, value: int) -> None:
+    def set_min_gas_price(self, value: Union[int, str]) -> None:
+        if isinstance(value, str):
+            value = Wei.from_str(value)
         self._chain_interface.set_min_gas_price(value)
         self.gas_price = value
 
@@ -2282,13 +2305,13 @@ class Contract(Account):
         return_tx: bool,
         return_type: Type,
         from_: Optional[Union[Account, Address, str]],
-        value: int,
+        value: Union[int, str],
         gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]],
         libraries: Dict[bytes, Tuple[Union[Account, Address, None], str]],
         chain: Optional[Chain],
-        gas_price: Optional[int],
-        max_fee_per_gas: Optional[int],
-        max_priority_fee_per_gas: Optional[int],
+        gas_price: Optional[Union[int, str]],
+        max_fee_per_gas: Optional[Union[int, str]],
+        max_priority_fee_per_gas: Optional[Union[int, str]],
         access_list: Optional[Dict[Union[Account, Address, str], List[int]]],
         type: Optional[int],
         block: Optional[Union[int, str]],
@@ -2368,11 +2391,11 @@ class Contract(Account):
         return_type: Type,
         from_: Optional[Union[Account, Address, str]],
         to: Optional[Union[Account, Address, str]],
-        value: int,
+        value: Union[int, str],
         gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]],
-        gas_price: Optional[int],
-        max_fee_per_gas: Optional[int],
-        max_priority_fee_per_gas: Optional[int],
+        gas_price: Optional[Union[int, str]],
+        max_fee_per_gas: Optional[Union[int, str]],
+        max_priority_fee_per_gas: Optional[Union[int, str]],
         access_list: Optional[Dict[Union[Account, Address, str], List[int]]],
         type: Optional[int],
         block: Optional[Union[int, str]],
@@ -2393,6 +2416,9 @@ class Contract(Account):
                 params["from"] = str(from_.address)
             else:
                 params["from"] = str(from_)
+
+        if isinstance(value, str):
+            value = Wei.from_str(value)
         params["value"] = value
 
         if gas_limit == "max":
@@ -2415,12 +2441,18 @@ class Contract(Account):
                 params["to"] = str(to)
 
         if gas_price is not None:
+            if isinstance(gas_price, str):
+                gas_price = Wei.from_str(gas_price)
             params["gasPrice"] = gas_price
 
         if max_fee_per_gas is not None:
+            if isinstance(max_fee_per_gas, str):
+                max_fee_per_gas = Wei.from_str(max_fee_per_gas)
             params["maxFeePerGas"] = max_fee_per_gas
 
         if max_priority_fee_per_gas is not None:
+            if isinstance(max_priority_fee_per_gas, str):
+                max_priority_fee_per_gas = Wei.from_str(max_priority_fee_per_gas)
             params["maxPriorityFeePerGas"] = max_priority_fee_per_gas
 
         if access_list == "auto":
@@ -2490,13 +2522,13 @@ class Library(Contract):
         return_tx: bool,
         return_type: Type,
         from_: Optional[Union[Account, Address, str]],
-        value: int,
+        value: Union[int, str],
         gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]],
         libraries: Dict[bytes, Tuple[Union[Account, Address, None], str]],
         chain: Optional[Chain],
-        gas_price: Optional[int],
-        max_fee_per_gas: Optional[int],
-        max_priority_fee_per_gas: Optional[int],
+        gas_price: Optional[Union[int, str]],
+        max_fee_per_gas: Optional[Union[int, str]],
+        max_priority_fee_per_gas: Optional[Union[int, str]],
         access_list: Optional[Dict[Union[Account, Address, str], List[int]]],
         type: Optional[int],
         block: Optional[Union[int, str]],

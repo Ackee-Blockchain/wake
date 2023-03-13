@@ -1,6 +1,6 @@
 import time
 from contextlib import contextmanager
-from typing import Any, Dict, Iterable, Optional, cast
+from typing import Any, Dict, Iterable, Optional, Union, cast
 
 import eth_utils
 
@@ -29,8 +29,8 @@ class Chain(woke.development.core.Chain):
         chain_id: Optional[int] = None,
         fork: Optional[str] = None,
         hardfork: Optional[str] = None,
-        min_gas_price: Optional[int] = None,
-        block_base_fee_per_gas: Optional[int] = None,
+        min_gas_price: Optional[Union[int, str]] = None,
+        block_base_fee_per_gas: Optional[Union[int, str]] = None,
     ):
         yield from self._connect(
             uri,
