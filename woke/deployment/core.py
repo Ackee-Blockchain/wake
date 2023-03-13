@@ -5,6 +5,7 @@ from typing import Any, Dict, Iterable, Optional, Union, cast
 import eth_utils
 
 import woke.development.core
+from woke.development.chain_interfaces import AnvilChainInterface
 from woke.development.core import (
     Abi,
     Account,
@@ -42,7 +43,9 @@ class Chain(woke.development.core.Chain):
             block_base_fee_per_gas=block_base_fee_per_gas,
         )
 
-    def _connect_setup(self, min_gas_price: Optional[int]) -> None:
+    def _connect_setup(
+        self, min_gas_price: Optional[int], block_base_fee_per_gas: Optional[int]
+    ) -> None:
         self._require_signed_txs = True
 
         if min_gas_price is not None:
@@ -214,7 +217,10 @@ class Chain(woke.development.core.Chain):
             if "maxFeePerGas" in params:
                 tx["maxFeePerGas"] = params["maxFeePerGas"]
             else:
-                if self.require_signed_txs:
+                if (
+                    isinstance(self.chain_interface, AnvilChainInterface)
+                    or self.require_signed_txs
+                ):
                     tx["maxFeePerGas"] = tx["maxPriorityFeePerGas"] + int(
                         self.chain_interface.get_block("pending")["baseFeePerGas"], 16
                     )

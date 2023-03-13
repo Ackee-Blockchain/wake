@@ -8,6 +8,7 @@ import eth_utils
 import woke.development.core
 from woke.development.core import (
     Abi,
+    Account,
     Address,
     RequestType,
     RevertToSnapshotFailedError,
@@ -17,6 +18,7 @@ from woke.development.core import (
 )
 from woke.development.json_rpc import JsonRpcError, TxParams
 
+from ..development.chain_interfaces import AnvilChainInterface
 from ..development.transactions import TransactionAbc, TransactionStatusEnum
 from ..utils.keyed_default_dict import KeyedDefaultDict
 
@@ -26,6 +28,7 @@ class Chain(woke.development.core.Chain):
     _gas_price: Wei
     _max_priority_fee_per_gas: Wei
     _nonces: KeyedDefaultDict[Address, int]  # pyright: reportGeneralTypeIssues=false
+    _initial_base_fee_per_gas: Wei
 
     @contextmanager
     def connect(
@@ -49,7 +52,9 @@ class Chain(woke.development.core.Chain):
             block_base_fee_per_gas=block_base_fee_per_gas,
         )
 
-    def _connect_setup(self, min_gas_price: Optional[int]) -> None:
+    def _connect_setup(
+        self, min_gas_price: Optional[int], block_base_fee_per_gas: Optional[int]
+    ) -> None:
         connected_chains.append(self)
 
         self._require_signed_txs = False
@@ -63,6 +68,11 @@ class Chain(woke.development.core.Chain):
         block_info = self._chain_interface.get_block("pending")
         assert "gasLimit" in block_info
         self._block_gas_limit = int(block_info["gasLimit"], 16)
+
+        if block_base_fee_per_gas is not None:
+            self._initial_base_fee_per_gas = Wei(block_base_fee_per_gas)
+        else:
+            self._initial_base_fee_per_gas = block_info.get("baseFeePerGas", 0)
 
         if min_gas_price is not None:
             try:
@@ -242,9 +252,14 @@ class Chain(woke.development.core.Chain):
             if "maxFeePerGas" in params:
                 tx["maxFeePerGas"] = params["maxFeePerGas"]
             else:
-                if self.require_signed_txs:
-                    tx["maxFeePerGas"] = tx["maxPriorityFeePerGas"] + int(
-                        self.chain_interface.get_block("pending")["baseFeePerGas"], 16
+                if isinstance(self.chain_interface, AnvilChainInterface) or (
+                    self.require_signed_txs
+                    and Account(tx["from"], self) not in self._accounts_set
+                ):
+                    # not really correct (base fee may/will change in time)
+                    # temporary workaround until Anvil implements https://github.com/foundry-rs/foundry/issues/4360
+                    tx["maxFeePerGas"] = (
+                        tx["maxPriorityFeePerGas"] + self._initial_base_fee_per_gas
                     )
 
         if "gas" not in params:

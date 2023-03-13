@@ -996,6 +996,7 @@ class Chain(ABC):
     _connected: bool
     _chain_interface: ChainInterfaceAbc
     _accounts: List[Account]
+    _accounts_set: Set[Account]  # for faster lookup
     _default_call_account: Optional[Account]
     _default_tx_account: Optional[Account]
     _default_estimate_account: Optional[Account]
@@ -1014,7 +1015,9 @@ class Chain(ABC):
     tx_callback: Optional[Callable[[TransactionAbc], None]]
 
     @abstractmethod
-    def _connect_setup(self, min_gas_price: Optional[int]) -> None:
+    def _connect_setup(
+        self, min_gas_price: Optional[int], block_base_fee_per_gas: Optional[int]
+    ) -> None:
         ...
 
     @abstractmethod
@@ -1197,6 +1200,7 @@ class Chain(ABC):
             self._accounts = [
                 Account(acc, self) for acc in self._chain_interface.accounts()
             ]
+            self._accounts_set = set(self._accounts)
             self._chain_id = self._chain_interface.get_chain_id()
             self._snapshots = {}
             self._deployed_libraries = defaultdict(list)
@@ -1219,7 +1223,7 @@ class Chain(ABC):
 
             self.tx_callback = None
 
-            self._connect_setup(min_gas_price)
+            self._connect_setup(min_gas_price, block_base_fee_per_gas)
 
             yield self
         except Exception as e:
@@ -1411,6 +1415,7 @@ class Chain(ABC):
         self._accounts = [
             Account(acc, self) for acc in self._chain_interface.accounts()
         ]
+        self._accounts_set = set(self._accounts)
 
     @check_connected
     def mine(self, timestamp_change: Optional[Callable[[int], int]] = None) -> None:
@@ -1780,7 +1785,15 @@ class Chain(ABC):
             if "to" in tx_params:
                 tx_params["to"] = eth_utils.to_checksum_address(tx_params["to"])
 
-            if key is not None:
+            if Account(tx_params["from"], self) in self._accounts_set:
+                try:
+                    tx_hash = self._chain_interface.send_transaction(tx_params)
+                except (ValueError, JsonRpcError) as e:
+                    try:
+                        tx_hash = e.args[0]["data"]["txHash"]
+                    except Exception:
+                        raise e
+            elif key is not None:
                 signed_tx = eth_account.Account.sign_transaction(
                     tx_params, key
                 ).rawTransaction
@@ -1792,13 +1805,9 @@ class Chain(ABC):
                     except Exception:
                         raise e
             else:
-                try:
-                    tx_hash = self._chain_interface.send_transaction(tx_params)
-                except (ValueError, JsonRpcError) as e:
-                    try:
-                        tx_hash = e.args[0]["data"]["txHash"]
-                    except Exception:
-                        raise e
+                raise ValueError(
+                    f"Private key for account {tx_params['from']} not known and is not owned by the connected client either."
+                )
             self._update_nonce(Address(tx_params["from"]), tx_params["nonce"] + 1)
         else:
             if isinstance(self.chain_interface, AnvilChainInterface):
