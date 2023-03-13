@@ -81,9 +81,9 @@ contracts_by_metadata: Dict[bytes, str] = {}
 contracts_inheritance: Dict[str, Tuple[str, ...]] = {}
 # contract_fqn => set of REVERT opcode PCs belonging to a revert statement
 contracts_revert_index: Dict[str, Set[int]] = {}
-# list of pairs of (deployment code segments, contract_fqn)
-# where deployment code segments is a tuple of (length, BLAKE2b hash)
-deployment_code_index: List[Tuple[Tuple[Tuple[int, bytes], ...], str]] = []
+# list of pairs of (creation code segments, contract_fqn)
+# where creation code segments is a tuple of (length, BLAKE2b hash)
+creation_code_index: List[Tuple[Tuple[Tuple[int, bytes], ...], str]] = []
 
 
 def get_contracts_by_fqn() -> Dict[str, Any]:
@@ -1994,38 +1994,38 @@ def _signer_account(sender: Account):
             chain_interface.stop_impersonating_account(str(sender))
 
 
-def get_fqn_from_deployment_code(deployment_code: bytes) -> Tuple[str, int]:
-    for deployment_code_segments, fqn in deployment_code_index:
+def get_fqn_from_creation_code(creation_code: bytes) -> Tuple[str, int]:
+    for creation_code_segments, fqn in creation_code_index:
 
-        length, h = deployment_code_segments[0]
-        if length > len(deployment_code):
+        length, h = creation_code_segments[0]
+        if length > len(creation_code):
             continue
-        segment_h = BLAKE2b.new(data=deployment_code[:length], digest_bits=256).digest()
+        segment_h = BLAKE2b.new(data=creation_code[:length], digest_bits=256).digest()
         if segment_h != h:
             continue
 
-        deployment_code = deployment_code[length:]
+        creation_code = creation_code[length:]
         found = True
         constructor_offset = length
 
-        for length, h in deployment_code_segments[1:]:
-            if length + 20 > len(deployment_code):
+        for length, h in creation_code_segments[1:]:
+            if length + 20 > len(creation_code):
                 found = False
                 break
-            deployment_code = deployment_code[20:]
+            creation_code = creation_code[20:]
             segment_h = BLAKE2b.new(
-                data=deployment_code[:length], digest_bits=256
+                data=creation_code[:length], digest_bits=256
             ).digest()
             if segment_h != h:
                 found = False
                 break
-            deployment_code = deployment_code[length:]
+            creation_code = creation_code[length:]
             constructor_offset += length + 20
 
         if found:
             return fqn, constructor_offset
 
-    raise ValueError("Could not find contract definition from deployment code")
+    raise ValueError("Could not find contract definition from creation code")
 
 
 def get_fqn_from_address(
@@ -2090,11 +2090,11 @@ def process_debug_trace_for_fqn_overrides(
         elif trace["op"] in {"CREATE", "CREATE2"}:
             offset = int(trace["stack"][-2], 16)
             length = int(trace["stack"][-3], 16)
-            deployment_code = read_from_memory(offset, length, trace["memory"])
+            creation_code = read_from_memory(offset, length, trace["memory"])
 
             trace_is_create.append(True)
             addresses.append(None)
-            fqns.append(get_fqn_from_deployment_code(deployment_code)[0])
+            fqns.append(get_fqn_from_creation_code(creation_code)[0])
             fqn_overrides.maps.insert(0, {})
         elif trace["op"] in {"RETURN", "REVERT", "STOP", "SELFDESTRUCT"}:
             if trace["op"] == "SELFDESTRUCT":
@@ -2124,7 +2124,7 @@ def process_debug_trace_for_revert(
     fqn_overrides: ChainMap[Address, Optional[str]],
 ) -> str:
     if tx.to is None:
-        origin = get_fqn_from_deployment_code(tx.data)[0]
+        origin = get_fqn_from_creation_code(tx.data)[0]
     elif tx.to.address in fqn_overrides:
         origin = fqn_overrides[tx.to.address]
     else:
@@ -2162,11 +2162,11 @@ def process_debug_trace_for_revert(
         elif trace["op"] in {"CREATE", "CREATE2"}:
             offset = int(trace["stack"][-2], 16)
             length = int(trace["stack"][-3], 16)
-            deployment_code = read_from_memory(offset, length, trace["memory"])
+            creation_code = read_from_memory(offset, length, trace["memory"])
 
             trace_is_create.append(True)
             addresses.append(None)
-            fqns.append(get_fqn_from_deployment_code(deployment_code)[0])
+            fqns.append(get_fqn_from_creation_code(creation_code)[0])
             fqn_overrides.maps.insert(0, {})
         elif trace["op"] == "REVERT":
             pc = trace["pc"]
@@ -2205,7 +2205,7 @@ def process_debug_trace_for_events(
     fqn_overrides: ChainMap[Address, Optional[str]],
 ) -> List[Tuple[bytes, Optional[str]]]:
     if tx.to is None:
-        origin = get_fqn_from_deployment_code(tx.data)[0]
+        origin = get_fqn_from_creation_code(tx.data)[0]
     elif tx.to.address in fqn_overrides:
         origin = fqn_overrides[tx.to.address]
     else:
@@ -2243,11 +2243,11 @@ def process_debug_trace_for_events(
         elif trace["op"] in {"CREATE", "CREATE2"}:
             offset = int(trace["stack"][-2], 16)
             length = int(trace["stack"][-3], 16)
-            deployment_code = read_from_memory(offset, length, trace["memory"])
+            creation_code = read_from_memory(offset, length, trace["memory"])
 
             trace_is_create.append(True)
             addresses.append(None)
-            fqns.append(get_fqn_from_deployment_code(deployment_code)[0])
+            fqns.append(get_fqn_from_creation_code(creation_code)[0])
             fqn_overrides.maps.insert(0, {})
         elif trace["op"] in {"RETURN", "REVERT", "STOP", "SELFDESTRUCT"}:
             if trace["op"] != "REVERT" and len(fqn_overrides.maps) > 1:
@@ -2283,7 +2283,7 @@ class Contract(Account):
         Union[bytes, Literal["constructor"], Literal["fallback"], Literal["receive"]],
         Any,
     ]
-    _deployment_code: str
+    _creation_code: str
 
     def __init__(
         self, addr: Union[Account, Address, str], chain: Optional[Chain] = None
@@ -2304,15 +2304,15 @@ class Contract(Account):
     __repr__ = __str__
 
     @classmethod
-    def _get_deployment_code(
+    def _get_creation_code(
         cls, libraries: Dict[bytes, Tuple[Union[Account, Address], str]]
     ) -> bytes:
-        deployment_code = cls._deployment_code
-        for match in LIBRARY_PLACEHOLDER_REGEX.finditer(deployment_code):
+        creation_code = cls._creation_code
+        for match in LIBRARY_PLACEHOLDER_REGEX.finditer(creation_code):
             lib_id = bytes.fromhex(match.group(0)[3:-3])
             assert (
                 lib_id in libraries
-            ), f"Address of library {libraries[lib_id][1]} required to generate deployment code"
+            ), f"Address of library {libraries[lib_id][1]} required to generate creation code"
 
             lib = libraries[lib_id][0]
             if isinstance(lib, Account):
@@ -2322,12 +2322,10 @@ class Contract(Account):
             else:
                 raise TypeError()
 
-            deployment_code = (
-                deployment_code[: match.start()]
-                + lib_addr
-                + deployment_code[match.end() :]
+            creation_code = (
+                creation_code[: match.start()] + lib_addr + creation_code[match.end() :]
             )
-        return bytes.fromhex(deployment_code)
+        return bytes.fromhex(creation_code)
 
     @classmethod
     def _deploy(
@@ -2370,8 +2368,8 @@ class Contract(Account):
         if confirmations == 0 and not return_tx:
             raise ValueError("confirmations=0 is only valid when return_tx=True")
 
-        deployment_code = cls._deployment_code
-        for match in LIBRARY_PLACEHOLDER_REGEX.finditer(deployment_code):
+        creation_code = cls._creation_code
+        for match in LIBRARY_PLACEHOLDER_REGEX.finditer(creation_code):
             lib_id = bytes.fromhex(match.group(0)[3:-3])
             assert lib_id in libraries
 
@@ -2386,16 +2384,14 @@ class Contract(Account):
             else:
                 raise ValueError(f"Library {libraries[lib_id][1]} not deployed")
 
-            deployment_code = (
-                deployment_code[: match.start()]
-                + lib_addr
-                + deployment_code[match.end() :]
+            creation_code = (
+                creation_code[: match.start()] + lib_addr + creation_code[match.end() :]
             )
 
         return cls._execute(
             chain,
             request_type,
-            deployment_code,
+            creation_code,
             arguments,
             return_tx,
             return_type,

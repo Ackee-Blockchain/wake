@@ -145,7 +145,7 @@ class TypeGenerator:
     __contracts_by_metadata_index: Dict[bytes, str]
     __contracts_inheritance_index: Dict[str, Tuple[str, ...]]
     __contracts_revert_index: Dict[str, Set[int]]
-    __deployment_code_index: List[Tuple[Tuple[Tuple[int, bytes], ...], str]]
+    __creation_code_index: List[Tuple[Tuple[Tuple[int, bytes], ...], str]]
 
     def __init__(self, config: WokeConfig, return_tx_obj: bool):
         self.__config = config
@@ -168,7 +168,7 @@ class TypeGenerator:
         self.__contracts_by_metadata_index = {}
         self.__contracts_inheritance_index = {}
         self.__contracts_revert_index = {}
-        self.__deployment_code_index = []
+        self.__creation_code_index = []
 
         # built-in Error(str) and Panic(uint256) errors
         error_abi = {
@@ -320,7 +320,7 @@ class TypeGenerator:
         else:
             self.add_str_to_types(2, 'raise Exception("Cannot deploy interface")', 1)
 
-    def generate_deployment_code_func(
+    def generate_creation_code_func(
         self, contract: ContractDefinition, libraries: Dict[bytes, Tuple[str, str]]
     ):
         libraries_arg = "".join(
@@ -330,7 +330,7 @@ class TypeGenerator:
         self.add_str_to_types(1, "@classmethod", 1)
         self.add_str_to_types(
             1,
-            f"def deployment_code(cls{libraries_arg}) -> bytes:",
+            f"def get_creation_code(cls{libraries_arg}) -> bytes:",
             1,
         )
 
@@ -346,18 +346,18 @@ class TypeGenerator:
                 )
                 self.add_str_to_types(
                     2,
-                    f"return cls._get_deployment_code({libs_arg})",
+                    f"return cls._get_creation_code({libs_arg})",
                     1,
                 )
             else:
                 self.add_str_to_types(
                     2,
-                    'raise Exception("Cannot get deployment code of an abstract contract")',
+                    'raise Exception("Cannot get creation code of an abstract contract")',
                     1,
                 )
         else:
             self.add_str_to_types(
-                2, 'raise Exception("Cannot get deployment code of an interface")', 1
+                2, 'raise Exception("Cannot get creation code of an interface")', 1
             )
 
     def generate_contract_template(
@@ -530,7 +530,7 @@ class TypeGenerator:
                 raise Exception(f"Unexpected ABI item type: {item['type']}")
         self.add_str_to_types(1, f"_abi = {abi_by_selector}", 1)
         self.add_str_to_types(
-            1, f'_deployment_code = "{compilation_info.evm.bytecode.object}"', 2
+            1, f'_creation_code = "{compilation_info.evm.bytecode.object}"', 2
         )
 
         if contract.kind == ContractKind.LIBRARY:
@@ -562,7 +562,7 @@ class TypeGenerator:
             h = BLAKE2b.new(data=segment, digest_bits=256).digest()
             bytecode_segments.append((len(segment), h))
 
-            self.__deployment_code_index.append((tuple(bytecode_segments), fqn))
+            self.__creation_code_index.append((tuple(bytecode_segments), fqn))
 
         libraries: Dict[bytes, Tuple[str, str]] = {}
         source_units_queue = deque([contract.parent])
@@ -590,7 +590,7 @@ class TypeGenerator:
 
         self.generate_deploy_func(contract, libraries)
         self.add_str_to_types(0, "", 1)
-        self.generate_deployment_code_func(contract, libraries)
+        self.generate_creation_code_func(contract, libraries)
         self.add_str_to_types(0, "", 1)
 
         return events_abi
@@ -1506,7 +1506,7 @@ class TypeGenerator:
                 contracts_by_metadata=self.__contracts_by_metadata_index,
                 contracts_inheritance=self.__contracts_inheritance_index,
                 contracts_revert_index=self.__contracts_revert_index,
-                deployment_code_index=self.__deployment_code_index,
+                creation_code_index=self.__creation_code_index,
             )
         )
 
@@ -1695,11 +1695,11 @@ class NameSanitizer:
 
         self.__contract_reserved = {
             "_abi",
-            "_deployment_code",
+            "_creation_code",
             "_address",
             "_chain",
             "_label",
-            "_get_deployment_code",
+            "_get_creation_code",
             "_deploy",
             "_execute",
             "_library_id",
@@ -1714,7 +1714,7 @@ class NameSanitizer:
             "transact",
             "estimate",
             "deploy",
-            "deployment_code",
+            "get_creation_code",
         }
         self.__function_reserved = {
             "self",

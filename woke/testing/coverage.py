@@ -54,7 +54,7 @@ from woke.development.chain_interfaces import ChainInterfaceAbc
 from woke.development.core import (
     Address,
     get_fqn_from_address,
-    get_fqn_from_deployment_code,
+    get_fqn_from_creation_code,
 )
 from woke.testing import default_chain
 from woke.utils.file_utils import is_relative_to
@@ -1120,7 +1120,7 @@ class Coverage:
                     deployment_code += bytes.fromhex(struct_log["memory"][end_block])[
                         :end_offset
                     ]
-                new_fqn, _ = get_fqn_from_deployment_code(
+                new_fqn, _ = get_fqn_from_creation_code(
                     deployment_code
                 )  # pyright: reportGeneralTypeIssues=false
                 contract_fqn_stack.append(new_fqn)
@@ -1211,7 +1211,7 @@ class CoverageProvider:
                     if bytecode.startswith("0x"):
                         bytecode = bytecode[2:]
                     bytecode = bytes.fromhex(bytecode)
-                    contract_fqn = get_fqn_from_deployment_code(bytecode)
+                    contract_fqn = get_fqn_from_creation_code(bytecode)
 
                     self._coverage.process_trace(
                         contract_fqn, trace, is_from_deployment=True
