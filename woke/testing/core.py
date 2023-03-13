@@ -16,6 +16,7 @@ from woke.development.core import (
 )
 from woke.development.json_rpc import JsonRpcError, TxParams
 
+from ..development.transactions import TransactionAbc, TransactionStatusEnum
 from ..utils.keyed_default_dict import KeyedDefaultDict
 
 
@@ -276,6 +277,23 @@ class Chain(woke.development.core.Chain):
                 raise
 
         return tx
+
+    def _wait_for_transaction(
+        self, tx: TransactionAbc, confirmations: Optional[int]
+    ) -> None:
+        if confirmations == 0:
+            return
+        elif confirmations is None:
+            confirmations = 1
+
+        while tx.status == TransactionStatusEnum.PENDING:
+            pass
+
+        if confirmations == 1:
+            return
+
+        while self.blocks["latest"].number - tx.block.number < confirmations - 1:
+            pass
 
 
 default_chain = Chain()

@@ -1,3 +1,4 @@
+import time
 from contextlib import contextmanager
 from typing import Any, Dict, Iterable, Optional, cast
 
@@ -14,6 +15,7 @@ from woke.development.core import (
     fix_library_abi,
 )
 from woke.development.json_rpc.communicator import JsonRpcError, TxParams
+from woke.development.transactions import TransactionAbc, TransactionStatusEnum
 
 
 class Chain(woke.development.core.Chain):
@@ -242,6 +244,20 @@ class Chain(woke.development.core.Chain):
                 raise
 
         return tx
+
+    def _wait_for_transaction(
+        self, tx: TransactionAbc, confirmations: Optional[int]
+    ) -> None:
+        if confirmations == 0:
+            return
+        elif confirmations is None:
+            confirmations = 5
+
+        while tx.status == TransactionStatusEnum.PENDING:
+            time.sleep(0.25)
+
+        while self.blocks["latest"].number - tx.block.number < confirmations - 1:
+            time.sleep(0.25)
 
 
 default_chain = Chain()
