@@ -57,6 +57,7 @@ from .chain_interfaces import (
     AnvilChainInterface,
     ChainInterfaceAbc,
     GanacheChainInterface,
+    GethChainInterface,
     HardhatChainInterface,
 )
 from .globals import get_config, get_exception_handler
@@ -1160,7 +1161,9 @@ class Chain(ABC):
                     self._default_tx_type = 1
                 else:
                     self._default_tx_type = 2
-            elif isinstance(self._chain_interface, HardhatChainInterface):
+            elif isinstance(
+                self._chain_interface, (GethChainInterface, HardhatChainInterface)
+            ):
                 try:
                     self._chain_interface.call(
                         {
@@ -1764,7 +1767,7 @@ class Chain(ABC):
 
     def _process_call_revert(self, e: JsonRpcError):
         if (
-            isinstance(self._chain_interface, AnvilChainInterface)
+            isinstance(self._chain_interface, (AnvilChainInterface, GethChainInterface))
             and e.data["code"] == 3
         ):
             revert_data = e.data["data"]
