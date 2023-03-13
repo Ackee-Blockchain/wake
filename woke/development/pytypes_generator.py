@@ -188,7 +188,7 @@ class TypeGenerator:
             )  # pyright: reportPrivateImportUsage=false
             self.__errors_index[selector] = {}
             self.__errors_index[selector][""] = (
-                "woke.development.internal",
+                "woke.development.transactions",
                 (item["name"],),
             )
 
