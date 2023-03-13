@@ -157,6 +157,11 @@ class Chain(woke.development.core.Chain):
                 request_type == "estimate" and self.default_estimate_account is not None
             ):
                 sender = str(self.default_estimate_account.address)
+            elif (
+                request_type == "access_list"
+                and self.default_access_list_account is not None
+            ):
+                sender = str(self.default_access_list_account.address)
             else:
                 raise ValueError(
                     "No from_ account specified and no default account set"
