@@ -8,6 +8,22 @@ from Crypto.Hash import keccak
 
 from .core import Account, Address
 
+chain_explorer_urls = {
+    1: "https://etherscan.io",
+    5: "https://goerli.etherscan.io",
+    56: "https://bscscan.com",
+    97: "https://testnet.bscscan.com",
+    137: "https://polygonscan.com",
+    80001: "https://mumbai.polygonscan.com",
+    43114: "https://snowtrace.io/",
+    43113: "https://testnet.snowtrace.io/",
+    10: "https://optimistic.etherscan.io/",
+    420: "https://goerli-optimism.etherscan.io/",
+    100: "https://gnosisscan.io/",
+    42161: "https://arbiscan.io",
+    421613: "https://testnet.arbiscan.io/",
+}
+
 
 def format_int(x: int) -> str:
     if abs(x) < 10**5:
