@@ -190,9 +190,8 @@ class TransactionAbc(ABC, Generic[T]):
         else:
             return TransactionStatusEnum.SUCCESS
 
-    def wait(self) -> None:
-        while self.status == TransactionStatusEnum.PENDING:
-            pass
+    def wait(self, confirmations: Optional[int] = None) -> None:
+        self._chain._wait_for_transaction(self, confirmations)
 
     def _fetch_trace_transaction(self) -> None:
         if self._trace_transaction is None:

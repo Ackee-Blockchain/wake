@@ -684,6 +684,7 @@ class Account:
             Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
         ] = None,
         type: Optional[int] = None,
+        confirmations: Optional[int] = None,
     ) -> TransactionAbc[bytearray]:
         tx_params = self._setup_tx_params(
             RequestType.TX,
@@ -726,13 +727,14 @@ class Account:
             self.chain,
         )
 
-        tx.wait()
+        if confirmations != 0:
+            tx.wait(confirmations)
 
-        if self._chain.tx_callback is not None:
-            self._chain.tx_callback(tx)
+            if self._chain.tx_callback is not None:
+                self._chain.tx_callback(tx)
 
-        if tx.error is not None:
-            raise tx.error
+            if tx.error is not None:
+                raise tx.error
 
         return tx
 
@@ -1018,6 +1020,12 @@ class Chain(ABC):
         arguments: Iterable,
         abi: Optional[Dict],
     ) -> TxParams:
+        ...
+
+    @abstractmethod
+    def _wait_for_transaction(
+        self, tx: TransactionAbc, confirmations: Optional[int]
+    ) -> None:
         ...
 
     @property
@@ -1855,6 +1863,7 @@ class Chain(ABC):
         params: TxParams,
         return_tx: bool,
         return_type: Type,
+        confirmations: Optional[int],
     ) -> Any:
         tx_params = self._build_transaction(RequestType.TX, params, arguments, abi)
 
@@ -1884,14 +1893,16 @@ class Chain(ABC):
         )
         self._txs[tx_hash] = tx
 
-        tx.wait()
+        if confirmations != 0:
+            tx.wait(confirmations)
 
-        if self.tx_callback is not None:
-            self.tx_callback(tx)
+            if self.tx_callback is not None:
+                self.tx_callback(tx)
 
-        if return_tx:
             if tx.error is not None:
                 raise tx.error
+
+        if return_tx:
             return tx
 
         return tx.return_value
@@ -2274,6 +2285,7 @@ class Contract(Account):
         access_list: Optional[Dict[Union[Account, Address, str], List[int]]],
         type: Optional[int],
         block: Optional[Union[int, str]],
+        confirmations: Optional[int],
     ) -> Any:
         if chain is None:
             import woke.deployment
@@ -2292,6 +2304,9 @@ class Contract(Account):
                 chain = woke.testing.default_chain
             else:
                 raise NotConnectedError("default_chain not connected")
+
+        if confirmations == 0 and not return_tx:
+            raise ValueError("confirmations=0 is only valid when return_tx=True")
 
         deployment_code = cls._deployment_code
         for match in LIBRARY_PLACEHOLDER_REGEX.finditer(deployment_code):
@@ -2332,6 +2347,7 @@ class Contract(Account):
             access_list,
             type,
             block,
+            confirmations,
         )
 
     @classmethod
@@ -2353,11 +2369,14 @@ class Contract(Account):
         access_list: Optional[Dict[Union[Account, Address, str], List[int]]],
         type: Optional[int],
         block: Optional[Union[int, str]],
+        confirmations: Optional[int],
     ):
         if request_type == RequestType.TX and block is not None:
             raise ValueError("block cannot be specified for contract transactions")
         if request_type != RequestType.TX and return_tx:
             raise ValueError("return_tx cannot be specified for non-tx requests")
+        if request_type != RequestType.TX and confirmations is not None:
+            raise ValueError("confirmations cannot be specified for non-tx requests")
 
         params: TxParams = {}
         if from_ is not None:
@@ -2433,6 +2452,7 @@ class Contract(Account):
                 params,
                 return_tx,
                 return_type,
+                confirmations,
             )
         elif request_type == RequestType.CALL:
             if block is None:
@@ -2473,6 +2493,7 @@ class Library(Contract):
         access_list: Optional[Dict[Union[Account, Address, str], List[int]]],
         type: Optional[int],
         block: Optional[Union[int, str]],
+        confirmations: Optional[int],
     ) -> Any:
         if chain is None:
             import woke.deployment
@@ -2508,6 +2529,11 @@ class Library(Contract):
             access_list,
             type,
             block,
+            confirmations,
         )
-        chain._deployed_libraries[cls._library_id].append(lib)
+        if confirmations != 0:
+            if return_tx:
+                chain._deployed_libraries[cls._library_id].append(lib.return_value)
+            else:
+                chain._deployed_libraries[cls._library_id].append(lib)
         return lib
