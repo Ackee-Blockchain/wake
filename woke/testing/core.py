@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from typing import Any, Dict, Iterable, List, Optional, Tuple, cast
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, cast
 
 import eth_utils
 
@@ -36,8 +36,8 @@ class Chain(woke.development.core.Chain):
         chain_id: Optional[int] = None,
         fork: Optional[str] = None,
         hardfork: Optional[str] = None,
-        min_gas_price: Optional[int] = 0,
-        block_base_fee_per_gas: Optional[int] = 0,
+        min_gas_price: Optional[Union[int, str]] = 0,
+        block_base_fee_per_gas: Optional[Union[int, str]] = 0,
     ):
         yield from self._connect(
             uri,
