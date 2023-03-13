@@ -348,6 +348,13 @@ class Account:
         return hash((self._address, self._chain))
 
     @classmethod
+    def new(cls, chain: Optional[Chain] = None) -> Account:
+        acc = eth_account.Account.create()
+        ret = cls(acc.address, chain)
+        ret.chain._private_keys[ret.address] = bytes(acc.key)
+        return ret
+
+    @classmethod
     def from_key(
         cls, private_key: Union[str, int, bytes], chain: Optional[Chain] = None
     ) -> Account:
