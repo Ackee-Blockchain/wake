@@ -233,7 +233,7 @@ class Address:
         if isinstance(address, int):
             self._address = format(address, "#042x")
         elif isinstance(address, str):
-            if not address.startswith("0x"):
+            if not address.startswith(("0x", "0X")):
                 address = "0x" + address
             if not eth_utils.is_address(
                 address
@@ -253,7 +253,7 @@ class Address:
         if isinstance(other, Address):
             return self._address.lower() == other._address.lower()
         elif isinstance(other, str):
-            return self._address == other.lower()
+            return self._address.lower() == other.lower()
         elif isinstance(other, Account):
             raise TypeError(
                 "Cannot compare Address and Account. Use Account.address instead"
@@ -274,7 +274,7 @@ class Address:
             return NotImplemented
 
     def __hash__(self) -> int:
-        return hash(self._address)
+        return hash(self._address.lower())
 
     def __bytes__(self) -> bytes:
         return bytes.fromhex(self._address[2:])
