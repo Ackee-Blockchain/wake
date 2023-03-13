@@ -122,3 +122,15 @@ All LSP server features can be found in the [documentation](https://ackeeblockch
 ## License
 
 This project is licensed under the [ISC license](https://github.com/Ackee-Blockchain/woke/blob/main/LICENSE).
+
+## Partners
+
+RockawayX             |  Coinbase
+:-------------------------:|:-------------------------:
+[![](https://github.com/Ackee-Blockchain/woke/blob/main/images/zsCiZxap_400x400.jpg?raw=true)](https://rockawayx.com/)  |  [![](https://github.com/Ackee-Blockchain/woke/blob/main/images/A9yYenz3_400x400.png?raw=true)](https://www.coinbase.com/)
+
+
+
+
+
+
