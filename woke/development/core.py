@@ -208,9 +208,16 @@ class Wei(int):
     def to_ether(self) -> float:
         return self / 10**18
 
+    def to_gwei(self) -> float:
+        return self / 10**9
+
     @classmethod
     def from_ether(cls, value: Union[int, float]) -> Wei:
         return cls(int(value * 10**18))
+
+    @classmethod
+    def from_gwei(cls, value: Union[int, float]) -> Wei:
+        return cls(int(value * 10**9))
 
 
 @functools.total_ordering
