@@ -270,7 +270,7 @@ class Chain(woke.development.core.Chain):
         elif params["gas"] == "auto":
             # auto
             try:
-                tx["gas"] = self._chain_interface.estimate_gas(tx)
+                tx["gas"] = int(self._chain_interface.estimate_gas(tx) * 1.1)
             except JsonRpcError as e:
                 self._process_call_revert(e)
                 raise
