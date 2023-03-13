@@ -671,7 +671,6 @@ class Account:
             self._chain._process_call_revert(e)
             raise
 
-    @overload
     def transact(
         self,
         data: Union[bytes, bytearray] = b"",
@@ -685,43 +684,7 @@ class Account:
             Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
         ] = None,
         type: Optional[int] = None,
-        return_tx: Literal[False] = False,
-    ) -> bytearray:
-        ...
-
-    @overload
-    def transact(
-        self,
-        data: Union[bytes, bytearray] = b"",
-        value: int = 0,
-        from_: Optional[Union[Account, Address, str]] = None,
-        gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]] = None,
-        gas_price: Optional[int] = None,
-        max_fee_per_gas: Optional[int] = None,
-        max_priority_fee_per_gas: Optional[int] = None,
-        access_list: Optional[
-            Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
-        ] = None,
-        type: Optional[int] = None,
-        return_tx: Literal[True] = True,
     ) -> TransactionAbc[bytearray]:
-        ...
-
-    def transact(
-        self,
-        data: Union[bytes, bytearray] = b"",
-        value: int = 0,
-        from_: Optional[Union[Account, Address, str]] = None,
-        gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]] = None,
-        gas_price: Optional[int] = None,
-        max_fee_per_gas: Optional[int] = None,
-        max_priority_fee_per_gas: Optional[int] = None,
-        access_list: Optional[
-            Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
-        ] = None,
-        type: Optional[int] = None,
-        return_tx: bool = False,
-    ) -> Union[bytearray, TransactionAbc[bytearray]]:
         tx_params = self._setup_tx_params(
             RequestType.TX,
             data,
@@ -763,15 +726,15 @@ class Account:
             self.chain,
         )
 
-        if return_tx:
-            return tx
-
         tx.wait()
 
         if self._chain.tx_callback is not None:
             self._chain.tx_callback(tx)
 
-        return tx.return_value
+        if tx.error is not None:
+            raise tx.error
+
+        return tx
 
     def sign(self, data: bytes) -> bytes:
         """
@@ -1921,13 +1884,15 @@ class Chain(ABC):
         )
         self._txs[tx_hash] = tx
 
-        if return_tx:
-            return tx
-
         tx.wait()
 
         if self.tx_callback is not None:
             self.tx_callback(tx)
+
+        if return_tx:
+            if tx.error is not None:
+                raise tx.error
+            return tx
 
         return tx.return_value
 
