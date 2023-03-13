@@ -233,7 +233,11 @@ class Chain(woke.development.core.Chain):
                     or self.require_signed_txs
                 ):
                     tx["maxFeePerGas"] = tx["maxPriorityFeePerGas"] + int(
-                        self.chain_interface.get_block("pending")["baseFeePerGas"], 16
+                        int(
+                            self.chain_interface.get_block("pending")["baseFeePerGas"],
+                            16,
+                        )
+                        * 1.125
                     )
 
         if "gas" not in params or params["gas"] == "auto":
