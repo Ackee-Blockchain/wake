@@ -3,8 +3,12 @@ from contextlib import contextmanager
 from typing import Any, Dict, Iterable, Optional, Union, cast
 
 import eth_utils
+from rich.console import Group
+from rich.progress import BarColumn, Progress, TextColumn, TimeElapsedColumn
+from rich.table import Table
 
 import woke.development.core
+from woke.cli.console import console
 from woke.development.chain_interfaces import AnvilChainInterface
 from woke.development.core import (
     Abi,
@@ -17,7 +21,14 @@ from woke.development.core import (
     fix_library_abi,
 )
 from woke.development.json_rpc.communicator import JsonRpcError, TxParams
-from woke.development.transactions import TransactionAbc, TransactionStatusEnum
+from woke.development.transactions import (
+    Eip1559Transaction,
+    Eip2930Transaction,
+    LegacyTransaction,
+    TransactionAbc,
+    TransactionStatusEnum,
+)
+from woke.development.utils import chain_explorer_urls
 
 
 class Chain(woke.development.core.Chain):
@@ -255,16 +266,79 @@ class Chain(woke.development.core.Chain):
     def _wait_for_transaction(
         self, tx: TransactionAbc, confirmations: Optional[int]
     ) -> None:
+        def get_pending_text():
+            if tx.chain.chain_id in chain_explorer_urls:
+                text = f"Waiting for transaction [link={chain_explorer_urls[tx.chain.chain_id]}/tx/{tx.tx_hash}]{tx.tx_hash}[/link] to be mined\n"
+            else:
+                text = f"Waiting for transaction {tx.tx_hash} to be mined\n"
+
+            t = Table("", "Set in transaction", "Current recommended")
+
+            if isinstance(tx, Eip1559Transaction):
+                recommended_priority_fee = (
+                    self.chain_interface.get_max_priority_fee_per_gas() / 10**9
+                )
+                base_fee = (
+                    int(self.chain_interface.get_block("pending")["baseFeePerGas"], 16)
+                    / 10**9
+                )
+
+                t.add_row(
+                    "Max fee per gas",
+                    f"{(tx.max_fee_per_gas / 10 ** 9):.2f} Gwei",
+                    f"{(recommended_priority_fee + base_fee):.2f} Gwei",
+                )
+                t.add_row(
+                    "Max priority fee per gas",
+                    f"{(tx.max_priority_fee_per_gas / 10 ** 9):.2f} Gwei",
+                    f"{(recommended_priority_fee):.2f} Gwei",
+                )
+            elif isinstance(tx, (Eip2930Transaction, LegacyTransaction)):
+                t.add_row(
+                    "Gas price",
+                    f"{(tx.gas_price / 10 ** 9):.2f} Gwei",
+                    f"{(self.chain_interface.get_gas_price() / 10 ** 9):.2f} Gwei",
+                )
+
+            return Group(text, t)
+
         if confirmations == 0:
             return
         elif confirmations is None:
-            confirmations = 5
+            confirmations = 1
 
-        while tx.status == TransactionStatusEnum.PENDING:
-            time.sleep(0.25)
+        with console.status(get_pending_text()) as status:
+            while tx.status == TransactionStatusEnum.PENDING:
+                time.sleep(0.5)
+                status.update(get_pending_text())
 
-        while self.blocks["latest"].number - tx.block.number < confirmations - 1:
-            time.sleep(0.25)
+        if tx.chain.chain_id in chain_explorer_urls:
+            console.print(
+                f"Transaction [link={chain_explorer_urls[tx.chain.chain_id]}/tx/{tx.tx_hash}]{tx.tx_hash}[/link] mined in block {tx.block.number}"
+            )
+        else:
+            console.print(f"Transaction {tx.tx_hash} mined in block {tx.block.number}")
+
+        latest_block_number = self.chain_interface.get_block_number()
+
+        with Progress(
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            TextColumn("{task.completed} of {task.total}"),
+            TimeElapsedColumn(),
+            console=console,
+        ) as progress:
+            task_id = progress.add_task(
+                "Confirmations",
+                total=confirmations,
+                completed=(latest_block_number - tx.block.number + 1),
+            )
+            while latest_block_number - tx.block.number < confirmations - 1:
+                time.sleep(1)
+                latest_block_number = self.chain_interface.get_block_number()
+                progress.update(
+                    task_id, completed=(latest_block_number - tx.block.number + 1)
+                )
 
 
 default_chain = Chain()
