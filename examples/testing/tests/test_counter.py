@@ -35,8 +35,8 @@ def tx_callback(tx: TransactionAbc):
 # @default_chain.connect("ws://localhost:8545")
 def test_counter():
     # calls (pure and view functions) are executed using default_call_account
-    # default_tx_account is unset by default
-    default_chain.default_tx_account = default_chain.accounts[0]
+    # default_tx_account, default_estimate_account and default_access_list_account is unset by default
+    default_chain.set_default_accounts(default_chain.accounts[0])
 
     # tx_callback is called after each transaction which is not configured with return_tx=True
     default_chain.tx_callback = tx_callback

@@ -50,7 +50,7 @@ from pytypes.contracts.Gateway import Gateway
 
 @default_chain.connect()
 def test_call_trace():
-    default_chain.default_tx_account = default_chain.accounts[0]
+    default_chain.set_default_accounts(default_chain.accounts[0])
 
     gateway = Gateway.deploy()
     counter = Counter.deploy()
@@ -92,7 +92,7 @@ from pytypes.contracts.Counter import Counter
 @default_chain.connect()
 def test_console_logs():
     default_chain.tx_callback = lambda tx: print(tx.console_logs)
-    default_chain.default_tx_account = default_chain.accounts[0]
+    default_chain.set_default_accounts(default_chain.accounts[0])
 
     counter = Counter.deploy()
     counter.increment()

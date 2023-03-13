@@ -104,7 +104,7 @@ from pytypes.contracts.Counter import Counter
 
 @default_chain.connect()
 def test_multiple_txs():
-    default_chain.default_tx_account = default_chain.accounts[0]
+    default_chain.set_default_accounts(default_chain.accounts[0])
     counter = Counter.deploy()
 
     # temporarily disable automine

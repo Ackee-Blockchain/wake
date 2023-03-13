@@ -168,7 +168,7 @@ from pytypes.contracts.Counter import Counter
 
 @default_chain.connect()
 def test_counter():
-    default_chain.default_tx_account = default_chain.accounts[1]
+    default_chain.set_default_accounts(default_chain.accounts[1])
 
     counter = Counter.deploy(from_=default_chain.accounts[0])
     counter.increment()

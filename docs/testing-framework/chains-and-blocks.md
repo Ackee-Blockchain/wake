@@ -109,7 +109,7 @@ from pytypes.contracts.Counter import Counter
 
 @default_chain.connect()
 def test_chain_blocks():
-    default_chain.default_tx_account = default_chain.accounts[0]
+    default_chain.set_default_accounts(default_chain.accounts[0])
     
     # get the block 0
     block0 = default_chain.blocks[0]
