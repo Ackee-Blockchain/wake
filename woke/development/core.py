@@ -1001,7 +1001,7 @@ class Chain(ABC):
     _default_tx_account: Optional[Account]
     _default_estimate_account: Optional[Account]
     _default_access_list_account: Optional[Account]
-    _tx_type: int
+    _default_tx_type: int
     _deployed_libraries: DefaultDict[bytes, List[Library]]
     _single_source_errors: Set[bytes]
     _snapshots: Dict[str, Dict]
@@ -1155,11 +1155,11 @@ class Chain(ABC):
                     "ISTANBUL",
                     "MUIR_GLACIER",
                 }:
-                    self._tx_type = 0
+                    self._default_tx_type = 0
                 elif hardfork == "BERLIN":
-                    self._tx_type = 1
+                    self._default_tx_type = 1
                 else:
-                    self._tx_type = 2
+                    self._default_tx_type = 2
             elif isinstance(self._chain_interface, HardhatChainInterface):
                 try:
                     self._chain_interface.call(
@@ -1168,7 +1168,7 @@ class Chain(ABC):
                             "maxPriorityFeePerGas": 0,
                         }
                     )
-                    self._tx_type = 2
+                    self._default_tx_type = 2
                 except JsonRpcError:
                     try:
                         self._chain_interface.call(
@@ -1177,11 +1177,11 @@ class Chain(ABC):
                                 "accessList": [],
                             }
                         )
-                        self._tx_type = 1
+                        self._default_tx_type = 1
                     except JsonRpcError:
-                        self._tx_type = 0
+                        self._default_tx_type = 0
             elif isinstance(self._chain_interface, GanacheChainInterface):
-                self._tx_type = 0
+                self._default_tx_type = 0
             else:
                 raise NotImplementedError(
                     f"Unknown chain interface type: {type(self._chain_interface)}"
@@ -1352,6 +1352,18 @@ class Chain(ABC):
     @check_connected
     def require_signed_txs(self, value: bool) -> None:
         self._require_signed_txs = value
+
+    @property
+    @check_connected
+    def default_tx_type(self) -> int:
+        return self._default_tx_type
+
+    @default_tx_type.setter
+    @check_connected
+    def default_tx_type(self, value: int) -> None:
+        if value not in {0, 1, 2}:
+            raise ValueError("Invalid transaction type")
+        self._default_tx_type = value
 
     @contextmanager
     def change_automine(self, automine: bool):

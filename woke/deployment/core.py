@@ -131,7 +131,7 @@ class Chain(woke.development.core.Chain):
         arguments: Iterable,
         abi: Optional[Dict],
     ) -> TxParams:
-        tx_type = params.get("type", self._tx_type)
+        tx_type = params.get("type", self._default_tx_type)
         if tx_type not in {0, 1, 2}:
             raise ValueError("Invalid transaction type")
 
