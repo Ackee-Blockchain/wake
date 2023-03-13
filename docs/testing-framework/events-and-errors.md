@@ -44,7 +44,7 @@ from pytypes.contracts.Counter import Counter
 
 @default_chain.connect()
 def test_events():
-    default_chain.default_tx_account = default_chain.accounts[0]
+    default_chain.set_default_accounts(default_chain.accounts[0])
 
     counter = Counter.deploy()
     tx = counter.increment(return_tx=True)
@@ -64,7 +64,7 @@ def tx_callback(tx: TransactionAbc):
 
 @default_chain.connect()
 def test_events():
-    default_chain.default_tx_account = default_chain.accounts[0]
+    default_chain.set_default_accounts(default_chain.accounts[0])
     default_chain.tx_callback = tx_callback
 
     counter = Counter.deploy()
@@ -146,7 +146,7 @@ from pytypes.contracts.Counter import Counter
 
 @default_chain.connect()
 def test_errors():
-    default_chain.default_tx_account = default_chain.accounts[0]
+    default_chain.set_default_accounts(default_chain.accounts[0])
 
     counter = Counter.deploy()
     tx = counter.decrement(return_tx=True)
