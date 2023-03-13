@@ -12,6 +12,7 @@ from .call_trace import CallTrace
 from .chain_interfaces import (
     AnvilChainInterface,
     GanacheChainInterface,
+    GethChainInterface,
     HardhatChainInterface,
 )
 from .core import Account, Chain, Wei
@@ -198,7 +199,6 @@ class TransactionAbc(ABC, Generic[T]):
     def _fetch_trace_transaction(self) -> None:
         if self._trace_transaction is None:
             chain_interface = self._chain.chain_interface
-            assert isinstance(chain_interface, AnvilChainInterface)
             self._trace_transaction = chain_interface.trace_transaction(self._tx_hash)
 
     def _fetch_debug_trace_transaction(self) -> None:
@@ -306,6 +306,24 @@ class TransactionAbc(ABC, Generic[T]):
             self._fetch_debug_trace_transaction()
             assert self._debug_trace_transaction is not None
             revert_data = bytes.fromhex(self._debug_trace_transaction["returnValue"])  # type: ignore
+        elif isinstance(chain_interface, GethChainInterface):
+            try:
+                self._fetch_trace_transaction()
+                assert self._trace_transaction is not None
+                revert_data = bytes.fromhex(
+                    self._trace_transaction[0]["result"]["output"][2:]
+                )
+            except JsonRpcError as e:
+                # TODO make assertions about error.code?
+                try:
+                    self._fetch_debug_trace_transaction()
+                    assert self._debug_trace_transaction is not None
+                    revert_data = bytes.fromhex(self._debug_trace_transaction["returnValue"])  # type: ignore
+                except JsonRpcError as e:
+                    # TODO make assertions about error.code?
+                    raise RuntimeError(
+                        f"Could not get revert reason data for transaction {self.tx_hash} as trace_transaction and debug_trace_transaction are both unavailable"
+                    )
         else:
             raise NotImplementedError
 
@@ -351,6 +369,24 @@ class TransactionAbc(ABC, Generic[T]):
             self._fetch_debug_trace_transaction()
             assert self._debug_trace_transaction is not None
             output = bytes.fromhex(self._debug_trace_transaction["returnValue"])  # type: ignore
+        elif isinstance(chain_interface, GethChainInterface):
+            try:
+                self._fetch_trace_transaction()
+                assert self._trace_transaction is not None
+                output = bytes.fromhex(
+                    self._trace_transaction[0]["result"]["output"][2:]
+                )
+            except JsonRpcError as e:
+                # TODO make assertions about error.code?
+                try:
+                    self._fetch_debug_trace_transaction()
+                    assert self._debug_trace_transaction is not None
+                    output = bytes.fromhex(self._debug_trace_transaction["returnValue"])  # type: ignore
+                except JsonRpcError as e:
+                    # TODO make assertions about error.code?
+                    raise RuntimeError(
+                        f"Could not get return value for transaction {self.tx_hash} as trace_transaction and debug_trace_transaction are both unavailable"
+                    )
         else:
             raise NotImplementedError
 

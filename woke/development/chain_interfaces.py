@@ -269,6 +269,9 @@ class ChainInterfaceAbc(ABC):
     ) -> Dict[str, Any]:
         return self._communicator.eth_create_access_list(params, block_identifier)
 
+    def trace_transaction(self, tx_hash: str) -> List:
+        return self._communicator.trace_transaction(tx_hash)
+
     @abstractmethod
     def get_automine(self) -> bool:
         ...
@@ -365,9 +368,6 @@ class HardhatChainInterface(ChainInterfaceAbc):
 
 
 class AnvilChainInterface(ChainInterfaceAbc):
-    def trace_transaction(self, tx_hash: Any) -> List:
-        return self._communicator.trace_transaction(tx_hash)
-
     def set_balance(self, address: str, value: int) -> None:
         self._communicator.anvil_set_balance(address, value)
 
