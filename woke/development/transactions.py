@@ -421,6 +421,11 @@ class Eip2930Transaction(TransactionAbc[T]):
         return ret
 
     @property
+    def gas_price(self) -> Wei:
+        assert "gasPrice" in self._tx_params
+        return Wei(self._tx_params["gasPrice"])
+
+    @property
     @_fetch_tx_data
     def y_parity(self) -> bool:
         return bool(int(self._tx_data["v"], 16) & 1)
