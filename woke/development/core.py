@@ -481,6 +481,8 @@ class Account:
                 from_ = self._chain.default_tx_account
             elif request_type == RequestType.ESTIMATE:
                 from_ = self._chain.default_estimate_account
+            elif request_type == RequestType.ACCESS_LIST:
+                from_ = self._chain.default_access_list_account
 
         if isinstance(from_, Account):
             if from_.chain != self._chain:
@@ -1011,6 +1013,7 @@ class Chain(ABC):
     _default_call_account: Optional[Account]
     _default_tx_account: Optional[Account]
     _default_estimate_account: Optional[Account]
+    _default_access_list_account: Optional[Account]
     _tx_type: int
     _deployed_libraries: DefaultDict[bytes, List[Library]]
     _single_source_errors: Set[bytes]
@@ -1205,6 +1208,7 @@ class Chain(ABC):
             )
             self._default_tx_account = None
             self._default_estimate_account = None
+            self._default_access_list_account = None
             self._txs = {}
             self._blocks = ChainBlocks(self)
             self._labels = {}
@@ -1300,6 +1304,23 @@ class Chain(ABC):
             self._default_estimate_account = account
         else:
             self._default_estimate_account = Account(account, self)
+
+    @property
+    @check_connected
+    def default_access_list_account(self) -> Optional[Account]:
+        return self._default_access_list_account
+
+    @default_access_list_account.setter
+    @check_connected
+    def default_access_list_account(
+        self, account: Union[Account, Address, str]
+    ) -> None:
+        if isinstance(account, Account):
+            if account.chain != self:
+                raise ValueError("Account is not from this chain")
+            self._default_access_list_account = account
+        else:
+            self._default_access_list_account = Account(account, self)
 
     @property
     @check_connected
