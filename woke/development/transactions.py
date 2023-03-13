@@ -102,9 +102,9 @@ class TransactionAbc(ABC, Generic[T]):
         return self._chain
 
     @property
-    @_fetch_tx_data
+    @_fetch_tx_receipt
     def block(self) -> Block:
-        return self._chain.blocks[int(self._tx_data["blockNumber"], 16)]
+        return self._chain.blocks[int(self._tx_receipt["blockNumber"], 16)]
 
     @property
     def data(self) -> bytes:
@@ -133,10 +133,10 @@ class TransactionAbc(ABC, Generic[T]):
         ]  # pyright: reportTypedDictNotRequiredAccess=false
 
     @property
-    @_fetch_tx_data
+    @_fetch_tx_receipt
     def tx_index(self) -> int:
         return int(
-            self._tx_data["transactionIndex"], 16
+            self._tx_receipt["transactionIndex"], 16
         )  # pyright: reportOptionalSubscript=false
 
     @property
