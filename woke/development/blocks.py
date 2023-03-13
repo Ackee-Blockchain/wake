@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Union
 from typing_extensions import Literal
 
 if TYPE_CHECKING:
-    from .core import Account, Chain
+    from .core import Account, Chain, Wei
     from .transactions import TransactionAbc
 
 
@@ -160,10 +160,12 @@ class Block:
         return self._block_data["extraData"]
 
     @property
-    def base_fee_per_gas(self) -> Optional[int]:
+    def base_fee_per_gas(self) -> Optional[Wei]:
         if (
             "baseFeePerGas" in self._block_data
             and self._block_data["baseFeePerGas"] is not None
         ):
-            return int(self._block_data["baseFeePerGas"], 16)
+            from .core import Wei
+
+            return Wei(int(self._block_data["baseFeePerGas"], 16))
         return None

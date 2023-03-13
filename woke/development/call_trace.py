@@ -20,6 +20,7 @@ from .core import (
     Address,
     Chain,
     Contract,
+    Wei,
     fix_library_abi,
     get_contracts_by_fqn,
     get_fqn_from_address,
@@ -51,7 +52,7 @@ class CallTrace:
     _function_is_special: bool
     _arguments: List
     _status: bool
-    _value: int
+    _value: Wei
     _kind: CallTraceKind
     _depth: int
     _chain: Chain
@@ -79,7 +80,7 @@ class CallTrace:
         self._selector = selector
         self._address = address
         self._arguments = arguments
-        self._value = value
+        self._value = Wei(value)
         self._kind = kind
         self._depth = depth
         self._chain = chain
@@ -196,7 +197,7 @@ class CallTrace:
         return self._status
 
     @property
-    def value(self) -> int:
+    def value(self) -> Wei:
         return self._value
 
     @property

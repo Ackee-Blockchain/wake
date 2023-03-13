@@ -14,7 +14,7 @@ from .chain_interfaces import (
     GanacheChainInterface,
     HardhatChainInterface,
 )
-from .core import Account, Chain
+from .core import Account, Chain, Wei
 from .internal import (
     TransactionRevertedError,
     UnknownEvent,
@@ -140,10 +140,10 @@ class TransactionAbc(ABC, Generic[T]):
         )  # pyright: reportOptionalSubscript=false
 
     @property
-    def value(self) -> int:
-        return self._tx_params[
-            "value"
-        ]  # pyright: reportTypedDictNotRequiredAccess=false
+    def value(self) -> Wei:
+        return Wei(
+            self._tx_params["value"]
+        )  # pyright: reportTypedDictNotRequiredAccess=false
 
     @property
     @_fetch_tx_data
@@ -171,9 +171,9 @@ class TransactionAbc(ABC, Generic[T]):
 
     @property
     @_fetch_tx_receipt
-    def effective_gas_price(self) -> int:
-        return int(
-            self._tx_receipt["effectiveGasPrice"], 16
+    def effective_gas_price(self) -> Wei:
+        return Wei(
+            int(self._tx_receipt["effectiveGasPrice"], 16)
         )  # pyright: reportOptionalSubscript=false
 
     @property
@@ -394,9 +394,9 @@ class LegacyTransaction(TransactionAbc[T]):
         return int(self._tx_data["v"], 16)  # pyright: reportOptionalSubscript=false
 
     @property
-    def gas_price(self) -> int:
+    def gas_price(self) -> Wei:
         assert "gas_price" in self._tx_params
-        return self._tx_params["gasPrice"]
+        return Wei(self._tx_params["gasPrice"])
 
     @property
     def type(self) -> TransactionTypeEnum:
@@ -438,24 +438,24 @@ class Eip1559Transaction(TransactionAbc[T]):
         return self._tx_params["chainId"]
 
     @property
-    def max_fee_per_gas(self) -> int:
+    def max_fee_per_gas(self) -> Wei:
         if "max_fee_per_gas" not in self._tx_params:
             if self._tx_data is None:
                 self._tx_data = self._chain.chain_interface.get_transaction(
                     self.tx_hash
                 )
-            return int(self._tx_data["maxFeePerGas"], 16)
-        return self._tx_params["maxFeePerGas"]
+            return Wei(int(self._tx_data["maxFeePerGas"], 16))
+        return Wei(self._tx_params["maxFeePerGas"])
 
     @property
-    def max_priority_fee_per_gas(self) -> int:
+    def max_priority_fee_per_gas(self) -> Wei:
         if "max_priority_fee_per_gas" not in self._tx_params:
             if self._tx_data is None:
                 self._tx_data = self._chain.chain_interface.get_transaction(
                     self.tx_hash
                 )
-            return int(self._tx_data["maxPriorityFeePerGas"], 16)
-        return self._tx_params["maxPriorityFeePerGas"]
+            return Wei(int(self._tx_data["maxPriorityFeePerGas"], 16))
+        return Wei(self._tx_params["maxPriorityFeePerGas"])
 
     @property
     def access_list(self) -> Dict[Account, List[int]]:

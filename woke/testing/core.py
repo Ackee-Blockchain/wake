@@ -11,6 +11,7 @@ from woke.development.core import (
     Address,
     RequestType,
     RevertToSnapshotFailedError,
+    Wei,
     check_connected,
     fix_library_abi,
 )
@@ -22,8 +23,8 @@ from ..utils.keyed_default_dict import KeyedDefaultDict
 
 class Chain(woke.development.core.Chain):
     _block_gas_limit: int
-    _gas_price: int
-    _max_priority_fee_per_gas: int
+    _gas_price: Wei
+    _max_priority_fee_per_gas: Wei
     _nonces: KeyedDefaultDict[Address, int]  # pyright: reportGeneralTypeIssues=false
 
     @contextmanager
@@ -52,8 +53,8 @@ class Chain(woke.development.core.Chain):
         connected_chains.append(self)
 
         self._require_signed_txs = False
-        self._gas_price = 0
-        self._max_priority_fee_per_gas = 0
+        self._gas_price = Wei(0)
+        self._max_priority_fee_per_gas = Wei(0)
         self._nonces = KeyedDefaultDict(
             lambda addr: self._chain_interface.get_transaction_count(
                 str(addr)
@@ -122,23 +123,23 @@ class Chain(woke.development.core.Chain):
 
     @property
     @check_connected
-    def gas_price(self) -> int:
+    def gas_price(self) -> Wei:
         return self._gas_price
 
     @gas_price.setter
     @check_connected
     def gas_price(self, value: int) -> None:
-        self._gas_price = value
+        self._gas_price = Wei(value)
 
     @property
     @check_connected
-    def max_priority_fee_per_gas(self) -> int:
+    def max_priority_fee_per_gas(self) -> Wei:
         return self._max_priority_fee_per_gas
 
     @max_priority_fee_per_gas.setter
     @check_connected
     def max_priority_fee_per_gas(self, value: int) -> None:
-        self._max_priority_fee_per_gas = value
+        self._max_priority_fee_per_gas = Wei(value)
 
     def _build_transaction(
         self,
