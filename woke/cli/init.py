@@ -320,7 +320,7 @@ async def run_init_pytypes(
     "--return-tx",
     is_flag=True,
     default=False,
-    help="Return transaction objects instead of return data by default.",
+    help="Return transaction objects from deploy functions instead of contract instances",
 )
 @click.option(
     "--warnings",
