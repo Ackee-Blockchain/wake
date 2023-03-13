@@ -169,6 +169,8 @@ class ChainInterfaceAbc(ABC):
                 return HardhatChainInterface(config, communicator)
             elif "ethereumjs" in client_version:
                 return GanacheChainInterface(config, communicator)
+            elif "geth" in client_version:
+                return GethChainInterface(config, communicator)
             else:
                 raise NotImplementedError(
                     f"Client version {client_version} not supported"
@@ -459,3 +461,43 @@ class GanacheChainInterface(ChainInterfaceAbc):
 
     def set_min_gas_price(self, value: int) -> None:
         self._communicator.miner_set_gas_price(value)
+
+
+class GethChainInterface(ChainInterfaceAbc):
+    def get_automine(self) -> bool:
+        raise NotImplementedError("Geth does not support automine")
+
+    def set_automine(self, value: bool) -> None:
+        raise NotImplementedError("Geth does not support automine")
+
+    def reset(self) -> None:
+        raise NotImplementedError("Geth does not support resetting the chain")
+
+    def set_coinbase(self, address: str) -> None:
+        raise NotImplementedError("Geth does not support setting coinbase")
+
+    def set_balance(self, address: str, value: int) -> None:
+        raise NotImplementedError("Geth does not support setting balance")
+
+    def set_block_gas_limit(self, gas_limit: int) -> None:
+        raise NotImplementedError("Geth does not support setting block gas limit")
+
+    def set_code(self, address: str, value: bytes) -> None:
+        raise NotImplementedError("Geth does not support setting code")
+
+    def set_nonce(self, address: str, value: int) -> None:
+        raise NotImplementedError("Geth does not support setting nonce")
+
+    def set_next_block_timestamp(self, timestamp: int) -> None:
+        raise NotImplementedError("Geth does not support setting next block timestamp")
+
+    def send_unsigned_transaction(self, params: TxParams) -> str:
+        raise NotImplementedError("Geth does not support sending unsigned transactions")
+
+    def set_next_block_base_fee_per_gas(self, value: int) -> None:
+        raise NotImplementedError(
+            "Geth does not support setting next block base fee per gas"
+        )
+
+    def set_min_gas_price(self, value: int) -> None:
+        raise NotImplementedError("Geth does not support setting min gas price")
