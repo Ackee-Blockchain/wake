@@ -24,7 +24,7 @@ from .core import (
     fix_library_abi,
     get_contracts_by_fqn,
     get_fqn_from_address,
-    get_fqn_from_deployment_code,
+    get_fqn_from_creation_code,
     process_debug_trace_for_fqn_overrides,
 )
 from .internal import read_from_memory
@@ -232,7 +232,7 @@ class CallTrace:
         assert len(fqn_overrides.maps) == 1
 
         if tx.to is None:
-            origin_fqn, _ = get_fqn_from_deployment_code(tx.data)
+            origin_fqn, _ = get_fqn_from_creation_code(tx.data)
         else:
             if tx.to.address in fqn_overrides:
                 origin_fqn = fqn_overrides[tx.to.address]
@@ -278,7 +278,7 @@ class CallTrace:
                 if "data" not in tx_params or "constructor" not in contract_abi:
                     args = []
                 else:
-                    _, constructor_offset = get_fqn_from_deployment_code(
+                    _, constructor_offset = get_fqn_from_creation_code(
                         tx_params["data"]
                     )
                     fn_abi = contract_abi["constructor"]
@@ -578,8 +578,8 @@ class CallTrace:
                 offset = int(log["stack"][-2], 16)
                 length = int(log["stack"][-3], 16)
 
-                deployment_code = read_from_memory(offset, length, log["memory"])
-                fqn, constructor_offset = get_fqn_from_deployment_code(deployment_code)
+                creation_code = read_from_memory(offset, length, log["memory"])
+                fqn, constructor_offset = get_fqn_from_creation_code(creation_code)
 
                 contract_name = fqn.split(":")[-1]
                 module_name, attrs = contracts_by_fqn[fqn]
@@ -598,7 +598,7 @@ class CallTrace:
                     ]
                     args = list(
                         eth_abi.abi.decode(
-                            output_types, deployment_code[constructor_offset:]
+                            output_types, creation_code[constructor_offset:]
                         )
                     )  # pyright: reportGeneralTypeIssues=false
 

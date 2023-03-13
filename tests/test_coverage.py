@@ -366,7 +366,7 @@ class TestCoverageProvider:
         parents_coverage_provider._chain_interface.debug_trace_transaction.return_value = (
             trace
         )
-        coverage.get_fqn_from_deployment_code = mock.MagicMock(return_value=child_fqn)
+        coverage.get_fqn_from_creation_code = mock.MagicMock(return_value=child_fqn)
 
         parents_coverage_provider.update_coverage()
 
@@ -376,4 +376,4 @@ class TestCoverageProvider:
         parents_coverage_provider._chain_interface.get_block_number.assert_called_once()
         parents_coverage_provider._chain_interface.get_block.assert_called_once()
         parents_coverage_provider._chain_interface.debug_trace_transaction.assert_called_once()
-        coverage.get_fqn_from_deployment_code.assert_called_once()
+        coverage.get_fqn_from_creation_code.assert_called_once()

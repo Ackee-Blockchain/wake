@@ -106,7 +106,7 @@ def get_create_address(deployer: Union[Account, Address, str], nonce: int) -> Ad
 
 
 def get_create2_address_from_hash(
-    deployer: Union[Account, Address, str], salt: bytes, deployment_code_hash: bytes
+    deployer: Union[Account, Address, str], salt: bytes, creation_code_hash: bytes
 ) -> Address:
     if isinstance(deployer, Account):
         deployer = deployer.address
@@ -114,11 +114,11 @@ def get_create2_address_from_hash(
 
     return Address(
         "0x"
-        + keccak256(b"\xff" + deployer_bytes + salt + deployment_code_hash)[-20:].hex()
+        + keccak256(b"\xff" + deployer_bytes + salt + creation_code_hash)[-20:].hex()
     )
 
 
 def get_create2_address_from_code(
-    deployer: Union[Account, Address, str], salt: bytes, deployment_code: bytes
+    deployer: Union[Account, Address, str], salt: bytes, creation_code: bytes
 ) -> Address:
-    return get_create2_address_from_hash(deployer, salt, keccak256(deployment_code))
+    return get_create2_address_from_hash(deployer, salt, keccak256(creation_code))
