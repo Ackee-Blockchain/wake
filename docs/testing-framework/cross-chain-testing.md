@@ -74,15 +74,15 @@ def test_relay():
     counter1 = Counter.deploy(chain=chain1)
     counter2 = Counter.deploy(chain=chain2)
 
-    tx = counter1.increment(return_tx=True)
+    tx = counter1.increment()
     relay(counter2, tx.events)
     assert counter2.count() == 1
 
-    tx = counter2.decrement(return_tx=True)
+    tx = counter2.decrement()
     relay(counter1, tx.events)
     assert counter1.count() == 0
 
-    tx = counter1.setCount(5, return_tx=True)
+    tx = counter1.setCount(5)
     relay(counter2, tx.events)
     assert counter2.count() == 5
 ```
