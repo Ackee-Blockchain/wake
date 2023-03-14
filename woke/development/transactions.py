@@ -530,7 +530,9 @@ class TransactionRevertedError(Exception):
     )
 
     def __str__(self):
-        s = ", ".join([f"{f.name}={getattr(self, f.name)!r}" for f in fields(self)])
+        s = ", ".join(
+            [f"{f.name}={getattr(self, f.name)!r}" for f in fields(self) if f.init]
+        )
         return f"{self.__class__.__qualname__}({s})"
 
 
