@@ -1010,6 +1010,7 @@ class Chain(ABC):
     _default_estimate_account: Optional[Account]
     _default_access_list_account: Optional[Account]
     _default_tx_type: int
+    _default_tx_confirmations: int
     _deployed_libraries: DefaultDict[bytes, List[Library]]
     _single_source_errors: Set[bytes]
     _snapshots: Dict[str, Dict]
@@ -1220,6 +1221,7 @@ class Chain(ABC):
             self._default_tx_account = None
             self._default_estimate_account = None
             self._default_access_list_account = None
+            self._default_tx_confirmations = 1
             self._txs = {}
             self._blocks = ChainBlocks(self)
             self._labels = {}
@@ -1374,6 +1376,18 @@ class Chain(ABC):
         if value not in {0, 1, 2}:
             raise ValueError("Invalid transaction type")
         self._default_tx_type = value
+
+    @property
+    @check_connected
+    def default_tx_confirmations(self) -> int:
+        return self._default_tx_confirmations
+
+    @default_tx_confirmations.setter
+    @check_connected
+    def default_tx_confirmations(self, value: int) -> None:
+        if value < 0:
+            raise ValueError("Invalid transaction confirmations value")
+        self._default_tx_confirmations = value
 
     @contextmanager
     def change_automine(self, automine: bool):
