@@ -255,8 +255,10 @@ class Chain(woke.development.core.Chain):
         else:
             raise ValueError(f"Invalid gas value: {params['gas']}")
 
-        if tx_type in {1, 2} and (
-            "accessList" not in params or params["accessList"] == "auto"
+        if (
+            tx_type in {1, 2}
+            and ("accessList" not in params or params["accessList"] == "auto")
+            and request_type != "access_list"
         ):
             try:
                 response = self._chain_interface.create_access_list(tx)

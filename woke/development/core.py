@@ -665,9 +665,6 @@ class Account:
         gas_price: Optional[Union[int, str]] = None,
         max_fee_per_gas: Optional[Union[int, str]] = None,
         max_priority_fee_per_gas: Optional[Union[int, str]] = None,
-        access_list: Optional[
-            Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
-        ] = None,
         type: Optional[int] = None,
         block: Union[
             int,
@@ -687,7 +684,7 @@ class Account:
             gas_price,
             max_fee_per_gas,
             max_priority_fee_per_gas,
-            access_list,
+            {},
             type,
         )
         params = self._chain._build_transaction(
@@ -2373,7 +2370,9 @@ class Contract(Account):
         gas_price: Optional[Union[int, str]],
         max_fee_per_gas: Optional[Union[int, str]],
         max_priority_fee_per_gas: Optional[Union[int, str]],
-        access_list: Optional[Dict[Union[Account, Address, str], List[int]]],
+        access_list: Optional[
+            Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
+        ],
         type: Optional[int],
         block: Optional[Union[int, str]],
         confirmations: Optional[int],
@@ -2452,7 +2451,9 @@ class Contract(Account):
         gas_price: Optional[Union[int, str]],
         max_fee_per_gas: Optional[Union[int, str]],
         max_priority_fee_per_gas: Optional[Union[int, str]],
-        access_list: Optional[Dict[Union[Account, Address, str], List[int]]],
+        access_list: Optional[
+            Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
+        ],
         type: Optional[int],
         block: Optional[Union[int, str]],
         confirmations: Optional[int],
@@ -2465,6 +2466,8 @@ class Contract(Account):
             raise ValueError("confirmations cannot be specified for non-tx requests")
         if confirmations == 0 and not return_tx:
             raise ValueError("confirmations=0 is only valid when return_tx=True")
+        if request_type == RequestType.ACCESS_LIST and access_list is not None:
+            raise ValueError("access_list cannot be specified for access list requests")
 
         params: TxParams = {}
         if from_ is not None:
