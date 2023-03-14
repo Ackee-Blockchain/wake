@@ -214,7 +214,7 @@ class Chain(woke.development.core.Chain):
             params["data"] += Abi.encode(types, arguments)
 
         tx: TxParams = {
-            "nonce": self._nonces[sender],
+            "nonce": self._nonces[Address(sender)],
             "from": sender,
             "value": params["value"] if "value" in params else 0,
             "data": params["data"],
