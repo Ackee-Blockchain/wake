@@ -309,7 +309,7 @@ class Chain(woke.development.core.Chain):
         if confirmations == 0:
             return
         elif confirmations is None:
-            confirmations = 1
+            confirmations = self.default_tx_confirmations
 
         with console.status(get_pending_text()) as status:
             while tx.status == TransactionStatusEnum.PENDING:
