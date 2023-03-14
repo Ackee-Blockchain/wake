@@ -36,7 +36,7 @@ nav:
   - Installation: 'index.md'
   - Configuration: 'configuration.md'
   - Compilation: 'compilation.md'
-  - Testing framework:
+  - Development and testing framework:
       - Overview: 'testing-framework/overview.md'
       - Basics:
         - Getting started: 'testing-framework/getting-started.md'
