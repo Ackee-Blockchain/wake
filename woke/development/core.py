@@ -2372,9 +2372,6 @@ class Contract(Account):
             else:
                 raise NotConnectedError("default_chain not connected")
 
-        if confirmations == 0 and not return_tx:
-            raise ValueError("confirmations=0 is only valid when return_tx=True")
-
         creation_code = cls._creation_code
         for match in LIBRARY_PLACEHOLDER_REGEX.finditer(creation_code):
             lib_id = bytes.fromhex(match.group(0)[3:-3])
@@ -2442,6 +2439,8 @@ class Contract(Account):
             raise ValueError("return_tx cannot be specified for non-tx requests")
         if request_type != RequestType.TX and confirmations is not None:
             raise ValueError("confirmations cannot be specified for non-tx requests")
+        if confirmations == 0 and not return_tx:
+            raise ValueError("confirmations=0 is only valid when return_tx=True")
 
         params: TxParams = {}
         if from_ is not None:
