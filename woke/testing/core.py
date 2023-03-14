@@ -311,6 +311,9 @@ class Chain(woke.development.core.Chain):
         while self.blocks["latest"].number - tx.block.number < confirmations - 1:
             pass
 
+    def _confirm_transaction(self, tx: TxParams) -> None:
+        pass
+
 
 default_chain = Chain()
 connected_chains: List[Chain] = []
