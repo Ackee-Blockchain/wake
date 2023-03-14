@@ -35,8 +35,7 @@ class Transfer:
 
 ### Accessing events
 
-Events can be accessed using the `events` property of transaction objects.
-Transaction objects can be either obtained directly as a return value for function executions that specify `return_tx=True`:
+Events can be accessed using the `events` property of transaction objects:
 
 ```python
 from woke.testing import *
@@ -47,11 +46,11 @@ def test_events():
     default_chain.set_default_accounts(default_chain.accounts[0])
 
     counter = Counter.deploy()
-    tx = counter.increment(return_tx=True)
+    tx = counter.increment()
     assert tx.events == [Counter.Incremented()]
 ```
 
-Or in `tx_callback` for function executions with `return_tx=False`:
+Or in `tx_callback`:
 
 ```python
 from woke.testing import *
@@ -85,7 +84,11 @@ def test_events():
 
 ## Errors
 
-Solidity user-defined errors are translated into Python dataclasses and inherit from `TransactionRevertedError` which inherits from `Exception`. `pytypes` for unused errors are not generated.
+Solidity user-defined errors are translated into Python dataclasses and inherit from `TransactionRevertedError` which inherits from `Exception`.
+`TransactionRevertedError` also has a `tx` field that contains a transaction object for the transaction that caused the error.
+The `tx` field is set to `None` if the reverted request was not a transaction.
+
+`pytypes` for unused errors are not generated.
 
 ```solidity
 error NotEnoughFunds(
@@ -111,9 +114,9 @@ class NotEnoughFunds(TransactionRevertedError):
 
 ### Accessing errors
 
-Revert errors are automatically raised in form of exceptions with `return_tx=False`.
+Revert errors are automatically raised in form of exceptions unless a transaction configured to return immediately with `confirmations=0`.
 
-In case of `return_tx=True`, a revert error can be accessed using the `error` property of the transaction object.
+In case of `confirmations=0`, a revert error can be accessed using the `error` property of the transaction object. This performs an implicit `.wait()`.
 If the transaction did not revert, `error` is `None`.
 
 ```python
@@ -123,12 +126,16 @@ from pytypes.contracts.Counter import Counter
 @default_chain.connect()
 def test_errors():
     counter = Counter.deploy(from_=default_chain.accounts[0])
-    tx = counter.addToWhitelist(
-        default_chain.accounts[1],
-        from_=default_chain.accounts[1],
-        return_tx=True,
-    )
-    assert tx.error == Counter.NotOwner()
+
+    try:
+        counter.addToWhitelist(
+            default_chain.accounts[1],
+            from_=default_chain.accounts[1],
+        )
+        assert False, "Should have reverted"
+    except TransactionRevertedError as e:
+        assert e == Counter.NotOwner()
+        tx = e.tx
 ```
 
 Accessing `tx.return_value` in case of a revert automatically raises `tx.error`.
@@ -149,8 +156,12 @@ def test_errors():
     default_chain.set_default_accounts(default_chain.accounts[0])
 
     counter = Counter.deploy()
-    tx = counter.decrement(return_tx=True)
-    assert tx.error == Panic(PanicCodeEnum.UNDERFLOW_OVERFLOW)
+    try:
+        counter.decrement()
+        assert False, "Should have reverted"
+    except TransactionRevertedError as e:
+        assert e == Panic(PanicCodeEnum.UNDERFLOW_OVERFLOW)
+        tx = e.tx
 ```
 
 The full list of panic codes is available in the `PanicCodeEnum` enum:
@@ -198,6 +209,8 @@ with must_revert((Error, Panic(PanicCodeEnum.UNDERFLOW_OVERFLOW))) as e:
     pass
 
 print(e.value)
+# get the transaction object (if any)
+tx = e.value.tx
 ```
 
 `e.value` contains the error instance that was raised by the tested contract, or `None` if no error was raised.
