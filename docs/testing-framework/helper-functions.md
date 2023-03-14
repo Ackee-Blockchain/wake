@@ -105,7 +105,7 @@ get_create_address(deployer, deployer.nonce)
 ### get_create2_address_from_code
 
 `get_create2_address_from_code` computes the address of a contract deployed using the `CREATE2` opcode.
-It accepts a deployer (`Account`, `Address` or a hex string address), a salt and the contract deployment code.
+It accepts a deployer (`Account`, `Address` or a hex string address), a salt and the contract creation code.
 
 ```python
 from woke.testing import Account, get_create2_address_from_code
@@ -115,14 +115,14 @@ from pytypes.contracts.Counter import Counter
 get_create2_address_from_code(
     Account(1),
     random_bytes(32),
-    Counter.deployment_code()
+    Counter.get_creation_code()
 )
 ```
 
 ### get_create2_address_from_hash
 
 `get_create2_address_from_hash` computes the address of a contract deployed using the `CREATE2` opcode.
-It accepts a deployer (`Account`, `Address` or a hex string address), a salt and the hash of the contract deployment code.
+It accepts a deployer (`Account`, `Address` or a hex string address), a salt and the hash of the contract creation code.
 
 ```python
 from woke.testing import Account, get_create2_address_from_hash, keccak256
@@ -132,6 +132,6 @@ from pytypes.contracts.Counter import Counter
 get_create2_address_from_hash(
     Account(1),
     random_bytes(32),
-    keccak256(Counter.deployment_code())
+    keccak256(Counter.get_creation_code())
 )
 ```
