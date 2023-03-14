@@ -6,7 +6,18 @@ from abc import ABC, abstractmethod
 from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass, field, fields
 from enum import IntEnum
-from typing import TYPE_CHECKING, Any, Dict, Generic, List, Optional, Type, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Generic,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 if TYPE_CHECKING:
     from .blocks import Block
@@ -577,7 +588,9 @@ class ExceptionWrapper:
 
 @contextmanager
 def must_revert(
-    exceptions=TransactionRevertedError,
+    exceptions: Union[
+        Exception, Type[Exception], Tuple[Union[Exception, Type[Exception]], ...]
+    ] = TransactionRevertedError,
 ) -> AbstractContextManager[ExceptionWrapper]:
     if isinstance(exceptions, (tuple, list)):
         types = tuple(
@@ -608,7 +621,9 @@ def must_revert(
 
 @contextmanager
 def may_revert(
-    exceptions=TransactionRevertedError,
+    exceptions: Union[
+        Exception, Type[Exception], Tuple[Union[Exception, Type[Exception]], ...]
+    ] = TransactionRevertedError,
 ) -> AbstractContextManager[ExceptionWrapper]:
     if isinstance(exceptions, (tuple, list)):
         types = tuple(type(x) if not inspect.isclass(x) else x for x in exceptions)
