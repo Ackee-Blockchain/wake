@@ -102,6 +102,10 @@ class AlreadyConnectedError(Exception):
     pass
 
 
+class TransactionConfirmationFailedError(Exception):
+    pass
+
+
 class RequestType(StrEnum):
     ACCESS_LIST = "access_list"
     CALL = "call"
@@ -1061,6 +1065,10 @@ class Chain(ABC):
     ) -> None:
         ...
 
+    @abstractmethod
+    def _confirm_transaction(self, tx: TxParams) -> None:
+        ...
+
     @property
     @abstractmethod
     def block_gas_limit(self) -> int:
@@ -1821,6 +1829,8 @@ class Chain(ABC):
     def _send_transaction(self, tx_params: TxParams) -> str:
         assert "from" in tx_params
         assert "nonce" in tx_params
+
+        self._confirm_transaction(tx_params)
 
         if self.require_signed_txs:
             key = self._private_keys.get(Address(tx_params["from"]), None)

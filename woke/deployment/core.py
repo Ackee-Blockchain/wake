@@ -4,7 +4,9 @@ from typing import Any, Dict, Iterable, Optional, Union, cast
 
 import eth_utils
 from rich.console import Group
+from rich.pretty import pprint
 from rich.progress import BarColumn, Progress, TextColumn, TimeElapsedColumn
+from rich.prompt import Confirm
 from rich.table import Table
 
 import woke.development.core
@@ -16,6 +18,7 @@ from woke.development.core import (
     Address,
     RequestType,
     RevertToSnapshotFailedError,
+    TransactionConfirmationFailedError,
     Wei,
     check_connected,
     fix_library_abi,
@@ -343,6 +346,12 @@ class Chain(woke.development.core.Chain):
                 progress.update(
                     task_id, completed=(latest_block_number - tx.block.number + 1)
                 )
+
+    def _confirm_transaction(self, tx: TxParams) -> None:
+        pprint(tx, console=console, max_string=200)
+        confirm = Confirm.ask("Sign and send transaction?")
+        if not confirm:
+            raise TransactionConfirmationFailedError()
 
 
 default_chain = Chain()
