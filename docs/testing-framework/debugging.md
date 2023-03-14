@@ -59,14 +59,13 @@ def test_call_trace():
     tx = gateway.execute(
         counter,
         Abi.encode_call(counter.decrement, []),
-        return_tx=True
+        confirmations=0,
     )
     print(tx.call_trace)
 
     tx = gateway.execute(
         counter,
         Abi.encode_call(counter.increment, []),
-        return_tx=True
     )
     print(tx.call_trace)
 ```
