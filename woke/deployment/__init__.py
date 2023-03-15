@@ -1,6 +1,6 @@
 from rich import print
 
-from woke.development.core import Abi, Account, Address, Wei
+from woke.development.core import Abi, Account, Address, Eip712Domain, Wei
 from woke.development.internal import UnknownEvent
 from woke.development.primitive_types import *
 from woke.development.transactions import (
