@@ -62,21 +62,6 @@ Commonly used parameters can be set as keyword arguments in `@default_chain.conn
 )
 ```
 
-## Transaction return values
-
-As opposed to Ape and Brownie, Woke returns a transaction return value instead of a transaction receipt.
-To get the transaction receipt, `return_tx=True` can be passed to the transaction call:
-
-```python
-tx = counter.increment(return_tx=True)
-```
-
-To make this the default behavior, `pytypes` can be generated with the `--return-tx` flag:
-
-```shell
-woke init pytypes --return-tx
-```
-
 ## Events and user-defined errors
 
 Events and user-defined errors are generated in `pytypes` in a form of dataclasses.
@@ -92,12 +77,12 @@ def test_counter():
     default_chain.set_default_accounts(default_chain.accounts[0])
 
     counter = Counter.deploy()
-    tx = counter.increment(return_tx=True)
+    tx = counter.increment()
     assert Counter.Incremented() in tx.events
 
     acc = default_chain.accounts[1]
-    tx = counter.addToWhitelist(acc, from_=acc, return_tx=True)
-    assert tx.error == Counter.NotOwner()
+    with must_revert(Counter.NotOwner()):
+        counter.addToWhitelist(acc, from_=acc)
 ```
 
 ## Transaction parameters
