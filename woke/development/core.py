@@ -86,6 +86,9 @@ contracts_revert_index: Dict[str, Set[int]] = {}
 creation_code_index: List[Tuple[Tuple[Tuple[int, bytes], ...], str]] = []
 
 
+eth_account.Account.enable_unaudited_hdwallet_features()
+
+
 def get_contracts_by_fqn() -> Dict[str, Any]:
     return contracts_by_fqn
 
