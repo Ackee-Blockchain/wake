@@ -101,6 +101,13 @@ def run_init(ctx: Context, force: bool):
             overwrite=force,
         )
 
+        # create scripts directory
+        copy_dir(
+            Path(__file__).parent.parent / "templates" / "scripts",
+            config.project_root_path / "scripts",
+            overwrite=force,
+        )
+
         # update .gitignore, --force is not needed
         update_gitignore(config.project_root_path / ".gitignore")
 
