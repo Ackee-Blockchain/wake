@@ -1,32 +1,11 @@
 # Transaction objects
 
-When sending a transaction, either a return value or a full transaction object can be returned.
-The default behavior is to return the return value. This can be changed by setting the `return_tx`
-keyword argument to `True`.
-
-When returning a transaction object, it is not waited for the transaction to be mined. This can be
-done by calling `wait()` on the transaction object:
-
-```python
-tx = counter.increment(return_tx=True)
-tx.wait()
-```
-
+When sending a transaction, a transaction object is returned. This object can be used to access
+the transaction's properties and wait for it to be mined (if `confirmations=0` set).
 Accessing some of the transaction object's properties also performs an implicit `wait()`.
 
-!!! tip "Generating `pytypes` with `return_tx=True`"
-    It is possible to generate `pytypes` with `return_tx=True` as the default behavior.
-
-    ```shell
-    woke init pytypes --return-tx
-    ```
-
-    It should be noted that this does not change the default `return_tx` value of the low-level
-    `transact` method. This method is not generated in `pytypes`, but inherited from `Account` and
-    will use the default `False` value.
-
-Alternatively, `tx_callback` can be registered on a `Chain` instance. The callback receives a single
-argument, the transaction object. This can be used to process all transactions in a single place.
+A `tx_callback` can be registered on a `Chain` instance. The callback receives a single argument,
+the transaction object. This can be used to process all transactions in a single place.
 
 ```python
 from woke.testing import *
@@ -44,7 +23,7 @@ def test_callback():
 ```
 
 !!! warning
-    `tx_callback` is not invoked for transactions with `return_tx=True`!
+    `tx_callback` is not invoked for transactions with `confirmations=0`!
 
 ## Transaction properties
 
@@ -84,8 +63,24 @@ Legacy transactions (type `0`) have the following additional properties:
 | `gas_price`           | gas price specified in the transaction |                            |
 | `v`                   | ECDSA signature recovery ID            |                            |
 
-!!! info
-    Only legacy transactions are currently supported.
+EIP-2930 transactions (type `1`) have the following additional properties:
+
+| Property                   | Description                                                                              | Note |
+|----------------------------|------------------------------------------------------------------------------------------|------|
+| <nobr>`access_list`</nobr> | access list of the transaction (see [EIP-2930](https://eips.ethereum.org/EIPS/eip-2930)) |      |
+| `chain_id`                 | chain ID of the transaction                                                              |      |
+| `gas_price`                | gas price specified in the transaction                                                   |      |
+| `y_parity`                 | `y` parity of the ECDSA signature                                                        |      |
+
+EIP-1559 transactions (type `2`) have the following additional properties:
+
+| Property                                | Description                                                                                                         | Note |
+|-----------------------------------------|---------------------------------------------------------------------------------------------------------------------|------|
+| `access_list`                           | access list of the transaction (see [EIP-2930](https://eips.ethereum.org/EIPS/eip-2930))                            |      |
+| `chain_id`                              | chain ID of the transaction                                                                                         |      |
+| `max_fee_per_gas`                       | maximum fee per gas specified in the transaction (see [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559))          |      |
+| <nobr>`max_priority_fee_per_gas`</nobr> | maximum priority fee per gas specified in the transaction (see [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559)) |      |
+| `y_parity`                              | `y` parity of the ECDSA signature                                                                                   |      |
 
 ## Multiple transactions in a single block
 
@@ -93,7 +88,7 @@ It is possible to send multiple transactions in a way that they are mined in the
 can be achieved in the following steps:
 
 1. Disable `automine` on the `Chain` instance
-2. Send any number of transactions with `return_tx=True` and `gas_limit="auto"`
+2. Send any number of transactions with `confirmations=0` and `gas_limit="auto"`
 3. Re-enable `automine`
 4. Call `.mine()` on the `Chain` instance
 5. Wait for the block to be mined
@@ -109,9 +104,9 @@ def test_multiple_txs():
 
     # temporarily disable automine
     with default_chain.change_automine(False):
-        tx1 = counter.increment(return_tx=True, gas_limit="auto")
-        tx2 = counter.increment(return_tx=True, gas_limit="auto")
-        tx3 = counter.increment(return_tx=True, gas_limit="auto")
+        tx1 = counter.increment(confirmations=0, gas_limit="auto")
+        tx2 = counter.increment(confirmations=0, gas_limit="auto")
+        tx3 = counter.increment(confirmations=0, gas_limit="auto")
 
     default_chain.mine()
 
