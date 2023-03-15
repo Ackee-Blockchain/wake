@@ -48,6 +48,109 @@ chains cannot be compared using the `<` and `>` operators.
     does not accept `Account` instances belonging to different chains in most API functions. To overcome
     this limitation, it is possible to use the `address` property of an `Account` instance.
 
+### Importing accounts
+
+`Account` instances can be imported from a private key:
+
+```python
+from woke.testing import Account
+
+Account.from_key("0x" + "a" * 64)
+```
+
+From a mnemonic:
+
+```python
+from woke.testing import Account
+
+Account.from_mnemonic(" ".join(["test"] * 11 + ["junk"]))
+```
+
+Or from an alias (see [Managing accounts with private keys](./deployment.md#managing-accounts-with-private-keys)):
+
+```python
+from woke.testing import Account
+
+Account.from_alias("alice")
+```
+
+It is also possible to create a new account with a random private key:
+
+```python
+from woke.testing import Account
+
+Account.new()
+```
+
+In all of the above cases, a private key is stored together with the account and can be used to sign transactions or messages.
+
+### Signing messages
+
+`Account` instances can be used to sign messages. This is only possible if the account has a known private key.
+The private key must be imported using one of the methods described in the previous section or must be owned by
+the client (the account must be present in `chain.accounts`).
+
+#### Signing raw messages
+
+Using `account.sign(message)` it is possible to sign any message in the form of bytes:
+
+```python
+from woke.testing import Account
+
+account = Account.from_mnemonic(" ".join(["test"] * 11 + ["junk"]))
+signature = account.sign(b"Hello, world!")
+```
+
+The message is signed according to the [EIP-191](https://eips.ethereum.org/EIPS/eip-191) standard (version `0x45`).
+
+#### Signing structured messages
+
+Using `account.sign_structured(message)` it is possible to sign structured messages.
+
+```python
+from woke.testing import *
+from dataclasses import dataclass
+
+@dataclass
+class Transfer:
+    sender: Address
+    recipient: Address
+    amount: uint256
+
+account = Account.from_mnemonic(" ".join(["test"] * 11 + ["junk"]))
+signature = account.sign_structured(
+    Transfer(
+        sender=account.address,
+        recipient=Address(1),
+        amount=10,
+    ),
+    domain=Eip712Domain(
+        name="Test",
+        chainId=default_chain.chain_id,
+    )
+)
+```
+
+See [EIP-712](https://eips.ethereum.org/EIPS/eip-712) for more information.
+
+#### Signing message hash
+
+While it is not recommended to sign message hashes directly, it is sometimes necessary.
+To sign a message hash, use `account.sign_hash(message_hash)`.
+
+```python
+from woke.testing import *
+
+account = Account.from_mnemonic(" ".join(["test"] * 11 + ["junk"]))
+signature = account.sign_hash(keccak256(b"Hello, world!"))
+```
+
+!!! note
+    `account.sign_hash` is not available for accounts owned by the client.
+
+!!! warning
+    Always sign a message hash only if you know the original message.
+
 ### Assigning labels
 
 `Account` instances can be assigned labels. Labels override the default string representation
@@ -66,23 +169,22 @@ Setting the label to `None` removes the label.
 
 `Account` instances have the following properties:
 
-| Property  | Description                     |
-|-----------|---------------------------------|
-| `address` | `Address` of the account        |
-| `chain`   | `Chain` the account is bound to |
-| `label`   | string label of the account     |
-| `balance` | balance of the account in Wei   |
-| `code`    | code of the account             |
-| `nonce`   | nonce of the account            |
+| Property      | Description                           |
+|---------------|---------------------------------------|
+| `address`     | `Address` of the account              |
+| `balance`     | balance of the account in Wei         |
+| `chain`       | `Chain` the account is bound to       |
+| `code`        | code of the account                   |
+| `label`       | string label of the account           |
+| `nonce`       | nonce of the account                  |
+| `private_key` | private key of the account (if known) |
 
-Except for `address` and `chain`, all properties can be assigned to. `nonce` can only be incremented.
+Except for `address`, `chain` and `private_key`, all properties can be assigned to. `nonce` can only be incremented.
 
 ### Low-level calls and transactions
 
-Each `Account` instance has `call` and `transact` methods that can be used to perform arbitrary
-calls and transactions (see [Interacting with a contract](getting-started.md#interacting-with-a-contract)).
-Both methods accept `data`, `value`, `from_` and `gas_limit` keyword arguments. The `transact` method
-additionaly accepts the `return_tx` keyword argument.
+Each `Account` instance has `call`, `transact`, `estimate` and `access_list` methods that can be used to perform arbitrary
+requests (see [Interacting with contracts](./interacting-with-contracts.md)).
 
 ```python
 from woke.testing import *
@@ -102,38 +204,19 @@ def test_accounts():
 
 The previous example shows how to transfer Wei from one account to another.
 
-!!! tip "Encoding data for low-level calls and transactions"
-    To prepare the `data` payload, the `Abi` helper class can be used. It offers the same ABI encoding
-    functions as the `abi` global object in Solidity.
-
-    ```python
-    from woke.testing import *
-    from pytypes.contracts.Counter import Counter
-
-    @default_chain.connect()
-    def test_low_level_transact():
-        default_chain.default_tx_account = default_chain.accounts[0]
-
-        counter = Counter.deploy()
-
-        # execute counter.setCount(100) using a low-level transaction
-        counter.transact(data=Abi.encode_call(Counter.setCount, [100]))
-        assert counter.count() == 100
-    ```
-    
 ## Contract accounts
 
 Contract accounts are accounts that have non-empty code. Everything that applies to `Account` instances
 also applies to contract accounts. However, contract accounts have additional methods:
 
-- `deployment_code` - returns the code used to deploy the contract, may require addresses of libraries needed by the contract,
+- `get_creation_code` - returns the code used to deploy the contract, may require addresses of libraries needed by the contract,
 - `deploy` - deploys the contract, requires equivalent arguments as the constructor of the contract in Solidity,
 - other contract-specific methods generated in `pytypes`, including getters for public state variables.
 
 ```python
 from pytypes.contracts.Counter import Counter
 
-assert len(Counter.deployment_code()) > 0
+assert len(Counter.get_creation_code()) > 0
 print(Counter.setCount.selector.hex())
 ```
 
