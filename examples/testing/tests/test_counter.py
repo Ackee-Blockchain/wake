@@ -38,14 +38,14 @@ def test_counter():
     # default_tx_account, default_estimate_account and default_access_list_account is unset by default
     default_chain.set_default_accounts(default_chain.accounts[0])
 
-    # tx_callback is called after each transaction which is not configured with return_tx=True
+    # tx_callback is called after each transaction which is not configured with confirmations=0
     default_chain.tx_callback = tx_callback
 
     c = Counter.deploy(from_=random_account())
     print(c.address)
 
     # tx_callback will not be called for this transaction!!
-    tx = c.increment(return_tx=True)
+    tx = c.increment(confirmations=0)
     # -1 = pending, 0 = failed, 1 = success
     print(tx.status)
 
@@ -66,8 +66,8 @@ def test_counter():
         #   gas_limit="auto" is needed in this case, otherwise tx1 would consume whole block gas limit
 
         # calling these functions without return_tx=True will cause a timeout error
-        tx1 = c.increment(gas_limit="auto", return_tx=True)
-        tx2 = c.decrement(gas_limit="auto", return_tx=True)
+        tx1 = c.increment(gas_limit="auto", confirmations=0)
+        tx2 = c.decrement(gas_limit="auto", confirmations=0)
 
     # hardhat does not mine blocks automatically after automine re-enables
     default_chain.mine()
