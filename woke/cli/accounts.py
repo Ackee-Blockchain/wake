@@ -192,6 +192,9 @@ def accounts_import(
     keystore: Optional[str],
     alias: str,
 ):
+    """
+    Import an account from a private key or mnemonic.
+    """
     from eth_account import Account
     from eth_utils.address import to_checksum_address
 
@@ -246,6 +249,9 @@ def accounts_import(
 @click.argument("alias")
 @click.pass_context
 def accounts_export(ctx: Context, keystore: Optional[str], alias: str):
+    """
+    Export an account's private key.
+    """
     from eth_account import Account
     from eth_utils.address import to_checksum_address
 
