@@ -9,21 +9,27 @@ useful in [Cross-chain testing](cross-chain-testing.md).
 
 The `Chain` object has the following properties:
 
-| Property                            | Description                                                                                                |
-|-------------------------------------|------------------------------------------------------------------------------------------------------------|
-| `accounts`                          | list of pre-generated `Account` objects                                                                    |
-| `automine`                          | whether to automatically mine blocks                                                                       |
-| `blocks`                            | property to access the chain blocks                                                                        |
-| `block_gas_limit`                   | gas limit for blocks                                                                                       |
-| `chain_id`                          | chain ID                                                                                                   |
-| `chain_interface`                   | low-level chain interface usefull for debugging and power users                                            |
-| `coinbase`                          | coinbase `Account`                                                                                         |
-| `connected`                         | whether the chain is connected                                                                             |
-| <nobr>`default_call_account`</nobr> | default `Account` used for calls                                                                           |
-| <nobr>`default_tx_account`</nobr>   | default `Account` used for transactions                                                                    |
-| `gas_price`                         | gas price used for all transactions sent to the chain                                                      |
-| `txs`                               | dictionary of transaction objects indexed by transaction hash (a string starting with `0x`)                |
-| `tx_callback`                       | callback function to be called when a transaction is mined; applies only to `return_tx=False` transactions |
+| Property                                   | Description                                                                                                |
+|--------------------------------------------|------------------------------------------------------------------------------------------------------------|
+| `accounts`                                 | list of `Account` objects owned by the client (private keys are known to the client)                       |
+| `automine`                                 | whether to automatically mine blocks                                                                       |
+| `blocks`                                   | property to access the chain blocks                                                                        |
+| `block_gas_limit`                          | gas limit of the pending block                                                                             |
+| `chain_id`                                 | chain ID                                                                                                   |
+| `chain_interface`                          | low-level chain interface useful for debugging and power users                                             |
+| `coinbase`                                 | coinbase `Account`                                                                                         |
+| `connected`                                | whether the chain is connected                                                                             |
+| <nobr>`default_access_list_account`</nobr> | default `Account` used for access list creation requests                                                   |
+| <nobr>`default_call_account`</nobr>        | default `Account` used for calls                                                                           |
+| <nobr>`default_estimate_account`</nobr>    | default `Account` used for gas estimations                                                                 |
+| <nobr>`default_tx_account`</nobr>          | default `Account` used for transactions                                                                    |
+| `default_tx_confirmations`                 | default number of confirmations (mined blocks) needed before a transaction object is returned              |
+| `default_tx_type`                          | default transaction type (0, 1, or 2) used when sending transactions                                       |
+| `gas_price`                                | gas price used for all type 0 and type 1 transactions sent to the chain                                    |
+| `max_priority_fee_per_gas`                 | max priority fee per gas used for all type 2 transactions sent to the chain                                |
+| `require_signed_transactions`              | whether to send signed transactions or unsigned transactions                                               |
+| `txs`                                      | dictionary of transaction objects indexed by transaction hash (a string starting with `0x`)                |
+| `tx_callback`                              | callback function to be called when a transaction is mined; applies only to `return_tx=False` transactions |
 
 `automine`, `block_gas_limit`, `coinbase`, `default_call_account`, `default_tx_account`, `gas_price`, and `tx_callback` can be assigned to.
 
@@ -38,6 +44,7 @@ The `Chain` object has the following methods:
 | `mine`                                         | mine a block with an optional callback function to set the next block timestamp            |
 | `reset`                                        | reset the chain to its initial state                                                       |
 | `revert`                                       | revert the chain to a previous state given by a snapshot ID                                |
+| `set_default_accounts`                         | set the default accounts for `tx`, `call`, `estimate`, and `access_list` requests at once  |
 | `set_min_gas_price`                            | set the minimum gas price accepted by the chain                                            |
 | <nobr>`set_next_block_base_fee_per_gas`</nobr> | set the base fee per gas for the next block                                                |
 | `snapshot`                                     | take a snapshot of the chain state; return a snapshot ID                                   |
@@ -75,15 +82,17 @@ def test_chain():
 
 The `connect` context manager accepts keyword arguments that can override the command line arguments set in [configuration](../configuration.md#testing-namespace) files:
 
-| Keyword argument | Description                    | Default value            |
-|------------------|--------------------------------|--------------------------|
-| `accounts`       | number of accounts to generate | `None` (do not override) |
-| `chain_id`       | chain ID assigned to the chain | `None` (do not override) |
-| `fork`           | URL of the chain to fork from  | `None` (do not override) |
-| `hardfork`       | hardfork to use                | `None` (do not override) |
+| Keyword argument         | Description                             | Default value            |
+|--------------------------|-----------------------------------------|--------------------------|
+| `accounts`               | number of accounts to generate          | `None` (do not override) |
+| `chain_id`               | chain ID assigned to the chain          | `None` (do not override) |
+| `fork`                   | URL of the chain to fork from           | `None` (do not override) |
+| `hardfork`               | hardfork to use                         | `None` (do not override) |
+| `min_gas_price`          | minimum gas price accepted by the chain | `0`                      |
+| `block_base_fee_per_gas` | base fee per gas for the next block     | `0`                      |
 
 !!! warning
-    `accounts`, `chain_id`, `fork` and `hardfork` can only be used when launching a new development chain.
+    `connect` keyword arguments can only be used when launching a new development chain.
     Also, it is not possible to set these keyword arguments when working with Hardhat.
 
 ```python
@@ -110,25 +119,25 @@ from pytypes.contracts.Counter import Counter
 @default_chain.connect()
 def test_chain_blocks():
     default_chain.set_default_accounts(default_chain.accounts[0])
-    
+
     # get the block 0
     block0 = default_chain.blocks[0]
     # block 0 and earliest are the same
     assert block0 == default_chain.blocks["earliest"]
-    
+
     counter = Counter.deploy()
-    
+
     # find the first block with non-zero transactions count
     block = next(block for block in default_chain.blocks if len(block.txs) > 0)
-    
+
     assert block.txs[0].return_value == counter
 
     with default_chain.change_automine(False):
         # block -1 and latest are the same
         assert default_chain.blocks[-1] == default_chain.blocks["latest"]
 
-        tx = counter.increment(return_tx=True)
-        
+        tx = counter.increment(confirmations=0)
+
         # pending block contains the transaction
         assert tx in default_chain.blocks["pending"].txs
 ```
