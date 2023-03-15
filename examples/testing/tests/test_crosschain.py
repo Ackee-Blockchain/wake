@@ -77,8 +77,7 @@ class CrosschainTest(FuzzTest):
 
         # encode the call to set the count on the other chain
         payload = Abi.encode_call(Counter.setCount, [counter.count()])
-        tx = gw.relay(other_counter.address, payload, dest_chain, from_=random_account(chain=gw.chain), return_tx=True)
-        assert tx.error is None
+        tx = gw.relay(other_counter.address, payload, dest_chain, from_=random_account(chain=gw.chain))
 
         # relay the data (command) based on the events emitted by the gateway
         for event in tx.events:
