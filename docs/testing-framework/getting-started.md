@@ -1,6 +1,6 @@
 # Getting started
 
-This guide explains how to run the first test in the Woke testing framework.
+This guide explains how to run the first test in Woke development and testing framework.
 
 !!! warning "Important"
     Before getting started, make sure to have the latest version of a development chain installed.
@@ -14,7 +14,7 @@ This guide explains how to run the first test in the Woke testing framework.
 
 ## Generating pytypes
 
-`pytypes` are Python-native equivalents of Solidity types. They are generated from a Solidity source code and are used in tests to interact with smart contracts.
+`pytypes` are Python-native equivalents of Solidity types. They are generated from Solidity source code and used in tests and deployment scripts to interact with smart contracts.
 
 The first step is to generate `pytypes` by running the following command:
 
@@ -25,9 +25,9 @@ woke init pytypes -w
 !!! note "Configuring compilation"
     Woke uses default configuration options that should work for most projects.
     However, in some cases, it may be necessary to configure the compilation process.
-    For more information, see the [Configuration](../configuration.md) page.
+    For more information, see the [Compilation](../compilation.md) page.
 
-This command will create a `pytypes` directory in the current working directory. The `-w` flag tells Woke to watch for changes in the smart contracts and automatically regenerate the `pytypes` when a change is detected.
+This command creates a `pytypes` directory in the current working directory. The `-w` flag tells Woke to watch for changes in the smart contracts and automatically regenerate `pytypes` when a change is detected.
 
 <div id="generating-pytypes-asciinema" style="z-index: 1; position: relative;"></div>
 <script>
@@ -39,7 +39,7 @@ This command will create a `pytypes` directory in the current working directory.
 When a compilation error occurs, Woke generates `pytypes` for the contracts that were successfully compiled. `pytypes` for the contracts that failed to compile are not generated.
 
 !!! warning "Name collisions in `pytypes`"
-    In some cases, names of Solidity types may be a keyword in Python or otherwise reserved name. In such cases, Woke will append an underscore to the name of the type. For example, `class` will be renamed to `class_`.
+    In some cases, a name of a Solidity types may be a keyword in Python or otherwise reserved name. In such cases, Woke will append an underscore to the name of the type. For example, `class` will be renamed to `class_`.
 
     This also applies to overloaded functions. For example, if a contract has a function `foo` that takes an argument of type `uint256` and another function `foo` that takes an argument of type `uint8`, the generated `pytypes` will contain two functions `foo` and `foo_`.
 
@@ -58,6 +58,9 @@ The recommended project structure is as follows:
 ├── contracts
 │   └── Counter.sol
 ├── pytypes
+├── scripts
+│   ├── __init__.py
+│   └── deploy.py
 └── tests
     ├── __init__.py
     └── test_counter.py
@@ -99,21 +102,8 @@ The `Counter` contract from the previous example is available in the `pytypes.co
 
 Every contract has a `deploy` method that deploys the contract to the chain.
 The `deploy` method accepts the arguments that are required by the contract's constructor.
-Additionally, it accepts the following keyword arguments:
-
-| Argument    | Description                                                                                                    |
-|-------------|----------------------------------------------------------------------------------------------------------------|
-| `from_`     | `Address`, `Account` or a hex address string that will be used to deploy the contract (the transaction sender) |
-| `value`     | amount of Wei to be sent to the contract                                                                       |
-| `gas_limit` | maximum amount of gas that can be used in the transaction (`max`, `auto` or number)                            |
-| `return_tx` | `True` to return the full transaction object, `False` to return the return value (contract instance)           |
-| `chain`     | `Chain` to which the contract should be deployed                                                               |
-
-!!! warning "Sending transactions from any account"
-    The `from_` argument can be used to send transactions from any account (including contract) or address.
-    However, this may come at a cost of decreased performance (see [Performance considerations](performance-considerations.md)).
-
-    **When sending transactions from an account with code (contract), the contract behaves as if it had no code during the execution of the transaction!**
+Additionally, it accepts keyword arguments that can be used to configure the transaction that deploys the contract.
+All keyword arguments are described in the [Interacting with contracts](./interacting-with-contracts.md) section.
 
 ```python
 from woke.testing import *
@@ -128,62 +118,30 @@ def test_example():
 
 ### Interacting with a contract
 
-Woke testing framework distinguishes between two types of interactions with a contract:
-
-- **calls** - read-only requests that do not change the state of the blockchain,
-- **transactions** - requests that change the state of the blockchain.
-
-By default, Woke uses **calls** to execute pure and view functions. It uses **transactions** to execute all other functions.
-
-There are two more keyword arguments that the `deploy` method does not accept:
-
-| Argument       | Description                                                                                      |
-|----------------|--------------------------------------------------------------------------------------------------|
-| `to`           | `Address`, `Account` or a hex address string of the contract to which the request should be sent |
-| `request_type` | type of the request (`call` or `tx`)                                                         |
-
-!!! tip
-    The `to` argument can be used to override the address of the contract that is being called.
-    This can be useful when a contract should be called through a proxy contract.
-
-    ```python
-    contract.initialize(owner, to=proxy)
-    ```
-
-
-
-
-If no `from_` argument is specified:
-
-- `default_chain.default_call_account` is used to execute **calls**,
-- `default_chain.default_tx_account` is used to execute **transactions**.
-
-`default_call_account` is initialized to the first account in the chain's account list.
-`default_tx_account` is left unset by default.
+For every public and external function in Solidity source code, Woke generates a Python method in `pytypes`.
+These methods can be used to interact with a deployed contract. Generated methods accept the same arguments as the corresponding Solidity functions.
+Additional keyword arguments can configure the execution of a function like with the `deploy` method.
 
 ```python
 from woke.testing import *
-
 from pytypes.contracts.Counter import Counter
 
 @default_chain.connect()
 def test_counter():
-    default_chain.set_default_accounts(default_chain.accounts[1])
+    owner = default_chain.accounts[0]
+    other = default_chain.accounts[1]
 
-    counter = Counter.deploy(from_=default_chain.accounts[0])
-    counter.increment()
-    assert counter.count() == 1
-    
-    # increment performed as a call does not change the state
-    counter.increment(request_type="call")
+    counter = Counter.deploy(from_=owner)
+
+    counter.increment(from_=other)
     assert counter.count() == 1
 
     # setCount can only be called by the owner
-    counter.setCount(10, from_=default_chain.accounts[0])
+    counter.setCount(10, from_=owner)
     assert counter.count() == 10
-    
-    # this will fail because the default account is not the owner
+
+    # this will fail because the sender account is not the owner
     with must_revert():
-        counter.setCount(20)
+        counter.setCount(20, from_=other)
     assert counter.count() == 10
 ```
