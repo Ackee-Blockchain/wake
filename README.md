@@ -127,7 +127,7 @@ This project is licensed under the [ISC license](https://github.com/Ackee-Blockc
 
 RockawayX             |  Coinbase
 :-------------------------:|:-------------------------:
-[![](https://github.com/Ackee-Blockchain/woke/blob/main/images/zsCiZxap_400x400.jpg?raw=true)](https://rockawayx.com/)  |  [![](https://github.com/Ackee-Blockchain/woke/blob/main/images/A9yYenz3_400x400.png?raw=true)](https://www.coinbase.com/)
+[![](https://github.com/Ackee-Blockchain/woke/blob/main/images/rockawayx.jpg?raw=true)](https://rockawayx.com/)  |  [![](https://github.com/Ackee-Blockchain/woke/blob/main/images/coinbase.png?raw=true)](https://www.coinbase.com/)
 
 
 
