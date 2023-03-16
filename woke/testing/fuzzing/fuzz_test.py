@@ -52,9 +52,10 @@ class FuzzTest:
     def __get_methods(self, attr: str) -> Set[Callable]:
         ret = set()
         for x in dir(self):
-            m = getattr(self.__class__, x)
-            if hasattr(m, attr) and getattr(m, attr):
-                ret.add(m)
+            if hasattr(self.__class__, x):
+                m = getattr(self.__class__, x)
+                if hasattr(m, attr) and getattr(m, attr):
+                    ret.add(m)
         return ret
 
     def run(
