@@ -267,8 +267,13 @@ class Chain(woke.development.core.Chain):
                 if "gas" not in params or params["gas"] == "auto":
                     tx["gas"] = int(response["gasUsed"], 16)
             except JsonRpcError as e:
-                self._process_call_revert(e)
-                raise
+                try:
+                    # will re-raise if not a revert error
+                    self._process_call_revert(e)
+                    raise
+                except JsonRpcError as e:
+                    # eth_createAccessList probably not supported
+                    tx["accessList"] = []
 
         return tx
 
