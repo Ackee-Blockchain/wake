@@ -276,9 +276,12 @@ class Chain(woke.development.core.Chain):
                     # will re-raise if not a revert error
                     self._process_call_revert(e)
                     raise
-                except JsonRpcError as e:
+                except JsonRpcError:
                     # eth_createAccessList probably not supported
-                    tx["accessList"] = []
+                    if "accessList" not in params:
+                        tx["accessList"] = []
+                    else:
+                        raise
 
         return tx
 
