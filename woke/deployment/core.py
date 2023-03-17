@@ -262,10 +262,15 @@ class Chain(woke.development.core.Chain):
         ):
             try:
                 response = self._chain_interface.create_access_list(tx)
-                tx["accessList"] = response["accessList"]
+                gas_used = int(response["gasUsed"], 16)
 
-                if "gas" not in params or params["gas"] == "auto":
-                    tx["gas"] = int(response["gasUsed"], 16)
+                if params.get("accessList", None) == "auto" or (
+                    "accessList" not in params and gas_used <= tx["gas"]
+                ):
+                    tx["accessList"] = response["accessList"]
+
+                    if "gas" not in params or params["gas"] == "auto":
+                        tx["gas"] = gas_used
             except JsonRpcError as e:
                 try:
                     # will re-raise if not a revert error
