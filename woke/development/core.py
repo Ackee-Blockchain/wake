@@ -1024,6 +1024,7 @@ class Chain(ABC):
     _labels: Dict[Address, str]
     _private_keys: Dict[Address, bytes]
     _require_signed_txs: bool
+    _fork: Optional[str]
 
     tx_callback: Optional[Callable[[TransactionAbc], None]]
 
@@ -1234,6 +1235,7 @@ class Chain(ABC):
             self._blocks = ChainBlocks(self)
             self._labels = {}
             self._private_keys = {}
+            self._fork = fork
 
             self._single_source_errors = {
                 selector

@@ -30,6 +30,7 @@ from .core import (
 )
 from .internal import read_from_memory
 from .json_rpc.communicator import TxParams
+from .utils import get_contract_info_from_explorer
 
 if TYPE_CHECKING:
     from .transactions import TransactionAbc
@@ -260,7 +261,19 @@ class CallTrace:
         else:
             value = tx_params["value"]
 
-        if origin_fqn is None or origin_fqn not in contracts_by_fqn:
+        explorer_info = None
+        if (
+            tx.chain._fork is not None
+            and (origin_fqn is None or origin_fqn not in contracts_by_fqn)
+            and tx.to is not None
+        ):
+            explorer_info = get_contract_info_from_explorer(
+                tx.to.address, tx.chain.chain_id
+            )
+
+        if (
+            origin_fqn is None or origin_fqn not in contracts_by_fqn
+        ) and explorer_info is None:
             assert "to" in tx_params
             root_trace = CallTrace(
                 None,
@@ -276,12 +289,17 @@ class CallTrace:
                 True,
             )
         else:
-            contract_name = origin_fqn.split(":")[-1]
-            module_name, attrs = contracts_by_fqn[origin_fqn]
-            obj = getattr(importlib.import_module(module_name), attrs[0])
-            for attr in attrs[1:]:
-                obj = getattr(obj, attr)
-            contract_abi = obj._abi
+            if explorer_info is not None:
+                contract_name, contract_abi = explorer_info
+                obj = None
+            else:
+                assert origin_fqn is not None
+                contract_name = origin_fqn.split(":")[-1]
+                module_name, attrs = contracts_by_fqn[origin_fqn]
+                obj = getattr(importlib.import_module(module_name), attrs[0])
+                for attr in attrs[1:]:
+                    obj = getattr(obj, attr)
+                contract_abi = obj._abi
 
             if tx.to is None:
                 if "data" not in tx_params or "constructor" not in contract_abi:
@@ -439,7 +457,18 @@ class CallTrace:
                     fqn = fqn_overrides[addr]
                 else:
                     fqn = get_fqn_from_address(addr, tx.block.number - 1, tx.chain)
-                if fqn is None:
+
+                explorer_info = None
+                if (
+                    tx.chain._fork is not None
+                    and fqn is None
+                    and addr != Address("0x000000000000000000636F6e736F6c652e6c6f67")
+                ):
+                    explorer_info = get_contract_info_from_explorer(
+                        addr, tx.chain.chain_id
+                    )
+
+                if fqn is None and explorer_info is None:
                     if addr == Address("0x000000000000000000636F6e736F6c652e6c6f67"):
                         if data[:4] in hardhat_console.abis:
                             fn_abi = hardhat_console.abis[data[:4]]
@@ -485,12 +514,17 @@ class CallTrace:
                             True,
                         )
                 else:
-                    contract_name = fqn.split(":")[-1]
-                    module_name, attrs = contracts_by_fqn[fqn]
-                    obj = getattr(importlib.import_module(module_name), attrs[0])
-                    for attr in attrs[1:]:
-                        obj = getattr(obj, attr)
-                    contract_abi = obj._abi
+                    if explorer_info is not None:
+                        contract_name, contract_abi = explorer_info
+                        obj = None
+                    else:
+                        assert fqn is not None
+                        contract_name = fqn.split(":")[-1]
+                        module_name, attrs = contracts_by_fqn[fqn]
+                        obj = getattr(importlib.import_module(module_name), attrs[0])
+                        for attr in attrs[1:]:
+                            obj = getattr(obj, attr)
+                        contract_abi = obj._abi
 
                     if args_size >= 4:
                         selector = data[:4]
