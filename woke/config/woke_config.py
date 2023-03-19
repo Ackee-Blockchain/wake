@@ -331,6 +331,10 @@ class WokeConfig:
         return self.__config.detectors
 
     @property
+    def api_keys(self) -> Dict[str, str]:
+        return self.__config.api_keys
+
+    @property
     def compiler(self) -> CompilerConfig:
         """
         Return compiler-specific config options.
