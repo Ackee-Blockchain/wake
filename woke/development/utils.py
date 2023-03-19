@@ -1,12 +1,20 @@
 from __future__ import annotations
 
 import inspect
+import json
 import math
-from typing import Callable, Iterable, List, Tuple, TypeVar, Union
+from functools import lru_cache
+from typing import Callable, Dict, Iterable, List, Optional, Tuple, TypeVar, Union
+from urllib.error import URLError
+from urllib.parse import urlparse
+from urllib.request import Request, urlopen
 
 from Crypto.Hash import keccak
+from eth_utils.abi import function_abi_to_4byte_selector
 
+from ..utils import get_package_version
 from .core import Account, Address
+from .globals import get_config
 
 chain_explorer_urls = {
     1: "https://etherscan.io",
@@ -23,6 +31,54 @@ chain_explorer_urls = {
     42161: "https://arbiscan.io",
     421613: "https://testnet.arbiscan.io/",
 }
+
+
+@lru_cache(maxsize=1024)
+def get_contract_info_from_explorer(
+    addr: Address, chain_id: int
+) -> Optional[Tuple[str, Dict]]:
+    if chain_id not in chain_explorer_urls:
+        return None
+
+    u = urlparse(chain_explorer_urls[chain_id])
+    config = get_config()
+    api_key = config.api_keys.get(".".join(u.netloc.split(".")[:-1]), None)
+    if api_key is None:
+        return None
+
+    url = f"{u.scheme}://api.{u.netloc}/api?module=contract&action=getsourcecode&address={addr}&apikey={api_key}"
+
+    req = Request(
+        url,
+        headers={
+            "Content-Type": "application/json",
+            "User-Agent": f"woke/{get_package_version('woke')}",
+        },
+    )
+
+    try:
+        with urlopen(req) as response:
+            ret = json.loads(response.read().decode("utf-8"))
+    except URLError as e:
+        return None
+
+    if ret["status"] != "1":
+        return None
+
+    data = ret["result"][0]
+    if data["ContractName"] == "":
+        return None
+
+    abi = {}
+    # TODO library ABI is different and has to be fixed to compute the correct selector
+    # however, it is not possible to detect if a contract is a library or not without parsing the source code
+    for abi_item in json.loads(data["ABI"]):
+        if abi_item["type"] in {"constructor", "fallback", "receive"}:
+            abi[abi_item["type"]] = abi_item
+        elif abi_item["type"] == "function":
+            abi[function_abi_to_4byte_selector(abi_item)] = abi_item
+
+    return data["ContractName"], abi
 
 
 def format_int(x: int) -> str:
