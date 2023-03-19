@@ -1,7 +1,7 @@
 import re
 from dataclasses import astuple
 from pathlib import Path
-from typing import FrozenSet, List, Optional, Union
+from typing import Dict, FrozenSet, List, Optional, Union
 
 from pydantic import BaseModel, Extra, Field, validator
 from pydantic.dataclasses import dataclass
@@ -206,6 +206,7 @@ class TestingConfig(WokeConfigModel):
 
 class TopLevelConfig(WokeConfigModel):
     subconfigs: List[Path] = []
+    api_keys: Dict[str, str] = {}
     compiler: CompilerConfig = Field(default_factory=CompilerConfig)
     detectors: DetectorsConfig = Field(default_factory=DetectorsConfig)
     generator: GeneratorConfig = Field(default_factory=GeneratorConfig)
