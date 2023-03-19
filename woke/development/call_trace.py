@@ -232,7 +232,10 @@ class CallTrace:
         assert len(fqn_overrides.maps) == 1
 
         if tx.to is None:
-            origin_fqn, _ = get_fqn_from_creation_code(tx.data)
+            try:
+                origin_fqn, _ = get_fqn_from_creation_code(tx.data)
+            except ValueError:
+                origin_fqn = None
         else:
             if tx.to.address in fqn_overrides:
                 origin_fqn = fqn_overrides[tx.to.address]
@@ -579,28 +582,34 @@ class CallTrace:
                 length = int(log["stack"][-3], 16)
 
                 creation_code = read_from_memory(offset, length, log["memory"])
-                fqn, constructor_offset = get_fqn_from_creation_code(creation_code)
+                try:
+                    fqn, constructor_offset = get_fqn_from_creation_code(creation_code)
 
-                contract_name = fqn.split(":")[-1]
-                module_name, attrs = contracts_by_fqn[fqn]
-                obj = getattr(importlib.import_module(module_name), attrs[0])
-                for attr in attrs[1:]:
-                    obj = getattr(obj, attr)
-                contract_abi = obj._abi
+                    contract_name = fqn.split(":")[-1]
+                    module_name, attrs = contracts_by_fqn[fqn]
+                    obj = getattr(importlib.import_module(module_name), attrs[0])
+                    for attr in attrs[1:]:
+                        obj = getattr(obj, attr)
+                    contract_abi = obj._abi
 
-                if "constructor" not in contract_abi:
+                    if "constructor" not in contract_abi:
+                        args = []
+                    else:
+                        fn_abi = contract_abi["constructor"]
+                        output_types = [
+                            eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
+                            for arg in fix_library_abi(fn_abi["inputs"])
+                        ]
+                        args = list(
+                            eth_abi.abi.decode(
+                                output_types, creation_code[constructor_offset:]
+                            )
+                        )  # pyright: reportGeneralTypeIssues=false
+                except ValueError:
+                    fqn = None
+                    obj = None
+                    contract_name = None
                     args = []
-                else:
-                    fn_abi = contract_abi["constructor"]
-                    output_types = [
-                        eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
-                        for arg in fix_library_abi(fn_abi["inputs"])
-                    ]
-                    args = list(
-                        eth_abi.abi.decode(
-                            output_types, creation_code[constructor_offset:]
-                        )
-                    )  # pyright: reportGeneralTypeIssues=false
 
                 assert current_trace is not None
                 call_trace = CallTrace(
