@@ -6,6 +6,7 @@ from collections import ChainMap
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, cast
 
 import eth_abi
+import eth_abi.exceptions
 import eth_utils
 from rich.console import Console
 from rich.highlighter import ReprHighlighter
@@ -50,7 +51,7 @@ class CallTrace:
     _function_name: Optional[str]
     _selector: Optional[bytes]
     _function_is_special: bool
-    _arguments: List
+    _arguments: Optional[List]
     _status: bool
     _value: Wei
     _kind: CallTraceKind
@@ -67,7 +68,7 @@ class CallTrace:
         function_name: Optional[str],
         selector: Optional[bytes],
         address: Optional[Address],
-        arguments: List,
+        arguments: Optional[List],
         value: int,
         kind: CallTraceKind,
         depth: int,
@@ -142,14 +143,17 @@ class CallTrace:
             )
 
         if self.kind != CallTraceKind.INTERNAL:
-            ret.append("(")
-            for i, arg in enumerate(self.arguments):
-                t = Text(reprlib.repr(arg))
-                ReprHighlighter().highlight(t)
-                ret.append_text(t)
-                if i < len(self.arguments) - 1:
-                    ret.append(", ")
-            ret.append(")")
+            if self.arguments is not None:
+                ret.append("(")
+                for i, arg in enumerate(self.arguments):
+                    t = Text(reprlib.repr(arg))
+                    ReprHighlighter().highlight(t)
+                    ret.append_text(t)
+                    if i < len(self.arguments) - 1:
+                        ret.append(", ")
+                ret.append(")")
+            else:
+                ret.append("(???)")
 
         ret.append_text(
             Text.from_markup(
@@ -189,7 +193,9 @@ class CallTrace:
         return self._address
 
     @property
-    def arguments(self) -> Tuple:
+    def arguments(self) -> Optional[Tuple]:
+        if self._arguments is None:
+            return None
         return tuple(self._arguments)
 
     @property
@@ -289,11 +295,14 @@ class CallTrace:
                         eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
                         for arg in fix_library_abi(fn_abi["inputs"])
                     ]
-                    args = list(
-                        eth_abi.abi.decode(
-                            output_types, tx_params["data"][constructor_offset:]
-                        )
-                    )  # pyright: reportGeneralTypeIssues=false
+                    try:
+                        args = list(
+                            eth_abi.abi.decode(
+                                output_types, tx_params["data"][constructor_offset:]
+                            )
+                        )  # pyright: reportGeneralTypeIssues=false
+                    except eth_abi.exceptions.DecodingError:
+                        args = None
                 root_trace = CallTrace(
                     obj,
                     contract_name,
@@ -367,9 +376,12 @@ class CallTrace:
                     eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
                     for arg in fix_library_abi(fn_abi["inputs"])
                 ]
-                decoded_data = list(
-                    eth_abi.abi.decode(output_types, tx_params["data"][4:])
-                )  # pyright: reportGeneralTypeIssues=false
+                try:
+                    decoded_data = list(
+                        eth_abi.abi.decode(output_types, tx_params["data"][4:])
+                    )  # pyright: reportGeneralTypeIssues=false
+                except eth_abi.exceptions.DecodingError:
+                    decoded_data = None
                 root_trace = CallTrace(
                     obj,
                     contract_name,
@@ -437,9 +449,12 @@ class CallTrace:
                                 )
                                 for arg in fix_library_abi(fn_abi)
                             ]
-                            arguments = list(
-                                eth_abi.abi.decode(output_types, data[4:])
-                            )  # pyright: reportGeneralTypeIssues=false
+                            try:
+                                arguments = list(
+                                    eth_abi.abi.decode(output_types, data[4:])
+                                )  # pyright: reportGeneralTypeIssues=false
+                            except eth_abi.exceptions.DecodingError:
+                                arguments = None
                         else:
                             arguments = [data]
 
@@ -487,9 +502,12 @@ class CallTrace:
                                 )
                                 for arg in fix_library_abi(fn_abi["inputs"])
                             ]
-                            arguments = list(
-                                eth_abi.abi.decode(output_types, data[4:])
-                            )  # pyright: reportGeneralTypeIssues=false
+                            try:
+                                arguments = list(
+                                    eth_abi.abi.decode(output_types, data[4:])
+                                )  # pyright: reportGeneralTypeIssues=false
+                            except eth_abi.exceptions.DecodingError:
+                                arguments = None
                             fn_name = fn_abi["name"]
                             is_special = False
                         elif "fallback" in contract_abi and (
@@ -600,11 +618,14 @@ class CallTrace:
                             eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
                             for arg in fix_library_abi(fn_abi["inputs"])
                         ]
-                        args = list(
-                            eth_abi.abi.decode(
-                                output_types, creation_code[constructor_offset:]
-                            )
-                        )  # pyright: reportGeneralTypeIssues=false
+                        try:
+                            args = list(
+                                eth_abi.abi.decode(
+                                    output_types, creation_code[constructor_offset:]
+                                )
+                            )  # pyright: reportGeneralTypeIssues=false
+                        except eth_abi.exceptions.DecodingError:
+                            args = None
                 except ValueError:
                     fqn = None
                     obj = None
