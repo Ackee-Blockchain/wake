@@ -46,10 +46,12 @@ pymdown-extensions = { version = "^9", optional = true }
 pygments = { version = "^2", optional = true }
 mike = { git = "https://github.com/jimporter/mike.git" }
 isort = { version = "^5", optional = true }
+pillow = { version = "^9", optional = true }
+cairosvg = { version = "^2.7", optional = true }
 
 [tool.poetry.extras]
 tests = ["pytest-asyncio", "GitPython"]
-dev = ["black", "mkdocs-material", "mkdocstrings", "pymdown-extensions", "pygments", "mike", "isort"]
+dev = ["black", "mkdocs-material", "mkdocstrings", "pymdown-extensions", "pygments", "mike", "isort", "pillow", "cairosvg"]
 
 [tool.poetry.scripts]
 woke = "woke.cli.__main__:main"
