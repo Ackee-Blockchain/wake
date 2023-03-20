@@ -85,6 +85,10 @@ plugins:
           show_root_heading: true
 - mike:
     canonical_version: latest
+- social:
+    cards_color:
+      fill: "#0000FF"
+      text: "#FFFFFF"
 
 markdown_extensions:
   - def_list
