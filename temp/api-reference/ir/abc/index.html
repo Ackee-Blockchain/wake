@@ -1417,8 +1417,8 @@ This means that each IR node has a corresponding (typically non-empty) Solidity 
 <code class="highlight language-python"><span class="n">parent</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">IrAbc</span><span class="p">]</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
       <small class="doc doc-label doc-label-property"><code>property</code></small>
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
   </span>
 
 <a class="headerlink" href="#woke.ast.ir.abc.IrAbc.parent" title="Permanent link">#</a></h3>
@@ -2113,8 +2113,8 @@ This means that each IR node has a corresponding (typically non-empty) Solidity 
 <code class="highlight language-python"><span class="n">canonical_name</span><span class="p">:</span> <span class="nb">str</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
       <small class="doc doc-label doc-label-property"><code>property</code></small>
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
   </span>
 
 <a class="headerlink" href="#woke.ast.ir.declaration.abc.DeclarationAbc.canonical_name" title="Permanent link">#</a></h3>
@@ -2162,8 +2162,8 @@ This means that each IR node has a corresponding (typically non-empty) Solidity 
 <code class="highlight language-python"><span class="n">declaration_string</span><span class="p">:</span> <span class="nb">str</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
       <small class="doc doc-label doc-label-property"><code>property</code></small>
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
   </span>
 
 <a class="headerlink" href="#woke.ast.ir.declaration.abc.DeclarationAbc.declaration_string" title="Permanent link">#</a></h3>
@@ -2632,8 +2632,8 @@ Does not need to match the actual declaration string in the source code (may use
 <code class="highlight language-python"><span class="n">is_ref_to_state_variable</span><span class="p">:</span> <span class="nb">bool</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
       <small class="doc doc-label doc-label-property"><code>property</code></small>
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
   </span>
 
 <a class="headerlink" href="#woke.ast.ir.expression.abc.ExpressionAbc.is_ref_to_state_variable" title="Permanent link">#</a></h3>
@@ -2673,8 +2673,8 @@ This may not be straightforward to determine, e.g. if the expression is a <a cla
 <code class="highlight language-python"><span class="n">modifies_state</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">IrAbc</span><span class="p">,</span> <span class="n">ModifiesStateFlag</span><span class="p">]]</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
       <small class="doc doc-label doc-label-property"><code>property</code></small>
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
   </span>
 
 <a class="headerlink" href="#woke.ast.ir.expression.abc.ExpressionAbc.modifies_state" title="Permanent link">#</a></h3>
@@ -3121,8 +3121,8 @@ This may not be straightforward to determine, e.g. if the expression is a <a cla
 <code class="highlight language-python"><span class="n">modifies_state</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">IrAbc</span><span class="p">,</span> <span class="n">ModifiesStateFlag</span><span class="p">]]</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
       <small class="doc doc-label doc-label-property"><code>property</code></small>
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
   </span>
 
 <a class="headerlink" href="#woke.ast.ir.statement.abc.StatementAbc.modifies_state" title="Permanent link">#</a></h3>
@@ -3160,8 +3160,8 @@ This may not be straightforward to determine, e.g. if the expression is a <a cla
 <code class="highlight language-python"><span class="n">parent</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Block</span><span class="p">,</span> <span class="n">DoWhileStatement</span><span class="p">,</span> <span class="n">ForStatement</span><span class="p">,</span> <span class="n">IfStatement</span><span class="p">,</span> <span class="n">UncheckedBlock</span><span class="p">,</span> <span class="n">WhileStatement</span><span class="p">,</span> <span class="n">FunctionDefinition</span><span class="p">,</span> <span class="n">ModifierDefinition</span><span class="p">,</span> <span class="n">TryCatchClause</span><span class="p">]</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
       <small class="doc doc-label doc-label-property"><code>property</code></small>
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
   </span>
 
 <a class="headerlink" href="#woke.ast.ir.statement.abc.StatementAbc.parent" title="Permanent link">#</a></h3>
@@ -3550,8 +3550,8 @@ This may not be straightforward to determine, e.g. if the expression is a <a cla
 <code class="highlight language-python"><span class="n">parent</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">VariableDeclaration</span><span class="p">,</span> <span class="n">UserDefinedValueTypeDefinition</span><span class="p">,</span> <span class="n">ElementaryTypeNameExpression</span><span class="p">,</span> <span class="n">NewExpression</span><span class="p">,</span> <span class="n">UsingForDirective</span><span class="p">,</span> <span class="n">ArrayTypeName</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">]</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
       <small class="doc doc-label doc-label-property"><code>property</code></small>
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
   </span>
 
 <a class="headerlink" href="#woke.ast.ir.type_name.abc.TypeNameAbc.parent" title="Permanent link">#</a></h3>
