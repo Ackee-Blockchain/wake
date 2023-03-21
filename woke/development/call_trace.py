@@ -36,6 +36,88 @@ if TYPE_CHECKING:
     from .transactions import TransactionAbc
 
 
+def get_precompiled_info(
+    addr: Address, data: bytes
+) -> Tuple[str, Optional[Tuple[Any, ...]]]:
+    if addr == Address(1):
+        if len(data) != 128:
+            return "ecRecover", None
+        return "ecRecover", (data[:32], data[32:64], data[64:96], data[96:128])
+    elif addr == Address(2):
+        return "SHA2-256", (data,)
+    elif addr == Address(3):
+        return "RIPEMD-160", (data,)
+    elif addr == Address(4):
+        return "identity", (data,)
+    elif addr == Address(5):
+        if len(data) < 96:
+            return "modexp", None
+        base_length = int.from_bytes(data[:32], "big")
+        exp_length = int.from_bytes(data[32:64], "big")
+        mod_length = int.from_bytes(data[64:96], "big")
+        return "modexp", (
+            base_length,
+            exp_length,
+            mod_length,
+            data[96 : 96 + base_length],
+            data[96 + base_length : 96 + base_length + exp_length],
+            data[
+                96
+                + base_length
+                + exp_length : 96
+                + base_length
+                + exp_length
+                + mod_length
+            ],
+        )
+    elif addr == Address(6):
+        if len(data) != 128:
+            return "ecAdd", None
+        x1 = int.from_bytes(data[:32], "big")
+        y1 = int.from_bytes(data[32:64], "big")
+        x2 = int.from_bytes(data[64:96], "big")
+        y2 = int.from_bytes(data[96:128], "big")
+        return "ecAdd", (x1, y1, x2, y2)
+    elif addr == Address(7):
+        if len(data) != 96:
+            return "ecMul", None
+        x1 = int.from_bytes(data[:32], "big")
+        y1 = int.from_bytes(data[32:64], "big")
+        s = int.from_bytes(data[64:96], "big")
+        return "ecMul", (x1, y1, s)
+    elif addr == Address(8):
+        if len(data) % (6 * 32) != 0:
+            return "ecPairing", None
+        coords = tuple(
+            int.from_bytes(data[i : i + 32], "big") for i in range(0, len(data), 32)
+        )
+        return "ecPairing", coords
+    elif addr == Address(9):
+        if len(data) != 4 + 64 + 128 + 16 + 1:
+            return "Blake2F", None
+        rounds = int.from_bytes(data[:4], "big")
+        offset = 4
+        h = tuple(
+            int.from_bytes(data[i : i + 8], "little")
+            for i in range(offset, offset + 8 * 8, 8)
+        )
+        offset += 8 * 8
+        m = tuple(
+            int.from_bytes(data[i : i + 8], "little")
+            for i in range(offset, offset + 16 * 8, 8)
+        )
+        offset += 16 * 8
+        t = tuple(
+            int.from_bytes(data[i : i + 8], "little", signed=True)
+            for i in range(offset, offset + 2 * 8, 8)
+        )
+        offset += 2 * 8
+        f = data[offset]
+        return "Blake2F", (rounds, h, m, t, f)
+    else:
+        raise ValueError(f"Unknown precompiled contract address: {addr}")
+
+
 class CallTraceKind(StrEnum):
     CALL = "CALL"
     DELEGATECALL = "DELEGATECALL"
@@ -262,31 +344,52 @@ class CallTrace:
             value = tx_params["value"]
 
         explorer_info = None
-        if (
-            tx.chain._fork is not None
-            and (origin_fqn is None or origin_fqn not in contracts_by_fqn)
-            and tx.to is not None
-        ):
-            explorer_info = get_contract_info_from_explorer(
-                tx.to.address, tx.chain.chain_id
-            )
-
+        precompiled_info = None
         if (
             origin_fqn is None or origin_fqn not in contracts_by_fqn
-        ) and explorer_info is None:
-            assert "to" in tx_params
+        ) and tx.to is not None:
+            if tx.to.address <= Address(9):
+                precompiled_info = get_precompiled_info(
+                    tx.to.address, b"" if "data" not in tx_params else tx_params["data"]
+                )
+            elif tx.chain._fork is not None:
+                explorer_info = get_contract_info_from_explorer(
+                    tx.to.address, tx.chain.chain_id
+                )
+
+        if (
+            (origin_fqn is None or origin_fqn not in contracts_by_fqn)
+            and explorer_info is None
+            and precompiled_info is None
+        ):
             root_trace = CallTrace(
                 None,
                 None,
                 None,
                 None,
-                Address(tx_params["to"]),
+                None if tx.to is None else tx.to.address,
                 [b"" if "data" not in tx_params else tx_params["data"]],
                 value,
                 CallTraceKind.CALL,
                 1,
                 tx.chain,
                 True,
+            )
+        elif precompiled_info is not None:
+            assert tx.to is not None
+            precompiled_name, args = precompiled_info
+            root_trace = CallTrace(
+                None,
+                "<precompiled>",
+                precompiled_name,
+                None,
+                tx.to.address,
+                args,
+                value,
+                CallTraceKind.CALL,
+                1,
+                tx.chain,
+                False,
             )
         else:
             if explorer_info is not None:
@@ -459,16 +562,18 @@ class CallTrace:
                     fqn = get_fqn_from_address(addr, tx.block.number - 1, tx.chain)
 
                 explorer_info = None
-                if (
-                    tx.chain._fork is not None
-                    and fqn is None
-                    and addr != Address("0x000000000000000000636F6e736F6c652e6c6f67")
+                precompiled_info = None
+                if fqn is None and addr != Address(
+                    "0x000000000000000000636F6e736F6c652e6c6f67"
                 ):
-                    explorer_info = get_contract_info_from_explorer(
-                        addr, tx.chain.chain_id
-                    )
+                    if addr <= Address(9):
+                        precompiled_info = get_precompiled_info(addr, data)
+                    elif tx.chain._fork is not None:
+                        explorer_info = get_contract_info_from_explorer(
+                            addr, tx.chain.chain_id
+                        )
 
-                if fqn is None and explorer_info is None:
+                if fqn is None and explorer_info is None and precompiled_info is None:
                     if addr == Address("0x000000000000000000636F6e736F6c652e6c6f67"):
                         if data[:4] in hardhat_console.abis:
                             fn_abi = hardhat_console.abis[data[:4]]
@@ -513,6 +618,20 @@ class CallTrace:
                             tx.chain,
                             True,
                         )
+                elif precompiled_info is not None:
+                    call_trace = CallTrace(
+                        None,
+                        "<precompiled>",
+                        precompiled_info[0],
+                        None,
+                        addr,
+                        precompiled_info[1],
+                        value,
+                        log["op"],
+                        current_trace.depth + 1,
+                        tx.chain,
+                        False,
+                    )
                 else:
                     if explorer_info is not None:
                         contract_name, contract_abi = explorer_info
