@@ -161,7 +161,7 @@ def accounts_list(ctx: Context, keystore: Optional[str]):
     if not path.is_dir():
         return
 
-    for file in path.iterdir():
+    for file in sorted(path.iterdir()):
         if file.suffix == ".json" and file.is_file():
             with file.open() as f:
                 k = json.load(f)
