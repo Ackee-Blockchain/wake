@@ -53,7 +53,7 @@ def run_run(paths: Tuple[str, ...], debug: bool) -> None:
     run_functions: List[Callable] = []
 
     sys.path.insert(0, str(config.project_root_path))
-    for file in py_files:
+    for file in sorted(py_files):
         module_name = _get_module_name(file, config.project_root_path)
         module_spec = importlib.util.spec_from_file_location(module_name, file)
         if module_spec is None or module_spec.loader is None:
