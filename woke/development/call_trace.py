@@ -170,7 +170,7 @@ class CallTrace:
         return ret
 
     @property
-    def subtraces(self) -> Tuple[CallTrace]:
+    def subtraces(self) -> Tuple[CallTrace, ...]:
         return tuple(self._subtraces)
 
     @property
