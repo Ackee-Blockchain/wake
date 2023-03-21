@@ -3,6 +3,7 @@ from __future__ import annotations
 import heapq
 import keyword
 import logging
+import os
 import re
 import shutil
 import string
@@ -22,6 +23,7 @@ from typing import (
     Tuple,
     Union,
 )
+from urllib.request import pathname2url
 
 import eth_utils
 import networkx as nx
@@ -66,6 +68,27 @@ def _make_path_alphanum(source_unit_name: str) -> str:
         f"_{segment}" if segment.startswith(tuple(string.digits)) else segment
         for segment in filtered.split("/")
     )
+
+
+def _binary_search(lines: List[Tuple[bytes, int]], x: int) -> int:
+    l = 0
+    r = len(lines)
+
+    while l < r:
+        mid = l + (r - l) // 2
+        if lines[mid][1] < x + 1:
+            l = mid + 1
+        else:
+            r = mid
+
+    return l - 1
+
+
+def _path_to_uri(path: Path) -> str:
+    if os.name == "nt":
+        return "file:" + pathname2url(str(path.resolve()))
+    else:
+        return "file://" + pathname2url(str(path.resolve()))
 
 
 def _parse_opcodes(opcodes: str) -> List[Tuple[int, str, int, Optional[int]]]:
@@ -146,6 +169,7 @@ class TypeGenerator:
     __contracts_inheritance_index: Dict[str, Tuple[str, ...]]
     __contracts_revert_index: Dict[str, Set[int]]
     __creation_code_index: List[Tuple[Tuple[Tuple[int, bytes], ...], str]]
+    __line_indexes: Dict[Path, List[Tuple[bytes, int]]]
 
     def __init__(self, config: WokeConfig, return_tx_obj: bool):
         self.__config = config
@@ -169,6 +193,7 @@ class TypeGenerator:
         self.__contracts_inheritance_index = {}
         self.__contracts_revert_index = {}
         self.__creation_code_index = []
+        self.__line_indexes = {}
 
         # built-in Error(str) and Panic(uint256) errors
         error_abi = {
@@ -191,6 +216,36 @@ class TypeGenerator:
                 "woke.development.transactions",
                 (item["name"],),
             )
+
+    def __setup_line_indexes(self, file: Path) -> None:
+        content = self.__source_units[file].file_source
+        tmp_lines = re.split(b"(\r?\n)", content)
+        lines: List[bytes] = []
+        for line in tmp_lines:
+            if line in {b"\r\n", b"\n"}:
+                lines[-1] += line
+            else:
+                lines.append(line)
+
+        # UTF-8 encoded lines with prefix length
+        encoded_lines: List[Tuple[bytes, int]] = []
+        prefix_sum = 0
+        for line in lines:
+            encoded_lines.append((line, prefix_sum))
+            prefix_sum += len(line)
+        self.__line_indexes[file] = encoded_lines
+
+    def __get_line_pos_from_byte_offset(
+        self, file: Path, byte_offset: int
+    ) -> Tuple[int, int]:
+        if file not in self.__line_indexes:
+            self.__setup_line_indexes(file)
+
+        encoded_lines = self.__line_indexes[file]
+        line_num = _binary_search(encoded_lines, byte_offset)
+        line_data, prefix_sum = encoded_lines[line_num]
+        line_offset = byte_offset - prefix_sum
+        return line_num, line_offset
 
     # TODO do some prettier init :)
     def __init_sol_to_py_types(self):
@@ -223,6 +278,19 @@ class TypeGenerator:
     def generate_deploy_func(
         self, contract: ContractDefinition, libraries: Dict[bytes, Tuple[str, str]]
     ):
+        def generate_docstring():
+            if source_code_link is not None or len(param_names) > 0:
+                self.add_str_to_types(2, '"""', 1)
+                if source_code_link is not None:
+                    self.add_str_to_types(
+                        2, source_code_link, 1 if len(param_names) == 0 else 2
+                    )
+                if len(param_names) > 0:
+                    self.add_str_to_types(2, "Args:", 1)
+                    for param_name, param_type in param_names:
+                        self.add_str_to_types(3, f"{param_name}: {param_type}", 1)
+                self.add_str_to_types(2, '"""', 1)
+
         param_names = []
         params = []
         for fn in contract.functions:
@@ -237,6 +305,14 @@ class TypeGenerator:
         )
 
         contract_name = self.get_name(contract)
+        source_code_link = None
+        for fn in contract.functions:
+            if fn.kind == FunctionKind.CONSTRUCTOR:
+                line, _ = self.__get_line_pos_from_byte_offset(
+                    fn.file, fn.byte_location[0]
+                )
+                source_code_link = f"[Source code]({_path_to_uri(fn.file)}#{line + 1})"
+                break
 
         # generate @overload stubs
         self.add_str_to_types(1, "@overload", 1)
@@ -246,6 +322,7 @@ class TypeGenerator:
             f"""def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: Union[int, str] = 0, gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]] = None, return_tx: Literal[False]{'' if self.__return_tx_obj else ' = False'}{libraries_str}, request_type: Literal["call"], chain: Optional[Chain] = None, gas_price: Optional[Union[int, str]] = None, max_fee_per_gas: Optional[Union[int, str]] = None, max_priority_fee_per_gas: Optional[Union[int, str]] = None, access_list: Optional[Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]] = None, type: Optional[int] = None, block: Optional[Union[int, Literal["latest"], Literal["pending"], Literal["earliest"], Literal["safe"], Literal["finalized"]]] = None, confirmations: Optional[int] = None) -> bytearray:""",
             1,
         )
+        generate_docstring()
         self.add_str_to_types(2, "...", 2)
 
         self.add_str_to_types(1, "@overload", 1)
@@ -255,6 +332,7 @@ class TypeGenerator:
             f"""def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: Union[int, str] = 0, gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]] = None, return_tx: Literal[False]{'' if self.__return_tx_obj else ' = False'}{libraries_str}, request_type: Literal["tx"] = "tx", chain: Optional[Chain] = None, gas_price: Optional[Union[int, str]] = None, max_fee_per_gas: Optional[Union[int, str]] = None, max_priority_fee_per_gas: Optional[Union[int, str]] = None, access_list: Optional[Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]] = None, type: Optional[int] = None, block: Optional[Union[int, Literal["latest"], Literal["pending"], Literal["earliest"], Literal["safe"], Literal["finalized"]]] = None, confirmations: Optional[int] = None) -> {contract_name}:""",
             1,
         )
+        generate_docstring()
         self.add_str_to_types(2, "...", 2)
 
         self.add_str_to_types(1, "@overload", 1)
@@ -264,6 +342,7 @@ class TypeGenerator:
             f"""def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: Union[int, str] = 0, gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]] = None, return_tx: Literal[False]{'' if self.__return_tx_obj else ' = False'}{libraries_str}, request_type: Literal["estimate"], chain: Optional[Chain] = None, gas_price: Optional[Union[int, str]] = None, max_fee_per_gas: Optional[Union[int, str]] = None, max_priority_fee_per_gas: Optional[Union[int, str]] = None, access_list: Optional[Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]] = None, type: Optional[int] = None, block: Optional[Union[int, Literal["latest"], Literal["pending"], Literal["earliest"], Literal["safe"], Literal["finalized"]]] = None, confirmations: Optional[int] = None) -> int:""",
             1,
         )
+        generate_docstring()
         self.add_str_to_types(2, "...", 2)
 
         self.add_str_to_types(1, "@overload", 1)
@@ -273,6 +352,7 @@ class TypeGenerator:
             f"""def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: Union[int, str] = 0, gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]] = None, return_tx: Literal[False]{'' if self.__return_tx_obj else ' = False'}{libraries_str}, request_type: Literal["access_list"], chain: Optional[Chain] = None, gas_price: Optional[Union[int, str]] = None, max_fee_per_gas: Optional[Union[int, str]] = None, max_priority_fee_per_gas: Optional[Union[int, str]] = None, access_list: Optional[Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]] = None, type: Optional[int] = None, block: Optional[Union[int, Literal["latest"], Literal["pending"], Literal["earliest"], Literal["safe"], Literal["finalized"]]] = None, confirmations: Optional[int] = None) -> Tuple[Dict[Address, List[int]], int]:""",
             1,
         )
+        generate_docstring()
         self.add_str_to_types(2, "...", 2)
 
         self.add_str_to_types(1, "@overload", 1)
@@ -282,6 +362,7 @@ class TypeGenerator:
             f"""def deploy(cls, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, value: Union[int, str] = 0, gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]] = None, return_tx: Literal[True]{' = True' if self.__return_tx_obj else ''}{libraries_str}, request_type: Literal["tx"] = "tx", chain: Optional[Chain] = None, gas_price: Optional[Union[int, str]] = None, max_fee_per_gas: Optional[Union[int, str]] = None, max_priority_fee_per_gas: Optional[Union[int, str]] = None, access_list: Optional[Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]] = None, type: Optional[int] = None, block: Optional[Union[int, Literal["latest"], Literal["pending"], Literal["earliest"], Literal["safe"], Literal["finalized"]]] = None, confirmations: Optional[int] = None) -> TransactionAbc[{contract_name}]:""",
             1,
         )
+        generate_docstring()
         self.add_str_to_types(2, "...", 2)
 
         self.add_str_to_types(1, "@classmethod", 1)
@@ -291,12 +372,7 @@ class TypeGenerator:
             1,
         )
 
-        if len(param_names) > 0:
-            self.add_str_to_types(2, '"""', 1)
-            self.add_str_to_types(2, "Args:", 1)
-            for param_name, param_type in param_names:
-                self.add_str_to_types(3, f"{param_name}: {param_type}", 1)
-            self.add_str_to_types(2, '"""', 1)
+        generate_docstring()
 
         if contract.kind in {ContractKind.CONTRACT, ContractKind.LIBRARY}:
             if not contract.abstract:
@@ -371,6 +447,15 @@ class TypeGenerator:
             self.add_str_to_types(
                 0, "class " + self.get_name(contract) + "(" + base_names + "):", 1
             )
+        line, _ = self.__get_line_pos_from_byte_offset(
+            contract.file, contract.byte_location[0]
+        )
+        self.add_str_to_types(1, '"""', 1)
+        self.add_str_to_types(
+            1, f"[Source code]({_path_to_uri(contract.file)}#{line + 1})", 1
+        )
+        self.add_str_to_types(1, '"""', 1)
+
         compilation_info = contract.compilation_info
         assert compilation_info is not None
         assert compilation_info.abi is not None
@@ -611,6 +696,12 @@ class TypeGenerator:
             self.add_str_to_types(indent, "@dataclasses.dataclass", 1)
             self.add_str_to_types(indent, f"class {self.get_name(struct)}:", 1)
             self.add_str_to_types(indent + 1, '"""', 1)
+            line, _ = self.__get_line_pos_from_byte_offset(
+                struct.file, struct.byte_location[0]
+            )
+            self.add_str_to_types(
+                indent + 1, f"[Source code]({_path_to_uri(struct.file)}#{line + 1})", 2
+            )
             self.add_str_to_types(indent + 1, "Attributes:", 1)
             for member_name, member_type, member_type_desc, _ in members:
                 self.add_str_to_types(
@@ -636,6 +727,14 @@ class TypeGenerator:
         self.__imports.add_python_import("from enum import IntEnum")
         for enum in enums:
             self.add_str_to_types(indent, f"class {self.get_name(enum)}(IntEnum):", 1)
+            line, _ = self.__get_line_pos_from_byte_offset(
+                enum.file, enum.byte_location[0]
+            )
+            self.add_str_to_types(indent + 1, '"""', 1)
+            self.add_str_to_types(
+                indent + 1, f"[Source code]({_path_to_uri(enum.file)}#{line + 1})", 2
+            )
+            self.add_str_to_types(indent + 1, '"""', 1)
             num = 0
             for member in enum.values:
                 self.add_str_to_types(
@@ -697,15 +796,24 @@ class TypeGenerator:
                 1,
             )
 
+            line, _ = self.__get_line_pos_from_byte_offset(
+                error.file, error.byte_location[0]
+            )
+            self.add_str_to_types(indent + 1, '"""', 1)
+            self.add_str_to_types(
+                indent + 1,
+                f"[Source code]({_path_to_uri(error.file)}#{line + 1})",
+                1 if len(parameters) == 0 else 2,
+            )
+
             if len(parameters) > 0:
-                self.add_str_to_types(indent + 1, '"""', 1)
                 self.add_str_to_types(indent + 1, "Attributes:", 1)
                 for param_name, param_type, param_type_desc, _ in parameters:
                     self.add_str_to_types(
                         indent + 2, f"{param_name} ({param_type}): {param_type_desc}", 1
                     )
-                self.add_str_to_types(indent + 1, '"""', 1)
 
+            self.add_str_to_types(indent + 1, '"""', 1)
             self.add_str_to_types(indent + 1, f"_abi = {error_abi}", 1)
             self.add_str_to_types(indent + 1, f"original_name = '{error.name}'", 1)
             self.add_str_to_types(indent + 1, f"selector = {error.error_selector}", 2)
@@ -760,15 +868,24 @@ class TypeGenerator:
             self.add_str_to_types(indent, "@dataclasses.dataclass", 1)
             self.add_str_to_types(indent, f"class {self.get_name(event)}:", 1)
 
+            line, _ = self.__get_line_pos_from_byte_offset(
+                event.file, event.byte_location[0]
+            )
+            self.add_str_to_types(indent + 1, '"""', 1)
+            self.add_str_to_types(
+                indent + 1,
+                f"[Source code]({_path_to_uri(event.file)}#{line + 1})",
+                1 if len(parameters) == 0 else 2,
+            )
+
             if len(parameters) > 0:
-                self.add_str_to_types(indent + 1, '"""', 1)
                 self.add_str_to_types(indent + 1, "Attributes:", 1)
                 for param_name, param_type, param_type_desc, _ in parameters:
                     self.add_str_to_types(
                         indent + 2, f"{param_name} ({param_type}): {param_type_desc}", 1
                     )
-                self.add_str_to_types(indent + 1, '"""', 1)
 
+            self.add_str_to_types(indent + 1, '"""', 1)
             self.add_str_to_types(
                 indent + 1, f"_abi = {events_abi[event.event_selector]}", 1
             )
@@ -1057,10 +1174,10 @@ class TypeGenerator:
             returns_str = f"Tuple[{', '.join(ret[0] for ret in returns)}]"
 
         self.generate_type_hint_stub_func(
-            decl, generated_params, returns_str, "call", True
+            decl, generated_params, returns_str, "call", True, param_names, returns
         )
         self.generate_type_hint_stub_func(
-            decl, generated_params, "int", "estimate", False
+            decl, generated_params, "int", "estimate", False, param_names, returns
         )
         self.generate_type_hint_stub_func(
             decl,
@@ -1068,6 +1185,8 @@ class TypeGenerator:
             "Tuple[Dict[Address, List[int]], int]",
             "access_list",
             False,
+            param_names,
+            returns,
         )
         self.generate_type_hint_stub_func(
             decl,
@@ -1075,6 +1194,8 @@ class TypeGenerator:
             f"TransactionAbc[{returns_str}]",
             "tx",
             False,
+            param_names,
+            returns,
         )
 
         self.generate_func_implementation(
@@ -1125,19 +1246,26 @@ class TypeGenerator:
             1,
         )
 
-        if len(param_names) + len(returns) > 0:
-            self.add_str_to_types(2, '"""', 1)
-            if len(param_names) > 0:
-                self.add_str_to_types(2, "Args:", 1)
-                for param_name, param_type in param_names:
-                    self.add_str_to_types(3, f"{param_name}: {param_type}", 1)
-            if len(returns) == 1:
-                self.add_str_to_types(2, "Returns:", 1)
-                self.add_str_to_types(3, f"{returns[0][1]}", 1)
-            elif len(returns) > 1:
-                self.add_str_to_types(2, "Returns:", 1)
-                self.add_str_to_types(3, f'({", ".join(ret[1] for ret in returns)})', 1)
-            self.add_str_to_types(2, '"""', 1)
+        line, _ = self.__get_line_pos_from_byte_offset(
+            declaration.file, declaration.byte_location[0]
+        )
+        self.add_str_to_types(2, '"""', 1)
+        self.add_str_to_types(
+            2,
+            f"[Source code]({_path_to_uri(declaration.file)}#{line + 1})",
+            1 if len(param_names) + len(returns) == 0 else 2,
+        )
+        if len(param_names) > 0:
+            self.add_str_to_types(2, "Args:", 1)
+            for param_name, param_type in param_names:
+                self.add_str_to_types(3, f"{param_name}: {param_type}", 1)
+        if len(returns) == 1:
+            self.add_str_to_types(2, "Returns:", 1)
+            self.add_str_to_types(3, f"{returns[0][1]}", 1)
+        elif len(returns) > 1:
+            self.add_str_to_types(2, "Returns:", 1)
+            self.add_str_to_types(3, f'({", ".join(ret[1] for ret in returns)})', 1)
+        self.add_str_to_types(2, '"""', 1)
 
         if len(returns) == 0:
             return_types = "NoneType"
@@ -1161,6 +1289,8 @@ class TypeGenerator:
         returns_str: str,
         request_type: str,
         request_type_is_default: bool,
+        param_names: List[Tuple[str, str]],
+        returns: List[Tuple[str, str]],
     ):
         params_str = "".join(param + ", " for param in params)
 
@@ -1170,6 +1300,26 @@ class TypeGenerator:
             f"""def {self.get_name(declaration)}(self, {params_str}*, from_: Optional[Union[Account, Address, str]] = None, to: Optional[Union[Account, Address, str]] = None, value: Union[int, str] = 0, gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]] = None, request_type: Literal["{request_type}"]{' = "' + request_type + '"' if request_type_is_default else ''}, gas_price: Optional[Union[int, str]] = None, max_fee_per_gas: Optional[Union[int, str]] = None, max_priority_fee_per_gas: Optional[Union[int, str]] = None, access_list: Optional[Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]] = None, type: Optional[int] = None, block: Optional[Union[int, Literal["latest"], Literal["pending"], Literal["earliest"], Literal["safe"], Literal["finalized"]]] = None, confirmations: Optional[int] = None) -> {returns_str}:""",
             1,
         )
+        line, _ = self.__get_line_pos_from_byte_offset(
+            declaration.file, declaration.byte_location[0]
+        )
+        self.add_str_to_types(2, '"""', 1)
+        self.add_str_to_types(
+            2,
+            f"[Source code]({_path_to_uri(declaration.file)}#{line + 1})",
+            1 if len(param_names) + len(returns) == 0 else 2,
+        )
+        if len(param_names) > 0:
+            self.add_str_to_types(2, "Args:", 1)
+            for param_name, param_type in param_names:
+                self.add_str_to_types(3, f"{param_name}: {param_type}", 1)
+        if len(returns) == 1:
+            self.add_str_to_types(2, "Returns:", 1)
+            self.add_str_to_types(3, f"{returns[0][1]}", 1)
+        elif len(returns) > 1:
+            self.add_str_to_types(2, "Returns:", 1)
+            self.add_str_to_types(3, f'({", ".join(ret[1] for ret in returns)})', 1)
+        self.add_str_to_types(2, '"""', 1)
         self.add_str_to_types(2, "...", 2)
 
     def generate_types_function(self, fn: FunctionDefinition):
@@ -1194,6 +1344,8 @@ class TypeGenerator:
             returns_str,
             "call",
             is_pure_or_view,
+            params_names,
+            returns,
         )
         self.generate_type_hint_stub_func(
             fn,
@@ -1201,6 +1353,8 @@ class TypeGenerator:
             "int",
             "estimate",
             False,
+            params_names,
+            returns,
         )
         self.generate_type_hint_stub_func(
             fn,
@@ -1208,6 +1362,8 @@ class TypeGenerator:
             "Tuple[Dict[Address, List[int]], int]",
             "access_list",
             False,
+            params_names,
+            returns,
         )
         self.generate_type_hint_stub_func(
             fn,
@@ -1215,6 +1371,8 @@ class TypeGenerator:
             f"TransactionAbc[{returns_str}]",
             "tx",
             not is_pure_or_view,
+            params_names,
+            returns,
         )
 
         assert fn.function_selector is not None
