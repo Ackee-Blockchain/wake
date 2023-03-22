@@ -307,14 +307,16 @@ def _cfg_block_or_statement_is_publicly_reachable(
                             condition[0] == TransitionCondition.IS_TRUE
                             and condition[1] is not None
                             and expression_is_only_owner(
-                                condition[1], set(), check_only_eoa=check_only_eoa
+                                condition[1],
+                                set(),
+                                check_only_eoa=check_only_eoa,  # pyright: reportGeneralTypeIssues=false
                             )
                         )
                         or (
                             condition[0] == TransitionCondition.IS_FALSE
                             and condition[1] is not None
                             and expression_is_only_owner(
-                                condition[1],
+                                condition[1],  # pyright: reportGeneralTypeIssues=false
                                 set(),
                                 check_only_eoa=check_only_eoa,
                                 inverted=True,
