@@ -229,6 +229,32 @@ class TransactionAbc(ABC, Generic[T]):
             self._fetch_trace_transaction()
             assert self._trace_transaction is not None
             return self._chain._process_console_logs(self._trace_transaction)
+        elif isinstance(
+            chain_interface, (GanacheChainInterface, HardhatChainInterface)
+        ):
+            self._fetch_debug_trace_transaction()
+            assert self._debug_trace_transaction is not None
+            return self._chain._process_console_logs_from_debug_trace(
+                self._debug_trace_transaction
+            )
+        elif isinstance(chain_interface, GethChainInterface):
+            try:
+                self._fetch_trace_transaction()
+                assert self._trace_transaction is not None
+                return self._chain._process_console_logs(self._trace_transaction)
+            except JsonRpcError as e:
+                # TODO make assertions about error.code?
+                try:
+                    self._fetch_debug_trace_transaction()
+                    assert self._debug_trace_transaction is not None
+                    return self._chain._process_console_logs_from_debug_trace(
+                        self._debug_trace_transaction
+                    )
+                except JsonRpcError as e:
+                    # TODO make assertions about error.code?
+                    raise RuntimeError(
+                        f"Could not get console logs for transaction {self.tx_hash} as trace_transaction and debug_trace_transaction are both unavailable"
+                    )
         else:
             raise NotImplementedError
 

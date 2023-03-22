@@ -1805,6 +1805,24 @@ class Chain(ABC):
                     )
         return console_logs
 
+    def _process_console_logs_from_debug_trace(
+        self, debug_trace: Dict[str, Any]
+    ) -> List:
+        hardhat_console_address = Address("0x000000000000000000636F6e736F6c652e6c6f67")
+        console_logs = []
+        for trace in debug_trace["structLogs"]:
+            if trace["op"] == "STATICCALL":
+                addr = Address(int(trace["stack"][-2], 16))
+                if addr == hardhat_console_address:
+                    args_offset = int(trace["stack"][-3], 16)
+                    args_size = int(trace["stack"][-4], 16)
+                    data = bytes(
+                        read_from_memory(args_offset, args_size, trace["memory"])
+                    )
+                    console_logs.append(self._parse_console_log_data(data))
+
+        return console_logs
+
     def _process_call_revert(self, e: JsonRpcError):
         if (
             isinstance(self._chain_interface, (AnvilChainInterface, GethChainInterface))
