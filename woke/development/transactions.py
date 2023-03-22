@@ -28,10 +28,11 @@ from .chain_interfaces import (
     GanacheChainInterface,
     GethChainInterface,
     HardhatChainInterface,
+    TxParams,
 )
 from .core import Account, Chain, Wei
 from .internal import UnknownEvent, read_from_memory
-from .json_rpc import JsonRpcError, TxParams
+from .json_rpc import JsonRpcError
 
 T = TypeVar("T")
 

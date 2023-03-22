@@ -1,1 +1,1 @@
-from .communicator import JsonRpcError, TxParams
+from .communicator import JsonRpcError
