@@ -6,6 +6,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, cast
 import eth_utils
 
 import woke.development.core
+from woke.development.chain_interfaces import TxParams
 from woke.development.core import (
     Abi,
     Account,
@@ -16,7 +17,7 @@ from woke.development.core import (
     check_connected,
     fix_library_abi,
 )
-from woke.development.json_rpc import JsonRpcError, TxParams
+from woke.development.json_rpc import JsonRpcError
 
 from ..development.chain_interfaces import AnvilChainInterface
 from ..development.transactions import TransactionAbc, TransactionStatusEnum

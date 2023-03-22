@@ -11,7 +11,7 @@ from rich.table import Table
 
 import woke.development.core
 from woke.cli.console import console
-from woke.development.chain_interfaces import AnvilChainInterface
+from woke.development.chain_interfaces import AnvilChainInterface, TxParams
 from woke.development.core import (
     Abi,
     Account,
@@ -23,7 +23,7 @@ from woke.development.core import (
     check_connected,
     fix_library_abi,
 )
-from woke.development.json_rpc.communicator import JsonRpcError, TxParams
+from woke.development.json_rpc.communicator import JsonRpcError
 from woke.development.transactions import (
     Eip1559Transaction,
     Eip2930Transaction,

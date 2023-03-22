@@ -16,6 +16,7 @@ from rich.tree import Tree
 from woke.utils import StrEnum
 
 from . import hardhat_console
+from .chain_interfaces import TxParams
 from .core import (
     Account,
     Address,
@@ -29,7 +30,6 @@ from .core import (
     process_debug_trace_for_fqn_overrides,
 )
 from .internal import read_from_memory
-from .json_rpc.communicator import TxParams
 from .utils import get_contract_info_from_explorer
 
 if TYPE_CHECKING:

@@ -6,11 +6,32 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Union
 from urllib.error import URLError
 
+from typing_extensions import Literal, TypedDict
+
 from woke.config import WokeConfig
 from woke.development.globals import get_config
 from woke.utils.networking import get_free_port
 
-from .json_rpc.communicator import JsonRpcCommunicator, TxParams
+from .json_rpc.communicator import JsonRpcCommunicator
+
+TxParams = TypedDict(
+    "TxParams",
+    {
+        "type": int,
+        "nonce": int,
+        "to": str,
+        "from": str,
+        "gas": Union[int, Literal["auto"]],
+        "value": int,
+        "data": bytes,
+        "gasPrice": int,
+        "maxPriorityFeePerGas": int,
+        "maxFeePerGas": int,
+        "accessList": Union[List, Literal["auto"]],
+        "chainId": int,
+    },
+    total=False,
+)
 
 
 class ChainInterfaceAbc(ABC):
@@ -27,6 +48,46 @@ class ChainInterfaceAbc(ABC):
         self._config = config
         self._communicator = communicator
         self._process = process
+
+    @staticmethod
+    def _encode_tx_params(transaction: TxParams) -> Dict:
+        tx = {}
+        if "type" in transaction:
+            tx["type"] = hex(transaction["type"])
+        if "nonce" in transaction:
+            tx["nonce"] = hex(transaction["nonce"])
+        if "to" in transaction:
+            tx["to"] = transaction["to"]
+        if "from" in transaction:
+            tx["from"] = transaction["from"]
+        if "gas" in transaction:
+            assert transaction["gas"] != "auto"
+            tx["gas"] = hex(transaction["gas"])
+        if "value" in transaction:
+            tx["value"] = hex(transaction["value"])
+        if "data" in transaction:
+            tx["data"] = "0x" + transaction["data"].hex()
+        if "gasPrice" in transaction:
+            tx["gasPrice"] = hex(transaction["gasPrice"])
+        if "maxPriorityFeePerGas" in transaction:
+            tx["maxPriorityFeePerGas"] = hex(transaction["maxPriorityFeePerGas"])
+        if "maxFeePerGas" in transaction:
+            tx["maxFeePerGas"] = hex(transaction["maxFeePerGas"])
+        if "accessList" in transaction:
+            assert transaction["accessList"] != "auto"
+            tx["accessList"] = transaction["accessList"]
+        if "chainId" in transaction:
+            tx["chainId"] = hex(transaction["chainId"])
+        return tx
+
+    @staticmethod
+    def _encode_block_identifier(block_identifier: Union[int, str]) -> str:
+        if isinstance(block_identifier, int):
+            return hex(block_identifier)
+        elif isinstance(block_identifier, str):
+            return block_identifier
+        else:
+            raise TypeError("block identifier must be either int or str")
 
     @classmethod
     def launch(
@@ -139,7 +200,7 @@ class ChainInterfaceAbc(ABC):
                 try:
                     comm = JsonRpcCommunicator(config, f"ws://{hostname}:{port}")
                     comm.__enter__()
-                    comm.web3_client_version()
+                    comm.send_request("web3_clientVersion").lower()
                     break
                 except (ConnectionRefusedError, URLError, ValueError):
                     if time.perf_counter() - start > config.testing.timeout:
@@ -162,7 +223,7 @@ class ChainInterfaceAbc(ABC):
         communicator = JsonRpcCommunicator(config, uri)
         communicator.__enter__()
         try:
-            client_version = communicator.web3_client_version().lower()
+            client_version = communicator.send_request("web3_clientVersion").lower()
             if "anvil" in client_version:
                 return AnvilChainInterface(config, communicator)
             elif "hardhat" in client_version:
@@ -188,89 +249,153 @@ class ChainInterfaceAbc(ABC):
             except subprocess.TimeoutExpired:
                 self._process.kill()
 
-    def get_balance(self, address: str) -> int:
-        return self._communicator.eth_get_balance(address)
+    def get_balance(
+        self, address: str, block_identifier: Union[int, str] = "latest"
+    ) -> int:
+        return int(
+            self._communicator.send_request(
+                "eth_getBalance",
+                [address, self._encode_block_identifier(block_identifier)],
+            ),
+            16,
+        )
 
     def get_code(
         self, address: str, block_identifier: Union[int, str] = "latest"
     ) -> bytes:
-        return self._communicator.eth_get_code(address, block_identifier)
+        return bytes.fromhex(
+            self._communicator.send_request(
+                "eth_getCode",
+                [address, self._encode_block_identifier(block_identifier)],
+            )[2:]
+        )
 
-    def accounts(self) -> List[str]:
-        return self._communicator.eth_accounts()
+    def get_accounts(self) -> List[str]:
+        return self._communicator.send_request("eth_accounts")
 
     def get_coinbase(self) -> str:
-        return self._communicator.eth_coinbase()
+        return self._communicator.send_request("eth_coinbase")
 
     def get_block(
         self, block_identifier: Union[int, str], include_transactions: bool = False
     ) -> Dict[str, Any]:
-        return self._communicator.eth_get_block_by_number(
-            block_identifier, include_transactions
+        return self._communicator.send_request(
+            "eth_getBlockByNumber",
+            [self._encode_block_identifier(block_identifier), include_transactions],
         )
 
     def get_block_number(self) -> int:
-        return self._communicator.eth_block_number()
+        return int(self._communicator.send_request("eth_blockNumber"), 16)
 
     def get_transaction(self, tx_hash: str) -> Dict[str, Any]:
-        return self._communicator.eth_get_transaction_by_hash(tx_hash)
+        return self._communicator.send_request("eth_getTransactionByHash", [tx_hash])
 
     def get_chain_id(self) -> int:
-        return self._communicator.eth_chain_id()
+        return int(self._communicator.send_request("eth_chainId"), 16)
 
     def get_gas_price(self) -> int:
-        return self._communicator.eth_gas_price()
+        return int(self._communicator.send_request("eth_gasPrice"), 16)
 
-    def get_transaction_count(self, address: str) -> int:
-        return self._communicator.eth_get_transaction_count(address)
+    def get_transaction_count(
+        self, address: str, block_identifier: Union[int, str] = "latest"
+    ) -> int:
+        return int(
+            self._communicator.send_request(
+                "eth_getTransactionCount",
+                [address, self._encode_block_identifier(block_identifier)],
+            ),
+            16,
+        )
 
     def get_transaction_receipt(self, tx_hash: str) -> Optional[Dict[str, Any]]:
-        return self._communicator.eth_get_transaction_receipt(tx_hash)
+        return self._communicator.send_request("eth_getTransactionReceipt", [tx_hash])
 
     def call(
         self, params: TxParams, block_identifier: Union[int, str] = "latest"
     ) -> bytes:
-        return self._communicator.eth_call(params, block_identifier)
+        return bytes.fromhex(
+            self._communicator.send_request(
+                "eth_call",
+                [
+                    self._encode_tx_params(params),
+                    self._encode_block_identifier(block_identifier),
+                ],
+            )[2:]
+        )
 
     def estimate_gas(
         self, params: TxParams, block_identifier: Union[int, str] = "pending"
     ) -> int:
-        return self._communicator.eth_estimate_gas(params, block_identifier)
+        return int(
+            self._communicator.send_request(
+                "eth_estimateGas",
+                [
+                    self._encode_tx_params(params),
+                    self._encode_block_identifier(block_identifier),
+                ],
+            ),
+            16,
+        )
 
     def send_transaction(self, params: TxParams) -> str:
-        return self._communicator.eth_send_transaction(params)
+        return self._communicator.send_request(
+            "eth_sendTransaction", [self._encode_tx_params(params)]
+        )
 
     def send_raw_transaction(self, raw_tx: bytes) -> str:
-        return self._communicator.eth_send_raw_transaction(raw_tx)
+        return self._communicator.send_request(
+            "eth_sendRawTransaction", ["0x" + raw_tx.hex()]
+        )
 
-    def debug_trace_transaction(self, tx_hash: str, options: Dict) -> Dict[str, Any]:
-        return self._communicator.debug_trace_transaction(tx_hash, options)
+    def debug_trace_transaction(
+        self, tx_hash: str, options: Optional[Dict] = None
+    ) -> Dict[str, Any]:
+        return self._communicator.send_request(
+            "debug_traceTransaction",
+            [tx_hash, options] if options is not None else [tx_hash],
+        )
 
     def snapshot(self) -> str:
-        return self._communicator.evm_snapshot()
+        return self._communicator.send_request("evm_snapshot")
 
     def revert(self, snapshot_id: str) -> bool:
-        return self._communicator.evm_revert(snapshot_id)
+        return self._communicator.send_request("evm_revert", [snapshot_id])
 
     def mine(self, timestamp: Optional[int]) -> None:
-        self._communicator.evm_mine(timestamp)
+        self._communicator.send_request(
+            "evm_mine", [hex(timestamp)] if timestamp is not None else None
+        )
 
     def get_max_priority_fee_per_gas(self) -> int:
-        return self._communicator.eth_max_priority_fee_per_gas()
+        return int(self._communicator.send_request("eth_maxPriorityFeePerGas"), 16)
 
     def sign(self, address: str, message: bytes) -> bytes:
-        return self._communicator.eth_sign(address, message)
+        return bytes.fromhex(
+            self._communicator.send_request(
+                "eth_sign", [address, "0x" + message.hex()]
+            )[2:]
+        )
 
     def sign_typed(self, address: str, message: Dict) -> bytes:
-        return self._communicator.eth_sign_typed_data(address, message)
+        return bytes.fromhex(
+            self._communicator.send_request("eth_signTypedData_v4", [address, message])[
+                2:
+            ]
+        )
 
     def create_access_list(
         self, params: TxParams, block_identifier: Union[int, str] = "pending"
     ) -> Dict[str, Any]:
-        return self._communicator.eth_create_access_list(params, block_identifier)
+        return self._communicator.send_request(
+            "eth_createAccessList",
+            [
+                self._encode_tx_params(params),
+                self._encode_block_identifier(block_identifier),
+            ],
+        )
 
     def trace_transaction(self, tx_hash: str) -> List:
-        return self._communicator.trace_transaction(tx_hash)
+        return self._communicator.send_request("trace_transaction", [tx_hash])
 
     @abstractmethod
     def get_automine(self) -> bool:
@@ -281,7 +406,7 @@ class ChainInterfaceAbc(ABC):
         ...
 
     @abstractmethod
-    def reset(self) -> None:
+    def reset(self, options: Optional[Dict] = None) -> None:
         ...
 
     @abstractmethod
@@ -323,37 +448,41 @@ class ChainInterfaceAbc(ABC):
 
 class HardhatChainInterface(ChainInterfaceAbc):
     def set_balance(self, address: str, value: int) -> None:
-        self._communicator.hardhat_set_balance(address, value)
+        self._communicator.send_request("hardhat_setBalance", [address, hex(value)])
 
     def impersonate_account(self, address: str) -> None:
-        self._communicator.hardhat_impersonate_account(address)
+        self._communicator.send_request("hardhat_impersonateAccount", [address])
 
     def stop_impersonating_account(self, address: str) -> None:
-        self._communicator.hardhat_stop_impersonating_account(address)
+        self._communicator.send_request("hardhat_stopImpersonatingAccount", [address])
 
     def set_block_gas_limit(self, gas_limit: int) -> None:
-        self._communicator.evm_set_block_gas_limit(gas_limit)
+        self._communicator.send_request("evm_setBlockGasLimit", [hex(gas_limit)])
 
-    def reset(self) -> None:
-        self._communicator.hardhat_reset()
+    def reset(self, options: Optional[Dict] = None) -> None:
+        self._communicator.send_request(
+            "hardhat_reset", [options] if options is not None else None
+        )
 
     def set_coinbase(self, address: str) -> None:
-        self._communicator.hardhat_set_coinbase(address)
+        self._communicator.send_request("hardhat_setCoinbase", [address])
 
     def get_automine(self) -> bool:
-        return self._communicator.hardhat_get_automine()
+        return self._communicator.send_request("hardhat_getAutomine")
 
     def set_automine(self, value: bool) -> None:
-        self._communicator.evm_set_automine(value)
+        self._communicator.send_request("evm_setAutomine", [value])
 
     def set_code(self, address: str, value: bytes) -> None:
-        self._communicator.hardhat_set_code(address, value)
+        self._communicator.send_request(
+            "hardhat_setCode", [address, "0x" + value.hex()]
+        )
 
     def set_nonce(self, address: str, value: int) -> None:
-        self._communicator.hardhat_set_nonce(address, value)
+        self._communicator.send_request("hardhat_setNonce", [address, hex(value)])
 
     def set_next_block_timestamp(self, timestamp: int) -> None:
-        self._communicator.evm_set_next_block_timestamp(timestamp)
+        self._communicator.send_request("evm_setNextBlockTimestamp", [hex(timestamp)])
 
     def send_unsigned_transaction(self, params: TxParams) -> str:
         raise NotImplementedError(
@@ -361,72 +490,80 @@ class HardhatChainInterface(ChainInterfaceAbc):
         )
 
     def set_next_block_base_fee_per_gas(self, value: int) -> None:
-        self._communicator.hardhat_set_next_block_base_fee_per_gas(value)
+        self._communicator.send_request(
+            "hardhat_setNextBlockBaseFeePerGas", [hex(value)]
+        )
 
     def set_min_gas_price(self, value: int) -> None:
-        self._communicator.hardhat_set_min_gas_price(value)
+        self._communicator.send_request("hardhat_setMinGasPrice", [hex(value)])
 
 
 class AnvilChainInterface(ChainInterfaceAbc):
     def set_balance(self, address: str, value: int) -> None:
-        self._communicator.anvil_set_balance(address, value)
+        self._communicator.send_request("anvil_setBalance", [address, hex(value)])
 
     def impersonate_account(self, address: str) -> None:
-        self._communicator.anvil_impersonate_account(address)
+        self._communicator.send_request("anvil_impersonateAccount", [address])
 
     def stop_impersonating_account(self, address: str) -> None:
-        self._communicator.anvil_stop_impersonating_account(address)
+        self._communicator.send_request("anvil_stopImpersonatingAccount", [address])
 
     def set_block_gas_limit(self, gas_limit: int) -> None:
-        self._communicator.evm_set_block_gas_limit(gas_limit)
+        self._communicator.send_request("evm_setBlockGasLimit", [hex(gas_limit)])
 
-    def reset(self) -> None:
-        self._communicator.anvil_reset()
+    def reset(self, options: Optional[Dict] = None) -> None:
+        self._communicator.send_request(
+            "anvil_reset", [options] if options is not None else None
+        )
 
     def set_coinbase(self, address: str) -> None:
-        self._communicator.anvil_set_coinbase(address)
+        self._communicator.send_request("anvil_setCoinbase", [address])
 
     def get_automine(self) -> bool:
-        return self._communicator.anvil_get_automine()
+        return self._communicator.send_request("anvil_getAutomine")
 
     def set_automine(self, value: bool) -> None:
-        self._communicator.evm_set_automine(value)
+        self._communicator.send_request("evm_setAutomine", [value])
 
     def set_code(self, address: str, value: bytes) -> None:
-        self._communicator.anvil_set_code(address, value)
+        self._communicator.send_request("anvil_setCode", [address, "0x" + value.hex()])
 
     def set_nonce(self, address: str, value: int) -> None:
-        self._communicator.anvil_set_nonce(address, value)
+        self._communicator.send_request("anvil_setNonce", [address, hex(value)])
 
     def set_next_block_timestamp(self, timestamp: int) -> None:
-        self._communicator.evm_set_next_block_timestamp(timestamp)
+        self._communicator.send_request("evm_setNextBlockTimestamp", [hex(timestamp)])
 
     def send_unsigned_transaction(self, params: TxParams) -> str:
-        return self._communicator.eth_send_unsigned_transaction(params)
+        return self._communicator.send_request(
+            "eth_sendUnsignedTransaction", [self._encode_tx_params(params)]
+        )
 
     def set_next_block_base_fee_per_gas(self, value: int) -> None:
-        self._communicator.anvil_set_next_block_base_fee_per_gas(value)
+        self._communicator.send_request("anvil_setNextBlockBaseFeePerGas", [hex(value)])
 
     def set_min_gas_price(self, value: int) -> None:
-        self._communicator.anvil_set_min_gas_price(value)
+        self._communicator.send_request("anvil_setMinGasPrice", [hex(value)])
 
     def node_info(self) -> Dict[str, Any]:
-        return self._communicator.anvil_node_info()
+        return self._communicator.send_request("anvil_nodeInfo")
 
 
 class GanacheChainInterface(ChainInterfaceAbc):
     def set_balance(self, address: str, value: int) -> None:
-        self._communicator.evm_set_account_balance(address, value)
+        self._communicator.send_request("evm_setAccountBalance", [address, hex(value)])
 
     def add_account(self, address: str, passphrase: str) -> bool:
-        return self._communicator.evm_add_account(
-            address, passphrase
-        ) and self._communicator.personal_unlock_account(address, passphrase, 0)
+        return self._communicator.send_request(
+            "evm_addAccount", [address, passphrase]
+        ) and self._communicator.send_request(
+            "personal_unlockAccount", [address, passphrase, hex(0)]
+        )
 
     def set_block_gas_limit(self, gas_limit: int) -> None:
         raise NotImplementedError("Ganache does not support setting block gas limit")
 
-    def reset(self) -> None:
+    def reset(self, options: Optional[Dict] = None) -> None:
         raise NotImplementedError("Ganache does not support resetting the chain")
 
     def set_coinbase(self, address: str) -> None:
@@ -439,10 +576,12 @@ class GanacheChainInterface(ChainInterfaceAbc):
         raise NotImplementedError("Ganache does not support automine")
 
     def set_code(self, address: str, value: bytes) -> None:
-        return self._communicator.evm_set_account_code(address, value)
+        self._communicator.send_request(
+            "evm_setAccountCode", [address, "0x" + value.hex()]
+        )
 
     def set_nonce(self, address: str, value: int) -> None:
-        return self._communicator.evm_set_account_nonce(address, value)
+        self._communicator.send_request("evm_setAccountNonce", [address, hex(value)])
 
     def set_next_block_timestamp(self, timestamp: int) -> None:
         raise NotImplementedError(
@@ -460,7 +599,7 @@ class GanacheChainInterface(ChainInterfaceAbc):
         )
 
     def set_min_gas_price(self, value: int) -> None:
-        self._communicator.miner_set_gas_price(value)
+        self._communicator.send_request("miner_setGasPrice", [hex(value)])
 
 
 class GethChainInterface(ChainInterfaceAbc):
@@ -470,7 +609,7 @@ class GethChainInterface(ChainInterfaceAbc):
     def set_automine(self, value: bool) -> None:
         raise NotImplementedError("Geth does not support automine")
 
-    def reset(self) -> None:
+    def reset(self, options: Optional[Dict] = None) -> None:
         raise NotImplementedError("Geth does not support resetting the chain")
 
     def set_coinbase(self, address: str) -> None:

@@ -59,10 +59,11 @@ from .chain_interfaces import (
     GanacheChainInterface,
     GethChainInterface,
     HardhatChainInterface,
+    TxParams,
 )
 from .globals import get_config, get_exception_handler
 from .internal import UnknownEvent, read_from_memory
-from .json_rpc.communicator import JsonRpcError, TxParams
+from .json_rpc.communicator import JsonRpcError
 from .primitive_types import Length, ValueRange
 
 if TYPE_CHECKING:
@@ -1218,7 +1219,7 @@ class Chain(ABC):
                     pass
 
             self._accounts = [
-                Account(acc, self) for acc in self._chain_interface.accounts()
+                Account(acc, self) for acc in self._chain_interface.get_accounts()
             ]
             self._accounts_set = set(self._accounts)
             self._chain_id = self._chain_interface.get_chain_id()
@@ -1459,7 +1460,7 @@ class Chain(ABC):
     @check_connected
     def update_accounts(self):
         self._accounts = [
-            Account(acc, self) for acc in self._chain_interface.accounts()
+            Account(acc, self) for acc in self._chain_interface.get_accounts()
         ]
         self._accounts_set = set(self._accounts)
 
@@ -1850,9 +1851,9 @@ class Chain(ABC):
                     except Exception:
                         raise e
             elif key is not None:
-                signed_tx = eth_account.Account.sign_transaction(
-                    tx_params, key
-                ).rawTransaction
+                signed_tx = bytes(
+                    eth_account.Account.sign_transaction(tx_params, key).rawTransaction
+                )
                 try:
                     tx_hash = self._chain_interface.send_raw_transaction(signed_tx)
                 except (ValueError, JsonRpcError) as e:
