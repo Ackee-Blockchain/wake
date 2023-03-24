@@ -95,6 +95,22 @@ class FuzzTest:
                     )
                 ]
                 weights = [getattr(f, "weight") for f in valid_flows]
+                if len(valid_flows) == 0:
+                    max_times_flows = [
+                        f
+                        for f in flows
+                        if hasattr(f, "max_times")
+                        and flows_counter[f] >= getattr(f, "max_times")
+                    ]
+                    precondition_flows = [
+                        f
+                        for f in flows
+                        if hasattr(f, "precondition")
+                        and not getattr(f, "precondition")(self)
+                    ]
+                    raise Exception(
+                        f"Could not find a valid flow to run.\nFlows that have reached their max_times: {max_times_flows}\nFlows that do not satisfy their precondition: {precondition_flows}"
+                    )
                 flow = random.choices(valid_flows, weights=weights)[0]
                 flow_params = [
                     generate(v)
