@@ -36,6 +36,21 @@ The latter overrides the former.
     ```toml
     subconfigs = []
 
+    [api_keys]
+    # etherscan = "" (unset - no Etherscan API key)
+    # "goerli.etherscan" = "" (unset - no Goerli Etherscan API key)
+    # bscscan = "" (unset - no BscScan API key)
+    # "testnet.bscscan" = "" (unset - no Testnet BscScan API key)
+    # polygonscan = "" (unset - no PolygonScan API key)
+    # "mumbai.polygonscan" = "" (unset - no Mumbai PolygonScan API key)
+    # snowtrace = "" (unset - no Snowtrace API key)
+    # "testnet.snowtrace" = "" (unset - no Testnet Snowtrace API key)
+    # "optimistic.snowtrace" = "" (unset - no Optimistic Snowtrace API key)
+    # "goerli-optimism.etherscan" = "" (unset - no Goerli Optimism Etherscan API key)
+    # gnosisscan = "" (unset - no GnosisScan API key)
+    # arbiscan = "" (unset - no Arbiscan API key)
+    # "testnet.arbiscan" = "" (unset - no Testnet Arbiscan API key)
+
     [compiler.solc]
     allow_paths = []
     # evm_version = "" (unset - let the compiler decide)
@@ -67,6 +82,27 @@ The latter overrides the former.
     [testing.hardhat]
     cmd_args = ""
     ```
+
+### `api_keys` namespace
+
+| Option                        | Description                       |
+|:------------------------------|:----------------------------------|
+| `etherscan`                   | Etherscan API key                 |
+| `"goerli.etherscan"`          | Goerli Etherscan API key          |
+| `bscscan`                     | BscScan API key                   |
+| `"testnet.bscscan"`           | Testnet BscScan API key           |
+| `polygonscan`                 | PolygonScan API key               |
+| `"mumbai.polygonscan"`        | Mumbai PolygonScan API key        |
+| `snowtrace`                   | Snowtrace API key                 |
+| `"testnet.snowtrace"`         | Testnet Snowtrace API key         |
+| `"optimistic.snowtrace"`      | Optimistic Snowtrace API key      |
+| `"goerli-optimism.etherscan"` | Goerli Optimism Etherscan API key |
+| `gnosisscan`                  | GnosisScan API key                |
+| `arbiscan`                    | Arbiscan API key                  |
+| `"testnet.arbiscan"`          | Testnet Arbiscan API key          |
+
+!!! warning
+    Keep your API keys secret. Store them in the global configuration file or in a separate file included as a subconfig and add this file to `.gitignore`.
 
 ### `compiler.solc` namespace
 
