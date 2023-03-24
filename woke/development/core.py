@@ -61,7 +61,7 @@ from .chain_interfaces import (
     HardhatChainInterface,
     TxParams,
 )
-from .globals import get_config, get_exception_handler, get_coverage_handler
+from .globals import get_config, get_coverage_handler, get_exception_handler
 from .internal import UnknownEvent, read_from_memory
 from .json_rpc.communicator import JsonRpcError
 from .primitive_types import Length, ValueRange
@@ -612,7 +612,7 @@ class Account:
 
         try:
             coverage_handler = get_coverage_handler()
-            if coverage_handler is not None:
+            if coverage_handler is not None and self._chain._debug_trace_call_supported:
                 ret = self._chain.chain_interface.debug_trace_call(params, block)
                 coverage_handler.add_coverage(params, self._chain, ret)
                 output = bytes.fromhex(ret["returnValue"][2:])
@@ -773,7 +773,9 @@ class Account:
         coverage_handler = get_coverage_handler()
         if coverage_handler is not None:
             tx._fetch_debug_trace_transaction()
-            coverage_handler.add_coverage(tx_params, self._chain, tx._debug_trace_transaction)
+            coverage_handler.add_coverage(
+                tx_params, self._chain, tx._debug_trace_transaction
+            )
 
         if confirmations != 0:
             tx.wait(confirmations)
@@ -1040,6 +1042,7 @@ class Chain(ABC):
     _private_keys: Dict[Address, bytes]
     _require_signed_txs: bool
     _fork: Optional[str]
+    _debug_trace_call_supported: bool
 
     tx_callback: Optional[Callable[[TransactionAbc], None]]
 
@@ -1173,6 +1176,16 @@ class Chain(ABC):
 
         try:
             self._connected = True
+
+            try:
+                self._chain_interface.debug_trace_call(
+                    {
+                        "type": 0,
+                    }
+                )
+                self._debug_trace_call_supported = True
+            except JsonRpcError:
+                self._debug_trace_call_supported = False
 
             # determine the chain hardfork to set the default tx type
             if isinstance(self._chain_interface, AnvilChainInterface):
@@ -1934,7 +1947,7 @@ class Chain(ABC):
         tx_params = self._build_transaction(RequestType.CALL, params, arguments, abi)
         try:
             coverage_handler = get_coverage_handler()
-            if coverage_handler is not None:
+            if coverage_handler is not None and self._debug_trace_call_supported:
                 ret = self._chain_interface.debug_trace_call(tx_params, block)
                 coverage_handler.add_coverage(tx_params, self, ret)
                 output = bytes.fromhex(ret["returnValue"][2:])
