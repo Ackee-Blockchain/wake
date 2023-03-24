@@ -50,6 +50,7 @@ nav:
       - Cross-chain testing: 'testing-framework/cross-chain-testing.md'
       - Deployment: 'testing-framework/deployment.md'
       - Debugging: 'testing-framework/debugging.md'
+      - Coverage analysis: 'testing-framework/coverage-analysis.md'
       - Performance considerations: 'testing-framework/performance-considerations.md'
       - Migrating from Ape & Brownie: 'testing-framework/migrating-from-ape-and-brownie.md'
       - Migrating from Woke 2.x: 'testing-framework/migrating-from-woke-2.md'
