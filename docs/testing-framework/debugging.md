@@ -43,6 +43,10 @@ Useful commands:
 Every transaction object has a `call_trace` property that visualizes the call stack of the transaction.
 It can be used to debug failing transactions.
 
+!!! tip "External contracts in forking mode"
+    When using forking mode (see [`connect` keyword arguments](./chains-and-blocks.md#connect-keyword-arguments)), already present contracts are printed as unknown contracts in call traces.
+    To show contract and function names, configure your [API key](../configuration.md#api_keys-namespace) for a given chain explorer.
+
 ```python
 from woke.testing import *
 from pytypes.contracts.Counter import Counter
