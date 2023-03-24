@@ -6,7 +6,6 @@ import rich_click as click
 
 
 @click.command(name="test")
-@click.argument("test_path", nargs=-1, type=click.Path(exists=True))
 @click.option(
     "--debug", "-d", is_flag=True, default=False, help="Attach debugger on exception."
 )
@@ -23,13 +22,14 @@ import rich_click as click
     default=False,
     help="Create coverage report.",
 )
+@click.argument("pytest_args", nargs=-1, type=click.UNPROCESSED)
 @click.pass_context
 def run_test(
     context: click.Context,
-    test_path: Tuple[str, ...],
     debug: bool,
     s: bool,
     coverage: bool,
+    pytest_args: Tuple[str, ...],
 ) -> None:
     """Execute Woke tests using pytest."""
     import pytest
@@ -43,9 +43,6 @@ def run_test(
 
     set_config(config)
 
-    if len(test_path) == 0:
-        test_path = ("tests/",)
-
     if debug:
         from woke.development.globals import attach_debugger, set_exception_handler
 
@@ -57,7 +54,7 @@ def run_test(
 
         set_coverage_handler(CoverageHandler(config))
 
-    args = list(test_path)
+    args = list(pytest_args)
     if s:
         args.append("-s")
 
