@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Iterator, List, Tuple, Union
 
 from woke.ast.ir.utils import IrInitTuple
-from woke.ast.ir.yul.abc import YulAbc
+from woke.ast.ir.yul.abc import YulAbc, YulStatementAbc
 from woke.ast.ir.yul.case_statement import Case
 from woke.ast.ir.yul.function_call import FunctionCall
 from woke.ast.ir.yul.identifier import Identifier
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from .block import Block
 
 
-class Switch(YulAbc):
+class Switch(YulStatementAbc):
     """
     TBD
     """

@@ -4,12 +4,12 @@ from typing import Iterator, List, Optional, Tuple
 
 from ...nodes import YulFunctionDefinition
 from ..utils import IrInitTuple
-from .abc import YulAbc
+from .abc import YulAbc, YulStatementAbc
 from .block import Block
 from .typed_name import TypedName
 
 
-class FunctionDefinition(YulAbc):
+class FunctionDefinition(YulStatementAbc):
     """
     TBD
     """

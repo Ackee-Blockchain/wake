@@ -26,3 +26,10 @@ class YulAbc(IrAbc, ABC):
     # @abstractmethod
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         return set()  # TODO
+
+
+class YulStatementAbc(YulAbc, ABC):
+    """
+    Abstract base class for all Yul IR statements.
+    """
+    pass

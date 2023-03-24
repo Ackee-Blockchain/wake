@@ -4,14 +4,14 @@ from typing import Iterator, Union
 
 from ...nodes import YulForLoop, YulFunctionCall, YulIdentifier, YulLiteral
 from ..utils import IrInitTuple
-from .abc import YulAbc
+from .abc import YulAbc, YulStatementAbc
 from .block import Block
 from .function_call import FunctionCall
 from .identifier import Identifier
 from .literal import Literal
 
 
-class ForLoop(YulAbc):
+class ForLoop(YulStatementAbc):
     """
     TBD
     """

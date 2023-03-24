@@ -355,6 +355,19 @@ class ChainInterfaceAbc(ABC):
             [tx_hash, options] if options is not None else [tx_hash],
         )
 
+    def debug_trace_call(self, params: TxParams, block_identifier: Union[int, str] = "latest", options: Optional[Dict] = None) -> Dict[str, Any]:
+        return self._communicator.send_request(
+            "debug_traceCall",
+            [
+                self._encode_tx_params(params),
+                self._encode_block_identifier(block_identifier),
+                options,
+            ] if options is not None else [
+                self._encode_tx_params(params),
+                self._encode_block_identifier(block_identifier),
+            ],
+        )
+
     def snapshot(self) -> str:
         return self._communicator.send_request("evm_snapshot")
 

@@ -4,14 +4,14 @@ from typing import Iterator, Union
 
 from ...nodes import YulFunctionCall, YulIdentifier, YulIf, YulLiteral
 from ..utils import IrInitTuple
-from .abc import YulAbc
+from .abc import YulAbc, YulStatementAbc
 from .block import Block
 from .function_call import FunctionCall
 from .identifier import Identifier
 from .literal import Literal
 
 
-class If(YulAbc):
+class If(YulStatementAbc):
     """
     TBD
     """

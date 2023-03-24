@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .abc import YulAbc
+from .abc import YulStatementAbc
 
 if TYPE_CHECKING:
     from .block import Block
 
 
-class Break(YulAbc):
+class Break(YulStatementAbc):
     """
     TBD
     """

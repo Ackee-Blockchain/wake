@@ -1,3 +1,4 @@
+import json
 import sys
 from typing import Tuple
 
@@ -16,9 +17,19 @@ import rich_click as click
     default=True,
     help="Show stdout and stderr of test.",
 )
+@click.option(
+    "--coverage/--no-coverage",
+    is_flag=True,
+    default=False,
+    help="Create coverage report.",
+)
 @click.pass_context
 def run_test(
-    context: click.Context, test_path: Tuple[str, ...], debug: bool, s: bool
+    context: click.Context,
+    test_path: Tuple[str, ...],
+    debug: bool,
+    s: bool,
+    coverage: bool,
 ) -> None:
     """Execute Woke tests using pytest."""
     import pytest
@@ -40,6 +51,12 @@ def run_test(
 
         set_exception_handler(attach_debugger)
 
+    if coverage:
+        from woke.development.globals import set_coverage_handler
+        from woke.testing.coverage import CoverageHandler
+
+        set_coverage_handler(CoverageHandler(config))
+
     args = list(test_path)
     if s:
         args.append("-s")
@@ -56,4 +73,18 @@ def run_test(
     args.append("-p")
     args.append("no:pytest_ethereum")
 
-    sys.exit(pytest.main(args, plugins=[PytestWokePlugin(config)]))
+    ret = pytest.main(args, plugins=[PytestWokePlugin(config)])
+
+    if coverage:
+        from woke.development.globals import get_coverage_handler
+
+        coverage_handler = get_coverage_handler()
+        assert coverage_handler is not None
+
+        data = {
+            str(k): [i.export() for i in v.values()]
+            for k, v in coverage_handler.get_contract_ide_coverage().items()
+        }
+        (config.project_root_path / "woke.cov").write_text(json.dumps(data, indent=4))
+
+    sys.exit(ret)

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
 
 from ...nodes import YulFunctionCall, YulIdentifier, YulLiteral, YulVariableDeclaration
 from ..utils import IrInitTuple
-from .abc import YulAbc
+from .abc import YulAbc, YulStatementAbc
 from .function_call import FunctionCall
 from .identifier import Identifier
 from .literal import Literal
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from .block import Block
 
 
-class VariableDeclaration(YulAbc):
+class VariableDeclaration(YulStatementAbc):
     """
     TBD
     """
