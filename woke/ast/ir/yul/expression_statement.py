@@ -10,7 +10,7 @@ from woke.ast.nodes import (
     YulLiteral,
 )
 
-from .abc import YulAbc
+from .abc import YulAbc, YulStatementAbc
 from .function_call import FunctionCall
 from .identifier import Identifier
 from .literal import Literal
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from .block import Block
 
 
-class ExpressionStatement(YulAbc):
+class ExpressionStatement(YulStatementAbc):
     """
     TBD
     """

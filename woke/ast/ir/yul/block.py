@@ -17,7 +17,7 @@ from woke.ast.nodes import (
     YulVariableDeclaration,
 )
 
-from .abc import YulAbc
+from .abc import YulAbc, YulStatementAbc
 
 if TYPE_CHECKING:
     from woke.ast.ir.statement.inline_assembly import InlineAssembly
@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     from .variable_declaration import VariableDeclaration
 
 
-class Block(YulAbc):
+class Block(YulStatementAbc):
     """
     TBD
     """

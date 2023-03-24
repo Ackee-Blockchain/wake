@@ -61,7 +61,7 @@ from .chain_interfaces import (
     HardhatChainInterface,
     TxParams,
 )
-from .globals import get_config, get_exception_handler
+from .globals import get_config, get_exception_handler, get_coverage_handler
 from .internal import UnknownEvent, read_from_memory
 from .json_rpc.communicator import JsonRpcError
 from .primitive_types import Length, ValueRange
@@ -611,7 +611,16 @@ class Account:
         params = self._chain._build_transaction(RequestType.CALL, params, [], None)
 
         try:
-            output = self._chain.chain_interface.call(params, block)
+            coverage_handler = get_coverage_handler()
+            if coverage_handler is not None:
+                ret = self._chain.chain_interface.debug_trace_call(params, block)
+                coverage_handler.add_coverage(params, self._chain, ret)
+                output = bytes.fromhex(ret["returnValue"][2:])
+                if ret["failed"]:
+                    self._chain._process_revert_data(None, output)
+                    raise
+            else:
+                output = self._chain.chain_interface.call(params, block)
         except JsonRpcError as e:
             self._chain._process_call_revert(e)
             raise
@@ -760,6 +769,11 @@ class Account:
             bytearray,
             self.chain,
         )
+
+        coverage_handler = get_coverage_handler()
+        if coverage_handler is not None:
+            tx._fetch_debug_trace_transaction()
+            coverage_handler.add_coverage(tx_params, self._chain, tx._debug_trace_transaction)
 
         if confirmations != 0:
             tx.wait(confirmations)
@@ -1919,7 +1933,16 @@ class Chain(ABC):
     ) -> Any:
         tx_params = self._build_transaction(RequestType.CALL, params, arguments, abi)
         try:
-            output = self._chain_interface.call(tx_params, block)
+            coverage_handler = get_coverage_handler()
+            if coverage_handler is not None:
+                ret = self._chain_interface.debug_trace_call(tx_params, block)
+                coverage_handler.add_coverage(tx_params, self, ret)
+                output = bytes.fromhex(ret["returnValue"][2:])
+                if ret["failed"]:
+                    self._process_revert_data(None, output)
+                    raise
+            else:
+                output = self._chain_interface.call(tx_params, block)
         except JsonRpcError as e:
             self._process_call_revert(e)
             raise
@@ -2006,6 +2029,11 @@ class Chain(ABC):
             self,
         )
         self._txs[tx_hash] = tx
+
+        coverage_handler = get_coverage_handler()
+        if coverage_handler is not None:
+            tx._fetch_debug_trace_transaction()
+            coverage_handler.add_coverage(tx_params, self, tx._debug_trace_transaction)
 
         if confirmations != 0:
             tx.wait(confirmations)

@@ -1,15 +1,23 @@
+from __future__ import annotations
+
 from pathlib import Path
 from types import TracebackType
-from typing import Callable, Optional
+from typing import Callable, Optional, TYPE_CHECKING
 
 from pdbr import RichPdb
 
 from woke.config import WokeConfig
 from woke.utils.file_utils import is_relative_to
 
+if TYPE_CHECKING:
+    from woke.testing.coverage import CoverageHandler
+
+
 # must be declared before functions that use it because of a bug in Python (https://bugs.python.org/issue34939)
 _exception_handler: Optional[Callable[[Exception], None]] = None
 _exception_handled = False
+
+_coverage_handler: Optional[CoverageHandler] = None
 
 _config: Optional[WokeConfig] = None
 
@@ -76,3 +84,12 @@ def get_config() -> WokeConfig:
 def set_config(config: WokeConfig):
     global _config
     _config = config
+
+
+def set_coverage_handler(coverage_handler: CoverageHandler):
+    global _coverage_handler
+    _coverage_handler = coverage_handler
+
+
+def get_coverage_handler() -> Optional[CoverageHandler]:
+    return _coverage_handler

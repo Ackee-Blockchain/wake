@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Iterator, List, Tuple, Union
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import YulAssignment, YulFunctionCall, YulIdentifier, YulLiteral
 
-from .abc import YulAbc
+from .abc import YulAbc, YulStatementAbc
 from .function_call import FunctionCall
 from .identifier import Identifier
 from .literal import Literal
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from .block import Block
 
 
-class Assignment(YulAbc):
+class Assignment(YulStatementAbc):
     """
     TBD
     """
