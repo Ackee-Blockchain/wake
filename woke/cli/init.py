@@ -65,6 +65,7 @@ def update_gitignore(file: Path) -> None:
         "__pycache__/",
         "*.py[cod]",
         ".hypothesis/",
+        "woke-coverage.cov",
     ]
 
     new_lines = [l for l in new_lines if l not in lines]
