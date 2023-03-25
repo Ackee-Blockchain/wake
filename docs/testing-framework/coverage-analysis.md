@@ -54,12 +54,12 @@ There are some limitations to this coverage analysis:
 
 By enabling the coverage collection, a `woke-coverage.cov` file is generated in the current directory.
 To analyze this file, install [Tools for Solidity](https://marketplace.visualstudio.com/items?itemName=AckeeBlockchain.tools-for-solidity), a VS Code extension that can be used to visualize the coverage of Solidity contracts directly in the editor.
-With the extension installed, execute the `Tools for Solidity: Show coverage` command to open the coverage report.
+With the extension installed, execute the `Tools for Solidity: Show Coverage` command to open the coverage report.
 
 ![Code coverage in VS Code](../images/testing/coverage.png)
 
 The coverage report is updated automatically when the `woke-coverage.cov` file is modified.
-To hide the coverage report, execute the `Tools for Solidity: Hide coverage` command.
+To hide the coverage report, execute the `Tools for Solidity: Hide Coverage` command.
 
 !!! warning
     Contents of Solidity source files must not be modified since the last generation of `pytypes`, otherwise the coverage highlighting may be rendered incorrectly.
