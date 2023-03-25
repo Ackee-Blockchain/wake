@@ -316,17 +316,17 @@ def export_merged_ide_coverage(
 
 
 class CoverageHandler:
-    pc_maps: Dict[str, Dict[int, SourceMapPcRecord]]
-    pc_maps_undeployed: Dict[str, Dict[int, SourceMapPcRecord]]
-    source_units: Dict[pathlib.Path, SourceUnit]
-    interval_trees: Dict[pathlib.Path, IntervalTree]
-    lines_index: Dict[pathlib.Path, List[Tuple[bytes, int]]]
-    statement_coverage: DefaultDict[Union[StatementAbc, YulStatementAbc], int]
-    function_coverage: DefaultDict[FunctionDefinition, int]
-    modifier_coverage: DefaultDict[ModifierDefinition, int]
-    visited_functions: Set[FunctionDefinition]
-    visited_modifiers: Set[ModifierDefinition]
-    last_statements: DefaultDict[
+    _pc_maps: Dict[str, Dict[int, SourceMapPcRecord]]
+    _pc_maps_undeployed: Dict[str, Dict[int, SourceMapPcRecord]]
+    _source_units: Dict[pathlib.Path, SourceUnit]
+    _interval_trees: Dict[pathlib.Path, IntervalTree]
+    _lines_index: Dict[pathlib.Path, List[Tuple[bytes, int]]]
+    _statement_coverage: DefaultDict[Union[StatementAbc, YulStatementAbc], int]
+    _function_coverage: DefaultDict[FunctionDefinition, int]
+    _modifier_coverage: DefaultDict[ModifierDefinition, int]
+    _visited_functions: Set[FunctionDefinition]
+    _visited_modifiers: Set[ModifierDefinition]
+    _last_statements: DefaultDict[
         Union[FunctionDefinition, ModifierDefinition],
         Optional[Tuple[Union[StatementAbc, YulStatementAbc], int]],
     ]
@@ -340,15 +340,15 @@ class CoverageHandler:
                 "Failed to load previous build. Run `woke compile` first."
             )
 
-        self.source_units = compiler.latest_build.source_units
-        self.interval_trees = compiler.latest_build.interval_trees
-        self.lines_index = {}
-        self.statement_coverage = defaultdict(int)
-        self.function_coverage = defaultdict(int)
-        self.modifier_coverage = defaultdict(int)
-        self.visited_functions = set()
-        self.visited_modifiers = set()
-        self.last_statements = defaultdict(lambda: None)
+        self._source_units = compiler.latest_build.source_units
+        self._interval_trees = compiler.latest_build.interval_trees
+        self._lines_index = {}
+        self._statement_coverage = defaultdict(int)
+        self._function_coverage = defaultdict(int)
+        self._modifier_coverage = defaultdict(int)
+        self._visited_functions = set()
+        self._visited_modifiers = set()
+        self._last_statements = defaultdict(lambda: None)
 
         errored = False
         for cu in compiler.latest_build_info.compilation_units.values():
@@ -363,14 +363,14 @@ class CoverageHandler:
 
         start = time.perf_counter()
         with console.status("[bold green]Preparing coverage data...[/]"):
-            self.pc_maps = _construct_coverage_data(
+            self._pc_maps = _construct_coverage_data(
                 compiler.latest_build, use_deployed_bytecode=True
             )
-            self.pc_maps_undeployed = _construct_coverage_data(
+            self._pc_maps_undeployed = _construct_coverage_data(
                 compiler.latest_build, use_deployed_bytecode=False
             )
             for source_unit in compiler.latest_build.source_units.values():
-                self.lines_index[source_unit.file] = _setup_line_indexes(
+                self._lines_index[source_unit.file] = _setup_line_indexes(
                     source_unit.file_source
                 )
 
@@ -426,23 +426,23 @@ class CoverageHandler:
         """
         cov_data = {}
         for func, func_count in chain(
-            self.function_coverage.items(), self.modifier_coverage.items()
+            self._function_coverage.items(), self._modifier_coverage.items()
         ):
             if func.file not in cov_data:
                 cov_data[func.file] = {}
 
             func_ide_pos = IdePosition(
                 *_get_line_col_from_offset(
-                    func.name_location[0], self.lines_index[func.file]
+                    func.name_location[0], self._lines_index[func.file]
                 ),
                 *_get_line_col_from_offset(
-                    func.name_location[1], self.lines_index[func.file]
+                    func.name_location[1], self._lines_index[func.file]
                 ),
             )
 
             branch_records = {}
 
-            for statement, count in self.statement_coverage.items():
+            for statement, count in self._statement_coverage.items():
                 if statement.file != func.file:
                     continue
                 if isinstance(
@@ -463,8 +463,8 @@ class CoverageHandler:
 
                 if start >= func.byte_location[0] and end <= func.byte_location[1]:
                     ide_pos = IdePosition(
-                        *_get_line_col_from_offset(start, self.lines_index[func.file]),
-                        *_get_line_col_from_offset(end, self.lines_index[func.file]),
+                        *_get_line_col_from_offset(start, self._lines_index[func.file]),
+                        *_get_line_col_from_offset(end, self._lines_index[func.file]),
                     )
                     branch_records[ide_pos] = IdeCoverageRecord(ide_pos, count)
 
@@ -553,14 +553,14 @@ class CoverageHandler:
 
                 contract_fqn_stack.pop()
 
-            pc_maps = self.pc_maps if not deployment else self.pc_maps_undeployed
+            pc_maps = self._pc_maps if not deployment else self._pc_maps_undeployed
             if last_fqn not in pc_maps:
                 continue
             pc_map = pc_maps[last_fqn]
 
             if pc in pc_map:
                 path = pc_map[pc].source_file
-                if path is not None and path in self.interval_trees:
+                if path is not None and path in self._interval_trees:
                     self._update_coverage(pc, pc_map[pc].offset, path)
 
         self._flush_coverage()
@@ -568,7 +568,7 @@ class CoverageHandler:
     def _update_coverage(
         self, pc: int, byte_offsets: Tuple[int, int], path: pathlib.Path
     ) -> None:
-        interval_tree = self.interval_trees[path]
+        interval_tree = self._interval_trees[path]
         start, end = byte_offsets
         intervals = interval_tree[start:end]
         nodes: List[IrAbc] = [interval.data for interval in intervals]
@@ -591,13 +591,13 @@ class CoverageHandler:
         if len(functions) == 1:
             function = functions[0]
             if start >= function.byte_location[0] and end <= function.byte_location[1]:
-                self.visited_functions.add(function)
+                self._visited_functions.add(function)
 
         modifier = None
         if len(modifiers) == 1:
             modifier = modifiers[0]
             if start >= modifier.byte_location[0] and end <= modifier.byte_location[1]:
-                self.visited_modifiers.add(modifier)
+                self._visited_modifiers.add(modifier)
 
         if function is None and modifier is None:
             return
@@ -609,7 +609,7 @@ class CoverageHandler:
             yul_statement = yul_statements[-1]
             if isinstance(yul_statement, (YulBlock, YulFunctionDefinition)):
                 return
-            last_statement = self.last_statements[decl]
+            last_statement = self._last_statements[decl]
             if (
                 last_statement is None
                 or last_statement[0] != yul_statement
@@ -619,14 +619,14 @@ class CoverageHandler:
                     start >= yul_statement.byte_location[0]
                     and end <= yul_statement.byte_location[1]
                 ):
-                    self.statement_coverage[yul_statement] += 1
-                    self.last_statements[decl] = (yul_statement, pc)
+                    self._statement_coverage[yul_statement] += 1
+                    self._last_statements[decl] = (yul_statement, pc)
         elif len(statements) > 0:
             statements.sort(key=lambda x: x.ast_tree_depth)
             statement = statements[-1]
             if isinstance(statement, (Block, UncheckedBlock)):
                 return
-            last_statement = self.last_statements[decl]
+            last_statement = self._last_statements[decl]
             if (
                 last_statement is None
                 or last_statement[0] != statement
@@ -636,14 +636,14 @@ class CoverageHandler:
                     start >= statement.byte_location[0]
                     and end <= statement.byte_location[1]
                 ):
-                    self.statement_coverage[statement] += 1
-                    self.last_statements[decl] = (statement, pc)
+                    self._statement_coverage[statement] += 1
+                    self._last_statements[decl] = (statement, pc)
 
     def _flush_coverage(self) -> None:
-        for fn in self.visited_functions:
-            self.function_coverage[fn] += 1
-        for mod in self.visited_modifiers:
-            self.modifier_coverage[mod] += 1
-        self.visited_functions.clear()
-        self.visited_modifiers.clear()
-        self.last_statements.clear()
+        for fn in self._visited_functions:
+            self._function_coverage[fn] += 1
+        for mod in self._visited_modifiers:
+            self._modifier_coverage[mod] += 1
+        self._visited_functions.clear()
+        self._visited_modifiers.clear()
+        self._last_statements.clear()
