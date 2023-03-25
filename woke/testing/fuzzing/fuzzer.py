@@ -8,6 +8,7 @@ import os
 import pickle
 import random
 import sys
+import time
 import types
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
@@ -20,9 +21,13 @@ from tblib import pickling_support
 
 from woke.cli.console import console
 from woke.config import WokeConfig
-from woke.development.globals import attach_debugger, set_exception_handler
+from woke.development.globals import (
+    attach_debugger,
+    set_coverage_handler,
+    set_exception_handler,
+)
 from woke.testing.coverage import (
-    Coverage,
+    CoverageHandler,
     IdeFunctionCoverageRecord,
     IdePosition,
     export_merged_ide_coverage,
@@ -37,27 +42,29 @@ def _run_core(
     finished_event: multiprocessing.synchronize.Event,
     err_child_conn: multiprocessing.connection.Connection,
     cov_child_conn: multiprocessing.connection.Connection,
-    coverage: Optional[Coverage],
+    coverage: Optional[CoverageHandler],
 ):
     print(f"Using seed '{random_seed.hex()}' for process #{index}")
 
     fuzz_test()
 
     err_child_conn.send(None)
+    if coverage is not None:
+        # final coverage update
+        cov_child_conn.send(coverage.get_contract_ide_coverage())
     finished_event.set()
 
 
 def _run(
     fuzz_test: Callable,
     index: int,
-    port: int,
     random_seed: bytes,
     log_file: Path,
     tee: bool,
     finished_event: multiprocessing.synchronize.Event,
     err_child_conn: multiprocessing.connection.Connection,
     cov_child_conn: multiprocessing.connection.Connection,
-    coverage: Optional[Coverage],
+    coverage: Optional[CoverageHandler],
 ):
     def exception_handler(e: Exception) -> None:
         for ctx_manager in ctx_managers:
@@ -75,12 +82,24 @@ def _run(
         finally:
             finished_event.set()
 
+    last_coverage_sync = time.perf_counter()
+
+    def coverage_callback() -> None:
+        nonlocal last_coverage_sync
+        t = time.perf_counter()
+        if coverage is not None and t - last_coverage_sync > 5:
+            cov_child_conn.send(coverage.get_contract_ide_coverage())
+            last_coverage_sync = t
+
     ctx_managers = []
 
     pickling_support.install()
     random.seed(random_seed)
 
     set_exception_handler(exception_handler)
+    if coverage is not None:
+        set_coverage_handler(coverage)
+        coverage.set_callback(coverage_callback)
 
     try:
         if tee:
@@ -148,7 +167,10 @@ def fuzz(
             random_seeds.append(os.urandom(8))
 
     if cov_proc_num != 0:
-        empty_coverage = Coverage()
+        empty_coverage = CoverageHandler(config)
+        # clear coverage file
+        with open("woke-coverage.cov", "w") as f:
+            f.write("{}")
     else:
         empty_coverage = None
     processes = dict()
@@ -156,30 +178,27 @@ def fuzz(
         console.print(f"Using seed '{seed.hex()}' for process #{i}")
         finished_event = multiprocessing.Event()
         err_parent_conn, err_child_con = multiprocessing.Pipe()
-        cov_queue = multiprocessing.Queue()
+        cov_parent_conn, cov_child_con = multiprocessing.Pipe()
 
         log_path = logs_dir / sanitize_filename(
             f"{fuzz_test.__module__}.{fuzz_test.__name__}_{i}.ansi"
         )
-
-        proc_cov = copy.deepcopy(empty_coverage) if i < cov_proc_num else None
 
         p = multiprocessing.Process(
             target=_run,
             args=(
                 fuzz_test,
                 i,
-                8545 + i,
                 seed,
                 log_path,
                 passive and i == 0,
                 finished_event,
                 err_child_con,
-                cov_queue,
-                proc_cov,
+                cov_child_con,
+                empty_coverage if i < cov_proc_num else None,
             ),
         )
-        processes[i] = (p, finished_event, err_parent_conn, cov_queue)
+        processes[i] = (p, finished_event, err_parent_conn, cov_parent_conn)
         p.start()
 
     with rich.progress.Progress(
@@ -191,9 +210,6 @@ def fuzz(
         exported_coverages: Dict[
             int, Dict[Path, Dict[IdePosition, IdeFunctionCoverageRecord]]
         ] = {}
-        exported_coverages_per_trans: Dict[
-            int, Dict[Path, Dict[IdePosition, IdeFunctionCoverageRecord]]
-        ] = {}
 
         if passive:
             progress.stop()
@@ -203,7 +219,7 @@ def fuzz(
 
         while len(processes):
             to_be_removed = []
-            for i, (p, e, err_parent_conn, cov_queue) in processes.items():
+            for i, (p, e, err_parent_conn, cov_parent_conn) in processes.items():
                 finished = e.wait(0.125)
                 if finished:
                     to_be_removed.append(i)
@@ -247,26 +263,19 @@ def fuzz(
                     progress.update(task, thr_rem=len(processes) - len(to_be_removed))
                     if i == 0:
                         progress.start()
-                while not cov_queue.empty():
+
+                tmp = None
+                while cov_parent_conn.poll(0):
                     try:
-                        exported_coverage = cov_queue.get()
-                        if not cov_queue.empty():
-                            continue
-                        (
-                            exported_coverages[i],
-                            exported_coverages_per_trans[i],
-                        ) = exported_coverage
+                        tmp = cov_parent_conn.recv()
                     except EOFError:
-                        pass
+                        break
+                if tmp is not None:
+                    exported_coverages[i] = tmp
                     res = export_merged_ide_coverage(list(exported_coverages.values()))
-                    res_per_trans = export_merged_ide_coverage(
-                        list(exported_coverages_per_trans.values())
-                    )
                     if res:
                         with open("woke-coverage.cov", "w") as f:
                             f.write(json.dumps(res, indent=4, sort_keys=True))
-                        with open("woke-coverage-per-trans.cov", "w") as f:
-                            f.write(json.dumps(res_per_trans, indent=4, sort_keys=True))
                     cov_info = ""
                     if not passive and verbose_coverage:
                         cov_info = "\n[dark_goldenrod]" + "\n".join(
@@ -281,7 +290,7 @@ def fuzz(
                         )
                     progress.update(task, coverage_info=cov_info)
                 if finished:
-                    cov_queue.close()
+                    cov_parent_conn.close()
 
             for i in to_be_removed:
                 processes.pop(i)
