@@ -82,6 +82,8 @@ def run_test(
             str(k): [i.export() for i in v.values()]
             for k, v in coverage_handler.get_contract_ide_coverage().items()
         }
-        (config.project_root_path / "woke.cov").write_text(json.dumps(data, indent=4))
+        (config.project_root_path / "woke-coverage.cov").write_text(
+            json.dumps(data, indent=4)
+        )
 
     sys.exit(ret)
