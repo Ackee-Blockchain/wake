@@ -27,6 +27,14 @@ def _get_module_name(path: Path, root: Path) -> str:
     default=(multiprocessing.cpu_count()),
     help="Number of processes to create for fuzzing.",
 )
+@click.option(
+    "--coverage",
+    type=int,
+    is_flag=False,
+    flag_value=-1,
+    default=0,
+    help="Number of processes to report coverage (0 = off).",
+)
 @click.option("--seed", "-s", "seeds", multiple=True, type=str, help="Random seeds")
 @click.option(
     "--passive",
@@ -39,12 +47,19 @@ def run_fuzz(
     ctx: click.Context,
     paths: Tuple[str],
     process_count: int,
+    coverage: int,
     seeds: Tuple[str],
     passive: bool,
 ) -> None:
     """Run a Woke test using multiple processes."""
 
     from woke.testing.fuzzing.fuzzer import fuzz
+
+    if coverage == -1:
+        coverage = process_count
+
+    if process_count < coverage:
+        raise ValueError("Coverage must be less than or equal to process count.")
 
     config = WokeConfig()
     config.load_configs()  # load ~/.woke/config.toml and ./woke.toml
@@ -94,16 +109,20 @@ def run_fuzz(
     shutil.rmtree(logs_dir, ignore_errors=True)
     logs_dir.mkdir(parents=True, exist_ok=True)
 
-    for func in fuzz_functions:
-        console.print("\n\n")
-        console.print(f"Fuzzing '{func.__name__}' in '{func.__module__}'.")
-        fuzz(
-            config,
-            func,
-            process_count,
-            random_seeds,
-            logs_dir,
-            passive,
-            0,
-            False,
-        )
+    try:
+        for func in fuzz_functions:
+            console.print("\n\n")
+            console.print(f"Fuzzing '{func.__name__}' in '{func.__module__}'.")
+            fuzz(
+                config,
+                func,
+                process_count,
+                random_seeds,
+                logs_dir,
+                passive,
+                coverage,
+                False,
+            )
+    except Exception as e:
+        console.print_exception()
+        sys.exit(1)

@@ -8,7 +8,7 @@ import time
 from collections import ChainMap, defaultdict
 from dataclasses import dataclass
 from itertools import chain
-from typing import Any, DefaultDict, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, DefaultDict, Dict, List, Optional, Set, Tuple, Union
 
 from intervaltree import IntervalTree
 
@@ -330,6 +330,7 @@ class CoverageHandler:
         Union[FunctionDefinition, ModifierDefinition],
         Optional[Tuple[Union[StatementAbc, YulStatementAbc], int]],
     ]
+    _callback: Optional[Callable]
 
     def __init__(self, config: WokeConfig):
         compiler = SolidityCompiler(config)
@@ -349,6 +350,7 @@ class CoverageHandler:
         self._visited_functions = set()
         self._visited_modifiers = set()
         self._last_statements = defaultdict(lambda: None)
+        self._callback = None
 
         errored = False
         for cu in compiler.latest_build_info.compilation_units.values():
@@ -378,6 +380,9 @@ class CoverageHandler:
         console.log(
             f"[green]Prepared coverage data in [bold green]{end - start:.2f} s[/bold green][/]"
         )
+
+    def set_callback(self, callback: Callable) -> None:
+        self._callback = callback
 
     def add_coverage(
         self, params: TxParams, chain: Chain, debug_trace: Dict[str, Any]
@@ -417,6 +422,9 @@ class CoverageHandler:
                 fqn_overrides,
                 is_from_deployment=False,
             )
+
+        if self._callback is not None:
+            self._callback()
 
     def get_contract_ide_coverage(
         self,
