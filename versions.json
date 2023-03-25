@@ -1,10 +1,5 @@
 [
   {
-    "version": "temp",
-    "title": "temp",
-    "aliases": []
-  },
-  {
     "version": "devel",
     "title": "devel",
     "aliases": []
@@ -68,8 +63,8 @@
     "title": "1.0.2",
     "aliases": [
       "1.0.1",
-      "1.0.0",
-      "0.1.3"
+      "0.1.3",
+      "1.0.0"
     ]
   }
 ]
