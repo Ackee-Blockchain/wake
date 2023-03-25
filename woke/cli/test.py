@@ -74,16 +74,12 @@ def run_test(
 
     if coverage:
         from woke.development.globals import get_coverage_handler
+        from woke.testing.coverage import export_merged_ide_coverage, write_coverage
 
         coverage_handler = get_coverage_handler()
         assert coverage_handler is not None
 
-        data = {
-            str(k): [i.export() for i in v.values()]
-            for k, v in coverage_handler.get_contract_ide_coverage().items()
-        }
-        (config.project_root_path / "woke-coverage.cov").write_text(
-            json.dumps(data, indent=4)
-        )
+        c = export_merged_ide_coverage([coverage_handler.get_contract_ide_coverage()])
+        write_coverage(c, config.project_root_path / "woke-coverage.cov")
 
     sys.exit(ret)

@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import copy
+import json
 import logging
 import pathlib
 import re
 import time
 from collections import ChainMap, defaultdict
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass, field
 from itertools import chain
 from typing import Any, Callable, DefaultDict, Dict, List, Optional, Set, Tuple, Union
 
@@ -313,6 +314,20 @@ def export_merged_ide_coverage(
         for ide_pos, func_cov_rec in func_cov_recs.items():
             exported_coverage[file_path_str].append(func_cov_rec.export())
     return exported_coverage
+
+
+@dataclass
+class CoverageFileData:
+    version: str = "1.0"
+    data: Dict[str, List[Dict[str, List]]] = field(default_factory=dict)
+
+
+def write_coverage(
+    coverage: Dict[str, List[Dict[str, List]]], coverage_file: pathlib.Path
+):
+    data = CoverageFileData(data=coverage)
+    with open(coverage_file, "w") as f:
+        json.dump(asdict(data), f, indent=4)
 
 
 class CoverageHandler:
