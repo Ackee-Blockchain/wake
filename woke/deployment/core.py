@@ -290,7 +290,7 @@ class Chain(woke.development.core.Chain):
     ) -> None:
         def get_pending_text():
             if tx.chain.chain_id in chain_explorer_urls:
-                text = f"Waiting for transaction [link={chain_explorer_urls[tx.chain.chain_id]}/tx/{tx.tx_hash}]{tx.tx_hash}[/link] to be mined\n"
+                text = f"Waiting for transaction [link={chain_explorer_urls[tx.chain.chain_id].url}/tx/{tx.tx_hash}]{tx.tx_hash}[/link] to be mined\n"
             else:
                 text = f"Waiting for transaction {tx.tx_hash} to be mined\n"
 
@@ -336,7 +336,7 @@ class Chain(woke.development.core.Chain):
 
         if tx.chain.chain_id in chain_explorer_urls:
             console.print(
-                f"Transaction [link={chain_explorer_urls[tx.chain.chain_id]}/tx/{tx.tx_hash}]{tx.tx_hash}[/link] mined in block {tx.block.number}"
+                f"Transaction [link={chain_explorer_urls[tx.chain.chain_id].url}/tx/{tx.tx_hash}]{tx.tx_hash}[/link] mined in block {tx.block.number}"
             )
         else:
             console.print(f"Transaction {tx.tx_hash} mined in block {tx.block.number}")

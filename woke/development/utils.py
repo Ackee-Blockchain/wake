@@ -3,6 +3,7 @@ from __future__ import annotations
 import inspect
 import json
 import math
+from collections import namedtuple
 from functools import lru_cache
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, TypeVar, Union
 from urllib.error import URLError
@@ -16,20 +17,43 @@ from ..utils import get_package_version
 from .core import Account, Address
 from .globals import get_config
 
-chain_explorer_urls = {
-    1: "https://etherscan.io",
-    5: "https://goerli.etherscan.io",
-    56: "https://bscscan.com",
-    97: "https://testnet.bscscan.com",
-    137: "https://polygonscan.com",
-    80001: "https://mumbai.polygonscan.com",
-    43114: "https://snowtrace.io/",
-    43113: "https://testnet.snowtrace.io/",
-    10: "https://optimistic.etherscan.io/",
-    420: "https://goerli-optimism.etherscan.io/",
-    100: "https://gnosisscan.io/",
-    42161: "https://arbiscan.io",
-    421613: "https://testnet.arbiscan.io/",
+ChainExplorer = namedtuple("ChainExplorer", ["url", "api_url"])
+
+chain_explorer_urls: Dict[int, ChainExplorer] = {
+    1: ChainExplorer("https://etherscan.io", "https://api.etherscan.io/api"),
+    5: ChainExplorer(
+        "https://goerli.etherscan.io", "https://api-goerli.etherscan.io/api"
+    ),
+    56: ChainExplorer("https://bscscan.com", "https://api.bscscan.com/api"),
+    97: ChainExplorer(
+        "https://testnet.bscscan.com", "https://api-testnet.bscscan.com/api"
+    ),
+    137: ChainExplorer("https://polygonscan.com", "https://api.polygonscan.com/api"),
+    80001: ChainExplorer(
+        "https://mumbai.polygonscan.com", "https://api-mumbai.polygonscan.com/api"
+    ),
+    43114: ChainExplorer("https://snowtrace.io/", "https://api.snowtrace.io/api"),
+    43113: ChainExplorer(
+        "https://testnet.snowtrace.io/", "https://api-testnet.snowtrace.io/api"
+    ),
+    10: ChainExplorer(
+        "https://optimistic.etherscan.io/", "https://api-optimistic.etherscan.io/api"
+    ),
+    420: ChainExplorer(
+        "https://goerli-optimism.etherscan.io/",
+        "https://api-goerli-optimism.etherscan.io/api",
+    ),
+    100: ChainExplorer("https://gnosisscan.io/", "https://api.gnosisscan.io/api"),
+    42161: ChainExplorer("https://arbiscan.io/", "https://api.arbiscan.io/api"),
+    421613: ChainExplorer(
+        "https://testnet.arbiscan.io/", "https://api-testnet.arbiscan.io/api"
+    ),
+    84531: ChainExplorer(
+        "https://goerli.basescan.org/", "https://api-goerli.basescan.org/api"
+    ),
+    11155111: ChainExplorer(
+        "https://sepolia.etherscan.io/", "https://api-sepolia.etherscan.io/api"
+    ),
 }
 
 
@@ -40,13 +64,16 @@ def get_contract_info_from_explorer(
     if chain_id not in chain_explorer_urls:
         return None
 
-    u = urlparse(chain_explorer_urls[chain_id])
+    u = urlparse(chain_explorer_urls[chain_id].url)
     config = get_config()
     api_key = config.api_keys.get(".".join(u.netloc.split(".")[:-1]), None)
     if api_key is None:
         return None
 
-    url = f"{u.scheme}://api.{u.netloc}/api?module=contract&action=getsourcecode&address={addr}&apikey={api_key}"
+    url = (
+        chain_explorer_urls[chain_id].api_url
+        + f"?module=contract&action=getsourcecode&address={addr}&apikey={api_key}"
+    )
 
     req = Request(
         url,

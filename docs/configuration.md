@@ -45,11 +45,13 @@ The latter overrides the former.
     # "mumbai.polygonscan" = "" (unset - no Mumbai PolygonScan API key)
     # snowtrace = "" (unset - no Snowtrace API key)
     # "testnet.snowtrace" = "" (unset - no Testnet Snowtrace API key)
-    # "optimistic.snowtrace" = "" (unset - no Optimistic Snowtrace API key)
+    # "optimistic.etherscan" = "" (unset - no Optimistic Etherscan API key)
     # "goerli-optimism.etherscan" = "" (unset - no Goerli Optimism Etherscan API key)
     # gnosisscan = "" (unset - no GnosisScan API key)
     # arbiscan = "" (unset - no Arbiscan API key)
     # "testnet.arbiscan" = "" (unset - no Testnet Arbiscan API key)
+    # "goerli.basescan" = "" (unset - no Goerli BaseScan API key)
+    # "sepolia.etherscan" = "" (unset - no Sepolia Etherscan API key)
 
     [compiler.solc]
     allow_paths = []
@@ -95,11 +97,13 @@ The latter overrides the former.
 | `"mumbai.polygonscan"`        | Mumbai PolygonScan API key        |
 | `snowtrace`                   | Snowtrace API key                 |
 | `"testnet.snowtrace"`         | Testnet Snowtrace API key         |
-| `"optimistic.snowtrace"`      | Optimistic Snowtrace API key      |
+| `"optimistic.etherscan"`      | Optimistic Etherscan API key      |
 | `"goerli-optimism.etherscan"` | Goerli Optimism Etherscan API key |
 | `gnosisscan`                  | GnosisScan API key                |
 | `arbiscan`                    | Arbiscan API key                  |
 | `"testnet.arbiscan"`          | Testnet Arbiscan API key          |
+| `"goerli.basescan"`           | Goerli BaseScan API key           |
+| `"sepolia.etherscan"`         | Sepolia Etherscan API key         |
 
 !!! warning
     Keep your API keys secret. Store them in the global configuration file or in a separate file included as a subconfig and add this file to `.gitignore`.
