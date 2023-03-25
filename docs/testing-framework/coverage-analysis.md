@@ -29,24 +29,36 @@ TOTAL                                  156      8    95%
 
 Note that the `--` is required to separate the arguments passed to `woke` from the arguments passed to `pytest`.
 
+!!! info
+    There is no such option for `woke fuzz` since it does not use `pytest` internally.
+
 ## Solidity contracts coverage
 
-Woke comes with a built-in coverage analysis module that can be activated by passing the `--coverage` flag to `woke test`.
+Woke comes with a built-in coverage analysis module that can be activated by passing the `--coverage` flag and, in the case of `woke fuzz`, an optional number of processes to collect coverage data from.
 
-However, there are some limitations to this coverage analysis:
+```bash
+woke test --coverage
+```
+
+By passing the `--coverage` flag to `woke fuzz` without specifying the number of processes, the coverage analysis is performed for all fuzzing processes.
+```base
+woke fuzz -n 4 --coverage 2
+```
+
+There are some limitations to this coverage analysis:
 
 - code coverage can be inaccurate when analyzing a project with the solc optimizer enabled,
 - multiple executions of the same function in the same transaction/call are counted as a single execution,
 - `call` requests (default for `pure` and `view` functions) are not included in the coverage analysis with Ganache and Hardhat,
 - code coverage introduces a significant overhead in the execution time of the tests.
 
-By running `woke test --coverage`, the `woke.cov` file is generated in the current directory.
+By enabling the coverage collection, a `woke-coverage.cov` file is generated in the current directory.
 To analyze this file, install [Tools for Solidity](https://marketplace.visualstudio.com/items?itemName=AckeeBlockchain.tools-for-solidity), a VS Code extension that can be used to visualize the coverage of Solidity contracts directly in the editor.
 With the extension installed, execute the `Tools for Solidity: Show coverage` command to open the coverage report.
 
 ![Code coverage in VS Code](../images/testing/coverage.png)
 
-The coverage report is updated automatically when the `woke.cov` file is modified.
+The coverage report is updated automatically when the `woke-coverage.cov` file is modified.
 To hide the coverage report, execute the `Tools for Solidity: Hide coverage` command.
 
 !!! warning
