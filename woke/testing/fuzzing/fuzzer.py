@@ -31,6 +31,7 @@ from woke.testing.coverage import (
     IdeFunctionCoverageRecord,
     IdePosition,
     export_merged_ide_coverage,
+    write_coverage,
 )
 from woke.utils.tee import StderrTee, StdoutTee
 
@@ -169,8 +170,7 @@ def fuzz(
     if cov_proc_num != 0:
         empty_coverage = CoverageHandler(config)
         # clear coverage file
-        with open("woke-coverage.cov", "w") as f:
-            f.write("{}")
+        write_coverage({}, config.project_root_path / "woke-coverage.cov")
     else:
         empty_coverage = None
     processes = dict()
@@ -274,8 +274,9 @@ def fuzz(
                     exported_coverages[i] = tmp
                     res = export_merged_ide_coverage(list(exported_coverages.values()))
                     if res:
-                        with open("woke-coverage.cov", "w") as f:
-                            f.write(json.dumps(res, indent=4, sort_keys=True))
+                        write_coverage(
+                            res, config.project_root_path / "woke-coverage.cov"
+                        )
                     cov_info = ""
                     if not passive and verbose_coverage:
                         cov_info = "\n[dark_goldenrod]" + "\n".join(
