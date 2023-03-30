@@ -204,6 +204,11 @@ class TestingConfig(WokeConfigModel):
     hardhat: HardhatConfig = Field(default_factory=HardhatConfig)
 
 
+class DeploymentConfig(WokeConfigModel):
+    confirm_transactions: bool = True
+    silent: bool = False
+
+
 class TopLevelConfig(WokeConfigModel):
     subconfigs: List[Path] = []
     api_keys: Dict[str, str] = {}
@@ -212,6 +217,7 @@ class TopLevelConfig(WokeConfigModel):
     generator: GeneratorConfig = Field(default_factory=GeneratorConfig)
     lsp: LspConfig = Field(default_factory=LspConfig)
     testing: TestingConfig = Field(default_factory=TestingConfig)
+    deployment: DeploymentConfig = Field(default_factory=DeploymentConfig)
 
     @validator("subconfigs", pre=True, each_item=True)
     def set_subconfig(cls, v):

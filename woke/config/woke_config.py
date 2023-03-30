@@ -14,6 +14,7 @@ from woke.utils import change_cwd
 from ..core.solidity_version import SolidityVersion
 from .data_model import (
     CompilerConfig,
+    DeploymentConfig,
     DetectorsConfig,
     GeneratorConfig,
     LspConfig,
@@ -361,3 +362,10 @@ class WokeConfig:
         Return testing framework-specific config options.
         """
         return self.__config.testing
+
+    @property
+    def deployment(self) -> DeploymentConfig:
+        """
+        Return deployment-specific config options.
+        """
+        return self.__config.deployment

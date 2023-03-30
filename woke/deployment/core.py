@@ -1,5 +1,5 @@
 import time
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from typing import Any, Dict, Iterable, Optional, Union, cast
 
 import eth_utils
@@ -23,7 +23,7 @@ from woke.development.core import (
     check_connected,
     fix_library_abi,
 )
-from woke.development.globals import chain_interfaces_manager
+from woke.development.globals import chain_interfaces_manager, get_config
 from woke.development.json_rpc.communicator import JsonRpcError
 from woke.development.transactions import (
     Eip1559Transaction,
@@ -330,44 +330,72 @@ class Chain(woke.development.core.Chain):
         elif confirmations is None:
             confirmations = self.default_tx_confirmations
 
-        with console.status(get_pending_text()) as status:
+        config = get_config()
+
+        ctx_manager = (
+            console.status(get_pending_text())
+            if not config.deployment.silent
+            else nullcontext()
+        )
+
+        with ctx_manager as status:
             while tx.status == TransactionStatusEnum.PENDING:
                 time.sleep(0.5)
-                status.update(get_pending_text())
+                if status is not None:
+                    status.update(get_pending_text())
 
-        if tx.chain.chain_id in chain_explorer_urls:
-            console.print(
-                f"Transaction [link={chain_explorer_urls[tx.chain.chain_id].url}/tx/{tx.tx_hash}]{tx.tx_hash}[/link] mined in block {tx.block.number}"
-            )
-        else:
-            console.print(f"Transaction {tx.tx_hash} mined in block {tx.block.number}")
+        if not config.deployment.silent:
+            if tx.chain.chain_id in chain_explorer_urls:
+                console.print(
+                    f"Transaction [link={chain_explorer_urls[tx.chain.chain_id].url}/tx/{tx.tx_hash}]{tx.tx_hash}[/link] mined in block {tx.block.number}"
+                )
+            else:
+                console.print(
+                    f"Transaction {tx.tx_hash} mined in block {tx.block.number}"
+                )
 
         latest_block_number = self.chain_interface.get_block_number()
 
-        with Progress(
-            TextColumn("[progress.description]{task.description}"),
-            BarColumn(),
-            TextColumn("{task.completed} of {task.total}"),
-            TimeElapsedColumn(),
-            console=console,
-        ) as progress:
-            task_id = progress.add_task(
-                "Confirmations",
-                total=confirmations,
-                completed=(latest_block_number - tx.block.number + 1),
+        ctx_manager = (
+            Progress(
+                TextColumn("[progress.description]{task.description}"),
+                BarColumn(),
+                TextColumn("{task.completed} of {task.total}"),
+                TimeElapsedColumn(),
+                console=console,
             )
+            if not config.deployment.silent
+            else nullcontext()
+        )
+
+        with ctx_manager as progress:
+            if progress is not None:
+                task_id = progress.add_task(
+                    "Confirmations",
+                    total=confirmations,
+                    completed=(latest_block_number - tx.block.number + 1),
+                )
             while latest_block_number - tx.block.number < confirmations - 1:
                 time.sleep(1)
                 latest_block_number = self.chain_interface.get_block_number()
-                progress.update(
-                    task_id, completed=(latest_block_number - tx.block.number + 1)
-                )
+                if progress is not None:
+                    progress.update(
+                        task_id,
+                        completed=(
+                            latest_block_number - tx.block.number + 1
+                        ),  # pyright: reportUnboundVariable=false
+                    )
 
     def _confirm_transaction(self, tx: TxParams) -> None:
+        config = get_config()
+        if config.deployment.silent:
+            return
         pprint(tx, console=console, max_string=200)
-        confirm = Confirm.ask("Sign and send transaction?")
-        if not confirm:
-            raise TransactionConfirmationFailedError()
+
+        if config.deployment.confirm_transactions:
+            confirm = Confirm.ask("Sign and send transaction?")
+            if not confirm:
+                raise TransactionConfirmationFailedError()
 
 
 default_chain = Chain()

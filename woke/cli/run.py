@@ -14,7 +14,19 @@ def _get_module_name(path: Path, root: Path) -> str:
 @click.option(
     "--debug", "-d", is_flag=True, default=False, help="Attach debugger on exception."
 )
-def run_run(paths: Tuple[str, ...], debug: bool) -> None:
+@click.option(
+    "--ask/--no-ask",
+    is_flag=True,
+    default=True,
+    help="Confirm transaction before execution.",
+)
+@click.option(
+    "--silent/--no-silent",
+    is_flag=True,
+    default=False,
+    help="Do not print transaction info.",
+)
+def run_run(paths: Tuple[str, ...], debug: bool, ask: bool, silent: bool) -> None:
     """Run a Woke script."""
 
     import importlib.util
@@ -25,6 +37,7 @@ def run_run(paths: Tuple[str, ...], debug: bool) -> None:
     from woke.development.globals import (
         attach_debugger,
         chain_interfaces_manager,
+        get_config,
         reset_exception_handled,
         set_exception_handler,
     )
@@ -33,6 +46,15 @@ def run_run(paths: Tuple[str, ...], debug: bool) -> None:
 
     config = WokeConfig()
     config.load_configs()
+    get_config().update(
+        {
+            "deployment": {
+                "confirm_transactions": ask,
+                "silent": silent,
+            }
+        },
+        [],
+    )
 
     if len(paths) == 0:
         paths = (str(config.project_root_path / "scripts"),)
