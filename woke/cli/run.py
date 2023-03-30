@@ -24,6 +24,7 @@ def run_run(paths: Tuple[str, ...], debug: bool) -> None:
     from woke.config import WokeConfig
     from woke.development.globals import (
         attach_debugger,
+        chain_interfaces_manager,
         reset_exception_handled,
         set_exception_handler,
     )
@@ -83,3 +84,5 @@ def run_run(paths: Tuple[str, ...], debug: bool) -> None:
         finally:
             if debug:
                 reset_exception_handled()
+
+    chain_interfaces_manager.close_all()

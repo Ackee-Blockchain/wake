@@ -35,7 +35,7 @@ def run_test(
     import pytest
 
     from woke.config import WokeConfig
-    from woke.development.globals import set_config
+    from woke.development.globals import chain_interfaces_manager, set_config
     from woke.testing.pytest_plugin import PytestWokePlugin
 
     config = WokeConfig()
@@ -81,5 +81,7 @@ def run_test(
 
         c = export_merged_ide_coverage([coverage_handler.get_contract_ide_coverage()])
         write_coverage(c, config.project_root_path / "woke-coverage.cov")
+
+    chain_interfaces_manager.close_all()
 
     sys.exit(ret)

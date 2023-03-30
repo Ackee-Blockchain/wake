@@ -9,7 +9,6 @@ from urllib.error import URLError
 from typing_extensions import Literal, TypedDict
 
 from woke.config import WokeConfig
-from woke.development.globals import get_config
 from woke.utils.networking import get_free_port
 
 from .json_rpc.communicator import JsonRpcCommunicator
@@ -92,14 +91,13 @@ class ChainInterfaceAbc(ABC):
     @classmethod
     def launch(
         cls,
+        config: WokeConfig,
         *,
         accounts: Optional[int] = None,
         chain_id: Optional[int] = None,
         fork: Optional[str] = None,
         hardfork: Optional[str] = None,
     ) -> ChainInterfaceAbc:
-        config = get_config()
-
         if config.testing.cmd == "anvil":
             args = ["anvil"] + config.testing.anvil.cmd_args.split()
             constructor = AnvilChainInterface
@@ -218,8 +216,7 @@ class ChainInterfaceAbc(ABC):
             raise
 
     @classmethod
-    def connect(cls, uri: str) -> ChainInterfaceAbc:
-        config = get_config()
+    def connect(cls, config: WokeConfig, uri: str) -> ChainInterfaceAbc:
         communicator = JsonRpcCommunicator(config, uri)
         communicator.__enter__()
         try:
@@ -355,14 +352,21 @@ class ChainInterfaceAbc(ABC):
             [tx_hash, options] if options is not None else [tx_hash],
         )
 
-    def debug_trace_call(self, params: TxParams, block_identifier: Union[int, str] = "latest", options: Optional[Dict] = None) -> Dict[str, Any]:
+    def debug_trace_call(
+        self,
+        params: TxParams,
+        block_identifier: Union[int, str] = "latest",
+        options: Optional[Dict] = None,
+    ) -> Dict[str, Any]:
         return self._communicator.send_request(
             "debug_traceCall",
             [
                 self._encode_tx_params(params),
                 self._encode_block_identifier(block_identifier),
                 options,
-            ] if options is not None else [
+            ]
+            if options is not None
+            else [
                 self._encode_tx_params(params),
                 self._encode_block_identifier(block_identifier),
             ],
