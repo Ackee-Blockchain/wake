@@ -23,6 +23,7 @@ from woke.development.core import (
     check_connected,
     fix_library_abi,
 )
+from woke.development.globals import chain_interfaces_manager
 from woke.development.json_rpc.communicator import JsonRpcError
 from woke.development.transactions import (
     Eip1559Transaction,
@@ -69,7 +70,7 @@ class Chain(woke.development.core.Chain):
                 pass
 
     def _connect_finalize(self) -> None:
-        pass
+        chain_interfaces_manager.close(self._chain_interface)
 
     def _update_nonce(self, address: Address, nonce: int) -> None:
         # nothing to do

@@ -61,7 +61,12 @@ from .chain_interfaces import (
     HardhatChainInterface,
     TxParams,
 )
-from .globals import get_config, get_coverage_handler, get_exception_handler
+from .globals import (
+    chain_interfaces_manager,
+    get_config,
+    get_coverage_handler,
+    get_exception_handler,
+)
 from .internal import UnknownEvent, read_from_memory
 from .json_rpc.communicator import JsonRpcError
 from .primitive_types import Length, ValueRange
@@ -1155,24 +1160,9 @@ class Chain(ABC):
         if isinstance(block_base_fee_per_gas, str):
             block_base_fee_per_gas = Wei.from_str(block_base_fee_per_gas)
 
-        if uri is None:
-            self._chain_interface = ChainInterfaceAbc.launch(
-                accounts=accounts,
-                chain_id=chain_id,
-                fork=fork,
-                hardfork=hardfork,
-            )
-        else:
-            if (
-                accounts is not None
-                or chain_id is not None
-                or fork is not None
-                or hardfork is not None
-            ):
-                raise ValueError(
-                    "Cannot specify accounts, chain_id, fork or hardfork when connecting to a running chain"
-                )
-            self._chain_interface = ChainInterfaceAbc.connect(uri)
+        self._chain_interface = chain_interfaces_manager.get_or_create(
+            uri, accounts=accounts, chain_id=chain_id, fork=fork, hardfork=hardfork
+        )
 
         try:
             self._connected = True
@@ -1284,7 +1274,6 @@ class Chain(ABC):
                 raise
         finally:
             self._connect_finalize()
-            self._chain_interface.close()
             self._connected = False
 
     @property

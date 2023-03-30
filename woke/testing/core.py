@@ -17,6 +17,7 @@ from woke.development.core import (
     check_connected,
     fix_library_abi,
 )
+from woke.development.globals import chain_interfaces_manager
 from woke.development.json_rpc import JsonRpcError
 
 from ..development.chain_interfaces import AnvilChainInterface
@@ -86,6 +87,7 @@ class Chain(woke.development.core.Chain):
 
     def _connect_finalize(self) -> None:
         connected_chains.remove(self)
+        chain_interfaces_manager.free(self._chain_interface)
 
     def _update_nonce(self, address: Address, nonce: int) -> None:
         self._nonces[address] = nonce
