@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import enum
 from typing import Any, List, Optional, Union
 
@@ -17,42 +19,42 @@ from ..lsp_data_model import LspModel
 
 
 class CompletionItemKind(enum.IntEnum):
-    Text = 1
-    Method = 2
-    Function = 3
-    Constructor = 4
-    Field = 5
-    Variable = 6
-    Class = 7
-    Interface = 8
-    Module = 9
-    Property = 10
-    Unit = 11
-    Value = 12
-    Enum = 13
-    Keyword = 14
-    Snippet = 15
-    Color = 16
-    File = 17
-    Reference = 18
-    Folder = 19
-    EnumMember = 20
-    Constant = 21
-    Struct = 22
-    Event = 23
-    Operator = 24
-    TypeParameter = 25
+    TEXT = 1
+    METHOD = 2
+    FUNCTION = 3
+    CONSTRUCTOR = 4
+    FIELD = 5
+    VARIABLE = 6
+    CLASS = 7
+    INTERFACE = 8
+    MODULE = 9
+    PROPERTY = 10
+    UNIT = 11
+    VALUE = 12
+    ENUM = 13
+    KEYWORD = 14
+    SNIPPET = 15
+    COLOR = 16
+    FILE = 17
+    REFERENCE = 18
+    FOLDER = 19
+    ENUM_MEMBER = 20
+    CONSTANT = 21
+    STRUCT = 22
+    EVENT = 23
+    OPERATOR = 24
+    TYPE_PARAMETER = 25
 
 
 class CompletionItemTag(enum.IntEnum):
-    const = 1
+    DEPRECATED = 1
     """
     Render a completion as obsolete, usually using a strike-out.
     """
 
 
 class InsertTextMode(enum.IntEnum):
-    as_is = 1
+    AS_IS = 1
     """
     The insertion or replace strings is taken as it is. If the
     value is multi line the lines below the cursor will be
@@ -60,7 +62,7 @@ class InsertTextMode(enum.IntEnum):
     The client will not apply any kind of adjustments to the
     string.
     """
-    adjust_Indentation = 2
+    ADJUST_INDENTATION = 2
     """
     The editor adjusts leading whitespace of new lines so that
     they match the indentation up to the cursor of the line for
@@ -69,11 +71,11 @@ class InsertTextMode(enum.IntEnum):
 
 
 class InsertTextFormat(enum.IntEnum):
-    plain_text = 1
+    PLAIN_TEXT = 1
     """
     The primary text to be inserted is treated as a plain string.
     """
-    snippet = 2
+    SNIPPET = 2
     """
     The primary text to be inserted is treated as a snippet.
     A snippet can define tab stops and placeholders with `$1`, `$2`
@@ -99,12 +101,16 @@ class ClientCapabilitiesCompletionItemResolveSupport(LspModel):
 
 
 class ClientCapabilitiesCompletionItemKind(LspModel):
-    value_set: Optional[CompletionItemKind]
+    value_set: Optional[List[CompletionItemKind]]
     """
     If this property is not present the client only supports
     the completion items kinds from `Text` to `Reference` as defined in
     the initial version of the protocol.
     """
+
+
+class ClientCapabilitiesCompletionItemInsertTextModeSupport(LspModel):
+    value_set: List[InsertTextMode]
 
 
 #################################################################
@@ -124,7 +130,7 @@ class ClientCapabilitiesCompletionItem(LspModel):
     """
     Client supports commit characters on a completion item.
     """
-    documentation_format: Optional[MarkupKind]
+    documentation_format: Optional[List[MarkupKind]]
     """
     Client supports the following content formats for the documentation
     property. The order describes the preferred format of the client.
@@ -155,7 +161,9 @@ class ClientCapabilitiesCompletionItem(LspModel):
     completion item. Before version 3.16.0 only the predefined properties
     `documentation` and `detail` could be resolved lazily.
     """
-    insert_text_mode_support: Optional[List[InsertTextMode]]
+    insert_text_mode_support: Optional[
+        ClientCapabilitiesCompletionItemInsertTextModeSupport
+    ]
     """
     The client supports the `insertTextMode` property on
     a completion item to override the whitespace handling mode
@@ -257,23 +265,23 @@ class CompletionTriggerKind(enum.IntEnum):
     * How a completion was triggered
     """
 
-    invoked = 1
+    INVOKED = 1
     """
     Completion was triggered by typing an identifier
     """
-    trigger_character = 2
+    TRIGGER_CHARACTER = 2
     """
     Completion was triggered by a trigger character specified by
     the `triggerCharacters` properties of the
     `CompletionRegistrationOptions
     """
-    trigger_for_incomplete_completition = 3
+    TRIGGER_FOR_INCOMPLETE_COMPLETIONS = 3
     """
     Completion was re-triggered as the current completion list is incomplete.
     """
 
 
-class CompletionContext:
+class CompletionContext(LspModel):
     """
     * Contains additional information about the context in which a completion
     request is triggered.
@@ -297,17 +305,17 @@ class CompletionParams(
     context: Optional[CompletionContext]
 
 
-class CompletionListItemDefaultEditRange(LspModel):
+class CompletionListItemDefaultsEditRange(LspModel):
     insert: Range
     replace: Range
 
 
-class CompletionListItemDefault(LspModel):
+class CompletionListItemDefaults(LspModel):
     commit_characters: Optional[List[str]]
     """
     A default commit character set.
     """
-    edit_range: Optional[Union[Range, CompletionListItemDefaultEditRange]]
+    edit_range: Optional[Union[Range, CompletionListItemDefaultsEditRange]]
     """
     A default edit range.
     """
@@ -318,6 +326,10 @@ class CompletionListItemDefault(LspModel):
     insert_text_mode: Optional[InsertTextMode]
     """
     A default insert text mode.
+    """
+    data: Optional[Any]
+    """
+    A default data value.
     """
 
 
@@ -332,7 +344,7 @@ class CompletionList(LspModel):
     This list is not complete. Further typing should result in recomputing this list.
     Recomputed lists have all their items replaced (not appended) in the incomplete completion sessions.
     """
-    item_defaults: Optional[CompletionListItemDefault]
+    item_defaults: Optional[CompletionListItemDefaults]
     """
     In many cases the items of an actual completion result share the same
     value for properties like `commitCharacters` or the range of a text
@@ -345,7 +357,7 @@ class CompletionList(LspModel):
     Servers are only allowed to return default values if the client
     signals support for this via the `completionList.itemDefaults` capability.
     """
-    items: List["CompletionItem"]
+    items: List[CompletionItem]
     """
     The completion items.
     """
@@ -415,7 +427,7 @@ class CompletionItem(LspModel):
     A human-readable string with additional information
     about this item, like type or symbol information.
     """
-    documentation: Optional[Union[bool, MarkupContent]]
+    documentation: Optional[Union[str, MarkupContent]]
     """
     A human-readable string that represents a doc-comment.
     """
@@ -462,13 +474,26 @@ class CompletionItem(LspModel):
     An edit which is applied to a document when selecting this completion.
     When an edit is provided the value of `insertText` is ignored.
     """
+    text_edit_text: Optional[str]
+    """
+    The edit text ussed if the completion item is part of a
+    CompletionList and CompletionList defines an item default for
+    the text edit range.
+    """
     additional_text_edits: Optional[List[TextEdit]]
     """
     An optional array of additional text edits that are applied when
     selecting this completion. Edits must not overlap (including the same
     insert position) with the main edit nor with themselves.
     """
-    commit_characters: Optional[Command]
+    commit_characters: Optional[List[str]]
+    """
+    An optional set of characters that when pressed while this completion is
+    active will accept it first and then type that character. *Note* that all
+    commit characters should have `length=1` and that superfluous characters
+    will be ignored.
+    """
+    command: Optional[Command]
     """
     An optional command that is executed *after* inserting this completion.
     *Note* that additional modifications to the current document should be
