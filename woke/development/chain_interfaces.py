@@ -227,7 +227,7 @@ class ChainInterfaceAbc(ABC):
                 return HardhatChainInterface(config, communicator)
             elif "ethereumjs" in client_version:
                 return GanacheChainInterface(config, communicator)
-            elif "geth" in client_version:
+            elif "geth" in client_version or "bor" in client_version:
                 return GethChainInterface(config, communicator)
             else:
                 raise NotImplementedError(
