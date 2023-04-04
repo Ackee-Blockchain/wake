@@ -453,9 +453,12 @@ class Account:
         return Wei(self._chain.chain_interface.get_balance(str(self._address)))
 
     @balance.setter
-    def balance(self, value: int) -> None:
+    def balance(self, value: Union[int, str]) -> None:
+        if isinstance(value, str):
+            value = Wei.from_str(value)
+
         if not isinstance(value, int):
-            raise TypeError("value must be an integer")
+            raise TypeError("value must be an integer or string")
         if value < 0:
             raise ValueError("value must be non-negative")
         self._chain.chain_interface.set_balance(str(self.address), value)
