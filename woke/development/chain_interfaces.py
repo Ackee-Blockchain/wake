@@ -220,14 +220,16 @@ class ChainInterfaceAbc(ABC):
         communicator = JsonRpcCommunicator(config, uri)
         communicator.__enter__()
         try:
-            client_version = communicator.send_request("web3_clientVersion").lower()
+            client_version: str = communicator.send_request(
+                "web3_clientVersion"
+            ).lower()
             if "anvil" in client_version:
                 return AnvilChainInterface(config, communicator)
             elif "hardhat" in client_version:
                 return HardhatChainInterface(config, communicator)
             elif "ethereumjs" in client_version:
                 return GanacheChainInterface(config, communicator)
-            elif "geth" in client_version or "bor" in client_version:
+            elif client_version.startswith(("geth", "bor", "nitro")):
                 return GethChainInterface(config, communicator)
             else:
                 raise NotImplementedError(
