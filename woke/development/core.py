@@ -59,6 +59,7 @@ from .chain_interfaces import (
     GanacheChainInterface,
     GethChainInterface,
     HardhatChainInterface,
+    HermezChainInterface,
     TxParams,
 )
 from .globals import (
@@ -1202,12 +1203,18 @@ class Chain(ABC):
                 else:
                     self._default_tx_type = 2
             elif isinstance(
-                self._chain_interface, (GethChainInterface, HardhatChainInterface)
+                self._chain_interface,
+                (GethChainInterface, HardhatChainInterface, HermezChainInterface),
             ):
                 if self._chain_id in {56, 97}:
                     # BSC clients do not fail on the calls below
                     self._default_tx_type = 1
                 else:
+                    # TODO this is not the correct flow for Hermez:
+                    # EIP-1559 txs should be supported
+                    # access lists should not be supported
+                    # `type` field in txs should not be used
+                    # because Hermez does not implement eth_maxPriorityFeePerGas, fallback to legacy txs
                     try:
                         self._chain_interface.call(
                             {
@@ -1864,6 +1871,7 @@ class Chain(ABC):
         ):
             revert_data = e.data["data"]["data"]
         else:
+            # Hermez does not provide revert data for estimate
             raise e from None
 
         if revert_data.startswith("0x"):
