@@ -231,6 +231,8 @@ class ChainInterfaceAbc(ABC):
                 return GanacheChainInterface(config, communicator)
             elif client_version.startswith(("geth", "bor", "nitro")):
                 return GethChainInterface(config, communicator)
+            elif "hermez" in client_version:
+                return HermezChainInterface(config, communicator)
             else:
                 raise NotImplementedError(
                     f"Client version {client_version} not supported"
@@ -268,9 +270,6 @@ class ChainInterfaceAbc(ABC):
                 [address, self._encode_block_identifier(block_identifier)],
             )[2:]
         )
-
-    def get_accounts(self) -> List[str]:
-        return self._communicator.send_request("eth_accounts")
 
     def get_coinbase(self) -> str:
         return self._communicator.send_request("eth_coinbase")
@@ -417,6 +416,10 @@ class ChainInterfaceAbc(ABC):
         return self._communicator.send_request("trace_transaction", [tx_hash])
 
     @abstractmethod
+    def get_accounts(self) -> List[str]:
+        ...
+
+    @abstractmethod
     def get_automine(self) -> bool:
         ...
 
@@ -466,6 +469,9 @@ class ChainInterfaceAbc(ABC):
 
 
 class HardhatChainInterface(ChainInterfaceAbc):
+    def get_accounts(self) -> List[str]:
+        return self._communicator.send_request("eth_accounts")
+
     def set_balance(self, address: str, value: int) -> None:
         self._communicator.send_request("hardhat_setBalance", [address, hex(value)])
 
@@ -518,6 +524,9 @@ class HardhatChainInterface(ChainInterfaceAbc):
 
 
 class AnvilChainInterface(ChainInterfaceAbc):
+    def get_accounts(self) -> List[str]:
+        return self._communicator.send_request("eth_accounts")
+
     def set_balance(self, address: str, value: int) -> None:
         self._communicator.send_request("anvil_setBalance", [address, hex(value)])
 
@@ -569,6 +578,9 @@ class AnvilChainInterface(ChainInterfaceAbc):
 
 
 class GanacheChainInterface(ChainInterfaceAbc):
+    def get_accounts(self) -> List[str]:
+        return self._communicator.send_request("eth_accounts")
+
     def set_balance(self, address: str, value: int) -> None:
         self._communicator.send_request("evm_setAccountBalance", [address, hex(value)])
 
@@ -622,6 +634,9 @@ class GanacheChainInterface(ChainInterfaceAbc):
 
 
 class GethChainInterface(ChainInterfaceAbc):
+    def get_accounts(self) -> List[str]:
+        return self._communicator.send_request("eth_accounts")
+
     def get_automine(self) -> bool:
         raise NotImplementedError("Geth does not support automine")
 
@@ -659,3 +674,50 @@ class GethChainInterface(ChainInterfaceAbc):
 
     def set_min_gas_price(self, value: int) -> None:
         raise NotImplementedError("Geth does not support setting min gas price")
+
+
+class HermezChainInterface(ChainInterfaceAbc):
+    def get_accounts(self) -> List[str]:
+        return []
+
+    def get_automine(self) -> bool:
+        raise NotImplementedError("Hermez does not support automine")
+
+    def set_automine(self, value: bool) -> None:
+        raise NotImplementedError("Hermez does not support automine")
+
+    def reset(self, options: Optional[Dict] = None) -> None:
+        raise NotImplementedError("Hermez does not support resetting the chain")
+
+    def set_coinbase(self, address: str) -> None:
+        raise NotImplementedError("Hermez does not support setting coinbase")
+
+    def set_balance(self, address: str, value: int) -> None:
+        raise NotImplementedError("Hermez does not support setting balance")
+
+    def set_block_gas_limit(self, gas_limit: int) -> None:
+        raise NotImplementedError("Hermez does not support setting block gas limit")
+
+    def set_code(self, address: str, value: bytes) -> None:
+        raise NotImplementedError("Hermez does not support setting code")
+
+    def set_nonce(self, address: str, value: int) -> None:
+        raise NotImplementedError("Hermez does not support setting nonce")
+
+    def set_next_block_timestamp(self, timestamp: int) -> None:
+        raise NotImplementedError(
+            "Hermez does not support setting next block timestamp"
+        )
+
+    def send_unsigned_transaction(self, params: TxParams) -> str:
+        raise NotImplementedError(
+            "Hermez does not support sending unsigned transactions"
+        )
+
+    def set_next_block_base_fee_per_gas(self, value: int) -> None:
+        raise NotImplementedError(
+            "Hermez does not support setting next block base fee per gas"
+        )
+
+    def set_min_gas_price(self, value: int) -> None:
+        raise NotImplementedError("Hermez does not support setting min gas price")

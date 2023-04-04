@@ -28,6 +28,7 @@ from .chain_interfaces import (
     GanacheChainInterface,
     GethChainInterface,
     HardhatChainInterface,
+    HermezChainInterface,
     TxParams,
 )
 from .core import Account, Chain, Wei
@@ -237,7 +238,7 @@ class TransactionAbc(ABC, Generic[T]):
             return self._chain._process_console_logs_from_debug_trace(
                 self._debug_trace_transaction
             )
-        elif isinstance(chain_interface, GethChainInterface):
+        elif isinstance(chain_interface, (GethChainInterface, HermezChainInterface)):
             try:
                 self._fetch_trace_transaction()
                 assert self._trace_transaction is not None
@@ -342,7 +343,7 @@ class TransactionAbc(ABC, Generic[T]):
             self._fetch_debug_trace_transaction()
             assert self._debug_trace_transaction is not None
             revert_data = bytes.fromhex(self._debug_trace_transaction["returnValue"])  # type: ignore
-        elif isinstance(chain_interface, GethChainInterface):
+        elif isinstance(chain_interface, (GethChainInterface, HermezChainInterface)):
             try:
                 self._fetch_trace_transaction()
                 assert self._trace_transaction is not None
@@ -406,7 +407,7 @@ class TransactionAbc(ABC, Generic[T]):
             self._fetch_debug_trace_transaction()
             assert self._debug_trace_transaction is not None
             output = bytes.fromhex(self._debug_trace_transaction["returnValue"])  # type: ignore
-        elif isinstance(chain_interface, GethChainInterface):
+        elif isinstance(chain_interface, (GethChainInterface, HermezChainInterface)):
             try:
                 self._fetch_trace_transaction()
                 assert self._trace_transaction is not None
