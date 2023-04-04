@@ -1180,6 +1180,8 @@ class Chain(ABC):
             except JsonRpcError:
                 self._debug_trace_call_supported = False
 
+            self._chain_id = self._chain_interface.get_chain_id()
+
             # determine the chain hardfork to set the default tx type
             if isinstance(self._chain_interface, AnvilChainInterface):
                 hardfork = self._chain_interface.node_info()["hardFork"]
@@ -1202,25 +1204,29 @@ class Chain(ABC):
             elif isinstance(
                 self._chain_interface, (GethChainInterface, HardhatChainInterface)
             ):
-                try:
-                    self._chain_interface.call(
-                        {
-                            "type": 2,
-                            "maxPriorityFeePerGas": 0,
-                        }
-                    )
-                    self._default_tx_type = 2
-                except JsonRpcError:
+                if self._chain_id in {56, 97}:
+                    # BSC clients do not fail on the calls below
+                    self._default_tx_type = 1
+                else:
                     try:
                         self._chain_interface.call(
                             {
-                                "type": 1,
-                                "accessList": [],
+                                "type": 2,
+                                "maxPriorityFeePerGas": 0,
                             }
                         )
-                        self._default_tx_type = 1
+                        self._default_tx_type = 2
                     except JsonRpcError:
-                        self._default_tx_type = 0
+                        try:
+                            self._chain_interface.call(
+                                {
+                                    "type": 1,
+                                    "accessList": [],
+                                }
+                            )
+                            self._default_tx_type = 1
+                        except JsonRpcError:
+                            self._default_tx_type = 0
             elif isinstance(self._chain_interface, GanacheChainInterface):
                 self._default_tx_type = 0
             else:
@@ -1242,7 +1248,6 @@ class Chain(ABC):
                 Account(acc, self) for acc in self._chain_interface.get_accounts()
             ]
             self._accounts_set = set(self._accounts)
-            self._chain_id = self._chain_interface.get_chain_id()
             self._snapshots = {}
             self._deployed_libraries = defaultdict(list)
             self._default_call_account = (
@@ -1869,6 +1874,11 @@ class Chain(ABC):
     def _send_transaction(self, tx_params: TxParams) -> str:
         assert "from" in tx_params
         assert "nonce" in tx_params
+
+        if self._chain_id in {56, 97}:
+            # BSC doesn't support access lists and tx type
+            del tx_params["type"]
+            del tx_params["accessList"]
 
         self._confirm_transaction(tx_params)
 
