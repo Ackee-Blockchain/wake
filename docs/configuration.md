@@ -40,18 +40,7 @@ The latter overrides the former.
     # etherscan = "" (unset - no Etherscan API key)
     # "goerli.etherscan" = "" (unset - no Goerli Etherscan API key)
     # bscscan = "" (unset - no BscScan API key)
-    # "testnet.bscscan" = "" (unset - no Testnet BscScan API key)
-    # polygonscan = "" (unset - no PolygonScan API key)
-    # "mumbai.polygonscan" = "" (unset - no Mumbai PolygonScan API key)
-    # snowtrace = "" (unset - no Snowtrace API key)
-    # "testnet.snowtrace" = "" (unset - no Testnet Snowtrace API key)
-    # "optimistic.etherscan" = "" (unset - no Optimistic Etherscan API key)
-    # "goerli-optimism.etherscan" = "" (unset - no Goerli Optimism Etherscan API key)
-    # gnosisscan = "" (unset - no GnosisScan API key)
-    # arbiscan = "" (unset - no Arbiscan API key)
-    # "testnet.arbiscan" = "" (unset - no Testnet Arbiscan API key)
-    # "goerli.basescan" = "" (unset - no Goerli BaseScan API key)
-    # "sepolia.etherscan" = "" (unset - no Sepolia Etherscan API key)
+    # ...
 
     [compiler.solc]
     allow_paths = []
@@ -104,6 +93,14 @@ The latter overrides the former.
 | `"testnet.arbiscan"`          | Testnet Arbiscan API key          |
 | `"goerli.basescan"`           | Goerli BaseScan API key           |
 | `"sepolia.etherscan"`         | Sepolia Etherscan API key         |
+| `"zkevm.polygonscan"`         | zkEVM PolygonScan API key         |
+| `"testnet-zkevm.polygonscan"` | Testnet zkEVM PolygonScan API key |
+| `celoscan`                    | CeloScan API key                  |
+| `"alfajores.celoscan"`        | Alfajores CeloScan API key        |
+| `moonscan`                    | MoonScan API key                  |
+| `"moonbase.moonscan"`         | Moonbase MoonScan API key         |
+| `ftmscan`                     | FtmScan API key                   |
+| `"testnet.ftmscan"`           | Testnet FtmScan API key           |
 
 !!! warning
     Keep your API keys secret. Store them in the global configuration file or in a separate file included as a subconfig and add this file to `.gitignore`.

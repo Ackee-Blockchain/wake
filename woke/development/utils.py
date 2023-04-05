@@ -54,6 +54,37 @@ chain_explorer_urls: Dict[int, ChainExplorer] = {
     11155111: ChainExplorer(
         "https://sepolia.etherscan.io/", "https://api-sepolia.etherscan.io/api"
     ),
+    1101: ChainExplorer(
+        "https://zkevm.polygonscan.com/", "https://api-zkevm.polygonscan.com/api"
+    ),
+    1442: ChainExplorer(
+        "https://testnet-zkevm.polygonscan.com/",
+        "https://api-testnet-zkevm.polygonscan.com/api",
+    ),
+    42220: ChainExplorer(
+        "https://celoscan.io/",
+        "https://api.celoscan.io/api",
+    ),
+    44787: ChainExplorer(
+        "https://alfajores.celoscan.io/",
+        "https://api-alfajores.celoscan.io/api",
+    ),
+    1284: ChainExplorer(
+        "https://moonscan.io/",
+        "https://api-moonbeam.moonscan.io/api",
+    ),
+    1287: ChainExplorer(
+        "https://moonbase.moonscan.io/",
+        "https://api-moonbase.moonscan.io/api",
+    ),
+    250: ChainExplorer(
+        "https://ftmscan.com/",
+        "https://api.ftmscan.com/api",
+    ),
+    4002: ChainExplorer(
+        "https://testnet.ftmscan.com/",
+        "https://api-testnet.ftmscan.com/api",
+    ),
 }
 
 
