@@ -154,6 +154,7 @@ def _compute_coverage_per_function(
 
 def fuzz(
     config: WokeConfig,
+    func_name: str,
     fuzz_test: types.FunctionType,
     process_count: int,
     seeds: Iterable[bytes],
@@ -181,7 +182,7 @@ def fuzz(
         cov_parent_conn, cov_child_con = multiprocessing.Pipe()
 
         log_path = logs_dir / sanitize_filename(
-            f"{fuzz_test.__module__}.{fuzz_test.__name__}_{i}.ansi"
+            f"{fuzz_test.__module__}.{func_name}_{i}.ansi"
         )
 
         p = multiprocessing.Process(

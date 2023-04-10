@@ -94,27 +94,26 @@ def run_fuzz(
         sys.modules[module_name] = module
         module_spec.loader.exec_module(module)
 
-        functions: Iterable[Callable] = (
-            func
-            for _, func in inspect.getmembers(module, inspect.isfunction)
-            if func.__module__ == module_name and func.__name__.startswith("test")
+        functions: Iterable[Tuple[str, Callable]] = (
+            (func_name, func)
+            for func_name, func in inspect.getmembers(module, inspect.isfunction)
+            if func.__module__ == module_name and func_name.startswith("test")
         )
-        for func in functions:
-            console.print(
-                f"Found '{func.__name__}' function in '{func.__module__}' file."
-            )
-            fuzz_functions.append(func)
+        for func_name, func in functions:
+            console.print(f"Found '{func_name}' function in '{func.__module__}' file.")
+            fuzz_functions.append((func_name, func))
 
     logs_dir = config.project_root_path / ".woke-logs" / "fuzz"
     shutil.rmtree(logs_dir, ignore_errors=True)
     logs_dir.mkdir(parents=True, exist_ok=True)
 
     try:
-        for func in fuzz_functions:
+        for func_name, func in fuzz_functions:
             console.print("\n\n")
-            console.print(f"Fuzzing '{func.__name__}' in '{func.__module__}'.")
+            console.print(f"Fuzzing '{func_name}' in '{func.__module__}'.")
             fuzz(
                 config,
+                func_name,
                 func,
                 process_count,
                 random_seeds,
