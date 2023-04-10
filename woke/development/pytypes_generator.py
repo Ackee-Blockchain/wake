@@ -605,9 +605,12 @@ class TypeGenerator:
 
                 if selector not in self.__events_index:
                     self.__events_index[selector] = {}
+                event_module_name = "pytypes." + _make_path_alphanum(
+                    event_decl.parent.parent.source_unit_name[:-3]
+                ).replace("/", ".")
                 self.__events_index[selector][fqn] = (
-                    module_name,
-                    (self.get_name(contract), self.get_name(event_decl)),
+                    event_module_name,
+                    (self.get_name(event_decl.parent), self.get_name(event_decl)),
                 )
             elif item["type"] in {"constructor", "fallback", "receive"}:
                 abi_by_selector[item["type"]] = item

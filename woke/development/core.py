@@ -1697,7 +1697,7 @@ class Chain(ABC):
             if selector not in events:
                 continue
 
-            if len(events[selector]) > 1:
+            if len({source for source in events[selector].values()}) > 1:
                 non_unique = True
                 break
 
@@ -1744,7 +1744,7 @@ class Chain(ABC):
                 generated_events.append(UnknownEvent(topics, data))
                 continue
 
-            if len(events[selector]) > 1:
+            if len({source for source in events[selector].values()}) > 1:
                 assert traced_selector == selector
 
                 if fqn is None:
