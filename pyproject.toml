@@ -32,7 +32,7 @@ parsimonious = "^0.9"
 eth-hash = { version = "^0.5.1", extras = ["pycryptodome"] }
 websocket-client = "^1.4"
 pywin32 = { version = ">= 302", platform = "win32" }
-watchdog = "^2.2"
+watchdog = "~2.2.0"
 pytest = "^7"
 pdbr = { version = "^0.8.0", extras = ["ipython"] }
 
