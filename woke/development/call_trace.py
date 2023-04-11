@@ -348,7 +348,7 @@ class CallTrace:
         if (
             origin_fqn is None or origin_fqn not in contracts_by_fqn
         ) and tx.to is not None:
-            if tx.to.address <= Address(9):
+            if Address(0) < tx.to.address <= Address(9):
                 precompiled_info = get_precompiled_info(
                     tx.to.address, b"" if "data" not in tx_params else tx_params["data"]
                 )
@@ -566,7 +566,7 @@ class CallTrace:
                 if fqn is None and addr != Address(
                     "0x000000000000000000636F6e736F6c652e6c6f67"
                 ):
-                    if addr <= Address(9):
+                    if Address(0) < addr <= Address(9):
                         precompiled_info = get_precompiled_info(addr, data)
                     elif tx.chain._fork is not None:
                         explorer_info = get_contract_info_from_explorer(
