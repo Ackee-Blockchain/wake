@@ -73,7 +73,14 @@ def _run(
             ctx_manager.__exit__(None, None, None)
         ctx_managers.clear()
 
-        err_child_conn.send(pickle.dumps(sys.exc_info()))
+        exc_info = sys.exc_info()
+        try:
+            pickled = pickle.dumps(exc_info)
+        except Exception:
+            pickled = pickle.dumps(
+                (exc_info[0], Exception(repr(exc_info[1])), exc_info[2])
+            )
+        err_child_conn.send(pickled)
         finished_event.set()
 
         try:
