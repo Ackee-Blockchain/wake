@@ -151,24 +151,6 @@ files = [
 ]
 
 [[package]]
-name = "asttokens"
-version = "2.2.1"
-description = "Annotate AST trees with source code positions"
-category = "main"
-optional = false
-python-versions = "*"
-files = [
-    {file = "asttokens-2.2.1-py2.py3-none-any.whl", hash = "sha256:6b0ac9e93fb0335014d382b8fa9b3afa7df546984258005da0b9e7095b3deb1c"},
-    {file = "asttokens-2.2.1.tar.gz", hash = "sha256:4622110b2a6f30b77e1473affaa97e711bc2f07d3f10848420ff1898edbe94f3"},
-]
-
-[package.dependencies]
-six = "*"
-
-[package.extras]
-test = ["astroid", "pytest"]
-
-[[package]]
 name = "async-timeout"
 version = "4.0.2"
 description = "Timeout context manager for asyncio programs"
@@ -977,21 +959,6 @@ files = [
 test = ["pytest (>=6)"]
 
 [[package]]
-name = "executing"
-version = "1.2.0"
-description = "Get the currently executing AST node of a frame, and other information"
-category = "main"
-optional = false
-python-versions = "*"
-files = [
-    {file = "executing-1.2.0-py2.py3-none-any.whl", hash = "sha256:0314a69e37426e3608aada02473b4161d4caf5a4b244d1d0c48072b8fee7bacc"},
-    {file = "executing-1.2.0.tar.gz", hash = "sha256:19da64c18d2d851112f09c287f8d3dbbdf725ab0e569077efb6cdcbd3497c107"},
-]
-
-[package.extras]
-tests = ["asttokens", "littleutils", "pytest", "rich"]
-
-[[package]]
 name = "frozenlist"
 version = "1.3.3"
 description = "A list-like structure which implements collections.abc.MutableSequence"
@@ -1143,14 +1110,14 @@ test = ["coverage", "mock (>=4)", "pytest (>=6)", "pytest-cov", "pytest-mock (>=
 
 [[package]]
 name = "griffe"
-version = "0.26.0"
+version = "0.27.0"
 description = "Signatures for entire Python programs. Extract the structure, the frame, the skeleton of your project, to generate API documentation or find breaking changes in your API."
 category = "main"
 optional = true
 python-versions = ">=3.7"
 files = [
-    {file = "griffe-0.26.0-py3-none-any.whl", hash = "sha256:38f3f6bbe834501cc199a07b7b7e0e2550aaf19a9d1ee27acf879027e47c9b9e"},
-    {file = "griffe-0.26.0.tar.gz", hash = "sha256:08675ffe8c17139e7769e950dd21f8e98a2e76205cbbd2911d5dec26d2cbf1be"},
+    {file = "griffe-0.27.0-py3-none-any.whl", hash = "sha256:f3a5726e2d5876ac882d48ff9ca1a95c5bc267196a8f114263e66e234141bb84"},
+    {file = "griffe-0.27.0.tar.gz", hash = "sha256:dcf3cc4205f33cbb16095324803a6904e0b293cd1630ceab4b66a9115af6b818"},
 ]
 
 [package.dependencies]
@@ -1177,24 +1144,6 @@ dev = ["Sphinx (>=4.0.0,<5)", "black (>=22,<23)", "bumpversion (>=0.5.3,<1)", "e
 doc = ["Sphinx (>=4.0.0,<5)", "sphinx-rtd-theme (>=0.1.9,<1)", "towncrier (>=21,<22)"]
 lint = ["black (>=22,<23)", "flake8 (==3.7.9)", "isort (>=4.2.15,<5)", "mypy (==0.971)", "pydocstyle (>=5.0.0,<6)"]
 test = ["eth-utils (>=1.0.1,<3)", "hypothesis (>=3.44.24,<=6.31.6)", "pytest (>=7,<8)", "pytest-xdist", "tox (>=3.25.1,<4)"]
-
-[[package]]
-name = "icecream"
-version = "2.1.3"
-description = "Never use print() to debug again; inspect variables, expressions, and program execution with a single, simple function call."
-category = "main"
-optional = false
-python-versions = "*"
-files = [
-    {file = "icecream-2.1.3-py2.py3-none-any.whl", hash = "sha256:757aec31ad4488b949bc4f499d18e6e5973c40cc4d4fc607229e78cfaec94c34"},
-    {file = "icecream-2.1.3.tar.gz", hash = "sha256:0aa4a7c3374ec36153a1d08f81e3080e83d8ac1eefd97d2f4fe9544e8f9b49de"},
-]
-
-[package.dependencies]
-asttokens = ">=2.0.1"
-colorama = ">=0.3.9"
-executing = ">=0.3.1"
-pygments = ">=2.2.0"
 
 [[package]]
 name = "idna"
@@ -1273,6 +1222,23 @@ files = [
 
 [package.dependencies]
 sortedcontainers = ">=2.0,<3.0"
+
+[[package]]
+name = "ipdb"
+version = "0.13.13"
+description = "IPython-enabled pdb"
+category = "main"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+files = [
+    {file = "ipdb-0.13.13-py3-none-any.whl", hash = "sha256:45529994741c4ab6d2388bfa5d7b725c2cf7fe9deffabdb8a6113aa5ed449ed4"},
+    {file = "ipdb-0.13.13.tar.gz", hash = "sha256:e3ac6018ef05126d442af680aad863006ec19d02290561ac88b8b1c0b0cfc726"},
+]
+
+[package.dependencies]
+decorator = {version = "*", markers = "python_version > \"3.6\""}
+ipython = {version = ">=7.31.1", markers = "python_version > \"3.6\""}
+tomli = {version = "*", markers = "python_version > \"3.6\" and python_version < \"3.11\""}
 
 [[package]]
 name = "ipython"
@@ -1846,29 +1812,6 @@ files = [
 test = ["allpairspy", "click", "faker", "pytest (>=6.0.1)", "pytest-discord (>=0.0.6)", "pytest-md-report (>=0.0.12)"]
 
 [[package]]
-name = "pdbr"
-version = "0.8.2"
-description = "Pdb with Rich library."
-category = "main"
-optional = false
-python-versions = ">=3.7.9,<4.0.0"
-files = [
-    {file = "pdbr-0.8.2-py3-none-any.whl", hash = "sha256:0667c3c852e0c5a952bbef63d8ad37e950914105b215b55f3d9bcbc87b67d9c3"},
-    {file = "pdbr-0.8.2.tar.gz", hash = "sha256:1c427a6175f1603394a0fc896a5887aa57b871a0ac06b47df6f585f542dc9e12"},
-]
-
-[package.dependencies]
-icecream = "*"
-ipython = {version = "*", optional = true, markers = "extra == \"ipython\""}
-pyreadline3 = {version = ">=3.4.1,<4.0.0", markers = "sys_platform == \"win32\""}
-rich = "*"
-sqlparse = "*"
-
-[package.extras]
-celery = ["celery (>=5.2.2,<6.0.0)"]
-ipython = ["ipython"]
-
-[[package]]
 name = "pexpect"
 version = "4.8.0"
 description = "Pexpect allows easy control of interactive console applications."
@@ -2150,14 +2093,14 @@ email = ["email-validator (>=1.0.3)"]
 
 [[package]]
 name = "pygments"
-version = "2.14.0"
+version = "2.15.0"
 description = "Pygments is a syntax highlighting package written in Python."
 category = "main"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.7"
 files = [
-    {file = "Pygments-2.14.0-py3-none-any.whl", hash = "sha256:fa7bd7bd2771287c0de303af8bfdfc731f51bd2c6a47ab69d117138893b82717"},
-    {file = "Pygments-2.14.0.tar.gz", hash = "sha256:b3ed06a9e8ac9a9aae5a6f5dbe78a8a58655d17b43b93c078f094ddc476ae297"},
+    {file = "Pygments-2.15.0-py3-none-any.whl", hash = "sha256:77a3299119af881904cd5ecd1ac6a66214b6e9bed1f2db16993b54adede64094"},
+    {file = "Pygments-2.15.0.tar.gz", hash = "sha256:f7e36cffc4c517fbc252861b9a6e4644ca0e5abadf9a113c72d1358ad09b9500"},
 ]
 
 [package.extras]
@@ -2178,18 +2121,6 @@ files = [
 [package.dependencies]
 markdown = ">=3.2"
 pyyaml = "*"
-
-[[package]]
-name = "pyreadline3"
-version = "3.4.1"
-description = "A python implementation of GNU readline."
-category = "main"
-optional = false
-python-versions = "*"
-files = [
-    {file = "pyreadline3-3.4.1-py3-none-any.whl", hash = "sha256:b0efb6516fd4fb07b45949053826a62fa4cb353db5be2bbb4a7aa1fdd1e345fb"},
-    {file = "pyreadline3-3.4.1.tar.gz", hash = "sha256:6f3d1f7b8a31ba32b73917cefc1f28cc660562f39aea8646d30bd6eff21f7bae"},
-]
 
 [[package]]
 name = "pytest"
@@ -2574,18 +2505,6 @@ files = [
 ]
 
 [[package]]
-name = "sqlparse"
-version = "0.4.3"
-description = "A non-validating SQL parser."
-category = "main"
-optional = false
-python-versions = ">=3.5"
-files = [
-    {file = "sqlparse-0.4.3-py3-none-any.whl", hash = "sha256:0323c0ec29cd52bceabc1b4d9d579e311f3e4961b98d174201d5622a23b85e34"},
-    {file = "sqlparse-0.4.3.tar.gz", hash = "sha256:69ca804846bb114d2ec380e4360a8a340db83f0ccf3afceeb1404df028f57268"},
-]
-
-[[package]]
 name = "tblib"
 version = "1.7.0"
 description = "Traceback serialization library."
@@ -2928,4 +2847,4 @@ tests = ["pytest-asyncio", "GitPython"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7.9"
-content-hash = "43ca4e65c43be077d0235e897695d5f3977e3dbc641c0fe3a33c870672297f28"
+content-hash = "c3db7ca142562277417d90612741afc955872f7a0424c859978e16b0beb766c0"

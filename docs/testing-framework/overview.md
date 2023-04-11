@@ -11,7 +11,7 @@ It utilizes `pytypes`, Python equivalents of Solidity types, to simplify writing
 - type checking for all types generated in `pytypes`
 - property-based fuzzer leveraging multiprocessing to maximize the amount of inputs tested
 - cross-chain testing support
-- integrated Python debugger ([pdbr](https://github.com/cansarigol/pdbr)) attached on test failures
+- integrated Python debugger ([ipdb](https://github.com/gotcha/ipdb)) attached on test failures
 - call traces and `console.log` support for easier debugging
 - deployment scripts support
 - better performance than other Python or JavaScript frameworks

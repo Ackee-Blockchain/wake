@@ -6,7 +6,7 @@ from pathlib import Path
 from types import TracebackType
 from typing import TYPE_CHECKING, Callable, DefaultDict, List, Optional, Set, Tuple
 
-from pdbr import RichPdb
+from ipdb.__main__ import _init_pdb
 
 from woke.config import WokeConfig
 from woke.development.chain_interfaces import ChainInterfaceAbc
@@ -60,8 +60,9 @@ def attach_debugger(e: Exception):
             break
         frames_up += 1
 
-    p = RichPdb()
-    p.rcLines.extend(["up %d" % frames_up] if frames_up > 0 else [])
+    p = _init_pdb(
+        commands=["up %d" % frames_up] if frames_up > 0 else [],
+    )
     p.reset()
     p.interaction(None, tb)
 
