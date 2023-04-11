@@ -23,6 +23,7 @@ from woke.cli.console import console
 from woke.config import WokeConfig
 from woke.development.globals import (
     attach_debugger,
+    chain_interfaces_manager,
     set_coverage_handler,
     set_exception_handler,
 )
@@ -128,6 +129,7 @@ def _run(
     except Exception:
         pass
     finally:
+        chain_interfaces_manager.close_all()
         for ctx_manager in ctx_managers:
             ctx_manager.__exit__(None, None, None)
 
