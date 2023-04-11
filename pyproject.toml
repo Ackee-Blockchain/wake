@@ -34,7 +34,7 @@ websocket-client = "^1.4"
 pywin32 = { version = ">= 302", platform = "win32" }
 watchdog = "~2.2.0"
 pytest = "^7"
-pdbr = { version = "^0.8.0", extras = ["ipython"] }
+ipdb = { version = "^0.13.9", extras = ["ipython"] }
 
 pytest-asyncio = { version = "^0.17", optional = true }
 GitPython = { version = "^3.1.20", optional = true }

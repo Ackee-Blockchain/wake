@@ -3,7 +3,7 @@
 ## Using Python debugger
 
 Both commands `woke test` and `woke fuzz` support entering [pdb](https://docs.python.org/3/library/pdb.html), the Python debugger, when an error occurs.
-Woke uses an enhanced version of the Python debugger, [pdrb](https://github.com/cansarigol/pdbr), which provides a more user-friendly interface.
+Woke uses an enhanced version of the Python debugger, [ipdb](https://github.com/gotcha/ipdb), which provides a more user-friendly interface.
 
 It is also possible to enter the debugger manually by inserting a `breakpoint()` statement in the code.
 
@@ -19,7 +19,7 @@ def test_breakpoint():
 !!! info
     `breakpoint()` is not currently supported with `woke fuzz`.
 
-Inside pdbr, any expression can be evaluated by typing it and pressing `Enter`.
+Inside ipdb, any expression can be evaluated by typing it and pressing `Enter`.
 This can be used to get the value of a variable, to call a function, including contract functions, or even to deploy a new contract.
 
 <div id="debugger-asciinema" style="z-index: 1; position: relative;"></div>

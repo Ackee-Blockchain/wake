@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 import platform
 from pathlib import Path
 from typing import Optional
@@ -66,6 +67,8 @@ def main(ctx: Context, debug: bool, profile: bool) -> None:
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
     else:
         asyncio.get_event_loop_policy().set_child_watcher(ThreadedChildWatcher())
+
+    os.environ["PYTHONBREAKPOINT"] = "ipdb.set_trace"
 
 
 main.add_command(run_accounts)
