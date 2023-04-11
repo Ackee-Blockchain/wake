@@ -211,99 +211,111 @@ def fuzz(
         processes[i] = (p, finished_event, err_parent_conn, cov_parent_conn)
         p.start()
 
-    with rich.progress.Progress(
-        rich.progress.SpinnerColumn(finished_text="[green]⠿"),
-        "[progress.description][yellow]{task.description}, "
-        "[green]{task.fields[thr_rem]}[yellow] "
-        "processes remaining{task.fields[coverage_info]}",
-    ) as progress:
-        exported_coverages: Dict[
-            int, Dict[Path, Dict[IdePosition, IdeFunctionCoverageRecord]]
-        ] = {}
+    try:
+        with rich.progress.Progress(
+            rich.progress.SpinnerColumn(finished_text="[green]⠿"),
+            "[progress.description][yellow]{task.description}, "
+            "[green]{task.fields[thr_rem]}[yellow] "
+            "processes remaining{task.fields[coverage_info]}",
+        ) as progress:
+            exported_coverages: Dict[
+                int, Dict[Path, Dict[IdePosition, IdeFunctionCoverageRecord]]
+            ] = {}
 
-        if passive:
-            progress.stop()
-        task = progress.add_task(
-            "Fuzzing", thr_rem=len(processes), coverage_info="", total=1
-        )
+            if passive:
+                progress.stop()
+            task = progress.add_task(
+                "Fuzzing", thr_rem=len(processes), coverage_info="", total=1
+            )
 
-        while len(processes):
-            to_be_removed = []
-            for i, (p, e, err_parent_conn, cov_parent_conn) in processes.items():
-                finished = e.wait(0.125)
-                if finished:
-                    to_be_removed.append(i)
+            while len(processes):
+                to_be_removed = []
+                for i, (p, e, err_parent_conn, cov_parent_conn) in processes.items():
+                    finished = e.wait(0.125)
+                    if finished:
+                        to_be_removed.append(i)
 
-                    exception_info = err_parent_conn.recv()
-                    if exception_info is not None:
-                        exception_info = pickle.loads(exception_info)
+                        exception_info = err_parent_conn.recv()
+                        if exception_info is not None:
+                            exception_info = pickle.loads(exception_info)
 
-                    if exception_info is not None:
-                        if not passive or i == 0:
-                            tb = Traceback.from_exception(
-                                exception_info[0], exception_info[1], exception_info[2]
-                            )
-
-                            if not passive:
-                                progress.stop()
-
-                            console.print(tb)
-                            console.print(
-                                f"Process #{i} failed with an exception above."
-                            )
-
-                            attach = None
-                            while attach is None:
-                                response = input(
-                                    "Would you like to attach the debugger? [y/n] "
+                        if exception_info is not None:
+                            if not passive or i == 0:
+                                tb = Traceback.from_exception(
+                                    exception_info[0],
+                                    exception_info[1],
+                                    exception_info[2],
                                 )
-                                if response == "y":
-                                    attach = True
-                                elif response == "n":
-                                    attach = False
-                        else:
-                            attach = False
 
-                        e.clear()
-                        err_parent_conn.send(attach)
-                        e.wait()
-                        if not passive:
+                                if not passive:
+                                    progress.stop()
+
+                                console.print(tb)
+                                console.print(
+                                    f"Process #{i} failed with an exception above."
+                                )
+
+                                attach = None
+                                while attach is None:
+                                    response = input(
+                                        "Would you like to attach the debugger? [y/n] "
+                                    )
+                                    if response == "y":
+                                        attach = True
+                                    elif response == "n":
+                                        attach = False
+                            else:
+                                attach = False
+
+                            e.clear()
+                            err_parent_conn.send(attach)
+                            e.wait()
+                            if not passive:
+                                progress.start()
+
+                        progress.update(
+                            task, thr_rem=len(processes) - len(to_be_removed)
+                        )
+                        if i == 0:
                             progress.start()
 
-                    progress.update(task, thr_rem=len(processes) - len(to_be_removed))
-                    if i == 0:
-                        progress.start()
-
-                tmp = None
-                while cov_parent_conn.poll(0):
-                    try:
-                        tmp = cov_parent_conn.recv()
-                    except EOFError:
-                        break
-                if tmp is not None:
-                    exported_coverages[i] = tmp
-                    res = export_merged_ide_coverage(list(exported_coverages.values()))
-                    if res:
-                        write_coverage(
-                            res, config.project_root_path / "woke-coverage.cov"
+                    tmp = None
+                    while cov_parent_conn.poll(0):
+                        try:
+                            tmp = cov_parent_conn.recv()
+                        except EOFError:
+                            break
+                    if tmp is not None:
+                        exported_coverages[i] = tmp
+                        res = export_merged_ide_coverage(
+                            list(exported_coverages.values())
                         )
-                    cov_info = ""
-                    if not passive and verbose_coverage:
-                        cov_info = "\n[dark_goldenrod]" + "\n".join(
-                            [
-                                f"{fn_name}: [green]{fn_calls}[dark_goldenrod]"
-                                for (fn_name, fn_calls) in sorted(
-                                    _compute_coverage_per_function(res).items(),
-                                    key=lambda x: x[1],
-                                    reverse=True,
-                                )
-                            ]
-                        )
-                    progress.update(task, coverage_info=cov_info)
-                if finished:
-                    cov_parent_conn.close()
+                        if res:
+                            write_coverage(
+                                res, config.project_root_path / "woke-coverage.cov"
+                            )
+                        cov_info = ""
+                        if not passive and verbose_coverage:
+                            cov_info = "\n[dark_goldenrod]" + "\n".join(
+                                [
+                                    f"{fn_name}: [green]{fn_calls}[dark_goldenrod]"
+                                    for (fn_name, fn_calls) in sorted(
+                                        _compute_coverage_per_function(res).items(),
+                                        key=lambda x: x[1],
+                                        reverse=True,
+                                    )
+                                ]
+                            )
+                        progress.update(task, coverage_info=cov_info)
+                    if finished:
+                        cov_parent_conn.close()
 
-            for i in to_be_removed:
-                processes.pop(i)
+                for i in to_be_removed:
+                    processes.pop(i)
 
-        progress.update(task, description="Finished", completed=1)
+            progress.update(task, description="Finished", completed=1)
+    finally:
+        for i, (p, e, err_parent_conn, cov_parent_conn) in processes.items():
+            if p.is_alive():
+                p.terminate()
+            p.join()
