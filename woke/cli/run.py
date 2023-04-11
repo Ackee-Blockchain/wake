@@ -99,12 +99,13 @@ def run_run(paths: Tuple[str, ...], debug: bool, ask: bool, silent: bool) -> Non
         console.print("[yellow]No 'main' functions found in scripts.[/]")
         return
 
-    for func in run_functions:
-        console.print(f"Running {func.__module__}...")
-        try:
-            func()
-        finally:
-            if debug:
-                reset_exception_handled()
-
-    chain_interfaces_manager.close_all()
+    try:
+        for func in run_functions:
+            console.print(f"Running {func.__module__}...")
+            try:
+                func()
+            finally:
+                if debug:
+                    reset_exception_handled()
+    finally:
+        chain_interfaces_manager.close_all()
