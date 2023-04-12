@@ -469,6 +469,28 @@ class TransactionAbc(ABC, Generic[T]):
     @property
     @_fetch_tx_receipt
     def return_value(self) -> T:
+        raw_value = self.raw_return_value
+
+        if self._return_type is type(None):
+            return None
+
+        if isinstance(raw_value, Account):
+            return self._return_type(raw_value.address, self._chain)
+        elif isinstance(raw_value, bytearray):
+            if self._abi is None:
+                return self._return_type(raw_value)
+
+            return self._chain._process_return_data(
+                self, bytes(raw_value), self._abi, self._return_type
+            )
+        else:
+            raise TypeError(
+                f"Unexpected return type from transaction {self.tx_hash}: {type(raw_value)}"
+            )
+
+    @property
+    @_fetch_tx_receipt
+    def raw_return_value(self) -> Union[Account, bytearray]:
         if self.status != TransactionStatusEnum.SUCCESS:
             e = self.error
             assert e is not None
@@ -479,10 +501,7 @@ class TransactionAbc(ABC, Generic[T]):
             "contractAddress" in self._tx_receipt
             and self._tx_receipt["contractAddress"] is not None
         ):
-            return self._return_type(self._tx_receipt["contractAddress"], self._chain)
-
-        if self._return_type is type(None):
-            return None
+            return Account(self._tx_receipt["contractAddress"], self._chain)
 
         chain_interface = self._chain.chain_interface
         if isinstance(chain_interface, AnvilChainInterface):
@@ -526,12 +545,7 @@ class TransactionAbc(ABC, Generic[T]):
         else:
             raise NotImplementedError
 
-        if self._abi is None:
-            return self._return_type(output)
-
-        return self._chain._process_return_data(
-            self, output, self._abi, self._return_type
-        )
+        return bytearray(output)
 
     @property
     @_fetch_tx_receipt
