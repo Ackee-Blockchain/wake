@@ -16,7 +16,6 @@ from copy import deepcopy
 from enum import Enum, IntEnum
 from os import PathLike
 from pathlib import Path
-from types import MappingProxyType
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -73,7 +72,7 @@ from .json_rpc.communicator import JsonRpcError
 from .primitive_types import Length, ValueRange
 
 if TYPE_CHECKING:
-    from .transactions import TransactionAbc
+    from .transactions import ChainTransactions, TransactionAbc
 
 
 # selector => (contract_fqn => pytypes_object)
@@ -1045,7 +1044,7 @@ class Chain(ABC):
     _single_source_errors: Set[bytes]
     _snapshots: Dict[str, Dict]
     _blocks: ChainBlocks
-    _txs: Dict[str, TransactionAbc]
+    _txs: ChainTransactions
     _chain_id: int
     _labels: Dict[Address, str]
     _private_keys: Dict[Address, bytes]
@@ -1251,6 +1250,10 @@ class Chain(ABC):
                 except JsonRpcError:
                     pass
 
+            from .transactions import ChainTransactions
+
+            self._txs = ChainTransactions(self)
+
             self._accounts = [
                 Account(acc, self) for acc in self._chain_interface.get_accounts()
             ]
@@ -1264,7 +1267,6 @@ class Chain(ABC):
             self._default_estimate_account = None
             self._default_access_list_account = None
             self._default_tx_confirmations = 1
-            self._txs = {}
             self._blocks = ChainBlocks(self)
             self._labels = {}
             self._private_keys = {}
@@ -1312,8 +1314,8 @@ class Chain(ABC):
 
     @property
     @check_connected
-    def txs(self) -> MappingProxyType[str, TransactionAbc]:
-        return MappingProxyType(self._txs)
+    def txs(self) -> ChainTransactions:
+        return self._txs
 
     @property
     @check_connected
@@ -2051,7 +2053,6 @@ class Chain(ABC):
             return_type,
             self,
         )
-        self._txs[tx_hash] = tx
 
         coverage_handler = get_coverage_handler()
         if coverage_handler is not None:
@@ -2140,6 +2141,10 @@ def get_fqn_from_address(
         return contracts_by_metadata[metadata]
     else:
         return None
+
+
+def get_contract_from_fqn(fqn: str):
+    return contracts_by_fqn[fqn]
 
 
 def process_debug_trace_for_fqn_overrides(

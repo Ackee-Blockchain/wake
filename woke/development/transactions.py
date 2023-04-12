@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import functools
+import importlib
 import inspect
 from abc import ABC, abstractmethod
 from contextlib import AbstractContextManager, contextmanager
@@ -31,7 +32,15 @@ from .chain_interfaces import (
     HermezChainInterface,
     TxParams,
 )
-from .core import Account, Chain, Wei
+from .core import (
+    Account,
+    Address,
+    Chain,
+    Wei,
+    get_contract_from_fqn,
+    get_fqn_from_address,
+    get_fqn_from_creation_code,
+)
 from .internal import UnknownEvent, read_from_memory
 from .json_rpc import JsonRpcError
 
@@ -69,6 +78,95 @@ def _fetch_tx_receipt(f):
         return f(self)
 
     return wrapper
+
+
+class ChainTransactions:
+    _chain: Chain
+    _transactions: Dict[str, TransactionAbc]
+
+    def __init__(self, chain: Chain):
+        self._chain = chain
+        self._transactions = {}
+
+    def __getitem__(self, key: str) -> TransactionAbc:
+        if not key.startswith("0x"):
+            key = "0x" + key
+        key = key.lower()
+        if key in self._transactions:
+            return self._transactions[key]
+
+        tx_data = self._chain.chain_interface.get_transaction(key)
+        type = int(tx_data["type"], 16)
+
+        tx_params: TxParams = {
+            "nonce": int(tx_data["nonce"], 16),
+            "from": tx_data["from"],
+            "gas": int(tx_data["gas"], 16),
+            "value": int(tx_data["value"], 16),
+            "data": bytes.fromhex(tx_data["input"][2:]),
+        }
+
+        if "to" in tx_data and tx_data["to"] is not None:
+            tx_params["to"] = tx_data["to"]
+            try:
+                fqn = get_fqn_from_address(
+                    Address(tx_params["to"]),
+                    int(tx_data["blockNumber"], 16) - 1
+                    if "blockNumber" in tx_data
+                    else "latest",
+                    self._chain,
+                )
+                module_name, attrs = get_contract_from_fqn(fqn)
+                obj = getattr(importlib.import_module(module_name), attrs[0])
+                for attr in attrs[1:]:
+                    obj = getattr(obj, attr)
+                selector = tx_params["data"][:4]
+                abi = obj._abi[selector]
+                method = next(
+                    getattr(obj, m)
+                    for m in dir(obj)
+                    if hasattr(getattr(obj, m), "selector")
+                    and getattr(obj, m).selector == selector
+                )
+                return_type = method.return_type
+            except (KeyError, StopIteration):
+                abi = None
+                return_type = bytearray
+        else:
+            try:
+                fqn = get_fqn_from_creation_code(tx_params["data"])[0]
+                module_name, attrs = get_contract_from_fqn(fqn)
+                obj = getattr(importlib.import_module(module_name), attrs[0])
+                for attr in attrs[1:]:
+                    obj = getattr(obj, attr)
+                if "constructor" in obj._abi:
+                    abi = obj._abi["constructor"]
+                else:
+                    abi = None
+                return_type = obj
+            except (KeyError, ValueError):
+                abi = None
+                return_type = Account
+
+        if type == 0:
+            tx_params["gasPrice"] = int(tx_data["gasPrice"], 16)
+            tx = LegacyTransaction(key, tx_params, abi, return_type, self._chain)
+        elif type == 1:
+            tx_params["gasPrice"] = int(tx_data["gasPrice"], 16)
+            tx_params["accessList"] = tx_data["accessList"]
+            tx_params["chainId"] = 1
+            tx = Eip2930Transaction(key, tx_params, abi, return_type, self._chain)
+        elif type == 2:
+            tx_params["maxFeePerGas"] = int(tx_data["maxFeePerGas"], 16)
+            tx_params["maxPriorityFeePerGas"] = int(tx_data["maxPriorityFeePerGas"], 16)
+            tx_params["accessList"] = tx_data["accessList"]
+            tx_params["chainId"] = 2
+            tx = Eip1559Transaction(key, tx_params, abi, return_type, self._chain)
+        else:
+            raise ValueError(f"Unknown transaction type {type}")
+
+        self._transactions[key] = tx
+        return tx
 
 
 class TransactionAbc(ABC, Generic[T]):
