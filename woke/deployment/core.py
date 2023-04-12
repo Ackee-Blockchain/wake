@@ -84,7 +84,7 @@ class Chain(woke.development.core.Chain):
             "accounts": self._accounts.copy(),
             "default_call_account": self._default_call_account,
             "default_tx_account": self._default_tx_account,
-            "txs": dict(self._txs),
+            "txs": dict(self._txs._transactions),
             "blocks": dict(self._blocks._blocks),
         }
         return snapshot_id
@@ -99,7 +99,7 @@ class Chain(woke.development.core.Chain):
         self._accounts = snapshot["accounts"]
         self._default_call_account = snapshot["default_call_account"]
         self._default_tx_account = snapshot["default_tx_account"]
-        self._txs = snapshot["txs"]
+        self._txs._transactions = snapshot["txs"]
         self._blocks._blocks = snapshot["blocks"]
         del self._snapshots[snapshot_id]
 
