@@ -882,20 +882,31 @@ class SolidityCompiler:
         with ctx_manager:
             successful_compilation_units = []
             for cu, solc_output in zip(compilation_units, ret):
-                errored: bool = False
+                errored_files: Set[Path] = set()
                 errors_per_cu[cu.hash] = set()
 
                 for error in solc_output.errors:
                     errors_per_cu[cu.hash].add(error)
                     if error.severity == SolcOutputErrorSeverityEnum.ERROR:
-                        errored = True
+                        if error.source_location is not None:
+                            path = cu.source_unit_name_to_path(
+                                error.source_location.file
+                            )
+                            errored_files.add(path)
+                        else:
+                            # whole compilation unit errored
+                            errored_files |= cu.files
 
-                if errored:
-                    for file in cu.files:
-                        if file in build.source_units and file in files_to_compile:
-                            build.reference_resolver.run_destroy_callbacks(file)
-                            build.source_units.pop(file)
-                else:
+                self._out_edge_bfs(cu, errored_files, errored_files)
+
+                for file in errored_files:
+                    if file in build.source_units:
+                        build.reference_resolver.run_destroy_callbacks(file)
+                        build.source_units.pop(file)
+                    if file in build.interval_trees:
+                        build.interval_trees.pop(file)
+
+                if len(errored_files) == 0:
                     successful_compilation_units.append((cu, solc_output))
 
             for cu, solc_output in successful_compilation_units:
