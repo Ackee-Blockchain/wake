@@ -366,6 +366,7 @@ class LspCompiler:
                 path = uri_to_path(delete.uri)
                 self.__deleted_files.add(path)
                 self.__discovered_files.discard(path)
+                self.__opened_files.pop(path, None)
         elif isinstance(change, DidOpenTextDocumentParams):
             path = uri_to_path(change.text_document.uri).resolve()
             self.__opened_files[path] = VersionedFile(

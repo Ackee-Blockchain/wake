@@ -382,6 +382,8 @@ class SolidityCompiler:
                     import_path = self.__source_path_resolver.resolve(
                         import_unit_name, source_unit_name, modified_files.keys()
                     ).resolve()
+                    if import_path not in modified_files:
+                        import_path = import_path.resolve(strict=True)
                 except (FileNotFoundError, CompilationResolveError):
                     if ignore_errors:
                         graph.nodes[source_unit_name]["unresolved_imports"].add(
