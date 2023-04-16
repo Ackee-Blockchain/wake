@@ -176,7 +176,7 @@ class CompilationFileSystemEventHandler(FileSystemEventHandler):
                 or dest_file == self._config_path
                 or dest_file.suffix == ".sol"
             ):
-                self._loop.call_soon_threadsafe(self._queue.put, event)
+                self._loop.call_soon_threadsafe(self._queue.put_nowait, event)
         else:
             file = Path(event.src_path)
             if file == self._config_path or file.suffix == ".sol":
