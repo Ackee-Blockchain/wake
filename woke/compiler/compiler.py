@@ -218,6 +218,8 @@ class CompilationFileSystemEventHandler(FileSystemEventHandler):
                 unit_info.fs_path
                 for unit_info in self._compiler.latest_build_info.source_units_info.values()
             }
+            files.update(self._created_files)
+            files.update(self._modified_files)
             ignored_files = {
                 f
                 for f in files
@@ -227,8 +229,6 @@ class CompilationFileSystemEventHandler(FileSystemEventHandler):
                 )
                 or not is_relative_to(f, self._config.project_root_path)
             }
-            files.update(self._created_files)
-            files.update(self._modified_files)
             files.difference_update(ignored_files)
             files.difference_update(self._deleted_files)
             deleted_files = self._deleted_files
