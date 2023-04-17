@@ -351,6 +351,7 @@ class LspCompiler:
                 old_path = uri_to_path(rename.old_uri)
                 self.__deleted_files.add(old_path)
                 self.__discovered_files.discard(old_path)
+                self.__opened_files.pop(old_path, None)
 
                 new_path = uri_to_path(rename.new_uri)
                 if (
