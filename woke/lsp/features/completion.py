@@ -536,7 +536,7 @@ async def completion(
         context.config.compiler.solc.include_paths, [context.config.project_root_path]
     ):
         try:
-            rel_path = str(path.relative_to(include_path))
+            rel_path = str(path.relative_to(include_path).as_posix())
             if this_source_unit_name is None or len(this_source_unit_name) > len(
                 rel_path
             ):
