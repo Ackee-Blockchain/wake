@@ -1,10 +1,14 @@
 import logging
-from pathlib import Path
+from itertools import chain
 from typing import Any, List, Optional
 
+from woke.compiler.exceptions import CompilationResolveError
+from woke.compiler.source_path_resolver import SourcePathResolver
+from woke.compiler.source_unit_name_resolver import SourceUnitNameResolver
 from woke.lsp.common_structures import (
     DocumentUri,
     PartialResultParams,
+    Position,
     Range,
     TextDocumentIdentifier,
     WorkDoneProgressOptions,
@@ -12,7 +16,6 @@ from woke.lsp.common_structures import (
 )
 from woke.lsp.context import LspContext
 from woke.lsp.lsp_data_model import LspModel
-from woke.lsp.utils.position import changes_to_byte_offset
 from woke.lsp.utils.uri import path_to_uri, uri_to_path
 
 logger = logging.getLogger(__name__)
@@ -59,72 +62,66 @@ class DocumentLink(LspModel):
     """
 
 
-async def _get_document_links_from_cache(path: Path, context: LspContext):
-    source_unit = context.compiler.last_compilation_source_units[path]
-    forward_changes = context.compiler.get_last_compilation_forward_changes(path)
-    if forward_changes is None:
-        raise Exception("No forward changes found for file")
-
-    document_links = []
-
-    for import_directive in source_unit.imports:
-        location = import_directive.import_string_pos
-
-        if len(forward_changes[location[0] : location[1]]) > 0:
-            # change at range, skip import
-            continue
-
-        new_start = (
-            changes_to_byte_offset(forward_changes[0 : location[0]]) + location[0]
-        )
-        new_end = changes_to_byte_offset(forward_changes[0 : location[1]]) + location[1]
-
-        document_links.append(
-            DocumentLink(
-                range=context.compiler.get_range_from_byte_offsets(
-                    path, (new_start, new_end)
-                ),
-                target=DocumentUri(path_to_uri(import_directive.imported_file)),
-                tooltip=None,
-                data=None,
-            )
-        )
-
-    return document_links
-
-
 async def document_link(
     context: LspContext, params: DocumentLinkParams
 ) -> Optional[List[DocumentLink]]:
     logger.debug(f"Requested document links for file {params.text_document.uri}")
 
     path = uri_to_path(params.text_document.uri).resolve()
-    if (
-        path not in context.compiler.source_units
-        or not context.compiler.output_ready.is_set()
+
+    document_links = []
+    source_unit_name_resolver = SourceUnitNameResolver(context.config)
+    source_path_resolver = SourcePathResolver(context.config)
+
+    this_source_unit_name = None
+    for include_path in chain(
+        context.config.compiler.solc.include_paths, [context.config.project_root_path]
     ):
         try:
-            return await _get_document_links_from_cache(path, context)
-        except Exception:
-            pass
+            rel_path = str(path.relative_to(include_path))
+            if this_source_unit_name is None or len(this_source_unit_name) > len(
+                rel_path
+            ):
+                this_source_unit_name = rel_path
+        except ValueError:
+            continue
 
-    await context.compiler.output_ready.wait()
-    if path not in context.compiler.source_units:
+    if this_source_unit_name is None:
         return None
 
-    source_unit = context.compiler.source_units[path]
-    document_links = []
+    root = context.parser[path].root_node
+    for child in root.children:
+        if child.type == "import_directive":
+            source_node = child.child_by_field_name("source")
 
-    for import_directive in source_unit.imports:
-        document_links.append(
-            DocumentLink(
-                range=context.compiler.get_range_from_byte_offsets(
-                    path, import_directive.import_string_pos
-                ),
-                target=DocumentUri(path_to_uri(import_directive.imported_file)),
-                tooltip=None,
-                data=None,
-            )
-        )
+            if source_node is not None:
+                import_str = source_node.text.decode("utf-16-le")[1:-1]  # remove quotes
+                unit_name = source_unit_name_resolver.resolve_import(
+                    this_source_unit_name, import_str
+                )
+
+                try:
+                    include_path = source_path_resolver.resolve(
+                        unit_name, this_source_unit_name, context.parser.files
+                    )
+                    document_links.append(
+                        DocumentLink(
+                            range=Range(
+                                start=Position(
+                                    line=source_node.start_point[0],
+                                    character=source_node.start_point[1] // 2,
+                                ),
+                                end=Position(
+                                    line=source_node.end_point[0],
+                                    character=source_node.end_point[1] // 2,
+                                ),
+                            ),
+                            target=DocumentUri(path_to_uri(include_path)),
+                            tooltip=None,
+                            data=None,
+                        )
+                    )
+                except CompilationResolveError:
+                    continue
 
     return document_links
