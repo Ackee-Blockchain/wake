@@ -44,6 +44,7 @@ from .common_structures import (
     LogMessageParams,
     LogTraceParams,
     MessageType,
+    PositionEncodingKind,
     ProgressParams,
     RenameFilesParams,
     SetTraceParams,
@@ -65,6 +66,7 @@ from .document_sync import (
 )
 from .exceptions import LspError
 from .features.code_lens import CodeLensOptions, CodeLensParams, code_lens
+from .features.completion import CompletionOptions, CompletionParams, completion
 from .features.definition import DefinitionParams, definition
 from .features.document_link import (
     DocumentLinkOptions,
@@ -108,7 +110,6 @@ from .server_capabilities import (
     FileOperationPatternKind,
     FileOperationRegistrationOptions,
     InitializeResult,
-    PositionEncodingKind,
     ServerCapabilities,
     ServerCapabilitiesWorkspace,
     ServerCapabilitiesWorkspaceFileOperations,
@@ -213,6 +214,7 @@ class LspServer:
                 ExecuteCommandParams,
             ),
             RequestMethodEnum.HOVER: (self._workspace_route, HoverParams),
+            RequestMethodEnum.COMPLETION: (self._workspace_route, CompletionParams),
         }
 
         self.__notification_mapping = {
@@ -590,6 +592,12 @@ class LspServer:
                 commands=[command for command in CommandsEnum]
             ),
             hover_provider=True,
+            completion_provider=CompletionOptions(
+                trigger_characters=[".", '"', "'"],
+                all_commit_characters=None,
+                resolve_provider=None,
+                completion_item=None,
+            ),
         )
         return InitializeResult(capabilities=server_capabilities, server_info=None)
 
@@ -818,6 +826,8 @@ class LspServer:
             return await self._text_document_did_close(context, params)
         elif isinstance(params, HoverParams):
             return await hover(context, params)
+        elif isinstance(params, CompletionParams):
+            return await completion(context, params)
         else:
             raise NotImplementedError(f"Unhandled request: {type(params)}")
 
@@ -840,12 +850,14 @@ class LspServer:
             context = min(matching_workspaces, key=lambda x: len(x[1].parts))[0]
 
         await context.compiler.add_change(params)
+        await context.parser.add_change(params)
 
     @staticmethod
     async def _text_document_did_change(
         context: LspContext, params: DidChangeTextDocumentParams
     ) -> None:
         await context.compiler.add_change(params)
+        await context.parser.add_change(params)
 
     @staticmethod
     async def _text_document_will_save(
@@ -863,6 +875,7 @@ class LspServer:
         self, context: LspContext, params: DidCloseTextDocumentParams
     ) -> None:
         await context.compiler.add_change(params)
+        await context.parser.add_change(params)
 
         if context != self.__main_workspace:
             path = uri_to_path(params.text_document.uri)
@@ -872,14 +885,17 @@ class LspServer:
     async def _workspace_did_create_files(self, params: CreateFilesParams) -> None:
         assert self.__main_workspace is not None
         await self.__main_workspace.compiler.add_change(params)
+        await self.__main_workspace.parser.add_change(params)
 
     async def _workspace_did_rename_files(self, params: RenameFilesParams) -> None:
         assert self.__main_workspace is not None
         await self.__main_workspace.compiler.add_change(params)
+        await self.__main_workspace.parser.add_change(params)
 
     async def _workspace_did_delete_files(self, params: DeleteFilesParams) -> None:
         assert self.__main_workspace is not None
         await self.__main_workspace.compiler.add_change(params)
+        await self.__main_workspace.parser.add_change(params)
 
     async def _workspace_execute_command(
         self, params: ExecuteCommandParams

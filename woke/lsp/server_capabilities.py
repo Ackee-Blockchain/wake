@@ -1,10 +1,15 @@
 from typing import Any, List, Optional, Union
 
-from woke.lsp.common_structures import ExecuteCommandOptions, WorkspaceSymbolOptions
+from woke.lsp.common_structures import (
+    ExecuteCommandOptions,
+    PositionEncodingKind,
+    WorkspaceSymbolOptions,
+)
 from woke.lsp.document_sync import TextDocumentSyncKind, TextDocumentSyncOptions
 from woke.utils import StrEnum
 
 from .features.code_lens import CodeLensOptions
+from .features.completion import CompletionOptions
 from .features.definition import DefinitionOptions
 from .features.document_link import DocumentLinkOptions
 from .features.document_symbol import DocumentSymbolOptions
@@ -24,12 +29,6 @@ from .features.type_hierarchy import (
     TypeHierarchyRegistrationOptions,
 )
 from .lsp_data_model import LspModel
-
-
-class PositionEncodingKind(StrEnum):
-    UTF8 = "utf-8"
-    UTF16 = "utf-16"
-    UTF32 = "utf-32"
 
 
 class WorkspaceFoldersServerCapabilities(LspModel):
@@ -135,8 +134,8 @@ class ServerCapabilities(LspModel):
     rename_provider: Optional[Union[bool, RenameOptions]] = None
     execute_command_provider: Optional[ExecuteCommandOptions] = None
     hover_provider: Optional[Union[bool, HoverOptions]] = None
-    """
     completion_provider: Optional[CompletionOptions]
+    """
     signature_help_provider: Optional[SignatureHelpOptions]
     declaration_provider: Optional[Union[bool, DeclarationOptions, DeclarationRegistrationOptions]]
     document_highlight_provider: Optional[Union[bool, ReferenceOptions]]
