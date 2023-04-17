@@ -12,10 +12,12 @@
         <meta name="author" content="Ackee Blockchain">
       
       
-        <link rel="canonical" href="https://ackee-blockchain.github.io/woke/1.2.1/api-reference/ir/declarations/variable-declaration/">
+        <link rel="canonical" href="https://ackee-blockchain.github.io/woke/latest/api-reference/ir/declarations/variable-declaration/">
+      
+      
       
       <link rel="icon" href="../../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.3.0, mkdocs-material-8.3.9">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.6">
     
     
       
@@ -23,13 +25,13 @@
       
     
     
-      <link rel="stylesheet" href="../../../../assets/stylesheets/main.1d29e8d0.min.css">
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.ded33207.min.css">
       
         
-        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.cbb835fc.min.css">
-        
+        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.a0c5b2b5.min.css">
       
       
+
     
     
     
@@ -46,10 +48,11 @@
     
       <link rel="stylesheet" href="../../../../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("../../../..",location),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
+    
     
     
   </head>
@@ -83,16 +86,32 @@
       
     </div>
     
-      <div data-md-component="outdated" hidden>
-        <aside class="md-banner md-banner--warning">
-          
-        </aside>
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+          <aside class="md-banner md-banner--warning">
+            <div class="md-banner__inner md-grid md-typeset">
+              
+  <span class="twemoji">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.3 27.7.2 40.1S486.3 480 472 480H40c-14.3 0-27.6-7.7-34.7-20.1s-7-27.8.2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24v112c0 13.3 10.7 24 24 24s24-10.7 24-24V184c0-13.3-10.7-24-24-24zm32 224a32 32 0 1 0-64 0 32 32 0 1 0 64 0z"/></svg>
+  </span>
+  You're not viewing the latest version.
+
+  <a href="../../../../..">
+    <strong>Click here to go to latest.</strong>
+  </a>
+
+            </div>
+            <script>var el=document.querySelector("[data-md-component=outdated]"),outdated=__md_get("__outdated",sessionStorage);!0===outdated&&el&&(el.hidden=!1)</script>
+          </aside>
+        
       </div>
     
     
       
 
-<header class="md-header" data-md-component="header">
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../../../.." title="Woke" class="md-header__button md-logo" aria-label="Woke" data-md-component="logo">
       
@@ -122,7 +141,6 @@
       <form class="md-header__option" data-md-component="palette">
         
           
-          
           <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="" data-md-color-accent=""  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
           
             <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
@@ -130,7 +148,6 @@
             </label>
           
         
-          
           
           <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="" data-md-color-accent=""  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
           
@@ -157,7 +174,7 @@
       </label>
       <nav class="md-search__options" aria-label="Search">
         
-        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
         </button>
       </nav>
@@ -169,7 +186,7 @@
           <div class="md-search-result__meta">
             Initializing search
           </div>
-          <ol class="md-search-result__list"></ol>
+          <ol class="md-search-result__list" role="presentation"></ol>
         </div>
       </div>
     </div>
@@ -181,7 +198,7 @@
         <a href="https://github.com/Ackee-Blockchain/woke" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
   </div>
   <div class="md-source__repository">
     Ackee-Blockchain/woke
@@ -225,7 +242,7 @@
       <a href="https://github.com/Ackee-Blockchain/woke" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
   </div>
   <div class="md-source__repository">
     Ackee-Blockchain/woke
@@ -382,98 +399,98 @@
         
           <li class="md-nav__item">
   <a href="#woke.ast.ir.declaration.variable_declaration.VariableDeclaration.base_functions" class="md-nav__link">
-    base_functions()
+    base_functions
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#woke.ast.ir.declaration.variable_declaration.VariableDeclaration.data_location" class="md-nav__link">
-    data_location()
+    data_location
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#woke.ast.ir.declaration.variable_declaration.VariableDeclaration.documentation" class="md-nav__link">
-    documentation()
+    documentation
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#woke.ast.ir.declaration.variable_declaration.VariableDeclaration.function_selector" class="md-nav__link">
-    function_selector()
+    function_selector
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#woke.ast.ir.declaration.variable_declaration.VariableDeclaration.indexed" class="md-nav__link">
-    indexed()
+    indexed
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#woke.ast.ir.declaration.variable_declaration.VariableDeclaration.is_state_variable" class="md-nav__link">
-    is_state_variable()
+    is_state_variable
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#woke.ast.ir.declaration.variable_declaration.VariableDeclaration.mutability" class="md-nav__link">
-    mutability()
+    mutability
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#woke.ast.ir.declaration.variable_declaration.VariableDeclaration.overrides" class="md-nav__link">
-    overrides()
+    overrides
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#woke.ast.ir.declaration.variable_declaration.VariableDeclaration.parent" class="md-nav__link">
-    parent()
+    parent
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#woke.ast.ir.declaration.variable_declaration.VariableDeclaration.type" class="md-nav__link">
-    type()
+    type
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#woke.ast.ir.declaration.variable_declaration.VariableDeclaration.type_name" class="md-nav__link">
-    type_name()
+    type_name
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#woke.ast.ir.declaration.variable_declaration.VariableDeclaration.type_string" class="md-nav__link">
-    type_string()
+    type_string
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#woke.ast.ir.declaration.variable_declaration.VariableDeclaration.value" class="md-nav__link">
-    value()
+    value
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#woke.ast.ir.declaration.variable_declaration.VariableDeclaration.visibility" class="md-nav__link">
-    visibility()
+    visibility
   </a>
   
 </li>
@@ -496,14 +513,14 @@
               </div>
             
           
-          <div class="md-content" data-md-component="content">
-            <article class="md-content__inner md-typeset">
-              
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
                 
-  <a href="https://github.com/Ackee-Blockchain/woke/edit/main/docs/api-reference/ir/declarations/variable-declaration.md" title="Edit this page" class="md-content__button md-icon">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
-  </a>
+                  
 
+  
+  
 
 
   <h1>Variable declaration</h1>
@@ -560,50 +577,50 @@
 <p>A variable can be declared:</p>
 <ul>
 <li>inside a <a class="autorefs autorefs-internal" href="../contract-definition/#woke.ast.ir.declaration.contract_definition.ContractDefinition">ContractDefinition</a> as a state variable:<ul>
-<li><code class="highlight"><span class="kt">uint</span><span class="w"> </span><span class="k">public </span><span class="nv">stateVar</span><span class="w"></span></code> in line 4,</li>
+<li><code class="highlight"><span class="kt">uint</span><span class="w"> </span><span class="k">public </span><span class="nv">stateVar</span></code> in line 4,</li>
 </ul>
 </li>
 <li>inside a <a class="autorefs autorefs-internal" href="../../meta/parameter-list/#woke.ast.ir.meta.parameter_list.ParameterList">ParameterList</a>:<ul>
 <li>in an <a class="autorefs autorefs-internal" href="../error-definition/#woke.ast.ir.declaration.error_definition.ErrorDefinition">ErrorDefinition</a> parameters:<ul>
-<li><code class="highlight"><span class="kt">uint</span><span class="w"> </span><span class="nv">errorArg</span><span class="w"></span></code> in line 5,</li>
+<li><code class="highlight"><span class="kt">uint</span><span class="w"> </span><span class="nv">errorArg</span></code> in line 5,</li>
 </ul>
 </li>
 <li>in an <a class="autorefs autorefs-internal" href="../event-definition/#woke.ast.ir.declaration.event_definition.EventDefinition">EventDefinition</a> parameters:<ul>
-<li><code class="highlight"><span class="kt">uint</span><span class="w"> </span><span class="nv">indexed</span><span class="w"> </span>eventArg<span class="w"></span></code> in line 6,</li>
+<li><code class="highlight"><span class="kt">uint</span><span class="w"> </span><span class="nv">indexed</span><span class="w"> </span>eventArg</code> in line 6,</li>
 </ul>
 </li>
 <li>in a <a class="autorefs autorefs-internal" href="../function-definition/#woke.ast.ir.declaration.function_definition.FunctionDefinition">FunctionDefinition</a> parameters or return parameters:<ul>
-<li><code class="highlight"><span class="kt">uint</span><span class="w"> </span><span class="nv">funcReturnArg</span><span class="w"></span></code> in line 16</li>
-<li><code class="highlight"><span class="kt">uint</span><span class="w"> </span><span class="nv">x</span><span class="w"></span></code> and <code class="highlight"><span class="kt">uint</span><span class="w"></span></code> in line 20</li>
-<li><code class="highlight"><span class="kt">uint</span><span class="w"></span></code> in line 30</li>
-<li><code class="highlight"><span class="kt">function</span><span class="w"> </span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span>pure<span class="w"> </span><span class="kt">returns</span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span>h<span class="w"></span></code> and the third occurrence <code class="highlight"><span class="kt">uint</span><span class="w"></span></code> in line 34,</li>
+<li><code class="highlight"><span class="kt">uint</span><span class="w"> </span><span class="nv">funcReturnArg</span></code> in line 16</li>
+<li><code class="highlight"><span class="kt">uint</span><span class="w"> </span><span class="nv">x</span></code> and <code class="highlight"><span class="kt">uint</span></code> in line 20</li>
+<li><code class="highlight"><span class="kt">uint</span></code> in line 30</li>
+<li><code class="highlight"><span class="kt">function</span><span class="w"> </span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span>pure<span class="w"> </span><span class="kt">returns</span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span>h</code> and the third occurrence <code class="highlight"><span class="kt">uint</span></code> in line 34,</li>
 </ul>
 </li>
 <li>in a <a class="autorefs autorefs-internal" href="../modifier-definition/#woke.ast.ir.declaration.modifier_definition.ModifierDefinition">ModifierDefinition</a> parameters:<ul>
-<li><code class="highlight"><span class="kt">uint</span><span class="w"> </span><span class="nv">modifierArg</span><span class="w"></span></code> in line 12,</li>
+<li><code class="highlight"><span class="kt">uint</span><span class="w"> </span><span class="nv">modifierArg</span></code> in line 12,</li>
 </ul>
 </li>
 <li>in a <a class="autorefs autorefs-internal" href="../../type-names/function-type-name/#woke.ast.ir.type_name.function_type_name.FunctionTypeName">FunctionTypeName</a> parameters or return parameters:<ul>
-<li>the first two occurrences of <code class="highlight"><span class="kt">uint</span><span class="w"></span></code> in line 34,</li>
+<li>the first two occurrences of <code class="highlight"><span class="kt">uint</span></code> in line 34,</li>
 </ul>
 </li>
 <li>in a <a class="autorefs autorefs-internal" href="../../meta/try-catch-clause/#woke.ast.ir.meta.try_catch_clause.TryCatchClause">TryCatchClause</a>:<ul>
-<li><code class="highlight"><span class="kt">uint</span><span class="w"> </span><span class="nv">z</span><span class="w"></span></code> in line 22</li>
-<li><code class="highlight"><span class="kt">string</span><span class="w"> </span><span class="nv">memory</span><span class="w"> </span>reason<span class="w"></span></code> in line 24,</li>
+<li><code class="highlight"><span class="kt">uint</span><span class="w"> </span><span class="nv">z</span></code> in line 22</li>
+<li><code class="highlight"><span class="kt">string</span><span class="w"> </span><span class="nv">memory</span><span class="w"> </span>reason</code> in line 24,</li>
 </ul>
 </li>
 </ul>
 </li>
 <li>inside a <a class="autorefs autorefs-internal" href="../../meta/source-unit/#woke.ast.ir.meta.source_unit.SourceUnit">SourceUnit</a> only as a constant variable:<ul>
-<li><code class="highlight"><span class="kt">uint</span><span class="w"> </span><span class="nv">constant</span><span class="w"> </span>CONST<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m m-Decimal">10</span><span class="w"></span></code> in line 1,</li>
+<li><code class="highlight"><span class="kt">uint</span><span class="w"> </span><span class="nv">constant</span><span class="w"> </span>CONST<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m m-Decimal">10</span></code> in line 1,</li>
 </ul>
 </li>
 <li>inside a <a class="autorefs autorefs-internal" href="../struct-definition/#woke.ast.ir.declaration.struct_definition.StructDefinition">StructDefinition</a> as a member variable:<ul>
-<li><code class="highlight"><span class="kt">uint</span><span class="w"> </span><span class="nv">structMember</span><span class="w"></span></code> in line 9,</li>
+<li><code class="highlight"><span class="kt">uint</span><span class="w"> </span><span class="nv">structMember</span></code> in line 9,</li>
 </ul>
 </li>
 <li>inside a <a class="autorefs autorefs-internal" href="../../statements/variable-declaration-statement/#woke.ast.ir.statement.variable_declaration_statement.VariableDeclarationStatement">VariableDeclarationStatement</a> in a <a class="autorefs autorefs-internal" href="../function-definition/#woke.ast.ir.declaration.function_definition.FunctionDefinition.body">FunctionDefinition.body</a> as a local variable:<ul>
-<li><code class="highlight"><span class="kt">uint</span><span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>x<span class="w"></span></code> in line 21.</li>
+<li><code class="highlight"><span class="kt">uint</span><span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>x</code> in line 21.</li>
 </ul>
 </li>
 </ul>
@@ -643,43 +660,43 @@
 <span class="normal"><a href="#__codelineno-0-34">34</a></span>
 <span class="normal"><a href="#__codelineno-0-35">35</a></span>
 <span class="normal"><a href="#__codelineno-0-36">36</a></span>
-<span class="normal"><a href="#__codelineno-0-37">37</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="kt">uint</span><span class="w"> </span><span class="nv">constant</span><span class="w"> </span>CONST<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m m-Decimal">10</span><span class="p">;</span><span class="w"></span>
+<span class="normal"><a href="#__codelineno-0-37">37</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="kt">uint</span><span class="w"> </span><span class="nv">constant</span><span class="w"> </span>CONST<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m m-Decimal">10</span><span class="p">;</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3"></a><span class="k">contract</span><span class="w"> </span><span class="ni">C</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-4" name="__codelineno-0-4"></a><span class="w">    </span><span class="kt">uint</span><span class="w"> </span><span class="k">public </span><span class="nv">stateVar</span><span class="p">;</span><span class="w"></span>
-<a id="__codelineno-0-5" name="__codelineno-0-5"></a><span class="w">    </span>error<span class="w"> </span>E<span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">errorArg</span><span class="p">);</span><span class="w"></span>
-<a id="__codelineno-0-6" name="__codelineno-0-6"></a><span class="w">    </span><span class="kt">event</span><span class="w"> </span><span class="nv">F</span><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">indexed</span><span class="w"> </span>eventArg<span class="p">);</span><span class="w"></span>
+<a id="__codelineno-0-3" name="__codelineno-0-3"></a><span class="k">contract</span><span class="w"> </span><span class="ni">C</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4"></a><span class="w">    </span><span class="kt">uint</span><span class="w"> </span><span class="k">public </span><span class="nv">stateVar</span><span class="p">;</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5"></a><span class="w">    </span>error<span class="w"> </span>E<span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">errorArg</span><span class="p">);</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6"></a><span class="w">    </span><span class="kt">event</span><span class="w"> </span><span class="nv">F</span><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">indexed</span><span class="w"> </span>eventArg<span class="p">);</span>
 <a id="__codelineno-0-7" name="__codelineno-0-7"></a>
-<a id="__codelineno-0-8" name="__codelineno-0-8"></a><span class="w">    </span><span class="kt">struct</span><span class="w"> </span><span class="nv">S</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-9" name="__codelineno-0-9"></a><span class="w">        </span><span class="kt">uint</span><span class="w"> </span><span class="nv">structMember</span><span class="p">;</span><span class="w"></span>
-<a id="__codelineno-0-10" name="__codelineno-0-10"></a><span class="w">    </span><span class="p">}</span><span class="w"></span>
+<a id="__codelineno-0-8" name="__codelineno-0-8"></a><span class="w">    </span><span class="kt">struct</span><span class="w"> </span><span class="nv">S</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9"></a><span class="w">        </span><span class="kt">uint</span><span class="w"> </span><span class="nv">structMember</span><span class="p">;</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10"></a><span class="w">    </span><span class="p">}</span>
 <a id="__codelineno-0-11" name="__codelineno-0-11"></a>
-<a id="__codelineno-0-12" name="__codelineno-0-12"></a><span class="w">    </span><span class="kt">modifier</span><span class="w"> </span>M<span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">modifierArg</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-13" name="__codelineno-0-13"></a><span class="w">        </span>_<span class="p">;</span><span class="w"></span>
-<a id="__codelineno-0-14" name="__codelineno-0-14"></a><span class="w">    </span><span class="p">}</span><span class="w"></span>
+<a id="__codelineno-0-12" name="__codelineno-0-12"></a><span class="w">    </span><span class="kt">modifier</span><span class="w"> </span>M<span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">modifierArg</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13"></a><span class="w">        </span>_<span class="p">;</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14"></a><span class="w">    </span><span class="p">}</span>
 <a id="__codelineno-0-15" name="__codelineno-0-15"></a>
-<a id="__codelineno-0-16" name="__codelineno-0-16"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">foo</span><span class="p">()</span><span class="w"> </span><span class="kt">public</span><span class="w"> </span>pure<span class="w"> </span><span class="kt">returns</span><span class="w"> </span><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">funcReturnArg</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-17" name="__codelineno-0-17"></a><span class="w">        </span>funcReturnArg<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m m-Decimal">7</span><span class="p">;</span><span class="w"></span>
-<a id="__codelineno-0-18" name="__codelineno-0-18"></a><span class="w">    </span><span class="p">}</span><span class="w"></span>
+<a id="__codelineno-0-16" name="__codelineno-0-16"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">foo</span><span class="p">()</span><span class="w"> </span><span class="kt">public</span><span class="w"> </span>pure<span class="w"> </span><span class="kt">returns</span><span class="w"> </span><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">funcReturnArg</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17"></a><span class="w">        </span>funcReturnArg<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m m-Decimal">7</span><span class="p">;</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18"></a><span class="w">    </span><span class="p">}</span>
 <a id="__codelineno-0-19" name="__codelineno-0-19"></a>
-<a id="__codelineno-0-20" name="__codelineno-0-20"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">f</span><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="kt">public</span><span class="w"> </span>view<span class="w"> </span><span class="kt">returns</span><span class="w"> </span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-21" name="__codelineno-0-21"></a><span class="w">        </span><span class="kt">uint</span><span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>x<span class="p">;</span><span class="w"></span>
-<a id="__codelineno-0-22" name="__codelineno-0-22"></a><span class="w">        </span>try<span class="w"> </span><span class="kt">this</span><span class="p">.</span>tmp<span class="p">()</span><span class="w"> </span><span class="kt">returns</span><span class="w"> </span><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">z</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-23" name="__codelineno-0-23"></a><span class="w">            </span>y<span class="w"> </span><span class="o">=</span><span class="w"> </span>z<span class="p">;</span><span class="w"></span>
-<a id="__codelineno-0-24" name="__codelineno-0-24"></a><span class="w">        </span><span class="p">}</span><span class="w"> </span>catch<span class="w"> </span>Error<span class="p">(</span><span class="kt">string</span><span class="w"> </span><span class="nv">memory</span><span class="w"> </span>reason<span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-25" name="__codelineno-0-25"></a><span class="w">            </span>revert<span class="p">(</span>reason<span class="p">);</span><span class="w"></span>
-<a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="w">        </span><span class="p">}</span><span class="w"></span>
-<a id="__codelineno-0-27" name="__codelineno-0-27"></a><span class="w">        </span><span class="kt">return</span><span class="w"> </span>y<span class="p">;</span><span class="w"></span>
-<a id="__codelineno-0-28" name="__codelineno-0-28"></a><span class="w">    </span><span class="p">}</span><span class="w"></span>
+<a id="__codelineno-0-20" name="__codelineno-0-20"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">f</span><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="kt">public</span><span class="w"> </span>view<span class="w"> </span><span class="kt">returns</span><span class="w"> </span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21"></a><span class="w">        </span><span class="kt">uint</span><span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>x<span class="p">;</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22"></a><span class="w">        </span>try<span class="w"> </span><span class="kt">this</span><span class="p">.</span>tmp<span class="p">()</span><span class="w"> </span><span class="kt">returns</span><span class="w"> </span><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="nv">z</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23"></a><span class="w">            </span>y<span class="w"> </span><span class="o">=</span><span class="w"> </span>z<span class="p">;</span>
+<a id="__codelineno-0-24" name="__codelineno-0-24"></a><span class="w">        </span><span class="p">}</span><span class="w"> </span>catch<span class="w"> </span>Error<span class="p">(</span><span class="kt">string</span><span class="w"> </span><span class="nv">memory</span><span class="w"> </span>reason<span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25"></a><span class="w">            </span>revert<span class="p">(</span>reason<span class="p">);</span>
+<a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="w">        </span><span class="p">}</span>
+<a id="__codelineno-0-27" name="__codelineno-0-27"></a><span class="w">        </span><span class="kt">return</span><span class="w"> </span>y<span class="p">;</span>
+<a id="__codelineno-0-28" name="__codelineno-0-28"></a><span class="w">    </span><span class="p">}</span>
 <a id="__codelineno-0-29" name="__codelineno-0-29"></a>
-<a id="__codelineno-0-30" name="__codelineno-0-30"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">tmp</span><span class="p">()</span><span class="w"> </span><span class="kt">external</span><span class="w"> </span>pure<span class="w"> </span><span class="kt">returns</span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-31" name="__codelineno-0-31"></a><span class="w">        </span><span class="kt">return</span><span class="w"> </span>CONST<span class="p">;</span><span class="w"></span>
-<a id="__codelineno-0-32" name="__codelineno-0-32"></a><span class="w">    </span><span class="p">}</span><span class="w"></span>
+<a id="__codelineno-0-30" name="__codelineno-0-30"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">tmp</span><span class="p">()</span><span class="w"> </span><span class="kt">external</span><span class="w"> </span>pure<span class="w"> </span><span class="kt">returns</span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-31" name="__codelineno-0-31"></a><span class="w">        </span><span class="kt">return</span><span class="w"> </span>CONST<span class="p">;</span>
+<a id="__codelineno-0-32" name="__codelineno-0-32"></a><span class="w">    </span><span class="p">}</span>
 <a id="__codelineno-0-33" name="__codelineno-0-33"></a>
-<a id="__codelineno-0-34" name="__codelineno-0-34"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">g</span><span class="p">(</span><span class="kt">function</span><span class="w"> </span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span>pure<span class="w"> </span><span class="kt">returns</span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span>h<span class="p">)</span><span class="w"> </span><span class="kt">internal</span><span class="w"> </span>pure<span class="w"> </span><span class="kt">returns</span><span class="w"> </span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="w">        </span><span class="kt">return</span><span class="w"> </span>h<span class="p">(</span><span class="m m-Decimal">7</span><span class="p">);</span><span class="w"></span>
-<a id="__codelineno-0-36" name="__codelineno-0-36"></a><span class="w">    </span><span class="p">}</span><span class="w"></span>
-<a id="__codelineno-0-37" name="__codelineno-0-37"></a><span class="p">}</span><span class="w"></span>
+<a id="__codelineno-0-34" name="__codelineno-0-34"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">g</span><span class="p">(</span><span class="kt">function</span><span class="w"> </span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span>pure<span class="w"> </span><span class="kt">returns</span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span>h<span class="p">)</span><span class="w"> </span><span class="kt">internal</span><span class="w"> </span>pure<span class="w"> </span><span class="kt">returns</span><span class="w"> </span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="w">        </span><span class="kt">return</span><span class="w"> </span>h<span class="p">(</span><span class="m m-Decimal">7</span><span class="p">);</span>
+<a id="__codelineno-0-36" name="__codelineno-0-36"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-0-37" name="__codelineno-0-37"></a><span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
 
@@ -1132,7 +1149,7 @@
 <span class="normal"><a href="#__codelineno-0-477">477</a></span>
 <span class="normal"><a href="#__codelineno-0-478">478</a></span>
 <span class="normal"><a href="#__codelineno-0-479">479</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-34" name="__codelineno-0-34"></a><span class="k">class</span> <span class="nc">VariableDeclaration</span><span class="p">(</span><span class="n">DeclarationAbc</span><span class="p">):</span>
-<a id="__codelineno-0-35" name="__codelineno-0-35"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-36" name="__codelineno-0-36"></a><span class="sd">    !!! example</span>
 <a id="__codelineno-0-37" name="__codelineno-0-37"></a><span class="sd">        A variable can be declared:</span>
 <a id="__codelineno-0-38" name="__codelineno-0-38"></a>
@@ -1330,7 +1347,7 @@
 <a id="__codelineno-0-230" name="__codelineno-0-230"></a>        <span class="n">StructDefinition</span><span class="p">,</span>
 <a id="__codelineno-0-231" name="__codelineno-0-231"></a>        <span class="n">VariableDeclarationStatement</span><span class="p">,</span>
 <a id="__codelineno-0-232" name="__codelineno-0-232"></a>    <span class="p">]:</span>
-<a id="__codelineno-0-233" name="__codelineno-0-233"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-233" name="__codelineno-0-233"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-234" name="__codelineno-0-234"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-235" name="__codelineno-0-235"></a><span class="sd">            Parent IR node.</span>
 <a id="__codelineno-0-236" name="__codelineno-0-236"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1385,7 +1402,7 @@
 <a id="__codelineno-0-285" name="__codelineno-0-285"></a>
 <a id="__codelineno-0-286" name="__codelineno-0-286"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-287" name="__codelineno-0-287"></a>    <span class="k">def</span> <span class="nf">mutability</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mutability</span><span class="p">:</span>
-<a id="__codelineno-0-288" name="__codelineno-0-288"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-288" name="__codelineno-0-288"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-289" name="__codelineno-0-289"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-290" name="__codelineno-0-290"></a><span class="sd">            Mutability of the variable.</span>
 <a id="__codelineno-0-291" name="__codelineno-0-291"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1404,7 +1421,7 @@
 <a id="__codelineno-0-304" name="__codelineno-0-304"></a>
 <a id="__codelineno-0-305" name="__codelineno-0-305"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-306" name="__codelineno-0-306"></a>    <span class="k">def</span> <span class="nf">is_state_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-307" name="__codelineno-0-307"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-307" name="__codelineno-0-307"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-308" name="__codelineno-0-308"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-309" name="__codelineno-0-309"></a><span class="sd">            `True` if the variable is a state variable, `False` otherwise.</span>
 <a id="__codelineno-0-310" name="__codelineno-0-310"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1412,7 +1429,7 @@
 <a id="__codelineno-0-312" name="__codelineno-0-312"></a>
 <a id="__codelineno-0-313" name="__codelineno-0-313"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-314" name="__codelineno-0-314"></a>    <span class="k">def</span> <span class="nf">data_location</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataLocation</span><span class="p">:</span>
-<a id="__codelineno-0-315" name="__codelineno-0-315"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-315" name="__codelineno-0-315"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-316" name="__codelineno-0-316"></a><span class="sd">        [DataLocation.DEFAULT][woke.ast.enums.DataLocation.DEFAULT] is returned if the data location is not specified in the source code.</span>
 <a id="__codelineno-0-317" name="__codelineno-0-317"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-318" name="__codelineno-0-318"></a><span class="sd">            Data location of the variable.</span>
@@ -1421,7 +1438,7 @@
 <a id="__codelineno-0-321" name="__codelineno-0-321"></a>
 <a id="__codelineno-0-322" name="__codelineno-0-322"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-323" name="__codelineno-0-323"></a>    <span class="k">def</span> <span class="nf">visibility</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Visibility</span><span class="p">:</span>
-<a id="__codelineno-0-324" name="__codelineno-0-324"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-324" name="__codelineno-0-324"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-325" name="__codelineno-0-325"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-326" name="__codelineno-0-326"></a><span class="sd">            Visibility of the variable.</span>
 <a id="__codelineno-0-327" name="__codelineno-0-327"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1429,7 +1446,7 @@
 <a id="__codelineno-0-329" name="__codelineno-0-329"></a>
 <a id="__codelineno-0-330" name="__codelineno-0-330"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-331" name="__codelineno-0-331"></a>    <span class="k">def</span> <span class="nf">base_functions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">FunctionDefinition</span><span class="p">]:</span>
-<a id="__codelineno-0-332" name="__codelineno-0-332"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-332" name="__codelineno-0-332"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-333" name="__codelineno-0-333"></a><span class="sd">        !!! example</span>
 <a id="__codelineno-0-334" name="__codelineno-0-334"></a><span class="sd">            `C.foo` in line 6 lists `I.foo` in line 2 as a base function.</span>
 <a id="__codelineno-0-335" name="__codelineno-0-335"></a><span class="sd">            ```solidity linenums=&quot;1&quot;</span>
@@ -1478,7 +1495,7 @@
 <a id="__codelineno-0-378" name="__codelineno-0-378"></a>
 <a id="__codelineno-0-379" name="__codelineno-0-379"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-380" name="__codelineno-0-380"></a>    <span class="k">def</span> <span class="nf">documentation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StructuredDocumentation</span><span class="p">]:</span>
-<a id="__codelineno-0-381" name="__codelineno-0-381"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-381" name="__codelineno-0-381"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-382" name="__codelineno-0-382"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-383" name="__codelineno-0-383"></a><span class="sd">            [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation string, if any.</span>
 <a id="__codelineno-0-384" name="__codelineno-0-384"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1486,7 +1503,7 @@
 <a id="__codelineno-0-386" name="__codelineno-0-386"></a>
 <a id="__codelineno-0-387" name="__codelineno-0-387"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-388" name="__codelineno-0-388"></a>    <span class="k">def</span> <span class="nf">function_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]:</span>
-<a id="__codelineno-0-389" name="__codelineno-0-389"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-389" name="__codelineno-0-389"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-390" name="__codelineno-0-390"></a><span class="sd">        Is only set for public state variables.</span>
 <a id="__codelineno-0-391" name="__codelineno-0-391"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-392" name="__codelineno-0-392"></a><span class="sd">            Function selector of the getter function generated for this variable, if any.</span>
@@ -1495,7 +1512,7 @@
 <a id="__codelineno-0-395" name="__codelineno-0-395"></a>
 <a id="__codelineno-0-396" name="__codelineno-0-396"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-397" name="__codelineno-0-397"></a>    <span class="k">def</span> <span class="nf">indexed</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-398" name="__codelineno-0-398"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-398" name="__codelineno-0-398"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-399" name="__codelineno-0-399"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-400" name="__codelineno-0-400"></a><span class="sd">            `True` if the variable is indexed, `False` otherwise.</span>
 <a id="__codelineno-0-401" name="__codelineno-0-401"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1503,7 +1520,7 @@
 <a id="__codelineno-0-403" name="__codelineno-0-403"></a>
 <a id="__codelineno-0-404" name="__codelineno-0-404"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-405" name="__codelineno-0-405"></a>    <span class="k">def</span> <span class="nf">overrides</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">OverrideSpecifier</span><span class="p">]:</span>
-<a id="__codelineno-0-406" name="__codelineno-0-406"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-406" name="__codelineno-0-406"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-407" name="__codelineno-0-407"></a><span class="sd">        Returns override specified as specified in the source code.</span>
 <a id="__codelineno-0-408" name="__codelineno-0-408"></a>
 <a id="__codelineno-0-409" name="__codelineno-0-409"></a><span class="sd">        !!! example</span>
@@ -1535,7 +1552,7 @@
 <a id="__codelineno-0-435" name="__codelineno-0-435"></a>
 <a id="__codelineno-0-436" name="__codelineno-0-436"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-437" name="__codelineno-0-437"></a>    <span class="k">def</span> <span class="nf">type_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TypeNameAbc</span><span class="p">:</span>
-<a id="__codelineno-0-438" name="__codelineno-0-438"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-438" name="__codelineno-0-438"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-439" name="__codelineno-0-439"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-440" name="__codelineno-0-440"></a><span class="sd">            Type name IR node as present in the source code.</span>
 <a id="__codelineno-0-441" name="__codelineno-0-441"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1543,7 +1560,7 @@
 <a id="__codelineno-0-443" name="__codelineno-0-443"></a>
 <a id="__codelineno-0-444" name="__codelineno-0-444"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-445" name="__codelineno-0-445"></a>    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ExpressionAbc</span><span class="p">]:</span>
-<a id="__codelineno-0-446" name="__codelineno-0-446"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-446" name="__codelineno-0-446"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-447" name="__codelineno-0-447"></a><span class="sd">        Is not set if the parent is a [VariableDeclarationStatement][woke.ast.ir.statement.variable_declaration_statement.VariableDeclarationStatement].</span>
 <a id="__codelineno-0-448" name="__codelineno-0-448"></a><span class="sd">        In this case, the initial value (if any) is set in the [VariableDeclarationStatement.initial_value][woke.ast.ir.statement.variable_declaration_statement.VariableDeclarationStatement.initial_value] property.</span>
 <a id="__codelineno-0-449" name="__codelineno-0-449"></a><span class="sd">        Returns:</span>
@@ -1554,7 +1571,7 @@
 <a id="__codelineno-0-454" name="__codelineno-0-454"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-455" name="__codelineno-0-455"></a>    <span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>
 <a id="__codelineno-0-456" name="__codelineno-0-456"></a>    <span class="k">def</span> <span class="nf">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TypeAbc</span><span class="p">:</span>
-<a id="__codelineno-0-457" name="__codelineno-0-457"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-457" name="__codelineno-0-457"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-458" name="__codelineno-0-458"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-459" name="__codelineno-0-459"></a><span class="sd">            Type of the variable.</span>
 <a id="__codelineno-0-460" name="__codelineno-0-460"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1571,7 +1588,7 @@
 <a id="__codelineno-0-471" name="__codelineno-0-471"></a>
 <a id="__codelineno-0-472" name="__codelineno-0-472"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-473" name="__codelineno-0-473"></a>    <span class="k">def</span> <span class="nf">type_string</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<a id="__codelineno-0-474" name="__codelineno-0-474"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-474" name="__codelineno-0-474"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-475" name="__codelineno-0-475"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-476" name="__codelineno-0-476"></a><span class="sd">            User-friendly string describing the variable type.</span>
 <a id="__codelineno-0-477" name="__codelineno-0-477"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1590,14 +1607,12 @@
 
 
 
-
-
-<div class="doc doc-object doc-function">
+<div class="doc doc-object doc-attribute">
 
 
 
 <h4 class="doc doc-heading" id="woke.ast.ir.declaration.variable_declaration.VariableDeclaration.base_functions">
-<code class="highlight language-python"><span class="n">base_functions</span><span class="p">()</span></code>
+<code class="highlight language-python"><span class="n">base_functions</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">FunctionDefinition</span><span class="p">]</span></code>
   
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-property"><code>property</code></small>
@@ -1617,13 +1632,13 @@
 <span class="normal"><a href="#__codelineno-0-4">4</a></span>
 <span class="normal"><a href="#__codelineno-0-5">5</a></span>
 <span class="normal"><a href="#__codelineno-0-6">6</a></span>
-<span class="normal"><a href="#__codelineno-0-7">7</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1"></a>interface<span class="w"> </span>I<span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">foo</span><span class="p">(</span><span class="kt">uint</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="kt">external</span><span class="w"> </span><span class="kt">returns</span><span class="p">(</span><span class="kt">uint</span><span class="p">);</span><span class="w"></span>
-<a id="__codelineno-0-3" name="__codelineno-0-3"></a><span class="p">}</span><span class="w"></span>
+<span class="normal"><a href="#__codelineno-0-7">7</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1"></a>interface<span class="w"> </span>I<span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">foo</span><span class="p">(</span><span class="kt">uint</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="kt">external</span><span class="w"> </span><span class="kt">returns</span><span class="p">(</span><span class="kt">uint</span><span class="p">);</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3"></a><span class="p">}</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5"></a><span class="k">contract</span><span class="w"> </span><span class="ni">C</span><span class="w"> </span><span class="kt">is</span><span class="w"> </span>I<span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-6" name="__codelineno-0-6"></a><span class="w">    </span><span class="kt">mapping</span><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="kt">mapping</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="kt">uint</span><span class="p">))</span><span class="w"> </span><span class="kt">public</span><span class="w"> </span>override<span class="w"> </span>foo<span class="p">;</span><span class="w"></span>
-<a id="__codelineno-0-7" name="__codelineno-0-7"></a><span class="p">}</span><span class="w"></span>
+<a id="__codelineno-0-5" name="__codelineno-0-5"></a><span class="k">contract</span><span class="w"> </span><span class="ni">C</span><span class="w"> </span><span class="kt">is</span><span class="w"> </span>I<span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6"></a><span class="w">    </span><span class="kt">mapping</span><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="kt">mapping</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="kt">uint</span><span class="p">))</span><span class="w"> </span><span class="kt">public</span><span class="w"> </span>override<span class="w"> </span>foo<span class="p">;</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7"></a><span class="p">}</span>
 </code></pre></div></td></tr></table></div></p>
 </div>
 <div class="admonition example">
@@ -1643,21 +1658,21 @@
 <span class="normal"><a href="#__codelineno-1-12">12</a></span>
 <span class="normal"><a href="#__codelineno-1-13">13</a></span>
 <span class="normal"><a href="#__codelineno-1-14">14</a></span>
-<span class="normal"><a href="#__codelineno-1-15">15</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1"></a><span class="k">contract</span><span class="w"> </span><span class="ni">A1</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-1-2" name="__codelineno-1-2"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">foo</span><span class="p">(</span><span class="kt">uint</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="kt">external</span><span class="w"> </span>virtual<span class="w"> </span><span class="kt">returns</span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-1-3" name="__codelineno-1-3"></a><span class="w">        </span><span class="kt">return</span><span class="w"> </span><span class="m m-Decimal">1</span><span class="p">;</span><span class="w"></span>
-<a id="__codelineno-1-4" name="__codelineno-1-4"></a><span class="w">    </span><span class="p">}</span><span class="w"></span>
-<a id="__codelineno-1-5" name="__codelineno-1-5"></a><span class="p">}</span><span class="w"></span>
+<span class="normal"><a href="#__codelineno-1-15">15</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1"></a><span class="k">contract</span><span class="w"> </span><span class="ni">A1</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">foo</span><span class="p">(</span><span class="kt">uint</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="kt">external</span><span class="w"> </span>virtual<span class="w"> </span><span class="kt">returns</span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3"></a><span class="w">        </span><span class="kt">return</span><span class="w"> </span><span class="m m-Decimal">1</span><span class="p">;</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5"></a><span class="p">}</span>
 <a id="__codelineno-1-6" name="__codelineno-1-6"></a>
-<a id="__codelineno-1-7" name="__codelineno-1-7"></a><span class="k">contract</span><span class="w"> </span><span class="ni">A2</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-1-8" name="__codelineno-1-8"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">foo</span><span class="p">(</span><span class="kt">uint</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="kt">external</span><span class="w"> </span>virtual<span class="w"> </span><span class="kt">returns</span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-1-9" name="__codelineno-1-9"></a><span class="w">        </span><span class="kt">return</span><span class="w"> </span><span class="m m-Decimal">2</span><span class="p">;</span><span class="w"></span>
-<a id="__codelineno-1-10" name="__codelineno-1-10"></a><span class="w">    </span><span class="p">}</span><span class="w"></span>
-<a id="__codelineno-1-11" name="__codelineno-1-11"></a><span class="p">}</span><span class="w"></span>
+<a id="__codelineno-1-7" name="__codelineno-1-7"></a><span class="k">contract</span><span class="w"> </span><span class="ni">A2</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">foo</span><span class="p">(</span><span class="kt">uint</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="kt">external</span><span class="w"> </span>virtual<span class="w"> </span><span class="kt">returns</span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9"></a><span class="w">        </span><span class="kt">return</span><span class="w"> </span><span class="m m-Decimal">2</span><span class="p">;</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11"></a><span class="p">}</span>
 <a id="__codelineno-1-12" name="__codelineno-1-12"></a>
-<a id="__codelineno-1-13" name="__codelineno-1-13"></a><span class="k">contract</span><span class="w"> </span><span class="ni">B</span><span class="w"> </span><span class="kt">is</span><span class="w"> </span>A1<span class="p">,</span><span class="w"> </span>A2<span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-1-14" name="__codelineno-1-14"></a><span class="w">    </span><span class="kt">mapping</span><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="kt">mapping</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="kt">uint</span><span class="p">))</span><span class="w"> </span><span class="kt">public</span><span class="w"> </span>override<span class="p">(</span>A1<span class="p">,</span><span class="w"> </span>A2<span class="p">)</span><span class="w"> </span>foo<span class="p">;</span><span class="w"></span>
-<a id="__codelineno-1-15" name="__codelineno-1-15"></a><span class="p">}</span><span class="w"></span>
+<a id="__codelineno-1-13" name="__codelineno-1-13"></a><span class="k">contract</span><span class="w"> </span><span class="ni">B</span><span class="w"> </span><span class="kt">is</span><span class="w"> </span>A1<span class="p">,</span><span class="w"> </span>A2<span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-14" name="__codelineno-1-14"></a><span class="w">    </span><span class="kt">mapping</span><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="kt">mapping</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="kt">uint</span><span class="p">))</span><span class="w"> </span><span class="kt">public</span><span class="w"> </span>override<span class="p">(</span>A1<span class="p">,</span><span class="w"> </span>A2<span class="p">)</span><span class="w"> </span>foo<span class="p">;</span>
+<a id="__codelineno-1-15" name="__codelineno-1-15"></a><span class="p">}</span>
 </code></pre></div></td></tr></table></div></p>
 </div>
 
@@ -1678,116 +1693,16 @@
         </tr>
     </tbody>
   </table>
-
-      <details class="quote">
-        <summary>Source code in <code>woke/ast/ir/declaration/variable_declaration.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-330">330</a></span>
-<span class="normal"><a href="#__codelineno-0-331">331</a></span>
-<span class="normal"><a href="#__codelineno-0-332">332</a></span>
-<span class="normal"><a href="#__codelineno-0-333">333</a></span>
-<span class="normal"><a href="#__codelineno-0-334">334</a></span>
-<span class="normal"><a href="#__codelineno-0-335">335</a></span>
-<span class="normal"><a href="#__codelineno-0-336">336</a></span>
-<span class="normal"><a href="#__codelineno-0-337">337</a></span>
-<span class="normal"><a href="#__codelineno-0-338">338</a></span>
-<span class="normal"><a href="#__codelineno-0-339">339</a></span>
-<span class="normal"><a href="#__codelineno-0-340">340</a></span>
-<span class="normal"><a href="#__codelineno-0-341">341</a></span>
-<span class="normal"><a href="#__codelineno-0-342">342</a></span>
-<span class="normal"><a href="#__codelineno-0-343">343</a></span>
-<span class="normal"><a href="#__codelineno-0-344">344</a></span>
-<span class="normal"><a href="#__codelineno-0-345">345</a></span>
-<span class="normal"><a href="#__codelineno-0-346">346</a></span>
-<span class="normal"><a href="#__codelineno-0-347">347</a></span>
-<span class="normal"><a href="#__codelineno-0-348">348</a></span>
-<span class="normal"><a href="#__codelineno-0-349">349</a></span>
-<span class="normal"><a href="#__codelineno-0-350">350</a></span>
-<span class="normal"><a href="#__codelineno-0-351">351</a></span>
-<span class="normal"><a href="#__codelineno-0-352">352</a></span>
-<span class="normal"><a href="#__codelineno-0-353">353</a></span>
-<span class="normal"><a href="#__codelineno-0-354">354</a></span>
-<span class="normal"><a href="#__codelineno-0-355">355</a></span>
-<span class="normal"><a href="#__codelineno-0-356">356</a></span>
-<span class="normal"><a href="#__codelineno-0-357">357</a></span>
-<span class="normal"><a href="#__codelineno-0-358">358</a></span>
-<span class="normal"><a href="#__codelineno-0-359">359</a></span>
-<span class="normal"><a href="#__codelineno-0-360">360</a></span>
-<span class="normal"><a href="#__codelineno-0-361">361</a></span>
-<span class="normal"><a href="#__codelineno-0-362">362</a></span>
-<span class="normal"><a href="#__codelineno-0-363">363</a></span>
-<span class="normal"><a href="#__codelineno-0-364">364</a></span>
-<span class="normal"><a href="#__codelineno-0-365">365</a></span>
-<span class="normal"><a href="#__codelineno-0-366">366</a></span>
-<span class="normal"><a href="#__codelineno-0-367">367</a></span>
-<span class="normal"><a href="#__codelineno-0-368">368</a></span>
-<span class="normal"><a href="#__codelineno-0-369">369</a></span>
-<span class="normal"><a href="#__codelineno-0-370">370</a></span>
-<span class="normal"><a href="#__codelineno-0-371">371</a></span>
-<span class="normal"><a href="#__codelineno-0-372">372</a></span>
-<span class="normal"><a href="#__codelineno-0-373">373</a></span>
-<span class="normal"><a href="#__codelineno-0-374">374</a></span>
-<span class="normal"><a href="#__codelineno-0-375">375</a></span>
-<span class="normal"><a href="#__codelineno-0-376">376</a></span>
-<span class="normal"><a href="#__codelineno-0-377">377</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-330" name="__codelineno-0-330"></a><span class="nd">@property</span>
-<a id="__codelineno-0-331" name="__codelineno-0-331"></a><span class="k">def</span> <span class="nf">base_functions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">FunctionDefinition</span><span class="p">]:</span>
-<a id="__codelineno-0-332" name="__codelineno-0-332"></a>    <span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-333" name="__codelineno-0-333"></a><span class="sd">    !!! example</span>
-<a id="__codelineno-0-334" name="__codelineno-0-334"></a><span class="sd">        `C.foo` in line 6 lists `I.foo` in line 2 as a base function.</span>
-<a id="__codelineno-0-335" name="__codelineno-0-335"></a><span class="sd">        ```solidity linenums=&quot;1&quot;</span>
-<a id="__codelineno-0-336" name="__codelineno-0-336"></a><span class="sd">        interface I {</span>
-<a id="__codelineno-0-337" name="__codelineno-0-337"></a><span class="sd">            function foo(uint, bool) external returns(uint);</span>
-<a id="__codelineno-0-338" name="__codelineno-0-338"></a><span class="sd">        }</span>
-<a id="__codelineno-0-339" name="__codelineno-0-339"></a>
-<a id="__codelineno-0-340" name="__codelineno-0-340"></a><span class="sd">        contract C is I {</span>
-<a id="__codelineno-0-341" name="__codelineno-0-341"></a><span class="sd">            mapping(uint =&gt; mapping(bool =&gt; uint)) public override foo;</span>
-<a id="__codelineno-0-342" name="__codelineno-0-342"></a><span class="sd">        }</span>
-<a id="__codelineno-0-343" name="__codelineno-0-343"></a><span class="sd">        ```</span>
-<a id="__codelineno-0-344" name="__codelineno-0-344"></a>
-<a id="__codelineno-0-345" name="__codelineno-0-345"></a><span class="sd">    !!! example</span>
-<a id="__codelineno-0-346" name="__codelineno-0-346"></a><span class="sd">        `B.foo` in line 14 lists `A1.foo` in lines 2-4 and `A2.foo` in lines 8-10 as base functions.</span>
-<a id="__codelineno-0-347" name="__codelineno-0-347"></a><span class="sd">        ```solidity linenums=&quot;1&quot;</span>
-<a id="__codelineno-0-348" name="__codelineno-0-348"></a><span class="sd">        contract A1 {</span>
-<a id="__codelineno-0-349" name="__codelineno-0-349"></a><span class="sd">            function foo(uint, bool) external virtual returns(uint) {</span>
-<a id="__codelineno-0-350" name="__codelineno-0-350"></a><span class="sd">                return 1;</span>
-<a id="__codelineno-0-351" name="__codelineno-0-351"></a><span class="sd">            }</span>
-<a id="__codelineno-0-352" name="__codelineno-0-352"></a><span class="sd">        }</span>
-<a id="__codelineno-0-353" name="__codelineno-0-353"></a>
-<a id="__codelineno-0-354" name="__codelineno-0-354"></a><span class="sd">        contract A2 {</span>
-<a id="__codelineno-0-355" name="__codelineno-0-355"></a><span class="sd">            function foo(uint, bool) external virtual returns(uint) {</span>
-<a id="__codelineno-0-356" name="__codelineno-0-356"></a><span class="sd">                return 2;</span>
-<a id="__codelineno-0-357" name="__codelineno-0-357"></a><span class="sd">            }</span>
-<a id="__codelineno-0-358" name="__codelineno-0-358"></a><span class="sd">        }</span>
-<a id="__codelineno-0-359" name="__codelineno-0-359"></a>
-<a id="__codelineno-0-360" name="__codelineno-0-360"></a><span class="sd">        contract B is A1, A2 {</span>
-<a id="__codelineno-0-361" name="__codelineno-0-361"></a><span class="sd">            mapping(uint =&gt; mapping(bool =&gt; uint)) public override(A1, A2) foo;</span>
-<a id="__codelineno-0-362" name="__codelineno-0-362"></a><span class="sd">        }</span>
-<a id="__codelineno-0-363" name="__codelineno-0-363"></a><span class="sd">        ```</span>
-<a id="__codelineno-0-364" name="__codelineno-0-364"></a>
-<a id="__codelineno-0-365" name="__codelineno-0-365"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-366" name="__codelineno-0-366"></a><span class="sd">        List of base functions overridden by this function.</span>
-<a id="__codelineno-0-367" name="__codelineno-0-367"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-368" name="__codelineno-0-368"></a>    <span class="kn">from</span> <span class="nn">..declaration.function_definition</span> <span class="kn">import</span> <span class="n">FunctionDefinition</span>
-<a id="__codelineno-0-369" name="__codelineno-0-369"></a>
-<a id="__codelineno-0-370" name="__codelineno-0-370"></a>    <span class="n">base_functions</span> <span class="o">=</span> <span class="p">[]</span>
-<a id="__codelineno-0-371" name="__codelineno-0-371"></a>    <span class="k">for</span> <span class="n">base_function_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base_functions</span><span class="p">:</span>
-<a id="__codelineno-0-372" name="__codelineno-0-372"></a>        <span class="n">base_function</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference_resolver</span><span class="o">.</span><span class="n">resolve_node</span><span class="p">(</span>
-<a id="__codelineno-0-373" name="__codelineno-0-373"></a>            <span class="n">base_function_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cu_hash</span>
-<a id="__codelineno-0-374" name="__codelineno-0-374"></a>        <span class="p">)</span>
-<a id="__codelineno-0-375" name="__codelineno-0-375"></a>        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base_function</span><span class="p">,</span> <span class="n">FunctionDefinition</span><span class="p">)</span>
-<a id="__codelineno-0-376" name="__codelineno-0-376"></a>        <span class="n">base_functions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">base_function</span><span class="p">)</span>
-<a id="__codelineno-0-377" name="__codelineno-0-377"></a>    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">base_functions</span><span class="p">)</span>
-</code></pre></div></td></tr></table></div>
-      </details>
   </div>
 
 </div>
 
-<div class="doc doc-object doc-function">
+<div class="doc doc-object doc-attribute">
 
 
 
 <h4 class="doc doc-heading" id="woke.ast.ir.declaration.variable_declaration.VariableDeclaration.data_location">
-<code class="highlight language-python"><span class="n">data_location</span><span class="p">()</span></code>
+<code class="highlight language-python"><span class="n">data_location</span><span class="p">:</span> <span class="n">DataLocation</span></code>
   
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-property"><code>property</code></small>
@@ -1817,36 +1732,16 @@
         </tr>
     </tbody>
   </table>
-
-      <details class="quote">
-        <summary>Source code in <code>woke/ast/ir/declaration/variable_declaration.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-313">313</a></span>
-<span class="normal"><a href="#__codelineno-0-314">314</a></span>
-<span class="normal"><a href="#__codelineno-0-315">315</a></span>
-<span class="normal"><a href="#__codelineno-0-316">316</a></span>
-<span class="normal"><a href="#__codelineno-0-317">317</a></span>
-<span class="normal"><a href="#__codelineno-0-318">318</a></span>
-<span class="normal"><a href="#__codelineno-0-319">319</a></span>
-<span class="normal"><a href="#__codelineno-0-320">320</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-313" name="__codelineno-0-313"></a><span class="nd">@property</span>
-<a id="__codelineno-0-314" name="__codelineno-0-314"></a><span class="k">def</span> <span class="nf">data_location</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataLocation</span><span class="p">:</span>
-<a id="__codelineno-0-315" name="__codelineno-0-315"></a>    <span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-316" name="__codelineno-0-316"></a><span class="sd">    [DataLocation.DEFAULT][woke.ast.enums.DataLocation.DEFAULT] is returned if the data location is not specified in the source code.</span>
-<a id="__codelineno-0-317" name="__codelineno-0-317"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-318" name="__codelineno-0-318"></a><span class="sd">        Data location of the variable.</span>
-<a id="__codelineno-0-319" name="__codelineno-0-319"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-320" name="__codelineno-0-320"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_location</span>
-</code></pre></div></td></tr></table></div>
-      </details>
   </div>
 
 </div>
 
-<div class="doc doc-object doc-function">
+<div class="doc doc-object doc-attribute">
 
 
 
 <h4 class="doc doc-heading" id="woke.ast.ir.declaration.variable_declaration.VariableDeclaration.documentation">
-<code class="highlight language-python"><span class="n">documentation</span><span class="p">()</span></code>
+<code class="highlight language-python"><span class="n">documentation</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StructuredDocumentation</span><span class="p">]</span></code>
   
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-property"><code>property</code></small>
@@ -1875,34 +1770,16 @@
         </tr>
     </tbody>
   </table>
-
-      <details class="quote">
-        <summary>Source code in <code>woke/ast/ir/declaration/variable_declaration.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-379">379</a></span>
-<span class="normal"><a href="#__codelineno-0-380">380</a></span>
-<span class="normal"><a href="#__codelineno-0-381">381</a></span>
-<span class="normal"><a href="#__codelineno-0-382">382</a></span>
-<span class="normal"><a href="#__codelineno-0-383">383</a></span>
-<span class="normal"><a href="#__codelineno-0-384">384</a></span>
-<span class="normal"><a href="#__codelineno-0-385">385</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-379" name="__codelineno-0-379"></a><span class="nd">@property</span>
-<a id="__codelineno-0-380" name="__codelineno-0-380"></a><span class="k">def</span> <span class="nf">documentation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StructuredDocumentation</span><span class="p">]:</span>
-<a id="__codelineno-0-381" name="__codelineno-0-381"></a>    <span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-382" name="__codelineno-0-382"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-383" name="__codelineno-0-383"></a><span class="sd">        [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation string, if any.</span>
-<a id="__codelineno-0-384" name="__codelineno-0-384"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-385" name="__codelineno-0-385"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_documentation</span>
-</code></pre></div></td></tr></table></div>
-      </details>
   </div>
 
 </div>
 
-<div class="doc doc-object doc-function">
+<div class="doc doc-object doc-attribute">
 
 
 
 <h4 class="doc doc-heading" id="woke.ast.ir.declaration.variable_declaration.VariableDeclaration.function_selector">
-<code class="highlight language-python"><span class="n">function_selector</span><span class="p">()</span></code>
+<code class="highlight language-python"><span class="n">function_selector</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]</span></code>
   
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-property"><code>property</code></small>
@@ -1932,36 +1809,16 @@
         </tr>
     </tbody>
   </table>
-
-      <details class="quote">
-        <summary>Source code in <code>woke/ast/ir/declaration/variable_declaration.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-387">387</a></span>
-<span class="normal"><a href="#__codelineno-0-388">388</a></span>
-<span class="normal"><a href="#__codelineno-0-389">389</a></span>
-<span class="normal"><a href="#__codelineno-0-390">390</a></span>
-<span class="normal"><a href="#__codelineno-0-391">391</a></span>
-<span class="normal"><a href="#__codelineno-0-392">392</a></span>
-<span class="normal"><a href="#__codelineno-0-393">393</a></span>
-<span class="normal"><a href="#__codelineno-0-394">394</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-387" name="__codelineno-0-387"></a><span class="nd">@property</span>
-<a id="__codelineno-0-388" name="__codelineno-0-388"></a><span class="k">def</span> <span class="nf">function_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]:</span>
-<a id="__codelineno-0-389" name="__codelineno-0-389"></a>    <span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-390" name="__codelineno-0-390"></a><span class="sd">    Is only set for public state variables.</span>
-<a id="__codelineno-0-391" name="__codelineno-0-391"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-392" name="__codelineno-0-392"></a><span class="sd">        Function selector of the getter function generated for this variable, if any.</span>
-<a id="__codelineno-0-393" name="__codelineno-0-393"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-394" name="__codelineno-0-394"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_function_selector</span>
-</code></pre></div></td></tr></table></div>
-      </details>
   </div>
 
 </div>
 
-<div class="doc doc-object doc-function">
+<div class="doc doc-object doc-attribute">
 
 
 
 <h4 class="doc doc-heading" id="woke.ast.ir.declaration.variable_declaration.VariableDeclaration.indexed">
-<code class="highlight language-python"><span class="n">indexed</span><span class="p">()</span></code>
+<code class="highlight language-python"><span class="n">indexed</span><span class="p">:</span> <span class="nb">bool</span></code>
   
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-property"><code>property</code></small>
@@ -1990,34 +1847,16 @@
         </tr>
     </tbody>
   </table>
-
-      <details class="quote">
-        <summary>Source code in <code>woke/ast/ir/declaration/variable_declaration.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-396">396</a></span>
-<span class="normal"><a href="#__codelineno-0-397">397</a></span>
-<span class="normal"><a href="#__codelineno-0-398">398</a></span>
-<span class="normal"><a href="#__codelineno-0-399">399</a></span>
-<span class="normal"><a href="#__codelineno-0-400">400</a></span>
-<span class="normal"><a href="#__codelineno-0-401">401</a></span>
-<span class="normal"><a href="#__codelineno-0-402">402</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-396" name="__codelineno-0-396"></a><span class="nd">@property</span>
-<a id="__codelineno-0-397" name="__codelineno-0-397"></a><span class="k">def</span> <span class="nf">indexed</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-398" name="__codelineno-0-398"></a>    <span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-399" name="__codelineno-0-399"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-400" name="__codelineno-0-400"></a><span class="sd">        `True` if the variable is indexed, `False` otherwise.</span>
-<a id="__codelineno-0-401" name="__codelineno-0-401"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-402" name="__codelineno-0-402"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_indexed</span>
-</code></pre></div></td></tr></table></div>
-      </details>
   </div>
 
 </div>
 
-<div class="doc doc-object doc-function">
+<div class="doc doc-object doc-attribute">
 
 
 
 <h4 class="doc doc-heading" id="woke.ast.ir.declaration.variable_declaration.VariableDeclaration.is_state_variable">
-<code class="highlight language-python"><span class="n">is_state_variable</span><span class="p">()</span></code>
+<code class="highlight language-python"><span class="n">is_state_variable</span><span class="p">:</span> <span class="nb">bool</span></code>
   
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-property"><code>property</code></small>
@@ -2046,34 +1885,16 @@
         </tr>
     </tbody>
   </table>
-
-      <details class="quote">
-        <summary>Source code in <code>woke/ast/ir/declaration/variable_declaration.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-305">305</a></span>
-<span class="normal"><a href="#__codelineno-0-306">306</a></span>
-<span class="normal"><a href="#__codelineno-0-307">307</a></span>
-<span class="normal"><a href="#__codelineno-0-308">308</a></span>
-<span class="normal"><a href="#__codelineno-0-309">309</a></span>
-<span class="normal"><a href="#__codelineno-0-310">310</a></span>
-<span class="normal"><a href="#__codelineno-0-311">311</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-305" name="__codelineno-0-305"></a><span class="nd">@property</span>
-<a id="__codelineno-0-306" name="__codelineno-0-306"></a><span class="k">def</span> <span class="nf">is_state_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-307" name="__codelineno-0-307"></a>    <span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-308" name="__codelineno-0-308"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-309" name="__codelineno-0-309"></a><span class="sd">        `True` if the variable is a state variable, `False` otherwise.</span>
-<a id="__codelineno-0-310" name="__codelineno-0-310"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-311" name="__codelineno-0-311"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state_variable</span>
-</code></pre></div></td></tr></table></div>
-      </details>
   </div>
 
 </div>
 
-<div class="doc doc-object doc-function">
+<div class="doc doc-object doc-attribute">
 
 
 
 <h4 class="doc doc-heading" id="woke.ast.ir.declaration.variable_declaration.VariableDeclaration.mutability">
-<code class="highlight language-python"><span class="n">mutability</span><span class="p">()</span></code>
+<code class="highlight language-python"><span class="n">mutability</span><span class="p">:</span> <span class="n">Mutability</span></code>
   
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-property"><code>property</code></small>
@@ -2102,56 +1923,16 @@
         </tr>
     </tbody>
   </table>
-
-      <details class="quote">
-        <summary>Source code in <code>woke/ast/ir/declaration/variable_declaration.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-286">286</a></span>
-<span class="normal"><a href="#__codelineno-0-287">287</a></span>
-<span class="normal"><a href="#__codelineno-0-288">288</a></span>
-<span class="normal"><a href="#__codelineno-0-289">289</a></span>
-<span class="normal"><a href="#__codelineno-0-290">290</a></span>
-<span class="normal"><a href="#__codelineno-0-291">291</a></span>
-<span class="normal"><a href="#__codelineno-0-292">292</a></span>
-<span class="normal"><a href="#__codelineno-0-293">293</a></span>
-<span class="normal"><a href="#__codelineno-0-294">294</a></span>
-<span class="normal"><a href="#__codelineno-0-295">295</a></span>
-<span class="normal"><a href="#__codelineno-0-296">296</a></span>
-<span class="normal"><a href="#__codelineno-0-297">297</a></span>
-<span class="normal"><a href="#__codelineno-0-298">298</a></span>
-<span class="normal"><a href="#__codelineno-0-299">299</a></span>
-<span class="normal"><a href="#__codelineno-0-300">300</a></span>
-<span class="normal"><a href="#__codelineno-0-301">301</a></span>
-<span class="normal"><a href="#__codelineno-0-302">302</a></span>
-<span class="normal"><a href="#__codelineno-0-303">303</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-286" name="__codelineno-0-286"></a><span class="nd">@property</span>
-<a id="__codelineno-0-287" name="__codelineno-0-287"></a><span class="k">def</span> <span class="nf">mutability</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mutability</span><span class="p">:</span>
-<a id="__codelineno-0-288" name="__codelineno-0-288"></a>    <span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-289" name="__codelineno-0-289"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-290" name="__codelineno-0-290"></a><span class="sd">        Mutability of the variable.</span>
-<a id="__codelineno-0-291" name="__codelineno-0-291"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-292" name="__codelineno-0-292"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mutability</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-293" name="__codelineno-0-293"></a>        <span class="n">relative_type_end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_type_name</span><span class="o">.</span><span class="n">byte_location</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">byte_location</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<a id="__codelineno-0-294" name="__codelineno-0-294"></a>        <span class="n">relative_name_start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name_location</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">byte_location</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<a id="__codelineno-0-295" name="__codelineno-0-295"></a>        <span class="n">keywords_source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source</span><span class="p">[</span><span class="n">relative_type_end</span><span class="p">:</span><span class="n">relative_name_start</span><span class="p">]</span>
-<a id="__codelineno-0-296" name="__codelineno-0-296"></a>
-<a id="__codelineno-0-297" name="__codelineno-0-297"></a>        <span class="k">if</span> <span class="sa">b</span><span class="s2">&quot;immutable&quot;</span> <span class="ow">in</span> <span class="n">keywords_source</span><span class="p">:</span>
-<a id="__codelineno-0-298" name="__codelineno-0-298"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_mutability</span> <span class="o">=</span> <span class="n">Mutability</span><span class="o">.</span><span class="n">IMMUTABLE</span>
-<a id="__codelineno-0-299" name="__codelineno-0-299"></a>        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_constant</span><span class="p">:</span>
-<a id="__codelineno-0-300" name="__codelineno-0-300"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_mutability</span> <span class="o">=</span> <span class="n">Mutability</span><span class="o">.</span><span class="n">CONSTANT</span>
-<a id="__codelineno-0-301" name="__codelineno-0-301"></a>        <span class="k">else</span><span class="p">:</span>
-<a id="__codelineno-0-302" name="__codelineno-0-302"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_mutability</span> <span class="o">=</span> <span class="n">Mutability</span><span class="o">.</span><span class="n">MUTABLE</span>
-<a id="__codelineno-0-303" name="__codelineno-0-303"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mutability</span>
-</code></pre></div></td></tr></table></div>
-      </details>
   </div>
 
 </div>
 
-<div class="doc doc-object doc-function">
+<div class="doc doc-object doc-attribute">
 
 
 
 <h4 class="doc doc-heading" id="woke.ast.ir.declaration.variable_declaration.VariableDeclaration.overrides">
-<code class="highlight language-python"><span class="n">overrides</span><span class="p">()</span></code>
+<code class="highlight language-python"><span class="n">overrides</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">OverrideSpecifier</span><span class="p">]</span></code>
   
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-property"><code>property</code></small>
@@ -2181,21 +1962,21 @@
 <span class="normal"><a href="#__codelineno-0-12">12</a></span>
 <span class="normal"><a href="#__codelineno-0-13">13</a></span>
 <span class="normal"><a href="#__codelineno-0-14">14</a></span>
-<span class="normal"><a href="#__codelineno-0-15">15</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="k">contract</span><span class="w"> </span><span class="ni">A1</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">foo</span><span class="p">(</span><span class="kt">uint</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="kt">external</span><span class="w"> </span>virtual<span class="w"> </span><span class="kt">returns</span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-3" name="__codelineno-0-3"></a><span class="w">        </span><span class="kt">return</span><span class="w"> </span><span class="m m-Decimal">1</span><span class="p">;</span><span class="w"></span>
-<a id="__codelineno-0-4" name="__codelineno-0-4"></a><span class="w">    </span><span class="p">}</span><span class="w"></span>
-<a id="__codelineno-0-5" name="__codelineno-0-5"></a><span class="p">}</span><span class="w"></span>
+<span class="normal"><a href="#__codelineno-0-15">15</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="k">contract</span><span class="w"> </span><span class="ni">A1</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">foo</span><span class="p">(</span><span class="kt">uint</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="kt">external</span><span class="w"> </span>virtual<span class="w"> </span><span class="kt">returns</span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3"></a><span class="w">        </span><span class="kt">return</span><span class="w"> </span><span class="m m-Decimal">1</span><span class="p">;</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5"></a><span class="p">}</span>
 <a id="__codelineno-0-6" name="__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7"></a><span class="k">contract</span><span class="w"> </span><span class="ni">A2</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-8" name="__codelineno-0-8"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">foo</span><span class="p">(</span><span class="kt">uint</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="kt">external</span><span class="w"> </span>virtual<span class="w"> </span><span class="kt">returns</span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-9" name="__codelineno-0-9"></a><span class="w">        </span><span class="kt">return</span><span class="w"> </span><span class="m m-Decimal">2</span><span class="p">;</span><span class="w"></span>
-<a id="__codelineno-0-10" name="__codelineno-0-10"></a><span class="w">    </span><span class="p">}</span><span class="w"></span>
-<a id="__codelineno-0-11" name="__codelineno-0-11"></a><span class="p">}</span><span class="w"></span>
+<a id="__codelineno-0-7" name="__codelineno-0-7"></a><span class="k">contract</span><span class="w"> </span><span class="ni">A2</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">foo</span><span class="p">(</span><span class="kt">uint</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="kt">external</span><span class="w"> </span>virtual<span class="w"> </span><span class="kt">returns</span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9"></a><span class="w">        </span><span class="kt">return</span><span class="w"> </span><span class="m m-Decimal">2</span><span class="p">;</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11"></a><span class="p">}</span>
 <a id="__codelineno-0-12" name="__codelineno-0-12"></a>
-<a id="__codelineno-0-13" name="__codelineno-0-13"></a><span class="k">contract</span><span class="w"> </span><span class="ni">B</span><span class="w"> </span><span class="kt">is</span><span class="w"> </span>A1<span class="p">,</span><span class="w"> </span>A2<span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-14" name="__codelineno-0-14"></a><span class="w">    </span><span class="kt">mapping</span><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="kt">mapping</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="kt">uint</span><span class="p">))</span><span class="w"> </span><span class="kt">public</span><span class="w"> </span>override<span class="p">(</span>A1<span class="p">,</span><span class="w"> </span>A2<span class="p">)</span><span class="w"> </span>foo<span class="p">;</span><span class="w"></span>
-<a id="__codelineno-0-15" name="__codelineno-0-15"></a><span class="p">}</span><span class="w"></span>
+<a id="__codelineno-0-13" name="__codelineno-0-13"></a><span class="k">contract</span><span class="w"> </span><span class="ni">B</span><span class="w"> </span><span class="kt">is</span><span class="w"> </span>A1<span class="p">,</span><span class="w"> </span>A2<span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14"></a><span class="w">    </span><span class="kt">mapping</span><span class="p">(</span><span class="kt">uint</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="kt">mapping</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="kt">uint</span><span class="p">))</span><span class="w"> </span><span class="kt">public</span><span class="w"> </span>override<span class="p">(</span>A1<span class="p">,</span><span class="w"> </span>A2<span class="p">)</span><span class="w"> </span>foo<span class="p">;</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15"></a><span class="p">}</span>
 </code></pre></div></td></tr></table></div></p>
 </div>
 
@@ -2216,82 +1997,16 @@
         </tr>
     </tbody>
   </table>
-
-      <details class="quote">
-        <summary>Source code in <code>woke/ast/ir/declaration/variable_declaration.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-404">404</a></span>
-<span class="normal"><a href="#__codelineno-0-405">405</a></span>
-<span class="normal"><a href="#__codelineno-0-406">406</a></span>
-<span class="normal"><a href="#__codelineno-0-407">407</a></span>
-<span class="normal"><a href="#__codelineno-0-408">408</a></span>
-<span class="normal"><a href="#__codelineno-0-409">409</a></span>
-<span class="normal"><a href="#__codelineno-0-410">410</a></span>
-<span class="normal"><a href="#__codelineno-0-411">411</a></span>
-<span class="normal"><a href="#__codelineno-0-412">412</a></span>
-<span class="normal"><a href="#__codelineno-0-413">413</a></span>
-<span class="normal"><a href="#__codelineno-0-414">414</a></span>
-<span class="normal"><a href="#__codelineno-0-415">415</a></span>
-<span class="normal"><a href="#__codelineno-0-416">416</a></span>
-<span class="normal"><a href="#__codelineno-0-417">417</a></span>
-<span class="normal"><a href="#__codelineno-0-418">418</a></span>
-<span class="normal"><a href="#__codelineno-0-419">419</a></span>
-<span class="normal"><a href="#__codelineno-0-420">420</a></span>
-<span class="normal"><a href="#__codelineno-0-421">421</a></span>
-<span class="normal"><a href="#__codelineno-0-422">422</a></span>
-<span class="normal"><a href="#__codelineno-0-423">423</a></span>
-<span class="normal"><a href="#__codelineno-0-424">424</a></span>
-<span class="normal"><a href="#__codelineno-0-425">425</a></span>
-<span class="normal"><a href="#__codelineno-0-426">426</a></span>
-<span class="normal"><a href="#__codelineno-0-427">427</a></span>
-<span class="normal"><a href="#__codelineno-0-428">428</a></span>
-<span class="normal"><a href="#__codelineno-0-429">429</a></span>
-<span class="normal"><a href="#__codelineno-0-430">430</a></span>
-<span class="normal"><a href="#__codelineno-0-431">431</a></span>
-<span class="normal"><a href="#__codelineno-0-432">432</a></span>
-<span class="normal"><a href="#__codelineno-0-433">433</a></span>
-<span class="normal"><a href="#__codelineno-0-434">434</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-404" name="__codelineno-0-404"></a><span class="nd">@property</span>
-<a id="__codelineno-0-405" name="__codelineno-0-405"></a><span class="k">def</span> <span class="nf">overrides</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">OverrideSpecifier</span><span class="p">]:</span>
-<a id="__codelineno-0-406" name="__codelineno-0-406"></a>    <span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-407" name="__codelineno-0-407"></a><span class="sd">    Returns override specified as specified in the source code.</span>
-<a id="__codelineno-0-408" name="__codelineno-0-408"></a>
-<a id="__codelineno-0-409" name="__codelineno-0-409"></a><span class="sd">    !!! example</span>
-<a id="__codelineno-0-410" name="__codelineno-0-410"></a><span class="sd">        `A1.foo` in lines 2-4 and `A2.foo` in lines 8-10 do not have an override specifier.</span>
-<a id="__codelineno-0-411" name="__codelineno-0-411"></a>
-<a id="__codelineno-0-412" name="__codelineno-0-412"></a><span class="sd">        `B.foo` in line 14 has an override specifier with the [overrides][woke.ast.ir.meta.override_specifier.OverrideSpecifier.overrides] property containing two items referencing the contracts `A1` and `A2` ([ContractDefinition][woke.ast.ir.declaration.contract_definition.ContractDefinition]).</span>
-<a id="__codelineno-0-413" name="__codelineno-0-413"></a><span class="sd">        ```solidity linenums=&quot;1&quot;</span>
-<a id="__codelineno-0-414" name="__codelineno-0-414"></a><span class="sd">        contract A1 {</span>
-<a id="__codelineno-0-415" name="__codelineno-0-415"></a><span class="sd">            function foo(uint, bool) external virtual returns(uint) {</span>
-<a id="__codelineno-0-416" name="__codelineno-0-416"></a><span class="sd">                return 1;</span>
-<a id="__codelineno-0-417" name="__codelineno-0-417"></a><span class="sd">            }</span>
-<a id="__codelineno-0-418" name="__codelineno-0-418"></a><span class="sd">        }</span>
-<a id="__codelineno-0-419" name="__codelineno-0-419"></a>
-<a id="__codelineno-0-420" name="__codelineno-0-420"></a><span class="sd">        contract A2 {</span>
-<a id="__codelineno-0-421" name="__codelineno-0-421"></a><span class="sd">            function foo(uint, bool) external virtual returns(uint) {</span>
-<a id="__codelineno-0-422" name="__codelineno-0-422"></a><span class="sd">                return 2;</span>
-<a id="__codelineno-0-423" name="__codelineno-0-423"></a><span class="sd">            }</span>
-<a id="__codelineno-0-424" name="__codelineno-0-424"></a><span class="sd">        }</span>
-<a id="__codelineno-0-425" name="__codelineno-0-425"></a>
-<a id="__codelineno-0-426" name="__codelineno-0-426"></a><span class="sd">        contract B is A1, A2 {</span>
-<a id="__codelineno-0-427" name="__codelineno-0-427"></a><span class="sd">            mapping(uint =&gt; mapping(bool =&gt; uint)) public override(A1, A2) foo;</span>
-<a id="__codelineno-0-428" name="__codelineno-0-428"></a><span class="sd">        }</span>
-<a id="__codelineno-0-429" name="__codelineno-0-429"></a><span class="sd">        ```</span>
-<a id="__codelineno-0-430" name="__codelineno-0-430"></a>
-<a id="__codelineno-0-431" name="__codelineno-0-431"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-432" name="__codelineno-0-432"></a><span class="sd">        Override specifier, if any.</span>
-<a id="__codelineno-0-433" name="__codelineno-0-433"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-434" name="__codelineno-0-434"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_overrides</span>
-</code></pre></div></td></tr></table></div>
-      </details>
   </div>
 
 </div>
 
-<div class="doc doc-object doc-function">
+<div class="doc doc-object doc-attribute">
 
 
 
 <h4 class="doc doc-heading" id="woke.ast.ir.declaration.variable_declaration.VariableDeclaration.parent">
-<code class="highlight language-python"><span class="n">parent</span><span class="p">()</span></code>
+<code class="highlight language-python"><span class="n">parent</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ContractDefinition</span><span class="p">,</span> <span class="n">ParameterList</span><span class="p">,</span> <span class="n">SourceUnit</span><span class="p">,</span> <span class="n">StructDefinition</span><span class="p">,</span> <span class="n">VariableDeclarationStatement</span><span class="p">]</span></code>
   
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-property"><code>property</code></small>
@@ -2320,54 +2035,20 @@
         </tr>
     </tbody>
   </table>
-
-      <details class="quote">
-        <summary>Source code in <code>woke/ast/ir/declaration/variable_declaration.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-223">223</a></span>
-<span class="normal"><a href="#__codelineno-0-224">224</a></span>
-<span class="normal"><a href="#__codelineno-0-225">225</a></span>
-<span class="normal"><a href="#__codelineno-0-226">226</a></span>
-<span class="normal"><a href="#__codelineno-0-227">227</a></span>
-<span class="normal"><a href="#__codelineno-0-228">228</a></span>
-<span class="normal"><a href="#__codelineno-0-229">229</a></span>
-<span class="normal"><a href="#__codelineno-0-230">230</a></span>
-<span class="normal"><a href="#__codelineno-0-231">231</a></span>
-<span class="normal"><a href="#__codelineno-0-232">232</a></span>
-<span class="normal"><a href="#__codelineno-0-233">233</a></span>
-<span class="normal"><a href="#__codelineno-0-234">234</a></span>
-<span class="normal"><a href="#__codelineno-0-235">235</a></span>
-<span class="normal"><a href="#__codelineno-0-236">236</a></span>
-<span class="normal"><a href="#__codelineno-0-237">237</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-223" name="__codelineno-0-223"></a><span class="nd">@property</span>
-<a id="__codelineno-0-224" name="__codelineno-0-224"></a><span class="k">def</span> <span class="nf">parent</span><span class="p">(</span>
-<a id="__codelineno-0-225" name="__codelineno-0-225"></a>    <span class="bp">self</span><span class="p">,</span>
-<a id="__codelineno-0-226" name="__codelineno-0-226"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
-<a id="__codelineno-0-227" name="__codelineno-0-227"></a>    <span class="n">ContractDefinition</span><span class="p">,</span>
-<a id="__codelineno-0-228" name="__codelineno-0-228"></a>    <span class="n">ParameterList</span><span class="p">,</span>
-<a id="__codelineno-0-229" name="__codelineno-0-229"></a>    <span class="n">SourceUnit</span><span class="p">,</span>
-<a id="__codelineno-0-230" name="__codelineno-0-230"></a>    <span class="n">StructDefinition</span><span class="p">,</span>
-<a id="__codelineno-0-231" name="__codelineno-0-231"></a>    <span class="n">VariableDeclarationStatement</span><span class="p">,</span>
-<a id="__codelineno-0-232" name="__codelineno-0-232"></a><span class="p">]:</span>
-<a id="__codelineno-0-233" name="__codelineno-0-233"></a>    <span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-234" name="__codelineno-0-234"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-235" name="__codelineno-0-235"></a><span class="sd">        Parent IR node.</span>
-<a id="__codelineno-0-236" name="__codelineno-0-236"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-237" name="__codelineno-0-237"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span>
-</code></pre></div></td></tr></table></div>
-      </details>
   </div>
 
 </div>
 
-<div class="doc doc-object doc-function">
+<div class="doc doc-object doc-attribute">
 
 
 
 <h4 class="doc doc-heading" id="woke.ast.ir.declaration.variable_declaration.VariableDeclaration.type">
-<code class="highlight language-python"><span class="nb">type</span><span class="p">()</span></code>
+<code class="highlight language-python"><span class="nb">type</span><span class="p">:</span> <span class="n">TypeAbc</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-property"><code>property</code></small>
       <small class="doc doc-label doc-label-cached"><code>cached</code></small>
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
   </span>
 
 <a class="headerlink" href="#woke.ast.ir.declaration.variable_declaration.VariableDeclaration.type" title="Permanent link">#</a></h4>
@@ -2393,54 +2074,16 @@
         </tr>
     </tbody>
   </table>
-
-      <details class="quote">
-        <summary>Source code in <code>woke/ast/ir/declaration/variable_declaration.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-454">454</a></span>
-<span class="normal"><a href="#__codelineno-0-455">455</a></span>
-<span class="normal"><a href="#__codelineno-0-456">456</a></span>
-<span class="normal"><a href="#__codelineno-0-457">457</a></span>
-<span class="normal"><a href="#__codelineno-0-458">458</a></span>
-<span class="normal"><a href="#__codelineno-0-459">459</a></span>
-<span class="normal"><a href="#__codelineno-0-460">460</a></span>
-<span class="normal"><a href="#__codelineno-0-461">461</a></span>
-<span class="normal"><a href="#__codelineno-0-462">462</a></span>
-<span class="normal"><a href="#__codelineno-0-463">463</a></span>
-<span class="normal"><a href="#__codelineno-0-464">464</a></span>
-<span class="normal"><a href="#__codelineno-0-465">465</a></span>
-<span class="normal"><a href="#__codelineno-0-466">466</a></span>
-<span class="normal"><a href="#__codelineno-0-467">467</a></span>
-<span class="normal"><a href="#__codelineno-0-468">468</a></span>
-<span class="normal"><a href="#__codelineno-0-469">469</a></span>
-<span class="normal"><a href="#__codelineno-0-470">470</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-454" name="__codelineno-0-454"></a><span class="nd">@property</span>
-<a id="__codelineno-0-455" name="__codelineno-0-455"></a><span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>
-<a id="__codelineno-0-456" name="__codelineno-0-456"></a><span class="k">def</span> <span class="nf">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TypeAbc</span><span class="p">:</span>
-<a id="__codelineno-0-457" name="__codelineno-0-457"></a>    <span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-458" name="__codelineno-0-458"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-459" name="__codelineno-0-459"></a><span class="sd">        Type of the variable.</span>
-<a id="__codelineno-0-460" name="__codelineno-0-460"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-461" name="__codelineno-0-461"></a>    <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_type_descriptions</span><span class="o">.</span><span class="n">type_identifier</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-<a id="__codelineno-0-462" name="__codelineno-0-462"></a>
-<a id="__codelineno-0-463" name="__codelineno-0-463"></a>    <span class="n">type_identifier</span> <span class="o">=</span> <span class="n">StringReader</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_type_descriptions</span><span class="o">.</span><span class="n">type_identifier</span><span class="p">)</span>
-<a id="__codelineno-0-464" name="__codelineno-0-464"></a>    <span class="n">ret</span> <span class="o">=</span> <span class="n">TypeAbc</span><span class="o">.</span><span class="n">from_type_identifier</span><span class="p">(</span>
-<a id="__codelineno-0-465" name="__codelineno-0-465"></a>        <span class="n">type_identifier</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference_resolver</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cu_hash</span>
-<a id="__codelineno-0-466" name="__codelineno-0-466"></a>    <span class="p">)</span>
-<a id="__codelineno-0-467" name="__codelineno-0-467"></a>    <span class="k">assert</span> <span class="p">(</span>
-<a id="__codelineno-0-468" name="__codelineno-0-468"></a>        <span class="nb">len</span><span class="p">(</span><span class="n">type_identifier</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">ret</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-<a id="__codelineno-0-469" name="__codelineno-0-469"></a>    <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Failed to parse type identifier: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_type_descriptions</span><span class="o">.</span><span class="n">type_identifier</span><span class="si">}</span><span class="s2">&quot;</span>
-<a id="__codelineno-0-470" name="__codelineno-0-470"></a>    <span class="k">return</span> <span class="n">ret</span>
-</code></pre></div></td></tr></table></div>
-      </details>
   </div>
 
 </div>
 
-<div class="doc doc-object doc-function">
+<div class="doc doc-object doc-attribute">
 
 
 
 <h4 class="doc doc-heading" id="woke.ast.ir.declaration.variable_declaration.VariableDeclaration.type_name">
-<code class="highlight language-python"><span class="n">type_name</span><span class="p">()</span></code>
+<code class="highlight language-python"><span class="n">type_name</span><span class="p">:</span> <span class="n">TypeNameAbc</span></code>
   
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-property"><code>property</code></small>
@@ -2469,34 +2112,16 @@
         </tr>
     </tbody>
   </table>
-
-      <details class="quote">
-        <summary>Source code in <code>woke/ast/ir/declaration/variable_declaration.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-436">436</a></span>
-<span class="normal"><a href="#__codelineno-0-437">437</a></span>
-<span class="normal"><a href="#__codelineno-0-438">438</a></span>
-<span class="normal"><a href="#__codelineno-0-439">439</a></span>
-<span class="normal"><a href="#__codelineno-0-440">440</a></span>
-<span class="normal"><a href="#__codelineno-0-441">441</a></span>
-<span class="normal"><a href="#__codelineno-0-442">442</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-436" name="__codelineno-0-436"></a><span class="nd">@property</span>
-<a id="__codelineno-0-437" name="__codelineno-0-437"></a><span class="k">def</span> <span class="nf">type_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TypeNameAbc</span><span class="p">:</span>
-<a id="__codelineno-0-438" name="__codelineno-0-438"></a>    <span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-439" name="__codelineno-0-439"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-440" name="__codelineno-0-440"></a><span class="sd">        Type name IR node as present in the source code.</span>
-<a id="__codelineno-0-441" name="__codelineno-0-441"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-442" name="__codelineno-0-442"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_type_name</span>
-</code></pre></div></td></tr></table></div>
-      </details>
   </div>
 
 </div>
 
-<div class="doc doc-object doc-function">
+<div class="doc doc-object doc-attribute">
 
 
 
 <h4 class="doc doc-heading" id="woke.ast.ir.declaration.variable_declaration.VariableDeclaration.type_string">
-<code class="highlight language-python"><span class="n">type_string</span><span class="p">()</span></code>
+<code class="highlight language-python"><span class="n">type_string</span><span class="p">:</span> <span class="nb">str</span></code>
   
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-property"><code>property</code></small>
@@ -2525,36 +2150,16 @@
         </tr>
     </tbody>
   </table>
-
-      <details class="quote">
-        <summary>Source code in <code>woke/ast/ir/declaration/variable_declaration.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-472">472</a></span>
-<span class="normal"><a href="#__codelineno-0-473">473</a></span>
-<span class="normal"><a href="#__codelineno-0-474">474</a></span>
-<span class="normal"><a href="#__codelineno-0-475">475</a></span>
-<span class="normal"><a href="#__codelineno-0-476">476</a></span>
-<span class="normal"><a href="#__codelineno-0-477">477</a></span>
-<span class="normal"><a href="#__codelineno-0-478">478</a></span>
-<span class="normal"><a href="#__codelineno-0-479">479</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-472" name="__codelineno-0-472"></a><span class="nd">@property</span>
-<a id="__codelineno-0-473" name="__codelineno-0-473"></a><span class="k">def</span> <span class="nf">type_string</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<a id="__codelineno-0-474" name="__codelineno-0-474"></a>    <span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-475" name="__codelineno-0-475"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-476" name="__codelineno-0-476"></a><span class="sd">        User-friendly string describing the variable type.</span>
-<a id="__codelineno-0-477" name="__codelineno-0-477"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-478" name="__codelineno-0-478"></a>    <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_type_descriptions</span><span class="o">.</span><span class="n">type_string</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-<a id="__codelineno-0-479" name="__codelineno-0-479"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_type_descriptions</span><span class="o">.</span><span class="n">type_string</span>
-</code></pre></div></td></tr></table></div>
-      </details>
   </div>
 
 </div>
 
-<div class="doc doc-object doc-function">
+<div class="doc doc-object doc-attribute">
 
 
 
 <h4 class="doc doc-heading" id="woke.ast.ir.declaration.variable_declaration.VariableDeclaration.value">
-<code class="highlight language-python"><span class="n">value</span><span class="p">()</span></code>
+<code class="highlight language-python"><span class="n">value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ExpressionAbc</span><span class="p">]</span></code>
   
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-property"><code>property</code></small>
@@ -2585,38 +2190,16 @@ In this case, the initial value (if any) is set in the <a class="autorefs autore
         </tr>
     </tbody>
   </table>
-
-      <details class="quote">
-        <summary>Source code in <code>woke/ast/ir/declaration/variable_declaration.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-444">444</a></span>
-<span class="normal"><a href="#__codelineno-0-445">445</a></span>
-<span class="normal"><a href="#__codelineno-0-446">446</a></span>
-<span class="normal"><a href="#__codelineno-0-447">447</a></span>
-<span class="normal"><a href="#__codelineno-0-448">448</a></span>
-<span class="normal"><a href="#__codelineno-0-449">449</a></span>
-<span class="normal"><a href="#__codelineno-0-450">450</a></span>
-<span class="normal"><a href="#__codelineno-0-451">451</a></span>
-<span class="normal"><a href="#__codelineno-0-452">452</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-444" name="__codelineno-0-444"></a><span class="nd">@property</span>
-<a id="__codelineno-0-445" name="__codelineno-0-445"></a><span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ExpressionAbc</span><span class="p">]:</span>
-<a id="__codelineno-0-446" name="__codelineno-0-446"></a>    <span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-447" name="__codelineno-0-447"></a><span class="sd">    Is not set if the parent is a [VariableDeclarationStatement][woke.ast.ir.statement.variable_declaration_statement.VariableDeclarationStatement].</span>
-<a id="__codelineno-0-448" name="__codelineno-0-448"></a><span class="sd">    In this case, the initial value (if any) is set in the [VariableDeclarationStatement.initial_value][woke.ast.ir.statement.variable_declaration_statement.VariableDeclarationStatement.initial_value] property.</span>
-<a id="__codelineno-0-449" name="__codelineno-0-449"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-450" name="__codelineno-0-450"></a><span class="sd">        Initial value expression assigned to the variable in this declaration, if any.</span>
-<a id="__codelineno-0-451" name="__codelineno-0-451"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-452" name="__codelineno-0-452"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span>
-</code></pre></div></td></tr></table></div>
-      </details>
   </div>
 
 </div>
 
-<div class="doc doc-object doc-function">
+<div class="doc doc-object doc-attribute">
 
 
 
 <h4 class="doc doc-heading" id="woke.ast.ir.declaration.variable_declaration.VariableDeclaration.visibility">
-<code class="highlight language-python"><span class="n">visibility</span><span class="p">()</span></code>
+<code class="highlight language-python"><span class="n">visibility</span><span class="p">:</span> <span class="n">Visibility</span></code>
   
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-property"><code>property</code></small>
@@ -2645,27 +2228,11 @@ In this case, the initial value (if any) is set in the <a class="autorefs autore
         </tr>
     </tbody>
   </table>
-
-      <details class="quote">
-        <summary>Source code in <code>woke/ast/ir/declaration/variable_declaration.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-322">322</a></span>
-<span class="normal"><a href="#__codelineno-0-323">323</a></span>
-<span class="normal"><a href="#__codelineno-0-324">324</a></span>
-<span class="normal"><a href="#__codelineno-0-325">325</a></span>
-<span class="normal"><a href="#__codelineno-0-326">326</a></span>
-<span class="normal"><a href="#__codelineno-0-327">327</a></span>
-<span class="normal"><a href="#__codelineno-0-328">328</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-322" name="__codelineno-0-322"></a><span class="nd">@property</span>
-<a id="__codelineno-0-323" name="__codelineno-0-323"></a><span class="k">def</span> <span class="nf">visibility</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Visibility</span><span class="p">:</span>
-<a id="__codelineno-0-324" name="__codelineno-0-324"></a>    <span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-325" name="__codelineno-0-325"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-326" name="__codelineno-0-326"></a><span class="sd">        Visibility of the variable.</span>
-<a id="__codelineno-0-327" name="__codelineno-0-327"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-328" name="__codelineno-0-328"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visibility</span>
-</code></pre></div></td></tr></table></div>
-      </details>
   </div>
 
 </div>
+
+
 
 
 
@@ -2684,16 +2251,21 @@ In this case, the initial value (if any) is set in the <a class="autorefs autore
 
 </div>
 
-              
-            </article>
-            
-          </div>
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
         </div>
         
-          <a href="#" class="md-top md-icon" data-md-component="top" hidden>
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
             Back to top
-          </a>
+          </button>
         
       </main>
       
@@ -2709,29 +2281,35 @@ In this case, the initial value (if any) is set in the <a class="autorefs autore
   
     
     
+    
+    
       
       
     
     <a href="https://github.com/Ackee-Blockchain" target="_blank" rel="noopener" title="github.com" class="md-social__link">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
     </a>
   
+    
+    
     
     
       
       
     
     <a href="https://twitter.com/ackeeblockchain" target="_blank" rel="noopener" title="twitter.com" class="md-social__link">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M459.37 151.716c.325 4.548.325 9.097.325 13.645 0 138.72-105.583 298.558-298.558 298.558-59.452 0-114.68-17.219-161.137-47.106 8.447.974 16.568 1.299 25.34 1.299 49.055 0 94.213-16.568 130.274-44.832-46.132-.975-84.792-31.188-98.112-72.772 6.498.974 12.995 1.624 19.818 1.624 9.421 0 18.843-1.3 27.614-3.573-48.081-9.747-84.143-51.98-84.143-102.985v-1.299c13.969 7.797 30.214 12.67 47.431 13.319-28.264-18.843-46.781-51.005-46.781-87.391 0-19.492 5.197-37.36 14.294-52.954 51.655 63.675 129.3 105.258 216.365 109.807-1.624-7.797-2.599-15.918-2.599-24.04 0-57.828 46.782-104.934 104.934-104.934 30.213 0 57.502 12.67 76.67 33.137 23.715-4.548 46.456-13.32 66.599-25.34-7.798 24.366-24.366 44.833-46.132 57.827 21.117-2.273 41.584-8.122 60.426-16.243-14.292 20.791-32.161 39.308-52.628 54.253z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M459.37 151.716c.325 4.548.325 9.097.325 13.645 0 138.72-105.583 298.558-298.558 298.558-59.452 0-114.68-17.219-161.137-47.106 8.447.974 16.568 1.299 25.34 1.299 49.055 0 94.213-16.568 130.274-44.832-46.132-.975-84.792-31.188-98.112-72.772 6.498.974 12.995 1.624 19.818 1.624 9.421 0 18.843-1.3 27.614-3.573-48.081-9.747-84.143-51.98-84.143-102.985v-1.299c13.969 7.797 30.214 12.67 47.431 13.319-28.264-18.843-46.781-51.005-46.781-87.391 0-19.492 5.197-37.36 14.294-52.954 51.655 63.675 129.3 105.258 216.365 109.807-1.624-7.797-2.599-15.918-2.599-24.04 0-57.828 46.782-104.934 104.934-104.934 30.213 0 57.502 12.67 76.67 33.137 23.715-4.548 46.456-13.32 66.599-25.34-7.798 24.366-24.366 44.833-46.132 57.827 21.117-2.273 41.584-8.122 60.426-16.243-14.292 20.791-32.161 39.308-52.628 54.253z"/></svg>
     </a>
   
+    
+    
     
     
       
       
     
     <a href="https://discord.gg/2HgPXQZVzP" target="_blank" rel="noopener" title="discord.gg" class="md-social__link">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M524.531 69.836a1.5 1.5 0 0 0-.764-.7A485.065 485.065 0 0 0 404.081 32.03a1.816 1.816 0 0 0-1.923.91 337.461 337.461 0 0 0-14.9 30.6 447.848 447.848 0 0 0-134.426 0 309.541 309.541 0 0 0-15.135-30.6 1.89 1.89 0 0 0-1.924-.91 483.689 483.689 0 0 0-119.688 37.107 1.712 1.712 0 0 0-.788.676C39.068 183.651 18.186 294.69 28.43 404.354a2.016 2.016 0 0 0 .765 1.375 487.666 487.666 0 0 0 146.825 74.189 1.9 1.9 0 0 0 2.063-.676A348.2 348.2 0 0 0 208.12 430.4a1.86 1.86 0 0 0-1.019-2.588 321.173 321.173 0 0 1-45.868-21.853 1.885 1.885 0 0 1-.185-3.126 251.047 251.047 0 0 0 9.109-7.137 1.819 1.819 0 0 1 1.9-.256c96.229 43.917 200.41 43.917 295.5 0a1.812 1.812 0 0 1 1.924.233 234.533 234.533 0 0 0 9.132 7.16 1.884 1.884 0 0 1-.162 3.126 301.407 301.407 0 0 1-45.89 21.83 1.875 1.875 0 0 0-1 2.611 391.055 391.055 0 0 0 30.014 48.815 1.864 1.864 0 0 0 2.063.7A486.048 486.048 0 0 0 610.7 405.729a1.882 1.882 0 0 0 .765-1.352c12.264-126.783-20.532-236.912-86.934-334.541ZM222.491 337.58c-28.972 0-52.844-26.587-52.844-59.239s23.409-59.241 52.844-59.241c29.665 0 53.306 26.82 52.843 59.239 0 32.654-23.41 59.241-52.843 59.241Zm195.38 0c-28.971 0-52.843-26.587-52.843-59.239s23.409-59.241 52.843-59.241c29.667 0 53.307 26.82 52.844 59.239 0 32.654-23.177 59.241-52.844 59.241Z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M524.531 69.836a1.5 1.5 0 0 0-.764-.7A485.065 485.065 0 0 0 404.081 32.03a1.816 1.816 0 0 0-1.923.91 337.461 337.461 0 0 0-14.9 30.6 447.848 447.848 0 0 0-134.426 0 309.541 309.541 0 0 0-15.135-30.6 1.89 1.89 0 0 0-1.924-.91 483.689 483.689 0 0 0-119.688 37.107 1.712 1.712 0 0 0-.788.676C39.068 183.651 18.186 294.69 28.43 404.354a2.016 2.016 0 0 0 .765 1.375 487.666 487.666 0 0 0 146.825 74.189 1.9 1.9 0 0 0 2.063-.676A348.2 348.2 0 0 0 208.12 430.4a1.86 1.86 0 0 0-1.019-2.588 321.173 321.173 0 0 1-45.868-21.853 1.885 1.885 0 0 1-.185-3.126 251.047 251.047 0 0 0 9.109-7.137 1.819 1.819 0 0 1 1.9-.256c96.229 43.917 200.41 43.917 295.5 0a1.812 1.812 0 0 1 1.924.233 234.533 234.533 0 0 0 9.132 7.16 1.884 1.884 0 0 1-.162 3.126 301.407 301.407 0 0 1-45.89 21.83 1.875 1.875 0 0 0-1 2.611 391.055 391.055 0 0 0 30.014 48.815 1.864 1.864 0 0 0 2.063.7A486.048 486.048 0 0 0 610.7 405.729a1.882 1.882 0 0 0 .765-1.352c12.264-126.783-20.532-236.912-86.934-334.541ZM222.491 337.58c-28.972 0-52.844-26.587-52.844-59.239s23.409-59.241 52.844-59.241c29.665 0 53.306 26.82 52.843 59.239 0 32.654-23.41 59.241-52.843 59.241Zm195.38 0c-28.971 0-52.843-26.587-52.843-59.239s23.409-59.241 52.843-59.241c29.667 0 53.307 26.82 52.844 59.239 0 32.654-23.177 59.241-52.844 59.241Z"/></svg>
     </a>
   
 </div>
@@ -2744,10 +2322,11 @@ In this case, the initial value (if any) is set in the <a class="autorefs autore
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "../../../..", "features": ["navigation.tracking", "navigation.sections", "navigation.indexes", "navigation.top"], "search": "../../../../assets/javascripts/workers/search.b97dbffb.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    <script id="__config" type="application/json">{"base": "../../../..", "features": ["navigation.tracking", "navigation.sections", "navigation.indexes", "navigation.top"], "search": "../../../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../../../assets/javascripts/bundle.6c7ad80a.min.js"></script>
+      <script src="../../../../assets/javascripts/bundle.51198bba.min.js"></script>
       
         <script src="../../../../js/mathjax.js"></script>
       
