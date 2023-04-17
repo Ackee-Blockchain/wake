@@ -51,6 +51,22 @@ files = [
 ]
 
 [[package]]
+name = "abch-tree-sitter-solidity"
+version = "1.0.6"
+description = "Solidity grammar for the Tree-sitter parsing library"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "abch_tree_sitter_solidity-1.0.6-py3-none-macosx_11_7_x86_64.whl", hash = "sha256:dc8fb3e2bcc7413d4be34dcb0a85acb0cd24108b2eb2bf688ff60d5d76197cd6"},
+    {file = "abch_tree_sitter_solidity-1.0.6-py3-none-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:9917b1cc55c20cb8f8accf174343a55367953fd9ac964d44af66efa475b863c0"},
+    {file = "abch_tree_sitter_solidity-1.0.6-py3-none-win_amd64.whl", hash = "sha256:e227558fc3c61d4268ef92fef9e9868a2a941d6bdb6af56c2f97f7e75680fd2b"},
+]
+
+[package.dependencies]
+abch-tree-sitter = ">=1.0.1"
+
+[[package]]
 name = "aiofiles"
 version = "0.8.0"
 description = "File support for asyncio."
@@ -2900,4 +2916,4 @@ tests = ["pytest-asyncio", "GitPython"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7.9"
-content-hash = "c5f7d57194840a99f1a77cdc9821c5b0884d46e7bac4895858588ce20664cfe4"
+content-hash = "71d3ade92b535d002c83559a7a427330992aeae9761e93da5c9382bcfc75ad08"
