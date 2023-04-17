@@ -12,10 +12,12 @@
         <meta name="author" content="Ackee Blockchain">
       
       
-        <link rel="canonical" href="https://ackee-blockchain.github.io/woke/1.1.0/api-reference/ir/declarations/contract-definition/">
+        <link rel="canonical" href="https://ackee-blockchain.github.io/woke/latest/api-reference/ir/declarations/contract-definition/">
+      
+      
       
       <link rel="icon" href="../../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.3.0, mkdocs-material-8.3.9">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.6">
     
     
       
@@ -23,13 +25,13 @@
       
     
     
-      <link rel="stylesheet" href="../../../../assets/stylesheets/main.1d29e8d0.min.css">
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.ded33207.min.css">
       
         
-        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.cbb835fc.min.css">
-        
+        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.a0c5b2b5.min.css">
       
       
+
     
     
     
@@ -46,10 +48,11 @@
     
       <link rel="stylesheet" href="../../../../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("../../../..",location),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
+    
     
     
   </head>
@@ -83,16 +86,32 @@
       
     </div>
     
-      <div data-md-component="outdated" hidden>
-        <aside class="md-banner md-banner--warning">
-          
-        </aside>
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+          <aside class="md-banner md-banner--warning">
+            <div class="md-banner__inner md-grid md-typeset">
+              
+  <span class="twemoji">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.3 27.7.2 40.1S486.3 480 472 480H40c-14.3 0-27.6-7.7-34.7-20.1s-7-27.8.2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24v112c0 13.3 10.7 24 24 24s24-10.7 24-24V184c0-13.3-10.7-24-24-24zm32 224a32 32 0 1 0-64 0 32 32 0 1 0 64 0z"/></svg>
+  </span>
+  You're not viewing the latest version.
+
+  <a href="../../../../..">
+    <strong>Click here to go to latest.</strong>
+  </a>
+
+            </div>
+            <script>var el=document.querySelector("[data-md-component=outdated]"),outdated=__md_get("__outdated",sessionStorage);!0===outdated&&el&&(el.hidden=!1)</script>
+          </aside>
+        
       </div>
     
     
       
 
-<header class="md-header" data-md-component="header">
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../../../.." title="Woke" class="md-header__button md-logo" aria-label="Woke" data-md-component="logo">
       
@@ -122,7 +141,6 @@
       <form class="md-header__option" data-md-component="palette">
         
           
-          
           <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="" data-md-color-accent=""  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
           
             <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
@@ -130,7 +148,6 @@
             </label>
           
         
-          
           
           <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="" data-md-color-accent=""  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
           
@@ -157,7 +174,7 @@
       </label>
       <nav class="md-search__options" aria-label="Search">
         
-        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
         </button>
       </nav>
@@ -169,7 +186,7 @@
           <div class="md-search-result__meta">
             Initializing search
           </div>
-          <ol class="md-search-result__list"></ol>
+          <ol class="md-search-result__list" role="presentation"></ol>
         </div>
       </div>
     </div>
@@ -181,7 +198,7 @@
         <a href="https://github.com/Ackee-Blockchain/woke" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
   </div>
   <div class="md-source__repository">
     Ackee-Blockchain/woke
@@ -225,7 +242,7 @@
       <a href="https://github.com/Ackee-Blockchain/woke" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
   </div>
   <div class="md-source__repository">
     Ackee-Blockchain/woke
@@ -382,21 +399,119 @@
         
           <li class="md-nav__item">
   <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.abstract" class="md-nav__link">
-    abstract()
+    abstract
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.base_contracts" class="md-nav__link">
-    base_contracts()
+    base_contracts
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.child_contracts" class="md-nav__link">
-    child_contracts()
+    child_contracts
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.declared_variables" class="md-nav__link">
+    declared_variables
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.documentation" class="md-nav__link">
+    documentation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.enums" class="md-nav__link">
+    enums
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.errors" class="md-nav__link">
+    errors
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.events" class="md-nav__link">
+    events
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.fully_implemented" class="md-nav__link">
+    fully_implemented
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.functions" class="md-nav__link">
+    functions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.kind" class="md-nav__link">
+    kind
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.linearized_base_contracts" class="md-nav__link">
+    linearized_base_contracts
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.modifiers" class="md-nav__link">
+    modifiers
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.parent" class="md-nav__link">
+    parent
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.structs" class="md-nav__link">
+    structs
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.user_defined_value_types" class="md-nav__link">
+    user_defined_value_types
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.using_for_directives" class="md-nav__link">
+    using_for_directives
   </a>
   
 </li>
@@ -404,104 +519,6 @@
           <li class="md-nav__item">
   <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.declarations_iter" class="md-nav__link">
     declarations_iter()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.declared_variables" class="md-nav__link">
-    declared_variables()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.documentation" class="md-nav__link">
-    documentation()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.enums" class="md-nav__link">
-    enums()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.errors" class="md-nav__link">
-    errors()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.events" class="md-nav__link">
-    events()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.fully_implemented" class="md-nav__link">
-    fully_implemented()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.functions" class="md-nav__link">
-    functions()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.kind" class="md-nav__link">
-    kind()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.linearized_base_contracts" class="md-nav__link">
-    linearized_base_contracts()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.modifiers" class="md-nav__link">
-    modifiers()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.parent" class="md-nav__link">
-    parent()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.structs" class="md-nav__link">
-    structs()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.user_defined_value_types" class="md-nav__link">
-    user_defined_value_types()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.using_for_directives" class="md-nav__link">
-    using_for_directives()
   </a>
   
 </li>
@@ -524,14 +541,14 @@
               </div>
             
           
-          <div class="md-content" data-md-component="content">
-            <article class="md-content__inner md-typeset">
-              
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
                 
-  <a href="https://github.com/Ackee-Blockchain/woke/edit/main/docs/api-reference/ir/declarations/contract-definition.md" title="Edit this page" class="md-content__button md-icon">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
-  </a>
+                  
 
+  
+  
 
 
   <h1>Contract definition</h1>
@@ -586,20 +603,20 @@
       <p>Definition of a contract, library or interface. <a class="autorefs autorefs-internal" href="../../abc/#woke.ast.ir.abc.IrAbc.byte_location">byte_location</a> also includes the contract body.</p>
 <div class="admonition example">
 <p class="admonition-title">Example</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">contract</span><span class="w"> </span><span class="ni">C</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kt">uint</span><span class="w"> </span><span class="nv">x</span><span class="p">;</span><span class="w"></span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">f</span><span class="p">()</span><span class="w"> </span><span class="kt">public</span><span class="w"> </span><span class="p">{}</span><span class="w"></span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">}</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">contract</span><span class="w"> </span><span class="ni">C</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kt">uint</span><span class="w"> </span><span class="nv">x</span><span class="p">;</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">f</span><span class="p">()</span><span class="w"> </span><span class="kt">public</span><span class="w"> </span><span class="p">{}</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">}</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>interface<span class="w"> </span>I<span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">f</span><span class="p">()</span><span class="w"> </span><span class="kt">external</span><span class="p">;</span><span class="w"></span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="p">}</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>interface<span class="w"> </span>I<span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">f</span><span class="p">()</span><span class="w"> </span><span class="kt">external</span><span class="p">;</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="p">}</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kt">library</span><span class="w"> </span>L<span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">f</span><span class="p">()</span><span class="w"> </span><span class="kt">internal</span><span class="w"> </span>pure<span class="w"> </span><span class="kt">returns</span><span class="w"> </span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">        </span><span class="kt">return</span><span class="w"> </span><span class="m m-Decimal">7</span><span class="p">;</span><span class="w"></span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="p">}</span><span class="w"></span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="p">}</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kt">library</span><span class="w"> </span>L<span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">f</span><span class="p">()</span><span class="w"> </span><span class="kt">internal</span><span class="w"> </span>pure<span class="w"> </span><span class="kt">returns</span><span class="w"> </span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">        </span><span class="kt">return</span><span class="w"> </span><span class="m m-Decimal">7</span><span class="p">;</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="p">}</span>
 </code></pre></div>
 </div>
 
@@ -994,7 +1011,7 @@
 <span class="normal"><a href="#__codelineno-0-430">430</a></span>
 <span class="normal"><a href="#__codelineno-0-431">431</a></span>
 <span class="normal"><a href="#__codelineno-0-432">432</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="k">class</span> <span class="nc">ContractDefinition</span><span class="p">(</span><span class="n">DeclarationAbc</span><span class="p">):</span>
-<a id="__codelineno-0-46" name="__codelineno-0-46"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="sd">    Definition of a contract, library or interface. [byte_location][woke.ast.ir.abc.IrAbc.byte_location] also includes the contract body.</span>
 <a id="__codelineno-0-48" name="__codelineno-0-48"></a>
 <a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="sd">    !!! example</span>
@@ -1180,7 +1197,7 @@
 <a id="__codelineno-0-229" name="__codelineno-0-229"></a>
 <a id="__codelineno-0-230" name="__codelineno-0-230"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-231" name="__codelineno-0-231"></a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SourceUnit</span><span class="p">:</span>
-<a id="__codelineno-0-232" name="__codelineno-0-232"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-232" name="__codelineno-0-232"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-233" name="__codelineno-0-233"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-234" name="__codelineno-0-234"></a><span class="sd">            Parent IR node.</span>
 <a id="__codelineno-0-235" name="__codelineno-0-235"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1193,7 +1210,7 @@
 <a id="__codelineno-0-242" name="__codelineno-0-242"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-243" name="__codelineno-0-243"></a>    <span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>
 <a id="__codelineno-0-244" name="__codelineno-0-244"></a>    <span class="k">def</span> <span class="nf">declaration_string</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<a id="__codelineno-0-245" name="__codelineno-0-245"></a>        <span class="n">ret</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;abstract &#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">abstract</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="si">}{</span><span class="bp">self</span><span class="o">.</span><span class="n">kind</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+<a id="__codelineno-0-245" name="__codelineno-0-245"></a>        <span class="n">ret</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;abstract &#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">abstract</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="si">}{</span><span class="bp">self</span><span class="o">.</span><span class="n">kind</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
 <a id="__codelineno-0-246" name="__codelineno-0-246"></a>        <span class="n">ret</span> <span class="o">+=</span> <span class="p">(</span>
 <a id="__codelineno-0-247" name="__codelineno-0-247"></a>            <span class="s2">&quot; is &quot;</span> <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">source</span> <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_contracts</span><span class="p">)</span>
 <a id="__codelineno-0-248" name="__codelineno-0-248"></a>            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_contracts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
@@ -1218,7 +1235,7 @@
 <a id="__codelineno-0-267" name="__codelineno-0-267"></a>
 <a id="__codelineno-0-268" name="__codelineno-0-268"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-269" name="__codelineno-0-269"></a>    <span class="k">def</span> <span class="nf">abstract</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-270" name="__codelineno-0-270"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-270" name="__codelineno-0-270"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-271" name="__codelineno-0-271"></a><span class="sd">        Is `False` if the [kind][woke.ast.ir.declaration.contract_definition.ContractDefinition.kind] is [ContractKind.LIBRARY][woke.ast.enums.ContractKind.LIBRARY] or [ContractKind.INTERFACE][woke.ast.enums.ContractKind.INTERFACE].</span>
 <a id="__codelineno-0-272" name="__codelineno-0-272"></a>
 <a id="__codelineno-0-273" name="__codelineno-0-273"></a><span class="sd">        Returns:</span>
@@ -1228,7 +1245,7 @@
 <a id="__codelineno-0-277" name="__codelineno-0-277"></a>
 <a id="__codelineno-0-278" name="__codelineno-0-278"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-279" name="__codelineno-0-279"></a>    <span class="k">def</span> <span class="nf">base_contracts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">InheritanceSpecifier</span><span class="p">]:</span>
-<a id="__codelineno-0-280" name="__codelineno-0-280"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-280" name="__codelineno-0-280"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-281" name="__codelineno-0-281"></a><span class="sd">        Returns base contracts as specified in the source code. Does not return all base contracts (recursively).</span>
 <a id="__codelineno-0-282" name="__codelineno-0-282"></a><span class="sd">        !!! example</span>
 <a id="__codelineno-0-283" name="__codelineno-0-283"></a><span class="sd">            `A1` lists the interface `I` as a base contract.</span>
@@ -1249,7 +1266,7 @@
 <a id="__codelineno-0-298" name="__codelineno-0-298"></a>
 <a id="__codelineno-0-299" name="__codelineno-0-299"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-300" name="__codelineno-0-300"></a>    <span class="k">def</span> <span class="nf">child_contracts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenSet</span><span class="p">[</span><span class="n">ContractDefinition</span><span class="p">]:</span>
-<a id="__codelineno-0-301" name="__codelineno-0-301"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-301" name="__codelineno-0-301"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-302" name="__codelineno-0-302"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-303" name="__codelineno-0-303"></a><span class="sd">            Contracts that list this contract in their [base_contracts][woke.ast.ir.declaration.contract_definition.ContractDefinition.base_contracts] property.</span>
 <a id="__codelineno-0-304" name="__codelineno-0-304"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1257,7 +1274,7 @@
 <a id="__codelineno-0-306" name="__codelineno-0-306"></a>
 <a id="__codelineno-0-307" name="__codelineno-0-307"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-308" name="__codelineno-0-308"></a>    <span class="k">def</span> <span class="nf">kind</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ContractKind</span><span class="p">:</span>
-<a id="__codelineno-0-309" name="__codelineno-0-309"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-309" name="__codelineno-0-309"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-310" name="__codelineno-0-310"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-311" name="__codelineno-0-311"></a><span class="sd">            Contract kind.</span>
 <a id="__codelineno-0-312" name="__codelineno-0-312"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1265,7 +1282,7 @@
 <a id="__codelineno-0-314" name="__codelineno-0-314"></a>
 <a id="__codelineno-0-315" name="__codelineno-0-315"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-316" name="__codelineno-0-316"></a>    <span class="k">def</span> <span class="nf">fully_implemented</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
-<a id="__codelineno-0-317" name="__codelineno-0-317"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-317" name="__codelineno-0-317"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-318" name="__codelineno-0-318"></a><span class="sd">        Is `None` when a file that imports this contract cannot be compiled. This may happen in the LSP server where partial project analysis is supported.</span>
 <a id="__codelineno-0-319" name="__codelineno-0-319"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-320" name="__codelineno-0-320"></a><span class="sd">            `True` if all functions and modifiers of the contract are implemented, `False` otherwise.</span>
@@ -1274,7 +1291,7 @@
 <a id="__codelineno-0-323" name="__codelineno-0-323"></a>
 <a id="__codelineno-0-324" name="__codelineno-0-324"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-325" name="__codelineno-0-325"></a>    <span class="k">def</span> <span class="nf">linearized_base_contracts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">ContractDefinition</span><span class="p">]:</span>
-<a id="__codelineno-0-326" name="__codelineno-0-326"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-326" name="__codelineno-0-326"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-327" name="__codelineno-0-327"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-328" name="__codelineno-0-328"></a><span class="sd">            C3 linearized list of all base contracts.</span>
 <a id="__codelineno-0-329" name="__codelineno-0-329"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1287,7 +1304,7 @@
 <a id="__codelineno-0-336" name="__codelineno-0-336"></a>
 <a id="__codelineno-0-337" name="__codelineno-0-337"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-338" name="__codelineno-0-338"></a>    <span class="k">def</span> <span class="nf">documentation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">StructuredDocumentation</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
-<a id="__codelineno-0-339" name="__codelineno-0-339"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-339" name="__codelineno-0-339"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-340" name="__codelineno-0-340"></a><span class="sd">        Of [StructuredDocumentation][woke.ast.ir.meta.structured_documentation.StructuredDocumentation] type since Solidity 0.6.3.</span>
 <a id="__codelineno-0-341" name="__codelineno-0-341"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-342" name="__codelineno-0-342"></a><span class="sd">            [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation of this contract, if any.</span>
@@ -1296,7 +1313,7 @@
 <a id="__codelineno-0-345" name="__codelineno-0-345"></a>
 <a id="__codelineno-0-346" name="__codelineno-0-346"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-347" name="__codelineno-0-347"></a>    <span class="k">def</span> <span class="nf">enums</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">EnumDefinition</span><span class="p">]:</span>
-<a id="__codelineno-0-348" name="__codelineno-0-348"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-348" name="__codelineno-0-348"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-349" name="__codelineno-0-349"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-350" name="__codelineno-0-350"></a><span class="sd">            Enum definitions contained in this contract.</span>
 <a id="__codelineno-0-351" name="__codelineno-0-351"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1304,7 +1321,7 @@
 <a id="__codelineno-0-353" name="__codelineno-0-353"></a>
 <a id="__codelineno-0-354" name="__codelineno-0-354"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-355" name="__codelineno-0-355"></a>    <span class="k">def</span> <span class="nf">errors</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">ErrorDefinition</span><span class="p">]:</span>
-<a id="__codelineno-0-356" name="__codelineno-0-356"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-356" name="__codelineno-0-356"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-357" name="__codelineno-0-357"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-358" name="__codelineno-0-358"></a><span class="sd">            Error definitions contained in this contract.</span>
 <a id="__codelineno-0-359" name="__codelineno-0-359"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1312,7 +1329,7 @@
 <a id="__codelineno-0-361" name="__codelineno-0-361"></a>
 <a id="__codelineno-0-362" name="__codelineno-0-362"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-363" name="__codelineno-0-363"></a>    <span class="k">def</span> <span class="nf">events</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">EventDefinition</span><span class="p">]:</span>
-<a id="__codelineno-0-364" name="__codelineno-0-364"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-364" name="__codelineno-0-364"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-365" name="__codelineno-0-365"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-366" name="__codelineno-0-366"></a><span class="sd">            Event definitions contained in this contract.</span>
 <a id="__codelineno-0-367" name="__codelineno-0-367"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1320,7 +1337,7 @@
 <a id="__codelineno-0-369" name="__codelineno-0-369"></a>
 <a id="__codelineno-0-370" name="__codelineno-0-370"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-371" name="__codelineno-0-371"></a>    <span class="k">def</span> <span class="nf">functions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">FunctionDefinition</span><span class="p">]:</span>
-<a id="__codelineno-0-372" name="__codelineno-0-372"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-372" name="__codelineno-0-372"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-373" name="__codelineno-0-373"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-374" name="__codelineno-0-374"></a><span class="sd">            Function definitions contained in this contract.</span>
 <a id="__codelineno-0-375" name="__codelineno-0-375"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1328,7 +1345,7 @@
 <a id="__codelineno-0-377" name="__codelineno-0-377"></a>
 <a id="__codelineno-0-378" name="__codelineno-0-378"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-379" name="__codelineno-0-379"></a>    <span class="k">def</span> <span class="nf">modifiers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">ModifierDefinition</span><span class="p">]:</span>
-<a id="__codelineno-0-380" name="__codelineno-0-380"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-380" name="__codelineno-0-380"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-381" name="__codelineno-0-381"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-382" name="__codelineno-0-382"></a><span class="sd">            Modifier definitions contained in this contract.</span>
 <a id="__codelineno-0-383" name="__codelineno-0-383"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1336,7 +1353,7 @@
 <a id="__codelineno-0-385" name="__codelineno-0-385"></a>
 <a id="__codelineno-0-386" name="__codelineno-0-386"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-387" name="__codelineno-0-387"></a>    <span class="k">def</span> <span class="nf">structs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">StructDefinition</span><span class="p">]:</span>
-<a id="__codelineno-0-388" name="__codelineno-0-388"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-388" name="__codelineno-0-388"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-389" name="__codelineno-0-389"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-390" name="__codelineno-0-390"></a><span class="sd">            Struct definitions contained in this contract.</span>
 <a id="__codelineno-0-391" name="__codelineno-0-391"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1344,7 +1361,7 @@
 <a id="__codelineno-0-393" name="__codelineno-0-393"></a>
 <a id="__codelineno-0-394" name="__codelineno-0-394"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-395" name="__codelineno-0-395"></a>    <span class="k">def</span> <span class="nf">user_defined_value_types</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">UserDefinedValueTypeDefinition</span><span class="p">]:</span>
-<a id="__codelineno-0-396" name="__codelineno-0-396"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-396" name="__codelineno-0-396"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-397" name="__codelineno-0-397"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-398" name="__codelineno-0-398"></a><span class="sd">            User defined value type definitions contained in this contract.</span>
 <a id="__codelineno-0-399" name="__codelineno-0-399"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1352,7 +1369,7 @@
 <a id="__codelineno-0-401" name="__codelineno-0-401"></a>
 <a id="__codelineno-0-402" name="__codelineno-0-402"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-403" name="__codelineno-0-403"></a>    <span class="k">def</span> <span class="nf">using_for_directives</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">UsingForDirective</span><span class="p">]:</span>
-<a id="__codelineno-0-404" name="__codelineno-0-404"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-404" name="__codelineno-0-404"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-405" name="__codelineno-0-405"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-406" name="__codelineno-0-406"></a><span class="sd">            Using for directives contained in this contract.</span>
 <a id="__codelineno-0-407" name="__codelineno-0-407"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1360,14 +1377,14 @@
 <a id="__codelineno-0-409" name="__codelineno-0-409"></a>
 <a id="__codelineno-0-410" name="__codelineno-0-410"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-411" name="__codelineno-0-411"></a>    <span class="k">def</span> <span class="nf">declared_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">VariableDeclaration</span><span class="p">]:</span>
-<a id="__codelineno-0-412" name="__codelineno-0-412"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-412" name="__codelineno-0-412"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-413" name="__codelineno-0-413"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-414" name="__codelineno-0-414"></a><span class="sd">            Variable declarations contained in this contract.</span>
 <a id="__codelineno-0-415" name="__codelineno-0-415"></a><span class="sd">        &quot;&quot;&quot;</span>
 <a id="__codelineno-0-416" name="__codelineno-0-416"></a>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_declared_variables</span><span class="p">)</span>
 <a id="__codelineno-0-417" name="__codelineno-0-417"></a>
 <a id="__codelineno-0-418" name="__codelineno-0-418"></a>    <span class="k">def</span> <span class="nf">declarations_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">DeclarationAbc</span><span class="p">]:</span>
-<a id="__codelineno-0-419" name="__codelineno-0-419"></a>        <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-419" name="__codelineno-0-419"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-420" name="__codelineno-0-420"></a><span class="sd">        Yields:</span>
 <a id="__codelineno-0-421" name="__codelineno-0-421"></a><span class="sd">            All declarations contained in this contract.</span>
 <a id="__codelineno-0-422" name="__codelineno-0-422"></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -1394,14 +1411,12 @@
 
 
 
-
-
-<div class="doc doc-object doc-function">
+<div class="doc doc-object doc-attribute">
 
 
 
 <h4 class="doc doc-heading" id="woke.ast.ir.declaration.contract_definition.ContractDefinition.abstract">
-<code class="highlight language-python"><span class="n">abstract</span><span class="p">()</span></code>
+<code class="highlight language-python"><span class="n">abstract</span><span class="p">:</span> <span class="nb">bool</span></code>
   
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-property"><code>property</code></small>
@@ -1431,38 +1446,16 @@
         </tr>
     </tbody>
   </table>
-
-      <details class="quote">
-        <summary>Source code in <code>woke/ast/ir/declaration/contract_definition.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-268">268</a></span>
-<span class="normal"><a href="#__codelineno-0-269">269</a></span>
-<span class="normal"><a href="#__codelineno-0-270">270</a></span>
-<span class="normal"><a href="#__codelineno-0-271">271</a></span>
-<span class="normal"><a href="#__codelineno-0-272">272</a></span>
-<span class="normal"><a href="#__codelineno-0-273">273</a></span>
-<span class="normal"><a href="#__codelineno-0-274">274</a></span>
-<span class="normal"><a href="#__codelineno-0-275">275</a></span>
-<span class="normal"><a href="#__codelineno-0-276">276</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-268" name="__codelineno-0-268"></a><span class="nd">@property</span>
-<a id="__codelineno-0-269" name="__codelineno-0-269"></a><span class="k">def</span> <span class="nf">abstract</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-270" name="__codelineno-0-270"></a>    <span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-271" name="__codelineno-0-271"></a><span class="sd">    Is `False` if the [kind][woke.ast.ir.declaration.contract_definition.ContractDefinition.kind] is [ContractKind.LIBRARY][woke.ast.enums.ContractKind.LIBRARY] or [ContractKind.INTERFACE][woke.ast.enums.ContractKind.INTERFACE].</span>
-<a id="__codelineno-0-272" name="__codelineno-0-272"></a>
-<a id="__codelineno-0-273" name="__codelineno-0-273"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-274" name="__codelineno-0-274"></a><span class="sd">        `True` if the contract is abstract, `False` otherwise.</span>
-<a id="__codelineno-0-275" name="__codelineno-0-275"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-276" name="__codelineno-0-276"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_abstract</span>
-</code></pre></div></td></tr></table></div>
-      </details>
   </div>
 
 </div>
 
-<div class="doc doc-object doc-function">
+<div class="doc doc-object doc-attribute">
 
 
 
 <h4 class="doc doc-heading" id="woke.ast.ir.declaration.contract_definition.ContractDefinition.base_contracts">
-<code class="highlight language-python"><span class="n">base_contracts</span><span class="p">()</span></code>
+<code class="highlight language-python"><span class="n">base_contracts</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">InheritanceSpecifier</span><span class="p">]</span></code>
   
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-property"><code>property</code></small>
@@ -1479,10 +1472,10 @@
 <p><code>A1</code> lists the interface <code>I</code> as a base contract.</p>
 <p><code>A2</code> lists the interface <code>I</code> as a base contract.</p>
 <p><code>B</code> lists the contracts <code>A1</code> and <code>A2</code> as base contracts.
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>interface<span class="w"> </span>I<span class="w"> </span><span class="p">{}</span><span class="w"></span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">contract</span><span class="w"> </span><span class="ni">A1</span><span class="w"> </span><span class="kt">is</span><span class="w"> </span>I<span class="w"> </span><span class="p">{}</span><span class="w"></span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="k">contract</span><span class="w"> </span><span class="ni">A2</span><span class="w"> </span><span class="kt">is</span><span class="w"> </span>I<span class="w"> </span><span class="p">{}</span><span class="w"></span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="k">contract</span><span class="w"> </span><span class="ni">B</span><span class="w"> </span><span class="kt">is</span><span class="w"> </span>A1<span class="p">,</span><span class="w"> </span>A2<span class="w"> </span><span class="p">{}</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>interface<span class="w"> </span>I<span class="w"> </span><span class="p">{}</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">contract</span><span class="w"> </span><span class="ni">A1</span><span class="w"> </span><span class="kt">is</span><span class="w"> </span>I<span class="w"> </span><span class="p">{}</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="k">contract</span><span class="w"> </span><span class="ni">A2</span><span class="w"> </span><span class="kt">is</span><span class="w"> </span>I<span class="w"> </span><span class="p">{}</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="k">contract</span><span class="w"> </span><span class="ni">B</span><span class="w"> </span><span class="kt">is</span><span class="w"> </span>A1<span class="p">,</span><span class="w"> </span>A2<span class="w"> </span><span class="p">{}</span>
 </code></pre></div></p>
 </div>
 
@@ -1503,60 +1496,16 @@
         </tr>
     </tbody>
   </table>
-
-      <details class="quote">
-        <summary>Source code in <code>woke/ast/ir/declaration/contract_definition.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-278">278</a></span>
-<span class="normal"><a href="#__codelineno-0-279">279</a></span>
-<span class="normal"><a href="#__codelineno-0-280">280</a></span>
-<span class="normal"><a href="#__codelineno-0-281">281</a></span>
-<span class="normal"><a href="#__codelineno-0-282">282</a></span>
-<span class="normal"><a href="#__codelineno-0-283">283</a></span>
-<span class="normal"><a href="#__codelineno-0-284">284</a></span>
-<span class="normal"><a href="#__codelineno-0-285">285</a></span>
-<span class="normal"><a href="#__codelineno-0-286">286</a></span>
-<span class="normal"><a href="#__codelineno-0-287">287</a></span>
-<span class="normal"><a href="#__codelineno-0-288">288</a></span>
-<span class="normal"><a href="#__codelineno-0-289">289</a></span>
-<span class="normal"><a href="#__codelineno-0-290">290</a></span>
-<span class="normal"><a href="#__codelineno-0-291">291</a></span>
-<span class="normal"><a href="#__codelineno-0-292">292</a></span>
-<span class="normal"><a href="#__codelineno-0-293">293</a></span>
-<span class="normal"><a href="#__codelineno-0-294">294</a></span>
-<span class="normal"><a href="#__codelineno-0-295">295</a></span>
-<span class="normal"><a href="#__codelineno-0-296">296</a></span>
-<span class="normal"><a href="#__codelineno-0-297">297</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-278" name="__codelineno-0-278"></a><span class="nd">@property</span>
-<a id="__codelineno-0-279" name="__codelineno-0-279"></a><span class="k">def</span> <span class="nf">base_contracts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">InheritanceSpecifier</span><span class="p">]:</span>
-<a id="__codelineno-0-280" name="__codelineno-0-280"></a>    <span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-281" name="__codelineno-0-281"></a><span class="sd">    Returns base contracts as specified in the source code. Does not return all base contracts (recursively).</span>
-<a id="__codelineno-0-282" name="__codelineno-0-282"></a><span class="sd">    !!! example</span>
-<a id="__codelineno-0-283" name="__codelineno-0-283"></a><span class="sd">        `A1` lists the interface `I` as a base contract.</span>
-<a id="__codelineno-0-284" name="__codelineno-0-284"></a>
-<a id="__codelineno-0-285" name="__codelineno-0-285"></a><span class="sd">        `A2` lists the interface `I` as a base contract.</span>
-<a id="__codelineno-0-286" name="__codelineno-0-286"></a>
-<a id="__codelineno-0-287" name="__codelineno-0-287"></a><span class="sd">        `B` lists the contracts `A1` and `A2` as base contracts.</span>
-<a id="__codelineno-0-288" name="__codelineno-0-288"></a><span class="sd">        ```solidity</span>
-<a id="__codelineno-0-289" name="__codelineno-0-289"></a><span class="sd">        interface I {}</span>
-<a id="__codelineno-0-290" name="__codelineno-0-290"></a><span class="sd">        contract A1 is I {}</span>
-<a id="__codelineno-0-291" name="__codelineno-0-291"></a><span class="sd">        contract A2 is I {}</span>
-<a id="__codelineno-0-292" name="__codelineno-0-292"></a><span class="sd">        contract B is A1, A2 {}</span>
-<a id="__codelineno-0-293" name="__codelineno-0-293"></a><span class="sd">        ```</span>
-<a id="__codelineno-0-294" name="__codelineno-0-294"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-295" name="__codelineno-0-295"></a><span class="sd">        Base contracts of this contract.</span>
-<a id="__codelineno-0-296" name="__codelineno-0-296"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-297" name="__codelineno-0-297"></a>    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_contracts</span><span class="p">)</span>
-</code></pre></div></td></tr></table></div>
-      </details>
   </div>
 
 </div>
 
-<div class="doc doc-object doc-function">
+<div class="doc doc-object doc-attribute">
 
 
 
 <h4 class="doc doc-heading" id="woke.ast.ir.declaration.contract_definition.ContractDefinition.child_contracts">
-<code class="highlight language-python"><span class="n">child_contracts</span><span class="p">()</span></code>
+<code class="highlight language-python"><span class="n">child_contracts</span><span class="p">:</span> <span class="n">FrozenSet</span><span class="p">[</span><span class="n">ContractDefinition</span><span class="p">]</span></code>
   
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-property"><code>property</code></small>
@@ -1585,27 +1534,545 @@
         </tr>
     </tbody>
   </table>
-
-      <details class="quote">
-        <summary>Source code in <code>woke/ast/ir/declaration/contract_definition.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-299">299</a></span>
-<span class="normal"><a href="#__codelineno-0-300">300</a></span>
-<span class="normal"><a href="#__codelineno-0-301">301</a></span>
-<span class="normal"><a href="#__codelineno-0-302">302</a></span>
-<span class="normal"><a href="#__codelineno-0-303">303</a></span>
-<span class="normal"><a href="#__codelineno-0-304">304</a></span>
-<span class="normal"><a href="#__codelineno-0-305">305</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-299" name="__codelineno-0-299"></a><span class="nd">@property</span>
-<a id="__codelineno-0-300" name="__codelineno-0-300"></a><span class="k">def</span> <span class="nf">child_contracts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenSet</span><span class="p">[</span><span class="n">ContractDefinition</span><span class="p">]:</span>
-<a id="__codelineno-0-301" name="__codelineno-0-301"></a>    <span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-302" name="__codelineno-0-302"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-303" name="__codelineno-0-303"></a><span class="sd">        Contracts that list this contract in their [base_contracts][woke.ast.ir.declaration.contract_definition.ContractDefinition.base_contracts] property.</span>
-<a id="__codelineno-0-304" name="__codelineno-0-304"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-305" name="__codelineno-0-305"></a>    <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_child_contracts</span><span class="p">)</span>
-</code></pre></div></td></tr></table></div>
-      </details>
   </div>
 
 </div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 class="doc doc-heading" id="woke.ast.ir.declaration.contract_definition.ContractDefinition.declared_variables">
+<code class="highlight language-python"><span class="n">declared_variables</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">VariableDeclaration</span><span class="p">]</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a class="headerlink" href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.declared_variables" title="Permanent link">#</a></h4>
+
+
+  <div class="doc doc-contents ">
+  
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a>[<a class="autorefs autorefs-internal" title="woke.ast.ir.declaration.variable_declaration.VariableDeclaration" href="../variable-declaration/#woke.ast.ir.declaration.variable_declaration.VariableDeclaration">VariableDeclaration</a>]</code>
+          </td>
+          <td><p>Variable declarations contained in this contract.</p></td>
+        </tr>
+    </tbody>
+  </table>
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 class="doc doc-heading" id="woke.ast.ir.declaration.contract_definition.ContractDefinition.documentation">
+<code class="highlight language-python"><span class="n">documentation</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">StructuredDocumentation</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a class="headerlink" href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.documentation" title="Permanent link">#</a></h4>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Of <a class="autorefs autorefs-internal" href="../../meta/structured-documentation/#woke.ast.ir.meta.structured_documentation.StructuredDocumentation">StructuredDocumentation</a> type since Solidity 0.6.3.</p>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a>[<a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a>[<a class="autorefs autorefs-internal" title="woke.ast.ir.meta.structured_documentation.StructuredDocumentation" href="../../meta/structured-documentation/#woke.ast.ir.meta.structured_documentation.StructuredDocumentation">StructuredDocumentation</a>, <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>]]</code>
+          </td>
+          <td><p><a href="https://docs.soliditylang.org/en/latest/natspec-format.html">NatSpec</a> documentation of this contract, if any.</p></td>
+        </tr>
+    </tbody>
+  </table>
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 class="doc doc-heading" id="woke.ast.ir.declaration.contract_definition.ContractDefinition.enums">
+<code class="highlight language-python"><span class="n">enums</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">EnumDefinition</span><span class="p">]</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a class="headerlink" href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.enums" title="Permanent link">#</a></h4>
+
+
+  <div class="doc doc-contents ">
+  
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a>[<a class="autorefs autorefs-internal" title="woke.ast.ir.declaration.enum_definition.EnumDefinition" href="../enum-definition/#woke.ast.ir.declaration.enum_definition.EnumDefinition">EnumDefinition</a>]</code>
+          </td>
+          <td><p>Enum definitions contained in this contract.</p></td>
+        </tr>
+    </tbody>
+  </table>
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 class="doc doc-heading" id="woke.ast.ir.declaration.contract_definition.ContractDefinition.errors">
+<code class="highlight language-python"><span class="n">errors</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">ErrorDefinition</span><span class="p">]</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a class="headerlink" href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.errors" title="Permanent link">#</a></h4>
+
+
+  <div class="doc doc-contents ">
+  
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a>[<a class="autorefs autorefs-internal" title="woke.ast.ir.declaration.error_definition.ErrorDefinition" href="../error-definition/#woke.ast.ir.declaration.error_definition.ErrorDefinition">ErrorDefinition</a>]</code>
+          </td>
+          <td><p>Error definitions contained in this contract.</p></td>
+        </tr>
+    </tbody>
+  </table>
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 class="doc doc-heading" id="woke.ast.ir.declaration.contract_definition.ContractDefinition.events">
+<code class="highlight language-python"><span class="n">events</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">EventDefinition</span><span class="p">]</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a class="headerlink" href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.events" title="Permanent link">#</a></h4>
+
+
+  <div class="doc doc-contents ">
+  
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a>[<a class="autorefs autorefs-internal" title="woke.ast.ir.declaration.event_definition.EventDefinition" href="../event-definition/#woke.ast.ir.declaration.event_definition.EventDefinition">EventDefinition</a>]</code>
+          </td>
+          <td><p>Event definitions contained in this contract.</p></td>
+        </tr>
+    </tbody>
+  </table>
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 class="doc doc-heading" id="woke.ast.ir.declaration.contract_definition.ContractDefinition.fully_implemented">
+<code class="highlight language-python"><span class="n">fully_implemented</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a class="headerlink" href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.fully_implemented" title="Permanent link">#</a></h4>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Is <code>None</code> when a file that imports this contract cannot be compiled. This may happen in the LSP server where partial project analysis is supported.</p>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a>]</code>
+          </td>
+          <td><p><code>True</code> if all functions and modifiers of the contract are implemented, <code>False</code> otherwise.</p></td>
+        </tr>
+    </tbody>
+  </table>
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 class="doc doc-heading" id="woke.ast.ir.declaration.contract_definition.ContractDefinition.functions">
+<code class="highlight language-python"><span class="n">functions</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">FunctionDefinition</span><span class="p">]</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a class="headerlink" href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.functions" title="Permanent link">#</a></h4>
+
+
+  <div class="doc doc-contents ">
+  
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a>[<a class="autorefs autorefs-internal" title="woke.ast.ir.declaration.function_definition.FunctionDefinition" href="../function-definition/#woke.ast.ir.declaration.function_definition.FunctionDefinition">FunctionDefinition</a>]</code>
+          </td>
+          <td><p>Function definitions contained in this contract.</p></td>
+        </tr>
+    </tbody>
+  </table>
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 class="doc doc-heading" id="woke.ast.ir.declaration.contract_definition.ContractDefinition.kind">
+<code class="highlight language-python"><span class="n">kind</span><span class="p">:</span> <span class="n">ContractKind</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a class="headerlink" href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.kind" title="Permanent link">#</a></h4>
+
+
+  <div class="doc doc-contents ">
+  
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code><a class="autorefs autorefs-internal" title="woke.ast.enums.ContractKind" href="../../enums/#woke.ast.enums.ContractKind">ContractKind</a></code>
+          </td>
+          <td><p>Contract kind.</p></td>
+        </tr>
+    </tbody>
+  </table>
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 class="doc doc-heading" id="woke.ast.ir.declaration.contract_definition.ContractDefinition.linearized_base_contracts">
+<code class="highlight language-python"><span class="n">linearized_base_contracts</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">ContractDefinition</span><span class="p">]</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a class="headerlink" href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.linearized_base_contracts" title="Permanent link">#</a></h4>
+
+
+  <div class="doc doc-contents ">
+  
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a>[<a class="autorefs autorefs-internal" title="woke.ast.ir.declaration.contract_definition.ContractDefinition" href="#woke.ast.ir.declaration.contract_definition.ContractDefinition">ContractDefinition</a>]</code>
+          </td>
+          <td><p>C3 linearized list of all base contracts.</p></td>
+        </tr>
+    </tbody>
+  </table>
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 class="doc doc-heading" id="woke.ast.ir.declaration.contract_definition.ContractDefinition.modifiers">
+<code class="highlight language-python"><span class="n">modifiers</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">ModifierDefinition</span><span class="p">]</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a class="headerlink" href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.modifiers" title="Permanent link">#</a></h4>
+
+
+  <div class="doc doc-contents ">
+  
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a>[<a class="autorefs autorefs-internal" title="woke.ast.ir.declaration.modifier_definition.ModifierDefinition" href="../modifier-definition/#woke.ast.ir.declaration.modifier_definition.ModifierDefinition">ModifierDefinition</a>]</code>
+          </td>
+          <td><p>Modifier definitions contained in this contract.</p></td>
+        </tr>
+    </tbody>
+  </table>
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 class="doc doc-heading" id="woke.ast.ir.declaration.contract_definition.ContractDefinition.parent">
+<code class="highlight language-python"><span class="n">parent</span><span class="p">:</span> <span class="n">SourceUnit</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a class="headerlink" href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.parent" title="Permanent link">#</a></h4>
+
+
+  <div class="doc doc-contents ">
+  
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code><a class="autorefs autorefs-internal" title="woke.ast.ir.meta.source_unit.SourceUnit" href="../../meta/source-unit/#woke.ast.ir.meta.source_unit.SourceUnit">SourceUnit</a></code>
+          </td>
+          <td><p>Parent IR node.</p></td>
+        </tr>
+    </tbody>
+  </table>
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 class="doc doc-heading" id="woke.ast.ir.declaration.contract_definition.ContractDefinition.structs">
+<code class="highlight language-python"><span class="n">structs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">StructDefinition</span><span class="p">]</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a class="headerlink" href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.structs" title="Permanent link">#</a></h4>
+
+
+  <div class="doc doc-contents ">
+  
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a>[<a class="autorefs autorefs-internal" title="woke.ast.ir.declaration.struct_definition.StructDefinition" href="../struct-definition/#woke.ast.ir.declaration.struct_definition.StructDefinition">StructDefinition</a>]</code>
+          </td>
+          <td><p>Struct definitions contained in this contract.</p></td>
+        </tr>
+    </tbody>
+  </table>
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 class="doc doc-heading" id="woke.ast.ir.declaration.contract_definition.ContractDefinition.user_defined_value_types">
+<code class="highlight language-python"><span class="n">user_defined_value_types</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">UserDefinedValueTypeDefinition</span><span class="p">]</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a class="headerlink" href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.user_defined_value_types" title="Permanent link">#</a></h4>
+
+
+  <div class="doc doc-contents ">
+  
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a>[<a class="autorefs autorefs-internal" title="woke.ast.ir.declaration.user_defined_value_type_definition.UserDefinedValueTypeDefinition" href="../user-defined-value-type-definition/#woke.ast.ir.declaration.user_defined_value_type_definition.UserDefinedValueTypeDefinition">UserDefinedValueTypeDefinition</a>]</code>
+          </td>
+          <td><p>User defined value type definitions contained in this contract.</p></td>
+        </tr>
+    </tbody>
+  </table>
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 class="doc doc-heading" id="woke.ast.ir.declaration.contract_definition.ContractDefinition.using_for_directives">
+<code class="highlight language-python"><span class="n">using_for_directives</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">UsingForDirective</span><span class="p">]</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a class="headerlink" href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.using_for_directives" title="Permanent link">#</a></h4>
+
+
+  <div class="doc doc-contents ">
+  
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a>[<a class="autorefs autorefs-internal" title="woke.ast.ir.meta.using_for_directive.UsingForDirective" href="../../meta/using-for-directive/#woke.ast.ir.meta.using_for_directive.UsingForDirective">UsingForDirective</a>]</code>
+          </td>
+          <td><p>Using for directives contained in this contract.</p></td>
+        </tr>
+    </tbody>
+  </table>
+  </div>
+
+</div>
+
+
 
 <div class="doc doc-object doc-function">
 
@@ -1655,7 +2122,7 @@
 <span class="normal"><a href="#__codelineno-0-430">430</a></span>
 <span class="normal"><a href="#__codelineno-0-431">431</a></span>
 <span class="normal"><a href="#__codelineno-0-432">432</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-418" name="__codelineno-0-418"></a><span class="k">def</span> <span class="nf">declarations_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">DeclarationAbc</span><span class="p">]:</span>
-<a id="__codelineno-0-419" name="__codelineno-0-419"></a>    <span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-419" name="__codelineno-0-419"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-420" name="__codelineno-0-420"></a><span class="sd">    Yields:</span>
 <a id="__codelineno-0-421" name="__codelineno-0-421"></a><span class="sd">        All declarations contained in this contract.</span>
 <a id="__codelineno-0-422" name="__codelineno-0-422"></a><span class="sd">    &quot;&quot;&quot;</span>
@@ -1675,806 +2142,6 @@
 
 </div>
 
-<div class="doc doc-object doc-function">
-
-
-
-<h4 class="doc doc-heading" id="woke.ast.ir.declaration.contract_definition.ContractDefinition.declared_variables">
-<code class="highlight language-python"><span class="n">declared_variables</span><span class="p">()</span></code>
-  
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-property"><code>property</code></small>
-  </span>
-
-<a class="headerlink" href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.declared_variables" title="Permanent link">#</a></h4>
-
-
-  <div class="doc doc-contents ">
-  
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td>
-                <code><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a>[<a class="autorefs autorefs-internal" title="woke.ast.ir.declaration.variable_declaration.VariableDeclaration" href="../variable-declaration/#woke.ast.ir.declaration.variable_declaration.VariableDeclaration">VariableDeclaration</a>]</code>
-          </td>
-          <td><p>Variable declarations contained in this contract.</p></td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>woke/ast/ir/declaration/contract_definition.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-410">410</a></span>
-<span class="normal"><a href="#__codelineno-0-411">411</a></span>
-<span class="normal"><a href="#__codelineno-0-412">412</a></span>
-<span class="normal"><a href="#__codelineno-0-413">413</a></span>
-<span class="normal"><a href="#__codelineno-0-414">414</a></span>
-<span class="normal"><a href="#__codelineno-0-415">415</a></span>
-<span class="normal"><a href="#__codelineno-0-416">416</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-410" name="__codelineno-0-410"></a><span class="nd">@property</span>
-<a id="__codelineno-0-411" name="__codelineno-0-411"></a><span class="k">def</span> <span class="nf">declared_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">VariableDeclaration</span><span class="p">]:</span>
-<a id="__codelineno-0-412" name="__codelineno-0-412"></a>    <span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-413" name="__codelineno-0-413"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-414" name="__codelineno-0-414"></a><span class="sd">        Variable declarations contained in this contract.</span>
-<a id="__codelineno-0-415" name="__codelineno-0-415"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-416" name="__codelineno-0-416"></a>    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_declared_variables</span><span class="p">)</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-
-<h4 class="doc doc-heading" id="woke.ast.ir.declaration.contract_definition.ContractDefinition.documentation">
-<code class="highlight language-python"><span class="n">documentation</span><span class="p">()</span></code>
-  
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-property"><code>property</code></small>
-  </span>
-
-<a class="headerlink" href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.documentation" title="Permanent link">#</a></h4>
-
-
-  <div class="doc doc-contents ">
-  
-      <p>Of <a class="autorefs autorefs-internal" href="../../meta/structured-documentation/#woke.ast.ir.meta.structured_documentation.StructuredDocumentation">StructuredDocumentation</a> type since Solidity 0.6.3.</p>
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td>
-                <code><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a>[<a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a>[<a class="autorefs autorefs-internal" title="woke.ast.ir.meta.structured_documentation.StructuredDocumentation" href="../../meta/structured-documentation/#woke.ast.ir.meta.structured_documentation.StructuredDocumentation">StructuredDocumentation</a>, <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>]]</code>
-          </td>
-          <td><p><a href="https://docs.soliditylang.org/en/latest/natspec-format.html">NatSpec</a> documentation of this contract, if any.</p></td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>woke/ast/ir/declaration/contract_definition.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-337">337</a></span>
-<span class="normal"><a href="#__codelineno-0-338">338</a></span>
-<span class="normal"><a href="#__codelineno-0-339">339</a></span>
-<span class="normal"><a href="#__codelineno-0-340">340</a></span>
-<span class="normal"><a href="#__codelineno-0-341">341</a></span>
-<span class="normal"><a href="#__codelineno-0-342">342</a></span>
-<span class="normal"><a href="#__codelineno-0-343">343</a></span>
-<span class="normal"><a href="#__codelineno-0-344">344</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-337" name="__codelineno-0-337"></a><span class="nd">@property</span>
-<a id="__codelineno-0-338" name="__codelineno-0-338"></a><span class="k">def</span> <span class="nf">documentation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">StructuredDocumentation</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
-<a id="__codelineno-0-339" name="__codelineno-0-339"></a>    <span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-340" name="__codelineno-0-340"></a><span class="sd">    Of [StructuredDocumentation][woke.ast.ir.meta.structured_documentation.StructuredDocumentation] type since Solidity 0.6.3.</span>
-<a id="__codelineno-0-341" name="__codelineno-0-341"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-342" name="__codelineno-0-342"></a><span class="sd">        [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation of this contract, if any.</span>
-<a id="__codelineno-0-343" name="__codelineno-0-343"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-344" name="__codelineno-0-344"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_documentation</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-
-<h4 class="doc doc-heading" id="woke.ast.ir.declaration.contract_definition.ContractDefinition.enums">
-<code class="highlight language-python"><span class="n">enums</span><span class="p">()</span></code>
-  
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-property"><code>property</code></small>
-  </span>
-
-<a class="headerlink" href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.enums" title="Permanent link">#</a></h4>
-
-
-  <div class="doc doc-contents ">
-  
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td>
-                <code><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a>[<a class="autorefs autorefs-internal" title="woke.ast.ir.declaration.enum_definition.EnumDefinition" href="../enum-definition/#woke.ast.ir.declaration.enum_definition.EnumDefinition">EnumDefinition</a>]</code>
-          </td>
-          <td><p>Enum definitions contained in this contract.</p></td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>woke/ast/ir/declaration/contract_definition.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-346">346</a></span>
-<span class="normal"><a href="#__codelineno-0-347">347</a></span>
-<span class="normal"><a href="#__codelineno-0-348">348</a></span>
-<span class="normal"><a href="#__codelineno-0-349">349</a></span>
-<span class="normal"><a href="#__codelineno-0-350">350</a></span>
-<span class="normal"><a href="#__codelineno-0-351">351</a></span>
-<span class="normal"><a href="#__codelineno-0-352">352</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-346" name="__codelineno-0-346"></a><span class="nd">@property</span>
-<a id="__codelineno-0-347" name="__codelineno-0-347"></a><span class="k">def</span> <span class="nf">enums</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">EnumDefinition</span><span class="p">]:</span>
-<a id="__codelineno-0-348" name="__codelineno-0-348"></a>    <span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-349" name="__codelineno-0-349"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-350" name="__codelineno-0-350"></a><span class="sd">        Enum definitions contained in this contract.</span>
-<a id="__codelineno-0-351" name="__codelineno-0-351"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-352" name="__codelineno-0-352"></a>    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_enums</span><span class="p">)</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-
-<h4 class="doc doc-heading" id="woke.ast.ir.declaration.contract_definition.ContractDefinition.errors">
-<code class="highlight language-python"><span class="n">errors</span><span class="p">()</span></code>
-  
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-property"><code>property</code></small>
-  </span>
-
-<a class="headerlink" href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.errors" title="Permanent link">#</a></h4>
-
-
-  <div class="doc doc-contents ">
-  
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td>
-                <code><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a>[<a class="autorefs autorefs-internal" title="woke.ast.ir.declaration.error_definition.ErrorDefinition" href="../error-definition/#woke.ast.ir.declaration.error_definition.ErrorDefinition">ErrorDefinition</a>]</code>
-          </td>
-          <td><p>Error definitions contained in this contract.</p></td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>woke/ast/ir/declaration/contract_definition.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-354">354</a></span>
-<span class="normal"><a href="#__codelineno-0-355">355</a></span>
-<span class="normal"><a href="#__codelineno-0-356">356</a></span>
-<span class="normal"><a href="#__codelineno-0-357">357</a></span>
-<span class="normal"><a href="#__codelineno-0-358">358</a></span>
-<span class="normal"><a href="#__codelineno-0-359">359</a></span>
-<span class="normal"><a href="#__codelineno-0-360">360</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-354" name="__codelineno-0-354"></a><span class="nd">@property</span>
-<a id="__codelineno-0-355" name="__codelineno-0-355"></a><span class="k">def</span> <span class="nf">errors</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">ErrorDefinition</span><span class="p">]:</span>
-<a id="__codelineno-0-356" name="__codelineno-0-356"></a>    <span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-357" name="__codelineno-0-357"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-358" name="__codelineno-0-358"></a><span class="sd">        Error definitions contained in this contract.</span>
-<a id="__codelineno-0-359" name="__codelineno-0-359"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-360" name="__codelineno-0-360"></a>    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_errors</span><span class="p">)</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-
-<h4 class="doc doc-heading" id="woke.ast.ir.declaration.contract_definition.ContractDefinition.events">
-<code class="highlight language-python"><span class="n">events</span><span class="p">()</span></code>
-  
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-property"><code>property</code></small>
-  </span>
-
-<a class="headerlink" href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.events" title="Permanent link">#</a></h4>
-
-
-  <div class="doc doc-contents ">
-  
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td>
-                <code><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a>[<a class="autorefs autorefs-internal" title="woke.ast.ir.declaration.event_definition.EventDefinition" href="../event-definition/#woke.ast.ir.declaration.event_definition.EventDefinition">EventDefinition</a>]</code>
-          </td>
-          <td><p>Event definitions contained in this contract.</p></td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>woke/ast/ir/declaration/contract_definition.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-362">362</a></span>
-<span class="normal"><a href="#__codelineno-0-363">363</a></span>
-<span class="normal"><a href="#__codelineno-0-364">364</a></span>
-<span class="normal"><a href="#__codelineno-0-365">365</a></span>
-<span class="normal"><a href="#__codelineno-0-366">366</a></span>
-<span class="normal"><a href="#__codelineno-0-367">367</a></span>
-<span class="normal"><a href="#__codelineno-0-368">368</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-362" name="__codelineno-0-362"></a><span class="nd">@property</span>
-<a id="__codelineno-0-363" name="__codelineno-0-363"></a><span class="k">def</span> <span class="nf">events</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">EventDefinition</span><span class="p">]:</span>
-<a id="__codelineno-0-364" name="__codelineno-0-364"></a>    <span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-365" name="__codelineno-0-365"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-366" name="__codelineno-0-366"></a><span class="sd">        Event definitions contained in this contract.</span>
-<a id="__codelineno-0-367" name="__codelineno-0-367"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-368" name="__codelineno-0-368"></a>    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_events</span><span class="p">)</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-
-<h4 class="doc doc-heading" id="woke.ast.ir.declaration.contract_definition.ContractDefinition.fully_implemented">
-<code class="highlight language-python"><span class="n">fully_implemented</span><span class="p">()</span></code>
-  
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-property"><code>property</code></small>
-  </span>
-
-<a class="headerlink" href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.fully_implemented" title="Permanent link">#</a></h4>
-
-
-  <div class="doc doc-contents ">
-  
-      <p>Is <code>None</code> when a file that imports this contract cannot be compiled. This may happen in the LSP server where partial project analysis is supported.</p>
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td>
-                <code><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a>]</code>
-          </td>
-          <td><p><code>True</code> if all functions and modifiers of the contract are implemented, <code>False</code> otherwise.</p></td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>woke/ast/ir/declaration/contract_definition.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-315">315</a></span>
-<span class="normal"><a href="#__codelineno-0-316">316</a></span>
-<span class="normal"><a href="#__codelineno-0-317">317</a></span>
-<span class="normal"><a href="#__codelineno-0-318">318</a></span>
-<span class="normal"><a href="#__codelineno-0-319">319</a></span>
-<span class="normal"><a href="#__codelineno-0-320">320</a></span>
-<span class="normal"><a href="#__codelineno-0-321">321</a></span>
-<span class="normal"><a href="#__codelineno-0-322">322</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-315" name="__codelineno-0-315"></a><span class="nd">@property</span>
-<a id="__codelineno-0-316" name="__codelineno-0-316"></a><span class="k">def</span> <span class="nf">fully_implemented</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
-<a id="__codelineno-0-317" name="__codelineno-0-317"></a>    <span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-318" name="__codelineno-0-318"></a><span class="sd">    Is `None` when a file that imports this contract cannot be compiled. This may happen in the LSP server where partial project analysis is supported.</span>
-<a id="__codelineno-0-319" name="__codelineno-0-319"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-320" name="__codelineno-0-320"></a><span class="sd">        `True` if all functions and modifiers of the contract are implemented, `False` otherwise.</span>
-<a id="__codelineno-0-321" name="__codelineno-0-321"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-322" name="__codelineno-0-322"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fully_implemented</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-
-<h4 class="doc doc-heading" id="woke.ast.ir.declaration.contract_definition.ContractDefinition.functions">
-<code class="highlight language-python"><span class="n">functions</span><span class="p">()</span></code>
-  
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-property"><code>property</code></small>
-  </span>
-
-<a class="headerlink" href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.functions" title="Permanent link">#</a></h4>
-
-
-  <div class="doc doc-contents ">
-  
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td>
-                <code><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a>[<a class="autorefs autorefs-internal" title="woke.ast.ir.declaration.function_definition.FunctionDefinition" href="../function-definition/#woke.ast.ir.declaration.function_definition.FunctionDefinition">FunctionDefinition</a>]</code>
-          </td>
-          <td><p>Function definitions contained in this contract.</p></td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>woke/ast/ir/declaration/contract_definition.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-370">370</a></span>
-<span class="normal"><a href="#__codelineno-0-371">371</a></span>
-<span class="normal"><a href="#__codelineno-0-372">372</a></span>
-<span class="normal"><a href="#__codelineno-0-373">373</a></span>
-<span class="normal"><a href="#__codelineno-0-374">374</a></span>
-<span class="normal"><a href="#__codelineno-0-375">375</a></span>
-<span class="normal"><a href="#__codelineno-0-376">376</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-370" name="__codelineno-0-370"></a><span class="nd">@property</span>
-<a id="__codelineno-0-371" name="__codelineno-0-371"></a><span class="k">def</span> <span class="nf">functions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">FunctionDefinition</span><span class="p">]:</span>
-<a id="__codelineno-0-372" name="__codelineno-0-372"></a>    <span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-373" name="__codelineno-0-373"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-374" name="__codelineno-0-374"></a><span class="sd">        Function definitions contained in this contract.</span>
-<a id="__codelineno-0-375" name="__codelineno-0-375"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-376" name="__codelineno-0-376"></a>    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_functions</span><span class="p">)</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-
-<h4 class="doc doc-heading" id="woke.ast.ir.declaration.contract_definition.ContractDefinition.kind">
-<code class="highlight language-python"><span class="n">kind</span><span class="p">()</span></code>
-  
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-property"><code>property</code></small>
-  </span>
-
-<a class="headerlink" href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.kind" title="Permanent link">#</a></h4>
-
-
-  <div class="doc doc-contents ">
-  
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td>
-                <code><a class="autorefs autorefs-internal" title="woke.ast.enums.ContractKind" href="../../enums/#woke.ast.enums.ContractKind">ContractKind</a></code>
-          </td>
-          <td><p>Contract kind.</p></td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>woke/ast/ir/declaration/contract_definition.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-307">307</a></span>
-<span class="normal"><a href="#__codelineno-0-308">308</a></span>
-<span class="normal"><a href="#__codelineno-0-309">309</a></span>
-<span class="normal"><a href="#__codelineno-0-310">310</a></span>
-<span class="normal"><a href="#__codelineno-0-311">311</a></span>
-<span class="normal"><a href="#__codelineno-0-312">312</a></span>
-<span class="normal"><a href="#__codelineno-0-313">313</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-307" name="__codelineno-0-307"></a><span class="nd">@property</span>
-<a id="__codelineno-0-308" name="__codelineno-0-308"></a><span class="k">def</span> <span class="nf">kind</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ContractKind</span><span class="p">:</span>
-<a id="__codelineno-0-309" name="__codelineno-0-309"></a>    <span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-310" name="__codelineno-0-310"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-311" name="__codelineno-0-311"></a><span class="sd">        Contract kind.</span>
-<a id="__codelineno-0-312" name="__codelineno-0-312"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-313" name="__codelineno-0-313"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-
-<h4 class="doc doc-heading" id="woke.ast.ir.declaration.contract_definition.ContractDefinition.linearized_base_contracts">
-<code class="highlight language-python"><span class="n">linearized_base_contracts</span><span class="p">()</span></code>
-  
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-property"><code>property</code></small>
-  </span>
-
-<a class="headerlink" href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.linearized_base_contracts" title="Permanent link">#</a></h4>
-
-
-  <div class="doc doc-contents ">
-  
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td>
-                <code><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a>[<a class="autorefs autorefs-internal" title="woke.ast.ir.declaration.contract_definition.ContractDefinition" href="#woke.ast.ir.declaration.contract_definition.ContractDefinition">ContractDefinition</a>]</code>
-          </td>
-          <td><p>C3 linearized list of all base contracts.</p></td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>woke/ast/ir/declaration/contract_definition.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-324">324</a></span>
-<span class="normal"><a href="#__codelineno-0-325">325</a></span>
-<span class="normal"><a href="#__codelineno-0-326">326</a></span>
-<span class="normal"><a href="#__codelineno-0-327">327</a></span>
-<span class="normal"><a href="#__codelineno-0-328">328</a></span>
-<span class="normal"><a href="#__codelineno-0-329">329</a></span>
-<span class="normal"><a href="#__codelineno-0-330">330</a></span>
-<span class="normal"><a href="#__codelineno-0-331">331</a></span>
-<span class="normal"><a href="#__codelineno-0-332">332</a></span>
-<span class="normal"><a href="#__codelineno-0-333">333</a></span>
-<span class="normal"><a href="#__codelineno-0-334">334</a></span>
-<span class="normal"><a href="#__codelineno-0-335">335</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-324" name="__codelineno-0-324"></a><span class="nd">@property</span>
-<a id="__codelineno-0-325" name="__codelineno-0-325"></a><span class="k">def</span> <span class="nf">linearized_base_contracts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">ContractDefinition</span><span class="p">]:</span>
-<a id="__codelineno-0-326" name="__codelineno-0-326"></a>    <span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-327" name="__codelineno-0-327"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-328" name="__codelineno-0-328"></a><span class="sd">        C3 linearized list of all base contracts.</span>
-<a id="__codelineno-0-329" name="__codelineno-0-329"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-330" name="__codelineno-0-330"></a>    <span class="n">base_contracts</span> <span class="o">=</span> <span class="p">[]</span>
-<a id="__codelineno-0-331" name="__codelineno-0-331"></a>    <span class="k">for</span> <span class="n">base_contract</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linearized_base_contracts</span><span class="p">:</span>
-<a id="__codelineno-0-332" name="__codelineno-0-332"></a>        <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference_resolver</span><span class="o">.</span><span class="n">resolve_node</span><span class="p">(</span><span class="n">base_contract</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cu_hash</span><span class="p">)</span>
-<a id="__codelineno-0-333" name="__codelineno-0-333"></a>        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ContractDefinition</span><span class="p">)</span>
-<a id="__codelineno-0-334" name="__codelineno-0-334"></a>        <span class="n">base_contracts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
-<a id="__codelineno-0-335" name="__codelineno-0-335"></a>    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">base_contracts</span><span class="p">)</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-
-<h4 class="doc doc-heading" id="woke.ast.ir.declaration.contract_definition.ContractDefinition.modifiers">
-<code class="highlight language-python"><span class="n">modifiers</span><span class="p">()</span></code>
-  
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-property"><code>property</code></small>
-  </span>
-
-<a class="headerlink" href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.modifiers" title="Permanent link">#</a></h4>
-
-
-  <div class="doc doc-contents ">
-  
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td>
-                <code><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a>[<a class="autorefs autorefs-internal" title="woke.ast.ir.declaration.modifier_definition.ModifierDefinition" href="../modifier-definition/#woke.ast.ir.declaration.modifier_definition.ModifierDefinition">ModifierDefinition</a>]</code>
-          </td>
-          <td><p>Modifier definitions contained in this contract.</p></td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>woke/ast/ir/declaration/contract_definition.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-378">378</a></span>
-<span class="normal"><a href="#__codelineno-0-379">379</a></span>
-<span class="normal"><a href="#__codelineno-0-380">380</a></span>
-<span class="normal"><a href="#__codelineno-0-381">381</a></span>
-<span class="normal"><a href="#__codelineno-0-382">382</a></span>
-<span class="normal"><a href="#__codelineno-0-383">383</a></span>
-<span class="normal"><a href="#__codelineno-0-384">384</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-378" name="__codelineno-0-378"></a><span class="nd">@property</span>
-<a id="__codelineno-0-379" name="__codelineno-0-379"></a><span class="k">def</span> <span class="nf">modifiers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">ModifierDefinition</span><span class="p">]:</span>
-<a id="__codelineno-0-380" name="__codelineno-0-380"></a>    <span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-381" name="__codelineno-0-381"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-382" name="__codelineno-0-382"></a><span class="sd">        Modifier definitions contained in this contract.</span>
-<a id="__codelineno-0-383" name="__codelineno-0-383"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-384" name="__codelineno-0-384"></a>    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_modifiers</span><span class="p">)</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-
-<h4 class="doc doc-heading" id="woke.ast.ir.declaration.contract_definition.ContractDefinition.parent">
-<code class="highlight language-python"><span class="n">parent</span><span class="p">()</span></code>
-  
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-property"><code>property</code></small>
-  </span>
-
-<a class="headerlink" href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.parent" title="Permanent link">#</a></h4>
-
-
-  <div class="doc doc-contents ">
-  
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td>
-                <code><a class="autorefs autorefs-internal" title="woke.ast.ir.meta.source_unit.SourceUnit" href="../../meta/source-unit/#woke.ast.ir.meta.source_unit.SourceUnit">SourceUnit</a></code>
-          </td>
-          <td><p>Parent IR node.</p></td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>woke/ast/ir/declaration/contract_definition.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-230">230</a></span>
-<span class="normal"><a href="#__codelineno-0-231">231</a></span>
-<span class="normal"><a href="#__codelineno-0-232">232</a></span>
-<span class="normal"><a href="#__codelineno-0-233">233</a></span>
-<span class="normal"><a href="#__codelineno-0-234">234</a></span>
-<span class="normal"><a href="#__codelineno-0-235">235</a></span>
-<span class="normal"><a href="#__codelineno-0-236">236</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-230" name="__codelineno-0-230"></a><span class="nd">@property</span>
-<a id="__codelineno-0-231" name="__codelineno-0-231"></a><span class="k">def</span> <span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SourceUnit</span><span class="p">:</span>
-<a id="__codelineno-0-232" name="__codelineno-0-232"></a>    <span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-233" name="__codelineno-0-233"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-234" name="__codelineno-0-234"></a><span class="sd">        Parent IR node.</span>
-<a id="__codelineno-0-235" name="__codelineno-0-235"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-236" name="__codelineno-0-236"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-
-<h4 class="doc doc-heading" id="woke.ast.ir.declaration.contract_definition.ContractDefinition.structs">
-<code class="highlight language-python"><span class="n">structs</span><span class="p">()</span></code>
-  
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-property"><code>property</code></small>
-  </span>
-
-<a class="headerlink" href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.structs" title="Permanent link">#</a></h4>
-
-
-  <div class="doc doc-contents ">
-  
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td>
-                <code><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a>[<a class="autorefs autorefs-internal" title="woke.ast.ir.declaration.struct_definition.StructDefinition" href="../struct-definition/#woke.ast.ir.declaration.struct_definition.StructDefinition">StructDefinition</a>]</code>
-          </td>
-          <td><p>Struct definitions contained in this contract.</p></td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>woke/ast/ir/declaration/contract_definition.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-386">386</a></span>
-<span class="normal"><a href="#__codelineno-0-387">387</a></span>
-<span class="normal"><a href="#__codelineno-0-388">388</a></span>
-<span class="normal"><a href="#__codelineno-0-389">389</a></span>
-<span class="normal"><a href="#__codelineno-0-390">390</a></span>
-<span class="normal"><a href="#__codelineno-0-391">391</a></span>
-<span class="normal"><a href="#__codelineno-0-392">392</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-386" name="__codelineno-0-386"></a><span class="nd">@property</span>
-<a id="__codelineno-0-387" name="__codelineno-0-387"></a><span class="k">def</span> <span class="nf">structs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">StructDefinition</span><span class="p">]:</span>
-<a id="__codelineno-0-388" name="__codelineno-0-388"></a>    <span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-389" name="__codelineno-0-389"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-390" name="__codelineno-0-390"></a><span class="sd">        Struct definitions contained in this contract.</span>
-<a id="__codelineno-0-391" name="__codelineno-0-391"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-392" name="__codelineno-0-392"></a>    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_structs</span><span class="p">)</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-
-<h4 class="doc doc-heading" id="woke.ast.ir.declaration.contract_definition.ContractDefinition.user_defined_value_types">
-<code class="highlight language-python"><span class="n">user_defined_value_types</span><span class="p">()</span></code>
-  
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-property"><code>property</code></small>
-  </span>
-
-<a class="headerlink" href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.user_defined_value_types" title="Permanent link">#</a></h4>
-
-
-  <div class="doc doc-contents ">
-  
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td>
-                <code><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a>[<a class="autorefs autorefs-internal" title="woke.ast.ir.declaration.user_defined_value_type_definition.UserDefinedValueTypeDefinition" href="../user-defined-value-type-definition/#woke.ast.ir.declaration.user_defined_value_type_definition.UserDefinedValueTypeDefinition">UserDefinedValueTypeDefinition</a>]</code>
-          </td>
-          <td><p>User defined value type definitions contained in this contract.</p></td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>woke/ast/ir/declaration/contract_definition.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-394">394</a></span>
-<span class="normal"><a href="#__codelineno-0-395">395</a></span>
-<span class="normal"><a href="#__codelineno-0-396">396</a></span>
-<span class="normal"><a href="#__codelineno-0-397">397</a></span>
-<span class="normal"><a href="#__codelineno-0-398">398</a></span>
-<span class="normal"><a href="#__codelineno-0-399">399</a></span>
-<span class="normal"><a href="#__codelineno-0-400">400</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-394" name="__codelineno-0-394"></a><span class="nd">@property</span>
-<a id="__codelineno-0-395" name="__codelineno-0-395"></a><span class="k">def</span> <span class="nf">user_defined_value_types</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">UserDefinedValueTypeDefinition</span><span class="p">]:</span>
-<a id="__codelineno-0-396" name="__codelineno-0-396"></a>    <span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-397" name="__codelineno-0-397"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-398" name="__codelineno-0-398"></a><span class="sd">        User defined value type definitions contained in this contract.</span>
-<a id="__codelineno-0-399" name="__codelineno-0-399"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-400" name="__codelineno-0-400"></a>    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_user_defined_value_types</span><span class="p">)</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-
-<h4 class="doc doc-heading" id="woke.ast.ir.declaration.contract_definition.ContractDefinition.using_for_directives">
-<code class="highlight language-python"><span class="n">using_for_directives</span><span class="p">()</span></code>
-  
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-property"><code>property</code></small>
-  </span>
-
-<a class="headerlink" href="#woke.ast.ir.declaration.contract_definition.ContractDefinition.using_for_directives" title="Permanent link">#</a></h4>
-
-
-  <div class="doc doc-contents ">
-  
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td>
-                <code><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a>[<a class="autorefs autorefs-internal" title="woke.ast.ir.meta.using_for_directive.UsingForDirective" href="../../meta/using-for-directive/#woke.ast.ir.meta.using_for_directive.UsingForDirective">UsingForDirective</a>]</code>
-          </td>
-          <td><p>Using for directives contained in this contract.</p></td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>woke/ast/ir/declaration/contract_definition.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-402">402</a></span>
-<span class="normal"><a href="#__codelineno-0-403">403</a></span>
-<span class="normal"><a href="#__codelineno-0-404">404</a></span>
-<span class="normal"><a href="#__codelineno-0-405">405</a></span>
-<span class="normal"><a href="#__codelineno-0-406">406</a></span>
-<span class="normal"><a href="#__codelineno-0-407">407</a></span>
-<span class="normal"><a href="#__codelineno-0-408">408</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-402" name="__codelineno-0-402"></a><span class="nd">@property</span>
-<a id="__codelineno-0-403" name="__codelineno-0-403"></a><span class="k">def</span> <span class="nf">using_for_directives</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">UsingForDirective</span><span class="p">]:</span>
-<a id="__codelineno-0-404" name="__codelineno-0-404"></a>    <span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-405" name="__codelineno-0-405"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-406" name="__codelineno-0-406"></a><span class="sd">        Using for directives contained in this contract.</span>
-<a id="__codelineno-0-407" name="__codelineno-0-407"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-408" name="__codelineno-0-408"></a>    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_using_for_directives</span><span class="p">)</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
-
-</div>
-
 
 
   </div>
@@ -2492,16 +2159,21 @@
 
 </div>
 
-              
-            </article>
-            
-          </div>
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
         </div>
         
-          <a href="#" class="md-top md-icon" data-md-component="top" hidden>
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
             Back to top
-          </a>
+          </button>
         
       </main>
       
@@ -2517,29 +2189,35 @@
   
     
     
+    
+    
       
       
     
     <a href="https://github.com/Ackee-Blockchain" target="_blank" rel="noopener" title="github.com" class="md-social__link">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
     </a>
   
+    
+    
     
     
       
       
     
     <a href="https://twitter.com/ackeeblockchain" target="_blank" rel="noopener" title="twitter.com" class="md-social__link">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M459.37 151.716c.325 4.548.325 9.097.325 13.645 0 138.72-105.583 298.558-298.558 298.558-59.452 0-114.68-17.219-161.137-47.106 8.447.974 16.568 1.299 25.34 1.299 49.055 0 94.213-16.568 130.274-44.832-46.132-.975-84.792-31.188-98.112-72.772 6.498.974 12.995 1.624 19.818 1.624 9.421 0 18.843-1.3 27.614-3.573-48.081-9.747-84.143-51.98-84.143-102.985v-1.299c13.969 7.797 30.214 12.67 47.431 13.319-28.264-18.843-46.781-51.005-46.781-87.391 0-19.492 5.197-37.36 14.294-52.954 51.655 63.675 129.3 105.258 216.365 109.807-1.624-7.797-2.599-15.918-2.599-24.04 0-57.828 46.782-104.934 104.934-104.934 30.213 0 57.502 12.67 76.67 33.137 23.715-4.548 46.456-13.32 66.599-25.34-7.798 24.366-24.366 44.833-46.132 57.827 21.117-2.273 41.584-8.122 60.426-16.243-14.292 20.791-32.161 39.308-52.628 54.253z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M459.37 151.716c.325 4.548.325 9.097.325 13.645 0 138.72-105.583 298.558-298.558 298.558-59.452 0-114.68-17.219-161.137-47.106 8.447.974 16.568 1.299 25.34 1.299 49.055 0 94.213-16.568 130.274-44.832-46.132-.975-84.792-31.188-98.112-72.772 6.498.974 12.995 1.624 19.818 1.624 9.421 0 18.843-1.3 27.614-3.573-48.081-9.747-84.143-51.98-84.143-102.985v-1.299c13.969 7.797 30.214 12.67 47.431 13.319-28.264-18.843-46.781-51.005-46.781-87.391 0-19.492 5.197-37.36 14.294-52.954 51.655 63.675 129.3 105.258 216.365 109.807-1.624-7.797-2.599-15.918-2.599-24.04 0-57.828 46.782-104.934 104.934-104.934 30.213 0 57.502 12.67 76.67 33.137 23.715-4.548 46.456-13.32 66.599-25.34-7.798 24.366-24.366 44.833-46.132 57.827 21.117-2.273 41.584-8.122 60.426-16.243-14.292 20.791-32.161 39.308-52.628 54.253z"/></svg>
     </a>
   
+    
+    
     
     
       
       
     
     <a href="https://discord.gg/2HgPXQZVzP" target="_blank" rel="noopener" title="discord.gg" class="md-social__link">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M524.531 69.836a1.5 1.5 0 0 0-.764-.7A485.065 485.065 0 0 0 404.081 32.03a1.816 1.816 0 0 0-1.923.91 337.461 337.461 0 0 0-14.9 30.6 447.848 447.848 0 0 0-134.426 0 309.541 309.541 0 0 0-15.135-30.6 1.89 1.89 0 0 0-1.924-.91 483.689 483.689 0 0 0-119.688 37.107 1.712 1.712 0 0 0-.788.676C39.068 183.651 18.186 294.69 28.43 404.354a2.016 2.016 0 0 0 .765 1.375 487.666 487.666 0 0 0 146.825 74.189 1.9 1.9 0 0 0 2.063-.676A348.2 348.2 0 0 0 208.12 430.4a1.86 1.86 0 0 0-1.019-2.588 321.173 321.173 0 0 1-45.868-21.853 1.885 1.885 0 0 1-.185-3.126 251.047 251.047 0 0 0 9.109-7.137 1.819 1.819 0 0 1 1.9-.256c96.229 43.917 200.41 43.917 295.5 0a1.812 1.812 0 0 1 1.924.233 234.533 234.533 0 0 0 9.132 7.16 1.884 1.884 0 0 1-.162 3.126 301.407 301.407 0 0 1-45.89 21.83 1.875 1.875 0 0 0-1 2.611 391.055 391.055 0 0 0 30.014 48.815 1.864 1.864 0 0 0 2.063.7A486.048 486.048 0 0 0 610.7 405.729a1.882 1.882 0 0 0 .765-1.352c12.264-126.783-20.532-236.912-86.934-334.541ZM222.491 337.58c-28.972 0-52.844-26.587-52.844-59.239s23.409-59.241 52.844-59.241c29.665 0 53.306 26.82 52.843 59.239 0 32.654-23.41 59.241-52.843 59.241Zm195.38 0c-28.971 0-52.843-26.587-52.843-59.239s23.409-59.241 52.843-59.241c29.667 0 53.307 26.82 52.844 59.239 0 32.654-23.177 59.241-52.844 59.241Z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M524.531 69.836a1.5 1.5 0 0 0-.764-.7A485.065 485.065 0 0 0 404.081 32.03a1.816 1.816 0 0 0-1.923.91 337.461 337.461 0 0 0-14.9 30.6 447.848 447.848 0 0 0-134.426 0 309.541 309.541 0 0 0-15.135-30.6 1.89 1.89 0 0 0-1.924-.91 483.689 483.689 0 0 0-119.688 37.107 1.712 1.712 0 0 0-.788.676C39.068 183.651 18.186 294.69 28.43 404.354a2.016 2.016 0 0 0 .765 1.375 487.666 487.666 0 0 0 146.825 74.189 1.9 1.9 0 0 0 2.063-.676A348.2 348.2 0 0 0 208.12 430.4a1.86 1.86 0 0 0-1.019-2.588 321.173 321.173 0 0 1-45.868-21.853 1.885 1.885 0 0 1-.185-3.126 251.047 251.047 0 0 0 9.109-7.137 1.819 1.819 0 0 1 1.9-.256c96.229 43.917 200.41 43.917 295.5 0a1.812 1.812 0 0 1 1.924.233 234.533 234.533 0 0 0 9.132 7.16 1.884 1.884 0 0 1-.162 3.126 301.407 301.407 0 0 1-45.89 21.83 1.875 1.875 0 0 0-1 2.611 391.055 391.055 0 0 0 30.014 48.815 1.864 1.864 0 0 0 2.063.7A486.048 486.048 0 0 0 610.7 405.729a1.882 1.882 0 0 0 .765-1.352c12.264-126.783-20.532-236.912-86.934-334.541ZM222.491 337.58c-28.972 0-52.844-26.587-52.844-59.239s23.409-59.241 52.844-59.241c29.665 0 53.306 26.82 52.843 59.239 0 32.654-23.41 59.241-52.843 59.241Zm195.38 0c-28.971 0-52.843-26.587-52.843-59.239s23.409-59.241 52.843-59.241c29.667 0 53.307 26.82 52.844 59.239 0 32.654-23.177 59.241-52.844 59.241Z"/></svg>
     </a>
   
 </div>
@@ -2552,10 +2230,11 @@
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "../../../..", "features": ["navigation.tracking", "navigation.sections", "navigation.indexes", "navigation.top"], "search": "../../../../assets/javascripts/workers/search.b97dbffb.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    <script id="__config" type="application/json">{"base": "../../../..", "features": ["navigation.tracking", "navigation.sections", "navigation.indexes", "navigation.top"], "search": "../../../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../../../assets/javascripts/bundle.6c7ad80a.min.js"></script>
+      <script src="../../../../assets/javascripts/bundle.51198bba.min.js"></script>
       
         <script src="../../../../js/mathjax.js"></script>
       
