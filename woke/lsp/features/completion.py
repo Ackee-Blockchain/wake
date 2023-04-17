@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 import enum
+import logging
+from itertools import chain
 from typing import Any, List, Optional, Union
 
+from ...compiler.source_unit_name_resolver import SourceUnitNameResolver
 from ..common_structures import (
     Command,
     MarkupContent,
     MarkupKind,
     PartialResultParams,
+    Position,
     Range,
     TextDocumentPositionParams,
     TextDocumentRegistrationOptions,
@@ -15,7 +19,11 @@ from ..common_structures import (
     WorkDoneProgressOptions,
     WorkDoneProgressParams,
 )
+from ..context import LspContext
 from ..lsp_data_model import LspModel
+from ..utils import uri_to_path
+
+logger = logging.getLogger(__name__)
 
 
 class CompletionItemKind(enum.IntEnum):
@@ -344,7 +352,7 @@ class CompletionList(LspModel):
     This list is not complete. Further typing should result in recomputing this list.
     Recomputed lists have all their items replaced (not appended) in the incomplete completion sessions.
     """
-    item_defaults: Optional[CompletionListItemDefaults]
+    item_defaults: Optional[CompletionListItemDefaults] = None
     """
     In many cases the items of an actual completion result share the same
     value for properties like `commitCharacters` or the range of a text
@@ -408,100 +416,217 @@ class CompletionItem(LspModel):
     The label property is also by default the text that
     is inserted when selecting this completion.
     """
-    label_details: Optional[CompletionItemLabelDetails]
+    label_details: Optional[CompletionItemLabelDetails] = None
     """
     Additional details for the label
     """
-    kind: Optional[CompletionItemKind]
+    kind: Optional[CompletionItemKind] = None
     """
     The kind of this completion item. Based of the kind
     an icon is chosen by the editor. The standardized set
     of available values is defined in `CompletionItemKind`.
     """
-    tags: Optional[List[CompletionItemTag]]
+    tags: Optional[List[CompletionItemTag]] = None
     """
     Tags for this completion item.
     """
-    detail: Optional[str]
+    detail: Optional[str] = None
     """
     A human-readable string with additional information
     about this item, like type or symbol information.
     """
-    documentation: Optional[Union[str, MarkupContent]]
+    documentation: Optional[Union[str, MarkupContent]] = None
     """
     A human-readable string that represents a doc-comment.
     """
-    deprecated: Optional[bool]
+    deprecated: Optional[bool] = None
     """
     Indicates if this item is deprecated.
     """
-    preselect: Optional[bool]
+    preselect: Optional[bool] = None
     """
     Select this item when showing.
     """
-    sort_text: Optional[str]
+    sort_text: Optional[str] = None
     """
     A string that should be used when comparing this item
     with other items. When `falsy` the label is used
     as the sort text for this item.
     """
-    filter_text: Optional[str]
+    filter_text: Optional[str] = None
     """
     A string that should be used when filtering a set of
     completion items. When `falsy` the label is used as the
     filter text for this item.
     """
-    insert_text: Optional[str]
+    insert_text: Optional[str] = None
     """
     A string that should be inserted into a document when selecting
     this completion. When `falsy` the label is used as the insert text
     for this item.
     """
-    insert_text_format: Optional[InsertTextFormat]
+    insert_text_format: Optional[InsertTextFormat] = None
     """
     The format of the insert text. The format applies to both the
     `insertText` property and the `newText` property of a provided
     `textEdit`. If omitted defaults to `InsertTextFormat.PlainText`.
     """
-    insert_text_mode: Optional[InsertTextMode]
+    insert_text_mode: Optional[InsertTextMode] = None
     """
     How whitespace and indentation is handled during completion
     item insertion. If not provided the client's default value depends on
     the `textDocument.completion.insertTextMode` client capability.
     """
-    text_edit: Optional[Union[TextEdit, InsertReplaceEdit]]
+    text_edit: Optional[Union[TextEdit, InsertReplaceEdit]] = None
     """
     An edit which is applied to a document when selecting this completion.
     When an edit is provided the value of `insertText` is ignored.
     """
-    text_edit_text: Optional[str]
+    text_edit_text: Optional[str] = None
     """
     The edit text ussed if the completion item is part of a
     CompletionList and CompletionList defines an item default for
     the text edit range.
     """
-    additional_text_edits: Optional[List[TextEdit]]
+    additional_text_edits: Optional[List[TextEdit]] = None
     """
     An optional array of additional text edits that are applied when
     selecting this completion. Edits must not overlap (including the same
     insert position) with the main edit nor with themselves.
     """
-    commit_characters: Optional[List[str]]
+    commit_characters: Optional[List[str]] = None
     """
     An optional set of characters that when pressed while this completion is
     active will accept it first and then type that character. *Note* that all
     commit characters should have `length=1` and that superfluous characters
     will be ignored.
     """
-    command: Optional[Command]
+    command: Optional[Command] = None
     """
     An optional command that is executed *after* inserting this completion.
     *Note* that additional modifications to the current document should be
     described with the additionalTextEdits-property.
     """
     # LSPAny
-    data: Optional[Any]
+    data: Optional[Any] = None
     """
     A data entry field that is preserved on a completion item between
     a completion and a completion resolve request.
     """
+
+
+async def completion(
+    context: LspContext, params: CompletionParams
+) -> Optional[CompletionList]:
+    path = uri_to_path(params.text_document.uri).resolve()
+    node = await context.parser.get_node_at_position(
+        path, params.position.line, params.position.character
+    )
+
+    while node is not None:
+        if node.type == "import_directive":
+            break
+        node = node.parent
+
+    if node is None:
+        return None
+
+    this_source_unit_name = None
+    for include_path in chain(
+        context.config.compiler.solc.include_paths, [context.config.project_root_path]
+    ):
+        try:
+            rel_path = str(path.relative_to(include_path))
+            if this_source_unit_name is None or len(this_source_unit_name) > len(
+                rel_path
+            ):
+                this_source_unit_name = rel_path
+        except ValueError:
+            continue
+
+    if this_source_unit_name is None:
+        return None
+
+    source_node = node.child_by_field_name("source")
+    import_str = source_node.text.decode("utf-16-le")[1:-1]  # remove quotes
+    resolver = SourceUnitNameResolver(context.config)
+    import_str = resolver.apply_remapping(this_source_unit_name, import_str)
+
+    parts = import_str.split("/")
+    parent = "/".join(parts[:-1])
+    prefix = parts[-1]
+
+    completions = set()
+
+    if len(parent) == 0:
+        for p in path.parent.iterdir():
+            if p.is_dir():
+                completions.add(("./" + p.name + "/", CompletionItemKind.FOLDER))
+            elif p.is_file() and p.suffix == ".sol" and p != path:
+                completions.add(("./" + p.name, CompletionItemKind.FILE))
+
+        for include_path in chain(
+            context.config.compiler.solc.include_paths,
+            [context.config.project_root_path],
+        ):
+            if include_path.is_dir():
+                for p in include_path.iterdir():
+                    if p.is_dir():
+                        completions.add((p.name + "/", CompletionItemKind.FOLDER))
+                    elif p.is_file() and p.suffix == ".sol":
+                        completions.add((p.name, CompletionItemKind.FILE))
+
+        for remapping in context.config.compiler.solc.remappings:
+            if remapping.context is None or this_source_unit_name.startswith(
+                remapping.context
+            ):
+                completions.add((remapping.prefix, CompletionItemKind.MODULE))
+
+    elif parent.startswith("."):
+        dir = path.parent / parent
+        if dir.is_dir():
+            for p in dir.iterdir():
+                if p.is_dir():
+                    completions.add((p.name + "/", CompletionItemKind.FOLDER))
+                elif p.is_file() and p.suffix == ".sol" and p != path:
+                    completions.add((p.name, CompletionItemKind.FILE))
+    else:
+        for include_path in chain(
+            context.config.compiler.solc.include_paths,
+            [context.config.project_root_path],
+        ):
+            if include_path.is_dir():
+                dir = include_path / parent
+                if dir.is_dir():
+                    for p in dir.iterdir():
+                        if p.is_dir():
+                            completions.add((p.name + "/", CompletionItemKind.FOLDER))
+                        elif p.is_file() and p.suffix == ".sol":
+                            completions.add((p.name, CompletionItemKind.FILE))
+
+    import_end_pos = Position(
+        line=source_node.end_point[0],
+        character=source_node.end_point[1] // 2 - 1,
+    )
+
+    return CompletionList(
+        is_incomplete=False,
+        items=[
+            CompletionItem(
+                label=l,
+                kind=k,
+                text_edit=TextEdit(
+                    range=Range(
+                        start=import_end_pos,
+                        end=import_end_pos,
+                    ),
+                    new_text=l[len(prefix) :],
+                ),
+            )
+            for l, k in sorted(completions)
+            if l.startswith(prefix)
+        ],
+    )
+
+
+CompletionList.update_forward_refs()

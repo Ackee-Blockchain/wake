@@ -1183,9 +1183,16 @@ class ClientCapabilitiesGeneralStaleRequestSupport(LspModel):
     retry_on_content_modified: List[str]
 
 
+class PositionEncodingKind(StrEnum):
+    UTF8 = "utf-8"
+    UTF16 = "utf-16"
+    UTF32 = "utf-32"
+
+
 class ClientCapabilitiesGeneral(LspModel):
     stale_request_support: Optional[ClientCapabilitiesGeneralStaleRequestSupport]
     regular_expressions: Optional[RegularExpressionsClientCapabilities]
+    position_encodings: Optional[List[PositionEncodingKind]]
     """
     markdown: Optional[MarkdownClientCapabilities]
     """

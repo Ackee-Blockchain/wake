@@ -16,7 +16,7 @@ class SourceUnitNameResolver:
     def __init__(self, woke_config: WokeConfig):
         self.__config = woke_config
 
-    def __apply_remapping(self, parent_source_unit: str, source_unit_name: str) -> str:
+    def apply_remapping(self, parent_source_unit: str, source_unit_name: str) -> str:
         """
         Try to apply a remapping and return a source unit name. Up to one remapping can be applied to a single import.
         It is the longest one. In case of multiple remappings with the same length, the one specified last wins.
@@ -52,7 +52,7 @@ class SourceUnitNameResolver:
         """
         Return a source unit name of a direct import in the file with given source unit name.
         """
-        return self.__apply_remapping(parent_source_unit, import_str)
+        return self.apply_remapping(parent_source_unit, import_str)
 
     def __resolve_relative_import(
         self, parent_source_unit: str, import_str: str
@@ -99,7 +99,7 @@ class SourceUnitNameResolver:
             )
         else:
             source_unit_name = "/".join(normalized_import_parts)
-        return self.__apply_remapping(parent_source_unit, source_unit_name)
+        return self.apply_remapping(parent_source_unit, source_unit_name)
 
     def resolve_import(self, parent_source_unit: str, import_str: str) -> str:
         """
