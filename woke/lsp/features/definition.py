@@ -14,6 +14,7 @@ from woke.ast.ir.expression.identifier import Identifier
 from woke.ast.ir.expression.member_access import MemberAccess
 from woke.ast.ir.expression.unary_operation import UnaryOperation
 from woke.ast.ir.meta.identifier_path import IdentifierPath
+from woke.ast.ir.meta.source_unit import SourceUnit
 from woke.ast.ir.type_name.user_defined_type_name import UserDefinedTypeName
 from woke.lsp.common_structures import (
     DocumentUri,
@@ -95,7 +96,7 @@ def _get_results_from_node(
     else:
         node = original_node
 
-    if not isinstance(node, DeclarationAbc):
+    if not isinstance(node, (DeclarationAbc, SourceUnit)):
         return None
 
     definitions = []
@@ -129,6 +130,8 @@ def _get_results_from_node(
         for child_modifier in node.child_modifiers:
             if child_modifier.implemented:
                 definitions.append((child_modifier.file, child_modifier.name_location))
+    elif isinstance(node, SourceUnit):
+        definitions.append((node.file, node.byte_location))
     else:
         definitions.append((node.file, node.name_location))
 
@@ -158,8 +161,11 @@ async def _get_definition_from_cache(
 
     node = max(nodes, key=lambda n: n.ast_tree_depth)
 
-    if isinstance(node, DeclarationAbc):
-        location = node.name_location
+    if isinstance(node, (DeclarationAbc, SourceUnit)):
+        if isinstance(node, DeclarationAbc):
+            location = node.name_location
+        else:
+            location = node.byte_location
         forward_changes = context.compiler.get_last_compilation_forward_changes(path)
         if forward_changes is None:
             raise Exception("No forward changes found")
