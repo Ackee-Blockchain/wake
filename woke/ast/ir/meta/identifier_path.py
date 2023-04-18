@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from .inheritance_specifier import InheritanceSpecifier
     from .modifier_invocation import ModifierInvocation
     from .override_specifier import OverrideSpecifier
+    from .source_unit import SourceUnit
     from .using_for_directive import UsingForDirective
     from ..type_name.user_defined_type_name import UserDefinedTypeName
 
@@ -61,13 +62,15 @@ class IdentifierPathPart:
         self._reference_resolver.register_post_process_callback(self._post_process)
 
     def _post_process(self, callback_params: CallbackParams):
+        from .source_unit import SourceUnit
+
         referenced_declaration = self._reference_resolver.resolve_node(
             self._path_referenced_declaration_id, self._cu_hash
         )
         for i in range(self._path_index):
             assert referenced_declaration.parent is not None
             referenced_declaration = referenced_declaration.parent
-        assert isinstance(referenced_declaration, DeclarationAbc)
+        assert isinstance(referenced_declaration, (DeclarationAbc, SourceUnit))
 
         node_path_order = self._reference_resolver.get_node_path_order(
             AstNodeId(referenced_declaration.ast_node_id),
@@ -76,15 +79,19 @@ class IdentifierPathPart:
         this_cu_id = self._reference_resolver.get_ast_id_from_cu_node_path_order(
             node_path_order, self._cu_hash
         )
-
         self._referenced_declaration_id = this_cu_id
-        referenced_declaration.register_reference(self)
-        self._reference_resolver.register_destroy_callback(
-            self.file, partial(self._destroy, referenced_declaration)
-        )
 
-    def _destroy(self, referenced_declaration: DeclarationAbc) -> None:
-        referenced_declaration.unregister_reference(self)
+        if isinstance(referenced_declaration, DeclarationAbc):
+            referenced_declaration.register_reference(self)
+            self._reference_resolver.register_destroy_callback(
+                self.file, partial(self._destroy, referenced_declaration)
+            )
+
+    def _destroy(
+        self, referenced_declaration: Union[DeclarationAbc, SourceUnit]
+    ) -> None:
+        if isinstance(referenced_declaration, DeclarationAbc):
+            referenced_declaration.unregister_reference(self)
 
     @property
     def underlying_node(self) -> Union[IdentifierPath, UserDefinedTypeName]:
@@ -125,18 +132,25 @@ class IdentifierPathPart:
         return self._name
 
     @property
-    def referenced_declaration(self) -> DeclarationAbc:
+    def referenced_declaration(self) -> Union[DeclarationAbc, SourceUnit]:
         """
         !!! example
             In the case of `Contract.Struct` [IdentifierPath][woke.ast.ir.meta.identifier_path.IdentifierPath], the referenced declaration of `Struct` is the declaration of the struct `Struct` in the contract `Contract`.
+        !!! example
+            Can be a [SourceUnit][woke.ast.ir.meta.source_unit.SourceUnit] in the following case:
+            ```solidity
+            import * as Utils from "./Utils.sol";
+            ```
         Returns:
             Declaration referenced by this identifier path part.
         """
+        from .source_unit import SourceUnit
+
         assert self._referenced_declaration_id is not None
         node = self._reference_resolver.resolve_node(
             self._referenced_declaration_id, self._cu_hash
         )
-        assert isinstance(node, DeclarationAbc)
+        assert isinstance(node, (DeclarationAbc, SourceUnit))
         return node
 
 
