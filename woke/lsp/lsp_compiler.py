@@ -3,6 +3,8 @@ from __future__ import annotations
 import asyncio
 import difflib
 import logging
+import multiprocessing
+import multiprocessing.connection
 import re
 import threading
 import time
@@ -814,18 +816,36 @@ class LspCompiler:
 
         self.__compilation_errors = deepcopy(errors_per_file)
 
-        # diagnostics (compiler errors and warnings + detections) are sent in this function
-        await self.__run_detectors()
+        # send compiler warnings and errors first without waiting for detectors to finish
+        for path, errors in errors_per_file.items():
+            await self.__diagnostic_queue.put((path, errors))
+
+        # run detectors in a separate process
+        parent_conn, child_conn = multiprocessing.Pipe()
+        p = multiprocessing.Process(
+            target=self.__run_detectors,
+            args=(child_conn,),
+        )
+        p.start()
+        while True:
+            if parent_conn.poll():
+                errors_per_file = parent_conn.recv()
+                # send both compiler and detector warnings and errors
+                for path, errors in errors_per_file.items():
+                    await self.__diagnostic_queue.put((path, errors))
+                break
+            elif not p.is_alive():
+                break
+
+            await asyncio.sleep(0.1)
 
         if len(files_to_recompile) > 0:
             # avoid infinite recursion
             if files_to_recompile != files_to_compile or full_compile:
                 await self.__compile(files_to_recompile, False)
 
-    async def __run_detectors(self):
-        errors_per_file: Dict[Path, Set[Diagnostic]] = deepcopy(
-            self.__compilation_errors
-        )
+    def __run_detectors(self, conn: multiprocessing.connection.Connection) -> None:
+        errors_per_file: Dict[Path, Set[Diagnostic]] = self.__compilation_errors
 
         if self.__config.lsp.detectors.enable:
             for detection in detect(self.__config, self.__source_units):
@@ -867,8 +887,7 @@ class LspCompiler:
                     )
                 )
 
-        for path, errors in errors_per_file.items():
-            await self.__diagnostic_queue.put((path, errors))
+        conn.send(errors_per_file)
 
     async def __compilation_loop(self):
         if self.__perform_files_discovery:
@@ -915,7 +934,24 @@ class LspCompiler:
                 self.__deleted_files.clear()
 
             if self.__force_run_detectors:
-                await self.__run_detectors()
+                parent_conn, child_conn = multiprocessing.Pipe()
+                p = multiprocessing.Process(
+                    target=self.__run_detectors,
+                    args=(child_conn,),
+                )
+                p.start()
+                while True:
+                    if parent_conn.poll():
+                        errors_per_file = parent_conn.recv()
+                        # send both compiler and detector warnings and errors
+                        for path, errors in errors_per_file.items():
+                            await self.__diagnostic_queue.put((path, errors))
+                        break
+                    elif not p.is_alive():
+                        break
+
+                    await asyncio.sleep(0.1)
+
                 self.__force_run_detectors = False
 
             if self.__file_changes_queue.empty():
