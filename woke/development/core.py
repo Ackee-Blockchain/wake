@@ -51,6 +51,7 @@ from typing_extensions import (
 
 from woke.utils import StrEnum
 
+from ..utils.keyed_default_dict import KeyedDefaultDict
 from . import hardhat_console
 from .blocks import ChainBlocks
 from .chain_interfaces import (
@@ -1034,6 +1035,7 @@ class Chain(ABC):
     _chain_interface: ChainInterfaceAbc
     _accounts: List[Account]
     _accounts_set: Set[Account]  # for faster lookup
+    _nonces: KeyedDefaultDict[Address, int]  # pyright: reportGeneralTypeIssues=false
     _default_call_account: Optional[Account]
     _default_tx_account: Optional[Account]
     _default_estimate_account: Optional[Account]
@@ -1063,10 +1065,6 @@ class Chain(ABC):
 
     @abstractmethod
     def _connect_finalize(self) -> None:
-        ...
-
-    @abstractmethod
-    def _update_nonce(self, address: Address, nonce: int) -> None:
         ...
 
     @abstractmethod
@@ -1260,6 +1258,11 @@ class Chain(ABC):
                 Account(acc, self) for acc in self._chain_interface.get_accounts()
             ]
             self._accounts_set = set(self._accounts)
+            self._nonces = KeyedDefaultDict(
+                lambda addr: self._chain_interface.get_transaction_count(
+                    str(addr)
+                )  # pyright: reportGeneralTypeIssues=false
+            )
             self._snapshots = {}
             self._deployed_libraries = defaultdict(list)
             self._default_call_account = (
@@ -1528,6 +1531,9 @@ class Chain(ABC):
                 raise
         finally:
             self.revert(snapshot_id)
+
+    def _update_nonce(self, address: Address, nonce: int) -> None:
+        self._nonces[address] = nonce
 
     def _convert_to_web3_type(self, value: Any) -> Any:
         if dataclasses.is_dataclass(value):

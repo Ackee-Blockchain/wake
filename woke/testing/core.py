@@ -22,14 +22,12 @@ from woke.development.json_rpc import JsonRpcError
 
 from ..development.chain_interfaces import AnvilChainInterface
 from ..development.transactions import TransactionAbc, TransactionStatusEnum
-from ..utils.keyed_default_dict import KeyedDefaultDict
 
 
 class Chain(woke.development.core.Chain):
     _block_gas_limit: int
     _gas_price: Wei
     _max_priority_fee_per_gas: Wei
-    _nonces: KeyedDefaultDict[Address, int]  # pyright: reportGeneralTypeIssues=false
     _initial_base_fee_per_gas: Wei
 
     @contextmanager
@@ -62,11 +60,6 @@ class Chain(woke.development.core.Chain):
         self._require_signed_txs = False
         self._gas_price = Wei(0)
         self._max_priority_fee_per_gas = Wei(0)
-        self._nonces = KeyedDefaultDict(
-            lambda addr: self._chain_interface.get_transaction_count(
-                str(addr)
-            )  # pyright: reportGeneralTypeIssues=false
-        )
         block_info = self._chain_interface.get_block("pending")
         assert "gasLimit" in block_info
         self._block_gas_limit = int(block_info["gasLimit"], 16)
@@ -88,9 +81,6 @@ class Chain(woke.development.core.Chain):
     def _connect_finalize(self) -> None:
         connected_chains.remove(self)
         chain_interfaces_manager.free(self._chain_interface)
-
-    def _update_nonce(self, address: Address, nonce: int) -> None:
-        self._nonces[address] = nonce
 
     @check_connected
     def snapshot(self) -> str:
