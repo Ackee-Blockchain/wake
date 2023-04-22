@@ -223,6 +223,7 @@ class ChainInterfaceAbc(ABC):
             client_version: str = communicator.send_request(
                 "web3_clientVersion"
             ).lower()
+            chain_id = int(communicator.send_request("eth_chainId"), 16)
             if "anvil" in client_version:
                 return AnvilChainInterface(config, communicator)
             elif "hardhat" in client_version:
@@ -235,6 +236,10 @@ class ChainInterfaceAbc(ABC):
                 return NitroChainInterface(config, communicator)
             elif "hermez" in client_version:
                 return HermezChainInterface(config, communicator)
+            elif chain_id in {43113, 43114}:
+                # Avax client reports just a version number without the name of the client
+                # => hard to distinguish from other clients
+                return AvalancheChainInterface(config, communicator)
             else:
                 raise NotImplementedError(
                     f"Client version {client_version} not supported"
@@ -710,3 +715,9 @@ class NitroChainInterface(GethLikeChainInterfaceAbc):
     @property
     def _name(self) -> str:
         return "Nitro"
+
+
+class AvalancheChainInterface(GethLikeChainInterfaceAbc):
+    @property
+    def _name(self) -> str:
+        return "Avalanche"
