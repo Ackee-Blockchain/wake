@@ -1924,7 +1924,7 @@ class Chain(ABC):
                     try:
                         tx_hash = e.args[0]["data"]["txHash"]
                     except Exception:
-                        raise e
+                        raise e from None
             elif key is not None:
                 signed_tx = bytes(
                     eth_account.Account.sign_transaction(tx_params, key).rawTransaction
@@ -1935,7 +1935,7 @@ class Chain(ABC):
                     try:
                         tx_hash = e.args[0]["data"]["txHash"]
                     except Exception:
-                        raise e
+                        raise e from None
             else:
                 raise ValueError(
                     f"Private key for account {tx_params['from']} not known and is not owned by the connected client either."
