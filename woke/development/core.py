@@ -32,6 +32,7 @@ from typing import (
     cast,
     overload,
 )
+from urllib.error import HTTPError
 
 import eth_abi
 import eth_abi.packed
@@ -1177,7 +1178,7 @@ class Chain(ABC):
                     }
                 )
                 self._debug_trace_call_supported = True
-            except JsonRpcError:
+            except (JsonRpcError, HTTPError):
                 self._debug_trace_call_supported = False
 
             self._chain_id = self._chain_interface.get_chain_id()

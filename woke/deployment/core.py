@@ -1,6 +1,7 @@
 import time
 from contextlib import contextmanager, nullcontext
 from typing import Any, Dict, Iterable, Optional, Union, cast
+from urllib.error import HTTPError
 
 import eth_utils
 from rich.console import Group
@@ -66,7 +67,7 @@ class Chain(woke.development.core.Chain):
         if min_gas_price is not None:
             try:
                 self._chain_interface.set_min_gas_price(min_gas_price)
-            except JsonRpcError:
+            except (JsonRpcError, HTTPError):
                 pass
 
     def _connect_finalize(self) -> None:
@@ -279,11 +280,18 @@ class Chain(woke.development.core.Chain):
 
                     if "gas" not in params or params["gas"] == "auto":
                         tx["gas"] = gas_used
-            except JsonRpcError as e:
+            except (JsonRpcError, HTTPError) as e:
                 try:
-                    # will re-raise if not a revert error
-                    self._process_call_revert(e)
-                    raise
+                    if isinstance(e, JsonRpcError):
+                        # will re-raise if not a revert error
+                        self._process_call_revert(e)
+                        raise
+                    else:
+                        # HTTPError -> eth_createAccessList not supported
+                        if "accessList" not in params:
+                            tx["accessList"] = []
+                        else:
+                            raise
                 except JsonRpcError:
                     # eth_createAccessList probably not supported
                     if "accessList" not in params:
