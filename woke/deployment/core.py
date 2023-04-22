@@ -247,7 +247,14 @@ class Chain(woke.development.core.Chain):
         if "gas" not in params or params["gas"] == "auto":
             # use "auto when unset
             try:
-                tx["gas"] = int(self._chain_interface.estimate_gas(tx) * 1.1)
+                if self.chain_id in {137, 80001, 1101, 1442}:
+                    tx_copy = tx.copy()
+                    tx_copy.pop("gasPrice", None)
+                    tx_copy.pop("maxPriorityFeePerGas", None)
+                    tx_copy.pop("maxFeePerGas", None)
+                    tx["gas"] = int(self._chain_interface.estimate_gas(tx_copy) * 1.1)
+                else:
+                    tx["gas"] = int(self._chain_interface.estimate_gas(tx) * 1.1)
             except JsonRpcError as e:
                 self._process_call_revert(e)
                 raise
