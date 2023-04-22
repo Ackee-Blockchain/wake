@@ -234,12 +234,12 @@ class ChainInterfaceAbc(ABC):
                 return GethChainInterface(config, communicator)
             elif "nitro" in client_version:
                 return NitroChainInterface(config, communicator)
-            elif "hermez" in client_version:
-                return HermezChainInterface(config, communicator)
             elif chain_id in {43113, 43114}:
                 # Avax client reports just a version number without the name of the client
                 # => hard to distinguish from other clients
                 return AvalancheChainInterface(config, communicator)
+            elif chain_id in {1101, 1442}:
+                return HermezChainInterface(config, communicator)
             else:
                 raise NotImplementedError(
                     f"Client version {client_version} not supported"
