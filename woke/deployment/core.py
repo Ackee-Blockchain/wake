@@ -354,11 +354,11 @@ class Chain(woke.development.core.Chain):
         if not config.deployment.silent:
             if tx.chain.chain_id in chain_explorer_urls:
                 console.print(
-                    f"Transaction [link={chain_explorer_urls[tx.chain.chain_id].url}/tx/{tx.tx_hash}]{tx.tx_hash}[/link] mined in block {tx.block.number}"
+                    f"Transaction [link={chain_explorer_urls[tx.chain.chain_id].url}/tx/{tx.tx_hash}]{tx.tx_hash}[/link] mined in block {tx.block_number}"
                 )
             else:
                 console.print(
-                    f"Transaction {tx.tx_hash} mined in block {tx.block.number}"
+                    f"Transaction {tx.tx_hash} mined in block {tx.block_number}"
                 )
 
         latest_block_number = self.chain_interface.get_block_number()
@@ -380,16 +380,16 @@ class Chain(woke.development.core.Chain):
                 task_id = progress.add_task(
                     "Confirmations",
                     total=confirmations,
-                    completed=(latest_block_number - tx.block.number + 1),
+                    completed=(latest_block_number - tx.block_number + 1),
                 )
-            while latest_block_number - tx.block.number < confirmations - 1:
+            while latest_block_number - tx.block_number < confirmations - 1:
                 time.sleep(1)
                 latest_block_number = self.chain_interface.get_block_number()
                 if progress is not None:
                     progress.update(
                         task_id,
                         completed=(
-                            latest_block_number - tx.block.number + 1
+                            latest_block_number - tx.block_number + 1
                         ),  # pyright: reportUnboundVariable=false
                     )
 

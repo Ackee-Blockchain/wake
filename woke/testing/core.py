@@ -311,7 +311,7 @@ class Chain(woke.development.core.Chain):
         if confirmations == 1:
             return
 
-        while self.blocks["latest"].number - tx.block.number < confirmations - 1:
+        while self.blocks["latest"].number - tx.block_number < confirmations - 1:
             pass
 
     def _confirm_transaction(self, tx: TxParams) -> None:
