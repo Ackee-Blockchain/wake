@@ -5,6 +5,7 @@ from collections import defaultdict
 from pathlib import Path
 from types import TracebackType
 from typing import TYPE_CHECKING, Callable, DefaultDict, List, Optional, Set, Tuple
+from urllib.error import HTTPError
 
 from ipdb.__main__ import _init_pdb
 
@@ -162,7 +163,7 @@ class ChainInterfaceManager:
 
         try:
             snapshot = chain_interface.snapshot()
-        except JsonRpcError:
+        except (JsonRpcError, HTTPError):
             snapshot = None
 
         self._chain_interfaces[params].append((chain_interface, snapshot))
