@@ -229,8 +229,10 @@ class ChainInterfaceAbc(ABC):
                 return HardhatChainInterface(config, communicator)
             elif "ethereumjs" in client_version:
                 return GanacheChainInterface(config, communicator)
-            elif client_version.startswith(("geth", "bor", "nitro")):
+            elif client_version.startswith(("geth", "bor")):
                 return GethChainInterface(config, communicator)
+            elif "nitro" in client_version:
+                return NitroChainInterface(config, communicator)
             elif "hermez" in client_version:
                 return HermezChainInterface(config, communicator)
             else:
@@ -633,91 +635,78 @@ class GanacheChainInterface(ChainInterfaceAbc):
         self._communicator.send_request("miner_setGasPrice", [hex(value)])
 
 
-class GethChainInterface(ChainInterfaceAbc):
-    def get_accounts(self) -> List[str]:
-        return self._communicator.send_request("eth_accounts")
+class GethLikeChainInterfaceAbc(ChainInterfaceAbc, ABC):
+    @property
+    @abstractmethod
+    def _name(self) -> str:
+        ...
 
-    def get_automine(self) -> bool:
-        raise NotImplementedError("Geth does not support automine")
-
-    def set_automine(self, value: bool) -> None:
-        raise NotImplementedError("Geth does not support automine")
-
-    def reset(self, options: Optional[Dict] = None) -> None:
-        raise NotImplementedError("Geth does not support resetting the chain")
-
-    def set_coinbase(self, address: str) -> None:
-        raise NotImplementedError("Geth does not support setting coinbase")
-
-    def set_balance(self, address: str, value: int) -> None:
-        raise NotImplementedError("Geth does not support setting balance")
-
-    def set_block_gas_limit(self, gas_limit: int) -> None:
-        raise NotImplementedError("Geth does not support setting block gas limit")
-
-    def set_code(self, address: str, value: bytes) -> None:
-        raise NotImplementedError("Geth does not support setting code")
-
-    def set_nonce(self, address: str, value: int) -> None:
-        raise NotImplementedError("Geth does not support setting nonce")
-
-    def set_next_block_timestamp(self, timestamp: int) -> None:
-        raise NotImplementedError("Geth does not support setting next block timestamp")
-
-    def send_unsigned_transaction(self, params: TxParams) -> str:
-        raise NotImplementedError("Geth does not support sending unsigned transactions")
-
-    def set_next_block_base_fee_per_gas(self, value: int) -> None:
-        raise NotImplementedError(
-            "Geth does not support setting next block base fee per gas"
-        )
-
-    def set_min_gas_price(self, value: int) -> None:
-        raise NotImplementedError("Geth does not support setting min gas price")
-
-
-class HermezChainInterface(ChainInterfaceAbc):
     def get_accounts(self) -> List[str]:
         return []
 
     def get_automine(self) -> bool:
-        raise NotImplementedError("Hermez does not support automine")
+        raise NotImplementedError(f"{self._name} does not support automine")
 
     def set_automine(self, value: bool) -> None:
-        raise NotImplementedError("Hermez does not support automine")
+        raise NotImplementedError(f"{self._name} does not support automine")
 
     def reset(self, options: Optional[Dict] = None) -> None:
-        raise NotImplementedError("Hermez does not support resetting the chain")
+        raise NotImplementedError(f"{self._name} does not support resetting the chain")
 
     def set_coinbase(self, address: str) -> None:
-        raise NotImplementedError("Hermez does not support setting coinbase")
+        raise NotImplementedError(f"{self._name} does not support setting coinbase")
 
     def set_balance(self, address: str, value: int) -> None:
-        raise NotImplementedError("Hermez does not support setting balance")
+        raise NotImplementedError(f"{self._name} does not support setting balance")
 
     def set_block_gas_limit(self, gas_limit: int) -> None:
-        raise NotImplementedError("Hermez does not support setting block gas limit")
+        raise NotImplementedError(
+            f"{self._name} does not support setting block gas limit"
+        )
 
     def set_code(self, address: str, value: bytes) -> None:
-        raise NotImplementedError("Hermez does not support setting code")
+        raise NotImplementedError(f"{self._name} does not support setting code")
 
     def set_nonce(self, address: str, value: int) -> None:
-        raise NotImplementedError("Hermez does not support setting nonce")
+        raise NotImplementedError(f"{self._name} does not support setting nonce")
 
     def set_next_block_timestamp(self, timestamp: int) -> None:
         raise NotImplementedError(
-            "Hermez does not support setting next block timestamp"
+            f"{self._name} does not support setting next block timestamp"
         )
 
     def send_unsigned_transaction(self, params: TxParams) -> str:
         raise NotImplementedError(
-            "Hermez does not support sending unsigned transactions"
+            f"{self._name} does not support sending unsigned transactions"
         )
 
     def set_next_block_base_fee_per_gas(self, value: int) -> None:
         raise NotImplementedError(
-            "Hermez does not support setting next block base fee per gas"
+            f"{self._name} does not support setting next block base fee per gas"
         )
 
     def set_min_gas_price(self, value: int) -> None:
-        raise NotImplementedError("Hermez does not support setting min gas price")
+        raise NotImplementedError(
+            f"{self._name} does not support setting min gas price"
+        )
+
+
+class GethChainInterface(GethLikeChainInterfaceAbc):
+    @property
+    def _name(self) -> str:
+        return "Geth"
+
+    def get_accounts(self) -> List[str]:
+        return self._communicator.send_request("eth_accounts")
+
+
+class HermezChainInterface(GethLikeChainInterfaceAbc):
+    @property
+    def _name(self) -> str:
+        return "Hermez"
+
+
+class NitroChainInterface(GethLikeChainInterfaceAbc):
+    @property
+    def _name(self) -> str:
+        return "Nitro"

@@ -57,9 +57,8 @@ from .chain_interfaces import (
     AnvilChainInterface,
     ChainInterfaceAbc,
     GanacheChainInterface,
-    GethChainInterface,
+    GethLikeChainInterfaceAbc,
     HardhatChainInterface,
-    HermezChainInterface,
     TxParams,
 )
 from .globals import (
@@ -1204,7 +1203,7 @@ class Chain(ABC):
                     self._default_tx_type = 2
             elif isinstance(
                 self._chain_interface,
-                (GethChainInterface, HardhatChainInterface, HermezChainInterface),
+                (GethLikeChainInterfaceAbc, HardhatChainInterface),
             ):
                 if self._chain_id in {56, 97}:
                     # BSC clients do not fail on the calls below
@@ -1858,23 +1857,29 @@ class Chain(ABC):
         return console_logs
 
     def _process_call_revert(self, e: JsonRpcError):
-        if (
-            isinstance(self._chain_interface, (AnvilChainInterface, GethChainInterface))
-            and e.data["code"] == 3
-        ):
-            revert_data = e.data["data"]
-        elif (
-            isinstance(self._chain_interface, GanacheChainInterface)
-            and e.data["code"] == -32000
-        ):
-            revert_data = e.data["data"]
-        elif (
-            isinstance(self._chain_interface, HardhatChainInterface)
-            and e.data["code"] == -32603
-        ):
-            revert_data = e.data["data"]["data"]
-        else:
+        try:
             # Hermez does not provide revert data for estimate
+            if (
+                isinstance(
+                    self._chain_interface,
+                    (AnvilChainInterface, GethLikeChainInterfaceAbc),
+                )
+                and e.data["code"] == 3
+            ):
+                revert_data = e.data["data"]
+            elif (
+                isinstance(self._chain_interface, GanacheChainInterface)
+                and e.data["code"] == -32000
+            ):
+                revert_data = e.data["data"]
+            elif (
+                isinstance(self._chain_interface, HardhatChainInterface)
+                and e.data["code"] == -32603
+            ):
+                revert_data = e.data["data"]["data"]
+            else:
+                raise e from None
+        except Exception:
             raise e from None
 
         if revert_data.startswith("0x"):
