@@ -240,7 +240,7 @@ class Chain(woke.development.core.Chain):
                             self.chain_interface.get_block("pending")["baseFeePerGas"],
                             16,
                         )
-                        * 1.125
+                        * 2
                     )
 
         if "gas" not in params or params["gas"] == "auto":
