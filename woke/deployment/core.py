@@ -15,7 +15,6 @@ from woke.cli.console import console
 from woke.development.chain_interfaces import AnvilChainInterface, TxParams
 from woke.development.core import (
     Abi,
-    Account,
     Address,
     RequestType,
     RevertToSnapshotFailedError,
@@ -73,15 +72,12 @@ class Chain(woke.development.core.Chain):
     def _connect_finalize(self) -> None:
         chain_interfaces_manager.close(self._chain_interface)
 
-    def _update_nonce(self, address: Address, nonce: int) -> None:
-        # nothing to do
-        pass
-
     @check_connected
     def snapshot(self) -> str:
         snapshot_id = self._chain_interface.snapshot()
 
         self._snapshots[snapshot_id] = {
+            "nonces": self._nonces.copy(),
             "accounts": self._accounts.copy(),
             "default_call_account": self._default_call_account,
             "default_tx_account": self._default_tx_account,
@@ -97,6 +93,7 @@ class Chain(woke.development.core.Chain):
             raise RevertToSnapshotFailedError()
 
         snapshot = self._snapshots[snapshot_id]
+        self._nonces = snapshot["nonces"]
         self._accounts = snapshot["accounts"]
         self._default_call_account = snapshot["default_call_account"]
         self._default_tx_account = snapshot["default_tx_account"]
@@ -202,8 +199,9 @@ class Chain(woke.development.core.Chain):
             ]
             params["data"] += Abi.encode(types, arguments)
 
+        n = self._nonces[Address(sender)]
         tx: TxParams = {
-            "nonce": Account(sender, self).nonce,
+            "nonce": n,
             "from": sender,
             "value": params["value"] if "value" in params else 0,
             "data": params["data"],
