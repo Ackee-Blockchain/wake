@@ -1051,6 +1051,7 @@ class Chain(ABC):
     _require_signed_txs: bool
     _fork: Optional[str]
     _debug_trace_call_supported: bool
+    _client_version: str
 
     tx_callback: Optional[Callable[[TransactionAbc], None]]
 
@@ -1169,6 +1170,7 @@ class Chain(ABC):
 
         try:
             self._connected = True
+            self._client_version = self._chain_interface.get_client_version()
 
             try:
                 self._chain_interface.debug_trace_call(
@@ -1296,6 +1298,10 @@ class Chain(ABC):
     @property
     def connected(self) -> bool:
         return self._connected
+
+    @property
+    def client_version(self) -> str:
+        return self._client_version
 
     @property
     @check_connected

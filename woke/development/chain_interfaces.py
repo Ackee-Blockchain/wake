@@ -257,6 +257,9 @@ class ChainInterfaceAbc(ABC):
             except subprocess.TimeoutExpired:
                 self._process.kill()
 
+    def get_client_version(self) -> str:
+        return self._communicator.send_request("web3_clientVersion")
+
     def get_balance(
         self, address: str, block_identifier: Union[int, str] = "latest"
     ) -> int:
