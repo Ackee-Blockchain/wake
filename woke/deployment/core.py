@@ -266,7 +266,7 @@ class Chain(woke.development.core.Chain):
         ):
             try:
                 response = self._chain_interface.create_access_list(tx)
-                gas_used = int(response["gasUsed"], 16)
+                gas_used = int(int(response["gasUsed"], 16) * 1.1)
 
                 if params.get("accessList", None) == "auto" or (
                     "accessList" not in params and gas_used <= tx["gas"]
