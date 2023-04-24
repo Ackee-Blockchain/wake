@@ -107,3 +107,16 @@ And then run the script:
 ```shell
 woke run scripts/deploy.py
 ```
+
+## Supported chains
+
+The following chains are supported (mainnets and testnets):
+
+- Ethereum
+- Binance Smart Chain
+- Polygon
+- Avalanche
+- Arbitrum
+- Polygon zkEVM
+- Optimism
+- Base
