@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import logging
 import re
+from collections import deque
 from functools import lru_cache, partial
-from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Deque, Iterator, List, Optional, Set, Tuple, Union
 
 from woke.ast.enums import DataLocation, Mutability, Visibility
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -23,8 +24,14 @@ if TYPE_CHECKING:
     from ..declaration.contract_definition import ContractDefinition
     from ..declaration.function_definition import FunctionDefinition
     from ..declaration.struct_definition import StructDefinition
+    from ..expression.binary_operation import BinaryOperation
+    from ..expression.identifier import Identifier
+    from ..expression.member_access import MemberAccess
+    from ..expression.unary_operation import UnaryOperation
+    from ..meta.identifier_path import IdentifierPathPart
     from ..meta.parameter_list import ParameterList
     from ..meta.source_unit import SourceUnit
+    from ..statement.inline_assembly import ExternalReference
     from ..statement.variable_declaration_statement import VariableDeclarationStatement
 
 
@@ -219,6 +226,45 @@ class VariableDeclaration(DeclarationAbc):
         assert match
         byte_start = self._ast_node.src.byte_offset
         return byte_start + match.start("name"), byte_start + match.end("name")
+
+    def get_all_references(
+        self, include_declarations: bool
+    ) -> Iterator[
+        Union[
+            DeclarationAbc,
+            Identifier,
+            IdentifierPathPart,
+            MemberAccess,
+            ExternalReference,
+            UnaryOperation,
+            BinaryOperation,
+        ]
+    ]:
+        from .function_definition import FunctionDefinition
+
+        processed_declarations: Set[Union[FunctionDefinition, VariableDeclaration]] = {
+            self
+        }
+        declarations_queue: Deque[
+            Union[FunctionDefinition, VariableDeclaration]
+        ] = deque([self])
+
+        while declarations_queue:
+            declaration = declarations_queue.pop()
+            if include_declarations:
+                yield declaration
+            yield from declaration.references
+
+            if isinstance(declaration, (FunctionDefinition, VariableDeclaration)):
+                for base_function in declaration.base_functions:
+                    if base_function not in processed_declarations:
+                        declarations_queue.append(base_function)
+                        processed_declarations.add(base_function)
+            if isinstance(declaration, FunctionDefinition):
+                for child_function in declaration.child_functions:
+                    if child_function not in processed_declarations:
+                        declarations_queue.append(child_function)
+                        processed_declarations.add(child_function)
 
     @property
     def parent(
