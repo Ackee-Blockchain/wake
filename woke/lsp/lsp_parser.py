@@ -225,7 +225,7 @@ class LspParser:
                     pass
                 else:
                     while cursor.goto_next_sibling():
-                        if cursor.node.start_byte < offset < cursor.node.end_byte:
+                        if cursor.node.start_byte <= offset < cursor.node.end_byte:
                             break
 
             if cursor.node.start_byte <= offset < cursor.node.end_byte:
