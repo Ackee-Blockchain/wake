@@ -48,7 +48,7 @@ A development chain executable and its arguments can be configured in `woke.toml
 cmd = "anvil"  # other options: "hardhat", "ganache"
 
 [testing.anvil]
-cmd_args = "--prune-history 100 --steps-tracing --silent"
+cmd_args = "--prune-history 100 --transaction-block-keeper 10 --steps-tracing --silent"
 ```
 
 Commonly used parameters can be set as keyword arguments in `@default_chain.connect()`:

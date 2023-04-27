@@ -185,7 +185,9 @@ class GeneratorConfig(WokeConfigModel):
 
 
 class AnvilConfig(WokeConfigModel):
-    cmd_args: str = "--prune-history 100 --steps-tracing --silent"
+    cmd_args: str = (
+        "--prune-history 100 --transaction-block-keeper 10 --steps-tracing --silent"
+    )
 
 
 class GanacheConfig(WokeConfigModel):
