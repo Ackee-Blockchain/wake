@@ -170,6 +170,8 @@ class TypeGenerator:
     __contracts_revert_index: Dict[str, Set[int]]
     __creation_code_index: List[Tuple[Tuple[Tuple[int, bytes], ...], str]]
     __line_indexes: Dict[Path, List[Tuple[bytes, int]]]
+    # source unit name -> other source unit names in the cycle
+    __cyclic_source_units: DefaultDict[str, Set[str]]
 
     def __init__(self, config: WokeConfig, return_tx_obj: bool):
         self.__config = config
@@ -194,6 +196,7 @@ class TypeGenerator:
         self.__contracts_revert_index = {}
         self.__creation_code_index = []
         self.__line_indexes = {}
+        self.__cyclic_source_units = defaultdict(set)
 
         # built-in Error(str) and Panic(uint256) errors
         error_abi = {
@@ -260,8 +263,12 @@ class TypeGenerator:
         self.__sol_to_py_lookup[types.Function.__name__] = ("Callable", "Callable")
 
     @property
-    def current_source_unit(self):
+    def current_source_unit(self) -> str:
         return self.__current_source_unit
+
+    @property
+    def cyclic_source_units(self) -> Set[str]:
+        return self.__cyclic_source_units[self.__current_source_unit]
 
     def add_str_to_types(
         self, num_of_indentation: int, string: str, num_of_newlines: int
@@ -971,6 +978,7 @@ class TypeGenerator:
         return param_names, params
 
     def generate_func_returns(self, fn: FunctionDefinition) -> List[Tuple[str, str]]:
+        self.__imports.clear_tmp_type_checking_imports()
         return [
             (self.parse_type_and_import(par.type, True), par.type_string)
             for par in fn.return_parameters.parameters
@@ -1157,6 +1165,7 @@ class TypeGenerator:
 
             return parsed if use_parse else []
 
+        self.__imports.clear_tmp_type_checking_imports()
         generated_params = generate_getter_helper(decl.type_name, False, 0)
 
         if len(returns) == 0:
@@ -1266,6 +1275,11 @@ class TypeGenerator:
             return_types = returns[0][0]
         else:
             return_types = f"Tuple[{', '.join(map(itemgetter(0), returns))}]"
+
+        for cyclic_import in self.__imports.tmp_type_checking_imports:
+            self.add_str_to_types(2, cyclic_import, 1)
+        if self.__imports.tmp_type_checking_imports:
+            self.add_str_to_types(2, "", 1)
 
         assert declaration.function_selector is not None
         fn_selector = declaration.function_selector.hex()
@@ -1593,6 +1607,12 @@ class TypeGenerator:
         cycles_detected = False
         cycles: Set[FrozenSet[str]] = set()
 
+        for cycle in nx.simple_cycles(graph):
+            for source_unit_name in cycle:
+                self.__cyclic_source_units[source_unit_name].update(
+                    [s for s in cycle if s != source_unit_name]
+                )
+
         while len(graph) > 0:
             # use heapq to make order of source units deterministic
             sources: List[str] = [
@@ -1687,6 +1707,8 @@ class SourceUnitImports:
     __enum_imports: Set[str]
     __contract_imports: Set[str]
     __python_imports: Set[str]
+    __type_checking_imports: Set[str]
+    __tmp_type_checking_imports: Set[str]
     __type_gen: TypeGenerator
 
     def __init__(self, outer: TypeGenerator):
@@ -1695,48 +1717,64 @@ class SourceUnitImports:
         self.__all_imports = ""
         self.__contract_imports = set()
         self.__python_imports = set()
+        self.__type_checking_imports = set()
+        self.__tmp_type_checking_imports = set()
         self.__type_gen = outer
 
     def __str__(self) -> str:
-        self.add_str_to_imports(0, DEFAULT_IMPORTS, 1)
+        self.__add_str_to_imports(0, DEFAULT_IMPORTS, 1)
 
         for python_import in sorted(self.__python_imports):
-            self.add_str_to_imports(0, python_import, 1)
+            self.__add_str_to_imports(0, python_import, 1)
 
         if self.__python_imports:
-            self.add_str_to_imports(0, "", 1)
+            self.__add_str_to_imports(0, "", 1)
 
         for contract in sorted(self.__contract_imports):
-            self.add_str_to_imports(0, contract, 1)
+            self.__add_str_to_imports(0, contract, 1)
 
         if self.__contract_imports:
-            self.add_str_to_imports(0, "", 1)
+            self.__add_str_to_imports(0, "", 1)
 
         for struct in sorted(self.__struct_imports):
-            self.add_str_to_imports(0, struct, 1)
+            self.__add_str_to_imports(0, struct, 1)
 
         if self.__struct_imports:
-            self.add_str_to_imports(0, "", 1)
+            self.__add_str_to_imports(0, "", 1)
 
         for enum in sorted(self.__enum_imports):
-            self.add_str_to_imports(0, enum, 1)
+            self.__add_str_to_imports(0, enum, 1)
 
         if self.__enum_imports:
-            self.add_str_to_imports(0, "", 1)
+            self.__add_str_to_imports(0, "", 1)
 
-        self.add_str_to_imports(0, "", 2)
+        if self.__type_checking_imports:
+            self.__add_str_to_imports(0, "from typing import TYPE_CHECKING", 1)
+            self.__add_str_to_imports(0, "if TYPE_CHECKING:", 1)
+            for type_checking_import in sorted(self.__type_checking_imports):
+                self.__add_str_to_imports(1, type_checking_import, 1)
+            self.__add_str_to_imports(0, "", 1)
+
+        self.__add_str_to_imports(0, "", 2)
 
         return self.__all_imports
 
     def cleanup_imports(self) -> None:
-        self.__struct_imports = set()
-        self.__enum_imports = set()
-        self.__contract_imports = set()
-        self.__python_imports = set()
+        self.__struct_imports.clear()
+        self.__enum_imports.clear()
+        self.__contract_imports.clear()
+        self.__python_imports.clear()
+        self.__type_checking_imports.clear()
         self.__all_imports = ""
 
-    # TODO rename to better represent the functionality
-    def generate_import(
+    def clear_tmp_type_checking_imports(self) -> None:
+        self.__tmp_type_checking_imports.clear()
+
+    @property
+    def tmp_type_checking_imports(self) -> FrozenSet[str]:
+        return frozenset(self.__tmp_type_checking_imports)
+
+    def __generate_import(
         self, declaration: DeclarationAbc, source_unit_name: str
     ) -> str:
         source_unit_name = _make_path_alphanum(source_unit_name)
@@ -1747,7 +1785,7 @@ class SourceUnitImports:
             + self.__type_gen.get_name(declaration)
         )
 
-    def add_str_to_imports(
+    def __add_str_to_imports(
         self, num_of_indentation: int, string: str, num_of_newlines: int
     ):
         self.__all_imports += (
@@ -1763,12 +1801,14 @@ class SourceUnitImports:
         # only those structs that are defined in a different source unit should be imported
         if source_unit.source_unit_name == self.__type_gen.current_source_unit:
             return
-        struct_import = self.generate_import(
+        struct_import = self.__generate_import(
             struct_type.ir_node, source_unit.source_unit_name
         )
 
-        if struct_import not in self.__struct_imports:
-            # self.add_str_to_imports(0, struct_import, 1)
+        if source_unit.source_unit_name in self.__type_gen.cyclic_source_units:
+            self.__type_checking_imports.add(struct_import)
+            self.__tmp_type_checking_imports.add(struct_import)
+        else:
             self.__struct_imports.add(struct_import)
 
     # only used for top-level enums (not within contracts)
@@ -1779,12 +1819,14 @@ class SourceUnitImports:
         # only those structs that are defined in a different source unit should be imported
         if source_unit.source_unit_name == self.__type_gen.current_source_unit:
             return
-        enum_import = self.generate_import(
+        enum_import = self.__generate_import(
             enum_type.ir_node, source_unit.source_unit_name
         )
 
-        if enum_import not in self.__enum_imports:
-            # self.add_str_to_imports(0, struct_import, 1)
+        if source_unit.source_unit_name in self.__type_gen.cyclic_source_units:
+            self.__type_checking_imports.add(enum_import)
+            self.__tmp_type_checking_imports.add(enum_import)
+        else:
             self.__enum_imports.add(enum_import)
 
     def generate_contract_import(self, contract: ContractDefinition):
@@ -1792,9 +1834,12 @@ class SourceUnitImports:
         if source_unit.source_unit_name == self.__type_gen.current_source_unit:
             return
 
-        contract_import = self.generate_import(contract, source_unit.source_unit_name)
+        contract_import = self.__generate_import(contract, source_unit.source_unit_name)
 
-        if contract_import not in self.__contract_imports:
+        if source_unit.source_unit_name in self.__type_gen.cyclic_source_units:
+            self.__type_checking_imports.add(contract_import)
+            self.__tmp_type_checking_imports.add(contract_import)
+        else:
             self.__contract_imports.add(contract_import)
 
     def add_python_import(self, p_import: str) -> None:
