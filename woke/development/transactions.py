@@ -22,6 +22,8 @@ from typing import (
 )
 from urllib.error import HTTPError
 
+from typing_extensions import get_args, get_origin, get_type_hints
+
 if TYPE_CHECKING:
     from .blocks import Block
 
@@ -131,7 +133,12 @@ class ChainTransactions:
                     if hasattr(getattr(obj, m), "selector")
                     and getattr(obj, m).selector == selector
                 )
-                return_type = method.return_type
+                return_types = get_args(get_type_hints(method)["return"])
+                return_type = next(
+                    get_args(t)[0]
+                    for t in return_types
+                    if get_origin(t) is TransactionAbc
+                )
             except (KeyError, StopIteration):
                 abi = None
                 return_type = bytearray
