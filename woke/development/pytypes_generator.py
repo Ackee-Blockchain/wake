@@ -170,7 +170,6 @@ class TypeGenerator:
     __contracts_revert_index: Dict[str, Set[int]]
     __creation_code_index: List[Tuple[Tuple[Tuple[int, bytes], ...], str]]
     __line_indexes: Dict[Path, List[Tuple[bytes, int]]]
-    __tx_return_types: DefaultDict[str, Dict[str, str]]
 
     def __init__(self, config: WokeConfig, return_tx_obj: bool):
         self.__config = config
@@ -195,7 +194,6 @@ class TypeGenerator:
         self.__contracts_revert_index = {}
         self.__creation_code_index = []
         self.__line_indexes = {}
-        self.__tx_return_types = defaultdict(dict)
 
         # built-in Error(str) and Panic(uint256) errors
         error_abi = {
@@ -1269,11 +1267,6 @@ class TypeGenerator:
         else:
             return_types = f"Tuple[{', '.join(map(itemgetter(0), returns))}]"
 
-        assert isinstance(declaration.parent, ContractDefinition)
-        self.__tx_return_types[self.get_name(declaration.parent)][
-            self.get_name(declaration)
-        ] = return_types
-
         assert declaration.function_selector is not None
         fn_selector = declaration.function_selector.hex()
         self.add_str_to_types(
@@ -1455,13 +1448,6 @@ class TypeGenerator:
             self.add_str_to_types(
                 0, f"{self.get_name(contract)}.{fn_name}.selector = {selector}", 1
             )
-
-        for contract_name in self.__tx_return_types.keys():
-            for fn_name, return_type in self.__tx_return_types[contract_name].items():
-                self.add_str_to_types(
-                    0, f"{contract_name}.{fn_name}.return_type = {return_type}", 1
-                )
-        self.__tx_return_types.clear()
 
     def generate_types_source_unit(self, unit: SourceUnit) -> None:
         self.generate_types_struct(unit.structs, 0)
