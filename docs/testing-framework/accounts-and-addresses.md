@@ -48,30 +48,33 @@ chains cannot be compared using the `<` and `>` operators.
     does not accept `Account` instances belonging to different chains in most API functions. To overcome
     this limitation, it is possible to use the `address` property of an `Account` instance.
 
-### Importing accounts
+### Importing accounts and addresses
 
-`Account` instances can be imported from a private key:
+`Account` and `Address` instances can be imported from a private key:
 
 ```python
-from woke.testing import Account
+from woke.testing import Account, Address
 
 Account.from_key("0x" + "a" * 64)
+Address.from_key("0x" + "a" * 64)
 ```
 
 From a mnemonic:
 
 ```python
-from woke.testing import Account
+from woke.testing import Account, Address
 
 Account.from_mnemonic(" ".join(["test"] * 11 + ["junk"]))
+Address.from_mnemonic(" ".join(["test"] * 11 + ["junk"]))
 ```
 
 Or from an alias (see [Managing accounts with private keys](./deployment.md#managing-accounts-with-private-keys)):
 
 ```python
-from woke.testing import Account
+from woke.testing import Account, Address
 
 Account.from_alias("alice")
+Address.from_alias("alice")
 ```
 
 It is also possible to create a new account with a random private key:

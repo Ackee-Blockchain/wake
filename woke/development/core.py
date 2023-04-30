@@ -238,6 +238,7 @@ class Wei(int):
 @functools.total_ordering
 class Address:
     ZERO: Address
+    _private_key: Optional[bytes] = None
 
     def __init__(self, address: Union[str, int]) -> None:
         if isinstance(address, int):
@@ -286,6 +287,66 @@ class Address:
 
     def __bytes__(self) -> bytes:
         return bytes.fromhex(self._address[2:])
+
+    @classmethod
+    def from_key(cls, private_key: Union[str, int, bytes]) -> Address:
+        acc = eth_account.Account.from_key(private_key)
+        ret = cls(acc.address)
+        ret._private_key = bytes(acc.key)
+        return ret
+
+    @classmethod
+    def from_mnemonic(
+        cls,
+        mnemonic: str,
+        passphrase: str = "",
+        path: str = "m/44'/60'/0'/0/0",
+    ) -> Address:
+        acc = eth_account.Account.from_mnemonic(mnemonic, passphrase, path)
+        ret = cls(acc.address)
+        ret._private_key = bytes(acc.key)
+        return ret
+
+    @classmethod
+    def from_alias(
+        cls,
+        alias: str,
+        password: Optional[str] = None,
+        keystore: Optional[PathLike] = None,
+    ) -> Address:
+        if keystore is None:
+            path = Path(get_config().global_data_path) / "keystore"
+        else:
+            path = Path(keystore)
+        if not path.is_dir():
+            raise ValueError(f"Keystore path {path} is not a directory")
+
+        path = path / f"{alias}.json"
+        if not path.exists():
+            raise ValueError(f"Alias {alias} not found in keystore {path}")
+
+        with path.open() as f:
+            data = json.load(f)
+
+        if not data["address"].startswith("0x"):
+            data["address"] = "0x" + data["address"]
+
+        if password is None:
+            import click
+
+            password = click.prompt(
+                f"Password for account {alias}", default="", hide_input=True
+            )
+
+        key = eth_account.Account.decrypt(data, password)
+
+        ret = cls(data["address"])
+        ret._private_key = bytes(key)
+        return ret
+
+    @property
+    def private_key(self) -> Optional[bytes]:
+        return self._private_key
 
 
 Address.ZERO = Address(0)
@@ -357,18 +418,13 @@ class Account:
     @classmethod
     def new(cls, chain: Optional[Chain] = None) -> Account:
         acc = eth_account.Account.create()
-        ret = cls(acc.address, chain)
-        ret.chain._private_keys[ret.address] = bytes(acc.key)
-        return ret
+        return cls(Address.from_key(acc.key), chain)
 
     @classmethod
     def from_key(
         cls, private_key: Union[str, int, bytes], chain: Optional[Chain] = None
     ) -> Account:
-        acc = eth_account.Account.from_key(private_key)
-        ret = cls(acc.address, chain)
-        ret.chain._private_keys[ret.address] = bytes(acc.key)
-        return ret
+        return cls(Address.from_key(private_key), chain)
 
     @classmethod
     def from_mnemonic(
@@ -378,10 +434,7 @@ class Account:
         path: str = "m/44'/60'/0'/0/0",
         chain: Optional[Chain] = None,
     ) -> Account:
-        acc = eth_account.Account.from_mnemonic(mnemonic, passphrase, path)
-        ret = cls(acc.address, chain)
-        ret.chain._private_keys[ret.address] = bytes(acc.key)
-        return ret
+        return cls(Address.from_mnemonic(mnemonic, passphrase, path), chain)
 
     @classmethod
     def from_alias(
@@ -391,39 +444,11 @@ class Account:
         keystore: Optional[PathLike] = None,
         chain: Optional[Chain] = None,
     ) -> Account:
-        if keystore is None:
-            path = Path(get_config().global_data_path) / "keystore"
-        else:
-            path = Path(keystore)
-        if not path.is_dir():
-            raise ValueError(f"Keystore path {path} is not a directory")
-
-        path = path / f"{alias}.json"
-        if not path.exists():
-            raise ValueError(f"Alias {alias} not found in keystore {path}")
-
-        with path.open() as f:
-            data = json.load(f)
-
-        if not data["address"].startswith("0x"):
-            data["address"] = "0x" + data["address"]
-
-        if password is None:
-            import click
-
-            password = click.prompt(
-                f"Password for account {alias}", default="", hide_input=True
-            )
-
-        key = eth_account.Account.decrypt(data, password)
-
-        ret = cls(data["address"], chain)
-        ret.chain._private_keys[ret.address] = bytes(key)
-        return ret
+        return cls(Address.from_alias(alias, password, keystore), chain)
 
     @property
     def private_key(self) -> Optional[bytes]:
-        return self._chain._private_keys.get(self._address, None)
+        return self._address.private_key
 
     @property
     def address(self) -> Address:
@@ -747,7 +772,7 @@ class Account:
             RequestType.CALL, tx_params, [], None
         )
 
-        tx_hash = self._chain._send_transaction(tx_params)
+        tx_hash = self._chain._send_transaction(tx_params, from_)
 
         if "type" not in tx_params:
             from .transactions import LegacyTransaction
@@ -797,13 +822,13 @@ class Account:
         Sign raw data according to EIP-191 type 0x45.
         Specifically, sign(keccak256(b"\x19Ethereum Signed Message:\n" + len(data) + data)) is returned.
         """
-        if self._address not in self._chain._private_keys:
+        if self.private_key is None:
             return self._chain.chain_interface.sign(str(self._address), data)
         else:
             return bytes(
                 eth_account.Account.sign_message(
                     eth_account.messages.encode_defunct(data),
-                    self._chain._private_keys[self._address],
+                    self.private_key,
                 ).signature
             )
 
@@ -813,7 +838,7 @@ class Account:
         This is not recommended for most use cases.
         Specifically, sign(data_hash) is returned.
         """
-        if self._address not in self._chain._private_keys:
+        if self.private_key is None:
             raise NotImplementedError(
                 "Signing data hash without prefix (non EIP-191 compliant) is not supported for accounts without supplied private key"
             )
@@ -821,7 +846,7 @@ class Account:
             return bytes(
                 eth_account.Account.signHash(
                     data_hash,
-                    self._chain._private_keys[self._address],
+                    self.private_key,
                 ).signature
             )
 
@@ -977,7 +1002,7 @@ class Account:
         (https://eips.ethereum.org/EIPS/eip-712), or any ABI-compatible dataclass.
         """
 
-        client_signing = self._address not in self._chain._private_keys
+        client_signing = self.private_key is None
 
         if isinstance(message, dict):
             if domain is not None:
@@ -997,7 +1022,7 @@ class Account:
             return bytes(
                 eth_account.Account.sign_message(
                     eth_account.messages.encode_structured_data(message),
-                    self._chain._private_keys[self._address],
+                    self.private_key,
                 ).signature
             )
 
@@ -1044,7 +1069,6 @@ class Chain(ABC):
     _txs: ChainTransactions
     _chain_id: int
     _labels: Dict[Address, str]
-    _private_keys: Dict[Address, bytes]
     _require_signed_txs: bool
     _fork: Optional[str]
     _debug_trace_call_supported: bool
@@ -1269,7 +1293,6 @@ class Chain(ABC):
             self._default_tx_confirmations = 1
             self._blocks = ChainBlocks(self)
             self._labels = {}
-            self._private_keys = {}
             self._fork = fork
 
             self._single_source_errors = {
@@ -1894,7 +1917,9 @@ class Chain(ABC):
 
         self._process_revert_data(None, bytes.fromhex(revert_data))
 
-    def _send_transaction(self, tx_params: TxParams) -> str:
+    def _send_transaction(
+        self, tx_params: TxParams, from_: Optional[Union[Account, Address, str]]
+    ) -> str:
         assert "from" in tx_params
         assert "nonce" in tx_params
 
@@ -1906,7 +1931,13 @@ class Chain(ABC):
         self._confirm_transaction(tx_params)
 
         if self.require_signed_txs:
-            key = self._private_keys.get(Address(tx_params["from"]), None)
+            if isinstance(from_, (Account, Address)):
+                key = from_.private_key
+            elif from_ is None and self._default_tx_account is not None:
+                key = self._default_tx_account.private_key
+            else:
+                key = None
+
             tx_params["from"] = eth_utils.address.to_checksum_address(tx_params["from"])
 
             if "to" in tx_params:
@@ -2039,10 +2070,11 @@ class Chain(ABC):
         return_tx: bool,
         return_type: Type,
         confirmations: Optional[int],
+        from_: Optional[Union[Account, Address, str]],
     ) -> Any:
         tx_params = self._build_transaction(RequestType.TX, params, arguments, abi)
 
-        tx_hash = self._send_transaction(tx_params)
+        tx_hash = self._send_transaction(tx_params, from_)
 
         if "type" not in tx_params:
             from woke.development.transactions import LegacyTransaction
@@ -2650,6 +2682,7 @@ class Contract(Account):
                 return_tx,
                 return_type,
                 confirmations,
+                from_,
             )
         elif request_type == RequestType.CALL:
             if block is None:
