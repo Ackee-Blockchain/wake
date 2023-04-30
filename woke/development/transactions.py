@@ -10,6 +10,7 @@ from enum import IntEnum
 from typing import (
     TYPE_CHECKING,
     Any,
+    Callable,
     Dict,
     Generic,
     Iterator,
@@ -824,3 +825,18 @@ def may_revert(
         else:
             if not inspect.isclass(exceptions):
                 assert e == exceptions, f"Expected {e} but got {exceptions}"
+
+
+def on_revert(callback: Callable[[TransactionRevertedError], None]):
+    def decorator(f):
+        @functools.wraps(f)
+        def wrapper(*args, **kwargs):
+            try:
+                return f(*args, **kwargs)
+            except TransactionRevertedError as e:
+                callback(e)
+                raise
+
+        return wrapper
+
+    return decorator

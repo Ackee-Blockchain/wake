@@ -135,3 +135,23 @@ get_create2_address_from_hash(
     keccak256(Counter.get_creation_code())
 )
 ```
+
+## Decorators
+
+### on_revert
+
+`on_revert` is a decorator that simplifies handling of revert exceptions. It accepts a callback function that will be called if the decorated function reverts.
+
+```python
+from woke.testing import *
+
+def revert_handler(e: TransactionRevertedError):
+    if e.tx is not None:
+        print(e.tx.call_trace)
+        print(e.tx.console_logs)
+
+@default_chain.connect()
+@on_revert(revert_handler)
+def test_reverts():
+    ...
+```
