@@ -1904,9 +1904,9 @@ class Chain(ABC):
         assert "nonce" in tx_params
 
         if self._chain_id in {56, 97}:
-            # BSC doesn't support access lists and tx type
-            del tx_params["type"]
-            del tx_params["accessList"]
+            # BSC doesn't support access lists and tx type            
+            tx_params.pop("type", None)
+            tx_params.pop("accessList", None)            
 
         self._confirm_transaction(tx_params)
 
