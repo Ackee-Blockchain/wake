@@ -185,14 +185,34 @@ async def code_lens(
     _code_lens_cache[path] = []
 
     for declaration in source_unit.declarations_iter():
-        refs_count = _resolve_declaration(declaration, context)
+        refs = list(declaration.get_all_references(include_declarations=True))
+        refs_count = len([ref for ref in refs if not isinstance(ref, DeclarationAbc)])
+        declaration_positions = []
+
+        for ref in refs:
+            if isinstance(ref, DeclarationAbc):
+                line, col = context.compiler.get_line_pos_from_byte_offset(
+                    ref.file, ref.name_location[0]
+                )
+                declaration_positions.append(Position(line=line, character=col))
+
+        line, col = context.compiler.get_line_pos_from_byte_offset(
+            declaration.file, declaration.name_location[0]
+        )
+
+        # should include info to be able to recover command args from cache (positions could have changed)
+        # but references do not work in cache mode (compilation error) anyway
         code_lens.append(
             _generate_code_lens(
                 context,
                 declaration.file,
                 f"{refs_count} references" if refs_count != 1 else "1 reference",
-                "",
-                None,
+                "Tools-for-Solidity.execute.references",
+                [
+                    params.text_document.uri,
+                    Position(line=line, character=col),
+                    declaration_positions,
+                ],
                 declaration.name_location,
                 declaration.name_location,
             )
