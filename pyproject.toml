@@ -36,7 +36,7 @@ watchdog = "~2.2.0"
 pytest = "^7"
 ipdb = "^0.13.9"
 abch_tree_sitter = "^1.1.0"
-abch_tree_sitter_solidity = "^1.0.6"
+abch_tree_sitter_solidity = "^1.2.0"
 
 pytest-asyncio = { version = "^0.17", optional = true }
 GitPython = { version = "^3.1.20", optional = true }
