@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from functools import lru_cache, partial
-from typing import List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, List, Optional, Set, Tuple, Union
 
 from woke.ast.enums import GlobalSymbolsEnum, ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -9,6 +11,10 @@ from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.reference_resolver import CallbackParams
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import AstNodeId, SolcIdentifier
+
+if TYPE_CHECKING:
+    from woke.ast.ir.meta.import_directive import ImportDirective
+    from woke.ast.ir.meta.source_unit import SourceUnit
 
 
 class Identifier(ExpressionAbc):
@@ -26,7 +32,7 @@ class Identifier(ExpressionAbc):
     def __init__(
         self, init: IrInitTuple, identifier: SolcIdentifier, parent: SolidityAbc
     ):
-        from woke.ast.ir.meta.import_directive import ImportDirective
+        from ..meta.import_directive import ImportDirective
 
         super().__init__(init, identifier, parent)
         self._name = identifier.name
@@ -34,9 +40,13 @@ class Identifier(ExpressionAbc):
         self._referenced_declaration_id = identifier.referenced_declaration
         if self._referenced_declaration_id is None:
             assert isinstance(self._parent, ImportDirective)
-        init.reference_resolver.register_post_process_callback(self._post_process)
+        init.reference_resolver.register_post_process_callback(
+            self._post_process, priority=-1
+        )
 
     def _post_process(self, callback_params: CallbackParams):
+        from ..meta.import_directive import ImportDirective
+
         assert self._referenced_declaration_id is not None
         if self._referenced_declaration_id < 0:
             global_symbol = GlobalSymbolsEnum(self._referenced_declaration_id)
@@ -47,12 +57,30 @@ class Identifier(ExpressionAbc):
                 self.file, partial(self._destroy, global_symbol)
             )
         else:
-            referenced_declaration = self.referenced_declaration
-            assert isinstance(referenced_declaration, DeclarationAbc)
-            referenced_declaration.register_reference(self)
-            self._reference_resolver.register_destroy_callback(
-                self.file, partial(self._destroy, referenced_declaration)
+            node = self._reference_resolver.resolve_node(
+                self._referenced_declaration_id, self._cu_hash
             )
+
+            if isinstance(node, DeclarationAbc):
+                node.register_reference(self)
+                self._reference_resolver.register_destroy_callback(
+                    self.file, partial(self._destroy, node)
+                )
+            elif isinstance(node, ImportDirective):
+                # make this node to reference the source unit directly
+                assert node.unit_alias is not None
+                source_unit = callback_params.source_units[node.imported_file]
+                node_path_order = self._reference_resolver.get_node_path_order(
+                    AstNodeId(source_unit.ast_node_id),
+                    source_unit.cu_hash,
+                )
+                self._referenced_declaration_id = (
+                    self._reference_resolver.get_ast_id_from_cu_node_path_order(
+                        node_path_order, self.cu_hash
+                    )
+                )
+            else:
+                raise TypeError(f"Unexpected type: {type(node)}")
 
     def _destroy(
         self, referenced_declaration: Union[GlobalSymbolsEnum, DeclarationAbc]
@@ -89,7 +117,11 @@ class Identifier(ExpressionAbc):
         return tuple(overloaded_declarations)
 
     @property
-    def referenced_declaration(self) -> Union[DeclarationAbc, GlobalSymbolsEnum]:
+    def referenced_declaration(
+        self,
+    ) -> Union[DeclarationAbc, GlobalSymbolsEnum, SourceUnit]:
+        from ..meta.source_unit import SourceUnit
+
         assert self._referenced_declaration_id is not None
         if self._referenced_declaration_id < 0:
             return GlobalSymbolsEnum(self._referenced_declaration_id)
@@ -97,7 +129,9 @@ class Identifier(ExpressionAbc):
         node = self._reference_resolver.resolve_node(
             self._referenced_declaration_id, self._cu_hash
         )
-        assert isinstance(node, DeclarationAbc)
+        assert isinstance(
+            node, (DeclarationAbc, SourceUnit)
+        ), f"Unexpected type: {type(node)}\n{node.source}\n{self.source}\n{self.file}"
         return node
 
     @property

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import re
+from collections import deque
 from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Deque, Optional, Set, Tuple, Union
 
 if TYPE_CHECKING:
     from .inheritance_specifier import InheritanceSpecifier
@@ -31,8 +32,6 @@ class IdentifierPathPart:
 
     _reference_resolver: ReferenceResolver
     _underlying_node: Union[IdentifierPath, UserDefinedTypeName]
-    _path_referenced_declaration_id: AstNodeId
-    _path_index: int
     _referenced_declaration_id: Optional[AstNodeId]
     _cu_hash: bytes
     _file: Path
@@ -42,56 +41,33 @@ class IdentifierPathPart:
     def __init__(
         self,
         underlying_node: Union[IdentifierPath, UserDefinedTypeName],
-        init: IrInitTuple,
         byte_location: Tuple[int, int],
         name: str,
-        path_referenced_declaration_id: AstNodeId,
-        path_index: int,
+        referenced_declaration_id: AstNodeId,
+        reference_resolver: ReferenceResolver,
+        cu_hash: bytes,
+        file: Path,
     ):
         self._underlying_node = underlying_node
-        self._reference_resolver = init.reference_resolver
-        self._path_referenced_declaration_id = path_referenced_declaration_id
-        # zero-based index from the end of the path
-        self._path_index = path_index
-        self._referenced_declaration_id = None
-        self._cu_hash = init.cu.hash
-        self._file = init.file
+        self._reference_resolver = reference_resolver
+        self._referenced_declaration_id = referenced_declaration_id
+        self._cu_hash = cu_hash
+        self._file = file
         self._byte_location = byte_location
         self._name = name
 
         self._reference_resolver.register_post_process_callback(self._post_process)
 
     def _post_process(self, callback_params: CallbackParams):
-        from .source_unit import SourceUnit
-
-        referenced_declaration = self._reference_resolver.resolve_node(
-            self._path_referenced_declaration_id, self._cu_hash
-        )
-        for i in range(self._path_index):
-            assert referenced_declaration.parent is not None
-            referenced_declaration = referenced_declaration.parent
-        assert isinstance(referenced_declaration, (DeclarationAbc, SourceUnit))
-
-        node_path_order = self._reference_resolver.get_node_path_order(
-            AstNodeId(referenced_declaration.ast_node_id),
-            referenced_declaration.cu_hash,
-        )
-        this_cu_id = self._reference_resolver.get_ast_id_from_cu_node_path_order(
-            node_path_order, self._cu_hash
-        )
-        self._referenced_declaration_id = this_cu_id
-
+        referenced_declaration = self.referenced_declaration
         if isinstance(referenced_declaration, DeclarationAbc):
             referenced_declaration.register_reference(self)
             self._reference_resolver.register_destroy_callback(
                 self.file, partial(self._destroy, referenced_declaration)
             )
 
-    def _destroy(
-        self, referenced_declaration: Union[DeclarationAbc, SourceUnit]
-    ) -> None:
-        if isinstance(referenced_declaration, DeclarationAbc):
-            referenced_declaration.unregister_reference(self)
+    def _destroy(self, referenced_declaration: DeclarationAbc) -> None:
+        referenced_declaration.unregister_reference(self)
 
     @property
     def underlying_node(self) -> Union[IdentifierPath, UserDefinedTypeName]:
@@ -184,22 +160,92 @@ class IdentifierPath(SolidityAbc):
         self._referenced_declaration_id = identifier_path.referenced_declaration
         assert self._referenced_declaration_id >= 0
 
+        self._reference_resolver.register_post_process_callback(self._post_process)
+
+    def _post_process(self, callback_params: CallbackParams):
+        def find_referenced_source_unit(
+            searched_name: str, start_source_unit: SourceUnit
+        ) -> SourceUnit:
+            source_units_queue: Deque[SourceUnit] = deque([start_source_unit])
+            processed_source_units: Set[Path] = {start_source_unit.file}
+            referenced_declaration = None
+
+            while source_units_queue and referenced_declaration is None:
+                source_unit = source_units_queue.popleft()
+
+                for import_ in source_unit.imports:
+                    if import_.unit_alias == searched_name:
+                        referenced_declaration = callback_params.source_units[
+                            import_.imported_file
+                        ]
+                        break
+                    for symbol_alias in import_.symbol_aliases:
+                        if symbol_alias.local == searched_name:
+                            ref = symbol_alias.foreign.referenced_declaration
+                            assert isinstance(ref, SourceUnit)
+                            referenced_declaration = ref
+
+                    if referenced_declaration is not None:
+                        break
+
+                    if import_.imported_file not in processed_source_units:
+                        source_units_queue.append(
+                            callback_params.source_units[import_.imported_file]
+                        )
+                        processed_source_units.add(import_.imported_file)
+
+            assert referenced_declaration is not None
+            return referenced_declaration
+
+        from ..meta.source_unit import SourceUnit
+
         matches = list(IDENTIFIER_RE.finditer(self._source))
         groups_count = len(matches)
         assert groups_count > 0
 
         self._parts = IntervalTree()
-        for i, match in enumerate(matches):
+        start_source_unit = callback_params.source_units[self._file]
+
+        ref = self.referenced_declaration
+        refs = []
+        for _ in range(groups_count):
+            refs.append(ref)
+            if ref is not None:
+                ref = ref.parent
+
+        for match, ref in zip(matches, reversed(refs)):
             name = match.group(0).decode("utf-8")
+
+            if ref is None:
+                start_source_unit = find_referenced_source_unit(name, start_source_unit)
+                referenced_node = start_source_unit
+            elif isinstance(ref, (DeclarationAbc, SourceUnit)):
+                referenced_node = ref
+            else:
+                raise TypeError(
+                    f"Unexpected type of referenced declaration: {type(ref)}"
+                )
+
+            node_path_order = self._reference_resolver.get_node_path_order(
+                AstNodeId(referenced_node.ast_node_id),
+                referenced_node.cu_hash,
+            )
+            referenced_node_id = (
+                self._reference_resolver.get_ast_id_from_cu_node_path_order(
+                    node_path_order, self._cu_hash
+                )
+            )
+
             start = self.byte_location[0] + match.start()
             end = self.byte_location[0] + match.end()
             self._parts[start:end] = IdentifierPathPart(
                 self,
-                init,
                 (start, end),
                 name,
-                self._referenced_declaration_id,
-                groups_count - i - 1,
+                referenced_node_id,
+                self._reference_resolver,
+                self._cu_hash,
+                self._file,
             )
 
     @property
