@@ -8,6 +8,7 @@ from woke.lsp.common_structures import (
 from woke.lsp.document_sync import TextDocumentSyncKind, TextDocumentSyncOptions
 from woke.utils import StrEnum
 
+from .features.code_action import CodeActionOptions
 from .features.code_lens import CodeLensOptions
 from .features.completion import CompletionOptions
 from .features.definition import DefinitionOptions
@@ -134,12 +135,12 @@ class ServerCapabilities(LspModel):
     rename_provider: Optional[Union[bool, RenameOptions]] = None
     execute_command_provider: Optional[ExecuteCommandOptions] = None
     hover_provider: Optional[Union[bool, HoverOptions]] = None
-    completion_provider: Optional[CompletionOptions]
+    completion_provider: Optional[CompletionOptions] = None
+    code_action_provider: Optional[Union[bool, CodeActionOptions]] = None
     """
     signature_help_provider: Optional[SignatureHelpOptions]
     declaration_provider: Optional[Union[bool, DeclarationOptions, DeclarationRegistrationOptions]]
     document_highlight_provider: Optional[Union[bool, ReferenceOptions]]
-    code_action_provider: Optional[Union[bool, CodeActionOptions]]
     color_provider: Optional[Union[bool, DocumentColorOptions, DocumentColorRegistrationOptions]]
     document_formatting_provider: Optional[Union[bool, DocumentFormattingOptions]]
     document_range_formatting_provider: Optional[Union[bool, DocumentRangeFormattingOptions]]
