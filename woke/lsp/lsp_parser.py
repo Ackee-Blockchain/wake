@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
@@ -62,6 +62,7 @@ class LspParser:
     _trees: Dict[Path, Any]
     _tree_changed: DefaultDict[Path, bool]
     _line_indexes: Dict[Path, List[Tuple[bytes, int]]]
+    _line_endings: Dict[Path, str]
     _server: LspServer
 
     def __init__(self, server: LspServer):
@@ -70,6 +71,7 @@ class LspParser:
         self._trees = {}
         self._tree_changed = defaultdict(bool)
         self._line_indexes = {}
+        self._line_endings = {}
         self._parser = get_parser()
 
     def __getitem__(self, item: Path) -> Any:
@@ -94,12 +96,21 @@ class LspParser:
         # UTF-16 encoded lines with prefix length
         encoded_lines: List[Tuple[bytes, int]] = []
         prefix_sum = 0
+        line_endings = Counter()
         for line in content.splitlines(keepends=True):
             encoded_line = line.encode(ENCODING)
             encoded_lines.append((encoded_line, prefix_sum))
             prefix_sum += len(encoded_line)
 
+            if line.endswith("\r\n"):
+                line_endings["\r\n"] += 1
+            elif line.endswith("\n"):
+                line_endings["\n"] += 1
+            elif line.endswith("\r"):
+                line_endings["\r"] += 1
+
         self._line_indexes[file] = encoded_lines
+        self._line_endings[file] = line_endings.most_common(1)[0][0]
 
     def _get_byte_offset_from_line_pos(self, file: Path, line: int, col: int) -> int:
         lines = self._line_indexes[file]
@@ -238,3 +249,6 @@ class LspParser:
             last_node = cursor.node
 
         return last_node
+
+    def get_line_ending(self, file: Path) -> str:
+        return self._line_endings[file]
