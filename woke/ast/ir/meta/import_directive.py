@@ -115,7 +115,7 @@ class ImportDirective(SolidityAbc):
                 SymbolAlias(Identifier(init, alias.foreign, self), alias.local)
             )
         self._reference_resolver.register_post_process_callback(
-            self._post_process, priority=-1
+            self._post_process, priority=-2
         )
 
     def __iter__(self) -> Iterator[IrAbc]:
@@ -148,6 +148,10 @@ class ImportDirective(SolidityAbc):
                         break
 
                 for import_ in imported_source_unit.imports:
+                    if import_.unit_alias == searched_name:
+                        referenced_declaration = import_
+                        break
+
                     # handle the case when an imported symbol is an alias of another symbol
                     for alias in import_.symbol_aliases:
                         if alias.local == symbol_alias.foreign.name:

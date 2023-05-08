@@ -9,6 +9,7 @@ from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcAssignment
 
 from ..declaration.abc import DeclarationAbc
+from ..meta.source_unit import SourceUnit
 from .abc import ExpressionAbc
 from .conditional import Conditional
 from .identifier import Identifier
@@ -16,7 +17,9 @@ from .index_access import IndexAccess
 from .member_access import MemberAccess
 from .tuple_expression import TupleExpression
 
-AssignedVariablePath = Tuple[Union[DeclarationAbc, Literal["IndexAccess"]], ...]
+AssignedVariablePath = Tuple[
+    Union[DeclarationAbc, SourceUnit, Literal["IndexAccess"]], ...
+]
 
 
 class Assignment(ExpressionAbc):
@@ -87,7 +90,7 @@ class Assignment(ExpressionAbc):
                 )
             elif isinstance(node, Identifier):
                 referenced_declaration = node.referenced_declaration
-                assert isinstance(referenced_declaration, DeclarationAbc)
+                assert isinstance(referenced_declaration, (DeclarationAbc, SourceUnit))
                 return {(referenced_declaration,)}
             elif isinstance(node, IndexAccess):
                 return {
@@ -96,7 +99,7 @@ class Assignment(ExpressionAbc):
                 }
             elif isinstance(node, MemberAccess):
                 referenced_declaration = node.referenced_declaration
-                assert isinstance(referenced_declaration, DeclarationAbc)
+                assert isinstance(referenced_declaration, (DeclarationAbc, SourceUnit))
                 return {
                     path + (referenced_declaration,)
                     for path in resolve_node(node.expression)

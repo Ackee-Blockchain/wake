@@ -10,6 +10,8 @@ from woke.ast.ir.declaration.enum_definition import EnumDefinition
 from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
 from woke.ast.ir.expression.abc import ExpressionAbc
 from woke.ast.ir.expression.identifier import Identifier
+from woke.ast.ir.meta.import_directive import ImportDirective
+from woke.ast.ir.meta.source_unit import SourceUnit
 from woke.ast.ir.reference_resolver import CallbackParams
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import AstNodeId, SolcMemberAccess
@@ -55,7 +57,9 @@ class MemberAccess(ExpressionAbc):
         self._member_name = member_access.member_name
         self._referenced_declaration_id = member_access.referenced_declaration
 
-        self._reference_resolver.register_post_process_callback(self._post_process)
+        self._reference_resolver.register_post_process_callback(
+            self._post_process, priority=-1
+        )
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
@@ -333,12 +337,30 @@ class MemberAccess(ExpressionAbc):
                 self.file, partial(self._destroy, global_symbol)
             )
         else:
-            referenced_declaration = self.referenced_declaration
-            assert isinstance(referenced_declaration, DeclarationAbc)
-            referenced_declaration.register_reference(self)
-            self._reference_resolver.register_destroy_callback(
-                self.file, partial(self._destroy, referenced_declaration)
+            node = self._reference_resolver.resolve_node(
+                self._referenced_declaration_id, self._cu_hash
             )
+
+            if isinstance(node, DeclarationAbc):
+                node.register_reference(self)
+                self._reference_resolver.register_destroy_callback(
+                    self.file, partial(self._destroy, node)
+                )
+            elif isinstance(node, ImportDirective):
+                # make this node to reference the source unit directly
+                assert node.unit_alias is not None
+                source_unit = callback_params.source_units[node.imported_file]
+                node_path_order = self._reference_resolver.get_node_path_order(
+                    AstNodeId(source_unit.ast_node_id),
+                    source_unit.cu_hash,
+                )
+                self._referenced_declaration_id = (
+                    self._reference_resolver.get_ast_id_from_cu_node_path_order(
+                        node_path_order, self.cu_hash
+                    )
+                )
+            else:
+                raise TypeError(f"Unexpected type: {type(node)}")
 
     def _destroy(
         self, referenced_declaration: Union[GlobalSymbolsEnum, DeclarationAbc]
@@ -377,7 +399,9 @@ class MemberAccess(ExpressionAbc):
         ), self._expression.byte_location[1] + match.end("member")
 
     @property
-    def referenced_declaration(self) -> Union[DeclarationAbc, GlobalSymbolsEnum]:
+    def referenced_declaration(
+        self,
+    ) -> Union[DeclarationAbc, GlobalSymbolsEnum, SourceUnit]:
         assert self._referenced_declaration_id is not None
         if self._referenced_declaration_id < 0:
             return GlobalSymbolsEnum(self._referenced_declaration_id)
@@ -385,7 +409,7 @@ class MemberAccess(ExpressionAbc):
         node = self._reference_resolver.resolve_node(
             self._referenced_declaration_id, self._cu_hash
         )
-        assert isinstance(node, DeclarationAbc)
+        assert isinstance(node, (DeclarationAbc, SourceUnit))
         return node
 
     @property

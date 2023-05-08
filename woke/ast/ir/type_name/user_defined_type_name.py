@@ -1,10 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
+from collections import deque
+from pathlib import Path
+from typing import TYPE_CHECKING, Deque, Iterator, Optional, Set, Tuple, Union
 
 from intervaltree import IntervalTree
 
 from ...types import Contract, Enum, Struct, UserDefinedValueType
+from ..reference_resolver import CallbackParams
 
 if TYPE_CHECKING:
     from ..declaration.variable_declaration import VariableDeclaration
@@ -12,6 +15,7 @@ if TYPE_CHECKING:
     from ..meta.inheritance_specifier import InheritanceSpecifier
     from ..meta.override_specifier import OverrideSpecifier
     from ..meta.using_for_directive import UsingForDirective
+    from ..meta.source_unit import SourceUnit
     from ..type_name.array_type_name import ArrayTypeName
     from ..type_name.mapping import Mapping
 
@@ -116,30 +120,101 @@ class UserDefinedTypeName(TypeNameAbc):
         self._referenced_declaration_id = user_defined_type_name.referenced_declaration
         assert self._referenced_declaration_id >= 0
         self._contract_scope_id = user_defined_type_name.contract_scope
+
         if user_defined_type_name.path_node is None:
             self._path_node = None
-            matches = list(IDENTIFIER_RE.finditer(self._source))
-            groups_count = len(matches)
-            assert groups_count > 0
-
-            self._parts = IntervalTree()
-            for i, match in enumerate(matches):
-                name = match.group(0).decode("utf-8")
-                start = self.byte_location[0] + match.start()
-                end = self.byte_location[0] + match.end()
-                self._parts[start:end] = IdentifierPathPart(
-                    self,
-                    init,
-                    (start, end),
-                    name,
-                    self._referenced_declaration_id,
-                    groups_count - i - 1,
-                )
+            self._reference_resolver.register_post_process_callback(self._post_process)
         else:
             self._path_node = IdentifierPath(
                 init, user_defined_type_name.path_node, self
             )
             self._parts = None
+
+    def _post_process(self, callback_params: CallbackParams):
+        def find_referenced_source_unit(
+            searched_name: str, start_source_unit: SourceUnit
+        ) -> SourceUnit:
+            source_units_queue: Deque[SourceUnit] = deque([start_source_unit])
+            processed_source_units: Set[Path] = {start_source_unit.file}
+            referenced_declaration = None
+
+            while source_units_queue and referenced_declaration is None:
+                source_unit = source_units_queue.popleft()
+
+                for import_ in source_unit.imports:
+                    if import_.unit_alias == searched_name:
+                        referenced_declaration = callback_params.source_units[
+                            import_.imported_file
+                        ]
+                        break
+                    for symbol_alias in import_.symbol_aliases:
+                        if symbol_alias.local == searched_name:
+                            ref = symbol_alias.foreign.referenced_declaration
+                            assert isinstance(ref, SourceUnit)
+                            referenced_declaration = ref
+
+                    if referenced_declaration is not None:
+                        break
+
+                    if import_.imported_file not in processed_source_units:
+                        source_units_queue.append(
+                            callback_params.source_units[import_.imported_file]
+                        )
+                        processed_source_units.add(import_.imported_file)
+
+            assert referenced_declaration is not None
+            return referenced_declaration
+
+        from ..meta.source_unit import SourceUnit
+
+        matches = list(IDENTIFIER_RE.finditer(self._source))
+        groups_count = len(matches)
+        assert groups_count > 0
+
+        self._parts = IntervalTree()
+        start_source_unit = callback_params.source_units[self._file]
+
+        ref = self.referenced_declaration
+        refs = []
+        for _ in range(groups_count):
+            refs.append(ref)
+            if ref is not None:
+                ref = ref.parent
+
+        for match, ref in zip(matches, reversed(refs)):
+            name = match.group(0).decode("utf-8")
+
+            if ref is None:
+                start_source_unit = find_referenced_source_unit(name, start_source_unit)
+                referenced_node = start_source_unit
+            elif isinstance(ref, (DeclarationAbc, SourceUnit)):
+                referenced_node = ref
+            else:
+                raise TypeError(
+                    f"Unexpected type of referenced declaration: {type(ref)}"
+                )
+
+            node_path_order = self._reference_resolver.get_node_path_order(
+                AstNodeId(referenced_node.ast_node_id),
+                referenced_node.cu_hash,
+            )
+            referenced_node_id = (
+                self._reference_resolver.get_ast_id_from_cu_node_path_order(
+                    node_path_order, self._cu_hash
+                )
+            )
+
+            start = self.byte_location[0] + match.start()
+            end = self.byte_location[0] + match.end()
+            self._parts[start:end] = IdentifierPathPart(
+                self,
+                (start, end),
+                name,
+                referenced_node_id,
+                self._reference_resolver,
+                self._cu_hash,
+                self._file,
+            )
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
