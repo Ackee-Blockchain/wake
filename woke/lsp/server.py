@@ -65,6 +65,7 @@ from .document_sync import (
     WillSaveTextDocumentParams,
 )
 from .exceptions import LspError
+from .features.code_action import CodeActionOptions, CodeActionParams, code_action
 from .features.code_lens import CodeLensOptions, CodeLensParams, code_lens
 from .features.completion import CompletionOptions, CompletionParams, completion
 from .features.definition import DefinitionParams, definition
@@ -215,6 +216,7 @@ class LspServer:
             ),
             RequestMethodEnum.HOVER: (self._workspace_route, HoverParams),
             RequestMethodEnum.COMPLETION: (self._workspace_route, CompletionParams),
+            RequestMethodEnum.CODE_ACTION: (self._workspace_route, CodeActionParams),
         }
 
         self.__notification_mapping = {
@@ -598,6 +600,10 @@ class LspServer:
                 resolve_provider=None,
                 completion_item=None,
             ),
+            code_action_provider=CodeActionOptions(
+                code_action_kinds=None,
+                resolve_provider=False,
+            ),
         )
         return InitializeResult(capabilities=server_capabilities, server_info=None)
 
@@ -828,6 +834,8 @@ class LspServer:
             return await hover(context, params)
         elif isinstance(params, CompletionParams):
             return await completion(context, params)
+        elif isinstance(params, CodeActionParams):
+            return await code_action(context, params)
         else:
             raise NotImplementedError(f"Unhandled request: {type(params)}")
 
