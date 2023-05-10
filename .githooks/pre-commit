@@ -89,12 +89,6 @@ else
 fi
 
 if [ ${#pyfiles[@]} -ne 0 ]; then
-    echo "running \`pyright ${pyfiles[@]}\`"
-    pyright "${pyfiles[@]}";
-    check_last_command;
-fi
-
-if [ ${#pyfiles[@]} -ne 0 ]; then
     echo "running \`black ${pyfiles[@]}\`"
     black "${pyfiles[@]}";
     check_last_command;
@@ -104,6 +98,12 @@ fi
 if [ ${#pyfiles[@]} -ne 0 ]; then
     echo "running \`isort ${pyfiles[@]}\`"
     isort "${pyfiles[@]}";
+    check_last_command;
+fi
+
+if [ ${#pyfiles[@]} -ne 0 ]; then
+    echo "running \`pyright ${pyfiles[@]}\`"
+    pyright "${pyfiles[@]}";
     check_last_command;
 fi
 
