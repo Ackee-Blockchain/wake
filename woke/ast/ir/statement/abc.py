@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Iterator, Set, Tuple, Union, Optional
+from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
 
 from woke.ast.enums import ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -42,6 +42,7 @@ class StatementAbc(SolidityAbc, ABC):
     """
     Abstract base class for all Solidity statements.
     """
+
     _documentation: Optional[str]
 
     def __init__(

@@ -18,6 +18,7 @@ class Assignment(YulStatementAbc):
     """
     TBD
     """
+
     _parent: Block
     _value: Union[FunctionCall, Identifier, Literal]
     _variable_names: List[Identifier]

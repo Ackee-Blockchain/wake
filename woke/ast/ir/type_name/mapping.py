@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterator, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterator, Union
 
 from .elementary_type_name import ElementaryTypeName
 from .user_defined_type_name import UserDefinedTypeName
@@ -47,6 +47,7 @@ class Mapping(TypeNameAbc):
         }
         ```
     """
+
     _ast_node: SolcMapping
     _parent: Union[VariableDeclaration, UsingForDirective, ArrayTypeName, Mapping]
 
@@ -66,7 +67,9 @@ class Mapping(TypeNameAbc):
         yield from self._value_type
 
     @property
-    def parent(self) -> Union[VariableDeclaration, UsingForDirective, ArrayTypeName, Mapping]:
+    def parent(
+        self,
+    ) -> Union[VariableDeclaration, UsingForDirective, ArrayTypeName, Mapping]:
         """
         Returns:
             Parent IR node.

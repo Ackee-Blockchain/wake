@@ -28,6 +28,7 @@ class PlaceholderStatement(StatementAbc):
         }
         ```
     """
+
     _ast_node: SolcPlaceholderStatement
     _parent: Union[Block, DoWhileStatement, ForStatement, IfStatement, WhileStatement]
 

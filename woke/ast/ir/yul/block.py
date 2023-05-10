@@ -39,6 +39,7 @@ class Block(YulStatementAbc):
     """
     TBD
     """
+
     _parent: Union[InlineAssembly, Block, ForLoop, FunctionDefinition, If, Case]
     _statements: List[
         Union[

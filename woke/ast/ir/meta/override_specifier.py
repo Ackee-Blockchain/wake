@@ -56,6 +56,7 @@ class OverrideSpecifier(SolidityAbc):
         }
         ```
     """
+
     _ast_node: SolcOverrideSpecifier
     _parent: Union[FunctionDefinition, ModifierDefinition, VariableDeclaration]
 

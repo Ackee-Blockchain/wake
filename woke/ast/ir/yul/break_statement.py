@@ -12,6 +12,7 @@ class Break(YulStatementAbc):
     """
     TBD
     """
+
     _parent: Block
 
     @property

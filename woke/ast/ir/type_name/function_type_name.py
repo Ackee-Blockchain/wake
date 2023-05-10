@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterator, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterator, Union
 
 from ...types import Function
 
@@ -50,6 +50,7 @@ class FunctionTypeName(TypeNameAbc):
         }
         ```
     """
+
     _ast_node: SolcFunctionTypeName
     _parent: Union[VariableDeclaration, UsingForDirective, ArrayTypeName, Mapping]
 
@@ -80,7 +81,9 @@ class FunctionTypeName(TypeNameAbc):
         yield from self._return_parameter_types
 
     @property
-    def parent(self) -> Union[VariableDeclaration, UsingForDirective, ArrayTypeName, Mapping]:
+    def parent(
+        self,
+    ) -> Union[VariableDeclaration, UsingForDirective, ArrayTypeName, Mapping]:
         """
         Returns:
             Parent IR node.

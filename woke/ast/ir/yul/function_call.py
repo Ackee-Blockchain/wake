@@ -22,6 +22,7 @@ class FunctionCall(YulAbc):
     """
     TBD
     """
+
     _parent: Union[
         Assignment,
         ExpressionStatement,

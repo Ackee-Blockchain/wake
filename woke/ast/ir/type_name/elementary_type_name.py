@@ -1,13 +1,28 @@
 from __future__ import annotations
 
-from typing import Optional, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Union
 
-from ...types import Address, Bool, Int, UInt, String, Bytes, FixedBytes, Type, Fixed, UFixed
+from ...types import (
+    Address,
+    Bool,
+    Bytes,
+    Fixed,
+    FixedBytes,
+    Int,
+    String,
+    Type,
+    UFixed,
+    UInt,
+)
 
 if TYPE_CHECKING:
-    from ..declaration.user_defined_value_type_definition import UserDefinedValueTypeDefinition
+    from ..declaration.user_defined_value_type_definition import (
+        UserDefinedValueTypeDefinition,
+    )
     from ..declaration.variable_declaration import VariableDeclaration
-    from ..expression.elementary_type_name_expression import ElementaryTypeNameExpression
+    from ..expression.elementary_type_name_expression import (
+        ElementaryTypeNameExpression,
+    )
     from ..expression.new_expression import NewExpression
     from ..meta.using_for_directive import UsingForDirective
     from .array_type_name import ArrayTypeName
@@ -65,8 +80,17 @@ class ElementaryTypeName(TypeNameAbc):
         }
         ```
     """
+
     _ast_node: SolcElementaryTypeName
-    _parent: Union[VariableDeclaration, UserDefinedValueTypeDefinition, ElementaryTypeNameExpression, NewExpression, UsingForDirective, ArrayTypeName, Mapping]
+    _parent: Union[
+        VariableDeclaration,
+        UserDefinedValueTypeDefinition,
+        ElementaryTypeNameExpression,
+        NewExpression,
+        UsingForDirective,
+        ArrayTypeName,
+        Mapping,
+    ]
 
     _name: str
     _state_mutability: Optional[StateMutability]
@@ -92,7 +116,17 @@ class ElementaryTypeName(TypeNameAbc):
             self._type_descriptions = parent._type_descriptions
 
     @property
-    def parent(self) -> Union[VariableDeclaration, UserDefinedValueTypeDefinition, ElementaryTypeNameExpression, NewExpression, UsingForDirective, ArrayTypeName, Mapping]:
+    def parent(
+        self,
+    ) -> Union[
+        VariableDeclaration,
+        UserDefinedValueTypeDefinition,
+        ElementaryTypeNameExpression,
+        NewExpression,
+        UsingForDirective,
+        ArrayTypeName,
+        Mapping,
+    ]:
         """
         When the parent is a [NewExpression][woke.ast.ir.expression.new_expression.NewExpression], this can only be `bytes` or `string`.
         Returns:
@@ -101,16 +135,26 @@ class ElementaryTypeName(TypeNameAbc):
         return self._parent
 
     @property
-    def type(self) -> Union[Address, Bool, Int, UInt, Fixed, UFixed, String, Bytes, FixedBytes, Type]:
+    def type(
+        self,
+    ) -> Union[
+        Address, Bool, Int, UInt, Fixed, UFixed, String, Bytes, FixedBytes, Type
+    ]:
         """
         Returns either the generic [Type][woke.ast.types.Type] expression type (this is the case of a type conversion, for example `:::solidity address(0)`) or directly one of the elementary expression types.
         Returns:
             Type description.
         """
         t = super().type
-        if not isinstance(t, (Address, Bool, Int, UInt, Fixed, UFixed, String, Bytes, FixedBytes, Type)):
+        if not isinstance(
+            t,
+            (Address, Bool, Int, UInt, Fixed, UFixed, String, Bytes, FixedBytes, Type),
+        ):
             raise TypeError(f"Unexpected type {t} {self.source}")
-        assert isinstance(t, (Address, Bool, Int, UInt, Fixed, UFixed, String, Bytes, FixedBytes, Type))
+        assert isinstance(
+            t,
+            (Address, Bool, Int, UInt, Fixed, UFixed, String, Bytes, FixedBytes, Type),
+        )
         return t
 
     @property

@@ -23,6 +23,7 @@ class ExpressionStatement(YulStatementAbc):
     """
     TBD
     """
+
     _parent: Block
     _expression: Union[FunctionCall, Identifier, Literal]
 

@@ -25,6 +25,7 @@ class EnumValue(DeclarationAbc):
         enum ActionChoices { GoLeft, GoRight, GoStraight, SitStill }
         ```
     """
+
     _ast_node: SolcEnumValue
     _parent: EnumDefinition
 

@@ -18,6 +18,7 @@ class Switch(YulStatementAbc):
     """
     TBD
     """
+
     _parent: Block
     _cases: List[Case]
     _expression: Union[FunctionCall, Identifier, Literal]
