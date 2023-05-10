@@ -87,9 +87,9 @@ plugins:
 - mike:
     canonical_version: latest
 - social:
-    cards_color:
-      fill: "#0000FF"
-      text: "#FFFFFF"
+    cards_layout_options:
+      background_color: "#0000FF"
+      color: "#FFFFFF"
 
 markdown_extensions:
   - def_list
