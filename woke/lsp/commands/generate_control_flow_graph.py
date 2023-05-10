@@ -75,7 +75,12 @@ async def generate_cfg_handler(
             continue
 
         statements: List[StatementAbc] = node.statements
-        node_attrs = {"label": "".join(f"{line}\l" for line in str(node).splitlines())}
+        node_attrs = {
+            "label": "".join(
+                f"{line}\l"  # pyright: ignore reportInvalidStringEscapeSequence
+                for line in str(node).splitlines()
+            )
+        }
         if (
             context.config.generator.control_flow_graph.vscode_urls
             and len(statements) > 0
@@ -89,13 +94,17 @@ async def generate_cfg_handler(
             node_attrs["URL"] = f"vscode://file/{first_statement.file}:{line}:{column}"
         g.node(str(node.id), **node_attrs)
 
-    for from_, to, data in graph.edges.data():
+    for (
+        from_,
+        to,
+        data,
+    ) in graph.edges.data():  # pyright: ignore reportGeneralTypeIssues
         if skip_start_block and from_ == cfg.start_block:
             continue
         if skip_end_block and to == cfg.end_block:
             continue
 
-        condition = data["condition"]
+        condition = data["condition"]  # pyright: ignore reportOptionalSubscript
         if condition[1] is not None:
             label = f"{condition[1].source} {condition[0]}"
         else:

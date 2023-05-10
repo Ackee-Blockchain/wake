@@ -210,9 +210,7 @@ class TypeGenerator:
         }
 
         for item in [error_abi, panic_abi]:
-            selector = eth_utils.function_abi_to_4byte_selector(
-                item
-            )  # pyright: reportPrivateImportUsage=false
+            selector = eth_utils.abi.function_abi_to_4byte_selector(item)
             self.__errors_index[selector] = {}
             self.__errors_index[selector][""] = (
                 "woke.development.transactions",
@@ -546,16 +544,12 @@ class TypeGenerator:
                         elif arg["internalType"].startswith("enum "):
                             arg["type"] = arg["internalType"][5:]
 
-                    selector = eth_utils.function_abi_to_4byte_selector(
-                        item_copy
-                    )  # pyright: reportPrivateImportUsage=false
+                    selector = eth_utils.abi.function_abi_to_4byte_selector(item_copy)
                 else:
-                    selector = eth_utils.function_abi_to_4byte_selector(item)
+                    selector = eth_utils.abi.function_abi_to_4byte_selector(item)
                 abi_by_selector[selector] = item
             elif item["type"] == "error":
-                selector = eth_utils.function_abi_to_4byte_selector(
-                    item
-                )  # pyright: reportPrivateImportUsage=false
+                selector = eth_utils.abi.function_abi_to_4byte_selector(item)
 
                 if selector not in self.__errors_index:
                     self.__errors_index[selector] = {}
@@ -588,9 +582,7 @@ class TypeGenerator:
                 else:
                     raise Exception("Unknown error parent")
             elif item["type"] == "event":
-                selector = eth_utils.event_abi_to_log_topic(
-                    item
-                )  # pyright: reportPrivateImportUsage=false
+                selector = eth_utils.abi.event_abi_to_log_topic(item)
                 events_abi[selector] = item
 
                 event_decl = None
@@ -766,9 +758,7 @@ class TypeGenerator:
 
             for item in used_in.compilation_info.abi:
                 if item["type"] == "error" and item["name"] == error.name:
-                    selector = eth_utils.function_abi_to_4byte_selector(
-                        item
-                    )  # pyright: reportPrivateImportUsage=false
+                    selector = eth_utils.abi.function_abi_to_4byte_selector(item)
                     if selector == error.error_selector:
                         error_abi = item
                         break
@@ -1606,7 +1596,9 @@ class TypeGenerator:
         # generate source units in import order, source units with no imports are generated first
         # also handle cyclic imports
         assert compiler.latest_graph is not None
-        graph = compiler.latest_graph.copy()
+        graph: nx.DiGraph = (
+            compiler.latest_graph.copy()
+        )  # pyright: ignore reportGeneralTypeIssues
         paths_to_source_unit_names: DefaultDict[Path, Set[str]] = defaultdict(set)
         for source_unit_name, info in build_info.source_units_info.items():
             paths_to_source_unit_names[info.fs_path].add(source_unit_name)
@@ -1618,7 +1610,9 @@ class TypeGenerator:
         while len(graph) > 0:
             # use heapq to make order of source units deterministic
             sources: List[str] = [
-                node for node, in_degree in graph.in_degree() if in_degree == 0
+                node
+                for node, in_degree in graph.in_degree()  # pyright: ignore reportGeneralTypeIssues
+                if in_degree == 0
             ]
             heapq.heapify(sources)
             visited: Set[str] = set(sources)
@@ -1631,7 +1625,12 @@ class TypeGenerator:
 
                 for source_unit_name in paths_to_source_unit_names[path]:
                     visited.add(source_unit_name)
-                    for _, to in graph.out_edges(source_unit_name):
+                    for (
+                        _,
+                        to,
+                    ) in graph.out_edges(  # pyright: ignore reportGeneralTypeIssues
+                        source_unit_name
+                    ):
                         if graph.in_degree(to) == 1:
                             heapq.heappush(sources, to)
                             visited.add(to)

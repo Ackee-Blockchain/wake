@@ -297,26 +297,34 @@ def _cfg_block_or_statement_is_publicly_reachable(
                 block = queue.popleft()
                 from_: CfgBlock
                 condition: Tuple[TransitionCondition, Optional[ExpressionAbc]]
-                for from_, _, data in graph.in_edges(block, data=True):
+                for (
+                    from_,
+                    _,
+                    data,
+                ) in graph.in_edges(  # pyright: ignore reportGeneralTypeIssues
+                    block, data=True
+                ):
                     if from_ in visited:
                         continue
-                    condition = data["condition"]
+                    condition = data[  # pyright: ignore reportOptionalSubscript
+                        "condition"
+                    ]
                     if (
                         (condition[0] == TransitionCondition.NEVER)
                         or (
                             condition[0] == TransitionCondition.IS_TRUE
                             and condition[1] is not None
                             and expression_is_only_owner(
-                                condition[1],
+                                condition[1],  # pyright: ignore reportGeneralTypeIssues
                                 set(),
-                                check_only_eoa=check_only_eoa,  # pyright: reportGeneralTypeIssues=false
+                                check_only_eoa=check_only_eoa,
                             )
                         )
                         or (
                             condition[0] == TransitionCondition.IS_FALSE
                             and condition[1] is not None
                             and expression_is_only_owner(
-                                condition[1],  # pyright: reportGeneralTypeIssues=false
+                                condition[1],  # pyright: ignore reportGeneralTypeIssues
                                 set(),
                                 check_only_eoa=check_only_eoa,
                                 inverted=True,

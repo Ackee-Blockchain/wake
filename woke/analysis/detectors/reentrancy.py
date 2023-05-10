@@ -182,7 +182,7 @@ def _modifies_state_after_statement(
     queue = deque([])
     visited: Set[CfgBlock] = set()
 
-    for _, to in graph.out_edges(start):
+    for _, to in graph.out_edges(start):  # pyright: ignore reportGeneralTypeIssues
         if to in visited:
             continue
         if not nx.has_path(graph, to, cfg.end_block):
@@ -197,7 +197,7 @@ def _modifies_state_after_statement(
             ret.update(block.control_statement.modifies_state)
 
         to: CfgBlock
-        for _, to in graph.out_edges(block):
+        for _, to in graph.out_edges(block):  # pyright: ignore reportGeneralTypeIssues
             if to in visited:
                 continue
             if not nx.has_path(graph, to, cfg.end_block):

@@ -4,7 +4,7 @@ import functools
 import importlib
 import inspect
 from abc import ABC, abstractmethod
-from contextlib import AbstractContextManager, contextmanager
+from contextlib import contextmanager
 from dataclasses import dataclass, field, fields
 from enum import IntEnum
 from typing import (
@@ -12,6 +12,7 @@ from typing import (
     Any,
     Dict,
     Generic,
+    Iterator,
     List,
     Optional,
     Tuple,
@@ -116,7 +117,9 @@ class ChainTransactions:
                     else "latest",
                     self._chain,
                 )
-                module_name, attrs = get_contract_from_fqn(fqn)
+                module_name, attrs = get_contract_from_fqn(
+                    fqn  # pyright: ignore reportGeneralTypeIssues
+                )
                 obj = getattr(importlib.import_module(module_name), attrs[0])
                 for attr in attrs[1:]:
                     obj = getattr(obj, attr)
@@ -221,7 +224,10 @@ class TransactionAbc(ABC, Generic[T]):
     @property
     @_fetch_tx_receipt
     def block_number(self) -> int:
-        return int(self._tx_receipt["blockNumber"], 16)
+        return int(
+            self._tx_receipt["blockNumber"],  # pyright: ignore reportOptionalSubscript
+            16,
+        )
 
     @property
     def data(self) -> bytes:
@@ -230,8 +236,9 @@ class TransactionAbc(ABC, Generic[T]):
     @property
     def from_(self) -> Account:
         return Account(
-            self._tx_params["from"], self._chain
-        )  # pyright: reportTypedDictNotRequiredAccess=false
+            self._tx_params["from"],  # pyright: ignore reportTypedDictNotRequiredAccess
+            self._chain,
+        )
 
     @property
     def to(self) -> Optional[Account]:
@@ -241,57 +248,70 @@ class TransactionAbc(ABC, Generic[T]):
 
     @property
     def gas_limit(self) -> int:
-        return self._tx_params["gas"]  # pyright: reportTypedDictNotRequiredAccess=false
+        return self._tx_params[
+            "gas"
+        ]  # pyright: ignore reportTypedDictNotRequiredAccess
 
     @property
     def nonce(self) -> int:
         return self._tx_params[
             "nonce"
-        ]  # pyright: reportTypedDictNotRequiredAccess=false
+        ]  # pyright: ignore reportTypedDictNotRequiredAccess
 
     @property
     @_fetch_tx_receipt
     def tx_index(self) -> int:
         return int(
-            self._tx_receipt["transactionIndex"], 16
-        )  # pyright: reportOptionalSubscript=false
+            self._tx_receipt[  # pyright: ignore reportOptionalSubscript
+                "transactionIndex"
+            ],
+            16,
+        )
 
     @property
     def value(self) -> Wei:
         return Wei(
-            self._tx_params["value"]
-        )  # pyright: reportTypedDictNotRequiredAccess=false
+            self._tx_params["value"]  # pyright: ignore reportTypedDictNotRequiredAccess
+        )
 
     @property
     @_fetch_tx_data
     def r(self) -> int:
-        return int(self._tx_data["r"], 16)  # pyright: reportOptionalSubscript=false
+        return int(self._tx_data["r"], 16)  # pyright: ignore reportOptionalSubscript
 
     @property
     @_fetch_tx_data
     def s(self) -> int:
-        return int(self._tx_data["s"], 16)  # pyright: reportOptionalSubscript=false
+        return int(self._tx_data["s"], 16)  # pyright: ignore reportOptionalSubscript
 
     @property
     @_fetch_tx_receipt
     def gas_used(self) -> int:
         return int(
-            self._tx_receipt["gasUsed"], 16
-        )  # pyright: reportOptionalSubscript=false
+            self._tx_receipt["gasUsed"], 16  # pyright: ignore reportOptionalSubscript
+        )
 
     @property
     @_fetch_tx_receipt
     def cumulative_gas_used(self) -> int:
         return int(
-            self._tx_receipt["cumulativeGasUsed"], 16
-        )  # pyright: reportOptionalSubscript=false
+            self._tx_receipt[  # pyright: ignore reportOptionalSubscript
+                "cumulativeGasUsed"
+            ],
+            16,
+        )
 
     @property
     @_fetch_tx_receipt
     def effective_gas_price(self) -> Wei:
         return Wei(
-            int(self._tx_receipt["effectiveGasPrice"], 16)
-        )  # pyright: reportOptionalSubscript=false
+            int(
+                self._tx_receipt[  # pyright: ignore reportOptionalSubscript
+                    "effectiveGasPrice"
+                ],
+                16,
+            )
+        )
 
     @property
     def status(self) -> TransactionStatusEnum:
@@ -339,7 +359,7 @@ class TransactionAbc(ABC, Generic[T]):
             self._fetch_debug_trace_transaction()
             assert self._debug_trace_transaction is not None
             return self._chain._process_console_logs_from_debug_trace(
-                self._debug_trace_transaction
+                self._debug_trace_transaction  # pyright: ignore reportGeneralTypeIssues
             )
         elif isinstance(chain_interface, GethLikeChainInterfaceAbc):
             try:
@@ -352,7 +372,7 @@ class TransactionAbc(ABC, Generic[T]):
                     self._fetch_debug_trace_transaction()
                     assert self._debug_trace_transaction is not None
                     return self._chain._process_console_logs_from_debug_trace(
-                        self._debug_trace_transaction
+                        self._debug_trace_transaction  # pyright: ignore reportGeneralTypeIssues
                     )
                 except (JsonRpcError, HTTPError):
                     # TODO make assertions about error.code?
@@ -427,6 +447,7 @@ class TransactionAbc(ABC, Generic[T]):
 
         if isinstance(chain_interface, AnvilChainInterface):
             self._fetch_trace_transaction()
+            assert self._trace_transaction is not None
             revert_data = bytes.fromhex(
                 self._trace_transaction[0]["result"]["output"][2:]
             )
@@ -477,7 +498,7 @@ class TransactionAbc(ABC, Generic[T]):
         raw_value = self.raw_return_value
 
         if self._return_type is type(None):
-            return None
+            return None  # pyright: ignore reportGeneralTypeIssues
 
         if isinstance(raw_value, Account):
             return self._return_type(raw_value.address, self._chain)
@@ -561,9 +582,9 @@ class TransactionAbc(ABC, Generic[T]):
 
         return CallTrace.from_debug_trace(
             self,
-            self._debug_trace_transaction,
+            self._debug_trace_transaction,  # pyright: ignore reportGeneralTypeIssues
             self._tx_params,
-        )  # pyright: reportGeneralTypeIssues=false
+        )
 
     @property
     @abstractmethod
@@ -575,7 +596,7 @@ class LegacyTransaction(TransactionAbc[T]):
     @property
     @_fetch_tx_data
     def v(self) -> int:
-        return int(self._tx_data["v"], 16)  # pyright: reportOptionalSubscript=false
+        return int(self._tx_data["v"], 16)  # pyright: ignore reportOptionalSubscript
 
     @property
     def gas_price(self) -> Wei:
@@ -612,7 +633,9 @@ class Eip2930Transaction(TransactionAbc[T]):
     @property
     @_fetch_tx_data
     def y_parity(self) -> bool:
-        return bool(int(self._tx_data["v"], 16) & 1)
+        return bool(
+            int(self._tx_data["v"], 16) & 1  # pyright: ignore reportOptionalSubscript
+        )
 
     @property
     def type(self) -> TransactionTypeEnum:
@@ -660,7 +683,9 @@ class Eip1559Transaction(TransactionAbc[T]):
     @property
     @_fetch_tx_data
     def y_parity(self) -> bool:
-        return bool(int(self._tx_data["v"], 16) & 1)
+        return bool(
+            int(self._tx_data["v"], 16) & 1  # pyright: ignore reportOptionalSubscript
+        )
 
     @property
     def type(self) -> TransactionTypeEnum:
@@ -738,11 +763,9 @@ def must_revert(
     exceptions: Union[
         Exception, Type[Exception], Tuple[Union[Exception, Type[Exception]], ...]
     ] = TransactionRevertedError,
-) -> AbstractContextManager[ExceptionWrapper]:
+) -> Iterator[ExceptionWrapper]:
     if isinstance(exceptions, (tuple, list)):
-        types = tuple(
-            type(x) if not inspect.isclass(x) else x for x in exceptions
-        )  # pyright: reportGeneralTypeIssues=false
+        types = tuple(type(x) if not inspect.isclass(x) else x for x in exceptions)
     else:
         types = type(exceptions) if not inspect.isclass(exceptions) else exceptions
 
@@ -751,13 +774,13 @@ def must_revert(
     try:
         yield wrapper
         raise AssertionError(f"Expected revert of type {exceptions}")
-    except types as e:  # pyright: reportGeneralTypeIssues=false
+    except types as e:  # pyright: ignore reportGeneralTypeIssues
         wrapper.value = e
 
         if isinstance(exceptions, (tuple, list)):
             for ex, t in zip(
-                exceptions, types
-            ):  # pyright: reportGeneralTypeIssues=false
+                exceptions, types  # pyright: ignore reportGeneralTypeIssues
+            ):
                 if isinstance(ex, t) and not inspect.isclass(ex):
                     assert e == ex, f"Expected {ex} but got {e}"
                     return
@@ -771,7 +794,7 @@ def may_revert(
     exceptions: Union[
         Exception, Type[Exception], Tuple[Union[Exception, Type[Exception]], ...]
     ] = TransactionRevertedError,
-) -> AbstractContextManager[ExceptionWrapper]:
+) -> Iterator[ExceptionWrapper]:
     if isinstance(exceptions, (tuple, list)):
         types = tuple(type(x) if not inspect.isclass(x) else x for x in exceptions)
     else:
@@ -781,11 +804,13 @@ def may_revert(
 
     try:
         yield wrapper
-    except types as e:
+    except types as e:  # pyright: ignore reportGeneralTypeIssues
         wrapper.value = e
 
         if isinstance(exceptions, (tuple, list)):
-            for ex, t in zip(exceptions, types):
+            for ex, t in zip(
+                exceptions, types  # pyright: ignore reportGeneralTypeIssues
+            ):
                 if isinstance(ex, t) and not inspect.isclass(ex):
                     assert e == ex, f"Expected {ex} but got {e}"
                     return

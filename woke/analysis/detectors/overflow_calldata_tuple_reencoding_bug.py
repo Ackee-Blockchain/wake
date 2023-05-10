@@ -209,8 +209,11 @@ class OverflowCalldataTupleReencodingBugDetector(DetectorAbc):
             assert len(node.arguments) == 2
             if isinstance(node.arguments[1], TupleExpression):
                 encoded_types = [
-                    arg.type for arg in node.arguments[1].components
-                ]  # pyright: reportGeneralTypeIssues=false
+                    arg.type
+                    for arg in node.arguments[
+                        1
+                    ].components  # pyright: ignore reportGeneralTypeIssues
+                ]
             elif (
                 isinstance(node.arguments[1], FunctionCall)
                 and node.arguments[1].kind == FunctionCallKind.STRUCT_CONSTRUCTOR_CALL
@@ -229,7 +232,9 @@ class OverflowCalldataTupleReencodingBugDetector(DetectorAbc):
         if not abi_encoder_v2_enabled(node):
             return
 
-        if types_meet_requirements(encoded_types):  # type: ignore
+        if types_meet_requirements(
+            encoded_types  # pyright: ignore reportGeneralTypeIssues
+        ):
             self._detections.add(
                 DetectorResult(
                     node, "Found head overflow calldata tuple reencoding compiler bug"

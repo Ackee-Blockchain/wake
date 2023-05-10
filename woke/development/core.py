@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import collections
 import dataclasses
 import functools
 import importlib
@@ -30,11 +29,11 @@ from typing import (
     Type,
     Union,
     cast,
-    overload,
 )
 from urllib.error import HTTPError
 
 import eth_abi
+import eth_abi.abi
 import eth_abi.packed
 import eth_account
 import eth_account.messages
@@ -152,17 +151,11 @@ class Abi:
 
     @classmethod
     def encode(cls, types: Iterable, arguments: Iterable) -> bytes:
-        return eth_abi.encode(  # pyright: ignore[reportPrivateImportUsage]
-            types, cls._normalize_arguments(arguments)
-        )
+        return eth_abi.abi.encode(types, cls._normalize_arguments(arguments))
 
     @classmethod
     def encode_packed(cls, types: Iterable, arguments: Iterable) -> bytes:
-        return (
-            eth_abi.packed.encode_packed(  # pyright: ignore[reportPrivateImportUsage]
-                types, cls._normalize_arguments(arguments)
-            )
-        )
+        return eth_abi.packed.encode_packed(types, cls._normalize_arguments(arguments))
 
     @classmethod
     def encode_with_selector(
@@ -205,18 +198,20 @@ class Abi:
 
         selector = func.selector
         contract = get_class_that_defined_method(func)
-        assert selector in contract._abi  # pyright: reportOptionalMemberAccess=false
+        assert selector in contract._abi  # pyright: ignore reportGeneralTypeIssues
         types = [
             eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
             for arg in fix_library_abi(
-                contract._abi[selector]["inputs"]
-            )  # pyright: reportOptionalMemberAccess=false
+                contract._abi[selector][  # pyright: ignore reportGeneralTypeIssues
+                    "inputs"
+                ]
+            )
         ]
         return cls.encode_with_selector(selector, types, arguments)
 
     @classmethod
     def decode(cls, types: Iterable, data: bytes) -> Any:
-        return eth_abi.decode(types, data)  # pyright: ignore[reportPrivateImportUsage]
+        return eth_abi.abi.decode(types, data)
 
 
 class Wei(int):
@@ -237,7 +232,7 @@ class Wei(int):
     @classmethod
     def from_str(cls, value: str) -> Wei:
         count, unit = value.split()
-        return cls(eth_utils.to_wei(float(count), unit))
+        return cls(eth_utils.currency.to_wei(float(count), unit))
 
 
 @functools.total_ordering
@@ -250,9 +245,7 @@ class Address:
         elif isinstance(address, str):
             if not address.startswith(("0x", "0X")):
                 address = "0x" + address
-            if not eth_utils.is_address(
-                address
-            ):  # pyright: reportPrivateImportUsage=false
+            if not eth_utils.address.is_address(address):
                 raise ValueError(f"{address} is not a valid address")
             self._address = address
         else:
@@ -783,7 +776,9 @@ class Account:
         if coverage_handler is not None:
             tx._fetch_debug_trace_transaction()
             coverage_handler.add_coverage(
-                tx_params, self._chain, tx._debug_trace_transaction
+                tx_params,
+                self._chain,
+                tx._debug_trace_transaction,  # pyright: ignore reportGeneralTypeIssues
             )
 
         if confirmations != 0:
@@ -984,7 +979,7 @@ class Account:
 
         client_signing = self._address not in self._chain._private_keys
 
-        if isinstance(message, collections.MutableMapping):
+        if isinstance(message, dict):
             if domain is not None:
                 raise ValueError(
                     "Domain cannot be specified when message is a dictionary"
@@ -1035,7 +1030,7 @@ class Chain(ABC):
     _chain_interface: ChainInterfaceAbc
     _accounts: List[Account]
     _accounts_set: Set[Account]  # for faster lookup
-    _nonces: KeyedDefaultDict[Address, int]  # pyright: reportGeneralTypeIssues=false
+    _nonces: KeyedDefaultDict[Address, int]  # pyright: ignore reportGeneralTypeIssues
     _default_call_account: Optional[Account]
     _default_tx_account: Optional[Account]
     _default_estimate_account: Optional[Account]
@@ -1125,7 +1120,7 @@ class Chain(ABC):
     def max_priority_fee_per_gas(self, value: int) -> None:
         ...
 
-    @contextmanager
+    @contextmanager  # pyright: ignore reportGeneralTypeIssues
     @abstractmethod
     def connect(
         self,
@@ -1259,9 +1254,9 @@ class Chain(ABC):
             ]
             self._accounts_set = set(self._accounts)
             self._nonces = KeyedDefaultDict(
-                lambda addr: self._chain_interface.get_transaction_count(
+                lambda addr: self._chain_interface.get_transaction_count(  # pyright: ignore reportGeneralTypeIssues
                     str(addr)
-                )  # pyright: reportGeneralTypeIssues=false
+                )
             )
             self._snapshots = {}
             self._deployed_libraries = defaultdict(list)
@@ -1667,8 +1662,8 @@ class Chain(ABC):
                     prev_tx._fetch_debug_trace_transaction()
                     process_debug_trace_for_fqn_overrides(
                         prev_tx,
-                        prev_tx._debug_trace_transaction,
-                        fqn_overrides,  # pyright: reportGeneralTypeIssues=false
+                        prev_tx._debug_trace_transaction,  # pyright: ignore reportGeneralTypeIssues
+                        fqn_overrides,
                     )
                 fqn = process_debug_trace_for_revert(tx, debug_trace, fqn_overrides)
             except ValueError:
@@ -1725,8 +1720,8 @@ class Chain(ABC):
                 prev_tx._fetch_debug_trace_transaction()
                 process_debug_trace_for_fqn_overrides(
                     prev_tx,
-                    prev_tx._debug_trace_transaction,
-                    fqn_overrides,  # pyright: reportGeneralTypeIssues=false
+                    prev_tx._debug_trace_transaction,  # pyright: ignore reportGeneralTypeIssues
+                    fqn_overrides,
                 )
             event_traces = process_debug_trace_for_events(
                 tx, debug_trace, fqn_overrides
@@ -1912,10 +1907,10 @@ class Chain(ABC):
 
         if self.require_signed_txs:
             key = self._private_keys.get(Address(tx_params["from"]), None)
-            tx_params["from"] = eth_utils.to_checksum_address(tx_params["from"])
+            tx_params["from"] = eth_utils.address.to_checksum_address(tx_params["from"])
 
             if "to" in tx_params:
-                tx_params["to"] = eth_utils.to_checksum_address(tx_params["to"])
+                tx_params["to"] = eth_utils.address.to_checksum_address(tx_params["to"])
 
             if Account(tx_params["from"], self) in self._accounts_set:
                 try:
@@ -2075,7 +2070,11 @@ class Chain(ABC):
         coverage_handler = get_coverage_handler()
         if coverage_handler is not None:
             tx._fetch_debug_trace_transaction()
-            coverage_handler.add_coverage(tx_params, self, tx._debug_trace_transaction)
+            coverage_handler.add_coverage(
+                tx_params,
+                self,
+                tx._debug_trace_transaction,  # pyright: ignore reportGeneralTypeIssues
+            )
 
         if confirmations != 0:
             tx.wait(confirmations)

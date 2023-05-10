@@ -8,6 +8,6 @@ class KeyedDefaultDict(defaultdict):
             raise KeyError(key)
         else:
             ret = self[key] = self.default_factory(
-                key
-            )  # pyright: reportGeneralTypeIssues=false
+                key  # pyright: ignore reportGeneralTypeIssues
+            )
             return ret

@@ -433,14 +433,18 @@ class SolidityCompiler:
                 nodes_subset.add(node)
 
                 for in_edge in graph.in_edges(node):
-                    _from, to = in_edge
+                    _from, to = in_edge  # pyright: ignore reportGeneralTypeIssues
                     if _from not in nodes_subset:
                         nodes_queue.append(_from)
 
             subgraph = graph.subgraph(nodes_subset).copy()
             return CompilationUnit(subgraph, versions)
 
-        sinks = [node for node, out_degree in graph.out_degree() if out_degree == 0]
+        sinks = [
+            node
+            for node, out_degree in graph.out_degree()  # pyright: ignore reportGeneralTypeIssues
+            if out_degree == 0
+        ]
         compilation_units = []
 
         for sink in sinks:
@@ -586,7 +590,7 @@ class SolidityCompiler:
         while len(queue):
             node = queue.pop()
             for out_edge in cu.graph.out_edges(node):
-                from_, to = out_edge
+                from_, to = out_edge  # pyright: ignore reportGeneralTypeIssues
                 if to not in processed:
                     processed.add(to)
                     queue.append(to)
