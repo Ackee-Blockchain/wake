@@ -34,6 +34,7 @@ class InheritanceSpecifier(SolidityAbc):
         contract B is A(0x1234567890123456789012345678901234567890) {}
         ```
     """
+
     _ast_node: SolcInheritanceSpecifier
     _parent: ContractDefinition
 

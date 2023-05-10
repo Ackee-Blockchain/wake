@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Iterator, List, Optional, Union
 
+from ...enums import ModifierInvocationKind
 from ..expression.abc import ExpressionAbc
 from ..expression.identifier import Identifier
-from .identifier_path import IdentifierPath
 from ..reference_resolver import CallbackParams
-from ...enums import ModifierInvocationKind
+from .identifier_path import IdentifierPath
 
 if TYPE_CHECKING:
     from ..declaration.function_definition import FunctionDefinition
@@ -35,6 +35,7 @@ class ModifierInvocation(SolidityAbc):
         }
         ```
     """
+
     _ast_node: SolcModifierInvocation
     _parent: FunctionDefinition
 

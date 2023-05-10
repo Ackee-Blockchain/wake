@@ -16,6 +16,7 @@ class TypedName(YulAbc):
     """
     TBD
     """
+
     _parent: Union[FunctionDefinition, VariableDeclaration]
     _name: str
     _type: str

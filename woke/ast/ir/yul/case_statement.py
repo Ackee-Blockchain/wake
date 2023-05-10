@@ -18,6 +18,7 @@ class Case(YulAbc):
     """
     TBD
     """
+
     _parent: Switch
     _body: Block
     _value: Union[typing_extensions.Literal["default"], Literal]

@@ -30,6 +30,7 @@ class Continue(StatementAbc):
         }
         ```
     """
+
     _ast_node: SolcContinue
     _parent: Union[
         Block,

@@ -18,6 +18,7 @@ class VariableDeclaration(YulStatementAbc):
     """
     TBD
     """
+
     _parent: Block
     _variables: List[TypedName]
     _value: Optional[Union[FunctionCall, Identifier, Literal]]

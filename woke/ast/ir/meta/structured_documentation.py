@@ -31,6 +31,7 @@ class StructuredDocumentation(SolidityAbc):
         }
         ```
     """
+
     _ast_node: SolcStructuredDocumentation
     _parent: Union[
         ContractDefinition,

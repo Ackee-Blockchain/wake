@@ -12,6 +12,7 @@ class Continue(YulStatementAbc):
     """
     TBD
     """
+
     _parent: Block
 
     @property

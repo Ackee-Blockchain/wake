@@ -30,6 +30,7 @@ class Break(StatementAbc):
         }
         ```
     """
+
     _ast_node: SolcBreak
     _parent: Union[
         Block,

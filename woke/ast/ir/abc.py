@@ -23,6 +23,7 @@ class IrAbc(ABC):
         Yul IR nodes can have empty source code. In the case of Solidity IR nodes, this should not happen.
 
     """
+
     _file: Path
     _source: bytes
     _ast_node: SolcOrYulNode
@@ -150,6 +151,7 @@ class SolidityAbc(IrAbc, ABC):
     """
     Abstract base class for all Solidity IR nodes.
     """
+
     _ast_node: SolcNode
 
     def __init__(

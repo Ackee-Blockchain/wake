@@ -66,6 +66,7 @@ class ParameterList(SolidityAbc):
         }
         ```
     """
+
     _ast_node: SolcParameterList
     _parent: Union[
         ErrorDefinition,

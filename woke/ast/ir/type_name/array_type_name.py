@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterator, Optional, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterator, Optional, Union
 
 from ...types import Array
 
@@ -59,8 +59,11 @@ class ArrayTypeName(TypeNameAbc):
         }
         ```
     """
+
     _ast_node: SolcArrayTypeName
-    _parent: Union[VariableDeclaration, NewExpression, UsingForDirective, ArrayTypeName, Mapping]
+    _parent: Union[
+        VariableDeclaration, NewExpression, UsingForDirective, ArrayTypeName, Mapping
+    ]
 
     _base_type: TypeNameAbc
     _length: Optional[ExpressionAbc]
@@ -72,7 +75,7 @@ class ArrayTypeName(TypeNameAbc):
         self._base_type = TypeNameAbc.from_ast(init, array_type_name.base_type, self)
         self._length = (
             ExpressionAbc.from_ast(init, array_type_name.length, self)
-            if array_type_name.length
+            if array_type_name.length is not None
             else None
         )
 
@@ -83,7 +86,11 @@ class ArrayTypeName(TypeNameAbc):
             yield from self._length
 
     @property
-    def parent(self) -> Union[VariableDeclaration, NewExpression, UsingForDirective, ArrayTypeName, Mapping]:
+    def parent(
+        self,
+    ) -> Union[
+        VariableDeclaration, NewExpression, UsingForDirective, ArrayTypeName, Mapping
+    ]:
         """
         Returns:
             Parent IR node.
