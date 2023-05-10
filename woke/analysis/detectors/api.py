@@ -573,7 +573,7 @@ def print_detection(
                 start_line=(start_line_index + 1),
                 highlight_lines={line_index + 1},
             ),
-            title=f"{detector_result.message} \[{detector_id}]"
+            title=f"{detector_result.message} \[{detector_id}]"  # pyright: ignore reportInvalidStringEscapeSequence
             if detector_id is not None
             else detector_result.message,
             title_align="left",

@@ -3,9 +3,10 @@ from __future__ import annotations
 import importlib
 import reprlib
 from collections import ChainMap
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, cast
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Tuple, cast
 
 import eth_abi
+import eth_abi.abi
 import eth_abi.exceptions
 import eth_utils
 from rich.console import Console
@@ -151,7 +152,7 @@ class CallTrace:
         function_name: Optional[str],
         selector: Optional[bytes],
         address: Optional[Address],
-        arguments: Optional[List],
+        arguments: Optional[Iterable],
         value: int,
         kind: CallTraceKind,
         depth: int,
@@ -163,7 +164,7 @@ class CallTrace:
         self._function_name = function_name
         self._selector = selector
         self._address = address
-        self._arguments = arguments
+        self._arguments = list(arguments) if arguments is not None else None
         self._value = Wei(value)
         self._kind = kind
         self._depth = depth
@@ -246,8 +247,10 @@ class CallTrace:
 
         if self.kind != CallTraceKind.CALL:
             ret.append_text(
-                Text.from_markup(f" [yellow]\[{self.kind}][/yellow]")
-            )  # pyright: reportInvalidStringEscapeSequence=false
+                Text.from_markup(
+                    f" [yellow]\[{self.kind}][/yellow]"  # pyright: ignore reportInvalidStringEscapeSequence
+                )
+            )
 
         return ret
 
@@ -315,7 +318,9 @@ class CallTrace:
             tx_before = tx.block.txs[i]
             tx_before._fetch_debug_trace_transaction()
             process_debug_trace_for_fqn_overrides(
-                tx_before, tx_before._debug_trace_transaction, fqn_overrides
+                tx_before,
+                tx_before._debug_trace_transaction,  # pyright: ignore reportGeneralTypeIssues
+                fqn_overrides,
             )
 
         assert len(fqn_overrides.maps) == 1
@@ -421,7 +426,7 @@ class CallTrace:
                             eth_abi.abi.decode(
                                 output_types, tx_params["data"][constructor_offset:]
                             )
-                        )  # pyright: reportGeneralTypeIssues=false
+                        )
                     except eth_abi.exceptions.DecodingError:
                         args = None
                 root_trace = CallTrace(
@@ -500,7 +505,7 @@ class CallTrace:
                 try:
                     decoded_data = list(
                         eth_abi.abi.decode(output_types, tx_params["data"][4:])
-                    )  # pyright: reportGeneralTypeIssues=false
+                    )
                 except eth_abi.exceptions.DecodingError:
                     decoded_data = None
                 root_trace = CallTrace(
@@ -586,7 +591,7 @@ class CallTrace:
                             try:
                                 arguments = list(
                                     eth_abi.abi.decode(output_types, data[4:])
-                                )  # pyright: reportGeneralTypeIssues=false
+                                )
                             except eth_abi.exceptions.DecodingError:
                                 arguments = None
                         else:
@@ -658,7 +663,7 @@ class CallTrace:
                             try:
                                 arguments = list(
                                     eth_abi.abi.decode(output_types, data[4:])
-                                )  # pyright: reportGeneralTypeIssues=false
+                                )
                             except eth_abi.exceptions.DecodingError:
                                 arguments = None
                             fn_name = fn_abi["name"]
@@ -738,7 +743,7 @@ class CallTrace:
                         )
                         if address != Address(0):
                             current_trace._address = address
-                            fqn_overrides.maps[0][current_trace.address] = contracts[-1]
+                            fqn_overrides.maps[0][address] = contracts[-1]
                     except IndexError:
                         pass
 
@@ -776,7 +781,7 @@ class CallTrace:
                                 eth_abi.abi.decode(
                                     output_types, creation_code[constructor_offset:]
                                 )
-                            )  # pyright: reportGeneralTypeIssues=false
+                            )
                         except eth_abi.exceptions.DecodingError:
                             args = None
                 except ValueError:

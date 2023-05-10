@@ -20,6 +20,8 @@ from woke.ast.ir.expression.assignment import Assignment
 from woke.ast.ir.expression.binary_operation import BinaryOperation
 from woke.ast.ir.expression.function_call import FunctionCall
 from woke.ast.ir.expression.literal import Literal
+from woke.ast.ir.meta.identifier_path import IdentifierPathPart
+from woke.ast.ir.statement.inline_assembly import ExternalReference
 from woke.ast.ir.statement.return_statement import Return
 
 
@@ -40,12 +42,16 @@ class AxelarProxyContractIdDetector(DetectorAbc):
         proxy_contracts: Dict[bytes, Set[ContractDefinition]] = {}
         for selector, fns in self.proxies.items():
             proxy_contracts[selector] = set()
-            visited: Set[ContractDefinition] = set(
+            visited: Set[
+                ContractDefinition
+            ] = set(  # pyright: ignore reportGeneralTypeIssues
                 fn.parent for fn in fns
-            )  # pyright: reportGeneralTypeIssues=false
-            queue: Deque[ContractDefinition] = deque(
+            )
+            queue: Deque[
+                ContractDefinition
+            ] = deque(  # pyright: ignore reportGeneralTypeIssues
                 fn.parent for fn in fns
-            )  # pyright: reportGeneralTypeIssues=false
+            )
 
             while len(queue) > 0:
                 contract = queue.popleft()
@@ -62,12 +68,16 @@ class AxelarProxyContractIdDetector(DetectorAbc):
         upgradeable_contracts: Dict[bytes, Set[ContractDefinition]] = {}
         for selector, fns in self.upgradeables.items():
             upgradeable_contracts[selector] = set()
-            visited: Set[ContractDefinition] = set(
+            visited: Set[
+                ContractDefinition
+            ] = set(  # pyright: ignore reportGeneralTypeIssues
                 fn.parent for fn in fns
-            )  # pyright: reportGeneralTypeIssues=false
-            queue: Deque[ContractDefinition] = deque(
+            )
+            queue: Deque[
+                ContractDefinition
+            ] = deque(  # pyright: ignore reportGeneralTypeIssues
                 fn.parent for fn in fns
-            )  # pyright: reportGeneralTypeIssues=false
+            )
 
             while len(queue) > 0:
                 contract = queue.popleft()
@@ -299,6 +309,10 @@ class AxelarProxyContractIdDetector(DetectorAbc):
             assignments = []
 
             for ref in ret_var.references:
+                if isinstance(ref, ExternalReference):
+                    continue
+                elif isinstance(ref, IdentifierPathPart):
+                    ref = ref.underlying_node
                 assignment = ref
                 while assignment is not None:
                     if isinstance(assignment, Assignment):

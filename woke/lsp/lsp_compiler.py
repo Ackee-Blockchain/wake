@@ -101,7 +101,7 @@ def _out_edge_bfs(cu: CompilationUnit, start: Iterable[Path], out: Set[Path]) ->
     while len(queue):
         node = queue.pop()
         for out_edge in cu.graph.out_edges(node):
-            from_, to = out_edge
+            from_, to = out_edge  # pyright: ignore reportGeneralTypeIssues
             if to not in processed:
                 processed.add(to)
                 queue.append(to)

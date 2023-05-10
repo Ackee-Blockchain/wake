@@ -77,13 +77,16 @@ class LspParser:
     def __getitem__(self, item: Path) -> Any:
         if item not in self._trees:
             self._trees[item] = self._parser.parse(
-                bytes(self._files[item].text), encoding="utf16"
-            )  # pyright: reportGeneralTypeIssues=false
+                bytes(self._files[item].text),
+                encoding="utf16",  # pyright: ignore reportGeneralTypeIssues
+            )
 
         if self._tree_changed[item]:
             self._trees[item] = self._parser.parse(
-                self._files[item].text, self._trees[item], encoding="utf16"
-            )  # pyright: reportGeneralTypeIssues=false
+                self._files[item].text,
+                self._trees[item],
+                encoding="utf16",  # pyright: ignore reportGeneralTypeIssues
+            )
             self._tree_changed[item] = False
 
         return self._trees[item]

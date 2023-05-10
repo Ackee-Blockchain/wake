@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import networkx as nx
 
@@ -96,8 +96,10 @@ class ControlFlowGraph:
                 self.__statements_lookup[node.control_statement] = node
 
     @property
-    def graph(self):
-        return self.__graph.copy(as_view=True)
+    def graph(self) -> nx.DiGraph:
+        return self.__graph.copy(
+            as_view=True
+        )  # pyright: ignore reportGeneralTypeIssues
 
     @property
     def declaration(self) -> Union[FunctionDefinition, ModifierDefinition]:
@@ -145,7 +147,10 @@ def _normalize(graph: nx.DiGraph, start: CfgBlock, end: CfgBlock) -> bool:
 
     for node in graph.nodes:
         for out_edge in list(graph.out_edges(node, data=True)):
-            if out_edge[2]["condition"][0] == TransitionCondition.NEVER:
+            if (
+                out_edge[2]["condition"][0]  # pyright: ignore reportGeneralTypeIssues
+                == TransitionCondition.NEVER
+            ):
                 graph.remove_edge(out_edge[0], out_edge[1])
                 changed = True
 
@@ -155,11 +160,24 @@ def _normalize(graph: nx.DiGraph, start: CfgBlock, end: CfgBlock) -> bool:
             and node != start
         ):
             edge = next(iter(graph.out_edges(node, data=True)))
-            if edge[2]["condition"][0] == TransitionCondition.ALWAYS:
+            if (
+                edge[2]["condition"][0]  # pyright: ignore reportGeneralTypeIssues
+                == TransitionCondition.ALWAYS
+            ):
                 to = edge[1]
                 in_edges = list(graph.in_edges(node, data=True))
-                for from_, _, data in in_edges:
-                    graph.add_edge(from_, to, condition=data["condition"])
+                for (  # pyright: ignore reportGeneralTypeIssues
+                    from_,
+                    _,
+                    data,
+                ) in in_edges:
+                    graph.add_edge(
+                        from_,
+                        to,
+                        condition=data[  # pyright: ignore reportGeneralTypeIssues
+                            "condition"
+                        ],
+                    )
                     graph.remove_edge(from_, node)
                 to_be_removed.add(node)
                 changed = True
@@ -417,10 +435,23 @@ class CfgBlock:
         else:
             body_end.__statements = list(tmp.__statements)
 
-            for start, _, data in graph.in_edges(tmp, data=True):
+            data: Any
+            for (
+                start,
+                _,
+                data,
+            ) in graph.in_edges(  # pyright: ignore reportGeneralTypeIssues
+                tmp, data=True
+            ):
                 graph.add_edge(start, body_end, condition=data["condition"])
 
-            for end, _, data in graph.out_edges(tmp, data=True):
+            for (
+                end,
+                _,
+                data,
+            ) in graph.out_edges(  # pyright: ignore reportGeneralTypeIssues
+                tmp, data=True
+            ):
                 graph.add_edge(body_end, end, condition=data["condition"])
 
             graph.remove_node(tmp)

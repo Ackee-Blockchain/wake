@@ -21,12 +21,12 @@ class Tee:
         pass
 
     def write(self, message):
-        self.stream.write(message)  # pyright: reportGeneralTypeIssues=false
-        self.fp.write(message)  # pyright: reportOptionalMemberAccess=false
+        self.stream.write(message)  # pyright: ignore reportGeneralTypeIssues
+        self.fp.write(message)  # pyright: ignore reportOptionalMemberAccess
 
     def flush(self):
-        self.stream.flush()  # pyright: reportGeneralTypeIssues=false
-        self.fp.flush()  # pyright: reportOptionalMemberAccess=false
+        self.stream.flush()  # pyright: ignore reportGeneralTypeIssues
+        self.fp.flush()  # pyright: ignore reportOptionalMemberAccess
 
     def __enter__(self):
         self.stream = self.get_stream()
@@ -49,7 +49,7 @@ class Tee:
             self.fp = None
 
     def isatty(self):
-        return self.stream.isatty()  # pyright: reportGeneralTypeIssues=false
+        return self.stream.isatty()  # pyright: ignore reportGeneralTypeIssues
 
     def __repr__(self):
         return "<%s: %s>" % (self.__class__.__name__, self.filename)

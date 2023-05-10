@@ -5,9 +5,9 @@ import time
 from .abc import ProtocolAbc
 
 if platform.system() == "Windows":
-    import win32file  # pyright: reportMissingImports=false
+    import win32file  # pyright: ignore reportMissingModuleSource
 
-    class IpcProtocol(ProtocolAbc):  # pyright: reportGeneralTypeIssues=false
+    class IpcProtocol(ProtocolAbc):  # pyright: ignore reportGeneralTypeIssues
         _uri: str
         _timeout: float
 
@@ -30,13 +30,18 @@ if platform.system() == "Windows":
             self._handle.close()
 
         def send_recv(self, data: str):
-            win32file.WriteFile(self._handle, data.encode("utf-8"))
+            win32file.WriteFile(
+                self._handle,  # pyright: ignore reportGeneralTypeIssues
+                data.encode("utf-8"),
+            )
             received = bytearray()
             start = time.perf_counter()
 
             while time.perf_counter() - start < self._timeout:
-                res, data = win32file.ReadFile(self._handle, 4096)
-                received += data  # pyright: reportGeneralTypeIssues=false
+                res, data = win32file.ReadFile(
+                    self._handle, 4096  # pyright: ignore reportGeneralTypeIssues
+                )
+                received += data  # pyright: ignore reportGeneralTypeIssues
                 if not received.rstrip().endswith((b"}", b"]")):
                     continue
                 try:

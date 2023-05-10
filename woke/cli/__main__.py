@@ -25,8 +25,8 @@ from .test import run_test
 
 if platform.system() != "Windows":
     try:
-        from asyncio import (  # pyright: reportGeneralTypeIssues=false
-            ThreadedChildWatcher,
+        from asyncio import (
+            ThreadedChildWatcher,  # pyright: ignore reportGeneralTypeIssues
         )
     except ImportError:
         from woke.utils.threaded_child_watcher import ThreadedChildWatcher

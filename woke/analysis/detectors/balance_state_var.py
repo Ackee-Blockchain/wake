@@ -14,6 +14,7 @@ from woke.ast.ir.expression.function_call_options import FunctionCallOptions
 from woke.ast.ir.expression.identifier import Identifier
 from woke.ast.ir.expression.member_access import MemberAccess
 from woke.ast.ir.expression.tuple_expression import TupleExpression
+from woke.ast.ir.meta.source_unit import SourceUnit
 from woke.ast.ir.statement.abc import StatementAbc
 from woke.ast.ir.statement.variable_declaration_statement import (
     VariableDeclarationStatement,
@@ -96,7 +97,7 @@ def _process_assigned_vars(address_balance: ExpressionAbc) -> List[DetectorResul
         return ret
 
     assigned_var = next(iter(assigned_vars))[0]
-    assert assigned_var != "IndexAccess"
+    assert assigned_var != "IndexAccess" and not isinstance(assigned_var, SourceUnit)
     assigned_var_statement = None
     function_def = None
     node = assigned_var

@@ -390,10 +390,8 @@ class Chain(woke.development.core.Chain):
                 latest_block_number = self.chain_interface.get_block_number()
                 if progress is not None:
                     progress.update(
-                        task_id,
-                        completed=(
-                            latest_block_number - tx.block_number + 1
-                        ),  # pyright: reportUnboundVariable=false
+                        task_id,  # pyright: ignore reportUnboundVariable
+                        completed=(latest_block_number - tx.block_number + 1),
                     )
 
     def _confirm_transaction(self, tx: TxParams) -> None:

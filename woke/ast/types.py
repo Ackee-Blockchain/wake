@@ -773,9 +773,12 @@ class Tuple(TypeAbc):
             raise NotImplementedError
         return (
             "("
-            + ",".join(component.abi_type() for component in self.__components)
+            + ",".join(
+                component.abi_type()  # pyright: ignore reportOptionalMemberAccess
+                for component in self.__components
+            )
             + ")"
-        )  # pyright: reportOptionalMemberAccess=false
+        )
 
     @property
     def components(self) -> typ.Tuple[typ.Optional[TypeAbc], ...]:
