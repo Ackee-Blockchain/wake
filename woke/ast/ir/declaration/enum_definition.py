@@ -3,11 +3,12 @@ from __future__ import annotations
 import logging
 import re
 from functools import lru_cache
-from typing import TYPE_CHECKING, Iterator, List, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
 
 from woke.ast.nodes import SolcEnumDefinition
 
 from ..abc import IrAbc, SolidityAbc
+from ..meta.structured_documentation import StructuredDocumentation
 from ..utils import IrInitTuple
 from .abc import DeclarationAbc
 from .enum_value import EnumValue
@@ -35,6 +36,7 @@ class EnumDefinition(DeclarationAbc):
 
     _canonical_name: str
     _values: List[EnumValue]
+    _documentation: Optional[StructuredDocumentation]
 
     def __init__(
         self, init: IrInitTuple, enum: SolcEnumDefinition, parent: SolidityAbc
@@ -45,6 +47,11 @@ class EnumDefinition(DeclarationAbc):
         self._values = []
         for value in enum.members:
             self._values.append(EnumValue(init, value, self))
+        self._documentation = (
+            StructuredDocumentation(init, enum.documentation, self)
+            if enum.documentation is not None
+            else None
+        )
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
@@ -93,3 +100,12 @@ class EnumDefinition(DeclarationAbc):
             Enum values defined in this enum.
         """
         return tuple(self._values)
+
+    @property
+    def documentation(self) -> Optional[StructuredDocumentation]:
+        """
+        Added in Solidity 0.8.20.
+        Returns:
+            [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation string, if any.
+        """
+        return self._documentation

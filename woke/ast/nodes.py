@@ -419,6 +419,7 @@ class SolcEnumDefinition(SolcNode):
     members: List["SolcEnumValue"]
     # optional
     name_location: Optional[Src]  # new in 0.8.2
+    documentation: Optional["SolcStructuredDocumentation"]  # new in 0.8.20
 
 
 class SolcFunctionDefinition(SolcNode):
@@ -455,6 +456,7 @@ class SolcStructDefinition(SolcNode):
     visibility: Visibility
     # optional
     name_location: Optional[Src]  # new in 0.8.2
+    documentation: Optional["SolcStructuredDocumentation"]  # new in 0.8.20
 
 
 # new in 0.8.4
@@ -506,6 +508,10 @@ class SolcContractDefinition(SolcNode):
     ]  # missing when a file that imports the contract cannot be compiled
     documentation: Optional[Union["SolcStructuredDocumentation", str]]
     used_errors: Optional[List[AstNodeId]]  # new in 0.8.4
+    used_events: Optional[List[AstNodeId]]  # new in 0.8.20
+    internal_function_ids: Optional[Dict[int, StrictInt]] = Field(
+        alias="internalFunctionIDs"
+    )
 
 
 class SolcEventDefinition(SolcNode):

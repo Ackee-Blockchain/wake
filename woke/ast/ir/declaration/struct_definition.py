@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import re
 from functools import lru_cache
-from typing import TYPE_CHECKING, Iterator, List, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
 
+from ..meta.structured_documentation import StructuredDocumentation
 from .abc import DeclarationAbc
 
 if TYPE_CHECKING:
@@ -36,6 +37,7 @@ class StructDefinition(DeclarationAbc):
     _canonical_name: str
     _members: List[VariableDeclaration]
     _visibility: Visibility
+    _documentation: Optional[StructuredDocumentation]
 
     def __init__(
         self,
@@ -51,6 +53,11 @@ class StructDefinition(DeclarationAbc):
         self._members = []
         for member in struct_definition.members:
             self._members.append(VariableDeclaration(init, member, self))
+        self._documentation = (
+            StructuredDocumentation(init, struct_definition.documentation, self)
+            if struct_definition.documentation is not None
+            else None
+        )
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
@@ -99,3 +106,12 @@ class StructDefinition(DeclarationAbc):
             Tuple of member variable declarations.
         """
         return tuple(self._members)
+
+    @property
+    def documentation(self) -> Optional[StructuredDocumentation]:
+        """
+        Added in Solidity 0.8.20.
+        Returns:
+            [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation string, if any.
+        """
+        return self._documentation

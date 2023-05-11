@@ -301,6 +301,7 @@ class InlineAssemblyEvmVersion(StrEnum):
     BERLIN = "berlin"
     LONDON = "london"
     PARIS = "paris"
+    SHANGHAI = "shanghai"
 
 
 class InlineAssemblySuffix(StrEnum):

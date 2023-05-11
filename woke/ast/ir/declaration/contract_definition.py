@@ -92,6 +92,8 @@ class ContractDefinition(DeclarationAbc):
     _user_defined_value_types: List[UserDefinedValueTypeDefinition]
     _using_for_directives: List[UsingForDirective]
     _declared_variables: List[VariableDeclaration]
+    _used_events: List[AstNodeId]
+    # _internal_function_ids
 
     _child_contracts: Set[ContractDefinition]
 
@@ -105,6 +107,9 @@ class ContractDefinition(DeclarationAbc):
         self._linearized_base_contracts = list(contract.linearized_base_contracts)
         self._used_errors = (
             list(contract.used_errors) if contract.used_errors is not None else []
+        )
+        self._used_events = (
+            list(contract.used_events) if contract.used_events is not None else []
         )
 
         if contract.documentation is None:
@@ -360,6 +365,19 @@ class ContractDefinition(DeclarationAbc):
             assert isinstance(node, ErrorDefinition)
             used_errors.append(node)
         return tuple(used_errors)
+
+    @property
+    def used_events(self) -> Tuple[EventDefinition, ...]:
+        """
+        Returns:
+            Events emitted by the contract as well as all events defined and inherited by the contract.
+        """
+        used_events = []
+        for event in self._used_events:
+            node = self._reference_resolver.resolve_node(event, self._cu_hash)
+            assert isinstance(node, EventDefinition)
+            used_events.append(node)
+        return tuple(used_events)
 
     @property
     def documentation(self) -> Optional[Union[StructuredDocumentation, str]]:

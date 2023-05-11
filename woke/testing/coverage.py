@@ -187,7 +187,7 @@ def _parse_opcodes(opcodes: str) -> List[Tuple[int, str, int, Optional[int]]]:
             ignore = False
             continue
 
-        if not opcode.startswith("PUSH"):
+        if not opcode.startswith("PUSH") or opcode == "PUSH0":
             pc_op_map.append((pc, opcode, 1, None))
             pc += 1
         else:
