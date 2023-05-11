@@ -43,7 +43,7 @@ class ErrorDefinition(DeclarationAbc):
         self._parameters = ParameterList(init, error.parameters, self)
         self._documentation = (
             StructuredDocumentation(init, error.documentation, self)
-            if error.documentation
+            if error.documentation is not None
             else None
         )
         self._error_selector = (

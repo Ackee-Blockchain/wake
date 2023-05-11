@@ -103,7 +103,7 @@ def _parse_opcodes(opcodes: str) -> List[Tuple[int, str, int, Optional[int]]]:
             ignore = False
             continue
 
-        if not opcode.startswith("PUSH"):
+        if not opcode.startswith("PUSH") or opcode == "PUSH0":
             pc_op_map.append((pc, opcode, 1, None))
             pc += 1
         else:
@@ -1829,7 +1829,9 @@ class SourceUnitImports:
         else:
             self.__enum_imports.add(enum_import)
 
-    def generate_contract_import(self, contract: ContractDefinition, *, force: bool = False):
+    def generate_contract_import(
+        self, contract: ContractDefinition, *, force: bool = False
+    ):
         source_unit = contract.parent
         if source_unit.source_unit_name == self.__type_gen.current_source_unit:
             return
@@ -1837,9 +1839,9 @@ class SourceUnitImports:
         contract_import = self.__generate_import(contract, source_unit.source_unit_name)
 
         if (
-            not force and
-            contract_import not in self.__contract_imports and
-            source_unit.source_unit_name in self.__type_gen.cyclic_source_units
+            not force
+            and contract_import not in self.__contract_imports
+            and source_unit.source_unit_name in self.__type_gen.cyclic_source_units
         ):
             self.__type_checking_imports.add(contract_import)
             self.__tmp_type_checking_imports.add(contract_import)
