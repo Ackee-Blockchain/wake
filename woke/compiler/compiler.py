@@ -74,6 +74,8 @@ from .solc_frontend import (
 from .source_path_resolver import SourcePathResolver
 from .source_unit_name_resolver import SourceUnitNameResolver
 
+# pyright: reportGeneralTypeIssues=false
+
 logger = logging.getLogger(__name__)
 
 
@@ -433,18 +435,14 @@ class SolidityCompiler:
                 nodes_subset.add(node)
 
                 for in_edge in graph.in_edges(node):
-                    _from, to = in_edge  # pyright: ignore reportGeneralTypeIssues
+                    _from, to = in_edge
                     if _from not in nodes_subset:
                         nodes_queue.append(_from)
 
             subgraph = graph.subgraph(nodes_subset).copy()
             return CompilationUnit(subgraph, versions)
 
-        sinks = [
-            node
-            for node, out_degree in graph.out_degree()  # pyright: ignore reportGeneralTypeIssues
-            if out_degree == 0
-        ]
+        sinks = [node for node, out_degree in graph.out_degree() if out_degree == 0]
         compilation_units = []
 
         for sink in sinks:
@@ -590,7 +588,7 @@ class SolidityCompiler:
         while len(queue):
             node = queue.pop()
             for out_edge in cu.graph.out_edges(node):
-                from_, to = out_edge  # pyright: ignore reportGeneralTypeIssues
+                from_, to = out_edge
                 if to not in processed:
                     processed.add(to)
                     queue.append(to)
@@ -855,9 +853,7 @@ class SolidityCompiler:
         with ctx_manager:
             # wait for compilation of all compilation units
             try:
-                ret: Tuple[SolcOutput, ...] = await asyncio.gather(
-                    *tasks
-                )  # pyright: ignore[reportGeneralTypeIssues]
+                ret: Tuple[SolcOutput, ...] = await asyncio.gather(*tasks)
             except Exception:
                 for task in tasks:
                     task.cancel()

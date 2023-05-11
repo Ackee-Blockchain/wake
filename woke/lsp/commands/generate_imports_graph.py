@@ -21,13 +21,15 @@ async def generate_imports_graph_handler(context: LspContext) -> str:
 
     graph = context.compiler.last_graph
 
-    for node in graph.nodes:
+    for node in graph.nodes:  # pyright: ignore reportGeneralTypeIssues
         node_attrs = {}
         if config.vscode_urls:
-            node_attrs["URL"] = f"vscode://file/{graph.nodes[node]['path']}"
+            node_attrs[
+                "URL"
+            ] = f"vscode://file/{graph.nodes[node]['path']}"  # pyright: ignore reportGeneralTypeIssues
         g.node(node, **node_attrs)
 
-    for from_, to in graph.edges:
+    for from_, to in graph.edges:  # pyright: ignore reportGeneralTypeIssues
         if config.imports_direction == ImportsDirection.ImportedToImporting:
             g.edge(from_, to)
         else:

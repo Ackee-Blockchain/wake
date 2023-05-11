@@ -56,7 +56,8 @@ async def generate_cfg_handler(
     if (
         len(cfg.start_block.statements) == 0
         and cfg.start_block.control_statement is None
-        and graph.out_degree(cfg.start_block) == 1
+        and graph.out_degree(cfg.start_block)  # pyright: ignore reportGeneralTypeIssues
+        == 1
     ):
         skip_start_block = True
 
@@ -64,11 +65,12 @@ async def generate_cfg_handler(
     if (
         len(cfg.end_block.statements) == 0
         and cfg.end_block.control_statement is None
-        and graph.in_degree(cfg.end_block) == 1
+        and graph.in_degree(cfg.end_block)  # pyright: ignore reportGeneralTypeIssues
+        == 1
     ):
         skip_end_block = True
 
-    for node in graph.nodes:
+    for node in graph.nodes:  # pyright: ignore reportGeneralTypeIssues
         if skip_start_block and node == cfg.start_block:
             continue
         if skip_end_block and node == cfg.end_block:
