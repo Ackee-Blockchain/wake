@@ -289,7 +289,9 @@ class WokeConfig:
         config = TopLevelConfig.parse_obj(config_raw_copy)
         self.__config_raw = config_raw_copy
         self.__config = config
-        self.__loaded_files.update(subconfigs_graph.nodes)
+        self.__loaded_files.update(
+            subconfigs_graph.nodes  # pyright: ignore reportGeneralTypeIssues
+        )
 
     @property
     def loaded_files(self) -> FrozenSet[Path]:

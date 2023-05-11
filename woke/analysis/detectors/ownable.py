@@ -302,7 +302,7 @@ def _cfg_block_or_statement_is_publicly_reachable(
                     _,
                     data,
                 ) in graph.in_edges(  # pyright: ignore reportGeneralTypeIssues
-                    block, data=True
+                    block, data=True  # pyright: ignore reportGeneralTypeIssues
                 ):
                     if from_ in visited:
                         continue

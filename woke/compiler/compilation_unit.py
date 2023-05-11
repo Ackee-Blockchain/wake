@@ -9,6 +9,8 @@ from woke.compiler.source_path_resolver import SourcePathResolver
 from woke.config import WokeConfig
 from woke.core.solidity_version import SolidityVersionRanges
 
+# pyright: reportGeneralTypeIssues=false
+
 
 class CompilationUnit:
     __unit_graph: nx.DiGraph

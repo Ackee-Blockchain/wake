@@ -1629,9 +1629,14 @@ class TypeGenerator:
                         _,
                         to,
                     ) in graph.out_edges(  # pyright: ignore reportGeneralTypeIssues
-                        source_unit_name
+                        source_unit_name  # pyright: ignore reportGeneralTypeIssues
                     ):
-                        if graph.in_degree(to) == 1:
+                        if (
+                            graph.in_degree(
+                                to  # pyright: ignore reportGeneralTypeIssues
+                            )
+                            == 1
+                        ):
                             heapq.heappush(sources, to)
                             visited.add(to)
                 graph.remove_nodes_from(paths_to_source_unit_names[path])
@@ -1646,7 +1651,12 @@ class TypeGenerator:
 
                 is_closed_cycle = True
                 for node in cycle:
-                    if any(edge[0] not in cycle for edge in graph.in_edges(node)):
+                    if any(
+                        edge[0] not in cycle
+                        for edge in graph.in_edges(
+                            node  # pyright: ignore reportGeneralTypeIssues
+                        )
+                    ):
                         is_closed_cycle = False
                         break
 

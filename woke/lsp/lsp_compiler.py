@@ -100,7 +100,9 @@ def _out_edge_bfs(cu: CompilationUnit, start: Iterable[Path], out: Set[Path]) ->
     queue: Deque[str] = deque(processed)
     while len(queue):
         node = queue.pop()
-        for out_edge in cu.graph.out_edges(node):
+        for out_edge in cu.graph.out_edges(
+            node  # pyright: ignore reportGeneralTypeIssues
+        ):
             from_, to = out_edge  # pyright: ignore reportGeneralTypeIssues
             if to not in processed:
                 processed.add(to)
@@ -794,7 +796,10 @@ class LspCompiler:
                         self.__last_successful_compilation_contents[
                             path
                         ] = VersionedFile(
-                            cu.graph.nodes[source_unit_name]["content"], None
+                            cu.graph.nodes[  # pyright: ignore reportGeneralTypeIssues
+                                source_unit_name
+                            ]["content"],
+                            None,
                         )
 
             self.__ir_reference_resolver.run_post_process_callbacks(
