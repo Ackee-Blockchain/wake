@@ -1411,7 +1411,7 @@ class TypeGenerator:
                 self.generate_types_contract(parent_contract)
             # contract is not in the same source unit, so it must be imported
             else:
-                self.__imports.generate_contract_import(parent_contract)
+                self.__imports.generate_contract_import(parent_contract, force=True)
 
         contract_module_name = "pytypes." + _make_path_alphanum(
             contract.parent.source_unit_name[:-3]
@@ -1829,14 +1829,18 @@ class SourceUnitImports:
         else:
             self.__enum_imports.add(enum_import)
 
-    def generate_contract_import(self, contract: ContractDefinition):
+    def generate_contract_import(self, contract: ContractDefinition, *, force: bool = False):
         source_unit = contract.parent
         if source_unit.source_unit_name == self.__type_gen.current_source_unit:
             return
 
         contract_import = self.__generate_import(contract, source_unit.source_unit_name)
 
-        if source_unit.source_unit_name in self.__type_gen.cyclic_source_units:
+        if (
+            not force and
+            contract_import not in self.__contract_imports and
+            source_unit.source_unit_name in self.__type_gen.cyclic_source_units
+        ):
             self.__type_checking_imports.add(contract_import)
             self.__tmp_type_checking_imports.add(contract_import)
         else:
