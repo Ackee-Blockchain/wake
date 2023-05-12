@@ -89,7 +89,11 @@ async def document_link(
     if this_source_unit_name is None:
         return None
 
-    root = context.parser[path].root_node
+    try:
+        root = context.parser[path].root_node
+    except KeyError:
+        return None
+
     for child in root.children:
         if child.type == "import_directive":
             source_node = child.child_by_field_name("source")

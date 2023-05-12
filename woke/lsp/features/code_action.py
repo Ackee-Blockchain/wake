@@ -74,13 +74,18 @@ async def code_action(
 ) -> Optional[List[Union[Command, CodeAction]]]:
     path = uri_to_path(params.text_document.uri).resolve()
     line_ending = context.parser.get_line_ending(path)
+    if line_ending is None:
+        line_ending = "\n"
 
     ret = []
 
     for diag in params.context.diagnostics:
-        node = await context.parser.get_node_at_position(
-            path, diag.range.start.line, diag.range.start.character
-        )
+        try:
+            node = await context.parser.get_node_at_position(
+                path, diag.range.start.line, diag.range.start.character
+            )
+        except KeyError:
+            continue
 
         if diag.code == 4937:
             # No visibility specified. Did you intend to add "public"?
