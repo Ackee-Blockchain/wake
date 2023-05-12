@@ -519,9 +519,12 @@ async def completion(
     context: LspContext, params: CompletionParams
 ) -> Optional[CompletionList]:
     path = uri_to_path(params.text_document.uri).resolve()
-    node = await context.parser.get_node_at_position(
-        path, params.position.line, params.position.character
-    )
+    try:
+        node = await context.parser.get_node_at_position(
+            path, params.position.line, params.position.character
+        )
+    except KeyError:
+        return None
 
     while node is not None:
         if node.type == "import_directive":

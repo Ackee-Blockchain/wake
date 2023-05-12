@@ -9,6 +9,7 @@ from typing import (
     Dict,
     List,
     NamedTuple,
+    Optional,
     Set,
     Tuple,
     Union,
@@ -62,7 +63,7 @@ class LspParser:
     _trees: Dict[Path, Any]
     _tree_changed: DefaultDict[Path, bool]
     _line_indexes: Dict[Path, List[Tuple[bytes, int]]]
-    _line_endings: Dict[Path, str]
+    _line_endings: Dict[Path, Optional[str]]
     _server: LspServer
 
     def __init__(self, server: LspServer):
@@ -113,7 +114,10 @@ class LspParser:
                 line_endings["\r"] += 1
 
         self._line_indexes[file] = encoded_lines
-        self._line_endings[file] = line_endings.most_common(1)[0][0]
+        try:
+            self._line_endings[file] = line_endings.most_common(1)[0][0]
+        except IndexError:
+            self._line_endings[file] = None
 
     def _get_byte_offset_from_line_pos(self, file: Path, line: int, col: int) -> int:
         lines = self._line_indexes[file]
@@ -253,5 +257,8 @@ class LspParser:
 
         return last_node
 
-    def get_line_ending(self, file: Path) -> str:
-        return self._line_endings[file]
+    def get_line_ending(self, file: Path) -> Optional[str]:
+        try:
+            return self._line_endings[file]
+        except KeyError:
+            return None
