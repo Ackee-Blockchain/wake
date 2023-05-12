@@ -36,7 +36,7 @@ There you can also find a section on [contributing](https://ackeeblockchain.com/
 
 ### Testing framework
 
-See [examples](examples/testing) and [documentation](https://ackeeblockchain.com/woke/docs/latest/testing-framework/overview) for more information.
+See [examples](examples) and [documentation](https://ackeeblockchain.com/woke/docs/latest/testing-framework/overview) for more information.
 
 Writing tests is as simple as:
 
