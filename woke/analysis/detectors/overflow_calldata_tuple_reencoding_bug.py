@@ -209,7 +209,7 @@ class OverflowCalldataTupleReencodingBugDetector(DetectorAbc):
             assert len(node.arguments) == 2
             if isinstance(node.arguments[1], TupleExpression):
                 encoded_types = [
-                    arg.type
+                    arg.type if arg is not None else None
                     for arg in node.arguments[
                         1
                     ].components  # pyright: ignore reportGeneralTypeIssues
