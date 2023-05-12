@@ -126,6 +126,7 @@ class Block(YulStatementAbc):
             If,
             Switch,
             VariableDeclaration,
-        ]
+        ],
+        ...,
     ]:
         return tuple(self._statements)

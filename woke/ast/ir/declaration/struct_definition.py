@@ -100,7 +100,7 @@ class StructDefinition(DeclarationAbc):
         )
 
     @property
-    def members(self) -> Tuple[VariableDeclaration]:
+    def members(self) -> Tuple[VariableDeclaration, ...]:
         """
         Returns:
             Tuple of member variable declarations.

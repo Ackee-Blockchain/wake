@@ -93,7 +93,7 @@ class OverrideSpecifier(SolidityAbc):
         return self._parent
 
     @property
-    def overrides(self) -> Tuple[Union[IdentifierPath, UserDefinedTypeName]]:
+    def overrides(self) -> Tuple[Union[IdentifierPath, UserDefinedTypeName], ...]:
         """
         !!! note
             Is empty when there are no curly braces after the `:::solidity override` keyword.

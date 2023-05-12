@@ -72,7 +72,7 @@ class FunctionCall(YulAbc):
         return self._parent
 
     @property
-    def arguments(self) -> Tuple[Union["FunctionCall", Identifier, Literal]]:
+    def arguments(self) -> Tuple[Union["FunctionCall", Identifier, Literal], ...]:
         return tuple(self._arguments)
 
     @property

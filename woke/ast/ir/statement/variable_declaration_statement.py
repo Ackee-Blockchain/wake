@@ -96,7 +96,7 @@ class VariableDeclarationStatement(StatementAbc):
         return self._parent
 
     @property
-    def declarations(self) -> Tuple[Optional[VariableDeclaration]]:
+    def declarations(self) -> Tuple[Optional[VariableDeclaration], ...]:
         """
         !!! example
             Some declarations may be `None`, e.g. in the following code:

@@ -65,7 +65,7 @@ class UncheckedBlock(StatementAbc):
         return self._parent
 
     @property
-    def statements(self) -> Tuple[StatementAbc]:
+    def statements(self) -> Tuple[StatementAbc, ...]:
         """
         Can be empty.
         Returns:

@@ -53,5 +53,5 @@ class Assignment(YulStatementAbc):
         return self._value
 
     @property
-    def variable_names(self) -> Tuple[Identifier]:
+    def variable_names(self) -> Tuple[Identifier, ...]:
         return tuple(self._variable_names)

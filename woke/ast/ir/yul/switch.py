@@ -46,7 +46,7 @@ class Switch(YulStatementAbc):
         return self._parent
 
     @property
-    def cases(self) -> Tuple[Case]:
+    def cases(self) -> Tuple[Case, ...]:
         return tuple(self._cases)
 
     @property

@@ -52,11 +52,11 @@ class FunctionCallOptions(ExpressionAbc):
         return self._expression
 
     @property
-    def names(self) -> Tuple[str]:
+    def names(self) -> Tuple[str, ...]:
         return tuple(self._names)
 
     @property
-    def options(self) -> Tuple[ExpressionAbc]:
+    def options(self) -> Tuple[ExpressionAbc, ...]:
         return tuple(self._options)
 
     @property

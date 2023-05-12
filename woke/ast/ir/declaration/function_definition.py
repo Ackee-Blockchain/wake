@@ -358,7 +358,7 @@ class FunctionDefinition(DeclarationAbc):
         return self._kind
 
     @property
-    def modifiers(self) -> Tuple[ModifierInvocation]:
+    def modifiers(self) -> Tuple[ModifierInvocation, ...]:
         """
         Also includes base constructor invocations.
         !!! example
@@ -415,7 +415,7 @@ class FunctionDefinition(DeclarationAbc):
         return self._visibility
 
     @property
-    def base_functions(self) -> Tuple[FunctionDefinition]:
+    def base_functions(self) -> Tuple[FunctionDefinition, ...]:
         """
         !!! example
             `A.foo` on lines 6-8 lists `I.foo` on line 2 as a base function.

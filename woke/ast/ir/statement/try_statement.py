@@ -83,7 +83,7 @@ class TryStatement(StatementAbc):
         return self._parent
 
     @property
-    def clauses(self) -> Tuple[TryCatchClause]:
+    def clauses(self) -> Tuple[TryCatchClause, ...]:
         """
         Returns:
             Try/catch clauses.

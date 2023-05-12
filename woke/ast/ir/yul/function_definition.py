@@ -67,13 +67,13 @@ class FunctionDefinition(YulStatementAbc):
         return self._name
 
     @property
-    def parameters(self) -> Optional[Tuple[TypedName]]:
+    def parameters(self) -> Optional[Tuple[TypedName, ...]]:
         if self._parameters is None:
             return None
         return tuple(self._parameters)
 
     @property
-    def return_variables(self) -> Optional[Tuple[TypedName]]:
+    def return_variables(self) -> Optional[Tuple[TypedName, ...]]:
         if self._return_variables is None:
             return None
         return tuple(self._return_variables)
