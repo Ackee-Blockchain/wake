@@ -5,9 +5,11 @@ import difflib
 import logging
 import multiprocessing
 import multiprocessing.connection
+import platform
 import re
 import threading
 import time
+import traceback
 from collections import deque
 from copy import deepcopy
 from functools import lru_cache
@@ -825,32 +827,59 @@ class LspCompiler:
         for path, errors in errors_per_file.items():
             await self.__diagnostic_queue.put((path, errors))
 
-        # run detectors in a separate process
-        parent_conn, child_conn = multiprocessing.Pipe()
-        p = multiprocessing.Process(
-            target=self.__run_detectors,
-            args=(child_conn,),
-        )
-        p.start()
-        while True:
-            if parent_conn.poll():
-                errors_per_file = parent_conn.recv()
-                # send both compiler and detector warnings and errors
-                for path, errors in errors_per_file.items():
-                    await self.__diagnostic_queue.put((path, errors))
-                break
-            elif not p.is_alive():
-                break
-
-            await asyncio.sleep(0.1)
+        await self.__run_detectors_wrapper()
 
         if len(files_to_recompile) > 0:
             # avoid infinite recursion
             if files_to_recompile != files_to_compile or full_compile:
                 await self.__compile(files_to_recompile, False)
 
-    def __run_detectors(self, conn: multiprocessing.connection.Connection) -> None:
-        errors_per_file: Dict[Path, Set[Diagnostic]] = self.__compilation_errors
+    async def __run_detectors_wrapper(self) -> None:
+        if platform.system() == "Linux":
+            # run detectors in a separate process
+            parent_conn, child_conn = multiprocessing.Pipe()
+            p = multiprocessing.Process(
+                target=self.__run_detectors,
+                args=(child_conn,),
+            )
+            p.start()
+            while True:
+                if parent_conn.poll():
+                    errors_per_file = parent_conn.recv()
+                    # send both compiler and detector warnings and errors
+                    for path, errors in errors_per_file.items():
+                        await self.__diagnostic_queue.put((path, errors))
+                    break
+                elif not p.is_alive():
+                    break
+
+                await asyncio.sleep(0.1)
+        else:
+            # on Windows, forking is not available,
+            # on macOS, forking is available, but it's not recommended
+            # pickling and unpickling of whole IR model with spawn/forkserver would be too slow
+
+            # not in a subprocess, use try/except to avoid crashing the server by detectors
+            try:
+                errors_per_file = self.__run_detectors(None)
+                # send both compiler and detector warnings and errors
+                for path, errors in errors_per_file.items():
+                    await self.__diagnostic_queue.put((path, errors))
+            except Exception:
+                await self.__server.log_message(
+                    f"Exception occurred during running detectors:\n{traceback.format_exc()}",
+                    MessageType.ERROR,
+                )
+
+    def __run_detectors(
+        self, conn: Optional[multiprocessing.connection.Connection]
+    ) -> Dict[Path, Set[Diagnostic]]:
+        errors_per_file: Dict[Path, Set[Diagnostic]]
+        if conn is not None:
+            # in forked process, original dictionary won't be modified anyway
+            errors_per_file = self.__compilation_errors
+        else:
+            errors_per_file = deepcopy(self.__compilation_errors)
 
         if self.__config.lsp.detectors.enable:
             for detection in detect(self.__config, self.__source_units):
@@ -892,7 +921,9 @@ class LspCompiler:
                     )
                 )
 
-        conn.send(errors_per_file)
+        if conn is not None:
+            conn.send(errors_per_file)
+        return errors_per_file
 
     async def __compilation_loop(self):
         if self.__perform_files_discovery:
@@ -939,24 +970,7 @@ class LspCompiler:
                 self.__deleted_files.clear()
 
             if self.__force_run_detectors:
-                parent_conn, child_conn = multiprocessing.Pipe()
-                p = multiprocessing.Process(
-                    target=self.__run_detectors,
-                    args=(child_conn,),
-                )
-                p.start()
-                while True:
-                    if parent_conn.poll():
-                        errors_per_file = parent_conn.recv()
-                        # send both compiler and detector warnings and errors
-                        for path, errors in errors_per_file.items():
-                            await self.__diagnostic_queue.put((path, errors))
-                        break
-                    elif not p.is_alive():
-                        break
-
-                    await asyncio.sleep(0.1)
-
+                await self.__run_detectors_wrapper()
                 self.__force_run_detectors = False
 
             if self.__file_changes_queue.empty():
