@@ -103,7 +103,7 @@ class Identifier(ExpressionAbc):
         return self._name
 
     @property
-    def overloaded_declarations(self) -> Tuple[DeclarationAbc]:
+    def overloaded_declarations(self) -> Tuple[DeclarationAbc, ...]:
         overloaded_declarations = []
         for overloaded_declaration_id in self._overloaded_declarations:
             if overloaded_declaration_id < 0:

@@ -295,7 +295,7 @@ class ContractDefinition(DeclarationAbc):
         return self._abstract
 
     @property
-    def base_contracts(self) -> Tuple[InheritanceSpecifier]:
+    def base_contracts(self) -> Tuple[InheritanceSpecifier, ...]:
         """
         Returns base contracts as specified in the source code. Does not return all base contracts (recursively).
         !!! example
@@ -341,7 +341,7 @@ class ContractDefinition(DeclarationAbc):
         return self._fully_implemented
 
     @property
-    def linearized_base_contracts(self) -> Tuple[ContractDefinition]:
+    def linearized_base_contracts(self) -> Tuple[ContractDefinition, ...]:
         """
         Returns:
             C3 linearized list of all base contracts.
@@ -354,7 +354,7 @@ class ContractDefinition(DeclarationAbc):
         return tuple(base_contracts)
 
     @property
-    def used_errors(self) -> Tuple[ErrorDefinition]:
+    def used_errors(self) -> Tuple[ErrorDefinition, ...]:
         """
         Returns:
             Errors used in the contract.
@@ -393,7 +393,7 @@ class ContractDefinition(DeclarationAbc):
         return self._compilation_info
 
     @property
-    def enums(self) -> Tuple[EnumDefinition]:
+    def enums(self) -> Tuple[EnumDefinition, ...]:
         """
         Returns:
             Enum definitions contained in this contract.
@@ -401,7 +401,7 @@ class ContractDefinition(DeclarationAbc):
         return tuple(self._enums)
 
     @property
-    def errors(self) -> Tuple[ErrorDefinition]:
+    def errors(self) -> Tuple[ErrorDefinition, ...]:
         """
         Returns:
             Error definitions contained in this contract.
@@ -409,7 +409,7 @@ class ContractDefinition(DeclarationAbc):
         return tuple(self._errors)
 
     @property
-    def events(self) -> Tuple[EventDefinition]:
+    def events(self) -> Tuple[EventDefinition, ...]:
         """
         Returns:
             Event definitions contained in this contract.
@@ -417,7 +417,7 @@ class ContractDefinition(DeclarationAbc):
         return tuple(self._events)
 
     @property
-    def functions(self) -> Tuple[FunctionDefinition]:
+    def functions(self) -> Tuple[FunctionDefinition, ...]:
         """
         Returns:
             Function definitions contained in this contract.
@@ -425,7 +425,7 @@ class ContractDefinition(DeclarationAbc):
         return tuple(self._functions)
 
     @property
-    def modifiers(self) -> Tuple[ModifierDefinition]:
+    def modifiers(self) -> Tuple[ModifierDefinition, ...]:
         """
         Returns:
             Modifier definitions contained in this contract.
@@ -433,7 +433,7 @@ class ContractDefinition(DeclarationAbc):
         return tuple(self._modifiers)
 
     @property
-    def structs(self) -> Tuple[StructDefinition]:
+    def structs(self) -> Tuple[StructDefinition, ...]:
         """
         Returns:
             Struct definitions contained in this contract.
@@ -441,7 +441,7 @@ class ContractDefinition(DeclarationAbc):
         return tuple(self._structs)
 
     @property
-    def user_defined_value_types(self) -> Tuple[UserDefinedValueTypeDefinition]:
+    def user_defined_value_types(self) -> Tuple[UserDefinedValueTypeDefinition, ...]:
         """
         Returns:
             User defined value type definitions contained in this contract.
@@ -449,7 +449,7 @@ class ContractDefinition(DeclarationAbc):
         return tuple(self._user_defined_value_types)
 
     @property
-    def using_for_directives(self) -> Tuple[UsingForDirective]:
+    def using_for_directives(self) -> Tuple[UsingForDirective, ...]:
         """
         Returns:
             Using for directives contained in this contract.
@@ -457,7 +457,7 @@ class ContractDefinition(DeclarationAbc):
         return tuple(self._using_for_directives)
 
     @property
-    def declared_variables(self) -> Tuple[VariableDeclaration]:
+    def declared_variables(self) -> Tuple[VariableDeclaration, ...]:
         """
         Returns:
             Variable declarations contained in this contract.

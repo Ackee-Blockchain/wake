@@ -111,7 +111,7 @@ class ParameterList(SolidityAbc):
         return self._parent
 
     @property
-    def parameters(self) -> Tuple[VariableDeclaration]:
+    def parameters(self) -> Tuple[VariableDeclaration, ...]:
         """
         Can be empty.
         Returns:

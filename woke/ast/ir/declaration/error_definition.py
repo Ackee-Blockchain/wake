@@ -135,7 +135,7 @@ class ErrorDefinition(DeclarationAbc):
             return h.digest()[:4]
 
     @property
-    def used_in(self) -> Tuple[ContractDefinition]:
+    def used_in(self) -> Tuple[ContractDefinition, ...]:
         """
         Returns:
             List of contracts where the error is used.

@@ -74,7 +74,7 @@ class FunctionCall(ExpressionAbc):
         return self._kind
 
     @property
-    def names(self) -> Tuple[str]:
+    def names(self) -> Tuple[str, ...]:
         return tuple(self._names)
 
     @property
@@ -86,7 +86,7 @@ class FunctionCall(ExpressionAbc):
         return self._expression
 
     @property
-    def arguments(self) -> Tuple[ExpressionAbc]:
+    def arguments(self) -> Tuple[ExpressionAbc, ...]:
         return tuple(self._arguments)
 
     @property

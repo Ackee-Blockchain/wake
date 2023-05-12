@@ -177,7 +177,7 @@ class SourceUnit(SolidityAbc):
         return self._source_unit_name
 
     @property
-    def pragmas(self) -> Tuple[PragmaDirective]:
+    def pragmas(self) -> Tuple[PragmaDirective, ...]:
         """
         Returns:
             Pragma directives present in the file.
@@ -185,7 +185,7 @@ class SourceUnit(SolidityAbc):
         return tuple(self._pragmas)
 
     @property
-    def imports(self) -> Tuple[ImportDirective]:
+    def imports(self) -> Tuple[ImportDirective, ...]:
         """
         Returns:
             Import directives present in the file.
@@ -193,7 +193,7 @@ class SourceUnit(SolidityAbc):
         return tuple(self._imports)
 
     @property
-    def declared_variables(self) -> Tuple[VariableDeclaration]:
+    def declared_variables(self) -> Tuple[VariableDeclaration, ...]:
         """
         Should only return constants.
         Returns:
@@ -202,7 +202,7 @@ class SourceUnit(SolidityAbc):
         return tuple(self._declared_variables)
 
     @property
-    def enums(self) -> Tuple[EnumDefinition]:
+    def enums(self) -> Tuple[EnumDefinition, ...]:
         """
         Returns:
             Top-level enum definitions present in the file.
@@ -210,7 +210,7 @@ class SourceUnit(SolidityAbc):
         return tuple(self._enums)
 
     @property
-    def functions(self) -> Tuple[FunctionDefinition]:
+    def functions(self) -> Tuple[FunctionDefinition, ...]:
         """
         Should only return [FunctionDefinitions][woke.ast.ir.declaration.function_definition.FunctionDefinition] of the [FunctionKind.FREE_FUNCTION][woke.ast.enums.FunctionKind.FREE_FUNCTION] kind.
         Returns:
@@ -219,7 +219,7 @@ class SourceUnit(SolidityAbc):
         return tuple(self._functions)
 
     @property
-    def structs(self) -> Tuple[StructDefinition]:
+    def structs(self) -> Tuple[StructDefinition, ...]:
         """
         Returns:
             Top-level struct definitions present in the file.
@@ -227,7 +227,7 @@ class SourceUnit(SolidityAbc):
         return tuple(self._structs)
 
     @property
-    def errors(self) -> Tuple[ErrorDefinition]:
+    def errors(self) -> Tuple[ErrorDefinition, ...]:
         """
         Returns:
             Top-level error definitions present in the file.
@@ -235,7 +235,7 @@ class SourceUnit(SolidityAbc):
         return tuple(self._errors)
 
     @property
-    def user_defined_value_types(self) -> Tuple[UserDefinedValueTypeDefinition]:
+    def user_defined_value_types(self) -> Tuple[UserDefinedValueTypeDefinition, ...]:
         """
         Returns:
             Top-level user-defined value type definitions present in the file.
@@ -243,7 +243,7 @@ class SourceUnit(SolidityAbc):
         return tuple(self._user_defined_value_types)
 
     @property
-    def contracts(self) -> Tuple[ContractDefinition]:
+    def contracts(self) -> Tuple[ContractDefinition, ...]:
         """
         Returns:
             Contract definitions present in the file.
@@ -251,7 +251,7 @@ class SourceUnit(SolidityAbc):
         return tuple(self._contracts)
 
     @property
-    def using_for_directives(self) -> Tuple[UsingForDirective]:
+    def using_for_directives(self) -> Tuple[UsingForDirective, ...]:
         """
         Returns:
             Top-level using for directives present in the file.

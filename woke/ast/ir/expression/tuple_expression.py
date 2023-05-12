@@ -51,7 +51,7 @@ class TupleExpression(ExpressionAbc):
         return self._is_inline_array
 
     @property
-    def components(self) -> Tuple[Optional[ExpressionAbc]]:
+    def components(self) -> Tuple[Optional[ExpressionAbc], ...]:
         return tuple(self._components)
 
     @property

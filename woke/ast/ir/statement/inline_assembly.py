@@ -297,7 +297,7 @@ class InlineAssembly(StatementAbc):
         return frozenset(self._flags)
 
     @property
-    def external_references(self) -> Tuple[ExternalReference]:
+    def external_references(self) -> Tuple[ExternalReference, ...]:
         """
         Returns:
             External references in the inline assembly block.

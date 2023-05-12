@@ -178,7 +178,7 @@ class SolcVersionManager(CompilerVersionManagerAbc):
             filename = filename[:-3] + "exe"
         return self.__compilers_path / dirname / filename
 
-    def list_all(self) -> Tuple[SolidityVersion]:
+    def list_all(self) -> Tuple[SolidityVersion, ...]:
         self.__fetch_list_file()
         if self.__solc_builds is None:
             raise RuntimeError(

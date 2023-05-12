@@ -35,7 +35,7 @@ class PragmaDirective(SolidityAbc):
         return self._parent
 
     @property
-    def literals(self) -> Tuple[str]:
+    def literals(self) -> Tuple[str, ...]:
         """
         !!! example
             `:::py ('solidity', '^', '0.8', '||', '0.7', '.1', '-', '0.7', '.6')` for the following pragma:

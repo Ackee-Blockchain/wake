@@ -57,7 +57,7 @@ class VariableDeclaration(YulStatementAbc):
         return self._parent
 
     @property
-    def variables(self) -> Tuple[TypedName]:
+    def variables(self) -> Tuple[TypedName, ...]:
         return tuple(self._variables)
 
     @property

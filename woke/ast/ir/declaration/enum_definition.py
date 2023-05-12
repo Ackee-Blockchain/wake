@@ -94,7 +94,7 @@ class EnumDefinition(DeclarationAbc):
         )
 
     @property
-    def values(self) -> Tuple[EnumValue]:
+    def values(self) -> Tuple[EnumValue, ...]:
         """
         Returns:
             Enum values defined in this enum.

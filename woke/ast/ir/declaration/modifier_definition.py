@@ -264,7 +264,7 @@ class ModifierDefinition(DeclarationAbc):
         return self._visibility
 
     @property
-    def base_modifiers(self) -> Tuple[ModifierDefinition]:
+    def base_modifiers(self) -> Tuple[ModifierDefinition, ...]:
         """
         !!! example
             `B.mod` on lines 6-8 lists `A.mod` on line 2 as a base modifier.

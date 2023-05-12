@@ -386,7 +386,7 @@ class SolidityVersionRanges:
     Helper class implementing intersection on List[SolidityVersionRange].
     """
 
-    __version_ranges: Tuple[SolidityVersionRange]
+    __version_ranges: Tuple[SolidityVersionRange, ...]
 
     def __init__(self, version_ranges: Iterable[SolidityVersionRange]):
         self.__version_ranges = tuple(version_ranges)

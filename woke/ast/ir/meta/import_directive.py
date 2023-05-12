@@ -221,7 +221,7 @@ class ImportDirective(SolidityAbc):
         return node
 
     @property
-    def symbol_aliases(self) -> Tuple[SymbolAlias]:
+    def symbol_aliases(self) -> Tuple[SymbolAlias, ...]:
         """
         Is only set in the case of `:::solidity import { SafeType as CustomSafeType } from "SafeLib.sol";` import directive type.
         Returns:

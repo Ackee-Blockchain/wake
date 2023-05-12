@@ -374,7 +374,7 @@ class VariableDeclaration(DeclarationAbc):
         return self._visibility
 
     @property
-    def base_functions(self) -> Tuple[FunctionDefinition]:
+    def base_functions(self) -> Tuple[FunctionDefinition, ...]:
         """
         !!! example
             `C.foo` in line 6 lists `I.foo` in line 2 as a base function.
