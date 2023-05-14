@@ -532,14 +532,20 @@ class LspCompiler:
             if full_compile:
                 graph, _ = self.__compiler.build_graph(
                     self.__discovered_files,
-                    {path: info.text for path, info in self.__opened_files.items()},
+                    {
+                        path: info.text.encode("utf-8")
+                        for path, info in self.__opened_files.items()
+                    },
                     True,
                 )
                 self.__last_graph = graph
             else:
                 graph, _ = self.__compiler.build_graph(
                     files_to_compile,
-                    {path: info.text for path, info in self.__opened_files.items()},
+                    {
+                        path: info.text.encode("utf-8")
+                        for path, info in self.__opened_files.items()
+                    },
                     True,
                 )
         except CompilationError as e:
