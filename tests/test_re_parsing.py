@@ -6,26 +6,32 @@ base_path = Path(__file__).parent.resolve() / "re_parsing_sources"
 
 
 def test_comment_stripping():
-    assert SoliditySourceParser.strip_comments("abc // ikejfurgdi") == "abc "
-    assert SoliditySourceParser.strip_comments("xy/*1234*/z") == "xyz"
+    test_cases = [
+        (b"abc // ikejfurgdi", b"abc "),
+        (b"xy/*1234*/z", b"xyz"),
+        (
+            b"""
+            import "abc.sol"; // test
+            import "..//x/y.sol";
+            import "/*abc.sol";
+            import "de*/f.sol";// /* */ *//*//
+            import /* "xyz";
+            // */ "helper.sol";
+            """,
+            b"""
+            import "abc.sol"; 
+            import "..//x/y.sol";
+            import "/*abc.sol";
+            import "de*/f.sol";
+            import  "helper.sol";
+            """,
+        ),
+    ]
 
-    original = """
-    import "abc.sol"; // test
-    import "..//x/y.sol";
-    import "/*abc.sol";
-    import "de*/f.sol";// /* */ *//*//
-    import /* "xyz";
-    // */ "helper.sol";
-    """
-    stripped = """
-    import "abc.sol"; 
-    import "..//x/y.sol";
-    import "/*abc.sol";
-    import "de*/f.sol";
-    import  "helper.sol";
-    """
-
-    assert SoliditySourceParser.strip_comments(original) == stripped
+    for original, stripped in test_cases:
+        b = bytearray(original)
+        SoliditySourceParser.strip_comments(b)
+        assert b == stripped
 
 
 def test_a():
