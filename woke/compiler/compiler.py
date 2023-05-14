@@ -328,11 +328,11 @@ class SolidityCompiler:
     def build_graph(
         self,
         files: Iterable[Path],
-        modified_files: Mapping[Path, str],
+        modified_files: Mapping[Path, bytes],
         ignore_errors: bool = False,
     ) -> Tuple[nx.DiGraph, Dict[str, Path]]:
         # source unit name, full path, file content
-        source_units_queue: deque[Tuple[str, Path, Optional[str]]] = deque()
+        source_units_queue: deque[Tuple[str, Path, Optional[bytes]]] = deque()
         source_units: Dict[str, Path] = {}
 
         # for every source file resolve a source unit name
@@ -367,13 +367,17 @@ class SolidityCompiler:
             source_unit_name, path, content = source_units_queue.pop()
             if content is None:
                 try:
-                    versions, imports, h, content = SoliditySourceParser.parse(
-                        path, ignore_errors
-                    )
+                    (
+                        versions,
+                        imports,
+                        h,
+                        content,
+                        woke_comments,
+                    ) = SoliditySourceParser.parse(path, ignore_errors)
                 except UnicodeDecodeError:
                     continue
             else:
-                versions, imports, h = SoliditySourceParser.parse_source(
+                versions, imports, h, woke_comments = SoliditySourceParser.parse_source(
                     content, ignore_errors
                 )
             graph.add_node(
@@ -383,6 +387,7 @@ class SolidityCompiler:
                 hash=h,
                 content=content,
                 unresolved_imports=set(),
+                woke_comments=woke_comments,
             )
             source_units[source_unit_name] = path
 
@@ -722,7 +727,7 @@ class SolidityCompiler:
         *,
         write_artifacts: bool = True,
         force_recompile: bool = False,
-        modified_files: Optional[Mapping[Path, str]] = None,
+        modified_files: Optional[Mapping[Path, bytes]] = None,
         deleted_files: Optional[
             Set[Path]
         ] = None,  # files that should be treated as deleted even if they exist
@@ -997,7 +1002,7 @@ class SolidityCompiler:
                     interval_tree = IntervalTree()
                     init = IrInitTuple(
                         path,
-                        graph.nodes[source_unit_name]["content"].encode("utf-8"),
+                        graph.nodes[source_unit_name]["content"],
                         cu,
                         interval_tree,
                         build.reference_resolver,
@@ -1124,7 +1129,7 @@ class SolidityCompiler:
             if content is None:
                 files[source_unit_name] = path
             else:
-                sources[source_unit_name] = content
+                sources[source_unit_name] = content.decode("utf-8")
 
         # run the solc executable
         return await self.__solc_frontend.compile(
