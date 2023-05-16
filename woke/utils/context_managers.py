@@ -18,9 +18,10 @@ def change_cwd(path: Union[str, Path]):
 
 
 @contextmanager
-def recursion_guard(guard: Set, *args):
+def recursion_guard(guard: Set, *args, **kwargs):
+    sorted_kwargs = tuple(sorted(kwargs.items()))
     try:
-        guard.add(args)
+        guard.add((args, sorted_kwargs))
         yield
     finally:
-        guard.remove(args)
+        guard.remove((args, sorted_kwargs))
