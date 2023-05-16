@@ -234,11 +234,11 @@ def _cfg_block_or_statement_is_publicly_reachable(
     check_func_visibility: bool = True,
     check_only_eoa: bool = False,
 ) -> bool:
-    if (
+    if ((
         target,
         check_func_visibility,
         check_only_eoa,
-    ) in _block_statement_reachable_guard:
+    ), tuple()) in _block_statement_reachable_guard:
         return False
 
     with recursion_guard(

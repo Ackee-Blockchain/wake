@@ -9,11 +9,9 @@ def return_on_recursion(default):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            if len(kwargs) > 0:
-                raise ValueError("kwargs not supported")
-            if args in arguments:
+            if (args, tuple(sorted(kwargs.items()))) in arguments:
                 return default
-            with recursion_guard(arguments, *args):
+            with recursion_guard(arguments, *args, **kwargs):
                 return func(*args, **kwargs)
 
         return wrapper
