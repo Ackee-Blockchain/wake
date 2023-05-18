@@ -2094,6 +2094,9 @@ class NameSanitizer:
             return renames[declaration]
 
         new_name = declaration.name
+        while new_name.startswith("__"):
+            new_name = new_name[1:]
+
         while check(new_name):
             new_name = new_name + "_"
 
