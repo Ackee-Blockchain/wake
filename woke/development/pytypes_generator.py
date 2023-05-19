@@ -598,9 +598,8 @@ class TypeGenerator:
                             break
                     if event_decl is not None:
                         break
-                assert (
-                    event_decl is not None
-                ), f"Could not find event {item['name']} in contract {fqn} or its bases"
+                if event_decl is None:
+                    continue
 
                 if selector not in self.__events_index:
                     self.__events_index[selector] = {}
