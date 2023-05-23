@@ -1630,6 +1630,11 @@ class Chain(ABC):
                 self._convert_from_web3_type(tx, v, get_args(expected_type)[0])
                 for v in value
             ]
+        elif get_origin(expected_type) is tuple:
+            return tuple(
+                self._convert_from_web3_type(tx, v, t)
+                for v, t in zip(value, get_args(expected_type))
+            )
         elif dataclasses.is_dataclass(expected_type):
             assert isinstance(value, tuple)
             resolved_types = get_type_hints(expected_type)
@@ -1924,9 +1929,9 @@ class Chain(ABC):
         assert "nonce" in tx_params
 
         if self._chain_id in {56, 97}:
-            # BSC doesn't support access lists and tx type            
+            # BSC doesn't support access lists and tx type
             tx_params.pop("type", None)
-            tx_params.pop("accessList", None)            
+            tx_params.pop("accessList", None)
 
         self._confirm_transaction(tx_params)
 
