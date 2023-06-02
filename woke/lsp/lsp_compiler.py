@@ -630,8 +630,11 @@ class LspCompiler:
             for file in compilation_unit.files:
                 # clear diagnostics
                 await self.__diagnostic_queue.put((file, set()))
-                self.__interval_trees.pop(file, None)
-                self.__source_units.pop(file, None)
+                if file in self.__interval_trees:
+                    self.__interval_trees.pop(file)
+                if file in self.__source_units:
+                    self.__ir_reference_resolver.run_destroy_callbacks(file)
+                    self.__source_units.pop(file)
             compilation_units.remove(compilation_unit)
 
         progress_token = await self.__server.progress_begin(
