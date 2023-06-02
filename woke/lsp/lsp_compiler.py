@@ -707,8 +707,18 @@ class LspCompiler:
             self.__source_units.clear()
             return
 
-        files_to_recompile = set(files_to_compile)
-        processed_files: Set[Path] = set()
+        # files passed as files_to_compile and files importing them
+        files_to_recompile = set(
+            graph.nodes[n[1]]["path"]
+            for n in nx.edge_bfs(
+                graph,
+                [
+                    source_unit_name
+                    for source_unit_name in graph.nodes
+                    if graph.nodes[source_unit_name]["path"] in files_to_compile
+                ],
+            )
+        ) | set(files_to_compile)
 
         for deleted_file in self.__deleted_files:
             await self.__diagnostic_queue.put((deleted_file, []))
@@ -716,7 +726,8 @@ class LspCompiler:
                 self.__ir_reference_resolver.run_destroy_callbacks(deleted_file)
                 self.__source_units.pop(deleted_file)
 
-        for cu_index, (cu, solc_output) in enumerate(zip(compilation_units, ret)):
+        successful_compilation_units = []
+        for cu, solc_output in zip(compilation_units, ret):
             for file in cu.files:
                 if file in self.__line_indexes:
                     self.__line_indexes.pop(file)
@@ -733,12 +744,12 @@ class LspCompiler:
                     )
                     if error.severity == SolcOutputErrorSeverityEnum.ERROR:
                         errored_files.add(path)
+                else:
+                    # whole compilation unit errored
+                    if error.severity == SolcOutputErrorSeverityEnum.ERROR:
+                        errored_files.update(cu.files)
 
             _out_edge_bfs(cu, errored_files, errored_files)
-
-            # files requested to be compiled and files that import these files (even indirectly)
-            recompiled_files: Set[Path] = set()
-            _out_edge_bfs(cu, files_to_compile & cu.files, recompiled_files)
 
             for file in errored_files:
                 files_to_recompile.discard(file)
@@ -751,58 +762,77 @@ class LspCompiler:
                     self.__interval_trees.pop(file)
 
             if len(errored_files) == 0:
-                for source_unit_name, raw_ast in solc_output.sources.items():
-                    path = cu.source_unit_name_to_path(source_unit_name)
-                    if path in errored_files or raw_ast.ast is None:
-                        continue
-                    ast = AstSolc.parse_obj(raw_ast.ast)
+                successful_compilation_units.append((cu, solc_output))
 
-                    self.__ir_reference_resolver.index_nodes(ast, path, cu.hash)
+        # destroy callbacks for IR nodes that will be replaced by new ones must be executed before
+        # new IR nodes are created
+        callback_processed_files: Set[Path] = set()
+        for cu, solc_output in successful_compilation_units:
+            # files requested to be compiled and files that import these files (even indirectly)
+            recompiled_files: Set[Path] = set()
+            _out_edge_bfs(cu, files_to_compile & cu.files, recompiled_files)
 
-                    files_to_recompile.discard(path)
+            # run destroy callbacks for files that were recompiled and their IR nodes will be replaced
+            for source_unit_name in solc_output.sources.keys():
+                path = cu.source_unit_name_to_path(source_unit_name)
+                if (
+                    path in self.__source_units and path not in recompiled_files
+                ) or path in callback_processed_files:
+                    continue
+                callback_processed_files.add(path)
+                self.__ir_reference_resolver.run_destroy_callbacks(path)
 
-                    # give a chance to other tasks (LSP requests) to be processed
-                    await asyncio.sleep(0)
+        processed_files: Set[Path] = set()
+        for cu_index, (cu, solc_output) in enumerate(successful_compilation_units):
+            # files requested to be compiled and files that import these files (even indirectly)
+            recompiled_files: Set[Path] = set()
+            _out_edge_bfs(cu, files_to_compile & cu.files, recompiled_files)
 
-                    if (
-                        path in self.__source_units and path not in recompiled_files
-                    ) or path in processed_files:
-                        continue
-                    processed_files.add(path)
+            for source_unit_name, raw_ast in solc_output.sources.items():
+                path: Path = cu.source_unit_name_to_path(source_unit_name)
+                ast = AstSolc.parse_obj(raw_ast.ast)
 
-                    interval_tree = IntervalTree()
-                    init = IrInitTuple(
-                        path,
-                        self.get_compiled_file(path).text.encode("utf-8"),
-                        cu,
-                        interval_tree,
-                        self.__ir_reference_resolver,
+                self.__ir_reference_resolver.index_nodes(ast, path, cu.hash)
+
+                files_to_recompile.discard(path)
+
+                # give a chance to other tasks (LSP requests) to be processed
+                await asyncio.sleep(0)
+
+                if (
+                    path in self.__source_units and path not in recompiled_files
+                ) or path in processed_files:
+                    continue
+                processed_files.add(path)
+
+                interval_tree = IntervalTree()
+                init = IrInitTuple(
+                    path,
+                    self.get_compiled_file(path).text.encode("utf-8"),
+                    cu,
+                    interval_tree,
+                    self.__ir_reference_resolver,
+                    None,
+                )
+                self.__source_units[path] = SourceUnit(init, ast)
+                self.__interval_trees[path] = interval_tree
+
+                self.__last_compilation_source_units[path] = self.__source_units[path]
+                self.__last_compilation_interval_trees[path] = self.__interval_trees[
+                    path
+                ]
+
+                if path in self.__opened_files:
+                    self.__last_successful_compilation_contents[
+                        path
+                    ] = self.__opened_files[path]
+                else:
+                    self.__last_successful_compilation_contents[path] = VersionedFile(
+                        cu.graph.nodes[  # pyright: ignore reportGeneralTypeIssues
+                            source_unit_name
+                        ]["content"],
                         None,
                     )
-                    self.__ir_reference_resolver.run_destroy_callbacks(path)
-                    self.__source_units[path] = SourceUnit(init, ast)
-                    self.__interval_trees[path] = interval_tree
-
-                    self.__last_compilation_source_units[path] = self.__source_units[
-                        path
-                    ]
-                    self.__last_compilation_interval_trees[
-                        path
-                    ] = self.__interval_trees[path]
-
-                    if path in self.__opened_files:
-                        self.__last_successful_compilation_contents[
-                            path
-                        ] = self.__opened_files[path]
-                    else:
-                        self.__last_successful_compilation_contents[
-                            path
-                        ] = VersionedFile(
-                            cu.graph.nodes[  # pyright: ignore reportGeneralTypeIssues
-                                source_unit_name
-                            ]["content"],
-                            None,
-                        )
 
             self.__ir_reference_resolver.run_post_process_callbacks(
                 CallbackParams(
