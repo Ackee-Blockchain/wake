@@ -877,7 +877,6 @@ class SolidityCompiler:
             else nullcontext()
         )
         start = time.perf_counter()
-        processed_files: Set[Path] = set()
 
         with ctx_manager:
             successful_compilation_units = []
@@ -909,6 +908,25 @@ class SolidityCompiler:
                 if len(errored_files) == 0:
                     successful_compilation_units.append((cu, solc_output))
 
+            # destroy callbacks for IR nodes that will be replaced by new ones must be executed before
+            # new IR nodes are created
+            callback_processed_files: Set[Path] = set()
+            for cu, solc_output in successful_compilation_units:
+                # files requested to be compiled and files that import these files (even indirectly)
+                recompiled_files: Set[Path] = set()
+                self._out_edge_bfs(cu, files_to_compile & cu.files, recompiled_files)
+
+                # run destroy callbacks for files that were recompiled and their IR nodes will be replaced
+                for source_unit_name in solc_output.sources.keys():
+                    path = cu.source_unit_name_to_path(source_unit_name)
+                    if (
+                        path in build.source_units and path not in recompiled_files
+                    ) or path in callback_processed_files:
+                        continue
+                    callback_processed_files.add(path)
+                    build.reference_resolver.run_destroy_callbacks(path)
+
+            processed_files: Set[Path] = set()
             for cu, solc_output in successful_compilation_units:
                 # files requested to be compiled and files that import these files (even indirectly)
                 recompiled_files: Set[Path] = set()
@@ -943,7 +961,6 @@ class SolidityCompiler:
                         if source_unit_name in solc_output.contracts
                         else None,
                     )
-                    build.reference_resolver.run_destroy_callbacks(path)
                     build.source_units[path] = SourceUnit(init, ast)
                     build.interval_trees[path] = interval_tree
 
