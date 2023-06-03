@@ -926,6 +926,23 @@ class SolidityCompiler:
                     callback_processed_files.add(path)
                     build.reference_resolver.run_destroy_callbacks(path)
 
+            # files_to_compile and files importing them
+            files_to_recompile = set(
+                graph.nodes[n[1]]["path"]  # pyright: ignore reportGeneralTypeIssues
+                for n in nx.edge_bfs(
+                    graph,
+                    [
+                        source_unit_name
+                        for source_unit_name in graph.nodes  # pyright: ignore reportGeneralTypeIssues
+                        if graph.nodes[source_unit_name]["path"]
+                        in files_to_compile  # pyright: ignore reportGeneralTypeIssues
+                    ],
+                )
+            ) | set(files_to_compile)
+
+            # clear indexed node types responsible for handling multiple structurally different ASTs for the same file
+            build.reference_resolver.clear_indexed_nodes(files_to_recompile)
+
             processed_files: Set[Path] = set()
             for cu, solc_output in successful_compilation_units:
                 # files requested to be compiled and files that import these files (even indirectly)

@@ -320,6 +320,7 @@ class SolcOrYulNode(AstModel):
 
 class SolcNode(SolcOrYulNode):
     id: AstNodeId
+    node_type: str
 
     def __iter__(self):
         def iter_list(l: List):
