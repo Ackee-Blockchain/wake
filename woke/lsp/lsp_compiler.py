@@ -712,13 +712,14 @@ class LspCompiler:
 
         # files passed as files_to_compile and files importing them
         files_to_recompile = set(
-            graph.nodes[n[1]]["path"]
+            graph.nodes[n[1]]["path"]  # pyright: ignore reportGeneralTypeIssues
             for n in nx.edge_bfs(
                 graph,
                 [
                     source_unit_name
-                    for source_unit_name in graph.nodes
-                    if graph.nodes[source_unit_name]["path"] in files_to_compile
+                    for source_unit_name in graph.nodes  # pyright: ignore reportGeneralTypeIssues
+                    if graph.nodes[source_unit_name]["path"]
+                    in files_to_compile  # pyright: ignore reportGeneralTypeIssues
                 ],
             )
         ) | set(files_to_compile)
