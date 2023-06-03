@@ -44,6 +44,7 @@ class ReferenceResolver:
     _global_symbol_references: DefaultDict[
         GlobalSymbolsEnum, List[Union[Identifier, MemberAccess]]
     ]
+    _node_types: Dict[Path, Dict[int, str]]
 
     def __init__(self):
         self._ordered_nodes = defaultdict(dict)
@@ -53,13 +54,70 @@ class ReferenceResolver:
         self._post_process_callbacks = []
         self._destroy_callbacks = defaultdict(list)
         self._global_symbol_references = defaultdict(list)
+        self._node_types = {}
 
     def index_nodes(self, root_node: AstSolc, path: Path, cu_hash: bytes) -> None:
+        if path not in self._node_types:
+            self._node_types[path] = {}
+            self._node_types[path][0] = root_node.node_type
+            check = False
+        else:
+            assert self._node_types[path][0] == root_node.node_type
+            check = True
+        prev_type = root_node.node_type
+
         self._ordered_nodes[cu_hash][root_node.id] = (path, 0)
         self._ordered_nodes_inverted[cu_hash][(path, 0)] = root_node.id
-        for index, node in enumerate(root_node):
-            self._ordered_nodes[cu_hash][node.id] = (path, index + 1)
-            self._ordered_nodes_inverted[cu_hash][(path, index + 1)] = node.id
+        index = 1
+        for node in root_node:
+            if check:
+                skip = False
+                other_type = self._node_types[path].get(index)
+
+                while other_type != node.node_type:
+                    if other_type == "StructuredDocumentation":
+                        index += 1
+                        other_type = self._node_types[path].get(index)
+                        continue
+                    elif node.node_type == "StructuredDocumentation":
+                        skip = True
+                        prev_type = "StructuredDocumentation"
+                        break
+                    elif (
+                        self._node_types[path][index - 1] == "UserDefinedTypeName"
+                        and prev_type == "UserDefinedTypeName"
+                    ):
+                        if other_type == "IdentifierPath":
+                            index += 1
+                            other_type = self._node_types[path].get(index)
+                            continue
+                        elif node.node_type == "IdentifierPath":
+                            skip = True
+                            prev_type = "IdentifierPath"
+                            break
+                    elif (
+                        other_type == "IdentifierPath"
+                        and node.node_type == "UserDefinedTypeName"
+                    ) or (
+                        other_type == "UserDefinedTypeName"
+                        and node.node_type == "IdentifierPath"
+                    ):
+                        break
+
+                    assert (
+                        other_type == node.node_type
+                    ), f"Expected {other_type} but got {node.node_type} at {path}:{index} {node.id}"
+
+                if skip:
+                    continue
+            else:
+                self._node_types[path][index] = node.node_type
+
+            self._ordered_nodes[cu_hash][node.id] = (path, index)
+            self._ordered_nodes_inverted[cu_hash][(path, index)] = node.id
+
+            prev_type = node.node_type
+            index += 1
 
     def register_source_file_id(self, source_file_id: int, path: Path, cu_hash: bytes):
         self._registered_source_files[cu_hash][source_file_id] = path
