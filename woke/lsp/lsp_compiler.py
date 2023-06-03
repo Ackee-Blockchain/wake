@@ -785,6 +785,9 @@ class LspCompiler:
                 callback_processed_files.add(path)
                 self.__ir_reference_resolver.run_destroy_callbacks(path)
 
+        # clear indexed node types responsible for handling multiple structurally different ASTs for the same file
+        self.__ir_reference_resolver.clear_indexed_nodes(files_to_recompile)
+
         processed_files: Set[Path] = set()
         for cu_index, (cu, solc_output) in enumerate(successful_compilation_units):
             # files requested to be compiled and files that import these files (even indirectly)
