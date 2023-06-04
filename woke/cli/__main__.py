@@ -22,6 +22,7 @@ from .lsp import run_lsp
 from .run import run_run
 from .svm import run_svm
 from .test import run_test
+from .dash import run_dash
 
 if platform.system() != "Windows":
     try:
@@ -73,6 +74,7 @@ def main(ctx: Context, debug: bool, profile: bool) -> None:
 
 main.add_command(run_accounts)
 main.add_command(run_compile)
+main.add_command(run_dash)
 main.add_command(run_detect)
 main.add_command(run_fuzz)
 main.add_command(run_init)
