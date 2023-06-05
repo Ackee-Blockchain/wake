@@ -2,7 +2,7 @@ import asyncio
 import sys
 import time
 from pathlib import Path
-from typing import Set, Tuple, NamedTuple, List, TypeVar, Generic, Iterator
+from typing import Set, Tuple, NamedTuple, List, TypeVar, Generic, Iterator, Union
 from typing_extensions import Literal, TypedDict
 from dataclasses import dataclass, field
 
@@ -85,14 +85,14 @@ import rich_click as click
 class RootFolderNode(NamedTuple):
     key: str
     text: str
-    type: Literal["folder"] = "folder"
+    node_type: Literal["folder"] = "folder"
     checked: Literal[True] = True
 
 class FolderNode(NamedTuple):
     key: str
     text: str
     parent: str
-    type: Literal["folder"] = "folder"
+    node_type: Literal["folder"] = "folder"
     checked: Literal[True] = True
 
 @dataclass
@@ -100,7 +100,7 @@ class FileNode:
     key: str
     text: str
     parent: str
-    type: Literal["file"] = "file"
+    node_type: Literal["file"] = "file"
     checked: Literal[True] = True
 
 @dataclass
@@ -108,7 +108,7 @@ class ContractNode:
     key: str
     text: str
     parent: str
-    type: Literal["contract"] = "contract"
+    node_type: Literal["contract"] = "contract"
     isGroup: Literal[True] = True
 
 @dataclass
@@ -117,7 +117,7 @@ class FunctionNode:
     text: str
     parent: str
     group: str
-    type: Literal["function"] = "function"
+    node_type: Literal["function"] = "function"
     checked: Literal[True] = True
 
 Edge = TypedDict("Edge", {"from": str, "to": str})
@@ -257,3 +257,39 @@ def run_dash(
     )
     if errored:
         sys.exit(1)
+
+    out = WokeDashOut()
+
+    folder_ordered_set: OrderedSet[Union[RootFolderNode, FolderNode]] = OrderedSet()
+
+    for path, source_unit in sorted(build.source_units.items()):
+        # First add root folder
+        root_folder = RootFolderNode(
+            key=path.root,
+            text=path.root,
+            node_type="folder",
+            checked=True,
+        )
+        folder_ordered_set.add(root_folder)
+        
+        # Next, add all other predecessors
+        parent = path.parent
+        while parent != Path(path.root):
+            folder_ordered_set.add(FolderNode(
+                key=str(parent),
+                text=str(parent.name),
+                parent=str(parent.parent),
+                node_type="folder",
+                checked=True,
+            ))
+            parent = parent.parent
+
+        # Finally, add the file
+        out.files.append(FileNode(
+            key=str(path),
+            text=str(path.name),
+            parent=str(path.parent),
+            node_type="file",
+            checked=True,
+        ))
+
