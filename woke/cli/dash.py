@@ -2,7 +2,7 @@ import asyncio
 import sys
 import time
 from pathlib import Path
-from typing import Set, Tuple, NamedTuple, List
+from typing import Set, Tuple, NamedTuple, List, TypeVar, Generic, Iterator
 from typing_extensions import Literal, TypedDict
 from dataclasses import dataclass, field
 
@@ -82,7 +82,7 @@ import rich_click as click
 #    functional notation of a TypedDict for this, because "from" is a reserved
 #    keyword in Python.
 
-class RootNode(NamedTuple):
+class RootFolderNode(NamedTuple):
     key: str
     text: str
     type: Literal["folder"] = "folder"
@@ -127,42 +127,47 @@ class Edges:
     call_graph: List[Edge] = field(default_factory=list)
 
 @dataclass
-class Out:
+class WokeDashOut:
     folders: List[FolderNode] = field(default_factory=list)
     files: List[FileNode] = field(default_factory=list)
     contracts: List[ContractNode] = field(default_factory=list)
     functions: List[FunctionNode] = field(default_factory=list)
     edges: Edges = field(default_factory=Edges)
 
-class OrderedSet:
+T = TypeVar("T")
+
+class OrderedSet(Generic[T]):
+    _set: Set[T]
+    _list: List[T]
+
     def __init__(self):
         self._set = set()
         self._list = []
 
-    def add(self, item):
+    def add(self, item: T):
         if item not in self._set:
             self._set.add(item)
             self._list.append(item)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[T]:
         return iter(self._list)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._list)
 
-    def __contains__(self, item):
+    def __contains__(self, item: T):
         return item in self._set
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: int) -> T:
         return self._list[item]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return repr(self._list)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return self._list == other._list
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self._list)
 
 
