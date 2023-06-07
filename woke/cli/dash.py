@@ -331,12 +331,20 @@ def get_function_key(function: FunctionDefinition) -> Key:
         if isinstance(parent, SourceUnit):
             # Free function
             return Key(f"{function.file}/{function_signature}")
+    # return Key(str(function.ast_node_id))
 
+def var_decl_to_type_str(variable_declaration: VariableDeclaration) -> str:
+    try:
+        return variable_declaration.type.abi_type()
+    except NotImplementedError:
+        return variable_declaration.type_string
 
 def get_function_signature(function: FunctionDefinition) -> str:
     signature = f"{function.name}("
+    # if function.name == 'nextInitializedTickWithinOneWord':
+    #     breakpoint()
     signature += ",".join(
-        param.type.abi_type() for param in function.parameters.parameters
+        var_decl_to_type_str(param) for param in function.parameters.parameters
     )
     signature += ")"
     # breakpoint()
