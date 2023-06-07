@@ -2,12 +2,16 @@ import asyncio
 import sys
 import time
 from pathlib import Path
-from typing import Set, Tuple, NamedTuple, List, TypeVar, Generic, Iterator, Union
+from typing import Set, Tuple, NamedTuple, List, TypeVar, Generic, Iterator, Union, Optional
 from typing_extensions import Literal, TypedDict
 from dataclasses import dataclass, field
 
 import rich_click as click
 
+from woke.ast.ir.statement.inline_assembly import ExternalReference
+from woke.ast.ir.meta.identifier_path import IdentifierPathPart
+from woke.ast.enums import FunctionKind
+from woke.ast.ir.declaration.function_definition import FunctionDefinition
 # There are two main GoJS model types (and their corresponding diagram types)
 # that we'll be using in Woke Dash: TreeModel and GraphLinksModel. TreeModel is
 # used for the left-hand side diagram, which will show the "extended" file
@@ -24,9 +28,9 @@ import rich_click as click
 #
 # (The reason we go from the root '/' is that a user could technically have a
 # dependency outside of the current repository)
-# GraphLinksModel is used for the right-hand side diagram, which currently shows
-# the call graph (but could be extended to show other graphs, eg inheritance).
-# Now, the two models work quite differently:
+# GraphLinksModel is used for the right-hand side diagram, which currently
+# shows the reference graph (but could be extended to show other graphs, eg
+# inheritance). Now, the two models work quite differently:
 #
 # - TreeModel expects (in JS) an array of nodes, each having a unique "key", and
 # all nodes except for the root have a "parent" field. We consider the key to be
@@ -81,6 +85,18 @@ import rich_click as click
 # 4. The edges of our call graph expect a "from" and "to" field. We'll use the
 #    functional notation of a TypedDict for this, because "from" is a reserved
 #    keyword in Python.
+# 5. We also need to handle top-level functions. Unfortunately, we can't just
+#    use None as the `group` (GoJS would throw). So we'll need a new node type
+#    for that.
+# 6. We also need to handle function references in contract storage
+#    initiliazation (eg `uint x = computeX()`).
+# 7. We also need to add arguments to our functions to ensure they are unique.
+# 8. On the other hand, we don't need to consider references in assembly blocks,
+#    because they cannot contain Solidity functions.
+# 9. Finally, we technically should handle a function reference vs. an actual
+#    call. That said, it's better to keep it simple and just consider all
+#    references: so it's actually a reference_graph. ;-)
+
 
 class RootFolderNode(NamedTuple):
     key: str
@@ -109,29 +125,51 @@ class ContractNode:
     text: str
     parent: str
     node_type: Literal["contract"] = "contract"
+    checked: Literal[True] = True
     isGroup: Literal[True] = True
 
 @dataclass
-class FunctionNode:
+class FunctionBase:
+    """Base dataclass for FreeFunctionNode and ContractFunctionNode."""
     key: str
-    text: str
+    signature: str
+    name: str
+    name_with_params: str
+    declaration_string: str
+    visibility: str
+    state_mutability: str
+    modifiers: List[str]
+    base_functions: List[str]
+    child_functions: List[str]
     parent: str
+    # We can't have fields without default value _after_ fields with default
+    # values..
+    node_type: Literal["function"]
+    checked: Literal[True]
+
+@dataclass
+class FreeFunctionNode(FunctionBase):
+    """Free functions."""
+    ...
+
+@dataclass
+class ContractFunctionNode(FunctionBase):
+    """Contract functions."""
     group: str
-    node_type: Literal["function"] = "function"
-    checked: Literal[True] = True
 
 Edge = TypedDict("Edge", {"from": str, "to": str})
 
 @dataclass
 class Edges:
-    call_graph: List[Edge] = field(default_factory=list)
+    reference_graph: List[Edge] = field(default_factory=list)
 
 @dataclass
 class WokeDashOut:
     folders: List[FolderNode] = field(default_factory=list)
     files: List[FileNode] = field(default_factory=list)
+    free_functions: List[FreeFunctionNode] = field(default_factory=list)
     contracts: List[ContractNode] = field(default_factory=list)
-    functions: List[FunctionNode] = field(default_factory=list)
+    functions: List[ContractFunctionNode] = field(default_factory=list)
     edges: Edges = field(default_factory=Edges)
 
 T = TypeVar("T")
@@ -169,6 +207,24 @@ class OrderedSet(Generic[T]):
 
     def __hash__(self) -> int:
         return hash(self._list)
+
+def get_function_signature(function: FunctionDefinition) -> str:
+    signature = f"{function.name}("
+    signature += ",".join(
+        param.type.abi_type() for param in function.parameters.parameters
+    )
+    signature += ")"
+    breakpoint()
+    return signature
+
+def get_function_name_with_params(function: FunctionDefinition) -> str:
+    name_with_params = f"{function.name}("
+    name_with_params += ", ".join(
+        param.name for param in function.parameters.parameters
+    )
+    name_with_params += ")"
+    return name_with_params
+    
 
 
 @click.command(name="dash")
@@ -293,3 +349,79 @@ def run_dash(
             checked=True,
         ))
 
+        # Next, add free functions
+        for function in source_unit.functions:
+
+            assert function.kind is FunctionKind.FREE_FUNCTION
+
+            import os
+            os.environ["PYTHONBREAKPOINT"] = "pdbr.set_trace"
+            breakpoint()
+
+            function_signature = get_function_signature(function)
+            function_text = get_function_text(function)
+
+            out.free_functions.append(FreeFunctionNode(
+                key=f"{path}/{function_signature}",
+                signature=function_signature,
+                name=function.name,
+                text=function.name,
+                visibility=function.visibility,
+                state_mutability=function.state_mutability,
+                modifiers=function.modifiers,
+                base_function=function.base_function,
+                child_functions=function.child_functions,
+                parent=str(path),
+                node_type="function",
+                checked=True,
+            ))
+
+        # Next, add contract and function nodes
+        for contract in source_unit.contracts:
+            contract_key = f"{path}/{contract.name}"
+            out.contracts.append(ContractNode(
+                key=contract_key,
+                text=contract.name,
+                parent=str(path),
+                node_type="contract",
+                isGroup=True,
+                checked=True,
+            ))
+            for function in contract.functions:
+                out.functions.append(FunctionNode(
+                    key=f"{contract_key}.{function.canonical_name}",
+                    text=function.name,
+                    parent=contract_key,
+                    group=contract_key,
+                    node_type="function",
+                    checked=True,
+                ))
+
+                for ref in function.references:
+                    # at this point, ref is one of:
+                    # Identifier, IdentifierPathPart, MemberAccess,
+                    # ExternalReference, UnaryOperation, BinaryOperation
+
+                    # ExternalReference is a reference to a Solidity variable in Yul
+                    # It cannot represent a call to a Solidity function
+                    assert not isinstance(ref, ExternalReference)
+
+                    # IdentifierPathPart is a helper class and technically
+                    # not an IR node (it doesn't have `.parent`)
+                    if isinstance(ref, IdentifierPathPart):
+                        ref = ref.underlying_node
+                    
+                    # A function may be referenced:
+                    #   1. In a function of a contract
+                    #   2. In a top-level (free) function
+                    #   3. As part of storage initiliazation (`uint x = computeX()`)
+                    #   4. In a modifier 
+                    # We're going to loop through the parents of the ref
+                    # to find the contract and function that it belongs to
+                    
+                    # `ref_func` will represent this function.
+                    ref_func = ref
+
+
+                    # while not isinstance(ref_func, (FunctionDefinition,):
+                    #     ref_func = ref_func.parent
