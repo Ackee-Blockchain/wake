@@ -25,6 +25,7 @@ from woke.ast.ir.meta.identifier_path import IdentifierPathPart
 from woke.ast.ir.declaration.function_definition import FunctionDefinition
 from woke.ast.ir.declaration.modifier_definition import ModifierDefinition
 from woke.ast.ir.declaration.contract_definition import ContractDefinition
+from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
 from woke.ast.ir.meta.source_unit import SourceUnit
 from woke.ast.enums import ContractKind, FunctionKind, Visibility, StateMutability
 
@@ -115,6 +116,9 @@ from woke.ast.enums import ContractKind, FunctionKind, Visibility, StateMutabili
 # 10. For declarations, we use the `path` field, the first element of the
 #     tuples in `build.item()`. However, for references we use the `file` field
 #     of functions and contracts. We assume they are the same.
+# 11. Possible improvements: handle references in modifiers, storage
+#     initialization. Handle child_functions that are `VariableDeclaration`s.
+#     Include function complexity and references to state variables.
 
 Key = NewType("Key", str)
 
@@ -172,8 +176,8 @@ class FunctionBase:
     child_functions: List[Key]
     parent: Key
     # We can't have fields without default value _after_ fields with default
-    # values..
-    node_type: Union[Literal["function"], Literal["free_function"]]
+    # values. We also can't override fields in a subclass.
+    # node_type: Union[Literal["function"], Literal["free_function"]]
     checked: Literal[True]
 
 
@@ -181,7 +185,6 @@ class FunctionBase:
 class FreeFunctionNode(FunctionBase):
     """Free functions."""
 
-    kind: Literal[FunctionKind.FREE_FUNCTION] = FunctionKind.FREE_FUNCTION
     node_type: Literal["free_function"] = "free_function"
 
 
@@ -194,14 +197,15 @@ class FunctionNode(FunctionBase):
 
 
 # We use a TypedDict because "from" is a reserved keyword in Python.
-Edge = TypedDict("Edge", {"from": Key, "to": Key})
+# Edge = TypedDict("Edge", {"from": Key, "to": Key})
+Link = NamedTuple("Link", [("from", Key), ("to", Key)])
 
 
 @dataclass
 class Links:
-    contract_inheritance: List[Edge] = field(default_factory=list)
-    function_inheritance: List[Edge] = field(default_factory=list)
-    function_references: List[Edge] = field(default_factory=list)
+    contract_inheritance: List[Link] = field(default_factory=list)
+    function_inheritance: List[Link] = field(default_factory=list)
+    function_references: List[Link] = field(default_factory=list)
 
 
 @dataclass
@@ -274,8 +278,15 @@ def process_function(function: FunctionDefinition) -> ProcessedFunction:
 
     child_functions = []
     for child_function in function.child_functions:
-        assert isinstance(child_function, FunctionDefinition)
-        child_functions.append(get_function_key(child_function))
+        # `child_function`s can be a variable declaration
+        # (See the docs for `FunctionDefinition.child_functions`.)
+        # We're going to skip those.
+        if isinstance(child_function, VariableDeclaration):
+            continue
+        elif isinstance(child_function, FunctionDefinition):
+            child_functions.append(get_function_key(child_function))
+        else:
+            assert False
 
     signature = get_function_signature(function)
     name_with_params = get_function_name_with_params(function)
@@ -299,13 +310,18 @@ def get_modifier_key(modifier: ModifierDefinition) -> Key:
 
 
 def get_function_key(function: FunctionDefinition) -> Key:
-    """Get a contract function's key. We use the path, contract and ABI signature for the key."""
-    # We loop back to get the contract
-    contract = function
-    while not isinstance(contract, ContractDefinition):
-        contract = contract.parent
+    """Get a function's (free or contract) key. We use the path, (optionally) contract and ABI signature for the key."""
     function_signature = get_function_signature(function)
-    return Key(f"{function.file}/{contract.name}/{function_signature}")
+    # We loop back to get the contract
+    parent = function
+    while True:
+        parent = parent.parent
+        if isinstance(parent, ContractDefinition):
+            # Contract function
+            return Key(f"{function.file}/{parent.name}/{function_signature}")
+        if isinstance(parent, SourceUnit):
+            # Free function
+            return Key(f"{function.file}/{function_signature}")
 
 
 def get_function_signature(function: FunctionDefinition) -> str:
@@ -417,6 +433,7 @@ def run_dash(
     out = WokeDashOut()
 
     folder_ordered_set: OrderedSet[Union[RootFolderNode, FolderNode]] = OrderedSet()
+    contract_inheritance_ordered_set: OrderedSet[Link] = OrderedSet()
 
     for path, source_unit in sorted(build.source_units.items()):
         # First add root folder
@@ -455,6 +472,7 @@ def run_dash(
 
         import os
 
+
         os.environ["PYTHONBREAKPOINT"] = "pdbr.set_trace"
         # breakpoint()
 
@@ -485,7 +503,7 @@ def run_dash(
 
         # Next, add contract and function nodes
         for contract in source_unit.contracts:
-            breakpoint()
+            # breakpoint()
             contract_key = f"{path}/{contract.name}"
             out.contracts.append(
                 ContractNode(
@@ -499,6 +517,8 @@ def run_dash(
                     checked=True,
                 )
             )
+
+            # Add contract inheritance edges
             for function in contract.functions:
                 processed = process_function(function)
 
@@ -546,23 +566,20 @@ def run_dash(
 
                     # `referencing_function` will represent this function.
                     # `referencing_contract` will represent this contract.
-                    referencing_function = reference
-                    while not isinstance(referencing_function, FunctionDefinition):
-                        if isinstance(referencing_function, ModifierDefinition):
+                    parent = reference
+                    while True:
+                        parent = parent.parent # type: ignore
+                        if isinstance(parent, FunctionDefinition):
+                            break
+                        if isinstance(parent, ModifierDefinition):
                             # skip references in modifiers
                             break
-                        if isinstance(referencing_function, ContractDefinition):
+                        if isinstance(parent, ContractDefinition):
                             # skip references in storage initialization
                             break
-                        if isinstance(referencing_function, SourceUnit):
-                            # skip references in top-level functions
-                            break
-                        referencing_function = referencing_function.parent
 
-                    if isinstance(referencing_function, FunctionDefinition):
-                        out.links.function_references.append(
-                            {
-                                "from": Key(get_function_key(referencing_function)),
-                                "to": Key(get_function_key(function)),
-                            }
-                        )
+                    if isinstance(parent, FunctionDefinition):
+                        out.links.function_references.append(Link(
+                            Key(get_function_key(parent)),
+                            Key(get_function_key(function)),
+                        ))
