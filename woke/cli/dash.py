@@ -12,13 +12,15 @@ from typing import (
     Iterator,
     Union,
     Optional,
+    Dict,
 )
 from typing_extensions import Literal, NewType, TypedDict
-from dataclasses import dataclass, field
-from graphviz.dot import base
+from dataclasses import dataclass, field, asdict
+import json
 
 import rich_click as click
 from woke.ast.ir.declaration.modifier_definition import ModifierDefinition
+from woke.ast.ir.meta import inheritance_specifier
 
 from woke.ast.ir.statement.inline_assembly import ExternalReference
 from woke.ast.ir.meta.identifier_path import IdentifierPathPart
@@ -198,6 +200,8 @@ class FunctionNode(FunctionBase):
 
 # We use a TypedDict because "from" is a reserved keyword in Python.
 Link = TypedDict("Link", {"from": Key, "to": Key})
+# We'll also need a hashable version of a Link, for the inheritance graph.
+HashableLink = NamedTuple("HashableLink", [("from_", Key), ("to", Key)])
 
 
 @dataclass
@@ -208,8 +212,11 @@ class Links:
 
 
 @dataclass
-class WokeDashOut:
-    folders: List[FolderNode] = field(default_factory=list)
+class Model:
+    # This will have the same shape as FolderNode, but we'll convert it to a
+    # dictionary at the end. Before that, we'll keep it a NamedTuple so it's
+    # hashable.
+    folders: List[Dict] = field(default_factory=list)
     files: List[FileNode] = field(default_factory=list)
     free_functions: List[FreeFunctionNode] = field(default_factory=list)
     contracts: List[ContractNode] = field(default_factory=list)
@@ -433,10 +440,10 @@ def run_dash(
     if errored:
         sys.exit(1)
 
-    out = WokeDashOut()
+    model = Model()
 
     folder_ordered_set: OrderedSet[Union[RootFolderNode, FolderNode]] = OrderedSet()
-    contract_inheritance_ordered_set: OrderedSet[Link] = OrderedSet()
+    contract_inheritance_ordered_set: OrderedSet[HashableLink] = OrderedSet()
 
     for path, source_unit in sorted(build.source_units.items()):
         # First add root folder
@@ -463,7 +470,7 @@ def run_dash(
             parent = parent.parent
 
         # Finally, add the file
-        out.files.append(
+        model.files.append(
             FileNode(
                 key=Key(str(path)),
                 name=str(path.name),
@@ -485,7 +492,7 @@ def run_dash(
 
             processed = process_function(function)
 
-            out.free_functions.append(
+            model.free_functions.append(
                 FreeFunctionNode(
                     key=Key(f"{path}/{processed.signature}"),
                     signature=processed.signature,
@@ -510,7 +517,7 @@ def run_dash(
             contract_key = f"{path}/{contract.name}"
             # This is a sanity check so that future references to this contract work
             assert contract_key == get_contract_key(contract)
-            out.contracts.append(
+            model.contracts.append(
                 ContractNode(
                     key=Key(contract_key),
                     name=contract.name,
@@ -524,18 +531,20 @@ def run_dash(
             )
 
             # Add contract inheritance edges
-            for base_contract in contract.base_contracts:
+            for inheritance_specifier in contract.base_contracts:
                 breakpoint()
-                # contract_inheritance_ordered_set.add(
-                #     Link(
-                #         Key(contract_key),
-                #         get_contract_key(base_contract),
-                #     )
-                # )
+                base_contract = inheritance_specifier.base_name.referenced_declaration
+                assert isinstance(base_contract, ContractDefinition)
+                contract_inheritance_ordered_set.add(HashableLink(
+                    Key(contract_key),
+                    get_contract_key(base_contract),
+                ))
+
+            # Add contract functions
             for function in contract.functions:
                 processed = process_function(function)
 
-                out.functions.append(
+                model.functions.append(
                     FunctionNode(
                         key=Key(f"{contract_key}.{processed.signature}"),
                         signature=processed.signature,
@@ -554,7 +563,8 @@ def run_dash(
                         checked=True,
                     )
                 )
-
+                
+                # Add function references
                 for reference in function.references:
                     # at this point, ref is one of:
                     # Identifier, IdentifierPathPart, MemberAccess,
@@ -592,7 +602,28 @@ def run_dash(
                             break
 
                     if isinstance(parent, FunctionDefinition):
-                        out.links.function_references.append({
+                        model.links.function_references.append({
                             "from": Key(get_function_key(parent)),
                             "to": Key(get_function_key(function)),
                         })
+
+                    # Inside of loop function.references
+                # Same level as loop function.references
+            # Same level as loop contract.functions
+        # Same level as loop source_unit.contracts
+    # Same level as loop build.source_units
+
+    # Add folder nodes
+    for folder in folder_ordered_set:
+        model.folders.append(folder._asdict())
+
+    # Add contract inheritance edges
+    for hashable_link in contract_inheritance_ordered_set:
+        model.links.contract_inheritance.append({
+            "from": hashable_link.from_,
+            "to": hashable_link.to,
+        })
+
+    # Create a file that will contain our `model`. Html does not support
+    # importing JSONs, so we'll turn it into a Js file.
+    model_js_contents = f"window.model = {json.dumps(asdict(model), indent=4)}"
