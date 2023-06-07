@@ -17,6 +17,9 @@ from typing import (
 from typing_extensions import Literal, NewType, TypedDict
 from dataclasses import dataclass, field, asdict
 import json
+import shutil
+import time
+import platform
 
 import rich_click as click
 from woke.ast.ir.declaration.modifier_definition import ModifierDefinition
@@ -355,6 +358,9 @@ def get_contract_key(contract: ContractDefinition) -> Key:
 
 @click.command(name="dash")
 @click.argument("paths", nargs=-1, type=click.Path(exists=True))
+# default is project_root_path / ".woke-dash" / timestamp
+@click.option("--out-directory", type=click.Path(), help="Where `woke dash` will write the files. By default `.woke-dash`.")
+@click.option("--use-timestamp-directory", is_flag=True, default=True, help="In the out-directory, create a directory with the current timestamp and a symlink called `latest` that points to it.")
 @click.option(
     "--no-artifacts", is_flag=True, default=False, help="Do not write build artifacts."
 )
@@ -366,7 +372,7 @@ def get_contract_key(contract: ContractDefinition) -> Key:
 )
 @click.pass_context
 def run_dash(
-    ctx: click.Context, paths: Tuple[str], no_artifacts: bool, force: bool
+    ctx: click.Context, paths: Tuple[str], out_directory: Optional[Path], use_timestamp_directory: bool, no_artifacts: bool, force: bool
 ) -> None:
     """Visualize your project in the browser."""
 
@@ -532,7 +538,7 @@ def run_dash(
 
             # Add contract inheritance edges
             for inheritance_specifier in contract.base_contracts:
-                breakpoint()
+                # breakpoint()
                 base_contract = inheritance_specifier.base_name.referenced_declaration
                 assert isinstance(base_contract, ContractDefinition)
                 contract_inheritance_ordered_set.add(HashableLink(
@@ -627,3 +633,40 @@ def run_dash(
     # Create a file that will contain our `model`. Html does not support
     # importing JSONs, so we'll turn it into a Js file.
     model_js_contents = f"window.model = {json.dumps(asdict(model), indent=4)}"
+
+    # Write the file
+    if out_directory is None:
+        out_directory = config.project_root_path / ".woke-dash"
+    else:
+        out_directory = Path(out_directory).resolve()
+
+    if use_timestamp_directory:
+        out_directory = out_directory / str(int(time.time()))
+
+    out_directory.mkdir(parents=True, exist_ok=True)
+
+    # woke dash assets directory
+    wd_assets_directory = Path(__file__).parent.parent / "assets" / "woke-dash"
+    assert wd_assets_directory.exists()
+
+    model_js_path = out_directory / "woke-dash-model.js"
+
+    model_js_path.write_text(model_js_contents)
+
+    # We could use `copytree`, but it requires the directory be empty.
+    # According to ChatGpt, `copyfile` only copies file contents, `copy` also
+    # copies file permissions, and `copy2` also copies file metadata. It seems
+    # like `copy` is the best choice.
+    # We could do a loop on `.glob("**/*")`, but let's just do it individually.
+    shutil.copy(wd_assets_directory / "index.html", out_directory)
+    shutil.copy(wd_assets_directory / "js" / "declGraph.js", out_directory)
+    shutil.copy(wd_assets_directory / "js" / "refGraph.js", out_directory)
+
+    if use_timestamp_directory:
+        # Create a symlink to the latest directory
+        latest_directory = out_directory.parent / "latest"
+
+        if platform.system() != "Windows":
+            if latest_directory.is_symlink():
+                latest_directory.unlink()
+            latest_directory.symlink_to(out_directory, target_is_directory=True)
