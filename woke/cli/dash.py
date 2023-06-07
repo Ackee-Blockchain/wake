@@ -2,7 +2,17 @@ import asyncio
 import sys
 import time
 from pathlib import Path
-from typing import Set, Tuple, NamedTuple, List, TypeVar, Generic, Iterator, Union, Optional
+from typing import (
+    Set,
+    Tuple,
+    NamedTuple,
+    List,
+    TypeVar,
+    Generic,
+    Iterator,
+    Union,
+    Optional,
+)
 from typing_extensions import Literal, NewType, TypedDict
 from dataclasses import dataclass, field
 from graphviz.dot import base
@@ -15,7 +25,9 @@ from woke.ast.ir.meta.identifier_path import IdentifierPathPart
 from woke.ast.ir.declaration.function_definition import FunctionDefinition
 from woke.ast.ir.declaration.modifier_definition import ModifierDefinition
 from woke.ast.ir.declaration.contract_definition import ContractDefinition
+from woke.ast.ir.meta.source_unit import SourceUnit
 from woke.ast.enums import ContractKind, FunctionKind, Visibility, StateMutability
+
 # There are two main GoJS model types (and their corresponding diagram types)
 # that we'll be using in Woke Dash: TreeModel and GraphLinksModel. TreeModel is
 # used for the left-hand side diagram, which will show the "extended" file
@@ -113,12 +125,14 @@ class RootFolderNode(NamedTuple):
     node_type: Literal["folder"] = "folder"
     checked: Literal[True] = True
 
+
 class FolderNode(NamedTuple):
     key: Key
     name: str
     parent: Key
     node_type: Literal["folder"] = "folder"
     checked: Literal[True] = True
+
 
 @dataclass
 class FileNode:
@@ -127,6 +141,7 @@ class FileNode:
     parent: Key
     node_type: Literal["file"] = "file"
     checked: Literal[True] = True
+
 
 @dataclass
 class ContractNode:
@@ -139,9 +154,11 @@ class ContractNode:
     checked: Literal[True] = True
     isGroup: Literal[True] = True
 
+
 @dataclass
 class FunctionBase:
-    """Base dataclass for FreeFunctionNode and ContractFunctionNode."""
+    """Base dataclass for FreeFunctionNode and FunctionNode."""
+
     key: Key
     signature: str
     name: str
@@ -159,26 +176,33 @@ class FunctionBase:
     node_type: Union[Literal["function"], Literal["free_function"]]
     checked: Literal[True]
 
+
 @dataclass
 class FreeFunctionNode(FunctionBase):
     """Free functions."""
+
     kind: Literal[FunctionKind.FREE_FUNCTION] = FunctionKind.FREE_FUNCTION
     node_type: Literal["free_function"] = "free_function"
+
 
 @dataclass
 class FunctionNode(FunctionBase):
     """Contract functions."""
-    contract: Key 
+
+    contract: Key
     node_type: Literal["function"] = "function"
+
 
 # We use a TypedDict because "from" is a reserved keyword in Python.
 Edge = TypedDict("Edge", {"from": Key, "to": Key})
+
 
 @dataclass
 class Links:
     contract_inheritance: List[Edge] = field(default_factory=list)
     function_inheritance: List[Edge] = field(default_factory=list)
     function_references: List[Edge] = field(default_factory=list)
+
 
 @dataclass
 class WokeDashOut:
@@ -189,7 +213,9 @@ class WokeDashOut:
     functions: List[FunctionNode] = field(default_factory=list)
     links: Links = field(default_factory=Links)
 
+
 T = TypeVar("T")
+
 
 class OrderedSet(Generic[T]):
     _set: Set[T]
@@ -225,12 +251,14 @@ class OrderedSet(Generic[T]):
     def __hash__(self) -> int:
         return hash(self._list)
 
+
 class ProcessedFunction(NamedTuple):
     modifiers: List[Key]
     base_functions: List[Key]
     child_functions: List[Key]
     signature: str
     name_with_params: str
+
 
 def process_function(function: FunctionDefinition) -> ProcessedFunction:
     modifiers = []
@@ -269,6 +297,7 @@ def get_modifier_key(modifier: ModifierDefinition) -> Key:
         contract = contract.parent
     return Key(f"{modifier.file}/{contract.name}/{modifier.name}")
 
+
 def get_function_key(function: FunctionDefinition) -> Key:
     """Get a contract function's key. We use the path, contract and ABI signature for the key."""
     # We loop back to get the contract
@@ -277,6 +306,7 @@ def get_function_key(function: FunctionDefinition) -> Key:
         contract = contract.parent
     function_signature = get_function_signature(function)
     return Key(f"{function.file}/{contract.name}/{function_signature}")
+
 
 def get_function_signature(function: FunctionDefinition) -> str:
     signature = f"{function.name}("
@@ -287,6 +317,7 @@ def get_function_signature(function: FunctionDefinition) -> str:
     # breakpoint()
     return signature
 
+
 def get_function_name_with_params(function: FunctionDefinition) -> str:
     name_with_params = f"{function.name}("
     name_with_params += ", ".join(
@@ -294,7 +325,6 @@ def get_function_name_with_params(function: FunctionDefinition) -> str:
     )
     name_with_params += ")"
     return name_with_params
-    
 
 
 @click.command(name="dash")
@@ -397,75 +427,46 @@ def run_dash(
             checked=True,
         )
         folder_ordered_set.add(root_folder)
-        
+
         # Next, add all other predecessors
         parent = path.parent
         while parent != Path(path.root):
-            folder_ordered_set.add(FolderNode(
-                key=Key(str(parent)),
-                name=str(parent.name),
-                parent=Key(str(parent.parent)),
-                node_type="folder",
-                checked=True,
-            ))
+            folder_ordered_set.add(
+                FolderNode(
+                    key=Key(str(parent)),
+                    name=str(parent.name),
+                    parent=Key(str(parent.parent)),
+                    node_type="folder",
+                    checked=True,
+                )
+            )
             parent = parent.parent
 
         # Finally, add the file
-        out.files.append(FileNode(
-            key=Key(str(path)),
-            name=str(path.name),
-            parent=Key(str(path.parent)),
-            node_type="file",
-            checked=True,
-        ))
+        out.files.append(
+            FileNode(
+                key=Key(str(path)),
+                name=str(path.name),
+                parent=Key(str(path.parent)),
+                node_type="file",
+                checked=True,
+            )
+        )
 
         import os
+
         os.environ["PYTHONBREAKPOINT"] = "pdbr.set_trace"
         # breakpoint()
 
         # Next, add free functions
         for function in source_unit.functions:
-
             assert function.kind is FunctionKind.FREE_FUNCTION
 
             processed = process_function(function)
 
-            out.free_functions.append(FreeFunctionNode(
-                key=Key(f"{path}/{processed.signature}"),
-                signature=processed.signature,
-                name=function.name,
-                name_with_params=processed.name_with_params,
-                declaration_string=function.declaration_string,
-                kind=function.kind,
-                visibility=function.visibility,
-                state_mutability=function.state_mutability,
-                modifiers=processed.modifiers,
-                base_functions=processed.base_functions,
-                child_functions=processed.child_functions,
-                parent=Key(str(path)),
-                node_type="free_function",
-                checked=True,
-            ))
-
-        # Next, add contract and function nodes
-        for contract in source_unit.contracts:
-            breakpoint()
-            contract_key = f"{path}/{contract.name}"
-            out.contracts.append(ContractNode(
-                key=Key(contract_key),
-                name=contract.name,
-                parent=Key(str(path)),
-                kind=contract.kind,
-                fully_implemented=contract.fully_implemented,
-                node_type="contract",
-                isGroup=True,
-                checked=True,
-            ))
-            for function in contract.functions:
-                processed = process_function(function)
-
-                out.functions.append(FunctionNode(
-                    key=Key(f"{contract_key}.{processed.signature}"),
+            out.free_functions.append(
+                FreeFunctionNode(
+                    key=Key(f"{path}/{processed.signature}"),
                     signature=processed.signature,
                     name=function.name,
                     name_with_params=processed.name_with_params,
@@ -476,37 +477,92 @@ def run_dash(
                     modifiers=processed.modifiers,
                     base_functions=processed.base_functions,
                     child_functions=processed.child_functions,
-                    parent=Key(contract_key),
-                    contract=Key(contract_key),
-                    node_type="function",
+                    parent=Key(str(path)),
+                    node_type="free_function",
                     checked=True,
-                ))
+                )
+            )
 
-                for ref in function.references:
+        # Next, add contract and function nodes
+        for contract in source_unit.contracts:
+            breakpoint()
+            contract_key = f"{path}/{contract.name}"
+            out.contracts.append(
+                ContractNode(
+                    key=Key(contract_key),
+                    name=contract.name,
+                    parent=Key(str(path)),
+                    kind=contract.kind,
+                    fully_implemented=contract.fully_implemented,
+                    node_type="contract",
+                    isGroup=True,
+                    checked=True,
+                )
+            )
+            for function in contract.functions:
+                processed = process_function(function)
+
+                out.functions.append(
+                    FunctionNode(
+                        key=Key(f"{contract_key}.{processed.signature}"),
+                        signature=processed.signature,
+                        name=function.name,
+                        name_with_params=processed.name_with_params,
+                        declaration_string=function.declaration_string,
+                        kind=function.kind,
+                        visibility=function.visibility,
+                        state_mutability=function.state_mutability,
+                        modifiers=processed.modifiers,
+                        base_functions=processed.base_functions,
+                        child_functions=processed.child_functions,
+                        parent=Key(contract_key),
+                        contract=Key(contract_key),
+                        node_type="function",
+                        checked=True,
+                    )
+                )
+
+                for reference in function.references:
                     # at this point, ref is one of:
                     # Identifier, IdentifierPathPart, MemberAccess,
                     # ExternalReference, UnaryOperation, BinaryOperation
 
                     # ExternalReference is a reference to a Solidity variable in Yul
                     # It cannot represent a call to a Solidity function
-                    assert not isinstance(ref, ExternalReference)
+                    assert not isinstance(reference, ExternalReference)
 
                     # IdentifierPathPart is a helper class and technically
                     # not an IR node (it doesn't have `.parent`)
-                    if isinstance(ref, IdentifierPathPart):
-                        ref = ref.underlying_node
-                    
+                    if isinstance(reference, IdentifierPathPart):
+                        reference = reference.underlying_node
+
                     # A function may be referenced:
                     #   1. In a function of a contract
                     #   2. In a top-level (free) function
                     #   3. As part of storage initiliazation (`uint x = computeX()`)
-                    #   4. In a modifier 
+                    #   4. In a modifier
                     # We're going to loop through the parents of the ref
                     # to find the contract and function that it belongs to
-                    
-                    # `ref_func` will represent this function.
-                    ref_func = ref
 
+                    # `referencing_function` will represent this function.
+                    # `referencing_contract` will represent this contract.
+                    referencing_function = reference
+                    while not isinstance(referencing_function, FunctionDefinition):
+                        if isinstance(referencing_function, ModifierDefinition):
+                            # skip references in modifiers
+                            break
+                        if isinstance(referencing_function, ContractDefinition):
+                            # skip references in storage initialization
+                            break
+                        if isinstance(referencing_function, SourceUnit):
+                            # skip references in top-level functions
+                            break
+                        referencing_function = referencing_function.parent
 
-                    # while not isinstance(ref_func, (FunctionDefinition,):
-                    #     ref_func = ref_func.parent
+                    if isinstance(referencing_function, FunctionDefinition):
+                        out.links.function_references.append(
+                            {
+                                "from": Key(get_function_key(referencing_function)),
+                                "to": Key(get_function_key(function)),
+                            }
+                        )
