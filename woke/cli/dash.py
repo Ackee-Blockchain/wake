@@ -197,8 +197,7 @@ class FunctionNode(FunctionBase):
 
 
 # We use a TypedDict because "from" is a reserved keyword in Python.
-# Edge = TypedDict("Edge", {"from": Key, "to": Key})
-Link = NamedTuple("Link", [("from", Key), ("to", Key)])
+Link = TypedDict("Link", {"from": Key, "to": Key})
 
 
 @dataclass
@@ -341,6 +340,10 @@ def get_function_name_with_params(function: FunctionDefinition) -> str:
     )
     name_with_params += ")"
     return name_with_params
+
+def get_contract_key(contract: ContractDefinition) -> Key:
+    """Get a contract's key. We use the path and contract name for the key."""
+    return Key(f"{contract.file}/{contract.name}")
 
 
 @click.command(name="dash")
@@ -505,6 +508,8 @@ def run_dash(
         for contract in source_unit.contracts:
             # breakpoint()
             contract_key = f"{path}/{contract.name}"
+            # This is a sanity check so that future references to this contract work
+            assert contract_key == get_contract_key(contract)
             out.contracts.append(
                 ContractNode(
                     key=Key(contract_key),
@@ -519,6 +524,14 @@ def run_dash(
             )
 
             # Add contract inheritance edges
+            for base_contract in contract.base_contracts:
+                breakpoint()
+                # contract_inheritance_ordered_set.add(
+                #     Link(
+                #         Key(contract_key),
+                #         get_contract_key(base_contract),
+                #     )
+                # )
             for function in contract.functions:
                 processed = process_function(function)
 
@@ -579,7 +592,7 @@ def run_dash(
                             break
 
                     if isinstance(parent, FunctionDefinition):
-                        out.links.function_references.append(Link(
-                            Key(get_function_key(parent)),
-                            Key(get_function_key(function)),
-                        ))
+                        out.links.function_references.append({
+                            "from": Key(get_function_key(parent)),
+                            "to": Key(get_function_key(function)),
+                        })
