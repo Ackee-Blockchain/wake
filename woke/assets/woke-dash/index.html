@@ -23,7 +23,8 @@
     <!-- Fomantic UI is a better (maintained) version of Semantic UI, a front-end component library (like eg Material Design)-->
     <!-- You MUST include jQuery 3+ before Fomantic -->
     <script src="./vendor/jquery-3.6.3.js"></script>
-    <link rel="stylesheet" type="text/css" href="./vendor/fomantic-2.9.2.css">
+    <!-- <link rel="stylesheet" type="text/css" href="./vendor/fomantic-2.9.2.css"> -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.css">
     <script src="./vendor/fomantic-2.9.2.js"></script>
     <!-- endregion fomantic ui-->
     <!-- endregion dependencies -->
@@ -40,11 +41,12 @@ Childern can have:
 <!-- height: 100vh (vertical height) means the body occupies the entire page. -->
 <body style="height: 100vh; margin: 0; display: flex; flex-direction: column;">
     <div style="display: flex; flex-direction: row; justify-content: center; margin: 10px 0 0 0">
+        <button class="ui button teal" onclick="$('.ui.overlay.fullscreen.modal').modal('show');">Help</button>
         <button class="ui button" onclick="window.myRefGraph.layout.spacing -= 50">spacing -50</button>
         <button class="ui button" onclick="window.myRefGraph.layout.spacing += 50">spacing +50</button>
         <!-- margin order: top, right, bottom, left -->
         <button class="ui button" style="margin: 0 0 0 10px" onclick="window.collapse_all()">Collapse all</button>
-        <button class="ui button" style="margin: 0 10px" onclick="window.myRefGraph.commandHandler.zoomToFit()">Zoom to fit</button>
+        <button class="ui button teal" style="margin: 0 10px" onclick="window.myRefGraph.commandHandler.zoomToFit(); myRefGraph.alignDocument(go.Spot.Center, go.Spot.Center);">Center diagram</button>
         <button class="ui button" style="margin: 0 10px 0 0" onclick="window.expand_all()">Expand all</button>
         <button class="ui button" onclick="window.myRefGraph.layout.aspectRatio -= 0.1">aspectRatio -0.1</button>
         <button class="ui button" onclick="window.myRefGraph.layout.aspectRatio += 0.1">aspectRatio +0.1</button>
@@ -83,9 +85,22 @@ Childern can have:
             cursor: ew-resize;
         }
     </style>
+
     <script src="./lib/common.js"></script>
     <script src="./lib/declGraph.js"></script>
     <script src="./lib/refGraph.js"></script>
+
+    <div class="ui overlay fullscreen modal">
+        <i class="close icon"></i>
+        <div class="header">
+            Help
+        </div>
+        <div class="content">
+            <p>Keyboard shortcuts that work when Declaration Graph (the one on the left) is focused:</p>
+            <ul>
+                <li>j, k - select next/previous node</li>
+            </ul>
+        </div>
 </body>
 
 </html>
