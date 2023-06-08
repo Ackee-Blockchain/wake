@@ -682,6 +682,7 @@ def run_dash(
     shutil.copy(wd_assets_directory / "vendor" / "fomantic-2.9.2.js", out_directory / "vendor")
     shutil.copy(wd_assets_directory / "vendor" / "go-2.3.8.js", out_directory / "vendor")
     shutil.copy(wd_assets_directory / "vendor" / "jquery-3.6.3.js", out_directory / "vendor")
+    shutil.copy(wd_assets_directory / "lib" / "common.js", out_directory / "lib")
     shutil.copy(wd_assets_directory / "lib" / "declGraph.js", out_directory / "lib")
     shutil.copy(wd_assets_directory / "lib" / "refGraph.js", out_directory / "lib")
 
