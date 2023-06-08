@@ -66,4 +66,5 @@ function iterator_to_array(it) {
     return ret
 }
 
+const {folders, files, contracts, functions, links} = window.model;
 // endregion utils

@@ -176,9 +176,6 @@ myDeclGraph.linkTemplate =
             { stroke: 'gray', strokeDashArray: [1, 2] }));
 
 
-// Region model
-window.myDecl
-
 // Region helpers
 function collapse_all() {
     myRefGraph.findTopLevelGroups().each(function(g) {
@@ -220,3 +217,7 @@ myDeclGraph.commandHandler.doKeyDown = function() {
     const e = this.diagram.lastInput;
 }
 
+
+// Region model
+const decl_graph_nodes = folders.concat(files).concat(contracts).concat(functions)
+window.myDeclGraph.model = new go.TreeModel(decl_graph_nodes)
