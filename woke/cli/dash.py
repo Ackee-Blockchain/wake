@@ -677,16 +677,16 @@ def run_dash(
     # like `copy` is the best choice.
     # We could do a loop on `.glob("**/*")`, but let's just do it individually.
     (out_directory / "vendor").mkdir(exist_ok=True)
-    (out_directory / "lib").mkdir(exist_ok=True)
+    (out_directory / "js").mkdir(exist_ok=True)
     shutil.copy(wd_assets_directory / "index.html", out_directory)
     shutil.copy(wd_assets_directory / "favicon.svg", out_directory)
     shutil.copy(wd_assets_directory / "vendor" / "fomantic-2.9.2.js", out_directory / "vendor")
     shutil.copy(wd_assets_directory / "vendor" / "go-2.3.8.js", out_directory / "vendor")
     shutil.copy(wd_assets_directory / "vendor" / "jquery-3.6.3.js", out_directory / "vendor")
-    shutil.copy(wd_assets_directory / "lib" / "common.js", out_directory / "lib")
-    shutil.copy(wd_assets_directory / "lib" / "declGraph.js", out_directory / "lib")
-    shutil.copy(wd_assets_directory / "lib" / "refGraph.js", out_directory / "lib")
-    shutil.copy(wd_assets_directory / "lib" / "inhGraph.js", out_directory / "lib")
+    shutil.copy(wd_assets_directory / "js" / "common.js", out_directory / "js")
+    shutil.copy(wd_assets_directory / "js" / "declGraph.js", out_directory / "js")
+    shutil.copy(wd_assets_directory / "js" / "refGraph.js", out_directory / "js")
+    shutil.copy(wd_assets_directory / "js" / "inhGraph.js", out_directory / "js")
 
     if use_timestamp_directory:
         # Create a symlink to the latest directory
