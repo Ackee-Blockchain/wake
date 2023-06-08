@@ -213,9 +213,13 @@ class Links:
     function_inheritance: List[Link] = field(default_factory=list)
     function_references: List[Link] = field(default_factory=list)
 
+@dataclass
+class Metadata:
+    project_name: str = ""
+
 
 @dataclass
-class Model:
+class WokeDashModel:
     # This will have the same shape as FolderNode, but we'll convert it to a
     # dictionary at the end. Before that, we'll keep it a NamedTuple so it's
     # hashable.
@@ -225,6 +229,7 @@ class Model:
     contracts: List[ContractNode] = field(default_factory=list)
     functions: List[FunctionNode] = field(default_factory=list)
     links: Links = field(default_factory=Links)
+    metadata: Metadata = field(default_factory=Metadata)
 
 
 T = TypeVar("T")
@@ -454,7 +459,7 @@ def run_dash(
     if errored:
         sys.exit(1)
 
-    model = Model()
+    model = WokeDashModel()
 
     folder_ordered_set: OrderedSet[Union[RootFolderNode, FolderNode]] = OrderedSet()
     contract_inheritance_ordered_set: OrderedSet[HashableLink] = OrderedSet()
@@ -638,6 +643,9 @@ def run_dash(
             "to": hashable_link.to,
         })
 
+    # Add metadata to model
+    model.metadata.project_name = config.project_root_path.name
+
     # Create a file that will contain our `model`. Html does not support
     # importing JSONs, so we'll turn it into a Js file.
     model_js_contents = f"window.model = {json.dumps(asdict(model), indent=4)}"
@@ -666,9 +674,16 @@ def run_dash(
     # copies file permissions, and `copy2` also copies file metadata. It seems
     # like `copy` is the best choice.
     # We could do a loop on `.glob("**/*")`, but let's just do it individually.
+    (out_directory / "vendor").mkdir(exist_ok=True)
+    (out_directory / "lib").mkdir(exist_ok=True)
     shutil.copy(wd_assets_directory / "index.html", out_directory)
-    shutil.copy(wd_assets_directory / "js" / "declGraph.js", out_directory)
-    shutil.copy(wd_assets_directory / "js" / "refGraph.js", out_directory)
+    shutil.copy(wd_assets_directory / "favicon.svg", out_directory)
+    shutil.copy(wd_assets_directory / "vendor" / "fomantic-2.9.2.css", out_directory / "vendor")
+    shutil.copy(wd_assets_directory / "vendor" / "fomantic-2.9.2.js", out_directory / "vendor")
+    shutil.copy(wd_assets_directory / "vendor" / "go-2.3.8.js", out_directory / "vendor")
+    shutil.copy(wd_assets_directory / "vendor" / "jquery-3.6.3.js", out_directory / "vendor")
+    shutil.copy(wd_assets_directory / "lib" / "declGraph.js", out_directory / "lib")
+    shutil.copy(wd_assets_directory / "lib" / "refGraph.js", out_directory / "lib")
 
     if use_timestamp_directory:
         # Create a symlink to the latest directory
@@ -678,3 +693,4 @@ def run_dash(
             if latest_directory.is_symlink():
                 latest_directory.unlink()
             latest_directory.symlink_to(out_directory, target_is_directory=True)
+
