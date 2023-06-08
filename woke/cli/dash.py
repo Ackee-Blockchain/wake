@@ -215,6 +215,7 @@ class Links:
 
 @dataclass
 class Metadata:
+    project_root_path: str = ""
     project_name: str = ""
 
 
@@ -279,7 +280,7 @@ class ProcessedFunction(NamedTuple):
 
 
 def process_function(function: FunctionDefinition) -> ProcessedFunction:
-    modifiers = []
+    modifiers: List[Key] = []
     for modifier_invocation in function.modifiers:
         modifier = modifier_invocation.modifier_name.referenced_declaration
         assert isinstance(modifier, ModifierDefinition)
@@ -644,6 +645,7 @@ def run_dash(
         })
 
     # Add metadata to model
+    model.metadata.project_root_path = str(config.project_root_path)
     model.metadata.project_name = config.project_root_path.name
 
     # Create a file that will contain our `model`. Html does not support
@@ -678,13 +680,13 @@ def run_dash(
     (out_directory / "lib").mkdir(exist_ok=True)
     shutil.copy(wd_assets_directory / "index.html", out_directory)
     shutil.copy(wd_assets_directory / "favicon.svg", out_directory)
-    shutil.copy(wd_assets_directory / "vendor" / "fomantic-2.9.2.css", out_directory / "vendor")
     shutil.copy(wd_assets_directory / "vendor" / "fomantic-2.9.2.js", out_directory / "vendor")
     shutil.copy(wd_assets_directory / "vendor" / "go-2.3.8.js", out_directory / "vendor")
     shutil.copy(wd_assets_directory / "vendor" / "jquery-3.6.3.js", out_directory / "vendor")
     shutil.copy(wd_assets_directory / "lib" / "common.js", out_directory / "lib")
     shutil.copy(wd_assets_directory / "lib" / "declGraph.js", out_directory / "lib")
     shutil.copy(wd_assets_directory / "lib" / "refGraph.js", out_directory / "lib")
+    shutil.copy(wd_assets_directory / "lib" / "inhGraph.js", out_directory / "lib")
 
     if use_timestamp_directory:
         # Create a symlink to the latest directory

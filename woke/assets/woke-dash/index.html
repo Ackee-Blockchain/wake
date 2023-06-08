@@ -23,7 +23,7 @@
     <!-- Fomantic UI is a better (maintained) version of Semantic UI, a front-end component library (like eg Material Design)-->
     <!-- You MUST include jQuery 3+ before Fomantic -->
     <script src="./vendor/jquery-3.6.3.js"></script>
-    <!-- <link rel="stylesheet" type="text/css" href="./vendor/fomantic-2.9.2.css"> -->
+    <!-- Yeah it would be great to package this one as well, but it imports 6 fonts that take up 300kB. -->
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.css">
     <script src="./vendor/fomantic-2.9.2.js"></script>
     <!-- endregion fomantic ui-->
@@ -40,21 +40,23 @@ Childern can have:
 -->
 <!-- height: 100vh (vertical height) means the body occupies the entire page. -->
 <body style="height: 100vh; margin: 0; display: flex; flex-direction: column;">
+    <!-- margin order: top, right, bottom, left -->
     <div style="display: flex; flex-direction: row; justify-content: center; margin: 10px 0 0 0">
         <button class="ui button teal" onclick="$('.ui.overlay.fullscreen.modal').modal('show');">Help</button>
         <button class="ui button" onclick="window.myRefGraph.layout.spacing -= 50">spacing -50</button>
         <button class="ui button" onclick="window.myRefGraph.layout.spacing += 50">spacing +50</button>
-        <!-- margin order: top, right, bottom, left -->
+      <button class="ui button" onclick="window.myRefGraph.layout.aspectRatio -= 0.1">aspectRatio -0.1</button>
+      <button class="ui button" onclick="window.myRefGraph.layout.aspectRatio += 0.1">aspectRatio +0.1</button>
+      <button class="ui button teal" style="margin: 0 10px" onclick="window.myRefGraph.commandHandler.zoomToFit(); myRefGraph.alignDocument(go.Spot.Center, go.Spot.Center);">Center diagram</button>
+        <button class="ui button" style="margin: 0 0 0 10px" onclick="window.collapse_all()" data-content="Foo">Hide unused</button>
+        <button class="ui button" style="margin: 0 0 0 10px" onclick="window.collapse_all()">Show all</button>
         <button class="ui button" style="margin: 0 0 0 10px" onclick="window.collapse_all()">Collapse all</button>
-        <button class="ui button teal" style="margin: 0 10px" onclick="window.myRefGraph.commandHandler.zoomToFit(); myRefGraph.alignDocument(go.Spot.Center, go.Spot.Center);">Center diagram</button>
         <button class="ui button" style="margin: 0 10px 0 0" onclick="window.expand_all()">Expand all</button>
-        <button class="ui button" onclick="window.myRefGraph.layout.aspectRatio -= 0.1">aspectRatio -0.1</button>
-        <button class="ui button" onclick="window.myRefGraph.layout.aspectRatio += 0.1">aspectRatio +0.1</button>
     </div>
     <div class="container">
         <div id="myDeclDiv" class="resizable"></div>
         <div id="resizer"></div>
-        <div id="myRefDiv" class="resizable"></div>
+        <div id="myMainDiv" class="resizable"></div>
     </div>
     <style>
         .container {
@@ -74,7 +76,7 @@ Childern can have:
             margin: 10px 0 10px 10px;
         }
 
-        #myRefDiv {
+        #myMainDiv {
             flex-grow: 7.5;
             margin: 10px 10px 10px 0;
         }
@@ -84,11 +86,21 @@ Childern can have:
             /* display a resize cursor when hovering over the resizer */
             cursor: ew-resize;
         }
+
+        code {
+            font-family: "Courier New", monospace;
+        }
     </style>
 
     <script src="./lib/common.js"></script>
     <script src="./lib/declGraph.js"></script>
     <script src="./lib/refGraph.js"></script>
+    <script src="./lib/inhGraph.js"></script>
+    <script>
+        // this obviously can't go into common, because it has to be after refGraph.js has run
+        window.mainGraph = window.myRefGraph;
+        // endregion main graph
+    </script>
 
     <div class="ui overlay fullscreen modal">
         <i class="close icon"></i>
@@ -100,6 +112,9 @@ Childern can have:
             <ul>
                 <li>j, k - select next/previous node</li>
             </ul>
+        <p>To view this file on an iPad or another computer, ensure you are on a WiFi where you trust all other computers. Then type: <code id="cdDir"></code>.</p>
+        <script>document.getElementById("cdDir").innerHTML = "cd " + window.model.metadata.project_root_path + "; python3 -m http.server"</script>
+        <p>Next, figure out your IP address on your local network. On Windows, try typing <code>ipconfig</code> in a command prompt and look for the line that says "IPv4 Address". On Linux and MacOS, try <code>ifconfig | grep inet</code>. Your address should be the first <code>inet</code> one after <code>127.0.0.1</code>. Finally, open <code>{your_ip_address}:8000</code> on the target machine.
         </div>
 </body>
 
