@@ -1,7 +1,9 @@
 // region resizing
 const container = document.querySelector('.container');
-const leftDiv = document.querySelector('#myDeclDiv');
-const rightDiv = document.querySelector('#myRefDiv');
+const myDeclDiv = document.querySelector('#myDeclDiv');
+const myMainDiv = document.querySelector('#myMainDiv');
+const myRefDiv = document.querySelector('#myRefDiv');
+const myInhDiv = document.querySelector('#myInhDiv');
 const resizer = document.querySelector('#resizer');
 
 let isResizing = false;
@@ -16,11 +18,11 @@ document.addEventListener('mousemove', (e) => {
     if (!isResizing) return;
 
     const offset = e.clientX - lastDownX;
-    const newLeftWidth = leftDiv.offsetWidth + offset;
-    const newRightWidth = rightDiv.offsetWidth - offset;
+    const newLeftWidth = myDeclDiv.offsetWidth + offset;
+    const newRightWidth = myMainDiv.offsetWidth - offset;
 
-    leftDiv.style.width = `${newLeftWidth}px`;
-    rightDiv.style.width = `${newRightWidth}px`;
+    myDeclDiv.style.width = `${newLeftWidth}px`;
+    myMainDiv.style.width = `${newRightWidth}px`;
     window.myDeclGraph.requestUpdate();
     window.mainGraph.requestUpdate();
 
@@ -54,7 +56,17 @@ $('button').popup();
 
 $('#graphSelection').dropdown({
     onChange: function(value, text, $selectedItem) {
-        console.log(value, text, $selectedItem)
+        console.debug('graphSelection onChange', value, text, $selectedItem)
+        if (value === 'inhGraph') {
+            myRefDiv.style.display = 'none';
+            myInhDiv.style.display = 'block';
+            window.mainGraph = window.inhGraph;
+        }
+        else if (value === 'refGraph') {
+            myRefDiv.style.display = 'block';
+            myInhDiv.style.display = 'none';
+            window.mainGraph = window.refGraph;
+        }
     }
 });
 // endregion fomantic-ui
