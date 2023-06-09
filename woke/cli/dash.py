@@ -33,6 +33,7 @@ from woke.ast.ir.declaration.contract_definition import ContractDefinition
 from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
 from woke.ast.ir.meta.source_unit import SourceUnit
 from woke.ast.enums import ContractKind, FunctionKind, Visibility, StateMutability
+from woke.ast.types import Modifier
 
 # There are two main GoJS model types (and their corresponding diagram types)
 # that we'll be using in Woke Dash: TreeModel and GraphLinksModel. TreeModel is
@@ -121,8 +122,10 @@ from woke.ast.enums import ContractKind, FunctionKind, Visibility, StateMutabili
 # 10. For declarations, we use the `path` field, the first element of the
 #     tuples in `build.item()`. However, for references we use the `file` field
 #     of functions and contracts. We assume they are the same.
-# 11. Possible improvements: handle references in modifiers, storage
+# 11. Possible improvements: handle references in modifiers and storage
 #     initialization. Handle child_functions that are `VariableDeclaration`s.
+#     Handle calls to base constructors.
+#     Put modifiers, base_functions and child_functions as links. 
 #     Include function complexity and references to state variables.
 
 Key = NewType("Key", str)
@@ -283,8 +286,12 @@ def process_function(function: FunctionDefinition) -> ProcessedFunction:
     modifiers: List[Key] = []
     for modifier_invocation in function.modifiers:
         modifier = modifier_invocation.modifier_name.referenced_declaration
-        assert isinstance(modifier, ModifierDefinition)
-        modifiers.append(get_modifier_key(modifier))
+        # modifier can also be a ContractDefinition (if it's a call to a base constructor)
+        # We omit that for now.
+        if isinstance(modifier, ModifierDefinition):
+            modifiers.append(get_modifier_key(modifier))
+        else:
+            continue
 
     base_functions = []
     for base_function in function.base_functions:
