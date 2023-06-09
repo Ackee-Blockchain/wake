@@ -212,12 +212,7 @@ function get_node_text(node) {
     }
 }
 
-// Region keyboard shortcuts
-myDeclGraph.commandHandler.doKeyDown = function() {
-    const e = this.diagram.lastInput;
-}
-
-
 // Region model
 const decl_graph_nodes = folders.concat(files).concat(contracts).concat(functions)
 window.myDeclGraph.model = new go.TreeModel(decl_graph_nodes)
+

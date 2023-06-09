@@ -692,6 +692,7 @@ def run_dash(
     shutil.copy(wd_assets_directory / "vendor" / "jquery-3.6.3.js", out_directory / "vendor")
     shutil.copy(wd_assets_directory / "js" / "common.js", out_directory / "js")
     shutil.copy(wd_assets_directory / "js" / "declGraph.js", out_directory / "js")
+    shutil.copy(wd_assets_directory / "js" / "declGraphKeyboard.js", out_directory / "js")
     shutil.copy(wd_assets_directory / "js" / "refGraph.js", out_directory / "js")
     shutil.copy(wd_assets_directory / "js" / "inhGraph.js", out_directory / "js")
 
