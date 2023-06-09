@@ -22,7 +22,7 @@ document.addEventListener('mousemove', (e) => {
     leftDiv.style.width = `${newLeftWidth}px`;
     rightDiv.style.width = `${newRightWidth}px`;
     window.myDeclGraph.requestUpdate();
-    window.myRefGraph.requestUpdate();
+    window.mainGraph.requestUpdate();
 
     lastDownX = e.clientX;
 });
@@ -49,11 +49,15 @@ $(document).ready(function() {
 });
 // endregion modal
 
-// region fomantic-ui hover
-$('button')
-    .popup()
-    ;
-// endregion fomantic-ui hover
+// region fomantic-ui
+$('button').popup();
+
+$('#graphSelection').dropdown({
+    onChange: function(value, text, $selectedItem) {
+        console.log(value, text, $selectedItem)
+    }
+});
+// endregion fomantic-ui
 
 // region utils
 const $$ = go.GraphObject.make;
@@ -66,5 +70,5 @@ function iterator_to_array(it) {
     return ret
 }
 
-const {folders, files, contracts, functions, links} = window.model;
+const { folders, files, contracts, functions, links } = window.model;
 // endregion utils

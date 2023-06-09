@@ -36,18 +36,23 @@
     2. justify-content - how will DOM children be layed out along the main axis. flex-start by default.
     3. align-items - how will DOM children be layed out along the cross axis. stretch by default.
 Childern can have:
+    4. flex-wrap - whether they should wrap if they don't fit. nowrap/wrap. wrap by default.
     1. flex-grow - proportional that they are allowed to expand by. 0 by default.
 -->
 <!-- height: 100vh (vertical height) means the body occupies the entire page. -->
 <body style="height: 100vh; margin: 0; display: flex; flex-direction: column;">
     <!-- margin order: top, right, bottom, left -->
-    <div style="display: flex; flex-direction: row; justify-content: center; margin: 10px 0 0 0">
+    <div style="display: flex; flex-direction: row; justify-content: center; flex-wrap: wrap; margin: 10px 0 0 0">
         <button class="ui button teal" onclick="$('.ui.overlay.fullscreen.modal').modal('show');">Help</button>
         <button class="ui button" onclick="window.myRefGraph.layout.spacing -= 50">spacing -50</button>
         <button class="ui button" onclick="window.myRefGraph.layout.spacing += 50">spacing +50</button>
-      <button class="ui button" onclick="window.myRefGraph.layout.aspectRatio -= 0.1">aspectRatio -0.1</button>
-      <button class="ui button" onclick="window.myRefGraph.layout.aspectRatio += 0.1">aspectRatio +0.1</button>
-      <button class="ui button teal" style="margin: 0 10px" onclick="window.myRefGraph.commandHandler.zoomToFit(); myRefGraph.alignDocument(go.Spot.Center, go.Spot.Center);">Center diagram</button>
+        <button class="ui button" onclick="window.myRefGraph.layout.aspectRatio -= 0.1">aspectRatio -0.1</button>
+        <button class="ui button" onclick="window.myRefGraph.layout.aspectRatio += 0.1">aspectRatio +0.1</button>
+        <button class="ui button teal" style="margin: 0 10px" onclick="window.myRefGraph.commandHandler.zoomToFit(); myRefGraph.alignDocument(go.Spot.Center, go.Spot.Center);">Center diagram</button>
+        <select id="graphSelection" class="ui selection dropdown">
+            <option value="refGraph">Reference graph</option>
+            <option value="inhGraph">Inheritance graph</option>
+        </select>
         <button class="ui button" style="margin: 0 0 0 10px" onclick="window.collapse_all()" data-content="Foo">Hide unused</button>
         <button class="ui button" style="margin: 0 0 0 10px" onclick="window.collapse_all()">Show all</button>
         <button class="ui button" style="margin: 0 0 0 10px" onclick="window.collapse_all()">Collapse all</button>
@@ -56,7 +61,10 @@ Childern can have:
     <div class="container">
         <div id="myDeclDiv" class="resizable"></div>
         <div id="resizer"></div>
-        <div id="myMainDiv" class="resizable"></div>
+        <div id="myMainDiv" class="resizable">
+            <div id="myRefDiv" style="height: 100%; width: 100%"></div>
+            <div id="myInhDiv" style="height: 100%; width: 100%; display: none"></div>
+        </div>
     </div>
     <style>
         .container {

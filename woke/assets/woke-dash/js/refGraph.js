@@ -11,7 +11,7 @@ function get_node_text(node) {
     }
 }
 
-window.myRefGraph = new go.Diagram("myMainDiv", {
+window.myRefGraph = new go.Diagram("myRefDiv", {
     maxSelectionCount: 1,
     SubGraphCollapsed: function(e) {
         console.debug('SubGraphCollapsed', e.subject.key)
