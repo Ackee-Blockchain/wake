@@ -43,20 +43,20 @@ Childern can have:
 <body style="height: 100vh; margin: 0; display: flex; flex-direction: column;">
     <!-- margin order: top, right, bottom, left -->
     <div style="display: flex; flex-direction: row; justify-content: center; flex-wrap: wrap; margin: 10px 0 0 0">
-        <button class="ui button teal" onclick="$('.ui.overlay.fullscreen.modal').modal('show');">Help</button>
-        <button class="ui button" onclick="window.myRefGraph.layout.spacing -= 50">spacing -50</button>
-        <button class="ui button" onclick="window.myRefGraph.layout.spacing += 50">spacing +50</button>
-        <button class="ui button" onclick="window.myRefGraph.layout.aspectRatio -= 0.1">aspectRatio -0.1</button>
-        <button class="ui button" onclick="window.myRefGraph.layout.aspectRatio += 0.1">aspectRatio +0.1</button>
-        <button class="ui button teal" style="margin: 0 10px" onclick="window.myRefGraph.commandHandler.zoomToFit(); myRefGraph.alignDocument(go.Spot.Center, go.Spot.Center);">Center diagram</button>
-        <select id="graphSelection" class="ui selection dropdown">
+        <button class="ui button teal" style="margin: 0 5px" data-content="Show help menu" onclick="$('.ui.overlay.fullscreen.modal').modal('show');">Help</button>
+        <button class="ui button" style="margin: 0 5px" data-content="Sets layout.spacing -= 50" onclick="window.mainGraph.layout.spacing -= 50" >spacing -50</button>
+        <button class="ui button" style="margin: 0 5px" data-content="Sets layout.spacing += 50" onclick="window.mainGraph.layout.spacing += 50">spacing +50</button>
+        <button class="ui button" style="margin: 0 5px" data-content="Sets layout.aspectRatio -= 0.1" onclick="window.mainGraph.layout.aspectRatio -= 0.1">aspectRatio -0.1</button>
+        <button class="ui button" style="margin: 0 5px" data-content="Sets layout.aspectRatio += 0.1" onclick="window.mainGraph.layout.aspectRatio += 0.1">aspectRatio +0.1</button>
+        <button class="ui button teal" style="margin: 0 5px" data-content="Calls .commandHandler.zoomToFit() and .alignDocument(go.Spot.Center, go.Spot.Center)" onclick="window.mainGraph.commandHandler.zoomToFit(); window.mainGraph.alignDocument(go.Spot.Center, go.Spot.Center);">Center diagram</button>
+        <select id="graphSelection" class="ui selection dropdown" style="margin: 0 5px">
             <option value="refGraph">Reference graph</option>
             <option value="inhGraph">Inheritance graph</option>
         </select>
-        <button class="ui button" style="margin: 0 0 0 10px" onclick="window.collapse_all()" data-content="Foo">Hide unused</button>
-        <button class="ui button" style="margin: 0 0 0 10px" onclick="window.collapse_all()">Show all</button>
-        <button class="ui button" style="margin: 0 0 0 10px" onclick="window.collapse_all()">Collapse all</button>
-        <button class="ui button" style="margin: 0 10px 0 0" onclick="window.expand_all()">Expand all</button>
+        <button class="ui button" style="margin: 0 5px" data-content="Hide groups whose nodes don't have links to nodes outside the group" onclick="window.hide_unused()">Hide unused</button>
+        <button class="ui button" style="margin: 0 5px" data-content="Show all nodes in diagram" onclick="window.show_all()">Show all</button>
+        <button class="ui button" style="margin: 0 5px" data-content="Collapse all groups in diagram" onclick="window.collapse_all()">Collapse all</button>
+        <button class="ui button" style="margin: 0 5px" data-content="Expand all groups in diagram" onclick="window.expand_all()">Expand all</button>
     </div>
     <div class="container">
         <div id="myDeclDiv" class="resizable"></div>
