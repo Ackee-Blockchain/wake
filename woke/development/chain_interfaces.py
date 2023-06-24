@@ -425,6 +425,20 @@ class ChainInterfaceAbc(ABC):
     def trace_transaction(self, tx_hash: str) -> List:
         return self._communicator.send_request("trace_transaction", [tx_hash])
 
+    def get_storage_at(
+        self, address: str, position: int, block_identifier: Union[int, str] = "latest"
+    ) -> bytes:
+        return bytes.fromhex(
+            self._communicator.send_request(
+                "eth_getStorageAt",
+                [
+                    address,
+                    hex(position),
+                    self._encode_block_identifier(block_identifier),
+                ],
+            )[2:]
+        )
+
     @abstractmethod
     def get_accounts(self) -> List[str]:
         ...
@@ -475,6 +489,10 @@ class ChainInterfaceAbc(ABC):
 
     @abstractmethod
     def set_min_gas_price(self, value: int) -> None:
+        ...
+
+    @abstractmethod
+    def set_storage_at(self, address: str, position: int, value: bytes) -> None:
         ...
 
 
@@ -532,6 +550,11 @@ class HardhatChainInterface(ChainInterfaceAbc):
     def set_min_gas_price(self, value: int) -> None:
         self._communicator.send_request("hardhat_setMinGasPrice", [hex(value)])
 
+    def set_storage_at(self, address: str, position: int, value: bytes) -> None:
+        self._communicator.send_request(
+            "hardhat_setStorageAt", [address, hex(position), "0x" + value.hex()]
+        )
+
 
 class AnvilChainInterface(ChainInterfaceAbc):
     def get_accounts(self) -> List[str]:
@@ -582,6 +605,11 @@ class AnvilChainInterface(ChainInterfaceAbc):
 
     def set_min_gas_price(self, value: int) -> None:
         self._communicator.send_request("anvil_setMinGasPrice", [hex(value)])
+
+    def set_storage_at(self, address: str, position: int, value: bytes) -> None:
+        self._communicator.send_request(
+            "anvil_setStorageAt", [address, hex(position), "0x" + value.hex()]
+        )
 
     def node_info(self) -> Dict[str, Any]:
         return self._communicator.send_request("anvil_nodeInfo")
@@ -642,6 +670,11 @@ class GanacheChainInterface(ChainInterfaceAbc):
     def set_min_gas_price(self, value: int) -> None:
         self._communicator.send_request("miner_setGasPrice", [hex(value)])
 
+    def set_storage_at(self, address: str, position: int, value: bytes) -> None:
+        self._communicator.send_request(
+            "evm_setAccountStorageAt", [address, hex(position), "0x" + value.hex()]
+        )
+
 
 class GethLikeChainInterfaceAbc(ChainInterfaceAbc, ABC):
     @property
@@ -697,6 +730,9 @@ class GethLikeChainInterfaceAbc(ChainInterfaceAbc, ABC):
         raise NotImplementedError(
             f"{self._name} does not support setting min gas price"
         )
+
+    def set_storage_at(self, address: str, position: int, value: bytes) -> None:
+        raise NotImplementedError(f"{self._name} does not support setting storage")
 
 
 class GethChainInterface(GethLikeChainInterfaceAbc):
