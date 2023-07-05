@@ -1,11 +1,29 @@
 import json
 import sys
-from typing import Tuple
+from typing import List, Tuple
 
+import click.shell_completion as shell_completion
 import rich_click as click
 
 
-@click.command(name="test")
+class FileAndPassParamType(click.ParamType):
+    name = "file_and_pass"
+
+    def convert(self, value, param, ctx):
+        return value
+
+    def shell_complete(
+        self, ctx: click.Context, param: click.Parameter, incomplete: str
+    ) -> List:
+        return [shell_completion.CompletionItem(incomplete, type="file")]
+
+
+@click.command(
+    name="test",
+    context_settings=dict(
+        ignore_unknown_options=True,
+    ),
+)
 @click.option(
     "--debug", "-d", is_flag=True, default=False, help="Attach debugger on exception."
 )
@@ -22,7 +40,7 @@ import rich_click as click
     default=False,
     help="Create coverage report.",
 )
-@click.argument("pytest_args", nargs=-1, type=click.UNPROCESSED)
+@click.argument("pytest_args", nargs=-1, type=FileAndPassParamType())
 @click.pass_context
 def run_test(
     context: click.Context,
