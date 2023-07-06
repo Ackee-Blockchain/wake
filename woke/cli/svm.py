@@ -1,21 +1,26 @@
+from __future__ import annotations
+
 import asyncio
-from typing import Tuple
+from typing import TYPE_CHECKING, Tuple
 
 import rich_click as click
 from click import Context
 from rich.progress import Progress
 
-from woke.config import WokeConfig
-from woke.core.solidity_version import SolidityVersion, SolidityVersionExpr
-from woke.svm import SolcVersionManager
-
 from .console import console
+
+if TYPE_CHECKING:
+    from woke.config import WokeConfig
+    from woke.core.solidity_version import SolidityVersionExpr
+    from woke.svm import SolcVersionManager
 
 
 @click.group(name="svm")
 @click.pass_context
 def run_svm(ctx: Context):
     """Run Woke Solc Version Manager."""
+    from woke.config import WokeConfig
+
     config = WokeConfig()
     config.load_configs()
     ctx.obj["config"] = config
@@ -32,6 +37,9 @@ def run_svm(ctx: Context):
 @click.pass_context
 def svm_install(ctx: Context, version_range: Tuple[str], force: bool) -> None:
     """Install the latest solc version matching the given version range."""
+    from woke.core.solidity_version import SolidityVersionExpr
+    from woke.svm import SolcVersionManager
+
     config: WokeConfig = ctx.obj["config"]
     svm = SolcVersionManager(config)
     version_expr = SolidityVersionExpr(" ".join(version_range))
@@ -68,6 +76,9 @@ async def run_solc_install(
 @click.pass_context
 def svm_switch(ctx: Context, version: str) -> None:
     """Switch to the target version of solc. Raise an exception if the version is not installed."""
+    from woke.core.solidity_version import SolidityVersion
+    from woke.svm import SolcVersionManager
+
     config: WokeConfig = ctx.obj["config"]
     svm = SolcVersionManager(config)
     parsed_version = SolidityVersion.fromstring(version)
@@ -90,6 +101,9 @@ def svm_switch(ctx: Context, version: str) -> None:
 @click.pass_context
 def svm_use(ctx: Context, version_range: Tuple[str], force: bool) -> None:
     """Install the target solc version and use it as the global version."""
+    from woke.core.solidity_version import SolidityVersionExpr
+    from woke.svm import SolcVersionManager
+
     config: WokeConfig = ctx.obj["config"]
     svm = SolcVersionManager(config)
     version_expr = SolidityVersionExpr(" ".join(version_range))
@@ -111,6 +125,8 @@ def svm_use(ctx: Context, version_range: Tuple[str], force: bool) -> None:
 @click.pass_context
 def svm_list(ctx: Context, all: bool) -> None:
     """List installed solc versions."""
+    from woke.svm import SolcVersionManager
+
     config: WokeConfig = ctx.obj["config"]
     svm = SolcVersionManager(config)
     if all:
@@ -134,6 +150,9 @@ def svm_list(ctx: Context, all: bool) -> None:
 @click.pass_context
 def svm_remove(ctx: Context, version: str, ignore_missing: bool) -> None:
     """Remove the target solc version."""
+    from woke.core.solidity_version import SolidityVersion
+    from woke.svm import SolcVersionManager
+
     config: WokeConfig = ctx.obj["config"]
     svm = SolcVersionManager(config)
     parsed_version = SolidityVersion.fromstring(version)

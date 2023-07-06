@@ -1,13 +1,16 @@
+from __future__ import annotations
+
 import asyncio
 import sys
 import time
 from pathlib import Path
-from typing import Set, Tuple
+from typing import TYPE_CHECKING, Set, Tuple
 
 import rich_click as click
 from click.core import Context
 
-from woke.config import WokeConfig
+if TYPE_CHECKING:
+    from woke.config import WokeConfig
 
 
 async def compile(
@@ -158,6 +161,8 @@ def run_compile(
     watch: bool,
 ) -> None:
     """Compile the project."""
+    from woke.config import WokeConfig
+
     config = WokeConfig()
     config.load_configs()  # load ~/.woke/config.toml and ./woke.toml
 
