@@ -719,8 +719,8 @@ class CallTrace:
                 contracts.append(fqn)
                 values.append(value)
                 fqn_overrides.maps.insert(0, {})
-            elif log["op"] in {"RETURN", "REVERT", "STOP", "SELFDESTRUCT"}:
-                if log["op"] == "REVERT":
+            elif log["op"] in {"INVALID", "RETURN", "REVERT", "STOP", "SELFDESTRUCT"}:
+                if log["op"] in {"INVALID", "REVERT"}:
                     status = False
                 else:
                     status = True
@@ -732,7 +732,10 @@ class CallTrace:
                     assert current_trace is not None
 
                 assert current_trace is not None
-                if log["op"] != "REVERT" and len(fqn_overrides.maps) > 1:
+                if (
+                    log["op"] not in {"INVALID", "REVERT"}
+                    and len(fqn_overrides.maps) > 1
+                ):
                     fqn_overrides.maps[1].update(fqn_overrides.maps[0])
                 fqn_overrides.maps.pop(0)
 

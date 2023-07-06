@@ -560,9 +560,18 @@ class CoverageHandler:
                 contract_fqn_stack.append(new_fqn)
                 is_deployment_stack.append(True)
                 fqn_overrides.maps.insert(0, {})
-            elif struct_log["op"] in ("RETURN", "STOP", "REVERT", "SELFDESTRUCT"):
+            elif struct_log["op"] in {
+                "INVALID",
+                "RETURN",
+                "STOP",
+                "REVERT",
+                "SELFDESTRUCT",
+            }:
                 logger.debug(f"{pc} {struct_log['op']} before pop {contract_fqn_stack}")
-                if struct_log["op"] != "REVERT" and len(fqn_overrides.maps) > 1:
+                if (
+                    struct_log["op"] not in {"INVALID", "REVERT"}
+                    and len(fqn_overrides.maps) > 1
+                ):
                     fqn_overrides.maps[1].update(fqn_overrides.maps[0])
                 fqn_overrides.maps.pop(0)
 
