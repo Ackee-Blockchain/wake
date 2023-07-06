@@ -1,13 +1,16 @@
+from __future__ import annotations
+
 import asyncio
 import sys
 import time
 from pathlib import Path
-from typing import Set
+from typing import TYPE_CHECKING, Set
 
 import rich_click as click
 from click.core import Context
 
-from woke.config import WokeConfig
+if TYPE_CHECKING:
+    from woke.config import WokeConfig
 
 
 def write_config(config: WokeConfig) -> None:
@@ -82,6 +85,8 @@ def update_gitignore(file: Path) -> None:
 @click.pass_context
 def run_init(ctx: Context, force: bool):
     """Initialize project."""
+    from woke.config import WokeConfig
+
     config = WokeConfig()
     config.load_configs()
     ctx.obj["config"] = config

@@ -2,15 +2,11 @@ import asyncio
 import logging
 import os
 import platform
-from pathlib import Path
-from typing import Optional
 
 import rich.traceback
 import rich_click as click
 from click.core import Context
 from rich.logging import RichHandler
-
-from woke.config import WokeConfig
 
 from .accounts import run_accounts
 from .compile import run_compile
@@ -86,6 +82,8 @@ main.add_command(run_test)
 @click.pass_context
 def config(ctx: Context) -> None:
     """Print loaded config options in JSON format."""
+    from woke.config import WokeConfig
+
     config = WokeConfig()
     config.load_configs()
     console.print_json(str(config))
@@ -95,6 +93,7 @@ def woke_solc() -> None:
     import subprocess
     import sys
 
+    from woke.config import WokeConfig
     from woke.core.solidity_version import SolidityVersion
     from woke.svm import SolcVersionManager
 

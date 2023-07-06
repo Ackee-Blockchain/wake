@@ -1,9 +1,14 @@
+from __future__ import annotations
+
 import asyncio
 import logging
+from typing import TYPE_CHECKING
 
 import rich_click as click
 
-from woke.config import WokeConfig
+if TYPE_CHECKING:
+    from woke.config import WokeConfig
+
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +39,8 @@ def run_lsp(context: click.Context, port: int):
     """
     Start the LSP server.
     """
+    from woke.config import WokeConfig
+
     config = WokeConfig()
     config.load_configs()  # load ~/.woke/config.toml and ./woke.toml
 

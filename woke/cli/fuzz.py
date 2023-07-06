@@ -1,15 +1,9 @@
-import importlib.resources
-import importlib.util
-import inspect
 import multiprocessing
-import shutil
 import sys
 from pathlib import Path
 from typing import Callable, Iterable, Tuple
 
 import rich_click as click
-
-from woke.config import WokeConfig
 
 from .console import console
 
@@ -52,7 +46,11 @@ def run_fuzz(
     passive: bool,
 ) -> None:
     """Run a Woke test using multiple processes."""
+    import importlib.util
+    import inspect
+    import shutil
 
+    from woke.config import WokeConfig
     from woke.testing.fuzzing.fuzzer import fuzz
 
     if coverage == -1:

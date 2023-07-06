@@ -1,4 +1,3 @@
-import json
 from pathlib import Path
 from typing import List, Optional
 
@@ -6,8 +5,7 @@ import rich_click as click
 from click.core import Context
 from rich_click.rich_group import RichGroup
 
-from woke.cli.console import console
-from woke.config import WokeConfig
+from .console import console
 
 
 class NewCommandAlias(RichGroup):
@@ -33,6 +31,8 @@ def run_accounts(ctx: Context):
     Run Woke accounts manager.
     """
     from eth_account import Account
+
+    from woke.config import WokeConfig
 
     config = WokeConfig()
     config.load_configs()
@@ -74,6 +74,8 @@ def accounts_new(
     """
     Create a new account.
     """
+    import json
+
     from eth_account import Account
     from eth_utils.address import to_checksum_address
 
@@ -123,6 +125,8 @@ def accounts_remove(ctx: Context, keystore: Optional[str], alias: str):
     """
     Remove an account.
     """
+    import json
+
     from eth_utils.address import to_checksum_address
 
     if keystore is None:
@@ -152,6 +156,8 @@ def accounts_list(ctx: Context, keystore: Optional[str]):
     """
     List all accounts.
     """
+    import json
+
     from eth_utils.address import to_checksum_address
 
     if keystore is None:
@@ -195,6 +201,8 @@ def accounts_import(
     """
     Import an account from a private key or mnemonic.
     """
+    import json
+
     from eth_account import Account
     from eth_utils.address import to_checksum_address
 
@@ -252,6 +260,8 @@ def accounts_export(ctx: Context, keystore: Optional[str], alias: str):
     """
     Export an account's private key.
     """
+    import json
+
     from eth_account import Account
     from eth_utils.address import to_checksum_address
 
