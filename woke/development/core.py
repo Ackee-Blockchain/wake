@@ -2258,12 +2258,12 @@ def process_debug_trace_for_fqn_overrides(
             addresses.append(None)
             fqns.append(get_fqn_from_creation_code(creation_code)[0])
             fqn_overrides.maps.insert(0, {})
-        elif trace["op"] in {"RETURN", "REVERT", "STOP", "SELFDESTRUCT"}:
+        elif trace["op"] in {"INVALID", "RETURN", "REVERT", "STOP", "SELFDESTRUCT"}:
             if trace["op"] == "SELFDESTRUCT":
                 if addresses[-1] is not None:
                     fqn_overrides.maps[0][addresses[-1]] = None
 
-            if trace["op"] != "REVERT" and len(fqn_overrides.maps) > 1:
+            if trace["op"] not in {"INVALID", "REVERT"} and len(fqn_overrides.maps) > 1:
                 fqn_overrides.maps[1].update(fqn_overrides.maps[0])
             fqn_overrides.maps.pop(0)
             addresses.pop()
@@ -2330,14 +2330,18 @@ def process_debug_trace_for_revert(
             addresses.append(None)
             fqns.append(get_fqn_from_creation_code(creation_code)[0])
             fqn_overrides.maps.insert(0, {})
-        elif trace["op"] == "REVERT":
+        elif trace["op"] in {"INVALID", "REVERT"}:
             pc = trace["pc"]
             fqn_overrides.maps.pop(0)
             fqn = fqns.pop()
             addresses.pop()
             trace_is_create.pop()
 
-            if fqn in contracts_revert_index and pc in contracts_revert_index[fqn]:
+            if (
+                trace["op"] == "REVERT"
+                and fqn in contracts_revert_index
+                and pc in contracts_revert_index[fqn]
+            ):
                 last_revert_origin = fqn
         elif trace["op"] in {"RETURN", "STOP", "SELFDESTRUCT"}:
             if len(fqn_overrides.maps) > 1:
@@ -2411,8 +2415,8 @@ def process_debug_trace_for_events(
             addresses.append(None)
             fqns.append(get_fqn_from_creation_code(creation_code)[0])
             fqn_overrides.maps.insert(0, {})
-        elif trace["op"] in {"RETURN", "REVERT", "STOP", "SELFDESTRUCT"}:
-            if trace["op"] != "REVERT" and len(fqn_overrides.maps) > 1:
+        elif trace["op"] in {"INVALID", "RETURN", "REVERT", "STOP", "SELFDESTRUCT"}:
+            if trace["op"] not in {"INVALID", "REVERT"} and len(fqn_overrides.maps) > 1:
                 fqn_overrides.maps[1].update(fqn_overrides.maps[0])
             fqn_overrides.maps.pop(0)
             addresses.pop()
