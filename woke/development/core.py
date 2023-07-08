@@ -24,6 +24,7 @@ from typing import (
     Iterable,
     List,
     Optional,
+    Sequence,
     Set,
     Tuple,
     Type,
@@ -34,6 +35,7 @@ from urllib.error import HTTPError
 
 import eth_abi
 import eth_abi.abi
+import eth_abi.grammar
 import eth_abi.packed
 import eth_account
 import eth_account.messages
@@ -146,24 +148,50 @@ def fix_library_abi(args: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 
 class Abi:
     @staticmethod
-    def _normalize_arguments(arguments: Iterable) -> List:
+    def _normalize_input(arguments: Iterable) -> List:
         ret = []
         for arg in arguments:
             if isinstance(arg, Address):
                 ret.append(str(arg))
             elif isinstance(arg, Account):
                 ret.append(str(arg.address))
+            elif isinstance(arg, (list, tuple)):
+                ret.append(Abi._normalize_input(arg))
             else:
                 ret.append(arg)
         return ret
 
+    @staticmethod
+    def _normalize_output(types: Sequence[str], arguments: Sequence) -> Tuple:
+        ret = []
+        assert len(types) == len(arguments)
+        for type, arg in zip(types, arguments):
+            type = type.strip()
+            if type == "address":
+                ret.append(Address(arg))
+            elif type.endswith("]"):
+                args_type = type[: type.rfind("[")]
+                assert isinstance(arg, (list, tuple))
+                ret.append(Abi._normalize_output([args_type] * len(arg), arg))
+            elif type.startswith("(") and type.endswith(")"):
+                abi_type = eth_abi.grammar.parse(type)
+                assert isinstance(abi_type, eth_abi.grammar.TupleType)
+                ret.append(
+                    Abi._normalize_output(
+                        [c.to_type_str() for c in abi_type.components], arg
+                    )
+                )
+            else:
+                ret.append(arg)
+        return tuple(ret)
+
     @classmethod
     def encode(cls, types: Iterable, arguments: Iterable) -> bytes:
-        return eth_abi.abi.encode(types, cls._normalize_arguments(arguments))
+        return eth_abi.abi.encode(types, cls._normalize_input(arguments))
 
     @classmethod
     def encode_packed(cls, types: Iterable, arguments: Iterable) -> bytes:
-        return eth_abi.packed.encode_packed(types, cls._normalize_arguments(arguments))
+        return eth_abi.packed.encode_packed(types, cls._normalize_input(arguments))
 
     @classmethod
     def encode_with_selector(
@@ -218,8 +246,8 @@ class Abi:
         return cls.encode_with_selector(selector, types, arguments)
 
     @classmethod
-    def decode(cls, types: Iterable, data: bytes) -> Any:
-        return eth_abi.abi.decode(types, data)
+    def decode(cls, types: Sequence[str], data: bytes) -> Any:
+        return cls._normalize_output(types, eth_abi.abi.decode(types, data))
 
 
 class Wei(int):
@@ -1662,8 +1690,6 @@ class Chain(ABC):
                 return expected_type(value, self)
             elif issubclass(expected_type, Account):
                 return Account(value, self)
-            elif issubclass(expected_type, Address):
-                return expected_type(value)
             elif issubclass(expected_type, IntEnum):
                 return expected_type(value)
         return value
