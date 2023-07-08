@@ -250,9 +250,26 @@ async def run_init_pytypes(
 
     compiler = SolidityCompiler(config)
 
+    sol_files: Set[Path] = set()
+    start = time.perf_counter()
+    with console.status("[bold green]Searching for *.sol files...[/]"):
+        for file in config.project_root_path.rglob("**/*.sol"):
+            if (
+                not any(
+                    is_relative_to(file, p) for p in config.compiler.solc.ignore_paths
+                )
+                and file.is_file()
+            ):
+                sol_files.add(file)
+    end = time.perf_counter()
+    console.log(
+        f"[green]Found {len(sol_files)} *.sol files in [bold green]{end - start:.2f} s[/bold green][/]"
+    )
+
     if watch:
         fs_handler = CompilationFileSystemEventHandler(
             config,
+            sol_files,
             asyncio.get_event_loop(),
             compiler,
             [SolcOutputSelectionEnum.ALL],
@@ -272,22 +289,6 @@ async def run_init_pytypes(
     else:
         fs_handler = None
         observer = None
-
-    sol_files: Set[Path] = set()
-    start = time.perf_counter()
-    with console.status("[bold green]Searching for *.sol files...[/]"):
-        for file in config.project_root_path.rglob("**/*.sol"):
-            if (
-                not any(
-                    is_relative_to(file, p) for p in config.compiler.solc.ignore_paths
-                )
-                and file.is_file()
-            ):
-                sol_files.add(file)
-    end = time.perf_counter()
-    console.log(
-        f"[green]Found {len(sol_files)} *.sol files in [bold green]{end - start:.2f} s[/bold green][/]"
-    )
 
     compiler.load(console=console)
 

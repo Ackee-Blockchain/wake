@@ -1583,9 +1583,7 @@ class TypeGenerator:
             self.__name_sanitizer.clear_global_renames()
 
         build = compiler.latest_build
-        build_info = compiler.latest_build_info
         assert build is not None
-        assert build_info is not None
         self.__interval_trees = build.interval_trees
         self.__source_units = build.source_units
         self.__reference_resolver = build.reference_resolver
@@ -1595,12 +1593,14 @@ class TypeGenerator:
         # generate source units in import order, source units with no imports are generated first
         # also handle cyclic imports
         assert compiler.latest_graph is not None
+        assert compiler.latest_source_units_to_paths
         graph: nx.DiGraph = (
             compiler.latest_graph.copy()
         )  # pyright: ignore reportGeneralTypeIssues
+        source_units_to_paths = compiler.latest_source_units_to_paths
         paths_to_source_unit_names: DefaultDict[Path, Set[str]] = defaultdict(set)
-        for source_unit_name, info in build_info.source_units_info.items():
-            paths_to_source_unit_names[info.fs_path].add(source_unit_name)
+        for source_unit, path in source_units_to_paths.items():
+            paths_to_source_unit_names[path].add(source_unit)
 
         previous_len = len(graph)
         cycles_detected = False
@@ -1624,7 +1624,7 @@ class TypeGenerator:
 
             while len(sources) > 0:
                 source = heapq.heappop(sources)
-                path = build_info.source_units_info[source].fs_path
+                path = source_units_to_paths[source]
                 if path in self.__source_units:
                     generate_source_unit(self.__source_units[path])
 
@@ -1670,7 +1670,7 @@ class TypeGenerator:
 
             for cycle in sorted(generated_cycles):
                 for source in cycle:
-                    path = build_info.source_units_info[source].fs_path
+                    path = source_units_to_paths[source]
                     if path in self.__source_units:
                         generate_source_unit(self.__source_units[path])
                     graph.remove_nodes_from(paths_to_source_unit_names[path])

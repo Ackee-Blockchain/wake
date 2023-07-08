@@ -32,28 +32,6 @@ async def compile(
 
     compiler = SolidityCompiler(config)
 
-    if watch:
-        fs_handler = CompilationFileSystemEventHandler(
-            config,
-            asyncio.get_event_loop(),
-            compiler,
-            [SolcOutputSelectionEnum.ALL],
-            write_artifacts=not no_artifacts,
-            console=console,
-            no_warnings=no_warnings,
-        )
-
-        observer = Observer()
-        observer.schedule(
-            fs_handler,
-            str(config.project_root_path),
-            recursive=True,
-        )
-        observer.start()
-    else:
-        fs_handler = None
-        observer = None
-
     sol_files: Set[Path] = set()
     start = time.perf_counter()
     with console.status("[bold green]Searching for *.sol files...[/]"):
@@ -90,6 +68,29 @@ async def compile(
     console.log(
         f"[green]Found {len(sol_files)} *.sol files in [bold green]{end - start:.2f} s[/bold green][/]"
     )
+
+    if watch:
+        fs_handler = CompilationFileSystemEventHandler(
+            config,
+            sol_files,
+            asyncio.get_event_loop(),
+            compiler,
+            [SolcOutputSelectionEnum.ALL],
+            write_artifacts=not no_artifacts,
+            console=console,
+            no_warnings=no_warnings,
+        )
+
+        observer = Observer()
+        observer.schedule(
+            fs_handler,
+            str(config.project_root_path),
+            recursive=True,
+        )
+        observer.start()
+    else:
+        fs_handler = None
+        observer = None
 
     if not force:
         compiler.load(console=console)

@@ -9,6 +9,7 @@ from collections import defaultdict, deque
 from contextlib import nullcontext
 from json import JSONDecodeError
 from pathlib import Path
+from types import MappingProxyType
 from typing import (
     Callable,
     Collection,
@@ -81,6 +82,7 @@ logger = logging.getLogger(__name__)
 
 class CompilationFileSystemEventHandler(FileSystemEventHandler):
     _config: WokeConfig
+    _files: Set[Path]
     _config_path: Path
     _compiler: SolidityCompiler
     _output_types: Collection[SolcOutputSelectionEnum]
@@ -100,6 +102,7 @@ class CompilationFileSystemEventHandler(FileSystemEventHandler):
     def __init__(
         self,
         config: WokeConfig,
+        files: Iterable[Path],
         loop: asyncio.AbstractEventLoop,
         compiler: SolidityCompiler,
         output_types: Collection[SolcOutputSelectionEnum],
@@ -109,6 +112,7 @@ class CompilationFileSystemEventHandler(FileSystemEventHandler):
         no_warnings: bool = False,
     ):
         self._config = config
+        self._files = set(files)
         self._loop = loop
         self._config_path = config.project_root_path / "woke.toml"
         self._compiler = compiler
@@ -185,8 +189,6 @@ class CompilationFileSystemEventHandler(FileSystemEventHandler):
                 self._loop.call_soon_threadsafe(self._queue.put_nowait, event)
 
     async def _compile(self):
-        assert self._compiler.latest_build_info is not None
-
         if self._config_changed:
             self._config.load_configs()
 
@@ -216,10 +218,7 @@ class CompilationFileSystemEventHandler(FileSystemEventHandler):
 
             deleted_files = self._deleted_files
         else:
-            files = {
-                unit_info.fs_path
-                for unit_info in self._compiler.latest_build_info.source_units_info.values()
-            }
+            files = self._files.copy()
             files.update(self._created_files)
             files.update(self._modified_files)
             ignored_files = {
@@ -253,6 +252,7 @@ class CompilationFileSystemEventHandler(FileSystemEventHandler):
         if file == self._config_path:
             self._config_changed = True
         elif file.suffix == ".sol":
+            self._files.add(file)
             if file in self._deleted_files:
                 self._deleted_files.remove(file)
                 self._modified_files.add(file)
@@ -271,6 +271,10 @@ class CompilationFileSystemEventHandler(FileSystemEventHandler):
         if file == self._config_path:
             self._config_changed = True
         elif file.suffix == ".sol":
+            try:
+                self._files.remove(file)
+            except KeyError:
+                pass
             if file in self._modified_files:
                 self._modified_files.remove(file)
 
@@ -291,6 +295,7 @@ class SolidityCompiler:
     _latest_build_info: Optional[ProjectBuildInfo]
     _latest_build: Optional[ProjectBuild]
     _latest_graph: Optional[nx.DiGraph]
+    _latest_source_units_to_paths: Optional[Dict[str, Path]]
 
     def __init__(self, woke_config: WokeConfig):
         self.__config = woke_config
@@ -302,6 +307,7 @@ class SolidityCompiler:
         self._latest_build_info = None
         self._latest_build = None
         self._latest_graph = None
+        self._latest_source_units_to_paths = None
 
     @property
     def latest_build_info(self) -> Optional[ProjectBuildInfo]:
@@ -314,6 +320,10 @@ class SolidityCompiler:
     @property
     def latest_graph(self) -> Optional[nx.DiGraph]:
         return self._latest_graph
+
+    @property
+    def latest_source_units_to_paths(self) -> Optional[MappingProxyType[str, Path]]:
+        return MappingProxyType(self._latest_source_units_to_paths)
 
     def build_graph(
         self,
@@ -745,6 +755,7 @@ class SolidityCompiler:
         build_settings = self.create_build_settings(output_types)
 
         self._latest_graph = graph
+        self._latest_source_units_to_paths = source_units_to_paths
 
         build_settings_changed = False
         if self._latest_build_info is not None:
@@ -880,6 +891,8 @@ class SolidityCompiler:
 
         with ctx_manager:
             successful_compilation_units = []
+            all_errored_files: Set[Path] = set()
+
             for cu, solc_output in zip(compilation_units, ret):
                 errored_files: Set[Path] = set()
                 errors_per_cu[cu.hash] = set()
@@ -897,6 +910,7 @@ class SolidityCompiler:
                             errored_files |= cu.files
 
                 self._out_edge_bfs(cu, errored_files, errored_files)
+                all_errored_files |= errored_files
 
                 for file in errored_files:
                     if file in build.source_units:
@@ -907,24 +921,6 @@ class SolidityCompiler:
 
                 if len(errored_files) == 0:
                     successful_compilation_units.append((cu, solc_output))
-
-            # destroy callbacks for IR nodes that will be replaced by new ones must be executed before
-            # new IR nodes are created
-            callback_processed_files: Set[Path] = set()
-            for cu, solc_output in successful_compilation_units:
-                # files requested to be compiled and files that import these files (even indirectly)
-                recompiled_files: Set[Path] = set()
-                self._out_edge_bfs(cu, files_to_compile & cu.files, recompiled_files)
-
-                # run destroy callbacks for files that were recompiled and their IR nodes will be replaced
-                for source_unit_name in solc_output.sources.keys():
-                    path = cu.source_unit_name_to_path(source_unit_name)
-                    if (
-                        path in build.source_units and path not in recompiled_files
-                    ) or path in callback_processed_files:
-                        continue
-                    callback_processed_files.add(path)
-                    build.reference_resolver.run_destroy_callbacks(path)
 
             # files_to_compile and files importing them
             files_to_recompile = set(
@@ -940,8 +936,27 @@ class SolidityCompiler:
                 )
             ) | set(files_to_compile)
 
+            # destroy callbacks for IR nodes that will be replaced by new ones must be executed before
+            # new IR nodes are created
+            for file in files_to_recompile:
+                if file in build.source_units:
+                    build.reference_resolver.run_destroy_callbacks(file)
+                    build.source_units.pop(file)
+                if file in build.interval_trees:
+                    build.interval_trees.pop(file)
+
             # clear indexed node types responsible for handling multiple structurally different ASTs for the same file
             build.reference_resolver.clear_indexed_nodes(files_to_recompile)
+
+            source_units_info = {
+                str(source_unit): SourceUnitInfo(
+                    graph.nodes[source_unit]["path"], graph.nodes[source_unit]["hash"]
+                )
+                for source_unit in graph.nodes
+                if graph.nodes[source_unit]["path"] not in deleted_files
+                and graph.nodes[source_unit]["path"] not in all_errored_files
+                and graph.nodes[source_unit]["path"] not in files_to_recompile
+            }
 
             processed_files: Set[Path] = set()
             for cu, solc_output in successful_compilation_units:
@@ -950,6 +965,11 @@ class SolidityCompiler:
                 self._out_edge_bfs(cu, files_to_compile & cu.files, recompiled_files)
 
                 for source_unit_name, raw_ast in solc_output.sources.items():
+                    source_units_info[source_unit_name] = SourceUnitInfo(
+                        graph.nodes[source_unit_name]["path"],
+                        graph.nodes[source_unit_name]["hash"],
+                    )
+
                     path = cu.source_unit_name_to_path(source_unit_name)
                     ast = AstSolc.parse_obj(raw_ast.ast)
 
@@ -1003,12 +1023,7 @@ class SolidityCompiler:
             ignore_paths=self.__config.compiler.solc.ignore_paths,
             include_paths=self.__config.compiler.solc.include_paths,
             settings=build_settings,
-            source_units_info={
-                str(source_unit): SourceUnitInfo(
-                    graph.nodes[source_unit]["path"], graph.nodes[source_unit]["hash"]
-                )
-                for source_unit in graph.nodes
-            },
+            source_units_info=source_units_info,
             target_solidity_version=self.__config.compiler.solc.target_version,
             woke_version=get_package_version("woke"),
         )
