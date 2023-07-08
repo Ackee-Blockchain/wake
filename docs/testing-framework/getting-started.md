@@ -46,7 +46,7 @@ When a compilation error occurs, Woke generates `pytypes` for the contracts that
 ## Writing the first test
 
 !!! tip
-    Solidity source code for all examples in this guide is available in the [Woke repository](https://github.com/Ackee-Blockchain/woke/tree/main/examples/testing).
+    Solidity source code for all examples in this guide is available in the [Woke repository](https://github.com/Ackee-Blockchain/woke/tree/main/examples/counter).
 
 To collect and execute tests, Woke uses the [pytest](https://docs.pytest.org/en/stable/) framework under the hood.
 The test files should start with `test_` or end with `_test.py` to be collected. It is possible to use all the features of the pytest framework like [fixtures](https://docs.pytest.org/en/stable/explanation/fixtures.html).
@@ -69,7 +69,7 @@ The recommended project structure is as follows:
 ### Connecting to a chain
 
 In single-chain tests, it is recommended to use the `default_chain` object that is automatically created by Woke.
-The `connect` decorator either launches a new development chain or connects to an existing one, if the second argument is specified.
+The `connect` decorator either launches a new development chain or connects to an existing one, if an argument is specified.
 It is possible to connect using:
 
 - a HTTP connection (e.g. `http://localhost:8545`),
