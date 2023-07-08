@@ -769,10 +769,28 @@ class ExceptionWrapper:
 @contextmanager
 def must_revert(
     exceptions: Union[
-        Exception, Type[Exception], Tuple[Union[Exception, Type[Exception]], ...]
+        str,
+        int,
+        Exception,
+        Type[Exception],
+        Tuple[Union[str, int, Exception, Type[Exception]], ...],
     ] = TransactionRevertedError,
 ) -> Iterator[ExceptionWrapper]:
+    if isinstance(exceptions, str):
+        exceptions = Error(exceptions)
+    elif isinstance(exceptions, int):
+        exceptions = Panic(PanicCodeEnum(exceptions))
+
     if isinstance(exceptions, (tuple, list)):
+        tmp: List[Union[str, int, Exception, Type[Exception]]] = []
+        for ex in exceptions:
+            if isinstance(ex, str):
+                tmp.append(Error(ex))
+            elif isinstance(ex, int):
+                tmp.append(Panic(PanicCodeEnum(ex)))
+            else:
+                tmp.append(ex)
+        exceptions = tuple(tmp)
         types = tuple(type(x) if not inspect.isclass(x) else x for x in exceptions)
     else:
         types = type(exceptions) if not inspect.isclass(exceptions) else exceptions
@@ -800,10 +818,28 @@ def must_revert(
 @contextmanager
 def may_revert(
     exceptions: Union[
-        Exception, Type[Exception], Tuple[Union[Exception, Type[Exception]], ...]
+        str,
+        int,
+        Exception,
+        Type[Exception],
+        Tuple[Union[str, int, Exception, Type[Exception]], ...],
     ] = TransactionRevertedError,
 ) -> Iterator[ExceptionWrapper]:
+    if isinstance(exceptions, str):
+        exceptions = Error(exceptions)
+    elif isinstance(exceptions, int):
+        exceptions = Panic(PanicCodeEnum(exceptions))
+
     if isinstance(exceptions, (tuple, list)):
+        tmp: List[Union[str, int, Exception, Type[Exception]]] = []
+        for ex in exceptions:
+            if isinstance(ex, str):
+                tmp.append(Error(ex))
+            elif isinstance(ex, int):
+                tmp.append(Panic(PanicCodeEnum(ex)))
+            else:
+                tmp.append(ex)
+        exceptions = tuple(tmp)
         types = tuple(type(x) if not inspect.isclass(x) else x for x in exceptions)
     else:
         types = type(exceptions) if not inspect.isclass(exceptions) else exceptions

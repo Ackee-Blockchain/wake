@@ -214,3 +214,15 @@ tx = e.value.tx
 ```
 
 `e.value` contains the error instance that was raised by the tested contract, or `None` if no error was raised.
+
+!!! tip
+    For ease of use, both context managers also accept `str` and `PanicCodeEnum` instances directly, e.g.
+    ```python
+    with must_revert("some error")
+    ```
+    or
+    ```python
+    with must_revert(PanicCodeEnum.UNDERFLOW_OVERFLOW)
+    ```
+
+    However, `e.value` will always be an instance of `Error` or `Panic` in this case.
