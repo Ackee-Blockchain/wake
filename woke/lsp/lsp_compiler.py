@@ -744,7 +744,7 @@ class LspCompiler:
                 if error.source_location is not None:
                     path = cu.source_unit_name_to_path(error.source_location.file)
                     errors_per_file[path].add(
-                        self.__solc_error_to_diagnostic(error, path)
+                        self.__solc_error_to_diagnostic(error, path, cu)
                     )
                     if error.severity == SolcOutputErrorSeverityEnum.ERROR:
                         errored_files.add(path)
@@ -1033,7 +1033,7 @@ class LspCompiler:
         self.__line_indexes[file] = encoded_lines
 
     def __solc_error_to_diagnostic(
-        self, error: SolcOutputError, path: Path
+        self, error: SolcOutputError, path: Path, cu: CompilationUnit
     ) -> Diagnostic:
         assert error.source_location is not None
         if error.severity == SolcOutputErrorSeverityEnum.ERROR:
@@ -1053,13 +1053,60 @@ class LspCompiler:
                 end=Position(line=0, character=0),
             )
 
-        return Diagnostic(
+        diag = Diagnostic(
             range=range_,
             severity=severity,
             code=error.error_code,
             source="Woke(solc)",
             message=error.message,
         )
+        if (
+            error.secondary_source_locations is not None
+            and len(error.secondary_source_locations) > 0
+        ):
+            related_info = []
+            for secondary_source_location in error.secondary_source_locations:
+                if (
+                    secondary_source_location.file is None
+                    or secondary_source_location.start is None
+                    or secondary_source_location.end is None
+                ):
+                    continue
+
+                if (
+                    secondary_source_location.start >= 0
+                    and secondary_source_location.end >= 0
+                ):
+                    range_ = self.get_range_from_byte_offsets(
+                        cu.source_unit_name_to_path(secondary_source_location.file),
+                        (
+                            secondary_source_location.start,
+                            secondary_source_location.end,
+                        ),
+                    )
+                else:
+                    range_ = Range(
+                        start=Position(line=0, character=0),
+                        end=Position(line=0, character=0),
+                    )
+
+                related_info.append(
+                    DiagnosticRelatedInformation(
+                        location=Location(
+                            uri=DocumentUri(
+                                path_to_uri(
+                                    cu.source_unit_name_to_path(
+                                        secondary_source_location.file
+                                    )
+                                )
+                            ),
+                            range=range_,
+                        ),
+                        message=secondary_source_location.message,
+                    )
+                )
+            diag.related_information = related_info
+        return diag
 
     def __file_ignored(self, path: Path) -> bool:
         return any(
