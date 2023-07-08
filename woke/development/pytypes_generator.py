@@ -543,13 +543,18 @@ class TypeGenerator:
                     item_copy = deepcopy(item)
                     for arg in item_copy["inputs"]:
                         if arg["internalType"].startswith("contract "):
-                            arg["type"] = arg["internalType"][9:]
+                            arg["internalType"] = arg["internalType"][9:]
                         elif arg["internalType"].startswith("struct "):
-                            arg["type"] = arg["internalType"][7:]
+                            arg["internalType"] = arg["internalType"][7:]
                         elif arg["internalType"].startswith("enum "):
-                            arg["type"] = arg["internalType"][5:]
+                            arg["internalType"] = arg["internalType"][5:]
 
-                    selector = eth_utils.abi.function_abi_to_4byte_selector(item_copy)
+                    selector = keccak.new(
+                        data=f"{item['name']}({','.join(arg['internalType'] for arg in item_copy['inputs'])})".encode(
+                            "utf-8"
+                        ),
+                        digest_bits=256,
+                    ).digest()[:4]
                 else:
                     selector = eth_utils.abi.function_abi_to_4byte_selector(item)
                 abi_by_selector[selector] = item
