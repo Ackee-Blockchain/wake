@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import importlib
-import reprlib
 from collections import ChainMap
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Tuple, cast
 
@@ -230,7 +229,7 @@ class CallTrace:
             if self.arguments is not None:
                 ret.append("(")
                 for i, arg in enumerate(self.arguments):
-                    t = Text(reprlib.repr(arg))
+                    t = Text(repr(arg))
                     ReprHighlighter().highlight(t)
                     ret.append_text(t)
                     if i < len(self.arguments) - 1:
