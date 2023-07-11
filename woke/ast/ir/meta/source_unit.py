@@ -288,6 +288,11 @@ class SourceUnit(SolidityAbc):
                 self._lines_index.append((line, prefix_sum))
                 prefix_sum += len(line)
 
-        line = bisect_left(self._lines_index, byte_offset, key=lambda x: x[1])
-        col = len(self._lines_index[line][0][:byte_offset - self._lines_index[line][1]].decode("utf-8"))  # TODO col as utf-8 offset?
+        line_prefix_sums = [line[1] for line in self._lines_index]
+        line = bisect_left(line_prefix_sums, byte_offset)
+        col = len(
+            self._lines_index[line][0][
+                : byte_offset - self._lines_index[line][1]
+            ].decode("utf-8")
+        )  # TODO col as utf-8 offset?
         return line, col
