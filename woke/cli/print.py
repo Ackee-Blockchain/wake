@@ -172,7 +172,7 @@ def run_print_summary(ctx: click.Context, paths: Tuple[str], no_immutable: bool)
 
                     line, _ = unit.get_line_col_from_byte_offset(variable.byte_location[0])
                     table.add_row(
-                        f"[link=vscode://file://{unit.file}:{line}]{variable.name}[/]",
+                        f"[link=vscode://file/{unit.file}:{line}]{variable.name}[/]",
                         variable.visibility,
                         variable.mutability if variable.mutability != "mutable" else "",
                         "",
@@ -192,7 +192,7 @@ def run_print_summary(ctx: click.Context, paths: Tuple[str], no_immutable: bool)
 
                     line, _ = unit.get_line_col_from_byte_offset(function.byte_location[0])
                     table.add_row(
-                        f"[link=vscode://file://{unit.file}:{line}]{function.name}[/]",
+                        f"[link=vscode://file/{unit.file}:{line}]{function.name}[/]",
                         function.visibility,
                         function.state_mutability if function.state_mutability != StateMutability.NONPAYABLE else "",
                         ", ".join(m.modifier_name.referenced_declaration.name for m in function.modifiers),
@@ -262,7 +262,7 @@ def run_print_summary(ctx: click.Context, paths: Tuple[str]) -> None:
             if child.path is None:
                 add_node(child, tree.add(f"{name} ({child.locs} LOC)"))
             else:
-                add_node(child, tree.add(f"[link=vscode://file://{child.path}]{name}[/] ({child.locs} LOC)"))
+                add_node(child, tree.add(f"[link=vscode://file/{child.path}]{name}[/] ({child.locs} LOC)"))
 
     add_node(root, tree)
     console.print(tree)
