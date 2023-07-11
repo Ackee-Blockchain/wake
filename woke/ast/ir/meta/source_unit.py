@@ -1,4 +1,5 @@
 import logging
+from bisect import bisect_left
 from typing import Iterator, List, Optional, Tuple
 
 from woke.ast.ir.abc import IrAbc, SolidityAbc
@@ -68,6 +69,8 @@ class SourceUnit(SolidityAbc):
     _user_defined_value_types: List[UserDefinedValueTypeDefinition]
     _contracts: List[ContractDefinition]
     _using_for_directives: List[UsingForDirective]
+    # TODO strip this from pickle?
+    _lines_index: Optional[List[Tuple[bytes, int]]]  # lines with prefix length
 
     def __init__(
         self,
@@ -78,6 +81,7 @@ class SourceUnit(SolidityAbc):
         self._file_source = init.source
         self._license = source_unit.license
         self._source_unit_name = source_unit.absolute_path
+        self._lines_index = None
 
         self._pragmas = []
         self._imports = []
@@ -274,3 +278,16 @@ class SourceUnit(SolidityAbc):
         yield from self.contracts
         for contract in self.contracts:
             yield from contract.declarations_iter()
+
+    def get_line_col_from_byte_offset(self, byte_offset: int) -> Tuple[int, int]:
+        if self._lines_index is None:
+            self._lines_index = []
+            prefix_sum = 0
+
+            for line in self._file_source.splitlines(keepends=True):
+                self._lines_index.append((line, prefix_sum))
+                prefix_sum += len(line)
+
+        line = bisect_left(self._lines_index, byte_offset, key=lambda x: x[1])
+        col = len(self._lines_index[line][0][:byte_offset - self._lines_index[line][1]].decode("utf-8"))  # TODO col as utf-8 offset?
+        return line, col
