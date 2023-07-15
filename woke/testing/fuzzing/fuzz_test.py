@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import random
 from collections import defaultdict
-from typing import Callable, DefaultDict, List, Optional, Set
+from typing import Callable, DefaultDict, List, Optional
 
 from typing_extensions import get_type_hints
 
@@ -49,13 +49,13 @@ class FuzzTest:
     def flow_num(self):
         return self._flow_num
 
-    def __get_methods(self, attr: str) -> Set[Callable]:
-        ret = set()
+    def __get_methods(self, attr: str) -> List[Callable]:
+        ret = []
         for x in dir(self):
             if hasattr(self.__class__, x):
                 m = getattr(self.__class__, x)
                 if hasattr(m, attr) and getattr(m, attr):
-                    ret.add(m)
+                    ret.append(m)
         return ret
 
     def run(
@@ -67,8 +67,8 @@ class FuzzTest:
     ):
         chains = get_connected_chains()
 
-        flows: Set[Callable] = self.__get_methods("flow")
-        invariants: Set[Callable] = self.__get_methods("invariant")
+        flows: List[Callable] = self.__get_methods("flow")
+        invariants: List[Callable] = self.__get_methods("invariant")
 
         for i in range(sequences_count):
             flows_counter: DefaultDict[Callable, int] = defaultdict(int)
