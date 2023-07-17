@@ -728,12 +728,18 @@ class SolidityCompiler:
         ] = None,  # files that should be treated as deleted even if they exist
         console: Optional[rich.console.Console] = None,
         no_warnings: bool = False,
-        merge_compilation_units: bool = False,
+        incremental: Optional[bool] = None,
     ) -> Tuple[ProjectBuild, Set[SolcOutputError]]:
         if modified_files is None:
             modified_files = {}
         if deleted_files is None:
             deleted_files = set()
+
+        if incremental is None:
+            if force_recompile or self._latest_build_info is None:
+                incremental = True
+            else:
+                incremental = self._latest_build_info.incremental
 
         # validate target solc version (if set)
         target_version = self.__config.compiler.solc.target_version
@@ -769,6 +775,7 @@ class SolidityCompiler:
                 or self._latest_build_info.settings != build_settings
                 or self._latest_build_info.target_solidity_version
                 != self.__config.compiler.solc.target_version
+                or self._latest_build_info.incremental != incremental
             ):
                 logger.debug("Build settings changed")
                 build_settings_changed = True
@@ -791,7 +798,7 @@ class SolidityCompiler:
                 source_units_to_paths[source_unit] for source_unit in graph.nodes
             )
 
-            if merge_compilation_units:
+            if not incremental:
                 compilation_units = self._merge_compilation_units(
                     compilation_units, graph
                 )
@@ -814,7 +821,7 @@ class SolidityCompiler:
                 if source_unit not in graph.nodes:
                     deleted_files.add(info.fs_path)
 
-            if merge_compilation_units:
+            if not incremental:
                 compilation_units = self._merge_compilation_units(
                     compilation_units, graph
                 )
@@ -1026,6 +1033,7 @@ class SolidityCompiler:
             source_units_info=source_units_info,
             target_solidity_version=self.__config.compiler.solc.target_version,
             woke_version=get_package_version("woke"),
+            incremental=incremental,
         )
         self._latest_build = build
 

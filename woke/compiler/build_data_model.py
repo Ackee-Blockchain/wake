@@ -54,6 +54,7 @@ class ProjectBuildInfo(BuildInfoModel):
     settings: SolcInputSettings
     target_solidity_version: Optional[SolidityVersion]
     woke_version: str
+    incremental: bool
 
 
 class ProjectBuild(NamedTuple):

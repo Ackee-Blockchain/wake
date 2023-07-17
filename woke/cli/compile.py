@@ -4,7 +4,7 @@ import asyncio
 import sys
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING, Set, Tuple
+from typing import TYPE_CHECKING, Optional, Set, Tuple
 
 import rich_click as click
 from click.core import Context
@@ -20,6 +20,7 @@ async def compile(
     no_warnings: bool,
     force: bool,
     watch: bool,
+    incremental: Optional[bool],
 ):
     from watchdog.observers import Observer
 
@@ -106,6 +107,7 @@ async def compile(
         force_recompile=force,
         console=console,
         no_warnings=no_warnings,
+        incremental=incremental,
     )
 
     if watch:
@@ -151,6 +153,13 @@ async def compile(
     default=False,
     help="Watch for changes in the project and recompile on change.",
 )
+@click.option(
+    "--incremental/--no-incremental",
+    is_flag=True,
+    required=False,
+    default=None,
+    help="Enforce incremental or non-incremental compilation.",
+)
 @click.pass_context
 def run_compile(
     ctx: Context,
@@ -159,6 +168,7 @@ def run_compile(
     no_warnings: bool,
     force: bool,
     watch: bool,
+    incremental: Optional[bool],
 ) -> None:
     """Compile the project."""
     from woke.config import WokeConfig
@@ -166,4 +176,6 @@ def run_compile(
     config = WokeConfig()
     config.load_configs()  # load ~/.woke/config.toml and ./woke.toml
 
-    asyncio.run(compile(config, paths, no_artifacts, no_warnings, force, watch))
+    asyncio.run(
+        compile(config, paths, no_artifacts, no_warnings, force, watch, incremental)
+    )
