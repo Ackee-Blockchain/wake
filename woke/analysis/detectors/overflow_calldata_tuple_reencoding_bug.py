@@ -175,9 +175,8 @@ class OverflowCalldataTupleReencodingBugDetector(DetectorAbc):
                 if isinstance(t, types.Function) and (t.value_set or t.gas_set):
                     func_identifier = func_identifier.expression
                 else:
-                    logger.warning(
-                        f"Unexpected function call child node: {func_identifier} {func_identifier.source}"
-                    )
+                    # function returning a function
+                    break
             else:
                 logger.warning(
                     f"Unexpected function call child node: {func_identifier} {func_identifier.source if func_identifier else ''}"
