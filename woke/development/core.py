@@ -1576,6 +1576,12 @@ class Chain(ABC):
 
         self._chain_interface.mine(timestamp)
 
+    @check_connected
+    def mine_many(
+        self, num_blocks: int, timestamp_change: Optional[int] = None
+    ) -> None:
+        self._chain_interface.mine_many(num_blocks, timestamp_change)
+
     @contextmanager
     def snapshot_and_revert(self):
         snapshot_id = self.snapshot()

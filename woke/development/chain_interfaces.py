@@ -495,6 +495,10 @@ class ChainInterfaceAbc(ABC):
     def set_storage_at(self, address: str, position: int, value: bytes) -> None:
         ...
 
+    @abstractmethod
+    def mine_many(self, num_blocks: int, timestamp_change: Optional[int]) -> None:
+        ...
+
 
 class HardhatChainInterface(ChainInterfaceAbc):
     def get_accounts(self) -> List[str]:
@@ -555,6 +559,14 @@ class HardhatChainInterface(ChainInterfaceAbc):
             "hardhat_setStorageAt", [address, hex(position), "0x" + value.hex()]
         )
 
+    def mine_many(self, num_blocks: int, timestamp_change: Optional[int]) -> None:
+        self._communicator.send_request(
+            "hardhat_mine",
+            [hex(num_blocks), hex(timestamp_change)]
+            if timestamp_change is not None
+            else [hex(num_blocks)],
+        )
+
 
 class AnvilChainInterface(ChainInterfaceAbc):
     def get_accounts(self) -> List[str]:
@@ -613,6 +625,14 @@ class AnvilChainInterface(ChainInterfaceAbc):
 
     def node_info(self) -> Dict[str, Any]:
         return self._communicator.send_request("anvil_nodeInfo")
+
+    def mine_many(self, num_blocks: int, timestamp_change: Optional[int]) -> None:
+        self._communicator.send_request(
+            "anvil_mine",
+            [hex(num_blocks), hex(timestamp_change)]
+            if timestamp_change is not None
+            else [hex(num_blocks)],
+        )
 
 
 class GanacheChainInterface(ChainInterfaceAbc):
@@ -675,6 +695,16 @@ class GanacheChainInterface(ChainInterfaceAbc):
             "evm_setAccountStorageAt", [address, hex(position), "0x" + value.hex()]
         )
 
+    def mine_many(self, num_blocks: int, timestamp_change: Optional[int]) -> None:
+        if timestamp_change is not None:
+            raise NotImplementedError(
+                "Ganache does not support timestamp intervals when mining multiple blocks"
+            )
+        self._communicator.send_request(
+            "evm_mine",
+            [{"blocks": num_blocks}],
+        )
+
 
 class GethLikeChainInterfaceAbc(ChainInterfaceAbc, ABC):
     @property
@@ -733,6 +763,9 @@ class GethLikeChainInterfaceAbc(ChainInterfaceAbc, ABC):
 
     def set_storage_at(self, address: str, position: int, value: bytes) -> None:
         raise NotImplementedError(f"{self._name} does not support setting storage")
+
+    def mine_many(self, num_blocks: int, timestamp_change: Optional[int]) -> None:
+        raise NotImplementedError(f"{self._name} does not support mining blocks")
 
 
 class GethChainInterface(GethLikeChainInterfaceAbc):

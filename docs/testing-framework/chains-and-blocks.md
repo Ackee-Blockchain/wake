@@ -43,6 +43,7 @@ The `Chain` object has the following methods:
 | `change_automine`                              | context manager to temporarily change the `automine` property                              |
 | `connect`                                      | context manager to launch a chain and connect to it or connect to an already running chain |
 | `mine`                                         | mine a block with an optional callback function to set the next block timestamp            |
+| `mine_many`                                    | mine multiple blocks with an optional timestamp delta between blocks                       |
 | `reset`                                        | reset the chain to its initial state                                                       |
 | `revert`                                       | revert the chain to a previous state given by a snapshot ID                                |
 | `set_default_accounts`                         | set the default accounts for `tx`, `call`, `estimate`, and `access_list` requests at once  |
