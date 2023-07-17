@@ -1530,6 +1530,10 @@ class Chain(ABC):
         self._chain_interface.set_next_block_base_fee_per_gas(value)
 
     @check_connected
+    def set_next_block_timestamp(self, timestamp: int) -> None:
+        self._chain_interface.set_next_block_timestamp(timestamp)
+
+    @check_connected
     def set_min_gas_price(self, value: Union[int, str]) -> None:
         if isinstance(value, str):
             value = Wei.from_str(value)

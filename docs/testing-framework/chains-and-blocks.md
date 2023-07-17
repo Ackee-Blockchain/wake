@@ -48,6 +48,7 @@ The `Chain` object has the following methods:
 | `set_default_accounts`                         | set the default accounts for `tx`, `call`, `estimate`, and `access_list` requests at once  |
 | `set_min_gas_price`                            | set the minimum gas price accepted by the chain                                            |
 | <nobr>`set_next_block_base_fee_per_gas`</nobr> | set the base fee per gas for the next block                                                |
+| <nobr>`set_next_block_timestamp`</nobr>        | set the timestamp of the next block                                                        |
 | `snapshot`                                     | take a snapshot of the chain state; return a snapshot ID                                   |
 | <nobr>`snapshot_and_revert`</nobr>             | context manager to take a snapshot and revert to it after the context ends                 |
 | `update_accounts`                              | update the accounts list                                                                   |
