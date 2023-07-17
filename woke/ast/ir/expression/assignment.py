@@ -3,15 +3,19 @@ from typing import Iterator, Optional, Set, Tuple, Union
 
 from typing_extensions import Literal
 
-from woke.ast.enums import AssignmentOperator, ModifiesStateFlag
+from woke.ast.enums import AssignmentOperator, GlobalSymbolsEnum, ModifiesStateFlag
 from woke.ast.ir.abc import IrAbc, SolidityAbc
 from woke.ast.ir.utils import IrInitTuple
 from woke.ast.nodes import SolcAssignment
 
 from ..declaration.abc import DeclarationAbc
+from ..declaration.function_definition import FunctionDefinition
+from ..declaration.struct_definition import StructDefinition
+from ..declaration.variable_declaration import VariableDeclaration
 from ..meta.source_unit import SourceUnit
 from .abc import ExpressionAbc
 from .conditional import Conditional
+from .function_call import FunctionCall
 from .identifier import Identifier
 from .index_access import IndexAccess
 from .member_access import MemberAccess
@@ -104,6 +108,24 @@ class Assignment(ExpressionAbc):
                     path + (referenced_declaration,)
                     for path in resolve_node(node.expression)
                 }
+            elif isinstance(node, FunctionCall):
+                function_called = node.function_called
+                if function_called is None:
+                    return set()
+                elif isinstance(
+                    function_called, (GlobalSymbolsEnum, VariableDeclaration)
+                ):
+                    # global function or variable getter called
+                    # variable getter may return different type than variable declaration (structs with arrays and mappings)
+                    # return empty set for now
+                    return set()
+                elif isinstance(function_called, FunctionDefinition):
+                    # cannot be handled in the current implementation, return empty set for now
+                    return set()
+                elif isinstance(function_called, StructDefinition):
+                    return {(function_called,)}
+                else:
+                    assert False, f"Unexpected node type: {type(node)}\n{self.source}"
             else:
                 assert False, f"Unexpected node type: {type(node)}\n{self.source}"
 
