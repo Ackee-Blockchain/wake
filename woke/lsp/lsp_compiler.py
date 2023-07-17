@@ -718,7 +718,11 @@ class LspCompiler:
                 [
                     source_unit_name
                     for source_unit_name in graph.nodes  # pyright: ignore reportGeneralTypeIssues
-                    if graph.nodes[source_unit_name]["path"]
+                    if graph.nodes[  # pyright: ignore reportGeneralTypeIssues
+                        source_unit_name
+                    ][  # pyright: ignore reportGeneralTypeIssues
+                        "path"
+                    ]
                     in files_to_compile  # pyright: ignore reportGeneralTypeIssues
                 ],
             )

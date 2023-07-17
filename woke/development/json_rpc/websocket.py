@@ -23,5 +23,5 @@ class WebsocketProtocol(ProtocolAbc):
         self._ws.close()
 
     def send_recv(self, data: str):
-        self._ws.send(data)
+        self._ws.send(data)  # pyright: ignore reportGeneralTypeIssues
         return json.loads(self._ws.recv())
