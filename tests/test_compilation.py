@@ -31,7 +31,7 @@ def config():
 
 @pytest.fixture()
 def setup_project(request):
-    clone_url = request.param
+    clone_url, dependencies_installer = request.param
     repo = None
 
     try:
@@ -39,7 +39,7 @@ def setup_project(request):
             clone_url, PYTEST_BUILD_PATH, multi_options=["--depth=1"]
         )
         subprocess.run(
-            ["yarn", "install"],
+            [dependencies_installer, "install"],
             cwd=PYTEST_BUILD_PATH,
             shell=(platform.system() == "Windows"),
         )
@@ -61,7 +61,9 @@ def setup_project(request):
 
 @pytest.mark.slow
 @pytest.mark.parametrize(
-    "setup_project", [r"https://github.com/Uniswap/v3-core.git"], indirect=True
+    "setup_project",
+    [(r"https://github.com/Uniswap/v3-core.git", "yarn")],
+    indirect=True,
 )
 def test_compile_uniswap_v3(setup_project, config):
     files = list((PYTEST_BUILD_PATH / "contracts").rglob("*.sol"))
@@ -94,7 +96,9 @@ def test_compile_uniswap_v3(setup_project, config):
 
 @pytest.mark.slow
 @pytest.mark.parametrize(
-    "setup_project", [r"https://github.com/graphprotocol/contracts.git"], indirect=True
+    "setup_project",
+    [(r"https://github.com/graphprotocol/contracts.git", "yarn")],
+    indirect=True,
 )
 @pytest.mark.skip()
 def test_compile_the_graph(setup_project, config):
@@ -122,7 +126,9 @@ def test_compile_the_graph(setup_project, config):
 
 @pytest.mark.slow
 @pytest.mark.parametrize(
-    "setup_project", [r"https://github.com/traderjoe-xyz/joe-core.git"], indirect=True
+    "setup_project",
+    [(r"https://github.com/traderjoe-xyz/joe-core.git", "yarn")],
+    indirect=True,
 )
 def test_compile_trader_joe(setup_project, config):
     files = list((PYTEST_BUILD_PATH / "contracts").rglob("*.sol"))
@@ -159,7 +165,7 @@ def test_compile_trader_joe(setup_project, config):
 @pytest.mark.slow
 @pytest.mark.parametrize(
     "setup_project",
-    [r"https://github.com/axelarnetwork/axelar-cgp-solidity.git"],
+    [(r"https://github.com/axelarnetwork/axelar-cgp-solidity.git", "npm")],
     indirect=True,
 )
 def test_compile_axelar(setup_project, config):
