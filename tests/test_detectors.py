@@ -223,4 +223,4 @@ class TestProxyContractSelectorClashes:
             fn.canonical_name for fn in detections_fns if fn is not None
         ]
 
-        assert "Proxy.bug_clash" in detections_fn_names
+        assert "Proxy.bug_clash(address)" in detections_fn_names

@@ -270,8 +270,8 @@ class FunctionDefinition(DeclarationAbc):
         from .contract_definition import ContractDefinition
 
         if isinstance(self._parent, ContractDefinition):
-            return f"{self._parent.canonical_name}.{self._name}"
-        return self.name
+            return f"{self._parent.canonical_name}.{self._name}({','.join(param.type_name.type_string for param in self._parameters.parameters)})"
+        return f"{self._name}({','.join(param.type_name.type_string for param in self._parameters.parameters)})"
 
     @property
     @lru_cache(maxsize=2048)
