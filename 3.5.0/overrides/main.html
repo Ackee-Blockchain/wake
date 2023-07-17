@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block outdated %}
+  <span class="twemoji">
+    {% include ".icons/fontawesome/solid/triangle-exclamation.svg" %}
+  </span>
+  You're not viewing the latest version.
+
+  <a href="{{ '../' ~ base_url }}">
+    <strong>Click here to go to latest.</strong>
+  </a>
+{% endblock %}
