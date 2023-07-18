@@ -620,6 +620,14 @@ class TypeGenerator:
             else:
                 raise Exception(f"Unexpected ABI item type: {item['type']}")
         self.add_str_to_types(1, f"_abi = {abi_by_selector}", 1)
+
+        if compilation_info.storage_layout is not None:
+            self.add_str_to_types(
+                1,
+                f"_storage_layout = {compilation_info.storage_layout.json(by_alias=True, exclude_none=True)}",
+                1,
+            )
+
         self.add_str_to_types(
             1, f'_creation_code = "{compilation_info.evm.bytecode.object}"', 2
         )
@@ -1948,6 +1956,7 @@ class NameSanitizer:
             "_execute",
             "_library_id",
             "_prepare_tx_params",
+            "_storage_layout",
             "address",
             "label",
             "balance",
