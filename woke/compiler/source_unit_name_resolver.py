@@ -33,7 +33,8 @@ class SourceUnitNameResolver:
         if len(matching_remappings) == 0:
             return source_unit_name
 
-        matching_remappings.sort(key=lambda r: len(r.context or ""), reverse=True)
+        # longest prefix wins, if there are multiple remappings with the same prefix, choose the last one
+        matching_remappings.sort(key=lambda r: len(r.prefix), reverse=True)
 
         # choose the remapping with the longest context
         # if there are multiple remappings with the same context, choose the last one
