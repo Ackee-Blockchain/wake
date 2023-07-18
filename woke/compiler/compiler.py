@@ -669,7 +669,7 @@ class SolidityCompiler:
             )
 
     @staticmethod
-    def _merge_compilation_units(
+    def merge_compilation_units(
         compilation_units: List[CompilationUnit],
         graph: nx.DiGraph,
     ) -> List[CompilationUnit]:
@@ -799,7 +799,7 @@ class SolidityCompiler:
             )
 
             if not incremental:
-                compilation_units = self._merge_compilation_units(
+                compilation_units = self.merge_compilation_units(
                     compilation_units, graph
                 )
         else:
@@ -822,7 +822,7 @@ class SolidityCompiler:
                     deleted_files.add(info.fs_path)
 
             if not incremental:
-                compilation_units = self._merge_compilation_units(
+                compilation_units = self.merge_compilation_units(
                     compilation_units, graph
                 )
 
