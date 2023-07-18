@@ -328,7 +328,7 @@ def get_modifier_key(modifier: ModifierDefinition) -> Key:
     contract = modifier
     while not isinstance(contract, ContractDefinition):
         contract = contract.parent
-    return Key(f"{modifier.file}/{contract.name}/{modifier.name}")
+    return Key(f"{modifier.file}.{contract.name}.{modifier.name}")
 
 
 def get_function_key(function: FunctionDefinition) -> Key:
@@ -340,10 +340,10 @@ def get_function_key(function: FunctionDefinition) -> Key:
         parent = parent.parent
         if isinstance(parent, ContractDefinition):
             # Contract function
-            return Key(f"{function.file}/{parent.name}/{function_signature}")
+            return Key(f"{function.file}.{parent.name}.{function_signature}")
         if isinstance(parent, SourceUnit):
             # Free function
-            return Key(f"{function.file}/{function_signature}")
+            return Key(f"{function.file}.{function_signature}")
     # return Key(str(function.ast_node_id))
 
 def var_decl_to_type_str(variable_declaration: VariableDeclaration) -> str:
@@ -374,7 +374,7 @@ def get_function_name_with_params(function: FunctionDefinition) -> str:
 
 def get_contract_key(contract: ContractDefinition) -> Key:
     """Get a contract's key. We use the path and contract name for the key."""
-    return Key(f"{contract.file}/{contract.name}")
+    return Key(f"{contract.file}.{contract.name}")
 
 
 @click.command(name="dash")
@@ -541,7 +541,7 @@ def run_dash(
         # Next, add contract and function nodes
         for contract in source_unit.contracts:
             # breakpoint()
-            contract_key = f"{path}/{contract.name}"
+            contract_key = f"{path}.{contract.name}"
             # This is a sanity check so that future references to this contract work
             assert contract_key == get_contract_key(contract)
             model.contracts.append(
@@ -630,8 +630,8 @@ def run_dash(
 
                     if isinstance(parent, FunctionDefinition):
                         model.links.function_references.append({
-                            "from": Key(get_function_key(parent)),
-                            "to": Key(get_function_key(function)),
+                            "from": Key(get_function_key(function)),
+                            "to": Key(get_function_key(parent)),
                         })
 
                     # Inside of loop function.references

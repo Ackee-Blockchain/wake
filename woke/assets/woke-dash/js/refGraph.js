@@ -69,5 +69,28 @@ myRefGraph.groupTemplate = $$(go.Group, "Auto", {
 );
 
 const ref_graph_nodes = contracts.concat(functions)
+// const ref_graph_links = links.function_references.slice(0,90).concat([{
+//         from: "/Users/dteiml/p/hacker-dom/single-collateral-dai/auth.sol/DSAuth.constructor()",
+//         to: "/Users/dteiml/p/hacker-dom/single-collateral-dai/auth.sol/DSAuthority.canCall(address,address,bytes4)"
+// }])
 const ref_graph_links = links.function_references
-myRefGraph.model = new go.GraphLinksModel(ref_graph_nodes, ref_graph_links)
+myRefGraph.model = new go.GraphLinksModel(
+    // functions.slice(0,10),
+    ref_graph_nodes,
+    ref_graph_links,
+    {
+        nodeGroupKeyProperty: "parent"
+    }
+)
+console.log(ref_graph_links.length)
+console.log(functions.slice(0,10))
+console.log(ref_graph_links)
+// myRefGraph.model = new go.GraphLinksModel(
+//     [
+//         { key: "foo" },
+//         { key: "bar" },
+//     ],
+//     [
+//         { from: "foo", to: "bar" }
+//     ]
+// )

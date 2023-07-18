@@ -83,4 +83,11 @@ function iterator_to_array(it) {
 }
 
 const { folders, files, contracts, functions, links } = window.model;
+console.log(
+    folders.length,
+    files.length,
+    contracts.length,
+    functions.length,
+    links.function_references.length,
+)
 // endregion utils
