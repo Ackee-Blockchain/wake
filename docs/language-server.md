@@ -6,7 +6,7 @@ Woke LSP server can be run using:
 woke lsp
 ```
 
-Or with an optional `--port` argument:
+Or with an optional `--port` argument (default 65432):
 ```shell
 woke lsp --port 1234
 ```

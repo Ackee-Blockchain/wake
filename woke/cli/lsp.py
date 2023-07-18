@@ -33,7 +33,13 @@ async def run_server(config: WokeConfig, port: int) -> None:
 
 
 @click.command(name="lsp")
-@click.option("--port", default=65432, type=int, help="Port to listen on.")
+@click.option(
+    "--port",
+    default=65432,
+    type=int,
+    help="Port to listen on.",
+    show_default=True,
+)
 @click.pass_context
 def run_lsp(context: click.Context, port: int):
     """
