@@ -54,6 +54,7 @@ nav:
       - Performance considerations: 'testing-framework/performance-considerations.md'
       - Migrating from Ape & Brownie: 'testing-framework/migrating-from-ape-and-brownie.md'
       - Migrating from Woke 2.x: 'testing-framework/migrating-from-woke-2.md'
+      - Troubleshooting: 'testing-framework/troubleshooting.md'
   - Detectors: 'detectors.md'
   - LSP server: 'language-server.md'
   - Solc Version Manager: 'solc-version-manager.md'
