@@ -453,13 +453,20 @@ class TransactionAbc(ABC, Generic[T]):
 
         chain_interface = self._chain.chain_interface
 
-        if isinstance(chain_interface, AnvilChainInterface):
+        assert self._tx_receipt is not None
+        # due to a bug, Anvil does not return revert data for failed contract creations
+        # "contractAddress" key is always present, so the first if branch is never taken
+        # keep this code for when the bug is fixed
+        if (
+            isinstance(chain_interface, AnvilChainInterface)
+            and "contractAddress" not in self._tx_receipt
+        ):
             self._fetch_trace_transaction()
             assert self._trace_transaction is not None
             revert_data = bytes.fromhex(
                 self._trace_transaction[0]["result"]["output"][2:]
             )
-        elif isinstance(chain_interface, GanacheChainInterface):
+        elif isinstance(chain_interface, (AnvilChainInterface, GanacheChainInterface)):
             self._fetch_debug_trace_transaction()
             assert self._debug_trace_transaction is not None
 
