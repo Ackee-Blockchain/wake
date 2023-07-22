@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          ssh-key: ${{ secrets.DOCUMENTATION_DEPLOY_KEY }}
       - name: Set up Python 3.10
         uses: actions/setup-python@v4
         with:
@@ -30,5 +32,5 @@ jobs:
       - name: Push documentation
         uses: ad-m/github-push-action@master
         with:
-          github_token: ${{ secrets.DOCUMENTATION_TOKEN }}
+          ssh: true
           branch: documentation
