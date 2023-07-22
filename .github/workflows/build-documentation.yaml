@@ -25,6 +25,8 @@ jobs:
           git config --global user.email "woke@ackeeblockchain.com"
           git config --global user.name "Woke bot"
           mike deploy -b documentation dev
+      - name: Checkout documentation branch
+        run: git checkout -f documentation
       - name: Push documentation
         uses: ad-m/github-push-action@master
         with:
