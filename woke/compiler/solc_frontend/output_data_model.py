@@ -85,6 +85,7 @@ class SolcOutputErrorTypeEnum(StrEnum):
     INFO = "Info"
     """Information that the compiler thinks the user might find useful, but is not dangerous and does not necessarily need to be addressed."""
     YUL_EXCEPTION = "YulException"
+    CODE_GENERATION_ERROR = "CodeGenerationError"
 
 
 class SolcOutputErrorSeverityEnum(StrEnum):
