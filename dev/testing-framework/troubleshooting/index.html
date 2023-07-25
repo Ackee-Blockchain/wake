@@ -739,6 +739,46 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#websockettimeoutexception" class="md-nav__link">
+    WebSocketTimeoutException
+  </a>
+  
+    <nav class="md-nav" aria-label="WebSocketTimeoutException">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#insufficient-timeout-configured" class="md-nav__link">
+    Insufficient timeout configured
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-freezes-without-timeout-error" class="md-nav__link">
+    Test freezes without timeout error
+  </a>
+  
+    <nav class="md-nav" aria-label="Test freezes without timeout error">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#contract-initcode-size-limit" class="md-nav__link">
+    Contract initcode size limit
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -874,6 +914,46 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#websockettimeoutexception" class="md-nav__link">
+    WebSocketTimeoutException
+  </a>
+  
+    <nav class="md-nav" aria-label="WebSocketTimeoutException">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#insufficient-timeout-configured" class="md-nav__link">
+    Insufficient timeout configured
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-freezes-without-timeout-error" class="md-nav__link">
+    Test freezes without timeout error
+  </a>
+  
+    <nav class="md-nav" aria-label="Test freezes without timeout error">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#contract-initcode-size-limit" class="md-nav__link">
+    Contract initcode size limit
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -906,7 +986,7 @@ This section describes the most common cases and how to debug them.</p>
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="p">}</span>
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="p">}</span>
 </code></pre></div>
-<p>To debug this error, print a call trace of the failing transaction. The trace should contain the failing call in a malformed way.</p>
+<p>To debug the latter case, print a call trace of the failing transaction. The trace should contain the failing call in a malformed way.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span> <span class="nn">woke.testing</span> <span class="kn">import</span> <span class="o">*</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span> <span class="nn">pytypes.contracts.Reverting</span> <span class="kn">import</span> <span class="n">Reverting</span>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
@@ -995,7 +1075,7 @@ This section describes the most common cases and how to debug them.</p>
 <h3 id="contract-code-size-limit">Contract code size limit<a class="headerlink" href="#contract-code-size-limit" title="Permanent link">#</a></h3>
 <p>The Spurious Dragon hard fork introduced a limit on the size of a contract. The limit is 24,576 bytes of bytecode.
 Due to the limit, a deployment transaction may fail with the <code>UnknownTransactionRevertedError</code> error without any reason data.
-In this case, the transaction call trace contains <strong>all contain green ticks</strong>, but the transaction itself still fails.</p>
+In this case, the transaction call trace <strong>does not contain any red cross</strong>, but the transaction itself still fails.</p>
 <p>To debug this error, compile the project and search for a warning message similar to the following:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Warning: Contract code size exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on mainnet.
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>Consider enabling the optimizer (with a low &quot;runs&quot; value!), turning off revert strings, or using libraries.
@@ -1007,6 +1087,21 @@ Under normal circumstances, an invalid opcode should never be encountered unless
 To debug this issue, try to set a different pre-Shanghai EVM version in the Woke config file.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p p-Indicator">[</span><span class="nv">compiler.solc</span><span class="p p-Indicator">]</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="l l-Scalar l-Scalar-Plain">evm_version = &quot;paris&quot;</span>
+</code></pre></div>
+<h2 id="websockettimeoutexception"><code>WebSocketTimeoutException</code><a class="headerlink" href="#websockettimeoutexception" title="Permanent link">#</a></h2>
+<h3 id="insufficient-timeout-configured">Insufficient timeout configured<a class="headerlink" href="#insufficient-timeout-configured" title="Permanent link">#</a></h3>
+<p>Occasionally, the default timeout may be insufficient, especially when performing complex transactions or when fork testing.</p>
+<p>To work around this issue, increase the timeout in the Woke config file.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p p-Indicator">[</span><span class="nv">testing</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="l l-Scalar l-Scalar-Plain">timeout = 60</span>
+</code></pre></div>
+<h2 id="test-freezes-without-timeout-error">Test freezes without timeout error<a class="headerlink" href="#test-freezes-without-timeout-error" title="Permanent link">#</a></h2>
+<h3 id="contract-initcode-size-limit">Contract initcode size limit<a class="headerlink" href="#contract-initcode-size-limit" title="Permanent link">#</a></h3>
+<p>Due to faulty implementations of development chains, a test may freeze without any error message. Especially, a <strong>timeout error is not raised</strong>.
+The reason may be that the transaction is trying to deploy a contract with initcode larger than the limit introduced in the Shanghai hard fork.</p>
+<p>To debug this issue, compile the project and search for a warning message similar to the following:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>Warning: Contract initcode size is 151670 bytes and exceeds 49152 bytes (a limit introduced in Shanghai).
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>This contract may not be deployable on Mainnet. Consider enabling the optimizer (with a low &quot;runs&quot; value!), turning off revert strings, or using libraries.
 </code></pre></div>
 
 
