@@ -811,12 +811,12 @@ def must_revert(
         wrapper.value = e
 
         if isinstance(exceptions, (tuple, list)):
-            for ex, t in zip(
-                exceptions, types  # pyright: ignore reportGeneralTypeIssues
+            if any(
+                (inspect.isclass(ex) and issubclass(type(e), ex)) or e == ex
+                for ex in exceptions
             ):
-                if isinstance(ex, t) and not inspect.isclass(ex):
-                    assert e == ex, f"Expected {ex} but got {e}"
-                    return
+                return
+            raise AssertionError(f"Expected revert of type {exceptions} but got {e}")
         else:
             if not inspect.isclass(exceptions):
                 assert e == exceptions, f"Expected {e} but got {exceptions}"
@@ -859,12 +859,12 @@ def may_revert(
         wrapper.value = e
 
         if isinstance(exceptions, (tuple, list)):
-            for ex, t in zip(
-                exceptions, types  # pyright: ignore reportGeneralTypeIssues
+            if any(
+                (inspect.isclass(ex) and issubclass(type(e), ex)) or e == ex
+                for ex in exceptions
             ):
-                if isinstance(ex, t) and not inspect.isclass(ex):
-                    assert e == ex, f"Expected {ex} but got {e}"
-                    return
+                return
+            raise AssertionError(f"Expected revert of type {exceptions} but got {e}")
         else:
             if not inspect.isclass(exceptions):
                 assert e == exceptions, f"Expected {e} but got {exceptions}"
