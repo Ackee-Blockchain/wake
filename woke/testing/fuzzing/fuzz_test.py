@@ -60,7 +60,11 @@ class FuzzTest:
         return ret
 
     def run(
-        self, sequences_count: int, flows_count: int, *, dry_run: bool = False,
+        self,
+        sequences_count: int,
+        flows_count: int,
+        *,
+        dry_run: bool = False,
     ):
         chains = get_connected_chains()
 
@@ -133,7 +137,7 @@ class FuzzTest:
                             inv(self)
                             self.post_invariant(inv)
 
-                            #restore any snapshots saved before the invariant
+                            # restore any snapshots saved before the invariant
                             for snapshot, chain in zip(isnapshots, chains):
                                 chain.revert(snapshot)
 
