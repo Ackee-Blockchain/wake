@@ -28,11 +28,11 @@ def flow(
     return decorator
 
 
-def invariant(*, period: int = 1, commitChanges=True):
+def invariant(*, period: int = 1, commit_changes=False):
     def decorator(fn):
         fn.invariant = True
         fn.period = period
-        fn.commit = commitChanges
+        fn.commit_changes = commit_changes
         return fn
 
     return decorator
@@ -131,7 +131,7 @@ class FuzzTest:
                         if invariant_periods[inv] == 0:
                             isnapshots = []
                             # if changes that occur during checking the invariant are not to be committed take a snapshot
-                            if getattr(inv, "commit") == False:
+                            if getattr(inv, "commit_changes") == False:
                                 isnapshots = [chain.snapshot() for chain in chains]
                             self.pre_invariant(inv)
                             inv(self)
