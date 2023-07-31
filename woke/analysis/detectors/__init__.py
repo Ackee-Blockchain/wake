@@ -9,7 +9,10 @@ from .api import (
 from .balance_state_var import UnsafeAddressBalanceUseDetector
 from .bug_empty_byte_array_copy import BugEmptyByteArrayCopyDetector
 from .call_options_not_called import FunctionCallOptionsNotCalledDetector
+from .encode_packed_arguments_collision import EncodePackedArgumentsCollisionDetector
+from .known_interface import KnownInterfaceDetector
 from .missing_return import MissingReturnDetector
+from .msg_sender_view_function import MsgSenderViewFunctionDetector
 from .msg_value_nonpayable_function import MsgValueNonpayableFunctionDetector
 from .overflow_calldata_tuple_reencoding_bug import (
     OverflowCalldataTupleReencodingBugDetector,
