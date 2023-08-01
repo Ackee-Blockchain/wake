@@ -2,12 +2,15 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Iterator, Optional, Tuple
+from typing import TYPE_CHECKING, Iterator, Optional, Tuple
 
 from woke.ast.ir.reference_resolver import ReferenceResolver
 from woke.ast.ir.utils.init_tuple import IrInitTuple
 from woke.ast.nodes import SolcNode, SolcOrYulNode
 from woke.core.solidity_version import SolidityVersionRanges
+
+if TYPE_CHECKING:
+    from woke.ast.ir.meta.source_unit import SourceUnit
 
 
 class IrAbc(ABC):
@@ -31,6 +34,7 @@ class IrAbc(ABC):
     _parent: Optional[IrAbc]
     _depth: int
     _cu_hash: bytes
+    _source_unit: SourceUnit
     _reference_resolver: ReferenceResolver
 
     def __init__(
@@ -46,6 +50,8 @@ class IrAbc(ABC):
             self._depth = 0
         self._cu_hash = init.cu.hash
 
+        assert init.source_unit is not None
+        self._source_unit = init.source_unit
         self._reference_resolver = init.reference_resolver
 
         source_start = solc_node.src.byte_offset
@@ -145,6 +151,14 @@ class IrAbc(ABC):
             Solidity or Yul source code corresponding to this node.
         """
         return self._source.decode("utf-8")
+
+    @property
+    def source_unit(self) -> SourceUnit:
+        """
+        Returns:
+            [source unit][woke.ast.ir.meta.source_unit.SourceUnit] that contains this node.
+        """
+        return self._source_unit
 
 
 class SolidityAbc(IrAbc, ABC):
