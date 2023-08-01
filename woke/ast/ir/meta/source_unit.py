@@ -77,6 +77,7 @@ class SourceUnit(SolidityAbc):
         init: IrInitTuple,
         source_unit: SolcSourceUnit,
     ):
+        init.source_unit = self
         super().__init__(init, source_unit, None)
         self._file_source = init.source
         self._license = source_unit.license
