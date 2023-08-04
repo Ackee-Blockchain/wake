@@ -14,7 +14,7 @@ from Crypto.Hash import keccak
 from eth_utils.abi import function_abi_to_4byte_selector
 
 from ..utils import get_package_version
-from .core import Account, Address
+from .core import Abi, Account, Address
 from .globals import get_config
 
 ChainExplorer = namedtuple("ChainExplorer", ["url", "api_url"])
@@ -236,3 +236,44 @@ def get_create2_address_from_code(
     deployer: Union[Account, Address, str], salt: bytes, creation_code: bytes
 ) -> Address:
     return get_create2_address_from_hash(deployer, salt, keccak256(creation_code))
+
+
+def get_logic_contract(contract: Account) -> Account:
+    # keccak256("eip1967.proxy.implementation") - 1
+    impl_addr = Abi.decode(
+        ["address"],
+        contract.chain.chain_interface.get_storage_at(
+            str(contract.address),
+            0x360894A13BA1A3210667C828492DB98DCA3E2076CC3735A920A3CA505D382BBC,
+        ),
+    )[0]
+    if impl_addr != Address.ZERO:
+        return Account(impl_addr, chain=contract.chain)
+
+    # keccak256("org.zeppelinos.proxy.implementation")
+    impl_addr = Abi.decode(
+        ["address"],
+        contract.chain.chain_interface.get_storage_at(
+            str(contract.address),
+            0x7050C9E0F4CA769C69BD3A8EF740BC37934F8E2C036E5A723FD8EE048ED3F8C3,
+        ),
+    )[0]
+    if impl_addr != Address.ZERO:
+        return Account(impl_addr, chain=contract.chain)
+
+    # keccak256("eip1967.proxy.beacon") - 1
+    beacon_addr = Abi.decode(
+        ["address"],
+        contract.chain.chain_interface.get_storage_at(
+            str(contract.address),
+            0xA3F0AD74E5423AEBFD80D3EF4346578335A9A72AEAEE59FF6CB3582B35133D50,
+        ),
+    )[0]
+
+    if beacon_addr != Address.ZERO:
+        impl_addr_raw = Account(beacon_addr, chain=contract.chain).call(
+            data=Abi.encode_with_signature("implementation()", [], [])
+        )
+        return Account(Abi.decode(["address"], impl_addr_raw)[0], chain=contract.chain)
+
+    return contract
