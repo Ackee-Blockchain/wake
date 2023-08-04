@@ -1611,12 +1611,8 @@ class TypeGenerator:
         cycles_detected = False
         cycles: Set[FrozenSet[str]] = set()
 
-        for cycle in nx.simple_cycles(graph):
-            for source_unit_name in cycle:
-                self.__cyclic_source_units[source_unit_name].update(
-                    [s for s in cycle if s != source_unit_name]
-                )
-
+        # keep generating pytypes for source units that have all import dependencies already generated
+        # take into account cyclic imports - generate pytypes for a cycle if all not yet generated import dependencies are in the cycle
         while len(graph) > 0:
             # use heapq to make order of source units deterministic
             sources: List[str] = [
@@ -1652,17 +1648,26 @@ class TypeGenerator:
                 graph.remove_nodes_from(paths_to_source_unit_names[path])
 
             generated_cycles: Set[FrozenSet[str]] = set()
-
-            for cycle in nx.simple_cycles(graph):
+            simple_cycles = [set(c) for c in nx.simple_cycles(graph)]
+            if len(simple_cycles) > 0:
+                # used for reporting to user
                 cycles_detected = True
-                cycles.add(frozenset(cycle))
-                if frozenset(cycle) in generated_cycles:
+                cycles.update([frozenset(c) for c in simple_cycles])
+
+            for simple_cycle in simple_cycles:
+                if any(simple_cycle.issubset(c) for c in generated_cycles):
+                    # source units in this cycle were already marked to be generated
                     continue
 
+                # merge with as many other cycles as possible (create transitive closure)
+                for other_cycle in simple_cycles:
+                    if len(simple_cycle & other_cycle) > 0:
+                        simple_cycle |= other_cycle
+
                 is_closed_cycle = True
-                for node in cycle:
+                for node in simple_cycle:
                     if any(
-                        edge[0] not in cycle
+                        edge[0] not in simple_cycle
                         for edge in graph.in_edges(
                             node  # pyright: ignore reportGeneralTypeIssues
                         )
@@ -1671,7 +1676,13 @@ class TypeGenerator:
                         break
 
                 if is_closed_cycle:
-                    generated_cycles.add(frozenset(cycle))
+                    generated_cycles.add(frozenset(simple_cycle))
+
+                    # update cyclic source units index used when generating pytypes
+                    for source_unit_name in simple_cycle:
+                        self.__cyclic_source_units[source_unit_name].update(
+                            s for s in simple_cycle if s != source_unit_name
+                        )
 
             for cycle in sorted(generated_cycles):
                 for source in cycle:
@@ -1681,6 +1692,8 @@ class TypeGenerator:
                     graph.remove_nodes_from(paths_to_source_unit_names[path])
 
             if len(graph) == previous_len:
+                # avoid infinite loop
+                # in a happy world, this should never happen
                 break
             previous_len = len(graph)
 
@@ -1688,6 +1701,12 @@ class TypeGenerator:
             logger.warning(
                 "Cyclic imports detected, pytypes may not be working correctly:\n"
                 + "\n".join(str(set(cycle)) for cycle in cycles)
+            )
+
+        if len(graph.nodes) > 0:
+            logger.warning(
+                "Failed to generate pytypes for the following source units:\n"
+                + "\n".join(graph.nodes)
             )
 
         init_path = self.__pytypes_dir / "__init__.py"
