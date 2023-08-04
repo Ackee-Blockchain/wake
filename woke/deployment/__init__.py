@@ -21,6 +21,7 @@ from woke.development.utils import (
     get_create2_address_from_code,
     get_create2_address_from_hash,
     get_create_address,
+    get_logic_contract,
     keccak256,
 )
 
