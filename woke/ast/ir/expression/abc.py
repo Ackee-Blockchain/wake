@@ -118,6 +118,10 @@ class ExpressionAbc(SolidityAbc, ABC):
         return ret
 
     @property
+    def type_identifier(self) -> Optional[str]:
+        return self._type_descriptions.type_identifier
+
+    @property
     def type_string(self) -> Optional[str]:
         """
         !!! example

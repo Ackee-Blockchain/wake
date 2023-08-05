@@ -516,6 +516,11 @@ class VariableDeclaration(DeclarationAbc):
         return ret
 
     @property
+    def type_identifier(self) -> str:
+        assert self._type_descriptions.type_identifier is not None
+        return self._type_descriptions.type_identifier
+
+    @property
     def type_string(self) -> str:
         """
         Returns:
