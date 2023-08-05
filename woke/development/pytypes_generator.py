@@ -165,6 +165,7 @@ class TypeGenerator:
     __contracts_index: Dict[str, Any]
     __errors_index: Dict[bytes, Dict[str, Any]]
     __events_index: Dict[bytes, Dict[str, Any]]
+    __user_defined_value_types_index: Dict[str, str]
     __contracts_by_metadata_index: Dict[bytes, str]
     __contracts_inheritance_index: Dict[str, Tuple[str, ...]]
     __contracts_revert_index: Dict[str, Set[int]]
@@ -191,6 +192,7 @@ class TypeGenerator:
         self.__contracts_index = {}
         self.__errors_index = {}
         self.__events_index = {}
+        self.__user_defined_value_types_index = {}
         self.__contracts_by_metadata_index = {}
         self.__contracts_inheritance_index = {}
         self.__contracts_revert_index = {}
@@ -1481,6 +1483,14 @@ class TypeGenerator:
         self.generate_types_error(unit.errors, 0)
         for contract in unit.contracts:
             self.generate_types_contract(contract)
+            for user_defined_value_type in contract.user_defined_value_types:
+                self.__user_defined_value_types_index[
+                    f"t_userDefinedValueType({user_defined_value_type.name}){user_defined_value_type.ast_node_id}"
+                ] = user_defined_value_type.underlying_type.type_identifier
+        for user_defined_value_type in unit.user_defined_value_types:
+            self.__user_defined_value_types_index[
+                f"t_userDefinedValueType({user_defined_value_type.name}){user_defined_value_type.ast_node_id}"
+            ] = user_defined_value_type.underlying_type.type_identifier
 
     def clean_type_dir(self):
         """
@@ -1728,6 +1738,7 @@ class TypeGenerator:
                 contracts_inheritance=self.__contracts_inheritance_index,
                 contracts_revert_index=self.__contracts_revert_index,
                 creation_code_index=self.__creation_code_index,
+                user_defined_value_types_index=self.__user_defined_value_types_index,
             )
         )
 

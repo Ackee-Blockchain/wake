@@ -92,6 +92,8 @@ contracts_revert_index: Dict[str, Set[int]] = {}
 # list of pairs of (creation code segments, contract_fqn)
 # where creation code segments is a tuple of (length, BLAKE2b hash)
 creation_code_index: List[Tuple[Tuple[Tuple[int, bytes], ...], str]] = []
+# user defined value type type identifier => underlying type type identifier
+user_defined_value_types_index: Dict[str, str] = {}
 
 
 eth_account.Account.enable_unaudited_hdwallet_features()
@@ -99,6 +101,10 @@ eth_account.Account.enable_unaudited_hdwallet_features()
 
 def get_contracts_by_fqn() -> Dict[str, Any]:
     return contracts_by_fqn
+
+
+def get_user_defined_value_types_index() -> Dict[str, str]:
+    return user_defined_value_types_index
 
 
 class RevertToSnapshotFailedError(Exception):
