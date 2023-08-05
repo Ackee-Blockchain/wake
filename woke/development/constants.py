@@ -27,4 +27,5 @@ woke.development.core.contracts_by_metadata = {contracts_by_metadata}
 woke.development.core.contracts_inheritance = {contracts_inheritance}
 woke.development.core.contracts_revert_index = {contracts_revert_index}
 woke.development.core.creation_code_index = {creation_code_index}
+woke.development.core.user_defined_value_types_index = {user_defined_value_types_index}
 """
