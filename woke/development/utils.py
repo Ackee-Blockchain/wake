@@ -693,6 +693,173 @@ def write_storage_variable(
     )
 
 
+def mint_erc20(
+    contract: Account,
+    to: Union[Account, Address],
+    amount: int,
+    *,
+    balance_slot: Optional[int] = None,
+    total_supply_slot: Optional[int] = None,
+) -> None:
+    _update_erc20_balance(contract, to, amount, balance_slot, total_supply_slot)
+
+
+def burn_erc20(
+    contract: Account,
+    from_: Union[Account, Address],
+    amount: int,
+    *,
+    balance_slot: Optional[int] = None,
+    total_supply_slot: Optional[int] = None,
+) -> None:
+    _update_erc20_balance(contract, from_, -amount, balance_slot, total_supply_slot)
+
+
+def _update_erc20_balance(
+    contract: Account,
+    account: Account,
+    amount: int,
+    balance_slot: Optional[int],
+    total_supply_slot: Optional[int],
+) -> None:
+    if balance_slot is None or total_supply_slot is None:
+        impl = get_logic_contract(contract)
+
+        # most used ERC20s
+        if impl.chain._forked_chain_id == 1 and impl.address == Address(
+            "0xdAC17F958D2ee523a2206206994597C13D831ec7"
+        ):
+            # USDT on mainnet
+            if balance_slot is None:
+                balance_slot = int.from_bytes(
+                    keccak256(Abi.encode(["address", "uint256"], [account, 2])),
+                    byteorder="big",
+                )
+            if total_supply_slot is None:
+                total_supply_slot = 1
+
+        balance_slots, total_supply_slots = _detect_erc20_slots_from_access_lists(
+            impl, account
+        )
+
+        if balance_slot is None and len(balance_slots) == 1:
+            balance_slot = balance_slots.pop()
+
+        if total_supply_slot is None and len(total_supply_slots) == 1:
+            total_supply_slot = total_supply_slots.pop()
+
+        if balance_slot is None or total_supply_slot is None:
+            (
+                layout_balance_slots,
+                layout_total_supply_slots,
+            ) = _detect_erc20_slots_from_storage_layout(impl, account)
+
+            # TODO use snapshot & revert?
+            if balance_slot is None:
+                intersection = balance_slots & set(layout_balance_slots.values())
+                if len(intersection) == 0:
+                    raise ValueError(
+                        f"Could not detect ERC20 balance slot, candidates: {', '.join(str(slot) for slot in balance_slots)}"
+                    )
+                elif len(intersection) > 1:
+                    raise ValueError(
+                        f"Could not detect ERC20 balance slot, candidates: {', '.join(f'{name}: {slot}' for name, slot in layout_balance_slots.items() if slot in balance_slots)}"
+                    )
+                balance_slot = intersection.pop()
+
+            if total_supply_slot is None:
+                intersection = total_supply_slots & set(
+                    layout_total_supply_slots.values()
+                )
+                if len(intersection) == 0:
+                    raise ValueError(
+                        f"Could not detect ERC20 total supply slot, candidates: {', '.join(str(slot) for slot in total_supply_slots)}"
+                    )
+                elif len(intersection) > 1:
+                    raise ValueError(
+                        f"Could not detect ERC20 total supply slot, candidates: {', '.join(f'{name}: {slot}' for name, slot in layout_total_supply_slots.items() if slot in total_supply_slots)}"
+                    )
+                total_supply_slot = intersection.pop()
+
+    chain = contract.chain
+    addr = str(contract.address)
+
+    old_balance = int.from_bytes(
+        chain.chain_interface.get_storage_at(addr, balance_slot), byteorder="big"
+    )
+    old_total_supply = int.from_bytes(
+        chain.chain_interface.get_storage_at(addr, total_supply_slot), byteorder="big"
+    )
+
+    if old_balance + amount < 0:
+        raise ValueError("Balance underflow")
+    if old_total_supply + amount >= 2**256:
+        raise ValueError("Total supply overflow")
+
+    chain.chain_interface.set_storage_at(
+        addr, balance_slot, (old_balance + amount).to_bytes(32, byteorder="big")
+    )
+    chain.chain_interface.set_storage_at(
+        addr,
+        total_supply_slot,
+        (old_total_supply + amount).to_bytes(32, byteorder="big"),
+    )
+
+
+def _detect_erc20_slots_from_access_lists(
+    erc20: Account, account: Account
+) -> Tuple[Set[int], Set[int]]:
+    from_acc = erc20.chain.default_access_list_account
+    if from_acc is None:
+        from_acc = erc20.chain.default_call_account
+    if from_acc is None and len(erc20.chain.accounts) > 0:
+        from_acc = erc20.chain.accounts[0]
+
+    access_list, _ = erc20.access_list(
+        data=Abi.encode_with_signature("balanceOf(address)", ["address"], [account]),
+        from_=from_acc,
+    )
+    if erc20.address not in access_list:
+        balance_slots = set()
+    else:
+        balance_slots = set(access_list[erc20.address])
+
+    access_list, _ = erc20.access_list(
+        data=Abi.encode_with_signature("totalSupply()", [], []), from_=from_acc
+    )
+    if erc20.address not in access_list:
+        total_supply_slots = set()
+    else:
+        total_supply_slots = set(access_list[erc20.address])
+
+    return balance_slots, total_supply_slots
+
+
+def _detect_erc20_slots_from_storage_layout(
+    erc20: Account, account: Account
+) -> Tuple[Dict[str, int], Dict[str, int]]:
+    try:
+        storage_layout = _get_storage_layout(erc20)
+    except ValueError:
+        return {}, {}
+    return (
+        {
+            i.label: int.from_bytes(
+                keccak256(Abi.encode(["address", "uint256"], [account, i.slot])),
+                byteorder="big",
+            )
+            for i in storage_layout
+            if i.type == "t_mapping(t_address,t_uint256)"
+            and "balanc" in i.label.lower()
+        },
+        {
+            i.label: i.slot
+            for i in storage_layout
+            if i.type == "t_uint256" and "total" in i.label.lower()
+        },
+    )
+
+
 def _get_storage_layout(
     contract: Union[Account, Type[Contract]]
 ) -> SolcOutputStorageLayout:
