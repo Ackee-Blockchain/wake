@@ -1113,6 +1113,7 @@ class Chain(ABC):
     _labels: Dict[Address, str]
     _require_signed_txs: bool
     _fork: Optional[str]
+    _forked_chain_id: Optional[int]
     _debug_trace_call_supported: bool
     _client_version: str
 
@@ -1222,6 +1223,17 @@ class Chain(ABC):
             min_gas_price = Wei.from_str(min_gas_price)
         if isinstance(block_base_fee_per_gas, str):
             block_base_fee_per_gas = Wei.from_str(block_base_fee_per_gas)
+
+        if fork is not None:
+            forked_chain_interface = ChainInterfaceAbc.connect(
+                get_config(), fork.split("@")[0]
+            )
+            try:
+                self._forked_chain_id = forked_chain_interface.get_chain_id()
+            finally:
+                forked_chain_interface.close()
+        else:
+            self._forked_chain_id = None
 
         self._chain_interface = chain_interfaces_manager.get_or_create(
             uri, accounts=accounts, chain_id=chain_id, fork=fork, hardfork=hardfork

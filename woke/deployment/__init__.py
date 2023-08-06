@@ -23,6 +23,7 @@ from woke.development.utils import (
     get_create_address,
     get_logic_contract,
     keccak256,
+    read_storage_variable,
 )
 
 from .core import Chain, default_chain
