@@ -11,6 +11,7 @@ from functools import lru_cache
 from json import JSONDecodeError
 from pathlib import Path, PurePosixPath
 from typing import (
+    Any,
     Callable,
     Dict,
     Iterable,
@@ -19,6 +20,7 @@ from typing import (
     Sequence,
     Set,
     Tuple,
+    Type,
     TypeVar,
     Union,
 )
@@ -48,11 +50,14 @@ from .core import (
     Abi,
     Account,
     Address,
+    Contract,
     get_contracts_by_fqn,
     get_fqn_from_address,
     get_user_defined_value_types_index,
 )
 from .globals import get_config
+
+# pyright: reportGeneralTypeIssues=false, reportOptionalIterable=false, reportOptionalSubscript=false, reportOptionalMemberAccess=false
 
 ChainExplorer = namedtuple("ChainExplorer", ["url", "api_url"])
 
@@ -316,23 +321,395 @@ def get_logic_contract(contract: Account) -> Account:
     return contract
 
 
-def _get_storage_layout(contract: Account) -> SolcOutputStorageLayout:
+def read_storage_variable(
+    contract: Account,
+    name: str,
+    *,
+    keys: Optional[Sequence] = None,
+    storage_layout_contract: Optional[Union[Account, Type[Contract]]] = None,
+):
+    def _get_storage_value(
+        slot: int,
+        offset: int,
+        keys: Sequence,
+        type_name: str,
+        types: Dict[str, SolcOutputStorageLayoutType],
+    ):
+        type_info = types[type_name]
+        slot_data = contract.chain.chain_interface.get_storage_at(
+            str(contract.address), slot
+        )
+        data = slot_data[
+            -offset - type_info.number_of_bytes : (-offset if offset != 0 else None)
+        ]
+
+        if type_name in ["t_bytes_storage", "t_string_storage"]:
+            data = data.rjust(32, b"\x00")
+            l = data[-1]
+            if l % 2 == 0:
+                # tight packing of length < 32 bytes
+                raw = data[: l // 2]
+            else:
+                # data are stored at data_slot = keccak256(slot)
+                length = int.from_bytes(slot_data, "big") // 2
+                start_slot = int.from_bytes(keccak256(slot.to_bytes(32, "big")), "big")
+                raw = bytearray()
+
+                while length >= 32:
+                    raw += contract.chain.chain_interface.get_storage_at(
+                        str(contract.address), start_slot
+                    )
+                    start_slot += 1
+                    length -= 32
+
+                if length > 0:
+                    raw += contract.chain.chain_interface.get_storage_at(
+                        str(contract.address), start_slot
+                    )[:length]
+
+            if type_name == "t_string_storage":
+                return raw.decode("utf-8")
+            return raw
+        elif type_name.startswith("t_struct"):
+            # TODO support getting whole struct?
+            if len(keys) == 0 or not isinstance(keys[0], str):
+                raise ValueError(
+                    f"{type_info.label} requires member name to be specified as key"
+                )
+            try:
+                member = next(m for m in type_info.members if m.label == keys[0])
+            except StopIteration:
+                raise ValueError(f"{type_info.label} does not have member {keys[0]}")
+            # structs always start a new slot
+            return _get_storage_value(
+                slot + member.slot, member.offset, keys[1:], member.type, types
+            )
+        elif type_name.startswith("t_array"):
+            # TODO support getting whole array?
+            if len(keys) == 0 or not isinstance(keys[0], int):
+                raise ValueError(
+                    f"{type_info.label} requires index to be specified as key"
+                )
+
+            base_type = types[type_info.base]
+            items_per_slot = 32 // base_type.number_of_bytes
+
+            # arrays always start a new slot
+            if type_info.encoding == "dynamic_array":
+                slot = int.from_bytes(keccak256(slot.to_bytes(32, "big")), "big")
+                length = Abi.decode(["uint256"], slot_data)[0]
+
+                if keys[0] >= length:
+                    raise ValueError(
+                        f"index {keys[0]} out of bounds for {type_info.label} with length {length}"
+                    )
+            else:
+                # check if index is out of bounds
+                if keys[0] >= int(type_info.label.split("[")[-1][:-1]):
+                    raise ValueError(
+                        f"index {keys[0]} out of bounds for {type_info.label}"
+                    )
+
+            if items_per_slot > 0:
+                return _get_storage_value(
+                    slot + keys[0] // items_per_slot,
+                    (keys[0] % items_per_slot) * base_type.number_of_bytes,
+                    keys[1:],
+                    type_info.base,
+                    types,
+                )
+            else:
+                # assuming base_type.number_of_bytes is always a multiple of 32
+                return _get_storage_value(
+                    slot + (base_type.number_of_bytes * keys[0]) // 32,
+                    0,
+                    keys[1:],
+                    type_info.base,
+                    types,
+                )
+        elif type_name.startswith("t_bytes"):
+            # bytes1 to bytes32
+            data = data.ljust(32, b"\x00")
+        elif type_name.startswith("t_mapping"):
+            if len(keys) == 0:
+                raise ValueError(
+                    f"{type_info.label} requires key of type {types[type_info.key].label} to be specified as key"
+                )
+
+            key_type_name = type_info.key
+            if key_type_name.startswith("t_userDefinedValueType"):
+                key_type_name = get_user_defined_value_types_index()[key_type_name]
+
+            if key_type_name.startswith("t_string"):
+                if not isinstance(keys[0], str):
+                    raise ValueError(
+                        f"{type_info.label} requires key to be string but got {keys[0]} of type {type(keys[0])}"
+                    )
+                encoded_key = keys[0].encode("utf-8")
+            elif (
+                key_type_name.startswith("t_bytes")
+                and types[key_type_name].encoding == "bytes"
+            ):
+                # do not handle bytes1 to bytes32 in this case
+                if not isinstance(keys[0], bytes):
+                    raise ValueError(
+                        f"{type_info.label} requires key to be bytes but got {keys[0]} of type {type(keys[0])}"
+                    )
+                encoded_key = keys[0]
+            elif key_type_name.startswith("t_contract"):
+                encoded_key = Abi.encode(["address"], [keys[0]])
+            elif key_type_name.startswith("t_enum"):
+                encoded_key = Abi.encode(["uint8"], [keys[0]])
+            else:
+                encoded_key = Abi.encode([key_type_name[2:]], [keys[0]])
+
+            return _get_storage_value(
+                int.from_bytes(
+                    keccak256(encoded_key + slot.to_bytes(32, "big")), "big"
+                ),
+                0,
+                keys[1:],
+                type_info.value,
+                types,
+            )
+        else:
+            data = data.rjust(32, b"\x00")
+
+        return Abi.decode([type_name[2:]], data)[0]
+
+    if storage_layout_contract is None:
+        storage_layout = _get_storage_layout(get_logic_contract(contract))
+    else:
+        storage_layout = _get_storage_layout(storage_layout_contract)
+
+    if keys is None:
+        keys = []
+
+    try:
+        storage = next(i for i in storage_layout.storage if i.label == name)
+    except StopIteration:
+        raise ValueError(f"Storage variable {name} not found")
+
+    return _get_storage_value(
+        storage.slot, storage.offset, keys, storage.type, storage_layout.types
+    )
+
+
+def write_storage_variable(
+    contract: Account,
+    name: str,
+    value: Any,
+    *,
+    keys: Optional[Sequence] = None,
+    storage_layout_contract: Optional[Union[Account, Type[Contract]]] = None,
+):
+    def _set_storage_value(
+        slot: int,
+        offset: int,
+        keys: Sequence,
+        type_name: str,
+        types: Dict[str, SolcOutputStorageLayoutType],
+    ):
+        nonlocal value
+
+        type_info = types[type_name]
+
+        if type_name in ["t_bytes_storage", "t_string_storage"]:
+            if type_name == "t_string_storage":
+                if not isinstance(value, str):
+                    raise ValueError(
+                        f"{type_info.label} requires string value but got {value} of type {type(value)}"
+                    )
+                value = value.encode("utf-8")
+            else:
+                if not isinstance(value, bytes):
+                    raise ValueError(
+                        f"{type_info.label} requires bytes value but got {value} of type {type(value)}"
+                    )
+
+            if len(value) >= 32:
+                encoded_length = Abi.encode(["uint256"], [len(value) * 2 + 1])
+                contract.chain.chain_interface.set_storage_at(
+                    str(contract.address), slot, encoded_length
+                )
+
+                start_slot = int.from_bytes(keccak256(slot.to_bytes(32, "big")), "big")
+                length = len(value)
+
+                while length >= 32:
+                    contract.chain.chain_interface.set_storage_at(
+                        str(contract.address), start_slot, value[:32]
+                    )
+                    start_slot += 1
+                    value = value[32:]
+                    length -= 32
+
+                if length > 0:
+                    original_data = contract.chain.chain_interface.get_storage_at(
+                        str(contract.address), start_slot
+                    )
+                    contract.chain.chain_interface.set_storage_at(
+                        str(contract.address),
+                        start_slot,
+                        value + original_data[length:],
+                    )
+            else:
+                encoded_data = Abi.encode(["uint8"], [len(value) * 2])
+                encoded_data = value + encoded_data[len(value) :]
+                contract.chain.chain_interface.set_storage_at(
+                    str(contract.address), slot, encoded_data
+                )
+        elif type_name.startswith("t_struct"):
+            # TODO support setting whole struct?
+            if len(keys) == 0 or not isinstance(keys[0], str):
+                raise ValueError(
+                    f"{type_info.label} requires member name to be specified as key"
+                )
+            try:
+                member = next(m for m in type_info.members if m.label == keys[0])
+            except StopIteration:
+                raise ValueError(f"{type_info.label} does not have member {keys[0]}")
+            # structs always start a new slot
+            _set_storage_value(
+                slot + member.slot, member.offset, keys[1:], member.type, types
+            )
+        elif type_name.startswith("t_array"):
+            # TODO support setting whole array?
+            if len(keys) == 0 or not isinstance(keys[0], int):
+                raise ValueError(
+                    f"{type_info.label} requires index to be specified as key"
+                )
+
+            base_type = types[type_info.base]
+            items_per_slot = 32 // base_type.number_of_bytes
+
+            # arrays always start a new slot
+            if type_info.encoding == "dynamic_array":
+                slot_data = contract.chain.chain_interface.get_storage_at(
+                    str(contract.address), slot
+                )
+                slot = int.from_bytes(keccak256(slot.to_bytes(32, "big")), "big")
+                length = Abi.decode(["uint256"], slot_data)[0]
+
+                if keys[0] >= length:
+                    raise ValueError(
+                        f"index {keys[0]} out of bounds for {type_info.label} with length {length}"
+                    )
+            else:
+                # check if index is out of bounds
+                if keys[0] >= int(type_info.label.split("[")[-1][:-1]):
+                    raise ValueError(
+                        f"index {keys[0]} out of bounds for {type_info.label}"
+                    )
+
+            if items_per_slot > 0:
+                _set_storage_value(
+                    slot + keys[0] // items_per_slot,
+                    (keys[0] % items_per_slot) * base_type.number_of_bytes,
+                    keys[1:],
+                    type_info.base,
+                    types,
+                )
+            else:
+                # assuming base_type.number_of_bytes is always a multiple of 32
+                _set_storage_value(
+                    slot + (base_type.number_of_bytes * keys[0]) // 32,
+                    0,
+                    keys[1:],
+                    type_info.base,
+                    types,
+                )
+        elif type_name.startswith("t_mapping"):
+            if len(keys) == 0:
+                raise ValueError(
+                    f"{type_info.label} requires key of type {types[type_info.key].label} to be specified as key"
+                )
+
+            key_type_name = type_info.key
+            if key_type_name.startswith("t_userDefinedValueType"):
+                key_type_name = get_user_defined_value_types_index()[key_type_name]
+
+            if key_type_name.startswith("t_string"):
+                if not isinstance(keys[0], str):
+                    raise ValueError(
+                        f"{type_info.label} requires key to be string but got {keys[0]} of type {type(keys[0])}"
+                    )
+                encoded_key = keys[0].encode("utf-8")
+            elif (
+                key_type_name.startswith("t_bytes")
+                and types[key_type_name].encoding == "bytes"
+            ):
+                # do not handle bytes1 to bytes32 in this case
+                if not isinstance(keys[0], bytes):
+                    raise ValueError(
+                        f"{type_info.label} requires key to be bytes but got {keys[0]} of type {type(keys[0])}"
+                    )
+                encoded_key = keys[0]
+            elif key_type_name.startswith("t_contract"):
+                encoded_key = Abi.encode(["address"], [keys[0]])
+            elif key_type_name.startswith("t_enum"):
+                encoded_key = Abi.encode(["uint8"], [keys[0]])
+            else:
+                encoded_key = Abi.encode([key_type_name[2:]], [keys[0]])
+
+            _set_storage_value(
+                int.from_bytes(
+                    keccak256(encoded_key + slot.to_bytes(32, "big")), "big"
+                ),
+                0,
+                keys[1:],
+                type_info.value,
+                types,
+            )
+        else:
+            original_data = bytearray(
+                contract.chain.chain_interface.get_storage_at(
+                    str(contract.address), slot
+                )
+            )
+            encoded_value = Abi.encode_packed([type_name[2:]], [value])
+            original_data[
+                -offset - type_info.number_of_bytes : (-offset if offset != 0 else None)
+            ] = encoded_value
+            contract.chain.chain_interface.set_storage_at(
+                str(contract.address), slot, original_data
+            )
+
+    if storage_layout_contract is None:
+        storage_layout = _get_storage_layout(get_logic_contract(contract))
+    else:
+        storage_layout = _get_storage_layout(storage_layout_contract)
+
+    if keys is None:
+        keys = []
+
+    try:
+        storage = next(i for i in storage_layout.storage if i.label == name)
+    except StopIteration:
+        raise ValueError(f"Storage variable {name} not found")
+
+    _set_storage_value(
+        storage.slot, storage.offset, keys, storage.type, storage_layout.types
+    )
+
+
+def _get_storage_layout(
+    contract: Union[Account, Type[Contract]]
+) -> SolcOutputStorageLayout:
+    if inspect.isclass(contract):
+        if not hasattr(contract, "_storage_layout"):
+            raise ValueError("Could not get storage layout from contract source code")
+
+        return SolcOutputStorageLayout.parse_obj(contract._storage_layout)
+
     fqn = get_fqn_from_address(contract.address, "latest", contract.chain)
     if fqn is None:
-        if contract.chain._fork is None:
+        if contract.chain._forked_chain_id is None:
             raise ValueError("Contract not found")
 
-        forked_chain_interface = ChainInterfaceAbc.connect(
-            get_config(), contract.chain._fork
-        )
-        try:
-            forked_chain_id = forked_chain_interface.get_chain_id()
-        finally:
-            forked_chain_interface.close()
-
-        if forked_chain_id not in chain_explorer_urls:
+        if contract.chain._forked_chain_id not in chain_explorer_urls:
             raise ValueError(
-                f"Chain explorer URL not found for chain ID {forked_chain_id}"
+                f"Chain explorer URL not found for chain ID {contract.chain._forked_chain_id}"
             )
 
         try:
