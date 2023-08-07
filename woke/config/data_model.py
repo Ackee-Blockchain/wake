@@ -211,6 +211,12 @@ class DeploymentConfig(WokeConfigModel):
     silent: bool = False
 
 
+class DashConfig(WokeConfigModel):
+    accept_gojs_license: bool = False
+    launch_application_if_macos: bool = True
+    application_to_launch: str = ""
+
+
 class TopLevelConfig(WokeConfigModel):
     subconfigs: List[Path] = []
     api_keys: Dict[str, str] = {}
@@ -220,6 +226,7 @@ class TopLevelConfig(WokeConfigModel):
     lsp: LspConfig = Field(default_factory=LspConfig)
     testing: TestingConfig = Field(default_factory=TestingConfig)
     deployment: DeploymentConfig = Field(default_factory=DeploymentConfig)
+    dash: DashConfig = Field(default_factory=DashConfig)
 
     @validator("subconfigs", pre=True, each_item=True)
     def set_subconfig(cls, v):

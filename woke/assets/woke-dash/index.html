@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Woke Dash</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+
+    <!-- Let's load our model first, so we can assign the window title. -->
+    <script src="./woke-dash-model.js"></script>
+    <script>
+        document.title = window.model.metadata.project_name + ": Woke Dash";
+    </script>
+
+    <!-- region dependencies -->
+    <!-- region gojs -->
+    <script src="./vendor/go-2.3.8.js"></script>
+    <!-- endregion gojs -->
+
+    <!-- region fomantic ui-->
+    <!-- Fomantic UI is a better (maintained) version of Semantic UI, a front-end component library (like eg Material Design)-->
+    <!-- You MUST include jQuery 3+ before Fomantic -->
+    <script src="./vendor/jquery-3.6.3.js"></script>
+    <!-- Yeah it would be great to package this one as well, but it imports 6 fonts that take up 300kB. -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.css">
+    <script src="./vendor/fomantic-2.9.2.js"></script>
+    <!-- endregion fomantic ui-->
+    <!-- endregion dependencies -->
+
+</head>
+
+<!-- Display: flex allows the following options (among others):
+    1. flex-dirction - how will DOM childern be layed out. row by default.
+    2. justify-content - how will DOM children be layed out along the main axis. flex-start by default.
+    3. align-items - how will DOM children be layed out along the cross axis. stretch by default.
+Childern can have:
+    4. flex-wrap - whether they should wrap if they don't fit. nowrap/wrap. wrap by default.
+    1. flex-grow - proportional that they are allowed to expand by. 0 by default.
+-->
+<!-- height: 100vh (vertical height) means the body occupies the entire page. -->
+<body style="height: 100vh; margin: 0; display: flex; flex-direction: column;">
+    <!-- margin order: top, right, bottom, left -->
+    <div style="display: flex; flex-direction: row; justify-content: center; flex-wrap: wrap; margin: 10px 0 0 0">
+        <button class="ui button teal" style="margin: 0 5px" data-content="Show help menu" onclick="$('.ui.overlay.fullscreen.modal').modal('show');">Help</button>
+        <button class="ui button" style="margin: 0 5px" data-content="Sets layout.spacing -= 50" onclick="window.mainGraph.layout.spacing -= 50" >spacing -50</button>
+        <button class="ui button" style="margin: 0 5px" data-content="Sets layout.spacing += 50" onclick="window.mainGraph.layout.spacing += 50">spacing +50</button>
+        <button class="ui button" style="margin: 0 5px" data-content="Sets layout.aspectRatio -= 0.1" onclick="window.mainGraph.layout.aspectRatio -= 0.1">aspectRatio -0.1</button>
+        <button class="ui button" style="margin: 0 5px" data-content="Sets layout.aspectRatio += 0.1" onclick="window.mainGraph.layout.aspectRatio += 0.1">aspectRatio +0.1</button>
+        <button class="ui button teal" style="margin: 0 5px" data-content="Calls .commandHandler.zoomToFit() and .alignDocument(go.Spot.Center, go.Spot.Center)" onclick="window.mainGraph.commandHandler.zoomToFit(); window.mainGraph.alignDocument(go.Spot.Center, go.Spot.Center);">Center diagram</button>
+        <select id="graphSelection" class="ui selection dropdown" style="margin: 0 5px">
+            <option value="refGraph">Reference graph</option>
+            <option value="inhGraph">Inheritance graph</option>
+        </select>
+        <button class="ui button" style="margin: 0 5px" data-content="Hide groups whose nodes don't have links to nodes outside the group" onclick="window.hide_unused()">Hide unused</button>
+        <button class="ui button" style="margin: 0 5px" data-content="Show all nodes in diagram" onclick="window.show_all()">Show all</button>
+        <button class="ui button" style="margin: 0 5px" data-content="Collapse all groups in diagram" onclick="window.collapse_all()">Collapse all</button>
+        <button class="ui button" style="margin: 0 5px" data-content="Expand all groups in diagram" onclick="window.expand_all()">Expand all</button>
+    </div>
+    <div class="container">
+        <div id="myDeclDiv" class="resizable"></div>
+        <div id="resizer"></div>
+        <div id="myMainDiv" class="resizable">
+            <div id="myRefDiv" style="height: 100%; width: 100%"></div>
+            <div id="myInhDiv" style="height: 100%; width: 100%; display: none"></div>
+        </div>
+    </div>
+    <style>
+        .container {
+            display: flex;
+            width: 100%;
+            /* make this extend until the end of the page */
+            flex-grow: 1;
+        }
+
+        .resizable {
+            min-width: 100px;
+            border: 1px solid black;
+        }
+
+        #myDeclDiv {
+            flex-grow: 2.5;
+            margin: 10px 0 10px 10px;
+        }
+
+        #myMainDiv {
+            flex-grow: 7.5;
+            margin: 10px 10px 10px 0;
+        }
+
+        #resizer {
+            width: 10px;
+            /* display a resize cursor when hovering over the resizer */
+            cursor: ew-resize;
+        }
+
+        code {
+            font-family: "Courier New", monospace;
+        }
+    </style>
+
+    <script src="./js/common.js"></script>
+    <script src="./js/declGraph.js"></script>
+    <script src="./js/declGraphKeyboard.js"></script>
+    <script src="./js/refGraph.js"></script>
+    <script src="./js/inhGraph.js"></script>
+    <script>
+        // this obviously can't go into common, because it has to be after refGraph.js has run
+        window.mainGraph = window.myRefGraph;
+        // endregion main graph
+    </script>
+
+    <div class="ui overlay fullscreen modal">
+        <i class="close icon"></i>
+        <div class="header">
+            Help
+        </div>
+        <div class="content">
+            <p>Keyboard shortcuts that work when Declaration Graph (the one on the left) is focused:</p>
+            <ul>
+                <li>j, k - select next/previous node</li>
+            </ul>
+        <p>To view this file on an iPad or another computer, ensure you are on a WiFi where you trust all other computers. Then type: <code id="cdDir"></code>.</p>
+        <script>document.getElementById("cdDir").innerHTML = "cd " + window.model.metadata.project_root_path + "; python3 -m http.server"</script>
+        <p>Next, figure out your IP address on your local network. On Windows, try typing <code>ipconfig</code> in a command prompt and look for the line that says "IPv4 Address". On Linux and MacOS, try <code>ifconfig | grep inet</code>. Your address should be the first <code>inet</code> one after <code>127.0.0.1</code>. Finally, open <code>{your_ip_address}:8000</code> on the target machine.
+        </div>
+</body>
+
+</html>
+
