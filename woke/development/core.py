@@ -3,7 +3,6 @@ from __future__ import annotations
 import dataclasses
 import functools
 import importlib
-import inspect
 import json
 import math
 import re
@@ -50,7 +49,7 @@ from typing_extensions import (
     get_type_hints,
 )
 
-from woke.utils import StrEnum
+from woke.utils import StrEnum, get_class_that_defined_method
 
 from ..utils.keyed_default_dict import KeyedDefaultDict
 from . import hardhat_console
@@ -220,28 +219,6 @@ class Abi:
 
     @classmethod
     def encode_call(cls, func: Callable, arguments: Iterable) -> bytes:
-        def get_class_that_defined_method(meth):
-            if isinstance(meth, functools.partial):
-                return get_class_that_defined_method(meth.func)
-            if inspect.ismethod(meth):
-                for c in inspect.getmro(meth.__self__.__class__):
-                    if meth.__name__ in c.__dict__:
-                        return c
-                meth = getattr(
-                    meth, "__func__", meth
-                )  # fallback to __qualname__ parsing
-            if inspect.isfunction(meth):
-                c = getattr(
-                    inspect.getmodule(meth),
-                    meth.__qualname__.split(".<locals>", 1)[0].rsplit(".", 1)[0],
-                    None,
-                )
-                if isinstance(c, type):
-                    return c
-            return getattr(
-                meth, "__objclass__", None
-            )  # handle special descriptor objects
-
         selector = func.selector
         contract = get_class_that_defined_method(func)
         assert selector in contract._abi  # pyright: ignore reportGeneralTypeIssues
