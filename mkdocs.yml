@@ -72,11 +72,12 @@ extra:
   version:
     provider: mike
 
+watch:
+  - woke
+
 plugins:
 - search
 - mkdocstrings:
-    watch:
-      - woke
     custom_templates: docs/templates
     handlers:
       python:
