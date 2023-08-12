@@ -2,23 +2,23 @@ import logging
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
-import woke.ast.ir.yul as yul
+from woke.ir import (
+    BinaryOperation,
+    ContractDefinition,
+    DeclarationAbc,
+    Identifier,
+    IdentifierPath,
+    IrAbc,
+    MemberAccess,
+    UnaryOperation,
+    UserDefinedTypeName,
+    YulIdentifier,
+)
 
-from ...ast.enums import GlobalSymbolsEnum
-from ...ast.ir.abc import IrAbc
-from ...ast.ir.declaration.abc import DeclarationAbc
-from ...ast.ir.declaration.contract_definition import ContractDefinition
-from ...ast.ir.expression.binary_operation import BinaryOperation
-from ...ast.ir.expression.identifier import Identifier
-from ...ast.ir.expression.member_access import MemberAccess
-from ...ast.ir.expression.unary_operation import UnaryOperation
-from ...ast.ir.meta.identifier_path import IdentifierPath
-from ...ast.ir.type_name.user_defined_type_name import UserDefinedTypeName
 from ...core.solidity_version import SemanticVersion
 from ..common_structures import (
     MarkupContent,
     MarkupKind,
-    MessageType,
     Position,
     Range,
     TextDocumentPositionParams,
@@ -259,7 +259,7 @@ def _get_results_from_node(
             return None
         node = part.referenced_declaration
         original_node_location = part.byte_location
-    elif isinstance(original_node, yul.Identifier):
+    elif isinstance(original_node, YulIdentifier):
         external_reference = original_node.external_reference
         if external_reference is not None:
             node = external_reference.referenced_declaration
@@ -286,7 +286,7 @@ def _get_results_from_node(
             )
 
         return value, original_node_location
-    elif isinstance(node, yul.Identifier):
+    elif isinstance(node, YulIdentifier):
         if node.name in yul_definitions:
             return (
                 f"```solidity\n{yul_definitions[node.name]}\n```",

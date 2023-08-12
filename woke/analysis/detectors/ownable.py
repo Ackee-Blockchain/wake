@@ -3,35 +3,37 @@ from collections import deque
 from functools import lru_cache
 from typing import Optional, Set, Tuple, Union
 
-import woke.ast.types as types
+import woke.ir.types as types
 from woke.analysis.cfg import CfgBlock, ControlFlowGraph, TransitionCondition
 from woke.analysis.detectors.utils import (
     expression_is_global_symbol,
     get_variable_declarations_from_expression,
     pair_function_call_arguments,
 )
-from woke.ast.enums import (
+from woke.ir import (
+    Assignment,
+    BinaryOperation,
+    ExpressionAbc,
+    ExpressionStatement,
+    ExternalReference,
+    FunctionCall,
+    FunctionDefinition,
+    IdentifierPathPart,
+    IndexAccess,
+    ModifierDefinition,
+    PlaceholderStatement,
+    Return,
+    StatementAbc,
+    TupleExpression,
+    VariableDeclaration,
+)
+from woke.ir.enums import (
     BinaryOpOperator,
     FunctionKind,
     GlobalSymbolsEnum,
     Mutability,
     Visibility,
 )
-from woke.ast.ir.declaration.function_definition import FunctionDefinition
-from woke.ast.ir.declaration.modifier_definition import ModifierDefinition
-from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
-from woke.ast.ir.expression.abc import ExpressionAbc
-from woke.ast.ir.expression.assignment import Assignment
-from woke.ast.ir.expression.binary_operation import BinaryOperation
-from woke.ast.ir.expression.function_call import FunctionCall
-from woke.ast.ir.expression.index_access import IndexAccess
-from woke.ast.ir.expression.tuple_expression import TupleExpression
-from woke.ast.ir.meta.identifier_path import IdentifierPathPart
-from woke.ast.ir.statement.abc import StatementAbc
-from woke.ast.ir.statement.expression_statement import ExpressionStatement
-from woke.ast.ir.statement.inline_assembly import ExternalReference
-from woke.ast.ir.statement.placeholder_statement import PlaceholderStatement
-from woke.ast.ir.statement.return_statement import Return
 from woke.utils import recursion_guard, return_on_recursion
 
 logger = logging.getLogger(__name__)

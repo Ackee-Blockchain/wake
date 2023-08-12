@@ -2,19 +2,19 @@ from typing import List, Optional, Set
 
 from woke.analysis.detectors import DetectorAbc, DetectorResult, detector
 from woke.analysis.detectors.utils import get_function_definition_from_expression
-from woke.ast.enums import DataLocation, GlobalSymbolsEnum
-from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
-from woke.ast.ir.expression.assignment import Assignment
-from woke.ast.ir.expression.function_call import FunctionCall
-from woke.ast.ir.expression.identifier import Identifier
-from woke.ast.ir.expression.index_access import IndexAccess
-from woke.ast.ir.expression.member_access import MemberAccess
-from woke.ast.ir.statement.abc import StatementAbc
-from woke.ast.ir.statement.expression_statement import ExpressionStatement
-from woke.ast.ir.statement.variable_declaration_statement import (
+from woke.core.solidity_version import SolidityVersionRange, SolidityVersionRanges
+from woke.ir import (
+    Assignment,
+    ExpressionStatement,
+    FunctionCall,
+    Identifier,
+    IndexAccess,
+    MemberAccess,
+    StatementAbc,
+    VariableDeclaration,
     VariableDeclarationStatement,
 )
-from woke.core.solidity_version import SolidityVersionRange, SolidityVersionRanges
+from woke.ir.enums import DataLocation, GlobalSymbolsEnum
 
 
 def check_bug_empty_byte_array_copy(fc: FunctionCall) -> Optional[DetectorResult]:

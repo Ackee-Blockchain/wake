@@ -46,13 +46,13 @@ from woke.core.solidity_version import (
     SolidityVersionRange,
     SolidityVersionRanges,
 )
+from woke.ir import SourceUnit
+from woke.ir.ast import AstSolc
+from woke.ir.reference_resolver import CallbackParams, ReferenceResolver
+from woke.ir.utils import IrInitTuple
 from woke.regex_parser import SoliditySourceParser
 from woke.svm import SolcVersionManager
 
-from ..ast.ir.meta.source_unit import SourceUnit
-from ..ast.ir.reference_resolver import CallbackParams, ReferenceResolver
-from ..ast.ir.utils import IrInitTuple
-from ..ast.nodes import AstSolc
 from ..utils import get_package_version
 from ..utils.file_utils import is_relative_to
 from .build_data_model import (

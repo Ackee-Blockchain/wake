@@ -1,19 +1,21 @@
 import logging
 from typing import List, Sequence, Set
 
-import woke.ast.types as types
+import woke.ir.types as types
 from woke.analysis.detectors import DetectorAbc, DetectorResult, detector
-from woke.ast.enums import DataLocation, FunctionCallKind, FunctionTypeKind, Visibility
-from woke.ast.ir.abc import IrAbc
-from woke.ast.ir.declaration.function_definition import FunctionDefinition
-from woke.ast.ir.expression.function_call import FunctionCall
-from woke.ast.ir.expression.function_call_options import FunctionCallOptions
-from woke.ast.ir.expression.identifier import Identifier
-from woke.ast.ir.expression.member_access import MemberAccess
-from woke.ast.ir.expression.new_expression import NewExpression
-from woke.ast.ir.expression.tuple_expression import TupleExpression
-from woke.ast.ir.meta.source_unit import SourceUnit
 from woke.core.solidity_version import SolidityVersionRange, SolidityVersionRanges
+from woke.ir import (
+    FunctionCall,
+    FunctionCallOptions,
+    FunctionDefinition,
+    Identifier,
+    IrAbc,
+    MemberAccess,
+    NewExpression,
+    SourceUnit,
+    TupleExpression,
+)
+from woke.ir.enums import DataLocation, FunctionCallKind, FunctionTypeKind, Visibility
 
 logger = logging.getLogger(__name__)
 

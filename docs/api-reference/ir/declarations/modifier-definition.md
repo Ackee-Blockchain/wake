@@ -1,1 +1,1 @@
-::: woke.ast.ir.declaration.modifier_definition
+::: woke.ir.declaration.modifier_definition

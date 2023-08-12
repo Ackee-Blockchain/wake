@@ -1,1 +1,1 @@
-::: woke.ast.ir.declaration.enum_value
+::: woke.ir.declaration.enum_value

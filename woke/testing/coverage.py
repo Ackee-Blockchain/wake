@@ -13,27 +13,6 @@ from typing import Any, Callable, DefaultDict, Dict, List, Optional, Set, Tuple,
 
 from intervaltree import IntervalTree
 
-from woke.ast.ir.abc import IrAbc
-from woke.ast.ir.declaration.function_definition import FunctionDefinition
-from woke.ast.ir.declaration.modifier_definition import ModifierDefinition
-from woke.ast.ir.meta.source_unit import SourceUnit
-from woke.ast.ir.reference_resolver import ReferenceResolver
-from woke.ast.ir.statement.abc import StatementAbc
-from woke.ast.ir.statement.block import Block
-from woke.ast.ir.statement.do_while_statement import DoWhileStatement
-from woke.ast.ir.statement.for_statement import ForStatement
-from woke.ast.ir.statement.if_statement import IfStatement
-from woke.ast.ir.statement.try_statement import TryStatement
-from woke.ast.ir.statement.unchecked_block import UncheckedBlock
-from woke.ast.ir.statement.while_statement import WhileStatement
-from woke.ast.ir.yul.abc import YulStatementAbc
-from woke.ast.ir.yul.block import Block as YulBlock
-from woke.ast.ir.yul.for_loop import ForLoop as YulForLoop
-from woke.ast.ir.yul.function_definition import (
-    FunctionDefinition as YulFunctionDefinition,
-)
-from woke.ast.ir.yul.if_statement import If as YulIf
-from woke.ast.ir.yul.switch import Switch as YulSwitch
 from woke.cli.console import console
 from woke.compiler import SolidityCompiler
 from woke.compiler.build_data_model import ProjectBuild
@@ -46,6 +25,27 @@ from woke.development.core import (
     get_fqn_from_creation_code,
 )
 from woke.development.internal import read_from_memory
+from woke.ir import (
+    Block,
+    DoWhileStatement,
+    ForStatement,
+    FunctionDefinition,
+    IfStatement,
+    IrAbc,
+    ModifierDefinition,
+    SourceUnit,
+    StatementAbc,
+    TryStatement,
+    UncheckedBlock,
+    WhileStatement,
+    YulBlock,
+    YulForLoop,
+    YulFunctionDefinition,
+    YulIf,
+    YulStatementAbc,
+    YulSwitch,
+)
+from woke.ir.reference_resolver import ReferenceResolver
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)

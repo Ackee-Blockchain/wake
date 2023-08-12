@@ -2,17 +2,17 @@ from typing import List, Set
 
 from woke.analysis.detectors import DetectorAbc, DetectorResult, detector
 from woke.analysis.detectors.utils import check_all_return_params_set
-from woke.ast.enums import GlobalSymbolsEnum
-from woke.ast.ir.declaration.function_definition import FunctionDefinition
-from woke.ast.ir.expression.function_call import FunctionCall
-from woke.ast.ir.statement.expression_statement import ExpressionStatement
-from woke.ast.ir.statement.inline_assembly import InlineAssembly
-from woke.ast.ir.statement.return_statement import Return
-from woke.ast.ir.statement.revert_statement import RevertStatement
-from woke.ast.ir.yul.expression_statement import (
-    ExpressionStatement as YulExpressionStatement,
+from woke.ir import (
+    ExpressionStatement,
+    FunctionCall,
+    FunctionDefinition,
+    InlineAssembly,
+    Return,
+    RevertStatement,
+    YulExpressionStatement,
+    YulFunctionCall,
 )
-from woke.ast.ir.yul.function_call import FunctionCall as YulFunctionCall
+from woke.ir.enums import GlobalSymbolsEnum
 
 
 def check_missing_return(node: FunctionDefinition) -> List[DetectorResult]:

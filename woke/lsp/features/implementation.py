@@ -1,10 +1,7 @@
 import logging
 from typing import List, Union
 
-from woke.ast.ir.abc import IrAbc
-from woke.ast.ir.declaration.function_definition import FunctionDefinition
-from woke.ast.ir.declaration.modifier_definition import ModifierDefinition
-from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
+from woke.ir import FunctionDefinition, IrAbc, ModifierDefinition, VariableDeclaration
 from woke.lsp.common_structures import (
     DocumentUri,
     Location,

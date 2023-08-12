@@ -1,1 +1,1 @@
-::: woke.ast.ir.declaration.contract_definition
+::: woke.ir.declaration.contract_definition

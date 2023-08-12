@@ -2,13 +2,15 @@ import logging
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
-import woke.ast.ir.yul as yul
-from woke.ast.ir.abc import IrAbc
-from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
-from woke.ast.ir.expression.identifier import Identifier
-from woke.ast.ir.expression.member_access import MemberAccess
-from woke.ast.ir.meta.identifier_path import IdentifierPath
-from woke.ast.ir.type_name.user_defined_type_name import UserDefinedTypeName
+from woke.ir import (
+    Identifier,
+    IdentifierPath,
+    IrAbc,
+    MemberAccess,
+    UserDefinedTypeName,
+    VariableDeclaration,
+    YulIdentifier,
+)
 from woke.lsp.common_structures import (
     DocumentUri,
     Location,
@@ -68,7 +70,7 @@ def _get_results_from_node(
         if part is None:
             return None
         node = part.referenced_declaration
-    elif isinstance(original_node, yul.Identifier):
+    elif isinstance(original_node, YulIdentifier):
         external_reference = original_node.external_reference
         if external_reference is None:
             return None

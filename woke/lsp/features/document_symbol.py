@@ -1,24 +1,22 @@
 import logging
 from typing import List, Optional, Union
 
-from woke.ast.enums import ContractKind, Mutability, StateMutability
-from woke.ast.ir.declaration.abc import DeclarationAbc
-from woke.ast.ir.declaration.contract_definition import ContractDefinition
-from woke.ast.ir.declaration.enum_definition import EnumDefinition
-from woke.ast.ir.declaration.error_definition import ErrorDefinition
-from woke.ast.ir.declaration.event_definition import EventDefinition
-from woke.ast.ir.declaration.function_definition import FunctionDefinition
-from woke.ast.ir.declaration.modifier_definition import ModifierDefinition
-from woke.ast.ir.declaration.struct_definition import StructDefinition
-from woke.ast.ir.declaration.user_defined_value_type_definition import (
+from woke.ir import (
+    ContractDefinition,
+    DeclarationAbc,
+    EnumDefinition,
+    ErrorDefinition,
+    EventDefinition,
+    FunctionDefinition,
+    ModifierDefinition,
+    StructDefinition,
     UserDefinedValueTypeDefinition,
+    VariableDeclaration,
 )
-from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
+from woke.ir.enums import ContractKind, Mutability, StateMutability
 from woke.lsp.common_structures import (
     DocumentSymbol,
     PartialResultParams,
-    Position,
-    Range,
     SymbolInformation,
     SymbolKind,
     TextDocumentIdentifier,

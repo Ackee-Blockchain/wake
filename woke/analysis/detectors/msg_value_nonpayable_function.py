@@ -3,12 +3,14 @@ from itertools import chain
 from typing import Deque, List, Set
 
 from woke.analysis.detectors import DetectorAbc, DetectorResult, detector
-from woke.ast.enums import GlobalSymbolsEnum, StateMutability
-from woke.ast.ir.declaration.function_definition import FunctionDefinition
-from woke.ast.ir.expression.function_call import FunctionCall
-from woke.ast.ir.expression.member_access import MemberAccess
-from woke.ast.ir.meta.identifier_path import IdentifierPathPart
-from woke.ast.ir.statement.inline_assembly import ExternalReference
+from woke.ir import (
+    ExternalReference,
+    FunctionCall,
+    FunctionDefinition,
+    IdentifierPathPart,
+    MemberAccess,
+)
+from woke.ir.enums import GlobalSymbolsEnum, StateMutability
 
 
 @detector(-1031, "msg-value-nonpayable-function")

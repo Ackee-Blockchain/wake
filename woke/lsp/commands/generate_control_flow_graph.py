@@ -3,9 +3,7 @@ from typing import List
 
 import graphviz as gv
 
-from woke.ast.ir.declaration.function_definition import FunctionDefinition
-from woke.ast.ir.declaration.modifier_definition import ModifierDefinition
-from woke.ast.ir.statement.abc import StatementAbc
+from woke.ir import FunctionDefinition, ModifierDefinition, StatementAbc
 from woke.lsp.common_structures import DocumentUri
 from woke.lsp.context import LspContext
 from woke.lsp.exceptions import LspError

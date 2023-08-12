@@ -3,9 +3,8 @@ from typing import List, Set
 
 from woke.analysis.detectors import DetectorAbc, DetectorResult, detector
 from woke.analysis.detectors.ownable import statement_is_publicly_executable
-from woke.ast.enums import GlobalSymbolsEnum
-from woke.ast.ir.expression.function_call import FunctionCall
-from woke.ast.ir.statement.abc import StatementAbc
+from woke.ir import FunctionCall, StatementAbc
+from woke.ir.enums import GlobalSymbolsEnum
 
 logger = logging.getLogger(__name__)
 

@@ -15,72 +15,9 @@ from rich.panel import Panel
 from rich.syntax import Syntax, SyntaxTheme
 from rich.tree import Tree
 
-import woke.ast.ir.yul as yul
 import woke.cli.console
-from woke.ast.ir.abc import IrAbc
-from woke.ast.ir.declaration.contract_definition import ContractDefinition
-from woke.ast.ir.declaration.enum_definition import EnumDefinition
-from woke.ast.ir.declaration.enum_value import EnumValue
-from woke.ast.ir.declaration.error_definition import ErrorDefinition
-from woke.ast.ir.declaration.event_definition import EventDefinition
-from woke.ast.ir.declaration.function_definition import FunctionDefinition
-from woke.ast.ir.declaration.modifier_definition import ModifierDefinition
-from woke.ast.ir.declaration.struct_definition import StructDefinition
-from woke.ast.ir.declaration.user_defined_value_type_definition import (
-    UserDefinedValueTypeDefinition,
-)
-from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
-from woke.ast.ir.expression.assignment import Assignment
-from woke.ast.ir.expression.binary_operation import BinaryOperation
-from woke.ast.ir.expression.conditional import Conditional
-from woke.ast.ir.expression.elementary_type_name_expression import (
-    ElementaryTypeNameExpression,
-)
-from woke.ast.ir.expression.function_call import FunctionCall
-from woke.ast.ir.expression.function_call_options import FunctionCallOptions
-from woke.ast.ir.expression.identifier import Identifier
-from woke.ast.ir.expression.index_access import IndexAccess
-from woke.ast.ir.expression.index_range_access import IndexRangeAccess
-from woke.ast.ir.expression.literal import Literal
-from woke.ast.ir.expression.member_access import MemberAccess
-from woke.ast.ir.expression.new_expression import NewExpression
-from woke.ast.ir.expression.tuple_expression import TupleExpression
-from woke.ast.ir.expression.unary_operation import UnaryOperation
-from woke.ast.ir.meta.identifier_path import IdentifierPath
-from woke.ast.ir.meta.import_directive import ImportDirective
-from woke.ast.ir.meta.inheritance_specifier import InheritanceSpecifier
-from woke.ast.ir.meta.modifier_invocation import ModifierInvocation
-from woke.ast.ir.meta.override_specifier import OverrideSpecifier
-from woke.ast.ir.meta.parameter_list import ParameterList
-from woke.ast.ir.meta.pragma_directive import PragmaDirective
-from woke.ast.ir.meta.source_unit import SourceUnit
-from woke.ast.ir.meta.structured_documentation import StructuredDocumentation
-from woke.ast.ir.meta.try_catch_clause import TryCatchClause
-from woke.ast.ir.meta.using_for_directive import UsingForDirective
-from woke.ast.ir.statement.block import Block
-from woke.ast.ir.statement.break_statement import Break
-from woke.ast.ir.statement.continue_statement import Continue
-from woke.ast.ir.statement.do_while_statement import DoWhileStatement
-from woke.ast.ir.statement.emit_statement import EmitStatement
-from woke.ast.ir.statement.expression_statement import ExpressionStatement
-from woke.ast.ir.statement.for_statement import ForStatement
-from woke.ast.ir.statement.if_statement import IfStatement
-from woke.ast.ir.statement.inline_assembly import InlineAssembly
-from woke.ast.ir.statement.placeholder_statement import PlaceholderStatement
-from woke.ast.ir.statement.return_statement import Return
-from woke.ast.ir.statement.revert_statement import RevertStatement
-from woke.ast.ir.statement.try_statement import TryStatement
-from woke.ast.ir.statement.unchecked_block import UncheckedBlock
-from woke.ast.ir.statement.variable_declaration_statement import (
-    VariableDeclarationStatement,
-)
-from woke.ast.ir.statement.while_statement import WhileStatement
-from woke.ast.ir.type_name.array_type_name import ArrayTypeName
-from woke.ast.ir.type_name.elementary_type_name import ElementaryTypeName
-from woke.ast.ir.type_name.function_type_name import FunctionTypeName
-from woke.ast.ir.type_name.mapping import Mapping
-from woke.ast.ir.type_name.user_defined_type_name import UserDefinedTypeName
 from woke.config import WokeConfig
+from woke.ir import *
 from woke.utils.file_utils import is_relative_to
 
 logger = logging.getLogger(__name__)
@@ -153,24 +90,24 @@ visit_map: Dict[Type[IrAbc], Callable] = {
     FunctionTypeName: lambda self, node: self.visit_function_type_name(node),
     Mapping: lambda self, node: self.visit_mapping(node),
     UserDefinedTypeName: lambda self, node: self.visit_user_defined_type_name(node),
-    yul.Assignment: lambda self, node: self.visit_yul_assignment(node),
-    yul.Block: lambda self, node: self.visit_yul_block(node),
-    yul.Break: lambda self, node: self.visit_yul_break(node),
-    yul.Case: lambda self, node: self.visit_yul_case(node),
-    yul.Continue: lambda self, node: self.visit_yul_continue(node),
-    yul.ExpressionStatement: lambda self, node: self.visit_yul_expression_statement(
+    YulAssignment: lambda self, node: self.visit_yul_assignment(node),
+    YulBlock: lambda self, node: self.visit_yul_block(node),
+    YulBreak: lambda self, node: self.visit_yul_break(node),
+    YulCase: lambda self, node: self.visit_yul_case(node),
+    YulContinue: lambda self, node: self.visit_yul_continue(node),
+    YulExpressionStatement: lambda self, node: self.visit_yul_expression_statement(
         node
     ),
-    yul.ForLoop: lambda self, node: self.visit_yul_for_loop(node),
-    yul.FunctionCall: lambda self, node: self.visit_yul_function_call(node),
-    yul.FunctionDefinition: lambda self, node: self.visit_yul_function_definition(node),
-    yul.Identifier: lambda self, node: self.visit_yul_identifier(node),
-    yul.If: lambda self, node: self.visit_yul_if(node),
-    yul.Leave: lambda self, node: self.visit_yul_leave(node),
-    yul.Literal: lambda self, node: self.visit_yul_literal(node),
-    yul.Switch: lambda self, node: self.visit_yul_switch(node),
-    yul.TypedName: lambda self, node: self.visit_yul_typed_name(node),
-    yul.VariableDeclaration: lambda self, node: self.visit_yul_variable_declaration(
+    YulForLoop: lambda self, node: self.visit_yul_for_loop(node),
+    YulFunctionCall: lambda self, node: self.visit_yul_function_call(node),
+    YulFunctionDefinition: lambda self, node: self.visit_yul_function_definition(node),
+    YulIdentifier: lambda self, node: self.visit_yul_identifier(node),
+    YulIf: lambda self, node: self.visit_yul_if(node),
+    YulLeave: lambda self, node: self.visit_yul_leave(node),
+    YulLiteral: lambda self, node: self.visit_yul_literal(node),
+    YulSwitch: lambda self, node: self.visit_yul_switch(node),
+    YulTypedName: lambda self, node: self.visit_yul_typed_name(node),
+    YulVariableDeclaration: lambda self, node: self.visit_yul_variable_declaration(
         node
     ),
 }
@@ -379,52 +316,52 @@ class DetectorAbc(ABC):
         pass
 
     # yul
-    def visit_yul_assignment(self, node: yul.Assignment):
+    def visit_yul_assignment(self, node: YulAssignment):
         pass
 
-    def visit_yul_block(self, node: yul.Block):
+    def visit_yul_block(self, node: YulBlock):
         pass
 
-    def visit_yul_break(self, node: yul.Break):
+    def visit_yul_break(self, node: YulBreak):
         pass
 
-    def visit_yul_case(self, node: yul.Case):
+    def visit_yul_case(self, node: YulCase):
         pass
 
-    def visit_yul_continue(self, node: yul.Continue):
+    def visit_yul_continue(self, node: YulContinue):
         pass
 
-    def visit_yul_expression_statement(self, node: yul.ExpressionStatement):
+    def visit_yul_expression_statement(self, node: YulExpressionStatement):
         pass
 
-    def visit_yul_for_loop(self, node: yul.ForLoop):
+    def visit_yul_for_loop(self, node: YulForLoop):
         pass
 
-    def visit_yul_function_call(self, node: yul.FunctionCall):
+    def visit_yul_function_call(self, node: YulFunctionCall):
         pass
 
-    def visit_yul_function_definition(self, node: yul.FunctionDefinition):
+    def visit_yul_function_definition(self, node: YulFunctionDefinition):
         pass
 
-    def visit_yul_identifier(self, node: yul.Identifier):
+    def visit_yul_identifier(self, node: YulIdentifier):
         pass
 
-    def visit_yul_if(self, node: yul.If):
+    def visit_yul_if(self, node: YulIf):
         pass
 
-    def visit_yul_leave(self, node: yul.Leave):
+    def visit_yul_leave(self, node: YulLeave):
         pass
 
-    def visit_yul_literal(self, node: yul.Literal):
+    def visit_yul_literal(self, node: YulLiteral):
         pass
 
-    def visit_yul_switch(self, node: yul.Switch):
+    def visit_yul_switch(self, node: YulSwitch):
         pass
 
-    def visit_yul_typed_name(self, node: yul.TypedName):
+    def visit_yul_typed_name(self, node: YulTypedName):
         pass
 
-    def visit_yul_variable_declaration(self, node: yul.VariableDeclaration):
+    def visit_yul_variable_declaration(self, node: YulVariableDeclaration):
         pass
 
 

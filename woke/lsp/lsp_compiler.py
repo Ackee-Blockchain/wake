@@ -41,15 +41,15 @@ if TYPE_CHECKING:
 import networkx as nx
 from intervaltree import IntervalTree
 
-from woke.ast.ir.meta.source_unit import SourceUnit
-from woke.ast.ir.reference_resolver import CallbackParams, ReferenceResolver
-from woke.ast.ir.utils import IrInitTuple
-from woke.ast.nodes import AstSolc
-from woke.compiler import SolcOutput, SolcOutputSelectionEnum
+from woke.compiler import SolcOutputSelectionEnum
 from woke.compiler.compilation_unit import CompilationUnit
 from woke.compiler.compiler import SolidityCompiler
 from woke.compiler.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
 from woke.config import WokeConfig
+from woke.ir import SourceUnit
+from woke.ir.ast import AstSolc
+from woke.ir.reference_resolver import CallbackParams, ReferenceResolver
+from woke.ir.utils import IrInitTuple
 from woke.lsp.document_sync import (
     DidChangeTextDocumentParams,
     DidCloseTextDocumentParams,
@@ -60,7 +60,6 @@ from woke.lsp.utils.uri import path_to_uri, uri_to_path
 from ..svm import SolcVersionManager
 from .common_structures import (
     CreateFilesParams,
-    DeleteFile,
     DeleteFilesParams,
     Diagnostic,
     DiagnosticRelatedInformation,

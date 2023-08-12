@@ -8,14 +8,11 @@ from typing import Optional, Set
 import pytest
 
 from woke.analysis.detectors import detect
-from woke.ast.ir.abc import IrAbc
-from woke.ast.ir.declaration.contract_definition import ContractDefinition
-from woke.ast.ir.declaration.function_definition import FunctionDefinition
-from woke.ast.ir.meta.source_unit import SourceUnit
 from woke.compiler import SolcOutputSelectionEnum, SolidityCompiler
 from woke.compiler.build_data_model import ProjectBuild
 from woke.compiler.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
 from woke.config import WokeConfig
+from woke.ir import ContractDefinition, FunctionDefinition, IrAbc, SourceUnit
 
 SOURCES_PATH = Path(__file__).parent.resolve() / "detectors_sources"
 
