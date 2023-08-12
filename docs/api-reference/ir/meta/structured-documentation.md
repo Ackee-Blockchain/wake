@@ -1,1 +1,1 @@
-::: woke.ast.ir.meta.structured_documentation
+::: woke.ir.meta.structured_documentation

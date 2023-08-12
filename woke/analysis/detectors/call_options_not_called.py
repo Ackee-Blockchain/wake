@@ -1,9 +1,7 @@
 from typing import List, Set
 
-from woke.ast.enums import GlobalSymbolsEnum
-from woke.ast.ir.expression.function_call import FunctionCall
-from woke.ast.ir.expression.function_call_options import FunctionCallOptions
-from woke.ast.ir.expression.member_access import MemberAccess
+from woke.ir import FunctionCall, FunctionCallOptions, MemberAccess
+from woke.ir.enums import GlobalSymbolsEnum
 
 from .api import DetectorAbc, DetectorResult, detector
 

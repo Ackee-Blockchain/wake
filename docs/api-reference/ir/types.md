@@ -1,5 +1,5 @@
-Types represent the type of an expression ([ExpressionAbc][woke.ast.ir.expression.abc.ExpressionAbc]), type name ([TypeNameAbc][woke.ast.ir.type_name.abc.TypeNameAbc]) and [VariableDeclaration][woke.ast.ir.declaration.variable_declaration.VariableDeclaration].
+Types represent the type of an expression ([ExpressionAbc][woke.ir.expression.abc.ExpressionAbc]), type name ([TypeNameAbc][woke.ir.type_name.abc.TypeNameAbc]) and [VariableDeclaration][woke.ir.declaration.variable_declaration.VariableDeclaration].
 
-::: woke.ast.types
+::: woke.ir.types
     options:
       members_order: "source"

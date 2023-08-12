@@ -1,16 +1,18 @@
 from typing import List, Set
 
-import woke.ast.types as types
+import woke.ir.types as types
 from woke.analysis.detectors import DetectorAbc, DetectorResult, detector
-from woke.ast.enums import UnaryOpOperator
-from woke.ast.ir.expression.assignment import Assignment
-from woke.ast.ir.expression.conditional import Conditional
-from woke.ast.ir.expression.function_call import FunctionCall
-from woke.ast.ir.expression.function_call_options import FunctionCallOptions
-from woke.ast.ir.expression.index_access import IndexAccess
-from woke.ast.ir.expression.index_range_access import IndexRangeAccess
-from woke.ast.ir.expression.unary_operation import UnaryOperation
-from woke.ast.ir.statement.expression_statement import ExpressionStatement
+from woke.ir import (
+    Assignment,
+    Conditional,
+    ExpressionStatement,
+    FunctionCall,
+    FunctionCallOptions,
+    IndexAccess,
+    IndexRangeAccess,
+    UnaryOperation,
+)
+from woke.ir.enums import UnaryOpOperator
 
 
 @detector(-1000, "unchecked-return-value")

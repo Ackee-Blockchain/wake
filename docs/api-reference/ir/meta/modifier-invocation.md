@@ -1,1 +1,1 @@
-::: woke.ast.ir.meta.modifier_invocation
+::: woke.ir.meta.modifier_invocation

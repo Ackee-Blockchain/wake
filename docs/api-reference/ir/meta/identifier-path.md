@@ -1,1 +1,1 @@
-::: woke.ast.ir.meta.identifier_path
+::: woke.ir.meta.identifier_path

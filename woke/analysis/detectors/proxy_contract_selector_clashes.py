@@ -6,29 +6,29 @@ from woke.analysis.detectors.utils import (
     get_function_implementations,
     pair_function_call_arguments,
 )
-from woke.ast.enums import FunctionKind, GlobalSymbolsEnum, LiteralKind, Visibility
-from woke.ast.ir.abc import IrAbc
-from woke.ast.ir.declaration.abc import DeclarationAbc
-from woke.ast.ir.declaration.contract_definition import ContractDefinition
-from woke.ast.ir.declaration.function_definition import FunctionDefinition
-from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
-from woke.ast.ir.expression.abc import ExpressionAbc
-from woke.ast.ir.expression.binary_operation import BinaryOperation
-from woke.ast.ir.expression.function_call import FunctionCall
-from woke.ast.ir.expression.identifier import Identifier
-from woke.ast.ir.expression.literal import Literal
-from woke.ast.ir.expression.member_access import MemberAccess
-from woke.ast.ir.expression.tuple_expression import TupleExpression
-from woke.ast.ir.statement.abc import StatementAbc
-from woke.ast.ir.statement.inline_assembly import InlineAssembly
-from woke.ast.ir.statement.return_statement import Return
-from woke.ast.ir.statement.variable_declaration_statement import (
+from woke.ir import (
+    BinaryOperation,
+    ContractDefinition,
+    DeclarationAbc,
+    ExpressionAbc,
+    FunctionCall,
+    FunctionDefinition,
+    Identifier,
+    InlineAssembly,
+    IrAbc,
+    Literal,
+    MemberAccess,
+    Return,
+    StatementAbc,
+    TupleExpression,
+    VariableDeclaration,
     VariableDeclarationStatement,
+    YulBlock,
+    YulFunctionCall,
+    YulIdentifier,
 )
-from woke.ast.ir.yul.block import Block as YulBlock
-from woke.ast.ir.yul.function_call import FunctionCall as YulFunctionCall
-from woke.ast.ir.yul.identifier import Identifier as YulIdentifier
-from woke.ast.types import Address, FixedBytes
+from woke.ir.enums import FunctionKind, GlobalSymbolsEnum, LiteralKind
+from woke.ir.types import Address, FixedBytes
 
 
 @lru_cache(maxsize=2048)

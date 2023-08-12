@@ -1,1 +1,1 @@
-::: woke.ast.ir.yul.switch
+::: woke.ir.yul.switch

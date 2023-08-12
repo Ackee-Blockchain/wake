@@ -4,7 +4,7 @@ import time
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Set, Tuple, DefaultDict, List, Optional
+from typing import DefaultDict, Iterable, Optional, Set, Tuple, Union
 
 import rich_click as click
 
@@ -32,8 +32,7 @@ def run_print(ctx: click.Context, no_artifacts: bool) -> None:
         for file in config.project_root_path.rglob("**/*.sol"):
             if (
                 not any(
-                    is_relative_to(file, p)
-                    for p in config.compiler.solc.ignore_paths
+                    is_relative_to(file, p) for p in config.compiler.solc.ignore_paths
                 )
                 and file.is_file()
             ):
@@ -71,10 +70,11 @@ def run_print(ctx: click.Context, no_artifacts: bool) -> None:
 @run_print.command(name="contracts")
 @click.argument("paths", nargs=-1, type=click.Path(exists=True))
 @click.pass_context
-def run_print_contracts(ctx: click.Context, paths: Tuple[str]) -> None:
+def run_print_contracts(ctx: click.Context, paths: Iterable[Union[str, Path]]) -> None:
+    from woke.utils.file_utils import is_relative_to
+
     from ..compiler.build_data_model import ProjectBuild
     from .console import console
-    from woke.utils.file_utils import is_relative_to
 
     build: ProjectBuild = ctx.obj["build"]
 
@@ -84,26 +84,37 @@ def run_print_contracts(ctx: click.Context, paths: Tuple[str]) -> None:
         if len(paths) == 0 or any(is_relative_to(path, p) for p in paths):
             console.print(f"[link=file://{path}]{source_unit.source_unit_name}[/]")
             for contract in source_unit.contracts:
-                line, _ = source_unit.get_line_col_from_byte_offset(contract.byte_location[0])
-                console.print(f"  [bold][link=file://{path}#{line}]{contract.name}[/][/]")
+                line, _ = source_unit.get_line_col_from_byte_offset(
+                    contract.byte_location[0]
+                )
+                console.print(
+                    f"  [bold][link=file://{path}#{line}]{contract.name}[/][/]"
+                )
             console.print()
 
 
 @run_print.command(name="contract-summary")
 @click.argument("paths", nargs=-1, type=click.Path(exists=True))
-@click.option("--no-immutable", is_flag=True, default=False, help="Do not print immutable variables.")
+@click.option(
+    "--no-immutable",
+    is_flag=True,
+    default=False,
+    help="Do not print immutable variables.",
+)
 @click.pass_context
-def run_print_summary(ctx: click.Context, paths: Tuple[str], no_immutable: bool) -> None:
+def run_print_summary(
+    ctx: click.Context, paths: Iterable[Union[Path, str]], no_immutable: bool
+) -> None:
     from itertools import chain
+
+    from rich.table import Table
+
+    from woke.ir.enums import StateMutability
+    from woke.ir.meta.source_unit import SourceUnit
+    from woke.utils.file_utils import is_relative_to
 
     from ..compiler.build_data_model import ProjectBuild
     from .console import console
-    from woke.utils.file_utils import is_relative_to
-
-    from woke.ast.enums import StateMutability
-    from woke.ast.ir.meta.source_unit import SourceUnit
-
-    from rich.table import Table
 
     build: ProjectBuild = ctx.obj["build"]
 
@@ -144,7 +155,10 @@ def run_print_summary(ctx: click.Context, paths: Tuple[str], no_immutable: bool)
                     variables.extend(base_contract.declared_variables)
                     for function in base_contract.functions:
                         # TODO constructor, fallback, receive
-                        if function.kind == "function" and not any(f.parent in contract.linearized_base_contracts for f in function.child_functions):
+                        if function.kind == "function" and not any(
+                            f.parent in contract.linearized_base_contracts
+                            for f in function.child_functions
+                        ):
                             functions.append(function)
 
                 variables.sort(
@@ -170,7 +184,9 @@ def run_print_summary(ctx: click.Context, paths: Tuple[str], no_immutable: bool)
                         unit = unit.parent
                     assert isinstance(unit, SourceUnit)
 
-                    line, _ = unit.get_line_col_from_byte_offset(variable.byte_location[0])
+                    line, _ = unit.get_line_col_from_byte_offset(
+                        variable.byte_location[0]
+                    )
                     table.add_row(
                         f"[link=vscode://file/{unit.file}:{line}]{variable.name}[/]",
                         variable.visibility,
@@ -190,12 +206,19 @@ def run_print_summary(ctx: click.Context, paths: Tuple[str], no_immutable: bool)
                         unit = unit.parent
                     assert isinstance(unit, SourceUnit)
 
-                    line, _ = unit.get_line_col_from_byte_offset(function.byte_location[0])
+                    line, _ = unit.get_line_col_from_byte_offset(
+                        function.byte_location[0]
+                    )
                     table.add_row(
                         f"[link=vscode://file/{unit.file}:{line}]{function.name}[/]",
                         function.visibility,
-                        function.state_mutability if function.state_mutability != StateMutability.NONPAYABLE else "",
-                        ", ".join(m.modifier_name.referenced_declaration.name for m in function.modifiers),
+                        function.state_mutability
+                        if function.state_mutability != StateMutability.NONPAYABLE
+                        else "",
+                        ", ".join(
+                            m.modifier_name.referenced_declaration.name
+                            for m in function.modifiers
+                        ),
                     )
 
                 console.print(table)
@@ -207,22 +230,25 @@ def run_print_summary(ctx: click.Context, paths: Tuple[str], no_immutable: bool)
 class NodeInfo:
     locs: int
     path: Optional[Path] = None
-    children: DefaultDict[str, "NodeInfo"] = field(default_factory=lambda: defaultdict(lambda: NodeInfo(0)))
+    children: DefaultDict[str, "NodeInfo"] = field(
+        default_factory=lambda: defaultdict(lambda: NodeInfo(0))
+    )
 
 
 @run_print.command(name="assembly-summary")
 @click.argument("paths", nargs=-1, type=click.Path(exists=True))
 @click.pass_context
-def run_print_summary(ctx: click.Context, paths: Tuple[str]) -> None:
+def run_assembly_summary(ctx: click.Context, paths: Iterable[Union[Path, str]]) -> None:
     from collections import defaultdict
+
+    from rich.tree import Tree
+
+    from woke.config import WokeConfig
+    from woke.ir.statement.inline_assembly import InlineAssembly
+    from woke.utils.file_utils import is_relative_to
 
     from ..compiler.build_data_model import ProjectBuild
     from .console import console
-    from woke.config import WokeConfig
-    from woke.utils.file_utils import is_relative_to
-    from woke.ast.ir.statement.inline_assembly import InlineAssembly
-
-    from rich.tree import Tree
 
     config: WokeConfig = ctx.obj["config"]
     build: ProjectBuild = ctx.obj["build"]
@@ -235,8 +261,12 @@ def run_print_summary(ctx: click.Context, paths: Tuple[str]) -> None:
         if len(paths) == 0 or any(is_relative_to(path, p) for p in paths):
             for node in source_unit:
                 if isinstance(node, InlineAssembly):
-                    start_line, _ = source_unit.get_line_col_from_byte_offset(node.byte_location[0])
-                    end_line, _ = source_unit.get_line_col_from_byte_offset(node.byte_location[1])
+                    start_line, _ = source_unit.get_line_col_from_byte_offset(
+                        node.byte_location[0]
+                    )
+                    end_line, _ = source_unit.get_line_col_from_byte_offset(
+                        node.byte_location[1]
+                    )
                     lines_per_file[path] += end_line - start_line
 
     root = NodeInfo(0)
@@ -262,7 +292,12 @@ def run_print_summary(ctx: click.Context, paths: Tuple[str]) -> None:
             if child.path is None:
                 add_node(child, tree.add(f"{name} ({child.locs} LOC)"))
             else:
-                add_node(child, tree.add(f"[link=vscode://file/{child.path}]{name}[/] ({child.locs} LOC)"))
+                add_node(
+                    child,
+                    tree.add(
+                        f"[link=vscode://file/{child.path}]{name}[/] ({child.locs} LOC)"
+                    ),
+                )
 
     add_node(root, tree)
     console.print(tree)

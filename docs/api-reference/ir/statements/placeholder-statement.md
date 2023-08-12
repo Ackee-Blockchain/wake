@@ -1,1 +1,1 @@
-::: woke.ast.ir.statement.placeholder_statement
+::: woke.ir.statement.placeholder_statement

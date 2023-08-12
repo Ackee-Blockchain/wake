@@ -1,1 +1,1 @@
-::: woke.ast.ir.meta.override_specifier
+::: woke.ir.meta.override_specifier

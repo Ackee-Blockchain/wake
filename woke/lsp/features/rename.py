@@ -4,17 +4,20 @@ from collections import defaultdict
 from pathlib import Path
 from typing import DefaultDict, List, Optional, Set, Union
 
-import woke.ast.ir.yul as yul
-from woke.ast.ir.abc import IrAbc
-from woke.ast.ir.declaration.abc import DeclarationAbc
-from woke.ast.ir.declaration.function_definition import FunctionDefinition
-from woke.ast.ir.expression.binary_operation import BinaryOperation
-from woke.ast.ir.expression.identifier import Identifier
-from woke.ast.ir.expression.member_access import MemberAccess
-from woke.ast.ir.expression.unary_operation import UnaryOperation
-from woke.ast.ir.meta.identifier_path import IdentifierPath, IdentifierPathPart
-from woke.ast.ir.statement.inline_assembly import ExternalReference
-from woke.ast.ir.type_name.user_defined_type_name import UserDefinedTypeName
+from woke.ir import (
+    BinaryOperation,
+    FunctionDefinition,
+    DeclarationAbc,
+    ExternalReference,
+    Identifier,
+    IdentifierPath,
+    IdentifierPathPart,
+    IrAbc,
+    MemberAccess,
+    UnaryOperation,
+    UserDefinedTypeName,
+    YulIdentifier,
+)
 from woke.lsp.common_structures import (
     DocumentUri,
     OptionalVersionedTextDocumentIdentifier,
@@ -187,7 +190,7 @@ async def rename(
         if part is None:
             raise LspError(ErrorCodes.RequestFailed, "Cannot rename this symbol")
         node = part.referenced_declaration
-    elif isinstance(node, yul.Identifier):
+    elif isinstance(node, YulIdentifier):
         external_reference = node.external_reference
         if external_reference is None:
             raise LspError(ErrorCodes.RequestFailed, "Cannot rename this symbol")
@@ -245,7 +248,7 @@ async def prepare_rename(
             return None
         location = part.byte_location
         node = part.referenced_declaration
-    elif isinstance(node, yul.Identifier):
+    elif isinstance(node, YulIdentifier):
         external_reference = node.external_reference
         if external_reference is None:
             return None

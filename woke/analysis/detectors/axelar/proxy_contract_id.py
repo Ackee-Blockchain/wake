@@ -3,9 +3,21 @@ from typing import Deque, Dict, List, Optional, Set, Union
 
 from Crypto.Hash import keccak
 
-import woke.ast.types as types
+import woke.ir.types as types
 from woke.analysis.detectors import DetectorAbc, DetectorResult, detector
-from woke.ast.enums import (
+from woke.ir import (
+    Assignment,
+    BinaryOperation,
+    ContractDefinition,
+    ExpressionAbc,
+    ExternalReference,
+    FunctionCall,
+    FunctionDefinition,
+    IdentifierPathPart,
+    Literal,
+    Return,
+)
+from woke.ir.enums import (
     BinaryOpOperator,
     ContractKind,
     FunctionCallKind,
@@ -13,16 +25,6 @@ from woke.ast.enums import (
     LiteralKind,
     Visibility,
 )
-from woke.ast.ir.declaration.contract_definition import ContractDefinition
-from woke.ast.ir.declaration.function_definition import FunctionDefinition
-from woke.ast.ir.expression.abc import ExpressionAbc
-from woke.ast.ir.expression.assignment import Assignment
-from woke.ast.ir.expression.binary_operation import BinaryOperation
-from woke.ast.ir.expression.function_call import FunctionCall
-from woke.ast.ir.expression.literal import Literal
-from woke.ast.ir.meta.identifier_path import IdentifierPathPart
-from woke.ast.ir.statement.inline_assembly import ExternalReference
-from woke.ast.ir.statement.return_statement import Return
 
 
 @detector(-12000, "axelar-proxy-contract-id")

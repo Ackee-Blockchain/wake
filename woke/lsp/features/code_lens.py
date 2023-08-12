@@ -1,24 +1,20 @@
 import logging
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Tuple, Union
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
 
 from intervaltree import IntervalTree
 
-from woke.ast.ir.declaration.abc import DeclarationAbc
-from woke.ast.ir.declaration.contract_definition import ContractDefinition
-from woke.ast.ir.declaration.error_definition import ErrorDefinition
-from woke.ast.ir.declaration.event_definition import EventDefinition
-from woke.ast.ir.declaration.function_definition import FunctionDefinition
-from woke.ast.ir.declaration.modifier_definition import ModifierDefinition
-from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
-from woke.ast.ir.expression.identifier import Identifier
-from woke.ast.ir.expression.member_access import MemberAccess
-from woke.ast.ir.meta.identifier_path import IdentifierPath
-from woke.ast.ir.type_name.user_defined_type_name import UserDefinedTypeName
+from woke.ir import (
+    ContractDefinition,
+    DeclarationAbc,
+    ErrorDefinition,
+    EventDefinition,
+    FunctionDefinition,
+    ModifierDefinition,
+    VariableDeclaration,
+)
 from woke.lsp.common_structures import (
     Command,
-    DocumentUri,
-    Location,
     PartialResultParams,
     Position,
     Range,
@@ -30,7 +26,7 @@ from woke.lsp.common_structures import (
 from woke.lsp.context import LspContext
 from woke.lsp.lsp_data_model import LspModel
 from woke.lsp.utils.position import changes_to_byte_offset
-from woke.lsp.utils.uri import path_to_uri, uri_to_path
+from woke.lsp.utils.uri import uri_to_path
 
 logger = logging.getLogger(__name__)
 
