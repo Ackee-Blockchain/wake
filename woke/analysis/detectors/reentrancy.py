@@ -6,7 +6,7 @@ from typing import List, Optional, Set, Tuple, Union
 
 import networkx as nx
 
-import woke.ast.types as types
+import woke.ir.types as types
 from woke.analysis.cfg import CfgBlock
 from woke.analysis.detectors.api import DetectorAbc, DetectorResult, detector
 from woke.analysis.detectors.ownable import (
@@ -17,7 +17,25 @@ from woke.analysis.detectors.utils import (
     get_all_base_and_child_functions,
     pair_function_call_arguments,
 )
-from woke.ast.enums import (
+from woke.ir import (
+    ContractDefinition,
+    ExpressionAbc,
+    ExternalReference,
+    FunctionCall,
+    FunctionDefinition,
+    Identifier,
+    IdentifierPathPart,
+    IrAbc,
+    Literal,
+    MemberAccess,
+    ParameterList,
+    Return,
+    StatementAbc,
+    TupleExpression,
+    VariableDeclaration,
+    VariableDeclarationStatement,
+)
+from woke.ir.enums import (
     ContractKind,
     FunctionCallKind,
     FunctionTypeKind,
@@ -26,24 +44,6 @@ from woke.ast.enums import (
     Mutability,
     StateMutability,
     Visibility,
-)
-from woke.ast.ir.abc import IrAbc
-from woke.ast.ir.declaration.contract_definition import ContractDefinition
-from woke.ast.ir.declaration.function_definition import FunctionDefinition
-from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
-from woke.ast.ir.expression.abc import ExpressionAbc
-from woke.ast.ir.expression.function_call import FunctionCall
-from woke.ast.ir.expression.identifier import Identifier
-from woke.ast.ir.expression.literal import Literal
-from woke.ast.ir.expression.member_access import MemberAccess
-from woke.ast.ir.expression.tuple_expression import TupleExpression
-from woke.ast.ir.meta.identifier_path import IdentifierPathPart
-from woke.ast.ir.meta.parameter_list import ParameterList
-from woke.ast.ir.statement.abc import StatementAbc
-from woke.ast.ir.statement.inline_assembly import ExternalReference
-from woke.ast.ir.statement.return_statement import Return
-from woke.ast.ir.statement.variable_declaration_statement import (
-    VariableDeclarationStatement,
 )
 
 logger = logging.getLogger(__name__)

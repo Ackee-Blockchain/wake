@@ -1,17 +1,20 @@
 import logging
 from typing import List, Union
 
-import woke.ast.ir.yul as yul
-from woke.ast.enums import GlobalSymbolsEnum
-from woke.ast.ir.abc import IrAbc
-from woke.ast.ir.declaration.abc import DeclarationAbc
-from woke.ast.ir.expression.binary_operation import BinaryOperation
-from woke.ast.ir.expression.identifier import Identifier
-from woke.ast.ir.expression.member_access import MemberAccess
-from woke.ast.ir.expression.unary_operation import UnaryOperation
-from woke.ast.ir.meta.identifier_path import IdentifierPath, IdentifierPathPart
-from woke.ast.ir.statement.inline_assembly import ExternalReference
-from woke.ast.ir.type_name.user_defined_type_name import UserDefinedTypeName
+from woke.ir import (
+    BinaryOperation,
+    DeclarationAbc,
+    ExternalReference,
+    Identifier,
+    IdentifierPath,
+    IdentifierPathPart,
+    IrAbc,
+    MemberAccess,
+    UnaryOperation,
+    UserDefinedTypeName,
+    YulIdentifier,
+)
+from woke.ir.enums import GlobalSymbolsEnum
 from woke.lsp.common_structures import (
     DocumentUri,
     Location,
@@ -131,7 +134,7 @@ async def references(
         if part is None:
             return None
         node = part.referenced_declaration
-    elif isinstance(node, yul.Identifier):
+    elif isinstance(node, YulIdentifier):
         external_reference = node.external_reference
         if external_reference is None:
             return None

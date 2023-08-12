@@ -5,20 +5,20 @@ from woke.analysis.detectors.utils import (
     expression_is_global_symbol,
     get_function_definition_from_expression,
 )
-from woke.ast.enums import BinaryOpOperator, GlobalSymbolsEnum
-from woke.ast.ir.expression.assignment import Assignment
-from woke.ast.ir.expression.binary_operation import BinaryOperation
-from woke.ast.ir.expression.function_call import FunctionCall
-from woke.ast.ir.expression.identifier import Identifier
-from woke.ast.ir.expression.index_access import IndexAccess
-from woke.ast.ir.expression.member_access import MemberAccess
-from woke.ast.ir.expression.tuple_expression import TupleExpression
-from woke.ast.ir.statement.abc import StatementAbc
-from woke.ast.ir.statement.expression_statement import ExpressionStatement
-from woke.ast.ir.statement.if_statement import IfStatement
-from woke.ast.ir.statement.variable_declaration_statement import (
+from woke.ir import (
+    Assignment,
+    BinaryOperation,
+    ExpressionStatement,
+    FunctionCall,
+    Identifier,
+    IfStatement,
+    IndexAccess,
+    MemberAccess,
+    StatementAbc,
+    TupleExpression,
     VariableDeclarationStatement,
 )
+from woke.ir.enums import BinaryOpOperator, GlobalSymbolsEnum
 
 
 def _check_variable_assigned_global_symbol(

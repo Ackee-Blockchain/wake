@@ -1,8 +1,8 @@
 from typing import List, Set
 
 from woke.analysis.detectors import DetectorAbc, DetectorResult, detector
-from woke.ast.enums import ContractKind
-from woke.ast.ir.declaration.contract_definition import ContractDefinition
+from woke.ir import ContractDefinition
+from woke.ir.enums import ContractKind
 
 
 @detector(-1040, "unused-contract")

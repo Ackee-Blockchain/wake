@@ -1,1 +1,1 @@
-::: woke.ast.ir.yul.case_statement
+::: woke.ir.yul.case_statement

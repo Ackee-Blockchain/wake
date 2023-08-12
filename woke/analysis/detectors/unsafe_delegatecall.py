@@ -1,7 +1,7 @@
 import logging
 from typing import List, Set
 
-import woke.ast.types as types
+import woke.ir.types as types
 from woke.analysis.detectors.api import DetectorAbc, DetectorResult, detector
 from woke.analysis.detectors.ownable import statement_is_publicly_executable
 from woke.analysis.detectors.reentrancy import (
@@ -9,16 +9,18 @@ from woke.analysis.detectors.reentrancy import (
     find_low_level_call_source_address,
 )
 from woke.analysis.detectors.utils import pair_function_call_arguments
-from woke.ast.enums import ContractKind, FunctionTypeKind, GlobalSymbolsEnum, Visibility
-from woke.ast.ir.declaration.contract_definition import ContractDefinition
-from woke.ast.ir.declaration.function_definition import FunctionDefinition
-from woke.ast.ir.expression.abc import ExpressionAbc
-from woke.ast.ir.expression.function_call import FunctionCall
-from woke.ast.ir.expression.literal import Literal
-from woke.ast.ir.expression.member_access import MemberAccess
-from woke.ast.ir.meta.identifier_path import IdentifierPathPart
-from woke.ast.ir.statement.abc import StatementAbc
-from woke.ast.ir.statement.inline_assembly import ExternalReference
+from woke.ir import (
+    ContractDefinition,
+    ExpressionAbc,
+    ExternalReference,
+    FunctionCall,
+    FunctionDefinition,
+    IdentifierPathPart,
+    Literal,
+    MemberAccess,
+    StatementAbc,
+)
+from woke.ir.enums import ContractKind, FunctionTypeKind, GlobalSymbolsEnum, Visibility
 
 logger = logging.getLogger(__name__)
 

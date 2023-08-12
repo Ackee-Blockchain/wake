@@ -1,1 +1,1 @@
-::: woke.ast.ir.meta.pragma_directive
+::: woke.ir.meta.pragma_directive

@@ -1,1 +1,1 @@
-::: woke.ast.ir.yul.typed_name
+::: woke.ir.yul.typed_name

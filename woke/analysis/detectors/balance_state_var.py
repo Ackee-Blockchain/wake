@@ -2,23 +2,24 @@ import logging
 from typing import List, Optional, Set
 
 from woke.analysis.detectors.api import DetectorAbc, DetectorResult, detector
-from woke.ast.enums import BinaryOpOperator, GlobalSymbolsEnum
-from woke.ast.ir.abc import IrAbc
-from woke.ast.ir.declaration.function_definition import FunctionDefinition
-from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
-from woke.ast.ir.expression.abc import ExpressionAbc
-from woke.ast.ir.expression.assignment import AssignedVariablePath, Assignment
-from woke.ast.ir.expression.binary_operation import BinaryOperation
-from woke.ast.ir.expression.function_call import FunctionCall
-from woke.ast.ir.expression.function_call_options import FunctionCallOptions
-from woke.ast.ir.expression.identifier import Identifier
-from woke.ast.ir.expression.member_access import MemberAccess
-from woke.ast.ir.expression.tuple_expression import TupleExpression
-from woke.ast.ir.meta.source_unit import SourceUnit
-from woke.ast.ir.statement.abc import StatementAbc
-from woke.ast.ir.statement.variable_declaration_statement import (
+from woke.ir import (
+    AssignedVariablePath,
+    Assignment,
+    BinaryOperation,
+    ExpressionAbc,
+    FunctionCall,
+    FunctionCallOptions,
+    FunctionDefinition,
+    Identifier,
+    IrAbc,
+    MemberAccess,
+    SourceUnit,
+    StatementAbc,
+    TupleExpression,
+    VariableDeclaration,
     VariableDeclarationStatement,
 )
+from woke.ir.enums import BinaryOpOperator, GlobalSymbolsEnum
 
 logger = logging.getLogger(__name__)
 _recursion_guard = set()

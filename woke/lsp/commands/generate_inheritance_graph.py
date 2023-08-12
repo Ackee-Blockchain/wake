@@ -4,7 +4,7 @@ from typing import Deque, Optional, Set, Tuple
 
 import graphviz as gv
 
-from woke.ast.ir.declaration.contract_definition import ContractDefinition
+from woke.ir import ContractDefinition
 from woke.lsp.common_structures import DocumentUri
 from woke.lsp.context import LspContext
 from woke.lsp.exceptions import LspError

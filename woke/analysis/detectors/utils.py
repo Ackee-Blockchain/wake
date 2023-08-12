@@ -5,27 +5,27 @@ from typing import Deque, Dict, List, Optional, Set, Tuple, Union
 
 import networkx as nx
 
-import woke.ast.types as types
+import woke.ir.types as types
 from woke.analysis.cfg import CfgBlock
-from woke.ast.enums import FunctionCallKind, GlobalSymbolsEnum
-from woke.ast.ir.declaration.contract_definition import ContractDefinition
-from woke.ast.ir.declaration.function_definition import FunctionDefinition
-from woke.ast.ir.declaration.variable_declaration import VariableDeclaration
-from woke.ast.ir.expression.abc import ExpressionAbc
-from woke.ast.ir.expression.assignment import Assignment
-from woke.ast.ir.expression.elementary_type_name_expression import (
+from woke.ir import (
+    Assignment,
+    ContractDefinition,
     ElementaryTypeNameExpression,
+    ExpressionAbc,
+    ExpressionStatement,
+    FunctionCall,
+    FunctionCallOptions,
+    FunctionDefinition,
+    Identifier,
+    InlineAssembly,
+    MemberAccess,
+    Return,
+    VariableDeclaration,
+    YulAbc,
+    YulAssignment,
+    YulIdentifier,
 )
-from woke.ast.ir.expression.function_call import FunctionCall
-from woke.ast.ir.expression.function_call_options import FunctionCallOptions
-from woke.ast.ir.expression.identifier import Identifier
-from woke.ast.ir.expression.member_access import MemberAccess
-from woke.ast.ir.statement.expression_statement import ExpressionStatement
-from woke.ast.ir.statement.inline_assembly import InlineAssembly
-from woke.ast.ir.statement.return_statement import Return
-from woke.ast.ir.yul.abc import YulAbc
-from woke.ast.ir.yul.assignment import Assignment as YulAssignment
-from woke.ast.ir.yul.identifier import Identifier as YulIdentifier
+from woke.ir.enums import FunctionCallKind, GlobalSymbolsEnum
 
 logger = logging.getLogger(__name__)
 

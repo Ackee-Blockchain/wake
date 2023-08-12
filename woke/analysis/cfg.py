@@ -5,23 +5,25 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import networkx as nx
 
-from woke.ast.enums import GlobalSymbolsEnum
-from woke.ast.ir.declaration.function_definition import FunctionDefinition
-from woke.ast.ir.declaration.modifier_definition import ModifierDefinition
-from woke.ast.ir.expression.function_call import FunctionCall
-from woke.ast.ir.statement.abc import StatementAbc
-from woke.ast.ir.statement.block import Block
-from woke.ast.ir.statement.break_statement import Break
-from woke.ast.ir.statement.continue_statement import Continue
-from woke.ast.ir.statement.do_while_statement import DoWhileStatement
-from woke.ast.ir.statement.expression_statement import ExpressionStatement
-from woke.ast.ir.statement.for_statement import ForStatement
-from woke.ast.ir.statement.if_statement import IfStatement
-from woke.ast.ir.statement.return_statement import Return
-from woke.ast.ir.statement.revert_statement import RevertStatement
-from woke.ast.ir.statement.try_statement import TryStatement
-from woke.ast.ir.statement.unchecked_block import UncheckedBlock
-from woke.ast.ir.statement.while_statement import WhileStatement
+from woke.ir import (
+    Block,
+    Break,
+    Continue,
+    DoWhileStatement,
+    ExpressionStatement,
+    ForStatement,
+    FunctionCall,
+    FunctionDefinition,
+    IfStatement,
+    ModifierDefinition,
+    Return,
+    RevertStatement,
+    StatementAbc,
+    TryStatement,
+    UncheckedBlock,
+    WhileStatement,
+)
+from woke.ir.enums import GlobalSymbolsEnum
 from woke.utils import StrEnum
 
 logger = logging.getLogger(__name__)
