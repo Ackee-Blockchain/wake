@@ -4,18 +4,18 @@ import logging
 from typing import TYPE_CHECKING, Iterator, List, Tuple, Union
 
 if TYPE_CHECKING:
-    from ..declaration.error_definition import ErrorDefinition
-    from ..declaration.event_definition import EventDefinition
-    from ..declaration.function_definition import FunctionDefinition
-    from ..declaration.modifier_definition import ModifierDefinition
-    from ..type_name.function_type_name import FunctionTypeName
+    from ..declarations.error_definition import ErrorDefinition
+    from ..declarations.event_definition import EventDefinition
+    from ..declarations.function_definition import FunctionDefinition
+    from ..declarations.modifier_definition import ModifierDefinition
+    from ..type_names.function_type_name import FunctionTypeName
     from .try_catch_clause import TryCatchClause
 
 from woke.ir.abc import IrAbc, SolidityAbc
 from woke.ir.ast import SolcParameterList
 from woke.ir.utils import IrInitTuple
 
-from ..declaration.variable_declaration import VariableDeclaration
+from ..declarations.variable_declaration import VariableDeclaration
 
 logger = logging.getLogger(__name__)
 
@@ -25,17 +25,17 @@ class ParameterList(SolidityAbc):
     !!! example
         A parameter list can be used:
 
-        - in an [ErrorDefinition][woke.ir.declaration.error_definition.ErrorDefinition]:
+        - in an [ErrorDefinition][woke.ir.declarations.error_definition.ErrorDefinition]:
             - `:::solidity (uint requested, uint available)` in line 2,
-        - in an [EventDefinition][woke.ir.declaration.event_definition.EventDefinition]:
+        - in an [EventDefinition][woke.ir.declarations.event_definition.EventDefinition]:
             - `:::solidity (address indexed previousOwner, address indexed newOwner)` in line 3,
-        - in a [FunctionDefinition][woke.ir.declaration.function_definition.FunctionDefinition]:
+        - in a [FunctionDefinition][woke.ir.declarations.function_definition.FunctionDefinition]:
             - `:::solidity (uint a, uint b)` in line 12 as function parameters,
             - `:::solidity (uint256)` in line 12 as function return parameters,
-        - in a [FunctionTypeName][woke.ir.type_name.function_type_name.FunctionTypeName]:
+        - in a [FunctionTypeName][woke.ir.type_names.function_type_name.FunctionTypeName]:
             - `:::solidity (string memory, uint)` in line 5 as function type name parameters,
             - `:::solidity (bool)` in line 5 as function type name return parameters,
-        - in a [ModifierDefinition][woke.ir.declaration.modifier_definition.ModifierDefinition]:
+        - in a [ModifierDefinition][woke.ir.declarations.modifier_definition.ModifierDefinition]:
             - `:::solidity (uint x)` in line 7,
         - in a [TryCatchClause][woke.ir.meta.try_catch_clause.TryCatchClause]:
             - `:::solidity (bool success)` in line 17 as try clause parameters,

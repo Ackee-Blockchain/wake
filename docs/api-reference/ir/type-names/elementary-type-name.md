@@ -1,1 +1,1 @@
-::: woke.ir.type_name.elementary_type_name
+::: woke.ir.type_names.elementary_type_name

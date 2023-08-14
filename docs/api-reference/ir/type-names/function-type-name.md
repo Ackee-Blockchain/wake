@@ -1,1 +1,1 @@
-::: woke.ir.type_name.function_type_name
+::: woke.ir.type_names.function_type_name

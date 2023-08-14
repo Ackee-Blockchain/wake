@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Iterator, List, Tuple, Union
 
-from ..type_name.user_defined_type_name import UserDefinedTypeName
+from ..type_names.user_defined_type_name import UserDefinedTypeName
 from .identifier_path import IdentifierPath
 
 if TYPE_CHECKING:
-    from ..declaration.function_definition import FunctionDefinition
-    from ..declaration.modifier_definition import ModifierDefinition
-    from ..declaration.variable_declaration import VariableDeclaration
+    from ..declarations.function_definition import FunctionDefinition
+    from ..declarations.modifier_definition import ModifierDefinition
+    from ..declarations.variable_declaration import VariableDeclaration
 
 from woke.ir.abc import IrAbc, SolidityAbc
 from woke.ir.ast import (
@@ -24,11 +24,11 @@ class OverrideSpecifier(SolidityAbc):
     !!! example
         An override specifier can be used:
 
-        - in a [FunctionDefinition][woke.ir.declaration.function_definition.FunctionDefinition]:
+        - in a [FunctionDefinition][woke.ir.declarations.function_definition.FunctionDefinition]:
             - `:::solidity override` in line 19,
-        - in a [ModifierDefinition][woke.ir.declaration.modifier_definition.ModifierDefinition]:
+        - in a [ModifierDefinition][woke.ir.declarations.modifier_definition.ModifierDefinition]:
             - `:::solidity override` in line 12,
-        - in a [VariableDeclaration][woke.ir.declaration.variable_declaration.VariableDeclaration]:
+        - in a [VariableDeclaration][woke.ir.declarations.variable_declaration.VariableDeclaration]:
             - `:::solidity override(IERC20)` in line 17.
 
         ```solidity linenums="1"

@@ -17,16 +17,16 @@ from woke.ir.ast import (
     SolcVariableDeclaration,
 )
 
-from ..declaration.abc import DeclarationAbc
-from ..declaration.contract_definition import ContractDefinition
-from ..declaration.enum_definition import EnumDefinition
-from ..declaration.error_definition import ErrorDefinition
-from ..declaration.function_definition import FunctionDefinition
-from ..declaration.struct_definition import StructDefinition
-from ..declaration.user_defined_value_type_definition import (
+from ..declarations.abc import DeclarationAbc
+from ..declarations.contract_definition import ContractDefinition
+from ..declarations.enum_definition import EnumDefinition
+from ..declarations.error_definition import ErrorDefinition
+from ..declarations.function_definition import FunctionDefinition
+from ..declarations.struct_definition import StructDefinition
+from ..declarations.user_defined_value_type_definition import (
     UserDefinedValueTypeDefinition,
 )
-from ..declaration.variable_declaration import VariableDeclaration
+from ..declarations.variable_declaration import VariableDeclaration
 from ..utils import IrInitTuple
 from .import_directive import ImportDirective
 from .pragma_directive import PragmaDirective
@@ -217,7 +217,7 @@ class SourceUnit(SolidityAbc):
     @property
     def functions(self) -> Tuple[FunctionDefinition, ...]:
         """
-        Should only return [FunctionDefinitions][woke.ir.declaration.function_definition.FunctionDefinition] of the [FunctionKind.FREE_FUNCTION][woke.ir.enums.FunctionKind.FREE_FUNCTION] kind.
+        Should only return [FunctionDefinitions][woke.ir.declarations.function_definition.FunctionDefinition] of the [FunctionKind.FREE_FUNCTION][woke.ir.enums.FunctionKind.FREE_FUNCTION] kind.
         Returns:
             Top-level function definitions present in the file.
         """
@@ -266,7 +266,7 @@ class SourceUnit(SolidityAbc):
     def declarations_iter(self) -> Iterator[DeclarationAbc]:
         """
         Yields:
-            All declarations ([DeclarationAbc][woke.ir.declaration.abc.DeclarationAbc]) present in the file (recursively).
+            All declarations ([DeclarationAbc][woke.ir.declarations.abc.DeclarationAbc]) present in the file (recursively).
         """
         yield from self.declared_variables
         yield from self.enums
