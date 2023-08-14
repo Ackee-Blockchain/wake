@@ -1,1 +1,1 @@
-::: woke.ir.declaration.function_definition
+::: woke.ir.declarations.function_definition

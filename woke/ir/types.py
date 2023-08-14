@@ -5,10 +5,10 @@ import typing as typ
 from abc import ABC, abstractmethod
 
 if typ.TYPE_CHECKING:
-    from woke.ir.declaration.contract_definition import ContractDefinition
-    from woke.ir.declaration.enum_definition import EnumDefinition
-    from woke.ir.declaration.struct_definition import StructDefinition
-    from woke.ir.declaration.user_defined_value_type_definition import (
+    from woke.ir.declarations.contract_definition import ContractDefinition
+    from woke.ir.declarations.enum_definition import EnumDefinition
+    from woke.ir.declarations.struct_definition import StructDefinition
+    from woke.ir.declarations.user_defined_value_type_definition import (
         UserDefinedValueTypeDefinition,
     )
 
@@ -671,12 +671,12 @@ class Function(TypeAbc):
     def gas_set(self) -> bool:
         """
         !!! example
-            In the case of the old syntax (deprecated), the `gas` [MemberAccess][woke.ir.expression.member_access.MemberAccess] expression is of the [Function][woke.ir.types.Function] type which returns a [Function][woke.ir.types.Function] with `gas_set` set to `True`.
+            In the case of the old syntax (deprecated), the `gas` [MemberAccess][woke.ir.expressions.member_access.MemberAccess] expression is of the [Function][woke.ir.types.Function] type which returns a [Function][woke.ir.types.Function] with `gas_set` set to `True`.
             ```solidity
             foo.gas(10)(1, 2);
             ```
 
-            In the case of the new syntax, the `{gas: 10}` [FunctionCallOptions][woke.ir.expression.function_call_options.FunctionCallOptions] expression is of the [Function][woke.ir.types.Function] type with `gas_set` set to `True`.
+            In the case of the new syntax, the `{gas: 10}` [FunctionCallOptions][woke.ir.expressions.function_call_options.FunctionCallOptions] expression is of the [Function][woke.ir.types.Function] type with `gas_set` set to `True`.
             ```solidity
             foo{gas: 10}(1, 2);
             ```
@@ -689,12 +689,12 @@ class Function(TypeAbc):
     def value_set(self) -> bool:
         """
         !!! example
-            In the case of the old syntax (deprecated), the `value` [MemberAccess][woke.ir.expression.member_access.MemberAccess] expression is of the [Function][woke.ir.types.Function] type which returns a [Function][woke.ir.types.Function] with `value_set` set to `True`.
+            In the case of the old syntax (deprecated), the `value` [MemberAccess][woke.ir.expressions.member_access.MemberAccess] expression is of the [Function][woke.ir.types.Function] type which returns a [Function][woke.ir.types.Function] with `value_set` set to `True`.
             ```solidity
             foo.value(1)(1, 2);
             ```
 
-            In the case of the new syntax, the `{value: 1}` [FunctionCallOptions][woke.ir.expression.function_call_options.FunctionCallOptions] expression is of the [Function][woke.ir.types.Function] type with `value_set` set to `True`.
+            In the case of the new syntax, the `{value: 1}` [FunctionCallOptions][woke.ir.expressions.function_call_options.FunctionCallOptions] expression is of the [Function][woke.ir.types.Function] type with `value_set` set to `True`.
             ```solidity
             foo{value: 1}(1, 2);
             ```
@@ -707,7 +707,7 @@ class Function(TypeAbc):
     def salt_set(self) -> bool:
         """
         !!! example
-            In the following example, the `{salt: salt}` [FunctionCallOptions][woke.ir.expression.function_call_options.FunctionCallOptions] expression is of the [Function][woke.ir.types.Function] type with `salt_set` set to `True`.
+            In the following example, the `{salt: salt}` [FunctionCallOptions][woke.ir.expressions.function_call_options.FunctionCallOptions] expression is of the [Function][woke.ir.types.Function] type with `salt_set` set to `True`.
             ```solidity
             new Foo{salt: salt}();
             ```
@@ -721,7 +721,7 @@ class Function(TypeAbc):
         """
         A function type can be attached to a type using the [UsingForDirective][woke.ir.meta.using_for_directive.UsingForDirective] or internally in the case of a Solidity global symbol.
         !!! example
-            In the following example, the `add` [MemberAccess][woke.ir.expression.member_access.MemberAccess] expression on line 9 is of the [Function][woke.ir.types.Function] type and is attached to the [UInt][woke.ir.types.UInt] type.
+            In the following example, the `add` [MemberAccess][woke.ir.expressions.member_access.MemberAccess] expression on line 9 is of the [Function][woke.ir.types.Function] type and is attached to the [UInt][woke.ir.types.UInt] type.
             ```solidity linenums="1"
             function add(uint a, uint b) pure returns (uint) {
                 return a + b;
@@ -736,7 +736,7 @@ class Function(TypeAbc):
             }
             ```
 
-            In this example, the `push` [MemberAccess][woke.ir.expression.member_access.MemberAccess] expression on line 9 is of the [Function][woke.ir.types.Function] type and is attached to the [Array][woke.ir.types.Array] type.
+            In this example, the `push` [MemberAccess][woke.ir.expressions.member_access.MemberAccess] expression on line 9 is of the [Function][woke.ir.types.Function] type and is attached to the [Array][woke.ir.types.Array] type.
             ```solidity
             arr.push(1);
             ```
@@ -1130,7 +1130,7 @@ class Contract(TypeAbc):
     def is_super(self) -> bool:
         """
         !!! warning
-            Until 0.7.6, the `super` keyword ([Identifier][woke.ir.expression.identifier.Identifier]) was of the [Contract][woke.ir.types.Contract] type with `is_super` set to `True`.
+            Until 0.7.6, the `super` keyword ([Identifier][woke.ir.expressions.identifier.Identifier]) was of the [Contract][woke.ir.types.Contract] type with `is_super` set to `True`.
             Since 0.8.0, the `super` keyword is of the [Type][woke.ir.types.Type] type with [Contract][woke.ir.types.Contract] as the `actual_type` and `is_super` set to `True`.
 
         !!! warning
@@ -1165,7 +1165,7 @@ class Contract(TypeAbc):
         Returns:
             Contract definition IR node.
         """
-        from woke.ir.declaration.contract_definition import ContractDefinition
+        from woke.ir.declarations.contract_definition import ContractDefinition
 
         node = self.__reference_resolver.resolve_node(self.__ast_id, self.__cu_hash)
         assert isinstance(node, ContractDefinition)
@@ -1264,7 +1264,7 @@ class Struct(TypeAbc):
         Returns:
             Struct definition IR node.
         """
-        from woke.ir.declaration.struct_definition import StructDefinition
+        from woke.ir.declarations.struct_definition import StructDefinition
 
         node = self.__reference_resolver.resolve_node(self.__ast_id, self.__cu_hash)
         assert isinstance(node, StructDefinition)
@@ -1318,7 +1318,7 @@ class Enum(TypeAbc):
         Returns:
             Enum definition IR node.
         """
-        from woke.ir.declaration.enum_definition import EnumDefinition
+        from woke.ir.declarations.enum_definition import EnumDefinition
 
         node = self.__reference_resolver.resolve_node(self.__ast_id, self.__cu_hash)
         assert isinstance(node, EnumDefinition)
@@ -1424,7 +1424,7 @@ class UserDefinedValueType(TypeAbc):
         Returns:
             User defined value type definition IR node.
         """
-        from woke.ir.declaration.user_defined_value_type_definition import (
+        from woke.ir.declarations.user_defined_value_type_definition import (
             UserDefinedValueTypeDefinition,
         )
 

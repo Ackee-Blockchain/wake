@@ -1,1 +1,1 @@
-::: woke.ir.statement.inline_assembly
+::: woke.ir.statements.inline_assembly

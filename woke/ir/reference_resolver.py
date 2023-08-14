@@ -22,8 +22,8 @@ from woke.ir.enums import GlobalSymbolsEnum
 
 if TYPE_CHECKING:
     from woke.ir.abc import SolidityAbc
-    from woke.ir.expression.identifier import Identifier
-    from woke.ir.expression.member_access import MemberAccess
+    from woke.ir.expressions.identifier import Identifier
+    from woke.ir.expressions.member_access import MemberAccess
     from woke.ir.meta.source_unit import SourceUnit
 
 from woke.ir.ast import AstNodeId, AstSolc

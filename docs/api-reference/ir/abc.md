@@ -4,10 +4,10 @@
 
 ::: woke.ir.yul.abc.YulAbc
 
-::: woke.ir.declaration.abc.DeclarationAbc
+::: woke.ir.declarations.abc.DeclarationAbc
 
-::: woke.ir.expression.abc.ExpressionAbc
+::: woke.ir.expressions.abc.ExpressionAbc
 
-::: woke.ir.statement.abc.StatementAbc
+::: woke.ir.statements.abc.StatementAbc
 
-::: woke.ir.type_name.abc.TypeNameAbc
+::: woke.ir.type_names.abc.TypeNameAbc
