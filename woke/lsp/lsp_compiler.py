@@ -30,7 +30,6 @@ from typing import (
 
 from woke.compiler.exceptions import CompilationError
 
-from ..analysis.detectors import detect
 from ..core.solidity_version import SolidityVersionRange, SolidityVersionRanges
 from ..utils import StrEnum
 from ..utils.file_utils import is_relative_to
@@ -875,6 +874,7 @@ class LspCompiler:
                 await self.__compile(files_to_recompile, False)
 
     async def __run_detectors_wrapper(self) -> None:
+        return
         if platform.system() == "Linux":
             # run detectors in a separate process
             parent_conn, child_conn = multiprocessing.Pipe()
