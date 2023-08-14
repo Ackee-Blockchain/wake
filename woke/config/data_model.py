@@ -121,9 +121,9 @@ class CompilerConfig(WokeConfigModel):
     solc: SolcConfig = Field(default_factory=SolcConfig)
 
 
-class DetectorsConfig(WokeConfigModel):
-    exclude: FrozenSet[Union[int, str]] = frozenset()
-    only: Optional[FrozenSet[Union[int, str]]] = None
+class DetectorsConfig(WokeConfigModel, extra=Extra.allow):
+    exclude: FrozenSet[str] = frozenset()
+    only: Optional[FrozenSet[str]] = None
     ignore_paths: FrozenSet[Path] = Field(
         default_factory=lambda: frozenset(
             [
@@ -215,6 +215,10 @@ class GeneralConfig(WokeConfigModel):
     link_format: str = "vscode://file/{path}:{line}:{col}"
 
 
+class PrintersConfig(WokeConfigModel, extra=Extra.allow):
+    pass
+
+
 class TopLevelConfig(WokeConfigModel):
     subconfigs: List[Path] = []
     api_keys: Dict[str, str] = {}
@@ -224,6 +228,7 @@ class TopLevelConfig(WokeConfigModel):
     lsp: LspConfig = Field(default_factory=LspConfig)
     testing: TestingConfig = Field(default_factory=TestingConfig)
     deployment: DeploymentConfig = Field(default_factory=DeploymentConfig)
+    printers: PrintersConfig = Field(default_factory=PrintersConfig)
     general: GeneralConfig = Field(default_factory=GeneralConfig)
 
     @validator("subconfigs", pre=True, each_item=True)

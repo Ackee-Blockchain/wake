@@ -19,6 +19,7 @@ from .data_model import (
     GeneralConfig,
     GeneratorConfig,
     LspConfig,
+    PrintersConfig,
     TestingConfig,
     TopLevelConfig,
 )
@@ -379,3 +380,10 @@ class WokeConfig:
         Return general config options.
         """
         return self.__config.general
+
+    @property
+    def printers(self) -> PrintersConfig:
+        """
+        Return printer-specific config options.
+        """
+        return self.__config.printers

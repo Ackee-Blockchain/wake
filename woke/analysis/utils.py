@@ -6,7 +6,6 @@ from typing import Deque, Dict, List, Optional, Set, Tuple, Union
 import networkx as nx
 
 import woke.ir.types as types
-from woke.analysis.cfg import CfgBlock
 from woke.ir import (
     Assignment,
     ContractDefinition,
@@ -26,6 +25,8 @@ from woke.ir import (
     YulIdentifier,
 )
 from woke.ir.enums import FunctionCallKind, GlobalSymbolsEnum
+
+from .cfg import CfgBlock
 
 logger = logging.getLogger(__name__)
 
