@@ -47,6 +47,10 @@
     color: #00FFFF;
 }
 
+[data-md-color-scheme="slate"] .md-tabs {
+    background-color: #0000FF;
+}
+
 :not(.doc-attribute) > h2.doc-heading > code,
 :not(.doc-attribute) > h3.doc-heading > code,
 :not(.doc-attribute) > h4.doc-heading > code,
