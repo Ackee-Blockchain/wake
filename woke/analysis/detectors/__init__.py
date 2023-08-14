@@ -9,6 +9,7 @@ from .api import (
 from .balance_state_var import UnsafeAddressBalanceUseDetector
 from .bug_empty_byte_array_copy import BugEmptyByteArrayCopyDetector
 from .call_options_not_called import FunctionCallOptionsNotCalledDetector
+from .dead_code import DeadCodeDetector
 from .encode_packed_arguments_collision import EncodePackedArgumentsCollisionDetector
 from .known_interface import KnownInterfaceDetector
 from .missing_return import MissingReturnDetector
