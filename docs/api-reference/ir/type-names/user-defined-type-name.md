@@ -1,1 +1,1 @@
-::: woke.ir.type_name.user_defined_type_name
+::: woke.ir.type_names.user_defined_type_name

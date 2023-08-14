@@ -1,1 +1,1 @@
-::: woke.ir.expression.elementary_type_name_expression
+::: woke.ir.expressions.elementary_type_name_expression

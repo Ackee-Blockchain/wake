@@ -5,8 +5,8 @@ from woke.utils import StrEnum
 
 class GlobalSymbolsEnum(IntEnum):
     """
-    Global symbols of the Solidity language. Symbols with identifiers from `-1` to `-99` are codified by the compiler and can only be referenced by [Identifier][woke.ir.expression.identifier.Identifier] nodes.
-    Other symbols are not officially codified by the compiler, but Woke also defines identifiers for them. These symbols can only be referenced by [MemberAccess][woke.ir.expression.member_access.MemberAccess] nodes.
+    Global symbols of the Solidity language. Symbols with identifiers from `-1` to `-99` are codified by the compiler and can only be referenced by [Identifier][woke.ir.expressions.identifier.Identifier] nodes.
+    Other symbols are not officially codified by the compiler, but Woke also defines identifiers for them. These symbols can only be referenced by [MemberAccess][woke.ir.expressions.member_access.MemberAccess] nodes.
     See the [Solidity docs](https://docs.soliditylang.org/en/latest/units-and-global-variables.html#special-variables-and-functions) for (an incomplete) list of global symbols and their descriptions.
     """
 
@@ -98,7 +98,7 @@ class GlobalSymbolsEnum(IntEnum):
 # Contracts
 class ContractKind(StrEnum):
     """
-    Kind of a [ContractDefinition][woke.ir.declaration.contract_definition.ContractDefinition] declaration node.
+    Kind of a [ContractDefinition][woke.ir.declarations.contract_definition.ContractDefinition] declaration node.
     """
 
     CONTRACT = "contract"
@@ -109,7 +109,7 @@ class ContractKind(StrEnum):
 # State variables
 class Mutability(StrEnum):
     """
-    Mutability of a [VariableDeclaration][woke.ir.declaration.variable_declaration.VariableDeclaration] declaration node.
+    Mutability of a [VariableDeclaration][woke.ir.declarations.variable_declaration.VariableDeclaration] declaration node.
     """
 
     MUTABLE = "mutable"
@@ -120,7 +120,7 @@ class Mutability(StrEnum):
 # Functions
 class FunctionKind(StrEnum):
     """
-    Kind of a [FunctionDefinition][woke.ir.declaration.function_definition.FunctionDefinition] declaration node.
+    Kind of a [FunctionDefinition][woke.ir.declarations.function_definition.FunctionDefinition] declaration node.
     """
 
     FUNCTION = "function"
@@ -137,8 +137,8 @@ class Visibility(StrEnum):
     """
     Visibility of:
 
-    - [FunctionTypeName][woke.ir.type_name.function_type_name.FunctionTypeName] type name,
-    - [FunctionDefinition][woke.ir.declaration.function_definition.FunctionDefinition], [ModifierDefinition][woke.ir.declaration.modifier_definition.ModifierDefinition], [StructDefinition][woke.ir.declaration.struct_definition.StructDefinition] and [VariableDeclaration][woke.ir.declaration.variable_declaration.VariableDeclaration] declarations.
+    - [FunctionTypeName][woke.ir.type_names.function_type_name.FunctionTypeName] type name,
+    - [FunctionDefinition][woke.ir.declarations.function_definition.FunctionDefinition], [ModifierDefinition][woke.ir.declarations.modifier_definition.ModifierDefinition], [StructDefinition][woke.ir.declarations.struct_definition.StructDefinition] and [VariableDeclaration][woke.ir.declarations.variable_declaration.VariableDeclaration] declarations.
     """
 
     EXTERNAL = "external"
@@ -152,10 +152,10 @@ class StateMutability(StrEnum):
     State mutability of:
 
     - [Function][woke.ir.types.Function] type,
-    - [FunctionDefinition][woke.ir.declaration.function_definition.FunctionDefinition] declaration,
-    - [ElementaryTypeName][woke.ir.type_name.elementary_type_name.ElementaryTypeName] and [FunctionTypeName][woke.ir.type_name.function_type_name.FunctionTypeName] type names.
+    - [FunctionDefinition][woke.ir.declarations.function_definition.FunctionDefinition] declaration,
+    - [ElementaryTypeName][woke.ir.type_names.elementary_type_name.ElementaryTypeName] and [FunctionTypeName][woke.ir.type_names.function_type_name.FunctionTypeName] type names.
 
-    In the case of [ElementaryTypeName][woke.ir.type_name.elementary_type_name.ElementaryTypeName], the state mutability is specified only for the `address` type and can be either [NONPAYABLE][woke.ir.enums.StateMutability.NONPAYABLE] or [PAYABLE][woke.ir.enums.StateMutability.PAYABLE].
+    In the case of [ElementaryTypeName][woke.ir.type_names.elementary_type_name.ElementaryTypeName], the state mutability is specified only for the `address` type and can be either [NONPAYABLE][woke.ir.enums.StateMutability.NONPAYABLE] or [PAYABLE][woke.ir.enums.StateMutability.PAYABLE].
     """
 
     PAYABLE = "payable"
@@ -176,7 +176,7 @@ class ModifierInvocationKind(StrEnum):
 # Literals
 class LiteralKind(StrEnum):
     """
-    Kind of a [Literal][woke.ir.expression.literal.Literal] expression node.
+    Kind of a [Literal][woke.ir.expressions.literal.Literal] expression node.
     """
 
     BOOL = "bool"
@@ -199,12 +199,12 @@ class YulLiteralValueKind(StrEnum):
 # Function call
 class FunctionCallKind(StrEnum):
     """
-    Kind of a [FunctionCall][woke.ir.expression.function_call.FunctionCall] expression node.
+    Kind of a [FunctionCall][woke.ir.expressions.function_call.FunctionCall] expression node.
     """
 
     FUNCTION_CALL = "functionCall"
     """
-    Represents also an error call, event call and [NewExpression][woke.ir.expression.new_expression.NewExpression] call.
+    Represents also an error call, event call and [NewExpression][woke.ir.expressions.new_expression.NewExpression] call.
     """
     TYPE_CONVERSION = "typeConversion"
     STRUCT_CONSTRUCTOR_CALL = "structConstructorCall"
@@ -213,7 +213,7 @@ class FunctionCallKind(StrEnum):
 # Compound types
 class DataLocation(StrEnum):
     """
-    Data location of a [VariableDeclaration][woke.ir.declaration.variable_declaration.VariableDeclaration] node.
+    Data location of a [VariableDeclaration][woke.ir.declarations.variable_declaration.VariableDeclaration] node.
     It also specifies the data location of the following types:
 
     - [Array][woke.ir.types.Array],
@@ -225,7 +225,7 @@ class DataLocation(StrEnum):
     CALLDATA = "calldata"
     DEFAULT = "default"
     """
-    Set only in [VariableDeclaration][woke.ir.declaration.variable_declaration.VariableDeclaration] nodes when the data location is not specified (and the compiler even does not allow it).
+    Set only in [VariableDeclaration][woke.ir.declarations.variable_declaration.VariableDeclaration] nodes when the data location is not specified (and the compiler even does not allow it).
     """
     MEMORY = "memory"
     STORAGE = "storage"
@@ -234,7 +234,7 @@ class DataLocation(StrEnum):
 # Operations
 class UnaryOpOperator(StrEnum):
     """
-    Unary operation operator used in an [UnaryOperation][woke.ir.expression.unary_operation.UnaryOperation] expression.
+    Unary operation operator used in an [UnaryOperation][woke.ir.expressions.unary_operation.UnaryOperation] expression.
     """
 
     PLUS_PLUS = r"++"
@@ -247,7 +247,7 @@ class UnaryOpOperator(StrEnum):
 
 class AssignmentOperator(StrEnum):
     """
-    Assignment operator used in an [Assignment][woke.ir.expression.assignment.Assignment] expression.
+    Assignment operator used in an [Assignment][woke.ir.expressions.assignment.Assignment] expression.
     """
 
     EQUALS = r"="
@@ -265,7 +265,7 @@ class AssignmentOperator(StrEnum):
 
 class BinaryOpOperator(StrEnum):
     """
-    Binary operation operator used in a [BinaryOperation][woke.ir.expression.binary_operation.BinaryOperation] expression.
+    Binary operation operator used in a [BinaryOperation][woke.ir.expressions.binary_operation.BinaryOperation] expression.
     """
 
     PLUS = r"+"
@@ -318,7 +318,7 @@ class InlineAssemblyFlag(StrEnum):
 
 class ModifiesStateFlag(IntFlag):
     """
-    Flag enum describing how an expression ([ExpressionAbc][woke.ir.expression.abc.ExpressionAbc]) or statement ([StatementAbc][woke.ir.statement.abc.StatementAbc]) modifies the blockchain state.
+    Flag enum describing how an expression ([ExpressionAbc][woke.ir.expressions.abc.ExpressionAbc]) or statement ([StatementAbc][woke.ir.statements.abc.StatementAbc]) modifies the blockchain state.
     """
 
     MODIFIES_STATE_VAR = 1

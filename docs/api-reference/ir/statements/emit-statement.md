@@ -1,1 +1,1 @@
-::: woke.ir.statement.emit_statement
+::: woke.ir.statements.emit_statement

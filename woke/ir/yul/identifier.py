@@ -8,7 +8,7 @@ from ..utils import IrInitTuple
 from .abc import YulAbc
 
 if TYPE_CHECKING:
-    from ..statement.inline_assembly import ExternalReference
+    from ..statements.inline_assembly import ExternalReference
     from .assignment import YulAssignment
     from .expression_statement import YulExpressionStatement
     from .for_loop import YulForLoop

@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Iterator, List, Optional, Union
 
-from ..expression.abc import ExpressionAbc
-from ..type_name.user_defined_type_name import UserDefinedTypeName
+from ..expressions.abc import ExpressionAbc
+from ..type_names.user_defined_type_name import UserDefinedTypeName
 from ..utils import IrInitTuple
 from .identifier_path import IdentifierPath
 
 if TYPE_CHECKING:
-    from ..declaration.contract_definition import ContractDefinition
+    from ..declarations.contract_definition import ContractDefinition
 
 from woke.ir.abc import IrAbc, SolidityAbc
 from woke.ir.ast import (
@@ -83,7 +83,7 @@ class InheritanceSpecifier(SolidityAbc):
     @property
     def base_name(self) -> Union[IdentifierPath, UserDefinedTypeName]:
         """
-        The returned IR node holds a reference to the base contract definition ([ContractDefinition][woke.ir.declaration.contract_definition.ContractDefinition]).
+        The returned IR node holds a reference to the base contract definition ([ContractDefinition][woke.ir.declarations.contract_definition.ContractDefinition]).
         !!! example
             `A` in the following code:
             ```solidity

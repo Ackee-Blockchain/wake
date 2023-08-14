@@ -4,12 +4,12 @@ from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
 
 from woke.ir.enums import BinaryOpOperator, UnaryOpOperator
 from woke.ir.meta.identifier_path import IdentifierPath
-from woke.ir.type_name.abc import TypeNameAbc
-from woke.ir.type_name.user_defined_type_name import UserDefinedTypeName
+from woke.ir.type_names.abc import TypeNameAbc
+from woke.ir.type_names.user_defined_type_name import UserDefinedTypeName
 from woke.ir.utils import IrInitTuple
 
 if TYPE_CHECKING:
-    from woke.ir.declaration.contract_definition import ContractDefinition
+    from woke.ir.declarations.contract_definition import ContractDefinition
     from .source_unit import SourceUnit
 
 from woke.ir.abc import IrAbc, SolidityAbc
@@ -150,7 +150,7 @@ class UsingForDirective(SolidityAbc):
         """
         Is only set in the case of `:::solidity using LibraryName for TypeName;` directive type.
         Returns:
-            IR node referencing the library ([ContractDefinition][woke.ir.declaration.contract_definition.ContractDefinition] of the [ContractKind.LIBRARY][woke.ir.enums.ContractKind.LIBRARY] kind) that is attached to the target type.
+            IR node referencing the library ([ContractDefinition][woke.ir.declarations.contract_definition.ContractDefinition] of the [ContractKind.LIBRARY][woke.ir.enums.ContractKind.LIBRARY] kind) that is attached to the target type.
         """
         return self._library_name
 

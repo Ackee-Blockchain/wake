@@ -8,7 +8,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Deque, Iterator, List, Optional, Set, Tuple
 
-from ..expression.identifier import Identifier
+from ..expressions.identifier import Identifier
 from ..reference_resolver import CallbackParams
 
 if TYPE_CHECKING:
@@ -124,7 +124,7 @@ class ImportDirective(SolidityAbc):
             yield from symbol_alias.foreign
 
     def _post_process(self, callback_params: CallbackParams):
-        from ..declaration.function_definition import FunctionDefinition
+        from ..declarations.function_definition import FunctionDefinition
 
         # referenced declaration ID is missing in import directive symbol aliases
         # the reason is that the Identifier may refer to multiple overloaded functions

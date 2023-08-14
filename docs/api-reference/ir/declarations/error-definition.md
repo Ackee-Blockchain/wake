@@ -1,1 +1,1 @@
-::: woke.ir.declaration.error_definition
+::: woke.ir.declarations.error_definition

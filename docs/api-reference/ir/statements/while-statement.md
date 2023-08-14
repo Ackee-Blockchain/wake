@@ -1,1 +1,1 @@
-::: woke.ir.statement.while_statement
+::: woke.ir.statements.while_statement

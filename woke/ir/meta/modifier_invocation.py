@@ -4,13 +4,13 @@ from typing import TYPE_CHECKING, Iterator, List, Optional, Union
 
 from woke.ir.enums import ModifierInvocationKind
 
-from ..expression.abc import ExpressionAbc
-from ..expression.identifier import Identifier
+from ..expressions.abc import ExpressionAbc
+from ..expressions.identifier import Identifier
 from ..reference_resolver import CallbackParams
 from .identifier_path import IdentifierPath
 
 if TYPE_CHECKING:
-    from ..declaration.function_definition import FunctionDefinition
+    from ..declarations.function_definition import FunctionDefinition
 
 from woke.ir.abc import IrAbc, SolidityAbc
 from woke.ir.ast import SolcIdentifier, SolcIdentifierPath, SolcModifierInvocation
@@ -72,8 +72,8 @@ class ModifierInvocation(SolidityAbc):
         self._reference_resolver.register_post_process_callback(self._post_process)
 
     def _post_process(self, callback_params: CallbackParams):
-        from ..declaration.contract_definition import ContractDefinition
-        from ..declaration.modifier_definition import ModifierDefinition
+        from ..declarations.contract_definition import ContractDefinition
+        from ..declarations.modifier_definition import ModifierDefinition
 
         referenced_declaration = self.modifier_name.referenced_declaration
         if isinstance(referenced_declaration, ModifierDefinition):
@@ -110,8 +110,8 @@ class ModifierInvocation(SolidityAbc):
     @property
     def modifier_name(self) -> Union[Identifier, IdentifierPath]:
         """
-        The returned IR node holds a reference to the [ModifierDefinition][woke.ir.declaration.modifier_definition.ModifierDefinition] declaration of the modifier being invoked in the case of the [ModifierInvocationKind.MODIFIER_INVOCATION][woke.ir.enums.ModifierInvocationKind.MODIFIER_INVOCATION] kind.
-        In the case of the [ModifierInvocationKind.BASE_CONSTRUCTOR_SPECIFIER][woke.ir.enums.ModifierInvocationKind.BASE_CONSTRUCTOR_SPECIFIER] kind, the returned IR node holds a reference to the [ContractDefinition][woke.ir.declaration.contract_definition.ContractDefinition] whose constructor is being invoked.
+        The returned IR node holds a reference to the [ModifierDefinition][woke.ir.declarations.modifier_definition.ModifierDefinition] declaration of the modifier being invoked in the case of the [ModifierInvocationKind.MODIFIER_INVOCATION][woke.ir.enums.ModifierInvocationKind.MODIFIER_INVOCATION] kind.
+        In the case of the [ModifierInvocationKind.BASE_CONSTRUCTOR_SPECIFIER][woke.ir.enums.ModifierInvocationKind.BASE_CONSTRUCTOR_SPECIFIER] kind, the returned IR node holds a reference to the [ContractDefinition][woke.ir.declarations.contract_definition.ContractDefinition] whose constructor is being invoked.
         !!! example
             `ERC20` and `initializer` in the following code:
             ```solidity

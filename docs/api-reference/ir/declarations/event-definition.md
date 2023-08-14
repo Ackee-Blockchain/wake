@@ -1,1 +1,1 @@
-::: woke.ir.declaration.event_definition
+::: woke.ir.declarations.event_definition

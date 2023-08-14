@@ -12,13 +12,13 @@ if TYPE_CHECKING:
     from .override_specifier import OverrideSpecifier
     from .source_unit import SourceUnit
     from .using_for_directive import UsingForDirective
-    from ..type_name.user_defined_type_name import UserDefinedTypeName
+    from ..type_names.user_defined_type_name import UserDefinedTypeName
 
 from intervaltree import IntervalTree
 
 from woke.ir.abc import SolidityAbc
 from woke.ir.ast import AstNodeId, SolcIdentifierPath
-from woke.ir.declaration.abc import DeclarationAbc
+from woke.ir.declarations.abc import DeclarationAbc
 from woke.ir.reference_resolver import CallbackParams, ReferenceResolver
 from woke.ir.utils import IrInitTuple
 
@@ -27,7 +27,7 @@ IDENTIFIER_RE = re.compile(r"[a-zA-Z$_][a-zA-Z0-9$_]*".encode("utf-8"))
 
 class IdentifierPathPart:
     """
-    A class representing a part of an identifier path. Is almost the same as [Identifier][woke.ir.expression.identifier.Identifier], but it is not generated in the AST output of the compiler and so it is not an IR node.
+    A class representing a part of an identifier path. Is almost the same as [Identifier][woke.ir.expressions.identifier.Identifier], but it is not generated in the AST output of the compiler and so it is not an IR node.
     """
 
     _reference_resolver: ReferenceResolver
@@ -133,7 +133,7 @@ class IdentifierPathPart:
 class IdentifierPath(SolidityAbc):
     """
     Identifier path represents a path name of identifiers separated by dots. It was introduced in Solidity 0.8.0 to replace
-    [UserDefinedTypeName][woke.ir.type_name.user_defined_type_name.UserDefinedTypeName] in some cases.
+    [UserDefinedTypeName][woke.ir.type_names.user_defined_type_name.UserDefinedTypeName] in some cases.
     """
 
     _ast_node: SolcIdentifierPath

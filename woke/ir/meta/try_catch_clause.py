@@ -5,12 +5,12 @@ from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple
 
 from woke.ir.enums import ModifiesStateFlag
 
-from ..statement.block import Block
+from ..statements.block import Block
 from ..utils import IrInitTuple
 from .parameter_list import ParameterList
 
 if TYPE_CHECKING:
-    from ..statement.try_statement import TryStatement
+    from ..statements.try_statement import TryStatement
 
 from woke.ir.abc import IrAbc, SolidityAbc
 from woke.ir.ast import SolcTryCatchClause

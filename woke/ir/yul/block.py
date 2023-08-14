@@ -20,7 +20,7 @@ from woke.ir.utils import IrInitTuple
 from .abc import YulAbc, YulStatementAbc
 
 if TYPE_CHECKING:
-    from woke.ir.statement.inline_assembly import InlineAssembly
+    from woke.ir.statements.inline_assembly import InlineAssembly
 
     from .assignment import YulAssignment
     from .break_statement import YulBreak

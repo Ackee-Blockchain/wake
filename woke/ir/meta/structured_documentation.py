@@ -7,12 +7,12 @@ from woke.ir.ast import SolcStructuredDocumentation
 from woke.ir.utils import IrInitTuple
 
 if TYPE_CHECKING:
-    from ..declaration.contract_definition import ContractDefinition
-    from ..declaration.error_definition import ErrorDefinition
-    from ..declaration.event_definition import EventDefinition
-    from ..declaration.function_definition import FunctionDefinition
-    from ..declaration.modifier_definition import ModifierDefinition
-    from ..declaration.variable_declaration import VariableDeclaration
+    from ..declarations.contract_definition import ContractDefinition
+    from ..declarations.error_definition import ErrorDefinition
+    from ..declarations.event_definition import EventDefinition
+    from ..declarations.function_definition import FunctionDefinition
+    from ..declarations.modifier_definition import ModifierDefinition
+    from ..declarations.variable_declaration import VariableDeclaration
 
 
 class StructuredDocumentation(SolidityAbc):
