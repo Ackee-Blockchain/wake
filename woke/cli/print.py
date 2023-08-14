@@ -1,25 +1,92 @@
 import asyncio
 import sys
 import time
-from collections import defaultdict
-from dataclasses import dataclass, field
 from pathlib import Path
-from typing import DefaultDict, Iterable, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Set, Type, Union
 
 import rich_click as click
 
+if TYPE_CHECKING:
+    from woke.printers import Printer
 
-@click.group(name="print")
+
+class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
+    _plugins_loaded = False
+    _plugin_commands: Dict[str, click.Command] = {}
+
+    def __init__(
+        self,
+        name: Optional[str] = None,
+        commands: Optional[
+            Union[Dict[str, click.Command], Sequence[click.Command]]
+        ] = None,
+        **attrs: Any,
+    ):
+        super().__init__(name=name, commands=commands, **attrs)
+
+        for command in self.commands.values():
+            self._inject_params(command)
+
+    @staticmethod
+    def _inject_params(command: click.Command) -> None:
+        command.params.append(
+            click.Argument(
+                ["paths"],
+                nargs=-1,
+                type=click.Path(exists=True),
+            )
+        )
+
+    def _load_plugins(self) -> None:
+        if sys.version_info < (3, 10):
+            from importlib_metadata import entry_points
+        else:
+            from importlib.metadata import entry_points
+
+        printer_entry_points = entry_points().select(group="woke.plugins.printers")
+        for entry_point in printer_entry_points:
+            entry_point.load()
+
+        self._plugins_loaded = True
+
+    def add_command(self, cmd: click.Command, name: Optional[str] = None) -> None:
+        self._inject_params(cmd)
+        super().add_command(cmd, name)
+
+    def get_command(self, ctx: click.Context, cmd_name: str) -> Optional[click.Command]:
+        if not self._plugins_loaded:
+            self._load_plugins()
+        return self.commands.get(cmd_name)
+
+    def list_commands(self, ctx: click.Context) -> List[str]:
+        if not self._plugins_loaded:
+            self._load_plugins()
+        return sorted(self.commands)
+
+    def invoke(self, ctx: click.Context):
+        ctx.obj["subcommand_args"] = ctx.args
+        ctx.obj["subcommand_protected_args"] = ctx.protected_args
+        super().invoke(ctx)
+
+
+@click.group(
+    name="print", cls=PrintCli, context_settings={"auto_envvar_prefix": "WOKE_PRINTER"}
+)
 @click.option(
     "--no-artifacts", is_flag=True, default=False, help="Do not write build artifacts."
 )
 @click.pass_context
 def run_print(ctx: click.Context, no_artifacts: bool) -> None:
     """Run a printer."""
+
+    if "--help" in ctx.obj["subcommand_args"]:
+        return
+
     from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
     from ..compiler.build_data_model import ProjectBuild
     from ..compiler.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
     from ..config import WokeConfig
+    from ..utils import get_class_that_defined_method
     from ..utils.file_utils import is_relative_to
     from .console import console
 
@@ -63,241 +130,80 @@ def run_print(ctx: click.Context, no_artifacts: bool) -> None:
     if errored:
         sys.exit(1)
 
-    ctx.obj["config"] = config
-    ctx.obj["build"] = build
+    assert compiler.latest_build_info is not None
+    assert compiler.latest_graph is not None
 
+    assert isinstance(ctx.command, PrintCli)
+    assert ctx.invoked_subcommand is not None
+    command = ctx.command.get_command(ctx, ctx.invoked_subcommand)
+    assert command is not None
+    assert command.name is not None
 
-@run_print.command(name="contracts")
-@click.argument("paths", nargs=-1, type=click.Path(exists=True))
-@click.pass_context
-def run_print_contracts(ctx: click.Context, paths: Iterable[Union[str, Path]]) -> None:
-    from woke.utils.file_utils import is_relative_to
+    if hasattr(config.printers, command.name):
+        default_map = getattr(config.printers, command.name)
+    else:
+        default_map = None
 
-    from ..compiler.build_data_model import ProjectBuild
-    from .console import console
+    cls: Type[Printer] = get_class_that_defined_method(
+        command.callback
+    )  # pyright: ignore reportGeneralTypeIssues
+    if cls is not None:
 
-    build: ProjectBuild = ctx.obj["build"]
+        def _callback(*args, **kwargs):
+            instance.paths = [Path(p).resolve() for p in kwargs.pop("paths", [])]
 
-    paths = [Path(p).resolve() for p in paths]
+            original_callback(
+                instance, *args, **kwargs
+            )  # pyright: ignore reportOptionalCall
 
-    for path, source_unit in build.source_units.items():
-        if len(paths) == 0 or any(is_relative_to(path, p) for p in paths):
-            console.print(f"[link=file://{path}]{source_unit.source_unit_name}[/]")
-            for contract in source_unit.contracts:
-                line, _ = source_unit.get_line_col_from_byte_offset(
-                    contract.byte_location[0]
-                )
-                console.print(
-                    f"  [bold][link=file://{path}#{line}]{contract.name}[/][/]"
-                )
-            console.print()
+        instance = cls()
+        instance.build = build
+        instance.build_info = compiler.latest_build_info
+        instance.config = config
+        instance.console = console
+        instance.imports_graph = (  # pyright: ignore reportGeneralTypeIssues
+            compiler.latest_graph.copy()
+        )
 
+        original_callback = command.callback
+        command.callback = _callback
 
-@run_print.command(name="contract-summary")
-@click.argument("paths", nargs=-1, type=click.Path(exists=True))
-@click.option(
-    "--no-immutable",
-    is_flag=True,
-    default=False,
-    help="Do not print immutable variables.",
-)
-@click.pass_context
-def run_print_summary(
-    ctx: click.Context, paths: Iterable[Union[Path, str]], no_immutable: bool
-) -> None:
-    from itertools import chain
+        sub_ctx = command.make_context(
+            command.name,
+            [*ctx.obj["subcommand_protected_args"][1:], *ctx.obj["subcommand_args"]],
+            parent=ctx,
+            default_map=default_map,
+        )
+        with sub_ctx:
+            sub_ctx.command.invoke(sub_ctx)
 
-    from rich.table import Table
+        instance._run()
+    else:
 
-    from woke.ir.enums import StateMutability
-    from woke.ir.meta.source_unit import SourceUnit
-    from woke.utils.file_utils import is_relative_to
+        def _callback(*args, **kwargs):
+            click.get_current_context().obj["paths"] = [
+                Path(p).resolve() for p in kwargs.pop("paths", [])
+            ]
 
-    from ..compiler.build_data_model import ProjectBuild
-    from .console import console
+            original_callback(*args, **kwargs)  # pyright: ignore reportOptionalCall
 
-    build: ProjectBuild = ctx.obj["build"]
+        args = [*ctx.obj["subcommand_protected_args"][1:], *ctx.obj["subcommand_args"]]
+        ctx.obj = {
+            "build": build,
+            "build_info": compiler.latest_build_info,
+            "config": config,
+            "console": console,
+            "imports_graph": compiler.latest_graph.copy(),
+        }
 
-    paths = [Path(p).resolve() for p in paths]
+        original_callback = command.callback
+        command.callback = _callback
 
-    for path, source_unit in build.source_units.items():
-        if len(paths) == 0 or any(is_relative_to(path, p) for p in paths):
-            for contract in source_unit.contracts:
-                table = Table(title=f"[link=file://{path}]{contract.name}[/]")
+        sub_ctx = command.make_context(
+            command.name, args, parent=ctx, default_map=default_map
+        )
+        with sub_ctx:
+            sub_ctx.command.invoke(sub_ctx)
 
-                table.add_column("Name")
-                table.add_column("Visibility", no_wrap=True)
-                table.add_column("Mutability", no_wrap=True)
-                table.add_column("Modifiers", no_wrap=True)
-
-                variable_mutability_priority = {
-                    "constant": 0,
-                    "immutable": 1,
-                    "mutable": 2,
-                }
-                function_mutability_priority = {
-                    "pure": 0,
-                    "view": 1,
-                    "nonpayable": 2,
-                    "payable": 3,
-                }
-                visibility_priority = {
-                    "private": 0,
-                    "internal": 1,
-                    "external": 2,
-                    "public": 3,
-                }
-
-                variables = []
-                functions = []
-
-                for base_contract in contract.linearized_base_contracts:
-                    variables.extend(base_contract.declared_variables)
-                    for function in base_contract.functions:
-                        # TODO constructor, fallback, receive
-                        if function.kind == "function" and not any(
-                            f.parent in contract.linearized_base_contracts
-                            for f in function.child_functions
-                        ):
-                            functions.append(function)
-
-                variables.sort(
-                    key=lambda v: (
-                        variable_mutability_priority[v.mutability],
-                        visibility_priority[v.visibility],
-                        v.name,
-                    )
-                )
-                functions.sort(
-                    key=lambda f: (
-                        function_mutability_priority[f.state_mutability],
-                        visibility_priority[f.visibility],
-                        f.name,
-                    )
-                )
-
-                for variable in variables:
-                    unit = variable
-                    while unit is not None:
-                        if isinstance(unit, SourceUnit):
-                            break
-                        unit = unit.parent
-                    assert isinstance(unit, SourceUnit)
-
-                    line, _ = unit.get_line_col_from_byte_offset(
-                        variable.byte_location[0]
-                    )
-                    table.add_row(
-                        f"[link=vscode://file/{unit.file}:{line}]{variable.name}[/]",
-                        variable.visibility,
-                        variable.mutability if variable.mutability != "mutable" else "",
-                        "",
-                    )
-                if len(variables) > 0:
-                    table.add_row(end_section=True)
-
-                # TODO overriden functions
-
-                for function in functions:
-                    unit = function
-                    while unit is not None:
-                        if isinstance(unit, SourceUnit):
-                            break
-                        unit = unit.parent
-                    assert isinstance(unit, SourceUnit)
-
-                    line, _ = unit.get_line_col_from_byte_offset(
-                        function.byte_location[0]
-                    )
-                    table.add_row(
-                        f"[link=vscode://file/{unit.file}:{line}]{function.name}[/]",
-                        function.visibility,
-                        function.state_mutability
-                        if function.state_mutability != StateMutability.NONPAYABLE
-                        else "",
-                        ", ".join(
-                            m.modifier_name.referenced_declaration.name
-                            for m in function.modifiers
-                        ),
-                    )
-
-                console.print(table)
-
-            console.print()
-
-
-@dataclass
-class NodeInfo:
-    locs: int
-    path: Optional[Path] = None
-    children: DefaultDict[str, "NodeInfo"] = field(
-        default_factory=lambda: defaultdict(lambda: NodeInfo(0))
-    )
-
-
-@run_print.command(name="assembly-summary")
-@click.argument("paths", nargs=-1, type=click.Path(exists=True))
-@click.pass_context
-def run_assembly_summary(ctx: click.Context, paths: Iterable[Union[Path, str]]) -> None:
-    from collections import defaultdict
-
-    from rich.tree import Tree
-
-    from woke.config import WokeConfig
-    from woke.ir.statement.inline_assembly import InlineAssembly
-    from woke.utils.file_utils import is_relative_to
-
-    from ..compiler.build_data_model import ProjectBuild
-    from .console import console
-
-    config: WokeConfig = ctx.obj["config"]
-    build: ProjectBuild = ctx.obj["build"]
-
-    paths = [Path(p).resolve() for p in paths]
-
-    lines_per_file: DefaultDict[Path, int] = defaultdict(int)
-
-    for path, source_unit in build.source_units.items():
-        if len(paths) == 0 or any(is_relative_to(path, p) for p in paths):
-            for node in source_unit:
-                if isinstance(node, InlineAssembly):
-                    start_line, _ = source_unit.get_line_col_from_byte_offset(
-                        node.byte_location[0]
-                    )
-                    end_line, _ = source_unit.get_line_col_from_byte_offset(
-                        node.byte_location[1]
-                    )
-                    lines_per_file[path] += end_line - start_line
-
-    root = NodeInfo(0)
-
-    for file, lines in lines_per_file.items():
-        try:
-            rel_path = file.relative_to(config.project_root_path)
-        except ValueError:
-            rel_path = file
-
-        node = root
-        node.locs += lines
-        for i, part in enumerate(rel_path.parts):
-            node = node.children[part]
-            node.locs += lines
-            if i == len(rel_path.parts) - 1:
-                node.path = file
-
-    tree = Tree(f"{root.locs} LOC")
-
-    def add_node(node: NodeInfo, tree: Tree) -> None:
-        for name, child in node.children.items():
-            if child.path is None:
-                add_node(child, tree.add(f"{name} ({child.locs} LOC)"))
-            else:
-                add_node(
-                    child,
-                    tree.add(
-                        f"[link=vscode://file/{child.path}]{name}[/] ({child.locs} LOC)"
-                    ),
-                )
-
-    add_node(root, tree)
-    console.print(tree)
+    # avoid double execution of a subcommand
+    sys.exit(0)

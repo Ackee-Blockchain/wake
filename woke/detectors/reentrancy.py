@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from collections import deque
 from functools import reduce
@@ -6,67 +8,46 @@ from typing import List, Optional, Set, Tuple, Union
 
 import networkx as nx
 
+import woke.ir as ir
 import woke.ir.types as types
-from woke.analysis.cfg import CfgBlock
-from woke.analysis.detectors.api import DetectorAbc, DetectorResult, detector
-from woke.analysis.detectors.ownable import (
-    statement_is_publicly_executable,
-    variable_is_owner,
-)
-from woke.analysis.detectors.utils import (
-    get_all_base_and_child_functions,
-    pair_function_call_arguments,
-)
-from woke.ir import (
-    ContractDefinition,
-    ExpressionAbc,
-    ExternalReference,
-    FunctionCall,
-    FunctionDefinition,
-    Identifier,
-    IdentifierPathPart,
-    IrAbc,
-    Literal,
-    MemberAccess,
-    ParameterList,
-    Return,
-    StatementAbc,
-    TupleExpression,
-    VariableDeclaration,
-    VariableDeclarationStatement,
-)
-from woke.ir.enums import (
-    ContractKind,
-    FunctionCallKind,
-    FunctionTypeKind,
-    GlobalSymbolsEnum,
-    ModifiesStateFlag,
-    Mutability,
-    StateMutability,
-    Visibility,
+from woke.detectors import (
+    Detection,
+    DetectionConfidence,
+    DetectionImpact,
+    Detector,
+    DetectorResult,
+    detector,
 )
 
 logger = logging.getLogger(__name__)
 
 
-def address_is_safe(addr: VariableDeclaration) -> Optional[bool]:
+def address_is_safe(addr: ir.VariableDeclaration) -> Optional[bool]:
+    from woke.analysis.ownable import variable_is_owner
+
     if variable_is_owner(addr):
         return True
 
-    if isinstance(addr.parent, ParameterList) and (
-        isinstance(addr.parent.parent, FunctionDefinition)
+    if isinstance(addr.parent, ir.ParameterList) and (
+        isinstance(addr.parent.parent, ir.FunctionDefinition)
     ):
         function_definition = addr.parent.parent
-        assert isinstance(function_definition, FunctionDefinition)
-        if function_definition.visibility in {Visibility.PUBLIC, Visibility.EXTERNAL}:
+        assert isinstance(function_definition, ir.FunctionDefinition)
+        if function_definition.visibility in {
+            ir.enums.Visibility.PUBLIC,
+            ir.enums.Visibility.EXTERNAL,
+        }:
             return False
 
         return None
     elif addr.is_state_variable:
-        if addr.mutability in {Mutability.CONSTANT, Mutability.IMMUTABLE}:
+        if addr.mutability in {
+            ir.enums.Mutability.CONSTANT,
+            ir.enums.Mutability.IMMUTABLE,
+        }:
             return True
         return False
-    elif isinstance(addr.parent, VariableDeclarationStatement):
+    elif isinstance(addr.parent, ir.VariableDeclarationStatement):
         return None
     else:
         logger.warning(
@@ -76,9 +57,14 @@ def address_is_safe(addr: VariableDeclaration) -> Optional[bool]:
 
 
 def find_low_level_call_source_address(
-    expression: ExpressionAbc,
+    expression: ir.ExpressionAbc,
 ) -> Optional[
-    Union[ContractDefinition, VariableDeclaration, Literal, GlobalSymbolsEnum]
+    Union[
+        ir.ContractDefinition,
+        ir.VariableDeclaration,
+        ir.Literal,
+        ir.enums.GlobalSymbolsEnum,
+    ]
 ]:
     t = expression.type
     if isinstance(t, types.Type):
@@ -88,19 +74,19 @@ def find_low_level_call_source_address(
         return None
 
     while True:
-        if isinstance(expression, (Identifier, Literal)):
+        if isinstance(expression, (ir.Identifier, ir.Literal)):
             break
-        elif isinstance(expression, FunctionCall):
-            if expression.kind == FunctionCallKind.FUNCTION_CALL:
+        elif isinstance(expression, ir.FunctionCall):
+            if expression.kind == ir.enums.FunctionCallKind.FUNCTION_CALL:
                 function_called = expression.function_called
                 if (
-                    isinstance(function_called, FunctionDefinition)
+                    isinstance(function_called, ir.FunctionDefinition)
                     and function_called.body is not None
                 ):
                     returns = [
                         statement
                         for statement in function_called.body.statements_iter()
-                        if isinstance(statement, Return)
+                        if isinstance(statement, ir.Return)
                     ]
 
                     if len(returns) == 1 and returns[0].expression is not None:
@@ -112,19 +98,21 @@ def find_low_level_call_source_address(
                         f"Unable to find source: {expression.expression}\n{expression.source}"
                     )
                     return None
-            elif expression.kind == FunctionCallKind.TYPE_CONVERSION:
+            elif expression.kind == ir.enums.FunctionCallKind.TYPE_CONVERSION:
                 if len(expression.arguments) != 1:
                     logger.debug(
                         f"Unable to find source: {expression}\n{expression.source}"
                     )
                     return None
                 expression = expression.arguments[0]
-        elif isinstance(expression, MemberAccess):
-            if isinstance(expression.referenced_declaration, GlobalSymbolsEnum):
+        elif isinstance(expression, ir.MemberAccess):
+            if isinstance(
+                expression.referenced_declaration, ir.enums.GlobalSymbolsEnum
+            ):
                 return expression.referenced_declaration
             expression = expression.expression
         elif (
-            isinstance(expression, TupleExpression)
+            isinstance(expression, ir.TupleExpression)
             and len(expression.components) == 1
             and expression.components[0] is not None
         ):
@@ -141,14 +129,14 @@ def find_low_level_call_source_address(
         logger.debug(f"Unable to find source: {expression.source}")
         return None
 
-    if isinstance(expression, Literal):
+    if isinstance(expression, ir.Literal):
         return expression
 
-    assert isinstance(expression, Identifier)
+    assert isinstance(expression, ir.Identifier)
     referenced_declaration = expression.referenced_declaration
     if not isinstance(
         referenced_declaration,
-        (ContractDefinition, VariableDeclaration, GlobalSymbolsEnum),
+        (ir.ContractDefinition, ir.VariableDeclaration, ir.enums.GlobalSymbolsEnum),
     ):
         logger.debug(
             f"Unable to find source:\n{expression.source}\n{expression.parent.source}"
@@ -158,10 +146,12 @@ def find_low_level_call_source_address(
 
 
 def _modifies_state_after_statement(
-    function_definition: FunctionDefinition,
-    statement: StatementAbc,
-) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
-    ret: Set[Tuple[IrAbc, ModifiesStateFlag]] = set()
+    function_definition: ir.FunctionDefinition,
+    statement: ir.StatementAbc,
+) -> Set[Tuple[ir.IrAbc, ir.enums.ModifiesStateFlag]]:
+    from woke.analysis.cfg import CfgBlock
+
+    ret: Set[Tuple[ir.IrAbc, ir.enums.ModifiesStateFlag]] = set()
     cfg = function_definition.cfg
     assert cfg is not None
     start = cfg.get_cfg_block(statement)
@@ -210,12 +200,18 @@ def _modifies_state_after_statement(
 
 
 def check_reentrancy_in_function(
-    function_definition: FunctionDefinition,
-    statement: StatementAbc,
-    address_source: ExpressionAbc,
-    child_modifies_state: Set[Tuple[IrAbc, ModifiesStateFlag]],
-    checked_statements: Set[StatementAbc],
-) -> List[DetectorResult]:
+    function_definition: ir.FunctionDefinition,
+    statement: ir.StatementAbc,
+    address_source: ir.ExpressionAbc,
+    child_modifies_state: Set[Tuple[ir.IrAbc, ir.enums.ModifiesStateFlag]],
+    checked_statements: Set[ir.StatementAbc],
+) -> List[Detection]:
+    from woke.analysis.ownable import statement_is_publicly_executable
+    from woke.analysis.utils import (
+        get_all_base_and_child_functions,
+        pair_function_call_arguments,
+    )
+
     # TODO check non-reentrant
     if not statement_is_publicly_executable(statement, check_only_eoa=True):
         return []
@@ -224,21 +220,21 @@ def check_reentrancy_in_function(
     is_safe = None
     if source_address_declaration is None:
         logger.debug(f"{address_source.source}")
-    elif isinstance(source_address_declaration, GlobalSymbolsEnum):
-        if source_address_declaration == GlobalSymbolsEnum.THIS:
+    elif isinstance(source_address_declaration, ir.enums.GlobalSymbolsEnum):
+        if source_address_declaration == ir.enums.GlobalSymbolsEnum.THIS:
             is_safe = True
         elif source_address_declaration in {
-            GlobalSymbolsEnum.MSG_SENDER,
-            GlobalSymbolsEnum.TX_ORIGIN,
+            ir.enums.GlobalSymbolsEnum.MSG_SENDER,
+            ir.enums.GlobalSymbolsEnum.TX_ORIGIN,
         }:
             is_safe = False
         else:
             is_safe = None
             logger.debug(f"{source_address_declaration}:")
-    elif isinstance(source_address_declaration, ContractDefinition):
-        if source_address_declaration.kind == ContractKind.LIBRARY:
+    elif isinstance(source_address_declaration, ir.ContractDefinition):
+        if source_address_declaration.kind == ir.enums.ContractKind.LIBRARY:
             is_safe = True
-    elif isinstance(source_address_declaration, Literal):
+    elif isinstance(source_address_declaration, ir.Literal):
         is_safe = True
     else:
         is_safe = address_is_safe(source_address_declaration)
@@ -255,21 +251,21 @@ def check_reentrancy_in_function(
     )
 
     if len(this_modifies_state) and function_definition.visibility in {
-        Visibility.PUBLIC,
-        Visibility.EXTERNAL,
+        ir.enums.Visibility.PUBLIC,
+        ir.enums.Visibility.EXTERNAL,
     }:
         state_mods = reduce(or_, (mod[1] for mod in this_modifies_state))
         ret.append(
-            DetectorResult(
+            Detection(
                 statement,
                 f"Exploitable from `{function_definition.canonical_name}`, address is safe: {is_safe}, state modified: {str(state_mods)}",
             )
         )
 
     for ref in function_definition.get_all_references(False):
-        if isinstance(ref, IdentifierPathPart):
+        if isinstance(ref, ir.IdentifierPathPart):
             top_statement = ref.underlying_node
-        elif isinstance(ref, ExternalReference):
+        elif isinstance(ref, ir.ExternalReference):
             continue  # TODO currently not supported
         else:
             top_statement = ref
@@ -277,12 +273,12 @@ def check_reentrancy_in_function(
         while top_statement is not None:
             if (
                 func_call is None
-                and isinstance(top_statement, FunctionCall)
+                and isinstance(top_statement, ir.FunctionCall)
                 and top_statement.function_called
                 in get_all_base_and_child_functions(function_definition)
             ):
                 func_call = top_statement
-            if isinstance(top_statement, StatementAbc):
+            if isinstance(top_statement, ir.StatementAbc):
                 break
             top_statement = top_statement.parent
 
@@ -290,12 +286,12 @@ def check_reentrancy_in_function(
             continue
         function_def = top_statement
         while function_def is not None and not isinstance(
-            function_def, FunctionDefinition
+            function_def, ir.FunctionDefinition
         ):
             function_def = function_def.parent
         if function_def is None:
             continue
-        assert isinstance(function_def, FunctionDefinition)
+        assert isinstance(function_def, ir.FunctionDefinition)
         if top_statement in checked_statements:
             continue
 
@@ -328,30 +324,26 @@ def check_reentrancy_in_function(
     return ret
 
 
-@detector(-1004, "reentrancy")
-class ReentrancyDetector(DetectorAbc):
-    """
-    Detects re-entrancy vulnerabilities.
-    """
-
+class ReentrancyDetector(Detector):
     _detections: Set[DetectorResult]
 
     def __init__(self):
         self._detections = set()
 
-    def report(self) -> List[DetectorResult]:
+    def detect(self) -> List[DetectorResult]:
         return list(self._detections)
 
-    def visit_member_access(self, node: MemberAccess):
+    def visit_member_access(self, node: ir.MemberAccess):
         t = node.type
         if (
             not isinstance(t, types.Function)
             or t.kind
             not in {
-                FunctionTypeKind.BARE_CALL,
-                FunctionTypeKind.EXTERNAL,
+                ir.enums.FunctionTypeKind.BARE_CALL,
+                ir.enums.FunctionTypeKind.EXTERNAL,
             }
-            or t.state_mutability in {StateMutability.PURE, StateMutability.VIEW}
+            or t.state_mutability
+            in {ir.enums.StateMutability.PURE, ir.enums.StateMutability.VIEW}
         ):
             return
 
@@ -359,7 +351,7 @@ class ReentrancyDetector(DetectorAbc):
 
         function_call = node
         while function_call is not None:
-            if isinstance(function_call, FunctionCall):
+            if isinstance(function_call, ir.FunctionCall):
                 break
             function_call = function_call.parent
         if function_call is None:
@@ -371,7 +363,7 @@ class ReentrancyDetector(DetectorAbc):
 
         statement = function_call
         while statement is not None:
-            if isinstance(statement, StatementAbc):
+            if isinstance(statement, ir.StatementAbc):
                 break
             statement = statement.parent
         if statement is None:
@@ -379,7 +371,7 @@ class ReentrancyDetector(DetectorAbc):
 
         function_def = statement
         while function_def is not None:
-            if isinstance(function_def, FunctionDefinition):
+            if isinstance(function_def, ir.FunctionDefinition):
                 break
             function_def = function_def.parent
         if function_def is None:
@@ -396,8 +388,19 @@ class ReentrancyDetector(DetectorAbc):
 
         self._detections.add(
             DetectorResult(
-                node,
-                f"Possible re-entrancy in `{function_def.canonical_name}`",
-                tuple(ret),
+                Detection(
+                    node,
+                    f"Possible re-entrancy in `{function_def.canonical_name}`",
+                    tuple(ret),
+                ),
+                impact=DetectionImpact.MEDIUM,
+                confidence=DetectionConfidence.MEDIUM,
             )
         )
+
+    @detector.command("reentrancy")
+    def cli(self):
+        """
+        Detects re-entrancy vulnerabilities.
+        """
+        pass

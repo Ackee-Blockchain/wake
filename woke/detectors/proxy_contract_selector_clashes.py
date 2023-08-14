@@ -1,119 +1,104 @@
-from functools import lru_cache
-from typing import Dict, List, Optional, Set, Tuple, Union
+from __future__ import annotations
 
-from woke.analysis.detectors import DetectorAbc, DetectorResult, detector
-from woke.analysis.detectors.utils import (
-    get_function_implementations,
-    pair_function_call_arguments,
+from functools import lru_cache
+from typing import TYPE_CHECKING, Dict, List, Optional, Set, Tuple, Union
+
+import woke.ir as ir
+import woke.ir.types as types
+from woke.detectors import (
+    Detection,
+    DetectionConfidence,
+    DetectionImpact,
+    Detector,
+    DetectorResult,
+    detector,
 )
-from woke.ir import (
-    BinaryOperation,
-    ContractDefinition,
-    DeclarationAbc,
-    ExpressionAbc,
-    FunctionCall,
-    FunctionDefinition,
-    Identifier,
-    InlineAssembly,
-    IrAbc,
-    Literal,
-    MemberAccess,
-    Return,
-    StatementAbc,
-    TupleExpression,
-    VariableDeclaration,
-    VariableDeclarationStatement,
-    YulBlock,
-    YulFunctionCall,
-    YulIdentifier,
-)
-from woke.ir.enums import FunctionKind, GlobalSymbolsEnum, LiteralKind
-from woke.ir.types import Address, FixedBytes
 
 
 @lru_cache(maxsize=2048)
-def _detect_slot_value(expr: ExpressionAbc) -> Optional[DetectorResult]:
+def _detect_slot_value(expr: ir.ExpressionAbc) -> Optional[Detection]:
+
     val = expr
     while True:
-        if isinstance(val, Literal) and val.kind in (
-            LiteralKind.NUMBER,
-            LiteralKind.STRING,
+        if isinstance(val, ir.Literal) and val.kind in (
+            ir.enums.LiteralKind.NUMBER,
+            ir.enums.LiteralKind.STRING,
         ):
-            return DetectorResult(val, "Detected slot in upgrade contract")
-        elif isinstance(val, BinaryOperation) and isinstance(
-            val.left_expression, FunctionCall
+            return Detection(val, "Detected slot in upgrade contract")
+        elif isinstance(val, ir.BinaryOperation) and isinstance(
+            val.left_expression, ir.FunctionCall
         ):
             val = val.left_expression
-        elif isinstance(val, BinaryOperation) and isinstance(
-            val.right_expression, FunctionCall
+        elif isinstance(val, ir.BinaryOperation) and isinstance(
+            val.right_expression, ir.FunctionCall
         ):
             val = val.right_expression
         elif (
-            isinstance(val, FunctionCall)
-            and val.function_called != GlobalSymbolsEnum.KECCAK256
+            isinstance(val, ir.FunctionCall)
+            and val.function_called != ir.enums.GlobalSymbolsEnum.KECCAK256
             and len(val.arguments) == 1
         ):
             val = val.arguments[0]
         else:
             break
     if (
-        isinstance(val, FunctionCall)
-        and val.function_called == GlobalSymbolsEnum.KECCAK256
+        isinstance(val, ir.FunctionCall)
+        and val.function_called == ir.enums.GlobalSymbolsEnum.KECCAK256
     ):
-        return DetectorResult(
-            expr, "Detected slot through keccak256 in upgrade contract"
-        )
+        return Detection(expr, "Detected slot through keccak256 in upgrade contract")
     return None
 
 
 @lru_cache(maxsize=2048)
-def _detect_implementation_fn(fn: FunctionDefinition) -> List[DetectorResult]:
+def _detect_implementation_fn(fn: ir.FunctionDefinition) -> List[Detection]:
+    from woke.analysis.utils import get_function_implementations
+
     dets = []
     if fn.body is None:
         for fn_impl in get_function_implementations(fn):
-            if not isinstance(fn_impl, FunctionDefinition):
+            if not isinstance(fn_impl, ir.FunctionDefinition):
                 continue
             dets.extend(_detect_implementation_fn(fn_impl))
         return dets
 
     addr_detected = False
     for param in fn.return_parameters.parameters:
-        if isinstance(param.type, Address):
+        if isinstance(param.type, types.Address):
             addr_detected = True
     if not addr_detected:
         return dets
 
     dets = []
     for node in fn.body:
-        if isinstance(node, Return) and node.expression is not None:
+        if isinstance(node, ir.Return) and node.expression is not None:
             for det in _detect_slot_variable(node.expression):
                 dets.append(
-                    DetectorResult(
+                    Detection(
                         fn,
                         "Detected slot usage in implementation function",
-                        related_info=(det,),
+                        subdetections=(det,),
                         lsp_range=fn.name_location,
                     )
                 )
-        elif isinstance(node, FunctionCall) and isinstance(
-            node.function_called, FunctionDefinition
+        elif isinstance(node, ir.FunctionCall) and isinstance(
+            node.function_called, ir.FunctionDefinition
         ):
             for det in _detect_implementation_fn(node.function_called):
                 dets.append(
-                    DetectorResult(
+                    Detection(
                         fn,
                         "Detected implementation function",
-                        related_info=(det,),
+                        subdetections=(det,),
                         lsp_range=fn.name_location,
                     )
                 )
-        elif isinstance(node, InlineAssembly) and node.yul_block is not None:
+        elif isinstance(node, ir.InlineAssembly) and node.yul_block is not None:
             for det in _check_assembly_uses_slot_variable(node.yul_block):
                 dets.append(
-                    DetectorResult(
+                    Detection(
                         fn,
                         "Detected slot usage in implementation function",
-                        related_info=(det,),
+                        subdetections=(det,),
                         lsp_range=fn.name_location,
                     )
                 )
@@ -121,10 +106,10 @@ def _detect_implementation_fn(fn: FunctionDefinition) -> List[DetectorResult]:
 
 
 def _detect_slot_variable(
-    expr: Union[ExpressionAbc, DeclarationAbc, StatementAbc],
-    value: Optional[ExpressionAbc] = None,
+    expr: Union[ir.ExpressionAbc, ir.DeclarationAbc, ir.StatementAbc],
+    value: Optional[ir.ExpressionAbc] = None,
     visited=None,
-) -> List[DetectorResult]:
+) -> List[Detection]:
     dets = []
     if visited is None:
         visited = set()
@@ -132,50 +117,50 @@ def _detect_slot_variable(
         return dets
     visited.add((expr, value))
 
-    if isinstance(expr, TupleExpression):
+    if isinstance(expr, ir.TupleExpression):
         for t in expr:
-            if isinstance(t, ExpressionAbc) or isinstance(t, DeclarationAbc):
+            if isinstance(t, ir.ExpressionAbc) or isinstance(t, ir.DeclarationAbc):
                 dets.extend(_detect_slot_variable(t, visited=visited))
-    elif isinstance(expr, VariableDeclaration):
+    elif isinstance(expr, ir.VariableDeclaration):
         val = expr.value if expr.value is not None else value
         if (
             expr.is_state_variable
-            and isinstance(expr.type, FixedBytes)
+            and isinstance(expr.type, types.FixedBytes)
             and expr.type.bytes_count == 32
         ):
             if val is not None:
                 det = _detect_slot_value(val)
                 if det is not None:
                     dets.append(det)
-        elif isinstance(expr.type, Address):
+        elif isinstance(expr.type, types.Address):
             if val is not None:
                 det = _detect_slot_value(val)
                 if det is not None:
                     dets.append(det)
-                if isinstance(val, FunctionCall) and isinstance(
-                    val.function_called, FunctionDefinition
+                if isinstance(val, ir.FunctionCall) and isinstance(
+                    val.function_called, ir.FunctionDefinition
                 ):
                     for arg in val.arguments:
                         dets.extend(_detect_slot_variable(arg, visited=visited))
                     dets.extend(_detect_implementation_fn(val.function_called))
             elif expr.parent is not None and isinstance(
-                expr.parent, VariableDeclarationStatement
+                expr.parent, ir.VariableDeclarationStatement
             ):
                 dets.extend(_detect_slot_variable(expr.parent, visited=visited))
     elif (
-        isinstance(expr, VariableDeclarationStatement)
+        isinstance(expr, ir.VariableDeclarationStatement)
         and expr.initial_value is not None
         and (
             (
-                isinstance(expr.initial_value, TupleExpression)
+                isinstance(expr.initial_value, ir.TupleExpression)
                 and len(expr.declarations) == len(expr.initial_value.components)
             )
             or (len(expr.declarations) == 1)
         )
     ):
-        if isinstance(expr.initial_value, TupleExpression):
+        if isinstance(expr.initial_value, ir.TupleExpression):
             vals = expr.initial_value.components
-        elif isinstance(expr.initial_value, ExpressionAbc):
+        elif isinstance(expr.initial_value, ir.ExpressionAbc):
             vals = [expr.initial_value]
         elif isinstance(expr.initial_value, List):
             vals = expr.initial_value
@@ -183,38 +168,43 @@ def _detect_slot_variable(
             return dets
         for i in range(len(vals)):
             ini_val = vals[i]
-            if isinstance(ini_val, Identifier) and isinstance(
-                ini_val.referenced_declaration, VariableDeclaration
+            if isinstance(ini_val, ir.Identifier) and isinstance(
+                ini_val.referenced_declaration, ir.VariableDeclaration
             ):
                 dets.extend(
                     _detect_slot_variable(
                         ini_val.referenced_declaration, visited=visited
                     )
                 )
-            elif isinstance(ini_val, ExpressionAbc) and ini_val is not None:
+            elif isinstance(ini_val, ir.ExpressionAbc) and ini_val is not None:
                 decl = expr.declarations[i]
                 if decl is not None:
                     dets.extend(_detect_slot_variable(decl, ini_val, visited=visited))
     elif (
-        isinstance(expr, Identifier)
-        and isinstance(expr.referenced_declaration, VariableDeclaration)
+        isinstance(expr, ir.Identifier)
+        and isinstance(expr.referenced_declaration, ir.VariableDeclaration)
         and expr.is_ref_to_state_variable
     ):
         dets.extend(_detect_slot_variable(expr.referenced_declaration, visited=visited))
-    elif isinstance(expr, MemberAccess):
+    elif isinstance(expr, ir.MemberAccess):
         for n in expr:
             if n == expr:
                 continue
-            if isinstance(n, ExpressionAbc) or isinstance(n, DeclarationAbc):
+            if isinstance(n, ir.ExpressionAbc) or isinstance(n, ir.DeclarationAbc):
                 dets.extend(_detect_slot_variable(n, visited=visited))
     return dets
 
 
 def _detect_delegatecall_to_slot_variable(
-    fn: FunctionDefinition,
-    callargs: Optional[Tuple[Tuple[VariableDeclaration, ExpressionAbc], ...]],
+    fn: ir.FunctionDefinition,
+    callargs: Optional[Tuple[Tuple[ir.VariableDeclaration, ir.ExpressionAbc], ...]],
     visited=None,
-) -> List[DetectorResult]:
+) -> List[Detection]:
+    from woke.analysis.utils import (
+        get_function_implementations,
+        pair_function_call_arguments,
+    )
+
     dets = []
     if visited is None:
         visited = []
@@ -224,52 +214,50 @@ def _detect_delegatecall_to_slot_variable(
 
     if fn.body is None:
         for impl in get_function_implementations(fn):
-            if isinstance(impl, FunctionDefinition):
+            if isinstance(impl, ir.FunctionDefinition):
                 dets.extend(
                     _detect_delegatecall_to_slot_variable(impl, callargs, visited)
                 )
         return dets
 
     for node in fn.body:
-        if isinstance(node, FunctionCall):
-            if isinstance(node.function_called, FunctionDefinition):
+        if isinstance(node, ir.FunctionCall):
+            if isinstance(node.function_called, ir.FunctionDefinition):
                 for det in _detect_delegatecall_to_slot_variable(
                     node.function_called,
                     pair_function_call_arguments(node.function_called, node),
                     visited,
                 ):
-                    dets.append(
-                        DetectorResult(node, "Detected call", related_info=(det,))
-                    )
+                    dets.append(Detection(node, "Detected call", subdetections=(det,)))
             elif (
-                node.function_called == GlobalSymbolsEnum.ADDRESS_DELEGATECALL
+                node.function_called == ir.enums.GlobalSymbolsEnum.ADDRESS_DELEGATECALL
                 and len(node.arguments) == 1
             ):
-                if isinstance(node.expression, MemberAccess) and isinstance(
-                    node.expression.referenced_declaration, DeclarationAbc
+                if isinstance(node.expression, ir.MemberAccess) and isinstance(
+                    node.expression.referenced_declaration, ir.DeclarationAbc
                 ):
                     for det in _detect_slot_variable(
                         node.expression.referenced_declaration
                     ):
                         dets.append(
-                            DetectorResult(
+                            Detection(
                                 fn,
                                 "Detected delegate call to an implementation slot",
-                                related_info=(
-                                    DetectorResult(
-                                        node, "Detected call", related_info=(det,)
+                                subdetections=(
+                                    Detection(
+                                        node, "Detected call", subdetections=(det,)
                                     ),
                                 ),
                                 lsp_range=fn.name_location,
                             )
                         )
         elif (
-            isinstance(node, YulFunctionCall)
+            isinstance(node, ir.YulFunctionCall)
             and node.function_name.name == "delegatecall"
             and len(node.arguments) > 1
         ):
             arg = node.arguments[1]  # type: ignore
-            if isinstance(arg, YulIdentifier) and arg.external_reference is not None:
+            if isinstance(arg, ir.YulIdentifier) and arg.external_reference is not None:
                 ref_decl = arg.external_reference.referenced_declaration
                 assembly_dets = []
                 if (
@@ -285,18 +273,18 @@ def _detect_delegatecall_to_slot_variable(
                     assembly_dets = _detect_slot_variable(ref_decl)
                 for det in assembly_dets:
                     dets.append(
-                        DetectorResult(
+                        Detection(
                             fn,
                             "Detected assembly delegate call using an implementation slot",
-                            related_info=(
-                                DetectorResult(
+                            subdetections=(
+                                Detection(
                                     node,
                                     "Detected assembly call",
-                                    related_info=(
-                                        DetectorResult(
+                                    subdetections=(
+                                        Detection(
                                             ref_decl,
                                             "Detected reference with implementation value passed in callargs",
-                                            related_info=(det,),
+                                            subdetections=(det,),
                                         ),
                                     ),
                                 ),
@@ -307,30 +295,30 @@ def _detect_delegatecall_to_slot_variable(
     return dets
 
 
-def _check_assembly_uses_slot_variable(block: YulBlock) -> List[DetectorResult]:
+def _check_assembly_uses_slot_variable(block: ir.YulBlock) -> List[Detection]:
     dets = []
     if block.statements is None:
         return dets
 
     for yul in block:
-        if isinstance(yul, YulIdentifier):
+        if isinstance(yul, ir.YulIdentifier):
             if yul.external_reference is not None:
                 for det in _detect_slot_variable(
                     yul.external_reference.referenced_declaration
                 ):
                     dets.append(
-                        DetectorResult(
+                        Detection(
                             yul,
                             "Detected slot variable usage in assembly",
-                            related_info=(det,),
+                            subdetections=(det,),
                         )
                     )
     return dets
 
 
-def detect_fallback(fn: FunctionDefinition) -> List[DetectorResult]:
+def detect_fallback(fn: ir.FunctionDefinition) -> List[Detection]:
     dets = []
-    if fn.kind != FunctionKind.FALLBACK:
+    if fn.kind != ir.enums.FunctionKind.FALLBACK:
         return dets
 
     if fn.body is None:
@@ -338,23 +326,25 @@ def detect_fallback(fn: FunctionDefinition) -> List[DetectorResult]:
 
     for det in _detect_delegatecall_to_slot_variable(fn, None):
         dets.append(
-            DetectorResult(
+            Detection(
                 fn,
                 "Detected fallback function with delegate call to an implementation slot",
-                related_info=(det,),
+                subdetections=(det,),
                 lsp_range=fn.name_location,
             )
         )
     return dets
 
 
-def get_last_detection_node(det: DetectorResult) -> IrAbc:
-    if len(det.related_info) == 0:
+def get_last_detection_node(det: Detection) -> ir.IrAbc:
+    if len(det.subdetections) == 0:
         return det.ir_node
-    return get_last_detection_node(det.related_info[0])
+    return get_last_detection_node(det.subdetections[0])
 
 
-def detect_slot_usage(fn: FunctionDefinition, visited=None) -> List[DetectorResult]:
+def detect_slot_usage(fn: ir.FunctionDefinition, visited=None) -> List[Detection]:
+    from woke.analysis.utils import get_function_implementations
+
     dets = []
     if visited is None:
         visited = []
@@ -366,49 +356,49 @@ def detect_slot_usage(fn: FunctionDefinition, visited=None) -> List[DetectorResu
 
     if not fn.implemented:
         for impl_fn in get_function_implementations(fn):
-            if isinstance(impl_fn, FunctionDefinition):
+            if isinstance(impl_fn, ir.FunctionDefinition):
                 dets.extend(detect_slot_usage(impl_fn, visited=visited))
         return dets
     for node in fn.body:
         if (
-            isinstance(node, Identifier) or isinstance(node, MemberAccess)
-        ) and isinstance(node.referenced_declaration, DeclarationAbc):
+            isinstance(node, ir.Identifier) or isinstance(node, ir.MemberAccess)
+        ) and isinstance(node.referenced_declaration, ir.DeclarationAbc):
             for det in _detect_slot_variable(node.referenced_declaration):
                 dets.append(
-                    DetectorResult(
+                    Detection(
                         node,
                         "Detected slot variable usage",
-                        related_info=(det,),
+                        subdetections=(det,),
                     )
                 )
-        elif isinstance(node, FunctionCall) and isinstance(
-            node.function_called, FunctionDefinition
+        elif isinstance(node, ir.FunctionCall) and isinstance(
+            node.function_called, ir.FunctionDefinition
         ):
             for det in detect_slot_usage(node.function_called, visited=visited):
                 dets.append(
-                    DetectorResult(
+                    Detection(
                         node,
                         "Detected slot variable usage",
-                        related_info=(det,),
+                        subdetections=(det,),
                     )
                 )
-        elif isinstance(node, InlineAssembly) and node.yul_block is not None:
+        elif isinstance(node, ir.InlineAssembly) and node.yul_block is not None:
             for det in _check_assembly_uses_slot_variable(node.yul_block):
                 dets.append(
-                    DetectorResult(
+                    Detection(
                         node,
                         "Detected slot variable usage",
-                        related_info=(det,),
+                        subdetections=(det,),
                     )
                 )
     return dets
 
 
 def detect_selector_clashes(
-    proxy_contract: ContractDefinition,
-    impl_contract: ContractDefinition,
-    proxy_detection: DetectorResult,
-    impl_detection: DetectorResult,
+    proxy_contract: ir.ContractDefinition,
+    impl_contract: ir.ContractDefinition,
+    proxy_detection: Detection,
+    impl_detection: Detection,
 ) -> List[DetectorResult]:
     fn_whitelist = ["implementation"]
 
@@ -426,54 +416,56 @@ def detect_selector_clashes(
 
     clashes = []
     for proxy_sel, proxy_fn in proxy_selectors.items():
-        if isinstance(proxy_fn, FunctionDefinition) and proxy_fn.name in fn_whitelist:
+        if (
+            isinstance(proxy_fn, ir.FunctionDefinition)
+            and proxy_fn.name in fn_whitelist
+        ):
             continue
         if proxy_sel in impl_selectors:
             clashes.append(
                 DetectorResult(
-                    proxy_fn,
-                    "Detected selector clash with implementation contract",
-                    related_info=(
-                        DetectorResult(
-                            impl_selectors[proxy_sel],
-                            "Implementation function with same selector",
-                            related_info=(impl_detection,),
-                            lsp_range=impl_selectors[proxy_sel].name_location
-                            if isinstance(impl_selectors[proxy_sel], FunctionDefinition)
-                            else None,
+                    Detection(
+                        proxy_fn,
+                        "Detected selector clash with implementation contract",
+                        subdetections=(
+                            Detection(
+                                impl_selectors[proxy_sel],
+                                "Implementation function with same selector",
+                                subdetections=(impl_detection,),
+                                lsp_range=impl_selectors[proxy_sel].name_location
+                                if isinstance(
+                                    impl_selectors[proxy_sel], ir.FunctionDefinition
+                                )
+                                else None,
+                            ),
+                            proxy_detection,
                         ),
-                        proxy_detection,
+                        lsp_range=proxy_fn.name_location,
                     ),
-                    lsp_range=proxy_fn.name_location,
+                    confidence=DetectionConfidence.MEDIUM,
+                    impact=DetectionImpact.MEDIUM,
                 )
             )
     return clashes
 
 
-@detector(-1030, "proxy-contract-selector-clashes")
-class ProxyContractSelectorClashDetector(DetectorAbc):
-    """
-    Detects selector clashes in proxy and implementation contracts.
-    Proxy contracts are detected based on fallback function and usage of slot variables and
-    implementation contracts that use same slots as proxy contracts
-    """
-
-    _proxy_detections: Set[Tuple[ContractDefinition, DetectorResult]]
-    _proxy_associated_contracts: Set[ContractDefinition]
-    _implementation_slots_detections: Set[Tuple[ContractDefinition, DetectorResult]]
-    _implementation_slots: Dict[VariableDeclaration, List[ContractDefinition]]
+class ProxyContractSelectorClashDetector(Detector):
+    _proxy_detections: Set[Tuple[ir.ContractDefinition, Detection]]
+    _proxy_associated_contracts: Set[ir.ContractDefinition]
+    _implementation_slots_detections: Set[Tuple[ir.ContractDefinition, Detection]]
+    _implementation_slots: Dict[ir.VariableDeclaration, List[ir.ContractDefinition]]
 
     def __init__(self):
-        self._proxy_detections: Set[Tuple[ContractDefinition, DetectorResult]] = set()
-        self._proxy_associated_contracts: Set[ContractDefinition] = set()
+        self._proxy_detections: Set[Tuple[ir.ContractDefinition, Detection]] = set()
+        self._proxy_associated_contracts: Set[ir.ContractDefinition] = set()
         self._implementation_slots_detections: Set[
-            Tuple[ContractDefinition, DetectorResult]
+            Tuple[ir.ContractDefinition, Detection]
         ] = set()
         self._implementation_slots: Dict[
-            VariableDeclaration, List[ContractDefinition]
+            ir.VariableDeclaration, List[ir.ContractDefinition]
         ] = {}
 
-    def report(self) -> List[DetectorResult]:
+    def detect(self) -> List[DetectorResult]:
         detections = []
 
         base_proxy_contracts = set()
@@ -512,10 +504,10 @@ class ProxyContractSelectorClashDetector(DetectorAbc):
                     ) in checked_pairs or proxy_contract not in proxy_detections:
                         continue
                     checked_pairs.add((proxy_contract, contract))
-                    impl_det = DetectorResult(
+                    impl_det = Detection(
                         contract,
                         f"Detected implementation contract with slot used in proxy contract {proxy_contract.name}",
-                        related_info=(det,),
+                        subdetections=(det,),
                         lsp_range=contract.name_location,
                     )
 
@@ -529,7 +521,7 @@ class ProxyContractSelectorClashDetector(DetectorAbc):
                         detections.extend(dets)
         return list(detections)
 
-    def visit_contract_definition(self, node: ContractDefinition):
+    def visit_contract_definition(self, node: ir.ContractDefinition):
         searched_fns = set()
         if node not in self._proxy_associated_contracts:
             for b in node.linearized_base_contracts:
@@ -541,10 +533,10 @@ class ProxyContractSelectorClashDetector(DetectorAbc):
                             self._proxy_detections.add(
                                 (
                                     node,
-                                    DetectorResult(
+                                    Detection(
                                         node,
                                         "Detected proxy contract",
-                                        related_info=tuple(dets),
+                                        subdetections=tuple(dets),
                                         lsp_range=node.name_location,
                                     ),
                                 )
@@ -553,7 +545,7 @@ class ProxyContractSelectorClashDetector(DetectorAbc):
                                 last_det_node = get_last_detection_node(det)
                                 if (
                                     isinstance(
-                                        last_det_node.parent, VariableDeclaration
+                                        last_det_node.parent, ir.VariableDeclaration
                                     )
                                     and last_det_node.parent is not None
                                 ):
@@ -575,3 +567,12 @@ class ProxyContractSelectorClashDetector(DetectorAbc):
             for fn in node.functions:
                 for det in detect_slot_usage(fn):
                     self._implementation_slots_detections.add((node, det))
+
+    @detector.command(name="proxy-contract-selector-clashes")
+    def cli(self):
+        """
+        Detects selector clashes in proxy and implementation contracts.
+        Proxy contracts are detected based on fallback function and usage of slot variables and
+        implementation contracts that use same slots as proxy contracts
+        """
+        pass
