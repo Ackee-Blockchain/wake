@@ -224,6 +224,7 @@ class GeneralConfig(WokeConfigModel):
             "error",
         ]
     )
+    link_format: str = "vscode://file/{path}:{line}:{col}"
 
 
 class TopLevelConfig(WokeConfigModel):
