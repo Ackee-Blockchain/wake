@@ -1,3 +1,4 @@
+from . import enums, types
 from .abc import IrAbc, SolidityAbc
 from .declaration.abc import DeclarationAbc
 from .declaration.contract_definition import ContractDefinition
