@@ -315,12 +315,12 @@ class ExternalReferenceModel(AstModel):  # helper class
 
 
 class SolcNode(AstModel):
+    node_type: str
     src: Src
 
 
 class SolidityNode(SolcNode):
     id: AstNodeId
-    node_type: str
 
     def __iter__(self):
         def iter_list(l: List):
