@@ -355,3 +355,99 @@ def init_pytypes(ctx: Context, return_tx: bool, warnings: bool, watch: bool) -> 
     """Generate Python types from Solidity sources."""
     config: WokeConfig = ctx.obj["config"]
     asyncio.run(run_init_pytypes(config, return_tx, warnings, watch))
+
+
+@run_init.command(name="detector")
+@click.argument("detector_name", type=str)
+@click.option(
+    "--force",
+    "-f",
+    is_flag=True,
+    default=False,
+    help="Force overwrite existing detector.",
+)
+@click.pass_context
+def init_detector(ctx: Context, detector_name: str, force: bool) -> None:
+    from woke.detectors.template import TEMPLATE
+
+    config: WokeConfig = ctx.obj["config"]
+
+    module_name = detector_name.replace("-", "_")
+
+    if not module_name.isidentifier():
+        raise click.BadParameter(
+            f"Detector name must be a valid Python identifier, got {detector_name}"
+        )
+
+    class_name = "".join([s.capitalize() for s in module_name.split("_") if s != ""])
+    dir_path = config.project_root_path / "detectors"
+    init_path = dir_path / "__init__.py"
+    detector_path = dir_path / f"{module_name}.py"
+
+    if detector_path.exists() and not force:
+        raise click.ClickException(
+            f"Detector {detector_name} already exists. Use --force to overwrite."
+        )
+
+    if not dir_path.exists():
+        dir_path.mkdir()
+
+    detector_path.write_text(
+        TEMPLATE.format(class_name=class_name, command_name=detector_name)
+    )
+
+    if not init_path.exists():
+        init_path.touch()
+
+    import_str = f"from .{module_name} import {class_name}"
+    if import_str not in init_path.read_text().splitlines():
+        with init_path.open("a") as f:
+            f.write(f"\n{import_str}")
+
+
+@run_init.command(name="printer")
+@click.argument("printer_name", type=str)
+@click.option(
+    "--force",
+    "-f",
+    is_flag=True,
+    default=False,
+    help="Force overwrite existing printer.",
+)
+@click.pass_context
+def init_printer(ctx: Context, printer_name: str, force: bool) -> None:
+    from woke.printers.template import TEMPLATE
+
+    config: WokeConfig = ctx.obj["config"]
+
+    module_name = printer_name.replace("-", "_")
+
+    if not module_name.isidentifier():
+        raise click.BadParameter(
+            f"Printer name must be a valid Python identifier, got {printer_name}"
+        )
+
+    class_name = "".join([s.capitalize() for s in module_name.split("_") if s != ""])
+    dir_path = config.project_root_path / "printers"
+    init_path = dir_path / "__init__.py"
+    printer_path = dir_path / f"{module_name}.py"
+
+    if printer_path.exists() and not force:
+        raise click.ClickException(
+            f"Printer {printer_name} already exists. Use --force to overwrite."
+        )
+
+    if not dir_path.exists():
+        dir_path.mkdir()
+
+    printer_path.write_text(
+        TEMPLATE.format(class_name=class_name, command_name=printer_name)
+    )
+
+    if not init_path.exists():
+        init_path.touch()
+
+    import_str = f"from .{module_name} import {class_name}"
+    if import_str not in init_path.read_text().splitlines():
+        with init_path.open("a") as f:
+            f.write(f"\n{import_str}")
