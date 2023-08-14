@@ -211,6 +211,10 @@ class DeploymentConfig(WokeConfigModel):
     silent: bool = False
 
 
+class GeneralConfig(WokeConfigModel):
+    link_format: str = "vscode://file/{path}:{line}:{col}"
+
+
 class TopLevelConfig(WokeConfigModel):
     subconfigs: List[Path] = []
     api_keys: Dict[str, str] = {}
@@ -220,6 +224,7 @@ class TopLevelConfig(WokeConfigModel):
     lsp: LspConfig = Field(default_factory=LspConfig)
     testing: TestingConfig = Field(default_factory=TestingConfig)
     deployment: DeploymentConfig = Field(default_factory=DeploymentConfig)
+    general: GeneralConfig = Field(default_factory=GeneralConfig)
 
     @validator("subconfigs", pre=True, each_item=True)
     def set_subconfig(cls, v):

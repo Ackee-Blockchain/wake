@@ -291,9 +291,17 @@ class SourceUnit(SolidityAbc):
 
         line_prefix_sums = [line[1] for line in self._lines_index]
         line = bisect_left(line_prefix_sums, byte_offset)
-        col = len(
-            self._lines_index[line][0][
-                : byte_offset - self._lines_index[line][1]
-            ].decode("utf-8")
-        )  # TODO col as utf-8 offset?
+        # TODO different modes: UTF-16 code units, UTF-8 code units (bytes), UTF-8 code points (len of str)
+        col = (
+            len(
+                self._lines_index[line - 1][0][
+                    : byte_offset - self._lines_index[line - 1][1]
+                ]
+                .decode("utf-8")
+                .encode("utf-16-le")
+            )
+            // 2
+            + 1
+        )
+        # TODO line col zero-indexed or one-indexed?
         return line, col
