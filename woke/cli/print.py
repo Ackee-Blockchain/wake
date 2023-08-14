@@ -47,6 +47,18 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         for entry_point in printer_entry_points:
             entry_point.load()
 
+        if (
+            Path.cwd().joinpath("printers").is_dir()
+            and Path.cwd().joinpath("printers/__init__.py").is_file()
+        ):
+            from importlib.util import module_from_spec, spec_from_file_location
+
+            sys.path.insert(0, str(Path.cwd()))
+            spec = spec_from_file_location("printers", "printers/__init__.py")
+            if spec is not None and spec.loader is not None:
+                module = module_from_spec(spec)
+                spec.loader.exec_module(module)
+
         self._plugins_loaded = True
 
     def add_command(self, cmd: click.Command, name: Optional[str] = None) -> None:
