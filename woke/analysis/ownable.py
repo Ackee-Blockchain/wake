@@ -4,12 +4,6 @@ from functools import lru_cache
 from typing import Optional, Set, Tuple, Union
 
 import woke.ir.types as types
-from woke.analysis.cfg import CfgBlock, ControlFlowGraph, TransitionCondition
-from woke.analysis.detectors.utils import (
-    expression_is_global_symbol,
-    get_variable_declarations_from_expression,
-    pair_function_call_arguments,
-)
 from woke.ir import (
     Assignment,
     BinaryOperation,
@@ -35,6 +29,13 @@ from woke.ir.enums import (
     Visibility,
 )
 from woke.utils import recursion_guard, return_on_recursion
+
+from .cfg import CfgBlock, ControlFlowGraph, TransitionCondition
+from .utils import (
+    expression_is_global_symbol,
+    get_variable_declarations_from_expression,
+    pair_function_call_arguments,
+)
 
 logger = logging.getLogger(__name__)
 

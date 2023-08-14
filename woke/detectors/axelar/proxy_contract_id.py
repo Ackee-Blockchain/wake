@@ -1,63 +1,56 @@
+from __future__ import annotations
+
 from collections import deque
 from typing import Deque, Dict, List, Optional, Set, Union
 
-from Crypto.Hash import keccak
-
+import woke.ir as ir
 import woke.ir.types as types
-from woke.analysis.detectors import DetectorAbc, DetectorResult, detector
-from woke.ir import (
-    Assignment,
-    BinaryOperation,
-    ContractDefinition,
-    ExpressionAbc,
-    ExternalReference,
-    FunctionCall,
-    FunctionDefinition,
-    IdentifierPathPart,
-    Literal,
-    Return,
-)
-from woke.ir.enums import (
-    BinaryOpOperator,
-    ContractKind,
-    FunctionCallKind,
-    GlobalSymbolsEnum,
-    LiteralKind,
-    Visibility,
+from woke.detectors import (
+    Detection,
+    DetectionConfidence,
+    DetectionImpact,
+    Detector,
+    DetectorResult,
+    detector,
 )
 
 
-@detector(-12000, "axelar-proxy-contract-id")
-class AxelarProxyContractIdDetector(DetectorAbc):
-    """
-    Detects incorrect use of the `contractId` function in Axelar proxy and upgradeable contracts.
-    """
-
-    proxies: Dict[bytes, Set[FunctionDefinition]]
-    upgradeables: Dict[bytes, Set[FunctionDefinition]]
+class AxelarProxyContractIdDetector(Detector):
+    proxies: Dict[bytes, Set[ir.FunctionDefinition]]
+    upgradeables: Dict[bytes, Set[ir.FunctionDefinition]]
 
     def __init__(self):
         self.proxies = {}
         self.upgradeables = {}
 
-    def report(self) -> List[DetectorResult]:
-        proxy_contracts: Dict[bytes, Set[ContractDefinition]] = {}
+    @detector.command("axelar-proxy-contract-id")
+    def cli(self):
+        """
+        Detects incorrect use of the `contractId` function in Axelar proxy and upgradeable contracts.
+        """
+        pass
+
+    def detect(self) -> List[DetectorResult]:
+        proxy_contracts: Dict[bytes, Set[ir.ContractDefinition]] = {}
         for selector, fns in self.proxies.items():
             proxy_contracts[selector] = set()
             visited: Set[
-                ContractDefinition
+                ir.ContractDefinition
             ] = set(  # pyright: ignore reportGeneralTypeIssues
                 fn.parent for fn in fns
             )
             queue: Deque[
-                ContractDefinition
+                ir.ContractDefinition
             ] = deque(  # pyright: ignore reportGeneralTypeIssues
                 fn.parent for fn in fns
             )
 
             while len(queue) > 0:
                 contract = queue.popleft()
-                if contract.kind == ContractKind.CONTRACT and not contract.abstract:
+                if (
+                    contract.kind == ir.enums.ContractKind.CONTRACT
+                    and not contract.abstract
+                ):
                     proxy_contracts[selector].add(contract)
                 for child in contract.child_contracts:
                     if child not in visited and (
@@ -67,23 +60,26 @@ class AxelarProxyContractIdDetector(DetectorAbc):
                         visited.add(child)
                         queue.append(child)
 
-        upgradeable_contracts: Dict[bytes, Set[ContractDefinition]] = {}
+        upgradeable_contracts: Dict[bytes, Set[ir.ContractDefinition]] = {}
         for selector, fns in self.upgradeables.items():
             upgradeable_contracts[selector] = set()
             visited: Set[
-                ContractDefinition
+                ir.ContractDefinition
             ] = set(  # pyright: ignore reportGeneralTypeIssues
                 fn.parent for fn in fns
             )
             queue: Deque[
-                ContractDefinition
+                ir.ContractDefinition
             ] = deque(  # pyright: ignore reportGeneralTypeIssues
                 fn.parent for fn in fns
             )
 
             while len(queue) > 0:
                 contract = queue.popleft()
-                if contract.kind == ContractKind.CONTRACT and not contract.abstract:
+                if (
+                    contract.kind == ir.enums.ContractKind.CONTRACT
+                    and not contract.abstract
+                ):
                     upgradeable_contracts[selector].add(contract)
                 for child in contract.child_contracts:
                     if child not in visited and (
@@ -99,11 +95,11 @@ class AxelarProxyContractIdDetector(DetectorAbc):
             if len(proxies) > 1:
                 sorted_proxies = sorted(proxies, key=lambda c: c.name)
                 ret.append(
-                    DetectorResult(
+                    Detection(
                         sorted_proxies[0],
                         "Proxy contract ID is shared between multiple contracts",
                         tuple(
-                            DetectorResult(
+                            Detection(
                                 other, "Other contract", lsp_range=other.name_location
                             )
                             for other in sorted_proxies[1:]
@@ -115,7 +111,7 @@ class AxelarProxyContractIdDetector(DetectorAbc):
         for only_proxy in sorted(proxy_contracts.keys() - upgradeable_contracts.keys()):
             for proxy in sorted(proxy_contracts[only_proxy], key=lambda c: c.name):
                 ret.append(
-                    DetectorResult(
+                    Detection(
                         proxy,
                         "Found a proxy contract without an upgradeable contract with the same contract ID",
                         lsp_range=proxy.name_location,
@@ -128,7 +124,7 @@ class AxelarProxyContractIdDetector(DetectorAbc):
                 upgradeable_contracts[only_upgradeable], key=lambda c: c.name
             ):
                 ret.append(
-                    DetectorResult(
+                    Detection(
                         upgradeable,
                         "Found an upgradeable contract without a proxy contract with the same contract ID",
                         lsp_range=upgradeable.name_location,
@@ -149,8 +145,8 @@ class AxelarProxyContractIdDetector(DetectorAbc):
                 for upgradeable in sorted(
                     upgradeable_contracts[common_contract_id], key=lambda c: c.name
                 ):
-                    proxy_functions: Dict[bytes, FunctionDefinition] = {}
-                    upgradeable_functions: Dict[bytes, FunctionDefinition] = {}
+                    proxy_functions: Dict[bytes, ir.FunctionDefinition] = {}
+                    upgradeable_functions: Dict[bytes, ir.FunctionDefinition] = {}
 
                     for contract in proxy.linearized_base_contracts:
                         for func in contract.functions:
@@ -180,23 +176,23 @@ class AxelarProxyContractIdDetector(DetectorAbc):
                             ):
                                 continue
                         ret.append(
-                            DetectorResult(
+                            Detection(
                                 proxy,
                                 "Found a proxy contract and an upgradeable contract with a function with the same function selector",
                                 (
-                                    DetectorResult(
+                                    Detection(
                                         upgradeable,
                                         "Upgradeable contract",
                                         lsp_range=upgradeable.name_location,
                                     ),
-                                    DetectorResult(
+                                    Detection(
                                         proxy_functions[common_selector],
                                         f"Proxy contract function (selector: {common_selector.hex()})",
                                         lsp_range=proxy_functions[
                                             common_selector
                                         ].name_location,
                                     ),
-                                    DetectorResult(
+                                    Detection(
                                         upgradeable_functions[common_selector],
                                         f"Upgradeable contract function (selector: {common_selector.hex()})",
                                         lsp_range=upgradeable_functions[
@@ -208,11 +204,18 @@ class AxelarProxyContractIdDetector(DetectorAbc):
                             )
                         )
 
-        return ret
+        return [
+            DetectorResult(
+                d, impact=DetectionImpact.WARNING, confidence=DetectionConfidence.HIGH
+            )
+            for d in ret
+        ]
 
-    def _eval_contract_id(self, expr: ExpressionAbc) -> Optional[Union[bytes, int]]:
-        if isinstance(expr, FunctionCall):
-            if expr.kind == FunctionCallKind.TYPE_CONVERSION:
+    def _eval_contract_id(self, expr: ir.ExpressionAbc) -> Optional[Union[bytes, int]]:
+        from Crypto.Hash import keccak
+
+        if isinstance(expr, ir.FunctionCall):
+            if expr.kind == ir.enums.FunctionCallKind.TYPE_CONVERSION:
                 arg = self._eval_contract_id(expr.arguments[0])
                 if isinstance(expr.type, types.IntAbc):
                     if isinstance(arg, int):
@@ -228,9 +231,9 @@ class AxelarProxyContractIdDetector(DetectorAbc):
                         return arg.to_bytes(32, "big", signed=False)
                     else:
                         return None
-            elif expr.function_called == GlobalSymbolsEnum.KECCAK256:
+            elif expr.function_called == ir.enums.GlobalSymbolsEnum.KECCAK256:
                 arg = expr.arguments[0]
-                if not isinstance(arg, Literal) or not isinstance(
+                if not isinstance(arg, ir.Literal) or not isinstance(
                     arg.type, types.StringLiteral
                 ):
                     return None
@@ -241,10 +244,10 @@ class AxelarProxyContractIdDetector(DetectorAbc):
                 return keccak.new(
                     data=contract_id.encode("utf-8"), digest_bits=256
                 ).digest()
-        elif isinstance(expr, Literal):
-            if expr.kind == LiteralKind.HEX_STRING:
+        elif isinstance(expr, ir.Literal):
+            if expr.kind == ir.enums.LiteralKind.HEX_STRING:
                 return bytes.fromhex(expr.hex_value)
-            elif expr.kind == LiteralKind.NUMBER and expr.value is not None:
+            elif expr.kind == ir.enums.LiteralKind.NUMBER and expr.value is not None:
                 if expr.value.startswith("0x"):
                     str_val = expr.value[2:].replace("_", "")
                     try:
@@ -258,15 +261,15 @@ class AxelarProxyContractIdDetector(DetectorAbc):
                         return None
             else:
                 return None
-        elif isinstance(expr, BinaryOperation):
+        elif isinstance(expr, ir.BinaryOperation):
             left = self._eval_contract_id(expr.left_expression)
             right = self._eval_contract_id(expr.right_expression)
-            if expr.operator == BinaryOpOperator.PLUS:
+            if expr.operator == ir.enums.BinaryOpOperator.PLUS:
                 if isinstance(left, int) and isinstance(right, int):
                     return left + right
                 else:
                     return None
-            elif expr.operator == BinaryOpOperator.MINUS:
+            elif expr.operator == ir.enums.BinaryOpOperator.MINUS:
                 if isinstance(left, int) and isinstance(right, int):
                     return left - right
                 else:
@@ -276,8 +279,8 @@ class AxelarProxyContractIdDetector(DetectorAbc):
         else:
             return None
 
-    def visit_contract_definition(self, node: ContractDefinition):
-        contract_id_function: Optional[FunctionDefinition] = None
+    def visit_contract_definition(self, node: ir.ContractDefinition):
+        contract_id_function: Optional[ir.FunctionDefinition] = None
         for func in node.functions:
             if (
                 func.name == "contractId"
@@ -298,7 +301,7 @@ class AxelarProxyContractIdDetector(DetectorAbc):
         assert contract_id_function.body is not None
 
         for statement in contract_id_function.body.statements_iter():
-            if isinstance(statement, Return):
+            if isinstance(statement, ir.Return):
                 returns.append(statement)
 
         if len(returns) > 1:
@@ -311,13 +314,13 @@ class AxelarProxyContractIdDetector(DetectorAbc):
             assignments = []
 
             for ref in ret_var.references:
-                if isinstance(ref, ExternalReference):
+                if isinstance(ref, ir.ExternalReference):
                     continue
-                elif isinstance(ref, IdentifierPathPart):
+                elif isinstance(ref, ir.IdentifierPathPart):
                     ref = ref.underlying_node
                 assignment = ref
                 while assignment is not None:
-                    if isinstance(assignment, Assignment):
+                    if isinstance(assignment, ir.Assignment):
                         break
                     assignment = assignment.parent
                 if assignment is None:
@@ -344,7 +347,7 @@ class AxelarProxyContractIdDetector(DetectorAbc):
         elif isinstance(contract_id, int):
             contract_id = contract_id.to_bytes(32, "big", signed=False)
 
-        if contract_id_function.visibility == Visibility.INTERNAL:
+        if contract_id_function.visibility == ir.enums.Visibility.INTERNAL:
             if contract_id not in self.proxies:
                 self.proxies[contract_id] = set()
             self.proxies[contract_id].add(contract_id_function)
