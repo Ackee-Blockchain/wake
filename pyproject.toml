@@ -51,6 +51,7 @@ mike = { git = "https://github.com/jimporter/mike.git" }
 isort = { version = "^5", optional = true }
 pillow = { version = "^9", optional = true }
 cairosvg = { version = "^2.7", optional = true }
+lazy-import = "^0.2.2"
 
 [tool.poetry.extras]
 tests = ["pytest-asyncio", "GitPython"]
