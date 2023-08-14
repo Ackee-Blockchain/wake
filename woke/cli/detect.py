@@ -89,6 +89,18 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         for entry_point in detector_entry_points:
             entry_point.load()
 
+        if (
+            Path.cwd().joinpath("detectors").is_dir()
+            and Path.cwd().joinpath("detectors/__init__.py").is_file()
+        ):
+            from importlib.util import module_from_spec, spec_from_file_location
+
+            sys.path.insert(0, str(Path.cwd()))
+            spec = spec_from_file_location("detectors", "detectors/__init__.py")
+            if spec is not None and spec.loader is not None:
+                module = module_from_spec(spec)
+                spec.loader.exec_module(module)
+
         self._plugins_loaded = True
 
     def add_command(self, cmd: click.Command, name: Optional[str] = None) -> None:
