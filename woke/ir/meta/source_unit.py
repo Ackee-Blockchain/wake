@@ -1,5 +1,5 @@
 import logging
-from bisect import bisect_left
+from bisect import bisect_right
 from typing import Iterator, List, Optional, Tuple
 
 from woke.ir.abc import IrAbc, SolidityAbc
@@ -290,7 +290,7 @@ class SourceUnit(SolidityAbc):
                 prefix_sum += len(line)
 
         line_prefix_sums = [line[1] for line in self._lines_index]
-        line = bisect_left(line_prefix_sums, byte_offset)
+        line = bisect_right(line_prefix_sums, byte_offset)
         # TODO different modes: UTF-16 code units, UTF-8 code units (bytes), UTF-8 code points (len of str)
         col = (
             len(
