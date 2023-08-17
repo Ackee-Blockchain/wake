@@ -1,25 +1,5 @@
 [
   {
-    "version": "xyz",
-    "title": "xyz",
-    "aliases": []
-  },
-  {
-    "version": "temp123",
-    "title": "temp123",
-    "aliases": []
-  },
-  {
-    "version": "foobar",
-    "title": "foobar",
-    "aliases": []
-  },
-  {
-    "version": "abcdefu",
-    "title": "abcdefu",
-    "aliases": []
-  },
-  {
     "version": "dev",
     "title": "dev",
     "aliases": []
@@ -40,8 +20,8 @@
     "version": "3.4.2",
     "title": "3.4.2",
     "aliases": [
-      "3.4.0",
-      "3.4.1"
+      "3.4.1",
+      "3.4.0"
     ]
   },
   {
@@ -78,8 +58,8 @@
     "version": "2.0.0",
     "title": "2.0.0",
     "aliases": [
-      "2.0.0-rc1",
-      "2.0.0-rc2"
+      "2.0.0-rc2",
+      "2.0.0-rc1"
     ]
   },
   {
@@ -105,9 +85,9 @@
     "version": "1.0.2",
     "title": "1.0.2",
     "aliases": [
-      "1.0.0",
+      "1.0.1",
       "0.1.3",
-      "1.0.1"
+      "1.0.0"
     ]
   }
 ]
