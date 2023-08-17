@@ -133,7 +133,6 @@ class UnsafeAddressBalanceUseDetector(Detector):
         self._detections = set()
 
     def detect(self) -> List[DetectorResult]:
-        print(ir.enums.GlobalSymbolsEnum.ADDRESS_BALANCE)
         return list(self._detections)
 
     def visit_member_access(self, node):
