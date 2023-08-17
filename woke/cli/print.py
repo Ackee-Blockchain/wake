@@ -2,7 +2,18 @@ import asyncio
 import sys
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Set, Type, Union
+from typing import (
+    TYPE_CHECKING,
+    AbstractSet,
+    Any,
+    Dict,
+    List,
+    Optional,
+    Sequence,
+    Set,
+    Type,
+    Union,
+)
 
 import rich_click as click
 
@@ -11,7 +22,7 @@ if TYPE_CHECKING:
 
 
 class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
-    _plugins_loaded = False
+    _plugin_paths: AbstractSet[Path] = set()
     _plugin_commands: Dict[str, click.Command] = {}
 
     def __init__(
@@ -37,7 +48,7 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
             )
         )
 
-    def _load_plugins(self) -> None:
+    def _load_plugins(self, plugin_paths: AbstractSet[Path]) -> None:
         if sys.version_info < (3, 10):
             from importlib_metadata import entry_points
         else:
@@ -47,32 +58,43 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         for entry_point in printer_entry_points:
             entry_point.load()
 
-        if (
-            Path.cwd().joinpath("printers").is_dir()
-            and Path.cwd().joinpath("printers/__init__.py").is_file()
-        ):
+        for path in plugin_paths:
             from importlib.util import module_from_spec, spec_from_file_location
 
-            sys.path.insert(0, str(Path.cwd()))
-            spec = spec_from_file_location("printers", "printers/__init__.py")
+            sys.path.insert(0, str(path.parent))
+
+            if path.is_dir():
+                spec = spec_from_file_location(path.stem, str(path / "__init__.py"))
+            else:
+                spec = spec_from_file_location(path.stem, str(path))
+
             if spec is not None and spec.loader is not None:
                 module = module_from_spec(spec)
                 spec.loader.exec_module(module)
 
-        self._plugins_loaded = True
+        self._plugin_paths = plugin_paths
 
     def add_command(self, cmd: click.Command, name: Optional[str] = None) -> None:
         self._inject_params(cmd)
         super().add_command(cmd, name)
 
-    def get_command(self, ctx: click.Context, cmd_name: str) -> Optional[click.Command]:
-        if not self._plugins_loaded:
-            self._load_plugins()
+    def get_command(
+        self,
+        ctx: click.Context,
+        cmd_name: str,
+        plugin_paths: AbstractSet[Path] = frozenset([Path.cwd() / "printers"]),
+    ) -> Optional[click.Command]:
+        if plugin_paths != self._plugin_paths:
+            self._load_plugins(plugin_paths)
         return self.commands.get(cmd_name)
 
-    def list_commands(self, ctx: click.Context) -> List[str]:
-        if not self._plugins_loaded:
-            self._load_plugins()
+    def list_commands(
+        self,
+        ctx: click.Context,
+        plugin_paths: AbstractSet[Path] = frozenset([Path.cwd() / "printers"]),
+    ) -> List[str]:
+        if plugin_paths != self._plugin_paths:
+            self._load_plugins(plugin_paths)
         return sorted(self.commands)
 
     def invoke(self, ctx: click.Context):
