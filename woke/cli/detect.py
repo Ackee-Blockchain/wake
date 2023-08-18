@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import sys
 import time
 from pathlib import Path
@@ -9,6 +10,7 @@ from typing import (
     AbstractSet,
     Any,
     Dict,
+    FrozenSet,
     Iterable,
     List,
     Optional,
@@ -33,10 +35,15 @@ if TYPE_CHECKING:
         DetectorResult,
     )
 
+logger = logging.getLogger(__name__)
+
 
 class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
     _plugin_paths: AbstractSet[Path] = set()
     _plugin_commands: Dict[str, click.Command] = {}
+    _failed_plugin_paths: Set[Tuple[Path, Exception]] = set()
+    _failed_plugin_entry_points: Set[Tuple[str, Exception]] = set()
+    _completion_mode: bool
 
     def __init__(
         self,
@@ -47,6 +54,10 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         **attrs: Any,
     ):
         super().__init__(name=name, commands=commands, **attrs)
+
+        import os
+
+        self._completion_mode = "_WOKE_COMPLETE" in os.environ
 
         for command in self.commands.values():
             self._inject_params(command)
@@ -77,6 +88,14 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
             )
         )
 
+    @property
+    def failed_plugin_paths(self) -> FrozenSet[Tuple[Path, Exception]]:
+        return frozenset(self._failed_plugin_paths)
+
+    @property
+    def failed_plugin_entry_points(self) -> FrozenSet[Tuple[str, Exception]]:
+        return frozenset(self._failed_plugin_entry_points)
+
     def _load_plugins(self, plugin_paths: AbstractSet[Path]) -> None:
         # need to load the module to register detectors
         from woke.detectors import Detector
@@ -85,24 +104,39 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
             from importlib_metadata import entry_points
         else:
             from importlib.metadata import entry_points
+        from importlib.util import module_from_spec, spec_from_file_location
 
         detector_entry_points = entry_points().select(group="woke.plugins.detectors")
         for entry_point in detector_entry_points:
-            entry_point.load()
+            try:
+                entry_point.load()
+            except Exception as e:
+                self._failed_plugin_entry_points.add((entry_point.value, e))
+                if not self._completion_mode:
+                    logger.warning(
+                        f"Failed to load detectors from package '{entry_point.value}': {e}"
+                    )
 
         for path in plugin_paths:
-            from importlib.util import module_from_spec, spec_from_file_location
-
+            if not path.exists():
+                continue
             sys.path.insert(0, str(path.parent))
+            try:
+                if path.is_dir():
+                    spec = spec_from_file_location(path.stem, str(path / "__init__.py"))
+                else:
+                    spec = spec_from_file_location(path.stem, str(path))
 
-            if path.is_dir():
-                spec = spec_from_file_location(path.stem, str(path / "__init__.py"))
-            else:
-                spec = spec_from_file_location(path.stem, str(path))
-
-            if spec is not None and spec.loader is not None:
-                module = module_from_spec(spec)
-                spec.loader.exec_module(module)
+                if spec is not None and spec.loader is not None:
+                    module = module_from_spec(spec)
+                    spec.loader.exec_module(module)
+                else:
+                    raise RuntimeError(f"spec_from_file_location returned None")
+            except Exception as e:
+                self._failed_plugin_paths.add((path, e))
+                sys.path.pop(0)
+                if not self._completion_mode:
+                    logger.warning(f"Failed to load detectors from path {path}: {e}")
 
         self._plugin_paths = plugin_paths
 
