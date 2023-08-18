@@ -33,6 +33,7 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
     _failed_plugin_paths: Set[Tuple[Path, Exception]] = set()
     _failed_plugin_entry_points: Set[Tuple[str, Exception]] = set()
     _completion_mode: bool
+    _global_data_path: Path
 
     def __init__(
         self,
@@ -45,8 +46,20 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         super().__init__(name=name, commands=commands, **attrs)
 
         import os
+        import platform
 
         self._completion_mode = "_WOKE_COMPLETE" in os.environ
+
+        system = platform.system()
+        try:
+            self._global_data_path = Path(os.environ["XDG_DATA_HOME"]) / "woke"
+        except KeyError:
+            if system in {"Linux", "Darwin"}:
+                self._global_data_path = Path.home() / ".local" / "share" / "woke"
+            elif system == "Windows":
+                self._global_data_path = Path(os.environ["LOCALAPPDATA"]) / "woke"
+            else:
+                raise RuntimeError(f"Unsupported system: {system}")
 
         for command in self.commands.values():
             self._inject_params(command)
@@ -69,6 +82,30 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
     def failed_plugin_entry_points(self) -> FrozenSet[Tuple[str, Exception]]:
         return frozenset(self._failed_plugin_entry_points)
 
+    def _verify_plugin_path(self, path: Path) -> bool:
+        import pickle
+
+        from rich.prompt import Confirm
+
+        try:
+            data: Set[Path] = pickle.loads(
+                self._global_data_path.joinpath("verified_printers.bin").read_bytes()
+            )
+        except FileNotFoundError:
+            data = set()
+        if path not in data:
+            if self._completion_mode:
+                return False
+
+            verified = Confirm.ask(f"Do you trust printers in {path}?", default=False)
+            if verified:
+                data.add(path)
+                self._global_data_path.joinpath("verified_printers.bin").write_bytes(
+                    pickle.dumps(data)
+                )
+            return verified
+        return True
+
     def _load_plugins(self, plugin_paths: AbstractSet[Path]) -> None:
         if sys.version_info < (3, 10):
             from importlib_metadata import entry_points
@@ -88,7 +125,7 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
                     )
 
         for path in plugin_paths:
-            if not path.exists():
+            if not path.exists() or not self._verify_plugin_path(path):
                 continue
             sys.path.insert(0, str(path.parent))
             try:
