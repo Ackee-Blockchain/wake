@@ -1,0 +1,33 @@
+#!/bin/bash
+###############################################################################
+## Title: gitmoji-fuzzy-hook-init
+## Brief: It opens a fuzzy searcher with gitmojis, to allow the git commit
+##        caller to select one. For git commit visual mode
+##        it adds a description of the selected emoji.
+## Args:
+##      $1: File of the commit message
+##      $2: Commit type
+##      $3: Commit Hash
+##
+## Returns:
+##      Prepends a selectable gitmoji to the git commit message.
+##
+## Source: https://gitlab.com/raabf/gitmoji-fuzzy-hook
+## Author: Fabian Raab <fabian@raab.link>
+## Dependencies: gitmoji-fuzzy-hook
+###############################################################################
+
+[ -t 1 ]  # checks if this script is called from a terminal
+emoji="$(/home/michal/.local/share/gitmoji-fuzzy-hook/bin/gitmoji-fuzzy-hook-exec.sh $? $@)"
+
+msg_file="$1"
+msg="$(cat "$msg_file")"
+
+# Do here whatever you want with the commit message before prepending the emoji
+# to it and writing the message to the commit file.
+
+if [ ! -z "${emoji}" ]; then  # surpress the space if there is no emoji
+	msg="${emoji} ${msg}"
+fi
+echo -e "$msg" > "$msg_file"
+
