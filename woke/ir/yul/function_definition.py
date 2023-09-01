@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Iterator, List, Optional, Tuple
+from functools import lru_cache
+from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple
 
 from woke.ir.ast import SolcYulFunctionDefinition
 
@@ -8,6 +9,9 @@ from ..utils import IrInitTuple
 from .abc import YulAbc, YulStatementAbc
 from .block import YulBlock
 from .typed_name import YulTypedName
+
+if TYPE_CHECKING:
+    from woke.analysis.cfg import ControlFlowGraph
 
 
 class YulFunctionDefinition(YulStatementAbc):
@@ -78,3 +82,10 @@ class YulFunctionDefinition(YulStatementAbc):
         if self._return_variables is None:
             return None
         return tuple(self._return_variables)
+
+    @property
+    @lru_cache(maxsize=64)
+    def cfg(self) -> ControlFlowGraph:
+        from woke.analysis.cfg import ControlFlowGraph
+
+        return ControlFlowGraph(self)
