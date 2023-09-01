@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-ZERO=0;
-
 echo "/.githooks/pre-commit executing..."
 
 # generate a random 16 characters long string that will be used
@@ -28,7 +26,7 @@ function pop_stash()
     # in the other case there were no unstaged changes
     git stash list -n 1 | grep -f .stash-id >/dev/null 2>&1
 
-    if [ $? -eq $ZERO ];
+    if [ $? -eq 0 ];
     then
         # this command should not case merging issues
         git stash pop >/dev/null
@@ -38,7 +36,7 @@ function pop_stash()
 
 function check_last_command()
 {
-    if [ $? -gt $ZERO ];
+    if [ $? -gt 0 ];
     then
         # something went wrong
         # revert all changes made by 'black' and the other tools
@@ -48,8 +46,8 @@ function check_last_command()
     fi
 }
 
-touch .prepare-commit-msg-ignore
-touch .post-commit-ignore
+export WOKE_SKIP_PREPARE_COMMIT_MSG_HOOK=1
+export WOKE_SKIP_POST_COMMIT_HOOK=1
 
 stash_id=$(gen_stash_id)
 echo "$stash_id" > .stash-id
@@ -60,13 +58,13 @@ commited=$?
 # stash unstaged changes
 git stash -u -m "$stash_id" -- . >/dev/null
 # restore staged changes
-if [ $commited -eq $ZERO ];
+if [ $commited -eq 0 ];
 then
     git reset --soft 'HEAD^'
 fi
 
-rm .prepare-commit-msg-ignore
-rm .post-commit-ignore
+unset WOKE_SKIP_PREPARE_COMMIT_MSG_HOOK
+unset WOKE_SKIP_POST_COMMIT_HOOK
 
 # find all staged "*.py" files
 pyfiles=()

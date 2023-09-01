@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 
-ZERO=0;
-
-# in case that post-commit hook should not run ('.post-commit-ignore' exists)
+# in case that post-commit hook should not run (WOKE_SKIP_POST_COMMIT_HOOK is set)
 # or pre-commit hook did not run prior to this hook ('.stash-id' does not exist)
 # just exit the hook
-if [[ -e .post-commit-ignore || ! -e .stash-id ]]; then
-    exit $ZERO
+
+if [[ -n "$WOKE_SKIP_POST_COMMIT_HOOK" || ! -e .stash-id ]]; then
+    exit 0
 fi
 
 # there may be unstaged changes that were stashed in the pre-commit hook
@@ -18,7 +17,7 @@ function pop_stash()
     # in the other case there were no unstaged changes
     git stash list -n 1 | grep -f .stash-id >/dev/null 2>&1
 
-    if [ $? -eq $ZERO ];
+    if [ $? -eq 0 ];
     then
         # this command may introduce merging conflicts
         # this is an expected behavior
@@ -29,9 +28,9 @@ function pop_stash()
 }
 
 # add all changes made by 'black' and other pre-commit tools as a fixup commit
-touch .post-commit-ignore
+export WOKE_SKIP_POST_COMMIT_HOOK=1
 git add -u -- woke tests
 git commit --fixup='HEAD' --no-verify >/dev/null
-rm .post-commit-ignore
+unset WOKE_SKIP_POST_COMMIT_HOOK
 
 pop_stash;
