@@ -48,6 +48,7 @@ function check_last_command()
     fi
 }
 
+touch .prepare-commit-msg-ignore
 touch .post-commit-ignore
 
 stash_id=$(gen_stash_id)
@@ -64,6 +65,7 @@ then
     git reset --soft 'HEAD^'
 fi
 
+rm .prepare-commit-msg-ignore
 rm .post-commit-ignore
 
 # find all staged "*.py" files
