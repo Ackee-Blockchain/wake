@@ -21,6 +21,12 @@ if [[ -e .prepare-commit-msg-ignore ]]; then
     exit 0
 fi
 
+first_line=$(head -n 1 "$1")
+
+if [[ "$first_line" == fixup!* ]]; then
+    exit 0
+fi
+
 [ -t 1 ]  # checks if this script is called from a terminal
 emoji="$(/home/michal/.local/share/gitmoji-fuzzy-hook/bin/gitmoji-fuzzy-hook-exec.sh $? $@)"
 
