@@ -157,7 +157,7 @@ def _modifies_state_after_statement(
     start = cfg.get_cfg_block(statement)
     graph = cfg.graph
 
-    if not nx.has_path(graph, start, cfg.end_block):
+    if not nx.has_path(graph, start, cfg.success_end_block):
         return ret
 
     if statement not in start.statements:
@@ -175,7 +175,7 @@ def _modifies_state_after_statement(
     for _, to in graph.out_edges(start):  # pyright: ignore reportGeneralTypeIssues
         if to in visited:
             continue
-        if not nx.has_path(graph, to, cfg.end_block):
+        if not nx.has_path(graph, to, cfg.success_end_block):
             continue
         queue.append(to)
 
@@ -190,7 +190,7 @@ def _modifies_state_after_statement(
         for _, to in graph.out_edges(block):  # pyright: ignore reportGeneralTypeIssues
             if to in visited:
                 continue
-            if not nx.has_path(graph, to, cfg.end_block):
+            if not nx.has_path(graph, to, cfg.success_end_block):
                 continue
 
             visited.add(to)
