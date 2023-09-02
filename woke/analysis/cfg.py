@@ -802,6 +802,12 @@ class CfgBlock:
             graph.add_edge(
                 fail_block_end, next, condition=(TransitionCondition.ALWAYS, None)
             )
+        else:
+            graph.add_edge(
+                prev,
+                revert_end,
+                condition=(TransitionCondition.TRY_FAILED, try_statement.external_call),
+            )
         return next
 
     @classmethod
