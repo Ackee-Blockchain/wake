@@ -138,7 +138,6 @@ class ControlFlowGraph:
         """
         return self.__start_block
 
-    # TODO simplify all usages of this property
     @property
     def success_end_block(self) -> CfgBlock:
         """
