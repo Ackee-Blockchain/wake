@@ -8,8 +8,10 @@ import networkx as nx
 from woke.ir import (
     Block,
     Break,
+    Conditional,
     Continue,
     DoWhileStatement,
+    ExpressionAbc,
     ExpressionStatement,
     ForStatement,
     FunctionCall,
@@ -381,21 +383,101 @@ class CfgBlock:
             graph.add_edge(prev, next, condition=(TransitionCondition.NEVER, None))
             return next
         elif isinstance(statement, ExpressionStatement):
-            expr = statement.expression
-            if (
-                isinstance(expr, FunctionCall)
-                and expr.function_called == GlobalSymbolsEnum.REVERT
-            ):
-                prev.__statements.append(statement)
-                next = CfgBlock()
-                graph.add_node(next)
-                graph.add_edge(
-                    prev, revert_end, condition=(TransitionCondition.ALWAYS, None)
-                )
-                graph.add_edge(prev, next, condition=(TransitionCondition.NEVER, None))
+
+            def process_expression(expression: ExpressionAbc, block: CfgBlock) -> bool:
+                if isinstance(expression, Conditional):
+                    true_block = CfgBlock()
+                    graph.add_node(true_block)
+                    false_block = CfgBlock()
+                    graph.add_node(false_block)
+
+                    graph.add_edge(
+                        block,
+                        true_block,
+                        condition=(TransitionCondition.IS_TRUE, expression.condition),
+                    )
+                    graph.add_edge(
+                        block,
+                        false_block,
+                        condition=(TransitionCondition.IS_FALSE, expression.condition),
+                    )
+
+                    true_is_control = process_expression(
+                        expression.true_expression, true_block
+                    )
+                    false_is_control = process_expression(
+                        expression.false_expression, false_block
+                    )
+
+                    if not true_is_control:
+                        graph.remove_node(true_block)
+                        if false_is_control:
+                            graph.add_edge(
+                                block,
+                                next,
+                                condition=(
+                                    TransitionCondition.IS_TRUE,
+                                    expression.condition,
+                                ),
+                            )
+
+                    if not false_is_control:
+                        graph.remove_node(false_block)
+                        if true_is_control:
+                            graph.add_edge(
+                                block,
+                                next,
+                                condition=(
+                                    TransitionCondition.IS_FALSE,
+                                    expression.condition,
+                                ),
+                            )
+
+                    return true_is_control or false_is_control
+                elif isinstance(expression, FunctionCall):
+                    func_called = expression.function_called
+                    if func_called == GlobalSymbolsEnum.REVERT:
+                        graph.add_edge(
+                            block,
+                            revert_end,
+                            condition=(TransitionCondition.ALWAYS, None),
+                        )
+                        graph.add_edge(
+                            block, next, condition=(TransitionCondition.NEVER, None)
+                        )
+                        return True
+                    elif func_called in {
+                        GlobalSymbolsEnum.REQUIRE,
+                        GlobalSymbolsEnum.ASSERT,
+                    }:
+                        graph.add_edge(
+                            block,
+                            next,
+                            condition=(
+                                TransitionCondition.IS_TRUE,
+                                expression.arguments[0],
+                            ),
+                        )
+                        graph.add_edge(
+                            block,
+                            revert_end,
+                            condition=(
+                                TransitionCondition.IS_FALSE,
+                                expression.arguments[0],
+                            ),
+                        )
+                        return True
+                    else:
+                        return False
+
+            prev.__statements.append(statement)
+            next = CfgBlock()
+            graph.add_node(next)
+
+            if process_expression(statement.expression, prev):
                 return next
             else:
-                prev.__statements.append(statement)
+                graph.remove_node(next)
                 return prev
         elif isinstance(statement, TryStatement):
             return cls.from_try_statement(
