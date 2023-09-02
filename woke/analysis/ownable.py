@@ -208,11 +208,7 @@ def statement_is_only_owner(statement: StatementAbc, check_only_eoa: bool) -> bo
     expr = statement.expression
     if isinstance(expr, FunctionCall):
         function_called = expr.function_called
-        if function_called == GlobalSymbolsEnum.REQUIRE:
-            return expression_is_only_owner(
-                expr.arguments[0], set(), check_only_eoa=check_only_eoa
-            )
-        elif (
+        if (
             isinstance(function_called, FunctionDefinition)
             and function_called.body is not None
         ):

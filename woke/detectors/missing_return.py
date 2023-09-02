@@ -23,35 +23,7 @@ def check_missing_return(node: ir.FunctionDefinition) -> List[DetectorResult]:
     detections = []
 
     for block in graph.predecessors(end):
-        has_return = False
-        for stmt in block.statements:
-            if isinstance(stmt, ir.ExpressionStatement):
-                if (
-                    isinstance(stmt.expression, ir.FunctionCall)
-                    and stmt.expression.function_called
-                    == ir.enums.GlobalSymbolsEnum.REVERT
-                ):
-                    has_return = True
-                    break
-                elif isinstance(stmt.expression, ir.Return) or isinstance(
-                    stmt.expression, ir.RevertStatement
-                ):
-                    has_return = True
-                    break
-            elif isinstance(stmt, ir.Return) or isinstance(stmt, ir.RevertStatement):
-                has_return = True
-                break
-            elif isinstance(stmt, ir.InlineAssembly) and stmt.yul_block is not None:
-                for yul_stmt in stmt.yul_block.statements:
-                    if (
-                        isinstance(yul_stmt, ir.YulExpressionStatement)
-                        and isinstance(yul_stmt.expression, ir.YulFunctionCall)
-                        and yul_stmt.expression.function_name.name
-                        in ("revert", "return")
-                    ):
-                        has_return = True
-                        break
-        if not has_return:
+        if not any(isinstance(stmt, ir.Return) for stmt in block.statements):
             has_return_params_named = True
             for param in node.return_parameters.parameters:
                 if param.name == "":
