@@ -23,4 +23,6 @@ from .unsafe_selfdestruct import UnsafeSelfdestructDetector
 from .unsafe_tx_origin import UnsafeTxOriginDetector
 from .unused_contract import UnusedContractDetector
 
+from .always_reverts import AlwaysRevertsDetector  # isort:skip
+
 from . import axelar  # isort:skip
