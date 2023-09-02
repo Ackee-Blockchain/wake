@@ -219,7 +219,7 @@ def statement_is_only_owner(statement: StatementAbc, check_only_eoa: bool) -> bo
             cfg = function_called.cfg
             assert cfg is not None
             return not _cfg_block_or_statement_is_publicly_reachable(
-                cfg.end_block,
+                cfg.success_end_block,
                 cfg,
                 check_func_visibility=False,
                 check_only_eoa=check_only_eoa,

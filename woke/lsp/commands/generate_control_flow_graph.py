@@ -59,19 +59,8 @@ async def generate_cfg_handler(
     ):
         skip_start_block = True
 
-    skip_end_block = False
-    if (
-        len(cfg.end_block.statements) == 0
-        and cfg.end_block.control_statement is None
-        and graph.in_degree(cfg.end_block)  # pyright: ignore reportGeneralTypeIssues
-        == 1
-    ):
-        skip_end_block = True
-
     for node in graph.nodes:  # pyright: ignore reportGeneralTypeIssues
         if skip_start_block and node == cfg.start_block:
-            continue
-        if skip_end_block and node == cfg.end_block:
             continue
 
         statements: List[StatementAbc] = node.statements
@@ -81,6 +70,14 @@ async def generate_cfg_handler(
                 for line in str(node).splitlines()
             )
         }
+
+        if node == cfg.success_end_block:
+            node_attrs["color"] = "green"
+            node_attrs["xlabel"] = "success"
+        elif node == cfg.revert_end_block:
+            node_attrs["color"] = "red"
+            node_attrs["xlabel"] = "revert"
+
         if (
             context.config.generator.control_flow_graph.vscode_urls
             and len(statements) > 0
@@ -100,8 +97,6 @@ async def generate_cfg_handler(
         data,
     ) in graph.edges.data():  # pyright: ignore reportGeneralTypeIssues
         if skip_start_block and from_ == cfg.start_block:
-            continue
-        if skip_end_block and to == cfg.end_block:
             continue
 
         condition = data["condition"]  # pyright: ignore reportOptionalSubscript

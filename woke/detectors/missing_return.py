@@ -18,7 +18,7 @@ def check_missing_return(node: ir.FunctionDefinition) -> List[DetectorResult]:
 
     cfg = node.cfg
     assert cfg is not None
-    end = cfg.end_block
+    end = cfg.success_end_block
     graph = cfg.graph
     detections = []
 

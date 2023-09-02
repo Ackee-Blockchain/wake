@@ -63,7 +63,8 @@ class ControlFlowGraph:
     __declaration: Union[FunctionDefinition, ModifierDefinition, YulFunctionDefinition]
     __statements_lookup: Dict[Union[StatementAbc, YulStatementAbc], CfgBlock]
     __start_block: CfgBlock
-    __end_block: CfgBlock
+    __success_end_block: CfgBlock
+    __revert_end_block: CfgBlock
 
     def __init__(
         self,
@@ -83,33 +84,31 @@ class ControlFlowGraph:
         self.__graph.add_edge(
             self.__start_block, next_block, condition=(TransitionCondition.ALWAYS, None)
         )
-        self.__end_block = CfgBlock()
-        self.__graph.add_node(self.__end_block)
+        self.__success_end_block = CfgBlock()
+        self.__graph.add_node(self.__success_end_block)
+        self.__revert_end_block = CfgBlock()
+        self.__graph.add_node(self.__revert_end_block)
 
-        last = CfgBlock.from_statement(
+        tmp = CfgBlock.from_statement(
             self.__graph,
             next_block,
-            self.__end_block,
+            self.__success_end_block,
+            self.__revert_end_block,
             None,
             None,
             declaration.body,
         )
         self.__graph.add_edge(
-            last, self.__end_block, condition=(TransitionCondition.ALWAYS, None)
+            tmp, self.__success_end_block, condition=(TransitionCondition.ALWAYS, None)
         )
 
-        while _normalize(self.__graph, self.__start_block, self.__end_block):
+        while _normalize(
+            self.__graph,
+            self.__start_block,
+            self.__success_end_block,
+            self.__revert_end_block,
+        ):
             pass
-
-        if len(self.__end_block.statements) != 0:
-            end_block = CfgBlock()
-            self.__graph.add_node(end_block)
-            self.__graph.add_edge(
-                self.__end_block,
-                end_block,
-                condition=(TransitionCondition.ALWAYS, None),
-            )
-            self.__end_block = end_block
 
         self.__statements_lookup = {
             stmt: block for block in self.__graph.nodes for stmt in block.statements
@@ -137,12 +136,20 @@ class ControlFlowGraph:
         """
         return self.__start_block
 
+    # TODO simplify all usages of this property
     @property
-    def end_block(self) -> CfgBlock:
+    def success_end_block(self) -> CfgBlock:
         """
         End block is guaranteed to be empty, i.e. it has no statements.
         """
-        return self.__end_block
+        return self.__success_end_block
+
+    @property
+    def revert_end_block(self) -> CfgBlock:
+        """
+        End block is guaranteed to be empty, i.e. it has no statements.
+        """
+        return self.__revert_end_block
 
     def get_cfg_block(
         self, statement: Union[StatementAbc, YulStatementAbc]
@@ -172,7 +179,9 @@ class ControlFlowGraph:
             return nx.has_path(self.__graph, start_block, end_block)
 
 
-def _normalize(graph: nx.DiGraph, start: CfgBlock, end: CfgBlock) -> bool:
+def _normalize(
+    graph: nx.DiGraph, start: CfgBlock, success_end: CfgBlock, revert_end: CfgBlock
+) -> bool:
     changed = False
     to_be_removed = set()
 
@@ -200,7 +209,7 @@ def _normalize(graph: nx.DiGraph, start: CfgBlock, end: CfgBlock) -> bool:
         if (
             len(node.statements) == 0
             and len(graph.in_edges(node)) == 0
-            and node not in {start, end}
+            and node not in {start, success_end, revert_end}
         ):
             to_be_removed.add(node)
             changed = True
@@ -274,7 +283,8 @@ class CfgBlock:
         cls,
         graph: nx.DiGraph,
         prev: CfgBlock,
-        function_end: CfgBlock,
+        success_end: CfgBlock,
+        revert_end: CfgBlock,
         loop_body_post: Optional[CfgBlock],
         loop_body_next: Optional[CfgBlock],
         statement: Union[StatementAbc, YulStatementAbc],
@@ -284,7 +294,8 @@ class CfgBlock:
                 prev = cls.from_statement(
                     graph,
                     prev,
-                    function_end,
+                    success_end,
+                    revert_end,
                     loop_body_post,
                     loop_body_next,
                     body_statement,
@@ -294,7 +305,8 @@ class CfgBlock:
             return cls.from_statement(
                 graph,
                 prev,
-                function_end,
+                success_end,
+                revert_end,
                 loop_body_post,
                 loop_body_next,
                 statement.yul_block,
@@ -308,7 +320,7 @@ class CfgBlock:
             next = CfgBlock()
             graph.add_node(next)
             graph.add_edge(
-                prev, function_end, condition=(TransitionCondition.ALWAYS, None)
+                prev, revert_end, condition=(TransitionCondition.ALWAYS, None)
             )
             graph.add_edge(prev, next, condition=(TransitionCondition.NEVER, None))
             return next
@@ -333,19 +345,38 @@ class CfgBlock:
             graph.add_edge(prev, next, condition=(TransitionCondition.NEVER, None))
             return next
         elif isinstance(statement, DoWhileStatement):
-            return cls.from_do_while_statement(graph, prev, function_end, statement)
+            return cls.from_do_while_statement(
+                graph, prev, success_end, revert_end, statement
+            )
         elif isinstance(statement, ForStatement):
-            return cls.from_for_statement(graph, prev, function_end, statement)
+            return cls.from_for_statement(
+                graph, prev, success_end, revert_end, statement
+            )
         elif isinstance(statement, IfStatement):
             return cls.from_if_statement(
-                graph, prev, function_end, loop_body_post, loop_body_next, statement
+                graph,
+                prev,
+                success_end,
+                revert_end,
+                loop_body_post,
+                loop_body_next,
+                statement,
             )
-        elif isinstance(statement, (Return, RevertStatement, YulLeave)):
+        elif isinstance(statement, (Return, YulLeave)):
             prev.__statements.append(statement)
             next = CfgBlock()
             graph.add_node(next)
             graph.add_edge(
-                prev, function_end, condition=(TransitionCondition.ALWAYS, None)
+                prev, success_end, condition=(TransitionCondition.ALWAYS, None)
+            )
+            graph.add_edge(prev, next, condition=(TransitionCondition.NEVER, None))
+            return next
+        elif isinstance(statement, RevertStatement):
+            prev.__statements.append(statement)
+            next = CfgBlock()
+            graph.add_node(next)
+            graph.add_edge(
+                prev, revert_end, condition=(TransitionCondition.ALWAYS, None)
             )
             graph.add_edge(prev, next, condition=(TransitionCondition.NEVER, None))
             return next
@@ -359,7 +390,7 @@ class CfgBlock:
                 next = CfgBlock()
                 graph.add_node(next)
                 graph.add_edge(
-                    prev, function_end, condition=(TransitionCondition.ALWAYS, None)
+                    prev, revert_end, condition=(TransitionCondition.ALWAYS, None)
                 )
                 graph.add_edge(prev, next, condition=(TransitionCondition.NEVER, None))
                 return next
@@ -368,20 +399,36 @@ class CfgBlock:
                 return prev
         elif isinstance(statement, TryStatement):
             return cls.from_try_statement(
-                graph, prev, function_end, loop_body_post, loop_body_next, statement
+                graph,
+                prev,
+                success_end,
+                revert_end,
+                loop_body_post,
+                loop_body_next,
+                statement,
             )
         elif isinstance(statement, WhileStatement):
-            return cls.from_while_statement(graph, prev, function_end, statement)
+            return cls.from_while_statement(
+                graph, prev, success_end, revert_end, statement
+            )
         elif isinstance(statement, YulCase):
             raise NotImplementedError()  # should be handled by YulSwitch
         elif isinstance(statement, YulForLoop):
-            return cls.from_yul_for_loop(graph, prev, function_end, statement)
+            return cls.from_yul_for_loop(
+                graph, prev, success_end, revert_end, statement
+            )
         elif isinstance(statement, YulIf):
             return cls.from_yul_if(
-                graph, prev, function_end, loop_body_post, loop_body_next, statement
+                graph,
+                prev,
+                success_end,
+                revert_end,
+                loop_body_post,
+                loop_body_next,
+                statement,
             )
         elif isinstance(statement, YulSwitch):
-            return cls.from_yul_switch(graph, prev, function_end, statement)
+            return cls.from_yul_switch(graph, prev, success_end, revert_end, statement)
         else:
             prev.__statements.append(statement)
             return prev
@@ -391,7 +438,8 @@ class CfgBlock:
         cls,
         graph: nx.DiGraph,
         prev: CfgBlock,
-        function_end: CfgBlock,
+        success_end: CfgBlock,
+        revert_end: CfgBlock,
         loop_body_post: Optional[CfgBlock],
         loop_body_next: Optional[CfgBlock],
         if_statement: IfStatement,
@@ -403,7 +451,8 @@ class CfgBlock:
         true_block_end = cls.from_statement(
             graph,
             true_block,
-            function_end,
+            success_end,
+            revert_end,
             loop_body_post,
             loop_body_next,
             if_statement.true_body,
@@ -418,7 +467,8 @@ class CfgBlock:
             false_block_end = cls.from_statement(
                 graph,
                 false_block,
-                function_end,
+                success_end,
+                revert_end,
                 loop_body_post,
                 loop_body_next,
                 if_statement.false_body,
@@ -449,7 +499,8 @@ class CfgBlock:
         cls,
         graph: nx.DiGraph,
         prev: CfgBlock,
-        function_end: CfgBlock,
+        success_end: CfgBlock,
+        revert_end: CfgBlock,
         loop_body_post: Optional[CfgBlock],
         loop_body_next: Optional[CfgBlock],
         if_statement: YulIf,
@@ -461,7 +512,8 @@ class CfgBlock:
         true_block_end = cls.from_statement(
             graph,
             true_block,
-            function_end,
+            success_end,
+            revert_end,
             loop_body_post,
             loop_body_next,
             if_statement.body,
@@ -488,7 +540,8 @@ class CfgBlock:
         cls,
         graph: nx.DiGraph,
         prev: CfgBlock,
-        function_end: CfgBlock,
+        success_end: CfgBlock,
+        revert_end: CfgBlock,
         do_while_statement: DoWhileStatement,
     ) -> CfgBlock:
         body = CfgBlock()
@@ -496,7 +549,7 @@ class CfgBlock:
         next = CfgBlock()
         graph.add_node(next)
         body_end = cls.from_statement(
-            graph, body, function_end, body, next, do_while_statement.body
+            graph, body, success_end, revert_end, body, next, do_while_statement.body
         )
         assert body_end.__control_statement is None
         body_end.__control_statement = do_while_statement
@@ -519,14 +572,16 @@ class CfgBlock:
         cls,
         graph: nx.DiGraph,
         prev: CfgBlock,
-        function_end: CfgBlock,
+        success_end: CfgBlock,
+        revert_end: CfgBlock,
         for_statement: ForStatement,
     ) -> CfgBlock:
         if for_statement.initialization_expression is not None:
             prev = cls.from_statement(
                 graph,
                 prev,
-                function_end,
+                success_end,
+                revert_end,
                 None,
                 None,
                 for_statement.initialization_expression,
@@ -544,7 +599,8 @@ class CfgBlock:
             loop_post_end = cls.from_statement(
                 graph,
                 loop_post,
-                function_end,
+                success_end,
+                revert_end,
                 loop_post,
                 next,
                 for_statement.loop_expression,
@@ -552,7 +608,7 @@ class CfgBlock:
         else:
             loop_post_end = loop_post
         body_end = cls.from_statement(
-            graph, body, function_end, loop_post, next, for_statement.body
+            graph, body, success_end, revert_end, loop_post, next, for_statement.body
         )
 
         graph.add_edge(
@@ -583,11 +639,14 @@ class CfgBlock:
         cls,
         graph: nx.DiGraph,
         prev: CfgBlock,
-        function_end: CfgBlock,
+        success_end: CfgBlock,
+        revert_end: CfgBlock,
         for_loop: YulForLoop,
     ) -> CfgBlock:
         assert prev.__control_statement is None
-        prev = cls.from_statement(graph, prev, function_end, None, None, for_loop.pre)
+        prev = cls.from_statement(
+            graph, prev, success_end, revert_end, None, None, for_loop.pre
+        )
         assert prev.__control_statement is None
         prev.__control_statement = for_loop
 
@@ -598,10 +657,10 @@ class CfgBlock:
         loop_post = CfgBlock()
         graph.add_node(loop_post)
         body_end = cls.from_statement(
-            graph, body, function_end, loop_post, next, for_loop.body
+            graph, body, success_end, revert_end, loop_post, next, for_loop.body
         )
         loop_post_end = cls.from_statement(
-            graph, loop_post, function_end, loop_post, next, for_loop.post
+            graph, loop_post, success_end, revert_end, loop_post, next, for_loop.post
         )
 
         graph.add_edge(
@@ -632,7 +691,8 @@ class CfgBlock:
         cls,
         graph: nx.DiGraph,
         prev: CfgBlock,
-        function_end: CfgBlock,
+        success_end: CfgBlock,
+        revert_end: CfgBlock,
         loop_body_post: Optional[CfgBlock],
         loop_body_next: Optional[CfgBlock],
         try_statement: TryStatement,
@@ -645,7 +705,8 @@ class CfgBlock:
         success_block_end = cls.from_statement(
             graph,
             success_block,
-            function_end,
+            success_end,
+            revert_end,
             loop_body_post,
             loop_body_next,
             try_statement.clauses[0].block,
@@ -664,7 +725,8 @@ class CfgBlock:
                 revert_block_end = cls.from_statement(
                     graph,
                     revert_block,
-                    function_end,
+                    success_end,
+                    revert_end,
                     loop_body_post,
                     loop_body_next,
                     clause.block,
@@ -675,7 +737,8 @@ class CfgBlock:
                 panic_block_end = cls.from_statement(
                     graph,
                     panic_block,
-                    function_end,
+                    success_end,
+                    revert_end,
                     loop_body_post,
                     loop_body_next,
                     clause.block,
@@ -686,7 +749,8 @@ class CfgBlock:
                 fail_block_end = cls.from_statement(
                     graph,
                     fail_block,
-                    function_end,
+                    success_end,
+                    revert_end,
                     loop_body_post,
                     loop_body_next,
                     clause.block,
@@ -745,7 +809,8 @@ class CfgBlock:
         cls,
         graph: nx.DiGraph,
         prev: CfgBlock,
-        function_end: CfgBlock,
+        success_end: CfgBlock,
+        revert_end: CfgBlock,
         switch: YulSwitch,
     ) -> CfgBlock:
         assert prev.__control_statement is None
@@ -765,7 +830,13 @@ class CfgBlock:
                 else (TransitionCondition.SWITCH_DEFAULT, None),
             )
             case_block_end = cls.from_statement(
-                graph, case_block, function_end, case_block, next, case_statement.body
+                graph,
+                case_block,
+                success_end,
+                revert_end,
+                case_block,
+                next,
+                case_statement.body,
             )
             graph.add_edge(
                 case_block_end, next, condition=(TransitionCondition.ALWAYS, None)
@@ -785,7 +856,8 @@ class CfgBlock:
         cls,
         graph: nx.DiGraph,
         prev: CfgBlock,
-        function_end: CfgBlock,
+        success_end: CfgBlock,
+        revert_end: CfgBlock,
         while_statement: WhileStatement,
     ) -> CfgBlock:
         assert prev.__control_statement is None
@@ -796,7 +868,7 @@ class CfgBlock:
         next = CfgBlock()
         graph.add_node(next)
         body_end = cls.from_statement(
-            graph, body, function_end, body, next, while_statement.body
+            graph, body, success_end, revert_end, body, next, while_statement.body
         )
 
         graph.add_edge(
