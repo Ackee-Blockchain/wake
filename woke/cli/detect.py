@@ -346,14 +346,10 @@ def run_detect(ctx: click.Context, no_artifacts: bool) -> None:
     if "--help" in ctx.obj["subcommand_args"]:
         return
 
-    from woke.core.visitor import visit_map
-    from woke.detectors.api import DetectionConfidence, DetectionImpact
-
     from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
     from ..compiler.build_data_model import ProjectBuild
     from ..compiler.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
     from ..config import WokeConfig
-    from ..utils import get_class_that_defined_method
     from ..utils.file_utils import is_relative_to
     from .console import console
 
@@ -400,116 +396,38 @@ def run_detect(ctx: click.Context, no_artifacts: bool) -> None:
     assert compiler.latest_build_info is not None
     assert compiler.latest_graph is not None
 
-    detections: List[DetectorResult]
-    assert isinstance(ctx.command, DetectCli)
+    from woke.detectors.api import detect
+
     assert ctx.invoked_subcommand is not None
-    command = ctx.command.get_command(ctx, ctx.invoked_subcommand)
-    assert command is not None
-    assert command.name is not None
-
-    if hasattr(config.detectors, command.name):
-        default_map = getattr(config.detectors, command.name)
-    else:
-        default_map = None
-
-    cls: Type[Detector] = get_class_that_defined_method(
-        command.callback
-    )  # pyright: ignore reportGeneralTypeIssues
-    if cls is not None:
-
-        def _callback(*args, **kwargs):
-            instance.paths = [Path(p).resolve() for p in kwargs.pop("paths", [])]
-
-            min_confidence = DetectionConfidence(kwargs.pop("min_confidence", "low"))
-            min_impact = DetectionImpact(kwargs.pop("min_impact", "low"))
-
-            original_callback(
-                instance, *args, **kwargs
-            )  # pyright: ignore reportOptionalCall
-
-            with console.status("[bold green]Running detectors...") as status:
-                for path, source_unit in build.source_units.items():
-                    if len(instance.paths) == 0 or any(
-                        is_relative_to(path, p) for p in instance.paths
-                    ):
-                        status.update(
-                            f"[bold green]Detecting in {source_unit.source_unit_name}..."
-                        )
-                        for node in source_unit:
-                            visit_map[node.ast_node.node_type](instance, node)
-
-            return _filter_detections(
-                instance.detect(),
-                min_confidence,
-                min_impact,
-                config,
-            )
-
-        instance = cls()
-        instance.build = build
-        instance.build_info = compiler.latest_build_info
-        instance.config = config
-        instance.imports_graph = (
-            compiler.latest_graph.copy()
-        )  # pyright: ignore reportGeneralTypeIssues
-
-        original_callback = command.callback
-        command.callback = _callback
-
-        sub_ctx = command.make_context(
-            command.name,
-            [*ctx.obj["subcommand_protected_args"][1:], *ctx.obj["subcommand_args"]],
-            parent=ctx,
-            default_map=default_map,
-        )
-        with sub_ctx:
-            detections = sub_ctx.command.invoke(sub_ctx)
-    else:
-
-        def _callback(*args, **kwargs):
-            click.get_current_context().obj["paths"] = [
-                Path(p).resolve() for p in kwargs.pop("paths", [])
-            ]
-            min_confidence = DetectionConfidence(kwargs.pop("min_confidence", "low"))
-            min_impact = DetectionImpact(kwargs.pop("min_impact", "low"))
-
-            return _filter_detections(
-                original_callback(
-                    *args, **kwargs
-                ),  # pyright: ignore reportOptionalCall
-                min_confidence,
-                min_impact,
-                config,
-            )
-
-        # this is the case without the Detector class
-        args = [*ctx.obj["subcommand_protected_args"][1:], *ctx.obj["subcommand_args"]]
+    if ctx.invoked_subcommand == "all":
         ctx.obj = {
             "build": build,
             "build_info": compiler.latest_build_info,
             "config": config,
-            "imports_graph": compiler.latest_graph.copy(),
+            "imports_graph": compiler.latest_graph,
         }
-
-        if command.name != "all":
-            original_callback = command.callback
-            command.callback = _callback
-
-        sub_ctx = command.make_context(
-            command.name, args, parent=ctx, default_map=default_map
+    else:
+        detections = detect(
+            ctx.invoked_subcommand,
+            build,
+            compiler.latest_build_info,
+            compiler.latest_graph,
+            config,
+            ctx,
+            ctx.obj["subcommand_args"],
+            console=console,
         )
-        with sub_ctx:
-            detections = sub_ctx.command.invoke(sub_ctx)
 
-    # TODO order
-    for detection in detections:
-        _print_detection(ctx.invoked_subcommand, detection, config)
+        # TODO order
+        for detector_name in sorted(detections.keys()):
+            for detection in detections[detector_name]:
+                _print_detection(detector_name, detection, config)
 
-    if len(detections) == 0:
-        console.print("No detections found")
-        sys.exit(0)
+        if len(detections) == 0:
+            console.print("No detections found")
+            sys.exit(0)
 
-    sys.exit(1)
+        sys.exit(1)
 
 
 @run_detect.command(name="all")
@@ -523,9 +441,7 @@ def run_detect_all(
     """
     Run all detectors.
     """
-    from woke.core.visitor import visit_map
-    from woke.utils import get_class_that_defined_method
-    from woke.utils.file_utils import is_relative_to
+    from woke.detectors.api import detect
 
     from .console import console
 
@@ -534,124 +450,18 @@ def run_detect_all(
     latest_build_info = ctx.obj["build_info"]
     latest_graph = ctx.obj["imports_graph"]
 
-    while not isinstance(ctx.command, DetectCli):
-        assert ctx.parent is not None
-        ctx = ctx.parent
-    assert ctx.parent is not None
-
-    all_detectors = ctx.command.list_commands(ctx)
-    if config.detectors.only is None:
-        only = set(all_detectors)
-    else:
-        only = set(config.detectors.only)
-
-    selected_detectors = [
-        d
-        for d in all_detectors
-        if d in only and d not in config.detectors.exclude and d != "all"
-    ]
-    collected_detectors: Dict[str, Detector] = {}
-    detections: Dict[str, Iterable[DetectorResult]] = {}
-
-    # TODO print enabled detectors?
-
-    for detector_name in selected_detectors:
-        assert isinstance(ctx.command, DetectCli)
-        command = ctx.command.get_command(ctx, detector_name)
-        assert command is not None
-        assert command.name is not None
-
-        if hasattr(config.detectors, command.name):
-            default_map = getattr(config.detectors, command.name)
-        else:
-            default_map = None
-
-        cls: Type[Detector] = get_class_that_defined_method(
-            command.callback
-        )  # pyright: ignore reportGeneralTypeIssues
-        if cls is not None:
-
-            def _callback(*args, **kwargs):  # pyright: ignore reportGeneralTypeIssues
-                kwargs.pop("paths", None)
-                kwargs.pop("min_confidence", None)
-                kwargs.pop("min_impact", None)
-
-                original_callback(
-                    instance, *args, **kwargs
-                )  # pyright: ignore reportOptionalCall
-
-            instance = cls()
-            instance.build = build
-            instance.build_info = latest_build_info
-            instance.config = config
-            instance.imports_graph = latest_graph.copy()
-            instance.paths = [Path(p).resolve() for p in paths]
-
-            original_callback = command.callback
-            command.callback = _callback
-
-            sub_ctx = command.make_context(
-                command.name,
-                [
-                    *ctx.parent.obj["subcommand_protected_args"][1:],
-                    *ctx.parent.obj["subcommand_args"],
-                ],
-                parent=ctx,
-                default_map=default_map,
-            )
-            with sub_ctx:
-                sub_ctx.command.invoke(sub_ctx)
-
-            collected_detectors[detector_name] = instance
-        else:
-
-            def _callback(*args, **kwargs):
-                kwargs.pop("paths", None)
-                kwargs.pop("min_confidence", None)
-                kwargs.pop("min_impact", None)
-
-                return original_callback(
-                    *args, **kwargs
-                )  # pyright: ignore reportOptionalCall
-
-            # this is the case without the Detector class
-            args = [
-                *ctx.parent.obj["subcommand_protected_args"][1:],
-                *ctx.parent.obj["subcommand_args"],
-            ]
-            ctx.obj = {
-                "build": build,
-                "build_info": latest_build_info,
-                "config": config,
-                "imports_graph": latest_graph.copy(),
-                "paths": [Path(p).resolve() for p in paths],
-            }
-
-            original_callback = command.callback
-            command.callback = _callback
-
-            sub_ctx = command.make_context(
-                command.name, args, parent=ctx, default_map=default_map
-            )
-            with sub_ctx:
-                detections[detector_name] = _filter_detections(
-                    sub_ctx.command.invoke(sub_ctx), min_confidence, min_impact, config
-                )
-
-    with console.status("[bold green]Running detectors...") as status:
-        for path, source_unit in build.source_units.items():
-            if len(paths) == 0 or any(is_relative_to(path, p) for p in paths):
-                status.update(
-                    f"[bold green]Detecting in {source_unit.source_unit_name}..."
-                )
-                for node in source_unit:
-                    for detector in collected_detectors.values():
-                        visit_map[node.ast_node.node_type](detector, node)
-
-    for detector_name, detector in collected_detectors.items():
-        detections[detector_name] = _filter_detections(
-            detector.detect(), min_confidence, min_impact, config
-        )
+    detections = detect(
+        run_detect.list_commands(ctx),
+        build,
+        latest_build_info,
+        latest_graph,
+        config,
+        ctx,
+        paths=[Path(p).resolve() for p in paths],
+        min_confidence=min_confidence,
+        min_impact=min_impact,
+        console=console,
+    )
 
     # TODO order
     for detector_name in sorted(detections.keys()):
