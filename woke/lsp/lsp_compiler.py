@@ -30,8 +30,16 @@ from typing import (
 
 from woke.compiler.exceptions import CompilationError
 
+from ..cli.detect import run_detect
+from ..compiler.build_data_model import (
+    CompilationUnitBuildInfo,
+    ProjectBuild,
+    ProjectBuildInfo,
+    SourceUnitInfo,
+)
 from ..core.solidity_version import SolidityVersionRange, SolidityVersionRanges
-from ..utils import StrEnum
+from ..detectors.api import DetectionImpact, detect
+from ..utils import StrEnum, get_package_version
 from ..utils.file_utils import is_relative_to
 
 if TYPE_CHECKING:
@@ -43,9 +51,13 @@ from intervaltree import IntervalTree
 from woke.compiler import SolcOutputSelectionEnum
 from woke.compiler.compilation_unit import CompilationUnit
 from woke.compiler.compiler import SolidityCompiler
-from woke.compiler.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
+from woke.compiler.solc_frontend import (
+    SolcInputSettings,
+    SolcOutputError,
+    SolcOutputErrorSeverityEnum,
+)
 from woke.config import WokeConfig
-from woke.ir import SourceUnit
+from woke.ir import DeclarationAbc, SourceUnit
 from woke.ir.ast import AstSolc
 from woke.ir.reference_resolver import CallbackParams, ReferenceResolver
 from woke.ir.utils import IrInitTuple
@@ -58,6 +70,7 @@ from woke.lsp.utils.uri import path_to_uri, uri_to_path
 
 from ..svm import SolcVersionManager
 from .common_structures import (
+    CodeDescription,
     CreateFilesParams,
     DeleteFilesParams,
     Diagnostic,
@@ -140,9 +153,13 @@ class LspCompiler:
     __last_compilation_interval_trees: Dict[Path, IntervalTree]
     __last_compilation_source_units: Dict[Path, SourceUnit]
     __last_graph: nx.DiGraph
+    __last_build_settings: SolcInputSettings
     __line_indexes: Dict[Path, List[Tuple[bytes, int]]]
     __perform_files_discovery: bool
     __force_run_detectors: bool
+    __woke_version: str
+    __all_detectors: List[str]
+    __latest_errors_per_cu: Dict[bytes, Set[SolcOutputError]]
 
     __ir_reference_resolver: ReferenceResolver
 
@@ -168,6 +185,9 @@ class LspCompiler:
         self.__last_compilation_interval_trees = {}
         self.__last_compilation_source_units = {}
         self.__last_graph = nx.DiGraph()
+        self.__last_build_settings = (
+            SolcInputSettings()
+        )  # pyright: ignore reportGeneralTypeIssues
         self.__line_indexes = {}
         self.__output_contents = dict()
         self.__compilation_errors = dict()
@@ -175,6 +195,9 @@ class LspCompiler:
         self.__output_ready = asyncio.Event()
         self.__perform_files_discovery = perform_files_discovery
         self.__force_run_detectors = False
+        self.__woke_version = get_package_version("woke")
+        self.__all_detectors = []
+        self.__latest_errors_per_cu = {}
 
         self.__ir_reference_resolver = ReferenceResolver()
 
@@ -442,7 +465,11 @@ class LspCompiler:
         self,
         files_to_compile: AbstractSet[Path],
         full_compile: bool = True,
+        errors_per_cu: Optional[Dict[bytes, Set[SolcOutputError]]] = None,
     ) -> None:
+        if errors_per_cu is None:
+            errors_per_cu = {}
+
         target_version = self.__config.compiler.solc.target_version
         min_version = self.__config.min_solidity_version
         max_version = self.__config.max_solidity_version
@@ -507,6 +534,8 @@ class LspCompiler:
         build_settings = self.__compiler.create_build_settings(
             [SolcOutputSelectionEnum.AST]
         )
+        if full_compile:
+            self.__last_build_settings = build_settings
 
         # optimization - merge compilation units that can be compiled together
         if all(len(cu.versions) for cu in compilation_units):
@@ -673,6 +702,7 @@ class LspCompiler:
         )
 
         for cu, solc_output in zip(compilation_units, ret):
+            errors_per_cu[cu.hash] = set(solc_output.errors)
             for file in cu.files:
                 errors_per_file[file] = set()
             for error in solc_output.errors:
@@ -871,16 +901,55 @@ class LspCompiler:
         if len(files_to_recompile) > 0:
             # avoid infinite recursion
             if files_to_recompile != files_to_compile or full_compile:
-                await self.__compile(files_to_recompile, False)
+                await self.__compile(files_to_recompile, False, errors_per_cu)
+
+        if full_compile:
+            self.__latest_errors_per_cu = errors_per_cu
 
     async def __run_detectors_wrapper(self) -> None:
-        return
+        # discover detectors
+        all_detectors = run_detect.list_commands(
+            None,
+            plugin_paths={  # pyright: ignore reportGeneralTypeIssues
+                self.__config.project_root_path / "detectors"
+            },
+        )
+        for (
+            package,
+            e,
+        ) in (
+            run_detect.failed_plugin_entry_points  # pyright: ignore reportGeneralTypeIssues
+        ):
+            await self.__server.show_message(
+                f"Failed to load detectors from package {package}",
+                MessageType.WARNING,
+            )
+            await self.__server.log_message(
+                f"Failed to load detectors from package {package}:\n{e}",
+                MessageType.WARNING,
+            )
+        for (
+            path,
+            e,
+        ) in run_detect.failed_plugin_paths:  # pyright: ignore reportGeneralTypeIssues
+            await self.__server.show_message(
+                f"Failed to load detectors from path {path}",
+                MessageType.WARNING,
+            )
+            await self.__server.log_message(
+                f"Failed to load detectors from path {path}:\n{e}",
+                MessageType.WARNING,
+            )
+
         if platform.system() == "Linux":
             # run detectors in a separate process
             parent_conn, child_conn = multiprocessing.Pipe()
             p = multiprocessing.Process(
                 target=self.__run_detectors,
-                args=(child_conn,),
+                args=(
+                    [d for d in all_detectors if d != "all"],
+                    child_conn,
+                ),
             )
             p.start()
             while True:
@@ -901,7 +970,9 @@ class LspCompiler:
 
             # not in a subprocess, use try/except to avoid crashing the server by detectors
             try:
-                errors_per_file = self.__run_detectors(None)
+                errors_per_file = self.__run_detectors(
+                    [d for d in all_detectors if d != "all"], None
+                )
                 # send both compiler and detector warnings and errors
                 for path, errors in errors_per_file.items():
                     await self.__diagnostic_queue.put((path, errors))
@@ -912,7 +983,9 @@ class LspCompiler:
                 )
 
     def __run_detectors(
-        self, conn: Optional[multiprocessing.connection.Connection]
+        self,
+        detector_names: List[str],
+        conn: Optional[multiprocessing.connection.Connection],
     ) -> Dict[Path, Set[Diagnostic]]:
         errors_per_file: Dict[Path, Set[Diagnostic]]
         if conn is not None:
@@ -921,45 +994,94 @@ class LspCompiler:
         else:
             errors_per_file = deepcopy(self.__compilation_errors)
 
-        if self.__config.lsp.detectors.enable:
-            for detection in detect(self.__config, self.__source_units):
-                file = detection.result.ir_node.file
-                if len(detection.result.related_info) > 0:
-                    related_info = [
-                        DiagnosticRelatedInformation(
-                            location=Location(
-                                uri=DocumentUri(path_to_uri(info.ir_node.file)),
-                                range=self.get_range_from_byte_offsets(
-                                    info.ir_node.file,
-                                    info.lsp_range
-                                    if info.lsp_range is not None
-                                    else info.ir_node.byte_location,
-                                ),
-                            ),
-                            message=info.message,
-                        )
-                        for info in detection.result.related_info
-                    ]
-                else:
-                    related_info = None
-
-                if file not in errors_per_file:
-                    errors_per_file[file] = set()
-                errors_per_file[file].add(
-                    Diagnostic(
-                        range=self.get_range_from_byte_offsets(
-                            file,
-                            detection.result.lsp_range
-                            if detection.result.lsp_range is not None
-                            else detection.result.ir_node.byte_location,
-                        ),
-                        severity=DiagnosticSeverity.WARNING,
-                        source="Woke",
-                        message=detection.result.message,
-                        code=detection.code,
-                        related_information=related_info,
-                    )
+        build = ProjectBuild(
+            source_units=self.__source_units,
+            interval_trees=self.__interval_trees,
+            reference_resolver=self.__ir_reference_resolver,
+        )
+        build_info = ProjectBuildInfo(
+            compilation_units={
+                cu_hash.hex(): CompilationUnitBuildInfo(errors=list(errors))
+                for cu_hash, errors in self.__latest_errors_per_cu.items()
+            },
+            source_units_info={
+                node: SourceUnitInfo(
+                    self.__last_graph.nodes[node]["path"],
+                    self.__last_graph.nodes[node]["hash"],
                 )
+                for node in self.__last_graph
+            },
+            allow_paths=self.__config.compiler.solc.allow_paths,
+            ignore_paths=self.__config.compiler.solc.ignore_paths,
+            include_paths=self.__config.compiler.solc.include_paths,
+            settings=self.__last_build_settings,
+            target_solidity_version=self.__config.compiler.solc.target_version,
+            woke_version=self.__woke_version,
+            incremental=True,
+        )
+
+        if self.__config.lsp.detectors.enable:
+            for detector_name, results in detect(
+                detector_names,
+                build,
+                build_info,
+                self.__last_graph,
+                self.__config,
+                None,
+            ).items():
+                for result in results:
+                    file = result.detection.ir_node.file
+                    if len(result.detection.subdetections) > 0:
+                        related_info = [
+                            DiagnosticRelatedInformation(
+                                location=Location(
+                                    uri=DocumentUri(path_to_uri(info.ir_node.file)),
+                                    range=self.get_range_from_byte_offsets(
+                                        info.ir_node.file,
+                                        info.lsp_range
+                                        if info.lsp_range is not None
+                                        else info.ir_node.name_location
+                                        if isinstance(info.ir_node, DeclarationAbc)
+                                        else info.ir_node.byte_location,
+                                    ),
+                                ),
+                                message=info.message,
+                            )
+                            for info in result.detection.subdetections
+                        ]
+                    else:
+                        related_info = None
+
+                    if file not in errors_per_file:
+                        errors_per_file[file] = set()
+                    errors_per_file[file].add(
+                        Diagnostic(
+                            range=self.get_range_from_byte_offsets(
+                                file,
+                                result.detection.lsp_range
+                                if result.detection.lsp_range is not None
+                                else result.detection.ir_node.name_location
+                                if isinstance(result.detection.ir_node, DeclarationAbc)
+                                else result.detection.ir_node.byte_location,
+                            ),
+                            severity=(
+                                DiagnosticSeverity.INFORMATION
+                                if result.impact == DetectionImpact.INFO
+                                else DiagnosticSeverity.WARNING
+                                if result.impact == DetectionImpact.WARNING
+                                else DiagnosticSeverity.ERROR
+                            ),
+                            source="Woke",
+                            message=result.detection.message,
+                            code=detector_name,
+                            related_information=related_info,
+                            code_description=CodeDescription(
+                                href=result.url,  # pyright: ignore reportGeneralTypeIssues
+                            )
+                            if result.url is not None
+                            else None,
+                        )
+                    )
 
         if conn is not None:
             conn.send(errors_per_file)
