@@ -3,6 +3,7 @@ TEMPLATE = """from __future__ import annotations
 import rich_click as click
 import woke.ir as ir
 import woke.ir.types as types
+from rich import print
 from woke.printers import Printer, printer
 
 
