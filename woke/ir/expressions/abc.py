@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import logging
 from abc import ABC, abstractmethod
 from functools import lru_cache
-from typing import Optional, Set, Tuple
+from typing import TYPE_CHECKING, Optional, Set, Tuple
 
 from woke.ir.abc import IrAbc, SolidityAbc
 from woke.ir.ast import (
@@ -26,6 +28,9 @@ from woke.ir.enums import ModifiesStateFlag
 from woke.ir.types import TypeAbc
 from woke.ir.utils import IrInitTuple
 from woke.utils.string import StringReader
+
+if TYPE_CHECKING:
+    from ..statements.abc import StatementAbc
 
 logger = logging.getLogger(__name__)
 
@@ -162,3 +167,19 @@ class ExpressionAbc(SolidityAbc, ABC):
             Set of child IR nodes (including `self`) that modify the blockchain state and flags describing how the state is modified.
         """
         ...
+
+    @property
+    @lru_cache(maxsize=512)
+    def statement(self) -> Optional[StatementAbc]:
+        """
+        Returns:
+            [StatementAbc][woke.ir.statements.abc.StatementAbc] that contains the expression.
+        """
+        from ..statements.abc import StatementAbc
+
+        node = self
+        while node is not None:
+            if isinstance(node, StatementAbc):
+                return node
+            node = node.parent
+        return None
