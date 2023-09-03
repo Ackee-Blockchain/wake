@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from functools import lru_cache
 from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
 
 from woke.ir.abc import IrAbc, SolidityAbc
@@ -151,3 +152,20 @@ class StatementAbc(SolidityAbc, ABC):
             [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation string, if any.
         """
         return self._documentation
+
+    @property
+    @lru_cache(maxsize=512)
+    def declaration(self) -> Union[FunctionDefinition, ModifierDefinition]:
+        """
+        Returns:
+            [FunctionDefinition][woke.ir.declarations.function_definition.FunctionDefinition] or [ModifierDefinition][woke.ir.declarations.modifier_definition.ModifierDefinition] that contains the statement.
+        """
+        from ..declarations.function_definition import FunctionDefinition
+        from ..declarations.modifier_definition import ModifierDefinition
+
+        node = self
+        while node is not None:
+            if isinstance(node, (FunctionDefinition, ModifierDefinition)):
+                return node
+            node = node.parent
+        assert False, f"Statement {self.source} is not part of a function or modifier"
