@@ -1,3 +1,3 @@
-from rich.console import Console
+from rich import get_console
 
-console = Console()
+console = get_console()
