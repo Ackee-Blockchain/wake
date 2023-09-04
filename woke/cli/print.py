@@ -28,12 +28,13 @@ logger = logging.getLogger(__name__)
 
 
 class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
-    _plugin_paths: AbstractSet[Path] = set()
     _plugin_commands: Dict[str, click.Command] = {}
     _failed_plugin_paths: Set[Tuple[Path, Exception]] = set()
     _failed_plugin_entry_points: Set[Tuple[str, Exception]] = set()
     _completion_mode: bool
     _global_data_path: Path
+    _loading_from_plugins: bool = False
+    _loaded_from_plugins: Set[str] = set()
 
     def __init__(
         self,
@@ -113,8 +114,21 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
             from importlib.metadata import entry_points
         from importlib.util import module_from_spec, spec_from_file_location
 
+        self._loading_from_plugins = True
+        for cmd in self._loaded_from_plugins:
+            self.commands.pop(cmd, None)
+        self._loaded_from_plugins.clear()
+
         printer_entry_points = entry_points().select(group="woke.plugins.printers")
         for entry_point in printer_entry_points:
+            # unload target module and all its children
+            for m in [
+                k
+                for k in sys.modules.keys()
+                if k == entry_point.value or k.startswith(entry_point.value + ".")
+            ]:
+                sys.modules.pop(m)
+
             try:
                 entry_point.load()
             except Exception as e:
@@ -129,6 +143,14 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
                 continue
             sys.path.insert(0, str(path.parent))
             try:
+                # unload target module and all its children
+                for m in [
+                    k
+                    for k in sys.modules.keys()
+                    if k == path.stem or k.startswith(path.stem + ".")
+                ]:
+                    sys.modules.pop(m)
+
                 if path.is_dir():
                     spec = spec_from_file_location(path.stem, str(path / "__init__.py"))
                 else:
@@ -145,11 +167,15 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
                 if not self._completion_mode:
                     logger.warning(f"Failed to load printers from path {path}: {e}")
 
-        self._plugin_paths = plugin_paths
+        self._loading_from_plugins = False
 
     def add_command(self, cmd: click.Command, name: Optional[str] = None) -> None:
         self._inject_params(cmd)
         super().add_command(cmd, name)
+        if self._loading_from_plugins:
+            self._loaded_from_plugins.add(
+                name or cmd.name  # pyright: ignore reportGeneralTypeIssues
+            )
 
     def get_command(
         self,
@@ -157,8 +183,7 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         cmd_name: str,
         plugin_paths: AbstractSet[Path] = frozenset([Path.cwd() / "printers"]),
     ) -> Optional[click.Command]:
-        if plugin_paths != self._plugin_paths:
-            self._load_plugins(plugin_paths)
+        self._load_plugins(plugin_paths)
         return self.commands.get(cmd_name)
 
     def list_commands(
@@ -166,8 +191,7 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         ctx: click.Context,
         plugin_paths: AbstractSet[Path] = frozenset([Path.cwd() / "printers"]),
     ) -> List[str]:
-        if plugin_paths != self._plugin_paths:
-            self._load_plugins(plugin_paths)
+        self._load_plugins(plugin_paths)
         return sorted(self.commands)
 
     def invoke(self, ctx: click.Context):
