@@ -135,9 +135,6 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         return True
 
     def _load_plugins(self, plugin_paths: AbstractSet[Path]) -> None:
-        # need to load the module to register detectors
-        from woke.detectors import Detector
-
         if sys.version_info < (3, 10):
             from importlib_metadata import entry_points
         else:
