@@ -1,15 +1,21 @@
 import logging
+import os
 from pathlib import Path
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Type, Union
 
+import rich_click as click
 from intervaltree import IntervalTree
+from rich import get_console
+from rich.terminal_theme import MONOKAI
 
+from woke.core.visitor import visit_map
 from woke.ir import (
     ContractDefinition,
     DeclarationAbc,
     ErrorDefinition,
     EventDefinition,
     FunctionDefinition,
+    IrAbc,
     ModifierDefinition,
     VariableDeclaration,
 )
@@ -27,6 +33,7 @@ from woke.lsp.context import LspContext
 from woke.lsp.lsp_data_model import LspModel
 from woke.lsp.utils.position import changes_to_byte_offset
 from woke.lsp.utils.uri import uri_to_path
+from woke.printers.api import Printer, get_printers
 
 logger = logging.getLogger(__name__)
 
@@ -137,6 +144,70 @@ def _get_code_lens_from_cache(
     return ret
 
 
+def _get_printer_output(
+    context: LspContext,
+    printer_name: str,
+    command: click.Command,
+    printer_cls: Type[Printer],
+    node: IrAbc,
+) -> Optional[str]:
+    if hasattr(context.config.printers, printer_name):
+        default_map = getattr(context.config.printers, printer_name)
+    else:
+        default_map = None
+
+    console = get_console()
+    original_record = console.record
+    original_file = console.file
+
+    console.record = True
+    console.file = open(os.devnull, "w")
+
+    def _callback(*args, **kwargs):
+        instance.paths = [Path(p).resolve() for p in kwargs.pop("paths", [])]
+
+        original_callback(
+            instance, *args, **kwargs
+        )  # pyright: ignore reportOptionalCall
+
+    instance = printer_cls()
+    instance.build = context.compiler.last_build
+    instance.build_info = context.compiler.last_build_info
+    instance.config = context.config
+    instance.console = console
+    instance.imports_graph = (  # pyright: ignore reportGeneralTypeIssues
+        context.compiler.last_graph.copy()
+    )
+
+    original_callback = command.callback
+    command.callback = _callback
+
+    sub_ctx = command.make_context(
+        command.name,
+        [],
+        default_map=default_map,
+    )
+    with sub_ctx:
+        sub_ctx.command.invoke(sub_ctx)
+
+    if not instance.lsp_predicate(node):
+        command.callback = original_callback
+        return None
+
+    # call the target visit function with the node
+    visit_map[node.ast_node.node_type](instance, node)
+
+    instance.print()
+
+    command.callback = original_callback
+
+    # TODO detect theme from VS Code settings?
+    ret = console.export_html(theme=MONOKAI)
+    console.record = original_record
+    console.file = original_file
+    return ret
+
+
 def _generate_code_lens(
     context: LspContext,
     path: Path,
@@ -175,128 +246,167 @@ async def code_lens(
             return None
         return _get_code_lens_from_cache(context, path, forward_changes)
 
-    code_lens = []
+    code_lens: List[CodeLens] = []
     source_unit = context.compiler.source_units[path]
 
     _code_lens_cache[path] = []
 
-    for declaration in source_unit.declarations_iter():
-        refs = list(declaration.get_all_references(include_declarations=True))
-        refs_count = len([ref for ref in refs if not isinstance(ref, DeclarationAbc)])
-        declaration_positions = []
+    printers: Dict[str, Tuple[click.Command, Type[Printer]]] = {
+        n: p
+        for n, p in get_printers(
+            {context.config.project_root_path / "printers"}
+        ).items()
+        if p[1].lsp_node is not None
+    }
 
-        for ref in refs:
-            if isinstance(ref, DeclarationAbc):
-                line, col = context.compiler.get_line_pos_from_byte_offset(
-                    ref.file, ref.name_location[0]
+    for node in source_unit:
+        if isinstance(node, DeclarationAbc):
+            refs = list(node.get_all_references(include_declarations=True))
+            refs_count = len(
+                [ref for ref in refs if not isinstance(ref, DeclarationAbc)]
+            )
+            declaration_positions = []
+
+            for ref in refs:
+                if isinstance(ref, DeclarationAbc):
+                    line, col = context.compiler.get_line_pos_from_byte_offset(
+                        ref.file, ref.name_location[0]
+                    )
+                    declaration_positions.append(Position(line=line, character=col))
+
+            line, col = context.compiler.get_line_pos_from_byte_offset(
+                node.file, node.name_location[0]
+            )
+
+            # should include info to be able to recover command args from cache (positions could have changed)
+            # but references do not work in cache mode (compilation error) anyway
+            code_lens.append(
+                _generate_code_lens(
+                    context,
+                    node.file,
+                    f"{refs_count} references" if refs_count != 1 else "1 reference",
+                    "Tools-for-Solidity.execute.references",
+                    [
+                        params.text_document.uri,
+                        Position(line=line, character=col),
+                        declaration_positions,
+                    ],
+                    node.name_location,
+                    node.name_location,
                 )
-                declaration_positions.append(Position(line=line, character=col))
+            )
 
-        line, col = context.compiler.get_line_pos_from_byte_offset(
-            declaration.file, declaration.name_location[0]
+            if (
+                isinstance(node, (FunctionDefinition, ModifierDefinition))
+                and node.implemented
+            ):
+                code_lens.append(
+                    _generate_code_lens(
+                        context,
+                        node.file,
+                        "Control flow graph",
+                        "Tools-for-Solidity.generate.control_flow_graph",
+                        [params.text_document.uri, node.canonical_name],
+                        node.name_location,
+                        node.byte_location,
+                    )
+                )
+            elif isinstance(node, ContractDefinition):
+                code_lens.append(
+                    _generate_code_lens(
+                        context,
+                        node.file,
+                        "Inheritance graph",
+                        "Tools-for-Solidity.generate.inheritance_graph",
+                        [params.text_document.uri, node.canonical_name],
+                        node.name_location,
+                        node.name_location,
+                    )
+                )
+
+                code_lens.append(
+                    _generate_code_lens(
+                        context,
+                        node.file,
+                        "Linearized inheritance graph",
+                        "Tools-for-Solidity.generate.linearized_inheritance_graph",
+                        [params.text_document.uri, node.canonical_name],
+                        node.name_location,
+                        node.name_location,
+                    )
+                )
+
+            if (
+                isinstance(node, FunctionDefinition)
+                and node.function_selector is not None
+            ):
+                code_lens.append(
+                    _generate_code_lens(
+                        context,
+                        node.file,
+                        f"{node.function_selector.hex()}",
+                        "Tools-for-Solidity.copy_to_clipboard",
+                        [node.function_selector.hex()],
+                        node.name_location,
+                        node.byte_location,
+                    )
+                )
+            elif isinstance(node, ErrorDefinition) and node.error_selector is not None:
+                code_lens.append(
+                    _generate_code_lens(
+                        context,
+                        node.file,
+                        f"{node.error_selector.hex()}",
+                        "Tools-for-Solidity.copy_to_clipboard",
+                        [node.error_selector.hex()],
+                        node.name_location,
+                        node.byte_location,
+                    )
+                )
+            elif isinstance(node, EventDefinition) and node.event_selector is not None:
+                code_lens.append(
+                    _generate_code_lens(
+                        context,
+                        node.file,
+                        f"{node.event_selector.hex()}",
+                        "Tools-for-Solidity.copy_to_clipboard",
+                        [node.event_selector.hex()],
+                        node.name_location,
+                        node.byte_location,
+                    )
+                )
+
+        for printer_name in sorted(printers.keys()):
+            command, printer_cls = printers[printer_name]
+            assert printer_cls.lsp_node is not None
+            if not isinstance(node, printer_cls.lsp_node):
+                continue
+            out = _get_printer_output(context, printer_name, command, printer_cls, node)
+
+            if out is not None:
+                code_lens.append(
+                    _generate_code_lens(
+                        context,
+                        node.file,
+                        printer_name,  # TODO make command name configurable from printer?
+                        "Tools-for-Solidity.printer",
+                        [
+                            printer_name,
+                            out,
+                        ],
+                        node.name_location
+                        if isinstance(node, DeclarationAbc)
+                        else node.byte_location,
+                        node.byte_location,
+                    )
+                )
+
+    code_lens.sort(
+        key=lambda x: (
+            x.range.start.line,
+            x.range.start.character,
+            x.range.end.line,
+            x.range.end.character,
         )
-
-        # should include info to be able to recover command args from cache (positions could have changed)
-        # but references do not work in cache mode (compilation error) anyway
-        code_lens.append(
-            _generate_code_lens(
-                context,
-                declaration.file,
-                f"{refs_count} references" if refs_count != 1 else "1 reference",
-                "Tools-for-Solidity.execute.references",
-                [
-                    params.text_document.uri,
-                    Position(line=line, character=col),
-                    declaration_positions,
-                ],
-                declaration.name_location,
-                declaration.name_location,
-            )
-        )
-
-        if (
-            isinstance(declaration, (FunctionDefinition, ModifierDefinition))
-            and declaration.implemented
-        ):
-            code_lens.append(
-                _generate_code_lens(
-                    context,
-                    declaration.file,
-                    "Control flow graph",
-                    "Tools-for-Solidity.generate.control_flow_graph",
-                    [params.text_document.uri, declaration.canonical_name],
-                    declaration.name_location,
-                    declaration.byte_location,
-                )
-            )
-        elif isinstance(declaration, ContractDefinition):
-            code_lens.append(
-                _generate_code_lens(
-                    context,
-                    declaration.file,
-                    "Inheritance graph",
-                    "Tools-for-Solidity.generate.inheritance_graph",
-                    [params.text_document.uri, declaration.canonical_name],
-                    declaration.name_location,
-                    declaration.name_location,
-                )
-            )
-
-            code_lens.append(
-                _generate_code_lens(
-                    context,
-                    declaration.file,
-                    "Linearized inheritance graph",
-                    "Tools-for-Solidity.generate.linearized_inheritance_graph",
-                    [params.text_document.uri, declaration.canonical_name],
-                    declaration.name_location,
-                    declaration.name_location,
-                )
-            )
-
-        if (
-            isinstance(declaration, FunctionDefinition)
-            and declaration.function_selector is not None
-        ):
-            code_lens.append(
-                _generate_code_lens(
-                    context,
-                    declaration.file,
-                    f"{declaration.function_selector.hex()}",
-                    "Tools-for-Solidity.copy_to_clipboard",
-                    [declaration.function_selector.hex()],
-                    declaration.name_location,
-                    declaration.byte_location,
-                )
-            )
-        elif (
-            isinstance(declaration, ErrorDefinition)
-            and declaration.error_selector is not None
-        ):
-            code_lens.append(
-                _generate_code_lens(
-                    context,
-                    declaration.file,
-                    f"{declaration.error_selector.hex()}",
-                    "Tools-for-Solidity.copy_to_clipboard",
-                    [declaration.error_selector.hex()],
-                    declaration.name_location,
-                    declaration.byte_location,
-                )
-            )
-        elif (
-            isinstance(declaration, EventDefinition)
-            and declaration.event_selector is not None
-        ):
-            code_lens.append(
-                _generate_code_lens(
-                    context,
-                    declaration.file,
-                    f"{declaration.event_selector.hex()}",
-                    "Tools-for-Solidity.copy_to_clipboard",
-                    [declaration.event_selector.hex()],
-                    declaration.name_location,
-                    declaration.byte_location,
-                )
-            )
+    )
     return code_lens
