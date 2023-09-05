@@ -224,6 +224,38 @@ class LspCompiler:
         return self.__source_units
 
     @property
+    def last_build(self) -> ProjectBuild:
+        return ProjectBuild(
+            self.__last_compilation_interval_trees,
+            self.__ir_reference_resolver,  # TODO may be subject to race condition
+            self.__last_compilation_source_units,
+        )
+
+    @property
+    def last_build_info(self) -> ProjectBuildInfo:
+        # TODO config may be subject to race conditions
+        return ProjectBuildInfo(
+            compilation_units={
+                cu_hash.hex(): CompilationUnitBuildInfo(errors=list(errors))
+                for cu_hash, errors in self.__latest_errors_per_cu.items()
+            },
+            source_units_info={
+                node: SourceUnitInfo(
+                    self.__last_graph.nodes[node]["path"],
+                    self.__last_graph.nodes[node]["hash"],
+                )
+                for node in self.__last_graph
+            },
+            allow_paths=self.__config.compiler.solc.allow_paths,
+            ignore_paths=self.__config.compiler.solc.ignore_paths,
+            include_paths=self.__config.compiler.solc.include_paths,
+            settings=self.__last_build_settings,
+            target_solidity_version=self.__config.compiler.solc.target_version,
+            woke_version=self.__woke_version,
+            incremental=True,
+        )
+
+    @property
     def last_compilation_interval_trees(self) -> Dict[Path, IntervalTree]:
         return self.__last_compilation_interval_trees
 
@@ -994,37 +1026,11 @@ class LspCompiler:
         else:
             errors_per_file = deepcopy(self.__compilation_errors)
 
-        build = ProjectBuild(
-            source_units=self.__source_units,
-            interval_trees=self.__interval_trees,
-            reference_resolver=self.__ir_reference_resolver,
-        )
-        build_info = ProjectBuildInfo(
-            compilation_units={
-                cu_hash.hex(): CompilationUnitBuildInfo(errors=list(errors))
-                for cu_hash, errors in self.__latest_errors_per_cu.items()
-            },
-            source_units_info={
-                node: SourceUnitInfo(
-                    self.__last_graph.nodes[node]["path"],
-                    self.__last_graph.nodes[node]["hash"],
-                )
-                for node in self.__last_graph
-            },
-            allow_paths=self.__config.compiler.solc.allow_paths,
-            ignore_paths=self.__config.compiler.solc.ignore_paths,
-            include_paths=self.__config.compiler.solc.include_paths,
-            settings=self.__last_build_settings,
-            target_solidity_version=self.__config.compiler.solc.target_version,
-            woke_version=self.__woke_version,
-            incremental=True,
-        )
-
         if self.__config.lsp.detectors.enable:
             for detector_name, results in detect(
                 detector_names,
-                build,
-                build_info,
+                self.last_build,
+                self.last_build_info,
                 self.__last_graph,
                 self.__config,
                 None,
