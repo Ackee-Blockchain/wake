@@ -48,6 +48,7 @@ def get_printers(paths: Set[Path]) -> Dict[str, Tuple[click.Command, Type[Printe
             None,
             printer_name,
             plugin_paths=paths,  # pyright: ignore reportGeneralTypeIssues
+            load_plugins=False,  # pyright: ignore reportGeneralTypeIssues
         )
 
         cls: Type[Printer] = get_class_that_defined_method(
