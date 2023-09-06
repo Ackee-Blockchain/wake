@@ -8,6 +8,7 @@ from intervaltree import IntervalTree
 from rich import get_console
 from rich.terminal_theme import MONOKAI
 
+from woke.cli.print import run_print
 from woke.core.visitor import visit_map
 from woke.ir import (
     ContractDefinition,
@@ -21,6 +22,7 @@ from woke.ir import (
 )
 from woke.lsp.common_structures import (
     Command,
+    MessageType,
     PartialResultParams,
     Position,
     Range,
@@ -258,6 +260,28 @@ async def code_lens(
         ).items()
         if p[1].lsp_node is not None
     }
+    for (
+        package,
+        e,
+    ) in (
+        run_print.failed_plugin_entry_points  # pyright: ignore reportGeneralTypeIssues
+    ):
+        await context.server.show_message(
+            f"Failed to load printers from package {package}: {e}", MessageType.ERROR
+        )
+        await context.server.log_message(
+            f"Failed to load printers from package {package}: {e}", MessageType.ERROR
+        )
+    for (
+        path,
+        e,
+    ) in run_print.failed_plugin_paths:  # pyright: ignore reportGeneralTypeIssues
+        await context.server.show_message(
+            f"Failed to load printers from path {path}: {e}", MessageType.ERROR
+        )
+        await context.server.log_message(
+            f"Failed to load printers from path {path}: {e}", MessageType.ERROR
+        )
 
     for node in source_unit:
         if isinstance(node, DeclarationAbc):
@@ -381,7 +405,21 @@ async def code_lens(
             assert printer_cls.lsp_node is not None
             if not isinstance(node, printer_cls.lsp_node):
                 continue
-            out = _get_printer_output(context, printer_name, command, printer_cls, node)
+
+            try:
+                out = _get_printer_output(
+                    context, printer_name, command, printer_cls, node
+                )
+            except Exception as e:
+                await context.server.show_message(
+                    f"Error while running printer {printer_name}: {e}",
+                    MessageType.ERROR,
+                )
+                await context.server.log_message(
+                    f"Error while running printer {printer_name}: {e}",
+                    MessageType.ERROR,
+                )
+                out = None
 
             if out is not None:
                 code_lens.append(
