@@ -118,6 +118,8 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         for cmd in self._loaded_from_plugins:
             self.commands.pop(cmd, None)
         self._loaded_from_plugins.clear()
+        self._failed_plugin_paths.clear()
+        self._failed_plugin_entry_points.clear()
 
         printer_entry_points = entry_points().select(group="woke.plugins.printers")
         for entry_point in printer_entry_points:
