@@ -42,13 +42,14 @@ class Printer(Visitor, metaclass=ABCMeta):
 def get_printers(paths: Set[Path]) -> Dict[str, Tuple[click.Command, Type[Printer]]]:
     ret = {}
     for printer_name in run_print.list_commands(
-        None, plugin_paths=paths  # pyright: ignore reportGeneralTypeIssues
+        None,
+        plugin_paths=paths,  # pyright: ignore reportGeneralTypeIssues
+        force_load_plugins=True,  # pyright: ignore reportGeneralTypeIssues
     ):
         command = run_print.get_command(
             None,
             printer_name,
             plugin_paths=paths,  # pyright: ignore reportGeneralTypeIssues
-            load_plugins=False,  # pyright: ignore reportGeneralTypeIssues
         )
 
         cls: Type[Printer] = get_class_that_defined_method(

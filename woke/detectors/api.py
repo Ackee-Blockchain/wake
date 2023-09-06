@@ -114,40 +114,52 @@ def detect(
     min_confidence: Optional[DetectionConfidence] = None,
     min_impact: Optional[DetectionImpact] = None,
     console: Optional[rich.console.Console] = None,
-    load_plugins: bool = True,
-) -> Dict[str, List[DetectorResult]]:
+) -> Tuple[Dict[str, List[DetectorResult]], Dict[str, Exception]]:
     from contextlib import nullcontext
+
+    exceptions = {}
 
     detectors: List[click.Command] = []
     if isinstance(detector_names, str):
-        detectors = [
-            run_detect.get_command(
-                ctx,
-                detector_names,
-                plugin_paths={  # pyright: ignore reportGeneralTypeIssues
-                    config.project_root_path / "detectors"
-                },
-                load_plugins=load_plugins,  # pyright: ignore reportGeneralTypeIssues
+        command = run_detect.get_command(
+            ctx,
+            detector_names,
+            plugin_paths={  # pyright: ignore reportGeneralTypeIssues
+                config.project_root_path / "detectors"
+            },
+        )
+        if command is None:
+            exceptions[detector_names] = Exception(
+                f"Detector {detector_names} not found"
             )
-        ]
+        else:
+            detectors.append(command)
     elif isinstance(detector_names, list):
         if config.detectors.only is None:
             only = set(detector_names)
         else:
             only = set(config.detectors.only)
 
-        detectors = [
-            run_detect.get_command(
+        for detector_name in detector_names:
+            if (
+                detector_name not in only
+                or detector_name in config.detectors.exclude
+                or detector_name == "all"
+            ):
+                continue
+            command = run_detect.get_command(
                 None,
-                d,
+                detector_name,
                 plugin_paths={  # pyright: ignore reportGeneralTypeIssues
                     config.project_root_path / "detectors"
                 },
-                load_plugins=load_plugins,  # pyright: ignore reportGeneralTypeIssues
             )
-            for d in detector_names
-            if d in only and d not in config.detectors.exclude and d != "all"
-        ]
+            if command is None:
+                exceptions[detector_name] = Exception(
+                    f"Detector {detector_name} not found"
+                )
+            else:
+                detectors.append(command)
 
     if args is None:
         args = []
@@ -191,29 +203,32 @@ def detect(
                     instance, *args, **kwargs
                 )  # pyright: ignore reportOptionalCall
 
-            instance = cls()
-            instance.build = build
-            instance.build_info = build_info
-            instance.config = config
-            instance.imports_graph = (
-                imports_graph.copy()
-            )  # pyright: ignore reportGeneralTypeIssues
-
             original_callback = command.callback
             command.callback = _callback
 
-            sub_ctx = command.make_context(
-                command.name,
-                args,
-                parent=ctx,
-                default_map=default_map,
-            )
-            with sub_ctx:
-                sub_ctx.command.invoke(sub_ctx)
+            try:
+                instance = cls()
+                instance.build = build
+                instance.build_info = build_info
+                instance.config = config
+                instance.imports_graph = (
+                    imports_graph.copy()
+                )  # pyright: ignore reportGeneralTypeIssues
 
-            command.callback = original_callback
+                sub_ctx = command.make_context(
+                    command.name,
+                    args,
+                    parent=ctx,
+                    default_map=default_map,
+                )
+                with sub_ctx:
+                    sub_ctx.command.invoke(sub_ctx)
 
-            collected_detectors[command.name] = instance
+                collected_detectors[command.name] = instance
+            except Exception as e:
+                exceptions[command.name] = e
+            finally:
+                command.callback = original_callback
         else:
 
             def _callback(*args, **kwargs):
@@ -241,35 +256,40 @@ def detect(
                     *args, **kwargs
                 )  # pyright: ignore reportOptionalCall
 
-            sub_ctx = command.make_context(
-                command.name, args, parent=ctx, default_map=default_map
-            )
-            sub_ctx.obj = {
-                "build": build,
-                "build_info": build_info,
-                "config": config,
-                "imports_graph": imports_graph.copy(),
-            }
-
             original_callback = command.callback
             command.callback = _callback
 
-            with sub_ctx:
-                detections[command.name] = _filter_detections(
-                    sub_ctx.command.invoke(sub_ctx),
-                    min_confidence,  # pyright: ignore reportGeneralTypeIssues
-                    min_impact,  # pyright: ignore reportGeneralTypeIssues
-                    config,
+            try:
+                sub_ctx = command.make_context(
+                    command.name, args, parent=ctx, default_map=default_map
                 )
+                sub_ctx.obj = {
+                    "build": build,
+                    "build_info": build_info,
+                    "config": config,
+                    "imports_graph": imports_graph.copy(),
+                }
 
-            command.callback = original_callback
+                with sub_ctx:
+                    detections[command.name] = _filter_detections(
+                        sub_ctx.command.invoke(sub_ctx),
+                        min_confidence,  # pyright: ignore reportGeneralTypeIssues
+                        min_impact,  # pyright: ignore reportGeneralTypeIssues
+                        config,
+                    )
+            except Exception as e:
+                exceptions[command.name] = e
+            finally:
+                command.callback = original_callback
+
+    if paths is None:
+        paths = []
 
     ctx_manager = (
         console.status("[bold green]Running detectors...")
         if console is not None
         else nullcontext()
     )
-    assert paths is not None
     with ctx_manager as status:
         for path, source_unit in build.source_units.items():
             if len(paths) == 0 or any(is_relative_to(path, p) for p in paths):
@@ -278,15 +298,22 @@ def detect(
                         f"[bold green]Detecting in {source_unit.source_unit_name}..."
                     )
                 for node in source_unit:
-                    for detector in collected_detectors.values():
-                        visit_map[node.ast_node.node_type](detector, node)
+                    for detector_name, detector in list(collected_detectors.items()):
+                        try:
+                            visit_map[node.ast_node.node_type](detector, node)
+                        except Exception as e:
+                            exceptions[detector_name] = e
+                            del collected_detectors[detector_name]
 
     for detector_name, detector in collected_detectors.items():
-        detections[detector_name] = _filter_detections(
-            detector.detect(),
-            min_confidence,  # pyright: ignore reportGeneralTypeIssues
-            min_impact,  # pyright: ignore reportGeneralTypeIssues
-            config,
-        )
+        try:
+            detections[detector_name] = _filter_detections(
+                detector.detect(),
+                min_confidence,  # pyright: ignore reportGeneralTypeIssues
+                min_impact,  # pyright: ignore reportGeneralTypeIssues
+                config,
+            )
+        except Exception as e:
+            exceptions[detector_name] = e
 
-    return detections
+    return detections, exceptions
