@@ -945,6 +945,7 @@ class LspCompiler:
             plugin_paths={  # pyright: ignore reportGeneralTypeIssues
                 self.__config.project_root_path / "detectors"
             },
+            force_load_plugins=True,  # pyright: ignore reportGeneralTypeIssues
         )
         for (
             package,
@@ -953,24 +954,24 @@ class LspCompiler:
             run_detect.failed_plugin_entry_points  # pyright: ignore reportGeneralTypeIssues
         ):
             await self.__server.show_message(
-                f"Failed to load detectors from package {package}",
-                MessageType.WARNING,
+                f"Failed to load detectors from package {package}: {e}",
+                MessageType.ERROR,
             )
             await self.__server.log_message(
-                f"Failed to load detectors from package {package}:\n{e}",
-                MessageType.WARNING,
+                f"Failed to load detectors from package {package}: {e}",
+                MessageType.ERROR,
             )
         for (
             path,
             e,
         ) in run_detect.failed_plugin_paths:  # pyright: ignore reportGeneralTypeIssues
             await self.__server.show_message(
-                f"Failed to load detectors from path {path}",
-                MessageType.WARNING,
+                f"Failed to load detectors from path {path}: {e}",
+                MessageType.ERROR,
             )
             await self.__server.log_message(
-                f"Failed to load detectors from path {path}:\n{e}",
-                MessageType.WARNING,
+                f"Failed to load detectors from path {path}: {e}",
+                MessageType.ERROR,
             )
 
         if platform.system() == "Linux":
@@ -986,10 +987,20 @@ class LspCompiler:
             p.start()
             while True:
                 if parent_conn.poll():
-                    errors_per_file = parent_conn.recv()
+                    errors_per_file, exceptions = parent_conn.recv()
                     # send both compiler and detector warnings and errors
                     for path, errors in errors_per_file.items():
                         await self.__diagnostic_queue.put((path, errors))
+                    for detector_name, exception_str in exceptions.items():
+                        await self.__server.show_message(
+                            f"Exception while running detector {detector_name}: {exception_str}",
+                            MessageType.ERROR,
+                        )
+                        await self.__server.log_message(
+                            f"Exception while running detector {detector_name}: {exception_str}",
+                            MessageType.ERROR,
+                        )
+
                     break
                 elif not p.is_alive():
                     break
@@ -1002,7 +1013,7 @@ class LspCompiler:
 
             # not in a subprocess, use try/except to avoid crashing the server by detectors
             try:
-                errors_per_file = self.__run_detectors(
+                errors_per_file, exceptions = self.__run_detectors(
                     [d for d in all_detectors if d != "all"], None
                 )
                 # send both compiler and detector warnings and errors
@@ -1018,7 +1029,7 @@ class LspCompiler:
         self,
         detector_names: List[str],
         conn: Optional[multiprocessing.connection.Connection],
-    ) -> Dict[Path, Set[Diagnostic]]:
+    ) -> Tuple[Dict[Path, Set[Diagnostic]], Dict[str, str]]:
         errors_per_file: Dict[Path, Set[Diagnostic]]
         if conn is not None:
             # in forked process, original dictionary won't be modified anyway
@@ -1027,15 +1038,17 @@ class LspCompiler:
             errors_per_file = deepcopy(self.__compilation_errors)
 
         if self.__config.lsp.detectors.enable:
-            for detector_name, results in detect(
+            detections, detector_exceptions = detect(
                 detector_names,
                 self.last_build,
                 self.last_build_info,
                 self.__last_graph,
                 self.__config,
                 None,
-                load_plugins=False,
-            ).items():
+            )
+            exceptions = {name: repr(e) for name, e in detector_exceptions.items()}
+
+            for detector_name, results in detections.items():
                 for result in results:
                     file = result.detection.ir_node.file
                     if len(result.detection.subdetections) > 0:
@@ -1089,10 +1102,12 @@ class LspCompiler:
                             else None,
                         )
                     )
+        else:
+            exceptions = {}
 
         if conn is not None:
-            conn.send(errors_per_file)
-        return errors_per_file
+            conn.send((errors_per_file, exceptions))
+        return errors_per_file, exceptions
 
     async def __compilation_loop(self):
         if self.__perform_files_discovery:

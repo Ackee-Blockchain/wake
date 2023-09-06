@@ -35,6 +35,7 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
     _global_data_path: Path
     _loading_from_plugins: bool = False
     _loaded_from_plugins: Set[str] = set()
+    _plugins_loaded: bool = False
 
     def __init__(
         self,
@@ -136,7 +137,7 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
             except Exception as e:
                 self._failed_plugin_entry_points.add((entry_point.value, e))
                 if not self._completion_mode:
-                    logger.warning(
+                    logger.error(
                         f"Failed to load printers from package '{entry_point.value}': {e}"
                     )
 
@@ -167,7 +168,7 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
                 self._failed_plugin_paths.add((path, e))
                 sys.path.pop(0)
                 if not self._completion_mode:
-                    logger.warning(f"Failed to load printers from path {path}: {e}")
+                    logger.error(f"Failed to load printers from path {path}: {e}")
 
         self._loading_from_plugins = False
 
@@ -184,20 +185,22 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         ctx: click.Context,
         cmd_name: str,
         plugin_paths: AbstractSet[Path] = frozenset([Path.cwd() / "printers"]),
-        load_plugins: bool = True,
+        force_load_plugins: bool = False,
     ) -> Optional[click.Command]:
-        if load_plugins:
+        if not self._plugins_loaded or force_load_plugins:
             self._load_plugins(plugin_paths)
+            self._plugins_loaded = True
         return self.commands.get(cmd_name)
 
     def list_commands(
         self,
         ctx: click.Context,
         plugin_paths: AbstractSet[Path] = frozenset([Path.cwd() / "printers"]),
-        load_plugins: bool = True,
+        force_load_plugins: bool = False,
     ) -> List[str]:
-        if load_plugins:
+        if not self._plugins_loaded or force_load_plugins:
             self._load_plugins(plugin_paths)
+            self._plugins_loaded = True
         return sorted(self.commands)
 
     def invoke(self, ctx: click.Context):
