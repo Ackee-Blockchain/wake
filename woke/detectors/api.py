@@ -120,8 +120,12 @@ def detect(
     detectors: List[click.Command] = []
     if isinstance(detector_names, str):
         detectors = [
-            run_detect.get_command(  # pyright: ignore reportGeneralTypeIssues
-                ctx, detector_names  # pyright: ignore reportGeneralTypeIssues
+            run_detect.get_command(
+                ctx,
+                detector_names,
+                plugin_paths={  # pyright: ignore reportGeneralTypeIssues
+                    config.project_root_path / "detectors"
+                },
             )
         ]
     elif isinstance(detector_names, list):
