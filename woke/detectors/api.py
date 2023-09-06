@@ -114,6 +114,7 @@ def detect(
     min_confidence: Optional[DetectionConfidence] = None,
     min_impact: Optional[DetectionImpact] = None,
     console: Optional[rich.console.Console] = None,
+    load_plugins: bool = True,
 ) -> Dict[str, List[DetectorResult]]:
     from contextlib import nullcontext
 
@@ -126,6 +127,7 @@ def detect(
                 plugin_paths={  # pyright: ignore reportGeneralTypeIssues
                     config.project_root_path / "detectors"
                 },
+                load_plugins=load_plugins,  # pyright: ignore reportGeneralTypeIssues
             )
         ]
     elif isinstance(detector_names, list):
@@ -141,6 +143,7 @@ def detect(
                 plugin_paths={  # pyright: ignore reportGeneralTypeIssues
                     config.project_root_path / "detectors"
                 },
+                load_plugins=load_plugins,  # pyright: ignore reportGeneralTypeIssues
             )
             for d in detector_names
             if d in only and d not in config.detectors.exclude and d != "all"

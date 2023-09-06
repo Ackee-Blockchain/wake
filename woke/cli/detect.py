@@ -209,16 +209,20 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         ctx: click.Context,
         cmd_name: str,
         plugin_paths: AbstractSet[Path] = frozenset([Path.cwd() / "detectors"]),
+        load_plugins: bool = True,
     ) -> Optional[click.Command]:
-        self._load_plugins(plugin_paths)
+        if load_plugins:
+            self._load_plugins(plugin_paths)
         return self.commands.get(cmd_name)
 
     def list_commands(
         self,
         ctx: click.Context,
         plugin_paths: AbstractSet[Path] = frozenset([Path.cwd() / "detectors"]),
+        load_plugins: bool = True,
     ) -> List[str]:
-        self._load_plugins(plugin_paths)
+        if load_plugins:
+            self._load_plugins(plugin_paths)
         return sorted(self.commands)
 
     def invoke(self, ctx: click.Context):
@@ -482,6 +486,7 @@ def run_detect_all(
         min_confidence=min_confidence,
         min_impact=min_impact,
         console=console,
+        load_plugins=False,
     )
 
     # TODO order
