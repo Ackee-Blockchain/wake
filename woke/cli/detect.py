@@ -46,6 +46,7 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
     _global_data_path: Path
     _loading_from_plugins: bool = False
     _loaded_from_plugins: Set[str] = set()
+    _plugins_loaded: bool = False
 
     def __init__(
         self,
@@ -163,7 +164,7 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
             except Exception as e:
                 self._failed_plugin_entry_points.add((entry_point.value, e))
                 if not self._completion_mode:
-                    logger.warning(
+                    logger.error(
                         f"Failed to load detectors from package '{entry_point.value}': {e}"
                     )
 
@@ -194,7 +195,7 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
                 self._failed_plugin_paths.add((path, e))
                 sys.path.pop(0)
                 if not self._completion_mode:
-                    logger.warning(f"Failed to load detectors from path {path}: {e}")
+                    logger.error(f"Failed to load detectors from path {path}: {e}")
 
         self._loading_from_plugins = False
 
@@ -211,20 +212,22 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         ctx: click.Context,
         cmd_name: str,
         plugin_paths: AbstractSet[Path] = frozenset([Path.cwd() / "detectors"]),
-        load_plugins: bool = True,
+        force_load_plugins: bool = False,
     ) -> Optional[click.Command]:
-        if load_plugins:
+        if not self._plugins_loaded or force_load_plugins:
             self._load_plugins(plugin_paths)
+            self._plugins_loaded = True
         return self.commands.get(cmd_name)
 
     def list_commands(
         self,
         ctx: click.Context,
         plugin_paths: AbstractSet[Path] = frozenset([Path.cwd() / "detectors"]),
-        load_plugins: bool = True,
+        force_load_plugins: bool = False,
     ) -> List[str]:
-        if load_plugins:
+        if not self._plugins_loaded or force_load_plugins:
             self._load_plugins(plugin_paths)
+            self._plugins_loaded = True
         return sorted(self.commands)
 
     def invoke(self, ctx: click.Context):
@@ -434,7 +437,7 @@ def run_detect(ctx: click.Context, no_artifacts: bool) -> None:
             "imports_graph": compiler.latest_graph,
         }
     else:
-        detections = detect(
+        detections, exceptions = detect(
             ctx.invoked_subcommand,
             build,
             compiler.latest_build_info,
@@ -444,6 +447,9 @@ def run_detect(ctx: click.Context, no_artifacts: bool) -> None:
             ctx.obj["subcommand_args"],
             console=console,
         )
+
+        for detector_name, exception in exceptions.items():
+            logger.error(f"Error while running detector {detector_name}: {exception}")
 
         # TODO order
         for detector_name in sorted(detections.keys()):
@@ -477,7 +483,7 @@ def run_detect_all(
     latest_build_info = ctx.obj["build_info"]
     latest_graph = ctx.obj["imports_graph"]
 
-    detections = detect(
+    detections, exceptions = detect(
         run_detect.list_commands(ctx),
         build,
         latest_build_info,
@@ -488,8 +494,10 @@ def run_detect_all(
         min_confidence=min_confidence,
         min_impact=min_impact,
         console=console,
-        load_plugins=False,
     )
+
+    for detector_name, exception in exceptions.items():
+        logger.error(f"Error while running detector {detector_name}: {exception}")
 
     # TODO order
     for detector_name in sorted(detections.keys()):
