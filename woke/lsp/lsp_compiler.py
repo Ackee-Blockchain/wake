@@ -1034,6 +1034,7 @@ class LspCompiler:
                 self.__last_graph,
                 self.__config,
                 None,
+                load_plugins=False,
             ).items():
                 for result in results:
                     file = result.detection.ir_node.file
