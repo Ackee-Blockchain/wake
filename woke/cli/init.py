@@ -384,7 +384,10 @@ def init_detector(ctx: Context, detector_name: str, force: bool) -> None:
             f"Detector name must be a valid Python identifier, got {detector_name}"
         )
 
-    class_name = "".join([s.capitalize() for s in module_name.split("_") if s != ""])
+    class_name = (
+        "".join([s.capitalize() for s in module_name.split("_") if s != ""])
+        + "Detector"
+    )
     dir_path = config.project_root_path / "detectors"
     init_path = dir_path / "__init__.py"
     detector_path = dir_path / f"{module_name}.py"
@@ -438,7 +441,9 @@ def init_printer(ctx: Context, printer_name: str, force: bool) -> None:
             f"Printer name must be a valid Python identifier, got {printer_name}"
         )
 
-    class_name = "".join([s.capitalize() for s in module_name.split("_") if s != ""])
+    class_name = (
+        "".join([s.capitalize() for s in module_name.split("_") if s != ""]) + "Printer"
+    )
     dir_path = config.project_root_path / "printers"
     init_path = dir_path / "__init__.py"
     printer_path = dir_path / f"{module_name}.py"
