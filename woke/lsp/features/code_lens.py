@@ -257,7 +257,8 @@ async def code_lens(
     printers: Dict[str, Tuple[click.Command, Type[Printer]]] = {
         n: p
         for n, p in get_printers(
-            {context.config.project_root_path / "printers"}
+            {context.config.project_root_path / "printers"},
+            False,
         ).items()
         if p[1].lsp_node is not None
     }
