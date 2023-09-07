@@ -68,6 +68,11 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
 
     @staticmethod
     def _inject_params(command: click.Command) -> None:
+        for param in command.params:
+            if isinstance(param, click.Option):
+                param.show_default = True
+                param.show_envvar = True
+
         command.params.append(
             click.Argument(
                 ["paths"],
