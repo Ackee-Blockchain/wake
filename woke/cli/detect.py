@@ -79,10 +79,15 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
 
     @staticmethod
     def _inject_params(command: click.Command) -> None:
+        for param in command.params:
+            if isinstance(param, click.Option):
+                param.show_default = True
+                param.show_envvar = True
+
         command.params.append(
             click.Argument(
                 ["paths"],
-                nargs=-1,  # TODO: leave this as nargs=-1? other nargs=-1 are not possible
+                nargs=-1,
                 type=click.Path(exists=True),
             )
         )
@@ -92,6 +97,7 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
                 type=click.Choice(["info", "warning", "low", "medium", "high"]),
                 default="info",
                 help="Minimum impact level to report",
+                show_default=True,
             )
         )
         command.params.append(
@@ -100,6 +106,7 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
                 type=click.Choice(["low", "medium", "high"]),
                 default="low",
                 help="Minimum confidence level to report",
+                show_default=True,
             )
         )
 
