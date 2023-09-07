@@ -34,7 +34,8 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
     _completion_mode: bool
     _global_data_path: Path
     _loading_from_plugins: bool = False
-    _loaded_from_plugins: Set[str] = set()
+    loaded_from_plugins: Dict[str, Union[str, Path]] = {}
+    _current_plugin: Union[str, Path] = ""
     _plugins_loaded: bool = False
 
     def __init__(
@@ -121,14 +122,16 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         from importlib.util import module_from_spec, spec_from_file_location
 
         self._loading_from_plugins = True
-        for cmd in self._loaded_from_plugins:
+        for cmd in self.loaded_from_plugins.keys():
             self.commands.pop(cmd, None)
-        self._loaded_from_plugins.clear()
+        self.loaded_from_plugins.clear()
         self._failed_plugin_paths.clear()
         self._failed_plugin_entry_points.clear()
 
         printer_entry_points = entry_points().select(group="woke.plugins.printers")
         for entry_point in printer_entry_points:
+            self._current_plugin = entry_point.value
+
             # unload target module and all its children
             for m in [
                 k
@@ -149,6 +152,7 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         for path in plugin_paths:
             if not path.exists() or not self._verify_plugin_path(path):
                 continue
+            self._current_plugin = path
             sys.path.insert(0, str(path.parent))
             try:
                 # unload target module and all its children
@@ -179,15 +183,26 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
 
     def add_command(self, cmd: click.Command, name: Optional[str] = None) -> None:
         name = name or cmd.name
-        if name in self.commands:
-            logger.warning(f"Printer {name} already exists, overwriting")
+        if name in self.loaded_from_plugins:
+            if isinstance(self.loaded_from_plugins[name], str):
+                prev = f"package '{self.loaded_from_plugins[name]}'"
+            else:
+                prev = f"path '{self.loaded_from_plugins[name]}'"
+            if isinstance(self._current_plugin, str):
+                current = f"package '{self._current_plugin}'"
+            else:
+                current = f"path '{self._current_plugin}'"
+
+            logger.warning(
+                f"Detector '{name}' loaded from {current} overwrites detector loaded from {prev}"
+            )
 
         self._inject_params(cmd)
         super().add_command(cmd, name)
         if self._loading_from_plugins:
-            self._loaded_from_plugins.add(
-                name  # pyright: ignore reportGeneralTypeIssues
-            )
+            self.loaded_from_plugins[
+                name
+            ] = self._current_plugin  # pyright: ignore reportGeneralTypeIssues
 
     def get_command(
         self,
