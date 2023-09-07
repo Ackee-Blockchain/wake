@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Set
 import rich_click as click
 from click.core import Context
 
+from .console import console
 from .detect import DetectCli, run_detect
 from .print import PrintCli, run_print
 
@@ -101,7 +102,6 @@ def run_init(ctx: Context, force: bool):
         from ..compiler.solc_frontend import SolcOutputErrorSeverityEnum
         from ..development.pytypes_generator import TypeGenerator
         from ..utils.file_utils import copy_dir, is_relative_to
-        from .console import console
 
         # create tests directory
         copy_dir(
@@ -246,7 +246,6 @@ async def run_init_pytypes(
     from ..compiler.solc_frontend import SolcOutputErrorSeverityEnum
     from ..development.pytypes_generator import TypeGenerator
     from ..utils.file_utils import is_relative_to
-    from .console import console
 
     def callback(build: ProjectBuild, build_info: ProjectBuildInfo):
         start = time.perf_counter()
@@ -369,8 +368,16 @@ def init_pytypes(ctx: Context, return_tx: bool, warnings: bool, watch: bool) -> 
     default=False,
     help="Force overwrite existing detector.",
 )
+@click.option(
+    "--global",
+    "-g",
+    "global_",
+    is_flag=True,
+    default=False,
+    help="Create detector in global data directory.",
+)
 @click.pass_context
-def init_detector(ctx: Context, detector_name: str, force: bool) -> None:
+def init_detector(ctx: Context, detector_name: str, force: bool, global_: bool) -> None:
     from woke.detectors.template import TEMPLATE
 
     assert isinstance(run_detect, DetectCli)
@@ -388,7 +395,10 @@ def init_detector(ctx: Context, detector_name: str, force: bool) -> None:
         "".join([s.capitalize() for s in module_name.split("_") if s != ""])
         + "Detector"
     )
-    dir_path = config.project_root_path / "detectors"
+    if global_:
+        dir_path = config.global_data_path / "global-detectors"
+    else:
+        dir_path = config.project_root_path / "detectors"
     init_path = dir_path / "__init__.py"
     detector_path = dir_path / f"{module_name}.py"
 
@@ -416,6 +426,10 @@ def init_detector(ctx: Context, detector_name: str, force: bool) -> None:
         with init_path.open("a") as f:
             f.write(f"\n{import_str}")
 
+    console.print(
+        f"[green]Created detector '{detector_name}' at {detector_path}[/green]"
+    )
+
 
 @run_init.command(name="printer")
 @click.argument("printer_name", type=str)
@@ -426,8 +440,16 @@ def init_detector(ctx: Context, detector_name: str, force: bool) -> None:
     default=False,
     help="Force overwrite existing printer.",
 )
+@click.option(
+    "--global",
+    "-g",
+    "global_",
+    is_flag=True,
+    default=False,
+    help="Create detector in global data directory.",
+)
 @click.pass_context
-def init_printer(ctx: Context, printer_name: str, force: bool) -> None:
+def init_printer(ctx: Context, printer_name: str, force: bool, global_: bool) -> None:
     from woke.printers.template import TEMPLATE
 
     assert isinstance(run_print, PrintCli)
@@ -444,7 +466,10 @@ def init_printer(ctx: Context, printer_name: str, force: bool) -> None:
     class_name = (
         "".join([s.capitalize() for s in module_name.split("_") if s != ""]) + "Printer"
     )
-    dir_path = config.project_root_path / "printers"
+    if global_:
+        dir_path = config.global_data_path / "global-printers"
+    else:
+        dir_path = config.project_root_path / "printers"
     init_path = dir_path / "__init__.py"
     printer_path = dir_path / f"{module_name}.py"
 
@@ -471,3 +496,5 @@ def init_printer(ctx: Context, printer_name: str, force: bool) -> None:
     if import_str not in init_path.read_text().splitlines():
         with init_path.open("a") as f:
             f.write(f"\n{import_str}")
+
+    console.print(f"[green]Created printer '{printer_name}' at {printer_path}[/green]")
