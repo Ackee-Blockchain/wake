@@ -90,6 +90,19 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
     def failed_plugin_entry_points(self) -> FrozenSet[Tuple[str, Exception]]:
         return frozenset(self._failed_plugin_entry_points)
 
+    def add_verified_plugin_path(self, path: Path) -> None:
+        import json
+
+        try:
+            with open(self._global_data_path.joinpath("verified-printers.json")) as f:
+                data = {Path(d) for d in json.load(f)}
+        except FileNotFoundError:
+            data = set()
+
+        data.add(path)
+        with open(self._global_data_path.joinpath("verified-printers.json"), "w") as f:
+            json.dump([str(p) for p in data], f)
+
     def _verify_plugin_path(self, path: Path) -> bool:
         import json
 
