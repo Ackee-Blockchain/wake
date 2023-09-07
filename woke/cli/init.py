@@ -413,6 +413,7 @@ def init_detector(ctx: Context, detector_name: str, force: bool, global_: bool) 
 
     if not dir_path.exists():
         dir_path.mkdir()
+        run_detect.add_verified_plugin_path(dir_path)
 
     detector_path.write_text(
         TEMPLATE.format(class_name=class_name, command_name=detector_name)
@@ -484,6 +485,7 @@ def init_printer(ctx: Context, printer_name: str, force: bool, global_: bool) ->
 
     if not dir_path.exists():
         dir_path.mkdir()
+        run_print.add_verified_plugin_path(dir_path)
 
     printer_path.write_text(
         TEMPLATE.format(class_name=class_name, command_name=printer_name)
