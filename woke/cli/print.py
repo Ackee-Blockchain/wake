@@ -91,7 +91,7 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         return frozenset(self._failed_plugin_entry_points)
 
     def _verify_plugin_path(self, path: Path) -> bool:
-        import pickle
+        import json
 
         from rich.prompt import Confirm
 
@@ -99,9 +99,8 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
             return True
 
         try:
-            data: Set[Path] = pickle.loads(
-                self._global_data_path.joinpath("verified_printers.bin").read_bytes()
-            )
+            with open(self._global_data_path.joinpath("verified-printers.json")) as f:
+                data = {Path(d) for d in json.load(f)}
         except FileNotFoundError:
             data = set()
         if path not in data:
@@ -111,9 +110,10 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
             verified = Confirm.ask(f"Do you trust printers in {path}?", default=False)
             if verified:
                 data.add(path)
-                self._global_data_path.joinpath("verified_printers.bin").write_bytes(
-                    pickle.dumps(data)
-                )
+                with open(
+                    self._global_data_path.joinpath("verified-printers.json"), "w"
+                ) as f:
+                    json.dump([str(p) for p in data], f)
             return verified
         return True
 
