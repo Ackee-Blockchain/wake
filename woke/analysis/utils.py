@@ -1,7 +1,7 @@
 import copy
 import logging
 from collections import deque
-from typing import Deque, Dict, List, Optional, Set, Tuple, Union
+from typing import Deque, Dict, List, Optional, Set, Tuple, Union, overload
 
 import networkx as nx
 
@@ -18,6 +18,7 @@ from woke.ir import (
     Identifier,
     InlineAssembly,
     MemberAccess,
+    ModifierDefinition,
     Return,
     VariableDeclaration,
     YulAbc,
@@ -52,30 +53,64 @@ def pair_function_call_arguments(
         )
 
 
-def get_all_base_and_child_functions(
-    func: Union[FunctionDefinition, VariableDeclaration]
+@overload
+def get_all_base_and_child_declarations(
+    decl: FunctionDefinition,
 ) -> Set[Union[FunctionDefinition, VariableDeclaration]]:
-    ret = {func}
-    queue: Deque[Union[FunctionDefinition, VariableDeclaration]] = deque([func])
+    ...
+
+
+@overload
+def get_all_base_and_child_declarations(
+    decl: VariableDeclaration,
+) -> Set[Union[FunctionDefinition, VariableDeclaration]]:
+    ...
+
+
+@overload
+def get_all_base_and_child_declarations(
+    decl: ModifierDefinition,
+) -> Set[ModifierDefinition]:
+    ...
+
+
+def get_all_base_and_child_declarations(
+    decl: Union[FunctionDefinition, ModifierDefinition, VariableDeclaration]
+) -> Union[
+    Set[Union[FunctionDefinition, VariableDeclaration]], Set[ModifierDefinition]
+]:
+    ret = {decl}
+    queue: Deque[
+        Union[FunctionDefinition, ModifierDefinition, VariableDeclaration]
+    ] = deque([decl])
 
     while len(queue) > 0:
-        func = queue.popleft()
+        decl = queue.popleft()
 
-        if isinstance(func, VariableDeclaration):
-            for base in func.base_functions:
+        if isinstance(decl, VariableDeclaration):
+            for base in decl.base_functions:
                 if base not in ret:
                     ret.add(base)
                     queue.append(base)
-        elif isinstance(func, FunctionDefinition):
-            for base in func.base_functions:
+        elif isinstance(decl, FunctionDefinition):
+            for base in decl.base_functions:
                 if base not in ret:
                     ret.add(base)
                     queue.append(base)
-            for child in func.child_functions:
+            for child in decl.child_functions:
                 if child not in ret:
                     ret.add(child)
                     queue.append(child)
-    return ret
+        elif isinstance(decl, ModifierDefinition):
+            for base in decl.base_modifiers:
+                if base not in ret:
+                    ret.add(base)
+                    queue.append(base)
+            for child in decl.child_modifiers:
+                if child not in ret:
+                    ret.add(child)
+                    queue.append(child)
+    return ret  # pyright: ignore reportGeneralTypeIssues
 
 
 def expression_is_global_symbol(
