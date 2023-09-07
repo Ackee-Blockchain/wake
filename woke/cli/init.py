@@ -9,6 +9,9 @@ from typing import TYPE_CHECKING, Set
 import rich_click as click
 from click.core import Context
 
+from .detect import DetectCli, run_detect
+from .print import PrintCli, run_print
+
 if TYPE_CHECKING:
     from woke.config import WokeConfig
 
@@ -370,6 +373,8 @@ def init_pytypes(ctx: Context, return_tx: bool, warnings: bool, watch: bool) -> 
 def init_detector(ctx: Context, detector_name: str, force: bool) -> None:
     from woke.detectors.template import TEMPLATE
 
+    assert isinstance(run_detect, DetectCli)
+
     config: WokeConfig = ctx.obj["config"]
 
     module_name = detector_name.replace("-", "_")
@@ -384,9 +389,13 @@ def init_detector(ctx: Context, detector_name: str, force: bool) -> None:
     init_path = dir_path / "__init__.py"
     detector_path = dir_path / f"{module_name}.py"
 
-    if detector_path.exists() and not force:
+    if detector_name in run_detect.loaded_from_plugins and not force:
+        if isinstance(run_detect.loaded_from_plugins[detector_name], str):
+            other = f"package '{run_detect.loaded_from_plugins[detector_name]}'"
+        else:
+            other = f"path '{run_detect.loaded_from_plugins[detector_name]}'"
         raise click.ClickException(
-            f"Detector {detector_name} already exists. Use --force to overwrite."
+            f"Detector {detector_name} already exists in {other}. Use --force to force create."
         )
 
     if not dir_path.exists():
@@ -418,6 +427,8 @@ def init_detector(ctx: Context, detector_name: str, force: bool) -> None:
 def init_printer(ctx: Context, printer_name: str, force: bool) -> None:
     from woke.printers.template import TEMPLATE
 
+    assert isinstance(run_print, PrintCli)
+
     config: WokeConfig = ctx.obj["config"]
 
     module_name = printer_name.replace("-", "_")
@@ -432,9 +443,13 @@ def init_printer(ctx: Context, printer_name: str, force: bool) -> None:
     init_path = dir_path / "__init__.py"
     printer_path = dir_path / f"{module_name}.py"
 
-    if printer_path.exists() and not force:
+    if printer_name in run_print.loaded_from_plugins and not force:
+        if isinstance(run_print.loaded_from_plugins[printer_name], str):
+            other = f"package '{run_print.loaded_from_plugins[printer_name]}'"
+        else:
+            other = f"path '{run_print.loaded_from_plugins[printer_name]}'"
         raise click.ClickException(
-            f"Printer {printer_name} already exists. Use --force to overwrite."
+            f"Printer {printer_name} already exists in {other}. Use --force to force create."
         )
 
     if not dir_path.exists():
