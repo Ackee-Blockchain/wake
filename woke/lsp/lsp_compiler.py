@@ -946,6 +946,7 @@ class LspCompiler:
                 self.__config.project_root_path / "detectors"
             },
             force_load_plugins=True,  # pyright: ignore reportGeneralTypeIssues
+            verify_paths=False,  # pyright: ignore reportGeneralTypeIssues
         )
         for (
             package,
@@ -1045,6 +1046,7 @@ class LspCompiler:
                 self.__last_graph,
                 self.__config,
                 None,
+                verify_paths=False,
             )
             exceptions = {name: repr(e) for name, e in detector_exceptions.items()}
 
