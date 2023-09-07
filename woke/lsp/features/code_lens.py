@@ -184,24 +184,25 @@ def _get_printer_output(
     original_callback = command.callback
     command.callback = _callback
 
-    sub_ctx = command.make_context(
-        command.name,
-        [],
-        default_map=default_map,
-    )
-    with sub_ctx:
-        sub_ctx.command.invoke(sub_ctx)
+    try:
+        sub_ctx = command.make_context(
+            command.name,
+            [],
+            default_map=default_map,
+        )
+        with sub_ctx:
+            sub_ctx.command.invoke(sub_ctx)
 
-    if not instance.lsp_predicate(node):
+        if not instance.lsp_predicate(node):
+            command.callback = original_callback
+            return None
+
+        # call the target visit function with the node
+        visit_map[node.ast_node.node_type](instance, node)
+
+        instance.print()
+    finally:
         command.callback = original_callback
-        return None
-
-    # call the target visit function with the node
-    visit_map[node.ast_node.node_type](instance, node)
-
-    instance.print()
-
-    command.callback = original_callback
 
     # TODO detect theme from VS Code settings?
     ret = console.export_html(theme=MONOKAI)
