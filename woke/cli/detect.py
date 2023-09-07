@@ -200,11 +200,15 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         self._loading_from_plugins = False
 
     def add_command(self, cmd: click.Command, name: Optional[str] = None) -> None:
+        name = name or cmd.name
+        if name in self.commands:
+            logger.warning(f"Detector {name} already exists, overwriting")
+
         self._inject_params(cmd)
         super().add_command(cmd, name)
         if self._loading_from_plugins:
             self._loaded_from_plugins.add(
-                name or cmd.name  # pyright: ignore reportGeneralTypeIssues
+                name  # pyright: ignore reportGeneralTypeIssues
             )
 
     def get_command(
