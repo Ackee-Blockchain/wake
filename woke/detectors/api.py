@@ -114,6 +114,7 @@ def detect(
     min_confidence: Optional[DetectionConfidence] = None,
     min_impact: Optional[DetectionImpact] = None,
     console: Optional[rich.console.Console] = None,
+    verify_paths: bool = True,
 ) -> Tuple[Dict[str, List[DetectorResult]], Dict[str, Exception]]:
     from contextlib import nullcontext
 
@@ -127,6 +128,7 @@ def detect(
             plugin_paths={  # pyright: ignore reportGeneralTypeIssues
                 config.project_root_path / "detectors"
             },
+            verify_paths=verify_paths,  # pyright: ignore reportGeneralTypeIssues
         )
         if command is None:
             exceptions[detector_names] = Exception(
@@ -153,6 +155,7 @@ def detect(
                 plugin_paths={  # pyright: ignore reportGeneralTypeIssues
                     config.project_root_path / "detectors"
                 },
+                verify_paths=verify_paths,  # pyright: ignore reportGeneralTypeIssues
             )
             if command is None:
                 exceptions[detector_name] = Exception(

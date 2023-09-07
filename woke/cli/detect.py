@@ -159,7 +159,9 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
             return verified
         return True
 
-    def _load_plugins(self, plugin_paths: AbstractSet[Path]) -> None:
+    def _load_plugins(
+        self, plugin_paths: AbstractSet[Path], verify_paths: bool
+    ) -> None:
         if sys.version_info < (3, 10):
             from importlib_metadata import entry_points
         else:
@@ -197,7 +199,9 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         for path in [self._global_data_path / "global-detectors"] + sorted(
             plugin_paths
         ):
-            if not path.exists() or not self._verify_plugin_path(path):
+            if not path.exists() or (
+                verify_paths and not self._verify_plugin_path(path)
+            ):
                 continue
             self._current_plugin = path
             sys.path.insert(0, str(path.parent))
@@ -257,9 +261,10 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         cmd_name: str,
         plugin_paths: AbstractSet[Path] = frozenset([Path.cwd() / "detectors"]),
         force_load_plugins: bool = False,
+        verify_paths: bool = True,
     ) -> Optional[click.Command]:
         if not self._plugins_loaded or force_load_plugins:
-            self._load_plugins(plugin_paths)
+            self._load_plugins(plugin_paths, verify_paths)
             self._plugins_loaded = True
         return self.commands.get(cmd_name)
 
@@ -268,9 +273,10 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         ctx: click.Context,
         plugin_paths: AbstractSet[Path] = frozenset([Path.cwd() / "detectors"]),
         force_load_plugins: bool = False,
+        verify_paths: bool = True,
     ) -> List[str]:
         if not self._plugins_loaded or force_load_plugins:
-            self._load_plugins(plugin_paths)
+            self._load_plugins(plugin_paths, verify_paths)
             self._plugins_loaded = True
         return sorted(self.commands)
 
