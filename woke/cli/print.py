@@ -95,6 +95,9 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
 
         from rich.prompt import Confirm
 
+        if path == self._global_data_path / "global-printers":
+            return True
+
         try:
             data: Set[Path] = pickle.loads(
                 self._global_data_path.joinpath("verified_printers.bin").read_bytes()
@@ -149,7 +152,7 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
                         f"Failed to load printers from package '{entry_point.value}': {e}"
                     )
 
-        for path in sorted(plugin_paths):
+        for path in [self._global_data_path / "global-printers"] + sorted(plugin_paths):
             if not path.exists() or not self._verify_plugin_path(path):
                 continue
             self._current_plugin = path
