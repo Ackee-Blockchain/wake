@@ -158,7 +158,7 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         self._failed_plugin_entry_points.clear()
 
         detector_entry_points = entry_points().select(group="woke.plugins.detectors")
-        for entry_point in detector_entry_points:
+        for entry_point in sorted(detector_entry_points, key=lambda e: e.value):
             self._current_plugin = entry_point.value
 
             # unload target module and all its children
@@ -178,7 +178,7 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
                         f"Failed to load detectors from package '{entry_point.value}': {e}"
                     )
 
-        for path in plugin_paths:
+        for path in sorted(plugin_paths):
             if not path.exists() or not self._verify_plugin_path(path):
                 continue
             self._current_plugin = path
