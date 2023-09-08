@@ -225,10 +225,11 @@ class LspCompiler:
 
     @property
     def last_build(self) -> ProjectBuild:
+        # TODO may be subject to race conditions
         return ProjectBuild(
-            self.__last_compilation_interval_trees,
-            self.__ir_reference_resolver,  # TODO may be subject to race condition
-            self.__last_compilation_source_units,
+            self.__interval_trees,
+            self.__ir_reference_resolver,
+            self.__source_units,
         )
 
     @property
