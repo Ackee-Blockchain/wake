@@ -11,6 +11,7 @@ from woke.cli.detect import run_detect
 from woke.core.visitor import Visitor, visit_map
 from woke.utils import StrEnum, get_class_that_defined_method
 from woke.utils.file_utils import is_relative_to
+from woke.utils.keyed_default_dict import KeyedDefaultDict
 
 if TYPE_CHECKING:
     import networkx as nx
@@ -18,7 +19,7 @@ if TYPE_CHECKING:
 
     from woke.compiler.build_data_model import ProjectBuild, ProjectBuildInfo
     from woke.config import WokeConfig
-    from woke.ir.abc import IrAbc
+    from woke.ir import IrAbc, SourceUnit
 
 
 class DetectionImpact(StrEnum):
@@ -66,12 +67,115 @@ class Detector(Visitor, metaclass=ABCMeta):
         ...
 
 
+@dataclass
+class WokeComment:
+    detectors: Optional[List[str]]
+    start_line: int
+    end_line: int
+
+
+def _prepare_woke_comments(
+    woke_comments: Dict[str, List[Tuple[List[str], Tuple[int, int]]]],
+    source_unit: SourceUnit,
+) -> Dict[str, Dict[int, WokeComment]]:
+    prepared = {}
+    for comment_type, comments in woke_comments.items():
+        prepared[comment_type] = {}
+        for detectors, (start, end) in comments:
+            start_line = source_unit.get_line_col_from_byte_offset(start)[0]
+            end_line = source_unit.get_line_col_from_byte_offset(end)[0]
+
+            prepared[comment_type][end_line] = WokeComment(
+                detectors if detectors else None,
+                start_line,
+                end_line,
+            )
+    return prepared
+
+
+def _detection_commented_out(
+    detector_name: str,
+    detection: Detection,
+    woke_comments: Dict[str, Dict[int, WokeComment]],
+    source_unit: SourceUnit,
+) -> bool:
+    from woke.ir import DeclarationAbc
+
+    if detection.lsp_range is not None:
+        start_line = source_unit.get_line_col_from_byte_offset(detection.lsp_range[0])[
+            0
+        ]
+        end_line = source_unit.get_line_col_from_byte_offset(detection.lsp_range[1])[0]
+    elif isinstance(detection.ir_node, DeclarationAbc):
+        start_line = source_unit.get_line_col_from_byte_offset(
+            detection.ir_node.name_location[0]
+        )[0]
+        end_line = source_unit.get_line_col_from_byte_offset(
+            detection.ir_node.name_location[1]
+        )[0]
+    else:
+        start_line = source_unit.get_line_col_from_byte_offset(
+            detection.ir_node.byte_location[0]
+        )[0]
+        end_line = source_unit.get_line_col_from_byte_offset(
+            detection.ir_node.byte_location[1]
+        )[0]
+
+    comments = KeyedDefaultDict(
+        lambda t: woke_comments.get(t, {})  # pyright: ignore reportGeneralTypeIssues
+    )
+
+    for l in range(start_line, end_line + 1):
+        if l in comments["woke-disable-line"]:
+            comment: WokeComment = comments["woke-disable-line"][l]
+            if comment.detectors is None or detector_name in comment.detectors:
+                return True
+
+    for l in range(start_line - 1, end_line):
+        if l in comments["woke-disable-next-line"]:
+            comment: WokeComment = comments["woke-disable-next-line"][l]
+            if comment.detectors is None or detector_name in comment.detectors:
+                return True
+
+    enable_keys: List[int] = sorted(comments["woke-enable"].keys())
+    disable_keys: List[int] = sorted(comments["woke-disable"].keys())
+
+    disabled_line = None
+    for k in disable_keys:
+        if k >= start_line:
+            break
+
+        comment: WokeComment = comments["woke-disable"][k]
+        if comment.detectors is None or detector_name in comment.detectors:
+            disabled_line = k
+
+    if disabled_line is None:
+        return False
+
+    for k in enable_keys:
+        if k <= disabled_line:
+            continue
+        if k >= start_line:
+            break
+
+        if (
+            comments["woke-enable"][k].detectors is None
+            or detector_name in comments["woke-enable"][k].detectors
+        ):
+            return False
+
+    return True
+
+
 # TODO detection exclude paths
 def _filter_detections(
+    detector_name: str,
     detections: List[DetectorResult],
     min_confidence: DetectionConfidence,
     min_impact: DetectionImpact,
     config: WokeConfig,
+    woke_comments: Dict[Path, Dict[str, Dict[int, WokeComment]]],
+    source_units: Dict[Path, SourceUnit],
 ) -> List[DetectorResult]:
     from woke.utils.file_utils import is_relative_to
 
@@ -99,6 +203,12 @@ def _filter_detections(
         if confidence_map[detection.confidence] >= confidence_map[min_confidence]
         and impact_map[detection.impact] >= impact_map[min_impact]
         and not _detection_ignored(detection.detection)
+        and not _detection_commented_out(
+            detector_name,
+            detection.detection,
+            woke_comments[detection.detection.ir_node.file],
+            source_units[detection.detection.ir_node.file],
+        )
     ]
 
 
@@ -117,6 +227,18 @@ def detect(
     verify_paths: bool = True,
 ) -> Tuple[Dict[str, List[DetectorResult]], Dict[str, Exception]]:
     from contextlib import nullcontext
+
+    woke_comments: KeyedDefaultDict[
+        Path,  # pyright: ignore reportGeneralTypeIssues
+        Dict[str, Dict[int, WokeComment]],
+    ] = KeyedDefaultDict(
+        lambda file: _prepare_woke_comments(  # pyright: ignore reportGeneralTypeIssues
+            imports_graph.nodes[build.source_units[file].source_unit_name][
+                "woke_comments"
+            ],
+            build.source_units[file],
+        )
+    )
 
     exceptions = {}
 
@@ -275,10 +397,13 @@ def detect(
 
                 with sub_ctx:
                     detections[command.name] = _filter_detections(
+                        command.name,
                         sub_ctx.command.invoke(sub_ctx),
                         min_confidence,  # pyright: ignore reportGeneralTypeIssues
                         min_impact,  # pyright: ignore reportGeneralTypeIssues
                         config,
+                        woke_comments,
+                        build.source_units,
                     )
             except Exception as e:
                 exceptions[command.name] = e
@@ -311,10 +436,13 @@ def detect(
     for detector_name, detector in collected_detectors.items():
         try:
             detections[detector_name] = _filter_detections(
+                detector_name,
                 detector.detect(),
                 min_confidence,  # pyright: ignore reportGeneralTypeIssues
                 min_impact,  # pyright: ignore reportGeneralTypeIssues
                 config,
+                woke_comments,
+                build.source_units,
             )
         except Exception as e:
             exceptions[detector_name] = e
