@@ -54,6 +54,7 @@ def main(ctx: Context, debug: bool, profile: bool) -> None:
         format="%(asctime)s %(name)s: %(message)s",
         handlers=[RichHandler(show_time=False, console=console)],
         level=(logging.WARNING if not debug else logging.DEBUG),
+        force=True,  # pyright: ignore reportGeneralTypeIssues
     )
 
     ctx.ensure_object(dict)
@@ -62,7 +63,9 @@ def main(ctx: Context, debug: bool, profile: bool) -> None:
     if platform.system() == "Windows":
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
     else:
-        asyncio.get_event_loop_policy().set_child_watcher(ThreadedChildWatcher())
+        asyncio.get_event_loop_policy().set_child_watcher(
+            ThreadedChildWatcher()  # pyright: ignore reportUnboundVariable
+        )
 
     os.environ["PYTHONBREAKPOINT"] = "ipdb.set_trace"
 
