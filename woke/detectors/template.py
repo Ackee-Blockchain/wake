@@ -2,6 +2,7 @@ TEMPLATE = """from __future__ import annotations
 
 from typing import List
 
+import networkx as nx
 import rich_click as click
 import woke.ir as ir
 import woke.ir.types as types
