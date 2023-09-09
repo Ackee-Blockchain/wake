@@ -892,7 +892,7 @@ class SolidityCompiler:
         for deleted_file in deleted_files:
             if deleted_file in build.source_units:
                 build.reference_resolver.run_destroy_callbacks(deleted_file)
-                build.source_units.pop(deleted_file)
+                build._source_units.pop(deleted_file)
 
         ctx_manager = (
             console.status(f"[bold green]Processing compilation results...[/]")
@@ -927,9 +927,9 @@ class SolidityCompiler:
                 for file in errored_files:
                     if file in build.source_units:
                         build.reference_resolver.run_destroy_callbacks(file)
-                        build.source_units.pop(file)
+                        build._source_units.pop(file)
                     if file in build.interval_trees:
-                        build.interval_trees.pop(file)
+                        build._interval_trees.pop(file)
 
                 if len(errored_files) == 0:
                     successful_compilation_units.append((cu, solc_output))
@@ -953,9 +953,9 @@ class SolidityCompiler:
             for file in files_to_recompile:
                 if file in build.source_units:
                     build.reference_resolver.run_destroy_callbacks(file)
-                    build.source_units.pop(file)
+                    build._source_units.pop(file)
                 if file in build.interval_trees:
-                    build.interval_trees.pop(file)
+                    build._interval_trees.pop(file)
 
             # clear indexed node types responsible for handling multiple structurally different ASTs for the same file
             build.reference_resolver.clear_indexed_nodes(files_to_recompile)
@@ -1010,8 +1010,8 @@ class SolidityCompiler:
                         if source_unit_name in solc_output.contracts
                         else None,
                     )
-                    build.source_units[path] = SourceUnit(init, ast)
-                    build.interval_trees[path] = interval_tree
+                    build._source_units[path] = SourceUnit(init, ast)
+                    build._interval_trees[path] = interval_tree
 
                 build.reference_resolver.run_post_process_callbacks(
                     CallbackParams(
