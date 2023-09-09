@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 from abc import ABC
-from typing import Iterator, Set, Tuple
+from typing import TYPE_CHECKING, Iterator, Set, Tuple
 
 from woke.ir.ast import YulNode
 from woke.ir.enums import ModifiesStateFlag
+from woke.ir.utils import IrInitTuple
 
 from ..abc import IrAbc
+
+if TYPE_CHECKING:
+    from ..statements.inline_assembly import InlineAssembly
 
 
 class YulAbc(IrAbc, ABC):
@@ -15,6 +19,12 @@ class YulAbc(IrAbc, ABC):
     """
 
     _ast_node: YulNode
+    _inline_assembly: InlineAssembly
+
+    def __init__(self, init: IrInitTuple, yul: YulNode, parent: IrAbc):
+        super().__init__(init, yul, parent)
+        assert init.inline_assembly is not None
+        self._inline_assembly = init.inline_assembly
 
     def __iter__(self) -> Iterator[YulAbc]:
         yield self
@@ -27,6 +37,10 @@ class YulAbc(IrAbc, ABC):
     # @abstractmethod
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         return set()  # TODO
+
+    @property
+    def inline_assembly(self) -> InlineAssembly:
+        return self._inline_assembly
 
 
 class YulStatementAbc(YulAbc, ABC):

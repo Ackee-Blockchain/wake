@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from woke.compiler.compilation_unit import CompilationUnit
     from woke.ir.meta.source_unit import SourceUnit
     from woke.ir.reference_resolver import ReferenceResolver
+    from woke.ir.statements.inline_assembly import InlineAssembly
 
 
 @dataclass
@@ -22,3 +23,4 @@ class IrInitTuple:
     reference_resolver: ReferenceResolver
     contracts_info: Optional[Dict[str, SolcOutputContractInfo]]
     source_unit: Optional[SourceUnit] = None
+    inline_assembly: Optional[InlineAssembly] = None

@@ -226,6 +226,8 @@ class InlineAssembly(StatementAbc):
         parent: SolidityAbc,
     ):
         super().__init__(init, inline_assembly, parent)
+        init.inline_assembly = self
+
         self._yul_block = YulBlock(init, inline_assembly.ast, self)
         self._evm_version = inline_assembly.evm_version
         self._external_references = IntervalTree()
@@ -239,6 +241,8 @@ class InlineAssembly(StatementAbc):
             self._external_references[start:end] = ExternalReference(
                 self, init, external_reference
             )
+
+        init.inline_assembly = None
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
