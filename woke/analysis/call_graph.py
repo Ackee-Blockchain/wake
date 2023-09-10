@@ -3,6 +3,7 @@ from typing import Iterable, Union
 
 import networkx as nx
 
+import woke.ir.types as types
 from woke.ir import (
     BinaryOperation,
     ExternalReference,
@@ -51,7 +52,9 @@ class CallGraph:
 
                     parent = ref.parent
                     if isinstance(parent, ModifierInvocation):
-                        self._graph.add_edge(parent.parent, node, call=parent)
+                        self._graph.add_edge(
+                            parent.parent, node, call=parent, external=False
+                        )
                     else:
                         logger.warning(
                             f"Unexpected parent of modifier reference: {parent.source}"
@@ -64,7 +67,9 @@ class CallGraph:
                 elif isinstance(ref, (BinaryOperation, UnaryOperation)):
                     if ref.statement is not None:
                         # should always be true
-                        self._graph.add_edge(ref.statement.declaration, node, call=ref)
+                        self._graph.add_edge(
+                            ref.statement.declaration, node, call=ref, external=False
+                        )
                     continue
 
                 parent = ref.parent
@@ -91,8 +96,29 @@ class CallGraph:
                     if parent.statement is None:
                         # should not happen
                         continue
+
+                    t = parent.expression.type
+                    if not isinstance(t, types.Function):
+                        logger.warning(
+                            f"Unexpected function call type: {parent.type} ({parent.source})"
+                        )
+                        continue
+
                     self._graph.add_edge(
-                        parent.statement.declaration, node, call=parent
+                        parent.statement.declaration,
+                        node,
+                        call=parent,
+                        external=(
+                            t.kind
+                            in {
+                                types.FunctionTypeKind.EXTERNAL,
+                                types.FunctionTypeKind.DELEGATE_CALL,
+                                types.FunctionTypeKind.BARE_CALL,
+                                types.FunctionTypeKind.BARE_CALL_CODE,
+                                types.FunctionTypeKind.BARE_DELEGATE_CALL,
+                                types.FunctionTypeKind.BARE_STATIC_CALL,
+                            }
+                        ),
                     )
 
     @property
