@@ -234,7 +234,7 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
 
     def add_command(self, cmd: click.Command, name: Optional[str] = None) -> None:
         name = name or cmd.name
-        if name in self.loaded_from_plugins:
+        if name in self.loaded_from_plugins and not self._completion_mode:
             if isinstance(self.loaded_from_plugins[name], str):
                 prev = f"package '{self.loaded_from_plugins[name]}'"
             else:
