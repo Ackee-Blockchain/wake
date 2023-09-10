@@ -2173,7 +2173,7 @@ class NameSanitizer:
         if declaration in renames:
             return renames[declaration]
 
-        new_name = declaration.name
+        new_name = declaration.name.replace("$", "_")
         while new_name.startswith("__"):
             new_name = new_name[1:]
 
