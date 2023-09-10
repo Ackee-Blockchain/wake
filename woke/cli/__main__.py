@@ -2,8 +2,8 @@ import asyncio
 import logging
 import os
 import platform
+import sys
 
-import rich.traceback
 import rich_click as click
 from click.core import Context
 from rich.logging import RichHandler
@@ -28,8 +28,33 @@ if platform.system() != "Windows":
         from woke.utils.threaded_child_watcher import ThreadedChildWatcher
 
 
+def excepthook(attach: bool, type, value, traceback):
+    from rich.console import Console
+    from rich.traceback import Traceback
+
+    traceback_console = Console(stderr=True)
+    traceback_console.print(
+        Traceback.from_exception(
+            type,
+            value,
+            traceback,
+            suppress=[click],
+        )
+    )
+
+    if attach:
+        import ipdb
+
+        ipdb.pm()
+
+
 @click.group()
-@click.option("--debug/--no-debug", default=False)
+@click.option(
+    "--debug",
+    "-d",
+    default=False,
+    help="Set logging level to debug and attach debugger on exception.",
+)
 @click.option(
     "--profile", is_flag=True, default=False, help="Enable profiling using cProfile."
 )
@@ -49,12 +74,14 @@ def main(ctx: Context, debug: bool, profile: bool) -> None:
 
         atexit.register(exit)
 
-    rich.traceback.install(show_locals=debug, suppress=[click], console=console)
     logging.basicConfig(
         format="%(asctime)s %(name)s: %(message)s",
         handlers=[RichHandler(show_time=False, console=console)],
         level=(logging.WARNING if not debug else logging.DEBUG),
         force=True,  # pyright: ignore reportGeneralTypeIssues
+    )
+    sys.excepthook = lambda type, value, traceback: excepthook(
+        debug, type, value, traceback
     )
 
     ctx.ensure_object(dict)
