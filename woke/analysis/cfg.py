@@ -38,7 +38,7 @@ from woke.ir import (
     YulStatementAbc,
     YulSwitch,
 )
-from woke.ir.enums import GlobalSymbolsEnum
+from woke.ir.enums import GlobalSymbol
 from woke.utils import StrEnum
 
 logger = logging.getLogger(__name__)
@@ -435,7 +435,7 @@ class CfgBlock:
                     return true_is_control or false_is_control
                 elif isinstance(expression, FunctionCall):
                     func_called = expression.function_called
-                    if func_called == GlobalSymbolsEnum.REVERT:
+                    if func_called == GlobalSymbol.REVERT:
                         graph.add_edge(
                             block,
                             revert_end,
@@ -446,8 +446,8 @@ class CfgBlock:
                         )
                         return True
                     elif func_called in {
-                        GlobalSymbolsEnum.REQUIRE,
-                        GlobalSymbolsEnum.ASSERT,
+                        GlobalSymbol.REQUIRE,
+                        GlobalSymbol.ASSERT,
                     }:
                         graph.add_edge(
                             block,

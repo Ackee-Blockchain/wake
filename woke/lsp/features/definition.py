@@ -17,7 +17,7 @@ from woke.ir import (
     VariableDeclaration,
     YulIdentifier,
 )
-from woke.ir.enums import GlobalSymbolsEnum
+from woke.ir.enums import GlobalSymbol
 from woke.lsp.common_structures import (
     DocumentUri,
     Location,
@@ -61,7 +61,7 @@ def _create_location(
 
 
 def _get_results_from_node(
-    original_node: Union[IrAbc, GlobalSymbolsEnum],
+    original_node: Union[IrAbc, GlobalSymbol],
     position: Position,
     context: LspContext,
     byte_offset: int,

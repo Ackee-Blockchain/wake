@@ -24,7 +24,7 @@ from woke.ir import (
 from woke.ir.enums import (
     BinaryOpOperator,
     FunctionKind,
-    GlobalSymbolsEnum,
+    GlobalSymbol,
     Mutability,
     Visibility,
 )
@@ -56,23 +56,23 @@ def expression_is_only_owner(
             left_is_msg_sender = (
                 len(left) == 1 and left[0] in msg_sender_variables
             ) or expression_is_global_symbol(
-                expression.left_expression, GlobalSymbolsEnum.MSG_SENDER
+                expression.left_expression, GlobalSymbol.MSG_SENDER
             )
             right_is_msg_sender = (
                 len(right) == 1 and right[0] in msg_sender_variables
             ) or expression_is_global_symbol(
-                expression.right_expression, GlobalSymbolsEnum.MSG_SENDER
+                expression.right_expression, GlobalSymbol.MSG_SENDER
             )
             left_is_owner = not any(var is None for var in left) and all(variable_is_owner(var) for var in left)  # type: ignore
             right_is_owner = not any(var is None for var in right) and all(variable_is_owner(var) for var in right)  # type: ignore
 
             if check_only_eoa:
                 if left_is_msg_sender and expression_is_global_symbol(
-                    expression.right_expression, GlobalSymbolsEnum.TX_ORIGIN
+                    expression.right_expression, GlobalSymbol.TX_ORIGIN
                 ):
                     return True
                 if right_is_msg_sender and expression_is_global_symbol(
-                    expression.left_expression, GlobalSymbolsEnum.TX_ORIGIN
+                    expression.left_expression, GlobalSymbol.TX_ORIGIN
                 ):
                     return True
 
@@ -141,7 +141,7 @@ def expression_is_only_owner(
 
             logger.debug(f"{expression.source} is a function call to {func.source}")
             for arg_decl, arg_expr in pair_function_call_arguments(func, expression):
-                if expression_is_global_symbol(arg_expr, GlobalSymbolsEnum.MSG_SENDER):
+                if expression_is_global_symbol(arg_expr, GlobalSymbol.MSG_SENDER):
                     sender_variables.add(arg_decl)
 
             returns = []
@@ -174,7 +174,7 @@ def expression_is_only_owner(
         index_is_msg_sender = (
             len(index_vars) == 1 and index_vars[0] in msg_sender_variables
         ) or expression_is_global_symbol(
-            expression.index_expression, GlobalSymbolsEnum.MSG_SENDER
+            expression.index_expression, GlobalSymbol.MSG_SENDER
         )
         if (
             not any(var is None for var in possible_owners)

@@ -25,7 +25,7 @@ from woke.ir import (
     YulAssignment,
     YulIdentifier,
 )
-from woke.ir.enums import FunctionCallKind, GlobalSymbolsEnum
+from woke.ir.enums import FunctionCallKind, GlobalSymbol
 
 from .cfg import CfgBlock
 
@@ -114,7 +114,7 @@ def get_all_base_and_child_declarations(
 
 
 def expression_is_global_symbol(
-    expr: ExpressionAbc, global_symbol: GlobalSymbolsEnum
+    expr: ExpressionAbc, global_symbol: GlobalSymbol
 ) -> bool:
     if isinstance(expr, MemberAccess):
         if expr.referenced_declaration == global_symbol:

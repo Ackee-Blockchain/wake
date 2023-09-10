@@ -3,7 +3,7 @@ from enum import IntEnum, IntFlag
 from woke.utils import StrEnum
 
 
-class GlobalSymbolsEnum(IntEnum):
+class GlobalSymbol(IntEnum):
     """
     Global symbols of the Solidity language. Symbols with identifiers from `-1` to `-99` are codified by the compiler and can only be referenced by [Identifier][woke.ir.expressions.identifier.Identifier] nodes.
     Other symbols are not officially codified by the compiler, but Woke also defines identifiers for them. These symbols can only be referenced by [MemberAccess][woke.ir.expressions.member_access.MemberAccess] nodes.

@@ -5,7 +5,7 @@ from typing_extensions import Literal
 
 from woke.ir.abc import IrAbc, SolidityAbc
 from woke.ir.ast import SolcAssignment
-from woke.ir.enums import AssignmentOperator, GlobalSymbolsEnum, ModifiesStateFlag
+from woke.ir.enums import AssignmentOperator, GlobalSymbol, ModifiesStateFlag
 from woke.ir.utils import IrInitTuple
 
 from ..declarations.abc import DeclarationAbc
@@ -113,7 +113,7 @@ class Assignment(ExpressionAbc):
                 if function_called is None:
                     return set()
                 elif isinstance(
-                    function_called, (GlobalSymbolsEnum, VariableDeclaration)
+                    function_called, (GlobalSymbol, VariableDeclaration)
                 ):
                     # global function or variable getter called
                     # variable getter may return different type than variable declaration (structs with arrays and mappings)

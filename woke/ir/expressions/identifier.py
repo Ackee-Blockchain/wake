@@ -7,13 +7,13 @@ from woke.ir.abc import IrAbc, SolidityAbc
 from woke.ir.ast import AstNodeId, SolcIdentifier
 from woke.ir.declarations.abc import DeclarationAbc
 from woke.ir.declarations.variable_declaration import VariableDeclaration
-from woke.ir.enums import GlobalSymbolsEnum, ModifiesStateFlag
+from woke.ir.enums import GlobalSymbol, ModifiesStateFlag
 from woke.ir.expressions.abc import ExpressionAbc
 from woke.ir.reference_resolver import CallbackParams
 from woke.ir.utils import IrInitTuple
 
 if TYPE_CHECKING:
-    from woke.ir.declaration.function_definition import FunctionDefinition
+    from woke.ir.declarations.function_definition import FunctionDefinition
     from woke.ir.meta.import_directive import ImportDirective
     from woke.ir.meta.source_unit import SourceUnit
 
@@ -54,7 +54,7 @@ class Identifier(ExpressionAbc):
 
         for referenced_declaration_id in self._referenced_declaration_ids:
             if referenced_declaration_id < 0:
-                global_symbol = GlobalSymbolsEnum(referenced_declaration_id)
+                global_symbol = GlobalSymbol(referenced_declaration_id)
                 self._reference_resolver.register_global_symbol_reference(
                     global_symbol, self
                 )
@@ -92,9 +92,9 @@ class Identifier(ExpressionAbc):
         self._referenced_declaration_ids = new_referenced_declaration_ids
 
     def _destroy(
-        self, referenced_declaration: Union[GlobalSymbolsEnum, DeclarationAbc]
+        self, referenced_declaration: Union[GlobalSymbol, DeclarationAbc]
     ) -> None:
-        if isinstance(referenced_declaration, GlobalSymbolsEnum):
+        if isinstance(referenced_declaration, GlobalSymbol):
             self._reference_resolver.unregister_global_symbol_reference(
                 referenced_declaration, self
             )
@@ -128,10 +128,10 @@ class Identifier(ExpressionAbc):
     @property
     def referenced_declaration(
         self,
-    ) -> Union[DeclarationAbc, GlobalSymbolsEnum, SourceUnit, Set[FunctionDefinition]]:
+    ) -> Union[DeclarationAbc, GlobalSymbol, SourceUnit, Set[FunctionDefinition]]:
         def resolve(referenced_declaration_id: AstNodeId):
             if referenced_declaration_id < 0:
-                return GlobalSymbolsEnum(referenced_declaration_id)
+                return GlobalSymbol(referenced_declaration_id)
 
             node = self._reference_resolver.resolve_node(
                 referenced_declaration_id, self._cu_hash
@@ -141,7 +141,7 @@ class Identifier(ExpressionAbc):
             ), f"Unexpected type: {type(node)}\n{node.source}\n{self.source}\n{self.file}"
             return node
 
-        from ..declaration.function_definition import FunctionDefinition
+        from ..declarations.function_definition import FunctionDefinition
         from ..meta.source_unit import SourceUnit
 
         assert len(self._referenced_declaration_ids) != 0
