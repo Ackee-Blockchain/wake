@@ -1054,6 +1054,7 @@ class LspCompiler:
                 self.__config,
                 None,
                 verify_paths=False,
+                capture_exceptions=True,
             )
             exceptions = {name: repr(e) for name, e in detector_exceptions.items()}
 

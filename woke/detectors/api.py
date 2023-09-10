@@ -225,6 +225,7 @@ def detect(
     min_impact: Optional[DetectionImpact] = None,
     console: Optional[rich.console.Console] = None,
     verify_paths: bool = True,
+    capture_exceptions: bool = False,
 ) -> Tuple[Dict[str, List[DetectorResult]], Dict[str, Exception]]:
     from contextlib import nullcontext
 
@@ -252,12 +253,13 @@ def detect(
             },
             verify_paths=verify_paths,  # pyright: ignore reportGeneralTypeIssues
         )
-        if command is None:
-            exceptions[detector_names] = Exception(
-                f"Detector {detector_names} not found"
-            )
-        else:
+        try:
+            assert command is not None, f"Detector {detector_names} not found"
             detectors.append(command)
+        except AssertionError as e:
+            if not capture_exceptions:
+                raise
+            exceptions[detector_names] = e
     elif isinstance(detector_names, list):
         if config.detectors.only is None:
             only = set(detector_names)
@@ -279,12 +281,13 @@ def detect(
                 },
                 verify_paths=verify_paths,  # pyright: ignore reportGeneralTypeIssues
             )
-            if command is None:
-                exceptions[detector_name] = Exception(
-                    f"Detector {detector_name} not found"
-                )
-            else:
+            try:
+                assert command is not None, f"Detector {detector_name} not found"
                 detectors.append(command)
+            except AssertionError as e:
+                if not capture_exceptions:
+                    raise
+                exceptions[detector_name] = e
 
     if args is None:
         args = []
@@ -351,6 +354,8 @@ def detect(
 
                 collected_detectors[command.name] = instance
             except Exception as e:
+                if not capture_exceptions:
+                    raise
                 exceptions[command.name] = e
             finally:
                 command.callback = original_callback
@@ -406,6 +411,8 @@ def detect(
                         build.source_units,
                     )
             except Exception as e:
+                if not capture_exceptions:
+                    raise
                 exceptions[command.name] = e
             finally:
                 command.callback = original_callback
@@ -430,6 +437,8 @@ def detect(
                         try:
                             visit_map[node.ast_node.node_type](detector, node)
                         except Exception as e:
+                            if not capture_exceptions:
+                                raise
                             exceptions[detector_name] = e
                             del collected_detectors[detector_name]
 
@@ -445,6 +454,8 @@ def detect(
                 build.source_units,
             )
         except Exception as e:
+            if not capture_exceptions:
+                raise
             exceptions[detector_name] = e
 
     return detections, exceptions
