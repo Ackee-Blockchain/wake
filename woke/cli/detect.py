@@ -419,8 +419,11 @@ def _filter_detections(
 @click.option(
     "--no-artifacts", is_flag=True, default=False, help="Do not write build artifacts."
 )
+@click.option(
+    "--ignore-exceptions", is_flag=True, default=False, help="Ignore exceptions."
+)
 @click.pass_context
-def run_detect(ctx: click.Context, no_artifacts: bool) -> None:
+def run_detect(ctx: click.Context, no_artifacts: bool, ignore_exceptions: bool) -> None:
     """Run vulnerability detectors on the project."""
 
     if "--help" in ctx.obj["subcommand_args"]:
@@ -485,6 +488,7 @@ def run_detect(ctx: click.Context, no_artifacts: bool) -> None:
             "build_info": compiler.latest_build_info,
             "config": config,
             "imports_graph": compiler.latest_graph,
+            "ignore_exceptions": ignore_exceptions,
         }
     else:
         detections, exceptions = detect(
@@ -496,10 +500,14 @@ def run_detect(ctx: click.Context, no_artifacts: bool) -> None:
             ctx,
             ctx.obj["subcommand_args"],
             console=console,
+            capture_exceptions=ignore_exceptions,
         )
 
-        for detector_name, exception in exceptions.items():
-            logger.error(f"Error while running detector {detector_name}: {exception}")
+        if ignore_exceptions:
+            for detector_name, exception in exceptions.items():
+                logger.error(
+                    f"Error while running detector {detector_name}: {exception}"
+                )
 
         # TODO order
         for detector_name in sorted(detections.keys()):
@@ -532,6 +540,7 @@ def run_detect_all(
     config = ctx.obj["config"]
     latest_build_info = ctx.obj["build_info"]
     latest_graph = ctx.obj["imports_graph"]
+    ignore_exceptions = ctx.obj["ignore_exceptions"]
 
     detections, exceptions = detect(
         run_detect.list_commands(ctx),
@@ -544,10 +553,12 @@ def run_detect_all(
         min_confidence=min_confidence,
         min_impact=min_impact,
         console=console,
+        capture_exceptions=ignore_exceptions,
     )
 
-    for detector_name, exception in exceptions.items():
-        logger.error(f"Error while running detector {detector_name}: {exception}")
+    if ignore_exceptions:
+        for detector_name, exception in exceptions.items():
+            logger.error(f"Error while running detector {detector_name}: {exception}")
 
     # TODO order
     for detector_name in sorted(detections.keys()):
