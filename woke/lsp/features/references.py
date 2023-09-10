@@ -14,7 +14,7 @@ from woke.ir import (
     UserDefinedTypeName,
     YulIdentifier,
 )
-from woke.ir.enums import GlobalSymbolsEnum
+from woke.ir.enums import GlobalSymbol
 from woke.lsp.common_structures import (
     DocumentUri,
     Location,
@@ -116,7 +116,7 @@ async def references(
         referenced_declaration = node.referenced_declaration
         if referenced_declaration is None:
             return None
-        if isinstance(referenced_declaration, GlobalSymbolsEnum):
+        if isinstance(referenced_declaration, GlobalSymbol):
             global_refs = (
                 context.compiler.ir_reference_resolver.get_global_symbol_references(
                     referenced_declaration

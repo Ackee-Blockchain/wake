@@ -6,7 +6,7 @@ from typing import Iterator, List, Optional, Set, Tuple, Union
 from woke.ir.abc import IrAbc, SolidityAbc
 from woke.ir.enums import (
     FunctionCallKind,
-    GlobalSymbolsEnum,
+    GlobalSymbol,
     ModifiesStateFlag,
     StateMutability,
 )
@@ -99,7 +99,7 @@ class FunctionCall(ExpressionAbc):
             EventDefinition,
             ErrorDefinition,
             FunctionDefinition,
-            GlobalSymbolsEnum,
+            GlobalSymbol,
             StructDefinition,
             VariableDeclaration,
         ]
@@ -117,7 +117,7 @@ class FunctionCall(ExpressionAbc):
                         EventDefinition,
                         ErrorDefinition,
                         FunctionDefinition,
-                        GlobalSymbolsEnum,
+                        GlobalSymbol,
                         StructDefinition,
                         VariableDeclaration,
                     ),
@@ -135,7 +135,7 @@ class FunctionCall(ExpressionAbc):
                         EventDefinition,
                         ErrorDefinition,
                         FunctionDefinition,
-                        GlobalSymbolsEnum,
+                        GlobalSymbol,
                         StructDefinition,
                         VariableDeclaration,
                     ),
@@ -150,8 +150,8 @@ class FunctionCall(ExpressionAbc):
                 while isinstance(
                     node, MemberAccess
                 ) and node.referenced_declaration in {
-                    GlobalSymbolsEnum.FUNCTION_VALUE,
-                    GlobalSymbolsEnum.FUNCTION_GAS,
+                    GlobalSymbol.FUNCTION_VALUE,
+                    GlobalSymbol.FUNCTION_GAS,
                 }:
                     node = node.expression
             elif isinstance(node, FunctionCallOptions):
@@ -189,26 +189,26 @@ class FunctionCall(ExpressionAbc):
         if self.kind == FunctionCallKind.FUNCTION_CALL:
             called_function = self.function_called
             if called_function in {
-                GlobalSymbolsEnum.SELFDESTRUCT,
-                GlobalSymbolsEnum.SUICIDE,
+                GlobalSymbol.SELFDESTRUCT,
+                GlobalSymbol.SUICIDE,
             }:
                 ret |= {(self, ModifiesStateFlag.SELFDESTRUCTS)}
             elif called_function in {
-                GlobalSymbolsEnum.ADDRESS_TRANSFER,
-                GlobalSymbolsEnum.ADDRESS_SEND,
+                GlobalSymbol.ADDRESS_TRANSFER,
+                GlobalSymbol.ADDRESS_SEND,
             }:
                 ret |= {(self, ModifiesStateFlag.SENDS_ETHER)}
-            elif called_function == GlobalSymbolsEnum.ADDRESS_CALL:
+            elif called_function == GlobalSymbol.ADDRESS_CALL:
                 ret |= {(self, ModifiesStateFlag.PERFORMS_CALL)}
-            elif called_function == GlobalSymbolsEnum.ADDRESS_DELEGATECALL:
+            elif called_function == GlobalSymbol.ADDRESS_DELEGATECALL:
                 ret |= {(self, ModifiesStateFlag.PERFORMS_DELEGATECALL)}
             elif (
                 called_function
-                in {GlobalSymbolsEnum.ARRAY_PUSH, GlobalSymbolsEnum.ARRAY_POP}
+                in {GlobalSymbol.ARRAY_PUSH, GlobalSymbol.ARRAY_POP}
                 and self.expression.is_ref_to_state_variable
             ):
                 ret |= {(self, ModifiesStateFlag.MODIFIES_STATE_VAR)}
-            elif called_function == GlobalSymbolsEnum.FUNCTION_VALUE:
+            elif called_function == GlobalSymbol.FUNCTION_VALUE:
                 ret |= {(self, ModifiesStateFlag.SENDS_ETHER)}
             elif isinstance(called_function, FunctionDefinition):
                 if called_function.state_mutability in {

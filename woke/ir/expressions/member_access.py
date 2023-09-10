@@ -8,7 +8,7 @@ from woke.ir.ast import AstNodeId, SolcMemberAccess
 from woke.ir.declarations.abc import DeclarationAbc
 from woke.ir.declarations.enum_definition import EnumDefinition
 from woke.ir.declarations.variable_declaration import VariableDeclaration
-from woke.ir.enums import GlobalSymbolsEnum, ModifiesStateFlag
+from woke.ir.enums import GlobalSymbol, ModifiesStateFlag
 from woke.ir.expressions.abc import ExpressionAbc
 from woke.ir.expressions.identifier import Identifier
 from woke.ir.meta.import_directive import ImportDirective
@@ -94,80 +94,80 @@ class MemberAccess(ExpressionAbc):
             if isinstance(expr_type, Address):
                 if self.member_name == "balance":
                     self._referenced_declaration_id = AstNodeId(
-                        GlobalSymbolsEnum.ADDRESS_BALANCE
+                        GlobalSymbol.ADDRESS_BALANCE
                     )
                 elif self.member_name == "code":
                     self._referenced_declaration_id = AstNodeId(
-                        GlobalSymbolsEnum.ADDRESS_CODE
+                        GlobalSymbol.ADDRESS_CODE
                     )
                 elif self.member_name == "codehash":
                     self._referenced_declaration_id = AstNodeId(
-                        GlobalSymbolsEnum.ADDRESS_CODEHASH
+                        GlobalSymbol.ADDRESS_CODEHASH
                     )
                 elif self.member_name == "transfer":
                     self._referenced_declaration_id = AstNodeId(
-                        GlobalSymbolsEnum.ADDRESS_TRANSFER
+                        GlobalSymbol.ADDRESS_TRANSFER
                     )
                 elif self.member_name == "send":
                     self._referenced_declaration_id = AstNodeId(
-                        GlobalSymbolsEnum.ADDRESS_SEND
+                        GlobalSymbol.ADDRESS_SEND
                     )
                 elif self.member_name == "call":
                     self._referenced_declaration_id = AstNodeId(
-                        GlobalSymbolsEnum.ADDRESS_CALL
+                        GlobalSymbol.ADDRESS_CALL
                     )
                 elif self.member_name == "delegatecall":
                     self._referenced_declaration_id = AstNodeId(
-                        GlobalSymbolsEnum.ADDRESS_DELEGATECALL
+                        GlobalSymbol.ADDRESS_DELEGATECALL
                     )
                 elif self.member_name == "staticcall":
                     self._referenced_declaration_id = AstNodeId(
-                        GlobalSymbolsEnum.ADDRESS_STATICCALL
+                        GlobalSymbol.ADDRESS_STATICCALL
                     )
                 else:
                     assert False, f"Unknown address member: {self.member_name}"
             elif isinstance(expr_type, Array):
                 if self.member_name == "length":
                     self._referenced_declaration_id = AstNodeId(
-                        GlobalSymbolsEnum.ARRAY_LENGTH
+                        GlobalSymbol.ARRAY_LENGTH
                     )
                 elif self.member_name == "push":
                     self._referenced_declaration_id = AstNodeId(
-                        GlobalSymbolsEnum.ARRAY_PUSH
+                        GlobalSymbol.ARRAY_PUSH
                     )
                 elif self.member_name == "pop":
                     self._referenced_declaration_id = AstNodeId(
-                        GlobalSymbolsEnum.ARRAY_POP
+                        GlobalSymbol.ARRAY_POP
                     )
                 else:
                     assert False, f"Unknown array member: {self.member_name}"
             elif isinstance(expr_type, (Bytes, FixedBytes)):
                 if self.member_name == "length":
                     self._referenced_declaration_id = AstNodeId(
-                        GlobalSymbolsEnum.BYTES_LENGTH
+                        GlobalSymbol.BYTES_LENGTH
                     )
                 elif self.member_name == "push":
                     self._referenced_declaration_id = AstNodeId(
-                        GlobalSymbolsEnum.BYTES_PUSH
+                        GlobalSymbol.BYTES_PUSH
                     )
                 else:
                     assert False, f"Unknown bytes member: {self.member_name}"
             elif isinstance(expr_type, Function):
                 if self.member_name == "selector":
                     self._referenced_declaration_id = AstNodeId(
-                        GlobalSymbolsEnum.FUNCTION_SELECTOR
+                        GlobalSymbol.FUNCTION_SELECTOR
                     )
                 elif self.member_name == "value":
                     self._referenced_declaration_id = AstNodeId(
-                        GlobalSymbolsEnum.FUNCTION_VALUE
+                        GlobalSymbol.FUNCTION_VALUE
                     )
                 elif self.member_name == "gas":
                     self._referenced_declaration_id = AstNodeId(
-                        GlobalSymbolsEnum.FUNCTION_GAS
+                        GlobalSymbol.FUNCTION_GAS
                     )
                 elif self.member_name == "address":
                     self._referenced_declaration_id = AstNodeId(
-                        GlobalSymbolsEnum.FUNCTION_ADDRESS
+                        GlobalSymbol.FUNCTION_ADDRESS
                     )
                 else:
                     assert False, f"Unknown function member: {self.member_name}"
@@ -175,119 +175,119 @@ class MemberAccess(ExpressionAbc):
                 if expr_type.kind == MagicTypeKind.BLOCK:
                     if self.member_name == "basefee":
                         self._referenced_declaration_id = AstNodeId(
-                            GlobalSymbolsEnum.BLOCK_BASEFEE
+                            GlobalSymbol.BLOCK_BASEFEE
                         )
                     elif self.member_name == "chainid":
                         self._referenced_declaration_id = AstNodeId(
-                            GlobalSymbolsEnum.BLOCK_CHAINID
+                            GlobalSymbol.BLOCK_CHAINID
                         )
                     elif self.member_name == "coinbase":
                         self._referenced_declaration_id = AstNodeId(
-                            GlobalSymbolsEnum.BLOCK_COINBASE
+                            GlobalSymbol.BLOCK_COINBASE
                         )
                     elif self.member_name == "difficulty":
                         self._referenced_declaration_id = AstNodeId(
-                            GlobalSymbolsEnum.BLOCK_DIFFICULTY
+                            GlobalSymbol.BLOCK_DIFFICULTY
                         )
                     elif self.member_name == "gaslimit":
                         self._referenced_declaration_id = AstNodeId(
-                            GlobalSymbolsEnum.BLOCK_GASLIMIT
+                            GlobalSymbol.BLOCK_GASLIMIT
                         )
                     elif self.member_name == "number":
                         self._referenced_declaration_id = AstNodeId(
-                            GlobalSymbolsEnum.BLOCK_NUMBER
+                            GlobalSymbol.BLOCK_NUMBER
                         )
                     elif self.member_name == "timestamp":
                         self._referenced_declaration_id = AstNodeId(
-                            GlobalSymbolsEnum.BLOCK_TIMESTAMP
+                            GlobalSymbol.BLOCK_TIMESTAMP
                         )
                     elif self.member_name == "prevrandao":
                         self._referenced_declaration_id = AstNodeId(
-                            GlobalSymbolsEnum.BLOCK_PREVRANDAO
+                            GlobalSymbol.BLOCK_PREVRANDAO
                         )
                     else:
                         assert False, f"Unknown block member {self.member_name}"
                 elif expr_type.kind == MagicTypeKind.MESSAGE:
                     if self.member_name == "data":
                         self._referenced_declaration_id = AstNodeId(
-                            GlobalSymbolsEnum.MSG_DATA
+                            GlobalSymbol.MSG_DATA
                         )
                     elif self.member_name == "sender":
                         self._referenced_declaration_id = AstNodeId(
-                            GlobalSymbolsEnum.MSG_SENDER
+                            GlobalSymbol.MSG_SENDER
                         )
                     elif self.member_name == "sig":
                         self._referenced_declaration_id = AstNodeId(
-                            GlobalSymbolsEnum.MSG_SIG
+                            GlobalSymbol.MSG_SIG
                         )
                     elif self.member_name == "value":
                         self._referenced_declaration_id = AstNodeId(
-                            GlobalSymbolsEnum.MSG_VALUE
+                            GlobalSymbol.MSG_VALUE
                         )
                     else:
                         assert False, f"Unknown msg member {self.member_name}"
                 elif expr_type.kind == MagicTypeKind.TRANSACTION:
                     if self.member_name == "gasprice":
                         self._referenced_declaration_id = AstNodeId(
-                            GlobalSymbolsEnum.TX_GASPRICE
+                            GlobalSymbol.TX_GASPRICE
                         )
                     elif self.member_name == "origin":
                         self._referenced_declaration_id = AstNodeId(
-                            GlobalSymbolsEnum.TX_ORIGIN
+                            GlobalSymbol.TX_ORIGIN
                         )
                     else:
                         assert False, f"Unknown tx member {self.member_name}"
                 elif expr_type.kind == MagicTypeKind.ABI:
                     if self.member_name == "decode":
                         self._referenced_declaration_id = AstNodeId(
-                            GlobalSymbolsEnum.ABI_DECODE
+                            GlobalSymbol.ABI_DECODE
                         )
                     elif self.member_name == "encode":
                         self._referenced_declaration_id = AstNodeId(
-                            GlobalSymbolsEnum.ABI_ENCODE
+                            GlobalSymbol.ABI_ENCODE
                         )
                     elif self.member_name == "encodePacked":
                         self._referenced_declaration_id = AstNodeId(
-                            GlobalSymbolsEnum.ABI_ENCODE_PACKED
+                            GlobalSymbol.ABI_ENCODE_PACKED
                         )
                     elif self.member_name == "encodeWithSelector":
                         self._referenced_declaration_id = AstNodeId(
-                            GlobalSymbolsEnum.ABI_ENCODE_WITH_SELECTOR
+                            GlobalSymbol.ABI_ENCODE_WITH_SELECTOR
                         )
                     elif self.member_name == "encodeWithSignature":
                         self._referenced_declaration_id = AstNodeId(
-                            GlobalSymbolsEnum.ABI_ENCODE_WITH_SIGNATURE
+                            GlobalSymbol.ABI_ENCODE_WITH_SIGNATURE
                         )
                     elif self.member_name == "encodeCall":
                         self._referenced_declaration_id = AstNodeId(
-                            GlobalSymbolsEnum.ABI_ENCODE_CALL
+                            GlobalSymbol.ABI_ENCODE_CALL
                         )
                     else:
                         assert False, f"Unknown abi member {self.member_name}"
                 elif expr_type.kind == MagicTypeKind.META_TYPE:
                     if self.member_name == "name":
                         self._referenced_declaration_id = AstNodeId(
-                            GlobalSymbolsEnum.TYPE_NAME
+                            GlobalSymbol.TYPE_NAME
                         )
                     elif self.member_name == "creationCode":
                         self._referenced_declaration_id = AstNodeId(
-                            GlobalSymbolsEnum.TYPE_CREATION_CODE
+                            GlobalSymbol.TYPE_CREATION_CODE
                         )
                     elif self.member_name == "runtimeCode":
                         self._referenced_declaration_id = AstNodeId(
-                            GlobalSymbolsEnum.TYPE_RUNTIME_CODE
+                            GlobalSymbol.TYPE_RUNTIME_CODE
                         )
                     elif self.member_name == "interfaceId":
                         self._referenced_declaration_id = AstNodeId(
-                            GlobalSymbolsEnum.TYPE_INTERFACE_ID
+                            GlobalSymbol.TYPE_INTERFACE_ID
                         )
                     elif self.member_name == "min":
                         self._referenced_declaration_id = AstNodeId(
-                            GlobalSymbolsEnum.TYPE_MIN
+                            GlobalSymbol.TYPE_MIN
                         )
                     elif self.member_name == "max":
                         self._referenced_declaration_id = AstNodeId(
-                            GlobalSymbolsEnum.TYPE_MAX
+                            GlobalSymbol.TYPE_MAX
                         )
                     else:
                         assert False, f"Unknown type member {self.member_name}"
@@ -295,25 +295,25 @@ class MemberAccess(ExpressionAbc):
                 if isinstance(expr_type.actual_type, Bytes):
                     if self.member_name == "concat":
                         self._referenced_declaration_id = AstNodeId(
-                            GlobalSymbolsEnum.BYTES_CONCAT
+                            GlobalSymbol.BYTES_CONCAT
                         )
                     else:
                         assert False, f"Unknown bytes member {self.member_name}"
                 elif isinstance(expr_type.actual_type, String):
                     if self.member_name == "concat":
                         self._referenced_declaration_id = AstNodeId(
-                            GlobalSymbolsEnum.STRING_CONCAT
+                            GlobalSymbol.STRING_CONCAT
                         )
                     else:
                         assert False, f"Unknown string member {self.member_name}"
                 elif isinstance(expr_type.actual_type, UserDefinedValueType):
                     if self.member_name == "wrap":
                         self._referenced_declaration_id = AstNodeId(
-                            GlobalSymbolsEnum.USER_DEFINED_VALUE_TYPE_WRAP
+                            GlobalSymbol.USER_DEFINED_VALUE_TYPE_WRAP
                         )
                     elif self.member_name == "unwrap":
                         self._referenced_declaration_id = AstNodeId(
-                            GlobalSymbolsEnum.USER_DEFINED_VALUE_TYPE_UNWRAP
+                            GlobalSymbol.USER_DEFINED_VALUE_TYPE_UNWRAP
                         )
                     else:
                         assert (
@@ -329,7 +329,7 @@ class MemberAccess(ExpressionAbc):
         ), f"Unknown member {self.member_name}"
 
         if self._referenced_declaration_id < 0:
-            global_symbol = GlobalSymbolsEnum(self._referenced_declaration_id)
+            global_symbol = GlobalSymbol(self._referenced_declaration_id)
             self._reference_resolver.register_global_symbol_reference(
                 global_symbol, self
             )
@@ -363,9 +363,9 @@ class MemberAccess(ExpressionAbc):
                 raise TypeError(f"Unexpected type: {type(node)}")
 
     def _destroy(
-        self, referenced_declaration: Union[GlobalSymbolsEnum, DeclarationAbc]
+        self, referenced_declaration: Union[GlobalSymbol, DeclarationAbc]
     ) -> None:
-        if isinstance(referenced_declaration, GlobalSymbolsEnum):
+        if isinstance(referenced_declaration, GlobalSymbol):
             self._reference_resolver.unregister_global_symbol_reference(
                 referenced_declaration, self
             )
@@ -401,10 +401,10 @@ class MemberAccess(ExpressionAbc):
     @property
     def referenced_declaration(
         self,
-    ) -> Union[DeclarationAbc, GlobalSymbolsEnum, SourceUnit]:
+    ) -> Union[DeclarationAbc, GlobalSymbol, SourceUnit]:
         assert self._referenced_declaration_id is not None
         if self._referenced_declaration_id < 0:
-            return GlobalSymbolsEnum(self._referenced_declaration_id)
+            return GlobalSymbol(self._referenced_declaration_id)
 
         node = self._reference_resolver.resolve_node(
             self._referenced_declaration_id, self._cu_hash

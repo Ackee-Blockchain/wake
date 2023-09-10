@@ -18,7 +18,7 @@ from typing import (
 
 from intervaltree import IntervalTree
 
-from woke.ir.enums import GlobalSymbolsEnum
+from woke.ir.enums import GlobalSymbol
 
 if TYPE_CHECKING:
     from woke.ir.abc import SolidityAbc
@@ -51,7 +51,7 @@ class ReferenceResolver:
     _post_process_callbacks: List[PostProcessQueueItem]
     _destroy_callbacks: DefaultDict[Path, List[Callable[[], None]]]
     _global_symbol_references: DefaultDict[
-        GlobalSymbolsEnum, List[Union[Identifier, MemberAccess]]
+        GlobalSymbol, List[Union[Identifier, MemberAccess]]
     ]
     _node_types: Dict[Path, Dict[int, str]]
 
@@ -179,16 +179,16 @@ class ReferenceResolver:
         del self._destroy_callbacks[file]
 
     def register_global_symbol_reference(
-        self, node_id: GlobalSymbolsEnum, node: Union[Identifier, MemberAccess]
+        self, node_id: GlobalSymbol, node: Union[Identifier, MemberAccess]
     ):
         self._global_symbol_references[node_id].append(node)
 
     def unregister_global_symbol_reference(
-        self, node_id: GlobalSymbolsEnum, node: Union[Identifier, MemberAccess]
+        self, node_id: GlobalSymbol, node: Union[Identifier, MemberAccess]
     ):
         self._global_symbol_references[node_id].remove(node)
 
     def get_global_symbol_references(
-        self, node_id: GlobalSymbolsEnum
+        self, node_id: GlobalSymbol
     ) -> Tuple[Union[Identifier, MemberAccess], ...]:
         return tuple(self._global_symbol_references[node_id])

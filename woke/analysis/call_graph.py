@@ -17,7 +17,7 @@ from woke.ir import (
     SourceUnit,
     UnaryOperation,
 )
-from woke.ir.enums import GlobalSymbolsEnum
+from woke.ir.enums import GlobalSymbol
 
 logger = logging.getLogger(__name__)
 
@@ -77,8 +77,8 @@ class CallGraph:
                     isinstance(parent, MemberAccess)
                     and parent.referenced_declaration
                     in {
-                        GlobalSymbolsEnum.FUNCTION_VALUE,
-                        GlobalSymbolsEnum.FUNCTION_GAS,
+                        GlobalSymbol.FUNCTION_VALUE,
+                        GlobalSymbol.FUNCTION_GAS,
                     }
                     or isinstance(parent, FunctionCallOptions)
                 ):
