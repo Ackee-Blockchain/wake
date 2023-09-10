@@ -1,7 +1,18 @@
 import logging
 import os
+from collections import defaultdict
 from pathlib import Path
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Type, Union
+from typing import (
+    Any,
+    DefaultDict,
+    Dict,
+    List,
+    NamedTuple,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+)
 
 import rich_click as click
 from intervaltree import IntervalTree
@@ -254,14 +265,22 @@ async def code_lens(
 
     _code_lens_cache[path] = []
 
-    printers: Dict[str, Tuple[click.Command, Type[Printer]]] = {
-        n: p
-        for n, p in get_printers(
-            {context.config.project_root_path / "printers"},
-            False,
-        ).items()
-        if p[1].lsp_node is not None
-    }
+    printers: DefaultDict[
+        Type[IrAbc], Dict[str, Tuple[click.Command, Type[Printer]]]
+    ] = defaultdict(dict)
+    for printer_name, printer in get_printers(
+        {context.config.project_root_path / "printers"},
+        False,
+    ).items():
+        lsp_node = printer[1].lsp_node()
+        if lsp_node is None:
+            continue
+        if isinstance(lsp_node, (list, tuple)):
+            for node in lsp_node:
+                printers[node][printer_name] = printer
+        else:
+            printers[lsp_node][printer_name] = printer
+
     for (
         package,
         e,
@@ -402,11 +421,8 @@ async def code_lens(
                     )
                 )
 
-        for printer_name in sorted(printers.keys()):
-            command, printer_cls = printers[printer_name]
-            assert printer_cls.lsp_node is not None
-            if not isinstance(node, printer_cls.lsp_node):
-                continue
+        for printer_name in sorted(printers[node.__class__].keys()):
+            command, printer_cls = printers[node.__class__][printer_name]
 
             try:
                 out = _get_printer_output(
