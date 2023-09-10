@@ -13,19 +13,22 @@ from woke.utils import get_class_that_defined_method
 if TYPE_CHECKING:
     from rich.console import Console
 
-    from woke.ir import IrAbc
+    import woke.ir as ir
 
 
 class Printer(Visitor, metaclass=ABCMeta):
     console: Console
     paths: List[Path]
-    lsp_node: Optional[Union[Type[IrAbc], Tuple[Type[IrAbc], ...]]] = None
 
     @abstractmethod
     def print(self) -> None:
         ...
 
-    def lsp_predicate(self, node: IrAbc) -> bool:
+    @classmethod
+    def lsp_node(cls) -> Optional[Union[Type[ir.IrAbc], Tuple[Type[ir.IrAbc], ...]]]:
+        return None
+
+    def lsp_predicate(self, node: ir.IrAbc) -> bool:
         return True
 
     def _run(self) -> None:
