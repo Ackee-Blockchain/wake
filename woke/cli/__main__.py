@@ -92,7 +92,7 @@ def config(ctx: Context) -> None:
     """Print loaded config options in JSON format."""
     from woke.config import WokeConfig
 
-    config = WokeConfig(ctx["custom_config_path"])
+    config = WokeConfig(ctx.obj["custom_config_path"])
     config.load_configs()
     console.print_json(str(config))
 
