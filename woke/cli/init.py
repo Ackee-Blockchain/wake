@@ -87,7 +87,7 @@ def run_init(ctx: Context, force: bool):
     """Initialize project."""
     from woke.config import WokeConfig
 
-    config = WokeConfig()
+    config = WokeConfig(ctx.obj["custom_config_path"])
     config.load_configs()
     ctx.obj["config"] = config
 

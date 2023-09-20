@@ -173,7 +173,7 @@ def run_compile(
     """Compile the project."""
     from woke.config import WokeConfig
 
-    config = WokeConfig()
+    config = WokeConfig(ctx.obj["custom_config_path"])
     config.load_configs()  # load ~/.woke/config.toml and ./woke.toml
 
     asyncio.run(

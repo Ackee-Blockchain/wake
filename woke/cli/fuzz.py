@@ -59,7 +59,7 @@ def run_fuzz(
     if process_count < coverage:
         raise ValueError("Coverage must be less than or equal to process count.")
 
-    config = WokeConfig()
+    config = WokeConfig(ctx.obj["custom_config_path"])
     config.load_configs()  # load ~/.woke/config.toml and ./woke.toml
 
     random_seeds = [bytes.fromhex(seed) for seed in seeds]

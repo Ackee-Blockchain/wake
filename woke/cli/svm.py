@@ -21,7 +21,7 @@ def run_svm(ctx: Context):
     """Run Woke Solc Version Manager."""
     from woke.config import WokeConfig
 
-    config = WokeConfig()
+    config = WokeConfig(ctx.obj["custom_config_path"])
     config.load_configs()
     ctx.obj["config"] = config
 

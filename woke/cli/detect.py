@@ -36,7 +36,7 @@ def run_detect(
     from ..utils.file_utils import is_relative_to
     from .console import console
 
-    config = WokeConfig()
+    config = WokeConfig(ctx.obj["custom_config_path"])
     config.load_configs()  # load ~/.woke/config.toml and ./woke.toml
 
     sol_files: Set[Path] = set()

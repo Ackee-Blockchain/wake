@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Callable, Iterable, List, Tuple
 
 import rich_click as click
+from click.core import Context
 
 
 def _get_module_name(path: Path, root: Path) -> str:
@@ -26,7 +27,10 @@ def _get_module_name(path: Path, root: Path) -> str:
     default=False,
     help="Do not print transaction info.",
 )
-def run_run(paths: Tuple[str, ...], debug: bool, ask: bool, silent: bool) -> None:
+@click.pass_context
+def run_run(
+    ctx: Context, paths: Tuple[str, ...], debug: bool, ask: bool, silent: bool
+) -> None:
     """Run a Woke script."""
 
     import importlib.util
@@ -44,7 +48,7 @@ def run_run(paths: Tuple[str, ...], debug: bool, ask: bool, silent: bool) -> Non
 
     from .console import console
 
-    config = WokeConfig()
+    config = WokeConfig(ctx.obj["custom_config_path"])
     config.load_configs()
     get_config().update(
         {

@@ -33,9 +33,16 @@ if platform.system() != "Windows":
 @click.option(
     "--profile", is_flag=True, default=False, help="Enable profiling using cProfile."
 )
+@click.option(
+    "--config",
+    "custom_config_path",  # name of parameter of `main` function
+    type=click.Path(exists=True),
+    default="woke.toml",
+    help="Path to config file to use.",
+)
 @click.version_option(message="%(version)s", package_name="woke")
 @click.pass_context
-def main(ctx: Context, debug: bool, profile: bool) -> None:
+def main(ctx: Context, debug: bool, custom_config_path: str, profile: bool) -> None:
     if profile:
         import atexit
         import cProfile
@@ -58,6 +65,7 @@ def main(ctx: Context, debug: bool, profile: bool) -> None:
 
     ctx.ensure_object(dict)
     ctx.obj["debug"] = debug
+    ctx.obj["custom_config_path"] = custom_config_path
 
     if platform.system() == "Windows":
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
@@ -84,7 +92,7 @@ def config(ctx: Context) -> None:
     """Print loaded config options in JSON format."""
     from woke.config import WokeConfig
 
-    config = WokeConfig()
+    config = WokeConfig(ctx["custom_config_path"])
     config.load_configs()
     console.print_json(str(config))
 
@@ -98,7 +106,7 @@ def woke_solc() -> None:
     from woke.svm import SolcVersionManager
 
     logging.basicConfig(level=logging.CRITICAL)
-    config = WokeConfig()
+    config = WokeConfig(None)
     config.load_configs()
     svm = SolcVersionManager(config)
 

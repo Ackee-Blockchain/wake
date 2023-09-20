@@ -34,7 +34,7 @@ def run_accounts(ctx: Context):
 
     from woke.config import WokeConfig
 
-    config = WokeConfig()
+    config = WokeConfig(ctx.obj["custom_config_path"])
     config.load_configs()
     ctx.obj["config"] = config
 

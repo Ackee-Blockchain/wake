@@ -32,15 +32,17 @@ class UnsupportedPlatformError(Exception):
 
 
 class WokeConfig:
-    __project_root_path: Path
     __global_config_path: Path
     __global_data_path: Path
+    __project_root_path: Path
+    __custom_config_path: Path
     __loaded_files: Set[Path]
     __config_raw: Dict[str, Any]
     __config: TopLevelConfig
 
     def __init__(
         self,
+        custom_config_path: Optional[Union[str, Path]],
         *_,
         project_root_path: Optional[Union[str, Path]] = None,
     ):
@@ -118,6 +120,11 @@ class WokeConfig:
         with change_cwd(self.__project_root_path):
             self.__config = TopLevelConfig()
         self.__config_raw = self.__config.dict(by_alias=True)
+
+        if custom_config_path is not None:
+            self.__custom_config_path = Path(custom_config_path).resolve(strict=True)
+        else:
+            self.__custom_config_path = self.__project_root_path / "woke.toml"
 
     def __str__(self) -> str:
         return self.__config.json(by_alias=True, exclude_unset=True)
@@ -274,7 +281,7 @@ class WokeConfig:
         self.__config_raw = self.__config.dict(by_alias=True)
 
         self.load(self.global_config_path / "config.toml")
-        self.load(self.project_root_path / "woke.toml")
+        self.load(self.custom_config_path)
 
     def load(self, path: Path) -> None:
         """
@@ -320,6 +327,13 @@ class WokeConfig:
         Return the system path of the currently open project.
         """
         return self.__project_root_path
+
+    @property
+    def custom_config_path(self) -> Path:
+        """
+        Return the system path to the custom config file.
+        """
+        return self.__custom_config_path
 
     @property
     def min_solidity_version(self) -> SolidityVersion:
