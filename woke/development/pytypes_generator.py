@@ -1510,15 +1510,8 @@ class TypeGenerator:
         self.__pytypes_dir.mkdir(exist_ok=True)
         contract_name = _make_path_alphanum(contract_name[:-3])
         unit_path = (self.__pytypes_dir / contract_name).with_suffix(".py")
-        unit_path_parent = unit_path.parent
-        # TODO validate whether project root can become paraent
-        unit_path_parent.mkdir(parents=True, exist_ok=True)
-        if unit_path.exists():
-            with unit_path.open("a") as f:
-                f.write(str(self.__imports) + self.__source_unit_types)
-        else:
-            unit_path.touch()
-            unit_path.write_text(str(self.__imports) + self.__source_unit_types)
+        unit_path.parent.mkdir(parents=True, exist_ok=True)
+        unit_path.write_text(str(self.__imports) + self.__source_unit_types)
 
     # clean the instance variables to enable generating a new source unit
     def cleanup_source_unit(self):
@@ -1633,6 +1626,7 @@ class TypeGenerator:
         previous_len = len(graph)
         cycles_detected = False
         cycles: Set[FrozenSet[str]] = set()
+        generated_paths: Set[Path] = set()
 
         # keep generating pytypes for source units that have all import dependencies already generated
         # take into account cyclic imports - generate pytypes for a cycle if all not yet generated import dependencies are in the cycle
@@ -1649,8 +1643,9 @@ class TypeGenerator:
             while len(sources) > 0:
                 source = heapq.heappop(sources)
                 path = source_units_to_paths[source]
-                if path in self.__source_units:
+                if path in self.__source_units and path not in generated_paths:
                     generate_source_unit(self.__source_units[path])
+                    generated_paths.add(path)
 
                 for source_unit_name in paths_to_source_unit_names[path]:
                     visited.add(source_unit_name)
@@ -1710,8 +1705,9 @@ class TypeGenerator:
             for cycle in sorted(generated_cycles):
                 for source in cycle:
                     path = source_units_to_paths[source]
-                    if path in self.__source_units:
+                    if path in self.__source_units and path not in generated_paths:
                         generate_source_unit(self.__source_units[path])
+                        generated_paths.add(path)
                     graph.remove_nodes_from(paths_to_source_unit_names[path])
 
             if len(graph) == previous_len:
