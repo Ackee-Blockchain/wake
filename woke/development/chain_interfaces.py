@@ -232,6 +232,8 @@ class ChainInterfaceAbc(ABC):
                 return GanacheChainInterface(config, communicator)
             elif client_version.startswith(("geth", "bor")):
                 return GethChainInterface(config, communicator)
+            elif client_version.startswith("erigon"):
+                return ErigonChainInterface(config, communicator)
             elif "nitro" in client_version:
                 return NitroChainInterface(config, communicator)
             elif chain_id in {43113, 43114}:
@@ -793,3 +795,9 @@ class AvalancheChainInterface(GethLikeChainInterfaceAbc):
     @property
     def _name(self) -> str:
         return "Avalanche"
+
+
+class ErigonChainInterface(GethLikeChainInterfaceAbc):
+    @property
+    def _name(self) -> str:
+        return "Erigon"
