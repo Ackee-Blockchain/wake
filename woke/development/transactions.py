@@ -811,10 +811,11 @@ def must_revert(
                 for ex in exceptions
             ):
                 return
-            raise AssertionError(f"Expected revert of type {exceptions} but got {e}")
+            raise
         else:
             if not inspect.isclass(exceptions):
-                assert e == exceptions, f"Expected {e} but got {exceptions}"
+                if e != exceptions:
+                    raise
 
 
 @contextmanager
@@ -859,10 +860,11 @@ def may_revert(
                 for ex in exceptions
             ):
                 return
-            raise AssertionError(f"Expected revert of type {exceptions} but got {e}")
+            raise
         else:
             if not inspect.isclass(exceptions):
-                assert e == exceptions, f"Expected {e} but got {exceptions}"
+                if e != exceptions:
+                    raise
 
 
 def on_revert(callback: Callable[[TransactionRevertedError], None]):
