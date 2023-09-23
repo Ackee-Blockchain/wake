@@ -136,6 +136,51 @@ get_create2_address_from_hash(
 )
 ```
 
+## Get logic contract from proxy
+
+`get_logic_contract` returns the logic contract `Account` from a proxy `Account`.
+If the input account is not a proxy, it returns the input account.
+
+```python
+from woke.testing import Account, get_logic_contract
+
+usdc_proxy = Account("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")
+usdc_logic = get_logic_contract(usdc_proxy)
+```
+
+## Read & write storage variable
+
+`read_storage_variable` and `write_storage_variable` read and write storage variables of a contract.
+They accept a contract `Account` and a variable name. Reading and writing whole arrays, structs and mappings currently is not supported.
+Instead, the `keys` argument must be used to provide a list of all keys (array and mapping indices, struct member names) needed to access the variable.
+
+If the provided contract is a proxy, the variable definition is searched in the logic contract and the proxy storage is used.
+This behavior can be overridden by setting the `storage_layout_contract` argument.
+In this case, the variable definition is searched in the provided `storage_layout_contract`.
+
+```python
+from woke.testing import Account, Address, read_storage_variable, write_storage_variable
+
+usdc_proxy = Account("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")
+write_storage_variable(usdc_proxy, "balances", 1000, keys=[Address(1)])
+assert read_storage_variable(usdc_proxy, "balances", keys=[Address(1)]) == 1000
+```
+
+## ERC-20 mint and burn
+
+`mint_erc20` and `burn_erc20` mint and burn ERC-20 tokens. They detect the `totalSupply` and `balances` variables using heuristics and may not work for all contracts.
+Optionally, `balance_slot` and `total_supply_slot` arguments can be used to specify the storage slot where the balance of the given account and the total supply are stored.
+
+```python
+from woke.testing import Account, mint_erc20, burn_erc20
+from pytypes.contracts.IERC20 import IERC20
+
+usdc_proxy = IERC20("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")
+burn_erc20(usdc_proxy, Account(1), usdc_proxy.balanceOf(Account(1)))
+mint_erc20(usdc_proxy, Account(1), 1000)
+assert usdc_proxy.balanceOf(Account(1)) == 1000
+```
+
 ## Decorators
 
 ### on_revert
