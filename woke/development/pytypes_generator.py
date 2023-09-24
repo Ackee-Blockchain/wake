@@ -279,7 +279,19 @@ class TypeGenerator:
             num_of_indentation * TAB_WIDTH * " " + string + num_of_newlines * "\n"
         )
 
-    def get_name(self, declaration: DeclarationAbc) -> str:
+    def get_name(
+        self, declaration: DeclarationAbc, *, import_alias: bool = False
+    ) -> str:
+        source_unit = declaration.parent
+
+        if (
+            not import_alias
+            and isinstance(source_unit, SourceUnit)
+            and source_unit.source_unit_name != self.current_source_unit
+            and source_unit.source_unit_name in self.cyclic_source_units
+        ):
+            n = self.__name_sanitizer.sanitize_name(declaration)
+            return f"{n}.{n}"
         return self.__name_sanitizer.sanitize_name(declaration)
 
     def generate_deploy_func(
@@ -992,7 +1004,6 @@ class TypeGenerator:
         return param_names, params
 
     def generate_func_returns(self, fn: FunctionDefinition) -> List[Tuple[str, str]]:
-        self.__imports.clear_tmp_type_checking_imports()
         return [
             (self.parse_type_and_import(par.type, True), par.type_string)
             for par in fn.return_parameters.parameters
@@ -1179,7 +1190,6 @@ class TypeGenerator:
 
             return parsed if use_parse else []
 
-        self.__imports.clear_tmp_type_checking_imports()
         generated_params = generate_getter_helper(decl.type_name, False, 0)
 
         if len(returns) == 0:
@@ -1289,11 +1299,6 @@ class TypeGenerator:
             return_types = returns[0][0]
         else:
             return_types = f"Tuple[{', '.join(map(itemgetter(0), returns))}]"
-
-        for cyclic_import in self.__imports.tmp_type_checking_imports:
-            self.add_str_to_types(2, cyclic_import, 1)
-        if self.__imports.tmp_type_checking_imports:
-            self.add_str_to_types(2, "", 1)
 
         assert declaration.function_selector is not None
         fn_selector = declaration.function_selector.hex()
@@ -1721,10 +1726,10 @@ class TypeGenerator:
                 + "\n".join(str(set(cycle)) for cycle in cycles)
             )
 
-        if len(graph.nodes) > 0:
+        if len(graph.nodes) > 0:  # pyright: ignore reportGeneralTypeIssues
             logger.warning(
                 "Failed to generate pytypes for the following source units:\n"
-                + "\n".join(graph.nodes)
+                + "\n".join(graph.nodes)  # pyright: ignore reportGeneralTypeIssues
             )
 
         init_path = self.__pytypes_dir / "__init__.py"
@@ -1750,7 +1755,7 @@ class SourceUnitImports:
     __contract_imports: Set[str]
     __python_imports: Set[str]
     __type_checking_imports: Set[str]
-    __tmp_type_checking_imports: Set[str]
+    __lazy_modules: Set[str]
     __type_gen: TypeGenerator
 
     def __init__(self, outer: TypeGenerator):
@@ -1760,7 +1765,7 @@ class SourceUnitImports:
         self.__contract_imports = set()
         self.__python_imports = set()
         self.__type_checking_imports = set()
-        self.__tmp_type_checking_imports = set()
+        self.__lazy_modules = set()
         self.__type_gen = outer
 
     def __str__(self) -> str:
@@ -1795,6 +1800,13 @@ class SourceUnitImports:
             self.__add_str_to_imports(0, "if TYPE_CHECKING:", 1)
             for type_checking_import in sorted(self.__type_checking_imports):
                 self.__add_str_to_imports(1, type_checking_import, 1)
+
+            if self.__lazy_modules:
+                self.__add_str_to_imports(0, "else:", 1)
+                self.__add_str_to_imports(1, "import lazy_import", 2)
+
+                for lazy_module in sorted(self.__lazy_modules):
+                    self.__add_str_to_imports(1, lazy_module, 1)
             self.__add_str_to_imports(0, "", 1)
 
         self.__add_str_to_imports(0, "", 2)
@@ -1807,25 +1819,30 @@ class SourceUnitImports:
         self.__contract_imports.clear()
         self.__python_imports.clear()
         self.__type_checking_imports.clear()
+        self.__lazy_modules.clear()
         self.__all_imports = ""
 
-    def clear_tmp_type_checking_imports(self) -> None:
-        self.__tmp_type_checking_imports.clear()
-
-    @property
-    def tmp_type_checking_imports(self) -> FrozenSet[str]:
-        return frozenset(self.__tmp_type_checking_imports)
-
     def __generate_import(
+        self,
+        declaration: DeclarationAbc,
+        source_unit_name: str,
+        *,
+        aliased: bool = False,
+    ) -> str:
+        source_unit_name = _make_path_alphanum(source_unit_name)
+        name = self.__type_gen.get_name(declaration, import_alias=True)
+
+        if aliased:
+            return f"import pytypes.{source_unit_name[:-3].replace('/', '.')} as {name}"
+        return f"from pytypes.{source_unit_name[:-3].replace('/', '.')} import {name}"
+
+    def __generate_lazy_module(
         self, declaration: DeclarationAbc, source_unit_name: str
     ) -> str:
         source_unit_name = _make_path_alphanum(source_unit_name)
-        return (
-            "from pytypes."
-            + source_unit_name[:-3].replace("/", ".")
-            + " import "
-            + self.__type_gen.get_name(declaration)
-        )
+        name = self.__type_gen.get_name(declaration, import_alias=True)
+
+        return f"{name} = lazy_import.lazy_module('pytypes.{source_unit_name[:-3].replace('/', '.')}')"
 
     def __add_str_to_imports(
         self, num_of_indentation: int, string: str, num_of_newlines: int
@@ -1843,14 +1860,21 @@ class SourceUnitImports:
         # only those structs that are defined in a different source unit should be imported
         if source_unit.source_unit_name == self.__type_gen.current_source_unit:
             return
-        struct_import = self.__generate_import(
-            struct_type.ir_node, source_unit.source_unit_name
-        )
 
         if source_unit.source_unit_name in self.__type_gen.cyclic_source_units:
+            struct_import = self.__generate_import(
+                struct_type.ir_node, source_unit.source_unit_name, aliased=True
+            )
             self.__type_checking_imports.add(struct_import)
-            self.__tmp_type_checking_imports.add(struct_import)
+            self.__lazy_modules.add(
+                self.__generate_lazy_module(
+                    struct_type.ir_node, source_unit.source_unit_name
+                )
+            )
         else:
+            struct_import = self.__generate_import(
+                struct_type.ir_node, source_unit.source_unit_name
+            )
             self.__struct_imports.add(struct_import)
 
     # only used for top-level enums (not within contracts)
@@ -1861,14 +1885,21 @@ class SourceUnitImports:
         # only those structs that are defined in a different source unit should be imported
         if source_unit.source_unit_name == self.__type_gen.current_source_unit:
             return
-        enum_import = self.__generate_import(
-            enum_type.ir_node, source_unit.source_unit_name
-        )
 
         if source_unit.source_unit_name in self.__type_gen.cyclic_source_units:
+            enum_import = self.__generate_import(
+                enum_type.ir_node, source_unit.source_unit_name, aliased=True
+            )
             self.__type_checking_imports.add(enum_import)
-            self.__tmp_type_checking_imports.add(enum_import)
+            self.__lazy_modules.add(
+                self.__generate_lazy_module(
+                    enum_type.ir_node, source_unit.source_unit_name
+                )
+            )
         else:
+            enum_import = self.__generate_import(
+                enum_type.ir_node, source_unit.source_unit_name
+            )
             self.__enum_imports.add(enum_import)
 
     def generate_contract_import(
@@ -1885,8 +1916,14 @@ class SourceUnitImports:
             and contract_import not in self.__contract_imports
             and source_unit.source_unit_name in self.__type_gen.cyclic_source_units
         ):
+            contract_import = self.__generate_import(
+                contract, source_unit.source_unit_name, aliased=True
+            )
+
             self.__type_checking_imports.add(contract_import)
-            self.__tmp_type_checking_imports.add(contract_import)
+            self.__lazy_modules.add(
+                self.__generate_lazy_module(contract, source_unit.source_unit_name)
+            )
         else:
             self.__contract_imports.add(contract_import)
 
