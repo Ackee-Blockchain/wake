@@ -149,6 +149,13 @@ def test_compile_trader_joe(setup_project, config):
     )
     assert len(output)
 
+    (PYTEST_BUILD_PATH / "woke.toml").write_text(
+        """
+        [compiler.solc]
+        ignore_paths = ["node_modules", "test", "lib"]
+        """
+    )
+
     cli_runner = CliRunner()
     with change_cwd(PYTEST_BUILD_PATH):
         cli_result = cli_runner.invoke(
