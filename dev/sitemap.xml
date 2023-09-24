@@ -2,497 +2,497 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/compilation/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/configuration/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/contributing/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/detectors/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/language-server/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/solc-version-manager/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/abc/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/enums/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/types/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/declarations/contract-definition/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/declarations/enum-definition/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/declarations/enum-value/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/declarations/error-definition/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/declarations/event-definition/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/declarations/function-definition/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/declarations/modifier-definition/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/declarations/struct-definition/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/declarations/user-defined-value-type-definition/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/declarations/variable-declaration/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/expressions/assignment/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/expressions/binary-operation/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/expressions/conditional/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/expressions/elementary-type-name-expression/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/expressions/function-call-options/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/expressions/function-call/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/expressions/identifier/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/expressions/index-access/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/expressions/index-range-access/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/expressions/literal/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/expressions/member-access/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/expressions/new-expression/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/expressions/tuple-expression/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/expressions/unary-operation/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/meta/identifier-path/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/meta/import-directive/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/meta/inheritance-specifier/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/meta/modifier-invocation/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/meta/override-specifier/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/meta/parameter-list/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/meta/pragma-directive/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/meta/source-unit/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/meta/structured-documentation/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/meta/try-catch-clause/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/meta/using-for-directive/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/statements/block/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/statements/break-statement/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/statements/continue-statement/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/statements/do-while-statement/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/statements/emit-statement/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/statements/expression-statement/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/statements/for-statement/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/statements/if-statement/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/statements/inline-assembly/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/statements/placeholder-statement/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/statements/return-statement/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/statements/revert-statement/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/statements/try-statement/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/statements/unchecked-block/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/statements/variable-declaration-statement/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/statements/while-statement/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/type-names/array-type-name/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/type-names/elementary-type-name/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/type-names/function-type-name/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/type-names/mapping/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/type-names/user-defined-type-name/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/yul/assignment/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/yul/block/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/yul/break-statement/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/yul/case-statement/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/yul/continue-statement/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/yul/expression-statement/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/yul/for-loop/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/yul/function-call/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/yul/function-definition/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/yul/identifier/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/yul/if-statement/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/yul/leave/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/yul/literal/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/yul/switch/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/yul/typed-name/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/api-reference/ir/yul/variable-declaration/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/testing-framework/accounts-and-addresses/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/testing-framework/chains-and-blocks/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/testing-framework/coverage-analysis/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/testing-framework/cross-chain-testing/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/testing-framework/debugging/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/testing-framework/deployment/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/testing-framework/events-and-errors/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/testing-framework/fuzzing/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/testing-framework/getting-started/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/testing-framework/helper-functions/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/testing-framework/interacting-with-contracts/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/testing-framework/migrating-from-ape-and-brownie/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/testing-framework/migrating-from-woke-2/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/testing-framework/overview/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/testing-framework/performance-considerations/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/testing-framework/transaction-objects/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://ackeeblockchain.com/woke/docs/latest/testing-framework/troubleshooting/</loc>
-         <lastmod>2023-08-04</lastmod>
+         <lastmod>2023-09-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
