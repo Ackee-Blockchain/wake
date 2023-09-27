@@ -280,7 +280,6 @@ class Wei(int):
 @functools.total_ordering
 class Address:
     ZERO: Address
-    _private_key: Optional[bytes] = None
 
     def __init__(self, address: Union[str, int]) -> None:
         if isinstance(address, int):
@@ -332,9 +331,11 @@ class Address:
 
     @classmethod
     def from_key(cls, private_key: Union[str, int, bytes]) -> Address:
+        global _private_keys_index
+
         acc = eth_account.Account.from_key(private_key)
         ret = cls(acc.address)
-        ret._private_key = bytes(acc.key)
+        _private_keys_index[ret] = bytes(acc.key)
         return ret
 
     @classmethod
@@ -344,9 +345,11 @@ class Address:
         passphrase: str = "",
         path: str = "m/44'/60'/0'/0/0",
     ) -> Address:
+        global _private_keys_index
+
         acc = eth_account.Account.from_mnemonic(mnemonic, passphrase, path)
         ret = cls(acc.address)
-        ret._private_key = bytes(acc.key)
+        _private_keys_index[ret] = bytes(acc.key)
         return ret
 
     @classmethod
@@ -356,6 +359,8 @@ class Address:
         password: Optional[str] = None,
         keystore: Optional[PathLike] = None,
     ) -> Address:
+        global _private_keys_index
+
         if keystore is None:
             path = Path(get_config().global_data_path) / "keystore"
         else:
@@ -383,12 +388,12 @@ class Address:
         key = eth_account.Account.decrypt(data, password)
 
         ret = cls(data["address"])
-        ret._private_key = bytes(key)
+        _private_keys_index[ret] = bytes(key)
         return ret
 
     @property
     def private_key(self) -> Optional[bytes]:
-        return self._private_key
+        return _private_keys_index.get(self, None)
 
 
 Address.ZERO = Address(0)
@@ -490,7 +495,7 @@ class Account:
 
     @property
     def private_key(self) -> Optional[bytes]:
-        return self._address.private_key
+        return _private_keys_index.get(self._address, None)
 
     @property
     def address(self) -> Address:
@@ -1092,6 +1097,10 @@ def check_connected(f):
     return wrapper
 
 
+_private_keys_index: Dict[Address, bytes] = {}
+_test_accounts_generated_count: int = 0
+
+
 class Chain(ABC):
     _connected: bool
     _chain_interface: ChainInterfaceAbc
@@ -1216,6 +1225,8 @@ class Chain(ABC):
         min_gas_price: Optional[Union[int, str]],
         block_base_fee_per_gas: Optional[Union[int, str]],
     ):
+        global _test_accounts_generated_count
+
         if self._connected:
             raise AlreadyConnectedError("Already connected to a chain")
 
@@ -1330,6 +1341,16 @@ class Chain(ABC):
             self._accounts = [
                 Account(acc, self) for acc in self._chain_interface.get_accounts()
             ]
+
+            if len(self._accounts) > _test_accounts_generated_count:
+                # generate private keys for accounts without private key
+                for i in range(_test_accounts_generated_count, len(self._accounts)):
+                    Address.from_mnemonic(
+                        "test test test test test test test test test test test junk",
+                        path=f"m/44'/60'/0'/0/{i}",
+                    )
+                _test_accounts_generated_count = len(self._accounts)
+
             self._accounts_set = set(self._accounts)
             self._nonces = KeyedDefaultDict(
                 lambda addr: self._chain_interface.get_transaction_count(  # pyright: ignore reportGeneralTypeIssues
