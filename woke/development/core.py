@@ -464,8 +464,27 @@ class Account:
 
     @classmethod
     def new(cls, chain: Optional[Chain] = None) -> Account:
-        acc = eth_account.Account.create()
-        return cls(Address.from_key(acc.key), chain)
+        if chain is None:
+            import woke.deployment
+            import woke.testing
+
+            if (
+                woke.deployment.default_chain.connected
+                and woke.testing.default_chain.connected
+            ):
+                raise ValueError(
+                    "Both default_chain and woke.deployment.default_chain are connected. Please specify which chain to use."
+                )
+            if woke.deployment.default_chain.connected:
+                chain = woke.deployment.default_chain
+            elif woke.testing.default_chain.connected:
+                chain = woke.testing.default_chain
+            else:
+                raise NotConnectedError("default_chain not connected")
+
+        private_key = chain._new_private_key()
+        address = Address.from_key(private_key)
+        return cls(address, chain)
 
     @classmethod
     def from_key(
@@ -1136,6 +1155,10 @@ class Chain(ABC):
 
     @abstractmethod
     def _connect_finalize(self) -> None:
+        ...
+
+    @abstractmethod
+    def _new_private_key(self, extra_entropy: bytes = b"") -> bytes:
         ...
 
     @abstractmethod

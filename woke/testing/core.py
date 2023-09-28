@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import random
 from contextlib import contextmanager
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, cast
 
 import eth_utils
+from Crypto.Hash import keccak
 
 import woke.development.core
 from woke.development.chain_interfaces import TxParams
@@ -81,6 +83,10 @@ class Chain(woke.development.core.Chain):
     def _connect_finalize(self) -> None:
         connected_chains.remove(self)
         chain_interfaces_manager.free(self._chain_interface)
+
+    def _new_private_key(self, extra_entropy: bytes = b"") -> bytes:
+        data = random.getrandbits(256).to_bytes(32, "little") + extra_entropy
+        return keccak.new(data=data, digest_bits=256).digest()
 
     @check_connected
     def snapshot(self) -> str:
