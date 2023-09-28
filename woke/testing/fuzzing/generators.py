@@ -143,7 +143,7 @@ def random_bytes(
             len = min
         else:
             len = random.randint(min, max)
-        return bytearray(random.getrandbits(8) for _ in range(len))
+        return bytearray(random.getrandbits(8 * len).to_bytes(len, "little"))
 
     ret = gen()
     if predicate is None:
