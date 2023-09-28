@@ -463,7 +463,7 @@ class Account:
         return hash((self._address, self._chain))
 
     @classmethod
-    def new(cls, chain: Optional[Chain] = None) -> Account:
+    def new(cls, chain: Optional[Chain] = None, extra_entropy: bytes = b"") -> Account:
         if chain is None:
             import woke.deployment
             import woke.testing
@@ -482,7 +482,7 @@ class Account:
             else:
                 raise NotConnectedError("default_chain not connected")
 
-        private_key = chain._new_private_key()
+        private_key = chain._new_private_key(extra_entropy)
         address = Address.from_key(private_key)
         return cls(address, chain)
 
