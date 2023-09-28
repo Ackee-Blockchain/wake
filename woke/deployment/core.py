@@ -1,9 +1,11 @@
+import os
 import time
 from contextlib import contextmanager, nullcontext
 from typing import Any, Dict, Iterable, Optional, Union, cast
 from urllib.error import HTTPError
 
 import eth_utils
+from Crypto.Hash import keccak
 from rich.console import Group
 from rich.pretty import pprint
 from rich.progress import BarColumn, Progress, TextColumn, TimeElapsedColumn
@@ -71,6 +73,10 @@ class Chain(woke.development.core.Chain):
 
     def _connect_finalize(self) -> None:
         chain_interfaces_manager.close(self._chain_interface)
+
+    def _new_private_key(self, extra_entropy: bytes = b"") -> bytes:
+        data = os.urandom(32) + extra_entropy
+        return keccak.new(data=data, digest_bits=256).digest()
 
     @check_connected
     def snapshot(self) -> str:
