@@ -52,6 +52,7 @@ def excepthook(attach: bool, type, value, traceback):
 @click.option(
     "--debug",
     "-d",
+    is_flag=True,
     default=False,
     help="Set logging level to debug and attach debugger on exception.",
 )
