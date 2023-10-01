@@ -426,6 +426,9 @@ class CallTrace:
                                 output_types, tx_params["data"][constructor_offset:]
                             )
                         )
+                        for i, type in enumerate(output_types):
+                            if type == "address":
+                                args[i] = Account(Address(args[i]), tx.chain)
                     except eth_abi.exceptions.DecodingError:
                         args = None
                 root_trace = CallTrace(
@@ -502,18 +505,19 @@ class CallTrace:
                     for arg in fix_library_abi(fn_abi["inputs"])
                 ]
                 try:
-                    decoded_data = list(
-                        eth_abi.abi.decode(output_types, tx_params["data"][4:])
-                    )
+                    args = list(eth_abi.abi.decode(output_types, tx_params["data"][4:]))
+                    for i, type in enumerate(output_types):
+                        if type == "address":
+                            args[i] = Account(Address(args[i]), tx.chain)
                 except eth_abi.exceptions.DecodingError:
-                    decoded_data = None
+                    args = None
                 root_trace = CallTrace(
                     obj,
                     contract_name,
                     fn_abi["name"],
                     tx_params["data"][:4],
                     tx.to.address,
-                    decoded_data,
+                    args,
                     value,
                     CallTraceKind.CALL,
                     1,
@@ -588,13 +592,14 @@ class CallTrace:
                                 for arg in fix_library_abi(fn_abi)
                             ]
                             try:
-                                arguments = list(
-                                    eth_abi.abi.decode(output_types, data[4:])
-                                )
+                                args = list(eth_abi.abi.decode(output_types, data[4:]))
+                                for i, type in enumerate(output_types):
+                                    if type == "address":
+                                        args[i] = Account(Address(args[i]), tx.chain)
                             except eth_abi.exceptions.DecodingError:
-                                arguments = None
+                                args = None
                         else:
-                            arguments = [data]
+                            args = [data]
 
                         call_trace = CallTrace(
                             None,
@@ -602,7 +607,7 @@ class CallTrace:
                             "log",
                             data[:4],
                             addr,
-                            arguments,
+                            args,
                             value,
                             log["op"],
                             current_trace.depth + 1,
@@ -660,11 +665,12 @@ class CallTrace:
                                 for arg in fix_library_abi(fn_abi["inputs"])
                             ]
                             try:
-                                arguments = list(
-                                    eth_abi.abi.decode(output_types, data[4:])
-                                )
+                                args = list(eth_abi.abi.decode(output_types, data[4:]))
+                                for i, type in enumerate(output_types):
+                                    if type == "address":
+                                        args[i] = Account(Address(args[i]), tx.chain)
                             except eth_abi.exceptions.DecodingError:
-                                arguments = None
+                                args = None
                             fn_name = fn_abi["name"]
                             is_special = False
                         elif "fallback" in contract_abi and (
@@ -673,29 +679,29 @@ class CallTrace:
                         ):
                             selector = None
                             fn_name = "fallback"
-                            arguments = [data]
+                            args = [data]
                             is_special = True
                         else:
                             selector = None
                             fn_name = None
-                            arguments = [data]
+                            args = [data]
                             is_special = True
                     else:
                         selector = None
                         if args_size == 0 and "receive" in contract_abi:
                             fn_name = "receive"
-                            arguments = []
+                            args = []
                             is_special = True
                         elif "fallback" in contract_abi and (
                             value == 0
                             or contract_abi["fallback"]["stateMutability"] == "payable"
                         ):
                             fn_name = "fallback"
-                            arguments = [data]
+                            args = [data]
                             is_special = True
                         else:
                             fn_name = None
-                            arguments = [data]
+                            args = [data]
                             is_special = True
 
                     call_trace = CallTrace(
@@ -704,7 +710,7 @@ class CallTrace:
                         fn_name,
                         selector,
                         addr,
-                        arguments,
+                        args,
                         value,
                         log["op"],
                         current_trace.depth + 1,
@@ -784,6 +790,9 @@ class CallTrace:
                                     output_types, creation_code[constructor_offset:]
                                 )
                             )
+                            for i, type in enumerate(output_types):
+                                if type == "address":
+                                    args[i] = Account(Address(args[i]), tx.chain)
                         except eth_abi.exceptions.DecodingError:
                             args = None
                 except ValueError:
