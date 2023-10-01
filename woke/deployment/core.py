@@ -258,8 +258,7 @@ class Chain(woke.development.core.Chain):
                 tx_copy.pop("maxFeePerGas", None)
                 tx["gas"] = int(self._chain_interface.estimate_gas(tx_copy) * 1.1)
             except JsonRpcError as e:
-                self._process_call_revert(e)
-                raise
+                raise self._process_call_revert(e) from None
         elif isinstance(params["gas"], int):
             tx["gas"] = params["gas"]
         else:
@@ -285,8 +284,7 @@ class Chain(woke.development.core.Chain):
                 try:
                     if isinstance(e, JsonRpcError):
                         # will re-raise if not a revert error
-                        self._process_call_revert(e)
-                        raise
+                        raise self._process_call_revert(e) from None
                     else:
                         # HTTPError -> eth_createAccessList not supported
                         if "accessList" not in params:

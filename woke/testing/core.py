@@ -271,8 +271,7 @@ class Chain(woke.development.core.Chain):
             try:
                 tx["gas"] = int(self._chain_interface.estimate_gas(tx) * 1.1)
             except JsonRpcError as e:
-                self._process_call_revert(e)
-                raise
+                raise self._process_call_revert(e) from None
         else:
             raise ValueError(f"Invalid gas value: {params['gas']}")
 
@@ -288,8 +287,7 @@ class Chain(woke.development.core.Chain):
                 if "gas" in params and params["gas"] == "auto":
                     tx["gas"] = int(response["gasUsed"], 16)
             except JsonRpcError as e:
-                self._process_call_revert(e)
-                raise
+                raise self._process_call_revert(e) from None
 
         return tx
 

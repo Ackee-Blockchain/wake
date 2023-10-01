@@ -436,11 +436,8 @@ class TransactionAbc(ABC, Generic[T]):
         raw_error = self.raw_error
         assert raw_error is not None
 
-        try:
-            self._chain._process_revert_data(self, raw_error.data)
-        except TransactionRevertedError as e:
-            self._error = e
-            return e
+        self._error = self._chain._process_revert_data(self, raw_error.data)
+        return self._error
 
     @property
     @_fetch_tx_receipt
