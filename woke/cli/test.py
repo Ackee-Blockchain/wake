@@ -87,6 +87,8 @@ def run_test(
     args.append("-p")
     args.append("no:pytest_ethereum")
 
+    sys.path.insert(0, str(config.project_root_path))
+
     ret = pytest.main(args, plugins=[PytestWokePlugin(config)])
 
     if coverage:
