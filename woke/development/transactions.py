@@ -455,12 +455,7 @@ class TransactionAbc(ABC, Generic[T]):
 
         assert self._tx_receipt is not None
         # due to a bug, Anvil does not return revert data for failed contract creations
-        # "contractAddress" key is always present, so the first if branch is never taken
-        # keep this code for when the bug is fixed
-        if (
-            isinstance(chain_interface, AnvilChainInterface)
-            and "contractAddress" not in self._tx_receipt
-        ):
+        if isinstance(chain_interface, AnvilChainInterface) and self.to is not None:
             self._fetch_trace_transaction()
             assert self._trace_transaction is not None
             revert_data = bytes.fromhex(
