@@ -74,7 +74,11 @@ from .json_rpc.communicator import JsonRpcError
 from .primitive_types import Length, ValueRange
 
 if TYPE_CHECKING:
-    from .transactions import ChainTransactions, TransactionAbc
+    from .transactions import (
+        ChainTransactions,
+        TransactionAbc,
+        TransactionRevertedError,
+    )
 
 
 # selector => (contract_fqn => pytypes_object)
@@ -710,13 +714,11 @@ class Account:
                 coverage_handler.add_coverage(params, self._chain, ret)
                 output = bytes.fromhex(ret["returnValue"][2:])
                 if ret["failed"]:
-                    self._chain._process_revert_data(None, output)
-                    raise
+                    raise self._chain._process_revert_data(None, output) from None
             else:
                 output = self._chain.chain_interface.call(params, block)
         except JsonRpcError as e:
-            self._chain._process_call_revert(e)
-            raise
+            raise self._chain._process_call_revert(e) from None
 
         return bytearray(output)
 
@@ -759,8 +761,7 @@ class Account:
         try:
             return self._chain.chain_interface.estimate_gas(params, block)
         except JsonRpcError as e:
-            self._chain._process_call_revert(e)
-            raise
+            raise self._chain._process_call_revert(e) from None
 
     def access_list(
         self,
@@ -804,8 +805,7 @@ class Account:
                 for e in response["accessList"]
             }, int(response["gasUsed"], 16)
         except JsonRpcError as e:
-            self._chain._process_call_revert(e)
-            raise
+            raise self._chain._process_call_revert(e) from None
 
     def transact(
         self,
@@ -1770,7 +1770,7 @@ class Chain(ABC):
         self,
         tx: Optional[TransactionAbc],
         revert_data: bytes,
-    ):
+    ) -> TransactionRevertedError:
         from .transactions import UnknownTransactionRevertedError
 
         selector = revert_data[0:4]
@@ -1786,9 +1786,8 @@ class Chain(ABC):
                 raise e from None
 
             # ambiguous error, try to find the source contract
-            debug_trace = self._chain_interface.debug_trace_transaction(
-                tx.tx_hash, {"enableMemory": True}
-            )
+            tx._fetch_debug_trace_transaction()
+            debug_trace = tx._debug_trace_transaction
             try:
                 fqn_overrides: ChainMap[Address, Optional[str]] = ChainMap()
                 for i in range(tx.tx_index):
@@ -1799,7 +1798,11 @@ class Chain(ABC):
                         prev_tx._debug_trace_transaction,  # pyright: ignore reportGeneralTypeIssues
                         fqn_overrides,
                     )
-                fqn = process_debug_trace_for_revert(tx, debug_trace, fqn_overrides)
+                fqn = process_debug_trace_for_revert(
+                    tx,
+                    debug_trace,  # pyright: ignore reportGeneralTypeIssues
+                    fqn_overrides,
+                )
             except ValueError:
                 raise UnknownTransactionRevertedError(revert_data) from None
         else:
@@ -1818,8 +1821,7 @@ class Chain(ABC):
         decoded = Abi.decode(types, revert_data[4:])
         generated_error = self._convert_from_web3_type(tx, decoded, obj)
         generated_error.tx = tx
-        # raise native pytypes exception on transaction revert
-        raise generated_error from None
+        return generated_error
 
     def _process_events(self, tx: TransactionAbc, logs: List) -> list:
         if len(logs) == 0:
@@ -1845,9 +1847,8 @@ class Chain(ABC):
                 break
 
         if non_unique:
-            debug_trace = self._chain_interface.debug_trace_transaction(
-                tx.tx_hash, {"enableMemory": True}
-            )
+            tx._fetch_debug_trace_transaction()
+            debug_trace = tx._debug_trace_transaction
             fqn_overrides: ChainMap[Address, Optional[str]] = ChainMap()
             for i in range(tx.tx_index):
                 prev_tx = tx.block.txs[i]
@@ -1858,7 +1859,9 @@ class Chain(ABC):
                     fqn_overrides,
                 )
             event_traces = process_debug_trace_for_events(
-                tx, debug_trace, fqn_overrides
+                tx,
+                debug_trace,  # pyright: ignore reportGeneralTypeIssues
+                fqn_overrides,
             )
             assert len(event_traces) == len(logs)
         else:
@@ -1997,7 +2000,7 @@ class Chain(ABC):
 
         return console_logs
 
-    def _process_call_revert(self, e: JsonRpcError):
+    def _process_call_revert(self, e: JsonRpcError) -> TransactionRevertedError:
         try:
             # Hermez does not provide revert data for estimate
             if (
@@ -2026,7 +2029,7 @@ class Chain(ABC):
         if revert_data.startswith("0x"):
             revert_data = revert_data[2:]
 
-        self._process_revert_data(None, bytes.fromhex(revert_data))
+        return self._process_revert_data(None, bytes.fromhex(revert_data))
 
     def _send_transaction(
         self, tx_params: TxParams, from_: Optional[Union[Account, Address, str]]
@@ -2119,13 +2122,11 @@ class Chain(ABC):
                 coverage_handler.add_coverage(tx_params, self, ret)
                 output = bytes.fromhex(ret["returnValue"][2:])
                 if ret["failed"]:
-                    self._process_revert_data(None, output)
-                    raise
+                    raise self._process_revert_data(None, output) from None
             else:
                 output = self._chain_interface.call(tx_params, block)
         except JsonRpcError as e:
-            self._process_call_revert(e)
-            raise
+            raise self._process_call_revert(e) from None
 
         # deploy
         if "to" not in params:
@@ -2148,8 +2149,7 @@ class Chain(ABC):
         try:
             return self._chain_interface.estimate_gas(tx_params, block)
         except JsonRpcError as e:
-            self._process_call_revert(e)
-            raise
+            raise self._process_call_revert(e) from None
 
     @check_connected
     def _access_list(
@@ -2169,8 +2169,7 @@ class Chain(ABC):
                 for e in response["accessList"]
             }, int(response["gasUsed"], 16)
         except JsonRpcError as e:
-            self._process_call_revert(e)
-            raise
+            raise self._process_call_revert(e) from None
 
     @check_connected
     def _transact(
