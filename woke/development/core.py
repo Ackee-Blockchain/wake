@@ -863,17 +863,17 @@ class Account:
             self.chain,
         )
 
-        coverage_handler = get_coverage_handler()
-        if coverage_handler is not None:
-            tx._fetch_debug_trace_transaction()
-            coverage_handler.add_coverage(
-                tx_params,
-                self._chain,
-                tx._debug_trace_transaction,  # pyright: ignore reportGeneralTypeIssues
-            )
-
         if confirmations != 0:
             tx.wait(confirmations)
+
+            coverage_handler = get_coverage_handler()
+            if coverage_handler is not None:
+                tx._fetch_debug_trace_transaction()
+                coverage_handler.add_coverage(
+                    tx_params,
+                    self._chain,
+                    tx._debug_trace_transaction,  # pyright: ignore reportGeneralTypeIssues
+                )
 
             if self._chain.tx_callback is not None:
                 self._chain.tx_callback(tx)
@@ -2209,17 +2209,17 @@ class Chain(ABC):
             self,
         )
 
-        coverage_handler = get_coverage_handler()
-        if coverage_handler is not None:
-            tx._fetch_debug_trace_transaction()
-            coverage_handler.add_coverage(
-                tx_params,
-                self,
-                tx._debug_trace_transaction,  # pyright: ignore reportGeneralTypeIssues
-            )
-
         if confirmations != 0:
             tx.wait(confirmations)
+
+            coverage_handler = get_coverage_handler()
+            if coverage_handler is not None:
+                tx._fetch_debug_trace_transaction()
+                coverage_handler.add_coverage(
+                    tx_params,
+                    self,
+                    tx._debug_trace_transaction,  # pyright: ignore reportGeneralTypeIssues
+                )
 
             if self.tx_callback is not None:
                 self.tx_callback(tx)
