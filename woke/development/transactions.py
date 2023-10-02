@@ -581,16 +581,19 @@ class TransactionAbc(ABC, Generic[T]):
         return bytearray(output)
 
     @property
+    @_fetch_tx_data
     @_fetch_tx_receipt
     def call_trace(self) -> CallTrace:
         if self._debug_trace_transaction is None:
             self._fetch_debug_trace_transaction()
         assert self._debug_trace_transaction is not None
+        assert self._tx_data is not None
 
         return CallTrace.from_debug_trace(
             self,
             self._debug_trace_transaction,  # pyright: ignore reportGeneralTypeIssues
             self._tx_params,
+            int(self._tx_data["gas"], 16),
         )
 
     @property

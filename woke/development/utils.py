@@ -181,6 +181,8 @@ def get_contract_info_from_explorer(
             abi[abi_item["type"]] = abi_item
         elif abi_item["type"] == "function":
             abi[function_abi_to_4byte_selector(abi_item)] = abi_item
+        elif abi_item["type"] == "error":
+            abi[function_abi_to_4byte_selector(abi_item)] = abi_item
 
     return data["ContractName"], abi
 
