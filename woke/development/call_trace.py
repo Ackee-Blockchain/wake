@@ -38,63 +38,71 @@ if TYPE_CHECKING:
 
 def get_precompiled_info(
     addr: Address, data: bytes
-) -> Tuple[str, Optional[Tuple[Any, ...]]]:
+) -> Tuple[str, Optional[Tuple[Any, ...]], List[str]]:
     if addr == Address(1):
         if len(data) != 128:
-            return "ecRecover", None
-        return "ecRecover", (data[:32], data[32:64], data[64:96], data[96:128])
+            return "ecRecover", None, ["address"]
+        return (
+            "ecRecover",
+            (data[:32], data[32:64], data[64:96], data[96:128]),
+            ["address"],
+        )
     elif addr == Address(2):
-        return "SHA2-256", (data,)
+        return "SHA2-256", (data,), ["bytes32"]
     elif addr == Address(3):
-        return "RIPEMD-160", (data,)
+        return "RIPEMD-160", (data,), ["bytes32"]
     elif addr == Address(4):
-        return "identity", (data,)
+        return "identity", (data,), ["bytes"]
     elif addr == Address(5):
         if len(data) < 96:
-            return "modexp", None
+            return "modexp", None, ["bytes"]
         base_length = int.from_bytes(data[:32], "big")
         exp_length = int.from_bytes(data[32:64], "big")
         mod_length = int.from_bytes(data[64:96], "big")
-        return "modexp", (
-            base_length,
-            exp_length,
-            mod_length,
-            data[96 : 96 + base_length],
-            data[96 + base_length : 96 + base_length + exp_length],
-            data[
-                96
-                + base_length
-                + exp_length : 96
-                + base_length
-                + exp_length
-                + mod_length
-            ],
+        return (
+            "modexp",
+            (
+                base_length,
+                exp_length,
+                mod_length,
+                data[96 : 96 + base_length],
+                data[96 + base_length : 96 + base_length + exp_length],
+                data[
+                    96
+                    + base_length
+                    + exp_length : 96
+                    + base_length
+                    + exp_length
+                    + mod_length
+                ],
+            ),
+            ["bytes"],
         )
     elif addr == Address(6):
         if len(data) != 128:
-            return "ecAdd", None
+            return "ecAdd", None, ["bytes32", "bytes32"]
         x1 = int.from_bytes(data[:32], "big")
         y1 = int.from_bytes(data[32:64], "big")
         x2 = int.from_bytes(data[64:96], "big")
         y2 = int.from_bytes(data[96:128], "big")
-        return "ecAdd", (x1, y1, x2, y2)
+        return "ecAdd", (x1, y1, x2, y2), ["bytes32", "bytes32"]
     elif addr == Address(7):
         if len(data) != 96:
-            return "ecMul", None
+            return "ecMul", None, ["bytes32", "bytes32"]
         x1 = int.from_bytes(data[:32], "big")
         y1 = int.from_bytes(data[32:64], "big")
         s = int.from_bytes(data[64:96], "big")
-        return "ecMul", (x1, y1, s)
+        return "ecMul", (x1, y1, s), ["bytes32", "bytes32"]
     elif addr == Address(8):
         if len(data) % (6 * 32) != 0:
-            return "ecPairing", None
+            return "ecPairing", None, ["bool"]
         coords = tuple(
             int.from_bytes(data[i : i + 32], "big") for i in range(0, len(data), 32)
         )
-        return "ecPairing", coords
+        return "ecPairing", coords, ["bool"]
     elif addr == Address(9):
         if len(data) != 4 + 64 + 128 + 16 + 1:
-            return "Blake2F", None
+            return "Blake2F", None, ["bytes"]
         rounds = int.from_bytes(data[:4], "big")
         offset = 4
         h = tuple(
@@ -113,7 +121,7 @@ def get_precompiled_info(
         )
         offset += 2 * 8
         f = data[offset]
-        return "Blake2F", (rounds, h, m, t, f)
+        return "Blake2F", (rounds, h, m, t, f), ["bytes"]
     else:
         raise ValueError(f"Unknown precompiled contract address: {addr}")
 
@@ -136,6 +144,7 @@ class CallTrace:
     _function_is_special: bool
     _arguments: Optional[List]
     _status: bool
+    _gas: int
     _value: Wei
     _kind: CallTraceKind
     _depth: int
@@ -143,6 +152,12 @@ class CallTrace:
     _subtraces: List[CallTrace]
     _parent: Optional[CallTrace]
     _address: Optional[Address]
+    _output_types: List[str]
+    _error_name: Optional[str]
+    _error_arguments: Optional[List]
+    _revert_data: Optional[bytes]
+    _return_value: Optional[List]
+    _abi: Dict[bytes, Any]
 
     def __init__(
         self,
@@ -152,10 +167,13 @@ class CallTrace:
         selector: Optional[bytes],
         address: Optional[Address],
         arguments: Optional[Iterable],
+        gas: int,
         value: int,
         kind: CallTraceKind,
         depth: int,
         chain: Chain,
+        output_types: List[str],
+        abi: Dict[bytes, Any],
         function_is_special: bool = False,
     ):
         self._contract = contract
@@ -164,14 +182,31 @@ class CallTrace:
         self._selector = selector
         self._address = address
         self._arguments = list(arguments) if arguments is not None else None
+        self._gas = gas
         self._value = Wei(value)
         self._kind = kind
         self._depth = depth
         self._chain = chain
+        self._output_types = output_types
         self._function_is_special = function_is_special
         self._status = True
         self._subtraces = []
         self._parent = None
+        self._error_name = None
+        self._error_arguments = None
+        self._revert_data = None
+        self._return_value = None
+        self._abi = abi
+        self._abi[bytes.fromhex("08c379a0")] = {
+            "name": "Error",
+            "type": "error",
+            "inputs": [{"internalType": "string", "name": "message", "type": "string"}],
+        }
+        self._abi[bytes.fromhex("4e487b71")] = {
+            "name": "Panic",
+            "type": "error",
+            "inputs": [{"internalType": "uint256", "name": "code", "type": "uint256"}],
+        }
 
     def __str__(self):
         console = Console()
@@ -251,11 +286,34 @@ class CallTrace:
                 )
             )
 
+        if self._return_value is not None and len(self._return_value) > 0:
+            ret.append("\n➞ ")
+            for i, arg in enumerate(self._return_value):
+                t = Text(repr(arg))
+                ReprHighlighter().highlight(t)
+                ret.append_text(t)
+                if i < len(self._return_value) - 1:
+                    ret.append(", ")
+        elif self._error_name is not None:
+            ret.append("\n➞ ")
+            ret.append_text(Text.from_markup(f"[red]{self._error_name}[/red]("))
+            for i, arg in enumerate(self.error_arguments or []):
+                t = Text(repr(arg))
+                ReprHighlighter().highlight(t)
+                ret.append_text(t)
+                if i < len(self.error_arguments or []) - 1:
+                    ret.append(", ")
+            ret.append(")")
+
         return ret
 
     @property
     def subtraces(self) -> Tuple[CallTrace, ...]:
         return tuple(self._subtraces)
+
+    @property
+    def parent(self) -> Optional[CallTrace]:
+        return self._parent
 
     @property
     def contract(self) -> Optional[Contract]:
@@ -303,12 +361,31 @@ class CallTrace:
     def chain(self) -> Chain:
         return self._chain
 
+    @property
+    def gas(self) -> int:
+        return self._gas
+
+    @property
+    def error_name(self) -> Optional[str]:
+        return self._error_name
+
+    @property
+    def error_arguments(self) -> Optional[Tuple]:
+        if self._error_arguments is None:
+            return None
+        return tuple(self._error_arguments)
+
+    @property
+    def return_value(self) -> Optional[List]:
+        return self._return_value
+
     @classmethod
     def from_debug_trace(
         cls,
         tx: TransactionAbc,
         trace: Dict[str, Any],
         tx_params: TxParams,
+        gas_limit: int,
     ):
         fqn_overrides: ChainMap[Address, Optional[str]] = ChainMap()
 
@@ -373,15 +450,18 @@ class CallTrace:
                 None,
                 None if tx.to is None else tx.to.address,
                 [b"" if "data" not in tx_params else tx_params["data"]],
+                gas_limit,
                 value,
                 CallTraceKind.CALL,
                 1,
                 tx.chain,
+                [],
+                {},
                 True,
             )
         elif precompiled_info is not None:
             assert tx.to is not None
-            precompiled_name, args = precompiled_info
+            precompiled_name, args, output_types = precompiled_info
             root_trace = CallTrace(
                 None,
                 "<precompiled>",
@@ -389,10 +469,13 @@ class CallTrace:
                 None,
                 tx.to.address,
                 args,
+                gas_limit,
                 value,
                 CallTraceKind.CALL,
                 1,
                 tx.chain,
+                output_types,
+                {},
                 False,
             )
         else:
@@ -416,17 +499,17 @@ class CallTrace:
                         tx_params["data"]
                     )
                     fn_abi = contract_abi["constructor"]
-                    output_types = [
+                    input_types = [
                         eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
                         for arg in fix_library_abi(fn_abi["inputs"])
                     ]
                     try:
                         args = list(
                             eth_abi.abi.decode(
-                                output_types, tx_params["data"][constructor_offset:]
+                                input_types, tx_params["data"][constructor_offset:]
                             )
                         )
-                        for i, type in enumerate(output_types):
+                        for i, type in enumerate(input_types):
                             if type == "address":
                                 args[i] = Account(Address(args[i]), tx.chain)
                     except eth_abi.exceptions.DecodingError:
@@ -438,10 +521,13 @@ class CallTrace:
                     None,
                     tx.return_value.address if tx.status == 1 else None,
                     args,
+                    gas_limit,
                     value,
                     CallTraceKind.CREATE,
                     1,
                     tx.chain,
+                    [],
+                    contract_abi,
                     True,
                 )
             elif (
@@ -456,10 +542,13 @@ class CallTrace:
                     None,
                     tx.to.address,
                     [],
+                    gas_limit,
                     value,
                     CallTraceKind.CALL,
                     1,
                     tx.chain,
+                    [],
+                    contract_abi,
                     True,
                 )
             elif (
@@ -478,10 +567,13 @@ class CallTrace:
                         None,
                         tx.to.address,
                         [b"" if "data" not in tx_params else tx_params["data"]],
+                        gas_limit,
                         value,
                         CallTraceKind.CALL,
                         1,
                         tx.chain,
+                        [],
+                        contract_abi,
                         True,
                     )
                 else:
@@ -492,21 +584,32 @@ class CallTrace:
                         None,
                         tx.to.address,
                         [b"" if "data" not in tx_params else tx_params["data"]],
+                        gas_limit,
                         value,
                         CallTraceKind.CALL,
                         1,
                         tx.chain,
+                        [],
+                        contract_abi,
                         True,
                     )
             else:
                 fn_abi = contract_abi[tx_params["data"][:4]]
-                output_types = [
+                input_types = [
                     eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
                     for arg in fix_library_abi(fn_abi["inputs"])
                 ]
+                output_types = (
+                    [
+                        eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
+                        for arg in fix_library_abi(fn_abi["outputs"])
+                    ]
+                    if "outputs" in fn_abi
+                    else []
+                )
                 try:
-                    args = list(eth_abi.abi.decode(output_types, tx_params["data"][4:]))
-                    for i, type in enumerate(output_types):
+                    args = list(eth_abi.abi.decode(input_types, tx_params["data"][4:]))
+                    for i, type in enumerate(input_types):
                         if type == "address":
                             args[i] = Account(Address(args[i]), tx.chain)
                 except eth_abi.exceptions.DecodingError:
@@ -518,10 +621,13 @@ class CallTrace:
                     tx_params["data"][:4],
                     tx.to.address,
                     args,
+                    gas_limit,
                     value,
                     CallTraceKind.CALL,
                     1,
                     tx.chain,
+                    output_types,
+                    contract_abi,
                 )
 
         current_trace = root_trace
@@ -529,7 +635,8 @@ class CallTrace:
         for i, log in enumerate(trace["structLogs"]):
             assert current_trace is not None
             if current_trace.depth != log["depth"]:
-                if trace["structLogs"][i - 1]["op"] in {
+                prev_op = trace["structLogs"][i - 1]["op"]
+                if prev_op in {
                     "CALL",
                     "CALLCODE",
                     "DELEGATECALL",
@@ -537,6 +644,31 @@ class CallTrace:
                 }:
                     # precompiled contract was called in the previous step
                     assert current_trace is not None
+
+                    status = int(log["stack"][-1], 16) != 0
+                    if prev_op in {"CALL", "CALLCODE"}:
+                        ret_offset = int(trace["structLogs"][i - 1]["stack"][-6], 16)
+                        ret_size = int(trace["structLogs"][i - 1]["stack"][-7], 16)
+                    else:
+                        ret_offset = int(trace["structLogs"][i - 1]["stack"][-5], 16)
+                        ret_size = int(trace["structLogs"][i - 1]["stack"][-6], 16)
+
+                    data = bytes(read_from_memory(ret_offset, ret_size, log["memory"]))
+
+                    output_types = current_trace._output_types
+                    try:
+                        return_value = list(eth_abi.abi.decode(output_types, data))
+                        for j, type in enumerate(output_types):
+                            if type == "address":
+                                return_value[j] = Account(
+                                    Address(return_value[j]), tx.chain
+                                )
+                    except eth_abi.exceptions.DecodingError:
+                        return_value = [data]
+
+                    current_trace._return_value = return_value
+                    current_trace._status = status
+
                     current_trace = current_trace._parent
                     fqn_overrides.maps[1].update(fqn_overrides.maps[0])
                     fqn_overrides.maps.pop(0)
@@ -547,14 +679,17 @@ class CallTrace:
 
             if log["op"] in {"CALL", "CALLCODE", "DELEGATECALL", "STATICCALL"}:
                 if log["op"] in {"CALL", "CALLCODE"}:
+                    gas = int(log["stack"][-1], 16)
                     value = int(log["stack"][-3], 16)
                     args_offset = int(log["stack"][-4], 16)
                     args_size = int(log["stack"][-5], 16)
                 elif log["op"] == "DELEGATECALL":
+                    gas = int(log["stack"][-1], 16)
                     value = values[-1]
                     args_offset = int(log["stack"][-3], 16)
                     args_size = int(log["stack"][-4], 16)
                 else:
+                    gas = int(log["stack"][-1], 16)
                     value = 0
                     args_offset = int(log["stack"][-3], 16)
                     args_size = int(log["stack"][-4], 16)
@@ -585,17 +720,17 @@ class CallTrace:
                     if addr == Address("0x000000000000000000636F6e736F6c652e6c6f67"):
                         if data[:4] in hardhat_console.abis:
                             fn_abi = hardhat_console.abis[data[:4]]
-                            output_types = [
+                            input_types = [
                                 eth_utils.abi.collapse_if_tuple(
                                     cast(Dict[str, Any], arg)
                                 )
                                 for arg in fix_library_abi(fn_abi)
                             ]
                             try:
-                                args = list(eth_abi.abi.decode(output_types, data[4:]))
-                                for i, type in enumerate(output_types):
+                                args = list(eth_abi.abi.decode(input_types, data[4:]))
+                                for j, type in enumerate(input_types):
                                     if type == "address":
-                                        args[i] = Account(Address(args[i]), tx.chain)
+                                        args[j] = Account(Address(args[j]), tx.chain)
                             except eth_abi.exceptions.DecodingError:
                                 args = None
                         else:
@@ -608,10 +743,13 @@ class CallTrace:
                             data[:4],
                             addr,
                             args,
+                            gas,
                             value,
                             log["op"],
                             current_trace.depth + 1,
                             tx.chain,
+                            [],
+                            {},
                         )
                     else:
                         call_trace = CallTrace(
@@ -621,10 +759,13 @@ class CallTrace:
                             None,
                             addr,
                             [data],
+                            gas,
                             value,
                             log["op"],
                             current_trace.depth + 1,
                             tx.chain,
+                            [],
+                            {},
                             True,
                         )
                 elif precompiled_info is not None:
@@ -635,10 +776,13 @@ class CallTrace:
                         None,
                         addr,
                         precompiled_info[1],
+                        gas,
                         value,
                         log["op"],
                         current_trace.depth + 1,
                         tx.chain,
+                        precompiled_info[2],
+                        {},
                         False,
                     )
                 else:
@@ -658,17 +802,27 @@ class CallTrace:
                         selector = data[:4]
                         if selector in contract_abi:
                             fn_abi = contract_abi[selector]
-                            output_types = [
+                            input_types = [
                                 eth_utils.abi.collapse_if_tuple(
                                     cast(Dict[str, Any], arg)
                                 )
                                 for arg in fix_library_abi(fn_abi["inputs"])
                             ]
+                            output_types = (
+                                [
+                                    eth_utils.abi.collapse_if_tuple(
+                                        cast(Dict[str, Any], arg)
+                                    )
+                                    for arg in fix_library_abi(fn_abi["outputs"])
+                                ]
+                                if "outputs" in fn_abi
+                                else []
+                            )
                             try:
-                                args = list(eth_abi.abi.decode(output_types, data[4:]))
-                                for i, type in enumerate(output_types):
+                                args = list(eth_abi.abi.decode(input_types, data[4:]))
+                                for j, type in enumerate(input_types):
                                     if type == "address":
-                                        args[i] = Account(Address(args[i]), tx.chain)
+                                        args[j] = Account(Address(args[j]), tx.chain)
                             except eth_abi.exceptions.DecodingError:
                                 args = None
                             fn_name = fn_abi["name"]
@@ -680,14 +834,17 @@ class CallTrace:
                             selector = None
                             fn_name = "fallback"
                             args = [data]
+                            output_types = []
                             is_special = True
                         else:
                             selector = None
                             fn_name = None
                             args = [data]
+                            output_types = []
                             is_special = True
                     else:
                         selector = None
+                        output_types = []
                         if args_size == 0 and "receive" in contract_abi:
                             fn_name = "receive"
                             args = []
@@ -711,10 +868,13 @@ class CallTrace:
                         selector,
                         addr,
                         args,
+                        gas,
                         value,
                         log["op"],
                         current_trace.depth + 1,
                         tx.chain,
+                        output_types,
+                        contract_abi,
                         is_special,
                     )
 
@@ -735,6 +895,85 @@ class CallTrace:
                     current_trace._status = status
                     current_trace = current_trace._parent
                     assert current_trace is not None
+
+                if log["op"] == "INVALID":
+                    current_trace._error_name = "UnknownTransactionRevertedError"
+                    current_trace._error_arguments = [b""]
+                elif log["op"] == "RETURN":
+                    data_offset = int(log["stack"][-1], 16)
+                    data_size = int(log["stack"][-2], 16)
+                    data = bytes(
+                        read_from_memory(data_offset, data_size, log["memory"])
+                    )
+
+                    output_types = current_trace._output_types
+                    try:
+                        return_value = list(eth_abi.abi.decode(output_types, data))
+                        for j, type in enumerate(output_types):
+                            if type == "address":
+                                return_value[j] = Account(
+                                    Address(return_value[j]), tx.chain
+                                )
+                    except eth_abi.exceptions.DecodingError:
+                        return_value = [data]
+
+                    current_trace._return_value = return_value
+                elif log["op"] == "REVERT":
+                    data_offset = int(log["stack"][-1], 16)
+                    data_size = int(log["stack"][-2], 16)
+                    data = bytes(
+                        read_from_memory(data_offset, data_size, log["memory"])
+                    )
+                    current_trace._revert_data = data
+
+                    if any(t._revert_data == data for t in current_trace._subtraces):
+                        # error propagated from a subtrace
+                        subtrace = next(
+                            t
+                            for t in current_trace._subtraces
+                            if t._revert_data == data
+                        )
+                        current_trace._error_name = subtrace._error_name
+                        current_trace._error_arguments = subtrace._error_arguments
+                    elif len(data) < 4 or data[:4] not in current_trace._abi:
+                        current_trace._error_name = "UnknownTransactionRevertedError"
+                        current_trace._error_arguments = [data]
+                    else:
+                        try:
+                            error_types = [
+                                eth_utils.abi.collapse_if_tuple(
+                                    cast(Dict[str, Any], arg)
+                                )
+                                for arg in current_trace._abi[data[:4]]["inputs"]
+                            ]
+                            error_args = list(eth_abi.abi.decode(error_types, data[4:]))
+                            for j, type in enumerate(error_types):
+                                if type == "address":
+                                    error_args[j] = Account(
+                                        Address(error_args[j]), tx.chain
+                                    )
+                            current_trace._error_name = current_trace._abi[data[:4]][
+                                "name"
+                            ]
+                            current_trace._error_arguments = error_args
+                        except eth_abi.exceptions.DecodingError:
+                            current_trace._error_name = (
+                                "UnknownTransactionRevertedError"
+                            )
+                            current_trace._error_arguments = [data]
+                else:
+                    output_types = current_trace._output_types
+                    return_value = list(
+                        eth_abi.abi.decode(
+                            output_types, b"\x00" * 32 * len(output_types)
+                        )
+                    )
+                    for j, type in enumerate(output_types):
+                        if type == "address":
+                            return_value[j] = Account(
+                                Address(return_value[j]), tx.chain
+                            )
+                    current_trace._return_value = return_value
 
                 assert current_trace is not None
                 if (
@@ -761,11 +1000,13 @@ class CallTrace:
                 contracts.pop()
                 values.pop()
             elif log["op"] in {"CREATE", "CREATE2"}:
+                gas = trace["structLogs"][i + 1]["gas"]  # TODO is this correct?
                 value = int(log["stack"][-1], 16)
                 offset = int(log["stack"][-2], 16)
                 length = int(log["stack"][-3], 16)
 
                 creation_code = read_from_memory(offset, length, log["memory"])
+                contract_abi = {}
                 try:
                     fqn, constructor_offset = get_fqn_from_creation_code(creation_code)
 
@@ -780,19 +1021,19 @@ class CallTrace:
                         args = []
                     else:
                         fn_abi = contract_abi["constructor"]
-                        output_types = [
+                        input_types = [
                             eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
                             for arg in fix_library_abi(fn_abi["inputs"])
                         ]
                         try:
                             args = list(
                                 eth_abi.abi.decode(
-                                    output_types, creation_code[constructor_offset:]
+                                    input_types, creation_code[constructor_offset:]
                                 )
                             )
-                            for i, type in enumerate(output_types):
+                            for j, type in enumerate(input_types):
                                 if type == "address":
-                                    args[i] = Account(Address(args[i]), tx.chain)
+                                    args[j] = Account(Address(args[j]), tx.chain)
                         except eth_abi.exceptions.DecodingError:
                             args = None
                 except ValueError:
@@ -809,10 +1050,13 @@ class CallTrace:
                     None,
                     None,  # to be set later
                     args,
+                    gas,
                     value,
                     log["op"],
                     current_trace.depth + 1,
                     tx.chain,
+                    [],
+                    contract_abi,
                     True,
                 )
 

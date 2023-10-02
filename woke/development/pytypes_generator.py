@@ -574,6 +574,7 @@ class TypeGenerator:
                 abi_by_selector[selector] = item
             elif item["type"] == "error":
                 selector = eth_utils.abi.function_abi_to_4byte_selector(item)
+                abi_by_selector[selector] = item
 
                 if selector not in self.__errors_index:
                     self.__errors_index[selector] = {}
