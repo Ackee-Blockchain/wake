@@ -127,6 +127,10 @@ chain_explorer_urls: Dict[int, ChainExplorer] = {
         "https://testnet.ftmscan.com/",
         "https://api-testnet.ftmscan.com/api",
     ),
+    17000: ChainExplorer(
+        "https://holesky.etherscan.io/",
+        "https://api-holesky.etherscan.io/api",
+    ),
 }
 
 
