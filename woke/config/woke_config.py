@@ -16,6 +16,7 @@ from .data_model import (
     CompilerConfig,
     DeploymentConfig,
     DetectorsConfig,
+    GeneralConfig,
     GeneratorConfig,
     LspConfig,
     TestingConfig,
@@ -371,3 +372,10 @@ class WokeConfig:
         Return deployment-specific config options.
         """
         return self.__config.deployment
+
+    @property
+    def general(self) -> GeneralConfig:
+        """
+        Return general config options.
+        """
+        return self.__config.general
