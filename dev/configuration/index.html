@@ -414,6 +414,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#general-namespace" class="md-nav__link">
+    general namespace
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#generatorcontrol_flow_graph-namespace" class="md-nav__link">
     generator.control_flow_graph namespace
   </a>
@@ -1140,6 +1147,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#general-namespace" class="md-nav__link">
+    general namespace
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#generatorcontrol_flow_graph-namespace" class="md-nav__link">
     generator.control_flow_graph namespace
   </a>
@@ -1303,18 +1317,24 @@ LSP configuration options are loaded from LSP clients using the <a href="https:/
 <a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="n">ignore_paths</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s">&quot;node_modules&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;.woke-build&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;venv&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;lib&quot;</span><span class="p">]</span>
 <a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="c1"># only = [] (unset - all detectors are enabled)</span>
 <a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>
-<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="k">[testing]</span>
-<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="n">cmd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;anvil&quot;</span>
-<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="n">timeout</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
-<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>
-<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="k">[testing.anvil]</span>
-<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a><span class="n">cmd_args</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;--prune-history 100 --transaction-block-keeper 10 --steps-tracing --silent&quot;</span>
-<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>
-<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a><span class="k">[testing.ganache]</span>
-<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a><span class="n">cmd_args</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;-g 0 -k istanbul -q&quot;</span>
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="k">[general]</span>
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="n">call_trace_options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="w">    </span><span class="s">&quot;contract_name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;function_name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;arguments&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;status&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a><span class="w">    </span><span class="s">&quot;call_type&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;value&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;return_value&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;error&quot;</span>
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="p">]</span>
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a><span class="k">[testing]</span>
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a><span class="n">cmd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;anvil&quot;</span>
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a><span class="n">timeout</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
 <a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>
-<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a><span class="k">[testing.hardhat]</span>
-<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="n">cmd_args</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span>
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a><span class="k">[testing.anvil]</span>
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="n">cmd_args</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;--prune-history 100 --transaction-block-keeper 10 --steps-tracing --silent&quot;</span>
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a><span class="k">[testing.ganache]</span>
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a><span class="n">cmd_args</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;-g 0 -k istanbul -q&quot;</span>
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a><span class="k">[testing.hardhat]</span>
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="n">cmd_args</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span>
 </code></pre></div></p>
 </details>
 <h3 id="api_keys-namespace"><code>api_keys</code> namespace<a class="headerlink" href="#api_keys-namespace" title="Permanent link">#</a></h3>
@@ -1506,6 +1526,21 @@ LSP configuration options are loaded from LSP clients using the <a href="https:/
 <tr>
 <td style="text-align: left;"><code>ignore_paths</code></td>
 <td style="text-align: left;">Detections with subdetections in these paths are ignored.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="general-namespace"><code>general</code> namespace<a class="headerlink" href="#general-namespace" title="Permanent link">#</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Option</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><nobr><code>call_trace_options</code></nobr></td>
+<td style="text-align: left;">What information to display in call traces. Possible options: <code>contract_name</code>, <code>address</code>, <code>function_name</code>, <code>arguments</code>, <code>status</code>, <code>call_type</code>, <code>value</code>, <code>gas</code>, <code>sender</code>, <code>return_value</code>, <code>error</code>.</td>
 </tr>
 </tbody>
 </table>
