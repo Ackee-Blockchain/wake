@@ -35,6 +35,7 @@ from woke.development.transactions import (
     TransactionStatusEnum,
 )
 from woke.development.utils import chain_explorer_urls
+from woke.utils.formatters import format_wei
 
 
 class Chain(woke.development.core.Chain):
@@ -313,28 +314,27 @@ class Chain(woke.development.core.Chain):
 
             if isinstance(tx, Eip1559Transaction):
                 recommended_priority_fee = (
-                    self.chain_interface.get_max_priority_fee_per_gas() / 10**9
+                    self.chain_interface.get_max_priority_fee_per_gas()
                 )
-                base_fee = (
-                    int(self.chain_interface.get_block("pending")["baseFeePerGas"], 16)
-                    / 10**9
+                base_fee = int(
+                    self.chain_interface.get_block("pending")["baseFeePerGas"], 16
                 )
 
                 t.add_row(
                     "Max fee per gas",
-                    f"{(tx.max_fee_per_gas / 10 ** 9):.2f} Gwei",
-                    f"{(recommended_priority_fee + base_fee):.2f} Gwei",
+                    format_wei(tx.max_fee_per_gas),
+                    format_wei(recommended_priority_fee + base_fee),
                 )
                 t.add_row(
                     "Max priority fee per gas",
-                    f"{(tx.max_priority_fee_per_gas / 10 ** 9):.2f} Gwei",
-                    f"{(recommended_priority_fee):.2f} Gwei",
+                    format_wei(tx.max_priority_fee_per_gas),
+                    format_wei(recommended_priority_fee),
                 )
             elif isinstance(tx, (Eip2930Transaction, LegacyTransaction)):
                 t.add_row(
                     "Gas price",
-                    f"{(tx.gas_price / 10 ** 9):.2f} Gwei",
-                    f"{(self.chain_interface.get_gas_price() / 10 ** 9):.2f} Gwei",
+                    format_wei(tx.gas_price),
+                    format_wei(self.chain_interface.get_gas_price()),
                 )
 
             return Group(text, t)
