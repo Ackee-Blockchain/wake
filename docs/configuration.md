@@ -60,6 +60,12 @@ The latter overrides the former.
     ignore_paths = ["node_modules", ".woke-build", "venv", "lib"]
     # only = [] (unset - all detectors are enabled)
 
+    [general]
+    call_trace_options = [
+        "contract_name", "function_name", "arguments", "status",
+        "call_type", "value", "return_value", "error"
+    ]
+
     [testing]
     cmd = "anvil"
     timeout = 5
@@ -134,6 +140,12 @@ The latter overrides the former.
 | `exclude`      | List of detector IDs (string or number) that should not be enabled.  |
 | `only`         | List of detector IDs (string or number) that should only be enabled. |
 | `ignore_paths` | Detections with subdetections in these paths are ignored.            |
+
+### `general` namespace
+
+| Option                            | Description                                                                                                                                                                                       |
+|:----------------------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| <nobr>`call_trace_options`</nobr> | What information to display in call traces. Possible options: `contract_name`, `address`, `function_name`, `arguments`, `status`, `call_type`, `value`, `gas`, `sender`, `return_value`, `error`. |
 
 ### `generator.control_flow_graph` namespace
 Related to the `woke.generate.control_flow_graph` LSP command.
