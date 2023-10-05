@@ -15,6 +15,7 @@ Features:
 ## Dependencies
 
 - [Python](https://www.python.org/downloads/release/python-3910/) (version 3.7 or higher)
+- Rosetta must be enabled on Apple Silicon (M1 & M2) Macs
 
 > :warning: Python 3.11 is experimentally supported.
 
