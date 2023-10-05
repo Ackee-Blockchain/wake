@@ -211,6 +211,21 @@ class DeploymentConfig(WokeConfigModel):
     silent: bool = False
 
 
+class GeneralConfig(WokeConfigModel):
+    call_trace_options: FrozenSet[str] = frozenset(
+        [
+            "contract_name",
+            "function_name",
+            "arguments",
+            "status",
+            "call_type",
+            "value",
+            "return_value",
+            "error",
+        ]
+    )
+
+
 class TopLevelConfig(WokeConfigModel):
     subconfigs: List[Path] = []
     api_keys: Dict[str, str] = {}
@@ -220,6 +235,7 @@ class TopLevelConfig(WokeConfigModel):
     lsp: LspConfig = Field(default_factory=LspConfig)
     testing: TestingConfig = Field(default_factory=TestingConfig)
     deployment: DeploymentConfig = Field(default_factory=DeploymentConfig)
+    general: GeneralConfig = Field(default_factory=GeneralConfig)
 
     @validator("subconfigs", pre=True, each_item=True)
     def set_subconfig(cls, v):

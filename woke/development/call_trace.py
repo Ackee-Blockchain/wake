@@ -15,6 +15,7 @@ from rich.tree import Tree
 
 from woke.utils import StrEnum
 
+from ..utils.formatters import format_wei
 from . import hardhat_console
 from .chain_interfaces import TxParams
 from .core import (
@@ -29,6 +30,7 @@ from .core import (
     get_fqn_from_creation_code,
     process_debug_trace_for_fqn_overrides,
 )
+from .globals import get_config
 from .internal import read_from_memory
 from .utils import get_contract_info_from_explorer
 
@@ -148,6 +150,7 @@ class CallTrace:
     _value: Wei
     _kind: CallTraceKind
     _depth: int
+    _origin: Account
     _chain: Chain
     _subtraces: List[CallTrace]
     _parent: Optional[CallTrace]
@@ -172,6 +175,7 @@ class CallTrace:
         kind: CallTraceKind,
         depth: int,
         chain: Chain,
+        origin: Account,
         output_types: List[str],
         abi: Dict[bytes, Any],
         function_is_special: bool = False,
@@ -187,6 +191,7 @@ class CallTrace:
         self._kind = kind
         self._depth = depth
         self._chain = chain
+        self._origin = origin
         self._output_types = output_types
         self._function_is_special = function_is_special
         self._status = True
@@ -227,40 +232,48 @@ class CallTrace:
             subtrace._into_tree(t)
 
     def _get_label(self) -> Text:
+        options = get_config().general.call_trace_options
         ret = Text()
 
-        label = None
-        if self.address is not None:
-            label = Account(self.address, self.chain).label
-
-        if label is not None:
-            contract_name = label
-        elif self.contract_name is not None:
-            contract_name = self.contract_name
-        else:
-            contract_name = f"Unknown({self.address})"
-
-        ret.append_text(
-            Text.from_markup(f"[bright_magenta]{contract_name}[/bright_magenta].")
-        )
-
-        if self.function_name is not None:
-            function_name = self.function_name
-        else:
-            function_name = "???"
-
-        if self.function_is_special:
-            ret.append_text(
-                Text.from_markup(f"<[bright_magenta]{function_name}[/bright_magenta]>")
-            )
-        else:
+        if "contract_name" in options:
             ret.append_text(
                 Text.from_markup(
-                    f"[bright_magenta]{self.function_name}[/bright_magenta]"
+                    f"[bright_magenta]{self.contract_name or 'Unknown'}[/bright_magenta]"
                 )
             )
 
-        if self.kind != CallTraceKind.INTERNAL:
+        if "address" in options:
+            label = None
+            if self.address is not None:
+                label = Account(self.address, self.chain).label
+
+            if "contract_name" in options:
+                ret.append_text(
+                    Text.from_markup(f"([blue]{label or self.address}[/blue])")
+                )
+            else:
+                ret.append_text(
+                    Text.from_markup(f"[blue]{label or self.address}[/blue]")
+                )
+
+        if "function_name" in options:
+            if "contract_name" in options or "address" in options:
+                ret.append(".")
+
+            if self.function_is_special:
+                ret.append_text(
+                    Text.from_markup(
+                        f"<[bright_magenta]{self.function_name or '???'}[/bright_magenta]>"
+                    )
+                )
+            else:
+                ret.append_text(
+                    Text.from_markup(
+                        f"[bright_magenta]{self.function_name or '???'}[/bright_magenta]"
+                    )
+                )
+
+        if "arguments" in options:
             if self.arguments is not None:
                 ret.append("(")
                 for i, arg in enumerate(self.arguments):
@@ -273,37 +286,66 @@ class CallTrace:
             else:
                 ret.append("(???)")
 
-        ret.append_text(
-            Text.from_markup(
-                f" {'[green]✓[/green]' if self.status else '[red]✗[/red]'}"
-            )
-        )
-
-        if self.kind != CallTraceKind.CALL:
+        if "status" in options:
             ret.append_text(
                 Text.from_markup(
-                    f" [yellow]\[{self.kind}][/yellow]"  # pyright: ignore reportInvalidStringEscapeSequence
+                    f" {'[green]✓[/green]' if self.status else '[red]✗[/red]'}"
                 )
             )
 
-        if self._return_value is not None and len(self._return_value) > 0:
-            ret.append("\n➞ ")
-            for i, arg in enumerate(self._return_value):
-                t = Text(repr(arg))
-                ReprHighlighter().highlight(t)
-                ret.append_text(t)
-                if i < len(self._return_value) - 1:
-                    ret.append(", ")
-        elif self._error_name is not None:
-            ret.append("\n➞ ")
-            ret.append_text(Text.from_markup(f"[red]{self._error_name}[/red]("))
-            for i, arg in enumerate(self.error_arguments or []):
-                t = Text(repr(arg))
-                ReprHighlighter().highlight(t)
-                ret.append_text(t)
-                if i < len(self.error_arguments or []) - 1:
-                    ret.append(", ")
-            ret.append(")")
+        if "call_type" in options:
+            if self.kind != CallTraceKind.CALL:
+                ret.append_text(
+                    Text.from_markup(
+                        f" [yellow]\[{self.kind}][/yellow]"  # pyright: ignore reportInvalidStringEscapeSequence
+                    )
+                )
+
+        if "value" in options and self.value > 0:
+            ret.append_text(
+                Text.from_markup(
+                    f" [sea_green2]\[{format_wei(self.value)}][/sea_green2]"  # pyright: ignore reportInvalidStringEscapeSequence
+                )
+            )
+
+        if "gas" in options:
+            ret.append_text(
+                Text.from_markup(
+                    f" [cyan]\[{self.gas:,} gas][/cyan]"  # pyright: ignore reportInvalidStringEscapeSequence
+                )
+            )
+
+        if "sender" in options:
+            sender = self.sender
+            if sender is not None:
+                ret.append_text(
+                    Text.from_markup(
+                        f" [blue_violet]\[{sender} sender][/blue_violet]"  # pyright: ignore reportInvalidStringEscapeSequence
+                    )
+                )
+
+        if "return_value" in options:
+            if self._return_value is not None and len(self._return_value) > 0:
+                ret.append("\n➞ ")
+                for i, arg in enumerate(self._return_value):
+                    t = Text(repr(arg))
+                    ReprHighlighter().highlight(t)
+                    ret.append_text(t)
+                    if i < len(self._return_value) - 1:
+                        ret.append(", ")
+                ret.append(")")
+
+        if "error" in options:
+            if self._error_name is not None:
+                ret.append("\n➞ ")
+                ret.append_text(Text.from_markup(f"[red]{self._error_name}[/red]("))
+                for i, arg in enumerate(self.error_arguments or []):
+                    t = Text(repr(arg))
+                    ReprHighlighter().highlight(t)
+                    ret.append_text(t)
+                    if i < len(self.error_arguments or []) - 1:
+                        ret.append(", ")
+                ret.append(")")
 
         return ret
 
@@ -356,6 +398,22 @@ class CallTrace:
     @property
     def depth(self) -> int:
         return self._depth
+
+    @property
+    def sender(self) -> Optional[Account]:
+        current_trace = self
+        while (
+            current_trace is not None
+            and current_trace.kind == CallTraceKind.DELEGATECALL
+        ):
+            current_trace = current_trace.parent
+
+        if current_trace is None or current_trace.parent is None:
+            return self._origin
+
+        if current_trace.parent.address is not None:
+            return Account(current_trace.parent.address, current_trace.parent.chain)
+        return None
 
     @property
     def chain(self) -> Chain:
@@ -416,6 +474,8 @@ class CallTrace:
 
         contracts = [origin_fqn]
         values = [0 if "value" not in tx_params else tx_params["value"]]
+        assert "from" in tx_params
+        origin = Account(tx_params["from"], tx.chain)
 
         contracts_by_fqn = get_contracts_by_fqn()
 
@@ -455,6 +515,7 @@ class CallTrace:
                 CallTraceKind.CALL,
                 1,
                 tx.chain,
+                origin,
                 [],
                 {},
                 True,
@@ -474,6 +535,7 @@ class CallTrace:
                 CallTraceKind.CALL,
                 1,
                 tx.chain,
+                origin,
                 output_types,
                 {},
                 False,
@@ -512,7 +574,7 @@ class CallTrace:
                         for i, type in enumerate(input_types):
                             if type == "address":
                                 args[i] = Account(Address(args[i]), tx.chain)
-                    except eth_abi.exceptions.DecodingError:
+                    except Exception:
                         args = None
                 root_trace = CallTrace(
                     obj,
@@ -526,6 +588,7 @@ class CallTrace:
                     CallTraceKind.CREATE,
                     1,
                     tx.chain,
+                    origin,
                     [],
                     contract_abi,
                     True,
@@ -547,6 +610,7 @@ class CallTrace:
                     CallTraceKind.CALL,
                     1,
                     tx.chain,
+                    origin,
                     [],
                     contract_abi,
                     True,
@@ -572,6 +636,7 @@ class CallTrace:
                         CallTraceKind.CALL,
                         1,
                         tx.chain,
+                        origin,
                         [],
                         contract_abi,
                         True,
@@ -589,6 +654,7 @@ class CallTrace:
                         CallTraceKind.CALL,
                         1,
                         tx.chain,
+                        origin,
                         [],
                         contract_abi,
                         True,
@@ -612,7 +678,7 @@ class CallTrace:
                     for i, type in enumerate(input_types):
                         if type == "address":
                             args[i] = Account(Address(args[i]), tx.chain)
-                except eth_abi.exceptions.DecodingError:
+                except Exception:
                     args = None
                 root_trace = CallTrace(
                     obj,
@@ -626,6 +692,7 @@ class CallTrace:
                     CallTraceKind.CALL,
                     1,
                     tx.chain,
+                    origin,
                     output_types,
                     contract_abi,
                 )
@@ -663,7 +730,7 @@ class CallTrace:
                                 return_value[j] = Account(
                                     Address(return_value[j]), tx.chain
                                 )
-                    except eth_abi.exceptions.DecodingError:
+                    except Exception:
                         return_value = [data]
 
                     current_trace._return_value = return_value
@@ -731,7 +798,7 @@ class CallTrace:
                                 for j, type in enumerate(input_types):
                                     if type == "address":
                                         args[j] = Account(Address(args[j]), tx.chain)
-                            except eth_abi.exceptions.DecodingError:
+                            except Exception:
                                 args = None
                         else:
                             args = [data]
@@ -748,6 +815,7 @@ class CallTrace:
                             log["op"],
                             current_trace.depth + 1,
                             tx.chain,
+                            origin,
                             [],
                             {},
                         )
@@ -764,6 +832,7 @@ class CallTrace:
                             log["op"],
                             current_trace.depth + 1,
                             tx.chain,
+                            origin,
                             [],
                             {},
                             True,
@@ -781,6 +850,7 @@ class CallTrace:
                         log["op"],
                         current_trace.depth + 1,
                         tx.chain,
+                        origin,
                         precompiled_info[2],
                         {},
                         False,
@@ -823,7 +893,7 @@ class CallTrace:
                                 for j, type in enumerate(input_types):
                                     if type == "address":
                                         args[j] = Account(Address(args[j]), tx.chain)
-                            except eth_abi.exceptions.DecodingError:
+                            except Exception:
                                 args = None
                             fn_name = fn_abi["name"]
                             is_special = False
@@ -873,6 +943,7 @@ class CallTrace:
                         log["op"],
                         current_trace.depth + 1,
                         tx.chain,
+                        origin,
                         output_types,
                         contract_abi,
                         is_special,
@@ -914,7 +985,7 @@ class CallTrace:
                                 return_value[j] = Account(
                                     Address(return_value[j]), tx.chain
                                 )
-                    except eth_abi.exceptions.DecodingError:
+                    except Exception:
                         return_value = [data]
 
                     current_trace._return_value = return_value
@@ -956,7 +1027,7 @@ class CallTrace:
                                 "name"
                             ]
                             current_trace._error_arguments = error_args
-                        except eth_abi.exceptions.DecodingError:
+                        except Exception:
                             current_trace._error_name = (
                                 "UnknownTransactionRevertedError"
                             )
@@ -1034,7 +1105,7 @@ class CallTrace:
                             for j, type in enumerate(input_types):
                                 if type == "address":
                                     args[j] = Account(Address(args[j]), tx.chain)
-                        except eth_abi.exceptions.DecodingError:
+                        except Exception:
                             args = None
                 except ValueError:
                     fqn = None
@@ -1055,6 +1126,7 @@ class CallTrace:
                     log["op"],
                     current_trace.depth + 1,
                     tx.chain,
+                    origin,
                     [],
                     contract_abi,
                     True,
