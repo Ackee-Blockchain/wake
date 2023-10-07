@@ -1359,12 +1359,11 @@ class Chain(ABC):
             )
             self._snapshots = {}
             self._deployed_libraries = defaultdict(list)
-            self._default_call_account = (
-                self._accounts[0] if len(self._accounts) > 0 else None
-            )
-            self._default_tx_account = None
-            self._default_estimate_account = None
-            self._default_access_list_account = None
+
+            if len(self._accounts) > 0:
+                self.set_default_accounts(self._accounts[0])
+            else:
+                self.set_default_accounts(None)
             self._default_tx_confirmations = 1
             self._blocks = ChainBlocks(self)
             self._labels = {}
@@ -1580,11 +1579,11 @@ class Chain(ABC):
         self.gas_price = value
 
     @check_connected
-    def set_default_accounts(self, account: Union[Account, Address, str]) -> None:
+    def set_default_accounts(self, account: Union[Account, Address, str, None]) -> None:
         if isinstance(account, Account):
             if account.chain != self:
                 raise ValueError("Account is not from this chain")
-        else:
+        elif account is not None:
             account = Account(account, self)
 
         self._default_call_account = account
