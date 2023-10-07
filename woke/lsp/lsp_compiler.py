@@ -242,8 +242,12 @@ class LspCompiler:
             },
             source_units_info={
                 node: SourceUnitInfo(
-                    self.__last_graph.nodes[node]["path"],
-                    self.__last_graph.nodes[node]["hash"],
+                    self.__last_graph.nodes[  # pyright: ignore reportGeneralTypeIssues
+                        node
+                    ]["path"],
+                    self.__last_graph.nodes[  # pyright: ignore reportGeneralTypeIssues
+                        node
+                    ]["hash"],
                 )
                 for node in self.__last_graph
             },
@@ -980,6 +984,19 @@ class LspCompiler:
             await self.__server.log_message(
                 f"Failed to load detectors from path {path}: {e}",
                 MessageType.ERROR,
+            )
+        for (
+            detector_name,
+            prev,
+            current,
+        ) in run_detect.detector_collisions:  # pyright: ignore reportGeneralTypeIssues
+            await self.__server.show_message(
+                f"Detector '{detector_name}' loaded from {current} overrides detector loaded from {prev}",
+                MessageType.WARNING,
+            )
+            await self.__server.log_message(
+                f"Detector '{detector_name}' loaded from {current} overrides detector loaded from {prev}",
+                MessageType.WARNING,
             )
 
         if platform.system() == "Linux":
