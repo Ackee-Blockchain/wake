@@ -378,57 +378,37 @@ def init_pytypes(ctx: Context, return_tx: bool, warnings: bool, watch: bool) -> 
 )
 @click.pass_context
 def init_detector(ctx: Context, detector_name: str, force: bool, global_: bool) -> None:
-    from woke.detectors.template import TEMPLATE
-
-    assert isinstance(run_detect, DetectCli)
-
-    config: WokeConfig = ctx.obj["config"]
-
-    module_name = detector_name.replace("-", "_")
-
-    if not module_name.isidentifier():
+    async def module_name_error_callback(module_name: str) -> None:
         raise click.BadParameter(
             f"Detector name must be a valid Python identifier, got {detector_name}"
         )
 
-    class_name = (
-        "".join([s.capitalize() for s in module_name.split("_") if s != ""])
-        + "Detector"
-    )
-    if global_:
-        dir_path = config.global_data_path / "global-detectors"
-    else:
-        dir_path = config.project_root_path / "detectors"
-    init_path = dir_path / "__init__.py"
-    detector_path = dir_path / f"{module_name}.py"
+    async def detector_exists_callback(other: str) -> None:
+        if not force:
+            raise click.ClickException(
+                f"Detector {detector_name} already exists in {other}. Use --force to force create."
+            )
 
-    if detector_name in run_detect.loaded_from_plugins and not force:
-        if isinstance(run_detect.loaded_from_plugins[detector_name], str):
-            other = f"package '{run_detect.loaded_from_plugins[detector_name]}'"
-        else:
-            other = f"path '{run_detect.loaded_from_plugins[detector_name]}'"
-        raise click.ClickException(
-            f"Detector {detector_name} already exists in {other}. Use --force to force create."
+    from woke.detectors.api import init_detector
+
+    from .detect import run_detect
+
+    config: WokeConfig = ctx.obj["config"]
+
+    # dummy call to load all detectors
+    run_detect.list_commands(None)  # pyright: ignore reportGeneralTypeIssues
+    detector_path: Path = asyncio.run(
+        init_detector(
+            config,
+            detector_name,
+            global_,
+            module_name_error_callback,
+            detector_exists_callback,
         )
-
-    if not dir_path.exists():
-        dir_path.mkdir()
-        run_detect.add_verified_plugin_path(dir_path)
-
-    detector_path.write_text(
-        TEMPLATE.format(class_name=class_name, command_name=detector_name)
     )
-
-    if not init_path.exists():
-        init_path.touch()
-
-    import_str = f"from .{module_name} import {class_name}"
-    if import_str not in init_path.read_text().splitlines():
-        with init_path.open("a") as f:
-            f.write(f"\n{import_str}")
 
     console.print(
-        f"[green]Created detector '{detector_name}' at {detector_path}[/green]"
+        f"[green]Detector '{detector_name}' created at {detector_path}[/green]"
     )
 
 
@@ -451,52 +431,33 @@ def init_detector(ctx: Context, detector_name: str, force: bool, global_: bool) 
 )
 @click.pass_context
 def init_printer(ctx: Context, printer_name: str, force: bool, global_: bool) -> None:
-    from woke.printers.template import TEMPLATE
-
-    assert isinstance(run_print, PrintCli)
-
-    config: WokeConfig = ctx.obj["config"]
-
-    module_name = printer_name.replace("-", "_")
-
-    if not module_name.isidentifier():
+    async def module_name_error_callback(module_name: str) -> None:
         raise click.BadParameter(
             f"Printer name must be a valid Python identifier, got {printer_name}"
         )
 
-    class_name = (
-        "".join([s.capitalize() for s in module_name.split("_") if s != ""]) + "Printer"
-    )
-    if global_:
-        dir_path = config.global_data_path / "global-printers"
-    else:
-        dir_path = config.project_root_path / "printers"
-    init_path = dir_path / "__init__.py"
-    printer_path = dir_path / f"{module_name}.py"
+    async def printer_exists_callback(other: str) -> None:
+        if not force:
+            raise click.ClickException(
+                f"Printer {printer_name} already exists in {other}. Use --force to force create."
+            )
 
-    if printer_name in run_print.loaded_from_plugins and not force:
-        if isinstance(run_print.loaded_from_plugins[printer_name], str):
-            other = f"package '{run_print.loaded_from_plugins[printer_name]}'"
-        else:
-            other = f"path '{run_print.loaded_from_plugins[printer_name]}'"
-        raise click.ClickException(
-            f"Printer {printer_name} already exists in {other}. Use --force to force create."
+    from woke.printers.api import init_printer
+
+    from .print import run_print
+
+    config: WokeConfig = ctx.obj["config"]
+
+    # dummy call to load all printers
+    run_print.list_commands(None)  # pyright: ignore reportGeneralTypeIssues
+    printer_path: Path = asyncio.run(
+        init_printer(
+            config,
+            printer_name,
+            global_,
+            module_name_error_callback,
+            printer_exists_callback,
         )
-
-    if not dir_path.exists():
-        dir_path.mkdir()
-        run_print.add_verified_plugin_path(dir_path)
-
-    printer_path.write_text(
-        TEMPLATE.format(class_name=class_name, command_name=printer_name)
     )
 
-    if not init_path.exists():
-        init_path.touch()
-
-    import_str = f"from .{module_name} import {class_name}"
-    if import_str not in init_path.read_text().splitlines():
-        with init_path.open("a") as f:
-            f.write(f"\n{import_str}")
-
-    console.print(f"[green]Created printer '{printer_name}' at {printer_path}[/green]")
+    console.print(f"[green]Printer '{printer_name}' created at {printer_path}[/green]")

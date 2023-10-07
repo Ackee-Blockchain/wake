@@ -9,6 +9,7 @@ from typing import (
     Callable,
     Coroutine,
     Dict,
+    Iterable,
     NoReturn,
     Optional,
     Set,
@@ -28,6 +29,7 @@ from .commands import (
     generate_inheritance_graph_handler,
     generate_linearized_inheritance_graph_handler,
 )
+from .commands.init import init_detector_handler, init_printer_handler
 from .common_structures import (
     ConfigurationItem,
     ConfigurationParams,
@@ -43,12 +45,14 @@ from .common_structures import (
     InitializeParams,
     LogMessageParams,
     LogTraceParams,
+    MessageActionItem,
     MessageType,
     PositionEncodingKind,
     ProgressParams,
     RenameFilesParams,
     SetTraceParams,
     ShowMessageParams,
+    ShowMessageRequestParams,
     WorkDoneProgressBegin,
     WorkDoneProgressCreateParams,
     WorkDoneProgressEnd,
@@ -131,6 +135,8 @@ class CommandsEnum(StrEnum):
     GENERATE_LINEARIZED_INHERITANCE_GRAPH = "woke.generate.linearized_inheritance_graph"
     LSP_FORCE_RECOMPILE = "woke.lsp.force_recompile"
     LSP_FORCE_RERUN_DETECTORS = "woke.lsp.force_rerun_detectors"
+    INIT_DETECTOR = "woke.init.detector"
+    INIT_PRINTER = "woke.init.printer"
 
 
 class LspServer:
@@ -386,6 +392,24 @@ class LspServer:
             message=message,
         )
         await self.send_notification(RequestMethodEnum.WINDOW_SHOW_MESSAGE, params)
+
+    async def show_message_request(
+        self,
+        message: str,
+        msg_type: MessageType,
+        actions: Optional[Iterable[str]] = None,
+    ) -> Optional[str]:
+        params = ShowMessageRequestParams(
+            type=msg_type,
+            message=message,
+            actions=[MessageActionItem(title=a) for a in actions]
+            if actions is not None
+            else None,
+        )
+        ret = await self.send_request(
+            RequestMethodEnum.WINDOW_SHOW_MESSAGE_REQUEST, params
+        )
+        return ret["title"] if ret is not None else None
 
     async def progress_begin(
         self,
@@ -969,6 +993,35 @@ class LspServer:
                 context = await self._get_workspace(document_uri)
                 return await generate_linearized_inheritance_graph_handler(
                     context, document_uri, canonical_name
+                )
+            else:
+                raise LspError(
+                    ErrorCodes.InvalidParams,
+                    f"Expected 2 arguments for `{CommandsEnum.GENERATE_LINEARIZED_INHERITANCE_GRAPH}` command",
+                )
+        elif command == CommandsEnum.INIT_DETECTOR:
+            if params.arguments is not None and len(params.arguments) == 2:
+                if self.__main_workspace is None:
+                    raise LspError(ErrorCodes.RequestFailed, "No workspace open")
+                name = str(params.arguments[0])
+                global_ = bool(params.arguments[1])
+                return await init_detector_handler(self.__main_workspace, name, global_)
+            else:
+                raise LspError(
+                    ErrorCodes.InvalidParams,
+                    f"Expected 2 arguments for `{CommandsEnum.INIT_DETECTOR}` command",
+                )
+        elif command == CommandsEnum.INIT_PRINTER:
+            if params.arguments is not None and len(params.arguments) == 2:
+                if self.__main_workspace is None:
+                    raise LspError(ErrorCodes.RequestFailed, "No workspace open")
+                name = str(params.arguments[0])
+                global_ = bool(params.arguments[1])
+                return await init_printer_handler(self.__main_workspace, name, global_)
+            else:
+                raise LspError(
+                    ErrorCodes.InvalidParams,
+                    f"Expected 2 arguments for `{CommandsEnum.INIT_PRINTER}` command",
                 )
 
         raise LspError(ErrorCodes.InvalidRequest, f"Unknown command: {command}")

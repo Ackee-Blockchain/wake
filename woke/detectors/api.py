@@ -3,11 +3,21 @@ from __future__ import annotations
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Type, Union
+from typing import (
+    TYPE_CHECKING,
+    Awaitable,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+)
 
 import rich_click as click
 
-from woke.cli.detect import run_detect
+from woke.cli.detect import DetectCli, run_detect
 from woke.core.visitor import Visitor, visit_map
 from woke.utils import StrEnum, get_class_that_defined_method
 from woke.utils.file_utils import is_relative_to
@@ -234,9 +244,9 @@ def detect(
         Dict[str, Dict[int, WokeComment]],
     ] = KeyedDefaultDict(
         lambda file: _prepare_woke_comments(  # pyright: ignore reportGeneralTypeIssues
-            imports_graph.nodes[build.source_units[file].source_unit_name][
-                "woke_comments"
-            ],
+            imports_graph.nodes[  # pyright: ignore reportGeneralTypeIssues
+                build.source_units[file].source_unit_name
+            ]["woke_comments"],
             build.source_units[file],
         )
     )
@@ -459,3 +469,59 @@ def detect(
             exceptions[detector_name] = e
 
     return detections, exceptions
+
+
+async def init_detector(
+    config: WokeConfig,
+    detector_name: str,
+    global_: bool,
+    module_name_error_callback: Callable[[str], Awaitable[None]],
+    detector_exists_callback: Callable[[str], Awaitable[None]],
+) -> Path:
+    from .template import TEMPLATE
+
+    assert isinstance(run_detect, DetectCli)
+
+    module_name = detector_name.replace("-", "_")
+    if not module_name.isidentifier():
+        await module_name_error_callback(module_name)
+        # unreachable
+        raise ValueError(
+            f"Detector name must be a valid Python identifier, got {detector_name}"
+        )
+
+    class_name = (
+        "".join([s.capitalize() for s in module_name.split("_") if s != ""])
+        + "Detector"
+    )
+    if global_:
+        dir_path = config.global_data_path / "global-detectors"
+    else:
+        dir_path = config.project_root_path / "detectors"
+    init_path = dir_path / "__init__.py"
+    detector_path = dir_path / f"{module_name}.py"
+
+    if detector_name in run_detect.loaded_from_plugins:
+        if isinstance(run_detect.loaded_from_plugins[detector_name], str):
+            other = f"package '{run_detect.loaded_from_plugins[detector_name]}'"
+        else:
+            other = f"path '{run_detect.loaded_from_plugins[detector_name]}'"
+        await detector_exists_callback(other)
+
+    if not dir_path.exists():
+        dir_path.mkdir()
+        run_detect.add_verified_plugin_path(dir_path)
+
+    detector_path.write_text(
+        TEMPLATE.format(class_name=class_name, command_name=detector_name)
+    )
+
+    if not init_path.exists():
+        init_path.touch()
+
+    import_str = f"from .{module_name} import {class_name}"
+    if import_str not in init_path.read_text().splitlines():
+        with init_path.open("a") as f:
+            f.write(f"\n{import_str}")
+
+    return detector_path
