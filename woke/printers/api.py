@@ -40,6 +40,10 @@ class Printer(Visitor, metaclass=ABCMeta):
     def lsp_node(cls) -> Optional[Union[Type[ir.IrAbc], Tuple[Type[ir.IrAbc], ...]]]:
         return None
 
+    def lsp_name(self) -> Optional[str]:
+        # return None for the default name (name of the Click command), empty string to skip
+        return None
+
     def lsp_predicate(self, node: ir.IrAbc) -> bool:
         return True
 
