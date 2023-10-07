@@ -165,7 +165,7 @@ def _get_printer_output(
     printer_cls: Type[Printer],
     node: IrAbc,
     logging_handler: logging.Handler,
-) -> Optional[str]:
+) -> Tuple[str, Optional[str]]:
     if hasattr(context.config.printers, printer_name):
         default_map = getattr(context.config.printers, printer_name)
     else:
@@ -210,20 +210,24 @@ def _get_printer_output(
 
         if not instance.lsp_predicate(node):
             command.callback = original_callback
-            return None
+            return "", None
 
         # call the target visit function with the node
         visit_map[node.ast_node.node_type](instance, node)
 
         instance.print()
+        lsp_name = instance.lsp_name()
+
+        if lsp_name == "":
+            return "", None
+
+        # TODO detect theme from VS Code settings?
+        ret = console.export_html(theme=MONOKAI)
+        return (lsp_name if lsp_name is not None else printer_name), ret
     finally:
         command.callback = original_callback
-
-    # TODO detect theme from VS Code settings?
-    ret = console.export_html(theme=MONOKAI)
-    console.record = original_record
-    console.file = original_file
-    return ret
+        console.record = original_record
+        console.file = original_file
 
 
 def _generate_code_lens(
@@ -445,7 +449,7 @@ async def code_lens(
             command, printer_cls = printers[node.__class__][printer_name]
 
             try:
-                out = _get_printer_output(
+                lsp_name, out = _get_printer_output(
                     context,
                     printer_name,
                     command,
@@ -463,13 +467,14 @@ async def code_lens(
                     MessageType.ERROR,
                 )
                 out = None
+                lsp_name = printer_name
 
             if out is not None:
                 code_lens.append(
                     _generate_code_lens(
                         context,
                         node.file,
-                        printer_name,  # TODO make command name configurable from printer?
+                        lsp_name,
                         "Tools-for-Solidity.printer",
                         [
                             printer_name,
