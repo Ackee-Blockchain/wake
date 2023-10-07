@@ -495,6 +495,7 @@ def run_detect(ctx: click.Context, no_artifacts: bool, ignore_exceptions: bool) 
             "build": build,
             "build_info": compiler.latest_build_info,
             "config": config,
+            "debug": ctx.obj["debug"],
             "imports_graph": compiler.latest_graph,
             "ignore_exceptions": ignore_exceptions,
         }
@@ -509,6 +510,7 @@ def run_detect(ctx: click.Context, no_artifacts: bool, ignore_exceptions: bool) 
             ctx.obj["subcommand_args"],
             console=console,
             capture_exceptions=ignore_exceptions,
+            debug=ctx.obj["debug"],
         )
 
         if ignore_exceptions:
@@ -562,6 +564,7 @@ def run_detect_all(
         min_impact=min_impact,
         console=console,
         capture_exceptions=ignore_exceptions,
+        debug=ctx.obj["debug"],
     )
 
     if ignore_exceptions:

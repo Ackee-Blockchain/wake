@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -236,6 +237,8 @@ def detect(
     console: Optional[rich.console.Console] = None,
     verify_paths: bool = True,
     capture_exceptions: bool = False,
+    debug: bool = False,
+    logging_handler: Optional[logging.Handler] = None,
 ) -> Tuple[Dict[str, List[DetectorResult]], Dict[str, Exception]]:
     from contextlib import nullcontext
 
@@ -352,6 +355,11 @@ def detect(
                 instance.imports_graph = (
                     imports_graph.copy()
                 )  # pyright: ignore reportGeneralTypeIssues
+                instance.logger = logging.getLogger(cls.__name__)
+                if debug:
+                    instance.logger.setLevel(logging.DEBUG)
+                if logging_handler is not None:
+                    instance.logger.addHandler(logging_handler)
 
                 sub_ctx = command.make_context(
                     command.name,
@@ -398,6 +406,7 @@ def detect(
 
             original_callback = command.callback
             command.callback = _callback
+            assert original_callback is not None
 
             try:
                 sub_ctx = command.make_context(
@@ -408,7 +417,12 @@ def detect(
                     "build_info": build_info,
                     "config": config,
                     "imports_graph": imports_graph.copy(),
+                    "logger": logging.getLogger(original_callback.__name__),
                 }
+                if debug:
+                    sub_ctx.obj["logger"].setLevel(logging.DEBUG)
+                if logging_handler is not None:
+                    sub_ctx.obj["logger"].addHandler(logging_handler)
 
                 with sub_ctx:
                     detections[command.name] = _filter_detections(

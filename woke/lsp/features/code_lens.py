@@ -43,6 +43,7 @@ from woke.lsp.common_structures import (
     WorkDoneProgressParams,
 )
 from woke.lsp.context import LspContext
+from woke.lsp.logging_handler import LspLoggingHandler
 from woke.lsp.lsp_data_model import LspModel
 from woke.lsp.utils.position import changes_to_byte_offset
 from woke.lsp.utils.uri import uri_to_path
@@ -163,6 +164,7 @@ def _get_printer_output(
     command: click.Command,
     printer_cls: Type[Printer],
     node: IrAbc,
+    logging_handler: logging.Handler,
 ) -> Optional[str]:
     if hasattr(context.config.printers, printer_name):
         default_map = getattr(context.config.printers, printer_name)
@@ -191,6 +193,8 @@ def _get_printer_output(
     instance.imports_graph = (  # pyright: ignore reportGeneralTypeIssues
         context.compiler.last_graph.copy()
     )
+    instance.logger = logging.getLogger(printer_cls.__name__)
+    instance.logger.addHandler(logging_handler)
 
     original_callback = command.callback
     command.callback = _callback
@@ -317,6 +321,9 @@ async def code_lens(
             MessageType.WARNING,
         )
 
+    logging_buffer = []
+    logging_handler = LspLoggingHandler(logging_buffer)
+
     for node in source_unit:
         if isinstance(node, DeclarationAbc):
             refs = list(node.get_all_references(include_declarations=True))
@@ -439,7 +446,12 @@ async def code_lens(
 
             try:
                 out = _get_printer_output(
-                    context, printer_name, command, printer_cls, node
+                    context,
+                    printer_name,
+                    command,
+                    printer_cls,
+                    node,
+                    logging_handler,
                 )
             except Exception as e:
                 await context.server.show_message(
@@ -469,6 +481,9 @@ async def code_lens(
                         node.byte_location,
                     )
                 )
+
+    for log, level in logging_buffer:
+        await context.server.log_message(log, level)
 
     code_lens.sort(
         key=lambda x: (

@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING, Callable, Dict, Union
 import woke.ir as ir
 
 if TYPE_CHECKING:
+    import logging
+
     import networkx as nx
 
     from woke.compiler.build_data_model import ProjectBuild, ProjectBuildInfo
@@ -107,6 +109,7 @@ class Visitor:
     build_info: ProjectBuildInfo
     config: WokeConfig
     imports_graph: nx.DiGraph
+    logger: logging.Logger
 
     def visit_contract_definition(self, node: ir.ContractDefinition):
         pass
