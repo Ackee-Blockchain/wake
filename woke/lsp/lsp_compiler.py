@@ -41,6 +41,7 @@ from ..core.solidity_version import SolidityVersionRange, SolidityVersionRanges
 from ..detectors.api import DetectionImpact, detect
 from ..utils import StrEnum, get_package_version
 from ..utils.file_utils import is_relative_to
+from .logging_handler import LspLoggingHandler
 
 if TYPE_CHECKING:
     from .server import LspServer
@@ -1012,7 +1013,11 @@ class LspCompiler:
             p.start()
             while True:
                 if parent_conn.poll():
-                    errors_per_file, exceptions = parent_conn.recv()
+                    errors_per_file, exceptions, logging_buffer = parent_conn.recv()
+
+                    for log, log_type in logging_buffer:
+                        await self.__server.log_message(log, log_type)
+
                     # send both compiler and detector warnings and errors
                     for path, errors in errors_per_file.items():
                         await self.__diagnostic_queue.put((path, errors))
@@ -1038,9 +1043,13 @@ class LspCompiler:
 
             # not in a subprocess, use try/except to avoid crashing the server by detectors
             try:
-                errors_per_file, exceptions = self.__run_detectors(
+                errors_per_file, exceptions, logging_buffer = self.__run_detectors(
                     [d for d in all_detectors if d != "all"], None
                 )
+
+                for log, log_type in logging_buffer:
+                    await self.__server.log_message(log, log_type)
+
                 # send both compiler and detector warnings and errors
                 for path, errors in errors_per_file.items():
                     await self.__diagnostic_queue.put((path, errors))
@@ -1054,13 +1063,18 @@ class LspCompiler:
         self,
         detector_names: List[str],
         conn: Optional[multiprocessing.connection.Connection],
-    ) -> Tuple[Dict[Path, Set[Diagnostic]], Dict[str, str]]:
+    ) -> Tuple[
+        Dict[Path, Set[Diagnostic]], Dict[str, str], List[Tuple[str, MessageType]]
+    ]:
         errors_per_file: Dict[Path, Set[Diagnostic]]
         if conn is not None:
             # in forked process, original dictionary won't be modified anyway
             errors_per_file = self.__compilation_errors
         else:
             errors_per_file = deepcopy(self.__compilation_errors)
+
+        logging_buffer = []
+        logging_handler = LspLoggingHandler(logging_buffer)
 
         if self.__config.lsp.detectors.enable:
             detections, detector_exceptions = detect(
@@ -1072,6 +1086,7 @@ class LspCompiler:
                 None,
                 verify_paths=False,
                 capture_exceptions=True,
+                logging_handler=logging_handler,
             )
             exceptions = {name: repr(e) for name, e in detector_exceptions.items()}
 
@@ -1133,8 +1148,8 @@ class LspCompiler:
             exceptions = {}
 
         if conn is not None:
-            conn.send((errors_per_file, exceptions))
-        return errors_per_file, exceptions
+            conn.send((errors_per_file, exceptions, logging_buffer))
+        return errors_per_file, exceptions, logging_buffer
 
     async def __compilation_loop(self):
         if self.__perform_files_discovery:

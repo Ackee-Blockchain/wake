@@ -358,6 +358,9 @@ def run_print(ctx: click.Context, no_artifacts: bool) -> None:
         instance.imports_graph = (  # pyright: ignore reportGeneralTypeIssues
             compiler.latest_graph.copy()
         )
+        instance.logger = logging.getLogger(cls.__name__)
+        if ctx.obj["debug"]:
+            instance.logger.setLevel(logging.DEBUG)
 
         original_callback = command.callback
         command.callback = _callback
@@ -381,13 +384,20 @@ def run_print(ctx: click.Context, no_artifacts: bool) -> None:
 
             original_callback(*args, **kwargs)  # pyright: ignore reportOptionalCall
 
+        assert command.callback is not None
+
         args = [*ctx.obj["subcommand_protected_args"][1:], *ctx.obj["subcommand_args"]]
+        logger = logging.getLogger(command.callback.__name__)
+        if ctx.obj["debug"]:
+            logger.setLevel(logging.DEBUG)
+
         ctx.obj = {
             "build": build,
             "build_info": compiler.latest_build_info,
             "config": config,
             "console": console,
             "imports_graph": compiler.latest_graph.copy(),
+            "logger": logger,
         }
 
         original_callback = command.callback
