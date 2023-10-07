@@ -42,6 +42,7 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
     _plugin_commands: Dict[str, click.Command] = {}
     _failed_plugin_paths: Set[Tuple[Path, Exception]] = set()
     _failed_plugin_entry_points: Set[Tuple[str, Exception]] = set()
+    _detector_collisions: Set[Tuple[str, str, str]] = set()
     _completion_mode: bool
     _global_data_path: Path
     _loading_from_plugins: bool = False
@@ -119,6 +120,10 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
     def failed_plugin_entry_points(self) -> FrozenSet[Tuple[str, Exception]]:
         return frozenset(self._failed_plugin_entry_points)
 
+    @property
+    def detector_collisions(self) -> FrozenSet[Tuple[str, str, str]]:
+        return frozenset(self._detector_collisions)
+
     def add_verified_plugin_path(self, path: Path) -> None:
         import json
 
@@ -174,6 +179,7 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         self.loaded_from_plugins.clear()
         self._failed_plugin_paths.clear()
         self._failed_plugin_entry_points.clear()
+        self._detector_collisions.clear()
 
         detector_entry_points = entry_points().select(group="woke.plugins.detectors")
         for entry_point in sorted(detector_entry_points, key=lambda e: e.value):
@@ -234,7 +240,7 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
 
     def add_command(self, cmd: click.Command, name: Optional[str] = None) -> None:
         name = name or cmd.name
-        if name in self.loaded_from_plugins and not self._completion_mode:
+        if name in self.loaded_from_plugins:
             if isinstance(self.loaded_from_plugins[name], str):
                 prev = f"package '{self.loaded_from_plugins[name]}'"
             else:
@@ -244,9 +250,11 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
             else:
                 current = f"path '{self._current_plugin}'"
 
-            logger.warning(
-                f"Detector '{name}' loaded from {current} overwrites detector loaded from {prev}"
-            )
+            self._detector_collisions.add((name, prev, current))
+            if not self._completion_mode:
+                logger.warning(
+                    f"Detector '{name}' loaded from {current} overrides detector loaded from {prev}"
+                )
 
         self._inject_params(cmd)
         super().add_command(cmd, name)

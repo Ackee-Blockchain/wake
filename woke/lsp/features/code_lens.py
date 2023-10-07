@@ -303,6 +303,19 @@ async def code_lens(
         await context.server.log_message(
             f"Failed to load printers from path {path}: {e}", MessageType.ERROR
         )
+    for (
+        printer_name,
+        prev,
+        current,
+    ) in run_print.printer_collisions:  # pyright: ignore reportGeneralTypeIssues
+        await context.server.show_message(
+            f"Printer '{printer_name}' loaded from {current} overrides printer loaded from {prev}",
+            MessageType.WARNING,
+        )
+        await context.server.log_message(
+            f"Printer '{printer_name}' loaded from {current} overrides printer loaded from {prev}",
+            MessageType.WARNING,
+        )
 
     for node in source_unit:
         if isinstance(node, DeclarationAbc):
