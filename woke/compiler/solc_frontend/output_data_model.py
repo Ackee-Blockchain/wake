@@ -233,7 +233,13 @@ class SolcOutputContractInfo(SolcOutputModel):
     devdoc: Optional[Dict] = None
     """Developer documentation (natspec)"""
     ir: Optional[str] = None
-    """Intermediate representation (string)"""
+    """Intermediate representation before optimization (string)"""
+    ir_ast: Optional[Dict] = None
+    """AST of intermediate representation before optimization"""
+    ir_optimized: Optional[str] = None
+    """Intermediate representation after optimization (string)"""
+    ir_optimized_ast: Optional[Dict] = None
+    """AST of intermediate representation after optimization"""
     storage_layout: Optional[SolcOutputStorageLayout] = None
     """See https://docs.soliditylang.org/en/latest/internals/layout_in_storage.html#json-output"""
     evm: Optional[SolcOutputEvmData] = None
