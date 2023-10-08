@@ -925,6 +925,11 @@ class TypeGenerator:
             self.add_str_to_types(
                 indent + 1, f"_abi = {events_abi[event.event_selector]}", 1
             )
+            self.add_str_to_types(
+                indent + 1,
+                "origin: Account = dataclasses.field(init=False, compare=False, repr=False)",
+                1,
+            )
             self.add_str_to_types(indent + 1, f"original_name = '{event.name}'", 1)
             self.add_str_to_types(indent + 1, f"selector = {event.event_selector}", 2)
             for param_name, param_type, _, original_name in parameters:
@@ -2041,7 +2046,7 @@ class NameSanitizer:
             "confirmations",
         }
         self.__struct_reserved = {"original_name"}
-        self.__event_reserved = {"_abi", "selector", "original_name"}
+        self.__event_reserved = {"_abi", "selector", "original_name", "origin"}
         self.__error_reserved = {"_abi", "selector", "original_name"}
         self.__enum_reserved = set()
 

@@ -1,9 +1,15 @@
-from dataclasses import dataclass
-from typing import List
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, List
+
+if TYPE_CHECKING:
+    from .core import Account
 
 
 @dataclass
 class UnknownEvent:
+    origin: Account = field(init=False, compare=False, repr=False)
     topics: List[bytes]
     data: bytes
 
