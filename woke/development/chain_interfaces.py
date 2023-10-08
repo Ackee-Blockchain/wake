@@ -588,6 +588,9 @@ class HardhatChainInterface(ChainInterfaceAbc):
             else [hex(num_blocks)],
         )
 
+    def hardhat_metadata(self) -> Dict[str, Any]:
+        return self._communicator.send_request("hardhat_metadata")
+
 
 class AnvilChainInterface(ChainInterfaceAbc):
     def get_accounts(self) -> List[str]:
