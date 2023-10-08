@@ -340,7 +340,7 @@ class SolidityNode(SolcNode):
 
 
 class YulNode(SolcNode):
-    pass
+    native_src: Optional[Src]  # new in 0.8.21
 
 
 class SolcSourceUnit(SolidityNode):

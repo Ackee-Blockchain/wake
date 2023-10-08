@@ -329,7 +329,7 @@ class WokeConfig:
 
     @property
     def max_solidity_version(self) -> SolidityVersion:
-        return SolidityVersion.fromstring("0.8.20")
+        return SolidityVersion.fromstring("0.8.21")
 
     @property
     def detectors(self) -> DetectorsConfig:
