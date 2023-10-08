@@ -441,6 +441,25 @@ class ChainInterfaceAbc(ABC):
             )[2:]
         )
 
+    def get_logs(
+        self,
+        *,
+        from_block: Optional[Union[int, str]] = None,
+        to_block: Optional[Union[int, str]] = None,
+        address: Optional[str] = None,
+        topics: Optional[List[str]] = None,
+    ) -> List:
+        params = {}
+        if from_block is not None:
+            params["fromBlock"] = self._encode_block_identifier(from_block)
+        if to_block is not None:
+            params["toBlock"] = self._encode_block_identifier(to_block)
+        if address is not None:
+            params["address"] = address
+        if topics is not None:
+            params["topics"] = topics
+        return self._communicator.send_request("eth_getLogs", [params])
+
     @abstractmethod
     def get_accounts(self) -> List[str]:
         ...

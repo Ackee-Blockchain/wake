@@ -402,7 +402,7 @@ class TransactionAbc(ABC, Generic[T]):
             self._events = []
             return self._events
 
-        self._events = self._chain._process_events(self, self._tx_receipt["logs"])
+        self._events = self._chain._process_events(self)
         return self._events
 
     @property
