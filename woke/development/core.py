@@ -1866,38 +1866,65 @@ class Chain(ABC):
                 if log["data"].startswith("0x")
                 else bytes.fromhex(log["data"])
             )
+            address = Address(log["address"])
+            unknown_event = UnknownEvent(topics, data)
+            unknown_event.origin = Account(address, tx.chain)
 
             if len(topics) == 0:
-                generated_events.append(UnknownEvent([], data))
+                generated_events.append(unknown_event)
                 continue
 
             selector = topics[0]
 
             if selector not in events:
-                generated_events.append(UnknownEvent(topics, data))
+                generated_events.append(unknown_event)
                 continue
 
             if len({source for source in events[selector].values()}) > 1:
-                address = Address(log["address"])
-                if address in fqn_overrides:
-                    fqn = fqn_overrides[address]
+                addresses = {address}
+
+                if isinstance(tx.chain.chain_interface, AnvilChainInterface):
+                    tx._fetch_trace_transaction()
+                    trace = tx._trace_transaction
+                    assert trace is not None
+
+                    # `address` may not be the address of the syntatic contract that emitted the event
+                    # it may be the address of a contract that delegatecalled into the syntatic contract
+                    # find all delegatecalls from `address` recursively
+                    finished = False
+                    while not finished:
+                        finished = True
+                        for t in trace:
+                            if (
+                                "callType" in t["action"]
+                                and t["action"]["callType"] == "delegatecall"
+                                and Address(t["action"]["from"]) in addresses
+                            ):
+                                to = Address(t["action"]["to"])
+                                if to not in addresses:
+                                    addresses.add(to)
+                                    finished = False
+
+                candidates = []
+                for a in addresses:
+                    if a in fqn_overrides:
+                        fqn = fqn_overrides[a]
+                    else:
+                        fqn = get_fqn_from_address(a, tx.block.number - 1, tx.chain)
+
+                    if fqn is None:
+                        continue
+
+                    for base_fqn in contracts_inheritance[fqn]:
+                        if base_fqn in events[selector]:
+                            candidates.append(base_fqn)
+                            break
+
+                if len(candidates) != 1:
+                    generated_events.append(unknown_event)
+                    continue
                 else:
-                    fqn = get_fqn_from_address(address, tx.block.number - 1, tx.chain)
-
-                if fqn is None:
-                    generated_events.append(UnknownEvent(topics, data))
-                    continue
-
-                found = False
-                for base_fqn in contracts_inheritance[fqn]:
-                    if base_fqn in events[selector]:
-                        found = True
-                        fqn = base_fqn
-                        break
-
-                if not found:
-                    generated_events.append(UnknownEvent(topics, data))
-                    continue
+                    fqn = candidates[0]
             else:
                 fqn = list(events[selector].keys())[0]
 
@@ -1942,6 +1969,7 @@ class Chain(ABC):
 
             merged = tuple(merged)
             generated_event = self._convert_from_web3_type(tx, merged, obj)
+            generated_event.origin = Account(address, tx.chain)
             generated_events.append(generated_event)
 
         return generated_events
