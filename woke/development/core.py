@@ -1799,51 +1799,32 @@ class Chain(ABC):
         generated_error.tx = tx
         return generated_error
 
-    def _process_events(self, tx: TransactionAbc, logs: List) -> list:
-        if len(logs) == 0:
-            return []
-
+    def _process_events(self, tx: TransactionAbc) -> list:
+        fqn_overrides: ChainMap[Address, Optional[str]] = ChainMap()
         generated_events = []
 
-        non_unique = False
-        for log in logs:
-            if len(log["topics"]) == 0:
-                continue
-
-            selector = log["topics"][0]
-            if selector.startswith("0x"):
-                selector = selector[2:]
-            selector = bytes.fromhex(selector.zfill(64))
-
-            if selector not in events:
-                continue
-
-            if len({source for source in events[selector].values()}) > 1:
-                non_unique = True
-                break
-
-        if non_unique:
-            tx._fetch_debug_trace_transaction()
-            debug_trace = tx._debug_trace_transaction
-            fqn_overrides: ChainMap[Address, Optional[str]] = ChainMap()
-            for i in range(tx.tx_index):
-                prev_tx = tx.block.txs[i]
-                prev_tx._fetch_debug_trace_transaction()
-                process_debug_trace_for_fqn_overrides(
-                    prev_tx,
-                    prev_tx._debug_trace_transaction,  # pyright: ignore reportGeneralTypeIssues
-                    fqn_overrides,
-                )
-            event_traces = process_debug_trace_for_events(
-                tx,
-                debug_trace,  # pyright: ignore reportGeneralTypeIssues
+        # process fqn_overrides for all txs before this one in the same block
+        for i in range(tx.tx_index):
+            tx_before = tx.block.txs[i]
+            tx_before._fetch_debug_trace_transaction()
+            process_debug_trace_for_fqn_overrides(
+                tx_before,
+                tx_before._debug_trace_transaction,  # pyright: ignore reportGeneralTypeIssues
                 fqn_overrides,
             )
-            assert len(event_traces) == len(logs)
-        else:
-            event_traces = [(None, None)] * len(logs)
+        assert len(fqn_overrides.maps) == 1
 
-        for log, (traced_selector, fqn) in zip(logs, event_traces):
+        logs = sorted(
+            (
+                l
+                for l in tx.chain.chain_interface.get_logs(
+                    from_block=tx.block.number, to_block=tx.block.number
+                )
+                if l["transactionHash"] == tx.tx_hash
+            ),
+            key=lambda l: int(l["logIndex"], 16),
+        )
+        for log in logs:
             topics = [
                 bytes.fromhex(t[2:].zfill(64))
                 if t.startswith("0x")
@@ -1867,7 +1848,11 @@ class Chain(ABC):
                 continue
 
             if len({source for source in events[selector].values()}) > 1:
-                assert traced_selector == selector
+                address = Address(log["address"])
+                if address in fqn_overrides:
+                    fqn = fqn_overrides[address]
+                else:
+                    fqn = get_fqn_from_address(address, tx.block.number - 1, tx.chain)
 
                 if fqn is None:
                     generated_events.append(UnknownEvent(topics, data))

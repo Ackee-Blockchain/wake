@@ -613,13 +613,20 @@ class TypeGenerator:
                 events_abi[selector] = item
 
                 event_decl = None
-                for c in contract.linearized_base_contracts:
-                    for event in c.events:
+                # used_events is only available in 0.8.20 and above
+                if len(contract.used_events) > 0:
+                    for event in contract.used_events:
                         if event.event_selector == selector:
                             event_decl = event
                             break
-                    if event_decl is not None:
-                        break
+                else:
+                    for c in contract.linearized_base_contracts:
+                        for event in c.events:
+                            if event.event_selector == selector:
+                                event_decl = event
+                                break
+                        if event_decl is not None:
+                            break
                 if event_decl is None:
                     continue
 
