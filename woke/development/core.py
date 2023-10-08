@@ -1235,17 +1235,6 @@ class Chain(ABC):
         if isinstance(block_base_fee_per_gas, str):
             block_base_fee_per_gas = Wei.from_str(block_base_fee_per_gas)
 
-        if fork is not None:
-            forked_chain_interface = ChainInterfaceAbc.connect(
-                get_config(), fork.split("@")[0]
-            )
-            try:
-                self._forked_chain_id = forked_chain_interface.get_chain_id()
-            finally:
-                forked_chain_interface.close()
-        else:
-            self._forked_chain_id = None
-
         self._chain_interface = chain_interfaces_manager.get_or_create(
             uri, accounts=accounts, chain_id=chain_id, fork=fork, hardfork=hardfork
         )
@@ -1266,9 +1255,27 @@ class Chain(ABC):
 
             self._chain_id = self._chain_interface.get_chain_id()
 
+            # determine the forked chain id (if any)
             # determine the chain hardfork to set the default tx type
             if isinstance(self._chain_interface, AnvilChainInterface):
-                hardfork = self._chain_interface.node_info()["hardFork"]
+                info = self._chain_interface.node_info()
+
+                if (
+                    "forkConfig" in info
+                    and "forkUrl" in info["forkConfig"]
+                    and info["forkConfig"]["forkUrl"] is not None
+                ):
+                    forked_chain_interface = ChainInterfaceAbc.connect(
+                        get_config(), info["forkConfig"]["forkUrl"]
+                    )
+                    try:
+                        self._forked_chain_id = forked_chain_interface.get_chain_id()
+                    finally:
+                        forked_chain_interface.close()
+                else:
+                    self._forked_chain_id = None
+
+                hardfork = info["hardFork"]
                 if hardfork in {
                     "FRONTIER",
                     "HOMESTEAD",
@@ -1289,6 +1296,18 @@ class Chain(ABC):
                 self._chain_interface,
                 (GethLikeChainInterfaceAbc, HardhatChainInterface),
             ):
+                if isinstance(self._chain_interface, GethLikeChainInterfaceAbc):
+                    self._forked_chain_id = None
+                else:
+                    metadata = self._chain_interface.hardhat_metadata()
+                    if (
+                        "forkedNetwork" in metadata
+                        and "chainId" in metadata["forkedNetwork"]
+                    ):
+                        self._forked_chain_id = metadata["forkedNetwork"]["chainId"]
+                    else:
+                        self._forked_chain_id = None
+
                 if self._chain_id in {56, 97}:
                     # BSC clients do not fail on the calls below
                     self._default_tx_type = 1
@@ -1318,6 +1337,17 @@ class Chain(ABC):
                         except JsonRpcError:
                             self._default_tx_type = 0
             elif isinstance(self._chain_interface, GanacheChainInterface):
+                if fork is not None:
+                    forked_chain_interface = ChainInterfaceAbc.connect(
+                        get_config(), fork.split("@")[0]
+                    )
+                    try:
+                        self._forked_chain_id = forked_chain_interface.get_chain_id()
+                    finally:
+                        forked_chain_interface.close()
+                else:
+                    self._forked_chain_id = None
+
                 self._default_tx_type = 0
             else:
                 raise NotImplementedError(
