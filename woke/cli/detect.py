@@ -432,8 +432,18 @@ def _filter_detections(
 @click.option(
     "--ignore-exceptions", is_flag=True, default=False, help="Ignore exceptions."
 )
+@click.option(
+    "--export",
+    type=click.Choice(["svg", "html", "text", "ansi"], case_sensitive=False),
+    help="Export detections to file.",
+)
 @click.pass_context
-def run_detect(ctx: click.Context, no_artifacts: bool, ignore_exceptions: bool) -> None:
+def run_detect(
+    ctx: click.Context,
+    no_artifacts: bool,
+    ignore_exceptions: bool,
+    export: Optional[str],
+) -> None:
     """Run vulnerability detectors on the project."""
 
     if "--help" in ctx.obj["subcommand_args"]:
@@ -499,6 +509,7 @@ def run_detect(ctx: click.Context, no_artifacts: bool, ignore_exceptions: bool) 
             "config": config,
             "imports_graph": compiler.latest_graph,
             "ignore_exceptions": ignore_exceptions,
+            "export": export,
         }
     else:
         detections, exceptions = detect(
@@ -519,10 +530,33 @@ def run_detect(ctx: click.Context, no_artifacts: bool, ignore_exceptions: bool) 
                     f"Error while running detector {detector_name}: {exception}"
                 )
 
+        if export is not None:
+            console.record = True
+
         # TODO order
         for detector_name in sorted(detections.keys()):
             for detection in detections[detector_name]:
                 _print_detection(detector_name, detection, config)
+
+        # TODO export theme
+        if export == "html":
+            console.save_html(
+                str(config.project_root_path / "woke-detections.html"),
+            )
+        elif export == "svg":
+            console.save_svg(
+                str(config.project_root_path / "woke-detections.svg"),
+                title=f"woke detect {ctx.invoked_subcommand}",
+            )
+        elif export == "text":
+            console.save_text(
+                str(config.project_root_path / "woke-detections.txt"),
+            )
+        elif export == "ansi":
+            console.save_text(
+                str(config.project_root_path / "woke-detections.ansi"),
+                styles=True,
+            )
 
         if len(detections) == 0:
             console.print("No detections found")
@@ -551,6 +585,7 @@ def run_detect_all(
     latest_build_info = ctx.obj["build_info"]
     latest_graph = ctx.obj["imports_graph"]
     ignore_exceptions = ctx.obj["ignore_exceptions"]
+    export = ctx.obj["export"]
 
     detections, exceptions = detect(
         run_detect.list_commands(ctx),
@@ -570,10 +605,33 @@ def run_detect_all(
         for detector_name, exception in exceptions.items():
             logger.error(f"Error while running detector {detector_name}: {exception}")
 
+    if export is not None:
+        console.record = True
+
     # TODO order
     for detector_name in sorted(detections.keys()):
         for detection in detections[detector_name]:
             _print_detection(detector_name, detection, config)
+
+    # TODO export theme
+    if export == "html":
+        console.save_html(
+            str(config.project_root_path / "woke-detections.html"),
+        )
+    elif export == "svg":
+        console.save_svg(
+            str(config.project_root_path / "woke-detections.svg"),
+            title="woke detect all",
+        )
+    elif export == "text":
+        console.save_text(
+            str(config.project_root_path / "woke-detections.txt"),
+        )
+    elif export == "ansi":
+        console.save_text(
+            str(config.project_root_path / "woke-detections.ansi"),
+            styles=True,
+        )
 
     if len(detections) == 0:
         console.print("No detections found")

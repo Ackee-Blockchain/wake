@@ -271,8 +271,13 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
 @click.option(
     "--no-artifacts", is_flag=True, default=False, help="Do not write build artifacts."
 )
+@click.option(
+    "--export",
+    type=click.Choice(["svg", "html", "text", "ansi"], case_sensitive=False),
+    help="Export output to file.",
+)
 @click.pass_context
-def run_print(ctx: click.Context, no_artifacts: bool) -> None:
+def run_print(ctx: click.Context, no_artifacts: bool, export: Optional[str]) -> None:
     """Run a printer."""
 
     if "--help" in ctx.obj["subcommand_args"]:
@@ -325,6 +330,9 @@ def run_print(ctx: click.Context, no_artifacts: bool) -> None:
     )
     if errored:
         sys.exit(1)
+
+    if export is not None:
+        console.record = True
 
     assert compiler.latest_build_info is not None
     assert compiler.latest_graph is not None
@@ -406,6 +414,26 @@ def run_print(ctx: click.Context, no_artifacts: bool) -> None:
         )
         with sub_ctx:
             sub_ctx.command.invoke(sub_ctx)
+
+    # TODO export theme
+    if export == "html":
+        console.save_html(
+            str(config.project_root_path / "woke-print-output.html"),
+        )
+    elif export == "svg":
+        console.save_svg(
+            str(config.project_root_path / "woke-print-output.svg"),
+            title=f"woke print {command.name}",
+        )
+    elif export == "text":
+        console.save_text(
+            str(config.project_root_path / "woke-print-output.txt"),
+        )
+    elif export == "ansi":
+        console.save_text(
+            str(config.project_root_path / "woke-print-output.ansi"),
+            styles=True,
+        )
 
     # avoid double execution of a subcommand
     sys.exit(0)
