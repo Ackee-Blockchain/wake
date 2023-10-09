@@ -708,7 +708,9 @@ class TypeGenerator:
                             self.get_name(c),
                         )
 
-            source_units_queue.extend(imp.source_unit for imp in source_unit.imports)
+            source_units_queue.extend(
+                imp.imported_source_unit for imp in source_unit.imports
+            )
 
         assert len(lib_ids) == 0, "Not all libraries were found"
 

@@ -87,10 +87,10 @@ class ImportDirective(SolidityAbc):
     _ast_node: SolcImportDirective
     _parent: SourceUnit
 
-    _source_unit_name: str
+    _imported_source_unit_name: str
     _import_string: str
     _imported_file: Path
-    _source_unit_id: AstNodeId
+    _imported_source_unit_id: AstNodeId
     _symbol_aliases: List[SymbolAlias]
     _unit_alias: Optional[str]
 
@@ -101,10 +101,12 @@ class ImportDirective(SolidityAbc):
         parent: SolidityAbc,
     ):
         super().__init__(init, import_directive, parent)
-        self._source_unit_name = import_directive.absolute_path
+        self._imported_source_unit_name = import_directive.absolute_path
         self._import_string = import_directive.file
-        self._imported_file = init.cu.source_unit_name_to_path(self._source_unit_name)
-        self._source_unit_id = import_directive.source_unit
+        self._imported_file = init.cu.source_unit_name_to_path(
+            self._imported_source_unit_name
+        )
+        self._imported_source_unit_id = import_directive.source_unit
         self._symbol_aliases = []
         if len(import_directive.unit_alias) > 0:
             self._unit_alias = import_directive.unit_alias
@@ -194,12 +196,12 @@ class ImportDirective(SolidityAbc):
         return self._parent
 
     @property
-    def source_unit_name(self) -> str:
+    def imported_source_unit_name(self) -> str:
         """
         Returns:
             Source unit name of the imported file.
         """
-        return self._source_unit_name
+        return self._imported_source_unit_name
 
     @property
     def imported_file(self) -> Path:
@@ -218,7 +220,7 @@ class ImportDirective(SolidityAbc):
         return self._import_string
 
     @property
-    def source_unit(self) -> SourceUnit:
+    def imported_source_unit(self) -> SourceUnit:
         """
         Returns:
             Source unit imported by this import directive.
@@ -226,7 +228,7 @@ class ImportDirective(SolidityAbc):
         from .source_unit import SourceUnit
 
         node = self._reference_resolver.resolve_node(
-            self._source_unit_id, self._cu_hash
+            self._imported_source_unit_id, self._cu_hash
         )
         assert isinstance(node, SourceUnit)
         return node
