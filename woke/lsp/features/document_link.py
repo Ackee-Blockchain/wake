@@ -5,6 +5,7 @@ from typing import Any, List, Optional
 from woke.compiler.exceptions import CompilationResolveError
 from woke.compiler.source_path_resolver import SourcePathResolver
 from woke.compiler.source_unit_name_resolver import SourceUnitNameResolver
+from woke.core import get_logger
 from woke.lsp.common_structures import (
     DocumentUri,
     PartialResultParams,
@@ -18,7 +19,7 @@ from woke.lsp.context import LspContext
 from woke.lsp.lsp_data_model import LspModel
 from woke.lsp.utils.uri import path_to_uri, uri_to_path
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class DocumentLinkOptions(WorkDoneProgressOptions):

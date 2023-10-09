@@ -3,9 +3,10 @@ import logging
 import graphviz as gv
 
 from woke.config.data_model import ImportsDirection
+from woke.core import get_logger
 from woke.lsp.context import LspContext
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 async def generate_imports_graph_handler(context: LspContext) -> str:

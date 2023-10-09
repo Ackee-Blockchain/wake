@@ -17,6 +17,7 @@ from woke.cli.console import console
 from woke.compiler import SolidityCompiler
 from woke.compiler.build_data_model import ProjectBuild
 from woke.config import WokeConfig
+from woke.core import get_logger
 from woke.development.chain_interfaces import TxParams
 from woke.development.core import (
     Address,
@@ -47,8 +48,7 @@ from woke.ir import (
 )
 from woke.ir.reference_resolver import ReferenceResolver
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.ERROR)
+logger = get_logger(__name__, logging.ERROR)
 
 
 @dataclass

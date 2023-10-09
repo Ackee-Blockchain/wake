@@ -1,6 +1,7 @@
 import logging
 from typing import List, Optional, Union
 
+from woke.core import get_logger
 from woke.ir import (
     ContractDefinition,
     DeclarationAbc,
@@ -27,7 +28,7 @@ from woke.lsp.common_structures import (
 from woke.lsp.context import LspContext
 from woke.lsp.utils.uri import uri_to_path
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class DocumentSymbolOptions(WorkDoneProgressOptions):

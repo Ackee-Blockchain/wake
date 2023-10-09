@@ -11,13 +11,14 @@ if TYPE_CHECKING:
     from ..type_names.function_type_name import FunctionTypeName
     from .try_catch_clause import TryCatchClause
 
+from woke.core import get_logger
 from woke.ir.abc import IrAbc, SolidityAbc
 from woke.ir.ast import SolcParameterList
 from woke.ir.utils import IrInitTuple
 
 from ..declarations.variable_declaration import VariableDeclaration
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class ParameterList(SolidityAbc):

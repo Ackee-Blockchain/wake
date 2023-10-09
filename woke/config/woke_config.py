@@ -9,6 +9,7 @@ from typing import Any, Dict, FrozenSet, Iterable, Optional, Set, Tuple, Union
 import networkx as nx
 import tomli
 
+from woke.core import get_logger
 from woke.utils import change_cwd
 
 from ..core.solidity_version import SolidityVersion
@@ -24,7 +25,7 @@ from .data_model import (
     TopLevelConfig,
 )
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class UnsupportedPlatformError(Exception):

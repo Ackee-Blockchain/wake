@@ -6,12 +6,13 @@ from typing import TYPE_CHECKING, List, Tuple
 if TYPE_CHECKING:
     from woke.ir.meta.source_unit import SourceUnit
 
+from woke.core import get_logger
 from woke.ir.ast import SolcPragmaDirective
 
 from ..abc import SolidityAbc
 from ..utils import IrInitTuple
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class PragmaDirective(SolidityAbc):

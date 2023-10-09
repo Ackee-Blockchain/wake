@@ -4,6 +4,7 @@ from functools import lru_cache
 from typing import Optional, Set, Tuple, Union
 
 import woke.ir.types as types
+from woke.core import get_logger
 from woke.ir import (
     Assignment,
     BinaryOperation,
@@ -37,7 +38,7 @@ from .utils import (
     pair_function_call_arguments,
 )
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def expression_is_only_owner(

@@ -79,12 +79,16 @@ def main(ctx: Context, debug: bool, profile: bool) -> None:
     logging.basicConfig(
         format="%(asctime)s %(name)s: %(message)s",
         handlers=[RichHandler(show_time=False, console=console)],
-        level=(logging.WARNING if not debug else logging.DEBUG),
         force=True,  # pyright: ignore reportGeneralTypeIssues
     )
     sys.excepthook = lambda type, value, traceback: excepthook(
         debug, type, value, traceback
     )
+
+    if debug:
+        from woke.core.logging import set_debug
+
+        set_debug(True)
 
     ctx.ensure_object(dict)
     ctx.obj["debug"] = debug

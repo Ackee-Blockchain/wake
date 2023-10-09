@@ -18,6 +18,8 @@ from typing import (
 
 from intervaltree import IntervalTree
 
+from woke.core import get_logger
+from woke.ir.ast import AstNodeId, AstSolc
 from woke.ir.enums import GlobalSymbol
 
 if TYPE_CHECKING:
@@ -26,9 +28,8 @@ if TYPE_CHECKING:
     from woke.ir.expressions.member_access import MemberAccess
     from woke.ir.meta.source_unit import SourceUnit
 
-from woke.ir.ast import AstNodeId, AstSolc
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @dataclass

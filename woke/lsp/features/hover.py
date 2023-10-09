@@ -2,6 +2,7 @@ import logging
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
+from woke.core import get_logger
 from woke.ir import (
     BinaryOperation,
     ContractDefinition,
@@ -31,7 +32,7 @@ from ..lsp_data_model import LspModel
 from ..utils import position_within_range, uri_to_path
 from ..utils.position import changes_to_byte_offset
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class HoverClientCapabilities(LspModel):

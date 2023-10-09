@@ -41,6 +41,7 @@ from watchdog.events import (
 )
 
 from woke.config import WokeConfig
+from woke.core import get_logger
 from woke.core.solidity_version import (
     SolidityVersion,
     SolidityVersionRange,
@@ -77,7 +78,7 @@ from .source_unit_name_resolver import SourceUnitNameResolver
 
 # pyright: reportGeneralTypeIssues=false
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class CompilationFileSystemEventHandler(FileSystemEventHandler):

@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Dict
 
 from woke.config import WokeConfig
+from woke.core import get_logger
 from woke.core.solidity_version import SolidityVersion
 from woke.svm import SolcVersionManager
 
@@ -17,7 +18,7 @@ from .input_data_model import (
 )
 from .output_data_model import SolcOutput
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class SolcFrontend:

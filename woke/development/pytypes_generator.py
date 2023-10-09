@@ -34,6 +34,7 @@ from typing_extensions import Literal
 import woke.ir.types as types
 from woke.compiler import SolidityCompiler
 from woke.config import WokeConfig
+from woke.core import get_logger
 from woke.ir import (
     ArrayTypeName,
     ContractDefinition,
@@ -58,7 +59,7 @@ from woke.utils import get_package_version
 
 from .constants import DEFAULT_IMPORTS, INIT_CONTENT, TAB_WIDTH
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 # TODO ensure that making the path alphanum won't create collisions

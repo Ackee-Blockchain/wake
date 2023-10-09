@@ -6,6 +6,7 @@ from typing import Deque, Dict, List, Optional, Set, Tuple, Union, overload
 import networkx as nx
 
 import woke.ir.types as types
+from woke.core import get_logger
 from woke.ir import (
     Assignment,
     ContractDefinition,
@@ -29,7 +30,7 @@ from woke.ir.enums import FunctionCallKind, GlobalSymbol
 
 from .cfg import CfgBlock
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def pair_function_call_arguments(

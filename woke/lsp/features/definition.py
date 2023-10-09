@@ -2,6 +2,7 @@ import logging
 from pathlib import Path
 from typing import List, Optional, Set, Tuple, Union
 
+from woke.core import get_logger
 from woke.ir import (
     BinaryOperation,
     DeclarationAbc,
@@ -34,7 +35,7 @@ from woke.lsp.lsp_compiler import LspCompiler
 from woke.lsp.utils import path_to_uri, position_within_range, uri_to_path
 from woke.lsp.utils.position import changes_to_byte_offset
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class DefinitionOptions(WorkDoneProgressOptions):

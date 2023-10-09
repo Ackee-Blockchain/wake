@@ -10,6 +10,7 @@ from urllib.error import HTTPError
 from ipdb.__main__ import _init_pdb
 
 from woke.config import WokeConfig
+from woke.core import get_logger
 from woke.development.chain_interfaces import ChainInterfaceAbc
 from woke.development.json_rpc import JsonRpcError
 from woke.utils.file_utils import is_relative_to
@@ -18,7 +19,7 @@ if TYPE_CHECKING:
     from woke.testing.coverage import CoverageHandler
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 # must be declared before functions that use it because of a bug in Python (https://bugs.python.org/issue34939)

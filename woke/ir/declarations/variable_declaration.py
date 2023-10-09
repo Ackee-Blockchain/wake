@@ -6,6 +6,7 @@ from collections import deque
 from functools import lru_cache, partial
 from typing import TYPE_CHECKING, Deque, Iterator, List, Optional, Set, Tuple, Union
 
+from woke.core import get_logger
 from woke.ir.abc import IrAbc, SolidityAbc
 from woke.ir.ast import AstNodeId, SolcVariableDeclaration, TypeDescriptionsModel
 from woke.ir.declarations.abc import DeclarationAbc
@@ -35,7 +36,7 @@ if TYPE_CHECKING:
     from ..statements.variable_declaration_statement import VariableDeclarationStatement
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class VariableDeclaration(DeclarationAbc):

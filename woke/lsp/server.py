@@ -20,6 +20,7 @@ from typing import (
 
 from pydantic.error_wrappers import ValidationError
 
+from woke.core import get_logger
 from woke.utils import StrEnum
 
 from ..config import WokeConfig
@@ -122,7 +123,7 @@ from .server_capabilities import (
 )
 from .utils.uri import uri_to_path
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 ConfigPath = Tuple[Union[str, int], ...]
 

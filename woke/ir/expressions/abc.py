@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 from functools import lru_cache
 from typing import TYPE_CHECKING, Optional, Set, Tuple
 
+from woke.core import get_logger
 from woke.ir.abc import IrAbc, SolidityAbc
 from woke.ir.ast import (
     SolcAssignment,
@@ -32,7 +33,7 @@ from woke.utils.string import StringReader
 if TYPE_CHECKING:
     from ..statements.abc import StatementAbc
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class ExpressionAbc(SolidityAbc, ABC):

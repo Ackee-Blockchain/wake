@@ -13,12 +13,13 @@ from Crypto.Hash import keccak
 from pydantic import BaseModel, Field
 
 from woke.config import UnsupportedPlatformError, WokeConfig
+from woke.core import get_logger
 from woke.core.solidity_version import SolidityVersion
 
 from .abc import CompilerVersionManagerAbc
 from .exceptions import ChecksumError, UnsupportedVersionError
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class SolcBuildInfo(BaseModel):

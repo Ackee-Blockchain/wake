@@ -5,6 +5,7 @@ import re
 from functools import lru_cache
 from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
 
+from woke.core import get_logger
 from woke.ir.ast import SolcEnumDefinition
 
 from ..abc import IrAbc, SolidityAbc
@@ -18,7 +19,7 @@ if TYPE_CHECKING:
     from .contract_definition import ContractDefinition
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class EnumDefinition(DeclarationAbc):
