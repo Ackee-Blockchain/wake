@@ -4,6 +4,7 @@ from typing import Deque, Optional, Set, Tuple
 
 import graphviz as gv
 
+from woke.core import get_logger
 from woke.ir import ContractDefinition
 from woke.lsp.common_structures import DocumentUri
 from woke.lsp.context import LspContext
@@ -11,7 +12,7 @@ from woke.lsp.exceptions import LspError
 from woke.lsp.protocol_structures import ErrorCodes
 from woke.lsp.utils import uri_to_path
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 async def generate_inheritance_graph_handler(

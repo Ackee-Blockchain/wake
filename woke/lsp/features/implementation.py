@@ -1,6 +1,7 @@
 import logging
 from typing import List, Union
 
+from woke.core import get_logger
 from woke.ir import FunctionDefinition, IrAbc, ModifierDefinition, VariableDeclaration
 from woke.lsp.common_structures import (
     DocumentUri,
@@ -16,7 +17,7 @@ from woke.lsp.common_structures import (
 from woke.lsp.context import LspContext
 from woke.lsp.utils import path_to_uri, uri_to_path
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class ImplementationOptions(WorkDoneProgressOptions):

@@ -19,6 +19,7 @@ from typing import (
 import rich_click as click
 
 from woke.cli.detect import DetectCli, run_detect
+from woke.core import get_logger
 from woke.core.visitor import Visitor, visit_map
 from woke.utils import StrEnum, get_class_that_defined_method
 from woke.utils.file_utils import is_relative_to
@@ -237,7 +238,6 @@ def detect(
     console: Optional[rich.console.Console] = None,
     verify_paths: bool = True,
     capture_exceptions: bool = False,
-    debug: bool = False,
     logging_handler: Optional[logging.Handler] = None,
 ) -> Tuple[Dict[str, List[DetectorResult]], Dict[str, Exception]]:
     from contextlib import nullcontext
@@ -355,9 +355,7 @@ def detect(
                 instance.imports_graph = (
                     imports_graph.copy()
                 )  # pyright: ignore reportGeneralTypeIssues
-                instance.logger = logging.getLogger(cls.__name__)
-                if debug:
-                    instance.logger.setLevel(logging.DEBUG)
+                instance.logger = get_logger(cls.__name__)
                 if logging_handler is not None:
                     instance.logger.addHandler(logging_handler)
 
@@ -417,10 +415,8 @@ def detect(
                     "build_info": build_info,
                     "config": config,
                     "imports_graph": imports_graph.copy(),
-                    "logger": logging.getLogger(original_callback.__name__),
+                    "logger": get_logger(original_callback.__name__),
                 }
-                if debug:
-                    sub_ctx.obj["logger"].setLevel(logging.DEBUG)
                 if logging_handler is not None:
                     sub_ctx.obj["logger"].addHandler(logging_handler)
 

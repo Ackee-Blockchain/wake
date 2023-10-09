@@ -5,14 +5,14 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from woke.config import WokeConfig
+from woke.core import get_logger
 
 from .abc import ProtocolAbc
 from .http import HttpProtocol
 from .ipc import IpcProtocol
 from .websocket import WebsocketProtocol
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.ERROR)
+logger = get_logger(__name__)
 
 
 class JsonRpcError(Exception):

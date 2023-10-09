@@ -8,11 +8,12 @@ from .abc import DeclarationAbc
 if TYPE_CHECKING:
     from .enum_definition import EnumDefinition
 
+from woke.core import get_logger
 from woke.ir.abc import SolidityAbc
 from woke.ir.ast import SolcEnumValue
 from woke.ir.utils import IrInitTuple
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class EnumValue(DeclarationAbc):

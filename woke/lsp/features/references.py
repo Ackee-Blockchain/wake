@@ -1,6 +1,7 @@
 import logging
 from typing import List, Union
 
+from woke.core import get_logger
 from woke.ir import (
     BinaryOperation,
     DeclarationAbc,
@@ -28,7 +29,7 @@ from woke.lsp.context import LspContext
 from woke.lsp.lsp_data_model import LspModel
 from woke.lsp.utils import path_to_uri, position_within_range, uri_to_path
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class ReferenceOptions(WorkDoneProgressOptions):

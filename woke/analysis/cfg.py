@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import networkx as nx
 
+from woke.core import get_logger
 from woke.ir import (
     Block,
     Break,
@@ -41,7 +42,7 @@ from woke.ir import (
 from woke.ir.enums import GlobalSymbol
 from woke.utils import StrEnum
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 # pyright: reportGeneralTypeIssues=false
 # pyright: reportOptionalSubscript=false

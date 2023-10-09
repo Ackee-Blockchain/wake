@@ -3,6 +3,7 @@ import re
 from functools import lru_cache, partial
 from typing import Iterator, Optional, Set, Tuple, Union
 
+from woke.core import get_logger
 from woke.ir.abc import IrAbc, SolidityAbc
 from woke.ir.ast import AstNodeId, SolcMemberAccess
 from woke.ir.declarations.abc import DeclarationAbc
@@ -31,7 +32,7 @@ from woke.ir.utils import IrInitTuple
 MEMBER_RE = re.compile(r"\s*.\s*(?P<member>.+)".encode("utf-8"))
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class MemberAccess(ExpressionAbc):
@@ -132,13 +133,9 @@ class MemberAccess(ExpressionAbc):
                         GlobalSymbol.ARRAY_LENGTH
                     )
                 elif self.member_name == "push":
-                    self._referenced_declaration_id = AstNodeId(
-                        GlobalSymbol.ARRAY_PUSH
-                    )
+                    self._referenced_declaration_id = AstNodeId(GlobalSymbol.ARRAY_PUSH)
                 elif self.member_name == "pop":
-                    self._referenced_declaration_id = AstNodeId(
-                        GlobalSymbol.ARRAY_POP
-                    )
+                    self._referenced_declaration_id = AstNodeId(GlobalSymbol.ARRAY_POP)
                 else:
                     assert False, f"Unknown array member: {self.member_name}"
             elif isinstance(expr_type, (Bytes, FixedBytes)):
@@ -147,9 +144,7 @@ class MemberAccess(ExpressionAbc):
                         GlobalSymbol.BYTES_LENGTH
                     )
                 elif self.member_name == "push":
-                    self._referenced_declaration_id = AstNodeId(
-                        GlobalSymbol.BYTES_PUSH
-                    )
+                    self._referenced_declaration_id = AstNodeId(GlobalSymbol.BYTES_PUSH)
                 else:
                     assert False, f"Unknown bytes member: {self.member_name}"
             elif isinstance(expr_type, Function):

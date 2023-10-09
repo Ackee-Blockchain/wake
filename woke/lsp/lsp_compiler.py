@@ -58,6 +58,7 @@ from woke.compiler.solc_frontend import (
     SolcOutputErrorSeverityEnum,
 )
 from woke.config import WokeConfig
+from woke.core import get_logger
 from woke.ir import DeclarationAbc, SourceUnit
 from woke.ir.ast import AstSolc
 from woke.ir.reference_resolver import CallbackParams, ReferenceResolver
@@ -85,7 +86,7 @@ from .common_structures import (
     RenameFilesParams,
 )
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 ENCODING = "utf-16-le"

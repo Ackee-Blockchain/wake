@@ -3,6 +3,7 @@ from functools import lru_cache, reduce
 from operator import or_
 from typing import Iterator, List, Optional, Set, Tuple, Union
 
+from woke.core import get_logger
 from woke.ir.abc import IrAbc, SolidityAbc
 from woke.ir.enums import (
     FunctionCallKind,
@@ -26,7 +27,7 @@ from ..expressions.new_expression import NewExpression
 from ..expressions.tuple_expression import TupleExpression
 from ..utils import IrInitTuple
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class FunctionCall(ExpressionAbc):
@@ -203,8 +204,7 @@ class FunctionCall(ExpressionAbc):
             elif called_function == GlobalSymbol.ADDRESS_DELEGATECALL:
                 ret |= {(self, ModifiesStateFlag.PERFORMS_DELEGATECALL)}
             elif (
-                called_function
-                in {GlobalSymbol.ARRAY_PUSH, GlobalSymbol.ARRAY_POP}
+                called_function in {GlobalSymbol.ARRAY_PUSH, GlobalSymbol.ARRAY_POP}
                 and self.expression.is_ref_to_state_variable
             ):
                 ret |= {(self, ModifiesStateFlag.MODIFIES_STATE_VAR)}

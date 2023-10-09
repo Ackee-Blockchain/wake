@@ -6,11 +6,13 @@ from typing import TYPE_CHECKING
 
 import rich_click as click
 
+from woke.core import get_logger
+
 if TYPE_CHECKING:
     from woke.config import WokeConfig
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 async def run_server(config: WokeConfig, port: int) -> None:

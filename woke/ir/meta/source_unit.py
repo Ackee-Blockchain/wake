@@ -2,6 +2,7 @@ import logging
 from bisect import bisect_right
 from typing import Iterator, List, Optional, Tuple
 
+from woke.core import get_logger
 from woke.ir.abc import IrAbc, SolidityAbc
 from woke.ir.ast import (
     SolcContractDefinition,
@@ -32,7 +33,7 @@ from .import_directive import ImportDirective
 from .pragma_directive import PragmaDirective
 from .using_for_directive import UsingForDirective
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class SourceUnit(SolidityAbc):

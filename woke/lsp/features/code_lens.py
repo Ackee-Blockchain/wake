@@ -20,6 +20,7 @@ from rich import get_console
 from rich.terminal_theme import MONOKAI
 
 from woke.cli.print import run_print
+from woke.core import get_logger
 from woke.core.visitor import visit_map
 from woke.ir import (
     ContractDefinition,
@@ -49,7 +50,7 @@ from woke.lsp.utils.position import changes_to_byte_offset
 from woke.lsp.utils.uri import uri_to_path
 from woke.printers.api import Printer, get_printers
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class CodeLensOptions(WorkDoneProgressOptions):
@@ -193,7 +194,7 @@ def _get_printer_output(
     instance.imports_graph = (  # pyright: ignore reportGeneralTypeIssues
         context.compiler.last_graph.copy()
     )
-    instance.logger = logging.getLogger(printer_cls.__name__)
+    instance.logger = get_logger(printer_cls.__name__)
     instance.logger.addHandler(logging_handler)
 
     original_callback = command.callback

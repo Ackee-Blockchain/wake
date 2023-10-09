@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from woke.lsp.server import LspServer
 
 from woke.compiler.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
+from woke.core import get_logger
 from woke.lsp.common_structures import (
     Diagnostic,
     DiagnosticSeverity,
@@ -21,7 +22,7 @@ from woke.lsp.lsp_data_model import LspModel
 from woke.lsp.methods import RequestMethodEnum
 from woke.lsp.utils.uri import path_to_uri
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class PublishDiagnosticsParams(LspModel):

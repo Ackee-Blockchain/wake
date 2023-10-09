@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from ..meta.using_for_directive import UsingForDirective
     from .array_type_name import ArrayTypeName
 
+from woke.core import get_logger
 from woke.ir.abc import SolidityAbc
 from woke.ir.ast import (
     SolcArrayTypeName,
@@ -50,7 +51,7 @@ from woke.ir.types import (
 from woke.ir.utils import IrInitTuple
 from woke.utils.string import StringReader
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class TypeNameAbc(SolidityAbc, ABC):

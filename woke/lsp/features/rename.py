@@ -4,6 +4,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import DefaultDict, List, Optional, Set, Union
 
+from woke.core import get_logger
 from woke.ir import (
     BinaryOperation,
     FunctionDefinition,
@@ -35,7 +36,7 @@ from woke.lsp.exceptions import LspError
 from woke.lsp.protocol_structures import ErrorCodes
 from woke.lsp.utils import path_to_uri, position_within_range, uri_to_path
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class RenameOptions(WorkDoneProgressOptions):

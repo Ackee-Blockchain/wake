@@ -5,6 +5,8 @@ import logging
 from itertools import chain
 from typing import Any, List, Optional, Union
 
+from woke.core import get_logger
+
 from ...compiler.source_unit_name_resolver import SourceUnitNameResolver
 from ..common_structures import (
     Command,
@@ -23,7 +25,7 @@ from ..context import LspContext
 from ..lsp_data_model import LspModel
 from ..utils import uri_to_path
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class CompletionItemKind(enum.IntEnum):

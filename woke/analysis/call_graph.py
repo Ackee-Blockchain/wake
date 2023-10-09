@@ -4,6 +4,7 @@ from typing import Iterable, Union
 import networkx as nx
 
 import woke.ir.types as types
+from woke.core import get_logger
 from woke.ir import (
     BinaryOperation,
     ExternalReference,
@@ -19,7 +20,7 @@ from woke.ir import (
 )
 from woke.ir.enums import GlobalSymbol
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class CallGraph:

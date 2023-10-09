@@ -5,7 +5,9 @@ import threading
 import warnings
 from asyncio import AbstractChildWatcher, events
 
-logger = logging.getLogger(__name__)
+from woke.core import get_logger
+
+logger = get_logger(__name__)
 
 
 """
