@@ -21,6 +21,7 @@ from typing import (
 import rich_click as click
 
 from woke.core import get_logger
+from woke.core.enums import EvmVersionEnum
 
 if TYPE_CHECKING:
     from woke.printers import Printer
@@ -276,8 +277,98 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
     type=click.Choice(["svg", "html", "text", "ansi"], case_sensitive=False),
     help="Export output to file.",
 )
+@click.option(
+    "--allow-path",
+    "allow_paths",
+    multiple=True,
+    type=click.Path(),
+    help="Additional allowed paths for solc.",
+    envvar="WOKE_COMPILE_ALLOW_PATHS",
+    show_envvar=True,
+)
+@click.option(
+    "--evm-version",
+    type=click.Choice(
+        ["auto"] + [v.value for v in EvmVersionEnum], case_sensitive=False
+    ),
+    help="Version of the EVM to compile for. Use 'auto' to let the solc decide.",
+    envvar="WOKE_COMPILE_EVM_VERSION",
+    show_envvar=True,
+)
+@click.option(
+    "--ignore-path",
+    "ignore_paths",
+    multiple=True,
+    type=click.Path(),
+    help="Paths to ignore when searching for *.sol files.",
+    envvar="WOKE_COMPILE_IGNORE_PATHS",
+    show_envvar=True,
+)
+@click.option(
+    "--include-path",
+    "include_paths",
+    multiple=True,
+    type=click.Path(),
+    help="Additional paths to search for when importing *.sol files.",
+    envvar="WOKE_COMPILE_INCLUDE_PATHS",
+    show_envvar=True,
+)
+@click.option(
+    "--optimizer-enabled/--no-optimizer-enabled",
+    is_flag=True,
+    required=False,
+    default=None,
+    help="Enforce optimizer enabled or disabled.",
+    envvar="WOKE_COMPILE_OPTIMIZER_ENABLED",
+    show_envvar=True,
+)
+@click.option(
+    "--optimizer-runs",
+    type=int,
+    help="Number of optimizer runs.",
+    envvar="WOKE_COMPILE_OPTIMIZER_RUNS",
+    show_envvar=True,
+)
+@click.option(
+    "--remapping",
+    "remappings",
+    multiple=True,
+    type=str,
+    help="Remappings for solc.",
+    envvar="WOKE_COMPILE_REMAPPINGS",
+    show_envvar=True,
+)
+@click.option(
+    "--target-version",
+    type=str,
+    help="Target version of solc used to compile. Use 'auto' to automatically select.",
+    envvar="WOKE_COMPILE_TARGET_VERSION",
+    show_envvar=True,
+)
+@click.option(
+    "--via-ir/--no-via-ir",
+    is_flag=True,
+    required=False,
+    default=None,
+    help="Enforce compilation via IR or not.",
+    envvar="WOKE_COMPILE_VIA_IR",
+    show_envvar=True,
+)
 @click.pass_context
-def run_print(ctx: click.Context, no_artifacts: bool, export: Optional[str]) -> None:
+def run_print(
+    ctx: click.Context,
+    no_artifacts: bool,
+    export: Optional[str],
+    allow_paths: Tuple[str],
+    evm_version: Optional[str],
+    ignore_paths: Tuple[str],
+    include_paths: Tuple[str],
+    optimizer_enabled: Optional[bool],
+    optimizer_runs: Optional[int],
+    remappings: Tuple[str],
+    target_version: Optional[str],
+    via_ir: Optional[bool],
+) -> None:
     """Run a printer."""
 
     if "--help" in ctx.obj["subcommand_args"]:
@@ -293,6 +384,40 @@ def run_print(ctx: click.Context, no_artifacts: bool, export: Optional[str]) -> 
 
     config = WokeConfig()
     config.load_configs()  # load ~/.woke/config.toml and ./woke.toml
+
+    new_options = {}
+    deleted_options = []
+
+    if allow_paths:
+        new_options["allow_paths"] = allow_paths
+    if evm_version is not None:
+        if evm_version == "auto":
+            deleted_options.append(("compiler", "solc", "evm_version"))
+        else:
+            new_options["evm_version"] = evm_version
+    if ignore_paths:
+        new_options["ignore_paths"] = ignore_paths
+    if include_paths:
+        new_options["include_paths"] = include_paths
+    if optimizer_enabled is not None:
+        if "optimizer" not in new_options:
+            new_options["optimizer"] = {}
+        new_options["optimizer"]["enabled"] = optimizer_enabled
+    if optimizer_runs is not None:
+        if "optimizer" not in new_options:
+            new_options["optimizer"] = {}
+        new_options["optimizer"]["runs"] = optimizer_runs
+    if remappings:
+        new_options["remappings"] = remappings
+    if target_version is not None:
+        if target_version == "auto":
+            deleted_options.append(("compiler", "solc", "target_version"))
+        else:
+            new_options["target_version"] = target_version
+    if via_ir is not None:
+        new_options["via_IR"] = via_ir
+
+    config.update({"compiler": {"solc": new_options}}, deleted_options)
 
     sol_files: Set[Path] = set()
     start = time.perf_counter()
