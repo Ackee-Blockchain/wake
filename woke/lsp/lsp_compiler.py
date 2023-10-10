@@ -1143,6 +1143,10 @@ class LspCompiler:
                             )
                             if result.url is not None
                             else None,
+                            data={
+                                "confidence": result.confidence,
+                                "impact": result.impact,
+                            },
                         )
                     )
         else:
