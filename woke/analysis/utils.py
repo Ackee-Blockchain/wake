@@ -21,6 +21,7 @@ from woke.ir import (
     MemberAccess,
     ModifierDefinition,
     Return,
+    StructDefinition,
     VariableDeclaration,
     YulAbc,
     YulAssignment,
@@ -34,23 +35,44 @@ logger = get_logger(__name__)
 
 
 def pair_function_call_arguments(
-    definition: FunctionDefinition, call: FunctionCall
+    definition: Union[FunctionDefinition, StructDefinition], call: FunctionCall
 ) -> Tuple[Tuple[VariableDeclaration, ExpressionAbc], ...]:
-    if len(definition.parameters.parameters) == len(call.arguments):
-        return tuple(zip(definition.parameters.parameters, call.arguments))
-    elif len(definition.parameters.parameters) == len(call.arguments) + 1:
+    """
+    Pairs function call arguments with function definition parameters.
+    Returned pairs are in the same order as the function definition parameters.
+    """
+    assert len(call.names) == 0 or len(call.names) == len(
+        call.arguments
+    ), "Call names must be empty or same length as arguments"
+
+    vars = (
+        definition.parameters.parameters
+        if isinstance(definition, FunctionDefinition)
+        else definition.members
+    )
+
+    if len(vars) == len(call.arguments):
+        if len(call.names) == 0:
+            return tuple(zip(vars, call.arguments))
+        else:
+            return tuple((p, call.arguments[call.names.index(p.name)]) for p in vars)
+    elif len(vars) == len(call.arguments) + 1:
         # using for
         node = call.expression
         if isinstance(node, FunctionCallOptions):
             node = node.expression
         if isinstance(node, MemberAccess):
             node = node.expression
-        return ((definition.parameters.parameters[0], node),) + tuple(
-            zip(definition.parameters.parameters[1:], call.arguments)
-        )
+
+        if len(call.names) == 0:
+            return ((vars[0], node),) + tuple(zip(vars[1:], call.arguments))
+        else:
+            return ((vars[0], node),) + tuple(
+                (p, call.arguments[call.names.index(p.name)]) for p in vars[1:]
+            )
     else:
         raise ValueError(
-            f"{definition.name} has {len(definition.parameters.parameters)} parameters but called with {len(call.arguments)} arguments"
+            f"{definition.name} has {len(vars)} parameters but called with {len(call.arguments)} arguments"
         )
 
 
