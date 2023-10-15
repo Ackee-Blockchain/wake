@@ -513,7 +513,7 @@ def run_detect(
             compiler.latest_graph,
             config,
             ctx,
-            ctx.obj["subcommand_args"],
+            args=ctx.obj["subcommand_args"],
             console=console,
             capture_exceptions=ignore_exceptions,
         )

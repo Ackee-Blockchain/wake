@@ -232,6 +232,7 @@ def detect(
     imports_graph: nx.DiGraph,
     config: WokeConfig,
     ctx: Optional[click.Context],
+    *,
     paths: Optional[List[Path]] = None,
     args: Optional[List[str]] = None,
     min_confidence: Optional[DetectionConfidence] = None,
