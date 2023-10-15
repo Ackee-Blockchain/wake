@@ -27,8 +27,6 @@ from woke.core import get_logger
 from woke.core.enums import EvmVersionEnum
 
 if TYPE_CHECKING:
-    from rich.syntax import SyntaxTheme
-
     from woke.config import WokeConfig
     from woke.detectors import (
         Detection,
@@ -297,131 +295,6 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         super().invoke(ctx)
 
 
-def _print_detection(
-    detector_name: str,
-    result: DetectorResult,
-    config: WokeConfig,
-    theme: Union[str, SyntaxTheme] = "monokai",
-) -> None:
-    from rich.panel import Panel
-    from rich.syntax import Syntax
-    from rich.tree import Tree
-
-    from woke.detectors.api import Detection, DetectorResult
-
-    from .console import console
-
-    def print_result(
-        info: Union[DetectorResult, Detection],
-        tree: Optional[Tree],
-        detector_id: Optional[str],
-    ) -> Tree:
-        if isinstance(info, DetectorResult):
-            detection = info.detection
-        else:
-            detection = info
-
-        source_unit = detection.ir_node.source_unit
-        line, col = source_unit.get_line_col_from_byte_offset(
-            detection.ir_node.byte_location[0]
-        )
-        assert source_unit._lines_index is not None
-        line -= 1
-        source = ""
-        start_line_index = max(0, line - 3)
-        end_line_index = min(len(source_unit._lines_index), line + 3)
-        for i in range(start_line_index, end_line_index):
-            source += source_unit._lines_index[i][0].decode("utf-8")
-
-        link = config.general.link_format.format(
-            path=source_unit.file,
-            line=line + 1,
-            col=col,
-        )
-        subtitle = f"[link={link}]{source_unit.source_unit_name}[/link]"
-
-        title = ""
-        if isinstance(info, DetectorResult):
-            if info.impact == "info":
-                title += "[[bold blue]INFO[/bold blue]] "
-            elif info.impact == "warning":
-                title += "[[bold yellow]WARNING[/bold yellow]] "
-            elif info.impact == "low":
-                title += "[[bold cyan]LOW[/bold cyan]] "
-            elif info.impact == "medium":
-                title += "[[bold magenta]MEDIUM[/bold magenta]] "
-            elif info.impact == "high":
-                title += "[[bold red]HIGH[/bold red]] "
-
-        title += detection.message
-        if detector_id is not None:
-            title += f" \[{detector_id}]"  # pyright: ignore reportInvalidStringEscapeSequence
-
-        panel = Panel.fit(
-            Syntax(
-                source,
-                "solidity",
-                theme=theme,
-                line_numbers=True,
-                start_line=start_line_index + 1,
-                highlight_lines={line + 1},
-            ),
-            title=title,
-            title_align="left",
-            subtitle=subtitle,
-            subtitle_align="left",
-        )
-
-        if tree is None:
-            t = Tree(panel)
-        else:
-            t = tree.add(panel)
-
-        for subdetection in detection.subdetections:
-            print_result(subdetection, t, None)
-
-        return t
-
-    console.print("\n")
-    tree = print_result(result, None, detector_name)
-    console.print(tree)
-
-
-def _filter_detections(
-    detections: List[DetectorResult],
-    min_confidence: DetectionConfidence,
-    min_impact: DetectionImpact,
-    config: WokeConfig,
-) -> List[DetectorResult]:
-    from woke.utils.file_utils import is_relative_to
-
-    def _detection_ignored(detection: Detection) -> bool:
-        return any(
-            is_relative_to(detection.ir_node.file, p)
-            for p in config.detectors.ignore_paths
-        ) and all(_detection_ignored(d) for d in detection.subdetections)
-
-    confidence_map = {
-        "low": 0,
-        "medium": 1,
-        "high": 2,
-    }
-    impact_map = {
-        "info": 0,
-        "warning": 1,
-        "low": 2,
-        "medium": 3,
-        "high": 4,
-    }
-    return [
-        detection
-        for detection in detections
-        if confidence_map[detection.confidence] >= confidence_map[min_confidence]
-        and impact_map[detection.impact] >= impact_map[min_impact]
-        and not _detection_ignored(detection.detection)
-    ]
-
-
 @click.group(
     name="detect",
     cls=DetectCli,
@@ -620,7 +493,7 @@ def run_detect(
     assert compiler.latest_build_info is not None
     assert compiler.latest_graph is not None
 
-    from woke.detectors.api import detect
+    from woke.detectors.api import detect, print_detection
 
     assert ctx.invoked_subcommand is not None
     if ctx.invoked_subcommand == "all":
@@ -657,7 +530,7 @@ def run_detect(
         # TODO order
         for detector_name in sorted(detections.keys()):
             for detection in detections[detector_name]:
-                _print_detection(detector_name, detection, config)
+                print_detection(detector_name, detection, config, console)
 
         # TODO export theme
         if export == "html":
@@ -697,7 +570,7 @@ def run_detect_all(
     """
     Run all detectors.
     """
-    from woke.detectors.api import detect
+    from woke.detectors.api import detect, print_detection
 
     from .console import console
 
@@ -732,7 +605,7 @@ def run_detect_all(
     # TODO order
     for detector_name in sorted(detections.keys()):
         for detection in detections[detector_name]:
-            _print_detection(detector_name, detection, config)
+            print_detection(detector_name, detection, config, console)
 
     # TODO export theme
     if export == "html":
