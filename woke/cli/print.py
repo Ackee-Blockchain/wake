@@ -270,7 +270,11 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
 
 
 async def print_(
-    config: WokeConfig, no_artifacts: bool, export: Optional[str], watch: bool
+    config: WokeConfig,
+    no_artifacts: bool,
+    ignore_errors: bool,
+    export: Optional[str],
+    watch: bool,
 ):
     from watchdog.observers import Observer
 
@@ -291,8 +295,7 @@ async def print_(
             for info in build_info.compilation_units.values()
             for error in info.errors
         )
-        if errored:
-            # TODO: add mode for running the printer anyway?
+        if not ignore_errors and errored:
             if watch:
                 return
             else:
@@ -326,30 +329,36 @@ async def print_(
                     instance, *args, **kwargs
                 )  # pyright: ignore reportOptionalCall
 
-            instance = cls()
-            instance.build = build
-            instance.build_info = build_info
-            instance.config = config
-            instance.console = console
-            instance.imports_graph = (  # pyright: ignore reportGeneralTypeIssues
-                compiler.latest_graph.copy()
-            )
-            instance.logger = get_logger(cls.__name__)
-
             original_callback = command.callback
             command.callback = _callback
 
-            sub_ctx = command.make_context(
-                command.name,
-                list(ctx_args),
-                parent=ctx,
-                default_map=default_map,
-            )
-            with sub_ctx:
-                sub_ctx.command.invoke(sub_ctx)
+            try:
+                instance = cls()
+                instance.build = build
+                instance.build_info = build_info
+                instance.config = config
+                instance.console = console
+                instance.imports_graph = (  # pyright: ignore reportGeneralTypeIssues
+                    compiler.latest_graph.copy()
+                )
+                instance.logger = get_logger(cls.__name__)
 
-            instance._run()
-            command.callback = original_callback
+                sub_ctx = command.make_context(
+                    command.name,
+                    list(ctx_args),
+                    parent=ctx,
+                    default_map=default_map,
+                )
+                with sub_ctx:
+                    sub_ctx.command.invoke(sub_ctx)
+
+                instance._run()
+            except Exception as e:
+                if not ignore_errors:
+                    raise
+                logger.error(f"Error while running printer {command.name}: {e}")
+            finally:
+                command.callback = original_callback
         else:
 
             def _callback(*args, **kwargs):
@@ -359,28 +368,31 @@ async def print_(
 
                 original_callback(*args, **kwargs)  # pyright: ignore reportOptionalCall
 
-            assert command.callback is not None
-
-            logger = get_logger(command.callback.__name__)
-
-            ctx.obj = {
-                "build": build,
-                "build_info": build_info,
-                "config": config,
-                "console": console,
-                "imports_graph": compiler.latest_graph.copy(),
-                "logger": logger,
-            }
-
             original_callback = command.callback
             command.callback = _callback
+            assert original_callback is not None
 
-            sub_ctx = command.make_context(
-                command.name, list(ctx_args), parent=ctx, default_map=default_map
-            )
-            with sub_ctx:
-                sub_ctx.command.invoke(sub_ctx)
-            command.callback = original_callback
+            try:
+                sub_ctx = command.make_context(
+                    command.name, list(ctx_args), parent=ctx, default_map=default_map
+                )
+                sub_ctx.obj = {
+                    "build": build,
+                    "build_info": build_info,
+                    "config": config,
+                    "console": console,
+                    "imports_graph": compiler.latest_graph.copy(),
+                    "logger": get_logger(original_callback.__name__),
+                }
+
+                with sub_ctx:
+                    sub_ctx.command.invoke(sub_ctx)
+            except Exception as e:
+                if not ignore_errors:
+                    raise
+                logger.error(f"Error while running printer {command.name}: {e}")
+            finally:
+                command.callback = original_callback
 
         # TODO export theme
         if export == "html":
@@ -482,6 +494,12 @@ async def print_(
     "--no-artifacts", is_flag=True, default=False, help="Do not write build artifacts."
 )
 @click.option(
+    "--ignore-errors",
+    is_flag=True,
+    default=False,
+    help="Ignore compilation errors and run printer anyway.",
+)
+@click.option(
     "--export",
     type=click.Choice(["svg", "html", "text", "ansi"], case_sensitive=False),
     help="Export output to file.",
@@ -574,6 +592,7 @@ async def print_(
 def run_print(
     ctx: click.Context,
     no_artifacts: bool,
+    ignore_errors: bool,
     export: Optional[str],
     watch: bool,
     allow_paths: Tuple[str],
@@ -630,4 +649,4 @@ def run_print(
 
     config.update({"compiler": {"solc": new_options}}, deleted_options)
 
-    asyncio.run(print_(config, no_artifacts, export, watch))
+    asyncio.run(print_(config, no_artifacts, ignore_errors, export, watch))
