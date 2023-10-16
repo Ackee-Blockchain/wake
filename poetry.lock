@@ -2864,4 +2864,4 @@ tests = ["GitPython", "pytest-asyncio"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7.9"
-content-hash = "69fdbb6b2c0c454035bf0fd5ba141c242cafbc88befc884f5689a58f8c86cd79"
+content-hash = "201f9ae46a9b5f56dd674e1ea09bfd5303e99cf6f86ce604fc10288b160c0965"
