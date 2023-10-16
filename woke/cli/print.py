@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 import logging
 import sys
@@ -24,6 +26,7 @@ from woke.core import get_logger
 from woke.core.enums import EvmVersionEnum
 
 if TYPE_CHECKING:
+    from woke.config import WokeConfig
     from woke.printers import Printer
 
 
@@ -266,6 +269,212 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         super().invoke(ctx)
 
 
+async def print_(
+    config: WokeConfig, no_artifacts: bool, export: Optional[str], watch: bool
+):
+    from watchdog.observers import Observer
+
+    from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
+    from ..compiler.build_data_model import ProjectBuild, ProjectBuildInfo
+    from ..compiler.compiler import CompilationFileSystemEventHandler
+    from ..compiler.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
+    from ..utils import get_class_that_defined_method
+    from ..utils.file_utils import is_relative_to
+    from .console import console
+
+    ctx = click.get_current_context()
+    ctx_args = [*ctx.obj["subcommand_protected_args"][1:], *ctx.obj["subcommand_args"]]
+
+    def callback(build: ProjectBuild, build_info: ProjectBuildInfo):
+        errored = any(
+            error.severity == SolcOutputErrorSeverityEnum.ERROR
+            for info in build_info.compilation_units.values()
+            for error in info.errors
+        )
+        if errored:
+            # TODO: add mode for running the printer anyway?
+            if watch:
+                return
+            else:
+                sys.exit(1)
+
+        if export is not None:
+            console.record = True
+
+        assert compiler.latest_graph is not None
+
+        assert isinstance(ctx.command, PrintCli)
+        assert ctx.invoked_subcommand is not None
+        command = ctx.command.get_command(ctx, ctx.invoked_subcommand)
+        assert command is not None
+        assert command.name is not None
+
+        if hasattr(config.printers, command.name):
+            default_map = getattr(config.printers, command.name)
+        else:
+            default_map = None
+
+        cls: Type[Printer] = get_class_that_defined_method(
+            command.callback
+        )  # pyright: ignore reportGeneralTypeIssues
+        if cls is not None:
+
+            def _callback(*args, **kwargs):
+                instance.paths = [Path(p).resolve() for p in kwargs.pop("paths", [])]
+
+                original_callback(
+                    instance, *args, **kwargs
+                )  # pyright: ignore reportOptionalCall
+
+            instance = cls()
+            instance.build = build
+            instance.build_info = build_info
+            instance.config = config
+            instance.console = console
+            instance.imports_graph = (  # pyright: ignore reportGeneralTypeIssues
+                compiler.latest_graph.copy()
+            )
+            instance.logger = get_logger(cls.__name__)
+
+            original_callback = command.callback
+            command.callback = _callback
+
+            sub_ctx = command.make_context(
+                command.name,
+                list(ctx_args),
+                parent=ctx,
+                default_map=default_map,
+            )
+            with sub_ctx:
+                sub_ctx.command.invoke(sub_ctx)
+
+            instance._run()
+            command.callback = original_callback
+        else:
+
+            def _callback(*args, **kwargs):
+                click.get_current_context().obj["paths"] = [
+                    Path(p).resolve() for p in kwargs.pop("paths", [])
+                ]
+
+                original_callback(*args, **kwargs)  # pyright: ignore reportOptionalCall
+
+            assert command.callback is not None
+
+            logger = get_logger(command.callback.__name__)
+
+            ctx.obj = {
+                "build": build,
+                "build_info": build_info,
+                "config": config,
+                "console": console,
+                "imports_graph": compiler.latest_graph.copy(),
+                "logger": logger,
+            }
+
+            original_callback = command.callback
+            command.callback = _callback
+
+            sub_ctx = command.make_context(
+                command.name, list(ctx_args), parent=ctx, default_map=default_map
+            )
+            with sub_ctx:
+                sub_ctx.command.invoke(sub_ctx)
+            command.callback = original_callback
+
+        # TODO export theme
+        if export == "html":
+            console.save_html(
+                str(config.project_root_path / "woke-print-output.html"),
+            )
+        elif export == "svg":
+            console.save_svg(
+                str(config.project_root_path / "woke-print-output.svg"),
+                title=f"woke print {command.name}",
+            )
+        elif export == "text":
+            console.save_text(
+                str(config.project_root_path / "woke-print-output.txt"),
+            )
+        elif export == "ansi":
+            console.save_text(
+                str(config.project_root_path / "woke-print-output.ansi"),
+                styles=True,
+            )
+
+        console.record = False
+
+    sol_files: Set[Path] = set()
+    start = time.perf_counter()
+    with console.status("[bold green]Searching for *.sol files...[/]"):
+        for file in config.project_root_path.rglob("**/*.sol"):
+            if (
+                not any(
+                    is_relative_to(file, p) for p in config.compiler.solc.ignore_paths
+                )
+                and file.is_file()
+            ):
+                sol_files.add(file)
+    end = time.perf_counter()
+    console.log(
+        f"[green]Found {len(sol_files)} *.sol files in [bold green]{end - start:.2f} s[/bold green][/]"
+    )
+
+    compiler = SolidityCompiler(config)
+    compiler.load(console=console)
+
+    if watch:
+        fs_handler = CompilationFileSystemEventHandler(
+            config,
+            sol_files,
+            asyncio.get_event_loop(),
+            compiler,
+            [SolcOutputSelectionEnum.ALL],
+            write_artifacts=not no_artifacts,
+            console=console,
+            no_warnings=True,
+        )
+        fs_handler.register_callback(callback)
+
+        observer = Observer()
+        observer.schedule(
+            fs_handler,
+            str(config.project_root_path),
+            recursive=True,
+        )
+        observer.start()
+    else:
+        fs_handler = None
+        observer = None
+
+    build: ProjectBuild
+    errors: Set[SolcOutputError]
+    build, errors = await compiler.compile(
+        sol_files,
+        [SolcOutputSelectionEnum.ALL],
+        write_artifacts=not no_artifacts,
+        console=console,
+        no_warnings=True,
+    )
+
+    assert compiler.latest_build_info is not None
+    callback(build, compiler.latest_build_info)
+
+    if watch:
+        assert fs_handler is not None
+        assert observer is not None
+        try:
+            await fs_handler.run()
+        except KeyboardInterrupt:
+            pass
+        finally:
+            observer.stop()
+            observer.join()
+
+    # prevent execution of a subcommand
+    sys.exit(0)
+
+
 @click.group(
     name="print", cls=PrintCli, context_settings={"auto_envvar_prefix": "WOKE_PRINTER"}
 )
@@ -276,6 +485,13 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
     "--export",
     type=click.Choice(["svg", "html", "text", "ansi"], case_sensitive=False),
     help="Export output to file.",
+)
+@click.option(
+    "--watch",
+    "-w",
+    is_flag=True,
+    default=False,
+    help="Watch for changes in the project and re-run on change.",
 )
 @click.option(
     "--allow-path",
@@ -359,6 +575,7 @@ def run_print(
     ctx: click.Context,
     no_artifacts: bool,
     export: Optional[str],
+    watch: bool,
     allow_paths: Tuple[str],
     evm_version: Optional[str],
     ignore_paths: Tuple[str],
@@ -374,13 +591,7 @@ def run_print(
     if "--help" in ctx.obj["subcommand_args"]:
         return
 
-    from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
-    from ..compiler.build_data_model import ProjectBuild
-    from ..compiler.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
     from ..config import WokeConfig
-    from ..utils import get_class_that_defined_method
-    from ..utils.file_utils import is_relative_to
-    from .console import console
 
     config = WokeConfig()
     config.load_configs()  # load ~/.woke/config.toml and ./woke.toml
@@ -419,146 +630,4 @@ def run_print(
 
     config.update({"compiler": {"solc": new_options}}, deleted_options)
 
-    sol_files: Set[Path] = set()
-    start = time.perf_counter()
-    with console.status("[bold green]Searching for *.sol files...[/]"):
-        for file in config.project_root_path.rglob("**/*.sol"):
-            if (
-                not any(
-                    is_relative_to(file, p) for p in config.compiler.solc.ignore_paths
-                )
-                and file.is_file()
-            ):
-                sol_files.add(file)
-    end = time.perf_counter()
-    console.log(
-        f"[green]Found {len(sol_files)} *.sol files in [bold green]{end - start:.2f} s[/bold green][/]"
-    )
-
-    compiler = SolidityCompiler(config)
-    compiler.load(console=console)
-
-    build: ProjectBuild
-    errors: Set[SolcOutputError]
-    build, errors = asyncio.run(
-        compiler.compile(
-            sol_files,
-            [SolcOutputSelectionEnum.ALL],
-            write_artifacts=not no_artifacts,
-            console=console,
-            no_warnings=True,
-        )
-    )
-
-    errored = any(
-        error.severity == SolcOutputErrorSeverityEnum.ERROR for error in errors
-    )
-    if errored:
-        sys.exit(1)
-
-    if export is not None:
-        console.record = True
-
-    assert compiler.latest_build_info is not None
-    assert compiler.latest_graph is not None
-
-    assert isinstance(ctx.command, PrintCli)
-    assert ctx.invoked_subcommand is not None
-    command = ctx.command.get_command(ctx, ctx.invoked_subcommand)
-    assert command is not None
-    assert command.name is not None
-
-    if hasattr(config.printers, command.name):
-        default_map = getattr(config.printers, command.name)
-    else:
-        default_map = None
-
-    cls: Type[Printer] = get_class_that_defined_method(
-        command.callback
-    )  # pyright: ignore reportGeneralTypeIssues
-    if cls is not None:
-
-        def _callback(*args, **kwargs):
-            instance.paths = [Path(p).resolve() for p in kwargs.pop("paths", [])]
-
-            original_callback(
-                instance, *args, **kwargs
-            )  # pyright: ignore reportOptionalCall
-
-        instance = cls()
-        instance.build = build
-        instance.build_info = compiler.latest_build_info
-        instance.config = config
-        instance.console = console
-        instance.imports_graph = (  # pyright: ignore reportGeneralTypeIssues
-            compiler.latest_graph.copy()
-        )
-        instance.logger = get_logger(cls.__name__)
-
-        original_callback = command.callback
-        command.callback = _callback
-
-        sub_ctx = command.make_context(
-            command.name,
-            [*ctx.obj["subcommand_protected_args"][1:], *ctx.obj["subcommand_args"]],
-            parent=ctx,
-            default_map=default_map,
-        )
-        with sub_ctx:
-            sub_ctx.command.invoke(sub_ctx)
-
-        instance._run()
-    else:
-
-        def _callback(*args, **kwargs):
-            click.get_current_context().obj["paths"] = [
-                Path(p).resolve() for p in kwargs.pop("paths", [])
-            ]
-
-            original_callback(*args, **kwargs)  # pyright: ignore reportOptionalCall
-
-        assert command.callback is not None
-
-        args = [*ctx.obj["subcommand_protected_args"][1:], *ctx.obj["subcommand_args"]]
-        logger = get_logger(command.callback.__name__)
-
-        ctx.obj = {
-            "build": build,
-            "build_info": compiler.latest_build_info,
-            "config": config,
-            "console": console,
-            "imports_graph": compiler.latest_graph.copy(),
-            "logger": logger,
-        }
-
-        original_callback = command.callback
-        command.callback = _callback
-
-        sub_ctx = command.make_context(
-            command.name, args, parent=ctx, default_map=default_map
-        )
-        with sub_ctx:
-            sub_ctx.command.invoke(sub_ctx)
-
-    # TODO export theme
-    if export == "html":
-        console.save_html(
-            str(config.project_root_path / "woke-print-output.html"),
-        )
-    elif export == "svg":
-        console.save_svg(
-            str(config.project_root_path / "woke-print-output.svg"),
-            title=f"woke print {command.name}",
-        )
-    elif export == "text":
-        console.save_text(
-            str(config.project_root_path / "woke-print-output.txt"),
-        )
-    elif export == "ansi":
-        console.save_text(
-            str(config.project_root_path / "woke-print-output.ansi"),
-            styles=True,
-        )
-
-    # avoid double execution of a subcommand
-    sys.exit(0)
+    asyncio.run(print_(config, no_artifacts, export, watch))
