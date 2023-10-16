@@ -17,6 +17,9 @@ async def init_detector_handler(context: LspContext, name: str, global_: bool) -
             f"Detector name must be a valid Python identifier, got {name}",
         )
 
+    async def detector_overwrite_callback(path: Path) -> None:
+        raise LspError(ErrorCodes.RequestFailed, f"File {path} already exists.")
+
     async def detector_exists_callback(other: str) -> None:
         if (
             await context.server.show_message_request(
@@ -44,6 +47,7 @@ async def init_detector_handler(context: LspContext, name: str, global_: bool) -
             name,
             global_,
             module_name_error_callback,
+            detector_overwrite_callback,
             detector_exists_callback,
         )
     except RuntimeError:
@@ -67,6 +71,9 @@ async def init_printer_handler(context: LspContext, name: str, global_: bool) ->
             ErrorCodes.InvalidParams,
             f"Printer name must be a valid Python identifier, got {name}",
         )
+
+    async def printer_overwrite_callback(path: Path) -> None:
+        raise LspError(ErrorCodes.RequestFailed, f"File {path} already exists.")
 
     async def printer_exists_callback(other: str) -> None:
         if (
@@ -95,6 +102,7 @@ async def init_printer_handler(context: LspContext, name: str, global_: bool) ->
             name,
             global_,
             module_name_error_callback,
+            printer_overwrite_callback,
             printer_exists_callback,
         )
     except RuntimeError:

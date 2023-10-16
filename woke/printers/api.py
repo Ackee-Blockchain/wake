@@ -88,6 +88,7 @@ async def init_printer(
     printer_name: str,
     global_: bool,
     module_name_error_callback: Callable[[str], Awaitable[None]],
+    printer_overwrite_callback: Callable[[Path], Awaitable[None]],
     printer_exists_callback: Callable[[str], Awaitable[None]],
 ) -> Path:
     from .template import TEMPLATE
@@ -112,12 +113,15 @@ async def init_printer(
     init_path = dir_path / "__init__.py"
     printer_path = dir_path / f"{module_name}.py"
 
-    if printer_name in run_print.loaded_from_plugins:
-        if isinstance(run_print.loaded_from_plugins[printer_name], str):
-            other = f"package '{run_print.loaded_from_plugins[printer_name]}'"
-        else:
-            other = f"path '{run_print.loaded_from_plugins[printer_name]}'"
-        await printer_exists_callback(other)
+    if printer_path.exists():
+        await printer_overwrite_callback(printer_path)
+    else:
+        if printer_name in run_print.loaded_from_plugins:
+            if isinstance(run_print.loaded_from_plugins[printer_name], str):
+                other = f"package '{run_print.loaded_from_plugins[printer_name]}'"
+            else:
+                other = f"path '{run_print.loaded_from_plugins[printer_name]}'"
+            await printer_exists_callback(other)
 
     if not dir_path.exists():
         dir_path.mkdir()
