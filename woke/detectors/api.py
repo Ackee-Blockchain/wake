@@ -189,7 +189,7 @@ def _filter_detections(
     config: WokeConfig,
     woke_comments: Dict[Path, Dict[str, Dict[int, WokeComment]]],
     source_units: Dict[Path, SourceUnit],
-) -> List[DetectorResult]:
+) -> Tuple[List[DetectorResult], List[DetectorResult]]:
     from woke.utils.file_utils import is_relative_to
 
     def _detection_ignored(detection: Detection) -> bool:
@@ -210,19 +210,26 @@ def _filter_detections(
         "medium": 3,
         "high": 4,
     }
-    return [
+    tmp = [
         detection
         for detection in detections
         if confidence_map[detection.confidence] >= confidence_map[min_confidence]
         and impact_map[detection.impact] >= impact_map[min_impact]
         and not _detection_ignored(detection.detection)
-        and not _detection_commented_out(
+    ]
+    valid = []
+    ignored = []
+    for detection in tmp:
+        if _detection_commented_out(
             detector_name,
             detection.detection,
             woke_comments[detection.detection.ir_node.file],
             source_units[detection.detection.ir_node.file],
-        )
-    ]
+        ):
+            ignored.append(detection)
+        else:
+            valid.append(detection)
+    return valid, ignored
 
 
 def detect(
@@ -241,7 +248,9 @@ def detect(
     verify_paths: bool = True,
     capture_exceptions: bool = False,
     logging_handler: Optional[logging.Handler] = None,
-) -> Tuple[Dict[str, List[DetectorResult]], Dict[str, Exception]]:
+) -> Tuple[
+    Dict[str, Tuple[List[DetectorResult], List[DetectorResult]]], Dict[str, Exception]
+]:
     from contextlib import nullcontext
 
     woke_comments: KeyedDefaultDict[
@@ -308,7 +317,7 @@ def detect(
         args = []
 
     collected_detectors: Dict[str, Detector] = {}
-    detections: Dict[str, List[DetectorResult]] = {}
+    detections: Dict[str, Tuple[List[DetectorResult], List[DetectorResult]]] = {}
 
     for command in detectors:
         assert command is not None

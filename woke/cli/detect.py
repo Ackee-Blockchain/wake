@@ -301,6 +301,7 @@ async def detect_(
     ignore_errors: bool,
     export: Optional[str],
     watch: bool,
+    ignore_disable_overrides: bool,
 ):
     from watchdog.observers import Observer
 
@@ -358,7 +359,11 @@ async def detect_(
 
         # TODO order
         for detector_name in sorted(detections.keys()):
-            for detection in detections[detector_name]:
+            if ignore_disable_overrides:
+                d = detections[detector_name][0] + detections[detector_name][1]
+            else:
+                d = detections[detector_name][0]
+            for detection in d:
                 print_detection(detector_name, detection, config, console)
 
         if len(detections) == 0:
@@ -488,6 +493,12 @@ async def detect_(
     help="Watch for changes in the project and re-run on change.",
 )
 @click.option(
+    "--ignore-disable-overrides",
+    is_flag=True,
+    default=False,
+    help="Print detections even if disabled with // woke-disable-* comments.",
+)
+@click.option(
     "--allow-path",
     "allow_paths",
     multiple=True,
@@ -571,6 +582,7 @@ def run_detect(
     ignore_errors: bool,
     export: Optional[str],
     watch: bool,
+    ignore_disable_overrides: bool,
     allow_paths: Tuple[str],
     evm_version: Optional[str],
     ignore_paths: Tuple[str],
@@ -625,7 +637,11 @@ def run_detect(
 
     config.update({"compiler": {"solc": new_options}}, deleted_options)
 
-    asyncio.run(detect_(config, no_artifacts, ignore_errors, export, watch))
+    asyncio.run(
+        detect_(
+            config, no_artifacts, ignore_errors, export, watch, ignore_disable_overrides
+        )
+    )
 
 
 # dummy command to allow completion
