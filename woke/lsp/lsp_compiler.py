@@ -13,6 +13,7 @@ import traceback
 from collections import deque
 from copy import deepcopy
 from functools import lru_cache
+from itertools import chain
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
@@ -38,10 +39,11 @@ from ..compiler.build_data_model import (
     SourceUnitInfo,
 )
 from ..core.solidity_version import SolidityVersionRange, SolidityVersionRanges
-from ..detectors.api import DetectionImpact, detect
+from ..detectors.api import DetectionConfidence, DetectionImpact, detect
 from ..utils import StrEnum, get_package_version
 from ..utils.file_utils import is_relative_to
 from .logging_handler import LspLoggingHandler
+from .lsp_data_model import LspModel
 
 if TYPE_CHECKING:
     from .server import LspServer
@@ -135,6 +137,48 @@ class CustomFileChangeCommand(StrEnum):
     FORCE_RERUN_DETECTORS = "force_rerun_detectors"
 
 
+class DetectionAdditionalInfo(LspModel):
+    impact: DetectionImpact
+    confidence: DetectionConfidence
+    ignored: bool
+    source_unit_name: str
+
+    def __members(self) -> Tuple:
+        return (
+            self.impact,
+            self.confidence,
+            self.ignored,
+            self.source_unit_name,
+        )
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.__members() == other.__members()
+        return NotImplemented
+
+    def __hash__(self):
+        return hash(self.__members())
+
+
+class CompilationErrorAdditionalInfo(LspModel):
+    severity: SolcOutputErrorSeverityEnum
+    source_unit_name: str
+
+    def __members(self) -> Tuple:
+        return (
+            self.severity,
+            self.source_unit_name,
+        )
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.__members() == other.__members()
+        return NotImplemented
+
+    def __hash__(self):
+        return hash(self.__members())
+
+
 class LspCompiler:
     __config: WokeConfig
     __svm: SolcVersionManager
@@ -162,6 +206,7 @@ class LspCompiler:
     __woke_version: str
     __all_detectors: List[str]
     __latest_errors_per_cu: Dict[bytes, Set[SolcOutputError]]
+    __ignored_detections_supported: bool
 
     __ir_reference_resolver: ReferenceResolver
 
@@ -200,6 +245,7 @@ class LspCompiler:
         self.__woke_version = get_package_version("woke")
         self.__all_detectors = []
         self.__latest_errors_per_cu = {}
+        self.__ignored_detections_supported = False
 
         self.__ir_reference_resolver = ReferenceResolver()
 
@@ -1091,65 +1137,81 @@ class LspCompiler:
             )
             exceptions = {name: repr(e) for name, e in detector_exceptions.items()}
 
-            for detector_name, results in detections.items():
-                for result in results:
-                    file = result.detection.ir_node.file
-                    if len(result.detection.subdetections) > 0:
-                        related_info = [
-                            DiagnosticRelatedInformation(
-                                location=Location(
-                                    uri=DocumentUri(path_to_uri(info.ir_node.file)),
-                                    range=self.get_range_from_byte_offsets(
-                                        info.ir_node.file,
-                                        info.lsp_range
-                                        if info.lsp_range is not None
-                                        else info.ir_node.name_location
-                                        if isinstance(info.ir_node, DeclarationAbc)
-                                        else info.ir_node.byte_location,
-                                    ),
-                                ),
-                                message=info.message,
-                            )
-                            for info in result.detection.subdetections
-                        ]
-                    else:
-                        related_info = None
-
-                    if file not in errors_per_file:
-                        errors_per_file[file] = set()
-                    errors_per_file[file].add(
-                        Diagnostic(
-                            range=self.get_range_from_byte_offsets(
-                                file,
-                                result.detection.lsp_range
-                                if result.detection.lsp_range is not None
-                                else result.detection.ir_node.name_location
-                                if isinstance(result.detection.ir_node, DeclarationAbc)
-                                else result.detection.ir_node.byte_location,
-                            ),
-                            severity=(
-                                DiagnosticSeverity.INFORMATION
-                                if result.impact == DetectionImpact.INFO
-                                else DiagnosticSeverity.WARNING
-                                if result.impact == DetectionImpact.WARNING
-                                else DiagnosticSeverity.ERROR
-                            ),
-                            source="Woke",
-                            message=result.detection.message,
-                            code=detector_name,
-                            related_information=related_info,
-                            code_description=CodeDescription(
-                                href=result.url,  # pyright: ignore reportGeneralTypeIssues
-                            )
-                            if result.url is not None
-                            else None,
-                            data={
-                                "confidence": result.confidence,
-                                "impact": result.impact,
-                                "source_unit_name": result.detection.ir_node.source_unit.source_unit_name,
-                            },
-                        )
+            if self.__ignored_detections_supported:
+                detection_gen = (
+                    (detector_name, ignored, result)
+                    for detector_name in detections.keys()
+                    for ignored, result in chain(
+                        ((False, r) for r in detections[detector_name][0]),
+                        ((True, r) for r in detections[detector_name][1]),
                     )
+                )
+            else:
+                detection_gen = (
+                    (detector_name, False, result)
+                    for detector_name in detections.keys()
+                    for result in detections[detector_name][0]
+                )
+
+            for detector_name, ignored, result in detection_gen:
+                file = result.detection.ir_node.file
+                if len(result.detection.subdetections) > 0:
+                    related_info = [
+                        DiagnosticRelatedInformation(
+                            location=Location(
+                                uri=DocumentUri(path_to_uri(info.ir_node.file)),
+                                range=self.get_range_from_byte_offsets(
+                                    info.ir_node.file,
+                                    info.lsp_range
+                                    if info.lsp_range is not None
+                                    else info.ir_node.name_location
+                                    if isinstance(info.ir_node, DeclarationAbc)
+                                    else info.ir_node.byte_location,
+                                ),
+                            ),
+                            message=info.message,
+                        )
+                        for info in result.detection.subdetections
+                    ]
+                else:
+                    related_info = None
+
+                if file not in errors_per_file:
+                    errors_per_file[file] = set()
+                errors_per_file[file].add(
+                    Diagnostic(
+                        range=self.get_range_from_byte_offsets(
+                            file,
+                            result.detection.lsp_range
+                            if result.detection.lsp_range is not None
+                            else result.detection.ir_node.name_location
+                            if isinstance(result.detection.ir_node, DeclarationAbc)
+                            else result.detection.ir_node.byte_location,
+                        ),
+                        severity=(
+                            DiagnosticSeverity.INFORMATION
+                            if result.impact == DetectionImpact.INFO
+                            else DiagnosticSeverity.WARNING
+                            if result.impact == DetectionImpact.WARNING
+                            else DiagnosticSeverity.ERROR
+                        ),
+                        source="Woke",
+                        message=result.detection.message,
+                        code=detector_name,
+                        related_information=related_info,
+                        code_description=CodeDescription(
+                            href=result.url,  # pyright: ignore reportGeneralTypeIssues
+                        )
+                        if result.url is not None
+                        else None,
+                        data=DetectionAdditionalInfo(
+                            confidence=result.confidence,
+                            impact=result.impact,
+                            source_unit_name=result.detection.ir_node.source_unit.source_unit_name,
+                            ignored=ignored,
+                        ),
+                    )
+                )
         else:
             exceptions = {}
 
@@ -1254,10 +1316,10 @@ class LspCompiler:
             code=error.error_code,
             source="Woke(solc)",
             message=error.message,
-            data={
-                "severity": error.severity,
-                "source_unit_name": error.source_location.file,
-            },
+            data=CompilationErrorAdditionalInfo(
+                severity=error.severity,
+                source_unit_name=error.source_location.file,
+            ),
         )
         if (
             error.secondary_source_locations is not None
