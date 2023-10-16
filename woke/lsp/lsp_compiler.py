@@ -1146,6 +1146,7 @@ class LspCompiler:
                             data={
                                 "confidence": result.confidence,
                                 "impact": result.impact,
+                                "source_unit_name": result.detection.ir_node.source_unit.source_unit_name,
                             },
                         )
                     )
@@ -1253,6 +1254,10 @@ class LspCompiler:
             code=error.error_code,
             source="Woke(solc)",
             message=error.message,
+            data={
+                "severity": error.severity,
+                "source_unit_name": error.source_location.file,
+            },
         )
         if (
             error.secondary_source_locations is not None
