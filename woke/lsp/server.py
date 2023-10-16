@@ -142,6 +142,7 @@ class CommandsEnum(StrEnum):
 
 class LspServer:
     __initialized: bool
+    __tfs_version: Optional[str]
     __cli_config: WokeConfig
     __workspaces: Dict[Path, LspContext]
     __user_config: Optional[WokeConfig]
@@ -269,6 +270,10 @@ class LspServer:
                 DeleteFilesParams,
             ),
         }
+
+    @property
+    def tfs_version(self) -> Optional[str]:
+        return self.__tfs_version
 
     def _task_done_callback(self, task: asyncio.Task) -> None:
         try:
@@ -573,6 +578,16 @@ class LspServer:
 
         self.__initialized = True
         self.__workspace_path = path
+
+        if (
+            isinstance(params.initialization_options, dict)
+            and "toolsForSolidityVersion" in params.initialization_options
+        ):
+            self.__tfs_version = params.initialization_options[
+                "toolsForSolidityVersion"
+            ]
+        else:
+            self.__tfs_version = None
 
         solidity_registration = FileOperationRegistrationOptions(
             filters=[
