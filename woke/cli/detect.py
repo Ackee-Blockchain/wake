@@ -295,6 +295,172 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         super().invoke(ctx)
 
 
+async def detect_(
+    config: WokeConfig,
+    no_artifacts: bool,
+    ignore_errors: bool,
+    export: Optional[str],
+    watch: bool,
+):
+    from watchdog.observers import Observer
+
+    from woke.detectors.api import detect, print_detection
+
+    from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
+    from ..compiler.build_data_model import ProjectBuild, ProjectBuildInfo
+    from ..compiler.compiler import CompilationFileSystemEventHandler
+    from ..compiler.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
+    from ..utils.file_utils import is_relative_to
+    from .console import console
+
+    ctx = click.get_current_context()
+    ctx_args = [*ctx.obj["subcommand_protected_args"][1:], *ctx.obj["subcommand_args"]]
+
+    def callback(build: ProjectBuild, build_info: ProjectBuildInfo):
+        errored = any(
+            error.severity == SolcOutputErrorSeverityEnum.ERROR
+            for info in build_info.compilation_units.values()
+            for error in info.errors
+        )
+        if not ignore_errors and errored:
+            if watch:
+                return
+            else:
+                sys.exit(1)
+
+        assert compiler.latest_graph is not None
+        assert ctx.invoked_subcommand is not None
+        if ctx.invoked_subcommand == "all":
+            detectors = run_detect.list_commands(ctx)
+        else:
+            detectors = ctx.invoked_subcommand
+
+        detections, exceptions = detect(
+            detectors,
+            build,
+            build_info,
+            compiler.latest_graph,
+            config,
+            ctx,
+            args=list(ctx_args),
+            console=console,
+            capture_exceptions=ignore_errors,
+        )
+
+        if ignore_errors:
+            for detector_name, exception in exceptions.items():
+                logger.error(
+                    f"Error while running detector {detector_name}: {exception}"
+                )
+
+        if export is not None:
+            console.record = True
+
+        # TODO order
+        for detector_name in sorted(detections.keys()):
+            for detection in detections[detector_name]:
+                print_detection(detector_name, detection, config, console)
+
+        if len(detections) == 0:
+            console.print("No detections found")
+
+        # TODO export theme
+        if export == "html":
+            console.save_html(
+                str(config.project_root_path / "woke-detections.html"),
+            )
+        elif export == "svg":
+            console.save_svg(
+                str(config.project_root_path / "woke-detections.svg"),
+                title=f"woke detect {ctx.invoked_subcommand}",
+            )
+        elif export == "text":
+            console.save_text(
+                str(config.project_root_path / "woke-detections.txt"),
+            )
+        elif export == "ansi":
+            console.save_text(
+                str(config.project_root_path / "woke-detections.ansi"),
+                styles=True,
+            )
+
+        console.record = False
+
+        if not watch:
+            # TODO different error exit codes for compilation/detection errors
+            sys.exit(0 if len(detections) == 0 else 1)
+
+    sol_files: Set[Path] = set()
+    start = time.perf_counter()
+    with console.status("[bold green]Searching for *.sol files...[/]"):
+        for file in config.project_root_path.rglob("**/*.sol"):
+            if (
+                not any(
+                    is_relative_to(file, p) for p in config.compiler.solc.ignore_paths
+                )
+                and file.is_file()
+            ):
+                sol_files.add(file)
+    end = time.perf_counter()
+    console.log(
+        f"[green]Found {len(sol_files)} *.sol files in [bold green]{end - start:.2f} s[/bold green][/]"
+    )
+
+    compiler = SolidityCompiler(config)
+    compiler.load(console=console)
+
+    if watch:
+        fs_handler = CompilationFileSystemEventHandler(
+            config,
+            sol_files,
+            asyncio.get_event_loop(),
+            compiler,
+            [SolcOutputSelectionEnum.ALL],
+            write_artifacts=not no_artifacts,
+            console=console,
+            no_warnings=True,
+        )
+        fs_handler.register_callback(callback)
+
+        observer = Observer()
+        observer.schedule(
+            fs_handler,
+            str(config.project_root_path),
+            recursive=True,
+        )
+        observer.start()
+    else:
+        fs_handler = None
+        observer = None
+
+    build: ProjectBuild
+    errors: Set[SolcOutputError]
+    build, errors = await compiler.compile(
+        sol_files,
+        [SolcOutputSelectionEnum.ALL],
+        write_artifacts=not no_artifacts,
+        console=console,
+        no_warnings=True,
+    )
+
+    assert compiler.latest_build_info is not None
+    callback(build, compiler.latest_build_info)
+
+    if watch:
+        assert fs_handler is not None
+        assert observer is not None
+        try:
+            await fs_handler.run()
+        except KeyboardInterrupt:
+            pass
+        finally:
+            observer.stop()
+            observer.join()
+
+    # prevent execution of a subcommand
+    sys.exit(0)
+
+
 @click.group(
     name="detect",
     cls=DetectCli,
@@ -313,6 +479,13 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
     "--export",
     type=click.Choice(["svg", "html", "text", "ansi"], case_sensitive=False),
     help="Export detections to file.",
+)
+@click.option(
+    "--watch",
+    "-w",
+    is_flag=True,
+    default=False,
+    help="Watch for changes in the project and re-run on change.",
 )
 @click.option(
     "--allow-path",
@@ -397,6 +570,7 @@ def run_detect(
     no_artifacts: bool,
     ignore_errors: bool,
     export: Optional[str],
+    watch: bool,
     allow_paths: Tuple[str],
     evm_version: Optional[str],
     ignore_paths: Tuple[str],
@@ -412,12 +586,7 @@ def run_detect(
     if "--help" in ctx.obj["subcommand_args"]:
         return
 
-    from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
-    from ..compiler.build_data_model import ProjectBuild
-    from ..compiler.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
     from ..config import WokeConfig
-    from ..utils.file_utils import is_relative_to
-    from .console import console
 
     config = WokeConfig()
     config.load_configs()  # load ~/.woke/config.toml and ./woke.toml
@@ -456,113 +625,10 @@ def run_detect(
 
     config.update({"compiler": {"solc": new_options}}, deleted_options)
 
-    sol_files: Set[Path] = set()
-    start = time.perf_counter()
-    with console.status("[bold green]Searching for *.sol files...[/]"):
-        for file in config.project_root_path.rglob("**/*.sol"):
-            if (
-                not any(
-                    is_relative_to(file, p) for p in config.compiler.solc.ignore_paths
-                )
-                and file.is_file()
-            ):
-                sol_files.add(file)
-    end = time.perf_counter()
-    console.log(
-        f"[green]Found {len(sol_files)} *.sol files in [bold green]{end - start:.2f} s[/bold green][/]"
-    )
-
-    compiler = SolidityCompiler(config)
-    compiler.load(console=console)
-
-    build: ProjectBuild
-    errors: Set[SolcOutputError]
-    build, errors = asyncio.run(
-        compiler.compile(
-            sol_files,
-            [SolcOutputSelectionEnum.ALL],
-            write_artifacts=not no_artifacts,
-            console=console,
-            no_warnings=True,
-        )
-    )
-
-    if not ignore_errors:
-        errored = any(
-            error.severity == SolcOutputErrorSeverityEnum.ERROR for error in errors
-        )
-        if errored:
-            sys.exit(1)
-
-    assert compiler.latest_build_info is not None
-    assert compiler.latest_graph is not None
-
-    from woke.detectors.api import detect, print_detection
-
-    assert ctx.invoked_subcommand is not None
-    if ctx.invoked_subcommand == "all":
-        ctx.obj = {
-            "build": build,
-            "build_info": compiler.latest_build_info,
-            "config": config,
-            "imports_graph": compiler.latest_graph,
-            "ignore_exceptions": ignore_errors,
-            "export": export,
-        }
-    else:
-        detections, exceptions = detect(
-            ctx.invoked_subcommand,
-            build,
-            compiler.latest_build_info,
-            compiler.latest_graph,
-            config,
-            ctx,
-            args=ctx.obj["subcommand_args"],
-            console=console,
-            capture_exceptions=ignore_errors,
-        )
-
-        if ignore_errors:
-            for detector_name, exception in exceptions.items():
-                logger.error(
-                    f"Error while running detector {detector_name}: {exception}"
-                )
-
-        if export is not None:
-            console.record = True
-
-        # TODO order
-        for detector_name in sorted(detections.keys()):
-            for detection in detections[detector_name]:
-                print_detection(detector_name, detection, config, console)
-
-        # TODO export theme
-        if export == "html":
-            console.save_html(
-                str(config.project_root_path / "woke-detections.html"),
-            )
-        elif export == "svg":
-            console.save_svg(
-                str(config.project_root_path / "woke-detections.svg"),
-                title=f"woke detect {ctx.invoked_subcommand}",
-            )
-        elif export == "text":
-            console.save_text(
-                str(config.project_root_path / "woke-detections.txt"),
-            )
-        elif export == "ansi":
-            console.save_text(
-                str(config.project_root_path / "woke-detections.ansi"),
-                styles=True,
-            )
-
-        if len(detections) == 0:
-            console.print("No detections found")
-            sys.exit(0)
-
-        sys.exit(1)
+    asyncio.run(detect_(config, no_artifacts, ignore_errors, export, watch))
 
 
+# dummy command to allow completion
 @run_detect.command(name="all")
 @click.pass_context
 def run_detect_all(
@@ -574,65 +640,4 @@ def run_detect_all(
     """
     Run all detectors.
     """
-    from woke.detectors.api import detect, print_detection
-
-    from .console import console
-
-    build = ctx.obj["build"]
-    config = ctx.obj["config"]
-    latest_build_info = ctx.obj["build_info"]
-    latest_graph = ctx.obj["imports_graph"]
-    ignore_exceptions = ctx.obj["ignore_exceptions"]
-    export = ctx.obj["export"]
-
-    detections, exceptions = detect(
-        run_detect.list_commands(ctx),
-        build,
-        latest_build_info,
-        latest_graph,
-        config,
-        ctx,
-        paths=[Path(p).resolve() for p in paths],
-        min_confidence=min_confidence,
-        min_impact=min_impact,
-        console=console,
-        capture_exceptions=ignore_exceptions,
-    )
-
-    if ignore_exceptions:
-        for detector_name, exception in exceptions.items():
-            logger.error(f"Error while running detector {detector_name}: {exception}")
-
-    if export is not None:
-        console.record = True
-
-    # TODO order
-    for detector_name in sorted(detections.keys()):
-        for detection in detections[detector_name]:
-            print_detection(detector_name, detection, config, console)
-
-    # TODO export theme
-    if export == "html":
-        console.save_html(
-            str(config.project_root_path / "woke-detections.html"),
-        )
-    elif export == "svg":
-        console.save_svg(
-            str(config.project_root_path / "woke-detections.svg"),
-            title="woke detect all",
-        )
-    elif export == "text":
-        console.save_text(
-            str(config.project_root_path / "woke-detections.txt"),
-        )
-    elif export == "ansi":
-        console.save_text(
-            str(config.project_root_path / "woke-detections.ansi"),
-            styles=True,
-        )
-
-    if len(detections) == 0:
-        console.print("No detections found")
-        sys.exit(0)
-
-    sys.exit(1)
+    pass
