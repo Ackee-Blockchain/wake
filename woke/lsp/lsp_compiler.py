@@ -29,6 +29,8 @@ from typing import (
     Union,
 )
 
+import packaging.version
+
 from woke.compiler.exceptions import CompilationError
 
 from ..cli.detect import run_detect
@@ -245,7 +247,16 @@ class LspCompiler:
         self.__woke_version = get_package_version("woke")
         self.__all_detectors = []
         self.__latest_errors_per_cu = {}
-        self.__ignored_detections_supported = False
+
+        try:
+            if server.tfs_version is not None and packaging.version.parse(
+                server.tfs_version
+            ) > packaging.version.parse("1.10.3"):
+                self.__ignored_detections_supported = True
+            else:
+                self.__ignored_detections_supported = False
+        except packaging.version.InvalidVersion:
+            self.__ignored_detections_supported = False
 
         self.__ir_reference_resolver = ReferenceResolver()
 
