@@ -510,6 +510,9 @@ def init_detector(ctx: Context, detector_name: str, force: bool, global_: bool) 
             f"Detector name must be a valid Python identifier, got {detector_name}"
         )
 
+    async def detector_overwrite_callback(path: Path) -> None:
+        raise click.ClickException(f"File {path} already exists.")
+
     async def detector_exists_callback(other: str) -> None:
         if not force:
             raise click.ClickException(
@@ -530,6 +533,7 @@ def init_detector(ctx: Context, detector_name: str, force: bool, global_: bool) 
             detector_name,
             global_,
             module_name_error_callback,
+            detector_overwrite_callback,
             detector_exists_callback,
         )
     )
@@ -563,6 +567,9 @@ def init_printer(ctx: Context, printer_name: str, force: bool, global_: bool) ->
             f"Printer name must be a valid Python identifier, got {printer_name}"
         )
 
+    async def printer_overwrite_callback(path: Path) -> None:
+        raise click.ClickException(f"File {path} already exists.")
+
     async def printer_exists_callback(other: str) -> None:
         if not force:
             raise click.ClickException(
@@ -583,6 +590,7 @@ def init_printer(ctx: Context, printer_name: str, force: bool, global_: bool) ->
             printer_name,
             global_,
             module_name_error_callback,
+            printer_overwrite_callback,
             printer_exists_callback,
         )
     )

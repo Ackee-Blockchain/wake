@@ -584,6 +584,7 @@ async def init_detector(
     detector_name: str,
     global_: bool,
     module_name_error_callback: Callable[[str], Awaitable[None]],
+    detector_overwrite_callback: Callable[[Path], Awaitable[None]],
     detector_exists_callback: Callable[[str], Awaitable[None]],
 ) -> Path:
     from .template import TEMPLATE
@@ -609,12 +610,15 @@ async def init_detector(
     init_path = dir_path / "__init__.py"
     detector_path = dir_path / f"{module_name}.py"
 
-    if detector_name in run_detect.loaded_from_plugins:
-        if isinstance(run_detect.loaded_from_plugins[detector_name], str):
-            other = f"package '{run_detect.loaded_from_plugins[detector_name]}'"
-        else:
-            other = f"path '{run_detect.loaded_from_plugins[detector_name]}'"
-        await detector_exists_callback(other)
+    if detector_path.exists():
+        await detector_overwrite_callback(detector_path)
+    else:
+        if detector_name in run_detect.loaded_from_plugins:
+            if isinstance(run_detect.loaded_from_plugins[detector_name], str):
+                other = f"package '{run_detect.loaded_from_plugins[detector_name]}'"
+            else:
+                other = f"path '{run_detect.loaded_from_plugins[detector_name]}'"
+            await detector_exists_callback(other)
 
     if not dir_path.exists():
         dir_path.mkdir()
