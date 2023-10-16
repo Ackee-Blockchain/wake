@@ -304,7 +304,10 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
     "--no-artifacts", is_flag=True, default=False, help="Do not write build artifacts."
 )
 @click.option(
-    "--ignore-exceptions", is_flag=True, default=False, help="Ignore exceptions."
+    "--ignore-errors",
+    is_flag=True,
+    default=False,
+    help="Ignore compilation errors and detector exceptions.",
 )
 @click.option(
     "--export",
@@ -392,7 +395,7 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
 def run_detect(
     ctx: click.Context,
     no_artifacts: bool,
-    ignore_exceptions: bool,
+    ignore_errors: bool,
     export: Optional[str],
     allow_paths: Tuple[str],
     evm_version: Optional[str],
@@ -484,11 +487,12 @@ def run_detect(
         )
     )
 
-    errored = any(
-        error.severity == SolcOutputErrorSeverityEnum.ERROR for error in errors
-    )
-    if errored:
-        sys.exit(1)
+    if not ignore_errors:
+        errored = any(
+            error.severity == SolcOutputErrorSeverityEnum.ERROR for error in errors
+        )
+        if errored:
+            sys.exit(1)
 
     assert compiler.latest_build_info is not None
     assert compiler.latest_graph is not None
@@ -502,7 +506,7 @@ def run_detect(
             "build_info": compiler.latest_build_info,
             "config": config,
             "imports_graph": compiler.latest_graph,
-            "ignore_exceptions": ignore_exceptions,
+            "ignore_exceptions": ignore_errors,
             "export": export,
         }
     else:
@@ -515,10 +519,10 @@ def run_detect(
             ctx,
             args=ctx.obj["subcommand_args"],
             console=console,
-            capture_exceptions=ignore_exceptions,
+            capture_exceptions=ignore_errors,
         )
 
-        if ignore_exceptions:
+        if ignore_errors:
             for detector_name, exception in exceptions.items():
                 logger.error(
                     f"Error while running detector {detector_name}: {exception}"
