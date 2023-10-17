@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "woke"
-version = "4.0.0-alpha.2"
+version = "4.0.0-alpha.3"
 description = "Woke is a Python-based development and testing framework for Solidity."
 license = "ISC"
 authors = ["Ackee Blockchain"]
