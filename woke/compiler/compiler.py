@@ -5,6 +5,7 @@ import logging
 import os
 import pickle
 import time
+from bisect import bisect
 from collections import defaultdict, deque
 from contextlib import nullcontext
 from json import JSONDecodeError
@@ -47,6 +48,7 @@ from woke.core.solidity_version import (
     SolidityVersionRange,
     SolidityVersionRanges,
 )
+from woke.core.woke_comments import WokeComment, error_commented_out
 from woke.ir import SourceUnit
 from woke.ir.ast import AstSolc
 from woke.ir.reference_resolver import CallbackParams, ReferenceResolver
@@ -56,6 +58,7 @@ from woke.svm import SolcVersionManager
 
 from ..utils import get_package_version
 from ..utils.file_utils import is_relative_to
+from ..utils.keyed_default_dict import KeyedDefaultDict
 from .build_data_model import (
     CompilationUnitBuildInfo,
     ProjectBuild,
@@ -298,6 +301,8 @@ class SolidityCompiler:
     _latest_graph: Optional[nx.DiGraph]
     _latest_source_units_to_paths: Optional[Dict[str, Path]]
 
+    _lines_index: Dict[Path, List[int]]
+
     def __init__(self, woke_config: WokeConfig):
         self.__config = woke_config
         self.__svm = SolcVersionManager(woke_config)
@@ -309,6 +314,8 @@ class SolidityCompiler:
         self._latest_build = None
         self._latest_graph = None
         self._latest_source_units_to_paths = None
+
+        self._lines_index = {}
 
     @property
     def latest_build_info(self) -> Optional[ProjectBuildInfo]:
@@ -326,12 +333,45 @@ class SolidityCompiler:
     def latest_source_units_to_paths(self) -> Optional[MappingProxyType[str, Path]]:
         return MappingProxyType(self._latest_source_units_to_paths)
 
+    def _get_line_from_offset(self, path: Path, offset: int, content: bytes) -> int:
+        if path not in self._lines_index:
+            prefix_sum = 0
+            self._lines_index[path] = []
+
+            for line in content.splitlines(keepends=True):
+                prefix_sum += len(line)
+                self._lines_index[path].append(prefix_sum)
+
+        return bisect(self._lines_index[path], offset)
+
+    def _prepare_woke_comments(
+        self,
+        path: Path,
+        content: bytes,
+        woke_comments: Dict[str, List[Tuple[List[str], Tuple[int, int]]]],
+    ) -> Dict[str, Dict[int, WokeComment]]:
+        prepared = {}
+        for comment_type, comments in woke_comments.items():
+            prepared[comment_type] = {}
+            for codes, (start, end) in comments:
+                start_line = self._get_line_from_offset(path, start, content)
+                end_line = self._get_line_from_offset(path, end, content)
+
+                prepared[comment_type][end_line] = WokeComment(
+                    codes if codes else None,
+                    start_line,
+                    end_line,
+                )
+        return prepared
+
     def build_graph(
         self,
         files: Iterable[Path],
         modified_files: Mapping[Path, bytes],
         ignore_errors: bool = False,
     ) -> Tuple[nx.DiGraph, Dict[str, Path]]:
+        self._lines_index.clear()
+
         # source unit name, full path, file content
         source_units_queue: deque[Tuple[str, Path, Optional[bytes]]] = deque()
         source_units: Dict[str, Path] = {}
@@ -388,7 +428,7 @@ class SolidityCompiler:
                 hash=h,
                 content=content,
                 unresolved_imports=set(),
-                woke_comments=woke_comments,
+                woke_comments=self._prepare_woke_comments(path, content, woke_comments),
             )
             source_units[source_unit_name] = path
 
@@ -1055,8 +1095,39 @@ class SolidityCompiler:
 
         logger.debug(f"Compilation finished with {len(errors)} errors")
 
+        woke_comments: KeyedDefaultDict[
+            str,  # pyright: ignore reportGeneralTypeIssues
+            Dict[str, Dict[int, WokeComment]],
+        ] = KeyedDefaultDict(
+            lambda source_unit_name: self._latest_graph.nodes[  # pyright: ignore reportGeneralTypeIssues
+                source_unit_name
+            ][
+                "woke_comments"
+            ]
+        )
+
         if console is not None:
             for error in errors:
+                if (
+                    error.severity != SolcOutputErrorSeverityEnum.ERROR
+                    and error.source_location is not None
+                ):
+                    source_unit_name = error.source_location.file
+                    path = self._latest_source_units_to_paths[source_unit_name]
+                    content = self._latest_graph.nodes[source_unit_name]["content"]
+
+                    if error_commented_out(
+                        error.error_code,
+                        self._get_line_from_offset(
+                            path, error.source_location.start, content
+                        ),
+                        self._get_line_from_offset(
+                            path, error.source_location.end, content
+                        ),
+                        woke_comments[source_unit_name],
+                    ):
+                        continue
+
                 if (
                     error.severity == SolcOutputErrorSeverityEnum.ERROR
                     or not no_warnings

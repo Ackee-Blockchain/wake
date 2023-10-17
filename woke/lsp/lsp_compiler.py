@@ -41,6 +41,7 @@ from ..compiler.build_data_model import (
     SourceUnitInfo,
 )
 from ..core.solidity_version import SolidityVersionRange, SolidityVersionRanges
+from ..core.woke_comments import error_commented_out
 from ..detectors.api import DetectionConfidence, DetectionImpact, detect
 from ..utils import StrEnum, get_package_version
 from ..utils.file_utils import is_relative_to
@@ -164,11 +165,13 @@ class DetectionAdditionalInfo(LspModel):
 
 class CompilationErrorAdditionalInfo(LspModel):
     severity: SolcOutputErrorSeverityEnum
+    ignored: bool
     source_unit_name: str
 
     def __members(self) -> Tuple:
         return (
             self.severity,
+            self.ignored,
             self.source_unit_name,
         )
 
@@ -877,9 +880,30 @@ class LspCompiler:
             for error in solc_output.errors:
                 if error.source_location is not None:
                     path = cu.source_unit_name_to_path(error.source_location.file)
-                    errors_per_file[path].add(
-                        self.__solc_error_to_diagnostic(error, path, cu)
+                    start_line = self.get_line_pos_from_byte_offset(
+                        path, error.source_location.start
+                    )[0]
+                    end_line = self.get_line_pos_from_byte_offset(
+                        path, error.source_location.end
+                    )[0]
+
+                    ignored = (
+                        error.severity != SolcOutputErrorSeverityEnum.ERROR
+                        and error_commented_out(
+                            error.error_code,
+                            start_line,
+                            end_line,
+                            self.__last_graph.nodes[  # pyright: ignore reportGeneralTypeIssues
+                                error.source_location.file
+                            ][
+                                "woke_comments"
+                            ],
+                        )
                     )
+                    if not ignored or self.__ignored_detections_supported:
+                        errors_per_file[path].add(
+                            self.__solc_error_to_diagnostic(error, path, cu, ignored)
+                        )
                     if error.severity == SolcOutputErrorSeverityEnum.ERROR:
                         errored_files.add(path)
                 else:
@@ -1301,7 +1325,7 @@ class LspCompiler:
         self.__line_indexes[file] = encoded_lines
 
     def __solc_error_to_diagnostic(
-        self, error: SolcOutputError, path: Path, cu: CompilationUnit
+        self, error: SolcOutputError, path: Path, cu: CompilationUnit, ignored: bool
     ) -> Diagnostic:
         assert error.source_location is not None
         if error.severity == SolcOutputErrorSeverityEnum.ERROR:
@@ -1329,6 +1353,7 @@ class LspCompiler:
             message=error.message,
             data=CompilationErrorAdditionalInfo(
                 severity=error.severity,
+                ignored=ignored,
                 source_unit_name=error.source_location.file,
             ),
         )

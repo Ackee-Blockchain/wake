@@ -21,6 +21,7 @@ import rich_click as click
 from woke.cli.detect import DetectCli, run_detect
 from woke.core import get_logger
 from woke.core.visitor import Visitor, visit_map
+from woke.core.woke_comments import WokeComment, error_commented_out
 from woke.utils import StrEnum, get_class_that_defined_method
 from woke.utils.file_utils import is_relative_to
 from woke.utils.keyed_default_dict import KeyedDefaultDict
@@ -80,32 +81,6 @@ class Detector(Visitor, metaclass=ABCMeta):
         ...
 
 
-@dataclass
-class WokeComment:
-    detectors: Optional[List[str]]
-    start_line: int
-    end_line: int
-
-
-def _prepare_woke_comments(
-    woke_comments: Dict[str, List[Tuple[List[str], Tuple[int, int]]]],
-    source_unit: SourceUnit,
-) -> Dict[str, Dict[int, WokeComment]]:
-    prepared = {}
-    for comment_type, comments in woke_comments.items():
-        prepared[comment_type] = {}
-        for detectors, (start, end) in comments:
-            start_line = source_unit.get_line_col_from_byte_offset(start)[0]
-            end_line = source_unit.get_line_col_from_byte_offset(end)[0]
-
-            prepared[comment_type][end_line] = WokeComment(
-                detectors if detectors else None,
-                start_line,
-                end_line,
-            )
-    return prepared
-
-
 def _detection_commented_out(
     detector_name: str,
     detection: Detection,
@@ -134,50 +109,12 @@ def _detection_commented_out(
             detection.ir_node.byte_location[1]
         )[0]
 
-    comments = KeyedDefaultDict(
-        lambda t: woke_comments.get(t, {})  # pyright: ignore reportGeneralTypeIssues
+    return error_commented_out(
+        detector_name,
+        start_line,
+        end_line,
+        woke_comments,
     )
-
-    for l in range(start_line, end_line + 1):
-        if l in comments["woke-disable-line"]:
-            comment: WokeComment = comments["woke-disable-line"][l]
-            if comment.detectors is None or detector_name in comment.detectors:
-                return True
-
-    for l in range(start_line - 1, end_line):
-        if l in comments["woke-disable-next-line"]:
-            comment: WokeComment = comments["woke-disable-next-line"][l]
-            if comment.detectors is None or detector_name in comment.detectors:
-                return True
-
-    enable_keys: List[int] = sorted(comments["woke-enable"].keys())
-    disable_keys: List[int] = sorted(comments["woke-disable"].keys())
-
-    disabled_line = None
-    for k in disable_keys:
-        if k >= start_line:
-            break
-
-        comment: WokeComment = comments["woke-disable"][k]
-        if comment.detectors is None or detector_name in comment.detectors:
-            disabled_line = k
-
-    if disabled_line is None:
-        return False
-
-    for k in enable_keys:
-        if k <= disabled_line:
-            continue
-        if k >= start_line:
-            break
-
-        if (
-            comments["woke-enable"][k].detectors is None
-            or detector_name in comments["woke-enable"][k].detectors
-        ):
-            return False
-
-    return True
 
 
 # TODO detection exclude paths
@@ -257,12 +194,9 @@ def detect(
         Path,  # pyright: ignore reportGeneralTypeIssues
         Dict[str, Dict[int, WokeComment]],
     ] = KeyedDefaultDict(
-        lambda file: _prepare_woke_comments(  # pyright: ignore reportGeneralTypeIssues
-            imports_graph.nodes[  # pyright: ignore reportGeneralTypeIssues
-                build.source_units[file].source_unit_name
-            ]["woke_comments"],
-            build.source_units[file],
-        )
+        lambda file: imports_graph.nodes[  # pyright: ignore reportGeneralTypeIssues
+            build.source_units[file].source_unit_name
+        ]["woke_comments"]
     )
 
     exceptions = {}
