@@ -220,6 +220,9 @@ class WokeConfig:
         instance.__config = parsed_config
         return instance
 
+    def todict(self) -> Dict[str, Any]:
+        return self.__config_raw
+
     def update(
         self,
         config_dict: Dict[str, Any],

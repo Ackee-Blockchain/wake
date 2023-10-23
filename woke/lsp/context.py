@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
 from ..config import WokeConfig
@@ -21,6 +22,9 @@ class LspContext:
     __diagnostics_queue: asyncio.Queue
     __openzeppelin_contracts_version: Optional[SemanticVersion]
     __parser: LspParser
+
+    use_toml: bool
+    toml_path: Path
 
     def __init__(
         self, server: LspServer, config: WokeConfig, perform_files_discovery: bool
