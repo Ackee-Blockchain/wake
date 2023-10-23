@@ -13,6 +13,7 @@ from woke.ir.enums import (
 )
 
 from ..ast import SolcFunctionCall
+from ..declarations.contract_definition import ContractDefinition
 from ..declarations.error_definition import ErrorDefinition
 from ..declarations.event_definition import EventDefinition
 from ..declarations.function_definition import FunctionDefinition
@@ -25,6 +26,9 @@ from ..expressions.identifier import Identifier
 from ..expressions.member_access import MemberAccess
 from ..expressions.new_expression import NewExpression
 from ..expressions.tuple_expression import TupleExpression
+from ..type_names.array_type_name import ArrayTypeName
+from ..type_names.elementary_type_name import ElementaryTypeName
+from ..type_names.user_defined_type_name import UserDefinedTypeName
 from ..utils import IrInitTuple
 
 logger = get_logger(__name__)
@@ -97,6 +101,9 @@ class FunctionCall(ExpressionAbc):
         self,
     ) -> Optional[
         Union[
+            ContractDefinition,  # contract construction
+            ArrayTypeName,  # new dynamic array
+            ElementaryTypeName,  # new string or bytes
             EventDefinition,
             ErrorDefinition,
             FunctionDefinition,
@@ -158,7 +165,18 @@ class FunctionCall(ExpressionAbc):
             elif isinstance(node, FunctionCallOptions):
                 node = node.expression
             elif isinstance(node, NewExpression):
-                return None
+                type_name = node.type_name
+                if isinstance(type_name, (ArrayTypeName, ElementaryTypeName)):
+                    return type_name
+                elif isinstance(type_name, UserDefinedTypeName):
+                    assert isinstance(
+                        type_name.referenced_declaration, ContractDefinition
+                    )
+                    return type_name.referenced_declaration
+                else:
+                    assert (
+                        False
+                    ), f"Unexpected function call child node: {node}\n{self.source}"
             elif isinstance(node, TupleExpression):
                 if len(node.components) != 1:
                     assert (
