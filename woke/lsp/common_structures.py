@@ -825,7 +825,7 @@ class Registration(LspModel):
     """
     The method / capability to register for.
     """
-    registration_options: Optional[Any]
+    register_options: Optional[Any]
     """
     Options necessary for the registration.
     """
@@ -1048,19 +1048,19 @@ class WatchKind(IntEnum):
     DELETE = 4
 
 
-class FileEvent(LspModel):
-    uri: DocumentUri
-    type: int  # uint
-
-
-class DidChangeWatchedParams(LspModel):
-    changes: List[FileEvent]
-
-
 class FileChangeType(IntEnum):
     CREATED = 1
-    CHANGED = 1
+    CHANGED = 2
     DELETED = 3
+
+
+class FileEvent(LspModel):
+    uri: DocumentUri
+    type: FileChangeType
+
+
+class DidChangeWatchedFilesParams(LspModel):
+    changes: List[FileEvent]
 
 
 class ExecuteCommandClientCapabilities(LspModel):

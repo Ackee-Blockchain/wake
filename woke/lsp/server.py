@@ -18,6 +18,7 @@ from typing import (
     Union,
 )
 
+import tomli
 from pydantic.error_wrappers import ValidationError
 
 from woke.core import get_logger
@@ -32,15 +33,20 @@ from .commands import (
 )
 from .commands.init import init_detector_handler, init_printer_handler
 from .common_structures import (
+    ClientCapabilities,
     ConfigurationItem,
     ConfigurationParams,
     CreateFilesParams,
     DeleteFilesParams,
     DidChangeConfigurationParams,
+    DidChangeWatchedFilesParams,
+    DidChangeWatchedFilesRegistrationOptions,
     DocumentFilter,
     DocumentUri,
     ExecuteCommandOptions,
     ExecuteCommandParams,
+    FileChangeType,
+    FileSystemWatcher,
     InitializedParams,
     InitializeError,
     InitializeParams,
@@ -50,6 +56,8 @@ from .common_structures import (
     MessageType,
     PositionEncodingKind,
     ProgressParams,
+    Registration,
+    RegistrationParams,
     RenameFilesParams,
     SetTraceParams,
     ShowMessageParams,
@@ -140,6 +148,15 @@ class CommandsEnum(StrEnum):
     INIT_PRINTER = "woke.init.printer"
 
 
+def key_in_nested_dict(key: Tuple, d: Dict) -> bool:
+    try:
+        for k in key:
+            d = d[k]
+        return True
+    except KeyError:
+        return False
+
+
 class LspServer:
     __initialized: bool
     __tfs_version: Optional[str]
@@ -158,6 +175,8 @@ class LspServer:
 
     __method_mapping: Dict[str, Tuple[Callable, Optional[Type[LspModel]]]]
     __notification_mapping: Dict[str, Tuple[Callable, Optional[Type[LspModel]]]]
+
+    _client_capabilities: ClientCapabilities
 
     def __init__(
         self,
@@ -268,6 +287,10 @@ class LspServer:
             RequestMethodEnum.WORKSPACE_DID_DELETE_FILES: (
                 self._workspace_did_delete_files,
                 DeleteFilesParams,
+            ),
+            RequestMethodEnum.WORKSPACE_DID_CHANGE_WATCHED_FILES: (
+                self._workspace_did_change_watched_files,
+                DidChangeWatchedFilesParams,
             ),
         }
 
@@ -561,6 +584,8 @@ class LspServer:
         if self.__initialized:
             raise LspError(ErrorCodes.InvalidRequest, "Server already initialized")
 
+        self._client_capabilities = params.capabilities
+
         if params.workspace_folders is not None:
             if len(params.workspace_folders) != 1:
                 raise LspError(
@@ -743,30 +768,103 @@ class LspServer:
 
         return raw_config, invalid_options, removed_options
 
-    async def _create_config(self, workspace_path: Path) -> WokeConfig:
+    async def _create_config(
+        self, workspace_path: Path
+    ) -> Tuple[WokeConfig, bool, Path]:
         code_config = await self.get_configuration()
         assert isinstance(code_config, list)
         assert len(code_config) == 1
         assert isinstance(code_config[0], dict)
         raw_config = code_config[0]
 
-        raw_config, _, _ = await self._parse_config(raw_config, workspace_path)
+        if "configuration" in raw_config:
+            toml_path = workspace_path / raw_config["configuration"].get(
+                "toml_path", "woke.toml"
+            )
+            use_toml = raw_config["configuration"].get("use_toml_if_present", False)
 
-        return WokeConfig.fromdict(
-            raw_config,
-            project_root_path=workspace_path,
-        )
+            raw_config.pop("configuration")
+        else:
+            toml_path = Path()
+            use_toml = False
 
-    async def _handle_config_change(self, raw_config: dict) -> None:
-        def key_in_nested_dict(key: Tuple, d: Dict) -> bool:
+        if use_toml and toml_path.exists():
+            config = WokeConfig(project_root_path=workspace_path)
+
             try:
-                for k in key:
-                    d = d[k]
-                return True
-            except KeyError:
-                return False
+                config.load(toml_path)
+            except tomli.TOMLDecodeError:
+                await self.log_message(
+                    f"Failed to parse {toml_path}, using defaults.",
+                    MessageType.ERROR,
+                )
+                await self.show_message(
+                    f"Failed to parse {toml_path}, using defaults.",
+                    MessageType.ERROR,
+                )
+            except ValidationError as e:
+                message = f"TOML config file validation error, using defaults:\n{e}"
+                await self.log_message(message, MessageType.ERROR)
+                await self.show_message(message, MessageType.ERROR)
+            return config, use_toml, toml_path
+        else:
+            raw_config, _, _ = await self._parse_config(raw_config, workspace_path)
 
-        for context in self.__workspaces.values():
+            return (
+                WokeConfig.fromdict(
+                    raw_config,
+                    project_root_path=workspace_path,
+                ),
+                use_toml,
+                toml_path,
+            )
+
+    async def _handle_config_change(
+        self, context: LspContext, raw_config: dict
+    ) -> None:
+        original_toml_path = context.toml_path
+        original_use_toml = context.use_toml
+
+        if "configuration" in raw_config:
+            if "toml_path" in raw_config["configuration"]:
+                context.toml_path = (
+                    context.config.project_root_path
+                    / raw_config["configuration"]["toml_path"]
+                )
+            if "use_toml_if_present" in raw_config["configuration"]:
+                context.use_toml = raw_config["configuration"]["use_toml_if_present"]
+            raw_config.pop("configuration")
+
+        if context.use_toml and context.toml_path.exists():
+            if (
+                original_toml_path != context.toml_path
+                or original_use_toml != context.use_toml
+            ):
+                try:
+                    config = WokeConfig(
+                        project_root_path=context.config.project_root_path
+                    )
+                    config.load(context.toml_path)
+
+                    changed = context.config.update(config.todict(), set())
+                except tomli.TOMLDecodeError:
+                    await self.log_message(
+                        f"Failed to parse {context.toml_path}.",
+                        MessageType.ERROR,
+                    )
+                    await self.show_message(
+                        f"Failed to parse {context.toml_path}.",
+                        MessageType.ERROR,
+                    )
+                    return
+                except ValidationError as e:
+                    message = f"TOML config file validation error:\n{e}"
+                    await self.log_message(message, MessageType.ERROR)
+                    await self.show_message(message, MessageType.ERROR)
+                    return
+            else:
+                changed = {}
+        else:
             raw_config_copy = deepcopy(raw_config)
             (
                 raw_config_copy,
@@ -780,34 +878,122 @@ class LspServer:
                 raw_config_copy, invalid_options.union(removed_options)
             )
 
-            if key_in_nested_dict(("compiler", "solc"), changed):
-                await context.compiler.force_recompile()
-            if key_in_nested_dict(("lsp", "detectors"), changed) or key_in_nested_dict(
-                ("detectors",), changed
-            ):
-                await context.compiler.force_rerun_detectors()
-            if key_in_nested_dict(("lsp", "code_lens"), changed):
-                try:
-                    await self.send_request(
-                        RequestMethodEnum.WORKSPACE_CODE_LENS_REFRESH, None
-                    )
-                except LspError:
-                    pass
+        if key_in_nested_dict(("compiler", "solc"), changed):
+            await context.compiler.force_recompile()
+        if key_in_nested_dict(("lsp", "detectors"), changed) or key_in_nested_dict(
+            ("detectors",), changed
+        ):
+            await context.compiler.force_rerun_detectors()
+        if key_in_nested_dict(("lsp", "code_lens"), changed):
+            try:
+                await self.send_request(
+                    RequestMethodEnum.WORKSPACE_CODE_LENS_REFRESH, None
+                )
+            except LspError:
+                pass
 
     async def _initialized(self, params: InitializedParams) -> None:
         if self.__workspace_path is not None:
-            self.__main_workspace = LspContext(
-                self, await self._create_config(self.__workspace_path), True
+            if (
+                self._client_capabilities.workspace is not None
+                and self._client_capabilities.workspace.did_change_watched_files
+                is not None
+                and self._client_capabilities.workspace.did_change_watched_files.dynamic_registration
+                is True
+            ):
+                await self.send_request(
+                    RequestMethodEnum.CLIENT_REGISTER_CAPABILITY,
+                    RegistrationParams(
+                        registrations=[
+                            Registration(
+                                id="watched-files-toml",
+                                method="workspace/didChangeWatchedFiles",
+                                register_options=DidChangeWatchedFilesRegistrationOptions(
+                                    watchers=[
+                                        FileSystemWatcher(
+                                            glob_pattern="**/*.toml",
+                                            kind=None,
+                                        )
+                                    ]
+                                ),
+                            )
+                        ]
+                    ),
+                )
+
+            config, use_toml, toml_path = await self._create_config(
+                self.__workspace_path
             )
+            self.__main_workspace = LspContext(self, config, True)
+            self.__main_workspace.use_toml = use_toml
+            self.__main_workspace.toml_path = toml_path
             self.__workspaces[self.__workspace_path] = self.__main_workspace
             self.__main_workspace.run()
+
+    async def _workspace_did_change_watched_files(
+        self, params: DidChangeWatchedFilesParams
+    ) -> None:
+        latest_configuration = None
+
+        for context in self.__workspaces.values():
+            if context.use_toml and context.toml_path.exists():
+                try:
+                    config = WokeConfig(
+                        project_root_path=context.config.project_root_path
+                    )
+                    config.load(context.toml_path)
+
+                    changed = context.config.update(config.todict(), set())
+
+                    if key_in_nested_dict(("compiler", "solc"), changed):
+                        await context.compiler.force_recompile()
+                    if key_in_nested_dict(
+                        ("lsp", "detectors"), changed
+                    ) or key_in_nested_dict(("detectors",), changed):
+                        await context.compiler.force_rerun_detectors()
+                    if key_in_nested_dict(("lsp", "code_lens"), changed):
+                        try:
+                            await self.send_request(
+                                RequestMethodEnum.WORKSPACE_CODE_LENS_REFRESH, None
+                            )
+                        except LspError:
+                            pass
+                except tomli.TOMLDecodeError:
+                    await self.log_message(
+                        f"Failed to parse {context.toml_path}.",
+                        MessageType.ERROR,
+                    )
+                    await self.show_message(
+                        f"Failed to parse {context.toml_path}.",
+                        MessageType.ERROR,
+                    )
+                except ValidationError as e:
+                    message = f"TOML config file validation error:\n{e}"
+                    await self.log_message(message, MessageType.ERROR)
+                    await self.show_message(message, MessageType.ERROR)
+                    return
+            elif context.use_toml and any(
+                uri_to_path(ch.uri) == context.toml_path
+                and ch.type == FileChangeType.DELETED
+                for ch in params.changes
+            ):
+                # target TOML file was deleted, load LSP config
+                if latest_configuration is None:
+                    code_config = await self.get_configuration()
+                    assert isinstance(code_config, list)
+                    assert len(code_config) == 1
+                    assert isinstance(code_config[0], dict)
+                    latest_configuration = code_config[0]
+
+                await self._handle_config_change(context, latest_configuration)
 
     async def _workspace_did_change_configuration(
         self, params: DidChangeConfigurationParams
     ) -> None:
         logger.debug(f"Received configuration change: {params}")
         if "woke" in params.settings:
-            await self._handle_config_change(params.settings["woke"])
+            for context in self.__workspaces.values():
+                await self._handle_config_change(context, params.settings["woke"])
 
     async def _get_workspace(self, uri: DocumentUri) -> LspContext:
         path = uri_to_path(uri)
@@ -821,7 +1007,10 @@ class LspServer:
                 pass
 
         if len(matching_workspaces) == 0:
-            context = LspContext(self, await self._create_config(path.parent), False)
+            config, use_toml, toml_path = await self._create_config(path.parent)
+            context = LspContext(self, config, False)
+            context.use_toml = use_toml
+            context.toml_path = toml_path
             self.__workspaces[path.parent] = context
             context.run()
             return context
@@ -891,7 +1080,10 @@ class LspServer:
                 pass
 
         if len(matching_workspaces) == 0:
-            context = LspContext(self, await self._create_config(path.parent), False)
+            config, use_toml, toml_path = await self._create_config(path.parent)
+            context = LspContext(self, config, False)
+            context.use_toml = use_toml
+            context.toml_path = toml_path
             self.__workspaces[path.parent] = context
             context.run()
         else:
