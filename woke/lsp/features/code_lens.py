@@ -1,34 +1,15 @@
-import logging
-import os
-from collections import defaultdict
 from pathlib import Path
-from typing import (
-    Any,
-    DefaultDict,
-    Dict,
-    List,
-    NamedTuple,
-    Optional,
-    Tuple,
-    Type,
-    Union,
-)
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
 
-import rich_click as click
 from intervaltree import IntervalTree
-from rich import get_console
-from rich.terminal_theme import MONOKAI
 
-from woke.cli.print import run_print
 from woke.core import get_logger
-from woke.core.visitor import visit_map
 from woke.ir import (
     ContractDefinition,
     DeclarationAbc,
     ErrorDefinition,
     EventDefinition,
     FunctionDefinition,
-    IrAbc,
     ModifierDefinition,
     VariableDeclaration,
 )
@@ -44,11 +25,9 @@ from woke.lsp.common_structures import (
     WorkDoneProgressParams,
 )
 from woke.lsp.context import LspContext
-from woke.lsp.logging_handler import LspLoggingHandler
 from woke.lsp.lsp_data_model import LspModel
 from woke.lsp.utils.position import changes_to_byte_offset
 from woke.lsp.utils.uri import uri_to_path
-from woke.printers.api import Printer, get_printers
 
 logger = get_logger(__name__)
 
@@ -159,78 +138,6 @@ def _get_code_lens_from_cache(
     return ret
 
 
-def _get_printer_output(
-    context: LspContext,
-    printer_name: str,
-    command: click.Command,
-    printer_cls: Type[Printer],
-    node: IrAbc,
-    logging_handler: logging.Handler,
-) -> Tuple[str, Optional[str]]:
-    if hasattr(context.config.printers, printer_name):
-        default_map = getattr(context.config.printers, printer_name)
-    else:
-        default_map = None
-
-    console = get_console()
-    original_record = console.record
-    original_file = console.file
-
-    console.record = True
-    console.file = open(os.devnull, "w")
-
-    def _callback(*args, **kwargs):
-        instance.paths = [Path(p).resolve() for p in kwargs.pop("paths", [])]
-
-        original_callback(
-            instance, *args, **kwargs
-        )  # pyright: ignore reportOptionalCall
-
-    instance = printer_cls()
-    instance.build = context.compiler.last_build
-    instance.build_info = context.compiler.last_build_info
-    instance.config = context.config
-    instance.console = console
-    instance.imports_graph = (  # pyright: ignore reportGeneralTypeIssues
-        context.compiler.last_graph.copy()
-    )
-    instance.logger = get_logger(printer_cls.__name__)
-    instance.logger.addHandler(logging_handler)
-
-    original_callback = command.callback
-    command.callback = _callback
-
-    try:
-        sub_ctx = command.make_context(
-            command.name,
-            [],
-            default_map=default_map,
-        )
-        with sub_ctx:
-            sub_ctx.command.invoke(sub_ctx)
-
-        if not instance.lsp_predicate(node):
-            command.callback = original_callback
-            return "", None
-
-        # call the target visit function with the node
-        visit_map[node.ast_node.node_type](instance, node)
-
-        instance.print()
-        lsp_name = instance.lsp_name()
-
-        if lsp_name == "":
-            return "", None
-
-        # TODO detect theme from VS Code settings?
-        ret = console.export_html(theme=MONOKAI)
-        return (lsp_name if lsp_name is not None else printer_name), ret
-    finally:
-        command.callback = original_callback
-        console.record = original_record
-        console.file = original_file
-
-
 def _generate_code_lens(
     context: LspContext,
     path: Path,
@@ -273,61 +180,6 @@ async def code_lens(
     source_unit = context.compiler.source_units[path]
 
     _code_lens_cache[path] = []
-
-    printers: DefaultDict[
-        Type[IrAbc], Dict[str, Tuple[click.Command, Type[Printer]]]
-    ] = defaultdict(dict)
-    for printer_name, printer in get_printers(
-        {context.config.project_root_path / "printers"},
-        False,
-    ).items():
-        lsp_node = printer[1].lsp_node()
-        if lsp_node is None:
-            continue
-        if isinstance(lsp_node, (list, tuple)):
-            for node in lsp_node:
-                printers[node][printer_name] = printer
-        else:
-            printers[lsp_node][printer_name] = printer
-
-    for (
-        package,
-        e,
-    ) in (
-        run_print.failed_plugin_entry_points  # pyright: ignore reportGeneralTypeIssues
-    ):
-        await context.server.show_message(
-            f"Failed to load printers from package {package}: {e}", MessageType.ERROR
-        )
-        await context.server.log_message(
-            f"Failed to load printers from package {package}: {e}", MessageType.ERROR
-        )
-    for (
-        path,
-        e,
-    ) in run_print.failed_plugin_paths:  # pyright: ignore reportGeneralTypeIssues
-        await context.server.show_message(
-            f"Failed to load printers from path {path}: {e}", MessageType.ERROR
-        )
-        await context.server.log_message(
-            f"Failed to load printers from path {path}: {e}", MessageType.ERROR
-        )
-    for (
-        printer_name,
-        prev,
-        current,
-    ) in run_print.printer_collisions:  # pyright: ignore reportGeneralTypeIssues
-        await context.server.show_message(
-            f"Printer '{printer_name}' loaded from {current} overrides printer loaded from {prev}",
-            MessageType.WARNING,
-        )
-        await context.server.log_message(
-            f"Printer '{printer_name}' loaded from {current} overrides printer loaded from {prev}",
-            MessageType.WARNING,
-        )
-
-    logging_buffer = []
-    logging_handler = LspLoggingHandler(logging_buffer)
 
     for node in source_unit:
         if isinstance(node, DeclarationAbc):
@@ -445,51 +297,6 @@ async def code_lens(
                         node.byte_location,
                     )
                 )
-
-        for printer_name in sorted(printers[node.__class__].keys()):
-            command, printer_cls = printers[node.__class__][printer_name]
-
-            try:
-                lsp_name, out = _get_printer_output(
-                    context,
-                    printer_name,
-                    command,
-                    printer_cls,
-                    node,
-                    logging_handler,
-                )
-            except Exception as e:
-                await context.server.show_message(
-                    f"Error while running printer {printer_name}: {e}",
-                    MessageType.ERROR,
-                )
-                await context.server.log_message(
-                    f"Error while running printer {printer_name}: {e}",
-                    MessageType.ERROR,
-                )
-                out = None
-                lsp_name = printer_name
-
-            if out is not None:
-                code_lens.append(
-                    _generate_code_lens(
-                        context,
-                        node.file,
-                        lsp_name,
-                        "Tools-for-Solidity.printer",
-                        [
-                            printer_name,
-                            out,
-                        ],
-                        node.name_location
-                        if isinstance(node, DeclarationAbc)
-                        else node.byte_location,
-                        node.byte_location,
-                    )
-                )
-
-    for log, level in logging_buffer:
-        await context.server.log_message(log, level)
 
     code_lens.sort(
         key=lambda x: (
