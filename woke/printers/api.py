@@ -2,18 +2,7 @@ from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-    Awaitable,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    Type,
-    Union,
-)
+from typing import TYPE_CHECKING, Awaitable, Callable, Dict, List, Set, Tuple, Type
 
 import rich_click as click
 
@@ -35,17 +24,6 @@ class Printer(Visitor, metaclass=ABCMeta):
     @abstractmethod
     def print(self) -> None:
         ...
-
-    @classmethod
-    def lsp_node(cls) -> Optional[Union[Type[ir.IrAbc], Tuple[Type[ir.IrAbc], ...]]]:
-        return None
-
-    def lsp_name(self) -> Optional[str]:
-        # return None for the default name (name of the Click command), empty string to skip
-        return None
-
-    def lsp_predicate(self, node: ir.IrAbc) -> bool:
-        return True
 
     def _run(self) -> None:
         from woke.utils.file_utils import is_relative_to
