@@ -183,24 +183,24 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         self._detector_collisions.clear()
 
         detector_entry_points = entry_points().select(group="woke.plugins.detectors")
-        for entry_point in sorted(detector_entry_points, key=lambda e: e.value):
-            self._current_plugin = entry_point.value
+        for entry_point in sorted(detector_entry_points, key=lambda e: e.module):
+            self._current_plugin = entry_point.module
 
             # unload target module and all its children
             for m in [
                 k
                 for k in sys.modules.keys()
-                if k == entry_point.value or k.startswith(entry_point.value + ".")
+                if k == entry_point.module or k.startswith(entry_point.module + ".")
             ]:
                 sys.modules.pop(m)
 
             try:
                 entry_point.load()
             except Exception as e:
-                self._failed_plugin_entry_points.add((entry_point.value, e))
+                self._failed_plugin_entry_points.add((entry_point.module, e))
                 if not self._completion_mode:
                     logger.error(
-                        f"Failed to load detectors from package '{entry_point.value}': {e}"
+                        f"Failed to load detectors from plugin module '{entry_point.module}': {e}"
                     )
 
         for path in [self._global_data_path / "global-detectors"] + sorted(
@@ -243,11 +243,11 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         name = name or cmd.name
         if name in self.loaded_from_plugins:
             if isinstance(self.loaded_from_plugins[name], str):
-                prev = f"package '{self.loaded_from_plugins[name]}'"
+                prev = f"plugin module '{self.loaded_from_plugins[name]}'"
             else:
                 prev = f"path '{self.loaded_from_plugins[name]}'"
             if isinstance(self._current_plugin, str):
-                current = f"package '{self._current_plugin}'"
+                current = f"plugin module '{self._current_plugin}'"
             else:
                 current = f"path '{self._current_plugin}'"
 
