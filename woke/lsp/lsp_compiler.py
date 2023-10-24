@@ -1049,11 +1049,11 @@ class LspCompiler:
             run_detect.failed_plugin_entry_points  # pyright: ignore reportGeneralTypeIssues
         ):
             await self.__server.show_message(
-                f"Failed to load detectors from package {package}: {e}",
+                f"Failed to load detectors from plugin module {package}: {e}",
                 MessageType.ERROR,
             )
             await self.__server.log_message(
-                f"Failed to load detectors from package {package}: {e}",
+                f"Failed to load detectors from plugin module {package}: {e}",
                 MessageType.ERROR,
             )
         for (
