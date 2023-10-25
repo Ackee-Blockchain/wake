@@ -126,7 +126,7 @@ def create_sarif_log(
                         Location(
                             physical_location=PhysicalLocation(
                                 artifact_location=ArtifactLocation(
-                                    uri=f"file://{result.detection.ir_node.file}",
+                                    uri=f"{result.detection.ir_node.file}",
                                 ),
                                 region=Region(
                                     start_line=start_line,
