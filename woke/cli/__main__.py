@@ -66,6 +66,7 @@ def excepthook(attach: bool, type, value, traceback):
     "--config",
     required=False,
     type=click.Path(exists=False, dir_okay=False),
+    envvar="WOKE_CONFIG",
     help="Path to the local config file.",
 )
 @click.version_option(message="%(version)s", package_name="woke")
