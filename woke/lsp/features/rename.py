@@ -2,11 +2,12 @@ import logging
 import re
 from collections import defaultdict
 from pathlib import Path
-from typing import DefaultDict, List, Optional, Union
+from typing import DefaultDict, List, Optional, Set, Union
 
 import woke.ast.ir.yul as yul
 from woke.ast.ir.abc import IrAbc
 from woke.ast.ir.declaration.abc import DeclarationAbc
+from woke.ast.ir.declaration.function_definition import FunctionDefinition
 from woke.ast.ir.expression.binary_operation import BinaryOperation
 from woke.ast.ir.expression.identifier import Identifier
 from woke.ast.ir.expression.member_access import MemberAccess
@@ -81,11 +82,20 @@ def _generate_reference_location(
 
 
 def _generate_workspace_edit(
-    declaration: DeclarationAbc, new_name: str, context: LspContext
+    declaration: Union[DeclarationAbc, Set[FunctionDefinition]],
+    new_name: str,
+    context: LspContext,
 ) -> WorkspaceEdit:
     changes_by_file: DefaultDict[Path, List[TextEdit]] = defaultdict(list)
 
-    for reference in declaration.get_all_references(True):
+    all_references = set()
+    if isinstance(declaration, set):
+        for func in declaration:
+            all_references.update(func.get_all_references(True))
+    else:
+        all_references.update(declaration.get_all_references(True))
+
+    for reference in all_references:
         if not isinstance(reference, (UnaryOperation, BinaryOperation)):
             changes_by_file[reference.file].append(
                 TextEdit(
@@ -183,7 +193,7 @@ async def rename(
             raise LspError(ErrorCodes.RequestFailed, "Cannot rename this symbol")
         node = external_reference.referenced_declaration
 
-    if not isinstance(node, DeclarationAbc):
+    if not isinstance(node, (DeclarationAbc, set)):
         raise LspError(ErrorCodes.RequestFailed, "Cannot rename this symbol")
 
     return _generate_workspace_edit(node, params.new_name, context)
@@ -249,6 +259,6 @@ async def prepare_rename(
             return None
         location = node.name_location
 
-    if not isinstance(node, DeclarationAbc) or location is None:
+    if not isinstance(node, (DeclarationAbc, set)) or location is None:
         return None
     return context.compiler.get_range_from_byte_offsets(path, location)

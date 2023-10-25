@@ -124,32 +124,37 @@ class ImportDirective(SolidityAbc):
             yield from symbol_alias.foreign
 
     def _post_process(self, callback_params: CallbackParams):
-        # referenced declaration ID is missing (for whatever reason) in import directive symbol aliases
+        from ..declaration.function_definition import FunctionDefinition
+
+        # referenced declaration ID is missing in import directive symbol aliases
+        # the reason is that the Identifier may refer to multiple overloaded functions
         # for example `import { SafeType } from "SafeLib.sol";`
         # fix: find these reference IDs manually
-        # seems to be fixed in solc >= 0.8.12
         for symbol_alias in self._symbol_aliases:
-            if symbol_alias.foreign._referenced_declaration_id is not None:
+            if len(symbol_alias.foreign._referenced_declaration_ids) != 0:
                 continue
 
             source_units_queue: Deque[SourceUnit] = deque(
                 [callback_params.source_units[self._imported_file]]
             )
             processed_source_units: Set[Path] = {self._imported_file}
-            referenced_declaration = None
+            referenced_declarations = set()
+            search = True
             searched_name = symbol_alias.foreign.name
 
-            while source_units_queue and referenced_declaration is None:
+            while source_units_queue and search:
                 imported_source_unit = source_units_queue.pop()
 
                 for declaration in imported_source_unit.declarations_iter():
-                    if declaration.canonical_name == searched_name:
-                        referenced_declaration = declaration
-                        break
+                    if declaration.name == searched_name:
+                        referenced_declarations.add(declaration)
+                        if not isinstance(declaration, FunctionDefinition):
+                            search = False
+                            break
 
                 for import_ in imported_source_unit.imports:
                     if import_.unit_alias == searched_name:
-                        referenced_declaration = import_
+                        referenced_declarations.add(import_)
                         break
 
                     # handle the case when an imported symbol is an alias of another symbol
@@ -162,17 +167,22 @@ class ImportDirective(SolidityAbc):
                         )
                         processed_source_units.add(import_.imported_file)
 
-            assert referenced_declaration is not None
-            node_path_order = self._reference_resolver.get_node_path_order(
-                AstNodeId(referenced_declaration.ast_node_id),
-                referenced_declaration.cu_hash,
-            )
-            referenced_declaration_id = (
-                self._reference_resolver.get_ast_id_from_cu_node_path_order(
-                    node_path_order, self.cu_hash
+            assert len(referenced_declarations) > 0
+
+            referenced_declaration_ids = set()
+            for referenced_declaration in referenced_declarations:
+                node_path_order = self._reference_resolver.get_node_path_order(
+                    AstNodeId(referenced_declaration.ast_node_id),
+                    referenced_declaration.cu_hash,
                 )
+                referenced_declaration_ids.add(
+                    self._reference_resolver.get_ast_id_from_cu_node_path_order(
+                        node_path_order, self.cu_hash
+                    )
+                )
+            symbol_alias.foreign._referenced_declaration_ids = (
+                referenced_declaration_ids
             )
-            symbol_alias.foreign._referenced_declaration_id = referenced_declaration_id
 
     @property
     def parent(self) -> SourceUnit:

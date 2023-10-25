@@ -129,6 +129,32 @@ def _get_node_symbol_kind(
         assert False, f"Unknown node type {type(node)}"
 
 
+def prepare_type_hierarchy_item(
+    context: LspContext,
+    node: Union[
+        ContractDefinition, FunctionDefinition, ModifierDefinition, VariableDeclaration
+    ],
+) -> TypeHierarchyItem:
+    return TypeHierarchyItem(
+        name=node.canonical_name,
+        kind=_get_node_symbol_kind(node),
+        tags=None,
+        detail=None,
+        uri=DocumentUri(path_to_uri(node.file)),
+        range=context.compiler.get_range_from_byte_offsets(
+            node.file, node.byte_location
+        ),
+        selection_range=context.compiler.get_range_from_byte_offsets(
+            node.file, node.name_location
+        ),
+        data=TypeHierarchyItemData(
+            ast_node_id=node.ast_node_id,
+            cu_hash=node.cu_hash.hex(),
+            uri=DocumentUri(path_to_uri(node.file)),
+        ),
+    )
+
+
 async def prepare_type_hierarchy(
     context: LspContext, params: TypeHierarchyPrepareParams
 ) -> Union[List[TypeHierarchyItem], None]:
@@ -181,26 +207,9 @@ async def prepare_type_hierarchy(
     if isinstance(
         node, (ContractDefinition, FunctionDefinition, ModifierDefinition)
     ) or (isinstance(node, VariableDeclaration) and node.overrides is not None):
-        return [
-            TypeHierarchyItem(
-                name=node.canonical_name,
-                kind=_get_node_symbol_kind(node),
-                tags=None,
-                detail=None,
-                uri=DocumentUri(path_to_uri(node.file)),
-                range=context.compiler.get_range_from_byte_offsets(
-                    node.file, node.byte_location
-                ),
-                selection_range=context.compiler.get_range_from_byte_offsets(
-                    node.file, node.name_location
-                ),
-                data=TypeHierarchyItemData(
-                    ast_node_id=node.ast_node_id,
-                    cu_hash=node.cu_hash.hex(),
-                    uri=DocumentUri(path_to_uri(node.file)),
-                ),
-            )
-        ]
+        return [prepare_type_hierarchy_item(context, node)]
+    elif isinstance(node, set):
+        return [prepare_type_hierarchy_item(context, n) for n in node]
 
     return None
 

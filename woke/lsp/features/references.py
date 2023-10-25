@@ -142,14 +142,21 @@ async def references(
     ):
         node = node.function
 
-    if not isinstance(node, DeclarationAbc):
+    if not isinstance(node, (DeclarationAbc, set)):
         return None
 
     refs = []
-    for reference in node.get_all_references(
-        context.config.lsp.find_references.include_declarations
-    ):
-        refs.append(_generate_reference_location(reference, context))
+    if isinstance(node, set):
+        for n in node:
+            for reference in n.get_all_references(
+                context.config.lsp.find_references.include_declarations
+            ):
+                refs.append(_generate_reference_location(reference, context))
+    else:
+        for reference in node.get_all_references(
+            context.config.lsp.find_references.include_declarations
+        ):
+            refs.append(_generate_reference_location(reference, context))
 
     if len(refs) == 0:
         return None
