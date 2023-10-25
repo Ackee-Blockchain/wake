@@ -329,7 +329,7 @@ async def detect_(
             if watch:
                 return
             else:
-                sys.exit(1)
+                sys.exit(2)
 
         assert compiler.latest_graph is not None
         assert ctx.invoked_subcommand is not None
@@ -401,8 +401,7 @@ async def detect_(
         console.record = False
 
         if not watch:
-            # TODO different error exit codes for compilation/detection errors
-            sys.exit(0 if len(detections) == 0 else 1)
+            sys.exit(0 if len(detections) == 0 else 3)
 
     sol_files: Set[Path] = set()
     start = time.perf_counter()

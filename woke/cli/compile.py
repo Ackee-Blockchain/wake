@@ -127,7 +127,7 @@ async def compile(
             error.severity == SolcOutputErrorSeverityEnum.ERROR for error in errors
         )
         if errored:
-            sys.exit(1)
+            sys.exit(2)
 
 
 @click.command(name="compile")

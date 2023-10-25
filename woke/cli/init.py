@@ -338,7 +338,7 @@ async def run_init_pytypes(
     else:
         errored = any(e.severity == SolcOutputErrorSeverityEnum.ERROR for e in errors)
         if errored:
-            sys.exit(1)
+            sys.exit(2)
 
 
 @run_init.command(name="pytypes")
