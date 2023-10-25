@@ -842,10 +842,12 @@ class LspServer:
             ):
                 try:
                     config = WokeConfig(
-                        project_root_path=context.config.project_root_path
+                        local_config_path=context.toml_path,
+                        project_root_path=context.config.project_root_path,
                     )
-                    config.load(context.toml_path)
+                    config.load_configs()
 
+                    context.config.local_config_path = context.toml_path
                     changed = context.config.update(config.todict(), set())
                 except tomli.TOMLDecodeError:
                     await self.log_message(

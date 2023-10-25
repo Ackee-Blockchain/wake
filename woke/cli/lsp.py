@@ -49,7 +49,7 @@ def run_lsp(context: click.Context, port: int):
     """
     from woke.config import WokeConfig
 
-    config = WokeConfig()
-    config.load_configs()  # load ~/.woke/config.toml and ./woke.toml
+    config = WokeConfig(local_config_path=context.obj.get("local_config_path", None))
+    config.load_configs()
 
     asyncio.run(run_server(config, port))

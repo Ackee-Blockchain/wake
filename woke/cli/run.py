@@ -26,7 +26,10 @@ def _get_module_name(path: Path, root: Path) -> str:
     default=False,
     help="Do not print transaction info.",
 )
-def run_run(paths: Tuple[str, ...], debug: bool, ask: bool, silent: bool) -> None:
+@click.pass_context
+def run_run(
+    ctx: click.Context, paths: Tuple[str, ...], debug: bool, ask: bool, silent: bool
+) -> None:
     """Run a Woke script."""
 
     import importlib.util
@@ -44,7 +47,7 @@ def run_run(paths: Tuple[str, ...], debug: bool, ask: bool, silent: bool) -> Non
 
     from .console import console
 
-    config = WokeConfig()
+    config = WokeConfig(local_config_path=ctx.obj.get("local_config_path", None))
     config.load_configs()
     get_config().update(
         {
@@ -77,8 +80,12 @@ def run_run(paths: Tuple[str, ...], debug: bool, ask: bool, silent: bool) -> Non
 
     sys.path.insert(0, str(config.project_root_path))
     for file in sorted(py_files):
-        module_name = _get_module_name(file, config.project_root_path)
-        module_spec = importlib.util.spec_from_file_location(module_name, file)
+        module_name = _get_module_name(
+            file, config.project_root_path  # pyright: ignore reportGeneralTypeIssues
+        )
+        module_spec = importlib.util.spec_from_file_location(
+            module_name, file  # pyright: ignore reportGeneralTypeIssues
+        )
         if module_spec is None or module_spec.loader is None:
             raise ValueError()
         module = importlib.util.module_from_spec(module_spec)

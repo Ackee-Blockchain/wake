@@ -7,6 +7,7 @@ from types import TracebackType
 from typing import TYPE_CHECKING, Callable, DefaultDict, List, Optional, Set, Tuple
 from urllib.error import HTTPError
 
+import rich_click
 from ipdb.__main__ import _init_pdb
 
 from woke.config import WokeConfig
@@ -86,7 +87,12 @@ def reset_exception_handled():
 def get_config() -> WokeConfig:
     global _config
     if _config is None:
-        _config = WokeConfig()
+        local_config_path = None
+        ctx = rich_click.get_current_context(silent=True)
+        if ctx is not None and isinstance(ctx.obj, dict):
+            local_config_path = ctx.obj.get("local_config_path", None)
+
+        _config = WokeConfig(local_config_path=local_config_path)
         _config.load_configs()
     return _config
 

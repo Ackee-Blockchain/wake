@@ -261,8 +261,8 @@ def run_compile(
     """Compile the project."""
     from woke.config import WokeConfig
 
-    config = WokeConfig()
-    config.load_configs()  # load ~/.woke/config.toml and ./woke.toml
+    config = WokeConfig(local_config_path=ctx.obj.get("local_config_path", None))
+    config.load_configs()
 
     new_options = {}
     deleted_options = []

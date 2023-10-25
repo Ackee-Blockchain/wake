@@ -35,6 +35,7 @@ class UnsupportedPlatformError(Exception):
 
 
 class WokeConfig:
+    __local_config_path: Path
     __project_root_path: Path
     __global_config_path: Path
     __global_data_path: Path
@@ -45,17 +46,24 @@ class WokeConfig:
     def __init__(
         self,
         *_,
+        local_config_path: Optional[Union[str, Path]] = None,
         project_root_path: Optional[Union[str, Path]] = None,
     ):
         system = platform.system()
 
         try:
-            self.__global_config_path = Path(os.environ["XDG_CONFIG_HOME"]) / "woke"
+            self.__global_config_path = (
+                Path(os.environ["XDG_CONFIG_HOME"]) / "woke" / "config.toml"
+            )
         except KeyError:
             if system in {"Linux", "Darwin"}:
-                self.__global_config_path = Path.home() / ".config" / "woke"
+                self.__global_config_path = (
+                    Path.home() / ".config" / "woke" / "config.toml"
+                )
             elif system == "Windows":
-                self.__global_config_path = Path(os.environ["LOCALAPPDATA"]) / "woke"
+                self.__global_config_path = (
+                    Path(os.environ["LOCALAPPDATA"]) / "woke" / "config.toml"
+                )
             else:
                 raise UnsupportedPlatformError(f"Platform `{system}` is not supported.")
 
@@ -71,12 +79,12 @@ class WokeConfig:
 
         migrate = False
         if (
-            not self.__global_config_path.exists()
+            not self.__global_config_path.parent.exists()
             and not self.__global_data_path.exists()
         ):
             migrate = True
 
-        self.__global_config_path.mkdir(parents=True, exist_ok=True)
+        self.__global_config_path.parent.mkdir(parents=True, exist_ok=True)
         self.__global_data_path.mkdir(parents=True, exist_ok=True)
 
         if migrate:
@@ -94,7 +102,7 @@ class WokeConfig:
             solc_versions_path = old_path / ".woke_solc_version"
 
             if config_path.exists():
-                config_path.rename(self.__global_config_path / "config.toml")
+                config_path.rename(self.__global_config_path)
             if compilers_path.exists():
                 compilers_path.rename(self.__global_data_path / "compilers")
             if solc_versions_path.exists():
@@ -112,6 +120,11 @@ class WokeConfig:
         else:
             self.__project_root_path = Path(project_root_path).resolve()
 
+        if local_config_path is None:
+            self.__local_config_path = self.__project_root_path / "woke.toml"
+        else:
+            self.__local_config_path = Path(local_config_path).resolve()
+
         if not self.__project_root_path.is_dir():
             raise ValueError(
                 f"Project root path '{self.__project_root_path}' is not a directory."
@@ -127,7 +140,7 @@ class WokeConfig:
 
     def __repr__(self) -> str:
         config_dict = reprlib.repr(self.__config_raw)
-        return f"{self.__class__.__name__}.fromdict({config_dict}, project_root_path={repr(self.__project_root_path)})"
+        return f"{self.__class__.__name__}.fromdict({config_dict}, config_path={repr(self.__local_config_path)}, project_root_path={repr(self.__project_root_path)})"
 
     def __merge_dicts(self, old: Dict[str, Any], new: Dict[str, Any]) -> None:
         for k, v in new.items():
@@ -279,8 +292,8 @@ class WokeConfig:
             self.__config = TopLevelConfig()
         self.__config_raw = self.__config.dict(by_alias=True)
 
-        self.load(self.global_config_path / "config.toml")
-        self.load(self.project_root_path / "woke.toml")
+        self.load(self.global_config_path)
+        self.load(self.local_config_path)
 
     def load(self, path: Path) -> None:
         """
@@ -305,6 +318,20 @@ class WokeConfig:
         Return frozenset of all loaded config file paths, including files that were loaded using the `subconfigs` config key.
         """
         return frozenset(self.__loaded_files)
+
+    @property
+    def local_config_path(self) -> Path:
+        """
+        Return the system path to the local config file.
+        """
+        return self.__local_config_path
+
+    @local_config_path.setter
+    def local_config_path(self, path: Path) -> None:
+        """
+        Set the system path to the local config file.
+        """
+        self.__local_config_path = path
 
     @property
     def global_config_path(self) -> Path:

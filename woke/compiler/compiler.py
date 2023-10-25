@@ -87,7 +87,6 @@ logger = get_logger(__name__)
 class CompilationFileSystemEventHandler(FileSystemEventHandler):
     _config: WokeConfig
     _files: Set[Path]
-    _config_path: Path
     _compiler: SolidityCompiler
     _output_types: Collection[SolcOutputSelectionEnum]
     _write_artifacts: bool
@@ -118,7 +117,6 @@ class CompilationFileSystemEventHandler(FileSystemEventHandler):
         self._config = config
         self._files = set(files)
         self._loop = loop
-        self._config_path = config.project_root_path / "woke.toml"
         self._compiler = compiler
         self._output_types = output_types
         self._write_artifacts = write_artifacts
@@ -181,15 +179,15 @@ class CompilationFileSystemEventHandler(FileSystemEventHandler):
             src_file = Path(event.src_path)
             dest_file = Path(event.dest_path)
             if (
-                src_file == self._config_path
+                src_file == self._config.local_config_path
                 or src_file.suffix == ".sol"
-                or dest_file == self._config_path
+                or dest_file == self._config.local_config_path
                 or dest_file.suffix == ".sol"
             ):
                 self._loop.call_soon_threadsafe(self._queue.put_nowait, event)
         else:
             file = Path(event.src_path)
-            if file == self._config_path or file.suffix == ".sol":
+            if file == self._config.local_config_path or file.suffix == ".sol":
                 self._loop.call_soon_threadsafe(self._queue.put_nowait, event)
 
     async def _compile(self):
@@ -253,7 +251,7 @@ class CompilationFileSystemEventHandler(FileSystemEventHandler):
         self._config_changed = False
 
     def _on_created(self, file: Path):
-        if file == self._config_path:
+        if file == self._config.local_config_path:
             self._config_changed = True
         elif file.suffix == ".sol":
             self._files.add(file)
@@ -265,14 +263,14 @@ class CompilationFileSystemEventHandler(FileSystemEventHandler):
                 self._created_files.add(file)
 
     def _on_modified(self, file: Path):
-        if file == self._config_path:
+        if file == self._config.local_config_path:
             self._config_changed = True
         elif file.suffix == ".sol":
             logger.debug(f"File {file} modified")
             self._modified_files.add(file)
 
     def _on_deleted(self, file: Path):
-        if file == self._config_path:
+        if file == self._config.local_config_path:
             self._config_changed = True
         elif file.suffix == ".sol":
             try:
