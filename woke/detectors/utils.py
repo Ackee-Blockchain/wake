@@ -152,9 +152,6 @@ def create_sarif_log(
                 invocations=[
                     Invocation(
                         execution_successful=True,
-                        working_directory=ArtifactLocation(
-                            uri=f"file://{os.getcwd()}",
-                        ),
                     ),
                 ],
                 results=results,
