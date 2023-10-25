@@ -40,6 +40,8 @@ abch_tree_sitter_solidity = "^1.2.0"
 lazy-import = "^0.2.2"
 importlib-metadata = { version = "4.8", python = "<3.10" }
 packaging = ">=22.0"
+sarif-om = "^1.0.4"
+jschema-to-python = "^1.2.3"
 
 pytest-asyncio = { version = "^0.17", optional = true }
 GitPython = { version = "^3.1.20", optional = true }

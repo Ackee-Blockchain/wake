@@ -1159,7 +1159,7 @@ class LspCompiler:
         logging_handler = LspLoggingHandler(logging_buffer)
 
         if self.__config.lsp.detectors.enable:
-            detections, detector_exceptions = detect(
+            _, detections, detector_exceptions = detect(
                 detector_names,
                 self.last_build,
                 self.last_build_info,

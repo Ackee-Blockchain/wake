@@ -186,7 +186,9 @@ def detect(
     capture_exceptions: bool = False,
     logging_handler: Optional[logging.Handler] = None,
 ) -> Tuple[
-    Dict[str, Tuple[List[DetectorResult], List[DetectorResult]]], Dict[str, Exception]
+    List[click.Command],
+    Dict[str, Tuple[List[DetectorResult], List[DetectorResult]]],
+    Dict[str, Exception],
 ]:
     from contextlib import nullcontext
 
@@ -423,7 +425,7 @@ def detect(
                 raise
             exceptions[detector_name] = e
 
-    return detections, exceptions
+    return detectors, detections, exceptions
 
 
 def print_detection(
