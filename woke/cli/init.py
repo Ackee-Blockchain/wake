@@ -19,10 +19,17 @@ if TYPE_CHECKING:
 
 
 def write_config(config: WokeConfig) -> None:
-    with config.project_root_path.joinpath("woke.toml").open("w") as f:
+    rel_path = "../" * len(
+        config.local_config_path.parent.relative_to(config.project_root_path).parts
+    )
+
+    config.local_config_path.parent.mkdir(exist_ok=True, parents=True)
+    with config.local_config_path.open("w") as f:
         f.write("[compiler.solc]\n")
-        f.write('ignore_paths = ["node_modules", ".woke-build", "venv", "lib"]\n')
-        f.write('include_paths = ["node_modules"]\n')
+        f.write(
+            f'ignore_paths = ["{rel_path}node_modules", "{rel_path}.woke-build", "{rel_path}venv", "{rel_path}lib"]\n'
+        )
+        f.write(f'include_paths = ["{rel_path}node_modules"]\n')
         if len(config.compiler.solc.remappings) > 0:
             f.write("remappings = [\n")
             for r in config.compiler.solc.remappings:
@@ -40,7 +47,9 @@ def write_config(config: WokeConfig) -> None:
 
         f.write("[detectors]\n")
         f.write("exclude = []\n")
-        f.write('ignore_paths = ["node_modules", ".woke-build", "venv", "lib"]\n')
+        f.write(
+            f'ignore_paths = ["{rel_path}node_modules", "{rel_path}.woke-build", "{rel_path}venv", "{rel_path}lib"]\n'
+        )
         f.write("\n")
 
         f.write("[testing]\n")
@@ -92,7 +101,7 @@ def run_init(ctx: Context, force: bool):
     """Initialize project."""
     from woke.config import WokeConfig
 
-    config = WokeConfig()
+    config = WokeConfig(local_config_path=ctx.obj.get("local_config_path", None))
     config.load_configs()
     ctx.obj["config"] = config
 
@@ -232,7 +241,7 @@ def run_init(ctx: Context, force: bool):
                 f"[green]Generated pytypes in [bold green]{end - start:.2f} s[/]"
             )
 
-    if not (config.project_root_path / "woke.toml").exists() or force:
+    if not config.local_config_path.exists() or force:
         write_config(config)
 
 

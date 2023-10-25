@@ -3,6 +3,8 @@ import logging
 import os
 import platform
 import sys
+from pathlib import Path
+from typing import Optional
 
 import rich_click as click
 from click.core import Context
@@ -60,9 +62,15 @@ def excepthook(attach: bool, type, value, traceback):
 @click.option(
     "--profile", is_flag=True, default=False, help="Enable profiling using cProfile."
 )
+@click.option(
+    "--config",
+    required=False,
+    type=click.Path(exists=False, dir_okay=False),
+    help="Path to the local config file.",
+)
 @click.version_option(message="%(version)s", package_name="woke")
 @click.pass_context
-def main(ctx: Context, debug: bool, profile: bool) -> None:
+def main(ctx: Context, debug: bool, profile: bool, config: Optional[str]) -> None:
     if profile:
         import atexit
         import cProfile
@@ -92,6 +100,16 @@ def main(ctx: Context, debug: bool, profile: bool) -> None:
 
     ctx.ensure_object(dict)
     ctx.obj["debug"] = debug
+    ctx.obj["local_config_path"] = config
+
+    if config is not None:
+        try:
+            Path(config).resolve().relative_to(Path.cwd())
+        except ValueError:
+            console.print(
+                f"[red]Config path must be relative to current directory: {Path.cwd()}[/red]"
+            )
+            sys.exit(1)
 
     if platform.system() == "Windows":
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
@@ -121,7 +139,7 @@ def config(ctx: Context) -> None:
     """Print loaded config options in JSON format."""
     from woke.config import WokeConfig
 
-    config = WokeConfig()
+    config = WokeConfig(local_config_path=ctx.obj.get("local_config_path", None))
     config.load_configs()
     console.print_json(str(config))
 
@@ -135,6 +153,7 @@ def woke_solc() -> None:
     from woke.svm import SolcVersionManager
 
     logging.basicConfig(level=logging.CRITICAL)
+    # WARNING: this config instance does not accept local config path
     config = WokeConfig()
     config.load_configs()
     svm = SolcVersionManager(config)

@@ -55,8 +55,8 @@ def run_test(
     from woke.development.globals import chain_interfaces_manager, set_config
     from woke.testing.pytest_plugin import PytestWokePlugin
 
-    config = WokeConfig()
-    config.load_configs()  # load ~/.woke/config.toml and ./woke.toml
+    config = WokeConfig(local_config_path=context.obj.get("local_config_path", None))
+    config.load_configs()
 
     set_config(config)
 

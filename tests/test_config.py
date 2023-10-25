@@ -31,11 +31,11 @@ def test_config_simple():
     config = WokeConfig()
     config.load_configs()  # should not have any effect
     assert len(config.loaded_files) == 0
-    assert config.global_config_path.resolve() == sources_path / "woke"
+    assert config.global_config_path.resolve() == sources_path / "woke" / "config.toml"
     assert len(config.compiler.solc.remappings) == 0
 
     config.load(sources_path / "a.toml")
-    assert config.global_config_path.resolve() == sources_path / "woke"
+    assert config.global_config_path.resolve() == sources_path / "woke" / "config.toml"
     assert len(config.loaded_files) == 4
     assert (sources_path / "a.toml").resolve() in config.loaded_files
     assert (sources_path / "b.toml").resolve() in config.loaded_files
