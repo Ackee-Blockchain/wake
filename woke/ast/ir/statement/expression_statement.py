@@ -20,6 +20,7 @@ from ..expression.index_access import IndexAccess
 from ..expression.index_range_access import IndexRangeAccess
 from ..expression.literal import Literal
 from ..expression.member_access import MemberAccess
+from ..expression.new_expression import NewExpression
 from ..expression.tuple_expression import TupleExpression
 from ..expression.unary_operation import UnaryOperation
 
@@ -46,9 +47,9 @@ class ExpressionStatement(StatementAbc):
         - a [FunctionCall][woke.ast.ir.expression.function_call.FunctionCall]:
             - `:::solidity require(arr.length > 1)` in line 3,
         - a [FunctionCallOptions][woke.ast.ir.expression.function_call_options.FunctionCallOptions]:
-            - `:::solidity payable(msg.sender).call{value: 1}` in line 16,
+            - `:::solidity payable(msg.sender).call{value: 1}` in line 17,
         - an [Identifier][woke.ast.ir.expression.identifier.Identifier]:
-            - `:::solidity this` in line 15,
+            - `:::solidity this` in line 16,
         - an [IndexAccess][woke.ast.ir.expression.index_access.IndexAccess]:
             - `:::solidity arr[0]` in line 9,
         - an [IndexRangeAccess][woke.ast.ir.expression.index_range_access.IndexRangeAccess]:
@@ -57,8 +58,10 @@ class ExpressionStatement(StatementAbc):
             - `:::solidity 10` in line 12,
         - a [MemberAccess][woke.ast.ir.expression.member_access.MemberAccess]:
             - `:::solidity arr.length` in line 13,
+        - a [NewExpression][woke.ast.ir.expression.new_expression.NewExpression]:
+            - `:::solidity new uint[]` in line 14,
         - a [TupleExpression][woke.ast.ir.expression.tuple_expression.TupleExpression]:
-            - `:::solidity (arr)` in line 14,
+            - `:::solidity (arr)` in line 15,
         - an [UnaryOperation][woke.ast.ir.expression.unary_operation.UnaryOperation]:
             - `:::solidity i++` in line 6.
 
@@ -76,6 +79,7 @@ class ExpressionStatement(StatementAbc):
                 arr[0] + arr[1];
                 10;
                 arr.length;
+                new uint[];
                 (arr);
                 this; // silence state mutability warning without generating bytecode
                 payable(msg.sender).call{value: 1};
@@ -105,6 +109,7 @@ class ExpressionStatement(StatementAbc):
         IndexRangeAccess,
         Literal,
         MemberAccess,
+        NewExpression,
         TupleExpression,
         UnaryOperation,
     ]
@@ -130,6 +135,7 @@ class ExpressionStatement(StatementAbc):
                 IndexRangeAccess,
                 Literal,
                 MemberAccess,
+                NewExpression,
                 TupleExpression,
                 UnaryOperation,
             ),
@@ -171,6 +177,7 @@ class ExpressionStatement(StatementAbc):
         IndexRangeAccess,
         Literal,
         MemberAccess,
+        NewExpression,
         TupleExpression,
         UnaryOperation,
     ]:
