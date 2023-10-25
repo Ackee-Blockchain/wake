@@ -34,8 +34,16 @@ def run_svm(ctx: Context):
     is_flag=True,
     help="Reinstall the target version if already installed.",
 )
+@click.option(
+    "--all",
+    is_flag=True,
+    default=False,
+    help="Install all versions matching the target version range.",
+)
 @click.pass_context
-def svm_install(ctx: Context, version_range: Tuple[str], force: bool) -> None:
+def svm_install(
+    ctx: Context, version_range: Tuple[str], force: bool, all: bool
+) -> None:
     """Install the latest solc version matching the given version range."""
     from woke.core.solidity_version import SolidityVersionExpr
     from woke.svm import SolcVersionManager
@@ -44,31 +52,35 @@ def svm_install(ctx: Context, version_range: Tuple[str], force: bool) -> None:
     svm = SolcVersionManager(config)
     version_expr = SolidityVersionExpr(" ".join(version_range))
 
-    asyncio.run(run_solc_install(svm, version_expr, force))
+    asyncio.run(run_solc_install(svm, version_expr, force, all))
 
 
 async def run_solc_install(
-    svm: SolcVersionManager, version_expr: SolidityVersionExpr, force: bool
+    svm: SolcVersionManager, version_expr: SolidityVersionExpr, force: bool, all: bool
 ) -> None:
-    version = next(
+    versions = (
         version for version in reversed(svm.list_all()) if version in version_expr
     )
-    if not force and svm.installed(version):
-        console.print(f"Version {version} is already installed.")
-        return
+    if not all:
+        versions = [next(versions)]
 
-    with Progress() as progress:
-        task = progress.add_task(f"[green]Downloading solc {version}")
+    for version in versions:
+        if not force and svm.installed(version):
+            console.print(f"Version {version} is already installed.")
+            continue
 
-        async def on_progress(downloaded: int, total: int) -> None:
-            progress.update(task, completed=downloaded, total=total)
+        with Progress() as progress:
+            task = progress.add_task(f"[green]Downloading solc {version}")
 
-        await svm.install(
-            version,
-            force_reinstall=force,
-            progress=on_progress,
-        )
-    console.print(f"Installed solc version {version}.")
+            async def on_progress(downloaded: int, total: int) -> None:
+                progress.update(task, completed=downloaded, total=total)
+
+            await svm.install(
+                version,
+                force_reinstall=force,
+                progress=on_progress,
+            )
+        console.print(f"Installed solc version {version}.")
 
 
 @run_svm.command(name="switch")
@@ -112,7 +124,9 @@ def svm_use(ctx: Context, version_range: Tuple[str], force: bool) -> None:
     )
 
     if not svm.installed(version):
-        asyncio.run(run_solc_install(svm, SolidityVersionExpr(str(version)), force))
+        asyncio.run(
+            run_solc_install(svm, SolidityVersionExpr(str(version)), force, False)
+        )
 
     (config.global_data_path / ".woke_solc_version").write_text(str(version))
     console.print(f"Using woke-solc version {version}.")
