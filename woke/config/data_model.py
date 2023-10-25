@@ -65,6 +65,8 @@ class SolcConfig(WokeConfigModel):
                 Path.cwd() / ".woke-build",
                 Path.cwd() / "venv",
                 Path.cwd() / "lib",
+                Path.cwd() / "script",
+                Path.cwd() / "test",
             ]
         )
     )
@@ -131,6 +133,8 @@ class DetectorsConfig(WokeConfigModel, extra=Extra.allow):
                 Path.cwd() / ".woke-build",
                 Path.cwd() / "venv",
                 Path.cwd() / "lib",
+                Path.cwd() / "script",
+                Path.cwd() / "test",
             ]
         )
     )
