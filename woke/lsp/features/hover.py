@@ -286,6 +286,11 @@ def _get_results_from_node(
             )
 
         return value, original_node_location
+    elif isinstance(node, set):
+        value = "\n".join(
+            "```solidity\n" + node.declaration_string + "\n```" for node in node
+        )
+        return value, original_node_location
     elif isinstance(node, yul.Identifier):
         if node.name in yul_definitions:
             return (

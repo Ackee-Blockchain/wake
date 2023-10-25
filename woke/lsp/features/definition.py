@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Set, Tuple, Union
 
 import woke.ast.ir.yul as yul
 from woke.ast.enums import GlobalSymbolsEnum
@@ -65,6 +65,40 @@ def _get_results_from_node(
     byte_offset: int,
     node_name_location: Optional[Tuple[int, int]],
 ) -> Optional[List[Tuple[Path, Tuple[int, int]]]]:
+    def resolve(node) -> Set[Tuple[Path, Tuple[int, int]]]:
+        ret = set()
+        if isinstance(node, (FunctionDefinition, VariableDeclaration)):
+            if isinstance(node, VariableDeclaration) or node.implemented:
+                ret.add((node.file, node.name_location))
+
+            for base_function in node.base_functions:
+                if base_function.implemented:
+                    ret.add((base_function.file, base_function.name_location))
+            if isinstance(node, FunctionDefinition):
+                for child_function in node.child_functions:
+                    if isinstance(child_function, VariableDeclaration):
+                        ret.add((child_function.file, child_function.name_location))
+                    elif (
+                        isinstance(child_function, FunctionDefinition)
+                        and child_function.implemented
+                    ):
+                        ret.add((child_function.file, child_function.name_location))
+        elif isinstance(node, ModifierDefinition):
+            if node.implemented:
+                ret.add((node.file, node.name_location))
+            for base_modifier in node.base_modifiers:
+                if base_modifier.implemented:
+                    ret.add((base_modifier.file, base_modifier.name_location))
+            for child_modifier in node.child_modifiers:
+                if child_modifier.implemented:
+                    ret.add((child_modifier.file, child_modifier.name_location))
+        elif isinstance(node, SourceUnit):
+            ret.add((node.file, node.byte_location))
+        else:
+            ret.add((node.file, node.name_location))
+
+        return ret
+
     if isinstance(original_node, DeclarationAbc):
         assert node_name_location is not None
         name_location_range = context.compiler.get_range_from_byte_offsets(
@@ -96,46 +130,17 @@ def _get_results_from_node(
     else:
         node = original_node
 
-    if not isinstance(node, (DeclarationAbc, SourceUnit)):
+    if not isinstance(node, (DeclarationAbc, SourceUnit, set)):
         return None
 
-    definitions = []
-
-    if isinstance(node, (FunctionDefinition, VariableDeclaration)):
-        if isinstance(node, VariableDeclaration) or node.implemented:
-            definitions.append((node.file, node.name_location))
-
-        for base_function in node.base_functions:
-            if base_function.implemented:
-                definitions.append((base_function.file, base_function.name_location))
-        if isinstance(node, FunctionDefinition):
-            for child_function in node.child_functions:
-                if isinstance(child_function, VariableDeclaration):
-                    definitions.append(
-                        (child_function.file, child_function.name_location)
-                    )
-                elif (
-                    isinstance(child_function, FunctionDefinition)
-                    and child_function.implemented
-                ):
-                    definitions.append(
-                        (child_function.file, child_function.name_location)
-                    )
-    elif isinstance(node, ModifierDefinition):
-        if node.implemented:
-            definitions.append((node.file, node.name_location))
-        for base_modifier in node.base_modifiers:
-            if base_modifier.implemented:
-                definitions.append((base_modifier.file, base_modifier.name_location))
-        for child_modifier in node.child_modifiers:
-            if child_modifier.implemented:
-                definitions.append((child_modifier.file, child_modifier.name_location))
-    elif isinstance(node, SourceUnit):
-        definitions.append((node.file, node.byte_location))
+    if isinstance(node, set):
+        definitions = set()
+        for n in node:
+            definitions |= resolve(n)
     else:
-        definitions.append((node.file, node.name_location))
+        definitions = resolve(node)
 
-    return definitions
+    return list(definitions)
 
 
 async def _get_definition_from_cache(
