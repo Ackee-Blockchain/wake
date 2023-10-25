@@ -303,9 +303,11 @@ async def detect_(
     watch: bool,
     ignore_disable_overrides: bool,
 ):
+    from jschema_to_python.to_json import to_json
     from watchdog.observers import Observer
 
     from woke.detectors.api import detect, print_detection
+    from woke.detectors.utils import create_sarif_log
 
     from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
     from ..compiler.build_data_model import ProjectBuild, ProjectBuildInfo
@@ -336,7 +338,7 @@ async def detect_(
         else:
             detectors = ctx.invoked_subcommand
 
-        detections, exceptions = detect(
+        used_detectors, detections, exceptions = detect(
             detectors,
             build,
             build_info,
@@ -387,6 +389,13 @@ async def detect_(
             console.save_text(
                 str(config.project_root_path / "woke-detections.ansi"),
                 styles=True,
+            )
+        elif export == "sarif":
+            log = create_sarif_log(
+                used_detectors, {name: d[0] for name, d in detections.items()}
+            )
+            (config.project_root_path / "woke-detections.sarif").write_text(
+                to_json(log)
             )
 
         console.record = False
@@ -482,7 +491,7 @@ async def detect_(
 )
 @click.option(
     "--export",
-    type=click.Choice(["svg", "html", "text", "ansi"], case_sensitive=False),
+    type=click.Choice(["svg", "html", "text", "ansi", "sarif"], case_sensitive=False),
     help="Export detections to file.",
 )
 @click.option(
