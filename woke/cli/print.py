@@ -299,7 +299,7 @@ async def print_(
             if watch:
                 return
             else:
-                sys.exit(1)
+                sys.exit(2)
 
         if export is not None:
             console.record = True
