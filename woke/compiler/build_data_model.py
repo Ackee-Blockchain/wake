@@ -7,7 +7,6 @@ import pydantic
 from intervaltree import IntervalTree
 from pydantic import BaseModel, Extra
 
-from woke.analysis.call_graph import CallGraph
 from woke.compiler.solc_frontend import SolcInputSettings, SolcOutputError
 from woke.core.solidity_version import SolidityVersion
 from woke.ir import SourceUnit
@@ -64,7 +63,6 @@ class ProjectBuild:
     _interval_trees: Dict[Path, IntervalTree]
     _reference_resolver: ReferenceResolver
     _source_units: Dict[Path, SourceUnit]
-    _call_graph: Optional[CallGraph]
 
     def __init__(
         self,
@@ -75,7 +73,6 @@ class ProjectBuild:
         self._interval_trees = interval_trees
         self._reference_resolver = reference_resolver
         self._source_units = source_units
-        self._call_graph = None
 
     @property
     def interval_trees(self) -> Dict[Path, IntervalTree]:
@@ -92,9 +89,3 @@ class ProjectBuild:
         return MappingProxyType(
             self._source_units
         )  # pyright: ignore reportGeneralTypeIssues
-
-    @property
-    def call_graph(self) -> CallGraph:
-        if self._call_graph is None:
-            self._call_graph = CallGraph(self._source_units.values())
-        return self._call_graph
