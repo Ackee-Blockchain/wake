@@ -122,6 +122,37 @@ def create_sarif_log(
                     index=extensions_index_mapping[package_name],
                 )
 
+            related_locations = []
+            for subdetection in result.detection.subdetections:
+                (
+                    sub_start_line,
+                    sub_start_col,
+                ) = subdetection.ir_node.source_unit.get_line_col_from_byte_offset(
+                    subdetection.ir_node.byte_location[0]
+                )
+                (
+                    sub_end_line,
+                    sub_end_col,
+                ) = subdetection.ir_node.source_unit.get_line_col_from_byte_offset(
+                    subdetection.ir_node.byte_location[1]
+                )
+                related_locations.append(
+                    Location(
+                        physical_location=PhysicalLocation(
+                            artifact_location=ArtifactLocation(
+                                uri=f"{subdetection.ir_node.file if workspace_root is None else subdetection.ir_node.file.relative_to(workspace_root)}",
+                            ),
+                            region=Region(
+                                start_line=sub_start_line,
+                                start_column=sub_start_col,
+                                end_line=sub_end_line,
+                                end_column=sub_end_col,
+                            ),
+                        ),
+                        message={"text": subdetection.message},
+                    )
+                )
+
             results.append(
                 Result(
                     rule=rule,
@@ -142,6 +173,7 @@ def create_sarif_log(
                             )
                         )
                     ],
+                    related_locations=related_locations,
                 )
             )
 
