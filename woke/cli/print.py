@@ -317,6 +317,7 @@ async def print_(
         else:
             default_map = None
 
+        extra = {}
         cls: Type[Printer] = get_class_that_defined_method(
             command.callback
         )  # pyright: ignore reportGeneralTypeIssues
@@ -337,6 +338,7 @@ async def print_(
                 instance.build = build
                 instance.build_info = build_info
                 instance.config = config
+                instance.extra = extra
                 instance.console = console
                 instance.imports_graph = (  # pyright: ignore reportGeneralTypeIssues
                     compiler.latest_graph.copy()
@@ -380,6 +382,7 @@ async def print_(
                     "build": build,
                     "build_info": build_info,
                     "config": config,
+                    "extra": extra,
                     "console": console,
                     "imports_graph": compiler.latest_graph.copy(),
                     "logger": get_logger(original_callback.__name__),
