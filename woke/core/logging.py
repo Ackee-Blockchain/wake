@@ -1,8 +1,8 @@
 import logging
-from typing import Optional
+from typing import Optional, Set
 
 _debug: bool = False
-_created_logger_names: set[str] = set()
+_created_logger_names: Set[str] = set()
 
 
 def get_logger(name: str, override_level: Optional[int] = None) -> logging.Logger:
