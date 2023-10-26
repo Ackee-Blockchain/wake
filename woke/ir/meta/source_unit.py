@@ -8,6 +8,7 @@ from woke.ir.ast import (
     SolcContractDefinition,
     SolcEnumDefinition,
     SolcErrorDefinition,
+    SolcEventDefinition,
     SolcFunctionDefinition,
     SolcImportDirective,
     SolcPragmaDirective,
@@ -22,6 +23,7 @@ from ..declarations.abc import DeclarationAbc
 from ..declarations.contract_definition import ContractDefinition
 from ..declarations.enum_definition import EnumDefinition
 from ..declarations.error_definition import ErrorDefinition
+from ..declarations.event_definition import EventDefinition
 from ..declarations.function_definition import FunctionDefinition
 from ..declarations.struct_definition import StructDefinition
 from ..declarations.user_defined_value_type_definition import (
@@ -70,6 +72,7 @@ class SourceUnit(SolidityAbc):
     _user_defined_value_types: List[UserDefinedValueTypeDefinition]
     _contracts: List[ContractDefinition]
     _using_for_directives: List[UsingForDirective]
+    _events: List[EventDefinition]
     # TODO strip this from pickle?
     _lines_index: Optional[List[Tuple[bytes, int]]]  # lines with prefix length
 
@@ -95,6 +98,7 @@ class SourceUnit(SolidityAbc):
         self._user_defined_value_types = []
         self._contracts = []
         self._using_for_directives = []
+        self._events = []
         for node in source_unit.nodes:
             if isinstance(node, SolcPragmaDirective):
                 self._pragmas.append(PragmaDirective(init, node, self))
@@ -118,6 +122,8 @@ class SourceUnit(SolidityAbc):
                 self._contracts.append(ContractDefinition(init, node, self))
             elif isinstance(node, SolcUsingForDirective):
                 self._using_for_directives.append(UsingForDirective(init, node, self))
+            elif isinstance(node, SolcEventDefinition):
+                self._events.append(EventDefinition(init, node, self))
             else:
                 assert False, f"Unknown node type: {node}"
 
@@ -143,6 +149,8 @@ class SourceUnit(SolidityAbc):
             yield from contract
         for using_for_directive in self._using_for_directives:
             yield from using_for_directive
+        for event in self._events:
+            yield from event
 
     @property
     def parent(self) -> None:
@@ -264,6 +272,14 @@ class SourceUnit(SolidityAbc):
         """
         return tuple(self._using_for_directives)
 
+    @property
+    def events(self) -> Tuple[EventDefinition, ...]:
+        """
+        Returns:
+            Top-level event definitions present in the file.
+        """
+        return tuple(self._events)
+
     def declarations_iter(self) -> Iterator[DeclarationAbc]:
         """
         Yields:
@@ -278,6 +294,7 @@ class SourceUnit(SolidityAbc):
         yield from self.errors
         yield from self.user_defined_value_types
         yield from self.contracts
+        yield from self.events
         for contract in self.contracts:
             yield from contract.declarations_iter()
 

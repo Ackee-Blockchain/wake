@@ -460,7 +460,7 @@ class TypeGenerator:
 
     def generate_contract_template(
         self, contract: ContractDefinition, base_names: str
-    ) -> Dict[bytes, Any]:
+    ) -> None:
         if contract.kind == ContractKind.LIBRARY:
             self.add_str_to_types(
                 0, "class " + self.get_name(contract) + "(Library):", 1
@@ -552,8 +552,6 @@ class TypeGenerator:
             contract.parent.source_unit_name[:-3]
         ).replace("/", ".")
 
-        events_abi = {}
-
         for item in compilation_info.abi:
             if item["type"] == "function":
                 if contract.kind == ContractKind.LIBRARY:
@@ -611,7 +609,7 @@ class TypeGenerator:
                     raise Exception("Unknown error parent")
             elif item["type"] == "event":
                 selector = eth_utils.abi.event_abi_to_log_topic(item)
-                events_abi[selector] = item
+                abi_by_selector[selector] = item
 
                 event_decl = None
                 # used_events is only available in 0.8.20 and above
@@ -633,13 +631,27 @@ class TypeGenerator:
 
                 if selector not in self.__events_index:
                     self.__events_index[selector] = {}
-                event_module_name = "pytypes." + _make_path_alphanum(
-                    event_decl.parent.parent.source_unit_name[:-3]
-                ).replace("/", ".")
-                self.__events_index[selector][fqn] = (
-                    event_module_name,
-                    (self.get_name(event_decl.parent), self.get_name(event_decl)),
-                )
+
+                # TODO: a contract may use two different events with the same selector when emitting events declared in other contracts
+                if isinstance(event_decl.parent, ContractDefinition):
+                    # event is declared in a contract
+                    event_module_name = "pytypes." + _make_path_alphanum(
+                        event_decl.parent.parent.source_unit_name[:-3]
+                    ).replace("/", ".")
+                    self.__events_index[selector][fqn] = (
+                        event_module_name,
+                        (self.get_name(event_decl.parent), self.get_name(event_decl)),
+                    )
+                elif isinstance(event_decl.parent, SourceUnit):
+                    event_module_name = "pytypes." + _make_path_alphanum(
+                        event_decl.parent.source_unit_name[:-3]
+                    ).replace("/", ".")
+                    self.__events_index[selector][fqn] = (
+                        event_module_name,
+                        (self.get_name(event_decl),),
+                    )
+                else:
+                    raise Exception("Unknown event parent")
             elif item["type"] in {"constructor", "fallback", "receive"}:
                 abi_by_selector[item["type"]] = item
             else:
@@ -718,8 +730,6 @@ class TypeGenerator:
         self.add_str_to_types(0, "", 1)
         self.generate_creation_code_func(contract, libraries)
         self.add_str_to_types(0, "", 1)
-
-        return events_abi
 
     def generate_types_struct(
         self, structs: Iterable[StructDefinition], indent: int
@@ -871,9 +881,27 @@ class TypeGenerator:
         self,
         events: Iterable[EventDefinition],
         indent: int,
-        events_abi: Dict[bytes, Any],
     ) -> None:
         for event in events:
+            # cannot generate pytypes for unused events
+            if len(event.used_in) == 0:
+                continue
+
+            used_in = event.used_in[0]
+            assert used_in.compilation_info is not None
+            assert used_in.compilation_info.abi is not None
+
+            event_abi = None
+
+            for item in used_in.compilation_info.abi:
+                if item["type"] == "event" and item["name"] == event.name:
+                    selector = eth_utils.abi.event_abi_to_log_topic(item)
+                    if selector == event.event_selector:
+                        event_abi = item
+                        break
+
+            assert event_abi is not None
+
             parameters: List[Tuple[str, str, str, str]] = []
             unnamed_params_index = 1
             for parameter in event.parameters.parameters:
@@ -925,9 +953,7 @@ class TypeGenerator:
                     )
 
             self.add_str_to_types(indent + 1, '"""', 1)
-            self.add_str_to_types(
-                indent + 1, f"_abi = {events_abi[event.event_selector]}", 1
-            )
+            self.add_str_to_types(indent + 1, f"_abi = {event_abi}", 1)
             self.add_str_to_types(
                 indent + 1,
                 "origin: Account = dataclasses.field(init=False, compare=False, repr=False)",
@@ -1461,7 +1487,7 @@ class TypeGenerator:
         if len(base_names) == 0:
             base_names = ["Contract"]
 
-        events_abi = self.generate_contract_template(contract, ", ".join(base_names))
+        self.generate_contract_template(contract, ", ".join(base_names))
 
         if contract.enums:
             self.generate_types_enum(contract.enums, 1)
@@ -1473,7 +1499,7 @@ class TypeGenerator:
             self.generate_types_error(contract.errors, 1)
 
         if contract.events:
-            self.generate_types_event(contract.events, 1, events_abi)
+            self.generate_types_event(contract.events, 1)
 
         selector_assignments = []
 
@@ -1504,6 +1530,8 @@ class TypeGenerator:
         self.generate_types_struct(unit.structs, 0)
         self.generate_types_enum(unit.enums, 0)
         self.generate_types_error(unit.errors, 0)
+        self.generate_types_event(unit.events, 0)
+
         for contract in unit.contracts:
             self.generate_types_contract(contract)
             for user_defined_value_type in contract.user_defined_value_types:

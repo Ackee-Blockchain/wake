@@ -141,6 +141,8 @@ async def document_symbol(
             symbols.append(_declaration_to_symbol(struct, SymbolKind.STRUCT, context))
         for error in source_unit.errors:
             symbols.append(_declaration_to_symbol(error, SymbolKind.OBJECT, context))
+        for event in source_unit.events:
+            symbols.append(_declaration_to_symbol(event, SymbolKind.EVENT, context))
         for user_defined_value_type in source_unit.user_defined_value_types:
             symbols.append(
                 _declaration_to_symbol(
