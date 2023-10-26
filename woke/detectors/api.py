@@ -301,7 +301,7 @@ def detect(
             command.callback = _callback
 
             try:
-                instance = cls()
+                instance = object.__new__(cls)
                 instance.build = build
                 instance.build_info = build_info
                 instance.config = config
@@ -312,6 +312,7 @@ def detect(
                 instance.logger = get_logger(cls.__name__)
                 if logging_handler is not None:
                     instance.logger.addHandler(logging_handler)
+                instance.__init__()
 
                 sub_ctx = command.make_context(
                     command.name,
