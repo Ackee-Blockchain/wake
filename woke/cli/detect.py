@@ -306,7 +306,12 @@ async def detect_(
     from jschema_to_python.to_json import to_json
     from watchdog.observers import Observer
 
-    from woke.detectors.api import detect, print_detection
+    from woke.detectors.api import (
+        DetectionConfidence,
+        DetectionImpact,
+        detect,
+        print_detection,
+    )
     from woke.detectors.utils import create_sarif_log
 
     from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
@@ -315,6 +320,34 @@ async def detect_(
     from ..compiler.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
     from ..utils.file_utils import is_relative_to
     from .console import console
+
+    severity_map: Dict[DetectionImpact, Dict[DetectionConfidence, int]] = {
+        DetectionImpact.HIGH: {
+            DetectionConfidence.HIGH: 0,
+            DetectionConfidence.MEDIUM: 1,
+            DetectionConfidence.LOW: 2,
+        },
+        DetectionImpact.MEDIUM: {
+            DetectionConfidence.HIGH: 1,
+            DetectionConfidence.MEDIUM: 2,
+            DetectionConfidence.LOW: 3,
+        },
+        DetectionImpact.LOW: {
+            DetectionConfidence.HIGH: 2,
+            DetectionConfidence.MEDIUM: 3,
+            DetectionConfidence.LOW: 4,
+        },
+        DetectionImpact.WARNING: {
+            DetectionConfidence.HIGH: 5,
+            DetectionConfidence.MEDIUM: 6,
+            DetectionConfidence.LOW: 7,
+        },
+        DetectionImpact.INFO: {
+            DetectionConfidence.HIGH: 8,
+            DetectionConfidence.MEDIUM: 9,
+            DetectionConfidence.LOW: 10,
+        },
+    }
 
     ctx = click.get_current_context()
     ctx_args = [*ctx.obj["subcommand_protected_args"][1:], *ctx.obj["subcommand_args"]]
@@ -359,14 +392,25 @@ async def detect_(
         if export is not None:
             console.record = True
 
-        # TODO order
-        for detector_name in sorted(detections.keys()):
+        all_detections: List[Tuple[str, DetectorResult]] = []
+        for detector_name in detections.keys():
+            for d in detections[detector_name][0]:
+                all_detections.append((detector_name, d))
             if ignore_disable_overrides:
-                d = detections[detector_name][0] + detections[detector_name][1]
-            else:
-                d = detections[detector_name][0]
-            for detection in d:
-                print_detection(detector_name, detection, config, console)
+                for d in detections[detector_name][1]:
+                    all_detections.append((detector_name, d))
+
+        all_detections.sort(
+            key=lambda d: (
+                severity_map[d[1].impact][d[1].confidence],
+                d[1].detection.ir_node.source_unit.source_unit_name,
+                d[1].detection.ir_node.byte_location[0],
+                d[1].detection.ir_node.byte_location[1],
+            )
+        )
+
+        for detector_name, detection in all_detections:
+            print_detection(detector_name, detection, config, console)
 
         if len(detections) == 0:
             console.print("No detections found")
