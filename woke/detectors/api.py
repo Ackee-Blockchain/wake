@@ -122,7 +122,49 @@ def _detection_commented_out(
     )
 
 
-# TODO detection exclude paths
+def _detection_ignored(detection: Detection, config: WokeConfig) -> bool:
+    """
+    Returns True if whole detection (including subdetections) ends up in ignored paths.
+    """
+    return any(
+        is_relative_to(detection.ir_node.file, p) for p in config.detectors.ignore_paths
+    ) and all(_detection_ignored(d, config) for d in detection.subdetections)
+
+
+def _strip_excluded_subdetections(
+    detection: Detection, config: WokeConfig
+) -> Detection:
+    """
+    Strip all subdetections that are located in excluded paths.
+    """
+    if len(detection.subdetections) == 0:
+        return detection
+
+    subdetections = []
+    for d in detection.subdetections:
+        if any(
+            is_relative_to(d.ir_node.file, p) for p in config.detectors.exclude_paths
+        ):
+            continue
+
+        l = len(d.subdetections)
+        if l == 0:
+            subdetections.append(d)
+            continue
+        d = _strip_excluded_subdetections(d, config)
+        if len(d.subdetections) == 0 and l > 0 and d.subdetections_mandatory:
+            continue
+        subdetections.append(d)
+
+    return Detection(
+        detection.ir_node,
+        detection.message,
+        tuple(subdetections),
+        detection.lsp_range,
+        detection.subdetections_mandatory,
+    )
+
+
 def _filter_detections(
     detector_name: str,
     detections: List[DetectorResult],
@@ -133,12 +175,6 @@ def _filter_detections(
     source_units: Dict[Path, SourceUnit],
 ) -> Tuple[List[DetectorResult], List[DetectorResult]]:
     from woke.utils.file_utils import is_relative_to
-
-    def _detection_ignored(detection: Detection) -> bool:
-        return any(
-            is_relative_to(detection.ir_node.file, p)
-            for p in config.detectors.ignore_paths
-        ) and all(_detection_ignored(d) for d in detection.subdetections)
 
     confidence_map = {
         "low": 0,
@@ -157,11 +193,31 @@ def _filter_detections(
         for detection in detections
         if confidence_map[detection.confidence] >= confidence_map[min_confidence]
         and impact_map[detection.impact] >= impact_map[min_impact]
-        and not _detection_ignored(detection.detection)
+        and not _detection_ignored(detection.detection, config)
     ]
     valid = []
     ignored = []
     for detection in tmp:
+        if any(
+            is_relative_to(detection.detection.ir_node.file, p)
+            for p in config.detectors.exclude_paths
+        ):
+            continue
+
+        l = len(detection.detection.subdetections)
+        detection = DetectorResult(
+            _strip_excluded_subdetections(detection.detection, config),
+            detection.impact,
+            detection.confidence,
+            detection.url,
+        )
+        if (
+            len(detection.detection.subdetections) == 0
+            and l > 0
+            and detection.detection.subdetections_mandatory
+        ):
+            continue
+
         if _detection_commented_out(
             detector_name,
             detection.detection,
