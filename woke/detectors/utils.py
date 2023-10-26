@@ -161,7 +161,10 @@ def create_sarif_log(
                     message={
                         "text": result.detection.message
                         + "\n"
-                        + "".join(f"[{i}]({i})" for i in range(len(related_locations)))
+                        + "".join(
+                            f"[{related_locations[i].message['text']}]({i})"
+                            for i in range(len(related_locations))
+                        )
                     },
                     locations=[
                         Location(
