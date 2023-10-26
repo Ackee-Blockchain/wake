@@ -1,6 +1,7 @@
 import os
 import sys
 from inspect import cleandoc
+from pathlib import Path
 from typing import Dict, List
 
 from rich_click import Command
@@ -85,6 +86,10 @@ def create_sarif_log(
         DetectionImpact.INFO: "note",
     }
 
+    workspace_root = os.getenv("GITHUB_WORKSPACE")
+    if workspace_root is not None:
+        workspace_root = Path(workspace_root).resolve()
+
     results = []
     for detector_name, r in detections.items():
         for result in r:
@@ -126,7 +131,7 @@ def create_sarif_log(
                         Location(
                             physical_location=PhysicalLocation(
                                 artifact_location=ArtifactLocation(
-                                    uri=f"{result.detection.ir_node.file}",
+                                    uri=f"{result.detection.ir_node.file if workspace_root is None else result.detection.ir_node.file.relative_to(workspace_root)}",
                                 ),
                                 region=Region(
                                     start_line=start_line,
