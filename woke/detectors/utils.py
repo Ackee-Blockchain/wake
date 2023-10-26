@@ -123,7 +123,7 @@ def create_sarif_log(
                 )
 
             related_locations = []
-            for subdetection in result.detection.subdetections:
+            for i, subdetection in enumerate(result.detection.subdetections):
                 (
                     sub_start_line,
                     sub_start_col,
@@ -138,6 +138,7 @@ def create_sarif_log(
                 )
                 related_locations.append(
                     Location(
+                        id=i,
                         physical_location=PhysicalLocation(
                             artifact_location=ArtifactLocation(
                                 uri=f"{subdetection.ir_node.file if workspace_root is None else subdetection.ir_node.file.relative_to(workspace_root)}",
@@ -157,7 +158,11 @@ def create_sarif_log(
                 Result(
                     rule=rule,
                     level=impact_to_level[result.impact],
-                    message={"text": result.detection.message},
+                    message={
+                        "text": result.detection.message
+                        + "\n"
+                        + "".join(f"[{i}]({i})" for i in range(len(related_locations)))
+                    },
                     locations=[
                         Location(
                             physical_location=PhysicalLocation(
