@@ -334,7 +334,7 @@ async def print_(
             command.callback = _callback
 
             try:
-                instance = cls()
+                instance = object.__new__(cls)
                 instance.build = build
                 instance.build_info = build_info
                 instance.config = config
@@ -344,6 +344,7 @@ async def print_(
                     compiler.latest_graph.copy()
                 )
                 instance.logger = get_logger(cls.__name__)
+                instance.__init__()
 
                 sub_ctx = command.make_context(
                     command.name,
