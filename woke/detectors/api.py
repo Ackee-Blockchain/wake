@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
+    Any,
     Awaitable,
     Callable,
     Dict,
@@ -75,6 +76,7 @@ class DetectorResult:
 
 class Detector(Visitor, metaclass=ABCMeta):
     paths: List[Path]
+    extra: Dict[Any, Any]
 
     @abstractmethod
     def detect(self) -> List[DetectorResult]:
@@ -185,12 +187,16 @@ def detect(
     verify_paths: bool = True,
     capture_exceptions: bool = False,
     logging_handler: Optional[logging.Handler] = None,
+    extra: Optional[Dict[Any, Any]] = None,
 ) -> Tuple[
     List[click.Command],
     Dict[str, Tuple[List[DetectorResult], List[DetectorResult]]],
     Dict[str, Exception],
 ]:
     from contextlib import nullcontext
+
+    if extra is None:
+        extra = {}
 
     woke_comments: KeyedDefaultDict[
         Path,  # pyright: ignore reportGeneralTypeIssues
@@ -299,6 +305,7 @@ def detect(
                 instance.build = build
                 instance.build_info = build_info
                 instance.config = config
+                instance.extra = extra
                 instance.imports_graph = (
                     imports_graph.copy()
                 )  # pyright: ignore reportGeneralTypeIssues
@@ -361,6 +368,7 @@ def detect(
                     "build": build,
                     "build_info": build_info,
                     "config": config,
+                    "extra": extra,
                     "imports_graph": imports_graph.copy(),
                     "logger": get_logger(original_callback.__name__),
                 }

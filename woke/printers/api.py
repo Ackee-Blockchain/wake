@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import TYPE_CHECKING, Awaitable, Callable, Dict, List, Set, Tuple, Type
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, List, Set, Tuple, Type
 
 import rich_click as click
 
@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 class Printer(Visitor, metaclass=ABCMeta):
     console: Console
     paths: List[Path]
+    extra: Dict[Any, Any]
 
     @abstractmethod
     def print(self) -> None:
