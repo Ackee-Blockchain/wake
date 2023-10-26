@@ -131,9 +131,15 @@ class DetectorsConfig(WokeConfigModel, extra=Extra.allow):
             [
                 Path.cwd() / "node_modules",
                 Path.cwd() / ".woke-build",
-                Path.cwd() / "venv",
                 Path.cwd() / "lib",
                 Path.cwd() / "script",
+            ]
+        )
+    )
+    exclude_paths: FrozenSet[Path] = Field(
+        default_factory=lambda: frozenset(
+            [
+                Path.cwd() / "venv",
                 Path.cwd() / "test",
             ]
         )
@@ -141,6 +147,10 @@ class DetectorsConfig(WokeConfigModel, extra=Extra.allow):
 
     @validator("ignore_paths", pre=True, each_item=True)
     def set_ignore_paths(cls, v):
+        return Path(v).resolve()
+
+    @validator("exclude_paths", pre=True, each_item=True)
+    def set_exclude_paths(cls, v):
         return Path(v).resolve()
 
 
