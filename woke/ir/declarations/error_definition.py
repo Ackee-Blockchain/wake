@@ -34,6 +34,8 @@ class ErrorDefinition(DeclarationAbc):
     _parameters: ParameterList
     _documentation: Optional[StructuredDocumentation]
     _error_selector: Optional[bytes]
+
+    # not a part of the AST
     _used_in: List[ContractDefinition]
 
     def __init__(

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 from functools import lru_cache
-from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
 
 from Crypto.Hash import keccak
 
@@ -10,6 +10,7 @@ from .abc import DeclarationAbc
 
 if TYPE_CHECKING:
     from .contract_definition import ContractDefinition
+    from ..meta.source_unit import SourceUnit
 
 from woke.ir.abc import IrAbc, SolidityAbc
 from woke.ir.ast import SolcEventDefinition, SolcStructuredDocumentation
@@ -28,12 +29,15 @@ class EventDefinition(DeclarationAbc):
     """
 
     _ast_node: SolcEventDefinition
-    _parent: ContractDefinition
+    _parent: Union[ContractDefinition, SourceUnit]
 
     _anonymous: bool
     _parameters: ParameterList
     _documentation: Optional[Union[StructuredDocumentation, str]]
     _event_selector: Optional[bytes]
+
+    # not a part of the AST
+    _used_in: List[ContractDefinition]
 
     def __init__(
         self, init: IrInitTuple, event: SolcEventDefinition, parent: SolidityAbc
@@ -57,6 +61,7 @@ class EventDefinition(DeclarationAbc):
         self._event_selector = (
             bytes.fromhex(event.event_selector) if event.event_selector else None
         )
+        self._used_in = []
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
@@ -78,7 +83,7 @@ class EventDefinition(DeclarationAbc):
         return byte_start + match.start("name"), byte_start + match.end("name")
 
     @property
-    def parent(self) -> ContractDefinition:
+    def parent(self) -> Union[ContractDefinition, SourceUnit]:
         """
         Returns:
             Parent IR node.
@@ -87,7 +92,11 @@ class EventDefinition(DeclarationAbc):
 
     @property
     def canonical_name(self) -> str:
-        return f"{self._parent.canonical_name}.{self._name}"
+        from .contract_definition import ContractDefinition
+
+        if isinstance(self._parent, ContractDefinition):
+            return f"{self._parent.canonical_name}.{self._name}"
+        return self._name
 
     @property
     @lru_cache(maxsize=2048)
@@ -158,3 +167,12 @@ class EventDefinition(DeclarationAbc):
             signature = f"{self._name}({','.join(param.type.abi_type() for param in self.parameters.parameters)})"
             h = keccak.new(data=signature.encode("utf-8"), digest_bits=256)
             return h.digest()
+
+    @property
+    def used_in(self) -> Tuple[ContractDefinition, ...]:
+        """
+        Available in Solidity 0.8.20 and later.
+        Returns:
+            List of contracts where the event is used.
+        """
+        return tuple(self._used_in)

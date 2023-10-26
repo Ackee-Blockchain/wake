@@ -203,6 +203,8 @@ class ContractDefinition(DeclarationAbc):
 
         for error in self.used_errors:
             error._used_in.append(self)
+        for event in self.used_events:
+            event._used_in.append(self)
 
         self._reference_resolver.register_destroy_callback(
             self.file, partial(self._destroy, base_contracts)
@@ -213,6 +215,8 @@ class ContractDefinition(DeclarationAbc):
             base_contract._child_contracts.remove(self)
         for error in self.used_errors:
             error._used_in.remove(self)
+        for event in self.used_events:
+            event._used_in.remove(self)
 
     def _parse_name_location(self) -> Tuple[int, int]:
         IDENTIFIER = r"[a-zA-Z$_][a-zA-Z0-9$_]*"
@@ -369,6 +373,7 @@ class ContractDefinition(DeclarationAbc):
     @property
     def used_events(self) -> Tuple[EventDefinition, ...]:
         """
+        Available in Solidity 0.8.20 and later.
         Returns:
             Events emitted by the contract as well as all events defined and inherited by the contract.
         """

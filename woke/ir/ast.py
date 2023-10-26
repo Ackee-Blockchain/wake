@@ -39,6 +39,8 @@ SolcTopLevelMemberUnion = Annotated[
         "SolcUserDefinedValueTypeDefinition",
         # new in solc 0.8.13
         "SolcUsingForDirective",
+        # new in solc 0.8.22
+        "SolcEventDefinition",
         # everywhere
         "SolcContractDefinition",
     ],
@@ -699,6 +701,7 @@ class SolcForStatement(SolidityNode):
     condition: OptionalSolcExpressionUnion
     initialization_expression: OptionalSolcInitExprUnion
     loop_expression: Optional[SolcExpressionStatement]
+    is_simple_counter_loop: Optional[bool]  # new in 0.8.22
 
 
 class SolcIfStatement(SolidityNode):
