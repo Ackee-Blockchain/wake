@@ -101,6 +101,7 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
                 default="info",
                 help="Minimum impact level to report",
                 show_default=True,
+                show_envvar=True,
             )
         )
         command.params.append(
@@ -110,6 +111,7 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
                 default="low",
                 help="Minimum confidence level to report",
                 show_default=True,
+                show_envvar=True,
             )
         )
 
@@ -303,6 +305,8 @@ async def detect_(
     watch: bool,
     ignore_disable_overrides: bool,
 ):
+    import os
+
     from jschema_to_python.to_json import to_json
     from watchdog.observers import Observer
 
@@ -349,6 +353,19 @@ async def detect_(
         },
     }
 
+    default_min_impact = os.getenv("WOKE_DETECT_MIN_IMPACT", DetectionImpact.INFO)
+    if default_min_impact.lower() not in DetectionImpact.__members__.values():
+        raise click.BadParameter(
+            f"Invalid value for WOKE_DETECT_MIN_IMPACT environment variable: {default_min_impact}"
+        )
+    default_min_confidence = os.getenv(
+        "WOKE_DETECT_MIN_CONFIDENCE", DetectionConfidence.LOW
+    )
+    if default_min_confidence.lower() not in DetectionConfidence.__members__.values():
+        raise click.BadParameter(
+            f"Invalid value for WOKE_DETECT_MIN_CONFIDENCE environment variable: {default_min_confidence}"
+        )
+
     ctx = click.get_current_context()
     ctx_args = [*ctx.obj["subcommand_protected_args"][1:], *ctx.obj["subcommand_args"]]
 
@@ -381,6 +398,8 @@ async def detect_(
             args=list(ctx_args),
             console=console,
             capture_exceptions=ignore_errors,
+            default_min_impact=default_min_impact,  # pyright: ignore reportGeneralTypeIssues
+            default_min_confidence=default_min_confidence,  # pyright: ignore reportGeneralTypeIssues
         )
 
         if ignore_errors:

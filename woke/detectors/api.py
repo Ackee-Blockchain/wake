@@ -2,13 +2,16 @@ from __future__ import annotations
 
 import logging
 from abc import ABCMeta, abstractmethod
+from collections import defaultdict
 from dataclasses import dataclass, field
+from functools import partial
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
     Awaitable,
     Callable,
+    DefaultDict,
     Dict,
     List,
     Optional,
@@ -123,8 +126,8 @@ def _detection_commented_out(
 def _filter_detections(
     detector_name: str,
     detections: List[DetectorResult],
-    min_confidence: DetectionConfidence,
     min_impact: DetectionImpact,
+    min_confidence: DetectionConfidence,
     config: WokeConfig,
     woke_comments: Dict[Path, Dict[str, Dict[int, WokeComment]]],
     source_units: Dict[Path, SourceUnit],
@@ -181,8 +184,8 @@ def detect(
     *,
     paths: Optional[List[Path]] = None,
     args: Optional[List[str]] = None,
-    min_confidence: Optional[DetectionConfidence] = None,
-    min_impact: Optional[DetectionImpact] = None,
+    default_min_impact: DetectionImpact = DetectionImpact.INFO,
+    default_min_confidence: DetectionConfidence = DetectionConfidence.LOW,
     console: Optional[rich.console.Console] = None,
     verify_paths: bool = True,
     capture_exceptions: bool = False,
@@ -260,6 +263,12 @@ def detect(
 
     collected_detectors: Dict[str, Detector] = {}
     detections: Dict[str, Tuple[List[DetectorResult], List[DetectorResult]]] = {}
+    min_confidence_by_detector: DefaultDict[str, DetectionConfidence] = defaultdict(
+        lambda: default_min_confidence
+    )
+    min_impact_by_detector: DefaultDict[str, DetectionImpact] = defaultdict(
+        lambda: default_min_impact
+    )
 
     for command in detectors:
         assert command is not None
@@ -275,22 +284,21 @@ def detect(
         )  # pyright: ignore reportGeneralTypeIssues
         if cls is not None:
 
-            def _callback(*args, **kwargs):  # pyright: ignore reportGeneralTypeIssues
-                nonlocal paths, min_impact, min_confidence
+            def _callback(  # pyright: ignore reportGeneralTypeIssues
+                detector_name: str, *args, **kwargs
+            ):
+                nonlocal paths, min_impact_by_detector, min_confidence_by_detector
                 if paths is None:
                     paths = [Path(p).resolve() for p in kwargs.pop("paths", [])]
                 else:
                     kwargs.pop("paths", None)
-                if min_confidence is None:
-                    min_confidence = kwargs.pop(
-                        "min_confidence", DetectionConfidence.LOW
-                    )
-                else:
-                    kwargs.pop("min_confidence", None)
-                if min_impact is None:
-                    min_impact = kwargs.pop("min_impact", DetectionImpact.INFO)
-                else:
-                    kwargs.pop("min_impact", None)
+
+                min_impact_by_detector[detector_name] = kwargs.pop(
+                    "min_impact", default_min_impact
+                )
+                min_confidence_by_detector[detector_name] = kwargs.pop(
+                    "min_confidence", default_min_confidence
+                )
 
                 instance.paths = [Path(p).resolve() for p in paths]
                 original_callback(
@@ -298,7 +306,7 @@ def detect(
                 )  # pyright: ignore reportOptionalCall
 
             original_callback = command.callback
-            command.callback = _callback
+            command.callback = partial(_callback, command.name)
 
             try:
                 instance = object.__new__(cls)
@@ -316,7 +324,7 @@ def detect(
 
                 sub_ctx = command.make_context(
                     command.name,
-                    args,
+                    list(args),
                     parent=ctx,
                     default_map=default_map,
                 )
@@ -332,22 +340,19 @@ def detect(
                 command.callback = original_callback
         else:
 
-            def _callback(*args, **kwargs):
-                nonlocal paths, min_impact, min_confidence
+            def _callback(detector_name: str, *args, **kwargs):
+                nonlocal paths, min_impact_by_detector, min_confidence_by_detector
                 if paths is None:
                     paths = [Path(p).resolve() for p in kwargs.pop("paths", [])]
                 else:
                     kwargs.pop("paths", None)
-                if min_confidence is None:
-                    min_confidence = kwargs.pop(
-                        "min_confidence", DetectionConfidence.LOW
-                    )
-                else:
-                    kwargs.pop("min_confidence", None)
-                if min_impact is None:
-                    min_impact = kwargs.pop("min_impact", DetectionImpact.INFO)
-                else:
-                    kwargs.pop("min_impact", None)
+
+                min_impact_by_detector[detector_name] = kwargs.pop(
+                    "min_impact", default_min_impact
+                )
+                min_confidence_by_detector[detector_name] = kwargs.pop(
+                    "min_confidence", default_min_confidence
+                )
 
                 click.get_current_context().obj["paths"] = [
                     Path(p).resolve() for p in paths
@@ -358,12 +363,12 @@ def detect(
                 )  # pyright: ignore reportOptionalCall
 
             original_callback = command.callback
-            command.callback = _callback
+            command.callback = partial(_callback, command.name)
             assert original_callback is not None
 
             try:
                 sub_ctx = command.make_context(
-                    command.name, args, parent=ctx, default_map=default_map
+                    command.name, list(args), parent=ctx, default_map=default_map
                 )
                 sub_ctx.obj = {
                     "build": build,
@@ -377,11 +382,12 @@ def detect(
                     sub_ctx.obj["logger"].addHandler(logging_handler)
 
                 with sub_ctx:
+                    d = sub_ctx.command.invoke(sub_ctx)
                     detections[command.name] = _filter_detections(
                         command.name,
-                        sub_ctx.command.invoke(sub_ctx),
-                        min_confidence,  # pyright: ignore reportGeneralTypeIssues
-                        min_impact,  # pyright: ignore reportGeneralTypeIssues
+                        d,
+                        min_impact_by_detector[command.name],
+                        min_confidence_by_detector[command.name],
                         config,
                         woke_comments,
                         build.source_units,
@@ -423,8 +429,8 @@ def detect(
             detections[detector_name] = _filter_detections(
                 detector_name,
                 detector.detect(),
-                min_confidence,  # pyright: ignore reportGeneralTypeIssues
-                min_impact,  # pyright: ignore reportGeneralTypeIssues
+                min_impact_by_detector[detector_name],
+                min_confidence_by_detector[detector_name],
                 config,
                 woke_comments,
                 build.source_units,
