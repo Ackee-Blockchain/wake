@@ -314,7 +314,7 @@ class LspCompiler:
                 for node in self.__last_graph
             },
             allow_paths=self.__config.compiler.solc.allow_paths,
-            ignore_paths=self.__config.compiler.solc.ignore_paths,
+            exclude_paths=self.__config.compiler.solc.exclude_paths,
             include_paths=self.__config.compiler.solc.include_paths,
             settings=self.__last_build_settings,
             target_solidity_version=self.__config.compiler.solc.target_version,
@@ -451,11 +451,11 @@ class LspCompiler:
                 self.__compilation_errors.clear()
                 if self.__perform_files_discovery:
                     for file in self.__config.project_root_path.rglob("**/*.sol"):
-                        if not self.__file_ignored(file) and file.is_file():
+                        if not self.__file_excluded(file) and file.is_file():
                             self.__discovered_files.add(file.resolve())
 
                 for file in self.__opened_files.keys():
-                    if not self.__file_ignored(file):
+                    if not self.__file_excluded(file):
                         self.__discovered_files.add(file)
 
                 self.__force_compile_files.update(self.__discovered_files)
@@ -466,7 +466,7 @@ class LspCompiler:
                 path = uri_to_path(file.uri)
                 if (
                     path not in self.__discovered_files
-                    and not self.__file_ignored(path)
+                    and not self.__file_excluded(path)
                     and path.is_file()
                     and path.suffix == ".sol"
                 ):
@@ -482,7 +482,7 @@ class LspCompiler:
                 new_path = uri_to_path(rename.new_uri)
                 if (
                     new_path not in self.__discovered_files
-                    and not self.__file_ignored(new_path)
+                    and not self.__file_excluded(new_path)
                     and new_path.is_file()
                     and new_path.suffix == ".sol"
                 ):
@@ -501,7 +501,7 @@ class LspCompiler:
             )
             if (
                 path not in self.__discovered_files
-                and not self.__file_ignored(path)
+                and not self.__file_excluded(path)
                 and path.is_file()
                 and path.suffix == ".sol"
             ):
@@ -1258,7 +1258,7 @@ class LspCompiler:
         if self.__perform_files_discovery:
             # perform Solidity files discovery
             for file in self.__config.project_root_path.rglob("**/*.sol"):
-                if not self.__file_ignored(file) and file.is_file():
+                if not self.__file_excluded(file) and file.is_file():
                     self.__discovered_files.add(file.resolve())
 
             # perform initial compilation
@@ -1405,7 +1405,7 @@ class LspCompiler:
             diag.related_information = related_info
         return diag
 
-    def __file_ignored(self, path: Path) -> bool:
+    def __file_excluded(self, path: Path) -> bool:
         return any(
-            is_relative_to(path, p) for p in self.__config.compiler.solc.ignore_paths
+            is_relative_to(path, p) for p in self.__config.compiler.solc.exclude_paths
         )

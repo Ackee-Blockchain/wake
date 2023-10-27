@@ -58,7 +58,7 @@ class SolcConfig(WokeConfigModel):
     """Woke should set solc `--allow-paths` automatically. This option allows to specify additional allowed paths."""
     evm_version: Optional[EvmVersionEnum] = None
     """Version of the EVM to compile for. Leave unset to let the solc decide."""
-    ignore_paths: FrozenSet[Path] = Field(
+    exclude_paths: FrozenSet[Path] = Field(
         default_factory=lambda: frozenset(
             [
                 Path.cwd() / "node_modules",
@@ -82,8 +82,8 @@ class SolcConfig(WokeConfigModel):
     def set_allow_path(cls, v):
         return Path(v).resolve()
 
-    @validator("ignore_paths", pre=True, each_item=True)
-    def set_ignore_paths(cls, v):
+    @validator("exclude_paths", pre=True, each_item=True)
+    def set_exclude_paths(cls, v):
         return Path(v).resolve()
 
     @validator("include_paths", pre=True, each_item=True)
@@ -129,18 +129,18 @@ class DetectorsConfig(WokeConfigModel, extra=Extra.allow):
     ignore_paths: FrozenSet[Path] = Field(
         default_factory=lambda: frozenset(
             [
-                Path.cwd() / "node_modules",
-                Path.cwd() / ".woke-build",
-                Path.cwd() / "lib",
-                Path.cwd() / "script",
+                Path.cwd() / "venv",
+                Path.cwd() / "test",
             ]
         )
     )
     exclude_paths: FrozenSet[Path] = Field(
         default_factory=lambda: frozenset(
             [
-                Path.cwd() / "venv",
-                Path.cwd() / "test",
+                Path.cwd() / "node_modules",
+                Path.cwd() / ".woke-build",
+                Path.cwd() / "lib",
+                Path.cwd() / "script",
             ]
         )
     )
