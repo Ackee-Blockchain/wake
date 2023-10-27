@@ -122,13 +122,33 @@ def _detection_commented_out(
     )
 
 
-def _detection_ignored(detection: Detection, config: WokeConfig) -> bool:
+def _strip_ignored_subdetections(detection: Detection, config: WokeConfig) -> Detection:
     """
-    Returns True if whole detection (including subdetections) ends up in ignored paths.
+    Strip all subdetections that are located in ignored paths and their parents are also in ignored paths.
+    In other words, remove all subdetection branches that whole end up in ignored paths.
     """
-    return any(
-        is_relative_to(detection.ir_node.file, p) for p in config.detectors.ignore_paths
-    ) and all(_detection_ignored(d, config) for d in detection.subdetections)
+    if len(detection.subdetections) == 0:
+        return detection
+
+    subdetections = []
+    for d in detection.subdetections:
+        if not any(
+            is_relative_to(d.ir_node.file, p) for p in config.detectors.ignore_paths
+        ):
+            subdetections.append(d)
+            continue
+
+        d = _strip_ignored_subdetections(d, config)
+        if len(d.subdetections) != 0:
+            subdetections.append(d)
+
+    return Detection(
+        detection.ir_node,
+        detection.message,
+        tuple(subdetections),
+        detection.lsp_range,
+        detection.subdetections_mandatory,
+    )
 
 
 def _strip_excluded_subdetections(
@@ -193,7 +213,6 @@ def _filter_detections(
         for detection in detections
         if confidence_map[detection.confidence] >= confidence_map[min_confidence]
         and impact_map[detection.impact] >= impact_map[min_impact]
-        and not _detection_ignored(detection.detection, config)
     ]
     valid = []
     ignored = []
@@ -217,6 +236,19 @@ def _filter_detections(
             and detection.detection.subdetections_mandatory
         ):
             continue
+
+        if any(
+            is_relative_to(detection.detection.ir_node.file, p)
+            for p in config.detectors.ignore_paths
+        ):
+            detection = DetectorResult(
+                _strip_ignored_subdetections(detection.detection, config),
+                detection.impact,
+                detection.confidence,
+                detection.url,
+            )
+            if len(detection.detection.subdetections) == 0:
+                continue
 
         if _detection_commented_out(
             detector_name,
