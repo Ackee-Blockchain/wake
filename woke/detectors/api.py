@@ -497,6 +497,9 @@ def detect(
     )
     with ctx_manager as status:
         for path, source_unit in build.source_units.items():
+            if any(is_relative_to(path, p) for p in config.detectors.ignore_paths):
+                continue
+
             if len(paths) == 0 or any(is_relative_to(path, p) for p in paths):
                 if status is not None:
                     status.update(
