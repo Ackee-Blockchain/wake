@@ -48,9 +48,32 @@ class ImportsDirection(StrEnum):
     ImportingToImported = "importing-to-imported"
 
 
+class SolcOptimizerYulDetailsConfig(WokeConfigModel):
+    stack_allocation: Optional[bool] = None
+    optimizer_steps: Optional[str] = None
+
+
+class SolcOptimizerDetailsConfig(WokeConfigModel):
+    peephole: Optional[bool] = None
+    inliner: Optional[bool] = None
+    jumpdest_remover: Optional[bool] = None
+    order_literals: Optional[bool] = None
+    deduplicate: Optional[bool] = None
+    cse: Optional[bool] = None
+    constant_optimizer: Optional[bool] = None
+    simple_counter_for_loop_unchecked_increment: Optional[bool] = None
+    # no need to add yul option here, since it applies only to solc < 0.6.0
+    yul_details: SolcOptimizerYulDetailsConfig = Field(
+        default_factory=SolcOptimizerYulDetailsConfig
+    )
+
+
 class SolcOptimizerConfig(WokeConfigModel):
     enabled: Optional[bool] = None
     runs: int = 200
+    details: SolcOptimizerDetailsConfig = Field(
+        default_factory=SolcOptimizerDetailsConfig
+    )
 
 
 class SolcConfig(WokeConfigModel):

@@ -160,6 +160,7 @@ class SolcInputOptimizerDetailsSettings(SolcInputModel):
     deduplicate: Optional[bool] = None
     cse: Optional[bool] = None
     constant_optimizer: Optional[bool] = None
+    simple_counter_for_loop_unchecked_increment: Optional[bool] = None
     yul: Optional[bool] = None
     yul_details: Optional[SolcInputOptimizerYulDetailsSettings] = None
 
