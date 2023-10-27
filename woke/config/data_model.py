@@ -123,7 +123,7 @@ class CompilerConfig(WokeConfigModel):
     solc: SolcConfig = Field(default_factory=SolcConfig)
 
 
-class DetectorsConfig(WokeConfigModel, extra=Extra.allow):
+class DetectorsConfig(WokeConfigModel):
     exclude: FrozenSet[str] = frozenset()
     only: Optional[FrozenSet[str]] = None
     ignore_paths: FrozenSet[Path] = Field(
@@ -152,6 +152,11 @@ class DetectorsConfig(WokeConfigModel, extra=Extra.allow):
     @validator("exclude_paths", pre=True, each_item=True)
     def set_exclude_paths(cls, v):
         return Path(v).resolve()
+
+
+# namespace for detector configs
+class DetectorConfig(WokeConfigModel, extra=Extra.allow):
+    pass
 
 
 class LspConfig(WokeConfigModel):
@@ -241,7 +246,13 @@ class GeneralConfig(WokeConfigModel):
     link_format: str = "vscode://file/{path}:{line}:{col}"
 
 
-class PrintersConfig(WokeConfigModel, extra=Extra.allow):
+# currently unused
+class PrintersConfig(WokeConfigModel):
+    pass
+
+
+# namespace for printer configs
+class PrinterConfig(WokeConfigModel, extra=Extra.allow):
     pass
 
 
@@ -250,11 +261,13 @@ class TopLevelConfig(WokeConfigModel):
     api_keys: Dict[str, str] = {}
     compiler: CompilerConfig = Field(default_factory=CompilerConfig)
     detectors: DetectorsConfig = Field(default_factory=DetectorsConfig)
+    detector: DetectorConfig = Field(default_factory=DetectorConfig)
     generator: GeneratorConfig = Field(default_factory=GeneratorConfig)
     lsp: LspConfig = Field(default_factory=LspConfig)
     testing: TestingConfig = Field(default_factory=TestingConfig)
     deployment: DeploymentConfig = Field(default_factory=DeploymentConfig)
     printers: PrintersConfig = Field(default_factory=PrintersConfig)
+    printer: PrinterConfig = Field(default_factory=PrinterConfig)
     general: GeneralConfig = Field(default_factory=GeneralConfig)
 
     @validator("subconfigs", pre=True, each_item=True)

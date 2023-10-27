@@ -16,10 +16,12 @@ from ..core.solidity_version import SolidityVersion
 from .data_model import (
     CompilerConfig,
     DeploymentConfig,
+    DetectorConfig,
     DetectorsConfig,
     GeneralConfig,
     GeneratorConfig,
     LspConfig,
+    PrinterConfig,
     PrintersConfig,
     TestingConfig,
     TopLevelConfig,
@@ -364,7 +366,17 @@ class WokeConfig:
 
     @property
     def detectors(self) -> DetectorsConfig:
+        """
+        Return general config options for all detectors.
+        """
         return self.__config.detectors
+
+    @property
+    def detector(self) -> DetectorConfig:
+        """
+        Return per-detector config options.
+        """
+        return self.__config.detector
 
     @property
     def api_keys(self) -> Dict[str, str]:
@@ -415,6 +427,13 @@ class WokeConfig:
     @property
     def printers(self) -> PrintersConfig:
         """
-        Return printer-specific config options.
+        Return general config options for all printers.
         """
         return self.__config.printers
+
+    @property
+    def printer(self) -> PrinterConfig:
+        """
+        Return per-printer config options.
+        """
+        return self.__config.printer

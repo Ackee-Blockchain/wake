@@ -362,8 +362,8 @@ def detect(
         assert command is not None
         assert command.name is not None
 
-        if hasattr(config.detectors, command.name):
-            default_map = getattr(config.detectors, command.name)
+        if hasattr(config.detector, command.name):
+            default_map = getattr(config.detector, command.name)
         else:
             default_map = None
 

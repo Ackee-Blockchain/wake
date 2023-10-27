@@ -312,8 +312,8 @@ async def print_(
         assert command is not None
         assert command.name is not None
 
-        if hasattr(config.printers, command.name):
-            default_map = getattr(config.printers, command.name)
+        if hasattr(config.printer, command.name):
+            default_map = getattr(config.printer, command.name)
         else:
             default_map = None
 
