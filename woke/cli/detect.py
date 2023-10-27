@@ -570,6 +570,38 @@ async def detect_(
     help="Print detections even if disabled with // woke-disable-* comments.",
 )
 @click.option(
+    "--ignore-path",
+    "ignore_paths",
+    multiple=True,
+    type=click.Path(),
+    help="Detection is not reported if any (sub)detection from a branch is in these paths.",
+    envvar="WOKE_DETECT_IGNORE_PATHS",
+)
+@click.option(
+    "--detect-exclude-path",
+    "detect_exclude_paths",
+    multiple=True,
+    type=click.Path(),
+    help="Detection is not reported if whole (sub)detections branch is in these paths.",
+    envvar="WOKE_DETECT_EXCLUDE_PATHS",
+)
+@click.option(
+    "--exclude",
+    "exclude",
+    multiple=True,
+    type=str,
+    help="Exclude detector(s) by name.",
+    envvar="WOKE_DETECT_EXCLUDE",
+)
+@click.option(
+    "--only",
+    "only",
+    multiple=True,
+    type=str,
+    help="Only run detector(s) by name.",
+    envvar="WOKE_DETECT_ONLY",
+)
+@click.option(
     "--allow-path",
     "allow_paths",
     multiple=True,
@@ -588,8 +620,8 @@ async def detect_(
     show_envvar=True,
 )
 @click.option(
-    "--exclude-path",
-    "exclude_paths",
+    "--compile-exclude-path",
+    "compile_exclude_paths",
     multiple=True,
     type=click.Path(),
     help="Paths to exclude from compilation unless imported from non-excluded paths.",
@@ -654,9 +686,13 @@ def run_detect(
     export: Optional[str],
     watch: bool,
     ignore_disable_overrides: bool,
+    ignore_paths: Tuple[str],
+    detect_exclude_paths: Tuple[str],
+    exclude: Tuple[str],
+    only: Tuple[str],
     allow_paths: Tuple[str],
     evm_version: Optional[str],
-    exclude_paths: Tuple[str],
+    compile_exclude_paths: Tuple[str],
     include_paths: Tuple[str],
     optimizer_enabled: Optional[bool],
     optimizer_runs: Optional[int],
@@ -674,39 +710,55 @@ def run_detect(
     config = WokeConfig(local_config_path=ctx.obj.get("local_config_path", None))
     config.load_configs()
 
-    new_options = {}
+    compiler_new_options = {}
+    detectors_new_options = {}
     deleted_options = []
 
     if allow_paths:
-        new_options["allow_paths"] = allow_paths
+        compiler_new_options["allow_paths"] = allow_paths
     if evm_version is not None:
         if evm_version == "auto":
             deleted_options.append(("compiler", "solc", "evm_version"))
         else:
-            new_options["evm_version"] = evm_version
-    if exclude_paths:
-        new_options["exclude_paths"] = exclude_paths
+            compiler_new_options["evm_version"] = evm_version
+    if compile_exclude_paths:
+        compiler_new_options["exclude_paths"] = compile_exclude_paths
     if include_paths:
-        new_options["include_paths"] = include_paths
+        compiler_new_options["include_paths"] = include_paths
     if optimizer_enabled is not None:
-        if "optimizer" not in new_options:
-            new_options["optimizer"] = {}
-        new_options["optimizer"]["enabled"] = optimizer_enabled
+        if "optimizer" not in compiler_new_options:
+            compiler_new_options["optimizer"] = {}
+        compiler_new_options["optimizer"]["enabled"] = optimizer_enabled
     if optimizer_runs is not None:
-        if "optimizer" not in new_options:
-            new_options["optimizer"] = {}
-        new_options["optimizer"]["runs"] = optimizer_runs
+        if "optimizer" not in compiler_new_options:
+            compiler_new_options["optimizer"] = {}
+        compiler_new_options["optimizer"]["runs"] = optimizer_runs
     if remappings:
-        new_options["remappings"] = remappings
+        compiler_new_options["remappings"] = remappings
     if target_version is not None:
         if target_version == "auto":
             deleted_options.append(("compiler", "solc", "target_version"))
         else:
-            new_options["target_version"] = target_version
+            compiler_new_options["target_version"] = target_version
     if via_ir is not None:
-        new_options["via_IR"] = via_ir
+        compiler_new_options["via_IR"] = via_ir
 
-    config.update({"compiler": {"solc": new_options}}, deleted_options)
+    if ignore_paths:
+        detectors_new_options["ignore_paths"] = ignore_paths
+    if detect_exclude_paths:
+        detectors_new_options["exclude_paths"] = detect_exclude_paths
+    if exclude:
+        detectors_new_options["exclude"] = exclude
+    if only:
+        detectors_new_options["only"] = only
+
+    config.update(
+        {
+            "compiler": {"solc": compiler_new_options},
+            "detectors": detectors_new_options,
+        },
+        deleted_options,
+    )
 
     asyncio.run(
         detect_(
