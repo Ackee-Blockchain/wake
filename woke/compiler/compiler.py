@@ -207,7 +207,7 @@ class CompilationFileSystemEventHandler(FileSystemEventHandler):
                     if (
                         not any(
                             is_relative_to(file, p)
-                            for p in self._config.compiler.solc.ignore_paths
+                            for p in self._config.compiler.solc.exclude_paths
                         )
                         and file.is_file()
                     ):
@@ -228,7 +228,7 @@ class CompilationFileSystemEventHandler(FileSystemEventHandler):
                 for f in files
                 if any(
                     is_relative_to(f, p)
-                    for p in self._config.compiler.solc.ignore_paths
+                    for p in self._config.compiler.solc.exclude_paths
                 )
                 or not is_relative_to(f, self._config.project_root_path)
             }
@@ -812,8 +812,8 @@ class SolidityCompiler:
             if (
                 self._latest_build_info.allow_paths
                 != self.__config.compiler.solc.allow_paths
-                or self._latest_build_info.ignore_paths
-                != self.__config.compiler.solc.ignore_paths
+                or self._latest_build_info.exclude_paths
+                != self.__config.compiler.solc.exclude_paths
                 or self._latest_build_info.include_paths
                 != self.__config.compiler.solc.include_paths
                 or self._latest_build_info.settings != build_settings
@@ -1071,7 +1071,7 @@ class SolidityCompiler:
                 for cu_hash, errors in errors_per_cu.items()
             },
             allow_paths=self.__config.compiler.solc.allow_paths,
-            ignore_paths=self.__config.compiler.solc.ignore_paths,
+            exclude_paths=self.__config.compiler.solc.exclude_paths,
             include_paths=self.__config.compiler.solc.include_paths,
             settings=build_settings,
             source_units_info=source_units_info,

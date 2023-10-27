@@ -426,7 +426,7 @@ async def print_(
         for file in config.project_root_path.rglob("**/*.sol"):
             if (
                 not any(
-                    is_relative_to(file, p) for p in config.compiler.solc.ignore_paths
+                    is_relative_to(file, p) for p in config.compiler.solc.exclude_paths
                 )
                 and file.is_file()
             ):
@@ -534,12 +534,12 @@ async def print_(
     show_envvar=True,
 )
 @click.option(
-    "--ignore-path",
-    "ignore_paths",
+    "--exclude-path",
+    "exclude_paths",
     multiple=True,
     type=click.Path(),
-    help="Paths to ignore when searching for *.sol files.",
-    envvar="WOKE_COMPILE_IGNORE_PATHS",
+    help="Paths to exclude from compilation unless imported from non-excluded paths.",
+    envvar="WOKE_COMPILE_EXCLUDE_PATHS",
     show_envvar=True,
 )
 @click.option(
@@ -601,7 +601,7 @@ def run_print(
     watch: bool,
     allow_paths: Tuple[str],
     evm_version: Optional[str],
-    ignore_paths: Tuple[str],
+    exclude_paths: Tuple[str],
     include_paths: Tuple[str],
     optimizer_enabled: Optional[bool],
     optimizer_runs: Optional[int],
@@ -629,8 +629,8 @@ def run_print(
             deleted_options.append(("compiler", "solc", "evm_version"))
         else:
             new_options["evm_version"] = evm_version
-    if ignore_paths:
-        new_options["ignore_paths"] = ignore_paths
+    if exclude_paths:
+        new_options["exclude_paths"] = exclude_paths
     if include_paths:
         new_options["include_paths"] = include_paths
     if optimizer_enabled is not None:

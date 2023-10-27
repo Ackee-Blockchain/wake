@@ -122,10 +122,12 @@ def _detection_commented_out(
     )
 
 
-def _strip_ignored_subdetections(detection: Detection, config: WokeConfig) -> Detection:
+def _strip_excluded_subdetections(
+    detection: Detection, config: WokeConfig
+) -> Detection:
     """
-    Strip all subdetections that are located in ignored paths and their parents are also in ignored paths.
-    In other words, remove all subdetection branches that whole end up in ignored paths.
+    Strip all subdetections that are located in excluded paths and their parents are also in excluded paths.
+    In other words, remove all subdetection branches that whole end up in excluded paths.
     """
     if len(detection.subdetections) == 0:
         return detection
@@ -133,12 +135,12 @@ def _strip_ignored_subdetections(detection: Detection, config: WokeConfig) -> De
     subdetections = []
     for d in detection.subdetections:
         if not any(
-            is_relative_to(d.ir_node.file, p) for p in config.detectors.ignore_paths
+            is_relative_to(d.ir_node.file, p) for p in config.detectors.exclude_paths
         ):
             subdetections.append(d)
             continue
 
-        d = _strip_ignored_subdetections(d, config)
+        d = _strip_excluded_subdetections(d, config)
         if len(d.subdetections) != 0:
             subdetections.append(d)
 
@@ -151,11 +153,9 @@ def _strip_ignored_subdetections(detection: Detection, config: WokeConfig) -> De
     )
 
 
-def _strip_excluded_subdetections(
-    detection: Detection, config: WokeConfig
-) -> Detection:
+def _strip_ignored_subdetections(detection: Detection, config: WokeConfig) -> Detection:
     """
-    Strip all subdetections that are located in excluded paths.
+    Strip all subdetections that are located in ignored paths.
     """
     if len(detection.subdetections) == 0:
         return detection
@@ -163,7 +163,7 @@ def _strip_excluded_subdetections(
     subdetections = []
     for d in detection.subdetections:
         if any(
-            is_relative_to(d.ir_node.file, p) for p in config.detectors.exclude_paths
+            is_relative_to(d.ir_node.file, p) for p in config.detectors.ignore_paths
         ):
             continue
 
@@ -171,7 +171,7 @@ def _strip_excluded_subdetections(
         if l == 0:
             subdetections.append(d)
             continue
-        d = _strip_excluded_subdetections(d, config)
+        d = _strip_ignored_subdetections(d, config)
         if len(d.subdetections) == 0 and l > 0 and d.subdetections_mandatory:
             continue
         subdetections.append(d)
@@ -219,13 +219,13 @@ def _filter_detections(
     for detection in tmp:
         if any(
             is_relative_to(detection.detection.ir_node.file, p)
-            for p in config.detectors.exclude_paths
+            for p in config.detectors.ignore_paths
         ):
             continue
 
         l = len(detection.detection.subdetections)
         detection = DetectorResult(
-            _strip_excluded_subdetections(detection.detection, config),
+            _strip_ignored_subdetections(detection.detection, config),
             detection.impact,
             detection.confidence,
             detection.url,
@@ -239,10 +239,10 @@ def _filter_detections(
 
         if any(
             is_relative_to(detection.detection.ir_node.file, p)
-            for p in config.detectors.ignore_paths
+            for p in config.detectors.exclude_paths
         ):
             detection = DetectorResult(
-                _strip_ignored_subdetections(detection.detection, config),
+                _strip_excluded_subdetections(detection.detection, config),
                 detection.impact,
                 detection.confidence,
                 detection.url,
