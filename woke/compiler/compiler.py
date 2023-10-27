@@ -69,7 +69,9 @@ from .compilation_unit import CompilationUnit
 from .exceptions import CompilationError, CompilationResolveError
 from .solc_frontend import (
     SolcFrontend,
+    SolcInputOptimizerDetailsSettings,
     SolcInputOptimizerSettings,
+    SolcInputOptimizerYulDetailsSettings,
     SolcInputSettings,
     SolcOutput,
     SolcOutputError,
@@ -539,7 +541,29 @@ class SolidityCompiler:
         settings.optimizer = SolcInputOptimizerSettings(
             enabled=self.__config.compiler.solc.optimizer.enabled,
             runs=self.__config.compiler.solc.optimizer.runs,
+            details=SolcInputOptimizerDetailsSettings(
+                peephole=self.__config.compiler.solc.optimizer.details.peephole,
+                inliner=self.__config.compiler.solc.optimizer.details.inliner,
+                jumpdest_remover=self.__config.compiler.solc.optimizer.details.jumpdest_remover,
+                order_literals=self.__config.compiler.solc.optimizer.details.order_literals,
+                deduplicate=self.__config.compiler.solc.optimizer.details.deduplicate,
+                cse=self.__config.compiler.solc.optimizer.details.cse,
+                constant_optimizer=self.__config.compiler.solc.optimizer.details.constant_optimizer,
+                simple_counter_for_loop_unchecked_increment=self.__config.compiler.solc.optimizer.details.simple_counter_for_loop_unchecked_increment,
+            ),
         )
+
+        if (
+            self.__config.compiler.solc.optimizer.details.yul_details.stack_allocation
+            is not None
+            or self.__config.compiler.solc.optimizer.details.yul_details.optimizer_steps
+            is not None
+        ):
+            assert settings.optimizer.details is not None
+            settings.optimizer.details.yul_details = SolcInputOptimizerYulDetailsSettings(
+                stack_allocation=self.__config.compiler.solc.optimizer.details.yul_details.stack_allocation,
+                optimizer_steps=self.__config.compiler.solc.optimizer.details.yul_details.optimizer_steps,
+            )
 
         settings.output_selection = {"*": {}}
 
