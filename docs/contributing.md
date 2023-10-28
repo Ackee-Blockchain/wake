@@ -5,7 +5,7 @@
 ### Using [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io)
 
 ```bash
-mkvirtualenv woke
+mkvirtualenv wake
 ```
 
 ### Using [venv](https://docs.python.org/3/library/venv.html)
@@ -40,7 +40,7 @@ chmod +x ./setup-githooks.sh
 
 Git hooks automatically run these commands when you commit:
 
-- `pytest tests -m "not slow"` when the `WOKE_HOOKS_RUN_ALL_TESTS` environment variable is not set (`pytest tests` is run otherwise)
+- `pytest tests -m "not slow"` when the `WAKE_HOOKS_RUN_ALL_TESTS` environment variable is not set (`pytest tests` is run otherwise)
 - `pyright` on Python files being committed
 - `black` on Python files being committed
 - `isort` on Python files being committed

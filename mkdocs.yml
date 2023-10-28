@@ -1,9 +1,9 @@
-site_name: Woke
-site_url: https://ackeeblockchain.com/woke/docs
-repo_url: https://github.com/Ackee-Blockchain/woke
-repo_name: Ackee-Blockchain/woke
+site_name: Wake
+site_url: https://ackeeblockchain.com/wake/docs
+repo_url: https://github.com/Ackee-Blockchain/wake
+repo_name: Ackee-Blockchain/wake
 edit_uri: edit/main/docs
-site_description: Woke is a Python-based development and testing framework for Solidity developed by Ackee Blockchain.
+site_description: Wake is a Python-based development and testing framework for Solidity developed by Ackee Blockchain.
 site_author: Ackee Blockchain
 
 theme:
@@ -54,17 +54,17 @@ nav:
       - Coverage analysis: 'testing-framework/coverage-analysis.md'
       - Performance considerations: 'testing-framework/performance-considerations.md'
       - Migrating from Ape & Brownie: 'testing-framework/migrating-from-ape-and-brownie.md'
-      - Migrating from Woke 2.x: 'testing-framework/migrating-from-woke-2.md'
+      - Migrating from Wake 2.x: 'testing-framework/migrating-from-wake-2.md'
       - Troubleshooting: 'testing-framework/troubleshooting.md'
   - Detectors: 'detectors.md'
   - LSP server: 'language-server.md'
   - Solc Version Manager: 'solc-version-manager.md'
   - Contributing: 'contributing.md'
   - API reference:
-      - woke.config:
+      - wake.config:
           - data_model: 'api-reference/config/data-model.md'
-          - woke_config: 'api-reference/config/woke-config.md'
-      - woke.ir:
+          - wake_config: 'api-reference/config/wake-config.md'
+      - wake.ir:
           - declarations:
               - abc: 'api-reference/ir/declarations/abc.md'
               - contract_definition: 'api-reference/ir/declarations/contract-definition.md'
@@ -163,7 +163,7 @@ extra:
     provider: mike
 
 watch:
-  - woke
+  - wake
 
 plugins:
 - search

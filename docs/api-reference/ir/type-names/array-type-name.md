@@ -1,1 +1,1 @@
-::: woke.ir.type_names.array_type_name
+::: wake.ir.type_names.array_type_name

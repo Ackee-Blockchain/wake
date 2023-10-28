@@ -1,1 +1,1 @@
-::: woke.ir.statements.continue_statement
+::: wake.ir.statements.continue_statement

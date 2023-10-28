@@ -24,8 +24,8 @@ jobs:
         run: git fetch origin documentation:documentation --depth=1
       - name: Build documentation
         run: |
-          git config --global user.email "woke@ackeeblockchain.com"
-          git config --global user.name "Woke bot"
+          git config --global user.email "wake@ackeeblockchain.com"
+          git config --global user.name "Wake bot"
           mike deploy -b documentation dev
       - name: Checkout documentation branch
         run: git checkout -f documentation

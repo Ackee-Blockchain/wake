@@ -1,1 +1,1 @@
-::: woke.ir.expressions.member_access
+::: wake.ir.expressions.member_access

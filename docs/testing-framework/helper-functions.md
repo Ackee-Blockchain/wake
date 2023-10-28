@@ -1,6 +1,6 @@
 # Helper functions
 
-Woke testing framework provides a set of helper functions to make testing easier.
+Wake testing framework provides a set of helper functions to make testing easier.
 
 ## ABI encoding and decoding
 
@@ -11,7 +11,7 @@ The `Abi` class provides functions to encode and decode data according to the AB
 `Abi.encode` encodes a list of values given a list of types. It returns `bytes`:
 
 ```python
-from woke.testing import Abi, Address
+from wake.testing import Abi, Address
 
 Abi.encode(['uint8', 'address'], [0xff, Address(0)])
 ```
@@ -21,7 +21,7 @@ Abi.encode(['uint8', 'address'], [0xff, Address(0)])
 `Abi.encode_packed` encodes a list of values given a list of types. It returns `bytes`:
 
 ```python
-from woke.testing import Abi
+from wake.testing import Abi
 
 Abi.encode_packed(['bytes', 'string'], [b'abc', 'def'])
 ```
@@ -31,7 +31,7 @@ Abi.encode_packed(['bytes', 'string'], [b'abc', 'def'])
 `Abi.encode_with_selector` encodes a list of values and a selector given a list of types and the selector. It returns `bytes`:
 
 ```python
-from woke.testing import Abi
+from wake.testing import Abi
 from pytypes.contracts.Counter import Counter
 
 Abi.encode_with_selector(Counter.setCount.selector, ['uint256'], [0xff])
@@ -42,7 +42,7 @@ Abi.encode_with_selector(Counter.setCount.selector, ['uint256'], [0xff])
 `Abi.encode_with_signature` encodes a list of values and a selector given a list of types and a signature. It returns `bytes`:
 
 ```python
-from woke.testing import Abi
+from wake.testing import Abi
 
 Abi.encode_with_signature("setCount(uint256)", ['uint256'], [0xff])
 ```
@@ -60,7 +60,7 @@ Abi.encode_with_signature("setCount(uint256)", ['uint256'], [0xff])
 `Abi.encode_call` encodes a list of values and a selector given a reference to a function. It returns `bytes`:
 
 ```python
-from woke.testing import Abi
+from wake.testing import Abi
 from pytypes.contracts.Counter import Counter
 
 Abi.encode_call(Counter.setCount, [0xff])
@@ -71,9 +71,10 @@ Abi.encode_call(Counter.setCount, [0xff])
 `Abi.decode` decodes a `bytes` object given a list of types. It returns a list of values:
 
 ```python
-from woke.testing import Abi
+from wake.testing import Abi
 
-Abi.decode(['uint8', 'address'], b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+Abi.decode(['uint8', 'address'],
+           b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
 ```
 
 ## Keccak-256
@@ -81,14 +82,14 @@ Abi.decode(['uint8', 'address'], b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\
 The `keccak256` function computes the Keccak-256 hash of a `bytes` object:
 
 ```python
-from woke.testing import keccak256
+from wake.testing import keccak256
 
 keccak256(b'abc')
 ```
 
 ## Computing `CREATE` and `CREATE2` address
 
-In some cases, it may be useful to compute the address of a contract before it is deployed. Woke testing framework provides three functions to do so.
+In some cases, it may be useful to compute the address of a contract before it is deployed. Wake testing framework provides three functions to do so.
 
 ### get_create_address
 
@@ -96,7 +97,7 @@ In some cases, it may be useful to compute the address of a contract before it i
 It accepts a deployer (`Account`, `Address` or a hex string address) and its nonce.
 
 ```python
-from woke.testing import Account, get_create_address
+from wake.testing import Account, get_create_address
 
 deployer = Account(1)
 get_create_address(deployer, deployer.nonce)
@@ -108,8 +109,8 @@ get_create_address(deployer, deployer.nonce)
 It accepts a deployer (`Account`, `Address` or a hex string address), a salt and the contract creation code.
 
 ```python
-from woke.testing import Account, get_create2_address_from_code
-from woke.testing.fuzzing import random_bytes
+from wake.testing import Account, get_create2_address_from_code
+from wake.testing.fuzzing import random_bytes
 from pytypes.contracts.Counter import Counter
 
 get_create2_address_from_code(
@@ -125,8 +126,8 @@ get_create2_address_from_code(
 It accepts a deployer (`Account`, `Address` or a hex string address), a salt and the hash of the contract creation code.
 
 ```python
-from woke.testing import Account, get_create2_address_from_hash, keccak256
-from woke.testing.fuzzing import random_bytes
+from wake.testing import Account, get_create2_address_from_hash, keccak256
+from wake.testing.fuzzing import random_bytes
 from pytypes.contracts.Counter import Counter
 
 get_create2_address_from_hash(
@@ -142,7 +143,7 @@ get_create2_address_from_hash(
 If the input account is not a proxy, it returns the input account.
 
 ```python
-from woke.testing import Account, get_logic_contract
+from wake.testing import Account, get_logic_contract
 
 usdc_proxy = Account("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")
 usdc_logic = get_logic_contract(usdc_proxy)
@@ -159,7 +160,7 @@ This behavior can be overridden by setting the `storage_layout_contract` argumen
 In this case, the variable definition is searched in the provided `storage_layout_contract`.
 
 ```python
-from woke.testing import Account, Address, read_storage_variable, write_storage_variable
+from wake.testing import Account, Address, read_storage_variable, write_storage_variable
 
 usdc_proxy = Account("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")
 write_storage_variable(usdc_proxy, "balances", 1000, keys=[Address(1)])
@@ -172,7 +173,7 @@ assert read_storage_variable(usdc_proxy, "balances", keys=[Address(1)]) == 1000
 Optionally, `balance_slot` and `total_supply_slot` arguments can be used to specify the storage slot where the balance of the given account and the total supply are stored.
 
 ```python
-from woke.testing import Account, mint_erc20, burn_erc20
+from wake.testing import Account, mint_erc20, burn_erc20
 from pytypes.contracts.IERC20 import IERC20
 
 usdc_proxy = IERC20("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")
@@ -188,12 +189,14 @@ assert usdc_proxy.balanceOf(Account(1)) == 1000
 `on_revert` is a decorator that simplifies handling of revert exceptions. It accepts a callback function that will be called if the decorated function reverts.
 
 ```python
-from woke.testing import *
+from wake.testing import *
+
 
 def revert_handler(e: TransactionRevertedError):
     if e.tx is not None:
         print(e.tx.call_trace)
         print(e.tx.console_logs)
+
 
 @default_chain.connect()
 @on_revert(revert_handler)

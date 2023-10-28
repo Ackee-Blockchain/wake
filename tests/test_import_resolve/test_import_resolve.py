@@ -3,9 +3,9 @@ from pathlib import Path
 
 import pytest
 
-from woke.compiler.source_unit_name_resolver import SourceUnitNameResolver
-from woke.config import WokeConfig
-from woke.utils import change_cwd
+from wake.compiler.source_unit_name_resolver import SourceUnitNameResolver
+from wake.config import WakeConfig
+from wake.utils import change_cwd
 
 current_path = Path(__file__).parent.resolve()
 
@@ -14,7 +14,7 @@ current_path = Path(__file__).parent.resolve()
 def test_simple():
     # no config files loaded => no remappings
     os.environ["XDG_CONFIG_HOME"] = str(current_path)
-    config = WokeConfig(project_root_path=current_path)
+    config = WakeConfig(project_root_path=current_path)
     resolver = SourceUnitNameResolver(config)
 
     assert (
@@ -61,7 +61,7 @@ def test_simple():
 @pytest.mark.platform_dependent
 def test_cmdline_args():
     os.environ["XDG_CONFIG_HOME"] = str(current_path)
-    config = WokeConfig.fromdict(
+    config = WakeConfig.fromdict(
         {
             "compiler": {
                 "solc": {
@@ -92,7 +92,7 @@ def test_cmdline_args():
 @pytest.mark.platform_dependent
 def test_remappings():
     os.environ["XDG_CONFIG_HOME"] = str(current_path)
-    config = WokeConfig.fromdict(
+    config = WakeConfig.fromdict(
         {
             "compiler": {
                 "solc": {

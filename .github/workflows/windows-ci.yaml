@@ -1,4 +1,4 @@
-name: Windows Woke tests
+name: Windows Wake tests
 
 on: [push]
 

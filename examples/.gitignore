@@ -1,5 +1,5 @@
 __pycache__/
 pytypes/
-.woke-build/
-.woke-logs/
+.wake/
+wake-coverage.cov
 node_modules/

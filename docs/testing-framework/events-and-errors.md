@@ -1,6 +1,6 @@
 # Events and errors
 
-Woke testing framework provides a way to test events and errors emitted by the tested contract.
+Wake testing framework provides a way to test events and errors emitted by the tested contract.
 
 ## Events
 
@@ -38,8 +38,9 @@ class Transfer:
 Events can be accessed using the `events` property of transaction objects:
 
 ```python
-from woke.testing import *
+from wake.testing import *
 from pytypes.contracts.Counter import Counter
+
 
 @default_chain.connect()
 def test_events():
@@ -53,13 +54,15 @@ def test_events():
 Or in `tx_callback`:
 
 ```python
-from woke.testing import *
+from wake.testing import *
 from pytypes.contracts.Counter import Counter
+
 
 def tx_callback(tx: TransactionAbc):
     for event in tx.events:
         if isinstance(event, Counter.CountSet):
             print(f"Count of Counter({tx.to}) was set to {event.count}")
+
 
 @default_chain.connect()
 def test_events():
@@ -120,8 +123,9 @@ In case of `confirmations=0`, a revert error can be accessed using the `error` p
 If the transaction did not revert, `error` is `None`.
 
 ```python
-from woke.testing import *
+from wake.testing import *
 from pytypes.contracts.Counter import Counter
+
 
 @default_chain.connect()
 def test_errors():
@@ -148,8 +152,9 @@ There are two types of internal errors in Solidity:
 - `Panic(uint256)` - a revert error with a numeric code in case of a failed assertion, division by zero, arithmetic underflow/overflow, etc.
 
 ```python
-from woke.testing import *
+from wake.testing import *
 from pytypes.contracts.Counter import Counter
+
 
 @default_chain.connect()
 def test_errors():
@@ -192,7 +197,7 @@ class PanicCodeEnum(IntEnum):
 
 ### Helper functions
 
-Woke offers two helper functions (context managers) to handle errors - `must_revert` and `may_revert`. Both functions can accept:
+Wake offers two helper functions (context managers) to handle errors - `must_revert` and `may_revert`. Both functions can accept:
 
 - no arguments - any `TransactionRevertedError` is handled,
 - a single error type - either `Error`, `Panic` or a user-defined type from `pytypes`
@@ -201,7 +206,7 @@ Woke offers two helper functions (context managers) to handle errors - `must_rev
 - a tuple or list of errors - any mix of error types and error instances.
 
 ```python
-from woke.testing import *
+from wake.testing import *
 
 # handle any Error(str message) or underflow/overflow
 with must_revert((Error, Panic(PanicCodeEnum.UNDERFLOW_OVERFLOW))) as e:

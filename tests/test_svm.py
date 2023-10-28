@@ -8,12 +8,12 @@ from typing import List, Optional, Union
 import aiohttp
 import pytest
 
-from woke.config import WokeConfig
-from woke.svm import SolcVersionManager
-from woke.svm.exceptions import UnsupportedVersionError
+from wake.config import WakeConfig
+from wake.svm import SolcVersionManager
+from wake.svm.exceptions import UnsupportedVersionError
 
-PYTEST_WOKE_PATH = Path.home() / ".tmpwoke_KVUhSovO5J"
-PYTEST_WOKE_PATH2 = Path.home() / ".tmpwoke2_fLtqXkHeVH"
+PYTEST_WAKE_PATH = Path.home() / ".tmpwake_KVUhSovO5J"
+PYTEST_WAKE_PATH2 = Path.home() / ".tmpwake2_fLtqXkHeVH"
 
 
 @pytest.fixture()
@@ -28,21 +28,21 @@ def run_cleanup(request):
 
 @pytest.fixture()
 def config():
-    os.environ["XDG_CONFIG_HOME"] = str(PYTEST_WOKE_PATH)
-    os.environ["XDG_DATA_HOME"] = str(PYTEST_WOKE_PATH)
-    return WokeConfig()
+    os.environ["XDG_CONFIG_HOME"] = str(PYTEST_WAKE_PATH)
+    os.environ["XDG_DATA_HOME"] = str(PYTEST_WAKE_PATH)
+    return WakeConfig()
 
 
 @pytest.fixture()
 def config2():
-    os.environ["XDG_CONFIG_HOME"] = str(PYTEST_WOKE_PATH2)
-    os.environ["XDG_DATA_HOME"] = str(PYTEST_WOKE_PATH2)
-    return WokeConfig()
+    os.environ["XDG_CONFIG_HOME"] = str(PYTEST_WAKE_PATH2)
+    os.environ["XDG_DATA_HOME"] = str(PYTEST_WAKE_PATH2)
+    return WakeConfig()
 
 
 @pytest.mark.slow
 @pytest.mark.platform_dependent
-@pytest.mark.parametrize("run_cleanup", [[PYTEST_WOKE_PATH]], indirect=True)
+@pytest.mark.parametrize("run_cleanup", [[PYTEST_WAKE_PATH]], indirect=True)
 async def test_basic_usage(run_cleanup, config):
     svm = SolcVersionManager(config)
 
@@ -63,7 +63,7 @@ async def test_basic_usage(run_cleanup, config):
 
 @pytest.mark.slow
 @pytest.mark.platform_dependent
-@pytest.mark.parametrize("run_cleanup", [[PYTEST_WOKE_PATH]], indirect=True)
+@pytest.mark.parametrize("run_cleanup", [[PYTEST_WAKE_PATH]], indirect=True)
 async def test_parallel_install(run_cleanup, config):
     svm = SolcVersionManager(config)
     to_be_installed = [f"0.8.{x}" for x in range(5)]
@@ -80,7 +80,7 @@ async def test_parallel_install(run_cleanup, config):
 
 
 @pytest.mark.platform_dependent
-@pytest.mark.parametrize("run_cleanup", [[PYTEST_WOKE_PATH]], indirect=True)
+@pytest.mark.parametrize("run_cleanup", [[PYTEST_WAKE_PATH]], indirect=True)
 async def test_install_invalid_version(run_cleanup, config):
     svm = SolcVersionManager(config)
     with pytest.raises(ValueError):
@@ -91,9 +91,9 @@ async def test_install_invalid_version(run_cleanup, config):
 @pytest.mark.slow
 @pytest.mark.platform_dependent
 @pytest.mark.parametrize(
-    "run_cleanup", [[PYTEST_WOKE_PATH, PYTEST_WOKE_PATH2]], indirect=True
+    "run_cleanup", [[PYTEST_WAKE_PATH, PYTEST_WAKE_PATH2]], indirect=True
 )
-async def test_two_woke_root_paths(run_cleanup, config, config2):
+async def test_two_wake_root_paths(run_cleanup, config, config2):
     svm1 = SolcVersionManager(config)
     svm2 = SolcVersionManager(config2)
 
@@ -110,7 +110,7 @@ async def test_two_woke_root_paths(run_cleanup, config, config2):
 
 
 @pytest.mark.platform_dependent
-@pytest.mark.parametrize("run_cleanup", [[PYTEST_WOKE_PATH]], indirect=True)
+@pytest.mark.parametrize("run_cleanup", [[PYTEST_WAKE_PATH]], indirect=True)
 def test_remove_not_installed_version(run_cleanup, config):
     svm = SolcVersionManager(config)
     with pytest.raises(ValueError):
@@ -118,7 +118,7 @@ def test_remove_not_installed_version(run_cleanup, config):
 
 
 @pytest.mark.platform_dependent
-@pytest.mark.parametrize("run_cleanup", [[PYTEST_WOKE_PATH]], indirect=True)
+@pytest.mark.parametrize("run_cleanup", [[PYTEST_WAKE_PATH]], indirect=True)
 async def test_install_nonexistent_version(run_cleanup, config):
     svm = SolcVersionManager(config)
     with pytest.raises(UnsupportedVersionError):
@@ -129,7 +129,7 @@ async def test_install_nonexistent_version(run_cleanup, config):
 
 @pytest.mark.slow
 @pytest.mark.platform_dependent
-@pytest.mark.parametrize("run_cleanup", [[PYTEST_WOKE_PATH]], indirect=True)
+@pytest.mark.parametrize("run_cleanup", [[PYTEST_WAKE_PATH]], indirect=True)
 async def test_install_aiohttp_session(run_cleanup, config):
     svm = SolcVersionManager(config)
     async with aiohttp.ClientSession() as session:
@@ -139,7 +139,7 @@ async def test_install_aiohttp_session(run_cleanup, config):
 
 
 @pytest.mark.platform_dependent
-@pytest.mark.parametrize("run_cleanup", [[PYTEST_WOKE_PATH]], indirect=True)
+@pytest.mark.parametrize("run_cleanup", [[PYTEST_WAKE_PATH]], indirect=True)
 async def test_get_path_nonexistent_version(run_cleanup, config):
     svm = SolcVersionManager(config)
     with pytest.raises(UnsupportedVersionError):
@@ -150,7 +150,7 @@ async def test_get_path_nonexistent_version(run_cleanup, config):
 
 @pytest.mark.slow
 @pytest.mark.platform_dependent
-@pytest.mark.parametrize("run_cleanup", [[PYTEST_WOKE_PATH]], indirect=True)
+@pytest.mark.parametrize("run_cleanup", [[PYTEST_WAKE_PATH]], indirect=True)
 async def test_file_executable(run_cleanup, config):
     svm = SolcVersionManager(config)
     await svm.install("0.8.10")

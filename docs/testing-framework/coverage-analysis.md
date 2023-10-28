@@ -1,10 +1,10 @@
 # Coverage analysis
 
-Woke supports code coverage analysis of both Python test scripts and Solidity contracts.
+Wake supports code coverage analysis of both Python test scripts and Solidity contracts.
 
 ## Python scripts coverage
 
-In order to measure coverage of Python scripts executed using `woke test`, the [`pytest-cov`](https://pytest-cov.readthedocs.io/en/latest/) plugin can be used.
+In order to measure coverage of Python scripts executed using `wake test`, the [`pytest-cov`](https://pytest-cov.readthedocs.io/en/latest/) plugin can be used.
 
 ```bash
 pip3 install pytest-cov
@@ -13,7 +13,7 @@ pip3 install pytest-cov
 To analyze scripts located in the `tests` directory, run:
 
 ```console
-$ woke test -- --cov=tests
+$ wake test -- --cov=tests
 
 ---------- coverage: platform linux, python 3.7.12-final-0 -----------
 Name                                 Stmts   Miss  Cover
@@ -27,22 +27,22 @@ tests/test_crosschain.py                63      0   100%
 TOTAL                                  156      8    95%
 ```
 
-Note that the `--` is required to separate the arguments passed to `woke` from the arguments passed to `pytest`.
+Note that the `--` is required to separate the arguments passed to `wake` from the arguments passed to `pytest`.
 
 !!! info
-    There is no such option for `woke fuzz` since it does not use `pytest` internally.
+    There is no such option for `wake fuzz` since it does not use `pytest` internally.
 
 ## Solidity contracts coverage
 
-Woke comes with a built-in coverage analysis module that can be activated by passing the `--coverage` flag and, in the case of `woke fuzz`, an optional number of processes to collect coverage data from.
+Wake comes with a built-in coverage analysis module that can be activated by passing the `--coverage` flag and, in the case of `wake fuzz`, an optional number of processes to collect coverage data from.
 
 ```bash
-woke test --coverage
+wake test --coverage
 ```
 
-By passing the `--coverage` flag to `woke fuzz` without specifying the number of processes, the coverage analysis is performed for all fuzzing processes.
+By passing the `--coverage` flag to `wake fuzz` without specifying the number of processes, the coverage analysis is performed for all fuzzing processes.
 ```base
-woke fuzz -n 4 --coverage 2
+wake fuzz -n 4 --coverage 2
 ```
 
 There are some limitations to this coverage analysis:
@@ -52,13 +52,13 @@ There are some limitations to this coverage analysis:
 - `call` requests (default for `pure` and `view` functions) are not included in the coverage analysis with Ganache and Hardhat,
 - code coverage introduces a significant overhead in the execution time of the tests.
 
-By enabling the coverage collection, a `woke-coverage.cov` file is generated in the current directory.
+By enabling the coverage collection, a `wake-coverage.cov` file is generated in the current directory.
 To analyze this file, install [Tools for Solidity](https://marketplace.visualstudio.com/items?itemName=AckeeBlockchain.tools-for-solidity), a VS Code extension that can be used to visualize the coverage of Solidity contracts directly in the editor.
 With the extension installed, execute the `Tools for Solidity: Show Coverage` command to open the coverage report.
 
 ![Code coverage in VS Code](../images/testing/coverage.png)
 
-The coverage report is updated automatically when the `woke-coverage.cov` file is modified.
+The coverage report is updated automatically when the `wake-coverage.cov` file is modified.
 To hide the coverage report, execute the `Tools for Solidity: Hide Coverage` command.
 
 !!! warning

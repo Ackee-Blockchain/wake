@@ -1,1 +1,1 @@
-::: woke.ir.expressions.binary_operation
+::: wake.ir.expressions.binary_operation

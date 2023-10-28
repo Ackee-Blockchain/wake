@@ -1,5 +1,5 @@
-from woke.testing import *
-from woke.testing.fuzzing import *
+from wake.testing import *
+from wake.testing.fuzzing import *
 
 from pytypes.contracts.Counter import Counter
 from pytypes.contracts.Gateway import Gateway

@@ -1,1 +1,1 @@
-::: woke.ir.yul.for_loop
+::: wake.ir.yul.for_loop

@@ -1,6 +1,6 @@
-# Woke
+# Wake
 
-Woke is a Python-based development and testing framework for Solidity.
+Wake is a Python-based development and testing framework for Solidity.
 
 Features:
 
@@ -24,39 +24,39 @@ Features:
 via `pip`
 
 ```shell
-pip3 install woke
+pip3 install eth-wake
 ```
 
 ## Documentation & Contribution
 
-Woke documentation can be found [here](https://ackeeblockchain.com/woke/docs/latest).
+Wake documentation can be found [here](https://ackeeblockchain.com/wake/docs/latest).
 
-There you can also find a section on [contributing](https://ackeeblockchain.com/woke/docs/latest/contributing/).
+There you can also find a section on [contributing](https://ackeeblockchain.com/wake/docs/latest/contributing/).
 
 ## Discovered vulnerabilities
 
 | Vulnerability                                   | Severity | Project | Method           | Discovered by    | Resources                                                                                                                                                                                                              |
 |-------------------------------------------------|----------|---------|------------------|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Profit & loss accounted twice                   | Critical | IPOR    | Fuzz test        | Ackee Blockchain | [Woke tests](https://github.com/Ackee-Blockchain/tests-ipor/blob/main/tests/test_fuzz.py)                                                                                                                              |
+| Profit & loss accounted twice                   | Critical | IPOR    | Fuzz test        | Ackee Blockchain | [Wake tests](https://github.com/Ackee-Blockchain/tests-ipor/blob/main/tests/test_fuzz.py)                                                                                                                              |
 | Console permanent denial of service             | High     | Brahma  | Fuzz test        | Ackee Blockchain | [Report](https://github.com/Ackee-Blockchain/public-audit-reports/blob/master/2023/ackee-blockchain-brahma-console-v2-report.pdf)                                                                                      |
-| Swap unwinding formula error                    | High     | IPOR    | Fuzz test        | Ackee Blockchain | [Woke tests](https://github.com/Ackee-Blockchain/tests-ipor/blob/main/tests/test_fuzz.py)                                                                                                                              |
-| Swap unwinding fee accounted twice              | High     | IPOR    | Fuzz test        | Ackee Blockchain | [Woke tests](https://github.com/Ackee-Blockchain/tests-ipor/blob/main/tests/test_fuzz.py)                                                                                                                              |
-| Incorrect event data                            | High     | Solady  | Integration test | Ackee Blockchain | [Report](https://github.com/Ackee-Blockchain/public-audit-reports/blob/master/2023/ackee-blockchain-solady-report.pdf), [Woke tests](https://github.com/Ackee-Blockchain/tests-solady/blob/main/tests/test_erc1155.py) |
-| `INTEREST_FROM_STRATEGY_BELOW_ZERO` reverts DoS | Medium   | IPOR    | Fuzz test        | Ackee Blockchain | [Woke tests](https://github.com/Ackee-Blockchain/tests-ipor/blob/main/tests/test_fuzz.py)                                                                                                                              |
-| Inaccurate hypothetical interest formula        | Medium   | IPOR    | Fuzz test        | Ackee Blockchain | [Woke tests](https://github.com/Ackee-Blockchain/tests-ipor/blob/main/tests/test_fuzz.py)                                                                                                                              |
-| Swap unwinding fee normalization error          | Medium   | IPOR    | Fuzz test        | Ackee Blockchain | [Woke tests](https://github.com/Ackee-Blockchain/tests-ipor/blob/main/tests/test_fuzz.py)                                                                                                                              |
-| Missing receive function                        | Medium   | Axelar  | Fuzz test        | Ackee Blockchain | [Woke tests](https://github.com/Ackee-Blockchain/tests-axelar-interchain-governance-executor/blob/main/tests/test_fuzz.py)                                                                                             |
+| Swap unwinding formula error                    | High     | IPOR    | Fuzz test        | Ackee Blockchain | [Wake tests](https://github.com/Ackee-Blockchain/tests-ipor/blob/main/tests/test_fuzz.py)                                                                                                                              |
+| Swap unwinding fee accounted twice              | High     | IPOR    | Fuzz test        | Ackee Blockchain | [Wake tests](https://github.com/Ackee-Blockchain/tests-ipor/blob/main/tests/test_fuzz.py)                                                                                                                              |
+| Incorrect event data                            | High     | Solady  | Integration test | Ackee Blockchain | [Report](https://github.com/Ackee-Blockchain/public-audit-reports/blob/master/2023/ackee-blockchain-solady-report.pdf), [Wake tests](https://github.com/Ackee-Blockchain/tests-solady/blob/main/tests/test_erc1155.py) |
+| `INTEREST_FROM_STRATEGY_BELOW_ZERO` reverts DoS | Medium   | IPOR    | Fuzz test        | Ackee Blockchain | [Wake tests](https://github.com/Ackee-Blockchain/tests-ipor/blob/main/tests/test_fuzz.py)                                                                                                                              |
+| Inaccurate hypothetical interest formula        | Medium   | IPOR    | Fuzz test        | Ackee Blockchain | [Wake tests](https://github.com/Ackee-Blockchain/tests-ipor/blob/main/tests/test_fuzz.py)                                                                                                                              |
+| Swap unwinding fee normalization error          | Medium   | IPOR    | Fuzz test        | Ackee Blockchain | [Wake tests](https://github.com/Ackee-Blockchain/tests-ipor/blob/main/tests/test_fuzz.py)                                                                                                                              |
+| Missing receive function                        | Medium   | Axelar  | Fuzz test        | Ackee Blockchain | [Wake tests](https://github.com/Ackee-Blockchain/tests-axelar-interchain-governance-executor/blob/main/tests/test_fuzz.py)                                                                                             |
 
 ## Features
 
 ### Testing framework
 
-See [examples](examples) and [documentation](https://ackeeblockchain.com/woke/docs/latest/testing-framework/overview) for more information.
+See [examples](examples) and [documentation](https://ackeeblockchain.com/wake/docs/latest/testing-framework/overview) for more information.
 
 Writing tests is as simple as:
 
 ```python
-from woke.testing import *
+from wake.testing import *
 from pytypes.contracts.Counter import Counter
 
 @default_chain.connect()
@@ -75,8 +75,8 @@ def test_counter():
 Fuzzer builds on top of the testing framework and allows efficient fuzz testing of Solidity smart contracts.
 
 ```python
-from woke.testing import *
-from woke.testing.fuzzing import *
+from wake.testing import *
+from wake.testing.fuzzing import *
 from pytypes.contracts.Counter import Counter
 
 class CounterTest(FuzzTest):
@@ -113,36 +113,36 @@ def test_counter():
 
 Vulnerability detectors can be run using:
 ```shell
-woke detect
+wake detect
 ```
 
 ### LSP server
 
-Woke implements an [LSP](https://microsoft.github.io/language-server-protocol/) server for Solidity. The only currently supported communication channel is TCP.
+Wake implements an [LSP](https://microsoft.github.io/language-server-protocol/) server for Solidity. The only currently supported communication channel is TCP.
 
-Woke LSP server can be run using:
+Wake LSP server can be run using:
 
 ```shell
-woke lsp
+wake lsp
 ```
 
 Or with an optional --port argument (default 65432):
 
 ```shell
-woke lsp --port 1234
+wake lsp --port 1234
 ```
 
-All LSP server features can be found in the [documentation](https://ackeeblockchain.com/woke/docs/latest/language-server/).
+All LSP server features can be found in the [documentation](https://ackeeblockchain.com/wake/docs/latest/language-server/).
 
 ## License
 
-This project is licensed under the [ISC license](https://github.com/Ackee-Blockchain/woke/blob/main/LICENSE).
+This project is licensed under the [ISC license](https://github.com/Ackee-Blockchain/wake/blob/main/LICENSE).
 
 ## Partners
 
 RockawayX             |  Coinbase
 :-------------------------:|:-------------------------:
-[![](https://github.com/Ackee-Blockchain/woke/blob/main/images/rockawayx.jpg?raw=true)](https://rockawayx.com/)  |  [![](https://github.com/Ackee-Blockchain/woke/blob/main/images/coinbase.png?raw=true)](https://www.coinbase.com/)
+[![](https://github.com/Ackee-Blockchain/wake/blob/main/images/rockawayx.jpg?raw=true)](https://rockawayx.com/)  |  [![](https://github.com/Ackee-Blockchain/wake/blob/main/images/coinbase.png?raw=true)](https://www.coinbase.com/)
 
 
 

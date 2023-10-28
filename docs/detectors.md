@@ -2,15 +2,15 @@
 
 Detectors can be run using:
 ```shell
-woke detect
+wake detect
 ```
 
 Or with specified files and directories:
 ```shell
-woke detect contracts/MyContract.sol tests
+wake detect contracts/MyContract.sol tests
 ```
 
 <figure>
-    <img src="../images/woke-detections.png" alt="Example output" />
-    <figcaption>Example <code>woke detect</code> output</figcaption>
+    <img src="../images/wake-detections.png" alt="Example output" />
+    <figcaption>Example <code>wake detect</code> output</figcaption>
 </figure>

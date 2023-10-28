@@ -1,6 +1,6 @@
 # Cross-chain testing
 
-Woke testing framework supports testing multichain solutions. The API remains the same as for single-chain solutions.
+Wake testing framework supports testing multichain solutions. The API remains the same as for single-chain solutions.
 The only difference is that a `Chain` instance must be created for each chain. This instance must be passed to
 all API functions that accept a `chain` keyword argument.
 
@@ -21,12 +21,13 @@ It is not possible to use `Account` instances bound to different chains than the
 This is done to prevent accidental misuse of accounts.
 
 ```python
-from woke.testing import *
-from woke.testing.fuzzing import random_account
+from wake.testing import *
+from wake.testing.fuzzing import random_account
 from pytypes.contracts.Counter import Counter
 
 chain1 = Chain()
 chain2 = Chain()
+
 
 @chain1.connect()
 @chain2.connect()
@@ -50,11 +51,12 @@ In production, cross-chain solutions usually emit events on a source chain. The 
 Cross-chain tests have to simulate this behavior. The next code snippet shows an example of how a relay function can be implemented:
 
 ```python
-from woke.testing import *
+from wake.testing import *
 from pytypes.contracts.Counter import Counter
 
 chain1 = Chain()
 chain2 = Chain()
+
 
 def relay(other_counter: Counter, events: List):
     for event in events:
@@ -64,6 +66,7 @@ def relay(other_counter: Counter, events: List):
             other_counter.decrement()
         elif isinstance(event, Counter.CountSet):
             other_counter.setCount(event.count)
+
 
 @chain1.connect()
 @chain2.connect()

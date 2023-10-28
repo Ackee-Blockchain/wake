@@ -22,12 +22,14 @@ contract Reverting {
 To debug the latter case, print a call trace of the failing transaction. The trace should contain the failing call in a malformed way.
 
 ```python
-from woke.testing import *
+from wake.testing import *
 from pytypes.contracts.Reverting import Reverting
+
 
 def revert_handler(e: TransactionRevertedError):
     if e.tx is not None:
         print(e.tx.call_trace)
+
 
 @default_chain.connect()
 @on_revert(revert_handler)
@@ -62,7 +64,7 @@ When EVM encounters an invalid opcode, it reverts without any reason data.
 Under normal circumstances, an invalid opcode should never be encountered unless explicitly triggered by the contract code.
 
 However, the `PUSH0` opcode may behave as invalid if the chain is not configured for the Shanghai hard fork or later.
-To debug this issue, try to set a different pre-Shanghai EVM version in the Woke config file.
+To debug this issue, try to set a different pre-Shanghai EVM version in the Wake config file.
 
 ```yaml
 [compiler.solc]
@@ -75,7 +77,7 @@ evm_version = "paris"
 
 Occasionally, the default timeout may be insufficient, especially when performing complex transactions or when fork testing.
 
-To work around this issue, increase the timeout in the Woke config file.
+To work around this issue, increase the timeout in the Wake config file.
 
 ```yaml
 [testing]
