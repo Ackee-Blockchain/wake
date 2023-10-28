@@ -85,7 +85,6 @@ class SolcConfig(WokeConfigModel):
         default_factory=lambda: frozenset(
             [
                 Path.cwd() / "node_modules",
-                Path.cwd() / ".woke-build",
                 Path.cwd() / "venv",
                 Path.cwd() / "lib",
                 Path.cwd() / "script",
@@ -161,7 +160,6 @@ class DetectorsConfig(WokeConfigModel):
         default_factory=lambda: frozenset(
             [
                 Path.cwd() / "node_modules",
-                Path.cwd() / ".woke-build",
                 Path.cwd() / "lib",
                 Path.cwd() / "script",
             ]
