@@ -17,7 +17,7 @@
 ## Dependencies: gitmoji-fuzzy-hook
 ###############################################################################
 
-if [[ -n ${WOKE_SKIP_PREPARE_COMMIT_MSG_HOOK} ]]; then
+if [[ -n ${WAKE_SKIP_PREPARE_COMMIT_MSG_HOOK} ]]; then
     exit 0
 fi
 

@@ -48,7 +48,7 @@
             </clipPath>
     </defs>
 
-    <rect fill="#292929" stroke="rgba(255,255,255,0.35)" stroke-width="1" x="1" y="1" width="1175" height="96.8" rx="8"/><text class="terminal-2348396974-title" fill="#c5c8c6" text-anchor="middle" x="587" y="27">Woke</text>
+    <rect fill="#292929" stroke="rgba(255,255,255,0.35)" stroke-width="1" x="1" y="1" width="1175" height="96.8" rx="8"/><text class="terminal-2348396974-title" fill="#c5c8c6" text-anchor="middle" x="587" y="27">Wake</text>
             <g transform="translate(26,22)">
             <circle cx="0" cy="0" r="7" fill="#ff5f57"/>
             <circle cx="22" cy="0" r="7" fill="#febc2e"/>

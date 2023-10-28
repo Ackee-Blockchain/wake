@@ -10,12 +10,12 @@ import pytest
 from click.testing import CliRunner
 from git import Repo  # type: ignore
 
-from woke.cli.__main__ import main
-from woke.compiler import SolcOutputSelectionEnum, SolidityCompiler
-from woke.config import WokeConfig
-from woke.utils import change_cwd
+from wake.cli.__main__ import main
+from wake.compiler import SolcOutputSelectionEnum, SolidityCompiler
+from wake.config import WakeConfig
+from wake.utils import change_cwd
 
-PYTEST_BUILD_PATH = Path.home() / ".tmpwoke_rkDv61DDf7"
+PYTEST_BUILD_PATH = Path.home() / ".tmpwake_rkDv61DDf7"
 
 
 @pytest.fixture()
@@ -23,7 +23,7 @@ def config():
     os.environ["XDG_CONFIG_HOME"] = str(PYTEST_BUILD_PATH)
     os.environ["XDG_DATA_HOME"] = str(PYTEST_BUILD_PATH)
     config_dict = {"compiler": {"solc": {"include_paths": ["./node_modules"]}}}
-    return WokeConfig.fromdict(
+    return WakeConfig.fromdict(
         config_dict,
         project_root_path=PYTEST_BUILD_PATH,
     )
@@ -74,7 +74,7 @@ def test_compile_uniswap_v3(setup_project, config):
     output = asyncio.run(compiler.compile(files, [SolcOutputSelectionEnum.ALL]))
     assert len(output)
 
-    (PYTEST_BUILD_PATH / "woke.toml").write_text(
+    (PYTEST_BUILD_PATH / "wake.toml").write_text(
         """
         [compiler.solc]
         ignore_paths = ["node_modules", "audits"]
@@ -149,7 +149,7 @@ def test_compile_trader_joe(setup_project, config):
     )
     assert len(output)
 
-    (PYTEST_BUILD_PATH / "woke.toml").write_text(
+    (PYTEST_BUILD_PATH / "wake.toml").write_text(
         """
         [compiler.solc]
         ignore_paths = ["node_modules", "test", "lib"]
@@ -184,7 +184,7 @@ def test_compile_axelar(setup_project, config):
     output = asyncio.run(compiler.compile(files, [SolcOutputSelectionEnum.ALL]))
     assert len(output)
 
-    (PYTEST_BUILD_PATH / "woke.toml").write_text(
+    (PYTEST_BUILD_PATH / "wake.toml").write_text(
         """
         [compiler.solc.optimizer]
         enabled = true

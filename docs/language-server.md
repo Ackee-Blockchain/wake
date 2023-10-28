@@ -1,21 +1,21 @@
 # Solidity LSP server
-Woke implements an [LSP](https://microsoft.github.io/language-server-protocol/) server for Solidity. The only currently supported communication channel is TCP.
+Wake implements an [LSP](https://microsoft.github.io/language-server-protocol/) server for Solidity. The only currently supported communication channel is TCP.
 
-Woke LSP server can be run using:
+Wake LSP server can be run using:
 ```shell
-woke lsp
+wake lsp
 ```
 
 Or with an optional `--port` argument (default 65432):
 ```shell
-woke lsp --port 1234
+wake lsp --port 1234
 ```
 
 !!! info
 
     Multi-root workspaces are not currently supported.
 
-## Projects using Woke LSP server
+## Projects using Wake LSP server
 - [VS Code Extension](https://marketplace.visualstudio.com/items?itemName=AckeeBlockchain.tools-for-solidity)
 
 ## Configuration options
@@ -24,21 +24,21 @@ Server configuration options are loaded using the [standard interface](https://m
 The full list of supported configuration options can be found in the [configuration](configuration.md#configuration-options) section.
 
 !!! warning
-    Configuration options are not loaded from `woke.toml` files by the LSP server.
+    Configuration options are not loaded from `wake.toml` files by the LSP server.
 
 ## Supported commands
 
-Woke LSP server implements the command execution provider as specified by the [LSP specification](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workspace_executeCommand). The following commands are supported:
+Wake LSP server implements the command execution provider as specified by the [LSP specification](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workspace_executeCommand). The following commands are supported:
 
 | Command                                                   | Arguments                                                                                                                                                                                  | Description                                                                                                                                     |
 |:----------------------------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------|
-| <nobr>`woke.lsp.force_recompile`</nobr>                   |                                                                                                                                                                                            | Force recompile the opened project/files. Useful after modifying files outside the IDE (e.g. after installing npm packages).                    |
-| <nobr>`woke.lsp.force_rerun_detectors`</nobr>             |                                                                                                                                                                                            | Force rerun detectors on the opened project/files.                                                                                              |
-| <nobr>`woke.generate.control_flow_graph`</nobr>           | `0`: [URI](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#uri) of the document containing the function<br>`1`: canonical name of the function | Generate a control flow graph for the given function or modifier. Returns the source code of the graph in Graphviz (DOT) format.                |
-| <nobr>`woke.generate.imports_graph`</nobr>                |                                                                                                                                                                                            | Generate an imports graph for the whole project. A workspace must be opened. Returns the source code of the graph in Graphviz (DOT) format.     |
-| <nobr>`woke.generate.inheritance_graph`</nobr>            | `0`: [URI](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#uri) of the document containing the contract<br>`1`: name of the contract           | Generate an inheritance graph for the given contract. Returns the source code of the graph in Graphviz (DOT) format.                            |
-| <nobr>`woke.generate.inheritance_graph_full`</nobr>       |                                                                                                                                                                                            | Generate an inheritance graph for the whole project. A workspace must be opened. Returns the source code of the graph in Graphviz (DOT) format. |
-| <nobr>`woke.generate.linearized_inheritance_graph`</nobr> | `0`: [URI](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#uri) of the document containing the contract<br>`1`: name of the contract           | Generate a linearized inheritance graph for the given contract. Returns the source code of the graph in Graphviz (DOT) format.                  |
+| <nobr>`wake.lsp.force_recompile`</nobr>                   |                                                                                                                                                                                            | Force recompile the opened project/files. Useful after modifying files outside the IDE (e.g. after installing npm packages).                    |
+| <nobr>`wake.lsp.force_rerun_detectors`</nobr>             |                                                                                                                                                                                            | Force rerun detectors on the opened project/files.                                                                                              |
+| <nobr>`wake.generate.control_flow_graph`</nobr>           | `0`: [URI](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#uri) of the document containing the function<br>`1`: canonical name of the function | Generate a control flow graph for the given function or modifier. Returns the source code of the graph in Graphviz (DOT) format.                |
+| <nobr>`wake.generate.imports_graph`</nobr>                |                                                                                                                                                                                            | Generate an imports graph for the whole project. A workspace must be opened. Returns the source code of the graph in Graphviz (DOT) format.     |
+| <nobr>`wake.generate.inheritance_graph`</nobr>            | `0`: [URI](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#uri) of the document containing the contract<br>`1`: name of the contract           | Generate an inheritance graph for the given contract. Returns the source code of the graph in Graphviz (DOT) format.                            |
+| <nobr>`wake.generate.inheritance_graph_full`</nobr>       |                                                                                                                                                                                            | Generate an inheritance graph for the whole project. A workspace must be opened. Returns the source code of the graph in Graphviz (DOT) format. |
+| <nobr>`wake.generate.linearized_inheritance_graph`</nobr> | `0`: [URI](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#uri) of the document containing the contract<br>`1`: name of the contract           | Generate a linearized inheritance graph for the given contract. Returns the source code of the graph in Graphviz (DOT) format.                  |
 
 ## Features
 
@@ -94,7 +94,7 @@ Number of references is shown above each declaration.
 
 ![Diagnostics preview](images/lsp/diagnostics-2.png)
 
-Together with compiler errors, diagnostics also include results from Woke vulnerability detectors.
+Together with compiler errors, diagnostics also include results from Wake vulnerability detectors.
 
 ![Diagnostics preview](images/lsp/diagnostics-3.png)
 
@@ -106,7 +106,7 @@ Together with compiler errors, diagnostics also include results from Woke vulner
 
 ## Debugging
 
-Woke LSP server can be debugged using:
+Wake LSP server can be debugged using:
 ```shell
-woke --debug lsp
+wake --debug lsp
 ```

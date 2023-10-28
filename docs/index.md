@@ -1,6 +1,6 @@
-# Woke
+# Wake
 
-Woke is a Python-based development and testing framework for Solidity.
+Wake is a Python-based development and testing framework for Solidity.
 
 ## Features
 - testing framework
@@ -9,7 +9,7 @@ Woke is a Python-based development and testing framework for Solidity.
 - LSP server
 
 ## Installation
-Woke requires Python 3.7 or higher.
+Wake requires Python 3.7 or higher.
 
 !!! warning
     Python 3.11 is experimentally supported.
@@ -17,31 +17,31 @@ Woke requires Python 3.7 or higher.
 ### Using pip
 
 ```shell
-pip3 install woke
+pip3 install eth-wake
 ```
 
 ## Shell completions
 
-It is possible to enable shell completions for the `woke` command (does not apply to `woke-svm`).
+It is possible to enable shell completions for the `wake` command (does not apply to `wake-svm`).
 The instructions depend on the shell you are using.
 
 === "Bash"
     Add the following to your `~/.bashrc` file:
 
     ```bash
-    eval "$(_WOKE_COMPLETE=bash_source woke)"
+    eval "$(_WAKE_COMPLETE=bash_source wake)"
     ```
 
 === "Zsh"
     Add the following to your `~/.zshrc` file:
 
     ```zsh
-    eval "$(_WOKE_COMPLETE=zsh_source woke)"
+    eval "$(_WAKE_COMPLETE=zsh_source wake)"
     ```
 
 === "Fish"
-    Add the following to your `~/.config/fish/completions/woke.fish` file:
+    Add the following to your `~/.config/fish/completions/wake.fish` file:
 
     ```fish
-    eval (env _WOKE_COMPLETE=fish_source woke)
+    eval (env _WAKE_COMPLETE=fish_source wake)
     ```

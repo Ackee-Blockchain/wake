@@ -2,7 +2,7 @@
 title: Development and testing framework
 ---
 
-Woke development and testing framework is a Python-based framework for testing and deploying Solidity smart contracts.
+Wake development and testing framework is a Python-based framework for testing and deploying Solidity smart contracts.
 It utilizes `pytypes`, Python equivalents of Solidity types, to simplify writing scripts and easily discover typing errors.
 
 ## Features

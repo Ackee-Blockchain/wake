@@ -1,1 +1,1 @@
-::: woke.ir.expressions.index_access
+::: wake.ir.expressions.index_access

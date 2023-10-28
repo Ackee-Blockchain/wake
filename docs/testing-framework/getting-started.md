@@ -1,6 +1,6 @@
 # Getting started
 
-This guide explains how to run the first test in Woke development and testing framework.
+This guide explains how to run the first test in Wake development and testing framework.
 
 !!! warning "Important"
     Before getting started, make sure to have the latest version of a development chain installed.
@@ -19,15 +19,15 @@ This guide explains how to run the first test in Woke development and testing fr
 The first step is to generate `pytypes` by running the following command:
 
 ```shell
-woke init pytypes -w
+wake init pytypes -w
 ```
 
 !!! note "Configuring compilation"
-    Woke uses default configuration options that should work for most projects.
+    Wake uses default configuration options that should work for most projects.
     However, in some cases, it may be necessary to configure the compilation process.
     For more information, see the [Compilation](../compilation.md) page.
 
-This command creates a `pytypes` directory in the current working directory. The `-w` flag tells Woke to watch for changes in the smart contracts and automatically regenerate `pytypes` when a change is detected.
+This command creates a `pytypes` directory in the current working directory. The `-w` flag tells Wake to watch for changes in the smart contracts and automatically regenerate `pytypes` when a change is detected.
 
 <div id="generating-pytypes-asciinema" style="z-index: 1; position: relative;"></div>
 <script>
@@ -36,19 +36,19 @@ This command creates a `pytypes` directory in the current working directory. The
 }
 </script>
 
-When a compilation error occurs, Woke generates `pytypes` for the contracts that were successfully compiled. `pytypes` for the contracts that failed to compile are not generated.
+When a compilation error occurs, Wake generates `pytypes` for the contracts that were successfully compiled. `pytypes` for the contracts that failed to compile are not generated.
 
 !!! warning "Name collisions in `pytypes`"
-    In some cases, a name of a Solidity types may be a keyword in Python or otherwise reserved name. In such cases, Woke will append an underscore to the name of the type. For example, `class` will be renamed to `class_`.
+    In some cases, a name of a Solidity types may be a keyword in Python or otherwise reserved name. In such cases, Wake will append an underscore to the name of the type. For example, `class` will be renamed to `class_`.
 
     This also applies to overloaded functions. For example, if a contract has a function `foo` that takes an argument of type `uint256` and another function `foo` that takes an argument of type `uint8`, the generated `pytypes` will contain two functions `foo` and `foo_`.
 
 ## Writing the first test
 
 !!! tip
-    Solidity source code for all examples in this guide is available in the [Woke repository](https://github.com/Ackee-Blockchain/woke/tree/main/examples/counter).
+    Solidity source code for all examples in this guide is available in the [Wake repository](https://github.com/Ackee-Blockchain/wake/tree/main/examples/counter).
 
-To collect and execute tests, Woke uses the [pytest](https://docs.pytest.org/en/stable/) framework under the hood.
+To collect and execute tests, Wake uses the [pytest](https://docs.pytest.org/en/stable/) framework under the hood.
 The test files should start with `test_` or end with `_test.py` to be collected. It is possible to use all the features of the pytest framework like [fixtures](https://docs.pytest.org/en/stable/explanation/fixtures.html).
 
 The recommended project structure is as follows:
@@ -68,7 +68,7 @@ The recommended project structure is as follows:
 
 ### Connecting to a chain
 
-In single-chain tests, it is recommended to use the `default_chain` object that is automatically created by Woke.
+In single-chain tests, it is recommended to use the `default_chain` object that is automatically created by Wake.
 The `connect` decorator either launches a new development chain or connects to an existing one, if an argument is specified.
 It is possible to connect using:
 
@@ -77,7 +77,8 @@ It is possible to connect using:
 - an IPC socket (e.g. `/tmp/anvil.ipc`).
 
 ```python
-from woke.testing import *
+from wake.testing import *
+
 
 # launch a new development chain
 @default_chain.connect()
@@ -90,10 +91,10 @@ def test_counter():
 To run the test, execute the following command:
 
 ```shell
-woke test tests/test_counter.py -d
+wake test tests/test_counter.py -d
 ```
 
-The `-d` flag tells Woke to attach the Python debugger on test failures.
+The `-d` flag tells Wake to attach the Python debugger on test failures.
 
 ### Deploying a contract
 
@@ -106,9 +107,10 @@ Additionally, it accepts keyword arguments that can be used to configure the tra
 All keyword arguments are described in the [Interacting with contracts](./interacting-with-contracts.md) section.
 
 ```python
-from woke.testing import *
+from wake.testing import *
 
 from pytypes.contracts.Counter import Counter
+
 
 @default_chain.connect()
 def test_example():
@@ -118,13 +120,14 @@ def test_example():
 
 ### Interacting with a contract
 
-For every public and external function in Solidity source code, Woke generates a Python method in `pytypes`.
+For every public and external function in Solidity source code, Wake generates a Python method in `pytypes`.
 These methods can be used to interact with a deployed contract. Generated methods accept the same arguments as the corresponding Solidity functions.
 Additional keyword arguments can configure the execution of a function like with the `deploy` method.
 
 ```python
-from woke.testing import *
+from wake.testing import *
 from pytypes.contracts.Counter import Counter
+
 
 @default_chain.connect()
 def test_counter():

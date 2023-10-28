@@ -2,13 +2,14 @@
 
 ## Using Python debugger
 
-Both commands `woke test` and `woke fuzz` support entering [pdb](https://docs.python.org/3/library/pdb.html), the Python debugger, when an error occurs.
-Woke uses an enhanced version of the Python debugger, [ipdb](https://github.com/gotcha/ipdb), which provides a more user-friendly interface.
+Both commands `wake test` and `wake fuzz` support entering [pdb](https://docs.python.org/3/library/pdb.html), the Python debugger, when an error occurs.
+Wake uses an enhanced version of the Python debugger, [ipdb](https://github.com/gotcha/ipdb), which provides a more user-friendly interface.
 
 It is also possible to enter the debugger manually by inserting a `breakpoint()` statement in the code.
 
 ```python
-from woke.testing import *
+from wake.testing import *
+
 
 @default_chain.connect()
 def test_breakpoint():
@@ -17,7 +18,7 @@ def test_breakpoint():
 ```
 
 !!! info
-    `breakpoint()` is not currently supported with `woke fuzz`.
+    `breakpoint()` is not currently supported with `wake fuzz`.
 
 Inside ipdb, any expression can be evaluated by typing it and pressing `Enter`.
 This can be used to get the value of a variable, to call a function, including contract functions, or even to deploy a new contract.
@@ -48,9 +49,10 @@ It can be used to debug failing transactions.
     To show contract and function names, configure your [API key](../configuration.md#api_keys-namespace) for a given chain explorer.
 
 ```python
-from woke.testing import *
+from wake.testing import *
 from pytypes.contracts.Counter import Counter
 from pytypes.contracts.Gateway import Gateway
+
 
 @default_chain.connect()
 def test_call_trace():
@@ -89,8 +91,9 @@ may be the easiest way to debug a contract. Logs can be accessed through the `co
 Console logs are available even for failed transactions.
 
 ```python
-from woke.testing import *
+from wake.testing import *
 from pytypes.contracts.Counter import Counter
+
 
 @default_chain.connect()
 def test_console_logs():
@@ -102,12 +105,12 @@ def test_console_logs():
     counter.setCount(42)
 ```
 
-!!! tip "Woke-integrated `console.sol`"
-    Woke integrates the `console.sol` library implementing the same functionalities as Hardhat's `console.sol`.
+!!! tip "Wake-integrated `console.sol`"
+    Wake integrates the `console.sol` library implementing the same functionalities as Hardhat's `console.sol`.
     It can serve as a drop-in replacement in case that the tested project is not using Hardhat.
 
     ```solidity
-    import "woke/console.sol";
+    import "wake/console.sol";
     
     contract MyContract {
         function myFunction() public view {

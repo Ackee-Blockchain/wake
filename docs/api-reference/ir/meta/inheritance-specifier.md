@@ -1,1 +1,1 @@
-::: woke.ir.meta.inheritance_specifier
+::: wake.ir.meta.inheritance_specifier

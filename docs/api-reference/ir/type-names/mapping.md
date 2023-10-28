@@ -1,1 +1,1 @@
-::: woke.ir.type_names.mapping
+::: wake.ir.type_names.mapping

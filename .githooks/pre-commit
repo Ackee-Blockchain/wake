@@ -46,8 +46,8 @@ function check_last_command()
     fi
 }
 
-export WOKE_SKIP_PREPARE_COMMIT_MSG_HOOK=1
-export WOKE_SKIP_POST_COMMIT_HOOK=1
+export WAKE_SKIP_PREPARE_COMMIT_MSG_HOOK=1
+export WAKE_SKIP_POST_COMMIT_HOOK=1
 
 stash_id=$(gen_stash_id)
 echo "$stash_id" > .stash-id
@@ -63,26 +63,26 @@ then
     git reset --soft 'HEAD^'
 fi
 
-unset WOKE_SKIP_PREPARE_COMMIT_MSG_HOOK
-unset WOKE_SKIP_POST_COMMIT_HOOK
+unset WAKE_SKIP_PREPARE_COMMIT_MSG_HOOK
+unset WAKE_SKIP_POST_COMMIT_HOOK
 
 # find all staged "*.py" files
 pyfiles=()
 IFS=$'\n'
-for f in $(git diff --cached --name-only --relative --diff-filter=ACMR -- woke tests)
+for f in $(git diff --cached --name-only --relative --diff-filter=ACMR -- wake tests)
 do
     if [[ "$f" == *.py ]]; then
         pyfiles+=("$f")
     fi
 done
 
-if [ -z ${WOKE_HOOKS_RUN_ALL_TESTS+dummy} ]; then
-    # WOKE_HOOKS_RUN_ALL_TESTS is unset
+if [ -z ${WAKE_HOOKS_RUN_ALL_TESTS+dummy} ]; then
+    # WAKE_HOOKS_RUN_ALL_TESTS is unset
     echo "running \`pytest tests -m \"not slow\"\`"
     pytest tests -m "not slow";
     check_last_command;
 else
-    # WOKE_HOOKS_RUN_ALL_TESTS is set
+    # WAKE_HOOKS_RUN_ALL_TESTS is set
     echo "running \`pytest tests\`"
     pytest tests;
     check_last_command;

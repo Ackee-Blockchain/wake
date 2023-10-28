@@ -1,2 +1,2 @@
 [compiler.solc]
-remappings = ["woke=test-target"]
+remappings = ["wake=test-target"]

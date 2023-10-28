@@ -22,7 +22,8 @@ Each request type has its default account used when no `from_` argument is provi
 The default accounts can be changed by assigning a new value to the corresponding property or by using the `set_default_accounts()` method.
 
 ```python
-from woke.testing import *
+from wake.testing import *
+
 
 @default_chain.connect()
 def test_accounts():
@@ -43,8 +44,9 @@ def test_accounts():
 In `pytypes`, the default request type is `tx` for non-pure non-view functions and `call` for pure and view functions.
 
 ```python
-from woke.testing import *
+from wake.testing import *
 from pytypes.contracts.Counter import Counter
+
 
 @default_chain.connect()
 def test_accounts():
@@ -118,7 +120,7 @@ Low-level methods also accept the `data` keyword argument (of type `bytes` or `b
     functions as the `abi` global object in Solidity.
 
     ```python
-    from woke.testing import *
+    from wake.testing import *
     from pytypes.contracts.Counter import Counter
 
     @default_chain.connect()

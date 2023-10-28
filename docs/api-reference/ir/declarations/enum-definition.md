@@ -1,1 +1,1 @@
-::: woke.ir.declarations.enum_definition
+::: wake.ir.declarations.enum_definition

@@ -8,11 +8,13 @@ A `tx_callback` can be registered on a `Chain` instance. The callback receives a
 the transaction object. This can be used to process all transactions in a single place.
 
 ```python
-from woke.testing import *
+from wake.testing import *
 from pytypes.contracts.Counter import Counter
+
 
 def tx_callback(tx: TransactionAbc):
     print(tx.console_logs)
+
 
 @default_chain.connect()
 def test_callback():
@@ -95,8 +97,9 @@ can be achieved in the following steps:
 5. Wait for the block to be mined
 
 ```python
-from woke.testing import *
+from wake.testing import *
 from pytypes.contracts.Counter import Counter
+
 
 @default_chain.connect()
 def test_multiple_txs():

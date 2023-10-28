@@ -1,4 +1,4 @@
-name: Linux Woke tests
+name: Linux Wake tests
 
 on: [push]
 
@@ -34,5 +34,5 @@ jobs:
         npm i -g pyright
     - name: Run pyright
       run: |
-        pyright woke
+        pyright wake
 

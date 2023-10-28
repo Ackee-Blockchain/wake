@@ -1,22 +1,22 @@
 # Configuration
 
-Woke can be configured using optional configuration files. The global configuration file is loaded from `$XDG_CONFIG_HOME/woke/config.toml`.
+Wake can be configured using optional configuration files. The global configuration file is loaded from `$XDG_CONFIG_HOME/wake/config.toml`.
 If `$XDG_CONFIG_HOME` is not set, the global configuration file is loaded from:
 
-- `$HOME/.config/woke/config.toml` on Linux/MacOS,
-- `%LOCALAPPDATA%\woke\config.toml` on Windows.
+- `$HOME/.config/wake/config.toml` on Linux/MacOS,
+- `%LOCALAPPDATA%\wake\config.toml` on Windows.
 
-Additionally, the configuration file for each project can be located in `{PROJECT_PATH}/woke.toml`.
+Additionally, the configuration file for each project can be located in `{PROJECT_PATH}/wake.toml`.
 
 !!! attention
 
-    Configuration options loaded from TOML files affect only the behavior of the Woke command-line tool.
+    Configuration options loaded from TOML files affect only the behavior of the Wake command-line tool.
     LSP configuration options are loaded from LSP clients using the [standard interface](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workspace_configuration).
 
 ## Subconfigs
 Any configuration file can include additional configuration files (subconfigs). These subconfigs are loaded after the original configuration file in the specified order. Subconfig configuration values override the values of the parent configuration file.
 
-!!! example "Example woke.toml"
+!!! example "Example wake.toml"
     ```toml
     subconfigs = ["loaded_next.toml", "../relative.toml", "/tmp/absolute.toml", "loaded_last.toml"]
     ```
@@ -31,7 +31,7 @@ The resolution order for each configuration option is:
 The latter overrides the former.
 
 
-???+ info "Default woke.toml"
+???+ info "Default wake.toml"
     Configuration options related to the LSP server are not shown here.
     ```toml
     subconfigs = []
@@ -45,7 +45,7 @@ The latter overrides the former.
     [compiler.solc]
     allow_paths = []
     # evm_version = "" (unset - let the compiler decide)
-    ignore_paths = ["node_modules", ".woke-build", "venv", "lib"]
+    ignore_paths = ["node_modules", "venv", "lib"]
     include_paths = ["node_modules"]
     remappings = []
     # target_version = "" (unset - use the latest version
@@ -57,7 +57,7 @@ The latter overrides the former.
 
     [detectors]
     exclude = []
-    ignore_paths = ["node_modules", ".woke-build", "venv", "lib"]
+    ignore_paths = ["node_modules", "venv", "lib"]
     # only = [] (unset - all detectors are enabled)
 
     [general]
@@ -148,7 +148,7 @@ The latter overrides the former.
 | <nobr>`call_trace_options`</nobr> | What information to display in call traces. Possible options: `contract_name`, `address`, `function_name`, `arguments`, `status`, `call_type`, `value`, `gas`, `sender`, `return_value`, `error`. |
 
 ### `generator.control_flow_graph` namespace
-Related to the `woke.generate.control_flow_graph` LSP command.
+Related to the `wake.generate.control_flow_graph` LSP command.
 
 | Option        | Description                            | Default value |
 |:--------------|:---------------------------------------|:--------------|
@@ -156,7 +156,7 @@ Related to the `woke.generate.control_flow_graph` LSP command.
 | `vscode_urls` | Attach VS Code URLs to the graph nodes | `true`        |
 
 ### `generator.inheritance_graph` namespace
-Related to the `woke.generate.inheritance_graph` LSP command.
+Related to the `wake.generate.inheritance_graph` LSP command.
 
 | Option        | Description                            | Default value |
 |:--------------|:---------------------------------------|:--------------|
@@ -164,7 +164,7 @@ Related to the `woke.generate.inheritance_graph` LSP command.
 | `vscode_urls` | Attach VS Code URLs to the graph nodes | `true`        |
 
 ### `generator.inheritance_graph_full` namespace
-Related to the `woke.generate.inheritance_graph_full` LSP command.
+Related to the `wake.generate.inheritance_graph_full` LSP command.
 
 | Option        | Description                            | Default value |
 |:--------------|:---------------------------------------|:--------------|
@@ -172,7 +172,7 @@ Related to the `woke.generate.inheritance_graph_full` LSP command.
 | `vscode_urls` | Attach VS Code URLs to the graph nodes | `true`        |
 
 ### `generator.linearized_inheritance_graph` namespace
-Related to the `woke.generate.linearized_inheritance_graph` LSP command.
+Related to the `wake.generate.linearized_inheritance_graph` LSP command.
 
 | Option        | Description                            | Default value |
 |:--------------|:---------------------------------------|:--------------|

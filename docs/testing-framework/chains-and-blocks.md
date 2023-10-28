@@ -1,6 +1,6 @@
 # Chains and blocks
 
-For single chain tests, Woke provides the global `default_chain` variable. This
+For single chain tests, Wake provides the global `default_chain` variable. This
 variable is a `Chain` object that can be used to change the chain parameters
 or access the chain data. Other `Chain` instances can be created, which is
 useful in [Cross-chain testing](cross-chain-testing.md).
@@ -59,7 +59,8 @@ It is recommended to use the context managers `change_automine` and `snapshot_an
 The following example presents the use of `Chain` methods:
 
 ```python
-from woke.testing import default_chain
+from wake.testing import default_chain
+
 
 def test_chain():
     # launch a chain and connect to it
@@ -71,7 +72,8 @@ def test_chain():
 All `Chain` context managers can be used as decorators:
 
 ```python
-from woke.testing import default_chain
+from wake.testing import default_chain
+
 
 @default_chain.connect()
 @default_chain.snapshot_and_revert()
@@ -99,7 +101,8 @@ The `connect` context manager accepts keyword arguments that can override the co
     Also, it is not possible to set these keyword arguments when working with Hardhat.
 
 ```python
-from woke.testing import default_chain
+from wake.testing import default_chain
+
 
 @default_chain.connect(
     accounts=15,
@@ -116,8 +119,9 @@ The `chain.blocks` property can be used to access up-to-date chain blocks data.
 It can be indexed by an integer or string literals `latest`, `pending`, `earliest`, `safe`, and `finalized`:
 
 ```python
-from woke.testing import default_chain
+from wake.testing import default_chain
 from pytypes.contracts.Counter import Counter
+
 
 @default_chain.connect()
 def test_chain_blocks():

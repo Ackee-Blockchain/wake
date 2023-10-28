@@ -1,6 +1,6 @@
 # Accounts and addresses
 
-Woke testing framework strictly distinguishes between accounts and addresses.
+Wake testing framework strictly distinguishes between accounts and addresses.
 However, in most cases, API functions accept both `Account` and `Address` types.
 
 ## Addresses
@@ -9,7 +9,7 @@ However, in most cases, API functions accept both `Account` and `Address` types.
 a hex string or an integer:
 
 ```python
-from woke.testing import Address
+from wake.testing import Address
 
 Address("0x0000000000000000000000000000000000000000")
 Address(0)
@@ -20,7 +20,7 @@ The hex string does not have to be [EIP-55](https://eips.ethereum.org/EIPS/eip-5
 Addresses can be compared with each other:
 
 ```python
-from woke.testing import Address
+from wake.testing import Address
 
 assert Address(1) > Address(0)
 ```
@@ -32,7 +32,7 @@ an `Address`, a hex string or an integer. Optionally, a chain can be specified, 
 the `default_chain` global object is used:
 
 ```python
-from woke.testing import Account, Chain, default_chain
+from wake.testing import Account, Chain, default_chain
 
 other_chain = Chain()
 
@@ -44,7 +44,7 @@ assert Account(0) != Account(0, other_chain)
 chains cannot be compared using the `<` and `>` operators.
 
 !!! warning "Using accounts belonging to different chains"
-    To save users from accidentally using accounts belonging to different chains, Woke testing framework
+    To save users from accidentally using accounts belonging to different chains, Wake testing framework
     does not accept `Account` instances belonging to different chains in most API functions. To overcome
     this limitation, it is possible to use the `address` property of an `Account` instance.
 
@@ -53,7 +53,7 @@ chains cannot be compared using the `<` and `>` operators.
 `Account` and `Address` instances can be imported from a private key:
 
 ```python
-from woke.testing import Account, Address
+from wake.testing import Account, Address
 
 Account.from_key("0x" + "a" * 64)
 Address.from_key("0x" + "a" * 64)
@@ -62,7 +62,7 @@ Address.from_key("0x" + "a" * 64)
 From a mnemonic:
 
 ```python
-from woke.testing import Account, Address
+from wake.testing import Account, Address
 
 Account.from_mnemonic(" ".join(["test"] * 11 + ["junk"]))
 Address.from_mnemonic(" ".join(["test"] * 11 + ["junk"]))
@@ -71,7 +71,7 @@ Address.from_mnemonic(" ".join(["test"] * 11 + ["junk"]))
 Or from an alias (see [Managing accounts with private keys](./deployment.md#managing-accounts-with-private-keys)):
 
 ```python
-from woke.testing import Account, Address
+from wake.testing import Account, Address
 
 Account.from_alias("alice")
 Address.from_alias("alice")
@@ -80,7 +80,7 @@ Address.from_alias("alice")
 It is also possible to create a new account with a random private key:
 
 ```python
-from woke.testing import Account
+from wake.testing import Account
 
 Account.new()
 ```
@@ -98,7 +98,7 @@ the client (the account must be present in `chain.accounts`).
 Using `account.sign(message)` it is possible to sign any message in the form of bytes:
 
 ```python
-from woke.testing import Account
+from wake.testing import Account
 
 account = Account.from_mnemonic(" ".join(["test"] * 11 + ["junk"]))
 signature = account.sign(b"Hello, world!")
@@ -111,14 +111,16 @@ The message is signed according to the [EIP-191](https://eips.ethereum.org/EIPS/
 Using `account.sign_structured(message)` it is possible to sign structured messages.
 
 ```python
-from woke.testing import *
+from wake.testing import *
 from dataclasses import dataclass
+
 
 @dataclass
 class Transfer:
     sender: Address
     recipient: Address
     amount: uint256
+
 
 account = Account.from_mnemonic(" ".join(["test"] * 11 + ["junk"]))
 signature = account.sign_structured(
@@ -142,7 +144,7 @@ While it is not recommended to sign message hashes directly, it is sometimes nec
 To sign a message hash, use `account.sign_hash(message_hash)`.
 
 ```python
-from woke.testing import *
+from wake.testing import *
 
 account = Account.from_mnemonic(" ".join(["test"] * 11 + ["junk"]))
 signature = account.sign_hash(keccak256(b"Hello, world!"))
@@ -160,7 +162,7 @@ signature = account.sign_hash(keccak256(b"Hello, world!"))
 of the account:
 
 ```python
-from woke.testing import Account
+from wake.testing import Account
 
 account = Account(0)
 account.label = "ZERO"
@@ -190,7 +192,8 @@ Each `Account` instance has `call`, `transact`, `estimate` and `access_list` met
 requests (see [Interacting with contracts](./interacting-with-contracts.md)).
 
 ```python
-from woke.testing import *
+from wake.testing import *
+
 
 @default_chain.connect()
 def test_accounts():
@@ -230,7 +233,7 @@ Every method of a contract generated in `pytypes` has a `selector` property.
     when interacting with contracts through proxies:
 
     ```python
-    from woke.testing import *
+    from wake.testing import *
     from pytypes.contracts.Counter import Counter
     from pytypes.openzeppelin.contracts.proxy.ERC1967.ERC1967Proxy import ERC1967Proxy
 

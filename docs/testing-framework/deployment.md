@@ -10,16 +10,16 @@
 ## Differences from testing
 
 Most information about testing is applicable to deployment as well. However, there are a few key differences.
-The behavior depends on whether `woke.testing` or `woke.deployment` is imported.
+The behavior depends on whether `wake.testing` or `wake.deployment` is imported.
 
-`woke.deployment` should be used when interacting with a live chain (testnet or mainnet). `woke.testing` should be used when interacting with a local development chain (like Anvil, Ganache, or Hardhat).
+`wake.deployment` should be used when interacting with a live chain (testnet or mainnet). `wake.testing` should be used when interacting with a local development chain (like Anvil, Ganache, or Hardhat).
 
 ```python
-# use woke.deployment when interacting with a live chain
-from woke.deployment import *
+# use wake.deployment when interacting with a live chain
+from wake.deployment import *
 
-# use woke.testing when interacting with a local development chain
-from woke.testing import *
+# use wake.testing when interacting with a local development chain
+from wake.testing import *
 ```
 
 ### `chain.connect` keyword arguments
@@ -47,14 +47,14 @@ In testing, the value of `chain.block_gas_limit` is cached for performance reaso
 ## Managing accounts with private keys
 
 While it is possible to import accounts from a private key or mnemonic phrase at runtime, it is not recommended.
-To protect your private keys, it should be encrypted and stored in a file. To do this, use `woke accounts` CLI commands.
+To protect your private keys, it should be encrypted and stored in a file. To do this, use `wake accounts` CLI commands.
 
 ```console
-$ woke accounts --help
+$ wake accounts --help
                                                                            
- Usage: woke accounts [OPTIONS] COMMAND [ARGS]...                          
+ Usage: wake accounts [OPTIONS] COMMAND [ARGS]...                          
                                                                            
- Run Woke accounts manager.                                                
+ Run Wake accounts manager.                                                
                                                                            
 ╭─ Options ───────────────────────────────────────────────────────────────╮
 │ --help      Show this message and exit.                                 │
@@ -76,19 +76,20 @@ a = Account.from_alias("my-account")
 
 ## Writing deployment scripts
 
-`woke.deployment` module can be imported in test files. This can be useful when both interacting with a live chain and [pytest](https://docs.pytest.org/en/stable/) features like fixtures are needed.
+`wake.deployment` module can be imported in test files. This can be useful when both interacting with a live chain and [pytest](https://docs.pytest.org/en/stable/) features like fixtures are needed.
 This way, integration tests can be written using the same conventions as unit tests.
 
-To distinguish between tests and deployment scripts, it is possible to execute Python scripts using the `woke run` CLI command.
+To distinguish between tests and deployment scripts, it is possible to execute Python scripts using the `wake run` CLI command.
 The Python scripts must define a `main` function, which will be executed when the script is run.
 
-When no arguments are passed to `woke run`, the `scripts` directory is searched for Python scripts.
+When no arguments are passed to `wake run`, the `scripts` directory is searched for Python scripts.
 
 ```python title="scripts/deploy.py"
-from woke.deployment import *
+from wake.deployment import *
 from pytypes.contracts.Counter import Counter
 
 ALCHEMY_API_KEY = "YOUR_ALCHEMY_API_KEY"
+
 
 @default_chain.connect(f"wss://eth-mainnet.g.alchemy.com/v2/{ALCHEMY_API_KEY}")
 def main():
@@ -105,7 +106,7 @@ def main():
 And then run the script:
 
 ```shell
-woke run scripts/deploy.py
+wake run scripts/deploy.py
 ```
 
 ## Supported chains

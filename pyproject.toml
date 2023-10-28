@@ -1,14 +1,17 @@
 [tool.poetry]
-name = "woke"
+name = "eth-wake"
 version = "4.0.0-alpha.3"
-description = "Woke is a Python-based development and testing framework for Solidity."
+description = "Wake is a Python-based development and testing framework for Solidity."
 license = "ISC"
 authors = ["Ackee Blockchain"]
 readme = "README.md"
 homepage = "https://ackeeblockchain.com"
-repository = "https://github.com/Ackee-Blockchain/woke"
-documentation = "https://ackeeblockchain.com/woke/docs/latest"
+repository = "https://github.com/Ackee-Blockchain/wake"
+documentation = "https://ackeeblockchain.com/wake/docs/latest"
 keywords = ["ethereum", "solidity", "security", "testing", "development", "framework", "audit"]
+packages = [
+    { include = "wake" }
+]
 
 [tool.poetry.dependencies]
 python = "^3.7.9"
@@ -62,8 +65,8 @@ tests = ["pytest-asyncio", "GitPython"]
 dev = ["black", "mkdocs-material", "mkdocstrings", "mkdocstrings-python", "pymdown-extensions", "pygments", "mike", "isort", "pillow", "cairosvg"]
 
 [tool.poetry.scripts]
-woke = "woke.cli.__main__:main"
-woke-solc = "woke.cli.__main__:woke_solc"
+wake = "wake.cli.__main__:main"
+wake-solc = "wake.cli.__main__:wake_solc"
 
 [tool.poetry.urls]
 "VS Code Extension" = "https://marketplace.visualstudio.com/items?itemName=AckeeBlockchain.tools-for-solidity"

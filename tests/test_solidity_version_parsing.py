@@ -1,6 +1,6 @@
 import pytest
 
-from woke.core.solidity_version import (
+from wake.core.solidity_version import (
     SolidityVersion,
     SolidityVersionExpr,
     SolidityVersionRange,

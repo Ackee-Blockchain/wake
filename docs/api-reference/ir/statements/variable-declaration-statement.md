@@ -1,1 +1,1 @@
-::: woke.ir.statements.variable_declaration_statement
+::: wake.ir.statements.variable_declaration_statement

@@ -1,4 +1,4 @@
-from woke.deployment import *
+from wake.deployment import *
 from pytypes.contracts.Counter import Counter
 
 # Use any node provider (Infura, Alchemy, etc.) or a local Geth node

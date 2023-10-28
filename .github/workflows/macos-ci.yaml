@@ -1,4 +1,4 @@
-name: macOS Woke tests
+name: macOS Wake tests
 
 on: [push]
 

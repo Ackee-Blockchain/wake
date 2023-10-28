@@ -1,1 +1,1 @@
-::: woke.ir.declarations.struct_definition
+::: wake.ir.declarations.struct_definition
