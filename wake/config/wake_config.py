@@ -79,43 +79,8 @@ class WakeConfig:
             else:
                 raise UnsupportedPlatformError(f"Platform `{system}` is not supported.")
 
-        migrate = False
-        if (
-            not self.__global_config_path.parent.exists()
-            and not self.__global_data_path.exists()
-        ):
-            migrate = True
-
         self.__global_config_path.parent.mkdir(parents=True, exist_ok=True)
         self.__global_data_path.mkdir(parents=True, exist_ok=True)
-
-        if migrate:
-            if system == "Linux":
-                old_path = Path.home() / ".config" / "Wake"
-            elif system == "Darwin":
-                old_path = Path.home() / ".config" / "Wake"
-            elif system == "Windows":
-                old_path = Path.home() / "Wake"
-            else:
-                raise UnsupportedPlatformError(f"Platform `{system}` is not supported.")
-
-            config_path = old_path / "config.toml"
-            compilers_path = old_path / "compilers"
-            solc_versions_path = old_path / ".wake_solc_version"
-
-            if config_path.exists():
-                config_path.rename(self.__global_config_path)
-            if compilers_path.exists():
-                compilers_path.rename(self.__global_data_path / "compilers")
-            if solc_versions_path.exists():
-                solc_versions_path.rename(
-                    self.__global_data_path / ".wake_solc_version"
-                )
-
-            try:
-                old_path.rmdir()
-            except OSError:
-                pass
 
         if project_root_path is None:
             self.__project_root_path = Path.cwd().resolve()
