@@ -72,6 +72,8 @@ def excepthook(attach: bool, type, value, traceback):
 @click.version_option(message="%(version)s", package_name="eth-wake")
 @click.pass_context
 def main(ctx: Context, debug: bool, profile: bool, config: Optional[str]) -> None:
+    from wake.migrations import run_woke_wake_migration, run_xdg_migration
+
     if profile:
         import atexit
         import cProfile
@@ -123,6 +125,9 @@ def main(ctx: Context, debug: bool, profile: bool, config: Optional[str]) -> Non
 
     os.environ["PYTHONBREAKPOINT"] = "ipdb.set_trace"
 
+    run_xdg_migration()
+    run_woke_wake_migration()
+
 
 main.add_command(run_accounts)
 main.add_command(run_compile)
@@ -153,9 +158,14 @@ def wake_solc() -> None:
 
     from wake.config import WakeConfig
     from wake.core.solidity_version import SolidityVersion
+    from wake.migrations import run_woke_wake_migration, run_xdg_migration
     from wake.svm import SolcVersionManager
 
     logging.basicConfig(level=logging.CRITICAL)
+
+    run_xdg_migration()
+    run_woke_wake_migration()
+
     # WARNING: this config instance does not accept local config path
     config = WakeConfig()
     config.load_configs()
