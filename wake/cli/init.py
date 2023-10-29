@@ -76,8 +76,7 @@ def update_gitignore(file: Path) -> None:
         lines = []
 
     new_lines = [
-        ".wake-build",
-        ".wake-logs",
+        ".wake",
         ".env",
         "pytypes",
         "__pycache__/",
