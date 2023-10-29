@@ -161,7 +161,7 @@ def wake_solc() -> None:
     config.load_configs()
     svm = SolcVersionManager(config)
 
-    version_file_path = config.global_data_path / ".wake_solc_version"
+    version_file_path = config.global_data_path / "solc-version.txt"
     if not version_file_path.is_file():
         console.print(
             "Target solc version is not configured. Run 'wake svm use' or 'wake svm switch' command."
