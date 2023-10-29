@@ -81,7 +81,9 @@ def main(ctx: Context, debug: bool, profile: bool, config: Optional[str]) -> Non
 
         def exit():
             pr.disable()
-            pr.dump_stats("wake.prof")
+            wake_path = Path.cwd() / ".wake"
+            wake_path.mkdir(exist_ok=True)
+            pr.dump_stats(wake_path / "wake.prof")
 
         atexit.register(exit)
 

@@ -101,7 +101,7 @@ def run_fuzz(
             console.print(f"Found '{func_name}' function in '{func.__module__}' file.")
             fuzz_functions.append((func_name, func))
 
-    logs_dir = config.project_root_path / ".wake-logs" / "fuzz"
+    logs_dir = config.project_root_path / ".wake" / "logs" / "fuzz"
     shutil.rmtree(logs_dir, ignore_errors=True)
     logs_dir.mkdir(parents=True, exist_ok=True)
 
