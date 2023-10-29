@@ -98,7 +98,7 @@ def svm_switch(ctx: Context, version: str) -> None:
     if not svm.installed(parsed_version):
         raise ValueError(f"solc version {parsed_version} is not installed.")
 
-    (config.global_data_path / ".wake_solc_version").write_text(str(parsed_version))
+    (config.global_data_path / "solc-version.txt").write_text(str(parsed_version))
     console.print(f"Using wake-solc version {version}.")
 
 
@@ -128,7 +128,7 @@ def svm_use(ctx: Context, version_range: Tuple[str], force: bool) -> None:
             run_solc_install(svm, SolidityVersionExpr(str(version)), force, False)
         )
 
-    (config.global_data_path / ".wake_solc_version").write_text(str(version))
+    (config.global_data_path / "solc-version.txt").write_text(str(version))
     console.print(f"Using wake-solc version {version}.")
 
 
