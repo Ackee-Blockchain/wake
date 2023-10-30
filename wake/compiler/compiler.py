@@ -1186,7 +1186,7 @@ class SolidityCompiler:
 
         with ctx_manager:
             build_path = self.__config.project_root_path / ".wake" / "build"
-            build_path.mkdir(exist_ok=True)
+            build_path.mkdir(parents=True, exist_ok=True)
 
             with (build_path / "build.json").open("w") as f:
                 f.write(self._latest_build_info.json(by_alias=True, exclude_none=True))
