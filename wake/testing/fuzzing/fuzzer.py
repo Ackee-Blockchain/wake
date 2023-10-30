@@ -1,5 +1,3 @@
-import copy
-import json
 import logging
 import multiprocessing
 import multiprocessing.connection
@@ -46,7 +44,7 @@ def _run_core(
     cov_child_conn: multiprocessing.connection.Connection,
     coverage: Optional[CoverageHandler],
 ):
-    print(f"Using seed '{random_seed.hex()}' for process #{index}")
+    print(f"Using random seed '{random_seed.hex()}' for process #{index}")
 
     fuzz_test()
 
@@ -141,7 +139,7 @@ def _run(
             ctx_manager.__exit__(None, None, None)
 
 
-def _compute_coverage_per_function(
+def compute_coverage_per_function(
     ide_cov: Dict[str, List[Dict[str, Any]]]
 ) -> Dict[str, int]:
     funcs_cov = {}
@@ -166,17 +164,12 @@ def fuzz(
     func_name: str,
     fuzz_test: types.FunctionType,
     process_count: int,
-    seeds: Iterable[bytes],
+    random_seeds: Iterable[bytes],
     logs_dir: Path,
     passive: bool,
     cov_proc_num: int,
     verbose_coverage: bool,
 ):
-    random_seeds = list(seeds)
-    if len(random_seeds) < process_count:
-        for i in range(process_count - len(random_seeds)):
-            random_seeds.append(os.urandom(8))
-
     if cov_proc_num != 0:
         empty_coverage = CoverageHandler(config)
         # clear coverage file
@@ -185,7 +178,7 @@ def fuzz(
         empty_coverage = None
     processes = dict()
     for i, seed in zip(range(process_count), random_seeds):
-        console.print(f"Using seed '{seed.hex()}' for process #{i}")
+        console.print(f"Using random seed '{seed.hex()}' for process #{i}")
         finished_event = multiprocessing.Event()
         err_parent_conn, err_child_con = multiprocessing.Pipe()
         cov_parent_conn, cov_child_con = multiprocessing.Pipe()
@@ -300,7 +293,7 @@ def fuzz(
                                 [
                                     f"{fn_name}: [green]{fn_calls}[dark_goldenrod]"
                                     for (fn_name, fn_calls) in sorted(
-                                        _compute_coverage_per_function(res).items(),
+                                        compute_coverage_per_function(res).items(),
                                         key=lambda x: x[1],
                                         reverse=True,
                                     )

@@ -14,7 +14,6 @@ from .accounts import run_accounts
 from .compile import run_compile
 from .console import console
 from .detect import run_detect
-from .fuzz import run_fuzz
 from .init import run_init
 from .lsp import run_lsp
 from .print import run_print
@@ -132,7 +131,6 @@ def main(ctx: Context, debug: bool, profile: bool, config: Optional[str]) -> Non
 main.add_command(run_accounts)
 main.add_command(run_compile)
 main.add_command(run_detect)
-main.add_command(run_fuzz)
 main.add_command(run_init)
 main.add_command(run_lsp)
 main.add_command(run_print)
