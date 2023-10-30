@@ -8,6 +8,22 @@ from ..cli.console import console
 def run_xdg_migration() -> None:
     system = platform.system()
 
+    if system == "Linux":
+        old_path = Path.home() / ".config" / "Woke"
+    elif system == "Darwin":
+        old_path = Path.home() / ".config" / "Woke"
+    elif system == "Windows":
+        old_path = Path.home() / "Woke"
+    else:
+        raise RuntimeError(f"Platform `{system}` is not supported.")
+
+    if not old_path.exists():
+        return
+
+    config_path = old_path / "config.toml"
+    compilers_path = old_path / "compilers"
+    solc_versions_path = old_path / ".woke_solc_version"
+
     try:
         global_config_path = (
             Path(os.environ["XDG_CONFIG_HOME"]) / "woke" / "config.toml"
@@ -32,24 +48,8 @@ def run_xdg_migration() -> None:
         else:
             raise RuntimeError(f"Platform `{system}` is not supported.")
 
-    if global_config_path.parent.exists() or global_data_path.exists():
-        return
-
     global_config_path.mkdir(parents=True, exist_ok=True)
     global_data_path.mkdir(parents=True, exist_ok=True)
-
-    if system == "Linux":
-        old_path = Path.home() / ".config" / "Woke"
-    elif system == "Darwin":
-        old_path = Path.home() / ".config" / "Woke"
-    elif system == "Windows":
-        old_path = Path.home() / "Woke"
-    else:
-        raise RuntimeError(f"Platform `{system}` is not supported.")
-
-    config_path = old_path / "config.toml"
-    compilers_path = old_path / "compilers"
-    solc_versions_path = old_path / ".woke_solc_version"
 
     if config_path.exists():
         config_path.rename(global_config_path)
