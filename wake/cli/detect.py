@@ -48,7 +48,9 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
     _global_data_path: Path
     _plugins_config_path: Path
     _loading_from_plugins: bool = False
+    _loading_priorities: Dict[str, Union[str, List[str]]]
     loaded_from_plugins: Dict[str, Union[str, Path]] = {}
+    detector_sources: Dict[str, Set[Union[str, Path]]] = {}
     _current_plugin: Union[str, Path] = ""
     _plugins_loaded: bool = False
 
@@ -66,6 +68,7 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         import platform
 
         self._completion_mode = "_WAKE_COMPLETE" in os.environ
+        self._loading_priorities = {}
 
         system = platform.system()
 
@@ -205,6 +208,8 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
     def _load_plugins(
         self, plugin_paths: AbstractSet[Path], verify_paths: bool
     ) -> None:
+        import tomli
+
         if sys.version_info < (3, 10):
             from importlib_metadata import entry_points
         else:
@@ -215,9 +220,17 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         for cmd in self.loaded_from_plugins.keys():
             self.commands.pop(cmd, None)
         self.loaded_from_plugins.clear()
+        self.detector_sources.clear()
         self._failed_plugin_paths.clear()
         self._failed_plugin_entry_points.clear()
         self._detector_collisions.clear()
+
+        try:
+            self._loading_priorities = tomli.loads(
+                self._plugins_config_path.read_text()
+            ).get("detector_loading_priorities", {})
+        except FileNotFoundError:
+            self._loading_priorities = {}
 
         detector_entry_points = entry_points().select(group="wake.plugins.detectors")
         for entry_point in sorted(detector_entry_points, key=lambda e: e.module):
@@ -278,6 +291,45 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
 
     def add_command(self, cmd: click.Command, name: Optional[str] = None) -> None:
         name = name or cmd.name
+        assert name is not None
+        if name in {"all", "list"}:
+            if name == "all":
+                self._inject_params(cmd)
+            super().add_command(cmd, name)
+            return
+
+        if name not in self.detector_sources:
+            self.detector_sources[name] = {self._current_plugin}
+        else:
+            self.detector_sources[name].add(self._current_plugin)
+
+        if name in self._loading_priorities:
+            priorities = self._loading_priorities[name]
+        elif "*" in self._loading_priorities:
+            priorities = self._loading_priorities["*"]
+        else:
+            priorities = []
+        if not isinstance(priorities, list):
+            priorities = [priorities]
+
+        if name in self.loaded_from_plugins and isinstance(self._current_plugin, str):
+            if isinstance(self.loaded_from_plugins[name], str):
+                prev = self.loaded_from_plugins[name]
+
+                # if current plugin is not in priorities and previous plugin is in priorities
+                if self._current_plugin not in priorities and prev in priorities:
+                    # do not override
+                    return
+
+                # if both current and previous plugins are in priorities, but previous is before current
+                if (
+                    self._current_plugin in priorities
+                    and prev in priorities
+                    and priorities.index(prev) < priorities.index(self._current_plugin)
+                ):
+                    # do not override
+                    return
+
         if name in self.loaded_from_plugins:
             if isinstance(self.loaded_from_plugins[name], str):
                 prev = f"plugin module '{self.loaded_from_plugins[name]}'"
@@ -739,6 +791,8 @@ def run_detect(
 
     if "--help" in ctx.obj["subcommand_args"]:
         return
+    if ctx.invoked_subcommand == "list":
+        return
 
     from ..config import WakeConfig
 
@@ -815,3 +869,52 @@ def run_detect_all(
     Run all detectors.
     """
     pass
+
+
+@run_detect.command(name="list")
+@click.pass_context
+def run_detect_list(ctx):
+    def normalize_source(source: Union[str, Path]) -> str:
+        if isinstance(source, Path):
+            if source == Path.cwd() / "detectors":
+                source = "./detectors"
+            else:
+                try:
+                    source = "~/" + str(source.relative_to(Path.home()))
+                except ValueError:
+                    source = str(source)
+        return source
+
+    from rich.table import Table
+
+    from .console import console
+
+    table = Table(title="Available detectors")
+    table.add_column("Name")
+    table.add_column("Loaded from")
+    table.add_column("Available in")
+
+    for detector in sorted(
+        run_detect.list_commands(ctx)  # pyright: ignore reportGeneralTypeIssues
+    ):
+        if detector in {"all", "list"}:
+            continue
+
+        table.add_row(
+            detector,
+            normalize_source(
+                run_detect.loaded_from_plugins[  # pyright: ignore reportGeneralTypeIssues
+                    detector
+                ]
+            ),
+            ", ".join(
+                sorted(
+                    normalize_source(s)
+                    for s in run_detect.detector_sources.get(  # pyright: ignore reportGeneralTypeIssues
+                        detector, []
+                    )
+                )
+            ),
+        )
+
+    console.print(table)

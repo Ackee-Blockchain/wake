@@ -42,7 +42,9 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
     _global_data_path: Path
     _plugins_config_path: Path
     _loading_from_plugins: bool = False
+    _loading_priorities: Dict[str, Union[str, List[str]]]
     loaded_from_plugins: Dict[str, Union[str, Path]] = {}
+    printer_sources: Dict[str, Set[Union[str, Path]]] = {}
     _current_plugin: Union[str, Path] = ""
     _plugins_loaded: bool = False
 
@@ -60,6 +62,7 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         import platform
 
         self._completion_mode = "_WAKE_COMPLETE" in os.environ
+        self._loading_priorities = {}
 
         system = platform.system()
 
@@ -179,6 +182,8 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
     def _load_plugins(
         self, plugin_paths: AbstractSet[Path], verify_paths: bool
     ) -> None:
+        import tomli
+
         if sys.version_info < (3, 10):
             from importlib_metadata import entry_points
         else:
@@ -189,9 +194,17 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         for cmd in self.loaded_from_plugins.keys():
             self.commands.pop(cmd, None)
         self.loaded_from_plugins.clear()
+        self.printer_sources.clear()
         self._failed_plugin_paths.clear()
         self._failed_plugin_entry_points.clear()
         self._printer_collisions.clear()
+
+        try:
+            self._loading_priorities = tomli.loads(
+                self._plugins_config_path.read_text()
+            ).get("printer_loading_priorities", {})
+        except FileNotFoundError:
+            self._loading_priorities = {}
 
         printer_entry_points = entry_points().select(group="wake.plugins.printers")
         for entry_point in sorted(printer_entry_points, key=lambda e: e.module):
@@ -250,6 +263,43 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
 
     def add_command(self, cmd: click.Command, name: Optional[str] = None) -> None:
         name = name or cmd.name
+        assert name is not None
+        if name in {"all", "list"}:
+            super().add_command(cmd, name)
+            return
+
+        if name not in self.printer_sources:
+            self.printer_sources[name] = {self._current_plugin}
+        else:
+            self.printer_sources[name].add(self._current_plugin)
+
+        if name in self._loading_priorities:
+            priorities = self._loading_priorities[name]
+        elif "*" in self._loading_priorities:
+            priorities = self._loading_priorities["*"]
+        else:
+            priorities = []
+        if not isinstance(priorities, list):
+            priorities = [priorities]
+
+        if name in self.loaded_from_plugins and isinstance(self._current_plugin, str):
+            if isinstance(self.loaded_from_plugins[name], str):
+                prev = self.loaded_from_plugins[name]
+
+                # if current plugin is not in priorities and previous plugin is in priorities
+                if self._current_plugin not in priorities and prev in priorities:
+                    # do not override
+                    return
+
+                # if both current and previous plugins are in priorities, but previous is before current
+                if (
+                    self._current_plugin in priorities
+                    and prev in priorities
+                    and priorities.index(prev) < priorities.index(self._current_plugin)
+                ):
+                    # do not override
+                    return
+
         if name in self.loaded_from_plugins:
             if isinstance(self.loaded_from_plugins[name], str):
                 prev = f"plugin module '{self.loaded_from_plugins[name]}'"
@@ -648,6 +698,8 @@ def run_print(
 
     if "--help" in ctx.obj["subcommand_args"]:
         return
+    if ctx.invoked_subcommand == "list":
+        return
 
     from ..config import WakeConfig
 
@@ -689,3 +741,52 @@ def run_print(
     config.update({"compiler": {"solc": new_options}}, deleted_options)
 
     asyncio.run(print_(config, no_artifacts, ignore_errors, export, watch))
+
+
+@run_print.command("list")
+@click.pass_context
+def run_print_list(ctx):
+    def normalize_source(source: Union[str, Path]) -> str:
+        if isinstance(source, Path):
+            if source == Path.cwd() / "printers":
+                source = "./printers"
+            else:
+                try:
+                    source = "~/" + str(source.relative_to(Path.home()))
+                except ValueError:
+                    source = str(source)
+        return source
+
+    from rich.table import Table
+
+    from .console import console
+
+    table = Table(title="Available printers")
+    table.add_column("Name")
+    table.add_column("Loaded from")
+    table.add_column("Available in")
+
+    for printer in sorted(
+        run_print.list_commands(ctx)  # pyright: ignore reportGeneralTypeIssues
+    ):
+        if printer in {"all", "list"}:
+            continue
+
+        table.add_row(
+            printer,
+            normalize_source(
+                run_print.loaded_from_plugins[  # pyright: ignore reportGeneralTypeIssues
+                    printer
+                ]
+            ),
+            ", ".join(
+                sorted(
+                    normalize_source(s)
+                    for s in run_print.printer_sources.get(  # pyright: ignore reportGeneralTypeIssues
+                        printer, []
+                    )
+                )
+            ),
+        )
+
+    console.print(table)

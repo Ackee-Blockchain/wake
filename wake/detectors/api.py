@@ -327,7 +327,7 @@ def detect(
             if (
                 detector_name not in only
                 or detector_name in config.detectors.exclude
-                or detector_name == "all"
+                or detector_name in {"all", "list"}
             ):
                 continue
             command = run_detect.get_command(
