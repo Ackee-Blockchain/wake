@@ -2,9 +2,21 @@ from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, List, Set, Tuple, Type
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Awaitable,
+    Callable,
+    Dict,
+    List,
+    Set,
+    Tuple,
+    Type,
+    Union,
+)
 
 import rich_click as click
+from typing_extensions import Literal
 
 from wake.cli.print import PrintCli, run_print
 from wake.core.visitor import Visitor, visit_map
@@ -22,6 +34,10 @@ class Printer(Visitor, metaclass=ABCMeta):
     paths: List[Path]
     extra: Dict[Any, Any]
 
+    @property
+    def visit_mode(self) -> Union[Literal["paths"], Literal["all"]]:
+        return "paths"
+
     @abstractmethod
     def print(self) -> None:
         ...
@@ -30,7 +46,11 @@ class Printer(Visitor, metaclass=ABCMeta):
         from wake.utils.file_utils import is_relative_to
 
         for path, source_unit in self.build.source_units.items():
-            if len(self.paths) == 0 or any(is_relative_to(path, p) for p in self.paths):
+            if (
+                self.visit_mode == "all"
+                or len(self.paths) == 0
+                or any(is_relative_to(path, p) for p in self.paths)
+            ):
                 for node in source_unit:
                     visit_map[node.ast_node.node_type](self, node)
 
