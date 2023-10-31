@@ -1068,19 +1068,6 @@ class LspCompiler:
                 f"Failed to load detectors from path {path}: {e}",
                 MessageType.ERROR,
             )
-        for (
-            detector_name,
-            prev,
-            current,
-        ) in run_detect.detector_collisions:  # pyright: ignore reportGeneralTypeIssues
-            await self.__server.show_message(
-                f"Detector '{detector_name}' loaded from {current} overrides detector loaded from {prev}",
-                MessageType.WARNING,
-            )
-            await self.__server.log_message(
-                f"Detector '{detector_name}' loaded from {current} overrides detector loaded from {prev}",
-                MessageType.WARNING,
-            )
 
         if platform.system() == "Linux":
             # run detectors in a separate process

@@ -311,10 +311,6 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
                 current = f"path '{self._current_plugin}'"
 
             self._printer_collisions.add((name, prev, current))
-            if not self._completion_mode:
-                logger.warning(
-                    f"Printer '{name}' loaded from {current} overrides printer loaded from {prev}"
-                )
 
         self._inject_params(cmd)
         super().add_command(cmd, name)

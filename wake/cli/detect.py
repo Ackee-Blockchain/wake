@@ -341,10 +341,6 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
                 current = f"path '{self._current_plugin}'"
 
             self._detector_collisions.add((name, prev, current))
-            if not self._completion_mode:
-                logger.warning(
-                    f"Detector '{name}' loaded from {current} overrides detector loaded from {prev}"
-                )
 
         self._inject_params(cmd)
         super().add_command(cmd, name)
