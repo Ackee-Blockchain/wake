@@ -1088,7 +1088,7 @@ class LspCompiler:
             p = multiprocessing.Process(
                 target=self.__run_detectors,
                 args=(
-                    [d for d in all_detectors if d != "all"],
+                    [d for d in all_detectors if d not in {"all", "list"}],
                     child_conn,
                 ),
             )
@@ -1126,7 +1126,7 @@ class LspCompiler:
             # not in a subprocess, use try/except to avoid crashing the server by detectors
             try:
                 errors_per_file, exceptions, logging_buffer = self.__run_detectors(
-                    [d for d in all_detectors if d != "all"], None
+                    [d for d in all_detectors if d not in {"all", "list"}], None
                 )
 
                 for log, log_type in logging_buffer:
