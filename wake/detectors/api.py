@@ -15,12 +15,14 @@ from typing import (
     Dict,
     List,
     Optional,
+    Set,
     Tuple,
     Type,
     Union,
 )
 
 import rich_click as click
+from typing_extensions import Literal
 
 from wake.cli.detect import DetectCli, run_detect
 from wake.core import get_logger
@@ -80,6 +82,10 @@ class DetectorResult:
 class Detector(Visitor, metaclass=ABCMeta):
     paths: List[Path]
     extra: Dict[Any, Any]
+
+    @property
+    def visit_mode(self) -> Union[Literal["paths"], Literal["all"]]:
+        return "paths"
 
     @abstractmethod
     def detect(self) -> List[DetectorResult]:
@@ -350,6 +356,7 @@ def detect(
         args = []
 
     collected_detectors: Dict[str, Detector] = {}
+    visit_all_detectors: Set[str] = set()
     detections: Dict[str, Tuple[List[DetectorResult], List[DetectorResult]]] = {}
     min_confidence_by_detector: DefaultDict[str, DetectionConfidence] = defaultdict(
         lambda: default_min_confidence
@@ -420,6 +427,8 @@ def detect(
                     sub_ctx.command.invoke(sub_ctx)
 
                 collected_detectors[command.name] = instance
+                if instance.visit_mode == "all":
+                    visit_all_detectors.add(command.name)
             except Exception as e:
                 if not capture_exceptions:
                     raise
@@ -500,20 +509,27 @@ def detect(
             if any(is_relative_to(path, p) for p in config.detectors.ignore_paths):
                 continue
 
+            target_detectors = visit_all_detectors
             if len(paths) == 0 or any(is_relative_to(path, p) for p in paths):
+                target_detectors = collected_detectors.keys()
                 if status is not None:
                     status.update(
                         f"[bold green]Detecting in {source_unit.source_unit_name}..."
                     )
-                for node in source_unit:
-                    for detector_name, detector in list(collected_detectors.items()):
-                        try:
-                            visit_map[node.ast_node.node_type](detector, node)
-                        except Exception as e:
-                            if not capture_exceptions:
-                                raise
-                            exceptions[detector_name] = e
-                            del collected_detectors[detector_name]
+
+            if len(target_detectors) == 0:
+                continue
+
+            for node in source_unit:
+                for detector_name in target_detectors:
+                    detector = collected_detectors[detector_name]
+                    try:
+                        visit_map[node.ast_node.node_type](detector, node)
+                    except Exception as e:
+                        if not capture_exceptions:
+                            raise
+                        exceptions[detector_name] = e
+                        del collected_detectors[detector_name]
 
     for detector_name, detector in collected_detectors.items():
         try:
