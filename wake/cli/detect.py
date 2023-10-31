@@ -46,6 +46,7 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
     _detector_collisions: Set[Tuple[str, str, str]] = set()
     _completion_mode: bool
     _global_data_path: Path
+    _plugins_config_path: Path
     _loading_from_plugins: bool = False
     loaded_from_plugins: Dict[str, Union[str, Path]] = {}
     _current_plugin: Union[str, Path] = ""
@@ -67,6 +68,7 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         self._completion_mode = "_WAKE_COMPLETE" in os.environ
 
         system = platform.system()
+
         try:
             self._global_data_path = Path(os.environ["XDG_DATA_HOME"]) / "wake"
         except KeyError:
@@ -74,6 +76,22 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
                 self._global_data_path = Path.home() / ".local" / "share" / "wake"
             elif system == "Windows":
                 self._global_data_path = Path(os.environ["LOCALAPPDATA"]) / "wake"
+            else:
+                raise RuntimeError(f"Unsupported system: {system}")
+
+        try:
+            self._plugins_config_path = (
+                Path(os.environ["XDG_CONFIG_HOME"]) / "wake" / "plugins.toml"
+            )
+        except KeyError:
+            if system in {"Linux", "Darwin"}:
+                self._plugins_config_path = (
+                    Path.home() / ".config" / "wake" / "plugins.toml"
+                )
+            elif system == "Windows":
+                self._plugins_config_path = (
+                    Path(os.environ["LOCALAPPDATA"]) / "wake" / "plugins.toml"
+                )
             else:
                 raise RuntimeError(f"Unsupported system: {system}")
 
@@ -128,42 +146,59 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         return frozenset(self._detector_collisions)
 
     def add_verified_plugin_path(self, path: Path) -> None:
-        import json
+        import tomli
+        import tomli_w
 
         try:
-            with open(self._global_data_path.joinpath("verified-detectors.json")) as f:
-                data = {Path(d) for d in json.load(f)}
+            config = tomli.loads(self._plugins_config_path.read_text())
         except FileNotFoundError:
-            data = set()
+            config = {}
 
-        data.add(path)
-        with open(self._global_data_path.joinpath("verified-detectors.json"), "w") as f:
-            json.dump([str(p) for p in data], f)
+        if "verified_paths" not in config:
+            config["verified_paths"] = []
+        else:
+            config["verified_paths"] = [
+                Path(p).resolve() for p in config["verified_paths"]
+            ]
+
+        if path not in config["verified_paths"]:
+            config["verified_paths"].append(path)
+            config["verified_paths"] = sorted(
+                [str(p) for p in config["verified_paths"]]
+            )
+            self._plugins_config_path.write_text(tomli_w.dumps(config))
 
     def _verify_plugin_path(self, path: Path) -> bool:
-        import json
-
+        import tomli
+        import tomli_w
         from rich.prompt import Confirm
 
         if path == self._global_data_path / "global-detectors":
             return True
 
         try:
-            with open(self._global_data_path.joinpath("verified-detectors.json")) as f:
-                data = {Path(d) for d in json.load(f)}
+            config = tomli.loads(self._plugins_config_path.read_text())
         except FileNotFoundError:
-            data = set()
-        if path not in data:
+            config = {}
+
+        if "verified_paths" not in config:
+            config["verified_paths"] = []
+        else:
+            config["verified_paths"] = [
+                Path(p).resolve() for p in config["verified_paths"]
+            ]
+
+        if path not in config["verified_paths"]:
             if self._completion_mode:
                 return False
 
             verified = Confirm.ask(f"Do you trust detectors in {path}?", default=False)
             if verified:
-                data.add(path)
-                with open(
-                    self._global_data_path.joinpath("verified-detectors.json"), "w"
-                ) as f:
-                    json.dump([str(p) for p in data], f)
+                config["verified_paths"].append(path)
+                config["verified_paths"] = sorted(
+                    [str(p) for p in config["verified_paths"]]
+                )
+                self._plugins_config_path.write_text(tomli_w.dumps(config))
             return verified
         return True
 
