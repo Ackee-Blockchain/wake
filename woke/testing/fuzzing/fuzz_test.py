@@ -112,8 +112,11 @@ class FuzzTest:
                         f"Could not find a valid flow to run.\nFlows that have reached their max_times: {max_times_flows}\nFlows that do not satisfy their precondition: {precondition_flows}"
                     )
                 flow = random.choices(valid_flows, weights=weights)[0]
+
                 flow_params = [
-                    generate(v)
+                    getattr(type(self), k)()
+                    if callable(getattr(type(self), k, None))
+                    else generate(v)
                     for k, v in get_type_hints(flow, include_extras=True).items()
                     if k != "return"
                 ]
