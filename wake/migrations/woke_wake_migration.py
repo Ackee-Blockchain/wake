@@ -135,6 +135,12 @@ def run_woke_wake_migration() -> None:
             console.print(
                 f"[red]• Failed to move old global data directory {old_global_data_path} to {new_global_data_path} ❌[/]"
             )
+            try:
+                shutil.rmtree(old_global_data_path)
+            except OSError:
+                console.print(
+                    f"[red]• Failed to remove old global data directory {old_global_data_path} ❌[/]]"
+                )
 
     # local files
 
