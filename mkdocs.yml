@@ -182,6 +182,7 @@ plugins:
     cards_layout_options:
       background_color: "#0000FF"
       color: "#FFFFFF"
+- monorepo
 
 markdown_extensions:
   - def_list

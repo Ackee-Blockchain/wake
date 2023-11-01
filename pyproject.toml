@@ -60,10 +60,11 @@ mike = { git = "https://github.com/jimporter/mike.git" }
 isort = { version = "^5", optional = true }
 pillow = { version = "^9", optional = true }
 cairosvg = { version = "^2.7", optional = true }
+mkdocs-monorepo-plugin = { version = "^1.0.5", optional = true }
 
 [tool.poetry.extras]
 tests = ["pytest-asyncio", "GitPython"]
-dev = ["black", "mkdocs-material", "mkdocstrings", "mkdocstrings-python", "pymdown-extensions", "pygments", "mike", "isort", "pillow", "cairosvg"]
+dev = ["black", "mkdocs-material", "mkdocstrings", "mkdocstrings-python", "pymdown-extensions", "pygments", "mike", "isort", "pillow", "cairosvg", "mkdocs-multirepo-plugin"]
 
 [tool.poetry.scripts]
 wake = "wake.cli.__main__:main"
