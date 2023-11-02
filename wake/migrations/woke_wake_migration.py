@@ -39,6 +39,13 @@ def migrate_config_file(old_path: Path, new_path: Path) -> None:
             pass
 
         try:
+            timeout = old_config["testing"]["timeout"]
+            old_config["general"]["json_rpc_timeout"] = timeout
+            del old_config["testing"]["timeout"]
+        except KeyError:
+            pass
+
+        try:
             new_path.write_text(tomli_w.dumps(old_config))
             console.print(
                 f"[green]• Migrated old config file {old_path} to {new_path} ✅[/]"

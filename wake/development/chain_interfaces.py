@@ -201,7 +201,7 @@ class ChainInterfaceAbc(ABC):
                     comm.send_request("web3_clientVersion").lower()
                     break
                 except (ConnectionRefusedError, URLError, ValueError):
-                    if time.perf_counter() - start > config.testing.timeout:
+                    if time.perf_counter() - start > config.general.json_rpc_timeout:
                         raise
                     time.sleep(0.05)
 
@@ -255,7 +255,7 @@ class ChainInterfaceAbc(ABC):
         if self._process is not None:
             self._process.terminate()
             try:
-                self._process.communicate(timeout=self._config.testing.timeout)
+                self._process.communicate(timeout=self._config.general.json_rpc_timeout)
             except subprocess.TimeoutExpired:
                 self._process.kill()
 

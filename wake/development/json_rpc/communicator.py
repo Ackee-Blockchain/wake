@@ -27,11 +27,11 @@ class JsonRpcCommunicator:
 
     def __init__(self, config: WakeConfig, uri: str):
         if uri.startswith(("http://", "https://")):
-            self._protocol = HttpProtocol(uri, config.testing.timeout)
+            self._protocol = HttpProtocol(uri, config.general.json_rpc_timeout)
         elif uri.startswith(("ws://", "wss://")):
-            self._protocol = WebsocketProtocol(uri, config.testing.timeout)
+            self._protocol = WebsocketProtocol(uri, config.general.json_rpc_timeout)
         elif Path(uri).is_socket() or platform.system() == "Windows":
-            self._protocol = IpcProtocol(uri, config.testing.timeout)
+            self._protocol = IpcProtocol(uri, config.general.json_rpc_timeout)
         else:
             raise ValueError(f"Invalid URI: {uri}")
 
