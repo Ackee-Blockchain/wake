@@ -240,7 +240,6 @@ class HardhatConfig(WakeConfigModel):
 
 class TestingConfig(WakeConfigModel):
     cmd: str = "anvil"
-    timeout: float = 5
     anvil: AnvilConfig = Field(default_factory=AnvilConfig)
     ganache: GanacheConfig = Field(default_factory=GanacheConfig)
     hardhat: HardhatConfig = Field(default_factory=HardhatConfig)
@@ -264,6 +263,7 @@ class GeneralConfig(WakeConfigModel):
             "error",
         ]
     )
+    json_rpc_timeout: float = 15
     link_format: str = "vscode://file/{path}:{line}:{col}"
 
 
