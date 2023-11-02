@@ -9,8 +9,11 @@ site_author: Ackee Blockchain
 theme:
   name: "material"
   language: en
-  logo: images/logo.png
+  favicon: images/wake-favicon.svg
+  logo: images/wake-logo.png
   custom_dir: docs/overrides
+  font:
+    text: Space Grotesk
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
@@ -34,9 +37,11 @@ theme:
     - navigation.tabs
 
 nav:
-  - Installation: 'index.md'
-  - Configuration: 'configuration.md'
-  - Compilation: 'compilation.md'
+  - Basics:
+      - Installation: 'installation.md'
+      - Configuration: 'configuration.md'
+      - Compilation: 'compilation.md'
+      - Contributing: 'contributing.md'
   - Development and testing framework:
       - Overview: 'testing-framework/overview.md'
       - Basics:
@@ -59,7 +64,6 @@ nav:
   - Detectors: 'detectors.md'
   - LSP server: 'language-server.md'
   - Solc Version Manager: 'solc-version-manager.md'
-  - Contributing: 'contributing.md'
   - API reference:
       - wake.config:
           - data_model: 'api-reference/config/data-model.md'
