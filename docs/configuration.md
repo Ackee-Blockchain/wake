@@ -1,112 +1,140 @@
 # Configuration
 
-Wake can be configured using optional configuration files. The global configuration file is loaded from `$XDG_CONFIG_HOME/wake/config.toml`.
-If `$XDG_CONFIG_HOME` is not set, the global configuration file is loaded from:
+Wake can be configured using configuration options loaded from multiple sources in the following order:
 
-- `$HOME/.config/wake/config.toml` on Linux/MacOS,
-- `%LOCALAPPDATA%\wake\config.toml` on Windows.
+- default values,
+- global configuration file,
+- project configuration file,
+- environment variables,
+- command-line arguments.
 
-Additionally, the configuration file for each project can be located in `{PROJECT_PATH}/wake.toml`.
+## Default values
 
-!!! attention
-
-    Configuration options loaded from TOML files affect only the behavior of the Wake command-line tool.
-    LSP configuration options are loaded from LSP clients using the [standard interface](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workspace_configuration).
-
-## Subconfigs
-Any configuration file can include additional configuration files (subconfigs). These subconfigs are loaded after the original configuration file in the specified order. Subconfig configuration values override the values of the parent configuration file.
-
-!!! example "Example wake.toml"
-    ```toml
-    subconfigs = ["loaded_next.toml", "../relative.toml", "/tmp/absolute.toml", "loaded_last.toml"]
-    ```
-
-## Configuration options
-The resolution order for each configuration option is:
-
-- default value,
-- value in the global configuration file,
-- value in the project configuration file.
-
-The latter overrides the former.
-
-
-???+ info "Default wake.toml"
-    Configuration options related to the LSP server are not shown here.
+???+ info
+    The following TOML snippet shows the default values of all configuration options.
+    LSP configuration options are not included in this snippet.
     ```toml
     subconfigs = []
 
     [api_keys]
     # etherscan = "" (unset - no Etherscan API key)
     # "goerli.etherscan" = "" (unset - no Goerli Etherscan API key)
-    # bscscan = "" (unset - no BscScan API key)
     # ...
 
     [compiler.solc]
     allow_paths = []
-    # evm_version = "" (unset - let the compiler decide)
-    ignore_paths = ["node_modules", "venv", "lib"]
+    # evm_version (unset - let the compiler decide)
+    exclude_paths = ["node_modules", "venv", "lib", "script", "test"]
     include_paths = ["node_modules"]
     remappings = []
-    # target_version = "" (unset - use the latest version
-    # via_IR = "" (unset - let the compiler decide)
+    # target_version (unset - use the latest version)
+    # via_IR (unset - let the compiler decide)
 
     [compiler.solc.optimizer]
-    # enabled = "" (unset - let the compiler decide)
+    # enabled (unset - let the compiler decide)
     runs = 200
+
+    [compiler.solc.optimizer.details]
+    # peephole (unset - let the compiler decide)
+    # inliner (unset - let the compiler decide)
+    # jumpdest_remover (unset - let the compiler decide)
+    # order_literals (unset - let the compiler decide)
+    # deduplicate (unset - let the compiler decide)
+    # cse (unset - let the compiler decide)
+    # constant_optimizer (unset - let the compiler decide)
+    # simple_counter_for_loop_unchecked_increment (unset - let the compiler decide)
+
+    [compiler.solc.optimizer.details.yul_details]
+    # stack_allocation (unset - let the compiler decide)
+    # optimizer_steps (unset - let the compiler decide)
+
+    [deployment]
+    confirm_transactions = true
+    silent = false
+
+    [detector]
 
     [detectors]
     exclude = []
-    ignore_paths = ["node_modules", "venv", "lib"]
-    # only = [] (unset - all detectors are enabled)
+    # only (unset - all detectors are enabled)
+    ignore_paths = ["venv", "test"]
+    exclude_paths = ["node_modules", "lib", "script"]
 
     [general]
     call_trace_options = [
         "contract_name", "function_name", "arguments", "status",
         "call_type", "value", "return_value", "error"
     ]
+    json_rpc_timeout = 15
+    link_format = "vscode://file/{path}:{line}:{col}"
+
+    [printer]
 
     [testing]
     cmd = "anvil"
-    timeout = 5
 
     [testing.anvil]
     cmd_args = "--prune-history 100 --transaction-block-keeper 10 --steps-tracing --silent"
 
     [testing.ganache]
-    cmd_args = "-g 0 -k istanbul -q"
+    cmd_args = "-k istanbul -q"
 
     [testing.hardhat]
     cmd_args = ""
     ```
 
+## Global configuration file
+
+The global configuration file is loaded from `$XDG_CONFIG_HOME/wake/config.toml`.
+If `$XDG_CONFIG_HOME` is not set, the global configuration file is loaded from:
+
+- `$HOME/.config/wake/config.toml` on Linux/MacOS,
+- `%LOCALAPPDATA%\wake\config.toml` on Windows.
+
+Additionally, there is a `plugins.toml` file in the same directory. It holds `verified_paths` with trusted paths to detectors and printers.
+The paths are updated automatically with command-line queries or when creating a new detector or printer.
+
+The `plugins.toml` file can be used to specify priorities when having multiple colliding detectors or printers of the same name installed.
+
+!!! example "Example plugins.toml"
+    ```toml
+    [detector_loading_priorities]
+    reentrancy = "my_detectors"  # prefer my_detectors module if present
+    unused-import = ["my_detectors", "wake_detectors"]  # prefer my_detectors, then wake_detectors
+    "*" = "wake_detectors"  # prefer wake_detectors for all other detectors
+
+    [printer_loading_priorities]
+    # follows the same structure
+    ```
+
+## Project configuration file
+
+The project configuration file is loaded from `./wake.toml`. This can be changed using the `wake --config path/to/wake.toml` command-line option.
+
+### Subconfigs
+The global `config.toml` and project configuration files can include additional TOML files (subconfigs). These subconfigs are loaded after the original configuration file in the specified order. Subconfig configuration values override the values of the parent configuration file.
+
+!!! example
+    ```toml
+    subconfigs = ["loaded_next.toml", "../relative.toml", "/tmp/absolute.toml", "loaded_last.toml"]
+    ```
+
+## Environment variables
+
+Environment variables (if supported) are printed in the help message of each command on the command-line.
+
+## Command-line arguments
+
+Command-line arguments for each command can be displayed using the `--help` option.
+
+## Configuration options
+
 ### `api_keys` namespace
 
-| Option                        | Description                       |
-|:------------------------------|:----------------------------------|
-| `etherscan`                   | Etherscan API key                 |
-| `"goerli.etherscan"`          | Goerli Etherscan API key          |
-| `bscscan`                     | BscScan API key                   |
-| `"testnet.bscscan"`           | Testnet BscScan API key           |
-| `polygonscan`                 | PolygonScan API key               |
-| `"mumbai.polygonscan"`        | Mumbai PolygonScan API key        |
-| `snowtrace`                   | Snowtrace API key                 |
-| `"testnet.snowtrace"`         | Testnet Snowtrace API key         |
-| `"optimistic.etherscan"`      | Optimistic Etherscan API key      |
-| `"goerli-optimism.etherscan"` | Goerli Optimism Etherscan API key |
-| `gnosisscan`                  | GnosisScan API key                |
-| `arbiscan`                    | Arbiscan API key                  |
-| `"testnet.arbiscan"`          | Testnet Arbiscan API key          |
-| `"goerli.basescan"`           | Goerli BaseScan API key           |
-| `"sepolia.etherscan"`         | Sepolia Etherscan API key         |
-| `"zkevm.polygonscan"`         | zkEVM PolygonScan API key         |
-| `"testnet-zkevm.polygonscan"` | Testnet zkEVM PolygonScan API key |
-| `celoscan`                    | CeloScan API key                  |
-| `"alfajores.celoscan"`        | Alfajores CeloScan API key        |
-| `moonscan`                    | MoonScan API key                  |
-| `"moonbase.moonscan"`         | Moonbase MoonScan API key         |
-| `ftmscan`                     | FtmScan API key                   |
-| `"testnet.ftmscan"`           | Testnet FtmScan API key           |
+The `api_keys` namespace may contain API keys for Etherscan, BscScan, PolygonScan, etc.
+Blockchain explorer API keys are stored under the lowercase name of the explorer with a subdomain prefix if needed (e.g. `goerli.etherscan`).
+
+Additionally, detectors and printers may use this namespace to load needed API keys.
 
 !!! warning
     Keep your API keys secret. Store them in the global configuration file or in a separate file included as a subconfig and add this file to `.gitignore`.
@@ -117,7 +145,7 @@ The latter overrides the former.
 |:------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------|
 | `allow_paths`                 | Allow paths passed to the `solc` executable                                                                                                    |
 | `evm_version`                 | EVM version as specified by the [Solidity docs](https://docs.soliditylang.org/en/latest/using-the-compiler.html#target-options)                |
-| `ignore_paths`                | Files in these paths are not compiled unless imported from other non-ignored files                                                             |
+| `exclude_paths`               | Files in these paths are not compiled unless imported from other non-excluded files                                                            |
 | <nobr>`include_paths`</nobr>  | Paths (along with the current working directory) where files from non-relative imports are searched                                            |
 | `remappings`                  | Compiler remappings as specified by the [Solidity docs](https://docs.soliditylang.org/en/latest/path-resolution.html#import-remapping)         |
 | <nobr>`target_version`</nobr> | Target `solc` version used to compile the project                                                                                              |
@@ -133,27 +161,50 @@ The latter overrides the former.
 | `enabled` | Compile the project with solc optimizations enabled. Leaving this unset disables most of the available optimizations. Setting this to `false` disables all optimizations for Solidity <0.8.6 and has the same behavior as leaving this unset for Solidity >=0.8.6. |
 | `runs`    | Configuration of the optimizer specifying how many times the code is intended to be run. Lower values optimize more for initial deployment cost, while higher values optimize more for high-frequency usage.                                                       |
 
+### `compiler.solc.optimizer.details` namespace
+
+For optimizer details, see the [Solidity docs](https://docs.soliditylang.org/en/latest/using-the-compiler.html#input-description). Settings follow the same structure as in the Solidity docs with an exception of `optimizer.details.yul` not being supported.
+
+### `detector` namespace
+
+This namespace contains detector-specific configuration options. See the documentation of each detector for more information.
+Each detector has its own namespace under the `detector` namespace, e.g. `detector.reentrancy`.
+Every dector supports at least the `min_confidence` and `min_impact` options:
+
+```toml
+[detector."unchecked-return-value"]
+min_confidence = "medium"
+min_impact = "high"
+```
+
 ### `detectors` namespace
 
-| Option         | Description                                                          |
-|:---------------|:---------------------------------------------------------------------|
-| `exclude`      | List of detector IDs (string or number) that should not be enabled.  |
-| `only`         | List of detector IDs (string or number) that should only be enabled. |
-| `ignore_paths` | Detections with subdetections in these paths are ignored.            |
+| Option                       | Description                                                                                                                      |
+|:-----------------------------|:---------------------------------------------------------------------------------------------------------------------------------|
+| `exclude`                    | List of detectors that should not be enabled.                                                                                    |
+| `only`                       | List of detectors that should only be enabled.                                                                                   |
+| <nobr>`ignore_paths`</nobr>  | Detections or subdetections in these paths are always ignored. Intended for files that will never be deployed (e.g. test files). |
+| <nobr>`exclude_paths`</nobr> | Detections are excluded if a whole detection (including subdetections) is in these paths. Intended for dependencies.              |
 
 ### `general` namespace
 
 | Option                            | Description                                                                                                                                                                                       |
 |:----------------------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | <nobr>`call_trace_options`</nobr> | What information to display in call traces. Possible options: `contract_name`, `address`, `function_name`, `arguments`, `status`, `call_type`, `value`, `gas`, `sender`, `return_value`, `error`. |
+| `json_rpc_timeout`                | Timeout in seconds when communicating with a node via JSON-RPC.                                                                                                                                   |
+| `link_format`                     | Format of links to source code files used in detectors and printers. The link should contain `{path}`, `{line}` and `{col}` placeholders.                                                         |
 
 ### `generator.control_flow_graph` namespace
 Related to the `wake.generate.control_flow_graph` LSP command.
 
-| Option        | Description                            | Default value |
-|:--------------|:---------------------------------------|:--------------|
-| `direction`   | Graph direction                        | `TB`          |
-| `vscode_urls` | Attach VS Code URLs to the graph nodes | `true`        |
+### `generator.imports_graph` namespace
+Related to the `wake.generate.imports_graph` LSP command.
+
+| Option              | Description                               | Default value           |
+|:--------------------|:------------------------------------------|:------------------------|
+| `direction`         | Graph direction                           | `TB`                    |
+| `imports_direction` | Direction of edges between imported files | `imported-to-importing` |
+| `vscode_urls`       | Attach VS Code URLs to the graph nodes    | `true`                  |
 
 ### `generator.inheritance_graph` namespace
 Related to the `wake.generate.inheritance_graph` LSP command.
@@ -209,7 +260,6 @@ Configuration options specific to the LSP `Find references` request.
 | Option    | Description                                                                      |
 |:----------|:---------------------------------------------------------------------------------|
 | `cmd`     | Development chain implementation to use. May be `anvil`, `hardhat` or `ganache`. |
-| `timeout` | Timeout in seconds applied when communicating with the development chain.        |
 
 ### `testing.anvil` namespace
 
