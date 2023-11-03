@@ -76,8 +76,6 @@ from pytypes.contracts.Counter import Counter
 
 @default_chain.connect()
 def test_counter():
-    default_chain.set_default_accounts(default_chain.accounts[0])
-
     counter = Counter.deploy()
     tx = counter.increment()
     assert Counter.Incremented() in tx.events
@@ -117,7 +115,7 @@ with brownie.reverts("Integer overflow"):
     counter.decrement()
 
 # Wake
-with must_revert(Panic(PanicCodeEnum.UNDERFLOW_OVERFLOW)):
+with must_revert(PanicCodeEnum.UNDERFLOW_OVERFLOW):
     counter.decrement()
 ```
 
@@ -136,6 +134,6 @@ chain2 = Chain()
 @chain1.connect()
 @chain2.connect()
 def test_counter():
-    counter1 = Counter.deploy(from_=chain1.accounts[0], chain=chain1)
-    counter2 = Counter.deploy(from_=chain2.accounts[0], chain=chain2)
+    counter1 = Counter.deploy(chain=chain1)
+    counter2 = Counter.deploy(chain=chain2)
 ```

@@ -10,7 +10,7 @@ Wake testing framework is designed to be fast and efficient. However, there are 
 
 ## Profiling tests
 
-Every Wake command has a `--profile` flag that can be used to profile the test execution. The profiling results are saved into the `wake.prof` file.
+Every Wake command has the `--profile` flag that can be used to profile the test execution. The profiling results are saved in the `.wake/wake.prof` file.
 
 ```shell
 wake --profile test tests/test_counter.py
@@ -19,7 +19,7 @@ wake --profile test tests/test_counter.py
 !!! warning
     It is important to specify the `--profile` flag before the `test` command.
     
-    It is not recommended to profile the `wake fuzz` command because it uses multiprocessing.
+    It is not recommended to profile the `wake test` command in multiprocessing mode (with the `-P` option set).
 
 Wake uses cProfile [dump_stats](https://docs.python.org/3/library/profile.html#profile.Profile.dump_stats) method to save the profiling results.
 
@@ -28,5 +28,5 @@ Wake uses cProfile [dump_stats](https://docs.python.org/3/library/profile.html#p
     Together with [Graphviz](https://graphviz.org/), it can be used to generate a call graph of the test execution.
     
     ```shell
-    gprof2dot -f pstats wake.prof | dot -Tsvg -o wake.prof.svg
+    gprof2dot -f pstats .wake/wake.prof | dot -Tsvg -o wake.prof.svg
     ```

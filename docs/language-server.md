@@ -23,8 +23,10 @@ Server configuration options are loaded using the [standard interface](https://m
 
 The full list of supported configuration options can be found in the [configuration](configuration.md#configuration-options) section.
 
-!!! warning
-    Configuration options are not loaded from `wake.toml` files by the LSP server.
+!!! tip
+    The LSP server automatically loads the configuration options from the `wake.toml` file located in the root of the project if `wake.use_toml_if_present` is set to `True`.
+
+    The path to the configuration file can be changed using the `wake.toml_path` configuration option.
 
 ## Supported commands
 
@@ -32,6 +34,8 @@ Wake LSP server implements the command execution provider as specified by the [L
 
 | Command                                                   | Arguments                                                                                                                                                                                  | Description                                                                                                                                     |
 |:----------------------------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------|
+| <nobr>`wake.init.detector`</nobr>                         | `0`: name of the detector<br>`1`: boolean indicating whether the detector should be global (True) or project-specific (False)                                                              | Initialize a detector from a template in `$XDG_DATA_HOME/wake/global-detectors` or `./detectors` (if the detector is project-specific).         |
+| <nobr>`wake.init.printer`</nobr>                          | `0`: name of the printer<br>`1`: boolean indicating whether the printer should be global (True) or project-specific (False)                                                                | Initialize a printer from a template in `$XDG_DATA_HOME/wake/global-printers` or `./printers` (if the printer is project-specific).             |
 | <nobr>`wake.lsp.force_recompile`</nobr>                   |                                                                                                                                                                                            | Force recompile the opened project/files. Useful after modifying files outside the IDE (e.g. after installing npm packages).                    |
 | <nobr>`wake.lsp.force_rerun_detectors`</nobr>             |                                                                                                                                                                                            | Force rerun detectors on the opened project/files.                                                                                              |
 | <nobr>`wake.generate.control_flow_graph`</nobr>           | `0`: [URI](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#uri) of the document containing the function<br>`1`: canonical name of the function | Generate a control flow graph for the given function or modifier. Returns the source code of the graph in Graphviz (DOT) format.                |

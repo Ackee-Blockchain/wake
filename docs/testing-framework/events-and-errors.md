@@ -17,7 +17,7 @@ event Transfer(
 In this case, `from` is a reserved keyword in Python, so it is renamed to `from_` in the dataclass.
 
 ```python
-@dataclass
+@dataclasses.dataclass
 class Transfer:
     """
     Attributes:
@@ -26,9 +26,11 @@ class Transfer:
         value (uint256): uint256
     """
     _abi = {'anonymous': False, 'inputs': [{'indexed': True, 'internalType': 'address', 'name': 'from', 'type': 'address'}, {'indexed': True, 'internalType': 'address', 'name': 'to', 'type': 'address'}, {'indexed': False, 'internalType': 'uint256', 'name': 'value', 'type': 'uint256'}], 'name': 'Transfer', 'type': 'event'}
+    origin: Account = dataclasses.field(init=False, compare=False, repr=False)
+    original_name = 'Transfer'
     selector = b'\xdd\xf2R\xad\x1b\xe2\xc8\x9bi\xc2\xb0h\xfc7\x8d\xaa\x95+\xa7\xf1c\xc4\xa1\x16(\xf5ZM\xf5#\xb3\xef'
 
-    from_: Address
+    from_: Address = dataclasses.field(metadata={"original_name": "from"})
     to: Address
     value: uint256
 ```
@@ -44,8 +46,6 @@ from pytypes.contracts.Counter import Counter
 
 @default_chain.connect()
 def test_events():
-    default_chain.set_default_accounts(default_chain.accounts[0])
-
     counter = Counter.deploy()
     tx = counter.increment()
     assert tx.events == [Counter.Incremented()]
@@ -66,13 +66,13 @@ def tx_callback(tx: TransactionAbc):
 
 @default_chain.connect()
 def test_events():
-    default_chain.set_default_accounts(default_chain.accounts[0])
     default_chain.tx_callback = tx_callback
 
     counter = Counter.deploy()
     counter.setCount(42)
 ```
 
+`pytypes` for unused events are not generated.
 `tx.events` may also contain `UnknownEvent` instances for events that cannot be recognized from the contract ABI.
 
 !!! info "How Solidity events are encoded"
@@ -80,6 +80,8 @@ def test_events():
     `topics` is a list of 32-byte entries where the first entry matches the selector of the event (i.e. Keccak-256 of the event signature).
     `indexed` parameters of the event are encoded in the `topics[1:]` sublist in the same order as they appear in the event definition.
     Other parameters are ABI-encoded in the `data` field.
+
+    `anonymous` events are encoded in the same way, except that the event selector is not included in the `topics` list.
 
 !!! tip "Accessing raw events"
     Transaction objects also offer the `raw_events` property with a list of `UnknownEvent` instances for all events.
@@ -101,7 +103,7 @@ error NotEnoughFunds(
 ```
 
 ```python
-@dataclass
+@dataclasses.dataclass
 class NotEnoughFunds(TransactionRevertedError):
     """
     Attributes:
@@ -109,6 +111,7 @@ class NotEnoughFunds(TransactionRevertedError):
         available (uint256): uint256
     """
     _abi = {'inputs': [{'internalType': 'uint256', 'name': 'requested', 'type': 'uint256'}, {'internalType': 'uint256', 'name': 'available', 'type': 'uint256'}], 'name': 'NotEnoughFunds', 'type': 'error'}
+    original_name = 'NotEnoughFunds'
     selector = b'\x8c\x90Sh'
 
     requested: uint256
@@ -158,8 +161,6 @@ from pytypes.contracts.Counter import Counter
 
 @default_chain.connect()
 def test_errors():
-    default_chain.set_default_accounts(default_chain.accounts[0])
-
     counter = Counter.deploy()
     try:
         counter.decrement()

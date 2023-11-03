@@ -19,15 +19,24 @@ This guide explains how to run the first test in Wake development and testing fr
 The first step is to generate `pytypes` by running the following command:
 
 ```shell
-wake init pytypes -w
+wake init
 ```
+
+The command prepares `wake.toml` in the current working directory, updates `.gitignore`, prepares a basic directory structure, and generates `pytypes` for all Solidity source files found.
 
 !!! note "Configuring compilation"
     Wake uses default configuration options that should work for most projects.
     However, in some cases, it may be necessary to configure the compilation process.
     For more information, see the [Compilation](../compilation.md) page.
 
-This command creates a `pytypes` directory in the current working directory. The `-w` flag tells Wake to watch for changes in the smart contracts and automatically regenerate `pytypes` when a change is detected.
+Alternatively, the following commands can be used just to setup the config file and generate `pytypes`:
+
+```shell
+wake init config
+wake init pytypes -w
+```
+
+The `-w` flag tells Wake to watch for changes in the smart contracts and automatically regenerate `pytypes` when a change is detected.
 
 <div id="generating-pytypes-asciinema" style="z-index: 1; position: relative;"></div>
 <script>
@@ -50,6 +59,20 @@ When a compilation error occurs, Wake generates `pytypes` for the contracts that
 
 To collect and execute tests, Wake uses the [pytest](https://docs.pytest.org/en/stable/) framework under the hood.
 The test files should start with `test_` or end with `_test.py` to be collected. It is possible to use all the features of the pytest framework like [fixtures](https://docs.pytest.org/en/stable/explanation/fixtures.html).
+
+!!! tip "Connecting to a chain from a fixture"
+    In order to interact with a chain in a fixture, the chain must be already connected.
+    The best way to achieve this is to prepare a fixture that connects to the chain and use it wherever needed.
+
+    ```python
+    @fixture
+    def chain():
+        if default_chain.connected:
+            return default_chain
+        else:
+            with default_chain.connect():
+                yield default_chain
+    ```
 
 The recommended project structure is as follows:
 
@@ -114,14 +137,14 @@ from pytypes.contracts.Counter import Counter
 
 @default_chain.connect()
 def test_example():
-    counter = Counter.deploy(from_=default_chain.accounts[0])
+    counter = Counter.deploy()
     print(counter)
 ```
 
 ### Interacting with a contract
 
 For every public and external function in Solidity source code, Wake generates a Python method in `pytypes`.
-These methods can be used to interact with a deployed contract. Generated methods accept the same arguments as the corresponding Solidity functions.
+These methods can be used to interact with deployed contracts. Generated methods accept the same arguments as the corresponding Solidity functions.
 Additional keyword arguments can configure the execution of a function like with the `deploy` method.
 
 ```python

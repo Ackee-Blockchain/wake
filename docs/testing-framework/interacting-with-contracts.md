@@ -14,12 +14,12 @@ There are 4 low-level methods that represent different request types:
 The low-level methods are named `.transact()`, `.call()`, `.estimate()`, and `.access_list()` respectively.
 Each request type has its default account used when no `from_` argument is provided. The default accounts are properties of the `Chain` object:
 
-- `chain.default_tx_account` for `tx` request type, `None` by default,
-- `chain.default_call_account` for `call` request type, set to `chain.accounts[0]` by default,
-- `chain.default_estimate_account` for `estimate` request type, `None` by default,
-- `chain.default_access_list_account` for `access_list` request type, `None` by default.
+- `chain.default_tx_account` for `tx` request type,
+- `chain.default_call_account` for `call` request type,
+- `chain.default_estimate_account` for `estimate` request type,
+- `chain.default_access_list_account` for `access_list` request type.
 
-The default accounts can be changed by assigning a new value to the corresponding property or by using the `set_default_accounts()` method.
+All default accounts use `chain.accounts[0]` as the default value. The default accounts can be changed by assigning a new value to the corresponding property or by using the `set_default_accounts()` method.
 
 ```python
 from wake.testing import *
@@ -28,14 +28,13 @@ from wake.testing import *
 @default_chain.connect()
 def test_accounts():
     # assign each default account manually
-    default_chain.default_tx_account = default_chain.accounts[0]
-    # default_chain.default_call_account is already set to default_chain.accounts[0]
-    default_chain.default_call_account = default_chain.accounts[0]
-    default_chain.default_estimate_account = default_chain.accounts[0]
-    default_chain.default_access_list_account = default_chain.accounts[0]
+    default_chain.default_tx_account = default_chain.accounts[1]
+    default_chain.default_call_account = default_chain.accounts[1]
+    default_chain.default_estimate_account = default_chain.accounts[1]
+    default_chain.default_access_list_account = default_chain.accounts[1]
 
     # or assign all default accounts at once
-    default_chain.set_default_accounts(default_chain.accounts[0])
+    default_chain.set_default_accounts(default_chain.accounts[2])
 ```
 
 !!! note
@@ -96,7 +95,7 @@ access_list, gas_estimate = Counter.deploy(request_type="access_list")
 ```
 
 !!! warning
-    The `call` request type does not currently work for `deploy` methods with Anvil. It always returns empty bytes.
+    The `call` request type used to return empty bytes for `deploy` methods in earlier versions of Anvil.
 
 ## Keyword arguments
 

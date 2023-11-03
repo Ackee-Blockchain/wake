@@ -2,9 +2,7 @@
 
 Wake testing framework supports testing multichain solutions. The API remains the same as for single-chain solutions.
 The only difference is that a `Chain` instance must be created for each chain. This instance must be passed to
-all API functions that accept a `chain` keyword argument.
-
-`chain` must be specified in the following cases:
+all API functions that accept a `chain` keyword argument, that is:
 
 - when deploying a contract (e.g. `Counter.deploy(chain=chain1)`),
 - when creating an `Account` instance (e.g. `Account(random_address(), chain=chain1)`),
@@ -71,9 +69,6 @@ def relay(other_counter: Counter, events: List):
 @chain1.connect()
 @chain2.connect()
 def test_relay():
-    chain1.default_tx_account = chain1.accounts[0]
-    chain2.default_tx_account = chain2.accounts[0]
-
     counter1 = Counter.deploy(chain=chain1)
     counter2 = Counter.deploy(chain=chain2)
 
