@@ -445,6 +445,8 @@ class CallTrace:
         tx_params: TxParams,
         gas_limit: int,
     ):
+        from .transactions import PanicCodeEnum
+
         fqn_overrides: ChainMap[Address, Optional[str]] = ChainMap()
 
         # process fqn_overrides for all txs before this one in the same block
@@ -1026,6 +1028,9 @@ class CallTrace:
                             current_trace._error_name = current_trace._abi[data[:4]][
                                 "name"
                             ]
+                            if data[:4] == bytes.fromhex("4e487b71"):
+                                # convert Panic int to enum
+                                error_args[0] = PanicCodeEnum(error_args[0])
                             current_trace._error_arguments = error_args
                         except Exception:
                             current_trace._error_name = (
