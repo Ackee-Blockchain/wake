@@ -105,62 +105,98 @@ def run_init(ctx: Context, force: bool):
     config.load_configs()
     ctx.obj["config"] = config
 
-    if ctx.invoked_subcommand is None:
-        import subprocess
+    if ctx.invoked_subcommand is not None:
+        return
 
-        from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
-        from ..compiler.solc_frontend import SolcOutputErrorSeverityEnum
-        from ..development.pytypes_generator import TypeGenerator
-        from ..utils.file_utils import copy_dir, is_relative_to
+    import subprocess
 
-        # create tests directory
-        copy_dir(
-            Path(__file__).parent.parent / "templates" / "tests",
-            config.project_root_path / "tests",
-            overwrite=force,
+    from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
+    from ..compiler.solc_frontend import SolcOutputErrorSeverityEnum
+    from ..development.pytypes_generator import TypeGenerator
+    from ..utils.file_utils import copy_dir, is_relative_to
+
+    # create tests directory
+    copy_dir(
+        Path(__file__).parent.parent / "templates" / "tests",
+        config.project_root_path / "tests",
+        overwrite=force,
+    )
+
+    # create scripts directory
+    copy_dir(
+        Path(__file__).parent.parent / "templates" / "scripts",
+        config.project_root_path / "scripts",
+        overwrite=force,
+    )
+
+    # update .gitignore, --force is not needed
+    update_gitignore(config.project_root_path / ".gitignore")
+
+    # load foundry remappings, if foundry.toml exists
+    if (config.project_root_path / "foundry.toml").exists():
+        remappings = (
+            subprocess.run(["forge", "remappings"], capture_output=True)
+            .stdout.decode("utf-8")
+            .splitlines()
         )
+        config.update({"compiler": {"solc": {"remappings": remappings}}}, [])
 
-        # create scripts directory
-        copy_dir(
-            Path(__file__).parent.parent / "templates" / "scripts",
-            config.project_root_path / "scripts",
-            overwrite=force,
-        )
+    sol_files: Set[Path] = set()
+    start = time.perf_counter()
+    with console.status("[bold green]Searching for *.sol files...[/]"):
+        for file in config.project_root_path.rglob("**/*.sol"):
+            if (
+                not any(
+                    is_relative_to(file, p) for p in config.compiler.solc.exclude_paths
+                )
+                and file.is_file()
+            ):
+                sol_files.add(file)
+    end = time.perf_counter()
+    console.log(
+        f"[green]Found {len(sol_files)} *.sol files in [bold green]{end - start:.2f} s[/bold green][/]"
+    )
 
-        # update .gitignore, --force is not needed
-        update_gitignore(config.project_root_path / ".gitignore")
+    if len(sol_files) == 0:
+        (config.project_root_path / "contracts").mkdir(exist_ok=True)
+    else:
+        compiler = SolidityCompiler(config)
+        compiler.load(console=console)
 
-        # load foundry remappings, if foundry.toml exists
-        if (config.project_root_path / "foundry.toml").exists():
-            remappings = (
-                subprocess.run(["forge", "remappings"], capture_output=True)
-                .stdout.decode("utf-8")
-                .splitlines()
+        _, errors = asyncio.run(
+            compiler.compile(
+                sol_files,
+                [SolcOutputSelectionEnum.ALL],
+                write_artifacts=True,
+                force_recompile=False,
+                console=console,
+                no_warnings=True,
             )
-            config.update({"compiler": {"solc": {"remappings": remappings}}}, [])
-
-        sol_files: Set[Path] = set()
-        start = time.perf_counter()
-        with console.status("[bold green]Searching for *.sol files...[/]"):
-            for file in config.project_root_path.rglob("**/*.sol"):
-                if (
-                    not any(
-                        is_relative_to(file, p)
-                        for p in config.compiler.solc.exclude_paths
-                    )
-                    and file.is_file()
-                ):
-                    sol_files.add(file)
-        end = time.perf_counter()
-        console.log(
-            f"[green]Found {len(sol_files)} *.sol files in [bold green]{end - start:.2f} s[/bold green][/]"
         )
 
-        if len(sol_files) == 0:
-            (config.project_root_path / "contracts").mkdir(exist_ok=True)
-        else:
-            compiler = SolidityCompiler(config)
-            compiler.load(console=console)
+        contract_size_limit = any(
+            e
+            for e in errors
+            if e.severity == SolcOutputErrorSeverityEnum.WARNING
+            and "Contract code size" in e.message
+        )
+        stack_too_deep = any(
+            e
+            for e in errors
+            if e.severity == SolcOutputErrorSeverityEnum.ERROR
+            and "Stack too deep" in e.message
+        )
+
+        if contract_size_limit or stack_too_deep:
+            if stack_too_deep:
+                console.print(
+                    "[yellow]Stack too deep error detected. Enabling optimizer.[/]"
+                )
+            elif contract_size_limit:
+                console.print(
+                    "[yellow]Contract size limit warning detected. Enabling optimizer.[/]"
+                )
+            config.update({"compiler": {"solc": {"optimizer": {"enabled": True}}}}, [])
 
             _, errors = asyncio.run(
                 compiler.compile(
@@ -172,13 +208,6 @@ def run_init(ctx: Context, force: bool):
                     no_warnings=True,
                 )
             )
-
-            contract_size_limit = any(
-                e
-                for e in errors
-                if e.severity == SolcOutputErrorSeverityEnum.WARNING
-                and "Contract code size" in e.message
-            )
             stack_too_deep = any(
                 e
                 for e in errors
@@ -186,18 +215,11 @@ def run_init(ctx: Context, force: bool):
                 and "Stack too deep" in e.message
             )
 
-            if contract_size_limit or stack_too_deep:
-                if stack_too_deep:
-                    console.print(
-                        "[yellow]Stack too deep error detected. Enabling optimizer.[/]"
-                    )
-                elif contract_size_limit:
-                    console.print(
-                        "[yellow]Contract size limit warning detected. Enabling optimizer.[/]"
-                    )
-                config.update(
-                    {"compiler": {"solc": {"optimizer": {"enabled": True}}}}, []
+            if stack_too_deep:
+                console.print(
+                    "[yellow]Stack too deep error still detected. Enabling --via-ir.[/]"
                 )
+                config.update({"compiler": {"solc": {"via_IR": True}}}, [])
 
                 _, errors = asyncio.run(
                     compiler.compile(
@@ -209,37 +231,12 @@ def run_init(ctx: Context, force: bool):
                         no_warnings=True,
                     )
                 )
-                stack_too_deep = any(
-                    e
-                    for e in errors
-                    if e.severity == SolcOutputErrorSeverityEnum.ERROR
-                    and "Stack too deep" in e.message
-                )
-
-                if stack_too_deep:
-                    console.print(
-                        "[yellow]Stack too deep error still detected. Enabling --via-ir.[/]"
-                    )
-                    config.update({"compiler": {"solc": {"via_IR": True}}}, [])
-
-                    _, errors = asyncio.run(
-                        compiler.compile(
-                            sol_files,
-                            [SolcOutputSelectionEnum.ALL],
-                            write_artifacts=True,
-                            force_recompile=False,
-                            console=console,
-                            no_warnings=True,
-                        )
-                    )
-            start = time.perf_counter()
-            with console.status("[bold green]Generating pytypes..."):
-                type_generator = TypeGenerator(config, False)
-                type_generator.generate_types(compiler)
-            end = time.perf_counter()
-            console.log(
-                f"[green]Generated pytypes in [bold green]{end - start:.2f} s[/]"
-            )
+        start = time.perf_counter()
+        with console.status("[bold green]Generating pytypes..."):
+            type_generator = TypeGenerator(config, False)
+            type_generator.generate_types(compiler)
+        end = time.perf_counter()
+        console.log(f"[green]Generated pytypes in [bold green]{end - start:.2f} s[/]")
 
     if not config.local_config_path.exists() or force:
         write_config(config)
@@ -493,6 +490,135 @@ def init_pytypes(
     config.update({"compiler": {"solc": new_options}}, deleted_options)
 
     asyncio.run(run_init_pytypes(config, return_tx, warnings, watch))
+
+
+@run_init.command(name="config")
+@click.option(
+    "--force",
+    "-f",
+    is_flag=True,
+    default=False,
+    help="Force overwrite existing config file.",
+)
+@click.pass_context
+def run_init_config(ctx: Context, force: bool):
+    """Initialize project config file."""
+    import subprocess
+
+    from wake.config import WakeConfig
+
+    from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
+    from ..compiler.solc_frontend import SolcOutputErrorSeverityEnum
+    from ..utils.file_utils import is_relative_to
+
+    config = WakeConfig(local_config_path=ctx.obj.get("local_config_path", None))
+    if config.local_config_path.exists() and not force:
+        raise click.ClickException(
+            f"Config file {config.local_config_path} already exists. Use --force to force overwrite."
+        )
+
+    config.load_configs()
+    ctx.obj["config"] = config
+
+    # load foundry remappings, if foundry.toml exists
+    if (config.project_root_path / "foundry.toml").exists():
+        remappings = (
+            subprocess.run(["forge", "remappings"], capture_output=True)
+            .stdout.decode("utf-8")
+            .splitlines()
+        )
+        config.update({"compiler": {"solc": {"remappings": remappings}}}, [])
+
+    sol_files: Set[Path] = set()
+    start = time.perf_counter()
+    with console.status("[bold green]Searching for *.sol files...[/]"):
+        for file in config.project_root_path.rglob("**/*.sol"):
+            if (
+                not any(
+                    is_relative_to(file, p) for p in config.compiler.solc.exclude_paths
+                )
+                and file.is_file()
+            ):
+                sol_files.add(file)
+    end = time.perf_counter()
+    console.log(
+        f"[green]Found {len(sol_files)} *.sol files in [bold green]{end - start:.2f} s[/bold green][/]"
+    )
+
+    if len(sol_files) > 0:
+        compiler = SolidityCompiler(config)
+        compiler.load(console=console)
+
+        _, errors = asyncio.run(
+            compiler.compile(
+                sol_files,
+                [SolcOutputSelectionEnum.ALL],
+                write_artifacts=True,
+                force_recompile=False,
+                console=console,
+                no_warnings=True,
+            )
+        )
+
+        contract_size_limit = any(
+            e
+            for e in errors
+            if e.severity == SolcOutputErrorSeverityEnum.WARNING
+            and "Contract code size" in e.message
+        )
+        stack_too_deep = any(
+            e
+            for e in errors
+            if e.severity == SolcOutputErrorSeverityEnum.ERROR
+            and "Stack too deep" in e.message
+        )
+
+        if contract_size_limit or stack_too_deep:
+            if stack_too_deep:
+                console.print(
+                    "[yellow]Stack too deep error detected. Enabling optimizer.[/]"
+                )
+            elif contract_size_limit:
+                console.print(
+                    "[yellow]Contract size limit warning detected. Enabling optimizer.[/]"
+                )
+            config.update({"compiler": {"solc": {"optimizer": {"enabled": True}}}}, [])
+
+            _, errors = asyncio.run(
+                compiler.compile(
+                    sol_files,
+                    [SolcOutputSelectionEnum.ALL],
+                    write_artifacts=True,
+                    force_recompile=False,
+                    console=console,
+                    no_warnings=True,
+                )
+            )
+            stack_too_deep = any(
+                e
+                for e in errors
+                if e.severity == SolcOutputErrorSeverityEnum.ERROR
+                and "Stack too deep" in e.message
+            )
+
+            if stack_too_deep:
+                console.print(
+                    "[yellow]Stack too deep error still detected. Enabling --via-ir.[/]"
+                )
+                config.update({"compiler": {"solc": {"via_IR": True}}}, [])
+
+                _, errors = asyncio.run(
+                    compiler.compile(
+                        sol_files,
+                        [SolcOutputSelectionEnum.ALL],
+                        write_artifacts=True,
+                        force_recompile=False,
+                        console=console,
+                        no_warnings=True,
+                    )
+                )
+
+    write_config(config)
 
 
 @run_init.command(name="detector")
