@@ -113,7 +113,7 @@ class CounterTest(FuzzTest):
 
     @flow()
     def flow_decrement(self) -> None:
-        with may_revert(Panic(PanicCodeEnum.UNDERFLOW_OVERFLOW)) as e:
+        with may_revert(PanicCodeEnum.UNDERFLOW_OVERFLOW) as e:
             self.counter.decrement()
 
         if e.value is None:
@@ -128,7 +128,6 @@ class CounterTest(FuzzTest):
 
 @default_chain.connect()
 def test_counter():
-    default_chain.set_default_accounts(default_chain.accounts[0])
     CounterTest().run(sequences_count=30, flows_count=100)
 ```
 
@@ -230,18 +229,13 @@ It accepts the following keyword arguments:
 ## Launching tests in parallel
 
 Wake testing framework allows running the same test in parallel with different random seeds.
-Multiprocess tests are launched using the `wake fuzz` command:
+Multiprocess tests are launched by setting the `-P` flag specifying the number of processes to be used:
 
 ```shell
-wake fuzz tests/test_counter_fuzz.py -n 5
+wake test tests/test_counter_fuzz.py -P 5
 ```
 
-!!! info
-    The command `wake fuzz` does not utilize the `pytest` framework to collect and execute tests.
-    As a consequence, the `pytest` features like [fixtures](https://docs.pytest.org/en/stable/explanation/fixtures.html) are not available. Test functions must start with the `test` prefix.
-    Test classes are not supported.
-
-If a test process encounters an error, the user is prompted whether to debug the test or continue fuzzing.
+If a test process encounters an error, the user is prompted whether to debug the test or continue testing.
 While debugging, other processes are still running in the background.
 
 <div id="wake-fuzz-asciinema" style="z-index: 1; position: relative;"></div>
@@ -252,14 +246,14 @@ While debugging, other processes are still running in the background.
 </script>
 
 By default, nothing but status of each test is printed to the console. Using the `--passive` flag, the output of the first process is printed to the console.
-Standard output and standard error of all processes are redirected to the `.wake-logs/fuzz` directory.
+Standard output and standard error of all processes are redirected to the `.wake/logs/testing` directory.
 
 !!! tip "Reproducing a failed test"
     For every process, Wake generates a random seed that is used to initialize the random number generator.
     The seed is printed to the console and can be used to reproduce the test failure:
 
     ```shell
-    wake fuzz tests/test_counter_fuzz.py -n 5 -s 62061e838798ad0f
+    wake test tests/test_counter_fuzz.py -P 5 -s 62061e838798ad0f
     ```
 
     A random seed can be specified using the `-s` flag. Multiple `-s` flags are allowed.

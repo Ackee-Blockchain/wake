@@ -20,8 +20,8 @@ def tx_callback(tx: TransactionAbc):
 def test_callback():
     default_chain.tx_callback = tx_callback
 
-    counter = Counter.deploy(from_=default_chain.accounts[0])
-    counter.increment(from_=default_chain.accounts[0])
+    counter = Counter.deploy()
+    counter.increment()
 ```
 
 !!! warning
@@ -103,7 +103,6 @@ from pytypes.contracts.Counter import Counter
 
 @default_chain.connect()
 def test_multiple_txs():
-    default_chain.set_default_accounts(default_chain.accounts[0])
     counter = Counter.deploy()
 
     # temporarily disable automine

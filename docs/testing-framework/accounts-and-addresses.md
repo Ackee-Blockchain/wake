@@ -150,9 +150,6 @@ account = Account.from_mnemonic(" ".join(["test"] * 11 + ["junk"]))
 signature = account.sign_hash(keccak256(b"Hello, world!"))
 ```
 
-!!! note
-    `account.sign_hash` is not available for accounts owned by the client.
-
 !!! warning
     Always sign a message hash only if you know the original message.
 
@@ -239,8 +236,6 @@ Every method of a contract generated in `pytypes` has a `selector` property.
 
     @default_chain.connect()
     def test_proxy():
-        default_chain.default_tx_account = default_chain.accounts[0]
-
         impl = Counter.deploy()
         proxy = ERC1967Proxy.deploy(impl, b"")
 

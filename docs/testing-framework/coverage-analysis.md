@@ -29,20 +29,18 @@ TOTAL                                  156      8    95%
 
 Note that the `--` is required to separate the arguments passed to `wake` from the arguments passed to `pytest`.
 
-!!! info
-    There is no such option for `wake fuzz` since it does not use `pytest` internally.
-
 ## Solidity contracts coverage
 
-Wake comes with a built-in coverage analysis module that can be activated by passing the `--coverage` flag and, in the case of `wake fuzz`, an optional number of processes to collect coverage data from.
+Wake comes with a built-in coverage analysis module that can be activated by passing the `--coverage` flag to the `wake test` command.
+It can be followed by an optional number of processes to collect coverage data from.
 
 ```bash
 wake test --coverage
 ```
 
-By passing the `--coverage` flag to `wake fuzz` without specifying the number of processes, the coverage analysis is performed for all fuzzing processes.
+By passing the `--coverage` flag to `wake test` without specifying the number of processes, the coverage analysis is performed for all testing processes.
 ```base
-wake fuzz -n 4 --coverage 2
+wake test -P 4 --coverage 2
 ```
 
 There are some limitations to this coverage analysis:

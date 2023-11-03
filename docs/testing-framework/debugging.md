@@ -2,7 +2,7 @@
 
 ## Using Python debugger
 
-Both commands `wake test` and `wake fuzz` support entering [pdb](https://docs.python.org/3/library/pdb.html), the Python debugger, when an error occurs.
+`wake test` supports entering [pdb](https://docs.python.org/3/library/pdb.html), the Python debugger, when an error occurs.
 Wake uses an enhanced version of the Python debugger, [ipdb](https://github.com/gotcha/ipdb), which provides a more user-friendly interface.
 
 It is also possible to enter the debugger manually by inserting a `breakpoint()` statement in the code.
@@ -18,7 +18,7 @@ def test_breakpoint():
 ```
 
 !!! info
-    `breakpoint()` is not currently supported with `wake fuzz`.
+    `breakpoint()` is not currently supported when running `wake test` in multiprocessing mode (with the `-P` option set)
 
 Inside ipdb, any expression can be evaluated by typing it and pressing `Enter`.
 This can be used to get the value of a variable, to call a function, including contract functions, or even to deploy a new contract.
@@ -56,8 +56,6 @@ from pytypes.contracts.Gateway import Gateway
 
 @default_chain.connect()
 def test_call_trace():
-    default_chain.set_default_accounts(default_chain.accounts[0])
-
     gateway = Gateway.deploy()
     counter = Counter.deploy()
     counter.addToWhitelist(gateway)
@@ -98,7 +96,6 @@ from pytypes.contracts.Counter import Counter
 @default_chain.connect()
 def test_console_logs():
     default_chain.tx_callback = lambda tx: print(tx.console_logs)
-    default_chain.set_default_accounts(default_chain.accounts[0])
 
     counter = Counter.deploy()
     counter.increment()
@@ -118,6 +115,3 @@ def test_console_logs():
         }
     }
     ```
-
-!!! info
-    Accessing transaction `console_logs` is not currently supported with Hardhat and Ganache.

@@ -19,7 +19,7 @@ contract Reverting {
 }
 ```
 
-To debug the latter case, print a call trace of the failing transaction. The trace should contain the failing call in a malformed way.
+To debug the latter case, print the call trace of the failing transaction. The trace should contain the failing call in a malformed way.
 
 ```python
 from wake.testing import *
@@ -34,11 +34,7 @@ def revert_handler(e: TransactionRevertedError):
 @default_chain.connect()
 @on_revert(revert_handler)
 def test_reverting():
-    a = default_chain.accounts[0]
-    r = Reverting.deploy(
-        Address("0x9a6A6920008318b3556702b5115680E048c2c8dB"),
-        from_=a
-    )
+    r = Reverting.deploy(Address("0x9a6A6920008318b3556702b5115680E048c2c8dB"))
 ```
 
 <div>
@@ -79,9 +75,9 @@ Occasionally, the default timeout may be insufficient, especially when performin
 
 To work around this issue, increase the timeout in the Wake config file.
 
-```yaml
-[testing]
-timeout = 60
+```toml
+[general]
+json_rpc_timeout = 60
 ```
 
 ## Test freezes without timeout error
