@@ -108,14 +108,14 @@ def run_no_pytest(
 
             chain_interfaces_manager.close_all()
     else:
-        logs_dir = config.project_root_path / ".wake" / "logs" / "fuzz"
+        logs_dir = config.project_root_path / ".wake" / "logs" / "testing"
         shutil.rmtree(logs_dir, ignore_errors=True)
         logs_dir.mkdir(parents=True, exist_ok=True)
 
         try:
             for func_name, func in test_functions:
                 console.print("\n\n")
-                console.print(f"Fuzzing '{func_name}' in '{func.__module__}'.")
+                console.print(f"Running '{func_name}' in '{func.__module__}'.")
                 fuzz(
                     config,
                     func_name,

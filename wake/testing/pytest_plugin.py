@@ -202,7 +202,7 @@ class PytestWakePlugin:
         else:
             empty_coverage = None
 
-        logs_dir = self._config.project_root_path / ".wake" / "logs" / "fuzz"
+        logs_dir = self._config.project_root_path / ".wake" / "logs" / "testing"
         shutil.rmtree(logs_dir, ignore_errors=True)
         logs_dir.mkdir(parents=True, exist_ok=True)
 

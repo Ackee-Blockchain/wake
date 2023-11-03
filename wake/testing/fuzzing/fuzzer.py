@@ -218,7 +218,7 @@ def fuzz(
             if passive:
                 progress.stop()
             task = progress.add_task(
-                "Fuzzing", thr_rem=len(processes), coverage_info="", total=1
+                "Testing", thr_rem=len(processes), coverage_info="", total=1
             )
 
             while len(processes):
