@@ -507,21 +507,28 @@ class SolidityCompiler:
 
         # cycles can also be "sinks" in terms of compilation units
         generated_cycles: Set[FrozenSet[str]] = set()
-
-        for cycle in nx.simple_cycles(graph):
-            if frozenset(cycle) in generated_cycles:
+        simple_cycles = [set(c) for c in nx.simple_cycles(graph)]
+        for simple_cycle in simple_cycles:
+            if any(simple_cycle.issubset(c) for c in generated_cycles):
+                # this cycle was already merged with another cycle
                 continue
 
+            # merge with as many other cycles as possible (create transitive closure)
+            for other_cycle in simple_cycles:
+                if len(simple_cycle & other_cycle) > 0:
+                    simple_cycle |= other_cycle
+
             is_closed_cycle = True
-            for node in cycle:
-                if any(edge[1] not in cycle for edge in graph.out_edges(node)):
+            for node in simple_cycle:
+                if any(edge[1] not in simple_cycle for edge in graph.out_edges(node)):
                     is_closed_cycle = False
                     break
 
             if is_closed_cycle:
-                generated_cycles.add(frozenset(cycle))
-                compilation_unit = __build_compilation_unit(graph, cycle)
+                generated_cycles.add(frozenset(simple_cycle))
+                compilation_unit = __build_compilation_unit(graph, simple_cycle)
                 compilation_units.append(compilation_unit)
+
         return compilation_units
 
     def create_build_settings(
