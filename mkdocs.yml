@@ -156,6 +156,8 @@ nav:
               - switch: 'api-reference/ir/yul/switch.md'
               - typed_name: 'api-reference/ir/yul/typed-name.md'
               - variable_declaration: 'api-reference/ir/yul/variable-declaration.md'
+      - wake.printers:
+          - api: 'api-reference/printers/api.md'
 
 extra:
   generator: false

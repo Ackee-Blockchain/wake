@@ -30,16 +30,35 @@ if TYPE_CHECKING:
 
 
 class Printer(Visitor, metaclass=ABCMeta):
+    """
+    Base class for printers.
+
+    Attributes:
+        paths: Paths the printer should operate on. May be empty if a user did not specify any paths, e.g. when running `wake print printer-name`.
+            In this case, the printer should operate on all paths. May be ignored unless [visit_mode][wake.printers.api.Printer.visit_mode] is `all`.
+        extra: Extra data set by the execution engine.
+    """
+
     console: Console
     paths: List[Path]
     extra: Dict[Any, Any]
 
     @property
     def visit_mode(self) -> Union[Literal["paths"], Literal["all"]]:
+        """
+        Configurable visit mode of the printer. If set to `paths`, the printer `visit_` methods will be called only for the paths specified by the user.
+        If set to `all`, the printer `visit_` methods will be called for all paths. In this case, the printer should use the `paths` attribute to decide what to print.
+
+        Returns:
+            Visit mode of the printer.
+        """
         return "paths"
 
     @abstractmethod
     def print(self) -> None:
+        """
+        Abstract method that must be implemented in every printer. This method is called after all `visit_` methods have been called.
+        """
         ...
 
     def _run(self) -> None:
