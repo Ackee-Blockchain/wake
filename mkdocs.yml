@@ -69,6 +69,8 @@ nav:
       - wake.config:
           - data_model: 'api-reference/config/data-model.md'
           - wake_config: 'api-reference/config/wake-config.md'
+      - wake.detectors:
+          - api: 'api-reference/detectors/api.md'
       - wake.ir:
           - declarations:
               - abc: 'api-reference/ir/declarations/abc.md'
@@ -180,6 +182,7 @@ plugins:
           - https://docs.python.org/3/objects.inv
           - https://networkx.org/documentation/stable/objects.inv
         options:
+          heading_level: 1
           show_root_heading: true
 - mike:
     canonical_version: latest

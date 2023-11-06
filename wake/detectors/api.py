@@ -43,6 +43,10 @@ if TYPE_CHECKING:
 
 
 class DetectionImpact(StrEnum):
+    """
+    The impact of a detection.
+    """
+
     INFO = "info"
     WARNING = "warning"
     LOW = "low"
@@ -51,6 +55,10 @@ class DetectionImpact(StrEnum):
 
 
 class DetectionConfidence(StrEnum):
+    """
+    The confidence of a detection.
+    """
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -58,6 +66,19 @@ class DetectionConfidence(StrEnum):
 
 @dataclass(eq=True, frozen=True)
 class Detection:
+    """
+    A single detection bound to a location in the source code through an IR node. May contain any number of subdetections.
+
+    Attributes:
+        ir_node: IR node representing the detection.
+        message: User-friendly message describing the detection.
+        subdetections: Subdetections of this detection.
+        lsp_range: Byte offsets (start, end) of the detection used for highlighting in an LSP diagnostic.
+        subdetections_mandatory: Whether the detection requires at least one subdetection to be valid,
+            or if the subdetections are not mandatory for the existence of the detection.
+            This attribute determines whether the detection should be filtered out if all subdetections are filtered out based on the detectors [ignore_paths][wake.config.data_model.DetectorsConfig.ignore_paths] configuration.
+    """
+
     ir_node: IrAbc
     message: str
     subdetections: Tuple[Detection, ...] = field(default_factory=tuple)
@@ -67,6 +88,16 @@ class Detection:
 
 @dataclass(eq=True, frozen=True)
 class DetectorResult:
+    """
+    A single result reported by a [Detector][wake.detectors.api.Detector].
+
+    Attributes:
+        detection: Detection describing the location in the source code and the message.
+        impact: Impact of the detection.
+        confidence: Confidence of the detection.
+        url: Optional URL to a page describing the detection.
+    """
+
     detection: Detection
     impact: DetectionImpact
     confidence: DetectionConfidence
@@ -80,15 +111,38 @@ class DetectorResult:
 
 
 class Detector(Visitor, metaclass=ABCMeta):
+    """
+    Base class for detectors.
+
+    Attributes:
+        paths: Paths the detector should operate on. May be empty if a user did not specify any paths, e.g. when running `wake detect all`.
+            In this case, the detector should operate on all paths. May be ignored unless [visit_mode][wake.detectors.api.Detector.visit_mode] is `all`.
+        extra: Extra data shared between all detectors in a single run. May contain additional data set by the execution engine.
+    """
+
     paths: List[Path]
     extra: Dict[Any, Any]
 
     @property
     def visit_mode(self) -> Union[Literal["paths"], Literal["all"]]:
+        """
+        Configurable visit mode of the detector. If set to `paths`, the detector `visit_` methods will be called only for the paths specified by the user.
+        If set to `all`, the detector `visit_` methods will be called for all paths, leaving the filtering of detections to the detector implementation.
+        In this case, the detector should use the `paths` attribute to determine which paths to operate on.
+
+        Returns:
+            Visit mode of the detector.
+        """
         return "paths"
 
     @abstractmethod
     def detect(self) -> List[DetectorResult]:
+        """
+        Abstract method that must be implemented in a detector to return the discovered detections.
+
+        Returns:
+            List of detector results.
+        """
         ...
 
 
