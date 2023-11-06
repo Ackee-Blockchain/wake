@@ -153,8 +153,12 @@ async def init_printer(
         init_path.touch()
 
     import_str = f"from .{module_name} import {class_name}"
-    if import_str not in init_path.read_text().splitlines():
+    init_text = init_path.read_text()
+    if import_str not in init_text.splitlines():
         with init_path.open("a") as f:
-            f.write(f"\n{import_str}")
+            lines = init_text.splitlines(keepends=True)
+            if len(lines) != 0 and not lines[-1].endswith("\n"):
+                f.write("\n")
+            f.write(f"{import_str}\n")
 
     return printer_path
