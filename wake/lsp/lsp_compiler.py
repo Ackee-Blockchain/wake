@@ -1122,6 +1122,16 @@ class LspCompiler:
                 # send both compiler and detector warnings and errors
                 for path, errors in errors_per_file.items():
                     await self.__diagnostic_queue.put((path, errors))
+
+                for detector_name, exception_str in exceptions.items():
+                    await self.__server.show_message(
+                        f"Exception while running detector {detector_name}: {exception_str}",
+                        MessageType.ERROR,
+                    )
+                    await self.__server.log_message(
+                        f"Exception while running detector {detector_name}: {exception_str}",
+                        MessageType.ERROR,
+                    )
             except Exception:
                 await self.__server.log_message(
                     f"Exception occurred during running detectors:\n{traceback.format_exc()}",
