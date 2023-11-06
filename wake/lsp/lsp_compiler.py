@@ -880,12 +880,20 @@ class LspCompiler:
             for error in solc_output.errors:
                 if error.source_location is not None:
                     path = cu.source_unit_name_to_path(error.source_location.file)
-                    start_line = self.get_line_pos_from_byte_offset(
-                        path, error.source_location.start
-                    )[0]
-                    end_line = self.get_line_pos_from_byte_offset(
-                        path, error.source_location.end
-                    )[0]
+
+                    if (
+                        error.source_location.start >= 0
+                        and error.source_location.end >= 0
+                    ):
+                        start_line = self.get_line_pos_from_byte_offset(
+                            path, error.source_location.start
+                        )[0]
+                        end_line = self.get_line_pos_from_byte_offset(
+                            path, error.source_location.end
+                        )[0]
+                    else:
+                        start_line = 0
+                        end_line = 0
 
                     ignored = (
                         error.severity != SolcOutputErrorSeverityEnum.ERROR

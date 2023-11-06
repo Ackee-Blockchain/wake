@@ -174,6 +174,10 @@ def _detection_commented_out(
             detection.ir_node.byte_location[1]
         )[0]
 
+    # returned line numbers are 1-based, but wake_comments are 0-based
+    start_line -= 1
+    end_line -= 1
+
     return error_commented_out(
         detector_name,
         start_line,
