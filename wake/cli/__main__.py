@@ -90,7 +90,7 @@ def main(ctx: Context, debug: bool, profile: bool, config: Optional[str]) -> Non
 
     logging.basicConfig(
         format="%(asctime)s %(name)s: %(message)s",
-        handlers=[RichHandler(show_time=False, console=console)],
+        handlers=[RichHandler(show_time=False, console=console, markup=True)],
         force=True,  # pyright: ignore reportGeneralTypeIssues
     )
     sys.excepthook = lambda type, value, traceback: excepthook(
