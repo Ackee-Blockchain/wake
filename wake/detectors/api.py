@@ -575,7 +575,7 @@ def detect(
                 continue
 
             for node in source_unit:
-                for detector_name in target_detectors:
+                for detector_name in list(target_detectors):
                     detector = collected_detectors[detector_name]
                     try:
                         visit_map[node.ast_node.node_type](detector, node)
