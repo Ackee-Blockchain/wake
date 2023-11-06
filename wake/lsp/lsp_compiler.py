@@ -288,10 +288,23 @@ class LspCompiler:
     @property
     def last_build(self) -> ProjectBuild:
         # TODO may be subject to race conditions
+
+        import_graph_paths = {
+            path
+            for n, path in self.__last_graph.nodes(
+                data="path"  # pyright: ignore reportGeneralTypeIssues
+            )
+        }
+
+        # filter out only files that are not excluded from compilation
         return ProjectBuild(
-            self.__interval_trees,
+            {
+                p: tree
+                for p, tree in self.__interval_trees.items()
+                if p in import_graph_paths
+            },
             self.__ir_reference_resolver,
-            self.__source_units,
+            {p: su for p, su in self.__source_units.items() if p in import_graph_paths},
         )
 
     @property
