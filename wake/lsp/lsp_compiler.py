@@ -1092,18 +1092,24 @@ class LspCompiler:
 
         if platform.system() == "Linux":
             # run detectors in a separate process
-            parent_conn, child_conn = multiprocessing.Pipe()
+            parent_data_conn, child_data_conn = multiprocessing.Pipe()
+            parent_error_conn, child_error_conn = multiprocessing.Pipe()
             p = multiprocessing.Process(
                 target=self.__run_detectors,
                 args=(
                     [d for d in all_detectors if d not in {"all", "list"}],
-                    child_conn,
+                    child_data_conn,
+                    child_error_conn,
                 ),
             )
             p.start()
             while True:
-                if parent_conn.poll():
-                    errors_per_file, exceptions, logging_buffer = parent_conn.recv()
+                if parent_data_conn.poll():
+                    (
+                        errors_per_file,
+                        exceptions,
+                        logging_buffer,
+                    ) = parent_data_conn.recv()
 
                     for log, log_type in logging_buffer:
                         await self.__server.log_message(log, log_type)
@@ -1123,6 +1129,16 @@ class LspCompiler:
 
                     break
                 elif not p.is_alive():
+                    if parent_error_conn.poll():
+                        error = parent_error_conn.recv()
+                        await self.__server.show_message(
+                            f"Exception occurred while running detectors:\n{error}",
+                            MessageType.ERROR,
+                        )
+                        await self.__server.log_message(
+                            f"Exception occurred while running detectors:\n{error}",
+                            MessageType.ERROR,
+                        )
                     break
 
                 await asyncio.sleep(0.1)
@@ -1134,7 +1150,7 @@ class LspCompiler:
             # not in a subprocess, use try/except to avoid crashing the server by detectors
             try:
                 errors_per_file, exceptions, logging_buffer = self.__run_detectors(
-                    [d for d in all_detectors if d not in {"all", "list"}], None
+                    [d for d in all_detectors if d not in {"all", "list"}], None, None
                 )
 
                 for log, log_type in logging_buffer:
@@ -1154,123 +1170,133 @@ class LspCompiler:
                         MessageType.ERROR,
                     )
             except Exception:
+                await self.__server.show_message(
+                    f"Exception occurred while running detectors:\n{traceback.format_exc()}",
+                    MessageType.ERROR,
+                )
                 await self.__server.log_message(
-                    f"Exception occurred during running detectors:\n{traceback.format_exc()}",
+                    f"Exception occurred while running detectors:\n{traceback.format_exc()}",
                     MessageType.ERROR,
                 )
 
     def __run_detectors(
         self,
         detector_names: List[str],
-        conn: Optional[multiprocessing.connection.Connection],
+        data_conn: Optional[multiprocessing.connection.Connection],
+        error_conn: Optional[multiprocessing.connection.Connection],
     ) -> Tuple[
         Dict[Path, Set[Diagnostic]], Dict[str, str], List[Tuple[str, MessageType]]
     ]:
-        errors_per_file: Dict[Path, Set[Diagnostic]]
-        if conn is not None:
-            # in forked process, original dictionary won't be modified anyway
-            errors_per_file = self.__compilation_errors
-        else:
-            errors_per_file = deepcopy(self.__compilation_errors)
-
-        logging_buffer = []
-        logging_handler = LspLoggingHandler(logging_buffer)
-
-        if self.__config.lsp.detectors.enable:
-            _, detections, detector_exceptions = detect(
-                detector_names,
-                self.last_build,
-                self.last_build_info,
-                self.__last_graph,
-                self.__config,
-                None,
-                verify_paths=False,
-                capture_exceptions=True,
-                logging_handler=logging_handler,
-            )
-            exceptions = {name: repr(e) for name, e in detector_exceptions.items()}
-
-            if self.__ignored_detections_supported:
-                detection_gen = (
-                    (detector_name, ignored, result)
-                    for detector_name in detections.keys()
-                    for ignored, result in chain(
-                        ((False, r) for r in detections[detector_name][0]),
-                        ((True, r) for r in detections[detector_name][1]),
-                    )
-                )
+        try:
+            errors_per_file: Dict[Path, Set[Diagnostic]]
+            if data_conn is not None:
+                # in forked process, original dictionary won't be modified anyway
+                errors_per_file = self.__compilation_errors
             else:
-                detection_gen = (
-                    (detector_name, False, result)
-                    for detector_name in detections.keys()
-                    for result in detections[detector_name][0]
+                errors_per_file = deepcopy(self.__compilation_errors)
+
+            logging_buffer = []
+            logging_handler = LspLoggingHandler(logging_buffer)
+
+            if self.__config.lsp.detectors.enable:
+                _, detections, detector_exceptions = detect(
+                    detector_names,
+                    self.last_build,
+                    self.last_build_info,
+                    self.__last_graph,
+                    self.__config,
+                    None,
+                    verify_paths=False,
+                    capture_exceptions=True,
+                    logging_handler=logging_handler,
                 )
+                exceptions = {name: repr(e) for name, e in detector_exceptions.items()}
 
-            for detector_name, ignored, result in detection_gen:
-                file = result.detection.ir_node.file
-                if len(result.detection.subdetections) > 0:
-                    related_info = [
-                        DiagnosticRelatedInformation(
-                            location=Location(
-                                uri=DocumentUri(path_to_uri(info.ir_node.file)),
-                                range=self.get_range_from_byte_offsets(
-                                    info.ir_node.file,
-                                    info.lsp_range
-                                    if info.lsp_range is not None
-                                    else info.ir_node.name_location
-                                    if isinstance(info.ir_node, DeclarationAbc)
-                                    else info.ir_node.byte_location,
-                                ),
-                            ),
-                            message=info.message,
+                if self.__ignored_detections_supported:
+                    detection_gen = (
+                        (detector_name, ignored, result)
+                        for detector_name in detections.keys()
+                        for ignored, result in chain(
+                            ((False, r) for r in detections[detector_name][0]),
+                            ((True, r) for r in detections[detector_name][1]),
                         )
-                        for info in result.detection.subdetections
-                    ]
-                else:
-                    related_info = None
-
-                if file not in errors_per_file:
-                    errors_per_file[file] = set()
-                errors_per_file[file].add(
-                    Diagnostic(
-                        range=self.get_range_from_byte_offsets(
-                            file,
-                            result.detection.lsp_range
-                            if result.detection.lsp_range is not None
-                            else result.detection.ir_node.name_location
-                            if isinstance(result.detection.ir_node, DeclarationAbc)
-                            else result.detection.ir_node.byte_location,
-                        ),
-                        severity=(
-                            DiagnosticSeverity.INFORMATION
-                            if result.impact == DetectionImpact.INFO
-                            else DiagnosticSeverity.WARNING
-                            if result.impact == DetectionImpact.WARNING
-                            else DiagnosticSeverity.ERROR
-                        ),
-                        source="Wake",
-                        message=result.detection.message,
-                        code=detector_name,
-                        related_information=related_info,
-                        code_description=CodeDescription(
-                            href=result.url,  # pyright: ignore reportGeneralTypeIssues
-                        )
-                        if result.url is not None
-                        else None,
-                        data=DetectionAdditionalInfo(
-                            confidence=result.confidence,
-                            impact=result.impact,
-                            source_unit_name=result.detection.ir_node.source_unit.source_unit_name,
-                            ignored=ignored,
-                        ),
                     )
-                )
-        else:
-            exceptions = {}
+                else:
+                    detection_gen = (
+                        (detector_name, False, result)
+                        for detector_name in detections.keys()
+                        for result in detections[detector_name][0]
+                    )
 
-        if conn is not None:
-            conn.send((errors_per_file, exceptions, logging_buffer))
-        return errors_per_file, exceptions, logging_buffer
+                for detector_name, ignored, result in detection_gen:
+                    file = result.detection.ir_node.file
+                    if len(result.detection.subdetections) > 0:
+                        related_info = [
+                            DiagnosticRelatedInformation(
+                                location=Location(
+                                    uri=DocumentUri(path_to_uri(info.ir_node.file)),
+                                    range=self.get_range_from_byte_offsets(
+                                        info.ir_node.file,
+                                        info.lsp_range
+                                        if info.lsp_range is not None
+                                        else info.ir_node.name_location
+                                        if isinstance(info.ir_node, DeclarationAbc)
+                                        else info.ir_node.byte_location,
+                                    ),
+                                ),
+                                message=info.message,
+                            )
+                            for info in result.detection.subdetections
+                        ]
+                    else:
+                        related_info = None
+
+                    if file not in errors_per_file:
+                        errors_per_file[file] = set()
+                    errors_per_file[file].add(
+                        Diagnostic(
+                            range=self.get_range_from_byte_offsets(
+                                file,
+                                result.detection.lsp_range
+                                if result.detection.lsp_range is not None
+                                else result.detection.ir_node.name_location
+                                if isinstance(result.detection.ir_node, DeclarationAbc)
+                                else result.detection.ir_node.byte_location,
+                            ),
+                            severity=(
+                                DiagnosticSeverity.INFORMATION
+                                if result.impact == DetectionImpact.INFO
+                                else DiagnosticSeverity.WARNING
+                                if result.impact == DetectionImpact.WARNING
+                                else DiagnosticSeverity.ERROR
+                            ),
+                            source="Wake",
+                            message=result.detection.message,
+                            code=detector_name,
+                            related_information=related_info,
+                            code_description=CodeDescription(
+                                href=result.url,  # pyright: ignore reportGeneralTypeIssues
+                            )
+                            if result.url is not None
+                            else None,
+                            data=DetectionAdditionalInfo(
+                                confidence=result.confidence,
+                                impact=result.impact,
+                                source_unit_name=result.detection.ir_node.source_unit.source_unit_name,
+                                ignored=ignored,
+                            ),
+                        )
+                    )
+            else:
+                exceptions = {}
+
+            if data_conn is not None:
+                data_conn.send((errors_per_file, exceptions, logging_buffer))
+            return errors_per_file, exceptions, logging_buffer
+        except Exception:
+            if error_conn is not None:
+                error_conn.send(traceback.format_exc())
+            raise
 
     async def __compilation_loop(self):
         if self.__perform_files_discovery:
