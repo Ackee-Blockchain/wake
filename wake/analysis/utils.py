@@ -79,6 +79,9 @@ def pair_function_call_arguments(
 @overload
 def get_all_base_and_child_declarations(
     decl: FunctionDefinition,
+    *,
+    base: bool = True,
+    child: bool = True,
 ) -> Set[Union[FunctionDefinition, VariableDeclaration]]:
     ...
 
@@ -86,6 +89,9 @@ def get_all_base_and_child_declarations(
 @overload
 def get_all_base_and_child_declarations(
     decl: VariableDeclaration,
+    *,
+    base: bool = True,
+    child: bool = True,
 ) -> Set[Union[FunctionDefinition, VariableDeclaration]]:
     ...
 
@@ -93,12 +99,18 @@ def get_all_base_and_child_declarations(
 @overload
 def get_all_base_and_child_declarations(
     decl: ModifierDefinition,
+    *,
+    base: bool = True,
+    child: bool = True,
 ) -> Set[ModifierDefinition]:
     ...
 
 
 def get_all_base_and_child_declarations(
-    decl: Union[FunctionDefinition, ModifierDefinition, VariableDeclaration]
+    decl: Union[FunctionDefinition, ModifierDefinition, VariableDeclaration],
+    *,
+    base: bool = True,
+    child: bool = True,
 ) -> Union[
     Set[Union[FunctionDefinition, VariableDeclaration]], Set[ModifierDefinition]
 ]:
@@ -111,28 +123,28 @@ def get_all_base_and_child_declarations(
         decl = queue.popleft()
 
         if isinstance(decl, VariableDeclaration):
-            for base in decl.base_functions:
-                if base not in ret:
-                    ret.add(base)
-                    queue.append(base)
+            for base_func in decl.base_functions:
+                if base and base_func not in ret:
+                    ret.add(base_func)
+                    queue.append(base_func)
         elif isinstance(decl, FunctionDefinition):
-            for base in decl.base_functions:
-                if base not in ret:
-                    ret.add(base)
-                    queue.append(base)
-            for child in decl.child_functions:
-                if child not in ret:
-                    ret.add(child)
-                    queue.append(child)
+            for base_func in decl.base_functions:
+                if base and base_func not in ret:
+                    ret.add(base_func)
+                    queue.append(base_func)
+            for child_func in decl.child_functions:
+                if child and child_func not in ret:
+                    ret.add(child_func)
+                    queue.append(child_func)
         elif isinstance(decl, ModifierDefinition):
-            for base in decl.base_modifiers:
-                if base not in ret:
-                    ret.add(base)
-                    queue.append(base)
-            for child in decl.child_modifiers:
-                if child not in ret:
-                    ret.add(child)
-                    queue.append(child)
+            for base_mod in decl.base_modifiers:
+                if base and base_mod not in ret:
+                    ret.add(base_mod)
+                    queue.append(base_mod)
+            for child_mod in decl.child_modifiers:
+                if child and child_mod not in ret:
+                    ret.add(child_mod)
+                    queue.append(child_mod)
     return ret  # pyright: ignore reportGeneralTypeIssues
 
 
