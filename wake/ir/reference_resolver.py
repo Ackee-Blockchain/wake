@@ -45,6 +45,21 @@ class PostProcessQueueItem:
 
 
 class ReferenceResolver:
+    """
+    The reference resolver is responsible for resolving references between IR nodes.
+
+    A single Solidity source file can be compiled in multiple compilation units (CUs).
+    Each CU may use different AST node IDs for the same AST node.
+    The reference resolver can map between different AST node IDs for the same AST node by indexing the AST IDs by their file path and traversal order.
+    Different compiler versions may produce (structurally) different ASTs for the same source code. All of these cases should be handled by the reference resolver.
+
+    Wake holds only a single [SourceUnit][wake.ir.meta.source_unit.SourceUnit] IR node for each source file.
+    If a source file is compiled in multiple CUs, a canonical AST representation is chosen and the other CUs only perform indexing of the AST nodes.
+    Which CU is chosen as the canonical is internal to Wake and should not be relied upon.
+
+    An unique identifier accross all CUs is a tuple (path, traversal_order).
+    """
+
     _ordered_nodes: DefaultDict[bytes, Dict[AstNodeId, Tuple[Path, int]]]
     _ordered_nodes_inverted: DefaultDict[bytes, Dict[Tuple[Path, int], AstNodeId]]
     _registered_source_files: DefaultDict[bytes, Dict[int, Path]]
@@ -139,11 +154,29 @@ class ReferenceResolver:
     def get_node_path_order(
         self, node_id: AstNodeId, cu_hash: bytes
     ) -> Tuple[Path, int]:
+        """
+        Get the (path, traversal_order) for a given AST node ID in a given CU.
+        Args:
+            node_id: AST node ID
+            cu_hash: hash of the compilation unit that contains the AST node ID
+
+        Returns:
+            Tuple of (path, traversal_order) for the AST node ID
+        """
         return self._ordered_nodes[cu_hash][node_id]
 
     def get_ast_id_from_cu_node_path_order(
         self, node_path_order: Tuple[Path, int], cu_hash: bytes
     ) -> AstNodeId:
+        """
+        Get the AST node ID for a given (path, traversal_order) in a given CU.
+        Args:
+            node_path_order: (path, traversal_order) tuple
+            cu_hash: hash of the compilation unit that contains the returned AST node ID
+
+        Returns:
+            AST node ID for the given (path, traversal_order) tuple in the given CU
+        """
         return self._ordered_nodes_inverted[cu_hash][node_path_order]
 
     def register_node(self, node: SolidityAbc, node_id: AstNodeId, cu_hash: bytes):
@@ -153,10 +186,29 @@ class ReferenceResolver:
         self._registered_nodes[node_path_order] = node
 
     def resolve_node(self, node_id: AstNodeId, cu_hash: bytes) -> SolidityAbc:
+        """
+        Get the IR node for a given AST node ID in a given CU.
+        Args:
+            node_id: AST node ID
+            cu_hash: hash of the compilation unit that contains the AST node ID
+
+        Returns:
+            IR node for the given AST node ID in the given CU
+        """
         node_path_order = self._ordered_nodes[cu_hash][node_id]
         return self._registered_nodes[node_path_order]
 
     def resolve_source_file_id(self, source_file_id: int, cu_hash: bytes) -> Path:
+        """
+        `solc` compiler output also assigns integer IDs to source files.
+        This function can be used to get the absolute path to the source file for a given source file ID in a given CU.
+        Args:
+            source_file_id: source file ID
+            cu_hash: hash of the compilation unit that contains the source file ID
+
+        Returns:
+            Absolute path to the source file for the given source file ID in the given CU
+        """
         return self._registered_source_files[cu_hash][source_file_id]
 
     def register_post_process_callback(
@@ -192,4 +244,12 @@ class ReferenceResolver:
     def get_global_symbol_references(
         self, node_id: GlobalSymbol
     ) -> Tuple[Union[Identifier, MemberAccess], ...]:
+        """
+        Get all references to a given global symbol.
+        Args:
+            node_id: global symbol
+
+        Returns:
+            Tuple of all references to the given global symbol
+        """
         return tuple(self._global_symbol_references[node_id])

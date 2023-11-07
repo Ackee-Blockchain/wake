@@ -113,6 +113,7 @@ nav:
               - structured_documentation: 'api-reference/ir/meta/structured-documentation.md'
               - try_catch_clause: 'api-reference/ir/meta/try-catch-clause.md'
               - using_for_directive: 'api-reference/ir/meta/using-for-directive.md'
+          - reference_resolver: 'api-reference/ir/reference-resolver.md'
           - statements:
               - abc: 'api-reference/ir/statements/abc.md'
               - block: 'api-reference/ir/statements/block.md'
