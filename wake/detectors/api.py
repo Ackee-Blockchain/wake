@@ -4,7 +4,7 @@ import logging
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass, field
-from functools import partial
+from functools import partial, total_ordering
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
@@ -42,6 +42,7 @@ if TYPE_CHECKING:
     from wake.ir import IrAbc, SourceUnit
 
 
+@total_ordering
 class DetectionImpact(StrEnum):
     """
     The impact of a detection.
@@ -53,7 +54,14 @@ class DetectionImpact(StrEnum):
     MEDIUM = "medium"
     HIGH = "high"
 
+    def __lt__(self, other: Any) -> bool:
+        if not isinstance(other, DetectionImpact):
+            return NotImplemented
+        prio = ["info", "warning", "low", "medium", "high"]
+        return prio.index(self.value) < prio.index(other.value)
 
+
+@total_ordering
 class DetectionConfidence(StrEnum):
     """
     The confidence of a detection.
@@ -62,6 +70,12 @@ class DetectionConfidence(StrEnum):
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
+
+    def __lt__(self, other: Any) -> bool:
+        if not isinstance(other, DetectionConfidence):
+            return NotImplemented
+        prio = ["low", "medium", "high"]
+        return prio.index(self.value) < prio.index(other.value)
 
 
 @dataclass(eq=True, frozen=True)
