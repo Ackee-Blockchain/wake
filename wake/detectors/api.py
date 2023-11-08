@@ -665,15 +665,22 @@ def print_detection(
         title = ""
         if isinstance(info, DetectorResult):
             if info.impact == "info":
-                title += "[[bold blue]INFO[/bold blue]] "
+                title += "[[bold blue]INFO[/bold blue]]"
             elif info.impact == "warning":
-                title += "[[bold yellow]WARNING[/bold yellow]] "
+                title += "[[bold yellow]WARNING[/bold yellow]]"
             elif info.impact == "low":
                 title += "[[bold cyan]LOW[/bold cyan]] "
             elif info.impact == "medium":
-                title += "[[bold magenta]MEDIUM[/bold magenta]] "
+                title += "[[bold magenta]MEDIUM[/bold magenta]]"
             elif info.impact == "high":
-                title += "[[bold red]HIGH[/bold red]] "
+                title += "[[bold red]HIGH[/bold red]]"
+            if info.confidence == "low":
+                title += "[[bold cyan]LOW[/bold cyan]]"
+            elif info.confidence == "medium":
+                title += "[[bold magenta]MEDIUM[/bold magenta]]"
+            elif info.confidence == "high":
+                title += "[[bold red]HIGH[/bold red]]"
+            title += " "
 
         title += detection.message
         if detector_id is not None:
