@@ -92,7 +92,7 @@ class ContractDefinition(DeclarationAbc):
     _user_defined_value_types: List[UserDefinedValueTypeDefinition]
     _using_for_directives: List[UsingForDirective]
     _declared_variables: List[VariableDeclaration]
-    _used_events: List[AstNodeId]
+    _used_events: Optional[List[AstNodeId]]
     # _internal_function_ids
 
     _child_contracts: Set[ContractDefinition]
@@ -109,7 +109,7 @@ class ContractDefinition(DeclarationAbc):
             list(contract.used_errors) if contract.used_errors is not None else []
         )
         self._used_events = (
-            list(contract.used_events) if contract.used_events is not None else []
+            list(contract.used_events) if contract.used_events is not None else None
         )
 
         if contract.documentation is None:
@@ -203,8 +203,9 @@ class ContractDefinition(DeclarationAbc):
 
         for error in self.used_errors:
             error._used_in.append(self)
-        for event in self.used_events:
-            event._used_in.append(self)
+        if self.used_events is not None:
+            for event in self.used_events:
+                event._used_in.append(self)
 
         self._reference_resolver.register_destroy_callback(
             self.file, partial(self._destroy, base_contracts)
@@ -215,8 +216,9 @@ class ContractDefinition(DeclarationAbc):
             base_contract._child_contracts.remove(self)
         for error in self.used_errors:
             error._used_in.remove(self)
-        for event in self.used_events:
-            event._used_in.remove(self)
+        if self.used_events is not None:
+            for event in self.used_events:
+                event._used_in.remove(self)
 
     def _parse_name_location(self) -> Tuple[int, int]:
         IDENTIFIER = r"[a-zA-Z$_][a-zA-Z0-9$_]*"
@@ -371,12 +373,15 @@ class ContractDefinition(DeclarationAbc):
         return tuple(used_errors)
 
     @property
-    def used_events(self) -> Tuple[EventDefinition, ...]:
+    def used_events(self) -> Optional[Tuple[EventDefinition, ...]]:
         """
         Available in Solidity 0.8.20 and later.
         Returns:
             Events emitted by the contract as well as all events defined and inherited by the contract.
         """
+        if self._used_events is None:
+            return None
+
         used_events = []
         for event in self._used_events:
             node = self._reference_resolver.resolve_node(event, self._cu_hash)
