@@ -17,8 +17,13 @@ from wake.detectors import (
 
 
 class {class_name}(Detector):
+    _detections: List[DetectorResult]
+
+    def __init__(self) -> None:
+        self._detections = []
+
     def detect(self) -> List[DetectorResult]:
-        return []
+        return self._detections
 
     @detector.command(name="{command_name}")
     def cli(self) -> None:
