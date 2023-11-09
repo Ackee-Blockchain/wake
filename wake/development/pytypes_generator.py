@@ -613,7 +613,7 @@ class TypeGenerator:
 
                 event_decl = None
                 # used_events is only available in 0.8.20 and above
-                if len(contract.used_events) > 0:
+                if contract.used_events is not None:
                     for event in contract.used_events:
                         if event.event_selector == selector:
                             event_decl = event
