@@ -86,8 +86,16 @@ class TypeAbc(ABC):
         else:
             return None
 
+    @property
     @abstractmethod
     def abi_type(self) -> str:
+        """
+        Raises:
+            NotImplementedError: If the type cannot be represented in contract ABI.
+
+        Returns:
+            ABI type string.
+        """
         ...
 
 
@@ -154,6 +162,7 @@ class Address(TypeAbc):
         else:
             self.__is_payable = False
 
+    @property
     def abi_type(self) -> str:
         return "address"
 
@@ -174,6 +183,7 @@ class Bool(TypeAbc):
     def __init__(self, type_identifier: StringReader):
         type_identifier.read("t_bool")
 
+    @property
     def abi_type(self) -> str:
         return "bool"
 
@@ -208,6 +218,7 @@ class Int(IntAbc):
         type_identifier.read(number)
         self._bits_count = int(number)
 
+    @property
     def abi_type(self) -> str:
         return f"int{self._bits_count}"
 
@@ -225,6 +236,7 @@ class UInt(IntAbc):
         type_identifier.read(number)
         self._bits_count = int(number)
 
+    @property
     def abi_type(self) -> str:
         return f"uint{self._bits_count}"
 
@@ -279,6 +291,7 @@ class Fixed(FixedAbc):
         type_identifier.read(fractional_digits)
         self._fractional_digits = int(fractional_digits)
 
+    @property
     def abi_type(self) -> str:
         raise NotImplementedError
 
@@ -306,6 +319,7 @@ class UFixed(FixedAbc):
         type_identifier.read(fractional_digits)
         self._fractional_digits = int(fractional_digits)
 
+    @property
     def abi_type(self) -> str:
         raise NotImplementedError
 
@@ -335,6 +349,7 @@ class StringLiteral(TypeAbc):
         type_identifier.read(hex)
         self.__keccak256_hash = bytes.fromhex(hex)
 
+    @property
     def abi_type(self) -> str:
         raise NotImplementedError
 
@@ -382,6 +397,7 @@ class String(TypeAbc):
         else:
             self.__is_slice = False
 
+    @property
     def abi_type(self) -> str:
         return "string"
 
@@ -460,6 +476,7 @@ class Bytes(TypeAbc):
         else:
             self.__is_slice = False
 
+    @property
     def abi_type(self) -> str:
         return "bytes"
 
@@ -518,6 +535,7 @@ class FixedBytes(TypeAbc):
         type_identifier.read(number)
         self.__bytes_count = int(number)
 
+    @property
     def abi_type(self) -> str:
         return f"bytes{self.__bytes_count}"
 
@@ -632,6 +650,7 @@ class Function(TypeAbc):
         else:
             self.__attached_to = None
 
+    @property
     def abi_type(self) -> str:
         return "function"
 
@@ -763,13 +782,14 @@ class Tuple(TypeAbc):
         type_identifier.read("t_tuple")
         self.__components = _parse_list(type_identifier, reference_resolver, cu_hash)
 
+    @property
     def abi_type(self) -> str:
         if any(component is None for component in self.__components):
             raise NotImplementedError
         return (
             "("
             + ",".join(
-                component.abi_type()  # pyright: ignore reportOptionalMemberAccess
+                component.abi_type  # pyright: ignore reportOptionalMemberAccess
                 for component in self.__components
             )
             + ")"
@@ -810,6 +830,7 @@ class Type(TypeAbc):
         assert len(actual_type) == 1 and actual_type[0] is not None
         self.__actual_type = actual_type[0]
 
+    @property
     def abi_type(self) -> str:
         raise NotImplementedError
 
@@ -881,6 +902,7 @@ class Rational(TypeAbc):
         type_identifier.read(number)
         self.__denominator = int(number)
 
+    @property
     def abi_type(self) -> str:
         raise NotImplementedError
 
@@ -920,6 +942,7 @@ class Modifier(TypeAbc):
         assert not any(param is None for param in parameters)
         self.__parameters = parameters  # type: ignore
 
+    @property
     def abi_type(self) -> str:
         raise NotImplementedError
 
@@ -989,11 +1012,12 @@ class Array(TypeAbc):
         else:
             self.__is_slice = False
 
+    @property
     def abi_type(self) -> str:
         if self.length is not None:
-            return f"{self.base_type.abi_type()}[{self.length}]"
+            return f"{self.base_type.abi_type}[{self.length}]"
         else:
-            return f"{self.base_type.abi_type()}[]"
+            return f"{self.base_type.abi_type}[]"
 
     @property
     def base_type(self) -> TypeAbc:
@@ -1072,6 +1096,7 @@ class Mapping(TypeAbc):
         self.__key_type = key_value[0]
         self.__value_type = key_value[1]
 
+    @property
     def abi_type(self) -> str:
         raise NotImplementedError
 
@@ -1123,6 +1148,7 @@ class Contract(TypeAbc):
         self.__reference_resolver = reference_resolver
         self.__cu_hash = cu_hash
 
+    @property
     def abi_type(self) -> str:
         return "address"
 
@@ -1219,10 +1245,11 @@ class Struct(TypeAbc):
         self.__reference_resolver = reference_resolver
         self.__cu_hash = cu_hash
 
+    @property
     def abi_type(self) -> str:
         return (
             "("
-            + ",".join([member.type.abi_type() for member in self.ir_node.members])
+            + ",".join([member.type.abi_type for member in self.ir_node.members])
             + ")"
         )
 
@@ -1301,6 +1328,7 @@ class Enum(TypeAbc):
         self.__reference_resolver = reference_resolver
         self.__cu_hash = cu_hash
 
+    @property
     def abi_type(self) -> str:
         return "uint8"
 
@@ -1360,6 +1388,7 @@ class Magic(TypeAbc):
         else:
             self.__meta_argument_type = None
 
+    @property
     def abi_type(self) -> str:
         raise NotImplementedError
 
@@ -1407,8 +1436,9 @@ class UserDefinedValueType(TypeAbc):
         self.__reference_resolver = reference_resolver
         self.__cu_hash = cu_hash
 
+    @property
     def abi_type(self) -> str:
-        return self.ir_node.underlying_type.type.abi_type()
+        return self.ir_node.underlying_type.type.abi_type
 
     @property
     def name(self) -> str:
@@ -1452,5 +1482,6 @@ class Module(TypeAbc):
 
         self.__source_unit_id = int(match.group("number"))
 
+    @property
     def abi_type(self) -> str:
         raise NotImplementedError

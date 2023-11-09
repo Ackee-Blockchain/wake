@@ -130,7 +130,7 @@ class ErrorDefinition(DeclarationAbc):
         else:
             signature = f"{self._name}("
             signature += ",".join(
-                param.type.abi_type() for param in self.parameters.parameters
+                param.type.abi_type for param in self.parameters.parameters
             )
             signature += ")"
             h = keccak.new(data=signature.encode("utf-8"), digest_bits=256)

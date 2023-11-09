@@ -164,7 +164,7 @@ class EventDefinition(DeclarationAbc):
         if self._event_selector is not None:
             return self._event_selector
         else:
-            signature = f"{self._name}({','.join(param.type.abi_type() for param in self.parameters.parameters)})"
+            signature = f"{self._name}({','.join(param.type.abi_type for param in self.parameters.parameters)})"
             h = keccak.new(data=signature.encode("utf-8"), digest_bits=256)
             return h.digest()
 
