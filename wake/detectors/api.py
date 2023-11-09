@@ -669,11 +669,12 @@ def print_detection(
             elif info.impact == "warning":
                 title += "[[bold yellow]WARNING[/bold yellow]]"
             elif info.impact == "low":
-                title += "[[bold cyan]LOW[/bold cyan]] "
+                title += "[[bold cyan]LOW[/bold cyan]]"
             elif info.impact == "medium":
                 title += "[[bold magenta]MEDIUM[/bold magenta]]"
             elif info.impact == "high":
                 title += "[[bold red]HIGH[/bold red]]"
+
             if info.confidence == "low":
                 title += "[[bold cyan]LOW[/bold cyan]]"
             elif info.confidence == "medium":
