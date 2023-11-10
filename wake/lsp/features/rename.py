@@ -73,7 +73,7 @@ def _generate_reference_location(
     ],
     context: LspContext,
 ) -> Range:
-    path = reference.file
+    path = reference.source_unit.file
     if isinstance(reference, MemberAccess):
         location = reference.member_byte_location
     elif isinstance(reference, ExternalReference):
@@ -101,7 +101,7 @@ def _generate_workspace_edit(
 
     for reference in all_references:
         if not isinstance(reference, (UnaryOperation, BinaryOperation)):
-            changes_by_file[reference.file].append(
+            changes_by_file[reference.source_unit.file].append(
                 TextEdit(
                     range=_generate_reference_location(reference, context),
                     new_text=new_name,
@@ -173,7 +173,7 @@ async def rename(
 
     if isinstance(node, DeclarationAbc):
         name_location_range = context.compiler.get_range_from_byte_offsets(
-            node.file, node.name_location
+            node.source_unit.file, node.name_location
         )
         if not position_within_range(params.position, name_location_range):
             raise LspError(ErrorCodes.RequestFailed, "Cannot rename this symbol")
@@ -181,7 +181,7 @@ async def rename(
         node = node.referenced_declaration
     elif isinstance(node, MemberAccess):
         member_location_range = context.compiler.get_range_from_byte_offsets(
-            node.file, node.member_byte_location
+            node.source_unit.file, node.member_byte_location
         )
         if not position_within_range(params.position, member_location_range):
             raise LspError(ErrorCodes.RequestFailed, "Cannot rename this symbol")
@@ -257,7 +257,7 @@ async def prepare_rename(
         node = external_reference.referenced_declaration
     elif isinstance(node, DeclarationAbc):
         name_location_range = context.compiler.get_range_from_byte_offsets(
-            node.file, node.name_location
+            node.source_unit.file, node.name_location
         )
         if not position_within_range(params.position, name_location_range):
             return None

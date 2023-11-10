@@ -85,11 +85,13 @@ async def generate_cfg_handler(
         ):
             first_statement = statements[0]
             line, column = context.compiler.get_line_pos_from_byte_offset(
-                first_statement.file, first_statement.byte_location[0]
+                first_statement.source_unit.file, first_statement.byte_location[0]
             )
             line += 1
             column += 1
-            node_attrs["URL"] = f"vscode://file/{first_statement.file}:{line}:{column}"
+            node_attrs[
+                "URL"
+            ] = f"vscode://file/{first_statement.source_unit.file}:{line}:{column}"
         g.node(str(node.id), **node_attrs)
 
     for (

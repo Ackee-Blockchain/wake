@@ -331,9 +331,11 @@ class TypeGenerator:
         for fn in contract.functions:
             if fn.kind == FunctionKind.CONSTRUCTOR:
                 line, _ = self.__get_line_pos_from_byte_offset(
-                    fn.file, fn.byte_location[0]
+                    fn.source_unit.file, fn.byte_location[0]
                 )
-                source_code_link = f"[Source code]({_path_to_uri(fn.file)}#{line + 1})"
+                source_code_link = (
+                    f"[Source code]({_path_to_uri(fn.source_unit.file)}#{line + 1})"
+                )
                 break
 
         # generate @overload stubs
@@ -470,11 +472,11 @@ class TypeGenerator:
                 0, "class " + self.get_name(contract) + "(" + base_names + "):", 1
             )
         line, _ = self.__get_line_pos_from_byte_offset(
-            contract.file, contract.byte_location[0]
+            contract.source_unit.file, contract.byte_location[0]
         )
         self.add_str_to_types(1, '"""', 1)
         self.add_str_to_types(
-            1, f"[Source code]({_path_to_uri(contract.file)}#{line + 1})", 1
+            1, f"[Source code]({_path_to_uri(contract.source_unit.file)}#{line + 1})", 1
         )
         self.add_str_to_types(1, '"""', 1)
 
@@ -502,7 +504,7 @@ class TypeGenerator:
                     continue
                 try:
                     path = self.__reference_resolver.resolve_source_file_id(
-                        file_id, contract.cu_hash
+                        file_id, contract.source_unit.cu_hash
                     )
                 except KeyError:
                     continue
@@ -748,10 +750,12 @@ class TypeGenerator:
             self.add_str_to_types(indent, f"class {self.get_name(struct)}:", 1)
             self.add_str_to_types(indent + 1, '"""', 1)
             line, _ = self.__get_line_pos_from_byte_offset(
-                struct.file, struct.byte_location[0]
+                struct.source_unit.file, struct.byte_location[0]
             )
             self.add_str_to_types(
-                indent + 1, f"[Source code]({_path_to_uri(struct.file)}#{line + 1})", 2
+                indent + 1,
+                f"[Source code]({_path_to_uri(struct.source_unit.file)}#{line + 1})",
+                2,
             )
             self.add_str_to_types(indent + 1, "Attributes:", 1)
             for member_name, member_type, member_type_desc, _ in members:
@@ -779,11 +783,13 @@ class TypeGenerator:
         for enum in enums:
             self.add_str_to_types(indent, f"class {self.get_name(enum)}(IntEnum):", 1)
             line, _ = self.__get_line_pos_from_byte_offset(
-                enum.file, enum.byte_location[0]
+                enum.source_unit.file, enum.byte_location[0]
             )
             self.add_str_to_types(indent + 1, '"""', 1)
             self.add_str_to_types(
-                indent + 1, f"[Source code]({_path_to_uri(enum.file)}#{line + 1})", 2
+                indent + 1,
+                f"[Source code]({_path_to_uri(enum.source_unit.file)}#{line + 1})",
+                2,
             )
             self.add_str_to_types(indent + 1, '"""', 1)
             num = 0
@@ -846,12 +852,12 @@ class TypeGenerator:
             )
 
             line, _ = self.__get_line_pos_from_byte_offset(
-                error.file, error.byte_location[0]
+                error.source_unit.file, error.byte_location[0]
             )
             self.add_str_to_types(indent + 1, '"""', 1)
             self.add_str_to_types(
                 indent + 1,
-                f"[Source code]({_path_to_uri(error.file)}#{line + 1})",
+                f"[Source code]({_path_to_uri(error.source_unit.file)}#{line + 1})",
                 1 if len(parameters) == 0 else 2,
             )
 
@@ -936,12 +942,12 @@ class TypeGenerator:
             self.add_str_to_types(indent, f"class {self.get_name(event)}:", 1)
 
             line, _ = self.__get_line_pos_from_byte_offset(
-                event.file, event.byte_location[0]
+                event.source_unit.file, event.byte_location[0]
             )
             self.add_str_to_types(indent + 1, '"""', 1)
             self.add_str_to_types(
                 indent + 1,
-                f"[Source code]({_path_to_uri(event.file)}#{line + 1})",
+                f"[Source code]({_path_to_uri(event.source_unit.file)}#{line + 1})",
                 1 if len(parameters) == 0 else 2,
             )
 
@@ -1317,12 +1323,12 @@ class TypeGenerator:
         )
 
         line, _ = self.__get_line_pos_from_byte_offset(
-            declaration.file, declaration.byte_location[0]
+            declaration.source_unit.file, declaration.byte_location[0]
         )
         self.add_str_to_types(2, '"""', 1)
         self.add_str_to_types(
             2,
-            f"[Source code]({_path_to_uri(declaration.file)}#{line + 1})",
+            f"[Source code]({_path_to_uri(declaration.source_unit.file)}#{line + 1})",
             1 if len(param_names) + len(returns) == 0 else 2,
         )
         if len(param_names) > 0:
@@ -1371,12 +1377,12 @@ class TypeGenerator:
             1,
         )
         line, _ = self.__get_line_pos_from_byte_offset(
-            declaration.file, declaration.byte_location[0]
+            declaration.source_unit.file, declaration.byte_location[0]
         )
         self.add_str_to_types(2, '"""', 1)
         self.add_str_to_types(
             2,
-            f"[Source code]({_path_to_uri(declaration.file)}#{line + 1})",
+            f"[Source code]({_path_to_uri(declaration.source_unit.file)}#{line + 1})",
             1 if len(param_names) + len(returns) == 0 else 2,
         )
         if len(param_names) > 0:

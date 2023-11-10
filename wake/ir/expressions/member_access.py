@@ -80,11 +80,11 @@ class MemberAccess(ExpressionAbc):
                             node_path_order = (
                                 self._reference_resolver.get_node_path_order(
                                     AstNodeId(enum_value.ast_node_id),
-                                    enum_value.cu_hash,
+                                    enum_value.source_unit.cu_hash,
                                 )
                             )
                             this_cu_id = self._reference_resolver.get_ast_id_from_cu_node_path_order(
-                                node_path_order, self.cu_hash
+                                node_path_order, self.source_unit.cu_hash
                             )
                             self._referenced_declaration_id = this_cu_id
                             break
@@ -329,17 +329,17 @@ class MemberAccess(ExpressionAbc):
                 global_symbol, self
             )
             self._reference_resolver.register_destroy_callback(
-                self.file, partial(self._destroy, global_symbol)
+                self.source_unit.file, partial(self._destroy, global_symbol)
             )
         else:
             node = self._reference_resolver.resolve_node(
-                self._referenced_declaration_id, self._cu_hash
+                self._referenced_declaration_id, self.source_unit.cu_hash
             )
 
             if isinstance(node, DeclarationAbc):
                 node.register_reference(self)
                 self._reference_resolver.register_destroy_callback(
-                    self.file, partial(self._destroy, node)
+                    self.source_unit.file, partial(self._destroy, node)
                 )
             elif isinstance(node, ImportDirective):
                 # make this node to reference the source unit directly
@@ -351,7 +351,7 @@ class MemberAccess(ExpressionAbc):
                 )
                 self._referenced_declaration_id = (
                     self._reference_resolver.get_ast_id_from_cu_node_path_order(
-                        node_path_order, self.cu_hash
+                        node_path_order, self.source_unit.cu_hash
                     )
                 )
             else:
@@ -402,7 +402,7 @@ class MemberAccess(ExpressionAbc):
             return GlobalSymbol(self._referenced_declaration_id)
 
         node = self._reference_resolver.resolve_node(
-            self._referenced_declaration_id, self._cu_hash
+            self._referenced_declaration_id, self.source_unit.cu_hash
         )
         assert isinstance(node, (DeclarationAbc, SourceUnit))
         return node

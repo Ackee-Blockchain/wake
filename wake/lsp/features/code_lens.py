@@ -192,12 +192,12 @@ async def code_lens(
             for ref in refs:
                 if isinstance(ref, DeclarationAbc):
                     line, col = context.compiler.get_line_pos_from_byte_offset(
-                        ref.file, ref.name_location[0]
+                        ref.source_unit.file, ref.name_location[0]
                     )
                     declaration_positions.append(Position(line=line, character=col))
 
             line, col = context.compiler.get_line_pos_from_byte_offset(
-                node.file, node.name_location[0]
+                node.source_unit.file, node.name_location[0]
             )
 
             # should include info to be able to recover command args from cache (positions could have changed)
@@ -205,7 +205,7 @@ async def code_lens(
             code_lens.append(
                 _generate_code_lens(
                     context,
-                    node.file,
+                    node.source_unit.file,
                     f"{refs_count} references" if refs_count != 1 else "1 reference",
                     "Tools-for-Solidity.execute.references",
                     [
@@ -225,7 +225,7 @@ async def code_lens(
                 code_lens.append(
                     _generate_code_lens(
                         context,
-                        node.file,
+                        node.source_unit.file,
                         "Control flow graph",
                         "Tools-for-Solidity.generate.control_flow_graph",
                         [params.text_document.uri, node.canonical_name],
@@ -237,7 +237,7 @@ async def code_lens(
                 code_lens.append(
                     _generate_code_lens(
                         context,
-                        node.file,
+                        node.source_unit.file,
                         "Inheritance graph",
                         "Tools-for-Solidity.generate.inheritance_graph",
                         [params.text_document.uri, node.canonical_name],
@@ -249,7 +249,7 @@ async def code_lens(
                 code_lens.append(
                     _generate_code_lens(
                         context,
-                        node.file,
+                        node.source_unit.file,
                         "Linearized inheritance graph",
                         "Tools-for-Solidity.generate.linearized_inheritance_graph",
                         [params.text_document.uri, node.canonical_name],
@@ -265,7 +265,7 @@ async def code_lens(
                 code_lens.append(
                     _generate_code_lens(
                         context,
-                        node.file,
+                        node.source_unit.file,
                         f"{node.function_selector.hex()}",
                         "Tools-for-Solidity.copy_to_clipboard",
                         [node.function_selector.hex()],
@@ -277,7 +277,7 @@ async def code_lens(
                 code_lens.append(
                     _generate_code_lens(
                         context,
-                        node.file,
+                        node.source_unit.file,
                         f"{node.error_selector.hex()}",
                         "Tools-for-Solidity.copy_to_clipboard",
                         [node.error_selector.hex()],
@@ -289,7 +289,7 @@ async def code_lens(
                 code_lens.append(
                     _generate_code_lens(
                         context,
-                        node.file,
+                        node.source_unit.file,
                         f"{node.event_selector.hex()}",
                         "Tools-for-Solidity.copy_to_clipboard",
                         [node.event_selector.hex()],

@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from pathlib import Path
 from typing import TYPE_CHECKING, Iterator, Optional, Tuple
 
-from wake.core.solidity_version import SolidityVersionRanges
 from wake.ir.ast import SolcNode, SolidityNode
 from wake.ir.reference_resolver import ReferenceResolver
 from wake.ir.utils import IrInitTuple
@@ -19,7 +17,7 @@ class IrAbc(ABC):
 
     IR model is built on top of the AST (Abstract Syntax Tree) output of the [solc compiler](https://docs.soliditylang.org/en/latest/using-the-compiler.html).
 
-    Each IR node is associated with a [source code location][wake.ir.abc.IrAbc.byte_location] in a [source file][wake.ir.abc.IrAbc.file].
+    Each IR node is associated with a [source code location][wake.ir.abc.IrAbc.byte_location] in a [source file][wake.ir.meta.source_unit.SourceUnit.file].
     This means that each IR node has a corresponding (typically non-empty) Solidity or Yul [source code][wake.ir.abc.IrAbc.source].
 
     !!! info
@@ -27,26 +25,20 @@ class IrAbc(ABC):
 
     """
 
-    _file: Path
     _source: bytes
     _ast_node: SolcNode
-    _version_ranges: SolidityVersionRanges
     _parent: Optional[IrAbc]
     _depth: int
-    _cu_hash: bytes
     _source_unit: SourceUnit
     _reference_resolver: ReferenceResolver
 
     def __init__(self, init: IrInitTuple, solc_node: SolcNode, parent: Optional[IrAbc]):
-        self._file = init.file
         self._ast_node = solc_node
-        self._version_ranges = init.cu.versions
         self._parent = parent
         if self._parent is not None:
             self._depth = self._parent.ast_tree_depth + 1
         else:
             self._depth = 0
-        self._cu_hash = init.cu.hash
 
         assert init.source_unit is not None
         self._source_unit = init.source_unit
@@ -77,35 +69,9 @@ class IrAbc(ABC):
         ...
 
     @property
-    def file(self) -> Path:
-        """
-        The absolute path to the source file that contains this IR node. For a given IR node, all child and parent nodes have the same file path.
-        Returns:
-            Absolute path to the file containing this node.
-        """
-        return self._file
-
-    @property
     @abstractmethod
     def ast_node(self) -> SolcNode:
         ...
-
-    @property
-    def cu_hash(self) -> bytes:
-        return self._cu_hash
-
-    @property
-    def version_ranges(self) -> SolidityVersionRanges:
-        """
-        !!! example
-            ```python
-            if "0.8.0" in node.version_ranges:
-                print("The given file can be compiled with solc 0.8.0")
-            ```
-        Returns:
-            Object listing all `solc` versions that can be used to compile the file containing this node.
-        """
-        return self._version_ranges
 
     @property
     def ast_tree_depth(self) -> int:
@@ -144,7 +110,7 @@ class IrAbc(ABC):
     @property
     def source(self) -> str:
         """
-        UTF-8 decoded source code from the [source file][wake.ir.abc.IrAbc.file] at the [byte offset][wake.ir.abc.IrAbc.byte_location] of this node.
+        UTF-8 decoded source code from the [source file][wake.ir.meta.source_unit.SourceUnit.file] at the [byte offset][wake.ir.abc.IrAbc.byte_location] of this node.
         Returns:
             Solidity or Yul source code corresponding to this node.
         """
@@ -170,7 +136,9 @@ class SolidityAbc(IrAbc, ABC):
         self, init: IrInitTuple, solc_node: SolidityNode, parent: Optional[SolidityAbc]
     ):
         super().__init__(init, solc_node, parent)
-        self._reference_resolver.register_node(self, solc_node.id, self._cu_hash)
+        self._reference_resolver.register_node(
+            self, solc_node.id, self.source_unit.cu_hash
+        )
 
     @property
     def ast_node(self) -> SolidityNode:

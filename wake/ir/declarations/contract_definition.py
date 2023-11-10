@@ -208,7 +208,7 @@ class ContractDefinition(DeclarationAbc):
                 event._used_in.append(self)
 
         self._reference_resolver.register_destroy_callback(
-            self.file, partial(self._destroy, base_contracts)
+            self.source_unit.file, partial(self._destroy, base_contracts)
         )
 
     def _destroy(self, base_contracts: List[ContractDefinition]) -> None:
@@ -354,7 +354,9 @@ class ContractDefinition(DeclarationAbc):
         """
         base_contracts = []
         for base_contract in self._linearized_base_contracts:
-            node = self._reference_resolver.resolve_node(base_contract, self._cu_hash)
+            node = self._reference_resolver.resolve_node(
+                base_contract, self.source_unit.cu_hash
+            )
             assert isinstance(node, ContractDefinition)
             base_contracts.append(node)
         return tuple(base_contracts)
@@ -367,7 +369,9 @@ class ContractDefinition(DeclarationAbc):
         """
         used_errors = []
         for error in self._used_errors:
-            node = self._reference_resolver.resolve_node(error, self._cu_hash)
+            node = self._reference_resolver.resolve_node(
+                error, self.source_unit.cu_hash
+            )
             assert isinstance(node, ErrorDefinition)
             used_errors.append(node)
         return tuple(used_errors)
@@ -384,7 +388,9 @@ class ContractDefinition(DeclarationAbc):
 
         used_events = []
         for event in self._used_events:
-            node = self._reference_resolver.resolve_node(event, self._cu_hash)
+            node = self._reference_resolver.resolve_node(
+                event, self.source_unit.cu_hash
+            )
             assert isinstance(node, EventDefinition)
             used_events.append(node)
         return tuple(used_events)

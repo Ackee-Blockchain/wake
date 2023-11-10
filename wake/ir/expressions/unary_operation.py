@@ -48,7 +48,7 @@ class UnaryOperation(ExpressionAbc):
         assert function is not None
         function.register_reference(self)
         self._reference_resolver.register_destroy_callback(
-            self.file, partial(self._destroy, function)
+            self.source_unit.file, partial(self._destroy, function)
         )
 
     def _destroy(self, function: FunctionDefinition) -> None:
@@ -95,6 +95,8 @@ class UnaryOperation(ExpressionAbc):
     def function(self) -> Optional[FunctionDefinition]:
         if self._function_id is None:
             return None
-        node = self._reference_resolver.resolve_node(self._function_id, self._cu_hash)
+        node = self._reference_resolver.resolve_node(
+            self._function_id, self.source_unit.cu_hash
+        )
         assert isinstance(node, FunctionDefinition)
         return node

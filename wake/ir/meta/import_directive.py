@@ -176,11 +176,11 @@ class ImportDirective(SolidityAbc):
             for referenced_declaration in referenced_declarations:
                 node_path_order = self._reference_resolver.get_node_path_order(
                     AstNodeId(referenced_declaration.ast_node_id),
-                    referenced_declaration.cu_hash,
+                    referenced_declaration.source_unit.cu_hash,
                 )
                 referenced_declaration_ids.add(
                     self._reference_resolver.get_ast_id_from_cu_node_path_order(
-                        node_path_order, self.cu_hash
+                        node_path_order, self.source_unit.cu_hash
                     )
                 )
             symbol_alias.foreign._referenced_declaration_ids = (
@@ -228,7 +228,7 @@ class ImportDirective(SolidityAbc):
         from .source_unit import SourceUnit
 
         node = self._reference_resolver.resolve_node(
-            self._imported_source_unit_id, self._cu_hash
+            self._imported_source_unit_id, self.source_unit.cu_hash
         )
         assert isinstance(node, SourceUnit)
         return node

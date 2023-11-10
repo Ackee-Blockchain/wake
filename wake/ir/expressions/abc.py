@@ -116,7 +116,7 @@ class ExpressionAbc(SolidityAbc, ABC):
 
         type_identifier = StringReader(self._type_descriptions.type_identifier)
         ret = TypeAbc.from_type_identifier(
-            type_identifier, self._reference_resolver, self.cu_hash
+            type_identifier, self._reference_resolver, self.source_unit.cu_hash
         )
         assert (
             len(type_identifier) == 0

@@ -354,4 +354,4 @@ class Visitor:
             line, col = node.source_unit.get_line_col_from_byte_offset(
                 node.byte_location[0]
             )
-        return self.generate_link_from_line_col(node.file, line, col)
+        return self.generate_link_from_line_col(node.source_unit.file, line, col)

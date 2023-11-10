@@ -112,7 +112,7 @@ class ModifierDefinition(DeclarationAbc):
         for base_modifier in base_modifiers:
             base_modifier._child_modifiers.add(self)
         self._reference_resolver.register_destroy_callback(
-            self.file, partial(self._destroy, base_modifiers)
+            self.source_unit.file, partial(self._destroy, base_modifiers)
         )
 
     def _destroy(self, base_modifiers: Tuple[ModifierDefinition]) -> None:
@@ -319,7 +319,7 @@ class ModifierDefinition(DeclarationAbc):
         base_modifiers = []
         for base_modifier_id in self._base_modifiers:
             base_modifier = self._reference_resolver.resolve_node(
-                base_modifier_id, self._cu_hash
+                base_modifier_id, self.source_unit.cu_hash
             )
             assert isinstance(base_modifier, ModifierDefinition)
             base_modifiers.append(base_modifier)

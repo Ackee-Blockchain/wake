@@ -72,43 +72,59 @@ def _get_results_from_node(
         ret = set()
         if isinstance(node, (FunctionDefinition, VariableDeclaration)):
             if isinstance(node, VariableDeclaration) or node.implemented:
-                ret.add((node.file, node.name_location))
+                ret.add((node.source_unit.file, node.name_location))
 
             for base_function in node.base_functions:
                 if base_function.implemented:
-                    ret.add((base_function.file, base_function.name_location))
+                    ret.add(
+                        (base_function.source_unit.file, base_function.name_location)
+                    )
             if isinstance(node, FunctionDefinition):
                 for child_function in node.child_functions:
                     if isinstance(child_function, VariableDeclaration):
-                        ret.add((child_function.file, child_function.name_location))
+                        ret.add(
+                            (
+                                child_function.source_unit.file,
+                                child_function.name_location,
+                            )
+                        )
                     elif (
                         isinstance(child_function, FunctionDefinition)
                         and child_function.implemented
                     ):
-                        ret.add((child_function.file, child_function.name_location))
+                        ret.add(
+                            (
+                                child_function.source_unit.file,
+                                child_function.name_location,
+                            )
+                        )
         elif isinstance(node, ModifierDefinition):
             if node.implemented:
-                ret.add((node.file, node.name_location))
+                ret.add((node.source_unit.file, node.name_location))
             for base_modifier in node.base_modifiers:
                 if base_modifier.implemented:
-                    ret.add((base_modifier.file, base_modifier.name_location))
+                    ret.add(
+                        (base_modifier.source_unit.file, base_modifier.name_location)
+                    )
             for child_modifier in node.child_modifiers:
                 if child_modifier.implemented:
-                    ret.add((child_modifier.file, child_modifier.name_location))
+                    ret.add(
+                        (child_modifier.source_unit.file, child_modifier.name_location)
+                    )
         elif isinstance(node, SourceUnit):
             ret.add((node.file, node.byte_location))
         else:
-            ret.add((node.file, node.name_location))
+            ret.add((node.source_unit.file, node.name_location))
 
         return ret
 
     if isinstance(original_node, DeclarationAbc):
         assert node_name_location is not None
         name_location_range = context.compiler.get_range_from_byte_offsets(
-            original_node.file, node_name_location
+            original_node.source_unit.file, node_name_location
         )
         if position_within_range(position, name_location_range):
-            return [(original_node.file, original_node.name_location)]
+            return [(original_node.source_unit.file, original_node.name_location)]
         return None
 
     if isinstance(original_node, (Identifier, MemberAccess)):

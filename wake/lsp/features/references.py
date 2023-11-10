@@ -62,7 +62,7 @@ def _generate_reference_location(
     ],
     context: LspContext,
 ) -> Location:
-    path = reference.file
+    path = reference.source_unit.file
     if isinstance(reference, MemberAccess):
         location = reference.member_byte_location
     elif isinstance(reference, ExternalReference):
@@ -108,7 +108,7 @@ async def references(
 
     if isinstance(node, DeclarationAbc):
         name_location_range = context.compiler.get_range_from_byte_offsets(
-            node.file, node.name_location
+            node.source_unit.file, node.name_location
         )
         if not position_within_range(params.position, name_location_range):
             return None

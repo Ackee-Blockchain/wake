@@ -213,7 +213,8 @@ def _strip_excluded_subdetections(
     subdetections = []
     for d in detection.subdetections:
         if not any(
-            is_relative_to(d.ir_node.file, p) for p in config.detectors.exclude_paths
+            is_relative_to(d.ir_node.source_unit.file, p)
+            for p in config.detectors.exclude_paths
         ):
             subdetections.append(d)
             continue
@@ -241,7 +242,8 @@ def _strip_ignored_subdetections(detection: Detection, config: WakeConfig) -> De
     subdetections = []
     for d in detection.subdetections:
         if any(
-            is_relative_to(d.ir_node.file, p) for p in config.detectors.ignore_paths
+            is_relative_to(d.ir_node.source_unit.file, p)
+            for p in config.detectors.ignore_paths
         ):
             continue
 
@@ -296,7 +298,7 @@ def _filter_detections(
     ignored = []
     for detection in tmp:
         if any(
-            is_relative_to(detection.detection.ir_node.file, p)
+            is_relative_to(detection.detection.ir_node.source_unit.file, p)
             for p in config.detectors.ignore_paths
         ):
             continue
@@ -316,7 +318,7 @@ def _filter_detections(
             continue
 
         if any(
-            is_relative_to(detection.detection.ir_node.file, p)
+            is_relative_to(detection.detection.ir_node.source_unit.file, p)
             for p in config.detectors.exclude_paths
         ):
             detection = DetectorResult(
@@ -331,8 +333,8 @@ def _filter_detections(
         if _detection_commented_out(
             detector_name,
             detection.detection,
-            wake_comments[detection.detection.ir_node.file],
-            source_units[detection.detection.ir_node.file],
+            wake_comments[detection.detection.ir_node.source_unit.file],
+            source_units[detection.detection.ir_node.source_unit.file],
         ):
             ignored.append(detection)
         else:

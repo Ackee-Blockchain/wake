@@ -33,10 +33,9 @@ class IdentifierPathPart:
     _reference_resolver: ReferenceResolver
     _underlying_node: Union[IdentifierPath, UserDefinedTypeName]
     _referenced_declaration_id: Optional[AstNodeId]
-    _cu_hash: bytes
-    _file: Path
     _byte_location: Tuple[int, int]
     _name: str
+    _source_unit: SourceUnit
 
     def __init__(
         self,
@@ -45,16 +44,14 @@ class IdentifierPathPart:
         name: str,
         referenced_declaration_id: AstNodeId,
         reference_resolver: ReferenceResolver,
-        cu_hash: bytes,
-        file: Path,
+        source_unit: SourceUnit,
     ):
         self._underlying_node = underlying_node
         self._reference_resolver = reference_resolver
         self._referenced_declaration_id = referenced_declaration_id
-        self._cu_hash = cu_hash
-        self._file = file
         self._byte_location = byte_location
         self._name = name
+        self._source_unit = source_unit
 
         self._reference_resolver.register_post_process_callback(self._post_process)
 
@@ -63,7 +60,7 @@ class IdentifierPathPart:
         if isinstance(referenced_declaration, DeclarationAbc):
             referenced_declaration.register_reference(self)
             self._reference_resolver.register_destroy_callback(
-                self.file, partial(self._destroy, referenced_declaration)
+                self._source_unit.file, partial(self._destroy, referenced_declaration)
             )
 
     def _destroy(self, referenced_declaration: DeclarationAbc) -> None:
@@ -78,15 +75,6 @@ class IdentifierPathPart:
         return self._underlying_node
 
     @property
-    def file(self) -> Path:
-        """
-        The absolute path to the source file that contains the parent IR node of this identifier path part.
-        Returns:
-            Absolute path to the file containing this identifier path part.
-        """
-        return self._file
-
-    @property
     def byte_location(self) -> Tuple[int, int]:
         """
         The start and end byte offsets of this identifier path part in the source file. `{node}.byte_location[0]` is the start byte offset, `{node}.byte_location[1]` is the end byte offset.
@@ -96,6 +84,14 @@ class IdentifierPathPart:
             Tuple of the start and end byte offsets of this node in the source file.
         """
         return self._byte_location
+
+    @property
+    def source_unit(self) -> SourceUnit:
+        """
+        Returns:
+            [source unit][wake.ir.meta.source_unit.SourceUnit] that contains this node.
+        """
+        return self._source_unit
 
     @property
     def name(self) -> str:
@@ -124,7 +120,7 @@ class IdentifierPathPart:
 
         assert self._referenced_declaration_id is not None
         node = self._reference_resolver.resolve_node(
-            self._referenced_declaration_id, self._cu_hash
+            self._referenced_declaration_id, self._source_unit.cu_hash
         )
         assert isinstance(node, (DeclarationAbc, SourceUnit))
         return node
@@ -204,7 +200,7 @@ class IdentifierPath(SolidityAbc):
         assert groups_count > 0
 
         self._parts = IntervalTree()
-        start_source_unit = callback_params.source_units[self._file]
+        start_source_unit = callback_params.source_units[self.source_unit.file]
 
         ref = self.referenced_declaration
         refs = []
@@ -228,11 +224,11 @@ class IdentifierPath(SolidityAbc):
 
             node_path_order = self._reference_resolver.get_node_path_order(
                 AstNodeId(referenced_node.ast_node_id),
-                referenced_node.cu_hash,
+                referenced_node.source_unit.cu_hash,
             )
             referenced_node_id = (
                 self._reference_resolver.get_ast_id_from_cu_node_path_order(
-                    node_path_order, self._cu_hash
+                    node_path_order, self.source_unit.cu_hash
                 )
             )
 
@@ -244,8 +240,7 @@ class IdentifierPath(SolidityAbc):
                 name,
                 referenced_node_id,
                 self._reference_resolver,
-                self._cu_hash,
-                self._file,
+                self.source_unit,
             )
 
     @property
@@ -303,7 +298,7 @@ class IdentifierPath(SolidityAbc):
             Declaration referenced by this identifier path.
         """
         node = self._reference_resolver.resolve_node(
-            self._referenced_declaration_id, self._cu_hash
+            self._referenced_declaration_id, self.source_unit.cu_hash
         )
         assert isinstance(node, DeclarationAbc)
         return node

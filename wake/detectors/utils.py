@@ -141,7 +141,7 @@ def create_sarif_log(
                         id=i,
                         physical_location=PhysicalLocation(
                             artifact_location=ArtifactLocation(
-                                uri=f"{subdetection.ir_node.file if workspace_root is None else subdetection.ir_node.file.relative_to(workspace_root)}",
+                                uri=f"{subdetection.ir_node.source_unit.file if workspace_root is None else subdetection.ir_node.file.relative_to(workspace_root)}",
                             ),
                             region=Region(
                                 start_line=sub_start_line,
@@ -170,7 +170,7 @@ def create_sarif_log(
                         Location(
                             physical_location=PhysicalLocation(
                                 artifact_location=ArtifactLocation(
-                                    uri=f"{result.detection.ir_node.file if workspace_root is None else result.detection.ir_node.file.relative_to(workspace_root)}",
+                                    uri=f"{result.detection.ir_node.source_unit.file if workspace_root is None else result.detection.ir_node.file.relative_to(workspace_root)}",
                                 ),
                                 region=Region(
                                     start_line=start_line,

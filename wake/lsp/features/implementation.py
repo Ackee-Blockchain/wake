@@ -77,18 +77,22 @@ async def implementation(
                 if child_function.implemented:
                     implementations.append(
                         Location(
-                            uri=DocumentUri(path_to_uri(child_function.file)),
+                            uri=DocumentUri(
+                                path_to_uri(child_function.source_unit.file)
+                            ),
                             range=context.compiler.get_range_from_byte_offsets(
-                                child_function.file, child_function.name_location
+                                child_function.source_unit.file,
+                                child_function.name_location,
                             ),
                         )
                     )
             elif isinstance(child_function, VariableDeclaration):
                 implementations.append(
                     Location(
-                        uri=DocumentUri(path_to_uri(child_function.file)),
+                        uri=DocumentUri(path_to_uri(child_function.source_unit.file)),
                         range=context.compiler.get_range_from_byte_offsets(
-                            child_function.file, child_function.name_location
+                            child_function.source_unit.file,
+                            child_function.name_location,
                         ),
                     )
                 )
@@ -97,9 +101,10 @@ async def implementation(
             if child_modifier.implemented:
                 implementations.append(
                     Location(
-                        uri=DocumentUri(path_to_uri(child_modifier.file)),
+                        uri=DocumentUri(path_to_uri(child_modifier.source_unit.file)),
                         range=context.compiler.get_range_from_byte_offsets(
-                            child_modifier.file, child_modifier.name_location
+                            child_modifier.source_unit.file,
+                            child_modifier.name_location,
                         ),
                     )
                 )
