@@ -2,7 +2,7 @@
 Wake requires Python 3.7 or higher.
 
 !!! warning
-    Python 3.12 is not supported yet.
+    Python 3.12 is experimentally supported.
 
 ## Using pip
 
