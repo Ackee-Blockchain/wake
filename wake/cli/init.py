@@ -673,8 +673,14 @@ def init_detector(ctx: Context, detector_name: str, force: bool, global_: bool) 
         )
     )
 
+    link = config.general.link_format.format(
+        path=detector_path,
+        line=1,
+        col=1,
+    )
+
     console.print(
-        f"[green]Detector '{detector_name}' created at {detector_path}[/green]"
+        f"[green]Detector '{detector_name}' created at [link={link}]{detector_path}[/link][/green]"
     )
 
 
@@ -730,4 +736,12 @@ def init_printer(ctx: Context, printer_name: str, force: bool, global_: bool) ->
         )
     )
 
-    console.print(f"[green]Printer '{printer_name}' created at {printer_path}[/green]")
+    link = config.general.link_format.format(
+        path=printer_path,
+        line=1,
+        col=1,
+    )
+
+    console.print(
+        f"[green]Printer '{printer_name}' created at [link={link}]{printer_path}[/link][/green]"
+    )
