@@ -17,7 +17,7 @@ Features:
 - [Python](https://www.python.org/downloads/release/python-3910/) (version 3.7 or higher)
 - Rosetta must be enabled on Apple Silicon (M1 & M2) Macs
 
-> :warning: Python 3.12 is not supported yet.
+> :warning: Python 3.12 is experimentally supported.
 
 ## Installation
 

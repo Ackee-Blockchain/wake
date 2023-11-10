@@ -17,7 +17,10 @@ packages = [
 python = "^3.7.9"
 pydantic = "^1.9.1"
 typing-extensions = "^4"
-aiohttp = "^3.8"
+aiohttp = [
+    { version = "^3.8", python = "<3.12" },
+    { version = ">=3.9.0b1", python = ">=3.12" }
+]
 aiofiles = "^0.8"
 tomli = "^2"
 networkx = "^2.5"
@@ -58,7 +61,10 @@ pymdown-extensions = { version = "^9", optional = true }
 pygments = { version = "^2", optional = true }
 mike = { git = "https://github.com/jimporter/mike.git" }
 isort = { version = "^5", optional = true }
-pillow = { version = "^9", optional = true }
+pillow = [
+    { version = "^9", optional = true, python = "<3.12" },
+    { version = "^10.1", optional = true, python = ">=3.12" }
+]
 cairosvg = { version = "^2.7", optional = true }
 mkdocs-monorepo-plugin = { version = "^1.0.5", optional = true }
 
