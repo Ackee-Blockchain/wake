@@ -327,7 +327,7 @@ class WakeConfig:
 
     @property
     def max_solidity_version(self) -> SolidityVersion:
-        return SolidityVersion.fromstring("0.8.22")
+        return SolidityVersion.fromstring("0.8.23")
 
     @property
     def detectors(self) -> DetectorsConfig:
