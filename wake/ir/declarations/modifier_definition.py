@@ -384,10 +384,18 @@ class ModifierDefinition(DeclarationAbc):
         return self._overrides
 
     @property
-    @lru_cache(maxsize=2048)
-    def cfg(self) -> Optional[ControlFlowGraph]:
+    @lru_cache(maxsize=128)
+    def cfg(self) -> ControlFlowGraph:
+        """
+        Raises:
+            ValueError: If the modifier is not implemented.
+
+        Returns:
+            Control flow graph of the modifier.
+        """
         from wake.analysis.cfg import ControlFlowGraph
 
-        if self.body is None:
-            return None
+        if not self._implemented:
+            raise ValueError("Cannot create CFG for unimplemented modifier")
+
         return ControlFlowGraph(self)
