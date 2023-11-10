@@ -68,6 +68,7 @@ nav:
   - API reference:
       - wake.analysis:
           - cfg: 'api-reference/analysis/cfg.md'
+          - utils: 'api-reference/analysis/utils.md'
       - wake.config:
           - data_model: 'api-reference/config/data-model.md'
           - wake_config: 'api-reference/config/wake-config.md'
