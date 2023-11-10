@@ -51,17 +51,17 @@ async def generate_cfg_handler(
     g.attr(rankdir=context.config.generator.control_flow_graph.direction)
     g.attr("node", shape="box")
 
-    skip_start_block = False
+    skip_start_node = False
     if (
-        len(cfg.start_block.statements) == 0
-        and cfg.start_block.control_statement is None
-        and graph.out_degree(cfg.start_block)  # pyright: ignore reportGeneralTypeIssues
+        len(cfg.start_node.statements) == 0
+        and cfg.start_node.control_statement is None
+        and graph.out_degree(cfg.start_node)  # pyright: ignore reportGeneralTypeIssues
         == 1
     ):
-        skip_start_block = True
+        skip_start_node = True
 
     for node in graph.nodes:  # pyright: ignore reportGeneralTypeIssues
-        if skip_start_block and node == cfg.start_block:
+        if skip_start_node and node == cfg.start_node:
             continue
 
         statements: List[StatementAbc] = node.statements
@@ -72,10 +72,10 @@ async def generate_cfg_handler(
             )
         }
 
-        if node == cfg.success_end_block:
+        if node == cfg.success_end_node:
             node_attrs["color"] = "green"
             node_attrs["xlabel"] = "success"
-        elif node == cfg.revert_end_block:
+        elif node == cfg.revert_end_node:
             node_attrs["color"] = "red"
             node_attrs["xlabel"] = "revert"
 
@@ -99,7 +99,7 @@ async def generate_cfg_handler(
         to,
         data,
     ) in graph.edges.data():  # pyright: ignore reportGeneralTypeIssues
-        if skip_start_block and from_ == cfg.start_block:
+        if skip_start_node and from_ == cfg.start_node:
             continue
 
         condition = data["condition"]  # pyright: ignore reportOptionalSubscript
