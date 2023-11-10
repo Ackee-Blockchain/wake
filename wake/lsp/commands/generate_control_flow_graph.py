@@ -42,9 +42,10 @@ async def generate_cfg_handler(
     if target_declaration is None:
         raise LspError(ErrorCodes.InvalidParams, "Declaration not found")
 
-    cfg = target_declaration.cfg
-    if cfg is None:
+    if not target_declaration.implemented:
         raise LspError(ErrorCodes.InternalError, "Control flow graph not available")
+
+    cfg = target_declaration.cfg
     graph = cfg.graph
 
     g = gv.Digraph(f"{canonical_name} control flow graph")
