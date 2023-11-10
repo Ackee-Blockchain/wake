@@ -166,7 +166,7 @@ def fuzz(
     process_count: int,
     random_seeds: Iterable[bytes],
     logs_dir: Path,
-    passive: bool,
+    attach_first: bool,
     cov_proc_num: int,
     verbose_coverage: bool,
 ):
@@ -194,7 +194,7 @@ def fuzz(
                 i,
                 seed,
                 log_path,
-                passive and i == 0,
+                attach_first and i == 0,
                 finished_event,
                 err_child_con,
                 cov_child_con,
@@ -215,7 +215,7 @@ def fuzz(
                 int, Dict[Path, Dict[IdePosition, IdeFunctionCoverageRecord]]
             ] = {}
 
-            if passive:
+            if attach_first:
                 progress.stop()
             task = progress.add_task(
                 "Testing", thr_rem=len(processes), coverage_info="", total=1
@@ -233,14 +233,14 @@ def fuzz(
                             exception_info = pickle.loads(exception_info)
 
                         if exception_info is not None:
-                            if not passive or i == 0:
+                            if not attach_first or i == 0:
                                 tb = Traceback.from_exception(
                                     exception_info[0],
                                     exception_info[1],
                                     exception_info[2],
                                 )
 
-                                if not passive:
+                                if not attach_first:
                                     progress.stop()
 
                                 console.print(tb)
@@ -263,7 +263,7 @@ def fuzz(
                             e.clear()
                             err_parent_conn.send(attach)
                             e.wait()
-                            if not passive:
+                            if not attach_first:
                                 progress.start()
 
                         progress.update(
@@ -288,7 +288,7 @@ def fuzz(
                                 res, config.project_root_path / "wake-coverage.cov"
                             )
                         cov_info = ""
-                        if not passive and verbose_coverage:
+                        if not attach_first and verbose_coverage:
                             cov_info = "\n[dark_goldenrod]" + "\n".join(
                                 [
                                     f"{fn_name}: [green]{fn_calls}[dark_goldenrod]"

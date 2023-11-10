@@ -23,6 +23,7 @@ def run_no_pytest(
     proc_count: Optional[int],
     coverage: int,
     random_seeds: List[bytes],
+    attach_first: bool,
     args: Tuple[str],
 ) -> None:
     import importlib.util
@@ -123,7 +124,7 @@ def run_no_pytest(
                     proc_count,
                     random_seeds,
                     logs_dir,
-                    False,
+                    attach_first,
                     coverage,
                     False,
                 )
@@ -195,6 +196,12 @@ class FileAndPassParamType(click.ParamType):
     type=str,
     help="Random seeds",
 )
+@click.option(
+    "--attach-first",
+    is_flag=True,
+    default=False,
+    help="In multi-process mode, print stdout of first process to console and don't prompt on exception in other processes.",
+)
 @click.argument("paths_or_pytest_args", nargs=-1, type=FileAndPassParamType())
 @click.pass_context
 def run_test(
@@ -205,6 +212,7 @@ def run_test(
     coverage: int,
     no_pytest: bool,
     seeds: Tuple[str],
+    attach_first: bool,
     paths_or_pytest_args: Tuple[str, ...],
 ) -> None:
     """Execute Wake tests using pytest."""
@@ -239,7 +247,13 @@ def run_test(
 
     if no_pytest:
         run_no_pytest(
-            config, debug, proc_count, coverage, random_seeds, paths_or_pytest_args
+            config,
+            debug,
+            proc_count,
+            coverage,
+            random_seeds,
+            attach_first,
+            paths_or_pytest_args,
         )
     else:
         pytest_args = list(paths_or_pytest_args)
@@ -261,7 +275,9 @@ def run_test(
             pytest.main(
                 pytest_args,
                 plugins=[
-                    PytestWakePlugin(config, debug, proc_count, coverage, random_seeds)
+                    PytestWakePlugin(
+                        config, debug, proc_count, coverage, random_seeds, attach_first
+                    )
                 ],
             )
         )
