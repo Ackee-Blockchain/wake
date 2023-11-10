@@ -95,7 +95,7 @@ def _declaration_to_symbol(
             detail += f"override "
         detail += f"variable"
 
-    file = declaration.file
+    file = declaration.source_unit.file
     return DocumentSymbol(
         name=declaration.name,
         detail=detail,

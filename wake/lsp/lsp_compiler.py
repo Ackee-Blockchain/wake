@@ -1229,14 +1229,16 @@ class LspCompiler:
                     )
 
                 for detector_name, ignored, result in detection_gen:
-                    file = result.detection.ir_node.file
+                    file = result.detection.ir_node.source_unit.file
                     if len(result.detection.subdetections) > 0:
                         related_info = [
                             DiagnosticRelatedInformation(
                                 location=Location(
-                                    uri=DocumentUri(path_to_uri(info.ir_node.file)),
+                                    uri=DocumentUri(
+                                        path_to_uri(info.ir_node.source_unit.file)
+                                    ),
                                     range=self.get_range_from_byte_offsets(
-                                        info.ir_node.file,
+                                        info.ir_node.source_unit.file,
                                         info.lsp_range
                                         if info.lsp_range is not None
                                         else info.ir_node.name_location

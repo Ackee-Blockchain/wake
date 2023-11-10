@@ -268,7 +268,7 @@ def _construct_coverage_data(
             pc_op_map = _parse_opcodes(opcodes)
             logger.debug(f"{contract.name} Pc Op Map {pc_op_map}")
             pc_map = _parse_source_map(
-                contract.cu_hash,
+                contract.source_unit.cu_hash,
                 build.reference_resolver,
                 source_map,
                 pc_op_map,
@@ -451,22 +451,22 @@ class CoverageHandler:
         for func, func_count in chain(
             self._function_coverage.items(), self._modifier_coverage.items()
         ):
-            if func.file not in cov_data:
-                cov_data[func.file] = {}
+            if func.source_unit.file not in cov_data:
+                cov_data[func.source_unit.file] = {}
 
             func_ide_pos = IdePosition(
                 *_get_line_col_from_offset(
-                    func.name_location[0], self._lines_index[func.file]
+                    func.name_location[0], self._lines_index[func.source_unit.file]
                 ),
                 *_get_line_col_from_offset(
-                    func.name_location[1], self._lines_index[func.file]
+                    func.name_location[1], self._lines_index[func.source_unit.file]
                 ),
             )
 
             branch_records = {}
 
             for statement, count in self._statement_coverage.items():
-                if statement.file != func.file:
+                if statement.source_unit.file != func.source_unit.file:
                     continue
                 if isinstance(
                     statement,
@@ -486,12 +486,16 @@ class CoverageHandler:
 
                 if start >= func.byte_location[0] and end <= func.byte_location[1]:
                     ide_pos = IdePosition(
-                        *_get_line_col_from_offset(start, self._lines_index[func.file]),
-                        *_get_line_col_from_offset(end, self._lines_index[func.file]),
+                        *_get_line_col_from_offset(
+                            start, self._lines_index[func.source_unit.file]
+                        ),
+                        *_get_line_col_from_offset(
+                            end, self._lines_index[func.source_unit.file]
+                        ),
                     )
                     branch_records[ide_pos] = IdeCoverageRecord(ide_pos, count)
 
-            cov_data[func.file][func_ide_pos] = IdeFunctionCoverageRecord(
+            cov_data[func.source_unit.file][func_ide_pos] = IdeFunctionCoverageRecord(
                 name=func.name,
                 ide_pos=func_ide_pos,
                 coverage_hits=func_count,

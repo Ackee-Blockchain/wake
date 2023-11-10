@@ -101,7 +101,7 @@ class Return(StatementAbc):
         if self._function_return_parameters is None:
             return None
         node = self._reference_resolver.resolve_node(
-            self._function_return_parameters, self._cu_hash
+            self._function_return_parameters, self.source_unit.cu_hash
         )
         assert isinstance(node, ParameterList)
         return node

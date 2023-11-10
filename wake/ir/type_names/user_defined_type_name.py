@@ -173,7 +173,7 @@ class UserDefinedTypeName(TypeNameAbc):
         assert groups_count > 0
 
         self._parts = IntervalTree()
-        start_source_unit = callback_params.source_units[self._file]
+        start_source_unit = callback_params.source_units[self.source_unit.file]
 
         ref = self.referenced_declaration
         refs = []
@@ -197,11 +197,11 @@ class UserDefinedTypeName(TypeNameAbc):
 
             node_path_order = self._reference_resolver.get_node_path_order(
                 AstNodeId(referenced_node.ast_node_id),
-                referenced_node.cu_hash,
+                referenced_node.source_unit.cu_hash,
             )
             referenced_node_id = (
                 self._reference_resolver.get_ast_id_from_cu_node_path_order(
-                    node_path_order, self._cu_hash
+                    node_path_order, self.source_unit.cu_hash
                 )
             )
 
@@ -213,8 +213,7 @@ class UserDefinedTypeName(TypeNameAbc):
                 name,
                 referenced_node_id,
                 self._reference_resolver,
-                self._cu_hash,
-                self._file,
+                self.source_unit,
             )
 
     def __iter__(self) -> Iterator[IrAbc]:
@@ -302,7 +301,7 @@ class UserDefinedTypeName(TypeNameAbc):
             Declaration IR node referenced by this user defined type name.
         """
         node = self._reference_resolver.resolve_node(
-            self._referenced_declaration_id, self._cu_hash
+            self._referenced_declaration_id, self.source_unit.cu_hash
         )
         assert isinstance(node, DeclarationAbc)
         return node

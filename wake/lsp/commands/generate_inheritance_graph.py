@@ -78,18 +78,20 @@ async def generate_inheritance_graph_handler(
         if (
             path is not None
             and contract_info is not None
-            and contract.file == path
+            and contract.source_unit.file == path
             and contract.canonical_name == contract_info[1]
         ):
             node_attrs["style"] = "filled"
 
         if config.vscode_urls:
             line, column = context.compiler.get_line_pos_from_byte_offset(
-                contract.file, contract.name_location[0]
+                contract.source_unit.file, contract.name_location[0]
             )
             line += 1
             column += 1
-            node_attrs["URL"] = f"vscode://file/{contract.file}:{line}:{column}"
+            node_attrs[
+                "URL"
+            ] = f"vscode://file/{contract.source_unit.file}:{line}:{column}"
 
         g.node(node_id, contract.canonical_name, **node_attrs)
 

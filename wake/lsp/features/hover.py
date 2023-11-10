@@ -245,7 +245,7 @@ def _get_results_from_node(
     if isinstance(original_node, DeclarationAbc):
         assert node_name_location is not None
         name_location_range = context.compiler.get_range_from_byte_offsets(
-            original_node.file, node_name_location
+            original_node.source_unit.file, node_name_location
         )
         if not position_within_range(position, name_location_range):
             return None

@@ -143,17 +143,17 @@ def prepare_type_hierarchy_item(
         kind=_get_node_symbol_kind(node),
         tags=None,
         detail=None,
-        uri=DocumentUri(path_to_uri(node.file)),
+        uri=DocumentUri(path_to_uri(node.source_unit.file)),
         range=context.compiler.get_range_from_byte_offsets(
-            node.file, node.byte_location
+            node.source_unit.file, node.byte_location
         ),
         selection_range=context.compiler.get_range_from_byte_offsets(
-            node.file, node.name_location
+            node.source_unit.file, node.name_location
         ),
         data=TypeHierarchyItemData(
             ast_node_id=node.ast_node_id,
-            cu_hash=node.cu_hash.hex(),
-            uri=DocumentUri(path_to_uri(node.file)),
+            cu_hash=node.source_unit.cu_hash.hex(),
+            uri=DocumentUri(path_to_uri(node.source_unit.file)),
         ),
     )
 
@@ -189,7 +189,7 @@ async def prepare_type_hierarchy(
 
     if isinstance(node, DeclarationAbc):
         name_location_range = context.compiler.get_range_from_byte_offsets(
-            node.file, node.name_location
+            node.source_unit.file, node.name_location
         )
         if not position_within_range(params.position, name_location_range):
             return None
@@ -264,17 +264,17 @@ async def supertypes(
                 kind=_get_node_symbol_kind(node),
                 tags=None,
                 detail=None,
-                uri=DocumentUri(path_to_uri(node.file)),
+                uri=DocumentUri(path_to_uri(node.source_unit.file)),
                 range=context.compiler.get_range_from_byte_offsets(
-                    node.file, node.byte_location
+                    node.source_unit.file, node.byte_location
                 ),
                 selection_range=context.compiler.get_range_from_byte_offsets(
-                    node.file, node.name_location
+                    node.source_unit.file, node.name_location
                 ),
                 data=TypeHierarchyItemData(
                     ast_node_id=node.ast_node_id,
-                    cu_hash=node.cu_hash.hex(),
-                    uri=DocumentUri(path_to_uri(node.file)),
+                    cu_hash=node.source_unit.cu_hash.hex(),
+                    uri=DocumentUri(path_to_uri(node.source_unit.file)),
                 ),
             )
         )
@@ -326,17 +326,17 @@ async def subtypes(
                 kind=_get_node_symbol_kind(node),
                 tags=None,
                 detail=None,
-                uri=DocumentUri(path_to_uri(node.file)),
+                uri=DocumentUri(path_to_uri(node.source_unit.file)),
                 range=context.compiler.get_range_from_byte_offsets(
-                    node.file, node.byte_location
+                    node.source_unit.file, node.byte_location
                 ),
                 selection_range=context.compiler.get_range_from_byte_offsets(
-                    node.file, node.name_location
+                    node.source_unit.file, node.name_location
                 ),
                 data=TypeHierarchyItemData(
                     ast_node_id=node.ast_node_id,
-                    cu_hash=node.cu_hash.hex(),
-                    uri=DocumentUri(path_to_uri(node.file)),
+                    cu_hash=node.source_unit.cu_hash.hex(),
+                    uri=DocumentUri(path_to_uri(node.source_unit.file)),
                 ),
             )
         )

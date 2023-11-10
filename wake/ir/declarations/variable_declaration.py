@@ -201,7 +201,7 @@ class VariableDeclaration(DeclarationAbc):
         for base_function in base_functions:
             base_function._child_functions.add(self)
         self._reference_resolver.register_destroy_callback(
-            self.file, partial(self._destroy, base_functions)
+            self.source_unit.file, partial(self._destroy, base_functions)
         )
 
     def _destroy(self, base_functions: Tuple[FunctionDefinition]) -> None:
@@ -417,7 +417,7 @@ class VariableDeclaration(DeclarationAbc):
         base_functions = []
         for base_function_id in self._base_functions:
             base_function = self._reference_resolver.resolve_node(
-                base_function_id, self._cu_hash
+                base_function_id, self.source_unit.cu_hash
             )
             assert isinstance(base_function, FunctionDefinition)
             base_functions.append(base_function)
@@ -509,7 +509,7 @@ class VariableDeclaration(DeclarationAbc):
 
         type_identifier = StringReader(self._type_descriptions.type_identifier)
         ret = TypeAbc.from_type_identifier(
-            type_identifier, self._reference_resolver, self.cu_hash
+            type_identifier, self._reference_resolver, self.source_unit.cu_hash
         )
         assert (
             len(type_identifier) == 0 and ret is not None

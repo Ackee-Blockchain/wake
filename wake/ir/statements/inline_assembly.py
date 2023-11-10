@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import re
 from functools import lru_cache, partial
-from pathlib import Path
 from typing import TYPE_CHECKING, FrozenSet, Iterator, Optional, Set, Tuple, Union
 
 from intervaltree import IntervalTree
@@ -24,6 +23,7 @@ from wake.ir.yul.block import YulBlock
 from ..yul.identifier import YulIdentifier
 
 if TYPE_CHECKING:
+    from ..meta.source_unit import SourceUnit
     from .block import Block
     from .do_while_statement import DoWhileStatement
     from .for_statement import ForStatement
@@ -46,9 +46,8 @@ class ExternalReference:
     _inline_assembly: InlineAssembly
     _external_reference_model: ExternalReferenceModel
     _reference_resolver: ReferenceResolver
-    _cu_hash: bytes
-    _file: Path
     _source: bytes
+    _source_unit: SourceUnit
 
     _referenced_declaration_id: AstNodeId
     _value_size: int
@@ -64,9 +63,9 @@ class ExternalReference:
         self._inline_assembly = inline_assembly
         self._external_reference_model = external_reference_model
         self._reference_resolver = init.reference_resolver
-        self._cu_hash = init.cu.hash
-        self._file = init.file
         self._source = init.source[self.byte_location[0] : self.byte_location[1]]
+        assert init.source_unit is not None
+        self._source_unit = init.source_unit
 
         self._referenced_declaration_id = external_reference_model.declaration
         assert self._referenced_declaration_id >= 0
@@ -85,9 +84,9 @@ class ExternalReference:
         referenced_declaration = self.referenced_declaration
         referenced_declaration.register_reference(self)
         self._reference_resolver.register_destroy_callback(
-            self._file, partial(self._destroy, referenced_declaration)
+            self._source_unit.file, partial(self._destroy, referenced_declaration)
         )
-        interval_tree = callback_params.interval_trees[self._file]
+        interval_tree = callback_params.interval_trees[self._source_unit.file]
         start, end = self.byte_location
         nodes = interval_tree[start:end]
         node = next(node for node in nodes if node.begin == start and node.end == end)
@@ -101,12 +100,12 @@ class ExternalReference:
         referenced_declaration.unregister_reference(self)
 
     @property
-    def file(self) -> Path:
+    def source_unit(self) -> SourceUnit:
         """
         Returns:
-            Absolute path to the file containing the inline assembly block.
+            [source unit][wake.ir.meta.source_unit.SourceUnit] that contains this node.
         """
-        return self._file
+        return self._source_unit
 
     @property
     def byte_location(self) -> Tuple[int, int]:
@@ -153,7 +152,7 @@ class ExternalReference:
             Solidity declaration referenced by this external reference.
         """
         node = self._reference_resolver.resolve_node(
-            self._referenced_declaration_id, self._cu_hash
+            self._referenced_declaration_id, self._source_unit.cu_hash
         )
         assert isinstance(node, DeclarationAbc)
         return node

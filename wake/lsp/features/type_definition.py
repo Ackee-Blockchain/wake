@@ -57,7 +57,7 @@ def _get_results_from_node(
     if isinstance(original_node, VariableDeclaration):
         assert node_name_location is not None
         name_location_range = context.compiler.get_range_from_byte_offsets(
-            original_node.file, node_name_location
+            original_node.source_unit.file, node_name_location
         )
         if not position_within_range(position, name_location_range):
             return None
@@ -86,7 +86,7 @@ def _get_results_from_node(
     if isinstance(type_name, UserDefinedTypeName):
         return [
             (
-                type_name.referenced_declaration.file,
+                type_name.referenced_declaration.source_unit.file,
                 type_name.referenced_declaration.name_location,
             )
         ]
@@ -242,7 +242,7 @@ async def type_definition(
 
     if isinstance(node, VariableDeclaration):
         name_location_range = context.compiler.get_range_from_byte_offsets(
-            node.file, node.name_location
+            node.source_unit.file, node.name_location
         )
         if not position_within_range(params.position, name_location_range):
             return None
@@ -269,9 +269,11 @@ async def type_definition(
     if isinstance(type_name, UserDefinedTypeName):
         return [
             Location(
-                uri=DocumentUri(path_to_uri(type_name.referenced_declaration.file)),
+                uri=DocumentUri(
+                    path_to_uri(type_name.referenced_declaration.source_unit.file)
+                ),
                 range=context.compiler.get_range_from_byte_offsets(
-                    type_name.referenced_declaration.file,
+                    type_name.referenced_declaration.source_unit.file,
                     type_name.referenced_declaration.name_location,
                 ),
             )

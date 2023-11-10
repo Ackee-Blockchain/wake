@@ -59,18 +59,18 @@ class Identifier(ExpressionAbc):
                     global_symbol, self
                 )
                 self._reference_resolver.register_destroy_callback(
-                    self.file, partial(self._destroy, global_symbol)
+                    self.source_unit.file, partial(self._destroy, global_symbol)
                 )
                 new_referenced_declaration_ids.add(referenced_declaration_id)
             else:
                 node = self._reference_resolver.resolve_node(
-                    referenced_declaration_id, self._cu_hash
+                    referenced_declaration_id, self.source_unit.cu_hash
                 )
 
                 if isinstance(node, DeclarationAbc):
                     node.register_reference(self)
                     self._reference_resolver.register_destroy_callback(
-                        self.file, partial(self._destroy, node)
+                        self.source_unit.file, partial(self._destroy, node)
                     )
                     new_referenced_declaration_ids.add(referenced_declaration_id)
                 elif isinstance(node, ImportDirective):
@@ -83,7 +83,7 @@ class Identifier(ExpressionAbc):
                     )
                     new_referenced_declaration_ids.add(
                         self._reference_resolver.get_ast_id_from_cu_node_path_order(
-                            node_path_order, self.cu_hash
+                            node_path_order, self.source_unit.cu_hash
                         )
                     )
                 else:
@@ -119,7 +119,7 @@ class Identifier(ExpressionAbc):
                 continue
 
             overloaded_declaration = self._reference_resolver.resolve_node(
-                overloaded_declaration_id, self._cu_hash
+                overloaded_declaration_id, self.source_unit.cu_hash
             )
             assert isinstance(overloaded_declaration, DeclarationAbc)
             overloaded_declarations.append(overloaded_declaration)
@@ -134,11 +134,11 @@ class Identifier(ExpressionAbc):
                 return GlobalSymbol(referenced_declaration_id)
 
             node = self._reference_resolver.resolve_node(
-                referenced_declaration_id, self._cu_hash
+                referenced_declaration_id, self.source_unit.cu_hash
             )
             assert isinstance(
                 node, (DeclarationAbc, SourceUnit)
-            ), f"Unexpected type: {type(node)}\n{node.source}\n{self.source}\n{self.file}"
+            ), f"Unexpected type: {type(node)}\n{node.source}\n{self.source}\n{self.source_unit.file}"
             return node
 
         from ..declarations.function_definition import FunctionDefinition

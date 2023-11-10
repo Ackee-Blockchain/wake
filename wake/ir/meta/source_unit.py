@@ -1,5 +1,6 @@
 import logging
 from bisect import bisect_right
+from pathlib import Path
 from typing import Iterator, List, Optional, Tuple
 
 from wake.core import get_logger
@@ -19,6 +20,7 @@ from wake.ir.ast import (
     SolcVariableDeclaration,
 )
 
+from ...core.solidity_version import SolidityVersionRanges
 from ..declarations.abc import DeclarationAbc
 from ..declarations.contract_definition import ContractDefinition
 from ..declarations.enum_definition import EnumDefinition
@@ -73,6 +75,10 @@ class SourceUnit(SolidityAbc):
     _contracts: List[ContractDefinition]
     _using_for_directives: List[UsingForDirective]
     _events: List[EventDefinition]
+
+    _version_ranges: SolidityVersionRanges
+    _file: Path
+    _cu_hash: bytes
     # TODO strip this from pickle?
     _lines_index: Optional[List[Tuple[bytes, int]]]  # lines with prefix length
 
@@ -82,10 +88,13 @@ class SourceUnit(SolidityAbc):
         source_unit: SolcSourceUnit,
     ):
         init.source_unit = self
+        self._file = init.file
+        self._cu_hash = init.cu.hash
         super().__init__(init, source_unit, None)
         self._file_source = init.source
         self._license = source_unit.license
         self._source_unit_name = source_unit.absolute_path
+        self._version_ranges = init.cu.versions
         self._lines_index = None
 
         self._pragmas = []
@@ -279,6 +288,38 @@ class SourceUnit(SolidityAbc):
             Top-level event definitions present in the file.
         """
         return tuple(self._events)
+
+    @property
+    def version_ranges(self) -> SolidityVersionRanges:
+        """
+        !!! example
+            ```python
+            if "0.8.0" in node.version_ranges:
+                print("The given file can be compiled with solc 0.8.0")
+            ```
+        Returns:
+            Object listing all `solc` versions that can be used to compile the file containing this node.
+        """
+        return self._version_ranges
+
+    @property
+    def cu_hash(self) -> bytes:
+        """
+        Refer to [ReferenceResolver][wake.ir.reference_resolver.ReferenceResolver] for more information about compilation units.
+
+        Returns:
+            Hash of the compilation unit that produced this source unit.
+        """
+        return self._cu_hash
+
+    @property
+    def file(self) -> Path:
+        """
+        The absolute path to the source file that is represented by this node.
+        Returns:
+            Absolute path to the file containing this node.
+        """
+        return self._file
 
     def declarations_iter(self) -> Iterator[DeclarationAbc]:
         """
