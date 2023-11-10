@@ -66,6 +66,8 @@ nav:
   - LSP server: 'language-server.md'
   - Solc Version Manager: 'solc-version-manager.md'
   - API reference:
+      - wake.analysis:
+          - cfg: 'api-reference/analysis/cfg.md'
       - wake.config:
           - data_model: 'api-reference/config/data-model.md'
           - wake_config: 'api-reference/config/wake-config.md'
