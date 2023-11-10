@@ -43,6 +43,7 @@ class PytestWakePlugin:
     _proc_count: Optional[int]
     _cov_proc_count: Optional[int]
     _random_seeds: List[bytes]
+    _attach_first: bool
     _debug: bool
 
     def __init__(
@@ -52,12 +53,14 @@ class PytestWakePlugin:
         proc_count: Optional[int],
         cov_proc_count: Optional[int],
         random_seeds: Iterable[bytes],
+        attach_first: bool,
     ):
         self._config = config
         self._debug = debug
         self._proc_count = proc_count
         self._cov_proc_count = cov_proc_count
         self._random_seeds = list(random_seeds)
+        self._attach_first = attach_first
 
     def pytest_runtest_setup(self, item):
         reset_exception_handled()
@@ -68,6 +71,7 @@ class PytestWakePlugin:
         index: int,
         random_seed: bytes,
         log_file: Path,
+        tee: bool,
         finished_event: multiprocessing.synchronize.Event,
         err_child_conn: multiprocessing.connection.Connection,
         cov_child_conn: multiprocessing.connection.Connection,
@@ -109,7 +113,6 @@ class PytestWakePlugin:
 
         pickling_support.install()
         random.seed(random_seed)
-        tee = False  # TODO
 
         set_exception_handler(exception_handler)
         if coverage is not None:
@@ -191,7 +194,6 @@ class PytestWakePlugin:
 
     def _runtestloop_multiprocess(self, session: Session):
         assert self._proc_count is not None
-        passive = False  # TODO
         verbose_coverage = False  # TODO
         # TODO use self._debug
 
@@ -221,6 +223,7 @@ class PytestWakePlugin:
                     i,
                     self._random_seeds[i],
                     log_path,
+                    self._attach_first and i == 0,
                     finished_event,
                     err_child_con,
                     cov_child_con,
@@ -244,7 +247,7 @@ class PytestWakePlugin:
                     int, Dict[Path, Dict[IdePosition, IdeFunctionCoverageRecord]]
                 ] = {}
 
-                if passive:
+                if self._attach_first:
                     progress.stop()
                 task = progress.add_task(
                     "Running", proc_rem=len(processes), coverage_info="", total=1
@@ -268,7 +271,7 @@ class PytestWakePlugin:
 
                             if exception_info is not None:
                                 if (
-                                    (not passive or i == 0)
+                                    (not self._attach_first or i == 0)
                                     and not exception_info[0] is session.Failed
                                     and not exception_info[0] is session.Interrupted
                                 ):
@@ -278,7 +281,7 @@ class PytestWakePlugin:
                                         exception_info[2],
                                     )
 
-                                    if not passive:
+                                    if not self._attach_first:
                                         progress.stop()
 
                                     console.print(tb)
@@ -301,7 +304,7 @@ class PytestWakePlugin:
                                 e.clear()
                                 err_parent_conn.send(attach)
                                 e.wait()
-                                if not passive:
+                                if not self._attach_first:
                                     progress.start()
 
                             progress.update(
@@ -328,7 +331,7 @@ class PytestWakePlugin:
                                     / "wake-coverage.cov",
                                 )
                             cov_info = ""
-                            if not passive and verbose_coverage:
+                            if not self._attach_first and verbose_coverage:
                                 cov_info = "\n[dark_goldenrod]" + "\n".join(
                                     [
                                         f"{fn_name}: [green]{fn_calls}[dark_goldenrod]"
