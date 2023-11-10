@@ -1,35 +1,17 @@
-import copy
-import logging
 from collections import deque
-from typing import Deque, Dict, List, Optional, Set, Tuple, Union, overload
+from typing import Deque, Set, Tuple, Union, overload
 
-import networkx as nx
-
-import wake.ir.types as types
 from wake.core import get_logger
 from wake.ir import (
-    Assignment,
-    ContractDefinition,
-    ElementaryTypeNameExpression,
     ExpressionAbc,
-    ExpressionStatement,
     FunctionCall,
     FunctionCallOptions,
     FunctionDefinition,
-    Identifier,
-    InlineAssembly,
     MemberAccess,
     ModifierDefinition,
-    Return,
     StructDefinition,
     VariableDeclaration,
-    YulAbc,
-    YulAssignment,
-    YulIdentifier,
 )
-from wake.ir.enums import FunctionCallKind, GlobalSymbol
-
-from .cfg import CfgBlock
 
 logger = get_logger(__name__)
 
@@ -38,8 +20,28 @@ def pair_function_call_arguments(
     definition: Union[FunctionDefinition, StructDefinition], call: FunctionCall
 ) -> Tuple[Tuple[VariableDeclaration, ExpressionAbc], ...]:
     """
-    Pairs function call arguments with function definition parameters.
+    Pairs function call arguments with function/struct definition parameters.
     Returned pairs are in the same order as the function definition parameters.
+
+    !!! example
+        The function also handles calls of bounded functions with the `using for` directive.
+
+        ```solidity
+        contract C {
+            using SafeERC20 for IERC20;
+
+            function withdraw(IERC20 token, uint256 amount) external {
+                token.safeTransfer(msg.sender, amount); // token is the first argument of safeTransfer
+            }
+        }
+        ```
+
+    Args:
+        definition: Function or struct definition called.
+        call: Function call or struct constructor call.
+
+    Returns:
+        Tuple of pairs of function/struct definition parameters and function call arguments.
     """
     assert len(call.names) == 0 or len(call.names) == len(
         call.arguments
@@ -78,7 +80,7 @@ def pair_function_call_arguments(
 
 @overload
 def get_all_base_and_child_declarations(
-    decl: FunctionDefinition,
+    declaration: FunctionDefinition,
     *,
     base: bool = True,
     child: bool = True,
@@ -88,7 +90,7 @@ def get_all_base_and_child_declarations(
 
 @overload
 def get_all_base_and_child_declarations(
-    decl: VariableDeclaration,
+    declaration: VariableDeclaration,
     *,
     base: bool = True,
     child: bool = True,
@@ -98,7 +100,7 @@ def get_all_base_and_child_declarations(
 
 @overload
 def get_all_base_and_child_declarations(
-    decl: ModifierDefinition,
+    declaration: ModifierDefinition,
     *,
     base: bool = True,
     child: bool = True,
@@ -107,287 +109,54 @@ def get_all_base_and_child_declarations(
 
 
 def get_all_base_and_child_declarations(
-    decl: Union[FunctionDefinition, ModifierDefinition, VariableDeclaration],
+    declaration: Union[FunctionDefinition, ModifierDefinition, VariableDeclaration],
     *,
     base: bool = True,
     child: bool = True,
 ) -> Union[
     Set[Union[FunctionDefinition, VariableDeclaration]], Set[ModifierDefinition]
 ]:
-    ret = {decl}
+    """
+    Args:
+        declaration: Declaration to get base and child declarations of.
+        base: Return base declarations of the given declaration.
+        child: Return child declarations of the given declaration.
+
+    Returns:
+        Recursively all base and child declarations of the given declaration plus the given declaration itself.
+
+            Set of [ModifierDefinitions][wake.ir.declarations.modifier_definition.ModifierDefinition] is returned for [ModifierDefinition][wake.ir.declarations.modifier_definition.ModifierDefinition] input,
+            otherwise set of [FunctionDefinitions][wake.ir.declarations.function_definition.FunctionDefinition] and [VariableDeclarations][wake.ir.declarations.variable_declaration.VariableDeclaration] is returned.
+    """
+    ret = {declaration}
     queue: Deque[
         Union[FunctionDefinition, ModifierDefinition, VariableDeclaration]
-    ] = deque([decl])
+    ] = deque([declaration])
 
     while len(queue) > 0:
-        decl = queue.popleft()
+        declaration = queue.popleft()
 
-        if isinstance(decl, VariableDeclaration):
-            for base_func in decl.base_functions:
+        if isinstance(declaration, VariableDeclaration):
+            for base_func in declaration.base_functions:
                 if base and base_func not in ret:
                     ret.add(base_func)
                     queue.append(base_func)
-        elif isinstance(decl, FunctionDefinition):
-            for base_func in decl.base_functions:
+        elif isinstance(declaration, FunctionDefinition):
+            for base_func in declaration.base_functions:
                 if base and base_func not in ret:
                     ret.add(base_func)
                     queue.append(base_func)
-            for child_func in decl.child_functions:
+            for child_func in declaration.child_functions:
                 if child and child_func not in ret:
                     ret.add(child_func)
                     queue.append(child_func)
-        elif isinstance(decl, ModifierDefinition):
-            for base_mod in decl.base_modifiers:
+        elif isinstance(declaration, ModifierDefinition):
+            for base_mod in declaration.base_modifiers:
                 if base and base_mod not in ret:
                     ret.add(base_mod)
                     queue.append(base_mod)
-            for child_mod in decl.child_modifiers:
+            for child_mod in declaration.child_modifiers:
                 if child and child_mod not in ret:
                     ret.add(child_mod)
                     queue.append(child_mod)
     return ret  # pyright: ignore reportGeneralTypeIssues
-
-
-def expression_is_global_symbol(
-    expr: ExpressionAbc, global_symbol: GlobalSymbol
-) -> bool:
-    if isinstance(expr, MemberAccess):
-        if expr.referenced_declaration == global_symbol:
-            logger.debug(f"Expression is {global_symbol}: {expr.source}")
-            return True
-    elif (
-        isinstance(expr, FunctionCall)
-        and expr.kind == FunctionCallKind.TYPE_CONVERSION
-        and len(expr.arguments) == 1
-    ):
-        # payable(msg.sender) for example
-        conversion = expr.expression
-        if isinstance(conversion, ElementaryTypeNameExpression):
-            t = conversion.type
-            if isinstance(t, types.Type) and isinstance(t.actual_type, types.Address):
-                return expression_is_global_symbol(expr.arguments[0], global_symbol)
-    elif isinstance(expr, FunctionCall) and isinstance(
-        expr.function_called, FunctionDefinition
-    ):
-        func = expr.function_called
-        assert isinstance(func, FunctionDefinition)
-        if len(func.return_parameters.parameters) == 1:
-            returns = []
-            if func.body is None:
-                return False
-
-            for statement in func.body.statements_iter():
-                if isinstance(statement, Return):
-                    returns.append(statement)
-            if all(
-                expression_is_global_symbol(return_.expression, global_symbol)
-                for return_ in returns
-                if return_.expression is not None
-            ):
-                logger.debug(f"Expression is {global_symbol}: {expr.source}")
-                return True
-
-    logger.debug(f"Expression is NOT {global_symbol}: {expr.source}")
-    return False
-
-
-def get_variable_declarations_from_expression(
-    expr: ExpressionAbc,
-) -> Tuple[Optional[VariableDeclaration], ...]:
-    if isinstance(expr, Identifier):
-        ref = expr.referenced_declaration
-        if isinstance(ref, VariableDeclaration):
-            return (ref,)
-    elif isinstance(expr, MemberAccess):
-        ref = expr.referenced_declaration
-        if isinstance(ref, VariableDeclaration):
-            return get_variable_declarations_from_expression(expr.expression) + (ref,)
-    elif isinstance(expr, FunctionCall) and isinstance(
-        expr.function_called, (FunctionDefinition, VariableDeclaration)
-    ):
-        func = expr.function_called
-
-        func_expr = expr.expression
-        if isinstance(func_expr, Identifier):
-            ret: Tuple[Optional[VariableDeclaration], ...] = tuple()
-        elif isinstance(func_expr, MemberAccess):
-            ret = get_variable_declarations_from_expression(func_expr.expression)
-        else:
-            return (None,)
-
-        if isinstance(func, VariableDeclaration):
-            return ret + (func,)
-        elif isinstance(func, FunctionDefinition):
-            if func.body is None:
-                implementations = get_function_implementations(func)
-                if len(implementations) == 1:
-                    if isinstance(implementations[0], VariableDeclaration):
-                        return ret + (implementations[0],)
-                    elif isinstance(implementations[0], FunctionDefinition):
-                        func = implementations[0]
-                        assert func.body is not None
-                    else:
-                        return (None,)
-                else:
-                    return (None,)
-
-            returns = []
-            for statement in func.body.statements_iter():
-                if isinstance(statement, Return):
-                    returns.append(statement)
-            if len(returns) == 1 and returns[0].expression is not None:
-                return ret + get_variable_declarations_from_expression(
-                    returns[0].expression
-                )
-
-    return (None,)
-
-
-def get_function_implementations(
-    function: FunctionDefinition,
-) -> Tuple[Union[FunctionDefinition, VariableDeclaration], ...]:
-    ret = set()
-    visited: Set[Union[FunctionDefinition, VariableDeclaration]] = {function}
-
-    queue = deque([function])
-    while len(queue) > 0:
-        func = queue.popleft()
-        if func.implemented:
-            ret.add(func)
-
-        for f in func.child_functions:
-            if f not in visited:
-                visited.add(f)
-                if isinstance(f, VariableDeclaration):
-                    ret.add(f)
-                elif isinstance(f, FunctionDefinition):
-                    queue.append(f)
-    return tuple(ret)
-
-
-def get_function_definition_from_expression(
-    expr: ExpressionAbc,
-) -> Optional[FunctionDefinition]:
-    fn_dec = expr
-    while (
-        fn_dec.parent
-        and not isinstance(fn_dec, FunctionDefinition)
-        and not isinstance(fn_dec, ContractDefinition)
-    ):
-        fn_dec = fn_dec.parent
-    if (
-        fn_dec is not None
-        and isinstance(fn_dec, FunctionDefinition)
-        and fn_dec.body is not None
-    ):
-        return fn_dec
-    return None
-
-
-def check_all_return_params_set(
-    params: Tuple[VariableDeclaration],
-    graph: nx.DiGraph,
-    start_block: CfgBlock,
-    end_block: CfgBlock,
-) -> Tuple[
-    bool, List[Dict[Tuple[Optional[VariableDeclaration]], Union[ExpressionAbc, YulAbc]]]
-]:
-    """
-    Checks if all return parameters are set
-    """
-    out = []
-    visited = set()
-    all_set = _check_all_return_params_set(
-        params, {}, set(), graph, start_block, end_block, out, visited
-    )
-    return all_set, out
-
-
-def _check_all_return_params_set(
-    params: Tuple[VariableDeclaration],
-    solved_params: Dict[
-        Tuple[Optional[VariableDeclaration]], Union[ExpressionAbc, YulAbc]
-    ],
-    solved_declarations: Set[VariableDeclaration],
-    graph: nx.DiGraph,
-    start_block: CfgBlock,
-    end_block: CfgBlock,
-    out: List[Dict[Tuple[Optional[VariableDeclaration]], Union[ExpressionAbc, YulAbc]]],
-    visited: Set[CfgBlock],
-) -> bool:
-    if start_block in visited:
-        return False
-    visited.add(start_block)
-    if len(solved_declarations) == len(params):
-        out.append(solved_params)
-        return True
-    if start_block == end_block:
-        out.append(solved_params)
-        return False
-
-    for stmt in reversed(start_block.statements):
-        if isinstance(stmt, ExpressionStatement) and isinstance(
-            stmt.expression, Assignment
-        ):
-            assigned_vars = []
-            assigned_params = set()
-            for vars in stmt.expression.assigned_variables:
-                if vars is None:
-                    continue
-                for decls in vars:
-                    for vd in decls:
-                        if (
-                            isinstance(vd, VariableDeclaration)
-                            and vd in params
-                            and vd not in solved_declarations
-                        ):
-                            assigned_vars.append(vd)
-                            assigned_params.add(vd)
-                        else:
-                            assigned_vars.append(None)
-            if len(assigned_params) > 0:
-                solved_declarations.update(assigned_params)
-                solved_params[tuple(assigned_vars)] = stmt.expression.right_expression
-        elif isinstance(stmt, InlineAssembly) and stmt.yul_block is not None:
-            for yul_stmt in stmt.yul_block.statements:
-                if isinstance(yul_stmt, YulAssignment):
-                    assigned_vars = []
-                    assigned_params = set()
-                    for var in yul_stmt.variable_names:
-                        if (
-                            isinstance(var, YulIdentifier)
-                            and var.external_reference is not None
-                            and isinstance(
-                                var.external_reference.referenced_declaration,
-                                VariableDeclaration,
-                            )
-                            and var.external_reference.referenced_declaration in params
-                        ):
-                            assigned_vars.append(
-                                var.external_reference.referenced_declaration
-                            )
-                            assigned_params.add(
-                                var.external_reference.referenced_declaration
-                            )
-                        else:
-                            assigned_vars.append(None)
-                    if len(assigned_params) > 0:
-                        solved_declarations.update(assigned_params)
-                        solved_params[tuple(assigned_vars)] = yul_stmt.value
-
-    all_set = True
-    for next_start in graph.predecessors(start_block):
-        if next_start in visited:
-            continue
-        if not _check_all_return_params_set(
-            params,
-            copy.copy(solved_params),
-            copy.copy(solved_declarations),
-            graph,
-            next_start,
-            end_block,
-            out,
-            visited,
-        ):
-            all_set = False
-    return all_set
