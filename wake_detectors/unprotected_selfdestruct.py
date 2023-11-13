@@ -45,7 +45,7 @@ class UnprotectedSelfdestructDetector(Detector):
                     Detection(node, "Selfdestruct call is not protected"),
                     impact=DetectorImpact.HIGH,
                     confidence=DetectorConfidence.MEDIUM,
-                    url="https://ackeeblockchain.com/wake/docs/latest/static-analysis/detectors/unprotected-selfdestruct",
+                    uri="https://ackeeblockchain.com/wake/docs/latest/static-analysis/detectors/unprotected-selfdestruct",
                 )
             )
 

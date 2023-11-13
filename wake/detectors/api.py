@@ -109,13 +109,13 @@ class DetectorResult:
         detection: Detection describing the location in the source code and the message.
         impact: Impact of the detection.
         confidence: Confidence of the detection.
-        url: Optional URL to a page describing the detection.
+        uri: Optional URI to a page describing the detection.
     """
 
     detection: Detection
     impact: DetectorImpact
     confidence: DetectorConfidence
-    url: Optional[str] = field(default=None)
+    uri: Optional[str] = field(default=None)
 
     def __post_init__(self):
         if self.impact not in DetectorImpact.__members__.values():
@@ -308,7 +308,7 @@ def _filter_detections(
             _strip_ignored_subdetections(detection.detection, config),
             detection.impact,
             detection.confidence,
-            detection.url,
+            detection.uri,
         )
         if (
             len(detection.detection.subdetections) == 0
@@ -325,7 +325,7 @@ def _filter_detections(
                 _strip_excluded_subdetections(detection.detection, config),
                 detection.impact,
                 detection.confidence,
-                detection.url,
+                detection.uri,
             )
             if len(detection.detection.subdetections) == 0:
                 continue
@@ -687,8 +687,8 @@ def print_detection(
 
         title += detection.message
         if detector_id is not None:
-            if isinstance(info, DetectorResult) and info.url is not None:
-                title += f" [link={info.url}]\[{detector_id}][/link]"  # pyright: ignore reportInvalidStringEscapeSequence
+            if isinstance(info, DetectorResult) and info.uri is not None:
+                title += f" [link={info.uri}]\[{detector_id}][/link]"  # pyright: ignore reportInvalidStringEscapeSequence
             else:
                 title += f" \[{detector_id}]"  # pyright: ignore reportInvalidStringEscapeSequence
 

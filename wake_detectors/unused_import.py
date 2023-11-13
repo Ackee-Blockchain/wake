@@ -75,6 +75,6 @@ class UnusedImportDetector(Detector):
                         ),
                         impact=DetectorImpact.WARNING,
                         confidence=DetectorConfidence.HIGH,
-                        url="https://ackeeblockchain.com/wake/docs/latest/static-analysis/detectors/unused-import",
+                        uri="https://ackeeblockchain.com/wake/docs/latest/static-analysis/detectors/unused-import",
                     )
                 )
