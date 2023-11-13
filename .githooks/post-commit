@@ -29,7 +29,7 @@ function pop_stash()
 
 # add all changes made by 'black' and other pre-commit tools as a fixup commit
 export WAKE_SKIP_POST_COMMIT_HOOK=1
-git add -u -- wake tests
+git add -u -- wake wake_detectors wake_printers tests
 git commit --fixup='HEAD' --no-verify >/dev/null
 unset WAKE_SKIP_POST_COMMIT_HOOK
 

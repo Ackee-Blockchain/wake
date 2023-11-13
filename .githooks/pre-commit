@@ -69,7 +69,7 @@ unset WAKE_SKIP_POST_COMMIT_HOOK
 # find all staged "*.py" files
 pyfiles=()
 IFS=$'\n'
-for f in $(git diff --cached --name-only --relative --diff-filter=ACMR -- wake tests)
+for f in $(git diff --cached --name-only --relative --diff-filter=ACMR -- wake wake_detectors wake_printers tests)
 do
     if [[ "$f" == *.py ]]; then
         pyfiles+=("$f")
