@@ -8,8 +8,8 @@ import wake.ir as ir
 import wake.ir.types as types
 from wake.detectors import (
     Detection,
-    DetectionConfidence,
-    DetectionImpact,
+    DetectorConfidence,
+    DetectorImpact,
     Detector,
     DetectorResult,
     detector,

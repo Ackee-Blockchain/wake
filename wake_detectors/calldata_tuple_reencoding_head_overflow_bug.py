@@ -9,9 +9,9 @@ import wake.ir as ir
 import wake.ir.types as types
 from wake.detectors import (
     Detection,
-    DetectionConfidence,
-    DetectionImpact,
     Detector,
+    DetectorConfidence,
+    DetectorImpact,
     DetectorResult,
     detector,
 )
@@ -134,8 +134,8 @@ class CalldataTupleReencodingHeadOverflowBugDetector(Detector):
                         node,
                         "External calls to this function may send malformed data because of compiler bug in Solidity < 0.8.16",
                     ),
-                    impact=DetectionImpact.HIGH,
-                    confidence=DetectionConfidence.LOW,
+                    impact=DetectorImpact.HIGH,
+                    confidence=DetectorConfidence.LOW,
                 )
             )
 
@@ -160,8 +160,8 @@ class CalldataTupleReencodingHeadOverflowBugDetector(Detector):
                         node.return_parameters,
                         "ABI-encoded return data from this function may be malformed because of compiler bug",
                     ),
-                    impact=DetectionImpact.HIGH,
-                    confidence=DetectionConfidence.HIGH,
+                    impact=DetectorImpact.HIGH,
+                    confidence=DetectorConfidence.HIGH,
                 )
             )
 
@@ -262,8 +262,8 @@ class CalldataTupleReencodingHeadOverflowBugDetector(Detector):
                         node,
                         "ABI-encoded data in this call may be malformed because of compiler bug",
                     ),
-                    impact=DetectionImpact.HIGH,
-                    confidence=DetectionConfidence.HIGH,
+                    impact=DetectorImpact.HIGH,
+                    confidence=DetectorConfidence.HIGH,
                 )
             )
 

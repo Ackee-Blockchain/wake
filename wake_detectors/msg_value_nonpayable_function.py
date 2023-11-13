@@ -10,9 +10,9 @@ import wake.ir as ir
 import wake.ir.types as types
 from wake.detectors import (
     Detection,
-    DetectionConfidence,
-    DetectionImpact,
     Detector,
+    DetectorConfidence,
+    DetectorImpact,
     DetectorResult,
     detector,
 )
@@ -101,8 +101,8 @@ class MsgValueNonpayableFunctionDetector(Detector):
                     node,
                     "msg.value used in function that is never called from payable function",
                 ),
-                impact=DetectionImpact.WARNING,
-                confidence=DetectionConfidence.HIGH,
+                impact=DetectorImpact.WARNING,
+                confidence=DetectorConfidence.HIGH,
             )
         )
 

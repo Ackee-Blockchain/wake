@@ -9,9 +9,9 @@ import wake.ir as ir
 import wake.ir.types as types
 from wake.detectors import (
     Detection,
-    DetectionConfidence,
-    DetectionImpact,
     Detector,
+    DetectorConfidence,
+    DetectorImpact,
     DetectorResult,
     detector,
 )
@@ -141,8 +141,8 @@ class BalanceReliedOnDetector(Detector):
                 self._detections.append(
                     DetectorResult(
                         Detection(node, "Use of address.balance", tuple(subdetections)),
-                        DetectionImpact.WARNING,
-                        DetectionConfidence.LOW,
+                        DetectorImpact.WARNING,
+                        DetectorConfidence.LOW,
                     ),
                 )
 

@@ -30,9 +30,9 @@ if TYPE_CHECKING:
     from wake.config import WakeConfig
     from wake.detectors import (
         Detection,
-        DetectionConfidence,
-        DetectionImpact,
         Detector,
+        DetectorConfidence,
+        DetectorImpact,
         DetectorResult,
     )
 
@@ -394,8 +394,8 @@ async def detect_(
     from watchdog.observers import Observer
 
     from wake.detectors.api import (
-        DetectionConfidence,
-        DetectionImpact,
+        DetectorConfidence,
+        DetectorImpact,
         detect,
         print_detection,
     )
@@ -408,43 +408,43 @@ async def detect_(
     from ..utils.file_utils import is_relative_to
     from .console import console
 
-    severity_map: Dict[DetectionImpact, Dict[DetectionConfidence, int]] = {
-        DetectionImpact.HIGH: {
-            DetectionConfidence.HIGH: 0,
-            DetectionConfidence.MEDIUM: 1,
-            DetectionConfidence.LOW: 2,
+    severity_map: Dict[DetectorImpact, Dict[DetectorConfidence, int]] = {
+        DetectorImpact.HIGH: {
+            DetectorConfidence.HIGH: 0,
+            DetectorConfidence.MEDIUM: 1,
+            DetectorConfidence.LOW: 2,
         },
-        DetectionImpact.MEDIUM: {
-            DetectionConfidence.HIGH: 1,
-            DetectionConfidence.MEDIUM: 2,
-            DetectionConfidence.LOW: 3,
+        DetectorImpact.MEDIUM: {
+            DetectorConfidence.HIGH: 1,
+            DetectorConfidence.MEDIUM: 2,
+            DetectorConfidence.LOW: 3,
         },
-        DetectionImpact.LOW: {
-            DetectionConfidence.HIGH: 2,
-            DetectionConfidence.MEDIUM: 3,
-            DetectionConfidence.LOW: 4,
+        DetectorImpact.LOW: {
+            DetectorConfidence.HIGH: 2,
+            DetectorConfidence.MEDIUM: 3,
+            DetectorConfidence.LOW: 4,
         },
-        DetectionImpact.WARNING: {
-            DetectionConfidence.HIGH: 5,
-            DetectionConfidence.MEDIUM: 6,
-            DetectionConfidence.LOW: 7,
+        DetectorImpact.WARNING: {
+            DetectorConfidence.HIGH: 5,
+            DetectorConfidence.MEDIUM: 6,
+            DetectorConfidence.LOW: 7,
         },
-        DetectionImpact.INFO: {
-            DetectionConfidence.HIGH: 8,
-            DetectionConfidence.MEDIUM: 9,
-            DetectionConfidence.LOW: 10,
+        DetectorImpact.INFO: {
+            DetectorConfidence.HIGH: 8,
+            DetectorConfidence.MEDIUM: 9,
+            DetectorConfidence.LOW: 10,
         },
     }
 
-    default_min_impact = os.getenv("WAKE_DETECT_MIN_IMPACT", DetectionImpact.INFO)
-    if default_min_impact.lower() not in DetectionImpact.__members__.values():
+    default_min_impact = os.getenv("WAKE_DETECT_MIN_IMPACT", DetectorImpact.INFO)
+    if default_min_impact.lower() not in DetectorImpact.__members__.values():
         raise click.BadParameter(
             f"Invalid value for WAKE_DETECT_MIN_IMPACT environment variable: {default_min_impact}"
         )
     default_min_confidence = os.getenv(
-        "WAKE_DETECT_MIN_CONFIDENCE", DetectionConfidence.LOW
+        "WAKE_DETECT_MIN_CONFIDENCE", DetectorConfidence.LOW
     )
-    if default_min_confidence.lower() not in DetectionConfidence.__members__.values():
+    if default_min_confidence.lower() not in DetectorConfidence.__members__.values():
         raise click.BadParameter(
             f"Invalid value for WAKE_DETECT_MIN_CONFIDENCE environment variable: {default_min_confidence}"
         )
@@ -858,8 +858,8 @@ def run_detect(
 def run_detect_all(
     ctx: click.Context,
     paths: Tuple[str, ...],
-    min_confidence: DetectionConfidence,
-    min_impact: DetectionImpact,
+    min_confidence: DetectorConfidence,
+    min_impact: DetectorImpact,
 ) -> None:
     """
     Run all detectors.

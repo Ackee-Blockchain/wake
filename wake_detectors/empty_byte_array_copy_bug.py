@@ -9,9 +9,9 @@ import wake.ir as ir
 import wake.ir.types as types
 from wake.detectors import (
     Detection,
-    DetectionConfidence,
-    DetectionImpact,
     Detector,
+    DetectorConfidence,
+    DetectorImpact,
     DetectorResult,
     detector,
 )
@@ -90,8 +90,8 @@ class EmptyByteArrayCopyBugDetector(Detector):
                             node.parent,
                             ".push() may append non-zero byte because of compiler bug",
                         ),
-                        DetectionImpact.MEDIUM,
-                        DetectionConfidence.MEDIUM,
+                        DetectorImpact.MEDIUM,
+                        DetectorConfidence.MEDIUM,
                     )
                 )
                 return

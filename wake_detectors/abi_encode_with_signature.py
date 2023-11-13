@@ -9,9 +9,9 @@ import wake.ir as ir
 import wake.ir.types as types
 from wake.detectors import (
     Detection,
-    DetectionConfidence,
-    DetectionImpact,
     Detector,
+    DetectorConfidence,
+    DetectorImpact,
     DetectorResult,
     detector,
 )
@@ -88,8 +88,8 @@ class AbiEncodeWithSignatureDetector(Detector):
                         ir_node=arg0,
                         message="abi.encodeWithSignature() argument is invalid ABI signature",
                     ),
-                    confidence=DetectionConfidence.HIGH,
-                    impact=DetectionImpact.MEDIUM,
+                    confidence=DetectorConfidence.HIGH,
+                    impact=DetectorImpact.MEDIUM,
                 )
             )
 

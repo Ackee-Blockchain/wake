@@ -7,9 +7,9 @@ import click
 import wake.ir as ir
 from wake.detectors import (
     Detection,
-    DetectionConfidence,
-    DetectionImpact,
     Detector,
+    DetectorConfidence,
+    DetectorImpact,
     DetectorResult,
     detector,
 )
@@ -28,8 +28,8 @@ class UnusedContractDetector(Detector):
         return [
             DetectorResult(
                 d,
-                impact=DetectionImpact.INFO,
-                confidence=DetectionConfidence.HIGH,
+                impact=DetectorImpact.INFO,
+                confidence=DetectorConfidence.HIGH,
                 url="https://ackeeblockchain.com/wake/docs/latest/static-analysis/detectors/unused-contract",
             )
             for d in self._detections

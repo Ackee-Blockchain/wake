@@ -10,9 +10,9 @@ import wake.ir as ir
 import wake.ir.types as types
 from wake.detectors import (
     Detection,
-    DetectionConfidence,
-    DetectionImpact,
     Detector,
+    DetectorConfidence,
+    DetectorImpact,
     DetectorResult,
     detector,
 )
@@ -103,8 +103,8 @@ class MissingReturnDetector(Detector):
                         node,
                         "Not all execution paths have assigned return values",
                     ),
-                    impact=DetectionImpact.WARNING,
-                    confidence=DetectionConfidence.MEDIUM,
+                    impact=DetectorImpact.WARNING,
+                    confidence=DetectorConfidence.MEDIUM,
                 )
             )
 

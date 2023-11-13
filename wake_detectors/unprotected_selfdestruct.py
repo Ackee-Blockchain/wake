@@ -9,9 +9,9 @@ import wake.ir as ir
 import wake.ir.types as types
 from wake.detectors import (
     Detection,
-    DetectionConfidence,
-    DetectionImpact,
     Detector,
+    DetectorConfidence,
+    DetectorImpact,
     DetectorResult,
     detector,
 )
@@ -43,8 +43,8 @@ class UnprotectedSelfdestructDetector(Detector):
             self._detections.append(
                 DetectorResult(
                     Detection(node, "Selfdestruct call is not protected"),
-                    impact=DetectionImpact.HIGH,
-                    confidence=DetectionConfidence.MEDIUM,
+                    impact=DetectorImpact.HIGH,
+                    confidence=DetectorConfidence.MEDIUM,
                     url="https://ackeeblockchain.com/wake/docs/latest/static-analysis/detectors/unprotected-selfdestruct",
                 )
             )

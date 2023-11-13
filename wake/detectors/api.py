@@ -43,9 +43,9 @@ if TYPE_CHECKING:
 
 
 @total_ordering
-class DetectionImpact(StrEnum):
+class DetectorImpact(StrEnum):
     """
-    The impact of a detection.
+    The impact of a [DetectorResult][wake.detectors.api.DetectorResult].
     """
 
     INFO = "info"
@@ -55,16 +55,16 @@ class DetectionImpact(StrEnum):
     HIGH = "high"
 
     def __lt__(self, other: Any) -> bool:
-        if not isinstance(other, DetectionImpact):
+        if not isinstance(other, DetectorImpact):
             return NotImplemented
         prio = ["info", "warning", "low", "medium", "high"]
         return prio.index(self.value) < prio.index(other.value)
 
 
 @total_ordering
-class DetectionConfidence(StrEnum):
+class DetectorConfidence(StrEnum):
     """
-    The confidence of a detection.
+    The confidence of a [DetectorResult][wake.detectors.api.DetectorResult].
     """
 
     LOW = "low"
@@ -72,7 +72,7 @@ class DetectionConfidence(StrEnum):
     HIGH = "high"
 
     def __lt__(self, other: Any) -> bool:
-        if not isinstance(other, DetectionConfidence):
+        if not isinstance(other, DetectorConfidence):
             return NotImplemented
         prio = ["low", "medium", "high"]
         return prio.index(self.value) < prio.index(other.value)
@@ -113,14 +113,14 @@ class DetectorResult:
     """
 
     detection: Detection
-    impact: DetectionImpact
-    confidence: DetectionConfidence
+    impact: DetectorImpact
+    confidence: DetectorConfidence
     url: Optional[str] = field(default=None)
 
     def __post_init__(self):
-        if self.impact not in DetectionImpact.__members__.values():
+        if self.impact not in DetectorImpact.__members__.values():
             raise ValueError(f"Invalid impact: {self.impact}")
-        if self.confidence not in DetectionConfidence.__members__.values():
+        if self.confidence not in DetectorConfidence.__members__.values():
             raise ValueError(f"Invalid confidence: {self.confidence}")
 
 
@@ -268,8 +268,8 @@ def _strip_ignored_subdetections(detection: Detection, config: WakeConfig) -> De
 def _filter_detections(
     detector_name: str,
     detections: List[DetectorResult],
-    min_impact: DetectionImpact,
-    min_confidence: DetectionConfidence,
+    min_impact: DetectorImpact,
+    min_confidence: DetectorConfidence,
     config: WakeConfig,
     wake_comments: Dict[Path, Dict[str, Dict[int, WakeComment]]],
     source_units: Dict[Path, SourceUnit],
@@ -352,8 +352,8 @@ def detect(
     *,
     paths: Optional[List[Path]] = None,
     args: Optional[List[str]] = None,
-    default_min_impact: DetectionImpact = DetectionImpact.INFO,
-    default_min_confidence: DetectionConfidence = DetectionConfidence.LOW,
+    default_min_impact: DetectorImpact = DetectorImpact.INFO,
+    default_min_confidence: DetectorConfidence = DetectorConfidence.LOW,
     console: Optional[rich.console.Console] = None,
     verify_paths: bool = True,
     capture_exceptions: bool = False,
@@ -383,7 +383,7 @@ def detect(
     detectors: List[click.Command] = []
     if isinstance(detector_names, str):
         command = run_detect.get_command(
-            ctx,
+            ctx,  # pyright: ignore reportGeneralTypeIssues
             detector_names,
             plugin_paths={  # pyright: ignore reportGeneralTypeIssues
                 config.project_root_path / "detectors"
@@ -411,7 +411,7 @@ def detect(
             ):
                 continue
             command = run_detect.get_command(
-                None,
+                None,  # pyright: ignore reportGeneralTypeIssues
                 detector_name,
                 plugin_paths={  # pyright: ignore reportGeneralTypeIssues
                     config.project_root_path / "detectors"
@@ -432,10 +432,10 @@ def detect(
     collected_detectors: Dict[str, Detector] = {}
     visit_all_detectors: Set[str] = set()
     detections: Dict[str, Tuple[List[DetectorResult], List[DetectorResult]]] = {}
-    min_confidence_by_detector: DefaultDict[str, DetectionConfidence] = defaultdict(
+    min_confidence_by_detector: DefaultDict[str, DetectorConfidence] = defaultdict(
         lambda: default_min_confidence
     )
-    min_impact_by_detector: DefaultDict[str, DetectionImpact] = defaultdict(
+    min_impact_by_detector: DefaultDict[str, DetectorImpact] = defaultdict(
         lambda: default_min_impact
     )
 

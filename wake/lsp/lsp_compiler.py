@@ -42,7 +42,7 @@ from ..compiler.build_data_model import (
 )
 from ..core.solidity_version import SolidityVersionRange, SolidityVersionRanges
 from ..core.wake_comments import error_commented_out
-from ..detectors.api import DetectionConfidence, DetectionImpact, detect
+from ..detectors.api import DetectorConfidence, DetectorImpact, detect
 from ..utils import StrEnum, get_package_version
 from ..utils.file_utils import is_relative_to
 from .logging_handler import LspLoggingHandler
@@ -141,8 +141,8 @@ class CustomFileChangeCommand(StrEnum):
 
 
 class DetectionAdditionalInfo(LspModel):
-    impact: DetectionImpact
-    confidence: DetectionConfidence
+    impact: DetectorImpact
+    confidence: DetectorConfidence
     ignored: bool
     source_unit_name: str
 
@@ -1056,7 +1056,7 @@ class LspCompiler:
     async def __run_detectors_wrapper(self) -> None:
         # discover detectors
         all_detectors = run_detect.list_commands(
-            None,
+            None,  # pyright: ignore reportGeneralTypeIssues
             plugin_paths={  # pyright: ignore reportGeneralTypeIssues
                 self.__config.project_root_path / "detectors"
             },
@@ -1267,9 +1267,9 @@ class LspCompiler:
                             ),
                             severity=(
                                 DiagnosticSeverity.INFORMATION
-                                if result.impact == DetectionImpact.INFO
+                                if result.impact == DetectorImpact.INFO
                                 else DiagnosticSeverity.WARNING
-                                if result.impact == DetectionImpact.WARNING
+                                if result.impact == DetectorImpact.WARNING
                                 else DiagnosticSeverity.ERROR
                             ),
                             source="Wake",

@@ -6,9 +6,9 @@ import wake.ir as ir
 import wake.ir.types as types
 from wake.detectors import (
     Detection,
-    DetectionConfidence,
-    DetectionImpact,
     Detector,
+    DetectorConfidence,
+    DetectorImpact,
     DetectorResult,
     detector,
 )
@@ -73,16 +73,16 @@ class UncheckedReturnValueDetector(Detector):
                     return
 
         func_called = node.function_called
-        impact = DetectionImpact.WARNING
-        confidence = DetectionConfidence.HIGH
+        impact = DetectorImpact.WARNING
+        confidence = DetectorConfidence.HIGH
         if isinstance(
             func_called, ir.FunctionDefinition
         ) and func_called.function_selector in {
             bytes.fromhex("a9059cbb"),  # transfer(address,uint256)
             bytes.fromhex("23b872dd"),  # transferFrom(address,address,uint256)
         }:
-            impact = DetectionImpact.HIGH
-            confidence = DetectionConfidence.MEDIUM
+            impact = DetectorImpact.HIGH
+            confidence = DetectorConfidence.MEDIUM
         elif func_called in {
             ir.enums.GlobalSymbol.ADDRESS_CALL,
             ir.enums.GlobalSymbol.ADDRESS_SEND,
@@ -90,8 +90,8 @@ class UncheckedReturnValueDetector(Detector):
             ir.enums.GlobalSymbol.ADDRESS_DELEGATECALL,
             ir.enums.GlobalSymbol.ADDRESS_STATICCALL,
         }:
-            impact = DetectionImpact.MEDIUM
-            confidence = DetectionConfidence.MEDIUM
+            impact = DetectorImpact.MEDIUM
+            confidence = DetectorConfidence.MEDIUM
 
         if return_value_unused:
             self._detections.add(
