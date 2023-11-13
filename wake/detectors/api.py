@@ -687,7 +687,10 @@ def print_detection(
 
         title += detection.message
         if detector_id is not None:
-            title += f" \[{detector_id}]"  # pyright: ignore reportInvalidStringEscapeSequence
+            if isinstance(info, DetectorResult) and info.url is not None:
+                title += f" [link={info.url}]\[{detector_id}][/link]"  # pyright: ignore reportInvalidStringEscapeSequence
+            else:
+                title += f" \[{detector_id}]"  # pyright: ignore reportInvalidStringEscapeSequence
 
         panel = Panel.fit(
             Syntax(
