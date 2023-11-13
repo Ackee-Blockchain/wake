@@ -232,16 +232,16 @@ Wake testing framework allows running the same test in parallel with different r
 Multiprocess tests are launched by setting the `-P` flag specifying the number of processes to be used:
 
 ```shell
-wake test tests/test_counter_fuzz.py -P 5
+wake test -P 3 tests/test_counter_fuzz.py
 ```
 
 If a test process encounters an error, the user is prompted whether to debug the test or continue testing.
 While debugging, other processes are still running in the background.
 
-<div id="wake-fuzz-asciinema" style="z-index: 1; position: relative;"></div>
+<div id="fuzz-asciinema" style="z-index: 1; position: relative;"></div>
 <script>
   window.onload = function(){
-    AsciinemaPlayer.create('../wake-fuzz.cast', document.getElementById('wake-fuzz-asciinema'), { preload: true, autoPlay: true, rows: 15 });
+    AsciinemaPlayer.create('../fuzz.cast', document.getElementById('fuzz-asciinema'), { preload: true, autoPlay: true, rows: 15 });
 }
 </script>
 
