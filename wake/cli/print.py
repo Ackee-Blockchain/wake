@@ -742,6 +742,10 @@ def run_print(
 @run_print.command("list")
 @click.pass_context
 def run_print_list(ctx):
+    """
+    List available printers and their sources.
+    """
+
     def normalize_source(source: Union[str, Path]) -> str:
         if isinstance(source, Path):
             if source == Path.cwd() / "printers":

@@ -870,6 +870,10 @@ def run_detect_all(
 @run_detect.command(name="list")
 @click.pass_context
 def run_detect_list(ctx):
+    """
+    List available detectors and their sources.
+    """
+
     def normalize_source(source: Union[str, Path]) -> str:
         if isinstance(source, Path):
             if source == Path.cwd() / "detectors":
