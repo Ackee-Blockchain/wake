@@ -16,6 +16,7 @@ from wake.detectors import (
     DetectorResult,
     detector,
 )
+from wake_detectors.utils import generate_detector_uri
 
 FunctionInfo = namedtuple(
     "FunctionInfo", ["name", "state_mutability", "return_parameters"]
@@ -161,6 +162,11 @@ class IncorrectInterfaceDetector(Detector):
                         Detection(event, f"{name} event must not be anonymous"),
                         impact=DetectorImpact.LOW,
                         confidence=DetectorConfidence.HIGH,
+                        uri=generate_detector_uri(
+                            name="incorrect-interface",
+                            version=self.extra["package_versions"]["eth-wake"],
+                            anchor="anonymous-events",
+                        ),
                     )
                 )
 
@@ -174,6 +180,10 @@ class IncorrectInterfaceDetector(Detector):
                         ),
                         impact=DetectorImpact.LOW,
                         confidence=DetectorConfidence.HIGH,
+                        uri=generate_detector_uri(
+                            name="incorrect-interface",
+                            version=self.extra["package_versions"]["eth-wake"],
+                        ),
                     )
                 )
             else:
@@ -189,6 +199,11 @@ class IncorrectInterfaceDetector(Detector):
                                 ),
                                 impact=DetectorImpact.LOW,
                                 confidence=DetectorConfidence.HIGH,
+                                uri=generate_detector_uri(
+                                    name="incorrect-interface",
+                                    version=self.extra["package_versions"]["eth-wake"],
+                                    anchor="indexed-event-parameters",
+                                ),
                             )
                         )
 
@@ -208,6 +223,11 @@ class IncorrectInterfaceDetector(Detector):
                             ),
                             impact=DetectorImpact.LOW,
                             confidence=DetectorConfidence.HIGH,
+                            uri=generate_detector_uri(
+                                name="incorrect-interface",
+                                version=self.extra["package_versions"]["eth-wake"],
+                                anchor="incorrect-state-mutability",
+                            ),
                         )
                     )
 
@@ -220,6 +240,11 @@ class IncorrectInterfaceDetector(Detector):
                             ),
                             impact=DetectorImpact.LOW,
                             confidence=DetectorConfidence.HIGH,
+                            uri=generate_detector_uri(
+                                name="incorrect-interface",
+                                version=self.extra["package_versions"]["eth-wake"],
+                                anchor="incorrect-return-type",
+                            ),
                         )
                     )
                 else:
@@ -235,10 +260,15 @@ class IncorrectInterfaceDetector(Detector):
                             DetectorResult(
                                 Detection(
                                     function,
-                                    f"{name} function parameter has incorrect return type, expected {functions[function_selector].return_parameters[0]}",
+                                    f"{name} function return parameter has incorrect type, expected {functions[function_selector].return_parameters[0]}",
                                 ),
                                 impact=DetectorImpact.LOW,
                                 confidence=DetectorConfidence.HIGH,
+                                uri=generate_detector_uri(
+                                    name="incorrect-interface",
+                                    version=self.extra["package_versions"]["eth-wake"],
+                                    anchor="incorrect-return-type",
+                                ),
                             )
                         )
             else:
@@ -256,6 +286,11 @@ class IncorrectInterfaceDetector(Detector):
                                 ),
                                 impact=DetectorImpact.LOW,
                                 confidence=DetectorConfidence.HIGH,
+                                uri=generate_detector_uri(
+                                    name="incorrect-interface",
+                                    version=self.extra["package_versions"]["eth-wake"],
+                                    anchor="incorrect-state-mutability",
+                                ),
                             )
                         )
 
@@ -270,6 +305,11 @@ class IncorrectInterfaceDetector(Detector):
                             ),
                             impact=DetectorImpact.LOW,
                             confidence=DetectorConfidence.HIGH,
+                            uri=generate_detector_uri(
+                                name="incorrect-interface",
+                                version=self.extra["package_versions"]["eth-wake"],
+                                anchor="incorrect-return-type",
+                            ),
                         )
                     )
                 else:
@@ -283,10 +323,17 @@ class IncorrectInterfaceDetector(Detector):
                                 DetectorResult(
                                     Detection(
                                         param,
-                                        f"{name} function parameter has incorrect return type, expected {abi_type}",
+                                        f"{name} function return parameter has incorrect type, expected {abi_type}",
                                     ),
                                     impact=DetectorImpact.LOW,
                                     confidence=DetectorConfidence.HIGH,
+                                    uri=generate_detector_uri(
+                                        name="incorrect-interface",
+                                        version=self.extra["package_versions"][
+                                            "eth-wake"
+                                        ],
+                                        anchor="incorrect-return-type",
+                                    ),
                                 )
                             )
 
@@ -311,6 +358,11 @@ class IncorrectInterfaceDetector(Detector):
                     ),
                     impact=DetectorImpact.LOW,
                     confidence=DetectorConfidence.HIGH,
+                    uri=generate_detector_uri(
+                        name="incorrect-interface",
+                        version=self.extra["package_versions"]["eth-wake"],
+                        anchor="missing-functions-events",
+                    ),
                 )
             )
 

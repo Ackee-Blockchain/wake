@@ -15,6 +15,7 @@ from wake.detectors import (
     DetectorResult,
     detector,
 )
+from wake_detectors.utils import generate_detector_uri
 
 
 # TODO: selfdestruct in Yul
@@ -45,7 +46,10 @@ class UnprotectedSelfdestructDetector(Detector):
                     Detection(node, "Selfdestruct call is not protected"),
                     impact=DetectorImpact.HIGH,
                     confidence=DetectorConfidence.MEDIUM,
-                    uri="https://ackeeblockchain.com/wake/docs/latest/static-analysis/detectors/unprotected-selfdestruct",
+                    uri=generate_detector_uri(
+                        name="unprotected-selfdestruct",
+                        version=self.extra["package_versions"]["eth-wake"],
+                    ),
                 )
             )
 

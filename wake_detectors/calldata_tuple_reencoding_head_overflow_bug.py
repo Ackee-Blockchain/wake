@@ -15,6 +15,7 @@ from wake.detectors import (
     DetectorResult,
     detector,
 )
+from wake_detectors.utils import generate_detector_uri
 
 
 def type_contains_dynamic_component(t: types.TypeAbc) -> bool:
@@ -136,6 +137,10 @@ class CalldataTupleReencodingHeadOverflowBugDetector(Detector):
                     ),
                     impact=DetectorImpact.HIGH,
                     confidence=DetectorConfidence.LOW,
+                    uri=generate_detector_uri(
+                        name="calldata-tuple-reencoding-head-overflow-bug",
+                        version=self.extra["package_versions"]["eth-wake"],
+                    ),
                 )
             )
 
@@ -162,6 +167,10 @@ class CalldataTupleReencodingHeadOverflowBugDetector(Detector):
                     ),
                     impact=DetectorImpact.HIGH,
                     confidence=DetectorConfidence.HIGH,
+                    uri=generate_detector_uri(
+                        name="calldata-tuple-reencoding-head-overflow-bug",
+                        version=self.extra["package_versions"]["eth-wake"],
+                    ),
                 )
             )
 
@@ -264,6 +273,10 @@ class CalldataTupleReencodingHeadOverflowBugDetector(Detector):
                     ),
                     impact=DetectorImpact.HIGH,
                     confidence=DetectorConfidence.HIGH,
+                    uri=generate_detector_uri(
+                        name="calldata-tuple-reencoding-head-overflow-bug",
+                        version=self.extra["package_versions"]["eth-wake"],
+                    ),
                 )
             )
 

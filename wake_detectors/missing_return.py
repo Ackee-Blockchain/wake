@@ -16,6 +16,7 @@ from wake.detectors import (
     DetectorResult,
     detector,
 )
+from wake_detectors.utils import generate_detector_uri
 
 if TYPE_CHECKING:
     from wake.analysis.cfg import CfgNode
@@ -105,6 +106,10 @@ class MissingReturnDetector(Detector):
                     ),
                     impact=DetectorImpact.WARNING,
                     confidence=DetectorConfidence.MEDIUM,
+                    uri=generate_detector_uri(
+                        name="missing-return",
+                        version=self.extra["package_versions"]["eth-wake"],
+                    ),
                 )
             )
 

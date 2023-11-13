@@ -16,6 +16,7 @@ from wake.detectors import (
     DetectorResult,
     detector,
 )
+from wake_detectors.utils import generate_detector_uri
 
 if TYPE_CHECKING:
     from wake.analysis.cfg import CfgNode
@@ -299,6 +300,10 @@ class ReentrancyDetector(Detector):
                 ),
                 impact=impact,
                 confidence=confidence,
+                uri=generate_detector_uri(
+                    name="reentrancy",
+                    version=self.extra["package_versions"]["eth-wake"],
+                ),
             )
         )
 

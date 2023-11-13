@@ -15,6 +15,7 @@ from wake.detectors import (
     DetectorResult,
     detector,
 )
+from wake_detectors.utils import generate_detector_uri
 
 
 class CallOptionsNotCalledDetector(Detector):
@@ -50,6 +51,10 @@ class CallOptionsNotCalledDetector(Detector):
                     Detection(node, "Function call options not called"),
                     DetectorImpact.HIGH,
                     DetectorConfidence.HIGH,
+                    uri=generate_detector_uri(
+                        name="call-options-not-called",
+                        version=self.extra["package_versions"]["eth-wake"],
+                    ),
                 )
             )
 
@@ -83,6 +88,10 @@ class CallOptionsNotCalledDetector(Detector):
                     Detection(node, "Function call options not called"),
                     DetectorImpact.HIGH,
                     DetectorConfidence.HIGH,
+                    uri=generate_detector_uri(
+                        name="call-options-not-called",
+                        version=self.extra["package_versions"]["eth-wake"],
+                    ),
                 )
             )
 
