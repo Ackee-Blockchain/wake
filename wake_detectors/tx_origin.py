@@ -42,7 +42,7 @@ class TxOriginDetector(Detector):
                     ),
                     impact=DetectorImpact.WARNING,
                     confidence=DetectorConfidence.LOW,
-                    url="https://ackeeblockchain.com/wake/docs/latest/static-analysis/detectors/unsafe-tx-origin#account-abstraction",
+                    uri="https://ackeeblockchain.com/wake/docs/latest/static-analysis/detectors/unsafe-tx-origin#account-abstraction",
                 )
             )
 
@@ -83,7 +83,7 @@ class TxOriginDetector(Detector):
                 Detection(node, "Unsafe usage of tx.origin"),
                 impact=DetectorImpact.MEDIUM,
                 confidence=DetectorConfidence.LOW,
-                url="https://ackeeblockchain.com/wake/docs/latest/static-analysis/detectors/unsafe-tx-origin#phishing-attacks",
+                uri="https://ackeeblockchain.com/wake/docs/latest/static-analysis/detectors/unsafe-tx-origin#phishing-attacks",
             )
         )
 

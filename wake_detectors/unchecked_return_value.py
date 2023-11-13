@@ -99,7 +99,7 @@ class UncheckedReturnValueDetector(Detector):
                     Detection(node, "Unchecked return value"),
                     impact=impact,
                     confidence=confidence,
-                    url="https://ackeeblockchain.com/wake/docs/latest/static-analysis/detectors/unchecked-return-value",
+                    uri="https://ackeeblockchain.com/wake/docs/latest/static-analysis/detectors/unchecked-return-value",
                 )
             )
 

@@ -1277,9 +1277,9 @@ class LspCompiler:
                             code=detector_name,
                             related_information=related_info,
                             code_description=CodeDescription(
-                                href=result.url,  # pyright: ignore reportGeneralTypeIssues
+                                href=result.uri,  # pyright: ignore reportGeneralTypeIssues
                             )
-                            if result.url is not None
+                            if result.uri is not None
                             else None,
                             data=DetectionAdditionalInfo(
                                 confidence=result.confidence,

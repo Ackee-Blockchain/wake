@@ -30,7 +30,7 @@ class UnusedContractDetector(Detector):
                 d,
                 impact=DetectorImpact.INFO,
                 confidence=DetectorConfidence.HIGH,
-                url="https://ackeeblockchain.com/wake/docs/latest/static-analysis/detectors/unused-contract",
+                uri="https://ackeeblockchain.com/wake/docs/latest/static-analysis/detectors/unused-contract",
             )
             for d in self._detections
         ]
