@@ -28,6 +28,7 @@ theme:
         name: Switch to light mode
 
   features:
+    - content.code.annotate
     - content.code.copy
     - content.tabs.link
     - navigation.tracking
@@ -62,7 +63,29 @@ nav:
       - Migrating from Woke 2.x: 'testing-framework/migrating-from-woke-2.md'
       - Migrating from Woke 3.x: 'testing-framework/migrating-from-woke-3.md'
       - Troubleshooting: 'testing-framework/troubleshooting.md'
-  - Detectors: 'detectors.md'
+  - Static analysis (detectors & printers):
+      - Built-in:
+        - Detectors:
+            - abi.encodeWithSignature: 'static-analysis/detectors/abi-encode-with-signature.md'
+            - Balance relied on: 'static-analysis/detectors/balance-relied-on.md'
+            - Calldata tuple reencoding head overflow bug: 'static-analysis/detectors/calldata-tuple-reencoding-head-overflow-bug.md'
+            - Call options not called: 'static-analysis/detectors/call-options-not-called.md'
+            - Empty byte array copy bug: 'static-analysis/detectors/empty-byte-array-copy-bug.md'
+            - Incorrect interface: 'static-analysis/detectors/incorrect-interface.md'
+            - Missing return: 'static-analysis/detectors/missing-return.md'
+            - msg.value non-payable function: 'static-analysis/detectors/msg-value-nonpayable-function.md'
+            - Reentrancy: 'static-analysis/detectors/reentrancy.md'
+            - tx.origin: 'static-analysis/detectors/tx-origin.md'
+            - Unchecked return value: 'static-analysis/detectors/unchecked-return-value.md'
+            - Unprotected selfdestruct: 'static-analysis/detectors/unprotected-selfdestruct.md'
+            - Unsafe delegatecall: 'static-analysis/detectors/unsafe-delegatecall.md'
+            - Unused contract: 'static-analysis/detectors/unused-contract.md'
+            - Unused import: 'static-analysis/detectors/unused-import.md'
+        - Printers:
+            - ABI: 'static-analysis/printers/abi.md'
+            - Storage layout: 'static-analysis/printers/storage-layout.md'
+            - Tokens: 'static-analysis/printers/tokens.md'
+
   - LSP server: 'language-server.md'
   - Solc Version Manager: 'solc-version-manager.md'
   - API reference:
@@ -196,7 +219,6 @@ plugins:
     cards_layout_options:
       background_color: "#0000FF"
       color: "#FFFFFF"
-- monorepo
 
 markdown_extensions:
   - def_list
