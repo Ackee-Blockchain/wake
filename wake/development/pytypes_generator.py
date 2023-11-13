@@ -1769,8 +1769,8 @@ class TypeGenerator:
             previous_len = len(graph)
 
         if cycles_detected:
-            logger.warning(
-                "Cyclic imports detected, pytypes may not be working correctly:\n"
+            logger.info(
+                "Cyclic imports detected\n"
                 + "\n".join(str(set(cycle)) for cycle in cycles)
             )
 
