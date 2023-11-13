@@ -10,9 +10,9 @@ import wake.ir as ir
 import wake.ir.types as types
 from wake.detectors import (
     Detection,
-    DetectionConfidence,
-    DetectionImpact,
     Detector,
+    DetectorConfidence,
+    DetectorImpact,
     DetectorResult,
     detector,
 )
@@ -88,7 +88,7 @@ class ReentrancyDetector(Detector):
         address_source: ir.ExpressionAbc,
         child_modifies_state: Set[Tuple[ir.IrAbc, ir.enums.ModifiesStateFlag]],
         checked_statements: Set[ir.StatementAbc],
-    ) -> List[Tuple[Detection, DetectionImpact, DetectionConfidence]]:
+    ) -> List[Tuple[Detection, DetectorImpact, DetectorConfidence]]:
         from functools import reduce
         from operator import or_
 
@@ -153,14 +153,14 @@ class ReentrancyDetector(Detector):
                 | ir.enums.ModifiesStateFlag.CALLS_UNIMPLEMENTED_NONPAYABLE_FUNCTION
                 | ir.enums.ModifiesStateFlag.CALLS_UNIMPLEMENTED_PAYABLE_FUNCTION
             ):
-                impact = DetectionImpact.HIGH
+                impact = DetectorImpact.HIGH
             elif state_mods & (
                 ir.enums.ModifiesStateFlag.EMITS
                 | ir.enums.ModifiesStateFlag.DEPLOYS_CONTRACT
                 | ir.enums.ModifiesStateFlag.SELFDESTRUCTS
                 | ir.enums.ModifiesStateFlag.PERFORMS_DELEGATECALL
             ):
-                impact = DetectionImpact.WARNING
+                impact = DetectorImpact.WARNING
             else:
                 raise NotImplementedError()
 
@@ -171,9 +171,9 @@ class ReentrancyDetector(Detector):
                         f"Exploitable from `{function_definition.canonical_name}`",
                     ),
                     impact,
-                    DetectionConfidence.LOW
+                    DetectorConfidence.LOW
                     if is_safe is None
-                    else DetectionConfidence.MEDIUM,
+                    else DetectorConfidence.MEDIUM,
                 )
             )
 

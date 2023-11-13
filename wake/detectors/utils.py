@@ -24,7 +24,7 @@ from sarif_om import (
 from wake.utils import get_package_version
 from wake.utils.keyed_default_dict import KeyedDefaultDict
 
-from .api import DetectionImpact, DetectorResult
+from .api import DetectorImpact, DetectorResult
 
 # pyright: reportGeneralTypeIssues=false
 
@@ -79,11 +79,11 @@ def create_sarif_log(
     extensions_index_mapping = {e.name: i for i, e in enumerate(extensions_list)}
 
     impact_to_level = {
-        DetectionImpact.HIGH: "error",
-        DetectionImpact.MEDIUM: "error",
-        DetectionImpact.LOW: "error",
-        DetectionImpact.WARNING: "warning",
-        DetectionImpact.INFO: "note",
+        DetectorImpact.HIGH: "error",
+        DetectorImpact.MEDIUM: "error",
+        DetectorImpact.LOW: "error",
+        DetectorImpact.WARNING: "warning",
+        DetectorImpact.INFO: "note",
     }
 
     workspace_root = os.getenv("GITHUB_WORKSPACE")

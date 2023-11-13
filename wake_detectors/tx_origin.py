@@ -9,9 +9,9 @@ import wake.ir as ir
 import wake.ir.types as types
 from wake.detectors import (
     Detection,
-    DetectionConfidence,
-    DetectionImpact,
     Detector,
+    DetectorConfidence,
+    DetectorImpact,
     DetectorResult,
     detector,
 )
@@ -40,8 +40,8 @@ class TxOriginDetector(Detector):
                         node,
                         "Use of tx.origin may interfere with ERC-4337 account abstraction",
                     ),
-                    impact=DetectionImpact.WARNING,
-                    confidence=DetectionConfidence.LOW,
+                    impact=DetectorImpact.WARNING,
+                    confidence=DetectorConfidence.LOW,
                     url="https://ackeeblockchain.com/wake/docs/latest/static-analysis/detectors/unsafe-tx-origin#account-abstraction",
                 )
             )
@@ -81,8 +81,8 @@ class TxOriginDetector(Detector):
         self._detections.append(
             DetectorResult(
                 Detection(node, "Unsafe usage of tx.origin"),
-                impact=DetectionImpact.MEDIUM,
-                confidence=DetectionConfidence.LOW,
+                impact=DetectorImpact.MEDIUM,
+                confidence=DetectorConfidence.LOW,
                 url="https://ackeeblockchain.com/wake/docs/latest/static-analysis/detectors/unsafe-tx-origin#phishing-attacks",
             )
         )

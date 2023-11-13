@@ -9,9 +9,9 @@ import wake.ir as ir
 import wake.ir.types as types
 from wake.detectors import (
     Detection,
-    DetectionConfidence,
-    DetectionImpact,
     Detector,
+    DetectorConfidence,
+    DetectorImpact,
     DetectorResult,
     detector,
 )
@@ -73,8 +73,8 @@ class UnusedImportDetector(Detector):
                             import_directive,
                             "Unused import",
                         ),
-                        impact=DetectionImpact.WARNING,
-                        confidence=DetectionConfidence.HIGH,
+                        impact=DetectorImpact.WARNING,
+                        confidence=DetectorConfidence.HIGH,
                         url="https://ackeeblockchain.com/wake/docs/latest/static-analysis/detectors/unused-import",
                     )
                 )

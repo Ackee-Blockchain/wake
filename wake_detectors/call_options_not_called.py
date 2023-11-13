@@ -9,9 +9,9 @@ import wake.ir as ir
 import wake.ir.types as types
 from wake.detectors import (
     Detection,
-    DetectionConfidence,
-    DetectionImpact,
     Detector,
+    DetectorConfidence,
+    DetectorImpact,
     DetectorResult,
     detector,
 )
@@ -48,8 +48,8 @@ class CallOptionsNotCalledDetector(Detector):
             self._detections.append(
                 DetectorResult(
                     Detection(node, "Function call options not called"),
-                    DetectionImpact.HIGH,
-                    DetectionConfidence.HIGH,
+                    DetectorImpact.HIGH,
+                    DetectorConfidence.HIGH,
                 )
             )
 
@@ -81,8 +81,8 @@ class CallOptionsNotCalledDetector(Detector):
             self._detections.append(
                 DetectorResult(
                     Detection(node, "Function call options not called"),
-                    DetectionImpact.HIGH,
-                    DetectionConfidence.HIGH,
+                    DetectorImpact.HIGH,
+                    DetectorConfidence.HIGH,
                 )
             )
 

@@ -9,9 +9,9 @@ import wake.ir as ir
 import wake.ir.types as types
 from wake.detectors import (
     Detection,
-    DetectionConfidence,
-    DetectionImpact,
     Detector,
+    DetectorConfidence,
+    DetectorImpact,
     DetectorResult,
     detector,
 )
@@ -22,7 +22,7 @@ def check_delegatecall_in_function(
     statement: ir.StatementAbc,
     address_source: ir.ExpressionAbc,
     checked_statements: Set[ir.StatementAbc],
-) -> List[Tuple[Detection, DetectionConfidence]]:
+) -> List[Tuple[Detection, DetectorConfidence]]:
     from wake.analysis.expressions import find_low_level_call_source_address
     from wake.analysis.ownable import address_is_safe, statement_is_publicly_executable
     from wake.analysis.utils import pair_function_call_arguments
@@ -69,9 +69,9 @@ def check_delegatecall_in_function(
                     statement,
                     f"Exploitable from `{function_definition.canonical_name}`",
                 ),
-                DetectionConfidence.LOW
+                DetectorConfidence.LOW
                 if is_safe is None
-                else DetectionConfidence.MEDIUM,
+                else DetectorConfidence.MEDIUM,
             )
         )
 
@@ -182,7 +182,7 @@ class UnsafeDelegatecallDetector(Detector):
                     tuple(r[0] for r in ret),
                 ),
                 confidence=max(r[1] for r in ret),
-                impact=DetectionImpact.MEDIUM,
+                impact=DetectorImpact.MEDIUM,
             )
         )
 

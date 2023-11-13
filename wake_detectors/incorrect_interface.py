@@ -10,9 +10,9 @@ import wake.ir as ir
 import wake.ir.types as types
 from wake.detectors import (
     Detection,
-    DetectionConfidence,
-    DetectionImpact,
     Detector,
+    DetectorConfidence,
+    DetectorImpact,
     DetectorResult,
     detector,
 )
@@ -159,8 +159,8 @@ class IncorrectInterfaceDetector(Detector):
                 self._detections.add(
                     DetectorResult(
                         Detection(event, f"{name} event must not be anonymous"),
-                        impact=DetectionImpact.LOW,
-                        confidence=DetectionConfidence.HIGH,
+                        impact=DetectorImpact.LOW,
+                        confidence=DetectorConfidence.HIGH,
                     )
                 )
 
@@ -172,8 +172,8 @@ class IncorrectInterfaceDetector(Detector):
                         Detection(
                             event, f"{name} event has incorrect number of parameters"
                         ),
-                        impact=DetectionImpact.LOW,
-                        confidence=DetectionConfidence.HIGH,
+                        impact=DetectorImpact.LOW,
+                        confidence=DetectorConfidence.HIGH,
                     )
                 )
             else:
@@ -187,8 +187,8 @@ class IncorrectInterfaceDetector(Detector):
                                     param,
                                     f"{name} event parameter {'has' if not indexed else 'does not have'} indexed flag set",
                                 ),
-                                impact=DetectionImpact.LOW,
-                                confidence=DetectionConfidence.HIGH,
+                                impact=DetectorImpact.LOW,
+                                confidence=DetectorConfidence.HIGH,
                             )
                         )
 
@@ -206,8 +206,8 @@ class IncorrectInterfaceDetector(Detector):
                                 function,
                                 f"{name} state-changing function was expected instead of read-only variable getter",
                             ),
-                            impact=DetectionImpact.LOW,
-                            confidence=DetectionConfidence.HIGH,
+                            impact=DetectorImpact.LOW,
+                            confidence=DetectorConfidence.HIGH,
                         )
                     )
 
@@ -218,8 +218,8 @@ class IncorrectInterfaceDetector(Detector):
                                 function,
                                 f"{name} function has incorrect number of return parameters",
                             ),
-                            impact=DetectionImpact.LOW,
-                            confidence=DetectionConfidence.HIGH,
+                            impact=DetectorImpact.LOW,
+                            confidence=DetectorConfidence.HIGH,
                         )
                     )
                 else:
@@ -237,8 +237,8 @@ class IncorrectInterfaceDetector(Detector):
                                     function,
                                     f"{name} function parameter has incorrect return type, expected {functions[function_selector].return_parameters[0]}",
                                 ),
-                                impact=DetectionImpact.LOW,
-                                confidence=DetectionConfidence.HIGH,
+                                impact=DetectorImpact.LOW,
+                                confidence=DetectorConfidence.HIGH,
                             )
                         )
             else:
@@ -254,8 +254,8 @@ class IncorrectInterfaceDetector(Detector):
                                     function,
                                     f"{name} function has incorrect state mutability, expected one of {functions[function_selector].state_mutability}",
                                 ),
-                                impact=DetectionImpact.LOW,
-                                confidence=DetectionConfidence.HIGH,
+                                impact=DetectorImpact.LOW,
+                                confidence=DetectorConfidence.HIGH,
                             )
                         )
 
@@ -268,8 +268,8 @@ class IncorrectInterfaceDetector(Detector):
                                 function,
                                 f"{name} function has incorrect number of return parameters",
                             ),
-                            impact=DetectionImpact.LOW,
-                            confidence=DetectionConfidence.HIGH,
+                            impact=DetectorImpact.LOW,
+                            confidence=DetectorConfidence.HIGH,
                         )
                     )
                 else:
@@ -285,8 +285,8 @@ class IncorrectInterfaceDetector(Detector):
                                         param,
                                         f"{name} function parameter has incorrect return type, expected {abi_type}",
                                     ),
-                                    impact=DetectionImpact.LOW,
-                                    confidence=DetectionConfidence.HIGH,
+                                    impact=DetectorImpact.LOW,
+                                    confidence=DetectorConfidence.HIGH,
                                 )
                             )
 
@@ -309,8 +309,8 @@ class IncorrectInterfaceDetector(Detector):
                         contract,
                         f"{name} contract does not implement all functions/events. Missing: {', '.join(missing)}",
                     ),
-                    impact=DetectionImpact.LOW,
-                    confidence=DetectionConfidence.HIGH,
+                    impact=DetectorImpact.LOW,
+                    confidence=DetectorConfidence.HIGH,
                 )
             )
 
