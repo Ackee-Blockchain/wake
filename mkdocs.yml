@@ -64,6 +64,8 @@ nav:
       - Migrating from Woke 3.x: 'testing-framework/migrating-from-woke-3.md'
       - Troubleshooting: 'testing-framework/troubleshooting.md'
   - Static analysis (detectors & printers):
+      - Using detectors: 'static-analysis/using-detectors.md'
+      - Using printers: 'static-analysis/using-printers.md'
       - Built-in:
         - Detectors:
             - abi.encodeWithSignature: 'static-analysis/detectors/abi-encode-with-signature.md'
