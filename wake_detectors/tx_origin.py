@@ -15,6 +15,7 @@ from wake.detectors import (
     DetectorResult,
     detector,
 )
+from wake_detectors.utils import generate_detector_uri
 
 
 class TxOriginDetector(Detector):
@@ -42,7 +43,11 @@ class TxOriginDetector(Detector):
                     ),
                     impact=DetectorImpact.WARNING,
                     confidence=DetectorConfidence.LOW,
-                    uri="https://ackeeblockchain.com/wake/docs/latest/static-analysis/detectors/unsafe-tx-origin#account-abstraction",
+                    uri=generate_detector_uri(
+                        name="tx-origin",
+                        version=self.extra["package_versions"]["eth-wake"],
+                        anchor="account-abstraction",
+                    ),
                 )
             )
 
@@ -83,7 +88,11 @@ class TxOriginDetector(Detector):
                 Detection(node, "Unsafe usage of tx.origin"),
                 impact=DetectorImpact.MEDIUM,
                 confidence=DetectorConfidence.LOW,
-                uri="https://ackeeblockchain.com/wake/docs/latest/static-analysis/detectors/unsafe-tx-origin#phishing-attacks",
+                uri=generate_detector_uri(
+                    name="tx-origin",
+                    version=self.extra["package_versions"]["eth-wake"],
+                    anchor="phishing-attacks",
+                ),
             )
         )
 

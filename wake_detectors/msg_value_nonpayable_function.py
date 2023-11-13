@@ -16,6 +16,7 @@ from wake.detectors import (
     DetectorResult,
     detector,
 )
+from wake_detectors.utils import generate_detector_uri
 
 
 class MsgValueNonpayableFunctionDetector(Detector):
@@ -103,6 +104,10 @@ class MsgValueNonpayableFunctionDetector(Detector):
                 ),
                 impact=DetectorImpact.WARNING,
                 confidence=DetectorConfidence.HIGH,
+                uri=generate_detector_uri(
+                    name="msg-value-nonpayable-function",
+                    version=self.extra["package_versions"]["eth-wake"],
+                ),
             )
         )
 

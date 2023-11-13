@@ -13,6 +13,7 @@ from wake.detectors import (
     DetectorResult,
     detector,
 )
+from wake_detectors.utils import generate_detector_uri
 
 
 class UnusedContractDetector(Detector):
@@ -30,7 +31,10 @@ class UnusedContractDetector(Detector):
                 d,
                 impact=DetectorImpact.INFO,
                 confidence=DetectorConfidence.HIGH,
-                uri="https://ackeeblockchain.com/wake/docs/latest/static-analysis/detectors/unused-contract",
+                uri=generate_detector_uri(
+                    name="unused-contract",
+                    version=self.extra["package_versions"]["eth-wake"],
+                ),
             )
             for d in self._detections
         ]

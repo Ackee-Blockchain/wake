@@ -15,6 +15,7 @@ from wake.detectors import (
     DetectorResult,
     detector,
 )
+from wake_detectors.utils import generate_detector_uri
 
 
 def check_delegatecall_in_function(
@@ -183,6 +184,10 @@ class UnsafeDelegatecallDetector(Detector):
                 ),
                 confidence=max(r[1] for r in ret),
                 impact=DetectorImpact.MEDIUM,
+                uri=generate_detector_uri(
+                    name="unsafe-delegatecall",
+                    version=self.extra["package_versions"]["eth-wake"],
+                ),
             )
         )
 

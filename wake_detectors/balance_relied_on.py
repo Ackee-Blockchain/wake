@@ -15,6 +15,7 @@ from wake.detectors import (
     DetectorResult,
     detector,
 )
+from wake_detectors.utils import generate_detector_uri
 
 _recursion_guard = set()
 
@@ -143,6 +144,10 @@ class BalanceReliedOnDetector(Detector):
                         Detection(node, "Use of address.balance", tuple(subdetections)),
                         DetectorImpact.WARNING,
                         DetectorConfidence.LOW,
+                        uri=generate_detector_uri(
+                            name="balance-relied-on",
+                            version=self.extra["package_versions"]["eth-wake"],
+                        ),
                     ),
                 )
 

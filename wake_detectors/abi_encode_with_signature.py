@@ -15,6 +15,7 @@ from wake.detectors import (
     DetectorResult,
     detector,
 )
+from wake_detectors.utils import generate_detector_uri
 
 
 class AbiEncodeWithSignatureDetector(Detector):
@@ -90,6 +91,10 @@ class AbiEncodeWithSignatureDetector(Detector):
                     ),
                     confidence=DetectorConfidence.HIGH,
                     impact=DetectorImpact.MEDIUM,
+                    uri=generate_detector_uri(
+                        name="abi-encode-with-signature",
+                        version=self.extra["package_versions"]["eth-wake"],
+                    ),
                 )
             )
 

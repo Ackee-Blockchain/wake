@@ -15,6 +15,7 @@ from wake.detectors import (
     DetectorResult,
     detector,
 )
+from wake_detectors.utils import generate_detector_uri
 
 
 class UnusedImportDetector(Detector):
@@ -75,6 +76,9 @@ class UnusedImportDetector(Detector):
                         ),
                         impact=DetectorImpact.WARNING,
                         confidence=DetectorConfidence.HIGH,
-                        uri="https://ackeeblockchain.com/wake/docs/latest/static-analysis/detectors/unused-import",
+                        uri=generate_detector_uri(
+                            name="unused-import",
+                            version=self.extra["package_versions"]["eth-wake"],
+                        ),
                     )
                 )

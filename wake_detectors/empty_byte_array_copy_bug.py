@@ -15,6 +15,7 @@ from wake.detectors import (
     DetectorResult,
     detector,
 )
+from wake_detectors.utils import generate_detector_uri
 
 
 class EmptyByteArrayCopyBugDetector(Detector):
@@ -92,6 +93,10 @@ class EmptyByteArrayCopyBugDetector(Detector):
                         ),
                         DetectorImpact.MEDIUM,
                         DetectorConfidence.MEDIUM,
+                        uri=generate_detector_uri(
+                            name="empty-byte-array-copy-bug",
+                            version=self.extra["package_versions"]["eth-wake"],
+                        ),
                     )
                 )
                 return

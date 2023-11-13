@@ -12,6 +12,7 @@ from wake.detectors import (
     DetectorResult,
     detector,
 )
+from wake_detectors.utils import generate_detector_uri
 
 
 class UncheckedReturnValueDetector(Detector):
@@ -99,7 +100,10 @@ class UncheckedReturnValueDetector(Detector):
                     Detection(node, "Unchecked return value"),
                     impact=impact,
                     confidence=confidence,
-                    uri="https://ackeeblockchain.com/wake/docs/latest/static-analysis/detectors/unchecked-return-value",
+                    uri=generate_detector_uri(
+                        name="unchecked-return-value",
+                        version=self.extra["package_versions"]["eth-wake"],
+                    ),
                 )
             )
 
