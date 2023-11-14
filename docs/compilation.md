@@ -68,7 +68,7 @@ Exclude paths define locations of Solidity files that should not be compiled unl
 The default settings for exclude paths are:
 ```toml title="wake.toml"
 [compiler.solc]
-exclude_paths = ["node_modules", "venv", "lib", "script", "test"]
+exclude_paths = ["node_modules", "venv", ".venv", "lib", "script", "test"]
 ```
 
 ## Via IR

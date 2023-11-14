@@ -27,7 +27,7 @@ def write_config(config: WakeConfig) -> None:
     with config.local_config_path.open("w") as f:
         f.write("[compiler.solc]\n")
         f.write(
-            f'exclude_paths = ["{rel_path}node_modules", "{rel_path}venv", "{rel_path}lib", "{rel_path}script", "{rel_path}test"]\n'
+            f'exclude_paths = ["{rel_path}node_modules", "{rel_path}venv", "{rel_path}.venv", "{rel_path}lib", "{rel_path}script", "{rel_path}test"]\n'
         )
         f.write(f'include_paths = ["{rel_path}node_modules"]\n')
         if len(config.compiler.solc.remappings) > 0:
@@ -47,7 +47,9 @@ def write_config(config: WakeConfig) -> None:
 
         f.write("[detectors]\n")
         f.write("exclude = []\n")
-        f.write(f'ignore_paths = ["{rel_path}venv", "{rel_path}test"]\n')
+        f.write(
+            f'ignore_paths = ["{rel_path}venv", "{rel_path}.venv", "{rel_path}test"]\n'
+        )
         f.write(
             f'exclude_paths = ["{rel_path}node_modules", "{rel_path}lib", "{rel_path}script"]\n'
         )

@@ -86,6 +86,7 @@ class SolcConfig(WakeConfigModel):
             [
                 Path.cwd() / "node_modules",
                 Path.cwd() / "venv",
+                Path.cwd() / ".venv",
                 Path.cwd() / "lib",
                 Path.cwd() / "script",
                 Path.cwd() / "test",
@@ -152,6 +153,7 @@ class DetectorsConfig(WakeConfigModel):
         default_factory=lambda: frozenset(
             [
                 Path.cwd() / "venv",
+                Path.cwd() / ".venv",
                 Path.cwd() / "test",
             ]
         )
