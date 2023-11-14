@@ -595,6 +595,7 @@ class LspCompiler:
                 await self.__diagnostic_queue.put((file, set()))
             self.__interval_trees.clear()
             self.__source_units.clear()
+            self.__ir_reference_resolver.clear_all_indexed_nodes()
             return
         if target_version is not None and target_version > max_version:
             await self.__server.log_message(
@@ -606,6 +607,7 @@ class LspCompiler:
                 await self.__diagnostic_queue.put((file, set()))
             self.__interval_trees.clear()
             self.__source_units.clear()
+            self.__ir_reference_resolver.clear_all_indexed_nodes()
             return
 
         try:
@@ -635,6 +637,7 @@ class LspCompiler:
                 await self.__diagnostic_queue.put((file, set()))
             self.__interval_trees.clear()
             self.__source_units.clear()
+            self.__ir_reference_resolver.clear_all_indexed_nodes()
             return
 
         compilation_units = self.__compiler.build_compilation_units_maximize(graph)
@@ -812,6 +815,7 @@ class LspCompiler:
                 await self.__diagnostic_queue.put((file, set()))
             self.__interval_trees.clear()
             self.__source_units.clear()
+            self.__ir_reference_resolver.clear_all_indexed_nodes()
             return
 
         errors_without_location: Set[SolcOutputError] = set()
@@ -854,6 +858,7 @@ class LspCompiler:
                 await self.__diagnostic_queue.put((file, set()))
             self.__interval_trees.clear()
             self.__source_units.clear()
+            self.__ir_reference_resolver.clear_all_indexed_nodes()
             return
 
         # files passed as files_to_compile and files importing them
@@ -873,6 +878,9 @@ class LspCompiler:
                 ],
             )
         ) | set(files_to_compile)
+
+        # clear indexed node types responsible for handling multiple structurally different ASTs for the same file
+        self.__ir_reference_resolver.clear_indexed_nodes(files_to_recompile)
 
         for deleted_file in self.__deleted_files:
             await self.__diagnostic_queue.put((deleted_file, []))
@@ -964,9 +972,6 @@ class LspCompiler:
                     continue
                 callback_processed_files.add(path)
                 self.__ir_reference_resolver.run_destroy_callbacks(path)
-
-        # clear indexed node types responsible for handling multiple structurally different ASTs for the same file
-        self.__ir_reference_resolver.clear_indexed_nodes(files_to_recompile)
 
         processed_files: Set[Path] = set()
         for cu_index, (cu, solc_output) in enumerate(successful_compilation_units):

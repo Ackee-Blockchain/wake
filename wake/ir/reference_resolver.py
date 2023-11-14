@@ -85,6 +85,9 @@ class ReferenceResolver:
         for path in paths:
             self._node_types.pop(path, None)
 
+    def clear_all_indexed_nodes(self) -> None:
+        self._node_types.clear()
+
     def index_nodes(self, root_node: AstSolc, path: Path, cu_hash: bytes) -> None:
         if path not in self._node_types:
             self._node_types[path] = {}
