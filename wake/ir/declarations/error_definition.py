@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, FrozenSet, Iterator, Optional, Set, Tuple, Union
 
 from Crypto.Hash import keccak
 
@@ -36,7 +36,7 @@ class ErrorDefinition(DeclarationAbc):
     _error_selector: Optional[bytes]
 
     # not a part of the AST
-    _used_in: List[ContractDefinition]
+    _used_in: Set[ContractDefinition]
 
     def __init__(
         self, init: IrInitTuple, error: SolcErrorDefinition, parent: SolidityAbc
@@ -51,7 +51,7 @@ class ErrorDefinition(DeclarationAbc):
         self._error_selector = (
             bytes.fromhex(error.error_selector) if error.error_selector else None
         )
-        self._used_in = []
+        self._used_in = set()
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
@@ -137,9 +137,9 @@ class ErrorDefinition(DeclarationAbc):
             return h.digest()[:4]
 
     @property
-    def used_in(self) -> Tuple[ContractDefinition, ...]:
+    def used_in(self) -> FrozenSet[ContractDefinition]:
         """
         Returns:
-            List of contracts where the error is used.
+            Contracts (including child contracts) that use this error in a revert statement, a contract that defines this error and contracts that inherit this error.
         """
-        return tuple(self._used_in)
+        return frozenset(self._used_in)

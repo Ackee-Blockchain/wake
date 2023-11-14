@@ -29,11 +29,15 @@ def find_interface(
 
     interface = {}
 
-    if contract.used_events is not None:
-        for event in contract.used_events:
-            if event.event_selector in events:
-                interface[event.event_selector] = event
-                events.remove(event.event_selector)
+    for event in contract.used_events:
+        if event.event_selector in events:
+            interface[event.event_selector] = event
+            events.remove(event.event_selector)
+
+    for error in contract.used_errors:
+        if error.error_selector in errors:
+            interface[error.error_selector] = error
+            errors.remove(error.error_selector)
 
     for c in contract.linearized_base_contracts:
         for func in c.functions:
@@ -47,15 +51,5 @@ def find_interface(
             if var.function_selector in functions:
                 interface[var.function_selector] = var
                 functions.remove(var.function_selector)
-
-        for event in c.events:
-            if event.event_selector in events:
-                interface[event.event_selector] = event
-                events.remove(event.event_selector)
-
-        for error in c.errors:
-            if error.error_selector in errors:
-                interface[error.error_selector] = error
-                errors.remove(error.error_selector)
 
     return interface

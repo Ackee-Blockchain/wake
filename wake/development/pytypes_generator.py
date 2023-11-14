@@ -614,20 +614,10 @@ class TypeGenerator:
                 abi_by_selector[selector] = item
 
                 event_decl = None
-                # used_events is only available in 0.8.20 and above
-                if contract.used_events is not None:
-                    for event in contract.used_events:
-                        if event.event_selector == selector:
-                            event_decl = event
-                            break
-                else:
-                    for c in contract.linearized_base_contracts:
-                        for event in c.events:
-                            if event.event_selector == selector:
-                                event_decl = event
-                                break
-                        if event_decl is not None:
-                            break
+                for event in contract.used_events:
+                    if event.event_selector == selector:
+                        event_decl = event
+                        break
                 if event_decl is None:
                     continue
 
@@ -810,7 +800,7 @@ class TypeGenerator:
             if len(error.used_in) == 0:
                 continue
 
-            used_in = error.used_in[0]
+            used_in = next(iter(error.used_in))
             assert used_in.compilation_info is not None
             assert used_in.compilation_info.abi is not None
 
@@ -893,7 +883,7 @@ class TypeGenerator:
             if len(event.used_in) == 0:
                 continue
 
-            used_in = event.used_in[0]
+            used_in = next(iter(event.used_in))
             assert used_in.compilation_info is not None
             assert used_in.compilation_info.abi is not None
 
