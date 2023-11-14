@@ -1059,6 +1059,8 @@ class LspCompiler:
             self.__latest_errors_per_cu = errors_per_cu
 
     async def __run_detectors_wrapper(self) -> None:
+        progress_token = await self.__server.progress_begin("Running detectors")
+
         # discover detectors
         all_detectors = run_detect.list_commands(
             None,  # pyright: ignore reportGeneralTypeIssues
@@ -1183,6 +1185,9 @@ class LspCompiler:
                     f"Exception occurred while running detectors:\n{traceback.format_exc()}",
                     MessageType.ERROR,
                 )
+
+        if progress_token is not None:
+            await self.__server.progress_end(progress_token)
 
     def __run_detectors(
         self,
