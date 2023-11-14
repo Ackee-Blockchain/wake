@@ -53,9 +53,15 @@ class MsgValueNonpayableFunctionDetector(Detector):
                     isinstance(ref.parent, ir.ModifierInvocation)
                     and ref.parent.parent not in visited
                 ):
-                    visited.add(ref.parent.parent)
-                    queue.append(ref.parent.parent)
+                    func = ref.parent.parent
+                    assert isinstance(func, ir.FunctionDefinition)
+                    if func.state_mutability == ir.enums.StateMutability.PAYABLE:
+                        return
+                    visited.add(func)
+                    queue.append(func)
         else:
+            if decl.state_mutability == ir.enums.StateMutability.PAYABLE:
+                return
             visited.add(decl)
             queue.append(decl)
 
