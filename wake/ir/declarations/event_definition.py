@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 from functools import lru_cache
-from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, FrozenSet, Iterator, Optional, Set, Tuple, Union
 
 from Crypto.Hash import keccak
 
@@ -37,7 +37,7 @@ class EventDefinition(DeclarationAbc):
     _event_selector: Optional[bytes]
 
     # not a part of the AST
-    _used_in: List[ContractDefinition]
+    _used_in: Set[ContractDefinition]
 
     def __init__(
         self, init: IrInitTuple, event: SolcEventDefinition, parent: SolidityAbc
@@ -61,7 +61,7 @@ class EventDefinition(DeclarationAbc):
         self._event_selector = (
             bytes.fromhex(event.event_selector) if event.event_selector else None
         )
-        self._used_in = []
+        self._used_in = set()
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
@@ -169,10 +169,9 @@ class EventDefinition(DeclarationAbc):
             return h.digest()
 
     @property
-    def used_in(self) -> Tuple[ContractDefinition, ...]:
+    def used_in(self) -> FrozenSet[ContractDefinition]:
         """
-        Available in Solidity 0.8.20 and later.
         Returns:
-            List of contracts where the event is used.
+            Contracts (including child contracts) that emit this event, a contract that defines this event and contracts that inherit this event.
         """
-        return tuple(self._used_in)
+        return frozenset(self._used_in)

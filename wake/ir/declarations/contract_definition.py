@@ -92,7 +92,9 @@ class ContractDefinition(DeclarationAbc):
     _user_defined_value_types: List[UserDefinedValueTypeDefinition]
     _using_for_directives: List[UsingForDirective]
     _declared_variables: List[VariableDeclaration]
-    _used_events: Optional[List[AstNodeId]]
+
+    _used_event_ids: List[AstNodeId]
+    _used_events: Set[EventDefinition]
     # _internal_function_ids
 
     _child_contracts: Set[ContractDefinition]
@@ -108,9 +110,10 @@ class ContractDefinition(DeclarationAbc):
         self._used_errors = (
             list(contract.used_errors) if contract.used_errors is not None else []
         )
-        self._used_events = (
-            list(contract.used_events) if contract.used_events is not None else None
+        self._used_event_ids = (
+            list(contract.used_events) if contract.used_events is not None else []
         )
+        self._used_events = set()
 
         if contract.documentation is None:
             self._documentation = None
@@ -167,6 +170,9 @@ class ContractDefinition(DeclarationAbc):
                 self._declared_variables.append(VariableDeclaration(init, node, self))
 
         init.reference_resolver.register_post_process_callback(self._post_process)
+        init.reference_resolver.register_post_process_callback(
+            self._post_process_events, priority=1
+        )
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
@@ -202,13 +208,33 @@ class ContractDefinition(DeclarationAbc):
             base_contracts.append(contract)
 
         for error in self.used_errors:
-            error._used_in.append(self)
-        if self.used_events is not None:
-            for event in self.used_events:
-                event._used_in.append(self)
+            error._used_in.add(self)
+
+        # in case used_events are set in the AST in solc >= 0.8.20
+        for event_id in self._used_event_ids:
+            event = self._reference_resolver.resolve_node(
+                event_id, self.source_unit.cu_hash
+            )
+            assert isinstance(event, EventDefinition)
+            self._used_events.add(event)
+
+        # in case used_events are not set in the AST in solc < 0.8.20
+        for event in self._events:
+            self._used_events.add(event)
 
         self._reference_resolver.register_destroy_callback(
             self.source_unit.file, partial(self._destroy, base_contracts)
+        )
+
+    def _post_process_events(self, callback_params: CallbackParams):
+        for base in self.linearized_base_contracts:
+            self._used_events.update(base.used_events)
+
+        for event in self.used_events:
+            event._used_in.add(self)
+
+        self._reference_resolver.register_destroy_callback(
+            self.source_unit.file, self._destroy_events
         )
 
     def _destroy(self, base_contracts: List[ContractDefinition]) -> None:
@@ -216,9 +242,10 @@ class ContractDefinition(DeclarationAbc):
             base_contract._child_contracts.remove(self)
         for error in self.used_errors:
             error._used_in.remove(self)
-        if self.used_events is not None:
-            for event in self.used_events:
-                event._used_in.remove(self)
+
+    def _destroy_events(self) -> None:
+        for event in self.used_events:
+            event._used_in.remove(self)
 
     def _parse_name_location(self) -> Tuple[int, int]:
         IDENTIFIER = r"[a-zA-Z$_][a-zA-Z0-9$_]*"
@@ -362,38 +389,27 @@ class ContractDefinition(DeclarationAbc):
         return tuple(base_contracts)
 
     @property
-    def used_errors(self) -> Tuple[ErrorDefinition, ...]:
+    def used_errors(self) -> FrozenSet[ErrorDefinition]:
         """
         Returns:
-            Errors used in the contract.
+            Errors used in revert statements in this contract (or its base contracts) as well as all errors defined and inherited by the contract.
         """
-        used_errors = []
+        used_errors = set()
         for error in self._used_errors:
             node = self._reference_resolver.resolve_node(
                 error, self.source_unit.cu_hash
             )
             assert isinstance(node, ErrorDefinition)
-            used_errors.append(node)
-        return tuple(used_errors)
+            used_errors.add(node)
+        return frozenset(used_errors)
 
     @property
-    def used_events(self) -> Optional[Tuple[EventDefinition, ...]]:
+    def used_events(self) -> FrozenSet[EventDefinition]:
         """
-        Available in Solidity 0.8.20 and later.
         Returns:
-            Events emitted by the contract as well as all events defined and inherited by the contract.
+            Events emitted by the contract (or its base contracts) as well as all events defined and inherited by the contract.
         """
-        if self._used_events is None:
-            return None
-
-        used_events = []
-        for event in self._used_events:
-            node = self._reference_resolver.resolve_node(
-                event, self.source_unit.cu_hash
-            )
-            assert isinstance(node, EventDefinition)
-            used_events.append(node)
-        return tuple(used_events)
+        return frozenset(self._used_events)
 
     @property
     def documentation(self) -> Optional[Union[StructuredDocumentation, str]]:
