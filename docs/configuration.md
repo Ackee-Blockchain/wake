@@ -24,7 +24,7 @@ Wake can be configured using configuration options loaded from multiple sources 
     [compiler.solc]
     allow_paths = []
     # evm_version (unset - let the compiler decide)
-    exclude_paths = ["node_modules", "venv", "lib", "script", "test"]
+    exclude_paths = ["node_modules", "venv", ".venv", "lib", "script", "test"]
     include_paths = ["node_modules"]
     remappings = []
     # target_version (unset - use the latest version)
@@ -57,7 +57,7 @@ Wake can be configured using configuration options loaded from multiple sources 
     [detectors]
     exclude = []
     # only (unset - all detectors are enabled)
-    ignore_paths = ["venv", "test"]
+    ignore_paths = ["venv", ".venv", "test"]
     exclude_paths = ["node_modules", "lib", "script"]
 
     [general]
