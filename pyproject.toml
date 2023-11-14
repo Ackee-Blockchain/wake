@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "eth-wake"
-version = "4.0.0-alpha.5"
+version = "4.0.0-alpha.6"
 description = "Wake is a Python-based development and testing framework for Solidity."
 license = "ISC"
 authors = ["Ackee Blockchain"]
