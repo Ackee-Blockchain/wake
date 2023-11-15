@@ -483,6 +483,7 @@ async def detect_(
             capture_exceptions=ignore_errors,
             default_min_impact=default_min_impact,  # pyright: ignore reportGeneralTypeIssues
             default_min_confidence=default_min_confidence,  # pyright: ignore reportGeneralTypeIssues
+            extra={"lsp": False},
         )
 
         if ignore_errors:
