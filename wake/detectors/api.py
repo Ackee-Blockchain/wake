@@ -366,8 +366,13 @@ def detect(
 ]:
     from contextlib import nullcontext
 
+    from wake.utils import get_package_version
+
     if extra is None:
         extra = {}
+    if "package_versions" not in extra:
+        extra["package_versions"] = {}
+    extra["package_versions"]["eth-wake"] = get_package_version("eth-wake")
 
     wake_comments: KeyedDefaultDict[
         Path,  # pyright: ignore reportGeneralTypeIssues
