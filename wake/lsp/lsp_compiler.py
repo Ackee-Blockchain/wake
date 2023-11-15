@@ -1219,6 +1219,7 @@ class LspCompiler:
                     verify_paths=False,
                     capture_exceptions=True,
                     logging_handler=logging_handler,
+                    extra={"lsp": True},
                 )
                 exceptions = {name: repr(e) for name, e in detector_exceptions.items()}
 
