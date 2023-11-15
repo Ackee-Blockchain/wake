@@ -333,7 +333,6 @@ class CallTrace:
                     ret.append_text(t)
                     if i < len(self._return_value) - 1:
                         ret.append(", ")
-                ret.append(")")
 
         if "error" in options:
             if self._error_name is not None:
