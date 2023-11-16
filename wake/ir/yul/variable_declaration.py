@@ -22,7 +22,25 @@ if TYPE_CHECKING:
 
 class YulVariableDeclaration(YulStatementAbc):
     """
-    TBD
+    Represents a new variable declaration with the following structure:
+
+    ```solidity
+    let <variables> := <value>
+    ```
+
+    !!! example
+        `:::solidity let a, b := foo()` in the following example:
+
+        ```solidity
+        assembly {
+            function foo() -> x, y {
+                x := 1
+                y := 2
+            }
+
+            let a, b := foo()
+        }
+        ```
     """
 
     _parent: YulBlock
@@ -60,12 +78,24 @@ class YulVariableDeclaration(YulStatementAbc):
 
     @property
     def parent(self) -> YulBlock:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
     def variables(self) -> Tuple[YulTypedName, ...]:
+        """
+        Returns:
+            Tuple of variables declared in this statement.
+        """
         return tuple(self._variables)
 
     @property
     def value(self) -> Optional[Union[YulFunctionCall, YulIdentifier, YulLiteral]]:
+        """
+        Returns:
+            Value assigned to the variables.
+        """
         return self._value

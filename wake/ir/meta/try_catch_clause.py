@@ -19,10 +19,13 @@ from wake.ir.ast import SolcTryCatchClause
 class TryCatchClause(SolidityAbc):
     """
     !!! example
+        All the following are try/catch clauses in the example below:
+
         - `:::solidity returns(uint x) {}`,
         - `:::solidity catch Error(string memory reason) {}`,
         - `:::solidity catch Panic(uint errorCode) {}`,
-        - `:::solidity catch (bytes memory lowLevelData) {}` are all try/catch clauses in the following example:
+        - `:::solidity catch (bytes memory lowLevelData) {}`.
+
         ```solidity
         contract C {
             function foo() public view {
@@ -100,10 +103,11 @@ class TryCatchClause(SolidityAbc):
             }
             ```
 
-            - the `error_name` of the first (try) clause is empty,
-            - the `error_name` of the second (catch) clause is `Error`,
-            - the `error_name` of the third (catch) clause is `Panic`,
-            - the `error_name` of the fourth (catch) clause is empty.
+            - is empty for the first (try) clause,
+            - is `Error` for the second (catch) clause,
+            - is `Panic` for the third (catch) clause,
+            - is empty for the fourth (catch) clause.
+
         Returns:
             Error name of the try/catch clause.
         """

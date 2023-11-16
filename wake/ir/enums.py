@@ -186,7 +186,7 @@ class LiteralKind(StrEnum):
     UNICODE_STRING = "unicodeString"
 
 
-class YulLiteralValueKind(StrEnum):
+class YulLiteralKind(StrEnum):
     """
     Kind of a [YulLiteral][wake.ir.yul.literal.YulLiteral] node.
     """

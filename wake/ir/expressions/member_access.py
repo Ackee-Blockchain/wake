@@ -37,7 +37,7 @@ logger = get_logger(__name__)
 
 class MemberAccess(ExpressionAbc):
     """
-    TBD
+    Represents a member access using the dot notation.
     """
 
     _ast_node: SolcMemberAccess
@@ -375,15 +375,30 @@ class MemberAccess(ExpressionAbc):
 
     @property
     def expression(self) -> ExpressionAbc:
+        """
+        Returns:
+            Expression, whose member is accessed.
+        """
         return self._expression
 
     @property
     def member_name(self) -> str:
+        """
+        Returns:
+            Name of the member being accessed.
+        """
         return self._member_name
 
     @property
     @lru_cache(maxsize=2048)
-    def member_byte_location(self) -> Tuple[int, int]:
+    def member_location(self) -> Tuple[int, int]:
+        """
+        In the case of [MemberAccess][wake.ir.expressions.member_access.MemberAccess], [byte_location][wake.ir.abc.IrAbc.byte_location] returns the byte location including the expression, whose member is accessed.
+        This property returns the byte location of the member name only.
+
+        Returns:
+            Byte location of the member name.
+        """
         relative_expression_end = (
             self._expression.byte_location[1] - self.byte_location[0]
         )
@@ -397,6 +412,10 @@ class MemberAccess(ExpressionAbc):
     def referenced_declaration(
         self,
     ) -> Union[DeclarationAbc, GlobalSymbol, SourceUnit]:
+        """
+        Returns:
+            Referenced declaration.
+        """
         assert self._referenced_declaration_id is not None
         if self._referenced_declaration_id < 0:
             return GlobalSymbol(self._referenced_declaration_id)

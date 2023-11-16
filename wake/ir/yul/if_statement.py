@@ -19,7 +19,25 @@ from .literal import YulLiteral
 
 class YulIf(YulStatementAbc):
     """
-    TBD
+    Represents an if statement with the following structure:
+
+    ```solidity
+    if <condition> {
+        <body>
+    }
+    ```
+
+    !!! example
+        ```solidity
+        assembly {
+            if lt(i, 10) {
+                // ...
+            }
+        }
+        ```
+
+    !!! note
+        There is no `else` branch in Yul. It must be implemented using a second `if` statement when needed.
     """
 
     _parent: YulBlock
@@ -45,12 +63,24 @@ class YulIf(YulStatementAbc):
 
     @property
     def parent(self) -> YulBlock:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
     def body(self) -> YulBlock:
+        """
+        Returns:
+            Body of the function executed if the condition is true.
+        """
         return self._body
 
     @property
     def condition(self) -> Union[YulFunctionCall, YulIdentifier, YulLiteral]:
+        """
+        Returns:
+            Condition of the if statement.
+        """
         return self._condition

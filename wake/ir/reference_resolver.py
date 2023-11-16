@@ -159,6 +159,7 @@ class ReferenceResolver:
     ) -> Tuple[Path, int]:
         """
         Get the (path, traversal_order) for a given AST node ID in a given CU.
+
         Args:
             node_id: AST node ID
             cu_hash: hash of the compilation unit that contains the AST node ID
@@ -173,6 +174,7 @@ class ReferenceResolver:
     ) -> AstNodeId:
         """
         Get the AST node ID for a given (path, traversal_order) in a given CU.
+
         Args:
             node_path_order: (path, traversal_order) tuple
             cu_hash: hash of the compilation unit that contains the returned AST node ID
@@ -191,6 +193,7 @@ class ReferenceResolver:
     def resolve_node(self, node_id: AstNodeId, cu_hash: bytes) -> SolidityAbc:
         """
         Get the IR node for a given AST node ID in a given CU.
+
         Args:
             node_id: AST node ID
             cu_hash: hash of the compilation unit that contains the AST node ID
@@ -205,6 +208,7 @@ class ReferenceResolver:
         """
         `solc` compiler output also assigns integer IDs to source files.
         This function can be used to get the absolute path to the source file for a given source file ID in a given CU.
+
         Args:
             source_file_id: source file ID
             cu_hash: hash of the compilation unit that contains the source file ID
@@ -249,6 +253,7 @@ class ReferenceResolver:
     ) -> Tuple[Union[Identifier, MemberAccess], ...]:
         """
         Get all references to a given global symbol.
+
         Args:
             node_id: global symbol
 

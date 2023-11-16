@@ -45,30 +45,30 @@ class VariableDeclaration(DeclarationAbc):
         A variable can be declared:
 
         - inside a [ContractDefinition][wake.ir.declarations.contract_definition.ContractDefinition] as a state variable:
-            - `:::solidity uint public stateVar` in line 4,
+            - `:::solidity uint public stateVar` on line 4,
         - inside a [ParameterList][wake.ir.meta.parameter_list.ParameterList]:
             - in an [ErrorDefinition][wake.ir.declarations.error_definition.ErrorDefinition] parameters:
-                - `:::solidity uint errorArg` in line 5,
+                - `:::solidity uint errorArg` on line 5,
             - in an [EventDefinition][wake.ir.declarations.event_definition.EventDefinition] parameters:
-                - `:::solidity uint indexed eventArg` in line 6,
+                - `:::solidity uint indexed eventArg` on line 6,
             - in a [FunctionDefinition][wake.ir.declarations.function_definition.FunctionDefinition] parameters or return parameters:
-                - `:::solidity uint funcReturnArg` in line 16
-                - `:::solidity uint x` and `:::solidity uint` in line 20
-                - `:::solidity uint` in line 30
-                - `:::solidity function (uint) pure returns(uint) h` and the third occurrence `:::solidity uint` in line 34,
+                - `:::solidity uint funcReturnArg` on line 16
+                - `:::solidity uint x` and `:::solidity uint` on line 20
+                - `:::solidity uint` on line 30
+                - `:::solidity function (uint) pure returns(uint) h` and the third occurrence `:::solidity uint` on line 34,
             - in a [ModifierDefinition][wake.ir.declarations.modifier_definition.ModifierDefinition] parameters:
-                - `:::solidity uint modifierArg` in line 12,
+                - `:::solidity uint modifierArg` on line 12,
             - in a [FunctionTypeName][wake.ir.type_names.function_type_name.FunctionTypeName] parameters or return parameters:
-                - the first two occurrences of `:::solidity uint` in line 34,
+                - the first two occurrences of `:::solidity uint` on line 34,
             - in a [TryCatchClause][wake.ir.meta.try_catch_clause.TryCatchClause]:
-                - `:::solidity uint z` in line 22
-                - `:::solidity string memory reason` in line 24,
+                - `:::solidity uint z` on line 22
+                - `:::solidity string memory reason` on line 24,
         - inside a [SourceUnit][wake.ir.meta.source_unit.SourceUnit] only as a constant variable:
-            - `:::solidity uint constant CONST = 10` in line 1,
+            - `:::solidity uint constant CONST = 10` on line 1,
         - inside a [StructDefinition][wake.ir.declarations.struct_definition.StructDefinition] as a member variable:
-            - `:::solidity uint structMember` in line 9,
+            - `:::solidity uint structMember` on line 9,
         - inside a [VariableDeclarationStatement][wake.ir.statements.variable_declaration_statement.VariableDeclarationStatement] in a [FunctionDefinition.body][wake.ir.declarations.function_definition.FunctionDefinition.body] as a local variable:
-            - `:::solidity uint y = x` in line 21.
+            - `:::solidity uint y = x` on line 21.
 
         ```solidity linenums="1"
         uint constant CONST = 10;
@@ -361,6 +361,7 @@ class VariableDeclaration(DeclarationAbc):
     def data_location(self) -> DataLocation:
         """
         [DataLocation.DEFAULT][wake.ir.enums.DataLocation.DEFAULT] is returned if the data location is not specified in the source code.
+
         Returns:
             Data location of the variable.
         """
@@ -378,7 +379,7 @@ class VariableDeclaration(DeclarationAbc):
     def base_functions(self) -> Tuple[FunctionDefinition, ...]:
         """
         !!! example
-            `C.foo` in line 6 lists `I.foo` in line 2 as a base function.
+            `C.foo` on line 6 lists `I.foo` on line 2 as a base function.
             ```solidity linenums="1"
             interface I {
                 function foo(uint, bool) external returns(uint);
@@ -390,7 +391,7 @@ class VariableDeclaration(DeclarationAbc):
             ```
 
         !!! example
-            `B.foo` in line 14 lists `A1.foo` in lines 2-4 and `A2.foo` in lines 8-10 as base functions.
+            `B.foo` on line 14 lists `A1.foo` on lines 2-4 and `A2.foo` on lines 8-10 as base functions.
             ```solidity linenums="1"
             contract A1 {
                 function foo(uint, bool) external virtual returns(uint) {
@@ -435,6 +436,7 @@ class VariableDeclaration(DeclarationAbc):
     def function_selector(self) -> Optional[bytes]:
         """
         Is only set for public state variables.
+
         Returns:
             Function selector of the getter function generated for this variable, if any.
         """
@@ -454,9 +456,9 @@ class VariableDeclaration(DeclarationAbc):
         Returns override specified as specified in the source code.
 
         !!! example
-            `A1.foo` in lines 2-4 and `A2.foo` in lines 8-10 do not have an override specifier.
+            `A1.foo` on lines 2-4 and `A2.foo` on lines 8-10 do not have an override specifier.
 
-            `B.foo` in line 14 has an override specifier with the [overrides][wake.ir.meta.override_specifier.OverrideSpecifier.overrides] property containing two items referencing the contracts `A1` and `A2` ([ContractDefinition][wake.ir.declarations.contract_definition.ContractDefinition]).
+            `B.foo` on line 14 has an override specifier with the [overrides][wake.ir.meta.override_specifier.OverrideSpecifier.overrides] property containing two items referencing the contracts `A1` and `A2` ([ContractDefinition][wake.ir.declarations.contract_definition.ContractDefinition]).
             ```solidity linenums="1"
             contract A1 {
                 function foo(uint, bool) external virtual returns(uint) {
@@ -493,6 +495,7 @@ class VariableDeclaration(DeclarationAbc):
         """
         Is not set if the parent is a [VariableDeclarationStatement][wake.ir.statements.variable_declaration_statement.VariableDeclarationStatement].
         In this case, the initial value (if any) is set in the [VariableDeclarationStatement.initial_value][wake.ir.statements.variable_declaration_statement.VariableDeclarationStatement.initial_value] property.
+
         Returns:
             Initial value expression assigned to the variable in this declaration, if any.
         """

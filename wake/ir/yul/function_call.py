@@ -20,7 +20,21 @@ if TYPE_CHECKING:
 
 class YulFunctionCall(YulAbc):
     """
-    TBD
+    Represents a call to a "builtin" function/instruction (see [Solidity docs](https://docs.soliditylang.org/en/latest/yul.html#evm-dialect)) or a user-defined [YulFunctionDefinition][wake.ir.yul.function_definition.YulFunctionDefinition].
+
+    !!! example
+        `foo` and `stop()` in the following example:
+
+        ```solidity
+        assembly {
+            function foo() -> x, y {
+                x := 1
+                y := 2
+            }
+            foo()
+            stop()
+        }
+        ```
     """
 
     _parent: Union[
@@ -69,14 +83,26 @@ class YulFunctionCall(YulAbc):
         YulVariableDeclaration,
         YulFunctionCall,
     ]:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
     def arguments(
         self,
-    ) -> Tuple[Union["YulFunctionCall", YulIdentifier, YulLiteral], ...]:
+    ) -> Tuple[Union[YulFunctionCall, YulIdentifier, YulLiteral], ...]:
+        """
+        Returns:
+            Arguments of the function call in the order they appear in the source code.
+        """
         return tuple(self._arguments)
 
     @property
     def function_name(self) -> YulIdentifier:
+        """
+        Returns:
+            Name of the function that is called.
+        """
         return self._function_name

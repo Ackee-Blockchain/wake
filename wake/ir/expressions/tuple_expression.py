@@ -11,7 +11,14 @@ from wake.ir.utils import IrInitTuple
 
 class TupleExpression(ExpressionAbc):
     """
-    TBD
+    Represents multiple expressions enclosed in parentheses.
+
+    !!! example
+        `:::solidity (uint256, uint256)` in:
+
+        ```solidity
+        abi.decode(data, (uint256, uint256))
+        ```
     """
 
     _ast_node: SolcTupleExpression
@@ -48,10 +55,33 @@ class TupleExpression(ExpressionAbc):
 
     @property
     def is_inline_array(self) -> bool:
+        """
+        !!! example
+            Returns `True` for `:::solidity [2, 3, 5, 7, 11, 13]` in the following example:
+
+            ```solidity
+            uint8[6] memory primes = [2, 3, 5, 7, 11, 13];
+            ```
+
+        Returns:
+            `True` if the tuple expression is an inline array, `False` otherwise.
+        """
         return self._is_inline_array
 
     @property
     def components(self) -> Tuple[Optional[ExpressionAbc], ...]:
+        """
+        !!! example
+            A component may be `None` if it is omitted, for example `:::solidity (success, )` in the following code snippet:
+
+            ```solidity
+            bool success;
+            (success, ) = target.call{gas: 1000}(data);
+            ```
+
+        Returns:
+            Tuple of expressions enclosed in parentheses in the order they appear in the source code.
+        """
         return tuple(self._components)
 
     @property

@@ -16,14 +16,24 @@ if TYPE_CHECKING:
 
 class YulFunctionDefinition(YulStatementAbc):
     """
-    TBD
+    Represents a Yul function definition.
+
+    !!! example
+        ```solidity
+        assembly {
+            function foo() -> x, y {
+                x := 1
+                y := 2
+            }
+        }
+        ```
     """
 
     _parent: YulBlock
     _body: YulBlock
     _name: str
-    _parameters: Optional[List[YulTypedName]]
-    _return_variables: Optional[List[YulTypedName]]
+    _parameters: List[YulTypedName]
+    _return_variables: List[YulTypedName]
 
     def __init__(
         self,
@@ -35,14 +45,14 @@ class YulFunctionDefinition(YulStatementAbc):
         self._body = YulBlock(init, function_definition.body, self)
         self._name = function_definition.name
         if function_definition.parameters is None:
-            self._parameters = None
+            self._parameters = []
         else:
             self._parameters = [
                 YulTypedName(init, parameter, self)
                 for parameter in function_definition.parameters
             ]
         if function_definition.return_variables is None:
-            self._return_variables = None
+            self._return_variables = []
         else:
             self._return_variables = [
                 YulTypedName(init, return_variable, self)
@@ -61,31 +71,51 @@ class YulFunctionDefinition(YulStatementAbc):
 
     @property
     def parent(self) -> YulBlock:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
     def body(self) -> YulBlock:
+        """
+        Returns:
+            Body of the function.
+        """
         return self._body
 
     @property
     def name(self) -> str:
+        """
+        Returns:
+            Name of the function.
+        """
         return self._name
 
     @property
-    def parameters(self) -> Optional[Tuple[YulTypedName, ...]]:
-        if self._parameters is None:
-            return None
+    def parameters(self) -> Tuple[YulTypedName, ...]:
+        """
+        Returns:
+            Parameters of the function.
+        """
         return tuple(self._parameters)
 
     @property
     def return_variables(self) -> Optional[Tuple[YulTypedName, ...]]:
-        if self._return_variables is None:
-            return None
+        """
+        Returns:
+            Return variables of the function.
+        """
         return tuple(self._return_variables)
 
     @property
     @lru_cache(maxsize=64)
     def cfg(self) -> ControlFlowGraph:
+        """
+        Returns:
+            Control flow graph of the function.
+        """
         from wake.analysis.cfg import ControlFlowGraph
 
         return ControlFlowGraph(self)

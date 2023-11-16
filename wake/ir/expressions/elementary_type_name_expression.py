@@ -11,7 +11,11 @@ from .abc import ExpressionAbc
 
 class ElementaryTypeNameExpression(ExpressionAbc):
     """
-    TBD
+    May be used:
+
+    - in a [FunctionCall][wake.ir.expressions.function_call.FunctionCall] type conversion expressions, e.g. `:::solidity address(this)`,
+    - as `type` argument, e.g. `:::solidity type(uint256).max`,
+    - as a [FunctionCall][wake.ir.expressions.function_call.FunctionCall] argument, e.g. `:::solidity abi.decode(x, (uint256))`.
     """
 
     _ast_node: SolcElementaryTypeNameExpression
@@ -40,6 +44,10 @@ class ElementaryTypeNameExpression(ExpressionAbc):
 
     @property
     def type_name(self) -> ElementaryTypeName:
+        """
+        Returns:
+            Type name referenced by the expression.
+        """
         return self._type_name
 
     @property

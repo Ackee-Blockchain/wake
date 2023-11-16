@@ -41,21 +41,21 @@ class UserDefinedTypeName(TypeNameAbc):
         A user defined type name can be used:
 
         - inside a [VariableDeclaration][wake.ir.declarations.variable_declaration.VariableDeclaration]:
-            - `:::solidity Interface.Struct` in line 18,
-            - `:::solidity Interface.Enum` in line 26,
+            - `:::solidity Interface.Struct` on line 18,
+            - `:::solidity Interface.Enum` on line 26,
         - inside a [NewExpression][wake.ir.expressions.new_expression.NewExpression]:
-            - `:::solidity Contract` in line 20,
+            - `:::solidity Contract` on line 20,
         - inside an [InheritanceSpecifier][wake.ir.meta.inheritance_specifier.InheritanceSpecifier]:
-            - `:::solidity Interface` in line 23,
+            - `:::solidity Interface` on line 23,
         - inside an [OverrideSpecifier][wake.ir.meta.override_specifier.OverrideSpecifier]:
-            - `:::solidity Interface` in line 30,
+            - `:::solidity Interface` on line 30,
         - inside a [UsingForDirective][wake.ir.meta.using_for_directive.UsingForDirective]:
-            - `:::solidity Lib` in line 24,
-            - `:::solidity Interface.Struct` in line 24,
+            - `:::solidity Lib` on line 24,
+            - `:::solidity Interface.Struct` on line 24,
         - inside an [ArrayTypeName][wake.ir.type_names.array_type_name.ArrayTypeName]:
-            - `:::solidity Interface.Enum` in line 27,
+            - `:::solidity Interface.Enum` on line 27,
         - inside a [Mapping][wake.ir.type_names.mapping.Mapping]:
-            - both occurrences of `:::solidity Interface.Enum` in line 28.
+            - both occurrences of `:::solidity Interface.Enum` on line 28.
 
         ```solidity linenums="1"
         pragma solidity 0.7;
@@ -254,6 +254,7 @@ class UserDefinedTypeName(TypeNameAbc):
         """
         !!! note
             Should be the same as [source][wake.ir.abc.IrAbc.source] and is the same as [path_node.name][wake.ir.meta.identifier_path.IdentifierPath.name] if [path_node][wake.ir.type_names.user_defined_type_name.UserDefinedTypeName.path_node] is not `None`.
+
         Returns:
             Name of the user defined type as it appears in the source code.
         """
@@ -281,6 +282,7 @@ class UserDefinedTypeName(TypeNameAbc):
         """
         Args:
             byte_offset: Byte offset in the source file.
+
         Returns:
             Identifier path part at the given byte offset, if any.
         """
@@ -310,6 +312,7 @@ class UserDefinedTypeName(TypeNameAbc):
     def path_node(self) -> Optional[IdentifierPath]:
         """
         Always present since Solidity 0.8.0. If not `None`, it represents the same source code as this node ([byte_location][wake.ir.abc.IrAbc.byte_location] properties are the same) and references the same declaration.
+
         Returns:
             Identifier path IR node.
         """

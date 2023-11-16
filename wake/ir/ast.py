@@ -1211,7 +1211,7 @@ class SolcYulLiteral(YulNode):
     # override alias
     node_type: Literal["YulLiteral"] = Field(alias="nodeType")
     # required
-    kind: YulLiteralValueKind
+    kind: YulLiteralKind
     type: StrictStr
     # at least one of these should be set
     value: Optional[StrictStr]

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Iterator, List, Optional, Union
+from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
 
 from wake.ir.enums import ModifierInvocationKind
 
@@ -22,7 +22,7 @@ class ModifierInvocation(SolidityAbc):
     !!! warning
         Also represents a base constructor invocation.
     !!! example
-        - `:::solidity IERC20("MyToken", "MTK")` ([ModifierInvocationKind.BASE_CONSTRUCTOR_SPECIFIER][wake.ir.enums.ModifierInvocationKind.BASE_CONSTRUCTOR_SPECIFIER]),
+        - `:::solidity ERC20("MyToken", "MTK")` ([ModifierInvocationKind.BASE_CONSTRUCTOR_SPECIFIER][wake.ir.enums.ModifierInvocationKind.BASE_CONSTRUCTOR_SPECIFIER]),
         - `:::solidity initializer` ([ModifierInvocationKind.MODIFIER_INVOCATION][wake.ir.enums.ModifierInvocationKind.MODIFIER_INVOCATION])
 
         in the following code:
@@ -119,21 +119,22 @@ class ModifierInvocation(SolidityAbc):
                 // ...
             }
             ```
+
         Returns:
             IR node representing the name of the modifier.
         """
         return self._modifier_name
 
     @property
-    def arguments(self) -> Optional[List[ExpressionAbc]]:
+    def arguments(self) -> Optional[Tuple[ExpressionAbc, ...]]:
         """
         !!! warning
-            Is `None` when there are no curly braces after the modifier name.
+            Is `None` when there are no round brackets after the modifier name.
             ```solidity
             constructor() initializer {}
             ```
 
-            Is an empty list when there are curly braces but no arguments.
+            Is an empty list when there are round brackets but no arguments.
             ```solidity
             constructor() initializer() {}
             ```
@@ -144,7 +145,10 @@ class ModifierInvocation(SolidityAbc):
                 // ...
             }
             ```
+
         Returns:
             Arguments of the base constructor or modifier invocation (if any).
         """
-        return self._arguments
+        if self._arguments is None:
+            return None
+        return tuple(self._arguments)

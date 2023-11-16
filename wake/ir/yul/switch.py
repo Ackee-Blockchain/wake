@@ -21,7 +21,29 @@ if TYPE_CHECKING:
 
 class YulSwitch(YulStatementAbc):
     """
-    TBD
+    Represents a switch statement with the following structure:
+
+    ```solidity
+    switch <expression> {
+        <cases>
+    }
+    ```
+
+    !!! example
+        ```solidity
+        assembly {
+            switch lt(i, 10)
+            case 1 {
+                // ...
+            }
+            case 2 {
+                // ...
+            }
+            default {
+                // ...
+            }
+        }
+        ```
     """
 
     _parent: YulBlock
@@ -48,12 +70,26 @@ class YulSwitch(YulStatementAbc):
 
     @property
     def parent(self) -> YulBlock:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
     def cases(self) -> Tuple[YulCase, ...]:
+        """
+        The `default` case is optional.
+
+        Returns:
+            Tuple of cases of this switch statement in the order they appear in the source code.
+        """
         return tuple(self._cases)
 
     @property
     def expression(self) -> Union[YulFunctionCall, YulIdentifier, YulLiteral]:
+        """
+        Returns:
+            Expression that is evaluated to determine which case to execute.
+        """
         return self._expression

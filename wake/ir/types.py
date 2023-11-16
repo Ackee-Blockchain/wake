@@ -199,6 +199,7 @@ class IntAbc(TypeAbc):
     def bits_count(self) -> int:
         """
         Can only be a multiple of 8, with a minimum of 8 and a maximum of 256.
+
         Returns:
             Number of bits used to represent this integer.
         """
@@ -405,6 +406,7 @@ class String(TypeAbc):
     def data_location(self) -> DataLocation:
         """
         Can be either [CALLDATA][wake.ir.enums.DataLocation.CALLDATA], [MEMORY][wake.ir.enums.DataLocation.MEMORY] or [STORAGE][wake.ir.enums.DataLocation.STORAGE]
+
         Returns:
             Data location of the string expression.
         """
@@ -435,6 +437,7 @@ class String(TypeAbc):
                 s[0:5]; // s[0:5] is a string slice
             }
             ```
+
         Returns:
             Whether this is a slice of a string expression.
         """
@@ -484,6 +487,7 @@ class Bytes(TypeAbc):
     def data_location(self) -> DataLocation:
         """
         Can be either [CALLDATA][wake.ir.enums.DataLocation.CALLDATA], [MEMORY][wake.ir.enums.DataLocation.MEMORY] or [STORAGE][wake.ir.enums.DataLocation.STORAGE]
+
         Returns:
             Data location of the bytes expression.
         """
@@ -514,6 +518,7 @@ class Bytes(TypeAbc):
                 b[0:5]; // s[0:5] is a bytes slice
             }
             ```
+
         Returns:
             Whether this is a slice of a bytes expression.
         """
@@ -543,6 +548,7 @@ class FixedBytes(TypeAbc):
     def bytes_count(self) -> int:
         """
         Is at least 1 and at most 32.
+
         Returns:
             Number of bytes used to represent this fixed-size byte array.
         """
@@ -565,7 +571,6 @@ class Function(TypeAbc):
         foo(1, 2);
         ```
         the type of `foo` is [Function][wake.ir.types.Function], but the type of `:::solidity foo(1, 2)` is [Tuple][wake.ir.types.Tuple].
-
     """
 
     __kind: FunctionTypeKind
@@ -699,6 +704,7 @@ class Function(TypeAbc):
             ```solidity
             foo{gas: 10}(1, 2);
             ```
+
         Returns:
             `True` if the gas is set in the function type.
         """
@@ -717,6 +723,7 @@ class Function(TypeAbc):
             ```solidity
             foo{value: 1}(1, 2);
             ```
+
         Returns:
             `True` if the value is set in the function type.
         """
@@ -730,6 +737,7 @@ class Function(TypeAbc):
             ```solidity
             new Foo{salt: salt}();
             ```
+
         Returns:
             `True` if the salt is set in the function type.
         """
@@ -910,6 +918,7 @@ class Rational(TypeAbc):
     def numerator(self) -> int:
         """
         If the rational is negative, the numerator will be negative.
+
         Returns:
             Numerator of the rational number.
         """
@@ -1068,6 +1077,7 @@ class Array(TypeAbc):
                 arr[0:5]; // arr[0:5] is an array slice
             }
             ```
+
         Returns:
             Whether this is a slice of an array expression.
         """

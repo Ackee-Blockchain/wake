@@ -43,22 +43,22 @@ class ElementaryTypeName(TypeNameAbc):
         An elementary type name can be used:
 
         - inside a [VariableDeclaration][wake.ir.declarations.variable_declaration.VariableDeclaration]:
-            - both occurrences of `:::solidity uint` in line 1,
-            - `:::solidity int` in line 1,
-            - `:::solidity string` in line 10,
-            - the first occurrence of `:::solidity bytes` in line 15,
+            - both occurrences of `:::solidity uint` on line 1,
+            - `:::solidity int` on line 1,
+            - `:::solidity string` on line 10,
+            - the first occurrence of `:::solidity bytes` on line 15,
         - inside a [UserDefinedValueTypeDefinition][wake.ir.declarations.user_defined_value_type_definition.UserDefinedValueTypeDefinition]:
-            - `:::solidity int` in line 7,
+            - `:::solidity int` on line 7,
         - inside an [ElementaryTypeNameExpression][wake.ir.expressions.elementary_type_name_expression.ElementaryTypeNameExpression]:
-            - `:::solidity int` in line 2,
+            - `:::solidity int` on line 2,
         - inside a [NewExpression][wake.ir.expressions.new_expression.NewExpression]:
-            - the second occurrence of `:::solidity bytes` in line 15,
+            - the second occurrence of `:::solidity bytes` on line 15,
         - inside a [UsingForDirective][wake.ir.meta.using_for_directive.UsingForDirective]:
-            - `:::solidity uint` in line 5,
+            - `:::solidity uint` on line 5,
         - inside an [ArrayTypeName][wake.ir.type_names.array_type_name.ArrayTypeName]:
-            - `:::solidity uint` in line 11,
+            - `:::solidity uint` on line 11,
         - inside a [Mapping][wake.ir.type_names.mapping.Mapping]:
-            - `:::solidity address` in line 12.
+            - `:::solidity address` on line 12.
 
         ```solidity linenums="1"
         function add(uint a, uint b) pure returns(int) {
@@ -129,6 +129,7 @@ class ElementaryTypeName(TypeNameAbc):
     ]:
         """
         When the parent is a [NewExpression][wake.ir.expressions.new_expression.NewExpression], this can only be `bytes` or `string`.
+
         Returns:
             Parent IR node.
         """
@@ -142,6 +143,7 @@ class ElementaryTypeName(TypeNameAbc):
     ]:
         """
         Returns either the generic [Type][wake.ir.types.Type] expression type (this is the case of a type conversion, for example `:::solidity address(0)`) or directly one of the elementary expression types.
+
         Returns:
             Type description.
         """
@@ -165,6 +167,7 @@ class ElementaryTypeName(TypeNameAbc):
 
         !!! tip
             Instead of working with the name, it may be better to use the [type][wake.ir.type_names.elementary_type_name.ElementaryTypeName.type] property.
+
         Returns:
             Name of the elementary type.
         """
@@ -174,6 +177,7 @@ class ElementaryTypeName(TypeNameAbc):
     def state_mutability(self) -> Optional[StateMutability]:
         """
         Is only set for `address` as either [StateMutability.PAYABLE][wake.ir.enums.StateMutability.PAYABLE] or [StateMutability.NONPAYABLE][wake.ir.enums.StateMutability.NONPAYABLE].
+
         Returns:
             State mutability of the `address` type.
         """

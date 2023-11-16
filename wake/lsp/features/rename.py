@@ -75,9 +75,9 @@ def _generate_reference_location(
 ) -> Range:
     path = reference.source_unit.file
     if isinstance(reference, MemberAccess):
-        location = reference.member_byte_location
+        location = reference.member_location
     elif isinstance(reference, ExternalReference):
-        location = reference.identifier_byte_location
+        location = reference.identifier_location
     elif isinstance(reference, DeclarationAbc):
         location = reference.name_location
     else:
@@ -181,7 +181,7 @@ async def rename(
         node = node.referenced_declaration
     elif isinstance(node, MemberAccess):
         member_location_range = context.compiler.get_range_from_byte_offsets(
-            node.source_unit.file, node.member_byte_location
+            node.source_unit.file, node.member_location
         )
         if not position_within_range(params.position, member_location_range):
             raise LspError(ErrorCodes.RequestFailed, "Cannot rename this symbol")
@@ -241,7 +241,7 @@ async def prepare_rename(
         location = node.byte_location
         node = node.referenced_declaration
     elif isinstance(node, MemberAccess):
-        location = node.member_byte_location
+        location = node.member_location
         node = node.referenced_declaration
     elif isinstance(node, (IdentifierPath, UserDefinedTypeName)):
         part = node.identifier_path_part_at(byte_offset)
@@ -253,7 +253,7 @@ async def prepare_rename(
         external_reference = node.external_reference
         if external_reference is None:
             return None
-        location = external_reference.identifier_byte_location
+        location = external_reference.identifier_location
         node = external_reference.referenced_declaration
     elif isinstance(node, DeclarationAbc):
         name_location_range = context.compiler.get_range_from_byte_offsets(

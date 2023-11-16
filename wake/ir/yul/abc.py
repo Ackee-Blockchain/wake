@@ -40,6 +40,10 @@ class YulAbc(IrAbc, ABC):
 
     @property
     def inline_assembly(self) -> InlineAssembly:
+        """
+        Returns:
+            Inline assembly statement that contains this Yul node.
+        """
         return self._inline_assembly
 
 
@@ -47,5 +51,3 @@ class YulStatementAbc(YulAbc, ABC):
     """
     Abstract base class for all Yul IR statements.
     """
-
-    pass

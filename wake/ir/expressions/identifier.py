@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache, partial
-from typing import TYPE_CHECKING, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, FrozenSet, List, Set, Tuple, Union
 
 from wake.ir.abc import IrAbc, SolidityAbc
 from wake.ir.ast import AstNodeId, SolcIdentifier
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 class Identifier(ExpressionAbc):
     """
-    TBD
+    Represents a single identifier referencing a declaration (or multiple overloaded declarations).
     """
 
     _ast_node: SolcIdentifier
@@ -109,26 +109,80 @@ class Identifier(ExpressionAbc):
 
     @property
     def name(self) -> str:
+        """
+        Returns:
+            Name of the referenced declaration.
+        """
         return self._name
 
     @property
-    def overloaded_declarations(self) -> Tuple[DeclarationAbc, ...]:
-        overloaded_declarations = []
+    def overloaded_declarations(self) -> FrozenSet[FunctionDefinition]:
+        """
+        Returns:
+            Empty set if [referenced_declaration][wake.ir.expressions.identifier.Identifier.referenced_declaration] is not overloaded.
+                Otherwise, set of all overloaded declarations (including [referenced_declaration][wake.ir.expressions.identifier.Identifier.referenced_declaration]) with the same name as the identifier.
+        """
+        from ..declarations.function_definition import FunctionDefinition
+
+        overloaded_declarations = set()
         for overloaded_declaration_id in self._overloaded_declarations:
-            if overloaded_declaration_id < 0:
-                continue
+            assert overloaded_declaration_id >= 0
 
             overloaded_declaration = self._reference_resolver.resolve_node(
                 overloaded_declaration_id, self.source_unit.cu_hash
             )
-            assert isinstance(overloaded_declaration, DeclarationAbc)
-            overloaded_declarations.append(overloaded_declaration)
-        return tuple(overloaded_declarations)
+            assert isinstance(overloaded_declaration, FunctionDefinition)
+            overloaded_declarations.add(overloaded_declaration)
+
+        # fix overloaded declarations are not set for identifiers in ImportDirective symbol alias
+        if len(overloaded_declarations) == 0:
+            ref_decl = self.referenced_declaration
+            if isinstance(ref_decl, set):
+                return frozenset(ref_decl)
+
+        return frozenset(overloaded_declarations)
 
     @property
     def referenced_declaration(
         self,
-    ) -> Union[DeclarationAbc, GlobalSymbol, SourceUnit, Set[FunctionDefinition]]:
+    ) -> Union[DeclarationAbc, GlobalSymbol, SourceUnit, FrozenSet[FunctionDefinition]]:
+        """
+        If the referenced function name is overloaded and a single function cannot be inferred from the context, returns a set of all overloaded functions.
+        This is the case of identifiers in [ImportDirectives][wake.ir.meta.import_directive.ImportDirective].
+        In the following example, the identifier `max` in the example import directive references both `max` functions from `Math.sol`:
+
+        ```solidity title="Math.sol"
+        function max(uint256 a, uint256 b) pure returns (uint256) {
+            return a >= b ? a : b;
+        }
+        function max(int256 a, int256 b) pure returns (int256) {
+            return a >= b ? a : b;
+        }
+        ```
+
+        ```solidity title="A.sol"
+        import { max } from "./Math.sol";
+        ```
+
+        If the referenced function name is overloaded and a single function can be inferred from the context, returns the inferred function.
+
+        A [SourceUnit][wake.ir.meta.source_unit.SourceUnit] is returned if the identifier references a source unit alias defined in an [ImportDirective][wake.ir.meta.import_directive.ImportDirective].
+        For example, `Math` in `Math.max(-1, 2)` references the source unit `Math.sol`:
+
+        ```solidity
+        import "./Math.sol" as Math;
+
+        contract C {
+            function test() public {
+                Math.max(-1, 2);
+            }
+        }
+        ```
+
+        Returns:
+            Referenced declaration(s).
+        """
+
         def resolve(referenced_declaration_id: AstNodeId):
             if referenced_declaration_id < 0:
                 return GlobalSymbol(referenced_declaration_id)

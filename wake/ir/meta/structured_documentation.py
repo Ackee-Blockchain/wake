@@ -8,10 +8,12 @@ from wake.ir.utils import IrInitTuple
 
 if TYPE_CHECKING:
     from ..declarations.contract_definition import ContractDefinition
+    from ..declarations.enum_definition import EnumDefinition
     from ..declarations.error_definition import ErrorDefinition
     from ..declarations.event_definition import EventDefinition
     from ..declarations.function_definition import FunctionDefinition
     from ..declarations.modifier_definition import ModifierDefinition
+    from ..declarations.struct_definition import StructDefinition
     from ..declarations.variable_declaration import VariableDeclaration
 
 
@@ -35,10 +37,12 @@ class StructuredDocumentation(SolidityAbc):
     _ast_node: SolcStructuredDocumentation
     _parent: Union[
         ContractDefinition,
+        EnumDefinition,
         ErrorDefinition,
         EventDefinition,
         FunctionDefinition,
         ModifierDefinition,
+        StructDefinition,
         VariableDeclaration,
     ]
 
@@ -58,10 +62,12 @@ class StructuredDocumentation(SolidityAbc):
         self,
     ) -> Union[
         ContractDefinition,
+        EnumDefinition,
         ErrorDefinition,
         EventDefinition,
         FunctionDefinition,
         ModifierDefinition,
+        StructDefinition,
         VariableDeclaration,
     ]:
         """
@@ -74,6 +80,7 @@ class StructuredDocumentation(SolidityAbc):
     def text(self) -> str:
         """
         Does not include the leading `///` or `/**` and trailing `*/`.
+
         Returns:
             [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation string.
         """

@@ -9,42 +9,77 @@ from wake.ir.utils import IrInitTuple
 
 class Literal(ExpressionAbc):
     """
-    TBD
+    May represent a literal of the following types (see [LiteralKind][wake.ir.enums.LiteralKind]):
+
+    - boolean, e.g. `true`, `false`,
+    - integer, e.g. `-1`, `.2`, `3e10`, `123_456`, `0x123`, `1_002e34`,
+    - string, e.g. `"Hello World!"`,
+    - hex string, e.g. `hex"1234aabb"`,
+    - unicode string, e.g. `unicode"Hello World! 😃"`,
     """
 
     _ast_node: SolcLiteral
     _parent: SolidityAbc  # TODO: make this more specific
 
-    _hex_value: str
+    _hex_value: bytes
     _kind: LiteralKind
     _subdenomination: Optional[str]
     _value: Optional[str]
 
     def __init__(self, init: IrInitTuple, literal: SolcLiteral, parent: SolidityAbc):
         super().__init__(init, literal, parent)
-        self._hex_value = literal.hex_value
+        self._hex_value = bytes.fromhex(literal.hex_value)
         self._kind = literal.kind
         self._subdenomination = literal.subdenomination
         self._value = literal.value
+
+        # fix prior to 0.7.0 hex string literals had kind `string` instead of `hexString`
+        if self._value is None:
+            self._kind = LiteralKind.HEX_STRING
 
     @property
     def parent(self) -> SolidityAbc:
         return self._parent
 
     @property
-    def hex_value(self) -> str:
+    def hex_value(self) -> bytes:
+        """
+        !!! important
+            Does not return the hexadecimal representation, but rather the [value][wake.ir.expressions.literal.Literal.value] encoded into bytes.
+            For example, `hex"1234aabb"` would return `b'\x124\xaa\xbb'` and `.2` would return `b'.2'`.
+
+        Returns:
+            Hex string literal value.
+        """
         return self._hex_value
 
     @property
     def kind(self) -> LiteralKind:
+        """
+        Returns:
+            Literal kind.
+        """
         return self._kind
 
     @property
     def subdenomination(self) -> Optional[str]:
+        """
+        !!! example
+            For example `wei`, `ether`, `seconds`, `days`, etc.
+
+        Returns:
+            Literal subdenomination, if any.
+        """
         return self._subdenomination
 
     @property
     def value(self) -> Optional[str]:
+        """
+        Is `None` for hex string literals.
+
+        Returns:
+            Literal value.
+        """
         return self._value
 
     @property

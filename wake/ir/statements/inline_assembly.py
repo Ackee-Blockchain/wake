@@ -8,7 +8,7 @@ from intervaltree import IntervalTree
 
 from wake.ir.abc import IrAbc, SolidityAbc
 from wake.ir.ast import AstNodeId, ExternalReferenceModel, SolcInlineAssembly
-from wake.ir.declarations.abc import DeclarationAbc
+from wake.ir.declarations.variable_declaration import VariableDeclaration
 from wake.ir.enums import (
     InlineAssemblyEvmVersion,
     InlineAssemblyFlag,
@@ -96,14 +96,14 @@ class ExternalReference:
         self._yul_identifier = node.data
         self._yul_identifier._external_reference = self
 
-    def _destroy(self, referenced_declaration: DeclarationAbc) -> None:
+    def _destroy(self, referenced_declaration: VariableDeclaration) -> None:
         referenced_declaration.unregister_reference(self)
 
     @property
     def source_unit(self) -> SourceUnit:
         """
         Returns:
-            [source unit][wake.ir.meta.source_unit.SourceUnit] that contains this node.
+            Source unit that contains this node.
         """
         return self._source_unit
 
@@ -121,10 +121,10 @@ class ExternalReference:
 
     @property
     @lru_cache(maxsize=2048)
-    def identifier_byte_location(self) -> Tuple[int, int]:
+    def identifier_location(self) -> Tuple[int, int]:
         """
         !!! example
-            Returns the byte location of `stateVar` in line 6, not `stateVar.slot`:
+            Returns the byte location of `stateVar` on line 6, not `stateVar.slot`:
             ```solidity linenums="1"
             contract Foo {
                 uint stateVar;
@@ -136,6 +136,7 @@ class ExternalReference:
                 }
             }
             ```
+
         Returns:
             Byte offsets (start and end) of the identifier representing the external reference in the source file.
         """
@@ -146,15 +147,15 @@ class ExternalReference:
         return start, end
 
     @property
-    def referenced_declaration(self) -> DeclarationAbc:
+    def referenced_declaration(self) -> VariableDeclaration:
         """
         Returns:
-            Solidity declaration referenced by this external reference.
+            Solidity variable declaration referenced by this external reference.
         """
         node = self._reference_resolver.resolve_node(
             self._referenced_declaration_id, self._source_unit.cu_hash
         )
-        assert isinstance(node, DeclarationAbc)
+        assert isinstance(node, VariableDeclaration)
         return node
 
     @property
@@ -182,6 +183,10 @@ class ExternalReference:
     @property
     def suffix(self) -> Optional[InlineAssemblySuffix]:
         """
+        - `.slot` and `.offset` suffixes may be applied to storage variables.
+        - `.length` suffix may be applied to dynamically-sized `calldata` arrays, `calldata` bytes and `calldata` strings.
+        - `.address` amd `.selector` suffixes may be applied to variables holding a reference to an external function (the variable has the [FunctionTypeName][wake.ir.type_names.function_type_name.FunctionTypeName] type name).
+
         Returns:
             Suffix of the external reference, if any.
         """
@@ -275,7 +280,8 @@ class InlineAssembly(StatementAbc):
     @property
     def evm_version(self) -> InlineAssemblyEvmVersion:
         """
-        Depends on the version of the `solc` compiler used to compile the contract.
+        Depends on the version of the `solc` compiler used to compile the contract and settings passed to the compiler.
+
         Returns:
             EVM version used for the inline assembly block.
         """
@@ -294,6 +300,7 @@ class InlineAssembly(StatementAbc):
                 }
             }
             ```
+
         Returns:
             Flags decorating the inline assembly block.
         """
@@ -311,6 +318,7 @@ class InlineAssembly(StatementAbc):
         """
         Args:
             byte_offset: Byte offset in the source file.
+
         Returns:
             External reference at the given byte offset, if any.
         """

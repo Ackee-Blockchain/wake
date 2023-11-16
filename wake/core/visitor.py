@@ -105,6 +105,30 @@ visit_map: Dict[str, Callable] = {
 
 
 class Visitor:
+    """
+    Base class for detectors and printers. `visit_` methods are called automatically by the execution engine.
+
+    Attributes:
+        build: The latest compilation build of the project.
+        build_info: Information about the latest compilation build of the project.
+        config: The loaded Wake configuration.
+        imports_graph: A directed graph representing the import dependencies of the project.
+            Nodes are represented by string [source unit names](https://docs.soliditylang.org/en/latest/path-resolution.html).
+            Edges are directed from the imported source unit to the importing source unit.
+
+            Nodes hold the following data attributes:
+
+            - `path`: [Path][pathlib.Path] to the source unit file.
+            - `versions`: [SolidityVersionRanges][wake.core.solidity_version.SolidityVersionRanges] describing allowed Solidity versions by pragma directives.
+            - `hash`: [bytes][bytes] 256-bit BLAKE2b hash of the source unit file contents.
+            - `content`: [bytes][bytes] source unit file contents.
+
+            !!! warning
+                Imports graph may contain source units that are not present in the build. This can happen for example because of a failed compilation.
+
+        logger: A logger instance that can be used to log messages to the console. The log messages are redirected to a VS Code output window in the case of detectors running in the VS Code extension.
+    """
+
     build: ProjectBuild
     build_info: ProjectBuildInfo
     config: WakeConfig
@@ -112,240 +136,404 @@ class Visitor:
     logger: logging.Logger
 
     def visit_contract_definition(self, node: ir.ContractDefinition):
-        pass
+        """
+        Visit [ContractDefinition][wake.ir.declarations.contract_definition.ContractDefinition] node.
+        """
 
     def visit_enum_definition(self, node: ir.EnumDefinition):
-        pass
+        """
+        Visit [EnumDefinition][wake.ir.declarations.enum_definition.EnumDefinition] node.
+        """
 
     def visit_enum_value(self, node: ir.EnumValue):
-        pass
+        """
+        Visit [EnumValue][wake.ir.declarations.enum_value.EnumValue] node.
+        """
 
     def visit_error_definition(self, node: ir.ErrorDefinition):
-        pass
+        """
+        Visit [ErrorDefinition][wake.ir.declarations.error_definition.ErrorDefinition] node.
+        """
 
     def visit_event_definition(self, node: ir.EventDefinition):
-        pass
+        """
+        Visit [EventDefinition][wake.ir.declarations.event_definition.EventDefinition] node.
+        """
 
     def visit_function_definition(self, node: ir.FunctionDefinition):
-        pass
+        """
+        Visit [FunctionDefinition][wake.ir.declarations.function_definition.FunctionDefinition] node.
+        """
 
     def visit_modifier_definition(self, node: ir.ModifierDefinition):
-        pass
+        """
+        Visit [ModifierDefinition][wake.ir.declarations.modifier_definition.ModifierDefinition] node.
+        """
 
     def visit_struct_definition(self, node: ir.StructDefinition):
-        pass
+        """
+        Visit [StructDefinition][wake.ir.declarations.struct_definition.StructDefinition] node.
+        """
 
     def visit_user_defined_value_type_definition(
         self, node: ir.UserDefinedValueTypeDefinition
     ):
-        pass
+        """
+        Visit [UserDefinedValueTypeDefinition][wake.ir.declarations.user_defined_value_type_definition.UserDefinedValueTypeDefinition] node.
+        """
 
     def visit_variable_declaration(self, node: ir.VariableDeclaration):
-        pass
+        """
+        Visit [VariableDeclaration][wake.ir.declarations.variable_declaration.VariableDeclaration] node.
+        """
 
     # expressions
     def visit_assignment(self, node: ir.Assignment):
-        pass
+        """
+        Visit [Assignment][wake.ir.expressions.assignment.Assignment] node.
+        """
 
     def visit_binary_operation(self, node: ir.BinaryOperation):
-        pass
+        """
+        Visit [BinaryOperation][wake.ir.expressions.binary_operation.BinaryOperation] node.
+        """
 
     def visit_conditional(self, node: ir.Conditional):
-        pass
+        """
+        Visit [Conditional][wake.ir.expressions.conditional.Conditional] node.
+        """
 
     def visit_elementary_type_name_expression(
         self, node: ir.ElementaryTypeNameExpression
     ):
-        pass
+        """
+        Visit [ElementaryTypeNameExpression][wake.ir.expressions.elementary_type_name_expression.ElementaryTypeNameExpression] node.
+        """
 
     def visit_function_call(self, node: ir.FunctionCall):
-        pass
+        """
+        Visit [FunctionCall][wake.ir.expressions.function_call.FunctionCall] node.
+        """
 
     def visit_function_call_options(self, node: ir.FunctionCallOptions):
-        pass
+        """
+        Visit [FunctionCallOptions][wake.ir.expressions.function_call_options.FunctionCallOptions] node.
+        """
 
     def visit_identifier(self, node: ir.Identifier):
-        pass
+        """
+        Visit [Identifier][wake.ir.expressions.identifier.Identifier] node.
+        """
 
     def visit_index_access(self, node: ir.IndexAccess):
-        pass
+        """
+        Visit [IndexAccess][wake.ir.expressions.index_access.IndexAccess] node.
+        """
 
     def visit_index_range_access(self, node: ir.IndexRangeAccess):
-        pass
+        """
+        Visit [IndexRangeAccess][wake.ir.expressions.index_range_access.IndexRangeAccess] node.
+        """
 
     def visit_literal(self, node: ir.Literal):
-        pass
+        """
+        Visit [Literal][wake.ir.expressions.literal.Literal] node.
+        """
 
     def visit_member_access(self, node: ir.MemberAccess):
-        pass
+        """
+        Visit [MemberAccess][wake.ir.expressions.member_access.MemberAccess] node.
+        """
 
     def visit_new_expression(self, node: ir.NewExpression):
-        pass
+        """
+        Visit [NewExpression][wake.ir.expressions.new_expression.NewExpression] node.
+        """
 
     def visit_tuple_expression(self, node: ir.TupleExpression):
-        pass
+        """
+        Visit [TupleExpression][wake.ir.expressions.tuple_expression.TupleExpression] node.
+        """
 
     def visit_unary_operation(self, node: ir.UnaryOperation):
-        pass
+        """
+        Visit [UnaryOperation][wake.ir.expressions.unary_operation.UnaryOperation] node.
+        """
 
     # meta
     def visit_identifier_path(self, node: ir.IdentifierPath):
-        pass
+        """
+        Visit [IdentifierPath][wake.ir.meta.identifier_path.IdentifierPath] node.
+        """
 
     def visit_import_directive(self, node: ir.ImportDirective):
-        pass
+        """
+        Visit [ImportDirective][wake.ir.meta.import_directive.ImportDirective] node.
+        """
 
     def visit_inheritance_specifier(self, node: ir.InheritanceSpecifier):
-        pass
+        """
+        Visit [InheritanceSpecifier][wake.ir.meta.inheritance_specifier.InheritanceSpecifier] node.
+        """
 
     def visit_modifier_invocation(self, node: ir.ModifierInvocation):
-        pass
+        """
+        Visit [ModifierInvocation][wake.ir.meta.modifier_invocation.ModifierInvocation] node.
+        """
 
     def visit_override_specifier(self, node: ir.OverrideSpecifier):
-        pass
+        """
+        Visit [OverrideSpecifier][wake.ir.meta.override_specifier.OverrideSpecifier] node.
+        """
 
     def visit_parameter_list(self, node: ir.ParameterList):
-        pass
+        """
+        Visit [ParameterList][wake.ir.meta.parameter_list.ParameterList] node.
+        """
 
     def visit_pragma_directive(self, node: ir.PragmaDirective):
-        pass
+        """
+        Visit [PragmaDirective][wake.ir.meta.pragma_directive.PragmaDirective] node.
+        """
 
     def visit_source_unit(self, node: ir.SourceUnit):
-        pass
+        """
+        Visit [SourceUnit][wake.ir.meta.source_unit.SourceUnit] node.
+        """
 
     def visit_structured_documentation(self, node: ir.StructuredDocumentation):
-        pass
+        """
+        Visit [StructuredDocumentation][wake.ir.meta.structured_documentation.StructuredDocumentation] node.
+        """
 
     def visit_try_catch_clause(self, node: ir.TryCatchClause):
-        pass
+        """
+        Visit [TryCatchClause][wake.ir.meta.try_catch_clause.TryCatchClause] node.
+        """
 
     def visit_using_for_directive(self, node: ir.UsingForDirective):
-        pass
+        """
+        Visit [UsingForDirective][wake.ir.meta.using_for_directive.UsingForDirective] node.
+        """
 
     # statements
     def visit_block(self, node: ir.Block):
-        pass
+        """
+        Visit [Block][wake.ir.statements.block.Block] node.
+        """
 
     def visit_break(self, node: ir.Break):
-        pass
+        """
+        Visit [Break][wake.ir.statements.break_statement.Break] node.
+        """
 
     def visit_continue(self, node: ir.Continue):
-        pass
+        """
+        Visit [Continue][wake.ir.statements.continue_statement.Continue] node.
+        """
 
     def visit_do_while_statement(self, node: ir.DoWhileStatement):
-        pass
+        """
+        Visit [DoWhileStatement][wake.ir.statements.do_while_statement.DoWhileStatement] node.
+        """
 
     def visit_emit_statement(self, node: ir.EmitStatement):
-        pass
+        """
+        Visit [EmitStatement][wake.ir.statements.emit_statement.EmitStatement] node.
+        """
 
     def visit_expression_statement(self, node: ir.ExpressionStatement):
-        pass
+        """
+        Visit [ExpressionStatement][wake.ir.statements.expression_statement.ExpressionStatement] node.
+        """
 
     def visit_for_statement(self, node: ir.ForStatement):
-        pass
+        """
+        Visit [ForStatement][wake.ir.statements.for_statement.ForStatement] node.
+        """
 
     def visit_if_statement(self, node: ir.IfStatement):
-        pass
+        """
+        Visit [IfStatement][wake.ir.statements.if_statement.IfStatement] node.
+        """
 
     def visit_inline_assembly(self, node: ir.InlineAssembly):
-        pass
+        """
+        Visit [InlineAssembly][wake.ir.statements.inline_assembly.InlineAssembly] node.
+        """
 
     def visit_placeholder_statement(self, node: ir.PlaceholderStatement):
-        pass
+        """
+        Visit [PlaceholderStatement][wake.ir.statements.placeholder_statement.PlaceholderStatement] node.
+        """
 
     def visit_return(self, node: ir.Return):
-        pass
+        """
+        Visit [Return][wake.ir.statements.return_statement.Return] node.
+        """
 
     def visit_revert_statement(self, node: ir.RevertStatement):
-        pass
+        """
+        Visit [RevertStatement][wake.ir.statements.revert_statement.RevertStatement] node.
+        """
 
     def visit_try_statement(self, node: ir.TryStatement):
-        pass
+        """
+        Visit [TryStatement][wake.ir.statements.try_statement.TryStatement] node.
+        """
 
     def visit_unchecked_block(self, node: ir.UncheckedBlock):
-        pass
+        """
+        Visit [UncheckedBlock][wake.ir.statements.unchecked_block.UncheckedBlock] node.
+        """
 
     def visit_variable_declaration_statement(
         self, node: ir.VariableDeclarationStatement
     ):
-        pass
+        """
+        Visit [VariableDeclarationStatement][wake.ir.statements.variable_declaration_statement.VariableDeclarationStatement] node.
+        """
 
     def visit_while_statement(self, node: ir.WhileStatement):
-        pass
+        """
+        Visit [WhileStatement][wake.ir.statements.while_statement.WhileStatement] node.
+        """
 
     # type names
     def visit_array_type_name(self, node: ir.ArrayTypeName):
-        pass
+        """
+        Visit [ArrayTypeName][wake.ir.type_names.array_type_name.ArrayTypeName] node.
+        """
 
     def visit_elementary_type_name(self, node: ir.ElementaryTypeName):
-        pass
+        """
+        Visit [ElementaryTypeName][wake.ir.type_names.elementary_type_name.ElementaryTypeName] node.
+        """
 
     def visit_function_type_name(self, node: ir.FunctionTypeName):
-        pass
+        """
+        Visit [FunctionTypeName][wake.ir.type_names.function_type_name.FunctionTypeName] node.
+        """
 
     def visit_mapping(self, node: ir.Mapping):
-        pass
+        """
+        Visit [Mapping][wake.ir.type_names.mapping.Mapping] node.
+        """
 
     def visit_user_defined_type_name(self, node: ir.UserDefinedTypeName):
-        pass
+        """
+        Visit [UserDefinedTypeName][wake.ir.type_names.user_defined_type_name.UserDefinedTypeName] node.
+        """
 
     # yul
     def visit_yul_assignment(self, node: ir.YulAssignment):
-        pass
+        """
+        Visit [YulAssignment][wake.ir.yul.assignment.YulAssignment] node.
+        """
 
     def visit_yul_block(self, node: ir.YulBlock):
-        pass
+        """
+        Visit [YulBlock][wake.ir.yul.block.YulBlock] node.
+        """
 
     def visit_yul_break(self, node: ir.YulBreak):
-        pass
+        """
+        Visit [YulBreak][wake.ir.yul.break_statement.YulBreak] node.
+        """
 
     def visit_yul_case(self, node: ir.YulCase):
-        pass
+        """
+        Visit [YulCase][wake.ir.yul.case_statement.YulCase] node.
+        """
 
     def visit_yul_continue(self, node: ir.YulContinue):
-        pass
+        """
+        Visit [YulContinue][wake.ir.yul.continue_statement.YulContinue] node.
+        """
 
     def visit_yul_expression_statement(self, node: ir.YulExpressionStatement):
-        pass
+        """
+        Visit [YulExpressionStatement][wake.ir.yul.expression_statement.YulExpressionStatement] node.
+        """
 
     def visit_yul_for_loop(self, node: ir.YulForLoop):
-        pass
+        """
+        Visit [YulForLoop][wake.ir.yul.for_loop.YulForLoop] node.
+        """
 
     def visit_yul_function_call(self, node: ir.YulFunctionCall):
-        pass
+        """
+        Visit [YulFunctionCall][wake.ir.yul.function_call.YulFunctionCall] node.
+        """
 
     def visit_yul_function_definition(self, node: ir.YulFunctionDefinition):
-        pass
+        """
+        Visit [YulFunctionDefinition][wake.ir.yul.function_definition.YulFunctionDefinition] node.
+        """
 
     def visit_yul_identifier(self, node: ir.YulIdentifier):
-        pass
+        """
+        Visit [YulIdentifier][wake.ir.yul.identifier.YulIdentifier] node.
+        """
 
     def visit_yul_if(self, node: ir.YulIf):
-        pass
+        """
+        Visit [YulIf][wake.ir.yul.if_statement.YulIf] node.
+        """
 
     def visit_yul_leave(self, node: ir.YulLeave):
-        pass
+        """
+        Visit [YulLeave][wake.ir.yul.leave.YulLeave] node.
+        """
 
     def visit_yul_literal(self, node: ir.YulLiteral):
-        pass
+        """
+        Visit [YulLiteral][wake.ir.yul.literal.YulLiteral] node.
+        """
 
     def visit_yul_switch(self, node: ir.YulSwitch):
-        pass
+        """
+        Visit [YulSwitch][wake.ir.yul.switch.YulSwitch] node.
+        """
 
     def visit_yul_typed_name(self, node: ir.YulTypedName):
-        pass
+        """
+        Visit [YulTypedName][wake.ir.yul.typed_name.YulTypedName] node.
+        """
 
     def visit_yul_variable_declaration(self, node: ir.YulVariableDeclaration):
-        pass
+        """
+        Visit [YulVariableDeclaration][wake.ir.yul.variable_declaration.YulVariableDeclaration] node.
+        """
 
     def generate_link_from_line_col(
         self, path: Union[str, Path], line: int, col: int
     ) -> str:
+        """
+        Generate a link to the given source unit file location.
+
+        Args:
+            path: Path to the source unit file.
+            line: Line number.
+            col: Column number.
+
+        Returns:
+            A link formatted according to the [link_format][wake.config.data_model.GeneralConfig.link_format] configuration option.
+        """
         if isinstance(path, Path):
             path = str(path.resolve())
         return self.config.general.link_format.format(path=path, line=line, col=col)
 
     def generate_link(self, node: ir.IrAbc) -> str:
+        """
+        Generate a link to the start of the given node based on [name_location][wake.ir.declarations.abc.DeclarationAbc.name_location] or [byte_location][wake.ir.abc.IrAbc.byte_location].
+
+        Args:
+            node: Node to generate a link to.
+
+        Returns:
+            A link formatted according to the [link_format][wake.config.data_model.GeneralConfig.link_format] configuration option.
+        """
         if isinstance(node, ir.DeclarationAbc):
             line, col = node.source_unit.get_line_col_from_byte_offset(
                 node.name_location[0]

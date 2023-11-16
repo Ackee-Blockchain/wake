@@ -10,7 +10,7 @@ from wake.ir.utils import IrInitTuple
 
 class IndexAccess(ExpressionAbc):
     """
-    TBD
+    Represents an index access to an array, bytes or mapping.
     """
 
     _ast_node: SolcIndexAccess
@@ -46,10 +46,25 @@ class IndexAccess(ExpressionAbc):
 
     @property
     def base_expression(self) -> ExpressionAbc:
+        """
+        Returns:
+            Base expression being indexed.
+        """
         return self._base_expression
 
     @property
     def index_expression(self) -> Optional[ExpressionAbc]:
+        """
+        !!! example
+            Is `None` for `:::solidity uint[]` in the following example:
+
+            ```solidity
+            abi.decode(data, (uint[]))
+            ```
+
+        Returns:
+            Index expression or `None` if the index is not specified.
+        """
         return self._index_expression
 
     @property

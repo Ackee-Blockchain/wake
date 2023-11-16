@@ -93,6 +93,16 @@ class SemanticVersion(VersionAbc):
         prerelease: Optional[str] = None,
         build: Optional[str] = None,
     ):
+        """
+        Create a new instance of `SemanticVersion`.
+
+        Args:
+            major: The major version number.
+            minor: The minor version number.
+            patch: The patch version number.
+            prerelease: The prerelease tag.
+            build: The build tag.
+        """
         self.__major = major
         self.__minor = minor
         self.__patch = patch
@@ -100,6 +110,9 @@ class SemanticVersion(VersionAbc):
         self.__build = build
 
     def __str__(self) -> str:
+        """
+        Return a user-friendly string representation of the version.
+        """
         s = f"{self.major}.{self.minor}.{self.patch}"
         if self.prerelease is not None:
             s += f"-{self.prerelease}"
@@ -108,6 +121,9 @@ class SemanticVersion(VersionAbc):
         return s
 
     def __repr__(self) -> str:
+        """
+        Return a string representation of the version.
+        """
         prerelease = (
             '"' + self.prerelease + '"' if self.prerelease is not None else None
         )
@@ -115,9 +131,16 @@ class SemanticVersion(VersionAbc):
         return f"{self.__class__.__name__}({self.major}, {self.minor}, {self.patch}, {prerelease}, {build})"
 
     def __hash__(self) -> int:
+        """
+        Return a hash of the version. Prerelease and build tags are ignored.
+        """
         return hash((self.major, self.minor, self.patch))
 
     def __eq__(self, other) -> bool:
+        """
+        Return `True` if the given version is equal to this version, `False` otherwise.
+        Prerelease and build tags are ignored.
+        """
         cls = self.__class__
 
         if isinstance(other, str):
@@ -131,6 +154,10 @@ class SemanticVersion(VersionAbc):
         )
 
     def __lt__(self, other) -> bool:
+        """
+        Return `True` if the given version is less than this version, `False` otherwise.
+        Prerelease and build tags are ignored.
+        """
         cls = self.__class__
 
         if isinstance(other, str):
@@ -144,15 +171,27 @@ class SemanticVersion(VersionAbc):
         )
 
     def __le__(self, other) -> bool:
+        """
+        Return `True` if the given version is less than or equal to this version, `False` otherwise.
+        Prerelease and build tags are ignored.
+        """
         return self < other or self == other
 
     def __gt__(self, other):
+        """
+        Return `True` if the given version is greater than this version, `False` otherwise.
+        Prerelease and build tags are ignored.
+        """
         lt = self < other
         if lt is NotImplemented:
             return NotImplemented
         return not lt and self != other
 
     def __ge__(self, other):
+        """
+        Return `True` if the given version is greater than or equal to this version, `False` otherwise.
+        Prerelease and build tags are ignored.
+        """
         lt = self < other
         if lt is NotImplemented:
             return NotImplemented
@@ -160,6 +199,12 @@ class SemanticVersion(VersionAbc):
 
     @classmethod
     def fromstring(cls: Type[T], version_str: str) -> T:
+        """
+        Create a new instance of `SemanticVersion` from a string.
+
+        Args:
+            version_str: The string to parse.
+        """
         match = cls.RE.match(version_str)
         if not match:
             raise ValueError(f"Invalid Solidity version: `{version_str}`")
@@ -173,27 +218,44 @@ class SemanticVersion(VersionAbc):
 
     @property
     def major(self) -> int:
+        """
+        Return the major version number.
+        """
         return self.__major
 
     @property
     def minor(self) -> int:
+        """
+        Return the minor version number.
+        """
         return self.__minor
 
     @property
     def patch(self) -> int:
+        """
+        Return the patch version number.
+        """
         return self.__patch
 
     @property
     def prerelease(self) -> Optional[str]:
+        """
+        Return the prerelease tag.
+        """
         return self.__prerelease
 
     @property
     def build(self) -> Optional[str]:
+        """
+        Return the build tag.
+        """
         return self.__build
 
 
 class SolidityVersion(SemanticVersion):
-    pass
+    """
+    A class representing a single Solidity version. Just an alias for [SemanticVersion](#semanticversion).
+    """
 
 
 class SolidityVersionRange:
@@ -216,6 +278,17 @@ class SolidityVersionRange:
         higher_bound: Optional[Union[SolidityVersion, str]],
         higher_inclusive: Optional[bool],
     ):
+        """
+        Create a new instance of `SolidityVersionRange`.
+
+        Args:
+            lower_bound: The lower bound of the range. If `None`, the default value 0.0.0 is used.
+            lower_inclusive: If `True`, the lower bound is inclusive, otherwise it is non-inclusive.
+                May only be `None` if `lower_bound` is `None`.
+            higher_bound: The higher bound of the range. If `None`, the range is unbounded.
+            higher_inclusive: If `True`, the higher bound is inclusive, otherwise it is non-inclusive.
+                May only be `None` if `higher_bound` is `None`.
+        """
         if (lower_bound is None) != (lower_inclusive is None):
             raise ValueError(
                 "Both arguments lower_bound and lower_inclusive must be either set or unset."
@@ -248,7 +321,13 @@ class SolidityVersionRange:
                 self.__higher = self.lower
                 self.__higher_inclusive = False
 
-    def __contains__(self, item) -> bool:
+    def __contains__(self, item: Any) -> bool:
+        """
+        Return `True` if the given Solidity version is contained in this range, `False` otherwise.
+
+        Args:
+            item: The Solidity version to check for containment. Can be either a `SolidityVersion` instance or a string.
+        """
         if isinstance(item, str):
             item = SolidityVersion.fromstring(item)
         if not isinstance(item, SolidityVersion):
@@ -265,6 +344,9 @@ class SolidityVersionRange:
         return lower_check and higher_check
 
     def __hash__(self) -> int:
+        """
+        Return a hash of the range.
+        """
         return hash(
             (
                 self.lower,
@@ -275,6 +357,9 @@ class SolidityVersionRange:
         )
 
     def __eq__(self, other) -> bool:
+        """
+        Return `True` if the given range is equal to this range, `False` otherwise.
+        """
         if not isinstance(other, SolidityVersionRange):
             return NotImplemented
         self_attr = (
@@ -292,12 +377,18 @@ class SolidityVersionRange:
         return self_attr == other_attr
 
     def __str__(self) -> str:
+        """
+        Return a user-friendly string representation of the range.
+        """
         s = f"{'>=' if self.lower_inclusive else '>'}{self.lower}"
         if self.higher is not None:
             s = s + f" {'<=' if self.higher_inclusive else '<'}{self.higher}"
         return s
 
     def __repr__(self) -> str:
+        """
+        Return a string representation of the range.
+        """
         lower = '"' + str(self.lower) + '"'
         higher = '"' + str(self.higher) + '"' if self.higher is not None else None
         return f"{self.__class__.__name__}({lower}, {self.lower_inclusive}, {higher}, {self.higher_inclusive})"
@@ -366,32 +457,57 @@ class SolidityVersionRange:
 
     @property
     def lower(self) -> SolidityVersion:
+        """
+        Return the lower bound of the range.
+        """
         return self.__lower
 
     @property
     def lower_inclusive(self) -> bool:
+        """
+        Return `True` if the lower bound is inclusive, `False` otherwise.
+        """
         return self.__lower_inclusive
 
     @property
     def higher(self) -> Optional[SolidityVersion]:
+        """
+        Return the higher bound of the range, if any.
+        """
         return self.__higher
 
     @property
     def higher_inclusive(self) -> Optional[bool]:
+        """
+        Return `True` if the higher bound is inclusive, `False` if it is non-inclusive or `None` if the range is unbounded.
+        """
         return self.__higher_inclusive
 
 
 class SolidityVersionRanges:
     """
     Helper class implementing intersection on List[SolidityVersionRange].
+    No normalization is performed, i.e. the ranges are taken as is without merging.
     """
 
     __version_ranges: Tuple[SolidityVersionRange, ...]
 
     def __init__(self, version_ranges: Iterable[SolidityVersionRange]):
+        """
+        Create a new instance of `SolidityVersionRanges`.
+
+        Args:
+            version_ranges: The Solidity version ranges that this instance should represent.
+        """
         self.__version_ranges = tuple(version_ranges)
 
-    def __and__(self, other):
+    def __and__(self, other: Any):
+        """
+        Perform an intersection of two `SolidityVersionRanges` and return a new instance of `SolidityVersionRanges`.
+
+        Args:
+            other: The other `SolidityVersionRanges` instance to intersect with.
+        """
         if not isinstance(other, SolidityVersionRanges):
             return NotImplemented
         ret = []
@@ -422,10 +538,18 @@ class SolidityVersionRanges:
 
     @property
     def version_ranges(self) -> Tuple[SolidityVersionRange]:
+        """
+        Return the Solidity version ranges that this instance represents.
+        """
         return self.__version_ranges
 
 
 class SolidityVersionExpr:
+    """
+    A class representing a Solidity version expression.
+    It keeps the original expression string and a `SolidityVersionRanges` instance that represents the expression.
+    """
+
     ERROR_MSG = r"Invalid Solidity version expression: `{value}`"
     NUMBER = r"x|X|\*|0|[1-9][0-9]*"
     PARTIAL = r"(?P<major>{number})\s*(?:\.\s*(?P<minor>{number}))?\s*(?:\.\s*(?P<patch>{number}))?".format(
@@ -440,6 +564,12 @@ class SolidityVersionExpr:
     __ranges: SolidityVersionRanges
 
     def __init__(self, expr: str):
+        """
+        Create a new instance of `SolidityVersionExpr`.
+
+        Args:
+            expr: The Solidity version expression to parse.
+        """
         cls = self.__class__
         self.__expression = expr
         evaluated_ranges = []
@@ -700,7 +830,13 @@ class SolidityVersionExpr:
         else:
             raise ValueError(cls.ERROR_MSG.format(value=match_str))
 
-    def __contains__(self, item) -> bool:
+    def __contains__(self, item: Any) -> bool:
+        """
+        Return `True` if the given Solidity version is contained in this range, `False` otherwise.
+
+        Args:
+            item: The Solidity version to check for containment. Can be either a `SolidityVersion` instance or a string.
+        """
         if isinstance(item, str):
             item = SolidityVersion.fromstring(item)
         if not isinstance(item, SolidityVersion):
@@ -711,11 +847,20 @@ class SolidityVersionExpr:
         return False
 
     def __str__(self) -> str:
+        """
+        Return a user-friendly string representation of the range.
+        """
         return self.__expression
 
     def __repr__(self) -> str:
+        """
+        Return a string representation of the range.
+        """
         return f'{self.__class__.__name__}("{str(self)}")'
 
     @property
     def version_ranges(self) -> SolidityVersionRanges:
+        """
+        Return the parsed Solidity version ranges.
+        """
         return self.__ranges

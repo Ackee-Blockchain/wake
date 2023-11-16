@@ -19,7 +19,22 @@ from .literal import YulLiteral
 
 class YulForLoop(YulStatementAbc):
     """
-    TBD
+    Represents a for loop with the following structure:
+
+    ```solidity
+    for <pre> <condition> <post> {
+        <body>
+    }
+    ```
+
+    !!! example
+        ```solidity
+        assembly {
+            for { let i := 0 } lt(i, 10) { i := add(i, 1) } {
+                // ...
+            }
+        }
+        ```
     """
 
     _parent: YulBlock
@@ -51,6 +66,10 @@ class YulForLoop(YulStatementAbc):
 
     @property
     def parent(self) -> YulBlock:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
@@ -59,12 +78,24 @@ class YulForLoop(YulStatementAbc):
 
     @property
     def condition(self) -> Union[YulFunctionCall, YulIdentifier, YulLiteral]:
+        """
+        Returns:
+            Condition expression that is evaluated before each iteration.
+        """
         return self._condition
 
     @property
     def post(self) -> YulBlock:
+        """
+        Returns:
+            Block of statements that are executed after each iteration.
+        """
         return self._post
 
     @property
     def pre(self) -> YulBlock:
+        """
+        Returns:
+            Block of statements that are executed once before the first iteration.
+        """
         return self._pre

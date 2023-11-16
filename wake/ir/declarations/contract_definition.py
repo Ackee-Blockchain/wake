@@ -343,6 +343,7 @@ class ContractDefinition(DeclarationAbc):
             contract A2 is I {}
             contract B is A1, A2 {}
             ```
+
         Returns:
             Base contracts of this contract.
         """
@@ -351,6 +352,8 @@ class ContractDefinition(DeclarationAbc):
     @property
     def child_contracts(self) -> FrozenSet[ContractDefinition]:
         """
+        Does not return all child contracts (recursively).
+
         Returns:
             Contracts that list this contract in their [base_contracts][wake.ir.declarations.contract_definition.ContractDefinition.base_contracts] property.
         """
@@ -368,6 +371,7 @@ class ContractDefinition(DeclarationAbc):
     def fully_implemented(self) -> Optional[bool]:
         """
         Is `None` when a file that imports this contract cannot be compiled. This may happen in the LSP server where partial project analysis is supported.
+
         Returns:
             `True` if all functions and modifiers of the contract are implemented, `False` otherwise.
         """
@@ -415,6 +419,7 @@ class ContractDefinition(DeclarationAbc):
     def documentation(self) -> Optional[Union[StructuredDocumentation, str]]:
         """
         Of [StructuredDocumentation][wake.ir.meta.structured_documentation.StructuredDocumentation] type since Solidity 0.6.3.
+
         Returns:
             [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation of this contract, if any.
         """

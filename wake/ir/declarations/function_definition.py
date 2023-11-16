@@ -464,6 +464,7 @@ class FunctionDefinition(DeclarationAbc):
                 }
             }
             ```
+
         Returns:
             List of base functions overridden by this function.
         """
@@ -490,6 +491,7 @@ class FunctionDefinition(DeclarationAbc):
     def documentation(self) -> Optional[Union[StructuredDocumentation, str]]:
         """
         Of [StructuredDocumentation][wake.ir.meta.structured_documentation.StructuredDocumentation] type since Solidity 0.6.3.
+
         Returns:
             [NatSpec](https://solidity.readthedocs.io/en/latest/natspec-format.html) documentation string, if any.
         """
@@ -499,6 +501,7 @@ class FunctionDefinition(DeclarationAbc):
     def function_selector(self) -> Optional[bytes]:
         """
         Is only set for [Visibility.PUBLIC][wake.ir.enums.Visibility.PUBLIC] and [Visibility.EXTERNAL][wake.ir.enums.Visibility.EXTERNAL] functions of the [FunctionKind.FUNCTION][wake.ir.enums.FunctionKind.FUNCTION] kind.
+
         Returns:
             Selector of the function.
         """

@@ -108,6 +108,7 @@ class ExpressionAbc(SolidityAbc, ABC):
             ```solidity
             import { Ownable } from './Ownable.sol';
             ```
+
         Returns:
             Type of the expression.
         """
@@ -144,6 +145,7 @@ class ExpressionAbc(SolidityAbc, ABC):
             ```solidity
             import { Ownable } from './Ownable.sol';
             ```
+
         Returns:
             User-friendly string describing the expression type.
         """
@@ -155,6 +157,10 @@ class ExpressionAbc(SolidityAbc, ABC):
         """
         In many cases it may be useful to know if an [Assignment][wake.ir.expressions.assignment.Assignment] to an expression modifies a state variable or not.
         This may not be straightforward to determine, e.g. if the expression is a [MemberAccess][wake.ir.expressions.member_access.MemberAccess] or [IndexAccess][wake.ir.expressions.index_access.IndexAccess] to a state variable.
+
+        WARNING:
+            Is not considered stable and so is not exported in the documentation.
+
         Returns:
             `True` if the expression (possibly) is a reference to a state variable.
         """
@@ -164,6 +170,9 @@ class ExpressionAbc(SolidityAbc, ABC):
     @abstractmethod
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         """
+        WARNING:
+            Is not considered stable and so is not exported in the documentation.
+
         Returns:
             Set of child IR nodes (including `self`) that modify the blockchain state and flags describing how the state is modified.
         """
@@ -173,8 +182,16 @@ class ExpressionAbc(SolidityAbc, ABC):
     @lru_cache(maxsize=512)
     def statement(self) -> Optional[StatementAbc]:
         """
+        May be `None` if the expression is not part of a function or modifier body.
+        This may happen in:
+
+        - [ModifierInvocation][wake.ir.meta.modifier_invocation.ModifierInvocation] arguments,
+        - [InheritanceSpecifier][wake.ir.meta.inheritance_specifier.InheritanceSpecifier] arguments,
+        - [ArrayTypeName][wake.ir.type_names.array_type_name.ArrayTypeName] length value,
+        - [VariableDeclaration][wake.ir.declarations.variable_declaration.VariableDeclaration] initializer.
+
         Returns:
-            [StatementAbc][wake.ir.statements.abc.StatementAbc] that contains the expression.
+            Statement that contains the expression.
         """
         from ..statements.abc import StatementAbc
 
