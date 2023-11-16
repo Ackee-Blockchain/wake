@@ -11,7 +11,10 @@ from .abc import ExpressionAbc
 
 class Conditional(ExpressionAbc):
     """
-    TBD
+    !!! example
+        ```solidity
+        x ? y : z
+        ```
     """
 
     _ast_node: SolcConditional
@@ -45,14 +48,26 @@ class Conditional(ExpressionAbc):
 
     @property
     def condition(self) -> ExpressionAbc:
+        """
+        Returns:
+            Condition expression.
+        """
         return self._condition
 
     @property
     def false_expression(self) -> ExpressionAbc:
+        """
+        Returns:
+            Expression evaluated when the condition is false.
+        """
         return self._false_expression
 
     @property
     def true_expression(self) -> ExpressionAbc:
+        """
+        Returns:
+            Expression evaluated when the condition is true.
+        """
         return self._true_expression
 
     @property

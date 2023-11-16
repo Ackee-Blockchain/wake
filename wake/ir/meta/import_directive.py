@@ -237,6 +237,7 @@ class ImportDirective(SolidityAbc):
     def symbol_aliases(self) -> Tuple[SymbolAlias, ...]:
         """
         Is only set in the case of `:::solidity import { SafeType as CustomSafeType } from "SafeLib.sol";` import directive type.
+
         Returns:
             Symbol aliases present in the import directive.
         """
@@ -261,6 +262,7 @@ class ImportDirective(SolidityAbc):
             ```solidity
             import { SafeType as CustomSafeType } from "SafeLib.sol";
             ```
+
         Returns:
             Alias for the namespace of the imported source unit.
         """
@@ -268,7 +270,7 @@ class ImportDirective(SolidityAbc):
 
     @property
     @lru_cache(maxsize=2048)
-    def import_string_pos(self) -> Tuple[int, int]:
+    def import_string_location(self) -> Tuple[int, int]:
         """
         Returns:
             Byte offsets (start, end) of the import string in the source file.

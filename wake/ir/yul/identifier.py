@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 class YulIdentifier(YulAbc):
     """
-    TBD
+    Represents an identifier referencing a [YulFunctionDefinition][wake.ir.yul.function_definition.YulFunctionDefinition], a [YulVariableDeclaration][wake.ir.yul.variable_declaration.YulVariableDeclaration], or a Solidity [VariableDeclaration][wake.ir.declarations.variable_declaration.VariableDeclaration] through an [ExternalReference][wake.ir.statements.inline_assembly.ExternalReference].
     """
 
     _parent: Union[
@@ -54,12 +54,36 @@ class YulIdentifier(YulAbc):
         YulVariableDeclaration,
         YulFunctionCall,
     ]:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
     def name(self) -> str:
+        """
+        Returns:
+            Name of the identifier.
+        """
         return self._name
 
     @property
     def external_reference(self) -> Optional[ExternalReference]:
+        """
+        Is not `None` if the identifier is an external reference to a Solidity variable.
+
+        !!! example
+            `:::solidity foo` in the following example:
+
+            ```solidity
+            uint foo;
+            assembly {
+                foo := 1
+            }
+            ```
+
+        Returns:
+            Object describing the external reference to a Solidity variable.
+        """
         return self._external_reference

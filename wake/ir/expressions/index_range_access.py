@@ -10,7 +10,16 @@ from wake.ir.utils import IrInitTuple
 
 class IndexRangeAccess(ExpressionAbc):
     """
-    TBD
+    Represents an index range access to a dynamic calldata array (other types are not currently supported).
+    Both start and end indices are optional.
+
+    !!! example
+        `:::solidity arr[1:2]` in the following example:
+        ```solidity
+        function foo(uint[] calldata arr) external {
+            arr[1:2];
+        }
+        ```
     """
 
     _ast_node: SolcIndexRangeAccess
@@ -59,14 +68,30 @@ class IndexRangeAccess(ExpressionAbc):
 
     @property
     def base_expression(self) -> ExpressionAbc:
+        """
+        Returns:
+            Calldata array expression being indexed.
+        """
         return self._base_expression
 
     @property
     def start_expression(self) -> Optional[ExpressionAbc]:
+        """
+        If not specified, the start index is assumed to be `0`.
+
+        Returns:
+            Start expression or `None` if the start index is not specified.
+        """
         return self._start_expression
 
     @property
     def end_expression(self) -> Optional[ExpressionAbc]:
+        """
+        If not specified, the end index is assumed to be the length of the array.
+
+        Returns:
+            End expression or `None` if the end index is not specified.
+        """
         return self._end_expression
 
     @property

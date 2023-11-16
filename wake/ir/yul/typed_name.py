@@ -14,7 +14,21 @@ if TYPE_CHECKING:
 
 class YulTypedName(YulAbc):
     """
-    TBD
+    As opposed to [YulIdentifier][wake.ir.yul.identifier.YulIdentifier] that serves as a reference to a variable and is evaluated to its value, `YulTypedName` is a declaration of a variable (an intention to use the given name for a variable).
+
+    The difference from [YulVariableDeclaration][wake.ir.yul.variable_declaration.YulVariableDeclaration] is that the variable declaration is used to declare a new unique name and contains `YulTypedName` as a child.
+
+    !!! example
+        `x`, `y`, `z` and `w` in the following example are all typed names:
+
+        ```solidity
+        assembly {
+            function foo(x, y) -> z {
+                z := add(x, y)
+            }
+            let w := foo(1, 2)
+        }
+        ```
     """
 
     _parent: Union[YulFunctionDefinition, YulVariableDeclaration]
@@ -25,6 +39,9 @@ class YulTypedName(YulAbc):
         super().__init__(init, typed_name, parent)
         self._name = typed_name.name
         self._type = typed_name.type
+        assert (
+            self._type == ""
+        ), f"Expected YulTypedName type to be empty, got {self._type}"
 
     @property
     def parent(self) -> Union[YulFunctionDefinition, YulVariableDeclaration]:
@@ -32,8 +49,13 @@ class YulTypedName(YulAbc):
 
     @property
     def name(self) -> str:
+        """
+        Returns:
+            Name of the typed name.
+        """
         return self._name
 
-    @property
-    def type(self) -> str:
-        return self._type
+    # type seems to be always empty
+    # @property
+    # def type(self) -> str:
+    # return self._type

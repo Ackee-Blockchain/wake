@@ -89,6 +89,7 @@ class InheritanceSpecifier(SolidityAbc):
             ```solidity
             contract B is A(0x1234567890123456789012345678901234567890) {}
             ```
+
         Returns:
             IR node representing the base contract name.
         """
@@ -98,12 +99,12 @@ class InheritanceSpecifier(SolidityAbc):
     def arguments(self) -> Optional[List[ExpressionAbc]]:
         """
         !!! warning
-            Is `None` when there are no curly braces after the inheritance specifier name.
+            Is `None` when there are no round brackets after the inheritance specifier name.
             ```solidity
             contract B is A {}
             ```
 
-            Is an empty list when there are curly braces but no arguments.
+            Is an empty list when there are round brackets but no arguments.
             ```solidity
             contract B is A() {}
             ```
@@ -112,6 +113,7 @@ class InheritanceSpecifier(SolidityAbc):
             ```solidity
             contract B is A(0x1234567890123456789012345678901234567890) {}
             ```
+
         Returns:
             Arguments of the base constructor call, if provided.
         """

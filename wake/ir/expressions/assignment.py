@@ -28,7 +28,11 @@ AssignedVariablePath = Tuple[
 
 class Assignment(ExpressionAbc):
     """
-    TBD
+    !!! example
+        ```solidity
+        x = 1;
+        y = x = 1;
+        ```
     """
 
     _ast_node: SolcAssignment
@@ -61,14 +65,28 @@ class Assignment(ExpressionAbc):
 
     @property
     def left_expression(self) -> ExpressionAbc:
+        """
+        Must be L-value (something that can be assigned to).
+
+        Returns:
+            Left expression of the assignment.
+        """
         return self._left_expression
 
     @property
     def right_expression(self) -> ExpressionAbc:
+        """
+        Returns:
+            Right expression of the assignment.
+        """
         return self._right_expression
 
     @property
     def operator(self) -> AssignmentOperator:
+        """
+        Returns:
+            Operator used in the assignment.
+        """
         return self._operator
 
     @property
@@ -87,6 +105,11 @@ class Assignment(ExpressionAbc):
     @property
     @lru_cache(maxsize=2048)
     def assigned_variables(self) -> Tuple[Optional[Set[AssignedVariablePath]], ...]:
+        """
+        WARNING:
+            Is not considered stable and so is not exported in the documentation.
+        """
+
         def resolve_node(node: ExpressionAbc) -> Set[AssignedVariablePath]:
             if isinstance(node, Conditional):
                 return resolve_node(node.true_expression) | resolve_node(

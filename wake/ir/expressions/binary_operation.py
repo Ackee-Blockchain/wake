@@ -13,7 +13,10 @@ from .abc import ExpressionAbc
 
 class BinaryOperation(ExpressionAbc):
     """
-    TBD
+    !!! example
+        ```solidity
+        x + y
+        ```
     """
 
     _ast_node: SolcBinaryOperation
@@ -64,14 +67,26 @@ class BinaryOperation(ExpressionAbc):
 
     @property
     def operator(self) -> BinaryOpOperator:
+        """
+        Returns:
+            Operator of the binary operation.
+        """
         return self._operator
 
     @property
     def left_expression(self) -> ExpressionAbc:
+        """
+        Returns:
+            Left expression of the binary operation.
+        """
         return self._left_expression
 
     @property
     def right_expression(self) -> ExpressionAbc:
+        """
+        Returns:
+            Right expression of the binary operation.
+        """
         return self._right_expression
 
     @property
@@ -87,6 +102,29 @@ class BinaryOperation(ExpressionAbc):
 
     @property
     def function(self) -> Optional[FunctionDefinition]:
+        """
+        Is not `None` if the binary operation operates on user-defined value types with custom operators.
+
+        !!! example
+            The binary operation `a + b` on line 11 of the following example references the function `add` on line 6:
+            ```solidity linenums="1"
+            pragma solidity ^0.8.19;
+
+            type Int is int;
+            using {add as +} for Int global;
+
+            function add(Int a, Int b) pure returns (Int) {
+                return Int.wrap(Int.unwrap(a) + Int.unwrap(b));
+            }
+
+            function test(Int a, Int b) pure returns (Int) {
+                return a + b; // Equivalent to add(a, b)
+            }
+            ```
+
+        Returns:
+            Function representing the user-defined operator.
+        """
         if self._function_id is None:
             return None
         node = self._reference_resolver.resolve_node(

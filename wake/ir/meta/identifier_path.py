@@ -77,9 +77,7 @@ class IdentifierPathPart:
     @property
     def byte_location(self) -> Tuple[int, int]:
         """
-        The start and end byte offsets of this identifier path part in the source file. `{node}.byte_location[0]` is the start byte offset, `{node}.byte_location[1]` is the end byte offset.
 
-        `{node}.byte_location[1]` is always greater than or equal to `{node}.byte_location[0]`.
         Returns:
             Tuple of the start and end byte offsets of this node in the source file.
         """
@@ -89,7 +87,7 @@ class IdentifierPathPart:
     def source_unit(self) -> SourceUnit:
         """
         Returns:
-            [source unit][wake.ir.meta.source_unit.SourceUnit] that contains this node.
+            Source unit that contains this node.
         """
         return self._source_unit
 
@@ -98,6 +96,7 @@ class IdentifierPathPart:
         """
         !!! example
             `Contract` or `Event` in `Contract.Event`.
+
         Returns:
             Name of the identifier path part as it appears in the source code.
         """
@@ -113,6 +112,7 @@ class IdentifierPathPart:
             ```solidity
             import * as Utils from "./Utils.sol";
             ```
+
         Returns:
             Declaration referenced by this identifier path part.
         """
@@ -282,6 +282,7 @@ class IdentifierPath(SolidityAbc):
         """
         Parameters:
             byte_offset: Byte offset in the source code.
+
         Returns:
             Identifier path part at the given byte offset, if any.
         """

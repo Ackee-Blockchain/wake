@@ -1,19 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Iterator, Union
+from typing import TYPE_CHECKING, Iterator
 
-from wake.ir.ast import (
-    SolcYulExpressionStatement,
-    SolcYulFunctionCall,
-    SolcYulIdentifier,
-    SolcYulLiteral,
-)
+from wake.ir.ast import SolcYulExpressionStatement, SolcYulFunctionCall
 from wake.ir.utils import IrInitTuple
 
 from .abc import YulAbc, YulStatementAbc
 from .function_call import YulFunctionCall
-from .identifier import YulIdentifier
-from .literal import YulLiteral
 
 if TYPE_CHECKING:
     from .block import YulBlock
@@ -21,11 +14,18 @@ if TYPE_CHECKING:
 
 class YulExpressionStatement(YulStatementAbc):
     """
-    TBD
+    The underlying expression can only be a [YulFunctionCall][wake.ir.yul.function_call.YulFunctionCall].
+
+    !!! example
+        ```solidity
+        assembly {
+            stop()
+        }
+        ```
     """
 
     _parent: YulBlock
-    _expression: Union[YulFunctionCall, YulIdentifier, YulLiteral]
+    _expression: YulFunctionCall
 
     def __init__(
         self,
@@ -34,18 +34,10 @@ class YulExpressionStatement(YulStatementAbc):
         parent: YulAbc,
     ):
         super().__init__(init, expression_statement, parent)
-        if isinstance(expression_statement.expression, SolcYulFunctionCall):
-            self._expression = YulFunctionCall(
-                init, expression_statement.expression, self
-            )
-        elif isinstance(expression_statement.expression, SolcYulIdentifier):
-            self._expression = YulIdentifier(
-                init, expression_statement.expression, self
-            )
-        elif isinstance(expression_statement.expression, SolcYulLiteral):
-            self._expression = YulLiteral(init, expression_statement.expression, self)
-        else:
-            assert False, f"Unexpected type: {type(expression_statement.expression)}"
+        assert isinstance(
+            expression_statement.expression, SolcYulFunctionCall
+        ), f"Unexpected type: {type(expression_statement.expression)}"
+        self._expression = YulFunctionCall(init, expression_statement.expression, self)
 
     def __iter__(self) -> Iterator[YulAbc]:
         yield self
@@ -53,8 +45,16 @@ class YulExpressionStatement(YulStatementAbc):
 
     @property
     def parent(self) -> YulBlock:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
-    def expression(self) -> Union[YulFunctionCall, YulIdentifier, YulLiteral]:
+    def expression(self) -> YulFunctionCall:
+        """
+        Returns:
+            Underlying expression.
+        """
         return self._expression

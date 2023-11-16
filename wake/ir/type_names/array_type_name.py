@@ -25,18 +25,18 @@ class ArrayTypeName(TypeNameAbc):
         An array type name can be used:
 
         - inside a [VariableDeclaration][wake.ir.declarations.variable_declaration.VariableDeclaration]:
-            - `:::solidity bool[]` in line 1,
-            - `:::solidity int[10][20]` in line 11,
-            - `:::solidity string[10]` in line 12,
-            - `:::solidity address[]` in line 16,
+            - `:::solidity bool[]` on line 1,
+            - `:::solidity int[10][20]` on line 11,
+            - `:::solidity string[10]` on line 12,
+            - `:::solidity address[]` on line 16,
         - inside a [NewExpression][wake.ir.expressions.new_expression.NewExpression]:
-            - `:::solidity address[]` in line 16,
+            - `:::solidity address[]` on line 16,
         - inside a [UsingForDirective][wake.ir.meta.using_for_directive.UsingForDirective]:
-            - `:::solidity bool[]` in line 8,
+            - `:::solidity bool[]` on line 8,
         - inside an [ArrayTypeName][wake.ir.type_names.array_type_name.ArrayTypeName]:
-            - `:::solidity int[10]` in line 11,
+            - `:::solidity int[10]` on line 11,
         - inside a [Mapping][wake.ir.type_names.mapping.Mapping]:
-            - `:::solidity C[]` in line 13.
+            - `:::solidity C[]` on line 13.
 
         ```solidity linenums="1"
         function or(bool[] memory arr) pure returns(bool) {
@@ -114,6 +114,7 @@ class ArrayTypeName(TypeNameAbc):
             `uint8[2]` has `uint8` ([ElementaryTypeName][wake.ir.type_names.elementary_type_name.ElementaryTypeName]) as a base type.
 
             `uint8[2][3]` has `uint8[2]` ([ArrayTypeName][wake.ir.type_names.array_type_name.ArrayTypeName]) as a base type.
+
         Returns:
             Type name IR node describing the base type.
         """
@@ -123,6 +124,7 @@ class ArrayTypeName(TypeNameAbc):
     def length(self) -> Optional[ExpressionAbc]:
         """
         Returns an expression as present in the source code.
+
         Returns:
             Expression defining the length of the array.
         """

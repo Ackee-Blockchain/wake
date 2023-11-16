@@ -68,6 +68,7 @@ class UncheckedBlock(StatementAbc):
     def statements(self) -> Tuple[StatementAbc, ...]:
         """
         Can be empty.
+
         Returns:
             Statements in the block.
         """

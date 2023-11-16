@@ -132,6 +132,9 @@ class StatementAbc(SolidityAbc, ABC):
     @abstractmethod
     def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
         """
+        WARNING:
+            Is not considered stable and so is not exported in the documentation.
+
         Returns:
             Set of child IR nodes (including `self`) that modify the blockchain state and flags describing how the state is modified.
         """
@@ -148,6 +151,7 @@ class StatementAbc(SolidityAbc, ABC):
     def documentation(self) -> Optional[str]:
         """
         Statement documentation strings should be placed above the statement.
+
         Returns:
             [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation string, if any.
         """

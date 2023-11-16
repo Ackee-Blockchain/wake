@@ -37,27 +37,13 @@ if TYPE_CHECKING:
 
 class YulBlock(YulStatementAbc):
     """
-    TBD
+    Block statements group multiple statements into a single block.
     """
 
     _parent: Union[
         InlineAssembly, YulBlock, YulForLoop, YulFunctionDefinition, YulIf, YulCase
     ]
-    _statements: List[
-        Union[
-            YulAssignment,
-            "YulBlock",
-            YulBreak,
-            YulContinue,
-            YulExpressionStatement,
-            YulLeave,
-            YulForLoop,
-            YulFunctionDefinition,
-            YulIf,
-            YulSwitch,
-            YulVariableDeclaration,
-        ]
-    ]
+    _statements: List[YulStatementAbc]
 
     def __init__(
         self,
@@ -115,25 +101,18 @@ class YulBlock(YulStatementAbc):
     ) -> Union[
         InlineAssembly, YulBlock, YulForLoop, YulFunctionDefinition, YulIf, YulCase
     ]:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
     def statements(
         self,
-    ) -> Tuple[
-        Union[
-            YulAssignment,
-            "YulBlock",
-            YulBreak,
-            YulContinue,
-            YulExpressionStatement,
-            YulLeave,
-            YulForLoop,
-            YulFunctionDefinition,
-            YulIf,
-            YulSwitch,
-            YulVariableDeclaration,
-        ],
-        ...,
-    ]:
+    ) -> Tuple[YulStatementAbc, ...]:
+        """
+        Returns:
+            Statements contained in this block.
+        """
         return tuple(self._statements)

@@ -21,7 +21,23 @@ if TYPE_CHECKING:
 
 class YulAssignment(YulStatementAbc):
     """
-    TBD
+    !!! important
+        Should not be confused with `:::solidity let a, b := foo()` which is a [YulVariableDeclaration][wake.ir.yul.variable_declaration.YulVariableDeclaration].
+
+    !!! example
+        `:::solidity a, b := foo()` in the following example:
+
+        ```solidity
+        uint a;
+        uint b;
+        assembly {
+            function foo() -> x, y {
+                x := 1
+                y := 2
+            }
+            a, b := foo()
+        }
+        ```
     """
 
     _parent: YulBlock
@@ -53,12 +69,24 @@ class YulAssignment(YulStatementAbc):
 
     @property
     def parent(self) -> YulBlock:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
     def value(self) -> Union[YulFunctionCall, YulIdentifier, YulLiteral]:
+        """
+        Returns:
+            Value that is assigned to the variables.
+        """
         return self._value
 
     @property
     def variable_names(self) -> Tuple[YulIdentifier, ...]:
+        """
+        Returns:
+            Identifiers of variables that are assigned to in the order they appear in the source code.
+        """
         return tuple(self._variable_names)

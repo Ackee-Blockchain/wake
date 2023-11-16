@@ -93,13 +93,31 @@ class SolcConfig(WakeConfigModel):
             ]
         )
     )
+    """
+    Solidity files in these paths are excluded from compilation unless imported from a non-excluded file.
+    """
     include_paths: FrozenSet[Path] = Field(
         default_factory=lambda: frozenset([Path.cwd() / "node_modules"])
     )
+    """
+    Paths where to search for Solidity files imported using direct (non-relative) import paths.
+    """
     optimizer: SolcOptimizerConfig = Field(default_factory=SolcOptimizerConfig)
+    """
+    Optimizer config options.
+    """
     remappings: List[SolcRemapping] = []
+    """
+    Remappings to apply during compilation.
+    """
     target_version: Optional[SolidityVersion] = None
+    """
+    Target Solidity version to use for all files during compilation.
+    """
     via_IR: Optional[bool] = None
+    """
+    Use new IR-based compiler pipeline.
+    """
 
     @validator("allow_paths", pre=True, each_item=True)
     def set_allow_path(cls, v):
@@ -132,14 +150,23 @@ class SolcConfig(WakeConfigModel):
 
 class FindReferencesConfig(WakeConfigModel):
     include_declarations: bool = False
+    """
+    Include declarations in the results.
+    """
 
 
 class CodeLensConfig(WakeConfigModel):
     enable: bool = True
+    """
+    Show code lenses.
+    """
 
 
 class DetectorsLspConfig(WakeConfigModel):
     enable: bool = True
+    """
+    Run detectors in LSP.
+    """
 
 
 class CompilerConfig(WakeConfigModel):
@@ -148,7 +175,13 @@ class CompilerConfig(WakeConfigModel):
 
 class DetectorsConfig(WakeConfigModel):
     exclude: FrozenSet[str] = frozenset()
+    """
+    Names of detectors that should not be loaded.
+    """
     only: Optional[FrozenSet[str]] = None
+    """
+    Names of detectors that should only be loaded.
+    """
     ignore_paths: FrozenSet[Path] = Field(
         default_factory=lambda: frozenset(
             [
@@ -158,6 +191,10 @@ class DetectorsConfig(WakeConfigModel):
             ]
         )
     )
+    """
+    Detections in these paths must be ignored under all circumstances.
+    Useful for ignoring detections in Solidity test files.
+    """
     exclude_paths: FrozenSet[Path] = Field(
         default_factory=lambda: frozenset(
             [
@@ -167,6 +204,10 @@ class DetectorsConfig(WakeConfigModel):
             ]
         )
     )
+    """
+    Detections in these paths are ignored unless linked to a (sub)detection in a non-excluded path.
+    Useful for ignoring detections in dependencies.
+    """
 
     @validator("ignore_paths", pre=True, each_item=True)
     def set_ignore_paths(cls, v):
@@ -179,38 +220,73 @@ class DetectorsConfig(WakeConfigModel):
 
 # namespace for detector configs
 class DetectorConfig(WakeConfigModel, extra=Extra.allow):
-    pass
+    """
+    Namespace for detector-specific config options.
+    Each attribute should be named after the detector name and hold a dictionary with string keys matching the Click option names.
+    """
 
 
 class LspConfig(WakeConfigModel):
     compilation_delay: float = 0
+    """
+    Delay to wait after a file content change before recompiling.
+    """
     code_lens: CodeLensConfig = Field(default_factory=CodeLensConfig)
+    """
+    Code lens config options.
+    """
     detectors: DetectorsLspConfig = Field(default_factory=DetectorsLspConfig)
+    """
+    Detectors config options specific to LSP.
+    """
     find_references: FindReferencesConfig = Field(default_factory=FindReferencesConfig)
+    """
+    Find references config options.
+    """
 
 
 class ControlFlowGraphConfig(WakeConfigModel):
+    """
+    Unstable, may change in the future.
+    """
+
     direction: GraphsDirection = GraphsDirection.TopBottom
     vscode_urls: bool = True
 
 
 class ImportsGraphConfig(WakeConfigModel):
+    """
+    Unstable, may change in the future.
+    """
+
     direction: GraphsDirection = GraphsDirection.TopBottom
     imports_direction: ImportsDirection = ImportsDirection.ImportedToImporting
     vscode_urls: bool = True
 
 
 class InheritanceGraphConfig(WakeConfigModel):
+    """
+    Unstable, may change in the future.
+    """
+
     direction: GraphsDirection = GraphsDirection.BottomTop
     vscode_urls: bool = True
 
 
 class LinearizedInheritanceGraphConfig(WakeConfigModel):
+    """
+    Unstable, may change in the future.
+    """
+
     direction: GraphsDirection = GraphsDirection.LeftRight
     vscode_urls: bool = True
 
 
 class GeneratorConfig(WakeConfigModel):
+    """
+    Unstable, may change in the future.
+    """
+
     control_flow_graph: ControlFlowGraphConfig = Field(
         default_factory=ControlFlowGraphConfig
     )
@@ -230,26 +306,53 @@ class AnvilConfig(WakeConfigModel):
     cmd_args: str = (
         "--prune-history 100 --transaction-block-keeper 10 --steps-tracing --silent"
     )
+    """
+    Command line arguments to pass to `anvil`.
+    """
 
 
 class GanacheConfig(WakeConfigModel):
     cmd_args: str = "-k istanbul -q"
+    """
+    Command line arguments to pass to `ganache`.
+    """
 
 
 class HardhatConfig(WakeConfigModel):
     cmd_args: str = ""
+    """
+    Command line arguments to pass to `npx hardhat node`.
+    """
 
 
 class TestingConfig(WakeConfigModel):
     cmd: str = "anvil"
+    """
+    Which development chain to use for testing. Should be one of `anvil`, `ganache` or `hardhat`.
+    """
     anvil: AnvilConfig = Field(default_factory=AnvilConfig)
+    """
+    Anvil-specific config options.
+    """
     ganache: GanacheConfig = Field(default_factory=GanacheConfig)
+    """
+    Ganache-specific config options.
+    """
     hardhat: HardhatConfig = Field(default_factory=HardhatConfig)
+    """
+    Hardhat-specific config options.
+    """
 
 
 class DeploymentConfig(WakeConfigModel):
     confirm_transactions: bool = True
+    """
+    Require confirmation for each transaction.
+    """
     silent: bool = False
+    """
+    Do not require confirmation for each transaction and do not print transaction status.
+    """
 
 
 class GeneralConfig(WakeConfigModel):
@@ -265,18 +368,33 @@ class GeneralConfig(WakeConfigModel):
             "error",
         ]
     )
+    """
+    Options to include in call traces.
+    """
     json_rpc_timeout: float = 15
+    """
+    Timeout applied to JSON-RPC requests.
+    """
     link_format: str = "vscode://file/{path}:{line}:{col}"
+    """
+    Format of links used in detectors and printers.
+    """
 
 
 # currently unused
 class PrintersConfig(WakeConfigModel):
-    pass
+    """
+    Holds general printer config options for all printers.
+    Currently unused.
+    """
 
 
 # namespace for printer configs
 class PrinterConfig(WakeConfigModel, extra=Extra.allow):
-    pass
+    """
+    Namespace for printer-specific config options.
+    Each attribute should be named after the printer name and hold a dictionary with string keys matching the Click option names.
+    """
 
 
 class TopLevelConfig(WakeConfigModel):

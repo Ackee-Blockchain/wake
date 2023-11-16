@@ -114,6 +114,7 @@ class VariableDeclarationStatement(StatementAbc):
         """
         Does not need to be a [TupleExpression][wake.ir.expressions.tuple_expression.TupleExpression] when there is more than one variable declared.
         Can also be a [FunctionCall][wake.ir.expressions.function_call.FunctionCall] returning a tuple.
+
         Returns:
             Initial value assigned to the declared variables (if any).
         """

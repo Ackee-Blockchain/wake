@@ -132,6 +132,7 @@ class EventDefinition(DeclarationAbc):
             ```solidity
             event Transfer(address indexed from, address indexed to, uint256 value) anonymous;
             ```
+
         Returns:
             `True` if the event is anonymous, `False` otherwise.
         """
@@ -149,6 +150,7 @@ class EventDefinition(DeclarationAbc):
     def documentation(self) -> Optional[Union[StructuredDocumentation, str]]:
         """
         Of [StructuredDocumentation][wake.ir.meta.structured_documentation.StructuredDocumentation] type since Solidity 0.6.3.
+
         Returns:
             [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation string, if any.
         """

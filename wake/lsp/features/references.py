@@ -64,9 +64,9 @@ def _generate_reference_location(
 ) -> Location:
     path = reference.source_unit.file
     if isinstance(reference, MemberAccess):
-        location = reference.member_byte_location
+        location = reference.member_location
     elif isinstance(reference, ExternalReference):
-        location = reference.identifier_byte_location
+        location = reference.identifier_location
     elif isinstance(reference, DeclarationAbc):
         location = reference.name_location
     else:
@@ -152,6 +152,7 @@ async def references(
     refs = []
     if isinstance(node, set):
         for n in node:
+            assert isinstance(n, DeclarationAbc)
             for reference in n.get_all_references(
                 context.config.lsp.find_references.include_declarations
             ):

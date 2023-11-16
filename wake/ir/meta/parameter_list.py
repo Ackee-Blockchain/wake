@@ -27,20 +27,20 @@ class ParameterList(SolidityAbc):
         A parameter list can be used:
 
         - in an [ErrorDefinition][wake.ir.declarations.error_definition.ErrorDefinition]:
-            - `:::solidity (uint requested, uint available)` in line 2,
+            - `:::solidity (uint requested, uint available)` on line 2,
         - in an [EventDefinition][wake.ir.declarations.event_definition.EventDefinition]:
-            - `:::solidity (address indexed previousOwner, address indexed newOwner)` in line 3,
+            - `:::solidity (address indexed previousOwner, address indexed newOwner)` on line 3,
         - in a [FunctionDefinition][wake.ir.declarations.function_definition.FunctionDefinition]:
-            - `:::solidity (uint a, uint b)` in line 12 as function parameters,
-            - `:::solidity (uint256)` in line 12 as function return parameters,
+            - `:::solidity (uint a, uint b)` on line 12 as function parameters,
+            - `:::solidity (uint256)` on line 12 as function return parameters,
         - in a [FunctionTypeName][wake.ir.type_names.function_type_name.FunctionTypeName]:
-            - `:::solidity (string memory, uint)` in line 5 as function type name parameters,
-            - `:::solidity (bool)` in line 5 as function type name return parameters,
+            - `:::solidity (string memory, uint)` on line 5 as function type name parameters,
+            - `:::solidity (bool)` on line 5 as function type name return parameters,
         - in a [ModifierDefinition][wake.ir.declarations.modifier_definition.ModifierDefinition]:
-            - `:::solidity (uint x)` in line 7,
+            - `:::solidity (uint x)` on line 7,
         - in a [TryCatchClause][wake.ir.meta.try_catch_clause.TryCatchClause]:
-            - `:::solidity (bool success)` in line 17 as try clause parameters,
-            - `:::solidity (string memory reason)` in line 19 as catch clause parameters.
+            - `:::solidity (bool success)` on line 17 as try clause parameters,
+            - `:::solidity (string memory reason)` on line 19 as catch clause parameters.
 
         ```solidity linenums="1"
         contract C {
@@ -116,6 +116,7 @@ class ParameterList(SolidityAbc):
     def parameters(self) -> Tuple[VariableDeclaration, ...]:
         """
         Can be empty.
+
         Returns:
             Variable declarations of the parameter list.
         """

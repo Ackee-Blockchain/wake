@@ -313,6 +313,7 @@ class ModifierDefinition(DeclarationAbc):
                 }
             }
             ```
+
         Returns:
             List of base modifiers overridden by this modifier.
         """
@@ -337,6 +338,7 @@ class ModifierDefinition(DeclarationAbc):
     def documentation(self) -> Optional[Union[StructuredDocumentation, str]]:
         """
         Of [StructuredDocumentation][wake.ir.meta.structured_documentation.StructuredDocumentation] type since Solidity 0.6.3.
+
         Returns:
             [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation string, if any.
         """

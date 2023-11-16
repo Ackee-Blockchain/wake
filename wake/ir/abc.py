@@ -90,10 +90,6 @@ class IrAbc(ABC):
     @property
     def byte_location(self) -> Tuple[int, int]:
         """
-        The start and end byte offsets of this node in the source file. `{node}.byte_location[0]` is the start byte offset, `{node}.byte_location[1]` is the end byte offset.
-
-        `{node}.byte_location[1]` is always greater than or equal to `{node}.byte_location[0]`.
-
         The byte location of a child node is typically a subrange of the byte location of its parent node.
 
         !!! info
@@ -111,6 +107,7 @@ class IrAbc(ABC):
     def source(self) -> str:
         """
         UTF-8 decoded source code from the [source file][wake.ir.meta.source_unit.SourceUnit.file] at the [byte offset][wake.ir.abc.IrAbc.byte_location] of this node.
+
         Returns:
             Solidity or Yul source code corresponding to this node.
         """
@@ -120,7 +117,7 @@ class IrAbc(ABC):
     def source_unit(self) -> SourceUnit:
         """
         Returns:
-            [source unit][wake.ir.meta.source_unit.SourceUnit] that contains this node.
+            Source unit that contains this node.
         """
         return self._source_unit
 

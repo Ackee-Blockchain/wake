@@ -173,6 +173,7 @@ class SourceUnit(SolidityAbc):
     def file_source(self) -> bytes:
         """
         As opposed to [source][wake.ir.abc.IrAbc.source], this property returns the whole file source.
+
         Returns:
             Source code of the file including trailing newlines and license string.
         """
@@ -186,6 +187,7 @@ class SourceUnit(SolidityAbc):
             ```solidity
             // SPDX-License-Identifier: MIT
             ```
+
         Returns:
             License string of the file, if any.
         """
@@ -219,6 +221,7 @@ class SourceUnit(SolidityAbc):
     def declared_variables(self) -> Tuple[VariableDeclaration, ...]:
         """
         Should only return constants.
+
         Returns:
             Top-level variable declarations present in the file.
         """
@@ -236,6 +239,7 @@ class SourceUnit(SolidityAbc):
     def functions(self) -> Tuple[FunctionDefinition, ...]:
         """
         Should only return [FunctionDefinitions][wake.ir.declarations.function_definition.FunctionDefinition] of the [FunctionKind.FREE_FUNCTION][wake.ir.enums.FunctionKind.FREE_FUNCTION] kind.
+
         Returns:
             Top-level function definitions present in the file.
         """
@@ -297,6 +301,7 @@ class SourceUnit(SolidityAbc):
             if "0.8.0" in node.version_ranges:
                 print("The given file can be compiled with solc 0.8.0")
             ```
+
         Returns:
             Object listing all `solc` versions that can be used to compile the file containing this node.
         """
@@ -316,6 +321,7 @@ class SourceUnit(SolidityAbc):
     def file(self) -> Path:
         """
         The absolute path to the source file that is represented by this node.
+
         Returns:
             Absolute path to the file containing this node.
         """
@@ -324,7 +330,7 @@ class SourceUnit(SolidityAbc):
     def declarations_iter(self) -> Iterator[DeclarationAbc]:
         """
         Yields:
-            All declarations ([DeclarationAbc][wake.ir.declarations.abc.DeclarationAbc]) present in the file (recursively).
+            All declarations present in the file (recursively).
         """
         yield from self.declared_variables
         yield from self.enums
@@ -363,4 +369,5 @@ class SourceUnit(SolidityAbc):
             + 1
         )
         # TODO line col zero-indexed or one-indexed?
+        # currently returning one-indexed
         return line, col

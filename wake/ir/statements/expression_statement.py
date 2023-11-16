@@ -36,34 +36,36 @@ if TYPE_CHECKING:
 class ExpressionStatement(StatementAbc):
     """
     !!! example
-        The underlying expression can be:
+        The underlying expression can be any expression ([ExpressionAbc][wake.ir.expressions.abc.ExpressionAbc]):
 
         - an [Assignment][wake.ir.expressions.assignment.Assignment]:
-            - `:::solidity i = 1` in line 6,
+            - `:::solidity i = 1` on line 6,
         - a [BinaryOperation][wake.ir.expressions.binary_operation.BinaryOperation]:
-            - `:::solidity arr[0] + arr[1]` in line 11,
+            - `:::solidity arr[0] + arr[1]` on line 11,
         - a [Conditional][wake.ir.expressions.conditional.Conditional]:
-            - `:::solidity arr[i] >= arr[i - 1] ? x++ : x--` in line 7,
+            - `:::solidity arr[i] >= arr[i - 1] ? x++ : x--` on line 7,
+        - an [ElementaryTypeNameExpression][wake.ir.expressions.elementary_type_name_expression.ElementaryTypeNameExpression]:
+            - `:::solidity int` on line 18,
         - a [FunctionCall][wake.ir.expressions.function_call.FunctionCall]:
-            - `:::solidity require(arr.length > 1)` in line 3,
+            - `:::solidity require(arr.length > 1)` on line 3,
         - a [FunctionCallOptions][wake.ir.expressions.function_call_options.FunctionCallOptions]:
-            - `:::solidity payable(msg.sender).call{value: 1}` in line 17,
+            - `:::solidity payable(msg.sender).call{value: 1}` on line 17,
         - an [Identifier][wake.ir.expressions.identifier.Identifier]:
-            - `:::solidity this` in line 16,
+            - `:::solidity this` on line 16,
         - an [IndexAccess][wake.ir.expressions.index_access.IndexAccess]:
-            - `:::solidity arr[0]` in line 9,
+            - `:::solidity arr[0]` on line 9,
         - an [IndexRangeAccess][wake.ir.expressions.index_range_access.IndexRangeAccess]:
-            - `:::solidity arr[0:1]` in line 10,
+            - `:::solidity arr[0:1]` on line 10,
         - a [Literal][wake.ir.expressions.literal.Literal]:
-            - `:::solidity 10` in line 12,
+            - `:::solidity 10` on line 12,
         - a [MemberAccess][wake.ir.expressions.member_access.MemberAccess]:
-            - `:::solidity arr.length` in line 13,
+            - `:::solidity arr.length` on line 13,
         - a [NewExpression][wake.ir.expressions.new_expression.NewExpression]:
-            - `:::solidity new uint[]` in line 14,
+            - `:::solidity new uint[]` on line 14,
         - a [TupleExpression][wake.ir.expressions.tuple_expression.TupleExpression]:
-            - `:::solidity (arr)` in line 15,
+            - `:::solidity (arr)` on line 15,
         - an [UnaryOperation][wake.ir.expressions.unary_operation.UnaryOperation]:
-            - `:::solidity i++` in line 6.
+            - `:::solidity i++` on line 6.
 
         ```solidity linenums="1"
         contract C {
@@ -83,6 +85,7 @@ class ExpressionStatement(StatementAbc):
                 (arr);
                 this; // silence state mutability warning without generating bytecode
                 payable(msg.sender).call{value: 1};
+                int;
             }
         }
         ```
@@ -98,21 +101,7 @@ class ExpressionStatement(StatementAbc):
         WhileStatement,
     ]
 
-    __expression: Union[
-        Assignment,
-        BinaryOperation,
-        Conditional,
-        FunctionCall,
-        FunctionCallOptions,
-        Identifier,
-        IndexAccess,
-        IndexRangeAccess,
-        Literal,
-        MemberAccess,
-        NewExpression,
-        TupleExpression,
-        UnaryOperation,
-    ]
+    __expression: ExpressionAbc
 
     def __init__(
         self,
@@ -122,24 +111,6 @@ class ExpressionStatement(StatementAbc):
     ):
         super().__init__(init, expression_statement, parent)
         expr = ExpressionAbc.from_ast(init, expression_statement.expression, self)
-        assert isinstance(
-            expr,
-            (
-                Assignment,
-                BinaryOperation,
-                Conditional,
-                FunctionCall,
-                FunctionCallOptions,
-                Identifier,
-                IndexAccess,
-                IndexRangeAccess,
-                Literal,
-                MemberAccess,
-                NewExpression,
-                TupleExpression,
-                UnaryOperation,
-            ),
-        )
         self._expression = expr
 
     def __iter__(self) -> Iterator[IrAbc]:
@@ -166,21 +137,7 @@ class ExpressionStatement(StatementAbc):
     @property
     def expression(
         self,
-    ) -> Union[
-        Assignment,
-        BinaryOperation,
-        Conditional,
-        FunctionCall,
-        FunctionCallOptions,
-        Identifier,
-        IndexAccess,
-        IndexRangeAccess,
-        Literal,
-        MemberAccess,
-        NewExpression,
-        TupleExpression,
-        UnaryOperation,
-    ]:
+    ) -> ExpressionAbc:
         """
         Returns:
             Expression of the expression statement.

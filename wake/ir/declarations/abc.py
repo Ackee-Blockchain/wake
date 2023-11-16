@@ -143,6 +143,7 @@ class DeclarationAbc(SolidityAbc, ABC):
                 }
             }
             ```
+
         Returns:
             Canonical name of the declared object.
         """
@@ -161,6 +162,7 @@ class DeclarationAbc(SolidityAbc, ABC):
                 return a + b;
             }
             ```
+
         Returns:
             String representation of the declaration.
         """
@@ -170,6 +172,7 @@ class DeclarationAbc(SolidityAbc, ABC):
     def name_location(self) -> Tuple[int, int]:
         """
         Similar to [byte_location][wake.ir.abc.IrAbc.byte_location], but returns the location of the declaration name in the source code.
+
         Returns:
             Tuple of the start and end byte offsets of the declaration name in the source code.
         """

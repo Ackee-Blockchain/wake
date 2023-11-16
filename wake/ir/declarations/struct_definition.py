@@ -111,6 +111,7 @@ class StructDefinition(DeclarationAbc):
     def documentation(self) -> Optional[StructuredDocumentation]:
         """
         Added in Solidity 0.8.20.
+
         Returns:
             [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation string, if any.
         """

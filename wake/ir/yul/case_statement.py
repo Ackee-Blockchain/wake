@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Iterator, Union
 
-import typing_extensions
+from typing_extensions import Literal
 
 from wake.ir.ast import SolcYulCase
 
@@ -17,12 +17,31 @@ if TYPE_CHECKING:
 
 class YulCase(YulAbc):
     """
-    TBD
+    Represents a single case in a [YulSwitch][wake.ir.yul.switch.YulSwitch] statement.
+
+    !!! example
+        Lines 4-6, 7-9, and 10-12 in the following example:
+
+        ```solidity linenums="1"
+        uint x = foo();
+        assembly {
+            switch x
+            case 0 {
+                // ...
+            }
+            case 1 {
+                // ...
+            }
+            default {
+                // ...
+            }
+        }
+        ```
     """
 
     _parent: YulSwitch
     _body: YulBlock
-    _value: Union[typing_extensions.Literal["default"], YulLiteral]
+    _value: Union[Literal["default"], YulLiteral]
 
     def __init__(self, init: IrInitTuple, case_: SolcYulCase, parent: YulAbc):
         super().__init__(init, case_, parent)
@@ -40,12 +59,28 @@ class YulCase(YulAbc):
 
     @property
     def parent(self) -> YulSwitch:
+        """
+        Returns:
+            Parent IR node.
+        """
         return self._parent
 
     @property
     def body(self) -> YulBlock:
+        """
+        Returns:
+            Body of the case.
+        """
         return self._body
 
     @property
-    def value(self) -> Union[typing_extensions.Literal["default"], YulLiteral]:
+    def value(self) -> Union[Literal["default"], YulLiteral]:
+        """
+        May be either a [YulLiteral][wake.ir.yul.literal.YulLiteral] or the string `default`.
+        `default` is used for the default case when neither of the cases match. The default case
+        is optional.
+
+        Returns:
+            Value that is compared to the switch expression.
+        """
         return self._value

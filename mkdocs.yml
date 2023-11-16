@@ -97,9 +97,15 @@ nav:
       - wake.config:
           - data_model: 'api-reference/config/data-model.md'
           - wake_config: 'api-reference/config/wake-config.md'
+      - wake.compiler:
+          - build_data_model: 'api-reference/compiler/build-data-model.md'
+      - wake.core:
+          - solidity_version: 'api-reference/core/solidity-version.md'
+          - visitor: 'api-reference/core/visitor.md'
       - wake.detectors:
           - api: 'api-reference/detectors/api.md'
       - wake.ir:
+          - abc: 'api-reference/ir/abc.md'
           - declarations:
               - abc: 'api-reference/ir/declarations/abc.md'
               - contract_definition: 'api-reference/ir/declarations/contract-definition.md'
@@ -177,6 +183,7 @@ nav:
               - continue_statement: 'api-reference/ir/yul/continue-statement.md'
               - expression_statement: 'api-reference/ir/yul/expression-statement.md'
               - for_loop: 'api-reference/ir/yul/for-loop.md'
+              - function_call: 'api-reference/ir/yul/function-call.md'
               - function_definition: 'api-reference/ir/yul/function-definition.md'
               - identifier: 'api-reference/ir/yul/identifier.md'
               - if_statement: 'api-reference/ir/yul/if-statement.md'

@@ -12,7 +12,10 @@ from wake.ir.utils import IrInitTuple
 
 class UnaryOperation(ExpressionAbc):
     """
-    TBD
+    !!! example
+        ```solidity
+        -x
+        ```
     """
 
     _ast_node: SolcUnaryOperation
@@ -60,14 +63,26 @@ class UnaryOperation(ExpressionAbc):
 
     @property
     def operator(self) -> UnaryOpOperator:
+        """
+        Returns:
+            Operator of the unary operation.
+        """
         return self._operator
 
     @property
     def prefix(self) -> bool:
+        """
+        Returns:
+            `False` for `++` and `--` operators applied as postfix operators, `True` otherwise.
+        """
         return self._prefix
 
     @property
     def sub_expression(self) -> ExpressionAbc:
+        """
+        Returns:
+            Sub-expression the unary operator is applied to.
+        """
         return self._sub_expression
 
     @property
@@ -93,6 +108,32 @@ class UnaryOperation(ExpressionAbc):
 
     @property
     def function(self) -> Optional[FunctionDefinition]:
+        """
+        Is not `None` if the unary operation operates on user-defined value types with custom operators.
+
+        !!! note
+            Only `~` and `-` may be defined as user-defined unary operators.
+
+        !!! example
+            The unary operation `:::solidity ~a` on line 11 of the following example references the function `negate` on line 6:
+            ```solidity linenums="1"
+            pragma solidity ^0.8.19;
+
+            type Int is int;
+            using {negate as ~} for Int global;
+
+            function negate(Int a) pure returns (Int) {
+                return Int.wrap(-Int.unwrap(a));
+            }
+
+            function test(Int a) pure returns (Int) {
+                return ~a;
+            }
+            ```
+
+        Returns:
+            Function representing the user-defined operator.
+        """
         if self._function_id is None:
             return None
         node = self._reference_resolver.resolve_node(

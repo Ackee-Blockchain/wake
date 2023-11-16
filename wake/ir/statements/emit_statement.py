@@ -79,6 +79,7 @@ class EmitStatement(StatementAbc):
             ```solidity
             emit Transfer(msg.sender, to, amount)
             ```
+
         Returns:
             Expression representing the event call.
         """

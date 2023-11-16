@@ -25,11 +25,11 @@ class OverrideSpecifier(SolidityAbc):
         An override specifier can be used:
 
         - in a [FunctionDefinition][wake.ir.declarations.function_definition.FunctionDefinition]:
-            - `:::solidity override` in line 19,
+            - `:::solidity override` on line 19,
         - in a [ModifierDefinition][wake.ir.declarations.modifier_definition.ModifierDefinition]:
-            - `:::solidity override` in line 12,
+            - `:::solidity override` on line 12,
         - in a [VariableDeclaration][wake.ir.declarations.variable_declaration.VariableDeclaration]:
-            - `:::solidity override(IERC20)` in line 17.
+            - `:::solidity override(IERC20)` on line 17.
 
         ```solidity linenums="1"
         interface IERC20 {
@@ -96,7 +96,8 @@ class OverrideSpecifier(SolidityAbc):
     def overrides(self) -> Tuple[Union[IdentifierPath, UserDefinedTypeName], ...]:
         """
         !!! note
-            Is empty when there are no curly braces after the `:::solidity override` keyword.
+            Is empty when there are no round brackets after the `:::solidity override` keyword.
+
         Returns:
             Tuple of IR nodes referencing the contract or interface whose declaration is being overridden.
         """

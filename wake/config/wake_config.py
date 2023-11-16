@@ -37,6 +37,10 @@ class UnsupportedPlatformError(Exception):
 
 
 class WakeConfig:
+    """
+    Wake configuration class. This class is responsible for loading, storing and merging all Wake config options.
+    """
+
     __local_config_path: Path
     __project_root_path: Path
     __global_config_path: Path
@@ -51,6 +55,10 @@ class WakeConfig:
         local_config_path: Optional[Union[str, Path]] = None,
         project_root_path: Optional[Union[str, Path]] = None,
     ):
+        """
+        Initialize the `WakeConfig` class. If `project_root_path` is not provided, the current working directory is used.
+        If `local_config_path` is not provided, the `wake.toml` file in the project root directory is used.
+        """
         system = platform.system()
 
         try:
@@ -103,9 +111,17 @@ class WakeConfig:
         self.__config_raw = self.__config.dict(by_alias=True)
 
     def __str__(self) -> str:
+        """
+        Returns:
+            JSON representation of the config.
+        """
         return self.__config.json(by_alias=True, exclude_unset=True)
 
     def __repr__(self) -> str:
+        """
+        Returns:
+            String representation of the config.
+        """
         config_dict = reprlib.repr(self.__config_raw)
         return f"{self.__class__.__name__}.fromdict({config_dict}, config_path={repr(self.__local_config_path)}, project_root_path={repr(self.__project_root_path)})"
 
@@ -187,11 +203,16 @@ class WakeConfig:
     def fromdict(
         cls,
         config_dict: Dict[str, Any],
-        *_,
+        *,
         project_root_path: Optional[Union[str, Path]] = None,
     ) -> "WakeConfig":
         """
-        Build `WakeConfig` class from a dictionary and optional Wake root and project root paths.
+        Args:
+            config_dict: Dictionary containing the config options.
+            project_root_path: Path to the project root directory.
+
+        Returns:
+            Instance of the `WakeConfig` class with the provided config options.
         """
         instance = cls(project_root_path=project_root_path)
         with change_cwd(instance.project_root_path):
@@ -201,6 +222,10 @@ class WakeConfig:
         return instance
 
     def todict(self) -> Dict[str, Any]:
+        """
+        Returns:
+            Dictionary containing the config options.
+        """
         return self.__config_raw
 
     def update(
@@ -209,7 +234,14 @@ class WakeConfig:
         deleted_options: Iterable[Tuple[Union[int, str], ...]],
     ) -> Dict:
         """
-        Update the config with a new dictionary. Return `True` if the config was changed.
+        Update the config with a new dictionary.
+
+        Args:
+            config_dict: Dictionary containing the new config options.
+            deleted_options: Iterable of config option paths (in the form of tuples of string keys and integer indices) that should be deleted from the config (reset to their default values).
+
+        Returns:
+            Dictionary containing the modified config options.
         """
         with change_cwd(self.project_root_path):
             parsed_config = TopLevelConfig.parse_obj(config_dict)
@@ -250,9 +282,8 @@ class WakeConfig:
     def load_configs(self) -> None:
         """
         Clear any previous config options and load both the global config file `config.toml`
-        located in the Wake root directory and the project specific config file `wake.toml`
-        located in the project root directory. This is expected to be called right after `WakeConfig`
-        instantiation.
+        located in the Wake root directory and the project specific local config file.
+        Typically, this is expected to be called right after `WakeConfig` instantiation.
         """
         self.__loaded_files = set()
         with change_cwd(self.__project_root_path):
@@ -266,6 +297,9 @@ class WakeConfig:
         """
         Load config from the provided file path. Any already loaded config options are overridden by the options loaded
         from this file.
+
+        Args:
+            path: System path to the config file.
         """
         subconfigs_graph = nx.DiGraph()
         config_raw_copy = deepcopy(self.__config_raw)
@@ -282,123 +316,151 @@ class WakeConfig:
     @property
     def loaded_files(self) -> FrozenSet[Path]:
         """
-        Return frozenset of all loaded config file paths, including files that were loaded using the `subconfigs` config key.
+        Returns:
+            All loaded config files, including files that were loaded using the `subconfigs` config key.
         """
         return frozenset(self.__loaded_files)
 
     @property
     def local_config_path(self) -> Path:
         """
-        Return the system path to the local config file.
+        Returns:
+            System path to the local config file.
         """
         return self.__local_config_path
 
     @local_config_path.setter
     def local_config_path(self, path: Path) -> None:
         """
-        Set the system path to the local config file.
+        Args:
+            path: New system path to the local config file.
         """
         self.__local_config_path = path
 
     @property
     def global_config_path(self) -> Path:
         """
-        Return the system path to the global config file.
+        Returns:
+            System path to the global config file.
         """
         return self.__global_config_path
 
     @property
     def global_data_path(self) -> Path:
         """
-        Return the system path to the global data directory.
+        Returns:
+            System path to the global data directory.
         """
         return self.__global_data_path
 
     @property
     def project_root_path(self) -> Path:
         """
-        Return the system path of the currently open project.
+        Returns:
+            System path to the project root directory.
         """
         return self.__project_root_path
 
     @property
     def min_solidity_version(self) -> SolidityVersion:
+        """
+        Returns:
+            Minimum supported Solidity version.
+        """
         return SolidityVersion.fromstring("0.6.2")
 
     @property
     def max_solidity_version(self) -> SolidityVersion:
+        """
+        Returns:
+            Maximum supported Solidity version.
+        """
         return SolidityVersion.fromstring("0.8.23")
 
     @property
     def detectors(self) -> DetectorsConfig:
         """
-        Return general config options for all detectors.
+        Returns:
+            General config options for all detectors.
         """
         return self.__config.detectors
 
     @property
     def detector(self) -> DetectorConfig:
         """
-        Return per-detector config options.
+        Returns:
+            Per-detector config options.
         """
         return self.__config.detector
 
     @property
     def api_keys(self) -> Dict[str, str]:
+        """
+        Returns:
+            API keys for various services.
+        """
         return self.__config.api_keys
 
     @property
     def compiler(self) -> CompilerConfig:
         """
-        Return compiler-specific config options.
+        Returns:
+            Compiler config options.
         """
         return self.__config.compiler
 
     @property
     def generator(self) -> GeneratorConfig:
         """
-        Return config options specific to assets generated by Wake.
+        Returns:
+            Config options for specific to assets generated by Wake.
         """
         return self.__config.generator
 
     @property
     def lsp(self) -> LspConfig:
         """
-        Return LSP-specific config options.
+        Returns:
+            LSP config options.
         """
         return self.__config.lsp
 
     @property
     def testing(self) -> TestingConfig:
         """
-        Return testing framework-specific config options.
+        Returns:
+            Testing config options.
         """
         return self.__config.testing
 
     @property
     def deployment(self) -> DeploymentConfig:
         """
-        Return deployment-specific config options.
+        Returns:
+            Deployment config options.
         """
         return self.__config.deployment
 
     @property
     def general(self) -> GeneralConfig:
         """
-        Return general config options.
+        Returns:
+            General config options.
         """
         return self.__config.general
 
     @property
     def printers(self) -> PrintersConfig:
         """
-        Return general config options for all printers.
+        Returns:
+            General config options for all printers.
         """
         return self.__config.printers
 
     @property
     def printer(self) -> PrinterConfig:
         """
-        Return per-printer config options.
+        Returns:
+            Per-printer config options.
         """
         return self.__config.printer

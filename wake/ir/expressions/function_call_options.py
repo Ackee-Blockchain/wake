@@ -11,7 +11,17 @@ from wake.ir.utils import IrInitTuple
 
 class FunctionCallOptions(ExpressionAbc):
     """
-    TBD
+    Sets `gas`, `value` and `salt` function call options.
+
+    Serves as a replacement for old-style syntax, e.g. `:::solidity this.foo.gas(1000).value(1)()`.
+
+    !!! example
+        `:::solidity this.foo{gas: 1000, value: 1}` in the following example:
+        ```solidity
+        function foo() public {
+            this.foo{gas: 1000, value: 1}();
+        }
+        ```
     """
 
     _ast_node: SolcFunctionCallOptions
@@ -49,14 +59,36 @@ class FunctionCallOptions(ExpressionAbc):
 
     @property
     def expression(self) -> ExpressionAbc:
+        """
+        !!! example
+            `:::solidity address(this).call` and `:::solidity new MyToken` in the following example:
+
+            ```solidity
+            function f() public {
+                address(this).call{value: 1}("");
+                new MyToken{salt: 0x1234}();
+            }
+            ```
+
+        Returns:
+            Sub-expression the function call options are applied to.
+        """
         return self._expression
 
     @property
     def names(self) -> Tuple[str, ...]:
+        """
+        Returns:
+            Names of the function call options in the order they appear in the source code.
+        """
         return tuple(self._names)
 
     @property
     def options(self) -> Tuple[ExpressionAbc, ...]:
+        """
+        Returns:
+            Values of the function call options in the order they appear in the source code.
+        """
         return tuple(self._options)
 
     @property

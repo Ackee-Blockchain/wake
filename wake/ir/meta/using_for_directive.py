@@ -25,7 +25,7 @@ class UsingForDirective(SolidityAbc):
     !!! note
         Either [library_name][wake.ir.meta.using_for_directive.UsingForDirective.library_name] must be set or one of [functions][wake.ir.meta.using_for_directive.UsingForDirective.functions] or [operator_functions][wake.ir.meta.using_for_directive.UsingForDirective.operator_functions] must be non-empty.
     !!! example
-        Lines 13 and 14 in the following example:
+        Lines 18, 21 and 22 in the following example:
         ```solidity linenums="1"
         type I8 is int8;
 
@@ -149,6 +149,7 @@ class UsingForDirective(SolidityAbc):
     def library_name(self) -> Optional[Union[IdentifierPath, UserDefinedTypeName]]:
         """
         Is only set in the case of `:::solidity using LibraryName for TypeName;` directive type.
+
         Returns:
             IR node referencing the library ([ContractDefinition][wake.ir.declarations.contract_definition.ContractDefinition] of the [ContractKind.LIBRARY][wake.ir.enums.ContractKind.LIBRARY] kind) that is attached to the target type.
         """
@@ -158,6 +159,7 @@ class UsingForDirective(SolidityAbc):
     def type_name(self) -> Optional[TypeNameAbc]:
         """
         Is `None` in the case of `:::solidity using Lib for *;`.
+
         Returns:
             Type name that is attached to the functions or library.
         """

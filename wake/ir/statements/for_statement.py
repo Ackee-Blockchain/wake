@@ -132,6 +132,7 @@ class ForStatement(StatementAbc):
             ```solidity
             for (uint i = 0; i < 10; i++) {}
             ```
+
         Returns:
             Condition of the for loop, if any.
         """
@@ -150,6 +151,7 @@ class ForStatement(StatementAbc):
             ```solidity
             for (uint i = 0; i < 10; i++) {}
             ```
+
         Returns:
             Initialization expression of the for loop, if any.
         """
@@ -166,6 +168,7 @@ class ForStatement(StatementAbc):
             ```solidity
             for (uint i = 0; i < 10; i++) {}
             ```
+
         Returns:
             Loop expression of the for loop, if any.
         """
