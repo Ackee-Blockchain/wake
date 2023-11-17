@@ -87,6 +87,8 @@ nav:
             - ABI: 'static-analysis/printers/abi.md'
             - Storage layout: 'static-analysis/printers/storage-layout.md'
             - Tokens: 'static-analysis/printers/tokens.md'
+      - Developer guide:
+        - Getting started: 'static-analysis/getting-started.md'
 
   - LSP server: 'language-server.md'
   - Solc Version Manager: 'solc-version-manager.md'
