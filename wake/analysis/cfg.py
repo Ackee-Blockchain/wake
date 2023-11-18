@@ -383,7 +383,14 @@ class CfgNode:
     ]:
         """
         Control statements are handled specially in CFG construction, because they contain sub-statements that are not
-        part of the current CFG node. A control statement is always the last statement in a CFG node.
+        part of the current CFG node. At the same time, control statements are always nearest parent statements for
+        some expressions and so must be indexed.
+
+        !!! example
+            For example, [IfStatement][wake.ir.statements.if_statement.IfStatement] is the nearest parent statement
+            of the [IfStatement.condition][wake.ir.statements.if_statement.IfStatement.condition] expression.
+
+        A control statement is always the last statement in a CFG node.
 
         Returns:
             Control statement of this CFG node, if any.
