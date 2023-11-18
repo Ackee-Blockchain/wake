@@ -89,6 +89,7 @@ nav:
             - Tokens: 'static-analysis/printers/tokens.md'
       - Developer guide:
         - Getting started: 'static-analysis/getting-started.md'
+        - Working with IR: 'static-analysis/working-with-ir.md'
 
   - LSP server: 'language-server.md'
   - Solc Version Manager: 'solc-version-manager.md'
