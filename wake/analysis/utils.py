@@ -160,3 +160,70 @@ def get_all_base_and_child_declarations(
                     ret.add(child_mod)
                     queue.append(child_mod)
     return ret  # pyright: ignore reportGeneralTypeIssues
+
+
+@overload
+def get_function_implementations(
+    function: FunctionDefinition,
+    *,
+    variables: bool = True,
+) -> Set[Union[FunctionDefinition, VariableDeclaration]]:
+    ...
+
+
+@overload
+def get_function_implementations(
+    function: FunctionDefinition,
+    *,
+    variables: bool = False,
+) -> Set[FunctionDefinition]:
+    ...
+
+
+def get_function_implementations(  # pyright: ignore reportGeneralTypeIssues
+    function: FunctionDefinition,
+    *,
+    variables: bool = True,
+) -> Set[Union[FunctionDefinition, VariableDeclaration]]:
+    """
+    Also returns the given function if it is implemented.
+
+    Args:
+        function: Function to get implementations of.
+        variables: Include variable declarations in the returned set.
+
+    Returns:
+        All overridden implemented functions and variable declarations of the given function.
+    """
+    ret = set()
+
+    for child in get_all_base_and_child_declarations(function, base=False):
+        if isinstance(child, VariableDeclaration):
+            if variables:
+                ret.add(child)
+        else:
+            if child.implemented:
+                ret.add(child)
+
+    return ret  # pyright: ignore reportGeneralTypeIssues
+
+
+def get_modifier_implementations(
+    modifier: ModifierDefinition,
+) -> Set[ModifierDefinition]:
+    """
+    Also returns the given modifier if it is implemented.
+
+    Args:
+        modifier: Modifier to get implementations of.
+
+    Returns:
+        All overridden implemented modifiers of the given modifier.
+    """
+    ret = set()
+
+    for child in get_all_base_and_child_declarations(modifier, base=False):
+        if child.implemented:
+            ret.add(child)
+
+    return ret
