@@ -22,4 +22,4 @@ jobs:
           destination-github-username: 'Ackee-Blockchain'
           destination-repository-name: 'firebase-abch-web'
           target-branch: master
-          target-directory: 'public/woke/docs'
+          target-directory: 'public/wake/docs'
