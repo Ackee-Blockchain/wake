@@ -14,6 +14,9 @@ packages = [
     { include = "wake_detectors" },
     { include = "wake_printers" }
 ]
+include = [
+    { path = "examples", format = ["sdist", "wheel"] }
+]
 
 [tool.poetry.plugins."wake.plugins.detectors"]
 wake-detectors = "wake_detectors"

@@ -12,6 +12,11 @@ This guide explains how to run the first test in Wake development and testing fr
     foundryup
     ```
 
+!!! tip
+    The command `wake init --example counter` can be used to generate an example project in the empty current working directory.
+
+    Code snippets in this guide are based on the example project.
+
 ## Generating pytypes
 
 `pytypes` are Python-native equivalents of Solidity types. They are generated from Solidity source code and used in tests and deployment scripts to interact with smart contracts.
