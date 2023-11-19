@@ -98,8 +98,13 @@ def update_gitignore(file: Path) -> None:
 @click.option(
     "--force", "-f", is_flag=True, default=False, help="Force overwrite existing files."
 )
+@click.option(
+    "--example",
+    type=click.Choice(["counter"], case_sensitive=False),
+    help="Initialize example project.",
+)
 @click.pass_context
-def run_init(ctx: Context, force: bool):
+def run_init(ctx: Context, force: bool, example: Optional[str]):
     """Initialize project."""
     from wake.config import WakeConfig
 
@@ -117,19 +122,33 @@ def run_init(ctx: Context, force: bool):
     from ..development.pytypes_generator import TypeGenerator
     from ..utils.file_utils import copy_dir, is_relative_to
 
-    # create tests directory
-    copy_dir(
-        Path(__file__).parent.parent / "templates" / "tests",
-        config.project_root_path / "tests",
-        overwrite=force,
-    )
+    if example is None:
+        # create tests directory
+        copy_dir(
+            Path(__file__).parent.parent / "templates" / "tests",
+            config.project_root_path / "tests",
+            overwrite=force,
+        )
 
-    # create scripts directory
-    copy_dir(
-        Path(__file__).parent.parent / "templates" / "scripts",
-        config.project_root_path / "scripts",
-        overwrite=force,
-    )
+        # create scripts directory
+        copy_dir(
+            Path(__file__).parent.parent / "templates" / "scripts",
+            config.project_root_path / "scripts",
+            overwrite=force,
+        )
+    else:
+        if any(config.project_root_path.iterdir()) and not force:
+            raise click.ClickException(
+                f"Project directory {config.project_root_path} is not empty. Use --force to force overwrite."
+            )
+
+        copy_dir(
+            Path(__file__).parent.parent.parent / "examples" / "counter",
+            config.project_root_path,
+            overwrite=force,
+        )
+
+        subprocess.run(["npm", "install"])
 
     # update .gitignore, --force is not needed
     update_gitignore(config.project_root_path / ".gitignore")
