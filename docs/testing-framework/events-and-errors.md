@@ -201,7 +201,7 @@ class PanicCodeEnum(IntEnum):
 Wake offers two helper functions (context managers) to handle errors - `must_revert` and `may_revert`. Both functions can accept:
 
 - no arguments - any `TransactionRevertedError` is handled,
-- a single error type - either `Error`, `Panic` or a user-defined type from `pytypes`
+- a single error type - either `Error`, `Panic` or a user-defined type from `pytypes`,
 - a single error instance - an instance of `Error`, `Panic` or a user-defined type from `pytypes`, e.g. `Error("some error")` or `Panic(PanicCodeEnum.UNDERFLOW_OVERFLOW)`,
     - the error raised by the tested contract must exactly match the provided error instance,
 - a tuple or list of errors - any mix of error types and error instances.

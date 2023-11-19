@@ -108,7 +108,7 @@ The message is signed according to the [EIP-191](https://eips.ethereum.org/EIPS/
 
 #### Signing structured messages
 
-Using `account.sign_structured(message)` it is possible to sign structured messages.
+Using `account.sign_structured(message)` it is possible to sign structured messages:
 
 ```python
 from wake.testing import *
@@ -141,7 +141,7 @@ See [EIP-712](https://eips.ethereum.org/EIPS/eip-712) for more information.
 #### Signing message hash
 
 While it is not recommended to sign message hashes directly, it is sometimes necessary.
-To sign a message hash, use `account.sign_hash(message_hash)`.
+To sign a message hash, use `account.sign_hash(message_hash)`:
 
 ```python
 from wake.testing import *
@@ -186,7 +186,7 @@ Except for `address`, `chain` and `private_key`, all properties can be assigned 
 ### Low-level calls and transactions
 
 Each `Account` instance has `call`, `transact`, `estimate` and `access_list` methods that can be used to perform arbitrary
-requests (see [Interacting with contracts](./interacting-with-contracts.md)).
+requests (see [Interacting with contracts](./interacting-with-contracts.md)):
 
 ```python
 from wake.testing import *

@@ -18,6 +18,6 @@ It utilizes `pytypes`, Python equivalents of Solidity types, to simplify writing
 
 The currently supported development chains are:
 
-- [Anvil](https://github.com/foundry-rs/foundry/tree/master/anvil) (recommended)
+- [Anvil](https://github.com/foundry-rs/foundry/tree/master/crates/anvil) (recommended)
 - [Hardhat](https://github.com/NomicFoundation/hardhat)
 - [Ganache](https://github.com/trufflesuite/ganache)

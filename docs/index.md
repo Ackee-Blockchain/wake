@@ -1,6 +1,6 @@
 # Wake
 
-Wake is a Python-based development, testing and static analysis framework for Solidity.
+Wake is a Python-based Solidity development and testing framework with built-in vulnerability detectors.
 
 ## Features
 - testing framework based on [pytest](https://docs.pytest.org/en)
@@ -9,7 +9,7 @@ Wake is a Python-based development, testing and static analysis framework for So
 - vulnerability and code quality detectors
 - printers for extracting useful information from Solidity code
 - static analysis framework for implementing custom detectors and printers
-- Github action with CodeQL code scanning support
+- [Github action](https://github.com/marketplace/actions/wake-detect) with CodeQL code scanning support
 - language server ([LSP](https://microsoft.github.io/language-server-protocol/))
 - VS Code extension ([Tools for Solidity](https://marketplace.visualstudio.com/items?itemName=AckeeBlockchain.tools-for-solidity))
 - solc version manager

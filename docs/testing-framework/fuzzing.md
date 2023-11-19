@@ -73,14 +73,14 @@ An optional `period` argument can be passed to the `@invariant` decorator. If sp
 
 Execution hooks are functions that are executed during the `FuzzTest` lifecycle. This is the list of all available execution hooks:
 
-- `pre_sequence(self)` - executed before each test sequence
-- `pre_flow(self, flow: Callable)` - executed before each flow, accepts the flow function to be executed as an argument
-- `post_flow(self, flow: Callable)` - executed after each flow, accepts the flow function that was executed as an argument
-- `pre_invariants(self)` - executed before each set of invariants
-- `pre_invariant(self, invariant: Callable)` - executed before each invariant, accepts the invariant function to be executed as an argument
-- `post_invariant(self, invariant: Callable)` - executed after each invariant, accepts the invariant function that was executed as an argument
-- `post_invariants(self)` - executed after each set of invariants
-- `post_sequence(self)` - executed after each test sequence
+- `pre_sequence(self)` - executed before each test sequence,
+- `pre_flow(self, flow: Callable)` - executed before each flow, accepts the flow function to be executed as an argument,
+- `post_flow(self, flow: Callable)` - executed after each flow, accepts the flow function that was executed as an argument,
+- `pre_invariants(self)` - executed before each set of invariants,
+- `pre_invariant(self, invariant: Callable)` - executed before each invariant, accepts the invariant function to be executed as an argument,
+- `post_invariant(self, invariant: Callable)` - executed after each invariant, accepts the invariant function that was executed as an argument,
+- `post_invariants(self)` - executed after each set of invariants,
+- `post_sequence(self)` - executed after each test sequence.
 
 The whole `FuzzTest` lifecycle is visualized in the following diagram:
 

@@ -197,44 +197,49 @@ min_impact = "high"
 ### `generator.control_flow_graph` namespace
 Related to the `wake.generate.control_flow_graph` LSP command.
 
+| Option        | Description                                                | Default value |
+|:--------------|:-----------------------------------------------------------|:--------------|
+| `direction`   | Graph direction. Possible options: `TB`, `BT`, `LR`, `RL`. | `TB`          |
+| `vscode_urls` | Attach VS Code URLs to the graph nodes                     | `true`        |
+
 ### `generator.imports_graph` namespace
 Related to the `wake.generate.imports_graph` LSP command.
 
-| Option              | Description                               | Default value           |
-|:--------------------|:------------------------------------------|:------------------------|
-| `direction`         | Graph direction                           | `TB`                    |
-| `imports_direction` | Direction of edges between imported files | `imported-to-importing` |
-| `vscode_urls`       | Attach VS Code URLs to the graph nodes    | `true`                  |
+| Option                           | Description                                                                                                    | Default value           |
+|:---------------------------------|:---------------------------------------------------------------------------------------------------------------|:------------------------|
+| `direction`                      | Graph direction. Possible options: `TB`, `BT`, `LR`, `RL`.                                                     | `TB`                    |
+| <nobr>`imports_direction`</nobr> | Direction of edges between imported files. Possible options: `imported-to-importing`, `importing-to-imported`. | `imported-to-importing` |
+| `vscode_urls`                    | Attach VS Code URLs to the graph nodes                                                                         | `true`                  |
 
 ### `generator.inheritance_graph` namespace
 Related to the `wake.generate.inheritance_graph` LSP command.
 
-| Option        | Description                            | Default value |
-|:--------------|:---------------------------------------|:--------------|
-| `direction`   | Graph direction                        | `BT`          |
-| `vscode_urls` | Attach VS Code URLs to the graph nodes | `true`        |
+| Option        | Description                                                | Default value |
+|:--------------|:-----------------------------------------------------------|:--------------|
+| `direction`   | Graph direction. Possible options: `TB`, `BT`, `LR`, `RL`. | `BT`          |
+| `vscode_urls` | Attach VS Code URLs to the graph nodes                     | `true`        |
 
 ### `generator.inheritance_graph_full` namespace
 Related to the `wake.generate.inheritance_graph_full` LSP command.
 
-| Option        | Description                            | Default value |
-|:--------------|:---------------------------------------|:--------------|
-| `direction`   | Graph direction                        | `BT`          |
-| `vscode_urls` | Attach VS Code URLs to the graph nodes | `true`        |
+| Option        | Description                                                | Default value |
+|:--------------|:-----------------------------------------------------------|:--------------|
+| `direction`   | Graph direction. Possible options: `TB`, `BT`, `LR`, `RL`. | `BT`          |
+| `vscode_urls` | Attach VS Code URLs to the graph nodes                     | `true`        |
 
 ### `generator.linearized_inheritance_graph` namespace
 Related to the `wake.generate.linearized_inheritance_graph` LSP command.
 
-| Option        | Description                            | Default value |
-|:--------------|:---------------------------------------|:--------------|
-| `direction`   | Graph direction                        | `LR`          |
-| `vscode_urls` | Attach VS Code URLs to the graph nodes | `true`        |
+| Option        | Description                                                | Default value |
+|:--------------|:-----------------------------------------------------------|:--------------|
+| `direction`   | Graph direction. Possible options: `TB`, `BT`, `LR`, `RL`. | `LR`          |
+| `vscode_urls` | Attach VS Code URLs to the graph nodes                     | `true`        |
 
 ### `lsp` namespace
 
-| Option              | Description                                                        | Default value |
-|:--------------------|:-------------------------------------------------------------------|:--------------|
-| `compilation_delay` | Delay in seconds before the project is compiled after a keystroke. | `0`           |
+| Option                           | Description                                                        | Default value |
+|:---------------------------------|:-------------------------------------------------------------------|:--------------|
+| <nobr>`compilation_delay`</nobr> | Delay in seconds before the project is compiled after a keystroke. | `0`           |
 
 ### `lsp.code_lens` namespace
 
@@ -251,9 +256,9 @@ Related to the `wake.generate.linearized_inheritance_graph` LSP command.
 ### `lsp.find_references` namespace
 Configuration options specific to the LSP `Find references` request.
 
-| Option                 | Description                                                     | Default value |
-|:-----------------------|:----------------------------------------------------------------|:--------------|
-| `include_declarations` | Also include declarations in `Find references` request results. | `false`       |
+| Option                              | Description                                                     | Default value |
+|:------------------------------------|:----------------------------------------------------------------|:--------------|
+| <nobr>`include_declarations`</nobr> | Also include declarations in `Find references` request results. | `false`       |
 
 ### `testing` namespace
 
