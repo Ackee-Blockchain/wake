@@ -27,10 +27,10 @@ By supplying the `--global` flag, the template will be created in `$XDG_DATA_HOM
 !!! tip
     If working in VS Code with the [Tools for Solidity](https://marketplace.visualstudio.com/items?itemName=AckeeBlockchain.tools-for-solidity) extension installed, the same can be achieved by running the following commands in the command palette:
 
-    - `Tools for Solidity: New Detector`
-    - `Tools for Solidity: New Global Detector`
-    - `Tools for Solidity: New Printer`
-    - `Tools for Solidity: New Global Printer`
+    - `Tools for Solidity: New Detector`,
+    - `Tools for Solidity: New Global Detector`,
+    - `Tools for Solidity: New Printer`,
+    - `Tools for Solidity: New Global Printer`.
 
 ## Detector & printer structure
 

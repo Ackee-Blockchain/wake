@@ -18,7 +18,7 @@ The `Chain` object has the following properties:
 | `chain_id`                                 | chain ID                                                                                                   |
 | `chain_interface`                          | low-level chain interface useful for debugging and power users                                             |
 | `client_version`                           | client version as reported by the `web3_clientVersion` JSON-RPC method                                     |
-| `coinbase`                                 | coinbase `Account`                                                                                         |
+| `coinbase`                                 | coinbase `Account`, i.e. account of the miner who mined the block                                          |
 | `connected`                                | whether the chain is connected                                                                             |
 | <nobr>`default_access_list_account`</nobr> | default `Account` used for access list creation requests                                                   |
 | <nobr>`default_call_account`</nobr>        | default `Account` used for calls                                                                           |

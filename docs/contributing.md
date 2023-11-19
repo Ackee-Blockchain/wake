@@ -45,9 +45,9 @@ npm i -g pyright
 
 ## Git hooks
 
-For Unix-like platforms, we provide up git hooks to help with development.
+For Unix-like platforms, we provide git hooks to help with development.
 
-After cloning, execute.
+After cloning, execute:
 
 ```bash
 chmod +x ./setup-githooks.sh

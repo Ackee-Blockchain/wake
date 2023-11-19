@@ -2,7 +2,7 @@
 
 Wake testing framework is designed to be fast and efficient. However, there are some things to keep in mind to achieve the best performance.
 
-1. Always prefer to use [Anvil](https://github.com/foundry-rs/foundry/tree/master/anvil) whenever possible.
+1. Always prefer to use [Anvil](https://github.com/foundry-rs/foundry/tree/master/crates/anvil) whenever possible.
 2. Always prefer WebSockets connection over HTTP connection.
 3. Avoid accessing transaction events (`tx.events`) unless necessary. Consider using `tx.raw_events` instead.
 4. Avoid using accounts other than the pre-generated ones (`chain.accounts`) in `from_` parameters. If you need more accounts than the default number, change the Wake [configuration](../configuration.md) file or launch the development chain with a higher number of accounts and connect to it.

@@ -5,7 +5,7 @@ This guide explains how to run the first test in Wake development and testing fr
 !!! warning "Important"
     Before getting started, make sure to have the latest version of a development chain installed.
 
-    This is especially important in the case of [Anvil](https://github.com/foundry-rs/foundry/tree/master/anvil), because it is under active development.
+    This is especially important in the case of [Anvil](https://github.com/foundry-rs/foundry/tree/master/crates/anvil), because it is under active development.
     To install the latest version of Anvil, run the following command:
 
     ```shell
@@ -61,7 +61,7 @@ To collect and execute tests, Wake uses the [pytest](https://docs.pytest.org/en/
 The test files should start with `test_` or end with `_test.py` to be collected. It is possible to use all the features of the pytest framework like [fixtures](https://docs.pytest.org/en/stable/explanation/fixtures.html).
 
 !!! tip "Connecting to a chain from a fixture"
-    In order to interact with a chain in a fixture, the chain must be already connected.
+    In order to interact with a chain in a fixture, the chain must already be connected.
     The best way to achieve this is to prepare a fixture that connects to the chain and use it wherever needed.
 
     ```python
@@ -95,7 +95,7 @@ In single-chain tests, it is recommended to use the `default_chain` object that 
 The `connect` decorator either launches a new development chain or connects to an existing one, if an argument is specified.
 It is possible to connect using:
 
-- a HTTP connection (e.g. `http://localhost:8545`),
+- an HTTP connection (e.g. `http://localhost:8545`),
 - a WebSocket connection (e.g. `ws://localhost:8545`),
 - an IPC socket (e.g. `/tmp/anvil.ipc`).
 
