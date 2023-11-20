@@ -1,4 +1,4 @@
-<svg class="rich-terminal" viewBox="0 0 1177 98.8" xmlns="http://www.w3.org/2000/svg">
+<svg class="rich-terminal" viewBox="0 0 1055 123.19999999999999" xmlns="http://www.w3.org/2000/svg">
     <!-- Generated with Rich https://www.textualize.io -->
     <style>
 
@@ -19,47 +19,52 @@
         font-weight: 700;
     }
 
-    .terminal-2348396974-matrix {
+    .terminal-899735471-matrix {
         font-family: Fira Code, monospace;
         font-size: 20px;
         line-height: 24.4px;
         font-variant-east-asian: full-width;
     }
 
-    .terminal-2348396974-title {
+    .terminal-899735471-title {
         font-size: 18px;
         font-weight: bold;
         font-family: arial;
     }
 
-    .terminal-2348396974-r1 { fill: #ff2c7a }
-.terminal-2348396974-r2 { fill: #c5c8c6 }
-.terminal-2348396974-r3 { fill: #98a84b }
-.terminal-2348396974-r4 { fill: #cc555a }
-.terminal-2348396974-r5 { fill: #d0b344 }
+    .terminal-899735471-r1 { fill: #ff2c7a }
+.terminal-899735471-r2 { fill: #c5c8c6 }
+.terminal-899735471-r3 { fill: #68a0b3;font-weight: bold }
+.terminal-899735471-r4 { fill: #cc555a }
+.terminal-899735471-r5 { fill: #d0b344 }
+.terminal-899735471-r6 { fill: #98a84b }
     </style>
 
     <defs>
-    <clipPath id="terminal-2348396974-clip-terminal">
-      <rect x="0" y="0" width="1158.0" height="47.8" />
+    <clipPath id="terminal-899735471-clip-terminal">
+      <rect x="0" y="0" width="1036.0" height="72.19999999999999" />
     </clipPath>
-    <clipPath id="terminal-2348396974-line-0">
-    <rect x="0" y="1.5" width="1159" height="24.65"/>
+    <clipPath id="terminal-899735471-line-0">
+    <rect x="0" y="1.5" width="1037" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-899735471-line-1">
+    <rect x="0" y="25.9" width="1037" height="24.65"/>
             </clipPath>
     </defs>
 
-    <rect fill="#292929" stroke="rgba(255,255,255,0.35)" stroke-width="1" x="1" y="1" width="1175" height="96.8" rx="8"/><text class="terminal-2348396974-title" fill="#c5c8c6" text-anchor="middle" x="587" y="27">Woke</text>
+    <rect fill="#292929" stroke="rgba(255,255,255,0.35)" stroke-width="1" x="1" y="1" width="1053" height="121.2" rx="8"/><text class="terminal-899735471-title" fill="#c5c8c6" text-anchor="middle" x="526" y="27">wake&#160;test</text>
             <g transform="translate(26,22)">
             <circle cx="0" cy="0" r="7" fill="#ff5f57"/>
             <circle cx="22" cy="0" r="7" fill="#febc2e"/>
             <circle cx="44" cy="0" r="7" fill="#28c840"/>
             </g>
         
-    <g transform="translate(9, 41)" clip-path="url(#terminal-2348396974-clip-terminal)">
+    <g transform="translate(9, 41)" clip-path="url(#terminal-899735471-clip-terminal)">
     
-    <g class="terminal-2348396974-matrix">
-    <text class="terminal-2348396974-r1" x="0" y="20" textLength="109.8" clip-path="url(#terminal-2348396974-line-0)">Reverting</text><text class="terminal-2348396974-r2" x="109.8" y="20" textLength="12.2" clip-path="url(#terminal-2348396974-line-0)">.</text><text class="terminal-2348396974-r2" x="122" y="20" textLength="12.2" clip-path="url(#terminal-2348396974-line-0)">&lt;</text><text class="terminal-2348396974-r1" x="134.2" y="20" textLength="134.2" clip-path="url(#terminal-2348396974-line-0)">constructor</text><text class="terminal-2348396974-r2" x="268.4" y="20" textLength="12.2" clip-path="url(#terminal-2348396974-line-0)">&gt;</text><text class="terminal-2348396974-r2" x="280.6" y="20" textLength="12.2" clip-path="url(#terminal-2348396974-line-0)">(</text><text class="terminal-2348396974-r3" x="292.8" y="20" textLength="536.8" clip-path="url(#terminal-2348396974-line-0)">&#x27;0x9a6a6920008318b3556702b5115680e048c2c8db&#x27;</text><text class="terminal-2348396974-r2" x="829.6" y="20" textLength="12.2" clip-path="url(#terminal-2348396974-line-0)">)</text><text class="terminal-2348396974-r4" x="854" y="20" textLength="12.2" clip-path="url(#terminal-2348396974-line-0)">✗</text><text class="terminal-2348396974-r5" x="878.4" y="20" textLength="97.6" clip-path="url(#terminal-2348396974-line-0)">[CREATE]</text><text class="terminal-2348396974-r2" x="1159" y="20" textLength="12.2" clip-path="url(#terminal-2348396974-line-0)">
-</text><text class="terminal-2348396974-r2" x="0" y="44.4" textLength="48.8" clip-path="url(#terminal-2348396974-line-1)">└──&#160;</text><text class="terminal-2348396974-r1" x="48.8" y="44.4" textLength="622.2" clip-path="url(#terminal-2348396974-line-1)">Unknown(0x9a6a6920008318b3556702b5115680e048c2c8db)</text><text class="terminal-2348396974-r2" x="671" y="44.4" textLength="12.2" clip-path="url(#terminal-2348396974-line-1)">.</text><text class="terminal-2348396974-r2" x="683.2" y="44.4" textLength="12.2" clip-path="url(#terminal-2348396974-line-1)">&lt;</text><text class="terminal-2348396974-r1" x="695.4" y="44.4" textLength="36.6" clip-path="url(#terminal-2348396974-line-1)">???</text><text class="terminal-2348396974-r2" x="732" y="44.4" textLength="12.2" clip-path="url(#terminal-2348396974-line-1)">&gt;</text><text class="terminal-2348396974-r2" x="744.2" y="44.4" textLength="12.2" clip-path="url(#terminal-2348396974-line-1)">(</text><text class="terminal-2348396974-r3" x="756.4" y="44.4" textLength="207.4" clip-path="url(#terminal-2348396974-line-1)">b&#x27;\x18\x16\r\xdd&#x27;</text><text class="terminal-2348396974-r2" x="963.8" y="44.4" textLength="12.2" clip-path="url(#terminal-2348396974-line-1)">)</text><text class="terminal-2348396974-r3" x="988.2" y="44.4" textLength="12.2" clip-path="url(#terminal-2348396974-line-1)">✓</text><text class="terminal-2348396974-r5" x="1012.6" y="44.4" textLength="146.4" clip-path="url(#terminal-2348396974-line-1)">[STATICCALL]</text><text class="terminal-2348396974-r2" x="1159" y="44.4" textLength="12.2" clip-path="url(#terminal-2348396974-line-1)">
+    <g class="terminal-899735471-matrix">
+    <text class="terminal-899735471-r1" x="0" y="20" textLength="109.8" clip-path="url(#terminal-899735471-line-0)">Reverting</text><text class="terminal-899735471-r2" x="109.8" y="20" textLength="24.4" clip-path="url(#terminal-899735471-line-0)">.&lt;</text><text class="terminal-899735471-r1" x="134.2" y="20" textLength="134.2" clip-path="url(#terminal-899735471-line-0)">constructor</text><text class="terminal-899735471-r2" x="268.4" y="20" textLength="24.4" clip-path="url(#terminal-899735471-line-0)">&gt;(</text><text class="terminal-899735471-r3" x="292.8" y="20" textLength="512.4" clip-path="url(#terminal-899735471-line-0)">0x9a6a6920008318b3556702b5115680e048c2c8db</text><text class="terminal-899735471-r2" x="805.2" y="20" textLength="24.4" clip-path="url(#terminal-899735471-line-0)">)&#160;</text><text class="terminal-899735471-r4" x="829.6" y="20" textLength="12.2" clip-path="url(#terminal-899735471-line-0)">✗</text><text class="terminal-899735471-r5" x="854" y="20" textLength="97.6" clip-path="url(#terminal-899735471-line-0)">[CREATE]</text><text class="terminal-899735471-r2" x="1037" y="20" textLength="12.2" clip-path="url(#terminal-899735471-line-0)">
+</text><text class="terminal-899735471-r2" x="0" y="44.4" textLength="24.4" clip-path="url(#terminal-899735471-line-1)">➞&#160;</text><text class="terminal-899735471-r4" x="24.4" y="44.4" textLength="378.2" clip-path="url(#terminal-899735471-line-1)">UnknownTransactionRevertedError</text><text class="terminal-899735471-r2" x="402.6" y="44.4" textLength="12.2" clip-path="url(#terminal-899735471-line-1)">(</text><text class="terminal-899735471-r6" x="414.8" y="44.4" textLength="36.6" clip-path="url(#terminal-899735471-line-1)">b&#x27;&#x27;</text><text class="terminal-899735471-r2" x="451.4" y="44.4" textLength="12.2" clip-path="url(#terminal-899735471-line-1)">)</text><text class="terminal-899735471-r2" x="1037" y="44.4" textLength="12.2" clip-path="url(#terminal-899735471-line-1)">
+</text><text class="terminal-899735471-r2" x="0" y="68.8" textLength="48.8" clip-path="url(#terminal-899735471-line-2)">└──&#160;</text><text class="terminal-899735471-r1" x="48.8" y="68.8" textLength="85.4" clip-path="url(#terminal-899735471-line-2)">Unknown</text><text class="terminal-899735471-r2" x="134.2" y="68.8" textLength="24.4" clip-path="url(#terminal-899735471-line-2)">.&lt;</text><text class="terminal-899735471-r1" x="158.6" y="68.8" textLength="36.6" clip-path="url(#terminal-899735471-line-2)">???</text><text class="terminal-899735471-r2" x="195.2" y="68.8" textLength="24.4" clip-path="url(#terminal-899735471-line-2)">&gt;(</text><text class="terminal-899735471-r6" x="219.6" y="68.8" textLength="207.4" clip-path="url(#terminal-899735471-line-2)">b&#x27;\x18\x16\r\xdd&#x27;</text><text class="terminal-899735471-r2" x="427" y="68.8" textLength="24.4" clip-path="url(#terminal-899735471-line-2)">)&#160;</text><text class="terminal-899735471-r6" x="451.4" y="68.8" textLength="12.2" clip-path="url(#terminal-899735471-line-2)">✓</text><text class="terminal-899735471-r5" x="475.8" y="68.8" textLength="146.4" clip-path="url(#terminal-899735471-line-2)">[STATICCALL]</text><text class="terminal-899735471-r2" x="1037" y="68.8" textLength="12.2" clip-path="url(#terminal-899735471-line-2)">
 </text>
     </g>
     </g>
