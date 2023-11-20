@@ -1,23 +1,26 @@
 # Wake
 
-Wake is a Python-based development and testing framework for Solidity.
+Wake is a Python-based Solidity development and testing framework with built-in vulnerability detectors.
 
 Features:
 
-- **Testing framework** - a testing framework for Solidity smart contracts with Python-native equivalents of Solidity types and blazing fast execution.
-
-- **Fuzzer** - a property-based fuzzer for Solidity smart contracts that allows testers to write their fuzz tests in Python.
-
-- **Vulnerability detectors**
-
-- **LSP server**
+- testing framework based on [pytest](https://docs.pytest.org/en)
+- property-based fuzzer
+- deployments & mainnet interactions
+- vulnerability and code quality detectors
+- printers for extracting useful information from Solidity code
+- static analysis framework for implementing custom detectors and printers
+- [Github action](https://github.com/marketplace/actions/wake-detect) with CodeQL code scanning support
+- language server ([LSP](https://microsoft.github.io/language-server-protocol/))
+- VS Code extension ([Tools for Solidity](https://marketplace.visualstudio.com/items?itemName=AckeeBlockchain.tools-for-solidity))
+- solc version manager
 
 ## Dependencies
 
 - [Python](https://www.python.org/downloads/release/python-3910/) (version 3.7 or higher)
 - Rosetta must be enabled on Apple Silicon (M1 & M2) Macs
 
-> :warning: Python 3.12 is experimentally supported.
+> ⚠️ Python 3.12 is experimentally supported.
 
 ## Installation
 
@@ -61,8 +64,6 @@ from pytypes.contracts.Counter import Counter
 
 @default_chain.connect()
 def test_counter():
-    default_chain.set_default_accounts(default_chain.accounts[0])
-
     counter = Counter.deploy()
     assert counter.count() == 0
 
@@ -91,7 +92,7 @@ class CounterTest(FuzzTest):
 
     @flow()
     def decrement(self) -> None:
-        with may_revert(Panic(PanicCodeEnum.UNDERFLOW_OVERFLOW)) as e:
+        with may_revert(PanicCodeEnum.UNDERFLOW_OVERFLOW) as e:
             self.counter.decrement()
 
         if e.value is not None:
@@ -105,16 +106,36 @@ class CounterTest(FuzzTest):
 
 @default_chain.connect()
 def test_counter():
-    default_chain.set_default_accounts(default_chain.accounts[0])
     CounterTest().run(sequences_count=30, flows_count=100)
 ```
 
-### Vulnerability detectors
+### Detectors
 
-Vulnerability detectors can be run using:
+All vulnerability & code quality detectors can be run using:
 ```shell
-wake detect
+wake detect all
 ```
+
+A specific detector can be run using:
+```shell
+wake detect <detector-name>
+```
+
+See the [documentation](https://ackeeblockchain.com/wake/docs/latest/static-analysis/using-detectors/) for a list of all detectors.
+
+### Printers
+
+A specific printer can be run using:
+```shell
+wake print <printer-name>
+```
+
+See the [documentation](https://ackeeblockchain.com/wake/docs/latest/static-analysis/using-printers/) for a list of all printers.
+
+### Custom detectors & printers
+
+Refer to the [getting started]() guide for more information.
+Also check out [wake_detectors](wake_detectors) and [wake_printers](wake_printers) for the implementation of built-in detectors and printers.
 
 ### LSP server
 
