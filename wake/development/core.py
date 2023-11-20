@@ -955,7 +955,10 @@ class Account:
                 return
 
             fields = []
-            hints = get_type_hints(t, include_extras=True)
+            hints = get_type_hints(
+                t,  # pyright: ignore reportGeneralTypeIssues
+                include_extras=True,
+            )
             for f in dataclasses.fields(t):
                 assert f.name in hints
                 fields.append(
@@ -1751,7 +1754,9 @@ class Chain(ABC):
             )
         elif dataclasses.is_dataclass(expected_type):
             assert isinstance(value, tuple)
-            resolved_types = get_type_hints(expected_type)
+            resolved_types = get_type_hints(
+                expected_type  # pyright: ignore reportGeneralTypeIssues
+            )
             field_types = [
                 resolved_types[field.name]
                 for field in dataclasses.fields(expected_type)

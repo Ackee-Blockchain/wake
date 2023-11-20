@@ -206,7 +206,13 @@ def generate(t: Type, options: Optional[Dict[str, Any]] = None):
             return random.choice(list(t))
         elif dataclasses.is_dataclass(t):
             return t(
-                *[generate(h) for h in get_type_hints(t, include_extras=True).values()]
+                *[
+                    generate(h)
+                    for h in get_type_hints(
+                        t,  # pyright: ignore reportGeneralTypeIssues
+                        include_extras=True,
+                    ).values()
+                ]
             )
         else:
             raise ValueError(f"No fuzz generator found for type {t}")

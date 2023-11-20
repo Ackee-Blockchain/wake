@@ -212,7 +212,12 @@ async def prepare_type_hierarchy(
     ) or (isinstance(node, VariableDeclaration) and node.overrides is not None):
         return [prepare_type_hierarchy_item(context, node)]
     elif isinstance(node, set):
-        return [prepare_type_hierarchy_item(context, n) for n in node]
+        return [
+            prepare_type_hierarchy_item(
+                context, n  # pyright: ignore reportGeneralTypeIssues
+            )
+            for n in node
+        ]
 
     return None
 

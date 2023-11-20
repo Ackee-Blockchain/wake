@@ -115,7 +115,7 @@ class ModifierDefinition(DeclarationAbc):
             self.source_unit.file, partial(self._destroy, base_modifiers)
         )
 
-    def _destroy(self, base_modifiers: Tuple[ModifierDefinition]) -> None:
+    def _destroy(self, base_modifiers: Tuple[ModifierDefinition, ...]) -> None:
         for base_modifier in base_modifiers:
             base_modifier._child_modifiers.remove(self)
 

@@ -46,7 +46,7 @@ class YulFunctionCall(YulAbc):
         YulVariableDeclaration,
         YulFunctionCall,
     ]
-    _arguments: List[Union["YulFunctionCall", YulIdentifier, YulLiteral]]
+    _arguments: List[Union[YulFunctionCall, YulIdentifier, YulLiteral]]
     _function_name: YulIdentifier
 
     def __init__(
@@ -57,11 +57,23 @@ class YulFunctionCall(YulAbc):
         self._arguments = []
         for argument in function_call.arguments:
             if isinstance(argument, SolcYulFunctionCall):
-                self._arguments.append(YulFunctionCall(init, argument, self))
+                self._arguments.append(
+                    YulFunctionCall(
+                        init, argument, self  # pyright: ignore reportGeneralTypeIssues
+                    )
+                )
             elif isinstance(argument, SolcYulIdentifier):
-                self._arguments.append(YulIdentifier(init, argument, self))
+                self._arguments.append(
+                    YulIdentifier(
+                        init, argument, self  # pyright: ignore reportGeneralTypeIssues
+                    )
+                )
             elif isinstance(argument, SolcYulLiteral):
-                self._arguments.append(YulLiteral(init, argument, self))
+                self._arguments.append(
+                    YulLiteral(
+                        init, argument, self  # pyright: ignore reportGeneralTypeIssues
+                    )
+                )
             else:
                 assert False, f"Unexpected type: {type(argument)}"
 
