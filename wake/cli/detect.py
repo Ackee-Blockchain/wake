@@ -515,7 +515,7 @@ async def detect_(
         for detector_name, detection in all_detections:
             print_detection(detector_name, detection, config, console)
 
-        if len(detections) == 0:
+        if len(all_detections) == 0:
             console.print("No detections found")
 
         # TODO export theme
@@ -548,7 +548,7 @@ async def detect_(
         console.record = False
 
         if not watch:
-            sys.exit(0 if len(detections) == 0 else 3)
+            sys.exit(0 if len(all_detections) == 0 else 3)
 
     sol_files: Set[Path] = set()
     start = time.perf_counter()
