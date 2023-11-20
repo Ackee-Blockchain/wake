@@ -538,9 +538,7 @@ async def detect_(
                 styles=True,
             )
         elif export == "sarif":
-            log = create_sarif_log(
-                used_detectors, {name: d[0] for name, d in detections.items()}
-            )
+            log = create_sarif_log(used_detectors, all_detections)
             (config.project_root_path / "wake-detections.sarif").write_text(
                 to_json(log)
             )
