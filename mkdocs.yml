@@ -3,7 +3,7 @@ site_url: https://ackeeblockchain.com/wake/docs
 repo_url: https://github.com/Ackee-Blockchain/wake
 repo_name: Ackee-Blockchain/wake
 edit_uri: edit/main/docs
-site_description: Wake is a Python-based development and testing framework for Solidity developed by Ackee Blockchain.
+site_description: Wake is a Python-based Solidity development and testing framework with built-in vulnerability detectors.
 site_author: Ackee Blockchain
 
 theme:
