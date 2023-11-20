@@ -80,7 +80,7 @@ def test_svm_switch(wake_root_path):
     )
     assert cli_result.exit_code == 0
 
-    version_str = (PYTEST_WAKE_ROOT_PATH / "wake" / ".wake_solc_version").read_text()
+    version_str = (PYTEST_WAKE_ROOT_PATH / "wake" / "solc-version.txt").read_text()
     version = SolidityVersion.fromstring(version_str)
     assert version in svm.list_installed()
     assert version == "0.6.2"
@@ -104,7 +104,7 @@ def test_svm_use(wake_root_path):
     assert cli_result.exit_code == 0
     assert len(svm.list_installed()) == 1
 
-    version_str = (PYTEST_WAKE_ROOT_PATH / "wake" / ".wake_solc_version").read_text()
+    version_str = (PYTEST_WAKE_ROOT_PATH / "wake" / "solc-version.txt").read_text()
     version = SolidityVersion.fromstring(version_str)
     assert version in svm.list_installed()
     assert version == "0.8.4"

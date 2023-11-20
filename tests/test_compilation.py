@@ -77,7 +77,7 @@ def test_compile_uniswap_v3(setup_project, config):
     (PYTEST_BUILD_PATH / "wake.toml").write_text(
         """
         [compiler.solc]
-        ignore_paths = ["node_modules", "audits"]
+        exclude_paths = ["node_modules", "audits"]
         """
     )
 
@@ -152,7 +152,7 @@ def test_compile_trader_joe(setup_project, config):
     (PYTEST_BUILD_PATH / "wake.toml").write_text(
         """
         [compiler.solc]
-        ignore_paths = ["node_modules", "test", "lib"]
+        exclude_paths = ["node_modules", "test", "lib"]
         """
     )
 
