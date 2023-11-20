@@ -1,14 +1,14 @@
 [tool.poetry]
 name = "eth-wake"
 version = "4.0.0-alpha.6"
-description = "Wake is a Python-based development and testing framework for Solidity."
+description = "Wake is a Python-based Solidity development and testing framework with built-in vulnerability detectors."
 license = "ISC"
 authors = ["Ackee Blockchain"]
 readme = "README.md"
-homepage = "https://ackeeblockchain.com"
+homepage = "https://getwake.io"
 repository = "https://github.com/Ackee-Blockchain/wake"
 documentation = "https://ackeeblockchain.com/wake/docs/latest"
-keywords = ["ethereum", "solidity", "security", "testing", "development", "framework", "audit"]
+keywords = ["ethereum", "solidity", "security", "testing", "development", "static analysis", "framework", "audit"]
 packages = [
     { include = "wake" },
     { include = "wake_detectors" },
@@ -88,7 +88,6 @@ wake-solc = "wake.cli.__main__:wake_solc"
 
 [tool.poetry.urls]
 "VS Code Extension" = "https://marketplace.visualstudio.com/items?itemName=AckeeBlockchain.tools-for-solidity"
-"Announcement" = "https://ackeeblockchain.com/blog/woke-our-development-and-testing-framework-for-solidity/"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
