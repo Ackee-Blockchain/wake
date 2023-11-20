@@ -190,7 +190,7 @@ class FunctionDefinition(DeclarationAbc):
             self.source_unit.file, partial(self._destroy, base_functions)
         )
 
-    def _destroy(self, base_functions: Tuple[FunctionDefinition]) -> None:
+    def _destroy(self, base_functions: Tuple[FunctionDefinition, ...]) -> None:
         for base_function in base_functions:
             base_function._child_functions.remove(self)
 

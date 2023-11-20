@@ -537,7 +537,7 @@ class SolidityVersionRanges:
         return any(item in version_range for version_range in self.__version_ranges)
 
     @property
-    def version_ranges(self) -> Tuple[SolidityVersionRange]:
+    def version_ranges(self) -> Tuple[SolidityVersionRange, ...]:
         """
         Return the Solidity version ranges that this instance represents.
         """

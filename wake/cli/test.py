@@ -24,7 +24,7 @@ def run_no_pytest(
     coverage: int,
     random_seeds: List[bytes],
     attach_first: bool,
-    args: Tuple[str],
+    args: Tuple[str, ...],
 ) -> None:
     import importlib.util
     import inspect

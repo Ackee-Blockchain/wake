@@ -555,7 +555,11 @@ def detect(
                     "logger": get_logger(original_callback.__name__),
                 }
                 if logging_handler is not None:
-                    sub_ctx.obj["logger"].addHandler(logging_handler)
+                    sub_ctx.obj[
+                        "logger"
+                    ].addHandler(  # pyright: ignore reportGeneralTypeIssues
+                        logging_handler
+                    )
 
                 with sub_ctx:
                     d = sub_ctx.command.invoke(sub_ctx)
