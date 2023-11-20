@@ -1,6 +1,6 @@
 # Wake
 
-Wake is a Python-based Solidity development and testing framework with built-in vulnerability detectors.
+[Wake](https://getwake.io) is a Python-based Solidity development and testing framework with built-in vulnerability detectors.
 
 ## Features
 - testing framework based on [pytest](https://docs.pytest.org/en)
