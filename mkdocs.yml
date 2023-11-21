@@ -86,6 +86,7 @@ nav:
             - Unused import: 'static-analysis/detectors/unused-import.md'
         - Printers:
             - ABI: 'static-analysis/printers/abi.md'
+            - Control flow graph: 'static-analysis/printers/control-flow-graph.md'
             - Storage layout: 'static-analysis/printers/storage-layout.md'
             - Tokens: 'static-analysis/printers/tokens.md'
       - Developer guide:
