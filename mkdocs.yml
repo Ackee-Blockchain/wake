@@ -211,6 +211,9 @@ extra:
       link: http://t.me/wake_group
   version:
     provider: mike
+  analytics:
+    provider: google
+    property: G-73VRX8Q3DK
 
 watch:
   - wake
