@@ -738,6 +738,8 @@ async def init_detector(
     module_name_error_callback: Callable[[str], Awaitable[None]],
     detector_overwrite_callback: Callable[[Path], Awaitable[None]],
     detector_exists_callback: Callable[[str], Awaitable[None]],
+    *,
+    path: Optional[Path] = None,
 ) -> Path:
     from .template import TEMPLATE
 
@@ -755,7 +757,9 @@ async def init_detector(
         "".join([s.capitalize() for s in module_name.split("_") if s != ""])
         + "Detector"
     )
-    if global_:
+    if path is not None:
+        dir_path = path
+    elif global_:
         dir_path = config.global_data_path / "global-detectors"
     else:
         dir_path = config.project_root_path / "detectors"

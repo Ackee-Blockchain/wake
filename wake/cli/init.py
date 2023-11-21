@@ -659,8 +659,17 @@ def run_init_config(ctx: Context, force: bool):
     default=False,
     help="Create detector in global data directory.",
 )
+@click.option(
+    "--path",
+    "-p",
+    type=click.Path(file_okay=False),
+    default=None,
+    help="Path where to create the detector. Must not be set if --global is set.",
+)
 @click.pass_context
-def init_detector(ctx: Context, detector_name: str, force: bool, global_: bool) -> None:
+def init_detector(
+    ctx: Context, detector_name: str, force: bool, global_: bool, path: Optional[str]
+) -> None:
     async def module_name_error_callback(module_name: str) -> None:
         raise click.BadParameter(
             f"Detector name must be a valid Python identifier, got {detector_name}"
@@ -679,6 +688,9 @@ def init_detector(ctx: Context, detector_name: str, force: bool, global_: bool) 
 
     from .detect import run_detect
 
+    if global_ and path is not None:
+        raise click.BadParameter("Cannot set --global and --path at the same time.")
+
     config: WakeConfig = ctx.obj["config"]
 
     # dummy call to load all detectors
@@ -691,6 +703,7 @@ def init_detector(ctx: Context, detector_name: str, force: bool, global_: bool) 
             module_name_error_callback,
             detector_overwrite_callback,
             detector_exists_callback,
+            path=Path(path).resolve() if path is not None else None,
         )
     )
 
@@ -722,8 +735,17 @@ def init_detector(ctx: Context, detector_name: str, force: bool, global_: bool) 
     default=False,
     help="Create detector in global data directory.",
 )
+@click.option(
+    "--path",
+    "-p",
+    type=click.Path(file_okay=False),
+    default=None,
+    help="Path where to create the printer. Must not be set if --global is set.",
+)
 @click.pass_context
-def init_printer(ctx: Context, printer_name: str, force: bool, global_: bool) -> None:
+def init_printer(
+    ctx: Context, printer_name: str, force: bool, global_: bool, path: Optional[str]
+) -> None:
     async def module_name_error_callback(module_name: str) -> None:
         raise click.BadParameter(
             f"Printer name must be a valid Python identifier, got {printer_name}"
@@ -742,6 +764,9 @@ def init_printer(ctx: Context, printer_name: str, force: bool, global_: bool) ->
 
     from .print import run_print
 
+    if global_ and path is not None:
+        raise click.BadParameter("Cannot set --global and --path at the same time.")
+
     config: WakeConfig = ctx.obj["config"]
 
     # dummy call to load all printers
@@ -754,6 +779,7 @@ def init_printer(ctx: Context, printer_name: str, force: bool, global_: bool) ->
             module_name_error_callback,
             printer_overwrite_callback,
             printer_exists_callback,
+            path=Path(path).resolve() if path is not None else None,
         )
     )
 
