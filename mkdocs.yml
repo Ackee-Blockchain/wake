@@ -208,7 +208,7 @@ extra:
     - icon: fontawesome/brands/telegram
       link: https://t.me/wakeframework
     - icon: fontawesome/brands/telegram
-      link: http://t.me/wake_group
+      link: https://t.me/wake_group
   version:
     provider: mike
   analytics:
