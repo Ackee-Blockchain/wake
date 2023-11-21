@@ -9,6 +9,7 @@ from typing import (
     Callable,
     Dict,
     List,
+    Optional,
     Set,
     Tuple,
     Type,
@@ -108,6 +109,8 @@ async def init_printer(
     module_name_error_callback: Callable[[str], Awaitable[None]],
     printer_overwrite_callback: Callable[[Path], Awaitable[None]],
     printer_exists_callback: Callable[[str], Awaitable[None]],
+    *,
+    path: Optional[Path] = None,
 ) -> Path:
     from .template import TEMPLATE
 
@@ -124,7 +127,9 @@ async def init_printer(
     class_name = (
         "".join([s.capitalize() for s in module_name.split("_") if s != ""]) + "Printer"
     )
-    if global_:
+    if path is not None:
+        dir_path = path
+    elif global_:
         dir_path = config.global_data_path / "global-printers"
     else:
         dir_path = config.project_root_path / "printers"
