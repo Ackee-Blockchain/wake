@@ -23,10 +23,12 @@ docker pull ackeeblockchain/wake
 docker run -it ackeeblockchain/wake wake --help
 ```
 
-## Github action
+## Github actions
 
-Wake comes with the `Ackee-Blockchain/wake-detect-action` Github action that can be used to run detectors on a Solidity codebase.
-Refer to the [Wake detect action documentation](https://github.com/marketplace/actions/wake-detect) for more information.
+Wake comes with 2 Github actions:
+
+- [`Ackee-Blockchain/wake-setup-action`](https://github.com/marketplace/actions/wake-setup) - sets up a CI pipeline with Wake and [Anvil](https://github.com/foundry-rs/foundry/tree/master/crates/anvil) pre-installed
+- [`Ackee-Blockchain/wake-detect-action`](https://github.com/marketplace/actions/wake-detect) - runs detectors with optional SARIF output
 
 ## Shell completions
 

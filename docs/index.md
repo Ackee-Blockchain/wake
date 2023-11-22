@@ -9,7 +9,7 @@
 - vulnerability and code quality detectors
 - printers for extracting useful information from Solidity code
 - static analysis framework for implementing custom detectors and printers
-- [Github action](https://github.com/marketplace/actions/wake-detect) with CodeQL code scanning support
+- Github actions for [setting up Wake](https://github.com/marketplace/actions/wake-setup) and [running detectors](https://github.com/marketplace/actions/wake-detect)
 - language server ([LSP](https://microsoft.github.io/language-server-protocol/))
 - VS Code extension ([Tools for Solidity](https://marketplace.visualstudio.com/items?itemName=AckeeBlockchain.tools-for-solidity))
 - solc version manager
