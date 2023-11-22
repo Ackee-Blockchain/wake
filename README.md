@@ -10,15 +10,15 @@ Features:
 - vulnerability and code quality detectors
 - printers for extracting useful information from Solidity code
 - static analysis framework for implementing custom detectors and printers
-- [Github action](https://github.com/marketplace/actions/wake-detect) with CodeQL code scanning support
+- Github actions for [setting up Wake](https://github.com/marketplace/actions/wake-setup) and [running detectors](https://github.com/marketplace/actions/wake-detect)
 - language server ([LSP](https://microsoft.github.io/language-server-protocol/))
 - VS Code extension ([Tools for Solidity](https://marketplace.visualstudio.com/items?itemName=AckeeBlockchain.tools-for-solidity))
 - solc version manager
 
 ## Dependencies
 
-- [Python](https://www.python.org/downloads/release/python-3910/) (version 3.7 or higher)
-- Rosetta must be enabled on Apple Silicon (M1 & M2) Macs
+- Python (version 3.7 or higher)
+- Rosetta must be enabled on Apple Silicon Macs
 
 > ⚠️ Python 3.12 is experimentally supported.
 
@@ -54,7 +54,7 @@ There you can also find a section on [contributing](https://ackeeblockchain.com/
 
 ### Testing framework
 
-See [examples](examples) and [documentation](https://ackeeblockchain.com/wake/docs/latest/testing-framework/overview) for more information.
+See [examples](https://github.com/Ackee-Blockchain/wake/tree/main/examples) and [documentation](https://ackeeblockchain.com/wake/docs/latest/testing-framework/overview) for more information.
 
 Writing tests is as simple as:
 
@@ -134,8 +134,8 @@ See the [documentation](https://ackeeblockchain.com/wake/docs/latest/static-anal
 
 ### Custom detectors & printers
 
-Refer to the [getting started]() guide for more information.
-Also check out [wake_detectors](wake_detectors) and [wake_printers](wake_printers) for the implementation of built-in detectors and printers.
+Refer to the [getting started](https://ackeeblockchain.com/wake/docs/latest/static-analysis/getting-started/) guide for more information.
+Also check out [wake_detectors](https://github.com/Ackee-Blockchain/wake/tree/main/wake_detectors) and [wake_printers](https://github.com/Ackee-Blockchain/wake/tree/main/wake_printers) for the implementation of built-in detectors and printers.
 
 ### LSP server
 
