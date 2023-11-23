@@ -24,6 +24,7 @@ from sarif_om import (
 from wake.utils import get_package_version
 from wake.utils.keyed_default_dict import KeyedDefaultDict
 
+from ..ir import DeclarationAbc
 from .api import DetectorImpact, DetectorResult
 
 # pyright: reportGeneralTypeIssues=false
@@ -96,13 +97,21 @@ def create_sarif_log(
             start_line,
             start_col,
         ) = result.detection.ir_node.source_unit.get_line_col_from_byte_offset(
-            result.detection.ir_node.byte_location[0]
+            result.detection.lsp_range
+            if result.detection.lsp_range is not None
+            else result.detection.ir_node.name_location[0]
+            if isinstance(result.detection.ir_node, DeclarationAbc)
+            else result.detection.ir_node.byte_location[0]
         )
         (
             end_line,
             end_col,
         ) = result.detection.ir_node.source_unit.get_line_col_from_byte_offset(
-            result.detection.ir_node.byte_location[1]
+            result.detection.lsp_range
+            if result.detection.lsp_range is not None
+            else result.detection.ir_node.name_location[1]
+            if isinstance(result.detection.ir_node, DeclarationAbc)
+            else result.detection.ir_node.byte_location[1]
         )
         rule = ReportingDescriptorReference(
             id=detector_name,
@@ -127,13 +136,21 @@ def create_sarif_log(
                 sub_start_line,
                 sub_start_col,
             ) = subdetection.ir_node.source_unit.get_line_col_from_byte_offset(
-                subdetection.ir_node.byte_location[0]
+                subdetection.lsp_range
+                if subdetection.lsp_range is not None
+                else subdetection.ir_node.name_location[0]
+                if isinstance(subdetection.ir_node, DeclarationAbc)
+                else subdetection.ir_node.byte_location[0]
             )
             (
                 sub_end_line,
                 sub_end_col,
             ) = subdetection.ir_node.source_unit.get_line_col_from_byte_offset(
-                subdetection.ir_node.byte_location[1]
+                subdetection.lsp_range
+                if subdetection.lsp_range is not None
+                else subdetection.ir_node.name_location[1]
+                if isinstance(subdetection.ir_node, DeclarationAbc)
+                else subdetection.ir_node.byte_location[1]
             )
             related_locations.append(
                 Location(

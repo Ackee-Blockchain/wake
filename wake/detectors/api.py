@@ -87,7 +87,7 @@ class Detection:
         ir_node: IR node representing the detection.
         message: User-friendly message describing the detection.
         subdetections: Subdetections of this detection.
-        lsp_range: Byte offsets (start, end) of the detection used for highlighting in an LSP diagnostic.
+        lsp_range: Byte offsets (start, end) of the detection used for highlighting in LSP diagnostics and in SARIF export.
         subdetections_mandatory: Whether the detection requires at least one subdetection to be valid,
             or if the subdetections are not mandatory for the existence of the detection.
             This attribute determines whether the detection should be filtered out if all subdetections are filtered out based on the detectors [ignore_paths][wake.config.data_model.DetectorsConfig.ignore_paths] configuration.
