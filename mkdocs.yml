@@ -87,6 +87,7 @@ nav:
         - Printers:
             - ABI: 'static-analysis/printers/abi.md'
             - Control flow graph: 'static-analysis/printers/control-flow-graph.md'
+            - Imports graph: 'static-analysis/printers/imports-graph.md'
             - Inheritance graph: 'static-analysis/printers/inheritance-graph.md'
             - Inheritance tree: 'static-analysis/printers/inheritance-tree.md'
             - Storage layout: 'static-analysis/printers/storage-layout.md'
