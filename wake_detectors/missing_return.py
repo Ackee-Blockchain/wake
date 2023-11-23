@@ -61,6 +61,8 @@ class MissingReturnDetector(Detector):
 
                 assignment = ref.parent
                 while not isinstance(assignment, (ir.Assignment, ir.StatementAbc)):
+                    if assignment is None:
+                        break
                     assignment = assignment.parent
                 if isinstance(assignment, ir.Assignment):
                     assert assignment.statement is not None
@@ -116,5 +118,5 @@ class MissingReturnDetector(Detector):
     @detector.command(name="missing-return")
     def cli(self) -> None:
         """
-        Detect when function return parameters may not always be set.
+        Function return parameters may not always be set
         """

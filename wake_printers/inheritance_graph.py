@@ -186,6 +186,9 @@ class InheritanceGraphPrinter(Printer):
         interfaces: bool,
         single_file: bool,
     ) -> None:
+        """
+        Generate inheritance graphs for contracts.
+        """
         self._names = set(names)
         self._out = Path(out).resolve()
         self._out.mkdir(parents=True, exist_ok=True)

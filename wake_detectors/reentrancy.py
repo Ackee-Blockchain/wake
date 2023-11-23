@@ -311,5 +311,5 @@ class ReentrancyDetector(Detector):
     @detector.command(name="reentrancy")
     def cli(self) -> None:
         """
-        Detect reentrancy vulnerabilities.
+        External call vulnerable to reentrancy
         """

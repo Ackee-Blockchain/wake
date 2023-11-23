@@ -79,6 +79,9 @@ class AbiPrinter(Printer):
         help="Skip contracts with empty ABI",
     )
     def cli(self, out: Optional[str], skip_empty: bool) -> None:
+        """
+        Print ABI of contracts.
+        """
         self._skip_empty = skip_empty
         if out is not None:
             self._out = Path(out)

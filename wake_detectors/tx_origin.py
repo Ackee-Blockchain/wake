@@ -105,6 +105,6 @@ class TxOriginDetector(Detector):
     )
     def cli(self, account_abstraction: bool) -> None:
         """
-        Detect possibly incorrect usage of `tx.origin`.
+        Possibly incorrect usage of tx.origin
         """
         self._account_abstraction = account_abstraction

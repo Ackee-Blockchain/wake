@@ -133,7 +133,7 @@ class ControlFlowGraphPrinter(Printer):
         self, names: Tuple[str, ...], out: str, direction: str, links: bool, force: bool
     ) -> None:
         """
-        Print control flow graphs for functions and modifiers.
+        Generate control flow graphs for functions and modifiers.
         """
         self._names = names
         self._out = Path(out).resolve()

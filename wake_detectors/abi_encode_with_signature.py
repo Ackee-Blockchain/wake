@@ -101,5 +101,5 @@ class AbiEncodeWithSignatureDetector(Detector):
     @detector.command(name="abi-encode-with-signature")
     def cli(self) -> None:
         """
-        Detect invalid ABI signatures in abi.encodeWithSignature() arguments.
+        Invalid ABI signature in abi.encodeWithSignature() arguments
         """

@@ -283,5 +283,5 @@ class CalldataTupleReencodingHeadOverflowBugDetector(Detector):
     @detector.command(name="calldata-tuple-reencoding-head-overflow-bug")
     def cli(self) -> None:
         """
-        Detect head overflow calldata tuple reencoding compiler bug in Solidity < 0.8.16
+        Head overflow calldata tuple reencoding compiler bug in Solidity < 0.8.16
         """

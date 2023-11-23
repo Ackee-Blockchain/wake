@@ -56,5 +56,5 @@ class UnprotectedSelfdestructDetector(Detector):
     @detector.command(name="unprotected-selfdestruct")
     def cli(self) -> None:
         """
-        Detect selfdestruct calls that may be called by unauthorized parties.
+        selfdestruct call that may be called by unauthorized parties
         """
