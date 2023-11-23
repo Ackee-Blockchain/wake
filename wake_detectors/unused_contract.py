@@ -69,7 +69,7 @@ class UnusedContractDetector(Detector):
     )
     def cli(self, abstract: bool, interface: bool, library: bool):
         """
-        Detect unused abstract contracts, interfaces and libraries.
+        Unused abstract contract, interface or library
         """
         self._abstract = abstract
         self._interface = interface

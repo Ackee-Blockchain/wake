@@ -120,5 +120,5 @@ class MsgValueNonpayableFunctionDetector(Detector):
     @detector.command(name="msg-value-nonpayable-function")
     def cli(self) -> None:
         """
-        Detect msg.value used in non-payable function
+        msg.value used in non-payable function
         """

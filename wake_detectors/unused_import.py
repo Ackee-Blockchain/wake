@@ -28,7 +28,7 @@ class UnusedImportDetector(Detector):
     @detector.command(name="unused-import")
     def cli(self) -> None:
         """
-        Detect unused imports.
+        Unused import
         """
 
     def visit_source_unit(self, node: ir.SourceUnit):

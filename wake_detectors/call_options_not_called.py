@@ -98,5 +98,5 @@ class CallOptionsNotCalledDetector(Detector):
     @detector.command(name="call-options-not-called")
     def cli(self) -> None:
         """
-        Detect when call options (`gas`, `value` or `salt`) are not called.
+        Call option (gas, value or salt) not called
         """

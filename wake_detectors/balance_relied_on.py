@@ -154,5 +154,5 @@ class BalanceReliedOnDetector(Detector):
     @detector.command(name="balance-relied-on")
     def cli(self) -> None:
         """
-        Detect uses of address.balance in strict comparison (==, !=) and state variable assignments.
+        address.balance used in strict comparison (==, !=) or state variable assignment
         """

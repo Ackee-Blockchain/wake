@@ -84,7 +84,7 @@ class StorageLayoutPrinter(Printer):
         self, split_slots: bool, table_style: str, header_style: str, style: str
     ) -> None:
         """
-        Print contract storage layout.
+        Print storage layout of contracts.
         """
         self._split_slots = split_slots
         self._table_style = table_style

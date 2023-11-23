@@ -418,7 +418,7 @@ class IncorrectInterfaceDetector(Detector):
         self, erc20_threshold: int, erc721_threshold: int, erc1155_threshold: int
     ) -> None:
         """
-        Detect contracts that do not properly implement ERC-20/ERC-721/ERC-1155 interface.
+        Incorrectly implemented ERC-20/ERC-721/ERC-1155 interface
         """
         self._erc20_threshold = erc20_threshold
         self._erc721_threshold = erc721_threshold

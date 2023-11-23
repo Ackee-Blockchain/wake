@@ -110,5 +110,5 @@ class UncheckedReturnValueDetector(Detector):
     @detector.command("unchecked-return-value")
     def cli(self):
         """
-        Detect function calls with unchecked return values.
+        Unchecked function call return value
         """

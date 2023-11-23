@@ -104,5 +104,5 @@ class EmptyByteArrayCopyBugDetector(Detector):
     @detector.command(name="empty-byte-array-copy-bug")
     def cli(self) -> None:
         """
-        Detect empty byte array copy compiler bug in Solidity < 0.7.14
+        Empty byte array copy compiler bug in Solidity < 0.7.14
         """

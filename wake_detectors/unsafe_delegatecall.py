@@ -200,6 +200,6 @@ class UnsafeDelegatecallDetector(Detector):
     )
     def cli(self, proxy: bool) -> None:
         """
-        Detect delegatecalls to untrusted contracts.
+        delegatecall to untrusted contract
         """
         self._proxy = proxy
