@@ -50,6 +50,23 @@ def excepthook(attach: bool, type, value, traceback):
         ipdb.pm()
 
 
+click.rich_click.COMMAND_GROUPS = {
+    "wake": [{"commands": ["detect", "print"]}],
+    "wake detect": [
+        {
+            "name": "Commands",
+            "commands": ["all", "list"],
+        }
+    ],
+    "wake print": [
+        {
+            "name": "Commands",
+            "commands": ["list"],
+        }
+    ],
+}
+
+
 @click.group()
 @click.option(
     "--debug",
