@@ -584,7 +584,7 @@ def detect(
 
     ctx_manager = (
         console.status("[bold green]Running detectors...")
-        if console is not None
+        if console is not None and (ctx is None or not ctx.obj.get("debug", False))
         else nullcontext()
     )
     with ctx_manager as status:
