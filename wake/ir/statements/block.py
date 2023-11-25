@@ -13,7 +13,9 @@ from wake.ir.utils import IrInitTuple
 if TYPE_CHECKING:
     from ..declarations.function_definition import FunctionDefinition
     from ..declarations.modifier_definition import ModifierDefinition
+    from ..expressions.abc import ExpressionAbc
     from ..meta.try_catch_clause import TryCatchClause
+    from ..yul.abc import YulAbc
     from .do_while_statement import DoWhileStatement
     from .for_statement import ForStatement
     from .if_statement import IfStatement
@@ -97,7 +99,9 @@ class Block(StatementAbc):
 
     @property
     @lru_cache(maxsize=2048)
-    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
+    def modifies_state(
+        self,
+    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
         if self.statements is None:
             return set()
         return reduce(
@@ -106,7 +110,7 @@ class Block(StatementAbc):
             set(),
         )
 
-    def statements_iter(self) -> Iterator["StatementAbc"]:
+    def statements_iter(self) -> Iterator[StatementAbc]:
         yield self
         if self._statements is not None:
             for statement in self._statements:

@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from functools import lru_cache
-from typing import Iterator, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
 
 from typing_extensions import Literal
 
@@ -20,6 +22,11 @@ from .identifier import Identifier
 from .index_access import IndexAccess
 from .member_access import MemberAccess
 from .tuple_expression import TupleExpression
+
+if TYPE_CHECKING:
+    from ..statements.abc import StatementAbc
+    from ..yul.abc import YulAbc
+
 
 AssignedVariablePath = Tuple[
     Union[DeclarationAbc, SourceUnit, Literal["IndexAccess"]], ...
@@ -96,7 +103,9 @@ class Assignment(ExpressionAbc):
 
     @property
     @lru_cache(maxsize=2048)
-    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
+    def modifies_state(
+        self,
+    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
         ret = self.left_expression.modifies_state | self.right_expression.modifies_state
         if self.left_expression.is_ref_to_state_variable:
             ret |= {(self, ModifiesStateFlag.MODIFIES_STATE_VAR)}

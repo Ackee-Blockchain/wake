@@ -1,7 +1,8 @@
-import logging
+from __future__ import annotations
+
 from functools import lru_cache, reduce
 from operator import or_
-from typing import Iterator, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, List, Optional, Set, Tuple, Union
 
 from wake.core import get_logger
 from wake.ir.abc import IrAbc, SolidityAbc
@@ -12,6 +13,7 @@ from wake.ir.enums import (
     StateMutability,
 )
 
+from ...utils import cached_return_on_recursion
 from ..ast import SolcFunctionCall
 from ..declarations.contract_definition import ContractDefinition
 from ..declarations.error_definition import ErrorDefinition
@@ -30,6 +32,10 @@ from ..type_names.array_type_name import ArrayTypeName
 from ..type_names.elementary_type_name import ElementaryTypeName
 from ..type_names.user_defined_type_name import UserDefinedTypeName
 from ..utils import IrInitTuple
+
+if TYPE_CHECKING:
+    from ..statements.abc import StatementAbc
+    from ..yul.abc import YulAbc
 
 logger = get_logger(__name__)
 
@@ -57,13 +63,10 @@ class FunctionCall(ExpressionAbc):
     _names: List[str]
     _try_call: bool
 
-    _recursion_lock: bool
-
     def __init__(
         self, init: IrInitTuple, function_call: SolcFunctionCall, parent: SolidityAbc
     ):
         super().__init__(init, function_call, parent)
-        self._recursion_lock = False
         self._kind = function_call.kind
         self._names = list(function_call.names)
         self._try_call = function_call.try_call
@@ -246,11 +249,10 @@ class FunctionCall(ExpressionAbc):
         return False
 
     @property
-    @lru_cache(maxsize=2048)
-    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
-        if self._recursion_lock:
-            return set()
-        self._recursion_lock = True
+    @cached_return_on_recursion(frozenset())
+    def modifies_state(
+        self,
+    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
         ret = self.expression.modifies_state | reduce(
             or_, (arg.modifies_state for arg in self.arguments), set()
         )
@@ -304,5 +306,4 @@ class FunctionCall(ExpressionAbc):
                     }
                 else:
                     assert False
-        self._recursion_lock = False
         return ret

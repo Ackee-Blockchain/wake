@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Iterator, List, Tuple, Union
+from functools import reduce
+from operator import or_
+from typing import TYPE_CHECKING, Iterator, List, Set, Tuple, Union
 
 from wake.ir.ast import (
     SolcYulFunctionCall,
@@ -15,7 +17,11 @@ from wake.ir.yul.function_call import YulFunctionCall
 from wake.ir.yul.identifier import YulIdentifier
 from wake.ir.yul.literal import YulLiteral
 
+from ..enums import ModifiesStateFlag
+
 if TYPE_CHECKING:
+    from ..expressions.abc import ExpressionAbc
+    from ..statements.abc import StatementAbc
     from .block import YulBlock
 
 
@@ -93,3 +99,13 @@ class YulSwitch(YulStatementAbc):
             Expression that is evaluated to determine which case to execute.
         """
         return self._expression
+
+    @property
+    def modifies_state(
+        self,
+    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
+        return self._expression.modifies_state | reduce(
+            or_,
+            (case.modifies_state for case in self._cases),
+            set(),
+        )

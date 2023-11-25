@@ -12,6 +12,7 @@ from wake.ir.statements.abc import StatementAbc
 from wake.ir.utils import IrInitTuple
 
 if TYPE_CHECKING:
+    from ..yul.abc import YulAbc
     from .block import Block
     from .do_while_statement import DoWhileStatement
     from .for_statement import ForStatement
@@ -122,7 +123,9 @@ class VariableDeclarationStatement(StatementAbc):
 
     @property
     @lru_cache(maxsize=2048)
-    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
+    def modifies_state(
+        self,
+    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
         ret = set()
         if self.initial_value is not None:
             ret |= self.initial_value.modifies_state

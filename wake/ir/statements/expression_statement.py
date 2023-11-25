@@ -10,21 +10,8 @@ from wake.ir.expressions.abc import ExpressionAbc
 from wake.ir.statements.abc import StatementAbc
 from wake.ir.utils import IrInitTuple
 
-from ..expressions.assignment import Assignment
-from ..expressions.binary_operation import BinaryOperation
-from ..expressions.conditional import Conditional
-from ..expressions.function_call import FunctionCall
-from ..expressions.function_call_options import FunctionCallOptions
-from ..expressions.identifier import Identifier
-from ..expressions.index_access import IndexAccess
-from ..expressions.index_range_access import IndexRangeAccess
-from ..expressions.literal import Literal
-from ..expressions.member_access import MemberAccess
-from ..expressions.new_expression import NewExpression
-from ..expressions.tuple_expression import TupleExpression
-from ..expressions.unary_operation import UnaryOperation
-
 if TYPE_CHECKING:
+    from ..yul.abc import YulAbc
     from .block import Block
     from .do_while_statement import DoWhileStatement
     from .for_statement import ForStatement
@@ -146,5 +133,7 @@ class ExpressionStatement(StatementAbc):
 
     @property
     @lru_cache(maxsize=2048)
-    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
+    def modifies_state(
+        self,
+    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
         return self.expression.modifies_state

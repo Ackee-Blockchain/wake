@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Iterator, List, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, List, Set, Tuple, Union
 
 from wake.ir.ast import (
     SolcYulAssignment,
@@ -10,12 +10,15 @@ from wake.ir.ast import (
 )
 from wake.ir.utils import IrInitTuple
 
+from ..enums import ModifiesStateFlag
 from .abc import YulAbc, YulStatementAbc
 from .function_call import YulFunctionCall
 from .identifier import YulIdentifier
 from .literal import YulLiteral
 
 if TYPE_CHECKING:
+    from ..expressions.abc import ExpressionAbc
+    from ..statements.abc import StatementAbc
     from .block import YulBlock
 
 
@@ -90,3 +93,9 @@ class YulAssignment(YulStatementAbc):
             Identifiers of variables that are assigned to in the order they appear in the source code.
         """
         return tuple(self._variable_names)
+
+    @property
+    def modifies_state(
+        self,
+    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
+        return self._value.modifies_state

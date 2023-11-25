@@ -11,6 +11,8 @@ from wake.ir.statements.abc import StatementAbc
 from wake.ir.utils import IrInitTuple
 
 if TYPE_CHECKING:
+    from ..expressions.abc import ExpressionAbc
+    from ..yul.abc import YulAbc
     from .block import Block
     from .do_while_statement import DoWhileStatement
     from .for_statement import ForStatement
@@ -76,14 +78,16 @@ class UncheckedBlock(StatementAbc):
 
     @property
     @lru_cache(maxsize=2048)
-    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
+    def modifies_state(
+        self,
+    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
         return reduce(
             or_,
             (statement.modifies_state for statement in self._statements),
             set(),
         )
 
-    def statements_iter(self) -> Iterator["StatementAbc"]:
+    def statements_iter(self) -> Iterator[StatementAbc]:
         yield self
         for statement in self._statements:
             yield from statement.statements_iter()

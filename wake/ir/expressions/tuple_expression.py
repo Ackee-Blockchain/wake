@@ -1,12 +1,18 @@
+from __future__ import annotations
+
 from functools import lru_cache, reduce
 from operator import or_
-from typing import Iterator, List, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Iterator, List, Optional, Set, Tuple, Union
 
 from wake.ir.abc import IrAbc, SolidityAbc
 from wake.ir.ast import SolcTupleExpression
 from wake.ir.enums import ModifiesStateFlag
 from wake.ir.expressions.abc import ExpressionAbc
 from wake.ir.utils import IrInitTuple
+
+if TYPE_CHECKING:
+    from ..statements.abc import StatementAbc
+    from ..yul.abc import YulAbc
 
 
 class TupleExpression(ExpressionAbc):
@@ -95,7 +101,9 @@ class TupleExpression(ExpressionAbc):
 
     @property
     @lru_cache(maxsize=2048)
-    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
+    def modifies_state(
+        self,
+    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
         return reduce(
             or_,
             (

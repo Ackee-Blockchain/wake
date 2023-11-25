@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterator, Union
+from typing import TYPE_CHECKING, Iterator, Set, Tuple, Union
 
 from wake.ir.ast import (
     SolcYulForLoop,
@@ -9,12 +9,17 @@ from wake.ir.ast import (
     SolcYulLiteral,
 )
 
+from ..enums import ModifiesStateFlag
 from ..utils import IrInitTuple
 from .abc import YulAbc, YulStatementAbc
 from .block import YulBlock
 from .function_call import YulFunctionCall
 from .identifier import YulIdentifier
 from .literal import YulLiteral
+
+if TYPE_CHECKING:
+    from ..expressions.abc import ExpressionAbc
+    from ..statements.abc import StatementAbc
 
 
 class YulForLoop(YulStatementAbc):
@@ -99,3 +104,14 @@ class YulForLoop(YulStatementAbc):
             Block of statements that are executed once before the first iteration.
         """
         return self._pre
+
+    @property
+    def modifies_state(
+        self,
+    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
+        return (
+            self._pre.modifies_state
+            | self._condition.modifies_state
+            | self._post.modifies_state
+            | self._body.modifies_state
+        )

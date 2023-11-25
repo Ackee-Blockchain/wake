@@ -11,6 +11,7 @@ from wake.ir.statements.abc import StatementAbc
 from wake.ir.utils import IrInitTuple
 
 if TYPE_CHECKING:
+    from ..yul.abc import YulAbc
     from .block import Block
     from .do_while_statement import DoWhileStatement
     from .for_statement import ForStatement
@@ -109,14 +110,16 @@ class IfStatement(StatementAbc):
 
     @property
     @lru_cache(maxsize=2048)
-    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
+    def modifies_state(
+        self,
+    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
         return (
             self.condition.modifies_state
             | self.true_body.modifies_state
             | (self.false_body.modifies_state if self.false_body is not None else set())
         )
 
-    def statements_iter(self) -> Iterator["StatementAbc"]:
+    def statements_iter(self) -> Iterator[StatementAbc]:
         yield self
         yield from self._true_body.statements_iter()
         if self._false_body is not None:
