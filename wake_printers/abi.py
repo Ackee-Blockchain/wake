@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set, Tuple
 
 import networkx as nx
 import rich_click as click
@@ -9,10 +9,12 @@ from rich import print
 
 import wake.ir as ir
 import wake.ir.types as types
+from wake.cli import SolidityName
 from wake.printers import Printer, printer
 
 
 class AbiPrinter(Printer):
+    _names: Set[str]
     _out: Optional[Path]
     _skip_empty: bool
     _abi: Dict[ir.ContractDefinition, List]
@@ -50,6 +52,8 @@ class AbiPrinter(Printer):
                     )
 
     def visit_contract_definition(self, node: ir.ContractDefinition):
+        if len(self._names) > 0 and node.name not in self._names:
+            return
         if node.compilation_info is None or node.compilation_info.abi is None:
             self.logger.warning(
                 f"ABI for [link={self.generate_link(node)}]{node.parent.source_unit_name}:{node.name}[/link] not available"
@@ -62,6 +66,14 @@ class AbiPrinter(Printer):
         self._abi[node] = node.compilation_info.abi
 
     @printer.command(name="abi")
+    @click.option(
+        "--name",
+        "-n",
+        "names",
+        type=SolidityName("contract", case_sensitive=False),
+        multiple=True,
+        help="Contract names",
+    )
     @click.option(
         "-o",
         "--out",
@@ -78,10 +90,11 @@ class AbiPrinter(Printer):
         default=False,
         help="Skip contracts with empty ABI",
     )
-    def cli(self, out: Optional[str], skip_empty: bool) -> None:
+    def cli(self, names: Tuple[str, ...], out: Optional[str], skip_empty: bool) -> None:
         """
         Print ABI of contracts.
         """
+        self._names = set(names)
         self._skip_empty = skip_empty
         if out is not None:
             self._out = Path(out)

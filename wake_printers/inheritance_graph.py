@@ -10,6 +10,7 @@ from rich import print
 
 import wake.ir as ir
 import wake.ir.types as types
+from wake.cli import SolidityName
 from wake.printers import Printer, printer
 
 
@@ -124,7 +125,7 @@ class InheritanceGraphPrinter(Printer):
         "--name",
         "-n",
         "names",
-        type=str,
+        type=SolidityName("contract", case_sensitive=False),
         multiple=True,
         help="Contract names",
     )
