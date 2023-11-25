@@ -1,6 +1,5 @@
 import logging
 from collections import deque
-from functools import lru_cache
 from typing import Optional, Set, Tuple, Union
 
 import wake.ir.types as types
@@ -35,7 +34,7 @@ from wake.ir.enums import (
     Mutability,
     Visibility,
 )
-from wake.utils import recursion_guard, return_on_recursion
+from wake.utils import cached_return_on_recursion, return_on_recursion
 
 from .expressions import (
     expression_is_global_symbol,
@@ -230,158 +229,138 @@ def statement_is_only_owner(
     return False
 
 
-_block_statement_reachable_guard = set()
-
-
-@lru_cache(maxsize=2048)
+@cached_return_on_recursion(False)
 def _cfg_block_or_statement_is_publicly_reachable(
     target: Union[CfgNode, StatementAbc],
     cfg: ControlFlowGraph,
     check_func_visibility: bool = True,
     check_only_eoa: bool = False,
 ) -> bool:
-    if (
-        (
-            target,
-            check_func_visibility,
-            check_only_eoa,
-        ),
-        tuple(),
-    ) in _block_statement_reachable_guard:
-        return False
+    decl = cfg.declaration
+    assert not isinstance(decl, YulFunctionDefinition), "Yul not supported"
 
-    with recursion_guard(
-        _block_statement_reachable_guard, target, check_func_visibility, check_only_eoa
-    ):
-        decl = cfg.declaration
-        assert not isinstance(decl, YulFunctionDefinition), "Yul not supported"
-
-        if isinstance(decl, FunctionDefinition):
-            if decl.kind == FunctionKind.CONSTRUCTOR:
-                return False
-            for modifier in decl.modifiers:
-                mod = modifier.modifier_name.referenced_declaration
-                assert isinstance(mod, ModifierDefinition)
-                if mod.body is None:
-                    continue
-                placeholders = [
-                    s
-                    for s in mod.body.statements_iter()
-                    if isinstance(s, PlaceholderStatement)
-                ]
-                if not any(
-                    statement_is_publicly_executable(s, check_only_eoa=check_only_eoa)
-                    for s in placeholders
-                ):
-                    return False
-
-        if isinstance(target, StatementAbc):
-            block = cfg.get_cfg_node(target)
-            if target not in block.statements:
-                assert target == block.control_statement
-                if any(
-                    statement_is_only_owner(s, check_only_eoa) for s in block.statements
-                ):
-                    return False
-            else:
-                index = block.statements.index(target)
-                if any(
-                    statement_is_only_owner(s, check_only_eoa)
-                    for s in block.statements[:index]
-                ):
-                    return False
-        elif isinstance(target, CfgNode):
-            block = target
-        else:
-            raise NotImplementedError()
-
-        if block == cfg.start_node:
-            reached_start = True
-        else:
-            graph = cfg.graph
-            visited = {block}
-            queue = deque([block])
-            reached_start = False
-
-            while len(queue) > 0:
-                block = queue.popleft()
-                from_: CfgNode
-                condition: Tuple[TransitionConditionKind, Optional[ExpressionAbc]]
-                for (
-                    from_,
-                    _,
-                    data,
-                ) in graph.in_edges(  # pyright: ignore reportGeneralTypeIssues
-                    block, data=True  # pyright: ignore reportGeneralTypeIssues
-                ):
-                    if from_ in visited:
-                        continue
-                    condition = data[  # pyright: ignore reportOptionalSubscript
-                        "condition"
-                    ]
-                    if (
-                        (condition[0] == TransitionConditionKind.NEVER)
-                        or (
-                            condition[0] == TransitionConditionKind.IS_TRUE
-                            and condition[1] is not None
-                            and expression_is_only_owner(
-                                condition[1],  # pyright: ignore reportGeneralTypeIssues
-                                set(),
-                                check_only_eoa=check_only_eoa,
-                            )
-                        )
-                        or (
-                            condition[0] == TransitionConditionKind.IS_FALSE
-                            and condition[1] is not None
-                            and expression_is_only_owner(
-                                condition[1],  # pyright: ignore reportGeneralTypeIssues
-                                set(),
-                                check_only_eoa=check_only_eoa,
-                                inverted=True,
-                            )
-                        )
-                    ):
-                        continue
-
-                    if any(
-                        statement_is_only_owner(s, check_only_eoa)
-                        for s in from_.statements
-                    ):
-                        continue
-
-                    if from_ == cfg.start_node:
-                        reached_start = True
-                        break
-
-                    visited.add(from_)
-                    queue.append(from_)
-
-        if not reached_start:
+    if isinstance(decl, FunctionDefinition):
+        if decl.kind == FunctionKind.CONSTRUCTOR:
             return False
-        if isinstance(decl, ModifierDefinition) or not check_func_visibility:
-            return True
-        if decl.visibility in {Visibility.PUBLIC, Visibility.EXTERNAL}:
-            return True
-
-        for ref in decl.get_all_references(False):
-            if isinstance(ref, IdentifierPathPart):
-                calling_statement = ref.underlying_node
-            elif isinstance(ref, ExternalReference):
-                continue  # TODO currently not supported
-            else:
-                calling_statement = ref
-            while calling_statement is not None:
-                if isinstance(calling_statement, StatementAbc):
-                    break
-                calling_statement = calling_statement.parent
-            if calling_statement is not None and statement_is_publicly_executable(
-                calling_statement, check_only_eoa=check_only_eoa
+        for modifier in decl.modifiers:
+            mod = modifier.modifier_name.referenced_declaration
+            assert isinstance(mod, ModifierDefinition)
+            if mod.body is None:
+                continue
+            placeholders = [
+                s
+                for s in mod.body.statements_iter()
+                if isinstance(s, PlaceholderStatement)
+            ]
+            if not any(
+                statement_is_publicly_executable(s, check_only_eoa=check_only_eoa)
+                for s in placeholders
             ):
-                return True
+                return False
+
+    if isinstance(target, StatementAbc):
+        block = cfg.get_cfg_node(target)
+        if target not in block.statements:
+            assert target == block.control_statement
+            if any(
+                statement_is_only_owner(s, check_only_eoa) for s in block.statements
+            ):
+                return False
+        else:
+            index = block.statements.index(target)
+            if any(
+                statement_is_only_owner(s, check_only_eoa)
+                for s in block.statements[:index]
+            ):
+                return False
+    elif isinstance(target, CfgNode):
+        block = target
+    else:
+        raise NotImplementedError()
+
+    if block == cfg.start_node:
+        reached_start = True
+    else:
+        graph = cfg.graph
+        visited = {block}
+        queue = deque([block])
+        reached_start = False
+
+        while len(queue) > 0:
+            block = queue.popleft()
+            from_: CfgNode
+            condition: Tuple[TransitionConditionKind, Optional[ExpressionAbc]]
+            for (
+                from_,
+                _,
+                data,
+            ) in graph.in_edges(  # pyright: ignore reportGeneralTypeIssues
+                block, data=True  # pyright: ignore reportGeneralTypeIssues
+            ):
+                if from_ in visited:
+                    continue
+                condition = data["condition"]  # pyright: ignore reportOptionalSubscript
+                if (
+                    (condition[0] == TransitionConditionKind.NEVER)
+                    or (
+                        condition[0] == TransitionConditionKind.IS_TRUE
+                        and condition[1] is not None
+                        and expression_is_only_owner(
+                            condition[1],  # pyright: ignore reportGeneralTypeIssues
+                            set(),
+                            check_only_eoa=check_only_eoa,
+                        )
+                    )
+                    or (
+                        condition[0] == TransitionConditionKind.IS_FALSE
+                        and condition[1] is not None
+                        and expression_is_only_owner(
+                            condition[1],  # pyright: ignore reportGeneralTypeIssues
+                            set(),
+                            check_only_eoa=check_only_eoa,
+                            inverted=True,
+                        )
+                    )
+                ):
+                    continue
+
+                if any(
+                    statement_is_only_owner(s, check_only_eoa) for s in from_.statements
+                ):
+                    continue
+
+                if from_ == cfg.start_node:
+                    reached_start = True
+                    break
+
+                visited.add(from_)
+                queue.append(from_)
+
+    if not reached_start:
         return False
+    if isinstance(decl, ModifierDefinition) or not check_func_visibility:
+        return True
+    if decl.visibility in {Visibility.PUBLIC, Visibility.EXTERNAL}:
+        return True
+
+    for ref in decl.get_all_references(False):
+        if isinstance(ref, IdentifierPathPart):
+            calling_statement = ref.underlying_node
+        elif isinstance(ref, ExternalReference):
+            continue  # TODO currently not supported
+        else:
+            calling_statement = ref
+        while calling_statement is not None:
+            if isinstance(calling_statement, StatementAbc):
+                break
+            calling_statement = calling_statement.parent
+        if calling_statement is not None and statement_is_publicly_executable(
+            calling_statement, check_only_eoa=check_only_eoa
+        ):
+            return True
+    return False
 
 
-@lru_cache(maxsize=2048)
 def statement_is_publicly_executable(
     statement: StatementAbc,
     check_func_visibility: bool = True,
