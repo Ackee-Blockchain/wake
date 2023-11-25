@@ -6,6 +6,7 @@ import networkx as nx
 import rich_click as click
 import wake.ir as ir
 import wake.ir.types as types
+from wake.cli import SolidityName
 from wake.detectors import (
     Detection,
     DetectorConfidence,

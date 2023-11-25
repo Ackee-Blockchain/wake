@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import os
 import pickle
@@ -49,7 +50,18 @@ from wake.core.solidity_version import (
     SolidityVersionRanges,
 )
 from wake.core.wake_comments import WakeComment, error_commented_out
-from wake.ir import SourceUnit
+from wake.ir import (
+    ContractDefinition,
+    EnumDefinition,
+    ErrorDefinition,
+    EventDefinition,
+    FunctionDefinition,
+    ModifierDefinition,
+    SourceUnit,
+    StructDefinition,
+    UserDefinedValueTypeDefinition,
+    VariableDeclaration,
+)
 from wake.ir.ast import AstSolc
 from wake.ir.reference_resolver import CallbackParams, ReferenceResolver
 from wake.ir.utils import IrInitTuple
@@ -971,6 +983,26 @@ class SolidityCompiler:
         )
         start = time.perf_counter()
 
+        symbols_index = {
+            "contracts": set(),
+            "enums": set(),
+            "canonical_enums": set(),
+            "errors": set(),
+            "canonical_errors": set(),
+            "events": set(),
+            "canonical_events": set(),
+            "functions": set(),
+            "canonical_functions": set(),
+            "modifiers": set(),
+            "canonical_modifiers": set(),
+            "structs": set(),
+            "canonical_structs": set(),
+            "user_defined_value_types": set(),
+            "canonical_user_defined_value_types": set(),
+            "variables": set(),
+            "canonical_variables": set(),
+        }
+
         with ctx_manager:
             successful_compilation_units = []
             all_errored_files: Set[Path] = set()
@@ -1090,6 +1122,54 @@ class SolidityCompiler:
                     )
                 )
 
+            if write_artifacts:
+                for source_unit in build._source_units.values():
+                    for declaration in source_unit.declarations_iter():
+                        if isinstance(declaration, ContractDefinition):
+                            symbols_index["contracts"].add(declaration.name)
+                        elif isinstance(declaration, EnumDefinition):
+                            symbols_index["enums"].add(declaration.name)
+                            symbols_index["canonical_enums"].add(
+                                declaration.canonical_name
+                            )
+                        elif isinstance(declaration, ErrorDefinition):
+                            symbols_index["errors"].add(declaration.name)
+                            symbols_index["canonical_errors"].add(
+                                declaration.canonical_name
+                            )
+                        elif isinstance(declaration, EventDefinition):
+                            symbols_index["events"].add(declaration.name)
+                            symbols_index["canonical_events"].add(
+                                declaration.canonical_name
+                            )
+                        elif isinstance(declaration, FunctionDefinition):
+                            symbols_index["functions"].add(declaration.name)
+                            symbols_index["canonical_functions"].add(
+                                declaration.canonical_name
+                            )
+                        elif isinstance(declaration, ModifierDefinition):
+                            symbols_index["modifiers"].add(declaration.name)
+                            symbols_index["canonical_modifiers"].add(
+                                declaration.canonical_name
+                            )
+                        elif isinstance(declaration, StructDefinition):
+                            symbols_index["structs"].add(declaration.name)
+                            symbols_index["canonical_structs"].add(
+                                declaration.canonical_name
+                            )
+                        elif isinstance(declaration, UserDefinedValueTypeDefinition):
+                            symbols_index["user_defined_value_types"].add(
+                                declaration.name
+                            )
+                            symbols_index["canonical_user_defined_value_types"].add(
+                                declaration.canonical_name
+                            )
+                        elif isinstance(declaration, VariableDeclaration):
+                            symbols_index["variables"].add(declaration.name)
+                            symbols_index["canonical_variables"].add(
+                                declaration.canonical_name
+                            )
+
         if console is not None:
             end = time.perf_counter()
             console.log(
@@ -1117,6 +1197,15 @@ class SolidityCompiler:
         ):
             logger.debug("Writing artifacts")
             self.write_artifacts(console=console)
+
+            self.__config.project_root_path.joinpath(
+                ".wake/build/symbols.json"
+            ).write_text(
+                json.dumps(
+                    symbols_index,
+                    default=lambda x: list(x) if isinstance(x, set) else x,
+                )
+            )
 
         errors = set()
         for error_list in errors_per_cu.values():

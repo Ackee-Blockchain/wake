@@ -5,6 +5,7 @@ import rich_click as click
 import wake.ir as ir
 import wake.ir.types as types
 from rich import print
+from wake.cli import SolidityName
 from wake.printers import Printer, printer
 
 
