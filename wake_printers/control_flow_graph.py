@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Tuple, Union
+from typing import Set, Tuple, Union
 
 import networkx as nx
 import rich_click as click
@@ -9,11 +9,12 @@ from rich import print
 
 import wake.ir as ir
 import wake.ir.types as types
+from wake.cli import SolidityName
 from wake.printers import Printer, printer
 
 
 class ControlFlowGraphPrinter(Printer):
-    _names: Tuple[str, ...]
+    _names: Set[str]
     _out: Path
     _direction: str
     _links: bool
@@ -28,6 +29,7 @@ class ControlFlowGraphPrinter(Printer):
         if (
             len(self._names) != 0
             and node.name not in self._names
+            and node.canonical_name not in self._names
             or not node.implemented
         ):
             return
@@ -99,7 +101,7 @@ class ControlFlowGraphPrinter(Printer):
         "--name",
         "-n",
         "names",
-        type=str,
+        type=SolidityName("function", "modifier", case_sensitive=False),
         multiple=True,
         help="Function and modifier names",
     )
@@ -135,7 +137,7 @@ class ControlFlowGraphPrinter(Printer):
         """
         Generate control flow graphs for functions and modifiers.
         """
-        self._names = names
+        self._names = set(names)
         self._out = Path(out).resolve()
         self._out.mkdir(parents=True, exist_ok=True)
         self._direction = direction

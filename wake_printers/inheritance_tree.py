@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Tuple
+from typing import Set, Tuple
 
 import networkx as nx
 import rich.tree
@@ -9,11 +9,12 @@ from rich import print
 
 import wake.ir as ir
 import wake.ir.types as types
+from wake.cli import SolidityName
 from wake.printers import Printer, printer
 
 
 class InheritanceTreePrinter(Printer):
-    _names: Tuple[str, ...]
+    _names: Set[str]
 
     def print(self) -> None:
         pass
@@ -44,7 +45,7 @@ class InheritanceTreePrinter(Printer):
         "--name",
         "-n",
         "names",
-        type=str,
+        type=SolidityName("contract", case_sensitive=False),
         multiple=True,
         help="Contract names",
     )
@@ -52,4 +53,4 @@ class InheritanceTreePrinter(Printer):
         """
         Print inheritance tree of contracts.
         """
-        self._names = names
+        self._names = set(names)
