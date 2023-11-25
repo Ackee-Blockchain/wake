@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, List, Optional, Set, Tuple, Union
 
 from wake.ir.ast import (
     SolcYulFunctionCall,
@@ -9,6 +9,7 @@ from wake.ir.ast import (
     SolcYulVariableDeclaration,
 )
 
+from ..enums import ModifiesStateFlag
 from ..utils import IrInitTuple
 from .abc import YulAbc, YulStatementAbc
 from .function_call import YulFunctionCall
@@ -17,6 +18,8 @@ from .literal import YulLiteral
 from .typed_name import YulTypedName
 
 if TYPE_CHECKING:
+    from ..expressions.abc import ExpressionAbc
+    from ..statements.abc import StatementAbc
     from .block import YulBlock
 
 
@@ -99,3 +102,11 @@ class YulVariableDeclaration(YulStatementAbc):
             Value assigned to the variables.
         """
         return self._value
+
+    @property
+    def modifies_state(
+        self,
+    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
+        if self._value is None:
+            return set()
+        return self._value.modifies_state

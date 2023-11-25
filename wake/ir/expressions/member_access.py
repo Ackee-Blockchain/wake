@@ -1,7 +1,8 @@
-import logging
+from __future__ import annotations
+
 import re
 from functools import lru_cache, partial
-from typing import Iterator, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
 
 from wake.core import get_logger
 from wake.ir.abc import IrAbc, SolidityAbc
@@ -28,6 +29,10 @@ from wake.ir.types import (
     UserDefinedValueType,
 )
 from wake.ir.utils import IrInitTuple
+
+if TYPE_CHECKING:
+    from ..statements.abc import StatementAbc
+    from ..yul.abc import YulAbc
 
 MEMBER_RE = re.compile(r"\s*.\s*(?P<member>.+)".encode("utf-8"))
 
@@ -438,5 +443,7 @@ class MemberAccess(ExpressionAbc):
 
     @property
     @lru_cache(maxsize=2048)
-    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
+    def modifies_state(
+        self,
+    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
         return self.expression.modifies_state

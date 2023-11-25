@@ -3,10 +3,10 @@ from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from functools import lru_cache
-from typing import TYPE_CHECKING, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Optional, Set, Tuple, Union
 
 from wake.core import get_logger
-from wake.ir.abc import IrAbc, SolidityAbc
+from wake.ir.abc import SolidityAbc
 from wake.ir.ast import (
     SolcAssignment,
     SolcBinaryOperation,
@@ -32,6 +32,7 @@ from wake.utils.string import StringReader
 
 if TYPE_CHECKING:
     from ..statements.abc import StatementAbc
+    from ..yul.abc import YulAbc
 
 logger = get_logger(__name__)
 
@@ -53,7 +54,7 @@ class ExpressionAbc(SolidityAbc, ABC):
     @staticmethod
     def from_ast(
         init: IrInitTuple, expression: SolcExpressionUnion, parent: SolidityAbc
-    ) -> "ExpressionAbc":
+    ) -> ExpressionAbc:
         from .assignment import Assignment
         from .binary_operation import BinaryOperation
         from .conditional import Conditional
@@ -168,7 +169,9 @@ class ExpressionAbc(SolidityAbc, ABC):
 
     @property
     @abstractmethod
-    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
+    def modifies_state(
+        self,
+    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
         """
         WARNING:
             Is not considered stable and so is not exported in the documentation.

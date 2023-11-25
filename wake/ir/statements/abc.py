@@ -30,7 +30,9 @@ from wake.ir.utils import IrInitTuple
 if TYPE_CHECKING:
     from ..declarations.function_definition import FunctionDefinition
     from ..declarations.modifier_definition import ModifierDefinition
+    from ..expressions.abc import ExpressionAbc
     from ..meta.try_catch_clause import TryCatchClause
+    from ..yul.abc import YulAbc
     from .block import Block
     from .do_while_statement import DoWhileStatement
     from .for_statement import ForStatement
@@ -55,7 +57,7 @@ class StatementAbc(SolidityAbc, ABC):
     @staticmethod
     def from_ast(
         init: IrInitTuple, statement: SolcStatementUnion, parent: SolidityAbc
-    ) -> "StatementAbc":
+    ) -> StatementAbc:
         from .block import Block
         from .break_statement import Break
         from .continue_statement import Continue
@@ -130,7 +132,9 @@ class StatementAbc(SolidityAbc, ABC):
 
     @property
     @abstractmethod
-    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
+    def modifies_state(
+        self,
+    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
         """
         WARNING:
             Is not considered stable and so is not exported in the documentation.

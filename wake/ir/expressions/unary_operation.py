@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from functools import lru_cache, partial
-from typing import Iterator, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
 
 from wake.ir.abc import IrAbc, SolidityAbc
 from wake.ir.ast import AstNodeId, SolcUnaryOperation
@@ -8,6 +10,10 @@ from wake.ir.enums import ModifiesStateFlag, UnaryOpOperator
 from wake.ir.expressions.abc import ExpressionAbc
 from wake.ir.reference_resolver import CallbackParams
 from wake.ir.utils import IrInitTuple
+
+if TYPE_CHECKING:
+    from ..statements.abc import StatementAbc
+    from ..yul.abc import YulAbc
 
 
 class UnaryOperation(ExpressionAbc):
@@ -91,7 +97,9 @@ class UnaryOperation(ExpressionAbc):
 
     @property
     @lru_cache(maxsize=2048)
-    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
+    def modifies_state(
+        self,
+    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
         ret = self.sub_expression.modifies_state
 
         if (

@@ -13,9 +13,11 @@ from wake.ir.reference_resolver import CallbackParams
 from wake.ir.utils import IrInitTuple
 
 if TYPE_CHECKING:
-    from wake.ir.declarations.function_definition import FunctionDefinition
-    from wake.ir.meta.import_directive import ImportDirective
-    from wake.ir.meta.source_unit import SourceUnit
+    from ..declarations.function_definition import FunctionDefinition
+    from ..meta.import_directive import ImportDirective
+    from ..meta.source_unit import SourceUnit
+    from ..statements.abc import StatementAbc
+    from ..yul.abc import YulAbc
 
 
 class Identifier(ExpressionAbc):
@@ -217,5 +219,7 @@ class Identifier(ExpressionAbc):
         )
 
     @property
-    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
+    def modifies_state(
+        self,
+    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
         return set()

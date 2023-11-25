@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from functools import lru_cache
-from typing import Iterator, Set, Tuple
+from typing import TYPE_CHECKING, Iterator, Set, Tuple, Union
 
 from wake.ir.abc import IrAbc, SolidityAbc
 from wake.ir.ast import SolcConditional
@@ -7,6 +9,10 @@ from wake.ir.enums import ModifiesStateFlag
 from wake.ir.utils import IrInitTuple
 
 from .abc import ExpressionAbc
+
+if TYPE_CHECKING:
+    from ..statements.abc import StatementAbc
+    from ..yul.abc import YulAbc
 
 
 class Conditional(ExpressionAbc):
@@ -80,7 +86,9 @@ class Conditional(ExpressionAbc):
 
     @property
     @lru_cache(maxsize=2048)
-    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
+    def modifies_state(
+        self,
+    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
         return (
             self.condition.modifies_state
             | self.true_expression.modifies_state

@@ -1,13 +1,16 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Set, Tuple, Union
 
 from wake.ir.ast import SolcYulTypedName
 from wake.ir.utils import IrInitTuple
 
+from ..enums import ModifiesStateFlag
 from .abc import YulAbc
 
 if TYPE_CHECKING:
+    from ..expressions.abc import ExpressionAbc
+    from ..statements.abc import StatementAbc
     from .function_definition import YulFunctionDefinition
     from .variable_declaration import YulVariableDeclaration
 
@@ -59,3 +62,9 @@ class YulTypedName(YulAbc):
     # @property
     # def type(self) -> str:
     # return self._type
+
+    @property
+    def modifies_state(
+        self,
+    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
+        return set()

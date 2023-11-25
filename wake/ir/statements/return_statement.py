@@ -10,6 +10,7 @@ from .abc import StatementAbc
 
 if TYPE_CHECKING:
     from ..meta.parameter_list import ParameterList
+    from ..yul.abc import YulAbc
 
 from wake.ir.abc import IrAbc, SolidityAbc
 from wake.ir.ast import AstNodeId, SolcReturn
@@ -116,7 +117,9 @@ class Return(StatementAbc):
 
     @property
     @lru_cache(maxsize=2048)
-    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
+    def modifies_state(
+        self,
+    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
         if self._expression is None:
             return set()
         return self._expression.modifies_state

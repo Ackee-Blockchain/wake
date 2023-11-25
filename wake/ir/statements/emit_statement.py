@@ -12,6 +12,8 @@ from ..expressions.function_call import FunctionCall
 from ..statements.abc import StatementAbc
 
 if TYPE_CHECKING:
+    from ..expressions.abc import ExpressionAbc
+    from ..yul.abc import YulAbc
     from .block import Block
     from .do_while_statement import DoWhileStatement
     from .for_statement import ForStatement
@@ -87,5 +89,7 @@ class EmitStatement(StatementAbc):
 
     @property
     @lru_cache(maxsize=2048)
-    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
+    def modifies_state(
+        self,
+    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
         return {(self, ModifiesStateFlag.EMITS)} | self.event_call.modifies_state
