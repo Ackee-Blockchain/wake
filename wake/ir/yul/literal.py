@@ -20,13 +20,16 @@ if TYPE_CHECKING:
     from .switch import YulSwitch
     from .variable_declaration import YulVariableDeclaration
 
+# hex escapes must be extra escaped (\\x instead of \x) for documentation to be generated correctly
+# Yul hex escapes are in the form of \x01, \x02, etc.
+
 
 class YulLiteral(YulAbc):
     """
-    String literals may have up to 32 characters.
+    String literals may have up to 32 bytes.
 
     !!! example
-        `:::solidity 10`, `:::solidity 0x1234`, `:::solidity true` and `:::solidity "abcdef"` in the following example are all literals:
+        `:::solidity 10`, `:::solidity 0x1234`, `:::solidity true`, `:::solidity "abcdef"` and `:::solidity "\\x01\\x02\\x03"` in the following example are all literals:
 
         ```solidity
         assembly {
@@ -34,6 +37,7 @@ class YulLiteral(YulAbc):
             x := 0x1234
             x := true
             x := "abcdef"
+            x := "\\x01\\x02\\x03"
         }
         ```
     """
@@ -50,7 +54,7 @@ class YulLiteral(YulAbc):
     ]
     _kind: YulLiteralKind
     _type: str
-    _value: str
+    _value: Optional[str]
     _hex_value: Optional[bytes]
 
     def __init__(self, init: IrInitTuple, literal: SolcYulLiteral, parent: YulAbc):
@@ -60,7 +64,6 @@ class YulLiteral(YulAbc):
         assert (
             literal.type == ""
         ), f"Expected YulLiteral type to be empty, got {literal.type}"
-        assert literal.value is not None, "Expected YulLiteral value to be not None"
         self._value = literal.value
         self._hex_value = (
             bytes.fromhex(literal.hex_value) if literal.hex_value is not None else None
@@ -99,10 +102,13 @@ class YulLiteral(YulAbc):
     # return self._type
 
     @property
-    def value(self) -> str:
+    def value(self) -> Optional[str]:
         """
+        Is `None` for hex-escaped strings that are not valid UTF-8 sequences, e.g. `:::solidity "\\xaa\\xbb"`.
+
         Returns:
-            Value of the literal as it appears in the Yul source code.
+            Value of the literal as it appears in the Yul source code, except for hex-escape sequences that are
+                replaced with their corresponding bytes.
         """
         return self._value
 
