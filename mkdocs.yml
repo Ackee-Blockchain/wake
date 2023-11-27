@@ -96,6 +96,7 @@ nav:
       - Developer guide:
         - Getting started: 'static-analysis/getting-started.md'
         - Working with IR: 'static-analysis/working-with-ir.md'
+        - Command-line interface: 'static-analysis/command-line-interface.md'
 
   - LSP server: 'language-server.md'
   - Solc Version Manager: 'solc-version-manager.md'
