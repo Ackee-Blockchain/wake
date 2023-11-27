@@ -90,6 +90,7 @@ nav:
             - Imports graph: 'static-analysis/printers/imports-graph.md'
             - Inheritance graph: 'static-analysis/printers/inheritance-graph.md'
             - Inheritance tree: 'static-analysis/printers/inheritance-tree.md'
+            - State changes: 'static-analysis/printers/state-changes.md'
             - Storage layout: 'static-analysis/printers/storage-layout.md'
             - Tokens: 'static-analysis/printers/tokens.md'
       - Developer guide:
