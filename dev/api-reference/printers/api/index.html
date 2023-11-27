@@ -1590,6 +1590,18 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -1629,6 +1641,126 @@
   
   <span class="md-ellipsis">
     ABI
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../static-analysis/printers/control-flow-graph/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Control flow graph
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../static-analysis/printers/imports-graph/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Imports graph
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../static-analysis/printers/inheritance-graph/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Inheritance graph
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../static-analysis/printers/inheritance-tree/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Inheritance tree
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../static-analysis/printers/modifiers/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Modifiers
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../static-analysis/printers/state-changes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    State changes
   </span>
   
 
@@ -1706,6 +1838,8 @@
       
         
       
+        
+      
     
     
       
@@ -1767,6 +1901,26 @@
   
   <span class="md-ellipsis">
     Working with IR
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../static-analysis/command-line-interface/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Command-line interface
   </span>
   
 
@@ -4696,8 +4850,7 @@ In this case, the printer should operate on all paths. May be ignored unless <a 
 
         <details class="quote">
           <summary>Source code in <code>wake/printers/api.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-32">32</a></span>
-<span class="normal"><a href="#__codelineno-0-33">33</a></span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-33">33</a></span>
 <span class="normal"><a href="#__codelineno-0-34">34</a></span>
 <span class="normal"><a href="#__codelineno-0-35">35</a></span>
 <span class="normal"><a href="#__codelineno-0-36">36</a></span>
@@ -4740,51 +4893,52 @@ In this case, the printer should operate on all paths. May be ignored unless <a 
 <span class="normal"><a href="#__codelineno-0-73">73</a></span>
 <span class="normal"><a href="#__codelineno-0-74">74</a></span>
 <span class="normal"><a href="#__codelineno-0-75">75</a></span>
-<span class="normal"><a href="#__codelineno-0-76">76</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-32" name="__codelineno-0-32"></a><span class="k">class</span> <span class="nc">Printer</span><span class="p">(</span><span class="n">Visitor</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
-<a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-34" name="__codelineno-0-34"></a><span class="sd">    Base class for printers.</span>
-<a id="__codelineno-0-35" name="__codelineno-0-35"></a>
-<a id="__codelineno-0-36" name="__codelineno-0-36"></a><span class="sd">    Attributes:</span>
-<a id="__codelineno-0-37" name="__codelineno-0-37"></a><span class="sd">        paths: Paths the printer should operate on. May be empty if a user did not specify any paths, e.g. when running `wake print printer-name`.</span>
-<a id="__codelineno-0-38" name="__codelineno-0-38"></a><span class="sd">            In this case, the printer should operate on all paths. May be ignored unless [visit_mode][wake.printers.api.Printer.visit_mode] is `all`.</span>
-<a id="__codelineno-0-39" name="__codelineno-0-39"></a><span class="sd">        extra: Extra data set by the execution engine.</span>
-<a id="__codelineno-0-40" name="__codelineno-0-40"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-41" name="__codelineno-0-41"></a>
-<a id="__codelineno-0-42" name="__codelineno-0-42"></a>    <span class="n">console</span><span class="p">:</span> <span class="n">Console</span>
-<a id="__codelineno-0-43" name="__codelineno-0-43"></a>    <span class="n">paths</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span>
-<a id="__codelineno-0-44" name="__codelineno-0-44"></a>    <span class="n">extra</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
-<a id="__codelineno-0-45" name="__codelineno-0-45"></a>
-<a id="__codelineno-0-46" name="__codelineno-0-46"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-47" name="__codelineno-0-47"></a>    <span class="k">def</span> <span class="nf">visit_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;paths&quot;</span><span class="p">],</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;all&quot;</span><span class="p">]]:</span>
-<a id="__codelineno-0-48" name="__codelineno-0-48"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="sd">        Configurable visit mode of the printer. If set to `paths`, the printer `visit_` methods will be called only for the paths specified by the user.</span>
-<a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="sd">        If set to `all`, the printer `visit_` methods will be called for all paths. In this case, the printer should use the `paths` attribute to decide what to print.</span>
-<a id="__codelineno-0-51" name="__codelineno-0-51"></a>
-<a id="__codelineno-0-52" name="__codelineno-0-52"></a><span class="sd">        Returns:</span>
-<a id="__codelineno-0-53" name="__codelineno-0-53"></a><span class="sd">            Visit mode of the printer.</span>
-<a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-55" name="__codelineno-0-55"></a>        <span class="k">return</span> <span class="s2">&quot;paths&quot;</span>
-<a id="__codelineno-0-56" name="__codelineno-0-56"></a>
-<a id="__codelineno-0-57" name="__codelineno-0-57"></a>    <span class="nd">@abstractmethod</span>
-<a id="__codelineno-0-58" name="__codelineno-0-58"></a>    <span class="k">def</span> <span class="nf">print</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="sd">        Abstract method that must be implemented in every printer. This method is called after all `visit_` methods have been called.</span>
-<a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-62" name="__codelineno-0-62"></a>        <span class="o">...</span>
-<a id="__codelineno-0-63" name="__codelineno-0-63"></a>
-<a id="__codelineno-0-64" name="__codelineno-0-64"></a>    <span class="k">def</span> <span class="nf">_run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-65" name="__codelineno-0-65"></a>        <span class="kn">from</span> <span class="nn">wake.utils.file_utils</span> <span class="kn">import</span> <span class="n">is_relative_to</span>
-<a id="__codelineno-0-66" name="__codelineno-0-66"></a>
-<a id="__codelineno-0-67" name="__codelineno-0-67"></a>        <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">source_unit</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">build</span><span class="o">.</span><span class="n">source_units</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-<a id="__codelineno-0-68" name="__codelineno-0-68"></a>            <span class="k">if</span> <span class="p">(</span>
-<a id="__codelineno-0-69" name="__codelineno-0-69"></a>                <span class="bp">self</span><span class="o">.</span><span class="n">visit_mode</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span>
-<a id="__codelineno-0-70" name="__codelineno-0-70"></a>                <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">paths</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
-<a id="__codelineno-0-71" name="__codelineno-0-71"></a>                <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="n">is_relative_to</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">paths</span><span class="p">)</span>
-<a id="__codelineno-0-72" name="__codelineno-0-72"></a>            <span class="p">):</span>
-<a id="__codelineno-0-73" name="__codelineno-0-73"></a>                <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">source_unit</span><span class="p">:</span>
-<a id="__codelineno-0-74" name="__codelineno-0-74"></a>                    <span class="n">visit_map</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">ast_node</span><span class="o">.</span><span class="n">node_type</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
-<a id="__codelineno-0-75" name="__codelineno-0-75"></a>
-<a id="__codelineno-0-76" name="__codelineno-0-76"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">print</span><span class="p">()</span>
+<span class="normal"><a href="#__codelineno-0-76">76</a></span>
+<span class="normal"><a href="#__codelineno-0-77">77</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="k">class</span> <span class="nc">Printer</span><span class="p">(</span><span class="n">Visitor</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+<a id="__codelineno-0-34" name="__codelineno-0-34"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="sd">    Base class for printers.</span>
+<a id="__codelineno-0-36" name="__codelineno-0-36"></a>
+<a id="__codelineno-0-37" name="__codelineno-0-37"></a><span class="sd">    Attributes:</span>
+<a id="__codelineno-0-38" name="__codelineno-0-38"></a><span class="sd">        paths: Paths the printer should operate on. May be empty if a user did not specify any paths, e.g. when running `wake print printer-name`.</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39"></a><span class="sd">            In this case, the printer should operate on all paths. May be ignored unless [visit_mode][wake.printers.api.Printer.visit_mode] is `all`.</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40"></a><span class="sd">        extra: Extra data set by the execution engine.</span>
+<a id="__codelineno-0-41" name="__codelineno-0-41"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-42" name="__codelineno-0-42"></a>
+<a id="__codelineno-0-43" name="__codelineno-0-43"></a>    <span class="n">console</span><span class="p">:</span> <span class="n">Console</span>
+<a id="__codelineno-0-44" name="__codelineno-0-44"></a>    <span class="n">paths</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span>
+<a id="__codelineno-0-45" name="__codelineno-0-45"></a>    <span class="n">extra</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+<a id="__codelineno-0-46" name="__codelineno-0-46"></a>
+<a id="__codelineno-0-47" name="__codelineno-0-47"></a>    <span class="nd">@property</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48"></a>    <span class="k">def</span> <span class="nf">visit_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;paths&quot;</span><span class="p">],</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;all&quot;</span><span class="p">]]:</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="sd">        Configurable visit mode of the printer. If set to `paths`, the printer `visit_` methods will be called only for the paths specified by the user.</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="sd">        If set to `all`, the printer `visit_` methods will be called for all paths. In this case, the printer should use the `paths` attribute to decide what to print.</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52"></a>
+<a id="__codelineno-0-53" name="__codelineno-0-53"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="sd">            Visit mode of the printer.</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56"></a>        <span class="k">return</span> <span class="s2">&quot;paths&quot;</span>
+<a id="__codelineno-0-57" name="__codelineno-0-57"></a>
+<a id="__codelineno-0-58" name="__codelineno-0-58"></a>    <span class="nd">@abstractmethod</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59"></a>    <span class="k">def</span> <span class="nf">print</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="sd">        Abstract method that must be implemented in every printer. This method is called after all `visit_` methods have been called.</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63"></a>        <span class="o">...</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64"></a>
+<a id="__codelineno-0-65" name="__codelineno-0-65"></a>    <span class="k">def</span> <span class="nf">_run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66"></a>        <span class="kn">from</span> <span class="nn">wake.utils.file_utils</span> <span class="kn">import</span> <span class="n">is_relative_to</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67"></a>
+<a id="__codelineno-0-68" name="__codelineno-0-68"></a>        <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">source_unit</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">build</span><span class="o">.</span><span class="n">source_units</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69"></a>            <span class="k">if</span> <span class="p">(</span>
+<a id="__codelineno-0-70" name="__codelineno-0-70"></a>                <span class="bp">self</span><span class="o">.</span><span class="n">visit_mode</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span>
+<a id="__codelineno-0-71" name="__codelineno-0-71"></a>                <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">paths</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+<a id="__codelineno-0-72" name="__codelineno-0-72"></a>                <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="n">is_relative_to</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">paths</span><span class="p">)</span>
+<a id="__codelineno-0-73" name="__codelineno-0-73"></a>            <span class="p">):</span>
+<a id="__codelineno-0-74" name="__codelineno-0-74"></a>                <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">source_unit</span><span class="p">:</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75"></a>                    <span class="n">visit_map</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">ast_node</span><span class="o">.</span><span class="n">node_type</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76"></a>
+<a id="__codelineno-0-77" name="__codelineno-0-77"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">print</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
         </details>
 
@@ -4869,17 +5023,17 @@ If set to <code>all</code>, the printer <code>visit_</code> methods will be call
 
           <details class="quote">
             <summary>Source code in <code>wake/printers/api.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-57">57</a></span>
-<span class="normal"><a href="#__codelineno-0-58">58</a></span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-58">58</a></span>
 <span class="normal"><a href="#__codelineno-0-59">59</a></span>
 <span class="normal"><a href="#__codelineno-0-60">60</a></span>
 <span class="normal"><a href="#__codelineno-0-61">61</a></span>
-<span class="normal"><a href="#__codelineno-0-62">62</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="nd">@abstractmethod</span>
-<a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="k">def</span> <span class="nf">print</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="sd">    Abstract method that must be implemented in every printer. This method is called after all `visit_` methods have been called.</span>
-<a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-62" name="__codelineno-0-62"></a>    <span class="o">...</span>
+<span class="normal"><a href="#__codelineno-0-62">62</a></span>
+<span class="normal"><a href="#__codelineno-0-63">63</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="nd">@abstractmethod</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="k">def</span> <span class="nf">print</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="sd">    Abstract method that must be implemented in every printer. This method is called after all `visit_` methods have been called.</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63"></a>    <span class="o">...</span>
 </code></pre></div></td></tr></table></div>
           </details>
   </div>

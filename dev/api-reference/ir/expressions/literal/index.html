@@ -1592,6 +1592,18 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -1631,6 +1643,126 @@
   
   <span class="md-ellipsis">
     ABI
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../static-analysis/printers/control-flow-graph/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Control flow graph
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../static-analysis/printers/imports-graph/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Imports graph
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../static-analysis/printers/inheritance-graph/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Inheritance graph
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../static-analysis/printers/inheritance-tree/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Inheritance tree
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../static-analysis/printers/modifiers/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Modifiers
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../static-analysis/printers/state-changes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    State changes
   </span>
   
 
@@ -1708,6 +1840,8 @@
       
         
       
+        
+      
     
     
       
@@ -1769,6 +1903,26 @@
   
   <span class="md-ellipsis">
     Working with IR
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../static-analysis/command-line-interface/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Command-line interface
   </span>
   
 
@@ -4697,13 +4851,7 @@
 
         <details class="quote">
           <summary>Source code in <code>wake/ir/expressions/literal.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-10">10</a></span>
-<span class="normal"><a href="#__codelineno-0-11">11</a></span>
-<span class="normal"><a href="#__codelineno-0-12">12</a></span>
-<span class="normal"><a href="#__codelineno-0-13">13</a></span>
-<span class="normal"><a href="#__codelineno-0-14">14</a></span>
-<span class="normal"><a href="#__codelineno-0-15">15</a></span>
-<span class="normal"><a href="#__codelineno-0-16">16</a></span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-16">16</a></span>
 <span class="normal"><a href="#__codelineno-0-17">17</a></span>
 <span class="normal"><a href="#__codelineno-0-18">18</a></span>
 <span class="normal"><a href="#__codelineno-0-19">19</a></span>
@@ -4778,88 +4926,98 @@
 <span class="normal"><a href="#__codelineno-0-88">88</a></span>
 <span class="normal"><a href="#__codelineno-0-89">89</a></span>
 <span class="normal"><a href="#__codelineno-0-90">90</a></span>
-<span class="normal"><a href="#__codelineno-0-91">91</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-10" name="__codelineno-0-10"></a><span class="k">class</span> <span class="nc">Literal</span><span class="p">(</span><span class="n">ExpressionAbc</span><span class="p">):</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-12" name="__codelineno-0-12"></a><span class="sd">    May represent a literal of the following types (see [LiteralKind][wake.ir.enums.LiteralKind]):</span>
-<a id="__codelineno-0-13" name="__codelineno-0-13"></a>
-<a id="__codelineno-0-14" name="__codelineno-0-14"></a><span class="sd">    - boolean, e.g. `true`, `false`,</span>
-<a id="__codelineno-0-15" name="__codelineno-0-15"></a><span class="sd">    - integer, e.g. `-1`, `.2`, `3e10`, `123_456`, `0x123`, `1_002e34`,</span>
-<a id="__codelineno-0-16" name="__codelineno-0-16"></a><span class="sd">    - string, e.g. `&quot;Hello World!&quot;`,</span>
-<a id="__codelineno-0-17" name="__codelineno-0-17"></a><span class="sd">    - hex string, e.g. `hex&quot;1234aabb&quot;`,</span>
-<a id="__codelineno-0-18" name="__codelineno-0-18"></a><span class="sd">    - unicode string, e.g. `unicode&quot;Hello World! 😃&quot;`,</span>
-<a id="__codelineno-0-19" name="__codelineno-0-19"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-20" name="__codelineno-0-20"></a>
-<a id="__codelineno-0-21" name="__codelineno-0-21"></a>    <span class="n">_ast_node</span><span class="p">:</span> <span class="n">SolcLiteral</span>
-<a id="__codelineno-0-22" name="__codelineno-0-22"></a>    <span class="n">_parent</span><span class="p">:</span> <span class="n">SolidityAbc</span>  <span class="c1"># TODO: make this more specific</span>
-<a id="__codelineno-0-23" name="__codelineno-0-23"></a>
-<a id="__codelineno-0-24" name="__codelineno-0-24"></a>    <span class="n">_hex_value</span><span class="p">:</span> <span class="nb">bytes</span>
-<a id="__codelineno-0-25" name="__codelineno-0-25"></a>    <span class="n">_kind</span><span class="p">:</span> <span class="n">LiteralKind</span>
-<a id="__codelineno-0-26" name="__codelineno-0-26"></a>    <span class="n">_subdenomination</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
-<a id="__codelineno-0-27" name="__codelineno-0-27"></a>    <span class="n">_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
-<a id="__codelineno-0-28" name="__codelineno-0-28"></a>
-<a id="__codelineno-0-29" name="__codelineno-0-29"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span> <span class="n">literal</span><span class="p">:</span> <span class="n">SolcLiteral</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">SolidityAbc</span><span class="p">):</span>
-<a id="__codelineno-0-30" name="__codelineno-0-30"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">literal</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
-<a id="__codelineno-0-31" name="__codelineno-0-31"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_hex_value</span> <span class="o">=</span> <span class="nb">bytes</span><span class="o">.</span><span class="n">fromhex</span><span class="p">(</span><span class="n">literal</span><span class="o">.</span><span class="n">hex_value</span><span class="p">)</span>
-<a id="__codelineno-0-32" name="__codelineno-0-32"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span> <span class="o">=</span> <span class="n">literal</span><span class="o">.</span><span class="n">kind</span>
-<a id="__codelineno-0-33" name="__codelineno-0-33"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_subdenomination</span> <span class="o">=</span> <span class="n">literal</span><span class="o">.</span><span class="n">subdenomination</span>
-<a id="__codelineno-0-34" name="__codelineno-0-34"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">=</span> <span class="n">literal</span><span class="o">.</span><span class="n">value</span>
-<a id="__codelineno-0-35" name="__codelineno-0-35"></a>
-<a id="__codelineno-0-36" name="__codelineno-0-36"></a>        <span class="c1"># fix prior to 0.7.0 hex string literals had kind `string` instead of `hexString`</span>
-<a id="__codelineno-0-37" name="__codelineno-0-37"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-38" name="__codelineno-0-38"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span> <span class="o">=</span> <span class="n">LiteralKind</span><span class="o">.</span><span class="n">HEX_STRING</span>
-<a id="__codelineno-0-39" name="__codelineno-0-39"></a>
-<a id="__codelineno-0-40" name="__codelineno-0-40"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-41" name="__codelineno-0-41"></a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SolidityAbc</span><span class="p">:</span>
-<a id="__codelineno-0-42" name="__codelineno-0-42"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span>
-<a id="__codelineno-0-43" name="__codelineno-0-43"></a>
-<a id="__codelineno-0-44" name="__codelineno-0-44"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-45" name="__codelineno-0-45"></a>    <span class="k">def</span> <span class="nf">hex_value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-<a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="sd">        !!! important</span>
-<a id="__codelineno-0-48" name="__codelineno-0-48"></a><span class="sd">            Does not return the hexadecimal representation, but rather the [value][wake.ir.expressions.literal.Literal.value] encoded into bytes.</span>
-<a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="sd">            For example, `hex&quot;1234aabb&quot;` would return `b&#39;\x124\xaa\xbb&#39;` and `.2` would return `b&#39;.2&#39;`.</span>
-<a id="__codelineno-0-50" name="__codelineno-0-50"></a>
-<a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="sd">        Returns:</span>
-<a id="__codelineno-0-52" name="__codelineno-0-52"></a><span class="sd">            Hex string literal value.</span>
-<a id="__codelineno-0-53" name="__codelineno-0-53"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-54" name="__codelineno-0-54"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hex_value</span>
-<a id="__codelineno-0-55" name="__codelineno-0-55"></a>
-<a id="__codelineno-0-56" name="__codelineno-0-56"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-57" name="__codelineno-0-57"></a>    <span class="k">def</span> <span class="nf">kind</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LiteralKind</span><span class="p">:</span>
-<a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="sd">        Returns:</span>
-<a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="sd">            Literal kind.</span>
-<a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-62" name="__codelineno-0-62"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span>
-<a id="__codelineno-0-63" name="__codelineno-0-63"></a>
-<a id="__codelineno-0-64" name="__codelineno-0-64"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-65" name="__codelineno-0-65"></a>    <span class="k">def</span> <span class="nf">subdenomination</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-67" name="__codelineno-0-67"></a><span class="sd">        !!! example</span>
-<a id="__codelineno-0-68" name="__codelineno-0-68"></a><span class="sd">            For example `wei`, `ether`, `seconds`, `days`, etc.</span>
+<span class="normal"><a href="#__codelineno-0-91">91</a></span>
+<span class="normal"><a href="#__codelineno-0-92">92</a></span>
+<span class="normal"><a href="#__codelineno-0-93">93</a></span>
+<span class="normal"><a href="#__codelineno-0-94">94</a></span>
+<span class="normal"><a href="#__codelineno-0-95">95</a></span>
+<span class="normal"><a href="#__codelineno-0-96">96</a></span>
+<span class="normal"><a href="#__codelineno-0-97">97</a></span>
+<span class="normal"><a href="#__codelineno-0-98">98</a></span>
+<span class="normal"><a href="#__codelineno-0-99">99</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-16" name="__codelineno-0-16"></a><span class="k">class</span> <span class="nc">Literal</span><span class="p">(</span><span class="n">ExpressionAbc</span><span class="p">):</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18"></a><span class="sd">    May represent a literal of the following types (see [LiteralKind][wake.ir.enums.LiteralKind]):</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19"></a>
+<a id="__codelineno-0-20" name="__codelineno-0-20"></a><span class="sd">    - boolean, e.g. `true`, `false`,</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21"></a><span class="sd">    - integer, e.g. `-1`, `.2`, `3e10`, `123_456`, `0x123`, `1_002e34`,</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22"></a><span class="sd">    - string, e.g. `&quot;Hello World!&quot;`,</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23"></a><span class="sd">    - hex string, e.g. `hex&quot;1234aabb&quot;`,</span>
+<a id="__codelineno-0-24" name="__codelineno-0-24"></a><span class="sd">    - unicode string, e.g. `unicode&quot;Hello World! 😃&quot;`,</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-26" name="__codelineno-0-26"></a>
+<a id="__codelineno-0-27" name="__codelineno-0-27"></a>    <span class="n">_ast_node</span><span class="p">:</span> <span class="n">SolcLiteral</span>
+<a id="__codelineno-0-28" name="__codelineno-0-28"></a>    <span class="n">_parent</span><span class="p">:</span> <span class="n">SolidityAbc</span>  <span class="c1"># TODO: make this more specific</span>
+<a id="__codelineno-0-29" name="__codelineno-0-29"></a>
+<a id="__codelineno-0-30" name="__codelineno-0-30"></a>    <span class="n">_hex_value</span><span class="p">:</span> <span class="nb">bytes</span>
+<a id="__codelineno-0-31" name="__codelineno-0-31"></a>    <span class="n">_kind</span><span class="p">:</span> <span class="n">LiteralKind</span>
+<a id="__codelineno-0-32" name="__codelineno-0-32"></a>    <span class="n">_subdenomination</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+<a id="__codelineno-0-33" name="__codelineno-0-33"></a>    <span class="n">_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+<a id="__codelineno-0-34" name="__codelineno-0-34"></a>
+<a id="__codelineno-0-35" name="__codelineno-0-35"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span> <span class="n">literal</span><span class="p">:</span> <span class="n">SolcLiteral</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">SolidityAbc</span><span class="p">):</span>
+<a id="__codelineno-0-36" name="__codelineno-0-36"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">literal</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
+<a id="__codelineno-0-37" name="__codelineno-0-37"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_hex_value</span> <span class="o">=</span> <span class="nb">bytes</span><span class="o">.</span><span class="n">fromhex</span><span class="p">(</span><span class="n">literal</span><span class="o">.</span><span class="n">hex_value</span><span class="p">)</span>
+<a id="__codelineno-0-38" name="__codelineno-0-38"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span> <span class="o">=</span> <span class="n">literal</span><span class="o">.</span><span class="n">kind</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_subdenomination</span> <span class="o">=</span> <span class="n">literal</span><span class="o">.</span><span class="n">subdenomination</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">=</span> <span class="n">literal</span><span class="o">.</span><span class="n">value</span>
+<a id="__codelineno-0-41" name="__codelineno-0-41"></a>
+<a id="__codelineno-0-42" name="__codelineno-0-42"></a>        <span class="c1"># fix prior to 0.7.0 hex string literals had kind `string` instead of `hexString`</span>
+<a id="__codelineno-0-43" name="__codelineno-0-43"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-44" name="__codelineno-0-44"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span> <span class="o">=</span> <span class="n">LiteralKind</span><span class="o">.</span><span class="n">HEX_STRING</span>
+<a id="__codelineno-0-45" name="__codelineno-0-45"></a>
+<a id="__codelineno-0-46" name="__codelineno-0-46"></a>    <span class="nd">@property</span>
+<a id="__codelineno-0-47" name="__codelineno-0-47"></a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SolidityAbc</span><span class="p">:</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49"></a>
+<a id="__codelineno-0-50" name="__codelineno-0-50"></a>    <span class="nd">@property</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51"></a>    <span class="k">def</span> <span class="nf">hex_value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53"></a><span class="sd">        !!! important</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="sd">            Does not return the hexadecimal representation, but rather the [value][wake.ir.expressions.literal.Literal.value] encoded into bytes.</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="sd">            For example, `hex&quot;1234aabb&quot;` would return `b&#39;\x124\xaa\xbb&#39;` and `.2` would return `b&#39;.2&#39;`.</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56"></a>
+<a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="sd">            Hex string literal value.</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hex_value</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61"></a>
+<a id="__codelineno-0-62" name="__codelineno-0-62"></a>    <span class="nd">@property</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63"></a>    <span class="k">def</span> <span class="nf">kind</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LiteralKind</span><span class="p">:</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-65" name="__codelineno-0-65"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="sd">            Literal kind.</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span>
 <a id="__codelineno-0-69" name="__codelineno-0-69"></a>
-<a id="__codelineno-0-70" name="__codelineno-0-70"></a><span class="sd">        Returns:</span>
-<a id="__codelineno-0-71" name="__codelineno-0-71"></a><span class="sd">            Literal subdenomination, if any.</span>
-<a id="__codelineno-0-72" name="__codelineno-0-72"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-73" name="__codelineno-0-73"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subdenomination</span>
-<a id="__codelineno-0-74" name="__codelineno-0-74"></a>
-<a id="__codelineno-0-75" name="__codelineno-0-75"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-76" name="__codelineno-0-76"></a>    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<a id="__codelineno-0-77" name="__codelineno-0-77"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-78" name="__codelineno-0-78"></a><span class="sd">        Is `None` for hex string literals.</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79"></a>
-<a id="__codelineno-0-80" name="__codelineno-0-80"></a><span class="sd">        Returns:</span>
-<a id="__codelineno-0-81" name="__codelineno-0-81"></a><span class="sd">            Literal value.</span>
-<a id="__codelineno-0-82" name="__codelineno-0-82"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-83" name="__codelineno-0-83"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span>
-<a id="__codelineno-0-84" name="__codelineno-0-84"></a>
-<a id="__codelineno-0-85" name="__codelineno-0-85"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-86" name="__codelineno-0-86"></a>    <span class="k">def</span> <span class="nf">is_ref_to_state_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-87" name="__codelineno-0-87"></a>        <span class="k">return</span> <span class="kc">False</span>
-<a id="__codelineno-0-88" name="__codelineno-0-88"></a>
-<a id="__codelineno-0-89" name="__codelineno-0-89"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-90" name="__codelineno-0-90"></a>    <span class="k">def</span> <span class="nf">modifies_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">IrAbc</span><span class="p">,</span> <span class="n">ModifiesStateFlag</span><span class="p">]]:</span>
-<a id="__codelineno-0-91" name="__codelineno-0-91"></a>        <span class="k">return</span> <span class="nb">set</span><span class="p">()</span>
+<a id="__codelineno-0-70" name="__codelineno-0-70"></a>    <span class="nd">@property</span>
+<a id="__codelineno-0-71" name="__codelineno-0-71"></a>    <span class="k">def</span> <span class="nf">subdenomination</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<a id="__codelineno-0-72" name="__codelineno-0-72"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-73" name="__codelineno-0-73"></a><span class="sd">        !!! example</span>
+<a id="__codelineno-0-74" name="__codelineno-0-74"></a><span class="sd">            For example `wei`, `ether`, `seconds`, `days`, etc.</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75"></a>
+<a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77"></a><span class="sd">            Literal subdenomination, if any.</span>
+<a id="__codelineno-0-78" name="__codelineno-0-78"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subdenomination</span>
+<a id="__codelineno-0-80" name="__codelineno-0-80"></a>
+<a id="__codelineno-0-81" name="__codelineno-0-81"></a>    <span class="nd">@property</span>
+<a id="__codelineno-0-82" name="__codelineno-0-82"></a>    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<a id="__codelineno-0-83" name="__codelineno-0-83"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-84" name="__codelineno-0-84"></a><span class="sd">        Is `None` for hex string literals.</span>
+<a id="__codelineno-0-85" name="__codelineno-0-85"></a>
+<a id="__codelineno-0-86" name="__codelineno-0-86"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-87" name="__codelineno-0-87"></a><span class="sd">            Literal value.</span>
+<a id="__codelineno-0-88" name="__codelineno-0-88"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span>
+<a id="__codelineno-0-90" name="__codelineno-0-90"></a>
+<a id="__codelineno-0-91" name="__codelineno-0-91"></a>    <span class="nd">@property</span>
+<a id="__codelineno-0-92" name="__codelineno-0-92"></a>    <span class="k">def</span> <span class="nf">is_ref_to_state_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-93" name="__codelineno-0-93"></a>        <span class="k">return</span> <span class="kc">False</span>
+<a id="__codelineno-0-94" name="__codelineno-0-94"></a>
+<a id="__codelineno-0-95" name="__codelineno-0-95"></a>    <span class="nd">@property</span>
+<a id="__codelineno-0-96" name="__codelineno-0-96"></a>    <span class="k">def</span> <span class="nf">modifies_state</span><span class="p">(</span>
+<a id="__codelineno-0-97" name="__codelineno-0-97"></a>        <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-98" name="__codelineno-0-98"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">ExpressionAbc</span><span class="p">,</span> <span class="n">StatementAbc</span><span class="p">,</span> <span class="n">YulAbc</span><span class="p">],</span> <span class="n">ModifiesStateFlag</span><span class="p">]]:</span>
+<a id="__codelineno-0-99" name="__codelineno-0-99"></a>        <span class="k">return</span> <span class="nb">set</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
         </details>
 

@@ -1592,6 +1592,18 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -1631,6 +1643,126 @@
   
   <span class="md-ellipsis">
     ABI
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../static-analysis/printers/control-flow-graph/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Control flow graph
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../static-analysis/printers/imports-graph/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Imports graph
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../static-analysis/printers/inheritance-graph/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Inheritance graph
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../static-analysis/printers/inheritance-tree/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Inheritance tree
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../static-analysis/printers/modifiers/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Modifiers
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../static-analysis/printers/state-changes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    State changes
   </span>
   
 
@@ -1708,6 +1840,8 @@
       
         
       
+        
+      
     
     
       
@@ -1769,6 +1903,26 @@
   
   <span class="md-ellipsis">
     Working with IR
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../static-analysis/command-line-interface/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Command-line interface
   </span>
   
 
@@ -5234,7 +5388,7 @@
           </td>
           <td>
             <div class="doc-md-description">
-              <p>Byte offsets (start, end) of the detection used for highlighting in an LSP diagnostic.</p>
+              <p>Byte offsets (start, end) of the detection used for highlighting in LSP diagnostics and in SARIF export.</p>
             </div>
           </td>
         </tr>
@@ -5285,7 +5439,7 @@ This attribute determines whether the detection should be filtered out if all su
 <a id="__codelineno-0-87" name="__codelineno-0-87"></a><span class="sd">        ir_node: IR node representing the detection.</span>
 <a id="__codelineno-0-88" name="__codelineno-0-88"></a><span class="sd">        message: User-friendly message describing the detection.</span>
 <a id="__codelineno-0-89" name="__codelineno-0-89"></a><span class="sd">        subdetections: Subdetections of this detection.</span>
-<a id="__codelineno-0-90" name="__codelineno-0-90"></a><span class="sd">        lsp_range: Byte offsets (start, end) of the detection used for highlighting in an LSP diagnostic.</span>
+<a id="__codelineno-0-90" name="__codelineno-0-90"></a><span class="sd">        lsp_range: Byte offsets (start, end) of the detection used for highlighting in LSP diagnostics and in SARIF export.</span>
 <a id="__codelineno-0-91" name="__codelineno-0-91"></a><span class="sd">        subdetections_mandatory: Whether the detection requires at least one subdetection to be valid,</span>
 <a id="__codelineno-0-92" name="__codelineno-0-92"></a><span class="sd">            or if the subdetections are not mandatory for the existence of the detection.</span>
 <a id="__codelineno-0-93" name="__codelineno-0-93"></a><span class="sd">            This attribute determines whether the detection should be filtered out if all subdetections are filtered out based on the detectors [ignore_paths][wake.config.data_model.DetectorsConfig.ignore_paths] configuration.</span>
