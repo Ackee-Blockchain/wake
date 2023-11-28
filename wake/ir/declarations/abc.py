@@ -169,18 +169,7 @@ class DeclarationAbc(SolidityAbc, ABC):
         ...
 
     @property
-    def name_location(self) -> Tuple[int, int]:
-        """
-        Similar to [byte_location][wake.ir.abc.IrAbc.byte_location], but returns the location of the declaration name in the source code.
-
-        Returns:
-            Tuple of the start and end byte offsets of the declaration name in the source code.
-        """
-        if self._name_location is None:
-            self._name_location = self._parse_name_location()
-        return self._name_location
-
-    @property
+    @abstractmethod
     def references(
         self,
     ) -> FrozenSet[
@@ -195,6 +184,18 @@ class DeclarationAbc(SolidityAbc, ABC):
     ]:
         """
         Returns:
-            Set of all IR nodes referencing to this declaration.
+            Set of all IR nodes referencing this declaration.
         """
-        return frozenset(self._references)
+        ...
+
+    @property
+    def name_location(self) -> Tuple[int, int]:
+        """
+        Similar to [byte_location][wake.ir.abc.IrAbc.byte_location], but returns the location of the declaration name in the source code.
+
+        Returns:
+            Tuple of the start and end byte offsets of the declaration name in the source code.
+        """
+        if self._name_location is None:
+            self._name_location = self._parse_name_location()
+        return self._name_location

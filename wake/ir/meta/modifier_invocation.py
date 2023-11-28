@@ -120,6 +120,9 @@ class ModifierInvocation(SolidityAbc):
             }
             ```
 
+        Until Solidity 0.8.0, modifiers were referenced in [ModifierInvocations][wake.ir.meta.modifier_invocation.ModifierInvocation]
+        using [Identifiers][wake.ir.expressions.identifier.Identifier]. Version 0.8.0 started using [IdentifierPaths][wake.ir.meta.identifier_path.IdentifierPath] instead.
+
         Returns:
             IR node representing the name of the modifier.
         """

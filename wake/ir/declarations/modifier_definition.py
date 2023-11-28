@@ -401,3 +401,29 @@ class ModifierDefinition(DeclarationAbc):
             raise ValueError("Cannot create CFG for unimplemented modifier")
 
         return ControlFlowGraph(self)
+
+    @property
+    def references(
+        self,
+    ) -> FrozenSet[Union[Identifier, IdentifierPathPart]]:
+        """
+        Until Solidity 0.8.0, modifiers were referenced in [ModifierInvocations][wake.ir.meta.modifier_invocation.ModifierInvocation]
+        using [Identifiers][wake.ir.expressions.identifier.Identifier]. Version 0.8.0 started using [IdentifierPaths][wake.ir.meta.identifier_path.IdentifierPath] instead.
+
+        Returns:
+            Set of all IR nodes referencing this modifier.
+        """
+        from ..expressions.identifier import Identifier
+        from ..meta.identifier_path import IdentifierPathPart
+
+        try:
+            ref = next(
+                ref
+                for ref in self._references
+                if not isinstance(ref, (Identifier, IdentifierPathPart))
+            )
+            raise AssertionError(f"Unexpected reference type: {ref}")
+        except StopIteration:
+            return frozenset(
+                self._references
+            )  # pyright: ignore reportGeneralTypeIssues

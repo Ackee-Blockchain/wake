@@ -14,6 +14,8 @@ from ..meta.structured_documentation import StructuredDocumentation
 from .abc import DeclarationAbc
 
 if TYPE_CHECKING:
+    from ..expressions.identifier import Identifier
+    from ..expressions.member_access import MemberAccess
     from ..meta.source_unit import SourceUnit
     from .contract_definition import ContractDefinition
 
@@ -143,3 +145,26 @@ class ErrorDefinition(DeclarationAbc):
             Contracts (including child contracts) that use this error in a revert statement, a contract that defines this error and contracts that inherit this error.
         """
         return frozenset(self._used_in)
+
+    @property
+    def references(
+        self,
+    ) -> FrozenSet[Union[Identifier, MemberAccess,]]:
+        """
+        Returns:
+            Set of all IR nodes referencing this error.
+        """
+        from ..expressions.identifier import Identifier
+        from ..expressions.member_access import MemberAccess
+
+        try:
+            ref = next(
+                ref
+                for ref in self._references
+                if not isinstance(ref, (Identifier, MemberAccess))
+            )
+            raise AssertionError(f"Unexpected reference type: {ref}")
+        except StopIteration:
+            return frozenset(
+                self._references
+            )  # pyright: ignore reportGeneralTypeIssues

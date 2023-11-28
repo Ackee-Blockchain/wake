@@ -564,3 +564,46 @@ class FunctionDefinition(DeclarationAbc):
             raise ValueError("Cannot create CFG for unimplemented function")
 
         return ControlFlowGraph(self)
+
+    @property
+    def references(
+        self,
+    ) -> FrozenSet[
+        Union[
+            Identifier,
+            IdentifierPathPart,
+            MemberAccess,
+            UnaryOperation,
+            BinaryOperation,
+        ]
+    ]:
+        """
+        Returns:
+            Set of all IR nodes referencing this function.
+        """
+        from ..expressions.binary_operation import BinaryOperation
+        from ..expressions.identifier import Identifier
+        from ..expressions.member_access import MemberAccess
+        from ..expressions.unary_operation import UnaryOperation
+        from ..meta.identifier_path import IdentifierPathPart
+
+        try:
+            ref = next(
+                ref
+                for ref in self._references
+                if not isinstance(
+                    ref,
+                    (
+                        Identifier,
+                        IdentifierPathPart,
+                        MemberAccess,
+                        UnaryOperation,
+                        BinaryOperation,
+                    ),
+                )
+            )
+            raise AssertionError(f"Unexpected reference type: {ref}")
+        except StopIteration:
+            return frozenset(
+                self._references
+            )  # pyright: ignore reportGeneralTypeIssues

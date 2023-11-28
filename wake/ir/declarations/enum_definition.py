@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import re
 from functools import lru_cache
-from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, FrozenSet, Iterator, List, Optional, Tuple, Union
 
 from wake.core import get_logger
 from wake.ir.ast import SolcEnumDefinition
@@ -15,6 +15,9 @@ from .abc import DeclarationAbc
 from .enum_value import EnumValue
 
 if TYPE_CHECKING:
+    from ..expressions.identifier import Identifier
+    from ..expressions.member_access import MemberAccess
+    from ..meta.identifier_path import IdentifierPathPart
     from ..meta.source_unit import SourceUnit
     from .contract_definition import ContractDefinition
 
@@ -111,3 +114,27 @@ class EnumDefinition(DeclarationAbc):
             [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation string, if any.
         """
         return self._documentation
+
+    @property
+    def references(
+        self,
+    ) -> FrozenSet[Union[Identifier, IdentifierPathPart, MemberAccess,]]:
+        """
+        Returns:
+            Set of all IR nodes referencing this enum.
+        """
+        from ..expressions.identifier import Identifier
+        from ..expressions.member_access import MemberAccess
+        from ..meta.identifier_path import IdentifierPathPart
+
+        try:
+            ref = next(
+                ref
+                for ref in self._references
+                if not isinstance(ref, (Identifier, IdentifierPathPart, MemberAccess))
+            )
+            raise AssertionError(f"Unexpected reference type: {ref}")
+        except StopIteration:
+            return frozenset(
+                self._references
+            )  # pyright: ignore reportGeneralTypeIssues

@@ -4,7 +4,17 @@ import logging
 import re
 from collections import deque
 from functools import lru_cache, partial
-from typing import TYPE_CHECKING, Deque, Iterator, List, Optional, Set, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Deque,
+    FrozenSet,
+    Iterator,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+)
 
 from wake.core import get_logger
 from wake.ir.abc import IrAbc, SolidityAbc
@@ -532,3 +542,27 @@ class VariableDeclaration(DeclarationAbc):
         """
         assert self._type_descriptions.type_string is not None
         return self._type_descriptions.type_string
+
+    @property
+    def references(
+        self,
+    ) -> FrozenSet[Union[Identifier, MemberAccess, ExternalReference,]]:
+        """
+        Returns:
+            Set of all IR nodes referencing this variable.
+        """
+        from ..expressions.identifier import Identifier
+        from ..expressions.member_access import MemberAccess
+        from ..statements.inline_assembly import ExternalReference
+
+        try:
+            ref = next(
+                ref
+                for ref in self._references
+                if not isinstance(ref, (Identifier, MemberAccess, ExternalReference))
+            )
+            raise AssertionError(f"Unexpected reference type: {ref}")
+        except StopIteration:
+            return frozenset(
+                self._references
+            )  # pyright: ignore reportGeneralTypeIssues

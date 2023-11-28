@@ -2,13 +2,16 @@ from __future__ import annotations
 
 import re
 from functools import lru_cache
-from typing import TYPE_CHECKING, Iterator, Tuple, Union
+from typing import TYPE_CHECKING, FrozenSet, Iterator, Tuple, Union
 
 from ..type_names.elementary_type_name import ElementaryTypeName
 from .abc import DeclarationAbc
 
 if TYPE_CHECKING:
     from .contract_definition import ContractDefinition
+    from ..expressions.identifier import Identifier
+    from ..expressions.member_access import MemberAccess
+    from ..meta.identifier_path import IdentifierPathPart
     from ..meta.source_unit import SourceUnit
 
 from wake.ir.abc import IrAbc, SolidityAbc
@@ -88,3 +91,27 @@ class UserDefinedValueTypeDefinition(DeclarationAbc):
             Underlying type of the user defined value type.
         """
         return self._underlying_type
+
+    @property
+    def references(
+        self,
+    ) -> FrozenSet[Union[Identifier, IdentifierPathPart, MemberAccess,]]:
+        """
+        Returns:
+            Set of all IR nodes referencing this user defined value type.
+        """
+        from ..expressions.identifier import Identifier
+        from ..expressions.member_access import MemberAccess
+        from ..meta.identifier_path import IdentifierPathPart
+
+        try:
+            ref = next(
+                ref
+                for ref in self._references
+                if not isinstance(ref, (Identifier, IdentifierPathPart, MemberAccess))
+            )
+            raise AssertionError(f"Unexpected reference type: {ref}")
+        except StopIteration:
+            return frozenset(
+                self._references
+            )  # pyright: ignore reportGeneralTypeIssues
