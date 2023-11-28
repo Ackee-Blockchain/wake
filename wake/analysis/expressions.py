@@ -4,6 +4,8 @@ import wake.ir as ir
 import wake.ir.types as types
 from wake.core.logging import get_logger
 
+from .utils import get_function_implementations
+
 logger = get_logger(__name__)
 
 
@@ -80,9 +82,7 @@ def get_variable_declarations_from_expression(
             return ret + (func,)
         elif isinstance(func, ir.FunctionDefinition):
             if func.body is None:
-                implementations = list(
-                    get_all_base_and_child_declarations(func, base=False)
-                )
+                implementations = list(get_function_implementations(func))
                 if len(implementations) == 1:
                     if isinstance(implementations[0], ir.VariableDeclaration):
                         return ret + (implementations[0],)
