@@ -49,7 +49,7 @@ def run_xdg_migration() -> None:
         else:
             raise RuntimeError(f"Platform `{system}` is not supported.")
 
-    global_config_path.mkdir(parents=True, exist_ok=True)
+    global_config_path.parent.mkdir(parents=True, exist_ok=True)
     global_data_path.mkdir(parents=True, exist_ok=True)
 
     if config_path.exists():
