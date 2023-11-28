@@ -82,17 +82,18 @@ def get_printers(
 ) -> Dict[str, Tuple[click.Command, Type[Printer]]]:
     ret = {}
     for printer_name in run_print.list_commands(
-        None,
+        None,  # pyright: ignore reportGeneralTypeIssues
         plugin_paths=paths,  # pyright: ignore reportGeneralTypeIssues
         force_load_plugins=True,  # pyright: ignore reportGeneralTypeIssues
         verify_paths=verify_paths,  # pyright: ignore reportGeneralTypeIssues
     ):
         command = run_print.get_command(
-            None,
+            None,  # pyright: ignore reportGeneralTypeIssues
             printer_name,
             plugin_paths=paths,  # pyright: ignore reportGeneralTypeIssues
             verify_paths=verify_paths,  # pyright: ignore reportGeneralTypeIssues
         )
+        assert command is not None
 
         cls: Type[Printer] = get_class_that_defined_method(
             command.callback

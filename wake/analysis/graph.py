@@ -38,7 +38,11 @@ def graph_iter(
         node = queue.popleft()
 
         if direction in ("in", "both"):
-            for from_, _, data in graph.in_edges(
+            for (
+                from_,
+                _,
+                data,
+            ) in graph.in_edges(  # pyright: ignore reportGeneralTypeIssues
                 node, data=True  # pyright: ignore reportGeneralTypeIssues
             ):
                 if from_ not in visited and edge_predicate((from_, node, data)):
@@ -51,7 +55,11 @@ def graph_iter(
                         visited.add(from_)
 
         if direction in ("out", "both"):
-            for _, to, data in graph.out_edges(
+            for (
+                _,
+                to,
+                data,
+            ) in graph.out_edges(  # pyright: ignore reportGeneralTypeIssues
                 node, data=True  # pyright: ignore reportGeneralTypeIssues
             ):
                 if to not in visited and edge_predicate((node, to, data)):

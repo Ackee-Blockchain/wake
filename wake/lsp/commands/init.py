@@ -33,7 +33,7 @@ async def init_detector_handler(context: LspContext, name: str, global_: bool) -
 
     # dummy call to load all detectors
     run_detect.list_commands(
-        None,
+        None,  # pyright: ignore reportGeneralTypeIssues
         plugin_paths={  # pyright: ignore reportGeneralTypeIssues
             context.config.project_root_path / "detectors"
         },
@@ -88,7 +88,7 @@ async def init_printer_handler(context: LspContext, name: str, global_: bool) ->
 
     # dummy call to make sure all printers are loaded
     run_print.list_commands(
-        None,
+        None,  # pyright: ignore reportGeneralTypeIssues
         plugin_paths={  # pyright: ignore reportGeneralTypeIssues
             context.config.project_root_path / "printers"
         },

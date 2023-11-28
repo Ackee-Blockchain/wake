@@ -143,6 +143,7 @@ class YulFunctionCall(YulAbc):
             if (
                 isinstance(arg2, YulLiteral)
                 and arg2.kind == YulLiteralKind.NUMBER
+                and arg2.value is not None
                 and (
                     int(arg2.value, 16)
                     if arg2.value.startswith("0x")
