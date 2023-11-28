@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
 
 from wake.ir.enums import ModifiesStateFlag
 
@@ -10,7 +10,10 @@ from ..utils import IrInitTuple
 from .parameter_list import ParameterList
 
 if TYPE_CHECKING:
+    from ..expressions.abc import ExpressionAbc
+    from ..statements.abc import StatementAbc
     from ..statements.try_statement import TryStatement
+    from ..yul.abc import YulAbc
 
 from wake.ir.abc import IrAbc, SolidityAbc
 from wake.ir.ast import SolcTryCatchClause
@@ -148,5 +151,7 @@ class TryCatchClause(SolidityAbc):
 
     @property
     @lru_cache(maxsize=2048)
-    def modifies_state(self) -> Set[Tuple[IrAbc, ModifiesStateFlag]]:
+    def modifies_state(
+        self,
+    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
         return self.block.modifies_state
