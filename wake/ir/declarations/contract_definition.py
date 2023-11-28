@@ -12,6 +12,9 @@ from .abc import DeclarationAbc
 
 if TYPE_CHECKING:
     from wake.compiler import SolcOutputContractInfo
+    from ..expressions.identifier import Identifier
+    from ..expressions.member_access import MemberAccess
+    from ..meta.identifier_path import IdentifierPathPart
     from ..meta.source_unit import SourceUnit
 
 from wake.ir.ast import (
@@ -516,3 +519,27 @@ class ContractDefinition(DeclarationAbc):
         yield from self.structs
         yield from self.user_defined_value_types
         yield from self.declared_variables
+
+    @property
+    def references(
+        self,
+    ) -> FrozenSet[Union[Identifier, IdentifierPathPart, MemberAccess,]]:
+        """
+        Returns:
+            Set of all IR nodes referencing this contract.
+        """
+        from ..expressions.identifier import Identifier
+        from ..expressions.member_access import MemberAccess
+        from ..meta.identifier_path import IdentifierPathPart
+
+        try:
+            ref = next(
+                ref
+                for ref in self._references
+                if not isinstance(ref, (Identifier, IdentifierPathPart, MemberAccess))
+            )
+            raise AssertionError(f"Unexpected reference type: {ref}")
+        except StopIteration:
+            return frozenset(
+                self._references
+            )  # pyright: ignore reportGeneralTypeIssues

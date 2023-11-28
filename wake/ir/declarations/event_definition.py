@@ -10,6 +10,8 @@ from .abc import DeclarationAbc
 
 if TYPE_CHECKING:
     from .contract_definition import ContractDefinition
+    from ..expressions.identifier import Identifier
+    from ..expressions.member_access import MemberAccess
     from ..meta.source_unit import SourceUnit
 
 from wake.ir.abc import IrAbc, SolidityAbc
@@ -177,3 +179,26 @@ class EventDefinition(DeclarationAbc):
             Contracts (including child contracts) that emit this event, a contract that defines this event and contracts that inherit this event.
         """
         return frozenset(self._used_in)
+
+    @property
+    def references(
+        self,
+    ) -> FrozenSet[Union[Identifier, MemberAccess,]]:
+        """
+        Returns:
+            Set of all IR nodes referencing this event.
+        """
+        from ..expressions.identifier import Identifier
+        from ..expressions.member_access import MemberAccess
+
+        try:
+            ref = next(
+                ref
+                for ref in self._references
+                if not isinstance(ref, (Identifier, MemberAccess))
+            )
+            raise AssertionError(f"Unexpected reference type: {ref}")
+        except StopIteration:
+            return frozenset(
+                self._references
+            )  # pyright: ignore reportGeneralTypeIssues

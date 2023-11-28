@@ -2,13 +2,16 @@ from __future__ import annotations
 
 import re
 from functools import lru_cache
-from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, FrozenSet, Iterator, List, Optional, Tuple, Union
 
 from ..meta.structured_documentation import StructuredDocumentation
 from .abc import DeclarationAbc
 
 if TYPE_CHECKING:
     from .contract_definition import ContractDefinition
+    from ..expressions.identifier import Identifier
+    from ..expressions.member_access import MemberAccess
+    from ..meta.identifier_path import IdentifierPathPart
     from ..meta.source_unit import SourceUnit
 
 from wake.ir.abc import IrAbc, SolidityAbc
@@ -116,3 +119,27 @@ class StructDefinition(DeclarationAbc):
             [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation string, if any.
         """
         return self._documentation
+
+    @property
+    def references(
+        self,
+    ) -> FrozenSet[Union[Identifier, IdentifierPathPart, MemberAccess,]]:
+        """
+        Returns:
+            Set of all IR nodes referencing this struct.
+        """
+        from ..expressions.identifier import Identifier
+        from ..expressions.member_access import MemberAccess
+        from ..meta.identifier_path import IdentifierPathPart
+
+        try:
+            ref = next(
+                ref
+                for ref in self._references
+                if not isinstance(ref, (Identifier, IdentifierPathPart, MemberAccess))
+            )
+            raise AssertionError(f"Unexpected reference type: {ref}")
+        except StopIteration:
+            return frozenset(
+                self._references
+            )  # pyright: ignore reportGeneralTypeIssues
