@@ -8,6 +8,7 @@ from urllib.error import URLError
 
 from typing_extensions import Literal, TypedDict
 
+from wake.cli.console import console
 from wake.config import WakeConfig
 from wake.utils.networking import get_free_port
 
@@ -189,7 +190,7 @@ class ChainInterfaceAbc(ABC):
             elif config.testing.cmd == "ganache":
                 args += ["-k", hardfork]
 
-        print(f"Launching {' '.join(args)}")
+        console.print(f"Launching {' '.join(args)}")
         process = subprocess.Popen(args, stdout=subprocess.DEVNULL)
 
         try:

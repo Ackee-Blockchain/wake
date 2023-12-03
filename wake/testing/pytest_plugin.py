@@ -133,7 +133,9 @@ class PytestWakePlugin:
             for ctx_manager in ctx_managers:
                 ctx_manager.__enter__()
 
-            print(f"Using random seed '{random_seed.hex()}' for process #{index}")
+            console.print(
+                f"Using random seed '{random_seed.hex()}' for process #{index}"
+            )
 
             for i, item in enumerate(session.items):
                 nextitem = session.items[i + 1] if i + 1 < len(session.items) else None
@@ -165,7 +167,7 @@ class PytestWakePlugin:
         coverage = self._cov_proc_count == 1 or self._cov_proc_count == -1
 
         random.seed(self._random_seeds[0])
-        print(f"Using random seed '{self._random_seeds[0].hex()}'")
+        console.print(f"Using random seed '{self._random_seeds[0].hex()}'")
 
         if self._debug:
             set_exception_handler(attach_debugger)

@@ -44,7 +44,7 @@ def _run_core(
     cov_child_conn: multiprocessing.connection.Connection,
     coverage: Optional[CoverageHandler],
 ):
-    print(f"Using random seed '{random_seed.hex()}' for process #{index}")
+    console.print(f"Using random seed '{random_seed.hex()}' for process #{index}")
 
     fuzz_test()
 

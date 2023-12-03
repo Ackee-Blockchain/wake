@@ -85,7 +85,7 @@ def run_no_pytest(
 
     if proc_count is None:
         random.seed(random_seeds[0])
-        print(f"Using random seed {random_seeds[0].hex()}")
+        console.print(f"Using random seed {random_seeds[0].hex()}")
 
         if debug:
             set_exception_handler(attach_debugger)
