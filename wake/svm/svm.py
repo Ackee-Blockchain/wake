@@ -49,6 +49,7 @@ class SolcVersionManager(CompilerVersionManagerAbc):
     # assignees: michprev
 
     BINARIES_URL: str = "https://binaries.soliditylang.org"
+    INSTALL_RETRY_COUNT: int = 5
 
     __platform: str
     __solc_list_url: str
@@ -116,26 +117,40 @@ class SolcVersionManager(CompilerVersionManagerAbc):
 
         if version not in self.__solc_builds.releases:
             raise ValueError(f"solc version `{version}` does not exist.")
-        if self.get_path(version).is_file() and not force_reinstall:
-            return
 
         filename = self.__solc_builds.releases[version]
+
+        if self.get_path(version).is_file() and not force_reinstall:
+            # cannot verify checksum for unzipped binaries
+            if filename.endswith(".zip"):
+                return
+            # checksum verification passed
+            if self.__verify_checksums(version):
+                return
+
         download_url = f"{self.BINARIES_URL}/{self.__platform}/{filename}"
         local_path = self.get_path(version).parent / filename
 
         local_path.parent.mkdir(parents=True, exist_ok=True)
 
-        if http_session is None:
-            async with aiohttp.ClientSession() as session:
-                await self.__download_file(download_url, local_path, session, progress)
-        else:
-            await self.__download_file(download_url, local_path, http_session, progress)
+        for retry in range(self.INSTALL_RETRY_COUNT):
+            if http_session is None:
+                async with aiohttp.ClientSession() as session:
+                    await self.__download_file(
+                        download_url, local_path, session, progress
+                    )
+            else:
+                await self.__download_file(
+                    download_url, local_path, http_session, progress
+                )
 
-        if not self.__verify_checksums(version):
-            local_path.unlink()
-            raise ChecksumError(
-                f"Checksum of the downloaded solc version `{version}` does not match the expected value."
-            )
+            if self.__verify_checksums(version):
+                break
+            elif retry == self.INSTALL_RETRY_COUNT - 1:
+                local_path.unlink()
+                raise ChecksumError(
+                    f"Checksum of the downloaded solc version `{version}` does not match the expected value."
+                )
 
         # unzip older Windows solc binary zipped together with DLLs
         if filename.endswith(".zip"):
