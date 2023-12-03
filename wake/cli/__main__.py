@@ -76,6 +76,13 @@ click.rich_click.COMMAND_GROUPS = {
     help="Set logging level to debug and attach debugger on exception.",
 )
 @click.option(
+    "--silent",
+    "-s",
+    is_flag=True,
+    default=False,
+    help="Disable all stdout output.",
+)
+@click.option(
     "--profile", is_flag=True, default=False, help="Enable profiling using cProfile."
 )
 @click.option(
@@ -87,7 +94,9 @@ click.rich_click.COMMAND_GROUPS = {
 )
 @click.version_option(message="%(version)s", package_name="eth-wake")
 @click.pass_context
-def main(ctx: Context, debug: bool, profile: bool, config: Optional[str]) -> None:
+def main(
+    ctx: Context, debug: bool, silent: bool, profile: bool, config: Optional[str]
+) -> None:
     from wake.migrations import run_woke_wake_migration, run_xdg_migration
 
     if profile:
@@ -140,6 +149,11 @@ def main(ctx: Context, debug: bool, profile: bool, config: Optional[str]) -> Non
         )
 
     os.environ["PYTHONBREAKPOINT"] = "ipdb.set_trace"
+
+    if silent:
+        from wake.utils.null_file import NullFile
+
+        console.file = NullFile()
 
     run_xdg_migration()
     run_woke_wake_migration()
