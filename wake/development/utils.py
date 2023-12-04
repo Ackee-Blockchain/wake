@@ -377,19 +377,28 @@ def read_storage_variable(
                 return raw.decode("utf-8")
             return raw
         elif type_name.startswith("t_struct"):
-            # TODO support getting whole struct?
-            if len(keys) == 0 or not isinstance(keys[0], str):
-                raise ValueError(
-                    f"{type_info.label} requires member name to be specified as key"
+            if len(keys) > 0:
+                if not isinstance(keys[0], str):
+                    raise ValueError(
+                        f"{type_info.label} requires string member name to be specified as key"
+                    )
+                try:
+                    member = next(m for m in type_info.members if m.label == keys[0])
+                except StopIteration:
+                    raise ValueError(
+                        f"{type_info.label} does not have member {keys[0]}"
+                    )
+                # structs always start a new slot
+                return _get_storage_value(
+                    slot + member.slot, member.offset, keys[1:], member.type, types
                 )
-            try:
-                member = next(m for m in type_info.members if m.label == keys[0])
-            except StopIteration:
-                raise ValueError(f"{type_info.label} does not have member {keys[0]}")
-            # structs always start a new slot
-            return _get_storage_value(
-                slot + member.slot, member.offset, keys[1:], member.type, types
-            )
+            else:
+                return {
+                    member.label: _get_storage_value(
+                        slot + member.slot, member.offset, keys, member.type, types
+                    )
+                    for member in type_info.members
+                }
         elif type_name.startswith("t_array"):
             base_type = types[type_info.base]
             items_per_slot = 32 // base_type.number_of_bytes
@@ -585,19 +594,45 @@ def write_storage_variable(
                     str(contract.address), slot, encoded_data
                 )
         elif type_name.startswith("t_struct"):
-            # TODO support setting whole struct?
-            if len(keys) == 0 or not isinstance(keys[0], str):
-                raise ValueError(
-                    f"{type_info.label} requires member name to be specified as key"
+            if len(keys) > 0:
+                if not isinstance(keys[0], str):
+                    raise ValueError(
+                        f"{type_info.label} requires string member name to be specified as key"
+                    )
+                try:
+                    member = next(m for m in type_info.members if m.label == keys[0])
+                except StopIteration:
+                    raise ValueError(
+                        f"{type_info.label} does not have member {keys[0]}"
+                    )
+                # structs always start a new slot
+                _set_storage_value(
+                    slot + member.slot, member.offset, keys[1:], member.type, types
                 )
-            try:
-                member = next(m for m in type_info.members if m.label == keys[0])
-            except StopIteration:
-                raise ValueError(f"{type_info.label} does not have member {keys[0]}")
-            # structs always start a new slot
-            _set_storage_value(
-                slot + member.slot, member.offset, keys[1:], member.type, types
-            )
+            else:
+                if not isinstance(value, dict):
+                    raise ValueError(
+                        f"{type_info.label} requires dict value but got {value} of type {type(value)}"
+                    )
+                if len(value) != len(type_info.members):
+                    raise ValueError(
+                        f"{type_info.label} requires list of length {len(type_info.members)} but got {value} of length {len(value)}"
+                    )
+
+                original_value = value
+                for member in type_info.members:
+                    if member.label not in original_value:
+                        raise ValueError(
+                            f"{type_info.label} requires member {member.label} to be specified"
+                        )
+                    value = original_value[member.label]
+                    _set_storage_value(
+                        slot + member.slot,
+                        member.offset,
+                        keys,
+                        member.type,
+                        types,
+                    )
         elif type_name.startswith("t_array"):
             if len(keys) > 0 and not isinstance(keys[0], int):
                 raise ValueError(
