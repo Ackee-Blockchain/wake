@@ -152,8 +152,13 @@ usdc_logic = get_logic_contract(usdc_proxy)
 ## Read & write storage variable
 
 `read_storage_variable` and `write_storage_variable` read and write storage variables of a contract.
-They accept a contract `Account` and a variable name. Reading and writing whole arrays, structs and mappings currently is not supported.
-Instead, the `keys` argument must be used to provide a list of all keys (array and mapping indices, struct member names) needed to access the variable.
+They accept a contract `Account` and a variable name.
+The `keys` argument is used to specify the array indexes, mapping keys and struct member names needed to access the variable.
+
+!!! info
+    Reading and writing arrays is done using lists, while reading and writing structs is done using dictionaries.
+
+    Reading and writing whole mappings is not supported.
 
 If the provided contract is a proxy, the variable definition is searched in the logic contract and the proxy storage is used.
 This behavior can be overridden by setting the `storage_layout_contract` argument.
