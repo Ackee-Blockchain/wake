@@ -391,12 +391,6 @@ def read_storage_variable(
                 slot + member.slot, member.offset, keys[1:], member.type, types
             )
         elif type_name.startswith("t_array"):
-            # TODO support getting whole array?
-            if len(keys) == 0 or not isinstance(keys[0], int):
-                raise ValueError(
-                    f"{type_info.label} requires index to be specified as key"
-                )
-
             base_type = types[type_info.base]
             items_per_slot = 32 // base_type.number_of_bytes
 
@@ -404,35 +398,60 @@ def read_storage_variable(
             if type_info.encoding == "dynamic_array":
                 slot = int.from_bytes(keccak256(slot.to_bytes(32, "big")), "big")
                 length = Abi.decode(["uint256"], slot_data)[0]
+            else:
+                length = int(type_info.label.split("[")[-1][:-1])
 
+            if len(keys) == 0:
+                # reading whole array
+                if items_per_slot > 0:
+                    return [
+                        _get_storage_value(
+                            slot + i // items_per_slot,
+                            (i % items_per_slot) * base_type.number_of_bytes,
+                            keys[1:],
+                            type_info.base,
+                            types,
+                        )
+                        for i in range(length)
+                    ]
+                else:
+                    return [
+                        _get_storage_value(
+                            slot + (base_type.number_of_bytes * i) // 32,
+                            0,
+                            keys[1:],
+                            type_info.base,
+                            types,
+                        )
+                        for i in range(length)
+                    ]
+            else:
+                if not isinstance(keys[0], int):
+                    raise ValueError(
+                        f"{type_info.label} requires integer index to be specified as key"
+                    )
                 if keys[0] >= length:
                     raise ValueError(
                         f"index {keys[0]} out of bounds for {type_info.label} with length {length}"
                     )
-            else:
-                # check if index is out of bounds
-                if keys[0] >= int(type_info.label.split("[")[-1][:-1]):
-                    raise ValueError(
-                        f"index {keys[0]} out of bounds for {type_info.label}"
-                    )
 
-            if items_per_slot > 0:
-                return _get_storage_value(
-                    slot + keys[0] // items_per_slot,
-                    (keys[0] % items_per_slot) * base_type.number_of_bytes,
-                    keys[1:],
-                    type_info.base,
-                    types,
-                )
-            else:
-                # assuming base_type.number_of_bytes is always a multiple of 32
-                return _get_storage_value(
-                    slot + (base_type.number_of_bytes * keys[0]) // 32,
-                    0,
-                    keys[1:],
-                    type_info.base,
-                    types,
-                )
+                if items_per_slot > 0:
+                    return _get_storage_value(
+                        slot + keys[0] // items_per_slot,
+                        (keys[0] % items_per_slot) * base_type.number_of_bytes,
+                        keys[1:],
+                        type_info.base,
+                        types,
+                    )
+                else:
+                    # assuming base_type.number_of_bytes is always a multiple of 32
+                    return _get_storage_value(
+                        slot + (base_type.number_of_bytes * keys[0]) // 32,
+                        0,
+                        keys[1:],
+                        type_info.base,
+                        types,
+                    )
         elif type_name.startswith("t_bytes"):
             # bytes1 to bytes32
             data = data.ljust(32, b"\x00")
@@ -580,10 +599,13 @@ def write_storage_variable(
                 slot + member.slot, member.offset, keys[1:], member.type, types
             )
         elif type_name.startswith("t_array"):
-            # TODO support setting whole array?
-            if len(keys) == 0 or not isinstance(keys[0], int):
+            if len(keys) > 0 and not isinstance(keys[0], int):
                 raise ValueError(
-                    f"{type_info.label} requires index to be specified as key"
+                    f"{type_info.label} requires integer index to be specified as key"
+                )
+            elif len(keys) == 0 and not isinstance(value, (list, tuple)):
+                raise ValueError(
+                    f"{type_info.label} requires list value but got {value} of type {type(value)}"
                 )
 
             base_type = types[type_info.base]
@@ -594,37 +616,66 @@ def write_storage_variable(
                 slot_data = contract.chain.chain_interface.get_storage_at(
                     str(contract.address), slot
                 )
+                length_slot = slot
                 slot = int.from_bytes(keccak256(slot.to_bytes(32, "big")), "big")
                 length = Abi.decode(["uint256"], slot_data)[0]
+            else:
+                length_slot = -1  # to satisfy linter
+                length = int(type_info.label.split("[")[-1][:-1])
+                if len(value) != length:
+                    raise ValueError(
+                        f"{type_info.label} requires list of length {length} but got {value} of length {len(value)}"
+                    )
 
+            if len(keys) == 0:
+                # setting whole array
+                if type_info.encoding == "dynamic_array":
+                    encoded_length = Abi.encode(["uint256"], [len(value)])
+                    contract.chain.chain_interface.set_storage_at(
+                        str(contract.address), length_slot, encoded_length
+                    )
+                for i, v in enumerate(value):
+                    value = v
+                    if items_per_slot > 0:
+                        _set_storage_value(
+                            slot + i // items_per_slot,
+                            (i % items_per_slot) * base_type.number_of_bytes,
+                            keys[1:],
+                            type_info.base,
+                            types,
+                        )
+                    else:
+                        # assuming base_type.number_of_bytes is always a multiple of 32
+                        _set_storage_value(
+                            slot + (base_type.number_of_bytes * i) // 32,
+                            0,
+                            keys[1:],
+                            type_info.base,
+                            types,
+                        )
+            else:
                 if keys[0] >= length:
                     raise ValueError(
                         f"index {keys[0]} out of bounds for {type_info.label} with length {length}"
                     )
-            else:
-                # check if index is out of bounds
-                if keys[0] >= int(type_info.label.split("[")[-1][:-1]):
-                    raise ValueError(
-                        f"index {keys[0]} out of bounds for {type_info.label}"
-                    )
 
-            if items_per_slot > 0:
-                _set_storage_value(
-                    slot + keys[0] // items_per_slot,
-                    (keys[0] % items_per_slot) * base_type.number_of_bytes,
-                    keys[1:],
-                    type_info.base,
-                    types,
-                )
-            else:
-                # assuming base_type.number_of_bytes is always a multiple of 32
-                _set_storage_value(
-                    slot + (base_type.number_of_bytes * keys[0]) // 32,
-                    0,
-                    keys[1:],
-                    type_info.base,
-                    types,
-                )
+                if items_per_slot > 0:
+                    _set_storage_value(
+                        slot + keys[0] // items_per_slot,
+                        (keys[0] % items_per_slot) * base_type.number_of_bytes,
+                        keys[1:],
+                        type_info.base,
+                        types,
+                    )
+                else:
+                    # assuming base_type.number_of_bytes is always a multiple of 32
+                    _set_storage_value(
+                        slot + (base_type.number_of_bytes * keys[0]) // 32,
+                        0,
+                        keys[1:],
+                        type_info.base,
+                        types,
+                    )
         elif type_name.startswith("t_mapping"):
             if len(keys) == 0:
                 raise ValueError(
