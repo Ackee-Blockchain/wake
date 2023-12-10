@@ -74,7 +74,7 @@ class UnusedImportDetector(Detector):
                             import_directive,
                             "Unused import",
                         ),
-                        impact=DetectorImpact.WARNING,
+                        impact=DetectorImpact.INFO,
                         confidence=DetectorConfidence.HIGH,
                         uri=generate_detector_uri(
                             name="unused-import",
