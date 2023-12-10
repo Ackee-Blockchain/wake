@@ -85,6 +85,7 @@ nav:
             - Unused contract: 'static-analysis/detectors/unused-contract.md'
             - Unused function: 'static-analysis/detectors/unused-function.md'
             - Unused import: 'static-analysis/detectors/unused-import.md'
+            - Unused modifier: 'static-analysis/detectors/unused-modifier.md'
         - Printers:
             - ABI: 'static-analysis/printers/abi.md'
             - Control flow graph: 'static-analysis/printers/control-flow-graph.md'

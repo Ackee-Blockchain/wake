@@ -16,3 +16,4 @@ from .unsafe_delegatecall import UnsafeDelegatecallDetector
 from .unused_contract import UnusedContractDetector
 from .unused_function import UnusedFunctionDetector
 from .unused_import import UnusedImportDetector
+from .unused_modifier import UnusedModifierDetector
