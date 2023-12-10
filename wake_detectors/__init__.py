@@ -14,4 +14,5 @@ from .unchecked_return_value import UncheckedReturnValueDetector
 from .unprotected_selfdestruct import UnprotectedSelfdestructDetector
 from .unsafe_delegatecall import UnsafeDelegatecallDetector
 from .unused_contract import UnusedContractDetector
+from .unused_function import UnusedFunctionDetector
 from .unused_import import UnusedImportDetector

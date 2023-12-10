@@ -83,6 +83,7 @@ nav:
             - Unprotected selfdestruct: 'static-analysis/detectors/unprotected-selfdestruct.md'
             - Unsafe delegatecall: 'static-analysis/detectors/unsafe-delegatecall.md'
             - Unused contract: 'static-analysis/detectors/unused-contract.md'
+            - Unused function: 'static-analysis/detectors/unused-function.md'
             - Unused import: 'static-analysis/detectors/unused-import.md'
         - Printers:
             - ABI: 'static-analysis/printers/abi.md'
