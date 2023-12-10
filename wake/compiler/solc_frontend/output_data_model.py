@@ -249,6 +249,7 @@ class SolcOutputContractInfo(SolcOutputModel):
 
 
 class SolcOutput(SolcOutputModel):
+    auxiliary_input_requested: Optional[Dict] = None
     errors: List[SolcOutputError] = []
     sources: Dict[str, SolcOutputSourceInfo] = {}
     contracts: Dict[
