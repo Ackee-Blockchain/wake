@@ -17,6 +17,7 @@ from .console import console
 from .detect import run_detect
 from .init import run_init
 from .lsp import run_lsp
+from .open import run_open
 from .print import run_print
 from .run import run_run
 from .svm import run_svm
@@ -185,6 +186,7 @@ main.add_command(run_compile)
 main.add_command(run_detect)
 main.add_command(run_init)
 main.add_command(run_lsp)
+main.add_command(run_open)
 main.add_command(run_print)
 main.add_command(run_run)
 main.add_command(run_svm)

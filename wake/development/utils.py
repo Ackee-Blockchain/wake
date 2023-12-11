@@ -7,6 +7,7 @@ import inspect
 import json
 import math
 from collections import namedtuple
+from dataclasses import dataclass
 from functools import lru_cache
 from json import JSONDecodeError
 from pathlib import Path, PurePosixPath
@@ -59,7 +60,16 @@ from .globals import get_config
 
 # pyright: reportGeneralTypeIssues=false, reportOptionalIterable=false, reportOptionalSubscript=false, reportOptionalMemberAccess=false
 
-ChainExplorer = namedtuple("ChainExplorer", ["url", "api_url"])
+
+@dataclass
+class ChainExplorer:
+    url: str
+    api_url: str
+
+    @property
+    def config_key(self) -> str:
+        return ".".join(urlparse(self.url).netloc.split(".")[:-1])
+
 
 chain_explorer_urls: Dict[int, ChainExplorer] = {
     1: ChainExplorer("https://etherscan.io", "https://api.etherscan.io/api"),
@@ -141,9 +151,8 @@ def get_contract_info_from_explorer(
     if chain_id not in chain_explorer_urls:
         return None
 
-    u = urlparse(chain_explorer_urls[chain_id].url)
     config = get_config()
-    api_key = config.api_keys.get(".".join(u.netloc.split(".")[:-1]), None)
+    api_key = config.api_keys.get(chain_explorer_urls[chain_id].config_key, None)
     if api_key is None:
         return None
 
