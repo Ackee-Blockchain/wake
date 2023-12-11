@@ -1242,6 +1242,10 @@
       
         
       
+        
+      
+        
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -1556,11 +1560,51 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../static-analysis/detectors/unused-function/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Unused function
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../static-analysis/detectors/unused-import/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
     Unused import
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../static-analysis/detectors/unused-modifier/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Unused modifier
   </span>
   
 
@@ -5015,7 +5059,8 @@
 <span class="normal"><a href="#__codelineno-0-197">197</a></span>
 <span class="normal"><a href="#__codelineno-0-198">198</a></span>
 <span class="normal"><a href="#__codelineno-0-199">199</a></span>
-<span class="normal"><a href="#__codelineno-0-200">200</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="k">class</span> <span class="nc">DeclarationAbc</span><span class="p">(</span><span class="n">SolidityAbc</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-200">200</a></span>
+<span class="normal"><a href="#__codelineno-0-201">201</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="k">class</span> <span class="nc">DeclarationAbc</span><span class="p">(</span><span class="n">SolidityAbc</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
 <a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="sd">    Abstract base class for all Solidity declarations.</span>
 <a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="sd">    &quot;&quot;&quot;</span>
@@ -5144,35 +5189,36 @@
 <a id="__codelineno-0-169" name="__codelineno-0-169"></a>        <span class="o">...</span>
 <a id="__codelineno-0-170" name="__codelineno-0-170"></a>
 <a id="__codelineno-0-171" name="__codelineno-0-171"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-172" name="__codelineno-0-172"></a>    <span class="k">def</span> <span class="nf">name_location</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
-<a id="__codelineno-0-173" name="__codelineno-0-173"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-174" name="__codelineno-0-174"></a><span class="sd">        Similar to [byte_location][wake.ir.abc.IrAbc.byte_location], but returns the location of the declaration name in the source code.</span>
-<a id="__codelineno-0-175" name="__codelineno-0-175"></a>
-<a id="__codelineno-0-176" name="__codelineno-0-176"></a><span class="sd">        Returns:</span>
-<a id="__codelineno-0-177" name="__codelineno-0-177"></a><span class="sd">            Tuple of the start and end byte offsets of the declaration name in the source code.</span>
-<a id="__codelineno-0-178" name="__codelineno-0-178"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-179" name="__codelineno-0-179"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name_location</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-180" name="__codelineno-0-180"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_name_location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_name_location</span><span class="p">()</span>
-<a id="__codelineno-0-181" name="__codelineno-0-181"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name_location</span>
-<a id="__codelineno-0-182" name="__codelineno-0-182"></a>
-<a id="__codelineno-0-183" name="__codelineno-0-183"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-184" name="__codelineno-0-184"></a>    <span class="k">def</span> <span class="nf">references</span><span class="p">(</span>
-<a id="__codelineno-0-185" name="__codelineno-0-185"></a>        <span class="bp">self</span><span class="p">,</span>
-<a id="__codelineno-0-186" name="__codelineno-0-186"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenSet</span><span class="p">[</span>
-<a id="__codelineno-0-187" name="__codelineno-0-187"></a>        <span class="n">Union</span><span class="p">[</span>
-<a id="__codelineno-0-188" name="__codelineno-0-188"></a>            <span class="n">Identifier</span><span class="p">,</span>
-<a id="__codelineno-0-189" name="__codelineno-0-189"></a>            <span class="n">IdentifierPathPart</span><span class="p">,</span>
-<a id="__codelineno-0-190" name="__codelineno-0-190"></a>            <span class="n">MemberAccess</span><span class="p">,</span>
-<a id="__codelineno-0-191" name="__codelineno-0-191"></a>            <span class="n">ExternalReference</span><span class="p">,</span>
-<a id="__codelineno-0-192" name="__codelineno-0-192"></a>            <span class="n">UnaryOperation</span><span class="p">,</span>
-<a id="__codelineno-0-193" name="__codelineno-0-193"></a>            <span class="n">BinaryOperation</span><span class="p">,</span>
-<a id="__codelineno-0-194" name="__codelineno-0-194"></a>        <span class="p">]</span>
-<a id="__codelineno-0-195" name="__codelineno-0-195"></a>    <span class="p">]:</span>
-<a id="__codelineno-0-196" name="__codelineno-0-196"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-197" name="__codelineno-0-197"></a><span class="sd">        Returns:</span>
-<a id="__codelineno-0-198" name="__codelineno-0-198"></a><span class="sd">            Set of all IR nodes referencing to this declaration.</span>
-<a id="__codelineno-0-199" name="__codelineno-0-199"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-200" name="__codelineno-0-200"></a>        <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_references</span><span class="p">)</span>
+<a id="__codelineno-0-172" name="__codelineno-0-172"></a>    <span class="nd">@abstractmethod</span>
+<a id="__codelineno-0-173" name="__codelineno-0-173"></a>    <span class="k">def</span> <span class="nf">references</span><span class="p">(</span>
+<a id="__codelineno-0-174" name="__codelineno-0-174"></a>        <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-175" name="__codelineno-0-175"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenSet</span><span class="p">[</span>
+<a id="__codelineno-0-176" name="__codelineno-0-176"></a>        <span class="n">Union</span><span class="p">[</span>
+<a id="__codelineno-0-177" name="__codelineno-0-177"></a>            <span class="n">Identifier</span><span class="p">,</span>
+<a id="__codelineno-0-178" name="__codelineno-0-178"></a>            <span class="n">IdentifierPathPart</span><span class="p">,</span>
+<a id="__codelineno-0-179" name="__codelineno-0-179"></a>            <span class="n">MemberAccess</span><span class="p">,</span>
+<a id="__codelineno-0-180" name="__codelineno-0-180"></a>            <span class="n">ExternalReference</span><span class="p">,</span>
+<a id="__codelineno-0-181" name="__codelineno-0-181"></a>            <span class="n">UnaryOperation</span><span class="p">,</span>
+<a id="__codelineno-0-182" name="__codelineno-0-182"></a>            <span class="n">BinaryOperation</span><span class="p">,</span>
+<a id="__codelineno-0-183" name="__codelineno-0-183"></a>        <span class="p">]</span>
+<a id="__codelineno-0-184" name="__codelineno-0-184"></a>    <span class="p">]:</span>
+<a id="__codelineno-0-185" name="__codelineno-0-185"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-186" name="__codelineno-0-186"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-187" name="__codelineno-0-187"></a><span class="sd">            Set of all IR nodes referencing this declaration.</span>
+<a id="__codelineno-0-188" name="__codelineno-0-188"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-189" name="__codelineno-0-189"></a>        <span class="o">...</span>
+<a id="__codelineno-0-190" name="__codelineno-0-190"></a>
+<a id="__codelineno-0-191" name="__codelineno-0-191"></a>    <span class="nd">@property</span>
+<a id="__codelineno-0-192" name="__codelineno-0-192"></a>    <span class="k">def</span> <span class="nf">name_location</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<a id="__codelineno-0-193" name="__codelineno-0-193"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-194" name="__codelineno-0-194"></a><span class="sd">        Similar to [byte_location][wake.ir.abc.IrAbc.byte_location], but returns the location of the declaration name in the source code.</span>
+<a id="__codelineno-0-195" name="__codelineno-0-195"></a>
+<a id="__codelineno-0-196" name="__codelineno-0-196"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-197" name="__codelineno-0-197"></a><span class="sd">            Tuple of the start and end byte offsets of the declaration name in the source code.</span>
+<a id="__codelineno-0-198" name="__codelineno-0-198"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-199" name="__codelineno-0-199"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name_location</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-200" name="__codelineno-0-200"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_name_location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_name_location</span><span class="p">()</span>
+<a id="__codelineno-0-201" name="__codelineno-0-201"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name_location</span>
 </code></pre></div></td></tr></table></div>
         </details>
 
@@ -5398,6 +5444,7 @@ Does not need to match the actual declaration string in the source code (may use
           <code class="highlight language-python"><span class="n">references</span><span class="p">:</span> <span class="n">FrozenSet</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Identifier</span><span class="p">,</span> <span class="n">IdentifierPathPart</span><span class="p">,</span> <span class="n">MemberAccess</span><span class="p">,</span> <span class="n">ExternalReference</span><span class="p">,</span> <span class="n">UnaryOperation</span><span class="p">,</span> <span class="n">BinaryOperation</span><span class="p">]]</span></code>
   
   <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
       <small class="doc doc-label doc-label-property"><code>property</code></small>
   </span>
 
@@ -5424,7 +5471,7 @@ Does not need to match the actual declaration string in the source code (may use
           </td>
           <td>
             <div class="doc-md-description">
-              <p>Set of all IR nodes referencing to this declaration.</p>
+              <p>Set of all IR nodes referencing this declaration.</p>
             </div>
           </td>
         </tr>

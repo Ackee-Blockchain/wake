@@ -1421,6 +1421,10 @@
       
         
       
+        
+      
+        
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -1735,11 +1739,51 @@
   
   
     <li class="md-nav__item">
+      <a href="../../static-analysis/detectors/unused-function/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Unused function
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../static-analysis/detectors/unused-import/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
     Unused import
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../static-analysis/detectors/unused-modifier/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Unused modifier
   </span>
   
 
@@ -5085,8 +5129,13 @@ If the input account is not a proxy, it returns the input account.</p>
 </code></pre></div>
 <h2 id="read-write-storage-variable">Read &amp; write storage variable<a class="headerlink" href="#read-write-storage-variable" title="Permanent link">#</a></h2>
 <p><code>read_storage_variable</code> and <code>write_storage_variable</code> read and write storage variables of a contract.
-They accept a contract <code>Account</code> and a variable name. Reading and writing whole arrays, structs and mappings currently is not supported.
-Instead, the <code>keys</code> argument must be used to provide a list of all keys (array and mapping indices, struct member names) needed to access the variable.</p>
+They accept a contract <code>Account</code> and a variable name.
+The <code>keys</code> argument is used to specify the array indexes, mapping keys and struct member names needed to access the variable.</p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>Reading and writing arrays is done using lists, while reading and writing structs is done using dictionaries.</p>
+<p>Reading and writing whole mappings is not supported.</p>
+</div>
 <p>If the provided contract is a proxy, the variable definition is searched in the logic contract and the proxy storage is used.
 This behavior can be overridden by setting the <code>storage_layout_contract</code> argument.
 In this case, the variable definition is searched in the provided <code>storage_layout_contract</code>.</p>

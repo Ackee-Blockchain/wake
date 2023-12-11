@@ -581,7 +581,17 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://ackeeblockchain.com/wake/docs/latest/static-analysis/detectors/unused-function/</loc>
+         <lastmod>2023-12-11</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://ackeeblockchain.com/wake/docs/latest/static-analysis/detectors/unused-import/</loc>
+         <lastmod>2023-12-11</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://ackeeblockchain.com/wake/docs/latest/static-analysis/detectors/unused-modifier/</loc>
          <lastmod>2023-12-11</lastmod>
          <changefreq>daily</changefreq>
     </url>

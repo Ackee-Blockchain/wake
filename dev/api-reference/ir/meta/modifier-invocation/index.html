@@ -1242,6 +1242,10 @@
       
         
       
+        
+      
+        
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -1556,11 +1560,51 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../static-analysis/detectors/unused-function/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Unused function
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../static-analysis/detectors/unused-import/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
     Unused import
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../static-analysis/detectors/unused-modifier/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Unused modifier
   </span>
   
 
@@ -4997,7 +5041,10 @@
 <span class="normal"><a href="#__codelineno-0-151">151</a></span>
 <span class="normal"><a href="#__codelineno-0-152">152</a></span>
 <span class="normal"><a href="#__codelineno-0-153">153</a></span>
-<span class="normal"><a href="#__codelineno-0-154">154</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-20" name="__codelineno-0-20"></a><span class="k">class</span> <span class="nc">ModifierInvocation</span><span class="p">(</span><span class="n">SolidityAbc</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-154">154</a></span>
+<span class="normal"><a href="#__codelineno-0-155">155</a></span>
+<span class="normal"><a href="#__codelineno-0-156">156</a></span>
+<span class="normal"><a href="#__codelineno-0-157">157</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-20" name="__codelineno-0-20"></a><span class="k">class</span> <span class="nc">ModifierInvocation</span><span class="p">(</span><span class="n">SolidityAbc</span><span class="p">):</span>
 <a id="__codelineno-0-21" name="__codelineno-0-21"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-22" name="__codelineno-0-22"></a><span class="sd">    !!! warning</span>
 <a id="__codelineno-0-23" name="__codelineno-0-23"></a><span class="sd">        Also represents a base constructor invocation.</span>
@@ -5100,38 +5147,41 @@
 <a id="__codelineno-0-120" name="__codelineno-0-120"></a><span class="sd">            }</span>
 <a id="__codelineno-0-121" name="__codelineno-0-121"></a><span class="sd">            ```</span>
 <a id="__codelineno-0-122" name="__codelineno-0-122"></a>
-<a id="__codelineno-0-123" name="__codelineno-0-123"></a><span class="sd">        Returns:</span>
-<a id="__codelineno-0-124" name="__codelineno-0-124"></a><span class="sd">            IR node representing the name of the modifier.</span>
-<a id="__codelineno-0-125" name="__codelineno-0-125"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-126" name="__codelineno-0-126"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modifier_name</span>
-<a id="__codelineno-0-127" name="__codelineno-0-127"></a>
-<a id="__codelineno-0-128" name="__codelineno-0-128"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-129" name="__codelineno-0-129"></a>    <span class="k">def</span> <span class="nf">arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">ExpressionAbc</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
-<a id="__codelineno-0-130" name="__codelineno-0-130"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-131" name="__codelineno-0-131"></a><span class="sd">        !!! warning</span>
-<a id="__codelineno-0-132" name="__codelineno-0-132"></a><span class="sd">            Is `None` when there are no round brackets after the modifier name.</span>
-<a id="__codelineno-0-133" name="__codelineno-0-133"></a><span class="sd">            ```solidity</span>
-<a id="__codelineno-0-134" name="__codelineno-0-134"></a><span class="sd">            constructor() initializer {}</span>
-<a id="__codelineno-0-135" name="__codelineno-0-135"></a><span class="sd">            ```</span>
-<a id="__codelineno-0-136" name="__codelineno-0-136"></a>
-<a id="__codelineno-0-137" name="__codelineno-0-137"></a><span class="sd">            Is an empty list when there are round brackets but no arguments.</span>
-<a id="__codelineno-0-138" name="__codelineno-0-138"></a><span class="sd">            ```solidity</span>
-<a id="__codelineno-0-139" name="__codelineno-0-139"></a><span class="sd">            constructor() initializer() {}</span>
-<a id="__codelineno-0-140" name="__codelineno-0-140"></a><span class="sd">            ```</span>
-<a id="__codelineno-0-141" name="__codelineno-0-141"></a><span class="sd">        !!! example</span>
-<a id="__codelineno-0-142" name="__codelineno-0-142"></a><span class="sd">            `:::solidity &quot;MyToken&quot;` and `:::solidity &quot;MTK&quot;` in the following code:</span>
-<a id="__codelineno-0-143" name="__codelineno-0-143"></a><span class="sd">            ```solidity</span>
-<a id="__codelineno-0-144" name="__codelineno-0-144"></a><span class="sd">            constructor() ERC20(&quot;MyToken&quot;, &quot;MTK&quot;) initializer {</span>
-<a id="__codelineno-0-145" name="__codelineno-0-145"></a><span class="sd">                // ...</span>
-<a id="__codelineno-0-146" name="__codelineno-0-146"></a><span class="sd">            }</span>
-<a id="__codelineno-0-147" name="__codelineno-0-147"></a><span class="sd">            ```</span>
-<a id="__codelineno-0-148" name="__codelineno-0-148"></a>
-<a id="__codelineno-0-149" name="__codelineno-0-149"></a><span class="sd">        Returns:</span>
-<a id="__codelineno-0-150" name="__codelineno-0-150"></a><span class="sd">            Arguments of the base constructor or modifier invocation (if any).</span>
-<a id="__codelineno-0-151" name="__codelineno-0-151"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-152" name="__codelineno-0-152"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arguments</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-153" name="__codelineno-0-153"></a>            <span class="k">return</span> <span class="kc">None</span>
-<a id="__codelineno-0-154" name="__codelineno-0-154"></a>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_arguments</span><span class="p">)</span>
+<a id="__codelineno-0-123" name="__codelineno-0-123"></a><span class="sd">        Until Solidity 0.8.0, modifiers were referenced in [ModifierInvocations][wake.ir.meta.modifier_invocation.ModifierInvocation]</span>
+<a id="__codelineno-0-124" name="__codelineno-0-124"></a><span class="sd">        using [Identifiers][wake.ir.expressions.identifier.Identifier]. Version 0.8.0 started using [IdentifierPaths][wake.ir.meta.identifier_path.IdentifierPath] instead.</span>
+<a id="__codelineno-0-125" name="__codelineno-0-125"></a>
+<a id="__codelineno-0-126" name="__codelineno-0-126"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-127" name="__codelineno-0-127"></a><span class="sd">            IR node representing the name of the modifier.</span>
+<a id="__codelineno-0-128" name="__codelineno-0-128"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-129" name="__codelineno-0-129"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modifier_name</span>
+<a id="__codelineno-0-130" name="__codelineno-0-130"></a>
+<a id="__codelineno-0-131" name="__codelineno-0-131"></a>    <span class="nd">@property</span>
+<a id="__codelineno-0-132" name="__codelineno-0-132"></a>    <span class="k">def</span> <span class="nf">arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">ExpressionAbc</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+<a id="__codelineno-0-133" name="__codelineno-0-133"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-134" name="__codelineno-0-134"></a><span class="sd">        !!! warning</span>
+<a id="__codelineno-0-135" name="__codelineno-0-135"></a><span class="sd">            Is `None` when there are no round brackets after the modifier name.</span>
+<a id="__codelineno-0-136" name="__codelineno-0-136"></a><span class="sd">            ```solidity</span>
+<a id="__codelineno-0-137" name="__codelineno-0-137"></a><span class="sd">            constructor() initializer {}</span>
+<a id="__codelineno-0-138" name="__codelineno-0-138"></a><span class="sd">            ```</span>
+<a id="__codelineno-0-139" name="__codelineno-0-139"></a>
+<a id="__codelineno-0-140" name="__codelineno-0-140"></a><span class="sd">            Is an empty list when there are round brackets but no arguments.</span>
+<a id="__codelineno-0-141" name="__codelineno-0-141"></a><span class="sd">            ```solidity</span>
+<a id="__codelineno-0-142" name="__codelineno-0-142"></a><span class="sd">            constructor() initializer() {}</span>
+<a id="__codelineno-0-143" name="__codelineno-0-143"></a><span class="sd">            ```</span>
+<a id="__codelineno-0-144" name="__codelineno-0-144"></a><span class="sd">        !!! example</span>
+<a id="__codelineno-0-145" name="__codelineno-0-145"></a><span class="sd">            `:::solidity &quot;MyToken&quot;` and `:::solidity &quot;MTK&quot;` in the following code:</span>
+<a id="__codelineno-0-146" name="__codelineno-0-146"></a><span class="sd">            ```solidity</span>
+<a id="__codelineno-0-147" name="__codelineno-0-147"></a><span class="sd">            constructor() ERC20(&quot;MyToken&quot;, &quot;MTK&quot;) initializer {</span>
+<a id="__codelineno-0-148" name="__codelineno-0-148"></a><span class="sd">                // ...</span>
+<a id="__codelineno-0-149" name="__codelineno-0-149"></a><span class="sd">            }</span>
+<a id="__codelineno-0-150" name="__codelineno-0-150"></a><span class="sd">            ```</span>
+<a id="__codelineno-0-151" name="__codelineno-0-151"></a>
+<a id="__codelineno-0-152" name="__codelineno-0-152"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-153" name="__codelineno-0-153"></a><span class="sd">            Arguments of the base constructor or modifier invocation (if any).</span>
+<a id="__codelineno-0-154" name="__codelineno-0-154"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-155" name="__codelineno-0-155"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arguments</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-156" name="__codelineno-0-156"></a>            <span class="k">return</span> <span class="kc">None</span>
+<a id="__codelineno-0-157" name="__codelineno-0-157"></a>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_arguments</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
         </details>
 
@@ -5279,6 +5329,8 @@ In the case of the <a class="autorefs autorefs-internal" href="../../enums/#wake
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">}</span>
 </code></pre></div></p>
 </div>
+<p>Until Solidity 0.8.0, modifiers were referenced in <a class="autorefs autorefs-internal" href="#wake.ir.meta.modifier_invocation.ModifierInvocation">ModifierInvocations</a>
+using <a class="autorefs autorefs-internal" href="../../expressions/identifier/#wake.ir.expressions.identifier.Identifier">Identifiers</a>. Version 0.8.0 started using <a class="autorefs autorefs-internal" href="../identifier-path/#wake.ir.meta.identifier_path.IdentifierPath">IdentifierPaths</a> instead.</p>
 
 
 

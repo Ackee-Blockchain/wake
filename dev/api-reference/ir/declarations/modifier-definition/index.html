@@ -1242,6 +1242,10 @@
       
         
       
+        
+      
+        
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -1556,11 +1560,51 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../static-analysis/detectors/unused-function/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Unused function
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../static-analysis/detectors/unused-import/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
     Unused import
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../static-analysis/detectors/unused-modifier/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Unused modifier
   </span>
   
 
@@ -2841,6 +2885,13 @@
           <li class="md-nav__item">
   <a href="#wake.ir.declarations.modifier_definition.ModifierDefinition.parent" class="md-nav__link">
     parent
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wake.ir.declarations.modifier_definition.ModifierDefinition.references" class="md-nav__link">
+    references
   </a>
   
 </li>
@@ -4854,6 +4905,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#wake.ir.declarations.modifier_definition.ModifierDefinition.references" class="md-nav__link">
+    references
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#wake.ir.declarations.modifier_definition.ModifierDefinition.virtual" class="md-nav__link">
     virtual
   </a>
@@ -5312,7 +5370,33 @@
 <span class="normal"><a href="#__codelineno-0-400">400</a></span>
 <span class="normal"><a href="#__codelineno-0-401">401</a></span>
 <span class="normal"><a href="#__codelineno-0-402">402</a></span>
-<span class="normal"><a href="#__codelineno-0-403">403</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-41" name="__codelineno-0-41"></a><span class="k">class</span> <span class="nc">ModifierDefinition</span><span class="p">(</span><span class="n">DeclarationAbc</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-403">403</a></span>
+<span class="normal"><a href="#__codelineno-0-404">404</a></span>
+<span class="normal"><a href="#__codelineno-0-405">405</a></span>
+<span class="normal"><a href="#__codelineno-0-406">406</a></span>
+<span class="normal"><a href="#__codelineno-0-407">407</a></span>
+<span class="normal"><a href="#__codelineno-0-408">408</a></span>
+<span class="normal"><a href="#__codelineno-0-409">409</a></span>
+<span class="normal"><a href="#__codelineno-0-410">410</a></span>
+<span class="normal"><a href="#__codelineno-0-411">411</a></span>
+<span class="normal"><a href="#__codelineno-0-412">412</a></span>
+<span class="normal"><a href="#__codelineno-0-413">413</a></span>
+<span class="normal"><a href="#__codelineno-0-414">414</a></span>
+<span class="normal"><a href="#__codelineno-0-415">415</a></span>
+<span class="normal"><a href="#__codelineno-0-416">416</a></span>
+<span class="normal"><a href="#__codelineno-0-417">417</a></span>
+<span class="normal"><a href="#__codelineno-0-418">418</a></span>
+<span class="normal"><a href="#__codelineno-0-419">419</a></span>
+<span class="normal"><a href="#__codelineno-0-420">420</a></span>
+<span class="normal"><a href="#__codelineno-0-421">421</a></span>
+<span class="normal"><a href="#__codelineno-0-422">422</a></span>
+<span class="normal"><a href="#__codelineno-0-423">423</a></span>
+<span class="normal"><a href="#__codelineno-0-424">424</a></span>
+<span class="normal"><a href="#__codelineno-0-425">425</a></span>
+<span class="normal"><a href="#__codelineno-0-426">426</a></span>
+<span class="normal"><a href="#__codelineno-0-427">427</a></span>
+<span class="normal"><a href="#__codelineno-0-428">428</a></span>
+<span class="normal"><a href="#__codelineno-0-429">429</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-41" name="__codelineno-0-41"></a><span class="k">class</span> <span class="nc">ModifierDefinition</span><span class="p">(</span><span class="n">DeclarationAbc</span><span class="p">):</span>
 <a id="__codelineno-0-42" name="__codelineno-0-42"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="sd">    Definition of a modifier.</span>
 <a id="__codelineno-0-44" name="__codelineno-0-44"></a>
@@ -5675,6 +5759,32 @@
 <a id="__codelineno-0-401" name="__codelineno-0-401"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot create CFG for unimplemented modifier&quot;</span><span class="p">)</span>
 <a id="__codelineno-0-402" name="__codelineno-0-402"></a>
 <a id="__codelineno-0-403" name="__codelineno-0-403"></a>        <span class="k">return</span> <span class="n">ControlFlowGraph</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+<a id="__codelineno-0-404" name="__codelineno-0-404"></a>
+<a id="__codelineno-0-405" name="__codelineno-0-405"></a>    <span class="nd">@property</span>
+<a id="__codelineno-0-406" name="__codelineno-0-406"></a>    <span class="k">def</span> <span class="nf">references</span><span class="p">(</span>
+<a id="__codelineno-0-407" name="__codelineno-0-407"></a>        <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-408" name="__codelineno-0-408"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenSet</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Identifier</span><span class="p">,</span> <span class="n">IdentifierPathPart</span><span class="p">]]:</span>
+<a id="__codelineno-0-409" name="__codelineno-0-409"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-410" name="__codelineno-0-410"></a><span class="sd">        Until Solidity 0.8.0, modifiers were referenced in [ModifierInvocations][wake.ir.meta.modifier_invocation.ModifierInvocation]</span>
+<a id="__codelineno-0-411" name="__codelineno-0-411"></a><span class="sd">        using [Identifiers][wake.ir.expressions.identifier.Identifier]. Version 0.8.0 started using [IdentifierPaths][wake.ir.meta.identifier_path.IdentifierPath] instead.</span>
+<a id="__codelineno-0-412" name="__codelineno-0-412"></a>
+<a id="__codelineno-0-413" name="__codelineno-0-413"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-414" name="__codelineno-0-414"></a><span class="sd">            Set of all IR nodes referencing this modifier.</span>
+<a id="__codelineno-0-415" name="__codelineno-0-415"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-416" name="__codelineno-0-416"></a>        <span class="kn">from</span> <span class="nn">..expressions.identifier</span> <span class="kn">import</span> <span class="n">Identifier</span>
+<a id="__codelineno-0-417" name="__codelineno-0-417"></a>        <span class="kn">from</span> <span class="nn">..meta.identifier_path</span> <span class="kn">import</span> <span class="n">IdentifierPathPart</span>
+<a id="__codelineno-0-418" name="__codelineno-0-418"></a>
+<a id="__codelineno-0-419" name="__codelineno-0-419"></a>        <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-0-420" name="__codelineno-0-420"></a>            <span class="n">ref</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+<a id="__codelineno-0-421" name="__codelineno-0-421"></a>                <span class="n">ref</span>
+<a id="__codelineno-0-422" name="__codelineno-0-422"></a>                <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_references</span>
+<a id="__codelineno-0-423" name="__codelineno-0-423"></a>                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="p">(</span><span class="n">Identifier</span><span class="p">,</span> <span class="n">IdentifierPathPart</span><span class="p">))</span>
+<a id="__codelineno-0-424" name="__codelineno-0-424"></a>            <span class="p">)</span>
+<a id="__codelineno-0-425" name="__codelineno-0-425"></a>            <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unexpected reference type: </span><span class="si">{</span><span class="n">ref</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-426" name="__codelineno-0-426"></a>        <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+<a id="__codelineno-0-427" name="__codelineno-0-427"></a>            <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span>
+<a id="__codelineno-0-428" name="__codelineno-0-428"></a>                <span class="bp">self</span><span class="o">.</span><span class="n">_references</span>
+<a id="__codelineno-0-429" name="__codelineno-0-429"></a>            <span class="p">)</span>  <span class="c1"># pyright: ignore reportGeneralTypeIssues</span>
 </code></pre></div></td></tr></table></div>
         </details>
 
@@ -6243,6 +6353,53 @@
           <td>
             <div class="doc-md-description">
               <p>Parent IR node.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+
+<h3 id="wake.ir.declarations.modifier_definition.ModifierDefinition.references" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">references</span><span class="p">:</span> <span class="n">FrozenSet</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Identifier</span><span class="p">,</span> <span class="n">IdentifierPathPart</span><span class="p">]]</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#wake.ir.declarations.modifier_definition.ModifierDefinition.references" class="headerlink" title="Permanent link">#</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Until Solidity 0.8.0, modifiers were referenced in <a class="autorefs autorefs-internal" href="../../meta/modifier-invocation/#wake.ir.meta.modifier_invocation.ModifierInvocation">ModifierInvocations</a>
+using <a class="autorefs autorefs-internal" href="../../expressions/identifier/#wake.ir.expressions.identifier.Identifier">Identifiers</a>. Version 0.8.0 started using <a class="autorefs autorefs-internal" href="../../meta/identifier-path/#wake.ir.meta.identifier_path.IdentifierPath">IdentifierPaths</a> instead.</p>
+
+
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code><a class="autorefs autorefs-external" title="typing.FrozenSet" href="https://docs.python.org/3/library/typing.html#typing.FrozenSet">FrozenSet</a>[<a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a>[<a class="autorefs autorefs-internal" title="wake.ir.expressions.identifier.Identifier" href="../../expressions/identifier/#wake.ir.expressions.identifier.Identifier">Identifier</a>, <a class="autorefs autorefs-internal" title="wake.ir.meta.identifier_path.IdentifierPathPart" href="../../meta/identifier-path/#wake.ir.meta.identifier_path.IdentifierPathPart">IdentifierPathPart</a>]]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Set of all IR nodes referencing this modifier.</p>
             </div>
           </td>
         </tr>

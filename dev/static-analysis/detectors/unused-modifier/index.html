@@ -12,28 +12,28 @@
         <meta name="author" content="Ackee Blockchain">
       
       
-        <link rel="canonical" href="https://ackeeblockchain.com/wake/docs/latest/api-reference/ir/meta/pragma-directive/">
+        <link rel="canonical" href="https://ackeeblockchain.com/wake/docs/latest/static-analysis/detectors/unused-modifier/">
       
       
-        <link rel="prev" href="../parameter-list/">
+        <link rel="prev" href="../unused-import/">
       
       
-        <link rel="next" href="../source-unit/">
+        <link rel="next" href="../../printers/abi/">
       
       
-      <link rel="icon" href="../../../../images/wake-favicon.svg">
+      <link rel="icon" href="../../../images/wake-favicon.svg">
       <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.2.6">
     
     
       
-        <title>pragma_directive - Wake</title>
+        <title>Unused modifier - Wake</title>
       
     
     
-      <link rel="stylesheet" href="../../../../assets/stylesheets/main.0e669242.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.0e669242.min.css">
       
         
-        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.85d0ee34.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.85d0ee34.min.css">
       
       
 
@@ -52,13 +52,13 @@
       
     
     
-      <link rel="stylesheet" href="../../../../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
     
-      <link rel="stylesheet" href="../../../../stylesheets/extra.css">
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
     
-      <link rel="stylesheet" href="../../../../stylesheets/asciinema-player.css">
+      <link rel="stylesheet" href="../../../stylesheets/asciinema-player.css">
     
-    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
   
@@ -77,11 +77,11 @@
       
         <meta  property="og:type"  content="website" >
       
-        <meta  property="og:title"  content="pragma_directive - Wake" >
+        <meta  property="og:title"  content="Unused modifier - Wake" >
       
         <meta  property="og:description"  content="Wake is a Python-based Solidity development and testing framework with built-in vulnerability detectors." >
       
-        <meta  property="og:image"  content="https://ackeeblockchain.com/wake/docs/latest/assets/images/social/api-reference/ir/meta/pragma-directive.png" >
+        <meta  property="og:image"  content="https://ackeeblockchain.com/wake/docs/latest/assets/images/social/static-analysis/detectors/unused-modifier.png" >
       
         <meta  property="og:image:type"  content="image/png" >
       
@@ -89,15 +89,15 @@
       
         <meta  property="og:image:height"  content="630" >
       
-        <meta  property="og:url"  content="https://ackeeblockchain.com/wake/docs/latest/api-reference/ir/meta/pragma-directive/" >
+        <meta  property="og:url"  content="https://ackeeblockchain.com/wake/docs/latest/static-analysis/detectors/unused-modifier/" >
       
         <meta  name="twitter:card"  content="summary_large_image" >
       
-        <meta  name="twitter:title"  content="pragma_directive - Wake" >
+        <meta  name="twitter:title"  content="Unused modifier - Wake" >
       
         <meta  name="twitter:description"  content="Wake is a Python-based Solidity development and testing framework with built-in vulnerability detectors." >
       
-        <meta  name="twitter:image"  content="https://ackeeblockchain.com/wake/docs/latest/assets/images/social/api-reference/ir/meta/pragma-directive.png" >
+        <meta  name="twitter:image"  content="https://ackeeblockchain.com/wake/docs/latest/assets/images/social/static-analysis/detectors/unused-modifier.png" >
       
     
     
@@ -123,7 +123,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#wake.ir.meta.pragma_directive" class="md-skip">
+        <a href="#unused-modifier-detector" class="md-skip">
           Skip to content
         </a>
       
@@ -142,7 +142,7 @@
   </span>
   You're not viewing the latest version.
 
-  <a href="../../../../..">
+  <a href="../../../..">
     <strong>Click here to go to latest.</strong>
   </a>
 
@@ -157,9 +157,9 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../../../.." title="Wake" class="md-header__button md-logo" aria-label="Wake" data-md-component="logo">
+    <a href="../../.." title="Wake" class="md-header__button md-logo" aria-label="Wake" data-md-component="logo">
       
-  <img src="../../../../images/wake-logo.png" alt="logo">
+  <img src="../../../images/wake-logo.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -176,7 +176,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              pragma_directive
+              Unused modifier
             
           </span>
         </div>
@@ -282,7 +282,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../.." class="md-tabs__link">
+        <a href="../../.." class="md-tabs__link">
           
   
     
@@ -302,7 +302,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../../testing-framework/overview/" class="md-tabs__link">
+        <a href="../../../testing-framework/overview/" class="md-tabs__link">
           
   
     
@@ -318,11 +318,13 @@
         
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../../../../static-analysis/using-detectors/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../using-detectors/" class="md-tabs__link">
           
   
     
@@ -340,7 +342,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../../../language-server/" class="md-tabs__link">
+      <a href="../../../language-server/" class="md-tabs__link">
         
   
     
@@ -357,7 +359,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../../../solc-version-manager/" class="md-tabs__link">
+      <a href="../../../solc-version-manager/" class="md-tabs__link">
         
   
     
@@ -372,21 +374,17 @@
         
   
   
-    
-  
   
     
     
       
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="../../../analysis/cfg/" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../../../api-reference/analysis/cfg/" class="md-tabs__link">
           
   
     
@@ -424,9 +422,9 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../../.." title="Wake" class="md-nav__button md-logo" aria-label="Wake" data-md-component="logo">
+    <a href="../../.." title="Wake" class="md-nav__button md-logo" aria-label="Wake" data-md-component="logo">
       
-  <img src="../../../../images/wake-logo.png" alt="logo">
+  <img src="../../../images/wake-logo.png" alt="logo">
 
     </a>
     Wake
@@ -479,7 +477,7 @@
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../.." class="md-nav__link ">
+            <a href="../../.." class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -510,7 +508,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../installation/" class="md-nav__link">
+      <a href="../../../installation/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -530,7 +528,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../configuration/" class="md-nav__link">
+      <a href="../../../configuration/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -550,7 +548,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../compilation/" class="md-nav__link">
+      <a href="../../../compilation/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -570,7 +568,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../contributing/" class="md-nav__link">
+      <a href="../../../contributing/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -657,7 +655,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../testing-framework/overview/" class="md-nav__link">
+      <a href="../../../testing-framework/overview/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -729,7 +727,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../testing-framework/getting-started/" class="md-nav__link">
+      <a href="../../../testing-framework/getting-started/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -749,7 +747,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../testing-framework/interacting-with-contracts/" class="md-nav__link">
+      <a href="../../../testing-framework/interacting-with-contracts/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -769,7 +767,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../testing-framework/accounts-and-addresses/" class="md-nav__link">
+      <a href="../../../testing-framework/accounts-and-addresses/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -789,7 +787,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../testing-framework/chains-and-blocks/" class="md-nav__link">
+      <a href="../../../testing-framework/chains-and-blocks/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -809,7 +807,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../testing-framework/transaction-objects/" class="md-nav__link">
+      <a href="../../../testing-framework/transaction-objects/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -829,7 +827,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../testing-framework/events-and-errors/" class="md-nav__link">
+      <a href="../../../testing-framework/events-and-errors/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -849,7 +847,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../testing-framework/helper-functions/" class="md-nav__link">
+      <a href="../../../testing-framework/helper-functions/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -877,7 +875,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../testing-framework/fuzzing/" class="md-nav__link">
+      <a href="../../../testing-framework/fuzzing/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -897,7 +895,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../testing-framework/cross-chain-testing/" class="md-nav__link">
+      <a href="../../../testing-framework/cross-chain-testing/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -917,7 +915,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../testing-framework/deployment/" class="md-nav__link">
+      <a href="../../../testing-framework/deployment/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -937,7 +935,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../testing-framework/debugging/" class="md-nav__link">
+      <a href="../../../testing-framework/debugging/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -957,7 +955,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../testing-framework/coverage-analysis/" class="md-nav__link">
+      <a href="../../../testing-framework/coverage-analysis/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -977,7 +975,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../testing-framework/performance-considerations/" class="md-nav__link">
+      <a href="../../../testing-framework/performance-considerations/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -997,7 +995,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../testing-framework/migrating-from-ape-and-brownie/" class="md-nav__link">
+      <a href="../../../testing-framework/migrating-from-ape-and-brownie/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1017,7 +1015,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../testing-framework/migrating-from-woke-2/" class="md-nav__link">
+      <a href="../../../testing-framework/migrating-from-woke-2/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1037,7 +1035,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../testing-framework/migrating-from-woke-3/" class="md-nav__link">
+      <a href="../../../testing-framework/migrating-from-woke-3/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1057,7 +1055,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../testing-framework/troubleshooting/" class="md-nav__link">
+      <a href="../../../testing-framework/troubleshooting/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1082,6 +1080,8 @@
       
   
   
+    
+  
   
     
     
@@ -1096,13 +1096,13 @@
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
             
@@ -1115,7 +1115,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             Static analysis (detectors & printers)
@@ -1128,7 +1128,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../static-analysis/using-detectors/" class="md-nav__link">
+      <a href="../../using-detectors/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1148,7 +1148,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../static-analysis/using-printers/" class="md-nav__link">
+      <a href="../../using-printers/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1166,6 +1166,8 @@
                 
   
   
+    
+  
   
     
     
@@ -1178,13 +1180,13 @@
     
       
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" checked>
         
           <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
             
@@ -1197,7 +1199,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_3">
             <span class="md-nav__icon md-icon"></span>
             Built-in
@@ -1208,6 +1210,8 @@
                 
   
   
+    
+  
   
     
     
@@ -1248,13 +1252,13 @@
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3_1" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3_1" checked>
         
           <label class="md-nav__link" for="__nav_3_3_1" id="__nav_3_3_1_label" tabindex="0">
             
@@ -1267,7 +1271,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_1_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_1_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_3_1">
             <span class="md-nav__icon md-icon"></span>
             Detectors
@@ -1280,7 +1284,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../static-analysis/detectors/abi-encode-with-signature/" class="md-nav__link">
+      <a href="../abi-encode-with-signature/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1300,7 +1304,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../static-analysis/detectors/balance-relied-on/" class="md-nav__link">
+      <a href="../balance-relied-on/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1320,7 +1324,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../static-analysis/detectors/calldata-tuple-reencoding-head-overflow-bug/" class="md-nav__link">
+      <a href="../calldata-tuple-reencoding-head-overflow-bug/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1340,7 +1344,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../static-analysis/detectors/call-options-not-called/" class="md-nav__link">
+      <a href="../call-options-not-called/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1360,7 +1364,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../static-analysis/detectors/empty-byte-array-copy-bug/" class="md-nav__link">
+      <a href="../empty-byte-array-copy-bug/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1380,7 +1384,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../static-analysis/detectors/incorrect-interface/" class="md-nav__link">
+      <a href="../incorrect-interface/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1400,7 +1404,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../static-analysis/detectors/missing-return/" class="md-nav__link">
+      <a href="../missing-return/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1420,7 +1424,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../static-analysis/detectors/msg-value-nonpayable-function/" class="md-nav__link">
+      <a href="../msg-value-nonpayable-function/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1440,7 +1444,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../static-analysis/detectors/reentrancy/" class="md-nav__link">
+      <a href="../reentrancy/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1460,7 +1464,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../static-analysis/detectors/tx-origin/" class="md-nav__link">
+      <a href="../tx-origin/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1480,7 +1484,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../static-analysis/detectors/unchecked-return-value/" class="md-nav__link">
+      <a href="../unchecked-return-value/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1500,7 +1504,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../static-analysis/detectors/unprotected-selfdestruct/" class="md-nav__link">
+      <a href="../unprotected-selfdestruct/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1520,7 +1524,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../static-analysis/detectors/unsafe-delegatecall/" class="md-nav__link">
+      <a href="../unsafe-delegatecall/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1540,7 +1544,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../static-analysis/detectors/unused-contract/" class="md-nav__link">
+      <a href="../unused-contract/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1560,7 +1564,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../static-analysis/detectors/unused-function/" class="md-nav__link">
+      <a href="../unused-function/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1580,7 +1584,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../static-analysis/detectors/unused-import/" class="md-nav__link">
+      <a href="../unused-import/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1598,9 +1602,29 @@
                 
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="../../../../static-analysis/detectors/unused-modifier/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Unused modifier
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -1609,6 +1633,40 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    Example
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#parameters" class="md-nav__link">
+    Parameters
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1682,7 +1740,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../static-analysis/printers/abi/" class="md-nav__link">
+      <a href="../../printers/abi/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1702,7 +1760,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../static-analysis/printers/control-flow-graph/" class="md-nav__link">
+      <a href="../../printers/control-flow-graph/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1722,7 +1780,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../static-analysis/printers/imports-graph/" class="md-nav__link">
+      <a href="../../printers/imports-graph/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1742,7 +1800,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../static-analysis/printers/inheritance-graph/" class="md-nav__link">
+      <a href="../../printers/inheritance-graph/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1762,7 +1820,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../static-analysis/printers/inheritance-tree/" class="md-nav__link">
+      <a href="../../printers/inheritance-tree/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1782,7 +1840,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../static-analysis/printers/modifiers/" class="md-nav__link">
+      <a href="../../printers/modifiers/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1802,7 +1860,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../static-analysis/printers/state-changes/" class="md-nav__link">
+      <a href="../../printers/state-changes/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1822,7 +1880,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../static-analysis/printers/storage-layout/" class="md-nav__link">
+      <a href="../../printers/storage-layout/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1842,7 +1900,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../static-analysis/printers/tokens/" class="md-nav__link">
+      <a href="../../printers/tokens/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1922,7 +1980,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../static-analysis/getting-started/" class="md-nav__link">
+      <a href="../../getting-started/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1942,7 +2000,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../static-analysis/working-with-ir/" class="md-nav__link">
+      <a href="../../working-with-ir/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1962,7 +2020,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../static-analysis/command-line-interface/" class="md-nav__link">
+      <a href="../../command-line-interface/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1997,7 +2055,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../language-server/" class="md-nav__link">
+      <a href="../../../language-server/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2016,7 +2074,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../solc-version-manager/" class="md-nav__link">
+      <a href="../../../solc-version-manager/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2033,8 +2091,6 @@
       
   
   
-    
-  
   
     
     
@@ -2055,13 +2111,13 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
         
           <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
             
@@ -2074,7 +2130,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             API reference
@@ -2129,7 +2185,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../analysis/cfg/" class="md-nav__link">
+      <a href="../../../api-reference/analysis/cfg/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2149,7 +2205,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../analysis/utils/" class="md-nav__link">
+      <a href="../../../api-reference/analysis/utils/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2219,7 +2275,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../config/data-model/" class="md-nav__link">
+      <a href="../../../api-reference/config/data-model/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2239,7 +2295,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../config/wake-config/" class="md-nav__link">
+      <a href="../../../api-reference/config/wake-config/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2307,7 +2363,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../compiler/build-data-model/" class="md-nav__link">
+      <a href="../../../api-reference/compiler/build-data-model/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2377,7 +2433,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../core/solidity-version/" class="md-nav__link">
+      <a href="../../../api-reference/core/solidity-version/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2397,7 +2453,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../core/visitor/" class="md-nav__link">
+      <a href="../../../api-reference/core/visitor/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2465,7 +2521,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../detectors/api/" class="md-nav__link">
+      <a href="../../../api-reference/detectors/api/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2491,8 +2547,6 @@
                 
   
   
-    
-  
   
     
     
@@ -2521,13 +2575,13 @@
     
       
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_6" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_6" >
         
           <label class="md-nav__link" for="__nav_6_6" id="__nav_6_6_label" tabindex="0">
             
@@ -2540,7 +2594,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_6_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_6_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_6_6">
             <span class="md-nav__icon md-icon"></span>
             wake.ir
@@ -2553,7 +2607,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../abc/" class="md-nav__link">
+      <a href="../../../api-reference/ir/abc/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2631,7 +2685,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../declarations/abc/" class="md-nav__link">
+      <a href="../../../api-reference/ir/declarations/abc/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2651,7 +2705,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../declarations/contract-definition/" class="md-nav__link">
+      <a href="../../../api-reference/ir/declarations/contract-definition/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2671,7 +2725,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../declarations/enum-definition/" class="md-nav__link">
+      <a href="../../../api-reference/ir/declarations/enum-definition/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2691,7 +2745,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../declarations/enum-value/" class="md-nav__link">
+      <a href="../../../api-reference/ir/declarations/enum-value/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2711,7 +2765,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../declarations/error-definition/" class="md-nav__link">
+      <a href="../../../api-reference/ir/declarations/error-definition/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2731,7 +2785,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../declarations/event-definition/" class="md-nav__link">
+      <a href="../../../api-reference/ir/declarations/event-definition/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2751,7 +2805,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../declarations/function-definition/" class="md-nav__link">
+      <a href="../../../api-reference/ir/declarations/function-definition/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2771,7 +2825,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../declarations/modifier-definition/" class="md-nav__link">
+      <a href="../../../api-reference/ir/declarations/modifier-definition/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2791,7 +2845,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../declarations/struct-definition/" class="md-nav__link">
+      <a href="../../../api-reference/ir/declarations/struct-definition/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2811,7 +2865,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../declarations/user-defined-value-type-definition/" class="md-nav__link">
+      <a href="../../../api-reference/ir/declarations/user-defined-value-type-definition/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2831,7 +2885,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../declarations/variable-declaration/" class="md-nav__link">
+      <a href="../../../api-reference/ir/declarations/variable-declaration/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2859,7 +2913,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../enums/" class="md-nav__link">
+      <a href="../../../api-reference/ir/enums/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2945,7 +2999,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../expressions/abc/" class="md-nav__link">
+      <a href="../../../api-reference/ir/expressions/abc/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2965,7 +3019,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../expressions/assignment/" class="md-nav__link">
+      <a href="../../../api-reference/ir/expressions/assignment/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2985,7 +3039,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../expressions/binary-operation/" class="md-nav__link">
+      <a href="../../../api-reference/ir/expressions/binary-operation/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3005,7 +3059,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../expressions/conditional/" class="md-nav__link">
+      <a href="../../../api-reference/ir/expressions/conditional/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3025,7 +3079,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../expressions/elementary-type-name-expression/" class="md-nav__link">
+      <a href="../../../api-reference/ir/expressions/elementary-type-name-expression/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3045,7 +3099,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../expressions/function-call/" class="md-nav__link">
+      <a href="../../../api-reference/ir/expressions/function-call/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3065,7 +3119,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../expressions/function-call-options/" class="md-nav__link">
+      <a href="../../../api-reference/ir/expressions/function-call-options/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3085,7 +3139,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../expressions/identifier/" class="md-nav__link">
+      <a href="../../../api-reference/ir/expressions/identifier/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3105,7 +3159,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../expressions/index-access/" class="md-nav__link">
+      <a href="../../../api-reference/ir/expressions/index-access/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3125,7 +3179,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../expressions/index-range-access/" class="md-nav__link">
+      <a href="../../../api-reference/ir/expressions/index-range-access/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3145,7 +3199,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../expressions/literal/" class="md-nav__link">
+      <a href="../../../api-reference/ir/expressions/literal/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3165,7 +3219,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../expressions/member-access/" class="md-nav__link">
+      <a href="../../../api-reference/ir/expressions/member-access/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3185,7 +3239,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../expressions/new-expression/" class="md-nav__link">
+      <a href="../../../api-reference/ir/expressions/new-expression/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3205,7 +3259,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../expressions/tuple-expression/" class="md-nav__link">
+      <a href="../../../api-reference/ir/expressions/tuple-expression/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3225,7 +3279,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../expressions/unary-operation/" class="md-nav__link">
+      <a href="../../../api-reference/ir/expressions/unary-operation/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3251,8 +3305,6 @@
                 
   
   
-    
-  
   
     
     
@@ -3281,13 +3333,13 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_6_5" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_6_5" >
         
           <label class="md-nav__link" for="__nav_6_6_5" id="__nav_6_6_5_label" tabindex="0">
             
@@ -3300,7 +3352,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_6_5_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_6_5_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_6_6_5">
             <span class="md-nav__icon md-icon"></span>
             meta
@@ -3313,7 +3365,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../identifier-path/" class="md-nav__link">
+      <a href="../../../api-reference/ir/meta/identifier-path/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3333,7 +3385,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../import-directive/" class="md-nav__link">
+      <a href="../../../api-reference/ir/meta/import-directive/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3353,7 +3405,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../inheritance-specifier/" class="md-nav__link">
+      <a href="../../../api-reference/ir/meta/inheritance-specifier/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3373,7 +3425,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../modifier-invocation/" class="md-nav__link">
+      <a href="../../../api-reference/ir/meta/modifier-invocation/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3393,7 +3445,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../override-specifier/" class="md-nav__link">
+      <a href="../../../api-reference/ir/meta/override-specifier/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3413,7 +3465,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../parameter-list/" class="md-nav__link">
+      <a href="../../../api-reference/ir/meta/parameter-list/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3431,29 +3483,9 @@
                 
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    pragma_directive
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../../api-reference/ir/meta/pragma-directive/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3462,53 +3494,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#wake.ir.meta.pragma_directive.PragmaDirective" class="md-nav__link">
-    PragmaDirective
-  </a>
-  
-    <nav class="md-nav" aria-label="PragmaDirective">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#wake.ir.meta.pragma_directive.PragmaDirective.literals" class="md-nav__link">
-    literals
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#wake.ir.meta.pragma_directive.PragmaDirective.parent" class="md-nav__link">
-    parent
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -3520,7 +3505,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../source-unit/" class="md-nav__link">
+      <a href="../../../api-reference/ir/meta/source-unit/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3540,7 +3525,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../structured-documentation/" class="md-nav__link">
+      <a href="../../../api-reference/ir/meta/structured-documentation/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3560,7 +3545,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../try-catch-clause/" class="md-nav__link">
+      <a href="../../../api-reference/ir/meta/try-catch-clause/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3580,7 +3565,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../using-for-directive/" class="md-nav__link">
+      <a href="../../../api-reference/ir/meta/using-for-directive/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3608,7 +3593,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference-resolver/" class="md-nav__link">
+      <a href="../../../api-reference/ir/reference-resolver/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3698,7 +3683,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../statements/abc/" class="md-nav__link">
+      <a href="../../../api-reference/ir/statements/abc/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3718,7 +3703,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../statements/block/" class="md-nav__link">
+      <a href="../../../api-reference/ir/statements/block/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3738,7 +3723,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../statements/break-statement/" class="md-nav__link">
+      <a href="../../../api-reference/ir/statements/break-statement/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3758,7 +3743,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../statements/continue-statement/" class="md-nav__link">
+      <a href="../../../api-reference/ir/statements/continue-statement/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3778,7 +3763,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../statements/do-while-statement/" class="md-nav__link">
+      <a href="../../../api-reference/ir/statements/do-while-statement/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3798,7 +3783,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../statements/emit-statement/" class="md-nav__link">
+      <a href="../../../api-reference/ir/statements/emit-statement/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3818,7 +3803,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../statements/expression-statement/" class="md-nav__link">
+      <a href="../../../api-reference/ir/statements/expression-statement/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3838,7 +3823,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../statements/for-statement/" class="md-nav__link">
+      <a href="../../../api-reference/ir/statements/for-statement/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3858,7 +3843,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../statements/if-statement/" class="md-nav__link">
+      <a href="../../../api-reference/ir/statements/if-statement/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3878,7 +3863,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../statements/inline-assembly/" class="md-nav__link">
+      <a href="../../../api-reference/ir/statements/inline-assembly/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3898,7 +3883,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../statements/placeholder-statement/" class="md-nav__link">
+      <a href="../../../api-reference/ir/statements/placeholder-statement/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3918,7 +3903,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../statements/return-statement/" class="md-nav__link">
+      <a href="../../../api-reference/ir/statements/return-statement/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3938,7 +3923,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../statements/revert-statement/" class="md-nav__link">
+      <a href="../../../api-reference/ir/statements/revert-statement/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3958,7 +3943,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../statements/try-statement/" class="md-nav__link">
+      <a href="../../../api-reference/ir/statements/try-statement/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3978,7 +3963,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../statements/unchecked-block/" class="md-nav__link">
+      <a href="../../../api-reference/ir/statements/unchecked-block/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3998,7 +3983,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../statements/variable-declaration-statement/" class="md-nav__link">
+      <a href="../../../api-reference/ir/statements/variable-declaration-statement/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4018,7 +4003,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../statements/while-statement/" class="md-nav__link">
+      <a href="../../../api-reference/ir/statements/while-statement/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4046,7 +4031,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../types/" class="md-nav__link">
+      <a href="../../../api-reference/ir/types/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4114,7 +4099,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../type-names/abc/" class="md-nav__link">
+      <a href="../../../api-reference/ir/type-names/abc/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4134,7 +4119,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../type-names/array-type-name/" class="md-nav__link">
+      <a href="../../../api-reference/ir/type-names/array-type-name/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4154,7 +4139,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../type-names/elementary-type-name/" class="md-nav__link">
+      <a href="../../../api-reference/ir/type-names/elementary-type-name/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4174,7 +4159,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../type-names/function-type-name/" class="md-nav__link">
+      <a href="../../../api-reference/ir/type-names/function-type-name/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4194,7 +4179,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../type-names/mapping/" class="md-nav__link">
+      <a href="../../../api-reference/ir/type-names/mapping/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4214,7 +4199,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../type-names/user-defined-type-name/" class="md-nav__link">
+      <a href="../../../api-reference/ir/type-names/user-defined-type-name/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4312,7 +4297,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../yul/abc/" class="md-nav__link">
+      <a href="../../../api-reference/ir/yul/abc/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4332,7 +4317,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../yul/assignment/" class="md-nav__link">
+      <a href="../../../api-reference/ir/yul/assignment/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4352,7 +4337,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../yul/block/" class="md-nav__link">
+      <a href="../../../api-reference/ir/yul/block/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4372,7 +4357,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../yul/break-statement/" class="md-nav__link">
+      <a href="../../../api-reference/ir/yul/break-statement/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4392,7 +4377,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../yul/case-statement/" class="md-nav__link">
+      <a href="../../../api-reference/ir/yul/case-statement/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4412,7 +4397,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../yul/continue-statement/" class="md-nav__link">
+      <a href="../../../api-reference/ir/yul/continue-statement/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4432,7 +4417,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../yul/expression-statement/" class="md-nav__link">
+      <a href="../../../api-reference/ir/yul/expression-statement/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4452,7 +4437,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../yul/for-loop/" class="md-nav__link">
+      <a href="../../../api-reference/ir/yul/for-loop/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4472,7 +4457,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../yul/function-call/" class="md-nav__link">
+      <a href="../../../api-reference/ir/yul/function-call/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4492,7 +4477,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../yul/function-definition/" class="md-nav__link">
+      <a href="../../../api-reference/ir/yul/function-definition/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4512,7 +4497,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../yul/identifier/" class="md-nav__link">
+      <a href="../../../api-reference/ir/yul/identifier/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4532,7 +4517,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../yul/if-statement/" class="md-nav__link">
+      <a href="../../../api-reference/ir/yul/if-statement/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4552,7 +4537,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../yul/leave/" class="md-nav__link">
+      <a href="../../../api-reference/ir/yul/leave/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4572,7 +4557,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../yul/literal/" class="md-nav__link">
+      <a href="../../../api-reference/ir/yul/literal/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4592,7 +4577,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../yul/switch/" class="md-nav__link">
+      <a href="../../../api-reference/ir/yul/switch/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4612,7 +4597,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../yul/typed-name/" class="md-nav__link">
+      <a href="../../../api-reference/ir/yul/typed-name/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4632,7 +4617,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../yul/variable-declaration/" class="md-nav__link">
+      <a href="../../../api-reference/ir/yul/variable-declaration/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4708,7 +4693,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../printers/api/" class="md-nav__link">
+      <a href="../../../api-reference/printers/api/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4764,29 +4749,16 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#wake.ir.meta.pragma_directive.PragmaDirective" class="md-nav__link">
-    PragmaDirective
-  </a>
-  
-    <nav class="md-nav" aria-label="PragmaDirective">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#wake.ir.meta.pragma_directive.PragmaDirective.literals" class="md-nav__link">
-    literals
+  <a href="#example" class="md-nav__link">
+    Example
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#wake.ir.meta.pragma_directive.PragmaDirective.parent" class="md-nav__link">
-    parent
+      
+        <li class="md-nav__item">
+  <a href="#parameters" class="md-nav__link">
+    Parameters
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -4808,280 +4780,49 @@
   
 
 
-<div class="doc doc-object doc-module">
-
-
-
-<h1 id="wake.ir.meta.pragma_directive" class="doc doc-heading">
-          <code>wake.ir.meta.pragma_directive</code>
-
-  
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-module"><code>module</code></small>
-  </span>
-
-<a href="#wake.ir.meta.pragma_directive" class="headerlink" title="Permanent link">#</a></h1>
-
-  <div class="doc doc-contents first">
-
-  
-
-  <div class="doc doc-children">
-
-
-
-
-
-
-
-
-<div class="doc doc-object doc-class">
-
-
-
-<h2 id="wake.ir.meta.pragma_directive.PragmaDirective" class="doc doc-heading">
-        <code>PragmaDirective</code>
-
-  
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-class"><code>class</code></small>
-  </span>
-
-<a href="#wake.ir.meta.pragma_directive.PragmaDirective" class="headerlink" title="Permanent link">#</a></h2>
-
-
-  <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code><a class="autorefs autorefs-internal" title="wake.ir.abc.SolidityAbc" href="../../abc/#wake.ir.abc.SolidityAbc">SolidityAbc</a></code></p>
-
-
-
-        <details class="quote">
-          <summary>Source code in <code>wake/ir/meta/pragma_directive.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-18">18</a></span>
-<span class="normal"><a href="#__codelineno-0-19">19</a></span>
-<span class="normal"><a href="#__codelineno-0-20">20</a></span>
-<span class="normal"><a href="#__codelineno-0-21">21</a></span>
-<span class="normal"><a href="#__codelineno-0-22">22</a></span>
-<span class="normal"><a href="#__codelineno-0-23">23</a></span>
-<span class="normal"><a href="#__codelineno-0-24">24</a></span>
-<span class="normal"><a href="#__codelineno-0-25">25</a></span>
-<span class="normal"><a href="#__codelineno-0-26">26</a></span>
-<span class="normal"><a href="#__codelineno-0-27">27</a></span>
-<span class="normal"><a href="#__codelineno-0-28">28</a></span>
-<span class="normal"><a href="#__codelineno-0-29">29</a></span>
-<span class="normal"><a href="#__codelineno-0-30">30</a></span>
-<span class="normal"><a href="#__codelineno-0-31">31</a></span>
-<span class="normal"><a href="#__codelineno-0-32">32</a></span>
-<span class="normal"><a href="#__codelineno-0-33">33</a></span>
-<span class="normal"><a href="#__codelineno-0-34">34</a></span>
-<span class="normal"><a href="#__codelineno-0-35">35</a></span>
-<span class="normal"><a href="#__codelineno-0-36">36</a></span>
-<span class="normal"><a href="#__codelineno-0-37">37</a></span>
-<span class="normal"><a href="#__codelineno-0-38">38</a></span>
-<span class="normal"><a href="#__codelineno-0-39">39</a></span>
-<span class="normal"><a href="#__codelineno-0-40">40</a></span>
-<span class="normal"><a href="#__codelineno-0-41">41</a></span>
-<span class="normal"><a href="#__codelineno-0-42">42</a></span>
-<span class="normal"><a href="#__codelineno-0-43">43</a></span>
-<span class="normal"><a href="#__codelineno-0-44">44</a></span>
-<span class="normal"><a href="#__codelineno-0-45">45</a></span>
-<span class="normal"><a href="#__codelineno-0-46">46</a></span>
-<span class="normal"><a href="#__codelineno-0-47">47</a></span>
-<span class="normal"><a href="#__codelineno-0-48">48</a></span>
-<span class="normal"><a href="#__codelineno-0-49">49</a></span>
-<span class="normal"><a href="#__codelineno-0-50">50</a></span>
-<span class="normal"><a href="#__codelineno-0-51">51</a></span>
-<span class="normal"><a href="#__codelineno-0-52">52</a></span>
-<span class="normal"><a href="#__codelineno-0-53">53</a></span>
-<span class="normal"><a href="#__codelineno-0-54">54</a></span>
-<span class="normal"><a href="#__codelineno-0-55">55</a></span>
-<span class="normal"><a href="#__codelineno-0-56">56</a></span>
-<span class="normal"><a href="#__codelineno-0-57">57</a></span>
-<span class="normal"><a href="#__codelineno-0-58">58</a></span>
-<span class="normal"><a href="#__codelineno-0-59">59</a></span>
-<span class="normal"><a href="#__codelineno-0-60">60</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-18" name="__codelineno-0-18"></a><span class="k">class</span> <span class="nc">PragmaDirective</span><span class="p">(</span><span class="n">SolidityAbc</span><span class="p">):</span>
-<a id="__codelineno-0-19" name="__codelineno-0-19"></a>    <span class="n">_ast_node</span><span class="p">:</span> <span class="n">SolcPragmaDirective</span>
-<a id="__codelineno-0-20" name="__codelineno-0-20"></a>    <span class="n">_parent</span><span class="p">:</span> <span class="n">SourceUnit</span>
-<a id="__codelineno-0-21" name="__codelineno-0-21"></a>
-<a id="__codelineno-0-22" name="__codelineno-0-22"></a>    <span class="n">_literals</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
-<a id="__codelineno-0-23" name="__codelineno-0-23"></a>
-<a id="__codelineno-0-24" name="__codelineno-0-24"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-<a id="__codelineno-0-25" name="__codelineno-0-25"></a>        <span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span> <span class="n">pragma</span><span class="p">:</span> <span class="n">SolcPragmaDirective</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">SolidityAbc</span>
-<a id="__codelineno-0-26" name="__codelineno-0-26"></a>    <span class="p">):</span>
-<a id="__codelineno-0-27" name="__codelineno-0-27"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">pragma</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
-<a id="__codelineno-0-28" name="__codelineno-0-28"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_literals</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">pragma</span><span class="o">.</span><span class="n">literals</span><span class="p">)</span>
-<a id="__codelineno-0-29" name="__codelineno-0-29"></a>
-<a id="__codelineno-0-30" name="__codelineno-0-30"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-31" name="__codelineno-0-31"></a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SourceUnit</span><span class="p">:</span>
-<a id="__codelineno-0-32" name="__codelineno-0-32"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="sd">        Returns:</span>
-<a id="__codelineno-0-34" name="__codelineno-0-34"></a><span class="sd">            Parent IR node.</span>
-<a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-36" name="__codelineno-0-36"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span>
-<a id="__codelineno-0-37" name="__codelineno-0-37"></a>
-<a id="__codelineno-0-38" name="__codelineno-0-38"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-39" name="__codelineno-0-39"></a>    <span class="k">def</span> <span class="nf">literals</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-<a id="__codelineno-0-40" name="__codelineno-0-40"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-41" name="__codelineno-0-41"></a><span class="sd">        !!! example</span>
-<a id="__codelineno-0-42" name="__codelineno-0-42"></a><span class="sd">            `:::py (&#39;solidity&#39;, &#39;^&#39;, &#39;0.8&#39;, &#39;||&#39;, &#39;0.7&#39;, &#39;.1&#39;, &#39;-&#39;, &#39;0.7&#39;, &#39;.6&#39;)` for the following pragma:</span>
-<a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="sd">            ```solidity</span>
-<a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="sd">            pragma solidity ^0.8 || 0.7.1 - 0.7.6;</span>
-<a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="sd">            ```</span>
-<a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="sd">        !!! example</span>
-<a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="sd">            `:::py (&#39;abicoder&#39;, &#39;v2&#39;)` for the following pragma:</span>
-<a id="__codelineno-0-48" name="__codelineno-0-48"></a><span class="sd">            ```solidity</span>
-<a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="sd">            pragma abicoder v2;</span>
-<a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="sd">            ```</span>
-<a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="sd">        !!! example</span>
-<a id="__codelineno-0-52" name="__codelineno-0-52"></a><span class="sd">            `:::py (&#39;experimental&#39;, &#39;SMTChecker&#39;)` for the following pragma:</span>
-<a id="__codelineno-0-53" name="__codelineno-0-53"></a><span class="sd">            ```solidity</span>
-<a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="sd">            pragma experimental SMTChecker;</span>
-<a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="sd">            ```</span>
-<a id="__codelineno-0-56" name="__codelineno-0-56"></a>
-<a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="sd">        Returns:</span>
-<a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="sd">            Literals of the pragma directive.</span>
-<a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-60" name="__codelineno-0-60"></a>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_literals</span><span class="p">)</span>
+<h1 id="unused-modifier-detector">Unused modifier detector<a class="headerlink" href="#unused-modifier-detector" title="Permanent link">#</a></h1>
+<p>Reports unused modifiers.</p>
+<h2 id="example">Example<a class="headerlink" href="#example" title="Permanent link">#</a></h2>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-0-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-0-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-0-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-0-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-0-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-0-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-0-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-0-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-0-10">10</a></span>
+<span class="normal"><a href="#__codelineno-0-11">11</a></span>
+<span class="normal"><a href="#__codelineno-0-12">12</a></span>
+<span class="normal"><a href="#__codelineno-0-13">13</a></span>
+<span class="normal"><a href="#__codelineno-0-14">14</a></span>
+<span class="normal"><a href="#__codelineno-0-15">15</a></span>
+<span class="normal"><a href="#__codelineno-0-16">16</a></span>
+<span class="normal"><a href="#__codelineno-0-17">17</a></span>
+<span class="normal"><a href="#__codelineno-0-18">18</a></span>
+<span class="normal"><a href="#__codelineno-0-19">19</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="k">pragma solidity</span><span class="w"> </span><span class="err">^0.8</span><span class="p">;</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3"></a><span class="k">contract</span><span class="w"> </span><span class="ni">C</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4"></a><span class="w">    </span><span class="kt">address</span><span class="w"> </span><span class="k">public </span><span class="nv">owner</span><span class="p">;</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5"></a>
+<a id="__codelineno-0-6" name="__codelineno-0-6"></a><span class="hll"><span class="w">    </span><span class="kt">modifier</span><span class="w"> </span>onlyOwner<span class="p">()</span><span class="w"> </span><span class="p">{</span>
+</span><a id="__codelineno-0-7" name="__codelineno-0-7"></a><span class="w">        </span><span class="kt">require</span><span class="p">(</span><span class="k">msg.sender</span><span class="w"> </span><span class="o">==</span><span class="w"> </span>owner<span class="p">,</span><span class="w"> </span><span class="s2">&quot;Not owner.&quot;</span><span class="p">);</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8"></a><span class="w">        </span>_<span class="p">;</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10"></a>
+<a id="__codelineno-0-11" name="__codelineno-0-11"></a><span class="w">    </span><span class="kt">constructor</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12"></a><span class="w">        </span>owner<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">msg.sender</span><span class="p">;</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14"></a>
+<a id="__codelineno-0-15" name="__codelineno-0-15"></a><span class="w">    </span><span class="kt">function</span><span class="w"> </span><span class="nv">withdraw</span><span class="p">()</span><span class="w"> </span><span class="kt">external</span><span class="w"> </span><span class="cm">/*onlyOwner*/</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16"></a><span class="w">        </span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="nv">success</span><span class="p">,</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">msg.sender</span><span class="p">.</span>call<span class="p">{</span>value<span class="o">:</span><span class="w"> </span><span class="kt">address</span><span class="p">(</span><span class="kt">this</span><span class="p">).</span>balance<span class="p">}(</span><span class="s2">&quot;&quot;</span><span class="p">);</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17"></a><span class="w">        </span><span class="kt">require</span><span class="p">(</span>success<span class="p">,</span><span class="w"> </span><span class="s2">&quot;Transfer failed.&quot;</span><span class="p">);</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19"></a><span class="p">}</span>
 </code></pre></div></td></tr></table></div>
-        </details>
-
-  
-
-  <div class="doc doc-children">
-
-
-
-
-
-
-
-<div class="doc doc-object doc-attribute">
-
-
-
-
-<h3 id="wake.ir.meta.pragma_directive.PragmaDirective.literals" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">literals</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span></code>
-  
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-property"><code>property</code></small>
-  </span>
-
-<a href="#wake.ir.meta.pragma_directive.PragmaDirective.literals" class="headerlink" title="Permanent link">#</a></h3>
-
-
-  <div class="doc doc-contents ">
-  
-      <div class="admonition example">
-<p class="admonition-title">Example</p>
-<p><code class="highlight"><span class="p">(</span><span class="s1">&#39;solidity&#39;</span><span class="p">,</span> <span class="s1">&#39;^&#39;</span><span class="p">,</span> <span class="s1">&#39;0.8&#39;</span><span class="p">,</span> <span class="s1">&#39;||&#39;</span><span class="p">,</span> <span class="s1">&#39;0.7&#39;</span><span class="p">,</span> <span class="s1">&#39;.1&#39;</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="s1">&#39;0.7&#39;</span><span class="p">,</span> <span class="s1">&#39;.6&#39;</span><span class="p">)</span></code> for the following pragma:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">pragma solidity</span><span class="w"> </span><span class="err">^0.8</span><span class="w"> </span><span class="err">||</span><span class="w"> </span><span class="err">0.7.1</span><span class="w"> </span><span class="err">-</span><span class="w"> </span><span class="err">0.7.6</span><span class="p">;</span>
-</code></pre></div></p>
-</div>
-<div class="admonition example">
-<p class="admonition-title">Example</p>
-<p><code class="highlight"><span class="p">(</span><span class="s1">&#39;abicoder&#39;</span><span class="p">,</span> <span class="s1">&#39;v2&#39;</span><span class="p">)</span></code> for the following pragma:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pragma<span class="w"> </span>abicoder<span class="w"> </span>v2<span class="p">;</span>
-</code></pre></div></p>
-</div>
-<div class="admonition example">
-<p class="admonition-title">Example</p>
-<p><code class="highlight"><span class="p">(</span><span class="s1">&#39;experimental&#39;</span><span class="p">,</span> <span class="s1">&#39;SMTChecker&#39;</span><span class="p">)</span></code> for the following pragma:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pragma<span class="w"> </span>experimental<span class="w"> </span>SMTChecker<span class="p">;</span>
-</code></pre></div></p>
-</div>
-
-
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td>
-                <code><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>, ...]</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>Literals of the pragma directive.</p>
-            </div>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-  </div>
-
-</div>
-
-<div class="doc doc-object doc-attribute">
-
-
-
-
-<h3 id="wake.ir.meta.pragma_directive.PragmaDirective.parent" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">parent</span><span class="p">:</span> <span class="n">SourceUnit</span></code>
-  
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-property"><code>property</code></small>
-  </span>
-
-<a href="#wake.ir.meta.pragma_directive.PragmaDirective.parent" class="headerlink" title="Permanent link">#</a></h3>
-
-
-  <div class="doc doc-contents ">
-  
-
-
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td>
-                <code><a class="autorefs autorefs-internal" title="wake.ir.meta.source_unit.SourceUnit" href="../source-unit/#wake.ir.meta.source_unit.SourceUnit">SourceUnit</a></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>Parent IR node.</p>
-            </div>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-  </div>
-
-</div>
-
-
-
-
-
-  </div>
-
-  </div>
-
-</div>
-
-
-
-
-  </div>
-
-  </div>
-
-</div>
+<h2 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">#</a></h2>
+<p>The detector does not accept any additional parameters.</p>
 
 
   
@@ -5171,14 +4912,14 @@
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "../../../..", "features": ["content.code.annotate", "content.code.copy", "content.tabs.link", "navigation.tracking", "navigation.sections", "navigation.indexes", "navigation.top", "navigation.tabs"], "search": "../../../../assets/javascripts/workers/search.dfff1995.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.annotate", "content.code.copy", "content.tabs.link", "navigation.tracking", "navigation.sections", "navigation.indexes", "navigation.top", "navigation.tabs"], "search": "../../../assets/javascripts/workers/search.dfff1995.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../../../assets/javascripts/bundle.78eede0e.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.78eede0e.min.js"></script>
       
-        <script src="../../../../js/mathjax.js"></script>
+        <script src="../../../js/mathjax.js"></script>
       
-        <script src="../../../../js/asciinema-player.min.js"></script>
+        <script src="../../../js/asciinema-player.min.js"></script>
       
         <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
       
