@@ -41,6 +41,9 @@ from .param_types import Chain
 def run_open(
     uri: str, chain: int, branch: Optional[str], path: Optional[str], force: bool
 ) -> None:
+    """
+    Fetch project from Github or Etherscan-like explorer.
+    """
     import asyncio
 
     if force and path is not None:

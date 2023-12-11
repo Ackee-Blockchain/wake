@@ -51,4 +51,6 @@ class UnusedModifierDetector(Detector):
 
     @detector.command(name="unused-modifier")
     def cli(self) -> None:
-        pass
+        """
+        Unused modifier
+        """
