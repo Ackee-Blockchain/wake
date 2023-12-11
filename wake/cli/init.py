@@ -670,6 +670,10 @@ def run_init_config(ctx: Context, force: bool):
 def init_detector(
     ctx: Context, detector_name: str, force: bool, global_: bool, path: Optional[str]
 ) -> None:
+    """
+    Create a new detector from template.
+    """
+
     async def module_name_error_callback(module_name: str) -> None:
         raise click.BadParameter(
             f"Detector name must be a valid Python identifier, got {detector_name}"
@@ -746,6 +750,10 @@ def init_detector(
 def init_printer(
     ctx: Context, printer_name: str, force: bool, global_: bool, path: Optional[str]
 ) -> None:
+    """
+    Create a new printer from template.
+    """
+
     async def module_name_error_callback(module_name: str) -> None:
         raise click.BadParameter(
             f"Printer name must be a valid Python identifier, got {printer_name}"

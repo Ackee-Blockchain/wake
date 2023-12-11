@@ -60,4 +60,6 @@ class UnusedFunctionDetector(Detector):
 
     @detector.command(name="unused-function")
     def cli(self) -> None:
-        pass
+        """
+        Unused function
+        """
