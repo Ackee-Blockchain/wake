@@ -360,8 +360,10 @@ async def print_(
     no_artifacts: bool,
     ignore_errors: bool,
     export: Optional[str],
+    theme: str,
     watch: bool,
 ):
+    from rich.terminal_theme import DEFAULT_TERMINAL_THEME, SVG_EXPORT_THEME
     from watchdog.observers import Observer
 
     from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
@@ -484,15 +486,16 @@ async def print_(
             finally:
                 command.callback = original_callback
 
-        # TODO export theme
         if export == "html":
             console.save_html(
                 str(config.project_root_path / "wake-print-output.html"),
+                theme=SVG_EXPORT_THEME if theme == "dark" else DEFAULT_TERMINAL_THEME,
             )
         elif export == "svg":
             console.save_svg(
                 str(config.project_root_path / "wake-print-output.svg"),
                 title=f"wake print {command.name}",
+                theme=SVG_EXPORT_THEME if theme == "dark" else DEFAULT_TERMINAL_THEME,
             )
         elif export == "text":
             console.save_text(
@@ -595,6 +598,12 @@ async def print_(
     help="Export output to file.",
 )
 @click.option(
+    "--theme",
+    type=click.Choice(["dark", "light"], case_sensitive=False),
+    default="dark",
+    help="Theme to use for export.",
+)
+@click.option(
     "--watch",
     "-w",
     is_flag=True,
@@ -684,6 +693,7 @@ def run_print(
     no_artifacts: bool,
     ignore_errors: bool,
     export: Optional[str],
+    theme: str,
     watch: bool,
     allow_paths: Tuple[str],
     evm_version: Optional[str],
@@ -741,7 +751,7 @@ def run_print(
 
     config.update({"compiler": {"solc": new_options}}, deleted_options)
 
-    asyncio.run(print_(config, no_artifacts, ignore_errors, export, watch))
+    asyncio.run(print_(config, no_artifacts, ignore_errors, export, theme, watch))
 
 
 @run_print.command("list")

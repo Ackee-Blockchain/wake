@@ -390,12 +390,14 @@ async def detect_(
     no_artifacts: bool,
     ignore_errors: bool,
     export: Optional[str],
+    theme: str,
     watch: bool,
     ignore_disable_overrides: bool,
 ):
     import os
 
     from jschema_to_python.to_json import to_json
+    from rich.terminal_theme import DEFAULT_TERMINAL_THEME, SVG_EXPORT_THEME
     from watchdog.observers import Observer
 
     from wake.detectors.api import (
@@ -518,20 +520,27 @@ async def detect_(
         )
 
         for detector_name, detection in all_detections:
-            print_detection(detector_name, detection, config, console)
+            print_detection(
+                detector_name,
+                detection,
+                config,
+                console,
+                "monokai" if theme == "dark" else "default",
+            )
 
         if len(all_detections) == 0:
             console.print("No detections found")
 
-        # TODO export theme
         if export == "html":
             console.save_html(
                 str(config.project_root_path / "wake-detections.html"),
+                theme=SVG_EXPORT_THEME if theme == "dark" else DEFAULT_TERMINAL_THEME,
             )
         elif export == "svg":
             console.save_svg(
                 str(config.project_root_path / "wake-detections.svg"),
                 title=f"wake detect {ctx.invoked_subcommand}",
+                theme=SVG_EXPORT_THEME if theme == "dark" else DEFAULT_TERMINAL_THEME,
             )
         elif export == "text":
             console.save_text(
@@ -642,6 +651,12 @@ async def detect_(
     "--export",
     type=click.Choice(["svg", "html", "text", "ansi", "sarif"], case_sensitive=False),
     help="Export detections to file.",
+)
+@click.option(
+    "--theme",
+    type=click.Choice(["dark", "light"], case_sensitive=False),
+    default="dark",
+    help="Theme for printing detections.",
 )
 @click.option(
     "--watch",
@@ -771,6 +786,7 @@ def run_detect(
     no_artifacts: bool,
     ignore_errors: bool,
     export: Optional[str],
+    theme: str,
     watch: bool,
     ignore_disable_overrides: bool,
     ignore_paths: Tuple[str],
@@ -851,7 +867,13 @@ def run_detect(
 
     asyncio.run(
         detect_(
-            config, no_artifacts, ignore_errors, export, watch, ignore_disable_overrides
+            config,
+            no_artifacts,
+            ignore_errors,
+            export,
+            theme,
+            watch,
+            ignore_disable_overrides,
         )
     )
 
