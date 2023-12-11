@@ -45,6 +45,7 @@ class WakeConfig:
     __project_root_path: Path
     __global_config_path: Path
     __global_data_path: Path
+    __global_cache_path: Path
     __loaded_files: Set[Path]
     __config_raw: Dict[str, Any]
     __config: TopLevelConfig
@@ -84,6 +85,16 @@ class WakeConfig:
                 self.__global_data_path = Path.home() / ".local" / "share" / "wake"
             elif system == "Windows":
                 self.__global_data_path = Path(os.environ["LOCALAPPDATA"]) / "wake"
+            else:
+                raise UnsupportedPlatformError(f"Platform `{system}` is not supported.")
+
+        try:
+            self.__global_cache_path = Path(os.environ["XDG_CACHE_HOME"]) / "wake"
+        except KeyError:
+            if system in {"Linux", "Darwin"}:
+                self.__global_cache_path = Path.home() / ".cache" / "wake"
+            elif system == "Windows":
+                self.__global_cache_path = Path(os.environ["TEMP"]) / "wake"
             else:
                 raise UnsupportedPlatformError(f"Platform `{system}` is not supported.")
 
@@ -352,6 +363,14 @@ class WakeConfig:
             System path to the global data directory.
         """
         return self.__global_data_path
+
+    @property
+    def global_cache_path(self) -> Path:
+        """
+        Returns:
+            System path to the global cache directory.
+        """
+        return self.__global_cache_path
 
     @property
     def project_root_path(self) -> Path:

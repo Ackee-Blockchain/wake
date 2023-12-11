@@ -116,3 +116,46 @@ class SolidityName(ParamType):
             return ret
         except Exception:
             return []
+
+
+class Chain(ParamType):
+    name = "chain"
+
+    choices = {"mainnet": 1, "bsc": 56, "polygon": 137, "avax": 43114}
+
+    def get_metavar(self, param: Parameter) -> str:
+        choices_str = "|".join(self.choices.keys())
+
+        # Use curly braces to indicate a required argument.
+        if param.required and param.param_type_name == "argument":
+            return f"{{{choices_str}}}"
+
+        # Use square braces to indicate an option or optional argument.
+        return f"[{choices_str}]"
+
+    def convert(self, value: str, param: Parameter, ctx: Context) -> int:
+        try:
+            if value.startswith("0x"):
+                return int(value, 16)
+            return int(value)
+        except ValueError:
+            pass
+
+        if value.lower() not in self.choices.keys():
+            self.fail(
+                f"invalid choice: {value}. (choose from {', '.join(self.choices)})"
+            )
+
+        return self.choices[value.lower()]
+
+    def shell_complete(
+        self, ctx: Context, param: Parameter, incomplete: str
+    ) -> List[CompletionItem]:
+        from click.shell_completion import CompletionItem
+
+        str_choices = map(str, self.choices.keys())
+
+        incomplete = incomplete.lower()
+        matched = (c for c in str_choices if c.lower().startswith(incomplete))
+
+        return [CompletionItem(c) for c in matched]
