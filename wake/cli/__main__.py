@@ -4,7 +4,7 @@ import os
 import platform
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 import rich_click as click
 from click.core import Context
@@ -67,7 +67,17 @@ click.rich_click.COMMAND_GROUPS = {
 }
 
 
-@click.group()
+class AliasedGroup(click.RichGroup):
+    def get_command(self, ctx: Context, cmd_name: str) -> Optional[click.Command]:
+        if cmd_name == "up":
+            cmd_name = "init"
+        return super().get_command(ctx, cmd_name)
+
+    def list_commands(self, ctx: Context) -> List[str]:
+        return sorted(["up"] + super().list_commands(ctx))
+
+
+@click.group(cls=AliasedGroup)
 @click.option(
     "--debug",
     "-d",
