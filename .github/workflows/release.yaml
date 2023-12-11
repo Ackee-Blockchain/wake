@@ -26,8 +26,11 @@ jobs:
     - name: Build
       run: poetry build
 
+    - name: Set up PyPi token
+      run: poetry config pypi-token.pypi ${{ secrets.PYPI_DEPLOY_TOKEN }}
+
     - name: Upload to PyPI
-      run: poetry publish # TODO AUTH
+      run: poetry publish
 
   docker:
     needs: build
