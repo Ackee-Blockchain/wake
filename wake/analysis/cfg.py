@@ -443,6 +443,19 @@ class CfgNode:
             )
             graph.add_edge(prev, next, condition=(TransitionConditionKind.NEVER, None))
             return next
+        elif (
+            isinstance(statement, YulExpressionStatement)
+            and isinstance(statement.expression, YulFunctionCall)
+            and statement.expression.function_name.name == "return"
+        ):
+            prev._statements.append(statement)
+            next = CfgNode()
+            graph.add_node(next)
+            graph.add_edge(
+                prev, success_end, condition=(TransitionConditionKind.ALWAYS, None)
+            )
+            graph.add_edge(prev, next, condition=(TransitionConditionKind.NEVER, None))
+            return next
         elif isinstance(statement, (Break, YulBreak)):
             prev._statements.append(statement)
             next = CfgNode()
