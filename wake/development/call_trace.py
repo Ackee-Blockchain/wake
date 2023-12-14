@@ -743,7 +743,23 @@ class CallTrace:
                     contracts.pop()
                     values.pop()
                 else:
-                    assert current_trace.depth == log["depth"]
+                    # the depth may not be equal in case of out-of-gas
+                    assert current_trace is not None
+                    assert current_trace.depth >= log["depth"]
+                    while current_trace.depth > log["depth"]:
+                        current_trace._error_name = "UnknownTransactionRevertedError"
+                        current_trace._error_arguments = [b""]
+                        current_trace._revert_data = b""
+
+                        if len(fqn_overrides.maps) > 1:
+                            fqn_overrides.maps[1].update(fqn_overrides.maps[0])
+                        fqn_overrides.maps.pop(0)
+
+                        current_trace._status = False
+                        current_trace = current_trace._parent
+                        assert current_trace is not None
+                        contracts.pop()
+                        values.pop()
 
             if log["op"] in {"CALL", "CALLCODE", "DELEGATECALL", "STATICCALL"}:
                 if log["op"] in {"CALL", "CALLCODE"}:
