@@ -30,7 +30,7 @@ jobs:
       run: poetry publish --build
 
   docker:
-    needs: build
+    needs: pypi
     runs-on: ubuntu-latest
 
     steps:
