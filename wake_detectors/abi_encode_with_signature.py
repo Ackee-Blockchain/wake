@@ -78,7 +78,7 @@ class AbiEncodeWithSignatureDetector(Detector):
             return
 
         try:
-            signature_args = "(" + arg0.value.split("(")[1]
+            signature_args = "(" + "(".join(arg0.value.split("(")[1:])
             if signature_args == "()":
                 return
             self._grammar.parse(signature_args)
