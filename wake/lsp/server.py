@@ -882,8 +882,10 @@ class LspServer:
 
         if key_in_nested_dict(("compiler", "solc"), changed):
             await context.compiler.force_recompile()
-        if key_in_nested_dict(("lsp", "detectors"), changed) or key_in_nested_dict(
-            ("detectors",), changed
+        if (
+            key_in_nested_dict(("lsp", "detectors"), changed)
+            or key_in_nested_dict(("detectors",), changed)
+            or key_in_nested_dict(("detector",), changed)
         ):
             await context.compiler.force_rerun_detectors()
         if key_in_nested_dict(("lsp", "code_lens"), changed):
