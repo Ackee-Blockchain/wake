@@ -1070,6 +1070,15 @@ class LspCompiler:
             force_load_plugins=True,  # pyright: ignore reportGeneralTypeIssues
             verify_paths=False,  # pyright: ignore reportGeneralTypeIssues
         )
+
+        for detector_name in self.__config.detectors.exclude.union(
+            self.__config.detectors.only or set()
+        ):
+            if detector_name not in all_detectors:
+                await self.__server.log_message(
+                    f"Detector {detector_name} not found", MessageType.WARNING
+                )
+
         for (
             package,
             e,
