@@ -475,6 +475,12 @@ async def detect_(
         assert ctx.invoked_subcommand is not None
         if ctx.invoked_subcommand == "all":
             detectors = run_detect.list_commands(ctx)
+
+            for detector_name in config.detectors.exclude.union(
+                config.detectors.only or set()
+            ):
+                if detector_name not in detectors:
+                    logger.warning(f"Detector {detector_name} not found")
         else:
             detectors = ctx.invoked_subcommand
 
