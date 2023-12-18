@@ -19,14 +19,11 @@ class C3Printer(Printer):
         pass
 
     def visit_contract_definition(self, node: ir.ContractDefinition) -> None:
-        print(f"[italic]C3 linearization ordered[/italic]")
         tree = Tree(".")
 
         # Using Rich Tree strcutrue to print the C3 linearization
         def add_contract_to_tree(parent_node, n, index):
             contract_name = n.canonical_name
-            if not self._interfaces and contract_name.startswith("I"):
-                return
 
             contract_node = parent_node.add(
                 f"{index:2d}.[bold][link={self.generate_link(n)}]{contract_name}[/link][/bold]"
@@ -64,12 +61,18 @@ class C3Printer(Printer):
         # Counter for more readable output
         counter = 1
         for n in node.linearized_base_contracts:
-            add_contract_to_tree(tree, n, counter)
-            counter += (
-                1 if self._interfaces or not n.canonical_name.startswith("I") else 0
-            )
+            if not self._interfaces and n.kind == ir.enums.ContractKind.INTERFACE:
+                continue
 
-        print(tree)
+            add_contract_to_tree(tree, n, counter)
+            counter += 1
+
+        if counter > 1:
+            print(
+                f"[italic][link={self.generate_link(node)}]{node.name}[/link] C3 linearization ordered[/italic]"
+            )
+            print(tree)
+            print()
 
     @printer.command(name="c3")
     @click.option(
