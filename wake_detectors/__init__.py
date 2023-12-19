@@ -10,6 +10,7 @@ from .incorrect_interface import IncorrectInterfaceDetector
 from .missing_return import MissingReturnDetector
 from .msg_value_nonpayable_function import MsgValueNonpayableFunctionDetector
 from .reentrancy import ReentrancyDetector
+from .struct_mapping_deletion import StructMappingDeletionDetector
 from .tx_origin import TxOriginDetector
 from .unchecked_return_value import UncheckedReturnValueDetector
 from .unprotected_selfdestruct import UnprotectedSelfdestructDetector

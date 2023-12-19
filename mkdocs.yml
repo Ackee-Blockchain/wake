@@ -79,6 +79,7 @@ nav:
             - Missing return: 'static-analysis/detectors/missing-return.md'
             - msg.value non-payable function: 'static-analysis/detectors/msg-value-nonpayable-function.md'
             - Reentrancy: 'static-analysis/detectors/reentrancy.md'
+            - Struct mapping deletion: 'static-analysis/detectors/struct-mapping-deletion.md'
             - tx.origin: 'static-analysis/detectors/tx-origin.md'
             - Unchecked return value: 'static-analysis/detectors/unchecked-return-value.md'
             - Unprotected selfdestruct: 'static-analysis/detectors/unprotected-selfdestruct.md'
