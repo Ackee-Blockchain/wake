@@ -73,6 +73,7 @@ nav:
             - Balance relied on: 'static-analysis/detectors/balance-relied-on.md'
             - Calldata tuple reencoding head overflow bug: 'static-analysis/detectors/calldata-tuple-reencoding-head-overflow-bug.md'
             - Call options not called: 'static-analysis/detectors/call-options-not-called.md'
+            - Complex struct getter: 'static-analysis/detectors/complex-struct-getter.md'
             - Empty byte array copy bug: 'static-analysis/detectors/empty-byte-array-copy-bug.md'
             - Incorrect interface: 'static-analysis/detectors/incorrect-interface.md'
             - Missing return: 'static-analysis/detectors/missing-return.md'

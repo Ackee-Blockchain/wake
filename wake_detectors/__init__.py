@@ -4,6 +4,7 @@ from .call_options_not_called import CallOptionsNotCalledDetector
 from .calldata_tuple_reencoding_head_overflow_bug import (
     CalldataTupleReencodingHeadOverflowBugDetector,
 )
+from .complex_struct_getter import ComplexStructGetterDetector
 from .empty_byte_array_copy_bug import EmptyByteArrayCopyBugDetector
 from .incorrect_interface import IncorrectInterfaceDetector
 from .missing_return import MissingReturnDetector
