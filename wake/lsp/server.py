@@ -22,7 +22,7 @@ import tomli
 from pydantic.error_wrappers import ValidationError
 
 from wake.core import get_logger
-from wake.utils import StrEnum
+from wake.utils import StrEnum, is_relative_to
 
 from ..config import WakeConfig
 from .commands import (
@@ -33,6 +33,7 @@ from .commands import (
 )
 from .commands.init import init_detector_handler, init_printer_handler
 from .common_structures import (
+    URI,
     ClientCapabilities,
     ConfigurationItem,
     ConfigurationParams,
@@ -58,6 +59,7 @@ from .common_structures import (
     ProgressParams,
     Registration,
     RegistrationParams,
+    RelativePattern,
     RenameFilesParams,
     SetTraceParams,
     ShowMessageParams,
@@ -917,7 +919,31 @@ class LspServer:
                                         FileSystemWatcher(
                                             glob_pattern="**/*.toml",
                                             kind=None,
-                                        )
+                                        ),
+                                        FileSystemWatcher(
+                                            glob_pattern=RelativePattern(
+                                                base_uri=URI(
+                                                    str(
+                                                        self.__workspace_path
+                                                        / "detectors"
+                                                    )
+                                                ),
+                                                pattern="**/*.py",
+                                            ),
+                                            kind=None,
+                                        ),
+                                        FileSystemWatcher(
+                                            glob_pattern=RelativePattern(
+                                                base_uri=URI(
+                                                    str(
+                                                        self.__cli_config.global_data_path
+                                                        / "global-detectors"
+                                                    )
+                                                ),
+                                                pattern="**/*.py",
+                                            ),
+                                            kind=None,
+                                        ),
                                     ]
                                 ),
                             )
@@ -940,7 +966,11 @@ class LspServer:
         latest_configuration = None
 
         for context in self.__workspaces.values():
-            if context.use_toml and context.toml_path.exists():
+            if (
+                context.use_toml
+                and context.toml_path.exists()
+                and any(ch.uri.lower().endswith(".toml") for ch in params.changes)
+            ):
                 try:
                     config = WakeConfig(
                         project_root_path=context.config.project_root_path
@@ -990,6 +1020,15 @@ class LspServer:
                     latest_configuration = code_config[0]
 
                 await self._handle_config_change(context, latest_configuration)
+
+            global_detectors = self.__cli_config.global_data_path / "global-detectors"
+            local_detectors = context.config.project_root_path / "detectors"
+            if any(
+                is_relative_to(uri_to_path(ch.uri), global_detectors)
+                or is_relative_to(uri_to_path(ch.uri), local_detectors)
+                for ch in params.changes
+            ):
+                await context.compiler.force_rerun_detectors()
 
     async def _workspace_did_change_configuration(
         self, params: DidChangeConfigurationParams

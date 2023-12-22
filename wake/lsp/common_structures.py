@@ -1033,8 +1033,13 @@ class DidChangeWatchedFilesClientCapabilities(LspModel):
     dynamic_registration: Optional[bool]
 
 
+class RelativePattern(LspModel):
+    base_uri: Union[WorkspaceFolder, URI]
+    pattern: str
+
+
 class FileSystemWatcher(LspModel):
-    glob_pattern: str
+    glob_pattern: Union[str, RelativePattern]
     kind: Optional[int]  # uint
 
 
