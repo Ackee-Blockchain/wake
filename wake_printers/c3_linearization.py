@@ -90,5 +90,8 @@ class C3LinearizationPrinter(Printer):
         help="Show inheritance and constructors",
     )
     def cli(self, interfaces: bool, verbose: bool) -> None:
+        """
+        Print the C3 linearization of contracts.
+        """
         self._interfaces = interfaces
         self._verbose = verbose
