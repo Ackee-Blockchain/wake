@@ -11,7 +11,7 @@ from wake.printers import Printer, printer
 
 
 # C3 linearization printer
-class C3Printer(Printer):
+class C3LinearizationPrinter(Printer):
     _interfaces: bool
     _verbose: bool
 
@@ -74,7 +74,7 @@ class C3Printer(Printer):
             print(tree)
             print()
 
-    @printer.command(name="c3")
+    @printer.command(name="c3-linearization")
     @click.option(
         "--interfaces",
         "-i",
