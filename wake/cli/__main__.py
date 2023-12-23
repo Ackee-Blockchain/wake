@@ -6,7 +6,6 @@ import sys
 from pathlib import Path
 from typing import List, Optional
 
-import rich.style
 import rich_click as click
 from click.core import Context
 from rich.logging import RichHandler
@@ -30,16 +29,6 @@ if platform.system() != "Windows":
         )
     except ImportError:
         from wake.utils.threaded_child_watcher import ThreadedChildWatcher
-
-
-click.rich_click.STYLE_USAGE = rich.style.Style(color="#4CAF50", bold=True)
-click.rich_click.STYLE_USAGE_COMMAND = rich.style.Style(color="#FF0000")
-click.rich_click.STYLE_OPTION = rich.style.Style(color="#FFD700", bold=True)
-click.rich_click.STYLE_ARGUMENT = rich.style.Style(color="#FFD700", bold=True)
-click.rich_click.STYLE_OPTION_HELP = rich.style.Style(color="#FF0000")
-click.rich_click.STYLE_COMMAND = rich.style.Style(color="#FFD700", bold=True)
-click.rich_click.STYLE_OPTIONS_PANEL_BORDER = rich.style.Style(color="#4CAF50")
-click.rich_click.STYLE_COMMANDS_PANEL_BORDER = rich.style.Style(color="#4CAF50")
 
 
 def excepthook(attach: bool, type, value, traceback):
