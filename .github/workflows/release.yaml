@@ -49,7 +49,7 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         push: true
-        tags: ackee-blockchain/wake:${{ github.event.release.tag_name }}
+        tags: ackeeblockchain/wake:${{ github.event.release.tag_name }}
 
   purge_cache:
     runs-on: ubuntu-latest
