@@ -57,7 +57,7 @@ class ReferenceResolver:
     If a source file is compiled in multiple CUs, a canonical AST representation is chosen and the other CUs only perform indexing of the AST nodes.
     Which CU is chosen as the canonical is internal to Wake and should not be relied upon.
 
-    An unique identifier accross all CUs is a tuple (path, traversal_order).
+    A unique identifier across all CUs is a tuple (path, traversal_order).
     """
 
     _ordered_nodes: DefaultDict[bytes, Dict[AstNodeId, Tuple[Path, int]]]
