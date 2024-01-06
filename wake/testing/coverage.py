@@ -280,7 +280,7 @@ def _construct_coverage_data(
     return pc_maps
 
 
-def _merge_ide_function_coverages(
+def merge_ide_function_coverages(
     func_covs: List[Dict[pathlib.Path, Dict[IdePosition, IdeFunctionCoverageRecord]]]
 ) -> Dict[pathlib.Path, Dict[IdePosition, IdeFunctionCoverageRecord]]:
     merged = {}
@@ -304,7 +304,7 @@ def export_merged_ide_coverage(
     Merges and exports IDE coverage records into a dictionary of paths -> funcs and their
     coverage records
     """
-    merged_records = _merge_ide_function_coverages(func_covs)
+    merged_records = merge_ide_function_coverages(func_covs)
 
     exported_coverage = {}
     for file_path, func_cov_recs in merged_records.items():
