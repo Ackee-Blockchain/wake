@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Optional
 
 import rich.progress
+from pathvalidate import sanitize_filename
 from pytest import Session
 from rich.traceback import Traceback
 from tblib import pickling_support
@@ -32,6 +33,7 @@ from wake.testing.coverage import (
     IdeFunctionCoverageRecord,
     IdePosition,
     export_merged_ide_coverage,
+    merge_ide_function_coverages,
     write_coverage,
 )
 from wake.testing.fuzzing.fuzzer import compute_coverage_per_function
@@ -69,6 +71,7 @@ class PytestWakePlugin:
         self,
         session: Session,
         index: int,
+        item_index: int,
         random_seed: bytes,
         log_file: Path,
         tee: bool,
@@ -137,19 +140,21 @@ class PytestWakePlugin:
                 f"Using random seed '{random_seed.hex()}' for process #{index}"
             )
 
-            for i, item in enumerate(session.items):
-                nextitem = session.items[i + 1] if i + 1 < len(session.items) else None
-                item.config.hook.pytest_runtest_protocol(item=item, nextitem=nextitem)
-                if session.shouldfail:
-                    err_child_conn.send(
-                        pickle.dumps(session.Failed(session.shouldfail))
-                    )
-                    finished_event.set()
-                if session.shouldstop:
-                    err_child_conn.send(
-                        pickle.dumps(session.Interrupted(session.shouldstop))
-                    )
-                    finished_event.set()
+            item = session.items[item_index]
+            nextitem = (
+                session.items[item_index + 1]
+                if item_index + 1 < len(session.items)
+                else None
+            )
+            item.config.hook.pytest_runtest_protocol(item=item, nextitem=nextitem)
+            if session.shouldfail:
+                err_child_conn.send(pickle.dumps(session.Failed(session.shouldfail)))
+                finished_event.set()
+            if session.shouldstop:
+                err_child_conn.send(
+                    pickle.dumps(session.Interrupted(session.shouldstop))
+                )
+                finished_event.set()
 
             err_child_conn.send(None)
             if coverage is not None:
@@ -210,153 +215,168 @@ class PytestWakePlugin:
         shutil.rmtree(logs_dir, ignore_errors=True)
         logs_dir.mkdir(parents=True, exist_ok=True)
 
-        processes = {}
-        for i in range(self._proc_count):
-            finished_event = multiprocessing.Event()
-            err_parent_conn, err_child_con = multiprocessing.Pipe()
-            cov_parent_conn, cov_child_con = multiprocessing.Pipe()
+        exported_coverages: Dict[
+            int, Dict[Path, Dict[IdePosition, IdeFunctionCoverageRecord]]
+        ] = {i: {} for i in range(self._proc_count)}
 
-            log_path = logs_dir / f"{i}.ansi"
+        for item_index, item in enumerate(session.items):
+            item_info = item.reportinfo()
 
-            p = multiprocessing.Process(
-                target=self._run_test,
-                args=(
-                    session,
-                    i,
-                    self._random_seeds[i],
-                    log_path,
-                    self._attach_first and i == 0,
-                    finished_event,
-                    err_child_con,
-                    cov_child_con,
-                    empty_coverage
-                    if self._cov_proc_count == -1 or i < self._cov_proc_count
-                    else None,
-                ),
-            )
-            processes[i] = (p, finished_event, err_parent_conn, cov_parent_conn)
-            p.start()
+            processes = {}
+            for i in range(self._proc_count):
+                finished_event = multiprocessing.Event()
+                err_parent_conn, err_child_con = multiprocessing.Pipe()
+                cov_parent_conn, cov_child_con = multiprocessing.Pipe()
 
-        try:
-            with rich.progress.Progress(
-                rich.progress.SpinnerColumn(finished_text="[green]⠿"),
-                "[progress.description][yellow]{task.description}, "
-                "[green]{task.fields[proc_rem]}[yellow] "
-                "processes remaining{task.fields[coverage_info]}",
-                console=console,
-            ) as progress:
-                exported_coverages: Dict[
-                    int, Dict[Path, Dict[IdePosition, IdeFunctionCoverageRecord]]
-                ] = {}
-
-                if self._attach_first:
-                    progress.stop()
-                task = progress.add_task(
-                    "Running", proc_rem=len(processes), coverage_info="", total=1
+                log_path = logs_dir / sanitize_filename(
+                    f"{Path(item_info[0]).stem}.{item_info[2]}_{i}.ansi"
                 )
 
-                while len(processes):
-                    to_be_removed = []
-                    for i, (
-                        p,
-                        e,
-                        err_parent_conn,
-                        cov_parent_conn,
-                    ) in processes.items():
-                        finished = e.wait(0.125)
-                        if finished:
-                            to_be_removed.append(i)
+                p = multiprocessing.Process(
+                    target=self._run_test,
+                    args=(
+                        session,
+                        i,
+                        item_index,
+                        self._random_seeds[i],
+                        log_path,
+                        self._attach_first and i == 0,
+                        finished_event,
+                        err_child_con,
+                        cov_child_con,
+                        empty_coverage
+                        if self._cov_proc_count == -1 or i < self._cov_proc_count
+                        else None,
+                    ),
+                )
+                processes[i] = (p, finished_event, err_parent_conn, cov_parent_conn)
+                p.start()
 
-                            exception_info = err_parent_conn.recv()
-                            if exception_info is not None:
-                                exception_info = pickle.loads(exception_info)
+            try:
+                with rich.progress.Progress(
+                    rich.progress.SpinnerColumn(finished_text="[green]⠿"),
+                    "[progress.description][yellow]{task.description}, "
+                    "[green]{task.fields[proc_rem]}[yellow] "
+                    "processes remaining{task.fields[coverage_info]}",
+                    console=console,
+                ) as progress:
+                    if self._attach_first:
+                        progress.stop()
+                    task = progress.add_task(
+                        f"Running {item_info[2]}",
+                        proc_rem=len(processes),
+                        coverage_info="",
+                        total=1,
+                    )
 
-                            if exception_info is not None:
-                                if (
-                                    (not self._attach_first or i == 0)
-                                    and not exception_info[0] is session.Failed
-                                    and not exception_info[0] is session.Interrupted
-                                ):
-                                    tb = Traceback.from_exception(
-                                        exception_info[0],
-                                        exception_info[1],
-                                        exception_info[2],
-                                    )
+                    while len(processes):
+                        to_be_removed = []
+                        for i, (
+                            p,
+                            e,
+                            err_parent_conn,
+                            cov_parent_conn,
+                        ) in processes.items():
+                            finished = e.wait(0.125)
+                            if finished:
+                                to_be_removed.append(i)
 
-                                    if not self._attach_first:
-                                        progress.stop()
+                                exception_info = err_parent_conn.recv()
+                                if exception_info is not None:
+                                    exception_info = pickle.loads(exception_info)
 
-                                    console.print(tb)
-                                    console.print(
-                                        f"Process #{i} failed with an exception above."
-                                    )
-
-                                    attach = None
-                                    while attach is None:
-                                        response = input(
-                                            "Would you like to attach the debugger? [y/n] "
+                                if exception_info is not None:
+                                    if (
+                                        (not self._attach_first or i == 0)
+                                        and not exception_info[0] is session.Failed
+                                        and not exception_info[0] is session.Interrupted
+                                    ):
+                                        tb = Traceback.from_exception(
+                                            exception_info[0],
+                                            exception_info[1],
+                                            exception_info[2],
                                         )
-                                        if response == "y":
-                                            attach = True
-                                        elif response == "n":
-                                            attach = False
-                                else:
-                                    attach = False
 
-                                e.clear()
-                                err_parent_conn.send(attach)
-                                e.wait()
-                                if not self._attach_first:
+                                        if not self._attach_first:
+                                            progress.stop()
+
+                                        console.print(tb)
+                                        console.print(
+                                            f"Process #{i} failed with an exception above."
+                                        )
+
+                                        attach = None
+                                        while attach is None:
+                                            response = input(
+                                                "Would you like to attach the debugger? [y/n] "
+                                            )
+                                            if response == "y":
+                                                attach = True
+                                            elif response == "n":
+                                                attach = False
+                                    else:
+                                        attach = False
+
+                                    e.clear()
+                                    err_parent_conn.send(attach)
+                                    e.wait()
+                                    if not self._attach_first:
+                                        progress.start()
+
+                                progress.update(
+                                    task, proc_rem=len(processes) - len(to_be_removed)
+                                )
+                                if i == 0:
                                     progress.start()
 
-                            progress.update(
-                                task, proc_rem=len(processes) - len(to_be_removed)
-                            )
-                            if i == 0:
-                                progress.start()
-
-                        tmp = None
-                        while cov_parent_conn.poll(0):
-                            try:
-                                tmp = cov_parent_conn.recv()
-                            except EOFError:
-                                break
-                        if tmp is not None:
-                            exported_coverages[i] = tmp
-                            res = export_merged_ide_coverage(
-                                list(exported_coverages.values())
-                            )
-                            if res:
-                                write_coverage(
-                                    res,
-                                    self._config.project_root_path
-                                    / "wake-coverage.cov",
+                            tmp = None
+                            while cov_parent_conn.poll(0):
+                                try:
+                                    tmp = cov_parent_conn.recv()
+                                except EOFError:
+                                    break
+                            if tmp is not None:
+                                exported_coverages[i] = merge_ide_function_coverages(
+                                    [exported_coverages[i], tmp]
                                 )
-                            cov_info = ""
-                            if not self._attach_first and verbose_coverage:
-                                cov_info = "\n[dark_goldenrod]" + "\n".join(
-                                    [
-                                        f"{fn_name}: [green]{fn_calls}[dark_goldenrod]"
-                                        for (fn_name, fn_calls) in sorted(
-                                            compute_coverage_per_function(res).items(),
-                                            key=lambda x: x[1],
-                                            reverse=True,
-                                        )
-                                    ]
+                                res = export_merged_ide_coverage(
+                                    list(exported_coverages.values())
                                 )
-                            progress.update(task, coverage_info=cov_info)
-                        if finished:
-                            cov_parent_conn.close()
+                                if res:
+                                    write_coverage(
+                                        res,
+                                        self._config.project_root_path
+                                        / "wake-coverage.cov",
+                                    )
+                                cov_info = ""
+                                if not self._attach_first and verbose_coverage:
+                                    cov_info = "\n[dark_goldenrod]" + "\n".join(
+                                        [
+                                            f"{fn_name}: [green]{fn_calls}[dark_goldenrod]"
+                                            for (fn_name, fn_calls) in sorted(
+                                                compute_coverage_per_function(
+                                                    res
+                                                ).items(),
+                                                key=lambda x: x[1],
+                                                reverse=True,
+                                            )
+                                        ]
+                                    )
+                                progress.update(task, coverage_info=cov_info)
+                            if finished:
+                                cov_parent_conn.close()
 
-                    for i in to_be_removed:
-                        processes.pop(i)
+                        for i in to_be_removed:
+                            processes.pop(i)
 
-                progress.update(task, description="Finished", completed=1)
-        finally:
-            for i, (p, e, err_parent_conn, cov_parent_conn) in processes.items():
-                if p.is_alive():
-                    p.terminate()
-                p.join()
+                    progress.update(
+                        task, description=f"Finished {item_info[2]}", completed=1
+                    )
+            finally:
+                for i, (p, e, err_parent_conn, cov_parent_conn) in processes.items():
+                    if p.is_alive():
+                        p.terminate()
+                    p.join()
 
     def pytest_runtestloop(self, session: Session):
         if (
