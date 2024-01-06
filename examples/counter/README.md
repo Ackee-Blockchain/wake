@@ -21,5 +21,5 @@ to run tests using a single process.
 
 To run tests in parallel (makes sense only for fuzz tests), use
 ```bash
-wake fuzz tests/test_*.py
+wake test -d -P 2 tests/test_*.py
 ```
