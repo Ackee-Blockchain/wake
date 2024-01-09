@@ -791,10 +791,13 @@ class LspServer:
             use_toml = False
 
         if use_toml and toml_path.exists():
-            config = WakeConfig(project_root_path=workspace_path)
+            config = WakeConfig(
+                local_config_path=toml_path,
+                project_root_path=workspace_path,
+            )
 
             try:
-                config.load(toml_path)
+                config.load_configs()
             except tomli.TOMLDecodeError:
                 await self.log_message(
                     f"Failed to parse {toml_path}, using defaults.",
@@ -973,9 +976,10 @@ class LspServer:
             ):
                 try:
                     config = WakeConfig(
-                        project_root_path=context.config.project_root_path
+                        local_config_path=context.toml_path,
+                        project_root_path=context.config.project_root_path,
                     )
-                    config.load(context.toml_path)
+                    config.load_configs()
 
                     changed = context.config.update(config.todict(), set())
 
