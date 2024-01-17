@@ -13,6 +13,9 @@ fi
 SITEMAP_URL="https://ackeeblockchain.com/wake/docs/latest/sitemap.xml"
 PURGE_URLS=$(curl -s $SITEMAP_URL | grep -Eo '<loc>[^<]*' | cut -d '>' -f 2)
 
+PURGE_URLS+=" https://ackeeblockchain.com/wake/docs/versions.json"
+PURGE_URLS+=" https://ackeeblockchain.com/wake/docs/latest/search/search_index.json"
+
 for url in $PURGE_URLS
 do
     echo "Purgin cache for ${url}"
