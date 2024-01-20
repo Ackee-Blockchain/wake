@@ -1273,7 +1273,7 @@ class TypeGenerator:
 
     # receives names of params and their type hints, returns only the types to be used for dispatch
     def get_types_from_func_params(self, params) -> str:
-        # 1. split on , to separete the params
+        # 1. split on , to seperate the params
         # 2. split on : and get the last (the second) elem to get the type (each pair is in the format name: type)
         # 3. remove the last elem which is params: Optional[TxParams] = None (not used for dispatch)
         name_type = params.split(",")
@@ -1575,7 +1575,7 @@ class TypeGenerator:
                 else:
                     source_unit = fn.parent
                 # there can be 2 contracts with the same name and both of them can define function with the same name
-                # thus to uniquely idenify the funtion also the source unit has to be used, otherwise it could happen
+                # thus to uniquely idenify the function also the source unit has to be used, otherwise it could happen
                 # that an incorrect function gets overloaded
                 self.__func_to_overload.add(
                     source_unit.source_unit_name + fn.canonical_name
