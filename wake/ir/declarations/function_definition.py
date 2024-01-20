@@ -524,7 +524,7 @@ class FunctionDefinition(DeclarationAbc):
 
             `A.foo` on lines 6-8 has an override specifier with the [overrides][wake.ir.meta.override_specifier.OverrideSpecifier.overrides] property empty.
 
-            `B.foo` on lines 12-14 has an override specifier with the [overrides][wake.ir.meta.override_specifier.OverrideSpecifier.overrides] property containg one item referencing the contract `A` ([ContractDefinition][wake.ir.declarations.contract_definition.ContractDefinition]).
+            `B.foo` on lines 12-14 has an override specifier with the [overrides][wake.ir.meta.override_specifier.OverrideSpecifier.overrides] property containing one item referencing the contract `A` ([ContractDefinition][wake.ir.declarations.contract_definition.ContractDefinition]).
             ```solidity linenums="1"
             interface I {
                 function foo() external returns(uint);
