@@ -245,7 +245,7 @@ While debugging, other processes are still running in the background.
 }
 </script>
 
-By default, nothing but status of each test is printed to the console. Using the `--passive` flag, the output of the first process is printed to the console.
+By default, nothing but status of each test is printed to the console. Using the `--attach-first` flag, the output of the first process is printed to the console.
 Standard output and standard error of all processes are redirected to the `.wake/logs/testing` directory.
 
 !!! tip "Reproducing a failed test"
@@ -253,7 +253,7 @@ Standard output and standard error of all processes are redirected to the `.wake
     The seed is printed to the console and can be used to reproduce the test failure:
 
     ```shell
-    wake test tests/test_counter_fuzz.py -P 5 -s 62061e838798ad0f
+    wake test tests/test_counter_fuzz.py -P 5 -S 62061e838798ad0f
     ```
 
-    A random seed can be specified using the `-s` flag. Multiple `-s` flags are allowed.
+    A random seed can be specified using the `-S` flag. Multiple `-S` flags are allowed.
