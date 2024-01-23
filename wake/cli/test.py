@@ -20,7 +20,7 @@ def _get_module_name(path: Path, root: Path) -> str:
 def run_no_pytest(
     config: WakeConfig,
     debug: bool,
-    proc_count: Optional[int],
+    proc_count: int,
     coverage: int,
     random_seeds: List[bytes],
     attach_first: bool,
@@ -83,7 +83,7 @@ def run_no_pytest(
             console.print(f"Found '{func_name}' function in '{func.__module__}' file.")
             test_functions.append((func_name, func))
 
-    if proc_count is None:
+    if proc_count == 1:
         random.seed(random_seeds[0])
         console.print(f"Using random seed {random_seeds[0].hex()}")
 
@@ -170,6 +170,8 @@ class FileAndPassParamType(click.ParamType):
     "-P",
     "proc_count",
     type=int,
+    is_flag=False,
+    flag_value=-1,
     default=None,
     help="Run tests in multiple processes.",
 )
@@ -202,6 +204,12 @@ class FileAndPassParamType(click.ParamType):
     default=False,
     help="In multi-process mode, print stdout of first process to console and don't prompt on exception in other processes.",
 )
+@click.option(
+    "--dist",
+    type=click.Choice(["uniform", "duplicated"]),
+    default="duplicated",
+    help="Distribution of test cases to processes.",
+)
 @click.argument("paths_or_pytest_args", nargs=-1, type=FileAndPassParamType())
 @click.pass_context
 def run_test(
@@ -213,6 +221,7 @@ def run_test(
     no_pytest: bool,
     seeds: Tuple[str],
     attach_first: bool,
+    dist: str,
     paths_or_pytest_args: Tuple[str, ...],
 ) -> None:
     """Execute Wake tests using pytest."""
@@ -221,12 +230,22 @@ def run_test(
     import pytest
 
     from wake.config import WakeConfig
-    from wake.development.globals import chain_interfaces_manager, set_config
-    from wake.testing.pytest_plugin import PytestWakePlugin
+    from wake.development.globals import set_config
 
-    if coverage > (proc_count or 1):
+    if proc_count == -1:
+        proc_count = os.cpu_count()
+    elif proc_count is None:
+        proc_count = 1
+    assert proc_count is not None
+
+    if coverage > proc_count:
         raise click.BadParameter(
             "Coverage process count must be less than or equal to process count."
+        )
+
+    if attach_first and debug:
+        raise click.BadParameter(
+            "--attach-first and --debug cannot be used at the same time."
         )
 
     try:
@@ -241,8 +260,8 @@ def run_test(
     sys.path.insert(0, str(config.project_root_path))
 
     # generate remaining random seeds
-    if len(random_seeds) < (proc_count or 1):
-        for i in range((proc_count or 1) - len(random_seeds)):
+    if len(random_seeds) < proc_count:
+        for i in range(proc_count - len(random_seeds)):
             random_seeds.append(os.urandom(8))
 
     if no_pytest:
@@ -271,13 +290,37 @@ def run_test(
         # disable pytest_ethereum
         pytest_args.append("-p")
         pytest_args.append("no:pytest_ethereum")
-        sys.exit(
-            pytest.main(
-                pytest_args,
-                plugins=[
-                    PytestWakePlugin(
-                        config, debug, proc_count, coverage, random_seeds, attach_first
-                    )
-                ],
+
+        if proc_count > 1:
+            from wake.testing.pytest_plugin_multiprocess_server import (
+                PytestWakePluginMultiprocessServer,
             )
-        )
+
+            sys.exit(
+                pytest.main(
+                    pytest_args,
+                    plugins=[
+                        PytestWakePluginMultiprocessServer(
+                            config,
+                            coverage,
+                            proc_count,
+                            random_seeds,
+                            attach_first,
+                            debug,
+                            dist,
+                            pytest_args,
+                        )
+                    ],
+                )
+            )
+        else:
+            from wake.testing.pytest_plugin_single import PytestWakePluginSingle
+
+            sys.exit(
+                pytest.main(
+                    pytest_args,
+                    plugins=[
+                        PytestWakePluginSingle(config, debug, coverage, random_seeds)
+                    ],
+                )
+            )
