@@ -283,12 +283,12 @@ class TypeGenerator:
         )
 
     def get_name(
-        self, declaration: DeclarationAbc, *, import_alias: bool = False
+        self, declaration: DeclarationAbc, *, force_simple: bool = False
     ) -> str:
         source_unit = declaration.parent
 
         if (
-            not import_alias
+            not force_simple
             and isinstance(source_unit, SourceUnit)
             and source_unit.source_unit_name != self.current_source_unit
             and source_unit.source_unit_name in self.cyclic_source_units
@@ -1461,15 +1461,16 @@ class TypeGenerator:
         for base in reversed(contract.base_contracts):
             parent_contract = base.base_name.referenced_declaration
             assert isinstance(parent_contract, ContractDefinition)
-            base_names.append(self.get_name(parent_contract))
             # only the types for contracts in the same source_unit are generated
             if (
                 parent_contract.parent.source_unit_name
                 == contract.parent.source_unit_name
             ):
+                base_names.append(self.get_name(parent_contract))
                 self.generate_types_contract(parent_contract)
             # contract is not in the same source unit, so it must be imported
             else:
+                base_names.append(self.get_name(parent_contract, force_simple=True))
                 self.__imports.generate_contract_import(parent_contract, force=True)
 
         contract_module_name = "pytypes." + _make_path_alphanum(
@@ -1868,7 +1869,7 @@ class SourceUnitImports:
         aliased: bool = False,
     ) -> str:
         source_unit_name = _make_path_alphanum(source_unit_name)
-        name = self.__type_gen.get_name(declaration, import_alias=True)
+        name = self.__type_gen.get_name(declaration, force_simple=True)
 
         if aliased:
             return f"import pytypes.{source_unit_name[:-3].replace('/', '.')} as {name}"
@@ -1878,7 +1879,7 @@ class SourceUnitImports:
         self, declaration: DeclarationAbc, source_unit_name: str
     ) -> str:
         source_unit_name = _make_path_alphanum(source_unit_name)
-        name = self.__type_gen.get_name(declaration, import_alias=True)
+        name = self.__type_gen.get_name(declaration, force_simple=True)
 
         return f"{name} = lazy_import.lazy_module('pytypes.{source_unit_name[:-3].replace('/', '.')}')"
 
