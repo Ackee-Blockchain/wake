@@ -54,15 +54,15 @@ setuptools = {version = ">=60.0.0", markers = "python_version >= \"3.12\""}
 
 [[package]]
 name = "abch-tree-sitter-solidity"
-version = "1.2.1"
+version = "1.2.2"
 description = "Solidity grammar for the Tree-sitter parsing library"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "abch_tree_sitter_solidity-1.2.1-py3-none-macosx_11_7_x86_64.whl", hash = "sha256:e85deae1470ee2e4aae65a6ea605ce98f759237eeb555e1a883129a511878873"},
-    {file = "abch_tree_sitter_solidity-1.2.1-py3-none-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:54c99484a3c2775f50f11137b823878bbe7156f3168523c89d48704aa93baaa4"},
-    {file = "abch_tree_sitter_solidity-1.2.1-py3-none-win_amd64.whl", hash = "sha256:52be98f42ca1723ce836cbca5d6b8536a66bd832c60d1fe83394276270f3493c"},
-    {file = "abch_tree_sitter_solidity-1.2.1.tar.gz", hash = "sha256:a5f1cabc6648b2c6f38899f616e8bf27d56361fa5ada7f58424c035047cb0c93"},
+    {file = "abch_tree_sitter_solidity-1.2.2-py3-none-macosx_11_7_x86_64.whl", hash = "sha256:3e23c4b4243c4e6b00fd0707080ecb7500c4fa3b61e524d65a996bd8378c18c9"},
+    {file = "abch_tree_sitter_solidity-1.2.2-py3-none-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:70db5f9ecd9d158eaf8b803026f7582f69826deb7c0cf3718454a7bcee4dc67c"},
+    {file = "abch_tree_sitter_solidity-1.2.2-py3-none-win_amd64.whl", hash = "sha256:8adacdd2ae310e8b35d7b44b6db1f575c62b9b4baa29b92c8ae61385f0ba3c08"},
+    {file = "abch_tree_sitter_solidity-1.2.2.tar.gz", hash = "sha256:305011c60c953bd7efb4078a022f2f0e21c54bb0b0bf7526ac617997f0660f35"},
 ]
 
 [package.dependencies]
@@ -3116,4 +3116,4 @@ tests = ["GitPython", "pytest-asyncio"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7.9"
-content-hash = "7973b41b73985de178de57dee28a2ee73d2ec7bfb5a354a2228a057802e5002e"
+content-hash = "7eaacc42ef6e4a7aba5102bed165f1a49676edd0efb3c584b804ede7bd4957f9"
