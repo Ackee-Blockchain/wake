@@ -480,7 +480,6 @@ class LspCompiler:
                 if (
                     path not in self.__discovered_files
                     and not self.__file_excluded(path)
-                    and path.is_file()
                     and path.suffix == ".sol"
                 ):
                     self.__discovered_files.add(path)
@@ -496,7 +495,6 @@ class LspCompiler:
                 if (
                     new_path not in self.__discovered_files
                     and not self.__file_excluded(new_path)
-                    and new_path.is_file()
                     and new_path.suffix == ".sol"
                 ):
                     self.__discovered_files.add(new_path)
@@ -515,7 +513,6 @@ class LspCompiler:
             if (
                 path not in self.__discovered_files
                 and not self.__file_excluded(path)
-                and path.is_file()
                 and path.suffix == ".sol"
             ):
                 self.__discovered_files.add(path)
