@@ -7,6 +7,7 @@ from wake.ir import (
     FunctionCall,
     FunctionCallOptions,
     FunctionDefinition,
+    Mapping,
     MemberAccess,
     ModifierDefinition,
     StructDefinition,
@@ -48,9 +49,9 @@ def pair_function_call_arguments(
     ), "Call names must be empty or same length as arguments"
 
     vars = (
-        definition.parameters.parameters
-        if isinstance(definition, FunctionDefinition)
-        else definition.members
+        [v for v in definition.members if not isinstance(v.type_name, Mapping)]
+        if isinstance(definition, StructDefinition)
+        else definition.parameters.parameters
     )
 
     if len(vars) == len(call.arguments):
