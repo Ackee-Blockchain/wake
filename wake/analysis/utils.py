@@ -3,6 +3,8 @@ from typing import Deque, Set, Tuple, Union, overload
 
 from wake.core import get_logger
 from wake.ir import (
+    ErrorDefinition,
+    EventDefinition,
     ExpressionAbc,
     FunctionCall,
     FunctionCallOptions,
@@ -18,11 +20,14 @@ logger = get_logger(__name__)
 
 
 def pair_function_call_arguments(
-    definition: Union[FunctionDefinition, StructDefinition], call: FunctionCall
+    definition: Union[
+        ErrorDefinition, EventDefinition, FunctionDefinition, StructDefinition
+    ],
+    call: FunctionCall,
 ) -> Tuple[Tuple[VariableDeclaration, ExpressionAbc], ...]:
     """
-    Pairs function call arguments with function/struct definition parameters.
-    Returned pairs are in the same order as the function definition parameters.
+    Pairs function call arguments with error/event/function/struct definition parameters.
+    Returned pairs are in the same order as the definition parameters/members.
 
     !!! example
         The function also handles calls of bounded functions with the `using for` directive.
@@ -38,11 +43,11 @@ def pair_function_call_arguments(
         ```
 
     Args:
-        definition: Function or struct definition called.
+        definition: Definition called.
         call: Function call or struct constructor call.
 
     Returns:
-        Tuple of pairs of function/struct definition parameters and function call arguments.
+        Tuple of pairs of definition parameters/members and function call arguments.
     """
     assert len(call.names) == 0 or len(call.names) == len(
         call.arguments
