@@ -32,6 +32,7 @@ class GlobalSymbol(IntEnum):
     TX = -26
     TYPE = -27
     THIS = -28
+    BLOBHASH = -29
 
     BLOCK_BASEFEE = -100
     BLOCK_CHAINID = -101
@@ -41,6 +42,7 @@ class GlobalSymbol(IntEnum):
     BLOCK_NUMBER = -105
     BLOCK_TIMESTAMP = -106
     BLOCK_PREVRANDAO = -107
+    BLOCK_BLOBBASEFEE = -108
 
     MSG_DATA = -200
     MSG_SENDER = -201
@@ -302,6 +304,7 @@ class InlineAssemblyEvmVersion(StrEnum):
     LONDON = "london"
     PARIS = "paris"
     SHANGHAI = "shanghai"
+    CANCUN = "cancun"
 
 
 class InlineAssemblySuffix(StrEnum):
@@ -375,6 +378,7 @@ class FunctionTypeKind(StrEnum):
     SET_GAS = "setgas"
     SET_VALUE = "setvalue"
     BLOCK_HASH = "blockhash"
+    BLOBHASH = "blobhash"
     ADD_MOD = "addmod"
     MUL_MOD = "mulmod"
     ARRAY_PUSH = "arraypush"
