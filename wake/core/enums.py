@@ -13,3 +13,4 @@ class EvmVersionEnum(StrEnum):
     LONDON = "london"
     PARIS = "paris"
     SHANGHAI = "shanghai"
+    CANCUN = "cancun"
