@@ -491,6 +491,7 @@ async def detect_(
             compiler.latest_graph,
             config,
             ctx,
+            None,
             args=list(ctx_args),
             console=console,
             capture_exceptions=ignore_errors,

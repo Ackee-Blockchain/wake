@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import logging
 from abc import ABCMeta, abstractmethod
+from functools import partial
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
@@ -21,13 +23,18 @@ from typing_extensions import Literal
 
 from wake.cli.print import PrintCli, run_print
 from wake.core.visitor import Visitor, visit_map
-from wake.utils import get_class_that_defined_method
+from wake.utils import get_class_that_defined_method, is_relative_to
+
+from ..core import get_logger
 
 if TYPE_CHECKING:
+    import networkx as nx
     from rich.console import Console
 
     import wake.ir as ir
+    from wake.compiler.build_data_model import ProjectBuild, ProjectBuildInfo
     from wake.config import WakeConfig
+    from wake.core.lsp_provider import LspProvider
 
 
 class Printer(Visitor, metaclass=ABCMeta):
@@ -43,9 +50,10 @@ class Printer(Visitor, metaclass=ABCMeta):
     console: Console
     paths: List[Path]
     extra: Dict[Any, Any]
+    lsp_provider: Optional[LspProvider]
 
     @property
-    def visit_mode(self) -> Union[Literal["paths"], Literal["all"]]:
+    def visit_mode(self) -> Literal["paths", "all"]:
         """
         Configurable visit mode of the printer. If set to `paths`, the printer `visit_` methods will be called only for the paths specified by the user.
         If set to `all`, the printer `visit_` methods will be called for all paths. In this case, the printer should use the `paths` attribute to decide what to print.
@@ -54,6 +62,18 @@ class Printer(Visitor, metaclass=ABCMeta):
             Visit mode of the printer.
         """
         return "paths"
+
+    # TODO remove both?
+    @property
+    def execution_mode(self) -> Literal["cli", "lsp", "both"]:
+        """
+        Configurable execution mode of the printer. If set to `cli`, the printer will be executed only when running `wake print printer-name`.
+        If set to `lsp`, the printer will be executed by the LSP server. If set to `both`, the printer will be executed in both cases.
+
+        Returns:
+            Execution mode of the printer.
+        """
+        return "cli"
 
     @abstractmethod
     def print(self) -> None:
@@ -168,3 +188,235 @@ async def init_printer(
             f.write(f"{import_str}\n")
 
     return printer_path
+
+
+def run_printers(
+    printer_names: Union[str, List[str]],
+    build: ProjectBuild,
+    build_info: ProjectBuildInfo,
+    imports_graph: nx.DiGraph,
+    config: WakeConfig,
+    console: Console,
+    ctx: Optional[click.Context],
+    lsp_provider: Optional[LspProvider],
+    *,
+    paths: Optional[List[Path]] = None,
+    args: Optional[List[str]] = None,
+    verify_paths: bool = True,
+    capture_exceptions: bool = False,
+    logging_handler: Optional[logging.Handler] = None,
+    extra: Optional[Dict[Any, Any]] = None,
+):
+    from wake.utils import get_package_version
+
+    if extra is None:
+        extra = {}
+    if "package_versions" not in extra:
+        extra["package_versions"] = {}
+    extra["package_versions"]["eth-wake"] = get_package_version("eth-wake")
+
+    exceptions = {}
+
+    printers: List[click.Command] = []
+    if isinstance(printer_names, str):
+        command = run_print.get_command(
+            ctx,  # pyright: ignore reportGeneralTypeIssues
+            printer_names,
+            plugin_paths={  # pyright: ignore reportGeneralTypeIssues
+                config.project_root_path / "printers"
+            },
+            verify_paths=verify_paths,  # pyright: ignore reportGeneralTypeIssues
+        )
+        try:
+            assert command is not None, f"Printer {printer_names} not found"
+            printers.append(command)
+        except AssertionError as e:
+            if not capture_exceptions:
+                raise
+            exceptions[printer_names] = e
+    elif isinstance(printer_names, list):
+        # TODO config only and exclude
+        for printer_name in printer_names:
+            if printer_name == "list":
+                continue
+            command = run_print.get_command(
+                None,  # pyright: ignore reportGeneralTypeIssues
+                printer_name,
+                plugin_paths={  # pyright: ignore reportGeneralTypeIssues
+                    config.project_root_path / "printers"
+                },
+                verify_paths=verify_paths,  # pyright: ignore reportGeneralTypeIssues
+            )
+            try:
+                assert command is not None, f"Printer {printer_name} not found"
+                printers.append(command)
+            except AssertionError as e:
+                if not capture_exceptions:
+                    raise
+                exceptions[printer_name] = e
+
+    if args is None:
+        args = []
+
+    collected_printers: Dict[str, Printer] = {}
+    visit_all_printers: Set[str] = set()
+
+    for command in list(printers):
+        assert command is not None
+        assert command.name is not None
+
+        if hasattr(config.printer, command.name):
+            default_map = getattr(config.printer, command.name)
+        else:
+            default_map = None
+
+        cls: Type[Printer] = get_class_that_defined_method(
+            command.callback
+        )  # pyright: ignore reportGeneralTypeIssues
+        if cls is not None:
+
+            def _callback(  # pyright: ignore reportGeneralTypeIssues
+                printer_name: str, *args, **kwargs
+            ):
+                nonlocal paths
+                if paths is None:
+                    paths = [Path(p).resolve() for p in kwargs.pop("paths", [])]
+                else:
+                    kwargs.pop("paths", None)
+
+                instance.paths = [Path(p).resolve() for p in paths]
+                original_callback(
+                    instance, *args, **kwargs
+                )  # pyright: ignore reportOptionalCall
+
+            original_callback = command.callback
+            command.callback = partial(_callback, command.name)
+
+            try:
+                instance = object.__new__(cls)
+                instance.build = build
+                instance.build_info = build_info
+                instance.config = config
+                instance.extra = extra
+                instance.console = console
+                instance.imports_graph = (
+                    imports_graph.copy()
+                )  # pyright: ignore reportGeneralTypeIssues
+                instance.logger = get_logger(cls.__name__)
+                if logging_handler is not None:
+                    instance.logger.addHandler(logging_handler)
+                instance.lsp_provider = lsp_provider
+                instance.__init__()
+
+                sub_ctx = command.make_context(
+                    command.name,
+                    list(args),
+                    parent=ctx,
+                    default_map=default_map,
+                )
+                with sub_ctx:
+                    sub_ctx.command.invoke(sub_ctx)
+
+                if lsp_provider is not None and instance.execution_mode == "cli":
+                    printers.remove(command)
+                    continue
+                elif lsp_provider is None and instance.execution_mode == "lsp":
+                    printers.remove(command)
+                    continue
+
+                collected_printers[command.name] = instance
+                if instance.visit_mode == "all":
+                    visit_all_printers.add(command.name)
+            except Exception as e:
+                if not capture_exceptions:
+                    raise
+                exceptions[command.name] = e
+            finally:
+                command.callback = original_callback
+        else:
+            if lsp_provider is not None:
+                printers.remove(command)
+                continue
+
+            def _callback(printer_name: str, *args, **kwargs):
+                nonlocal paths
+                if paths is None:
+                    paths = [Path(p).resolve() for p in kwargs.pop("paths", [])]
+                else:
+                    kwargs.pop("paths", None)
+
+                click.get_current_context().obj["paths"] = [
+                    Path(p).resolve() for p in paths
+                ]
+
+                return original_callback(
+                    *args, **kwargs
+                )  # pyright: ignore reportOptionalCall
+
+            original_callback = command.callback
+            command.callback = partial(_callback, command.name)
+            assert original_callback is not None
+
+            try:
+                sub_ctx = command.make_context(
+                    command.name, list(args), parent=ctx, default_map=default_map
+                )
+                sub_ctx.obj = {
+                    "build": build,
+                    "build_info": build_info,
+                    "config": config,
+                    "extra": extra,
+                    "imports_graph": imports_graph.copy(),
+                    "logger": get_logger(original_callback.__name__),
+                    "console": console,
+                    # no need to set lsp_provider as legacy printers are not executed by the LSP server
+                }
+                if logging_handler is not None:
+                    sub_ctx.obj[
+                        "logger"
+                    ].addHandler(  # pyright: ignore reportGeneralTypeIssues
+                        logging_handler
+                    )
+
+                with sub_ctx:
+                    sub_ctx.command.invoke(sub_ctx)
+            except Exception as e:
+                if not capture_exceptions:
+                    raise
+                exceptions[command.name] = e
+            finally:
+                command.callback = original_callback
+
+    if paths is None:
+        paths = []
+
+    for path, source_unit in build.source_units.items():
+        # TODO config printers ignore paths
+
+        target_printers = visit_all_printers
+        if len(paths) == 0 or any(is_relative_to(path, p) for p in paths):
+            target_printers = collected_printers.keys()
+
+        if len(target_printers) == 0:
+            continue
+
+        for node in source_unit:
+            for printer_name in list(target_printers):
+                printer = collected_printers[printer_name]
+                try:
+                    visit_map[node.ast_node.node_type](printer, node)
+                except Exception as e:
+                    if not capture_exceptions:
+                        raise
+                    exceptions[printer_name] = e
+                    del collected_printers[printer_name]
+
+    for printer_name, printer in collected_printers.items():
+        try:
+            printer.print()
+        except Exception as e:
+            if not capture_exceptions:
+                raise
+            exceptions[printer_name] = e
+
+    return printers, exceptions

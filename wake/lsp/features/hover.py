@@ -1,4 +1,5 @@
 import logging
+from itertools import chain
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
@@ -399,19 +400,25 @@ async def hover(context: LspContext, params: HoverParams) -> Optional[Hover]:
     else:
         node_name_location = None
 
-    result = _get_results_from_node(
+    results = []
+    definition_result = _get_results_from_node(
         node, params.position, byte_offset, context, node_name_location
     )
-    if result is None:
-        return None
+    if definition_result is not None:
+        results.append(definition_result[0])
 
-    value, original_node_location = result
+    for hover_options in chain(
+        context.detectors_lsp_provider.get_hovers(
+            path, byte_offset, node.byte_location
+        ),
+        context.printers_lsp_provider.get_hovers(path, byte_offset, node.byte_location),
+    ):
+        results.append(hover_options.text)
+
     return Hover(
         contents=MarkupContent(
             kind=MarkupKind.MARKDOWN,
-            value=value,
+            value="\n***\n".join(results),
         ),
-        range=context.compiler.get_range_from_byte_offsets(
-            path, original_node_location
-        ),
+        range=context.compiler.get_range_from_byte_offsets(path, node.byte_location),
     )
