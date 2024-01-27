@@ -19,6 +19,7 @@ from .features.implementation import (
     ImplementationOptions,
     ImplementationRegistrationOptions,
 )
+from .features.inlay_hint import InlayHintOptions, InlayHintRegistrationOptions
 from .features.references import ReferenceOptions
 from .features.rename import RenameOptions
 from .features.type_definition import (
@@ -137,6 +138,9 @@ class ServerCapabilities(LspModel):
     hover_provider: Optional[Union[bool, HoverOptions]] = None
     completion_provider: Optional[CompletionOptions] = None
     code_action_provider: Optional[Union[bool, CodeActionOptions]] = None
+    inlay_hint_provider: Optional[
+        Union[bool, InlayHintOptions, InlayHintRegistrationOptions]
+    ] = None
     """
     signature_help_provider: Optional[SignatureHelpOptions]
     declaration_provider: Optional[Union[bool, DeclarationOptions, DeclarationRegistrationOptions]]

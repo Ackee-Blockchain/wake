@@ -39,6 +39,7 @@ if TYPE_CHECKING:
 
     from wake.compiler.build_data_model import ProjectBuild, ProjectBuildInfo
     from wake.config import WakeConfig
+    from wake.core.lsp_provider import LspProvider
     from wake.ir import IrAbc, SourceUnit
 
 
@@ -136,9 +137,10 @@ class Detector(Visitor, metaclass=ABCMeta):
 
     paths: List[Path]
     extra: Dict[Any, Any]
+    lsp_provider: Optional[LspProvider]
 
     @property
-    def visit_mode(self) -> Union[Literal["paths"], Literal["all"]]:
+    def visit_mode(self) -> Literal["paths", "all"]:
         """
         Configurable visit mode of the detector. If set to `paths`, the detector `visit_` methods will be called only for the paths specified by the user.
         If set to `all`, the detector `visit_` methods will be called for all paths, leaving the filtering of detections to the detector implementation.
@@ -148,6 +150,18 @@ class Detector(Visitor, metaclass=ABCMeta):
             Visit mode of the detector.
         """
         return "paths"
+
+    # TODO is this needed?
+    @property
+    def execution_mode(self) -> Literal["cli", "lsp", "both"]:
+        """
+        Configurable execution mode of the detector. If set to `cli`, the detector will be executed only when running `wake detect`.
+        If set to `lsp`, the detector will be executed by the LSP server. If set to `both`, the detector will be executed in both cases.
+
+        Returns:
+            Execution mode of the detector.
+        """
+        return "both"
 
     @abstractmethod
     def detect(self) -> List[DetectorResult]:
@@ -349,6 +363,7 @@ def detect(
     imports_graph: nx.DiGraph,
     config: WakeConfig,
     ctx: Optional[click.Context],
+    lsp_provider: Optional[LspProvider],
     *,
     paths: Optional[List[Path]] = None,
     args: Optional[List[str]] = None,
@@ -444,7 +459,7 @@ def detect(
         lambda: default_min_impact
     )
 
-    for command in detectors:
+    for command in list(detectors):
         assert command is not None
         assert command.name is not None
 
@@ -494,6 +509,7 @@ def detect(
                 instance.logger = get_logger(cls.__name__)
                 if logging_handler is not None:
                     instance.logger.addHandler(logging_handler)
+                instance.lsp_provider = lsp_provider
                 instance.__init__()
 
                 sub_ctx = command.make_context(
@@ -505,6 +521,13 @@ def detect(
                 with sub_ctx:
                     sub_ctx.command.invoke(sub_ctx)
 
+                if lsp_provider is not None and instance.execution_mode == "cli":
+                    detectors.remove(command)
+                    continue
+                elif lsp_provider is None and instance.execution_mode == "lsp":
+                    detectors.remove(command)
+                    continue
+
                 collected_detectors[command.name] = instance
                 if instance.visit_mode == "all":
                     visit_all_detectors.add(command.name)
@@ -515,6 +538,9 @@ def detect(
             finally:
                 command.callback = original_callback
         else:
+            if lsp_provider is not None:
+                detectors.remove(command)
+                continue
 
             def _callback(detector_name: str, *args, **kwargs):
                 nonlocal paths, min_impact_by_detector, min_confidence_by_detector
@@ -553,6 +579,7 @@ def detect(
                     "extra": extra,
                     "imports_graph": imports_graph.copy(),
                     "logger": get_logger(original_callback.__name__),
+                    # no need to set lsp_provider as legacy detectors are not executed by the LSP server
                 }
                 if logging_handler is not None:
                     sub_ctx.obj[

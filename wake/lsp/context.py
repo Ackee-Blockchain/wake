@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
 from ..config import WakeConfig
+from ..core.lsp_provider import LspProvider
 from ..core.solidity_version import SemanticVersion
 from ..utils.openzeppelin import get_contracts_package_version
 from .features.diagnostic import diagnostics_loop
@@ -22,6 +23,8 @@ class LspContext:
     __diagnostics_queue: asyncio.Queue
     __openzeppelin_contracts_version: Optional[SemanticVersion]
     __parser: LspParser
+    __detectors_lsp_provider: LspProvider
+    __printers_lsp_provider: LspProvider
 
     use_toml: bool
     toml_path: Path
@@ -32,8 +35,14 @@ class LspContext:
         self.__server = server
         self.__workspace_config = config
         self.__diagnostics_queue = asyncio.Queue()
+        self.__detectors_lsp_provider = LspProvider()
+        self.__printers_lsp_provider = LspProvider()
         self.__compiler = LspCompiler(
-            server, self.__diagnostics_queue, perform_files_discovery
+            server,
+            self.__diagnostics_queue,
+            self.__detectors_lsp_provider,
+            self.__printers_lsp_provider,
+            perform_files_discovery,
         )
         self.__openzeppelin_contracts_version = get_contracts_package_version(config)
         self.__parser = LspParser(server)
@@ -65,3 +74,11 @@ class LspContext:
     @property
     def parser(self) -> LspParser:
         return self.__parser
+
+    @property
+    def detectors_lsp_provider(self) -> LspProvider:
+        return self.__detectors_lsp_provider
+
+    @property
+    def printers_lsp_provider(self) -> LspProvider:
+        return self.__printers_lsp_provider

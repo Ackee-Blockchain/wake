@@ -225,7 +225,7 @@ class Command(LspModel):
     """
     The identifier of the actual command handler.
     """
-    arguments: Optional[List[Any]]
+    arguments: Optional[List[Any]] = None
     """
     Arguments that the command handler should be invoked with.
     """

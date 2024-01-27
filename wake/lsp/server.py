@@ -92,6 +92,7 @@ from .features.document_link import (
 from .features.document_symbol import DocumentSymbolParams, document_symbol
 from .features.hover import HoverParams, hover
 from .features.implementation import ImplementationParams, implementation
+from .features.inlay_hint import InlayHintParams, inlay_hint
 from .features.references import ReferenceParams, references
 from .features.rename import (
     PrepareRenameParams,
@@ -246,6 +247,7 @@ class LspServer:
             RequestMethodEnum.HOVER: (self._workspace_route, HoverParams),
             RequestMethodEnum.COMPLETION: (self._workspace_route, CompletionParams),
             RequestMethodEnum.CODE_ACTION: (self._workspace_route, CodeActionParams),
+            RequestMethodEnum.INLAY_HINT: (self._workspace_route, InlayHintParams),
         }
 
         self.__notification_mapping = {
@@ -671,6 +673,7 @@ class LspServer:
                 code_action_kinds=None,
                 resolve_provider=False,
             ),
+            inlay_hint_provider=True,
         )
         return InitializeResult(capabilities=server_capabilities, server_info=None)
 
@@ -947,6 +950,30 @@ class LspServer:
                                             ),
                                             kind=None,
                                         ),
+                                        FileSystemWatcher(
+                                            glob_pattern=RelativePattern(
+                                                base_uri=URI(
+                                                    str(
+                                                        self.__workspace_path
+                                                        / "printers"
+                                                    )
+                                                ),
+                                                pattern="**/*.py",
+                                            ),
+                                            kind=None,
+                                        ),
+                                        FileSystemWatcher(
+                                            glob_pattern=RelativePattern(
+                                                base_uri=URI(
+                                                    str(
+                                                        self.__cli_config.global_data_path
+                                                        / "global-printers"
+                                                    )
+                                                ),
+                                                pattern="**/*.py",
+                                            ),
+                                            kind=None,
+                                        ),
                                     ]
                                 ),
                             )
@@ -1034,6 +1061,15 @@ class LspServer:
             ):
                 await context.compiler.force_rerun_detectors()
 
+            global_printers = self.__cli_config.global_data_path / "global-printers"
+            local_printers = context.config.project_root_path / "printers"
+            if any(
+                is_relative_to(uri_to_path(ch.uri), global_printers)
+                or is_relative_to(uri_to_path(ch.uri), local_printers)
+                for ch in params.changes
+            ):
+                await context.compiler.force_rerun_printers()
+
     async def _workspace_did_change_configuration(
         self, params: DidChangeConfigurationParams
     ) -> None:
@@ -1112,6 +1148,8 @@ class LspServer:
             return await completion(context, params)
         elif isinstance(params, CodeActionParams):
             return await code_action(context, params)
+        elif isinstance(params, InlayHintParams):
+            return await inlay_hint(context, params)
         else:
             raise NotImplementedError(f"Unhandled request: {type(params)}")
 

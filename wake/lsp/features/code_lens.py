@@ -1,3 +1,4 @@
+from itertools import chain
 from pathlib import Path
 from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
 
@@ -64,11 +65,11 @@ class CodeLens(LspModel):
     """
     The range in which this code lens is valid. Should only span a single line.
     """
-    command: Optional[Command]
+    command: Optional[Command] = None
     """
     The command this code lens represents.
     """
-    data: Optional[Any]
+    data: Optional[Any] = None
     """
     A data entry field that is preserved on a code lens item between
     a code lens and a code lens resolve request.
@@ -180,6 +181,21 @@ async def code_lens(
     source_unit = context.compiler.source_units[path]
 
     _code_lens_cache[path] = []
+
+    for offsets, code_lens_items in chain(
+        context.detectors_lsp_provider.get_code_lenses(path).items(),
+        context.printers_lsp_provider.get_code_lenses(path).items(),
+    ):
+        for code_lens_options in code_lens_items:
+            code_lens.append(
+                CodeLens(
+                    range=context.compiler.get_range_from_byte_offsets(path, offsets),
+                    command=Command(
+                        title=code_lens_options.title,
+                        command="",
+                    ),
+                )
+            )
 
     for node in source_unit:
         if isinstance(node, DeclarationAbc):

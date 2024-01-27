@@ -5,6 +5,7 @@ import difflib
 import logging
 import multiprocessing
 import multiprocessing.connection
+import os
 import platform
 import re
 import threading
@@ -30,23 +31,29 @@ from typing import (
 )
 
 import packaging.version
+from rich.console import Console
 
 from wake.compiler.exceptions import CompilationError
 
 from ..cli.detect import run_detect
+from ..cli.print import run_print
 from ..compiler.build_data_model import (
     CompilationUnitBuildInfo,
     ProjectBuild,
     ProjectBuildInfo,
     SourceUnitInfo,
 )
+from ..core.lsp_provider import LspProvider
 from ..core.solidity_version import SolidityVersionRange, SolidityVersionRanges
 from ..core.wake_comments import error_commented_out
 from ..detectors.api import DetectorConfidence, DetectorImpact, detect
+from ..printers.api import run_printers
 from ..utils import StrEnum, get_package_version
 from ..utils.file_utils import is_relative_to
+from .exceptions import LspError
 from .logging_handler import LspLoggingHandler
 from .lsp_data_model import LspModel
+from .methods import RequestMethodEnum
 
 if TYPE_CHECKING:
     from .server import LspServer
@@ -138,6 +145,7 @@ class VersionedFile(NamedTuple):
 class CustomFileChangeCommand(StrEnum):
     FORCE_RECOMPILE = "force_recompile"
     FORCE_RERUN_DETECTORS = "force_rerun_detectors"
+    FORCE_RERUN_PRINTERS = "force_rerun_printers"
 
 
 class DetectionAdditionalInfo(LspModel):
@@ -208,10 +216,13 @@ class LspCompiler:
     __line_indexes: Dict[Path, List[Tuple[bytes, int]]]
     __perform_files_discovery: bool
     __force_run_detectors: bool
+    __force_run_printers: bool
     __wake_version: str
     __all_detectors: List[str]
     __latest_errors_per_cu: Dict[bytes, Set[SolcOutputError]]
     __ignored_detections_supported: bool
+    __detectors_lsp_provider: LspProvider
+    __printers_lsp_provider: LspProvider
 
     __ir_reference_resolver: ReferenceResolver
 
@@ -221,6 +232,8 @@ class LspCompiler:
         self,
         server: LspServer,
         diagnostic_queue: asyncio.Queue,
+        detectors_lsp_provider: LspProvider,
+        printers_lsp_provider: LspProvider,
         perform_files_discovery: bool,
     ):
         self.__server = server
@@ -247,9 +260,12 @@ class LspCompiler:
         self.__output_ready = asyncio.Event()
         self.__perform_files_discovery = perform_files_discovery
         self.__force_run_detectors = False
+        self.__force_run_printers = False
         self.__wake_version = get_package_version("eth-wake")
         self.__all_detectors = []
         self.__latest_errors_per_cu = {}
+        self.__detectors_lsp_provider = detectors_lsp_provider
+        self.__printers_lsp_provider = printers_lsp_provider
 
         try:
             if server.tfs_version is not None and packaging.version.parse(
@@ -402,6 +418,11 @@ class LspCompiler:
             CustomFileChangeCommand.FORCE_RERUN_DETECTORS
         )
 
+    async def force_rerun_printers(self) -> None:
+        await self.__file_changes_queue.put(
+            CustomFileChangeCommand.FORCE_RERUN_PRINTERS
+        )
+
     def get_compiled_file(self, file: Union[Path, str]) -> VersionedFile:
         if isinstance(file, str):
             file = uri_to_path(file)
@@ -474,6 +495,8 @@ class LspCompiler:
                 self.__force_compile_files.update(self.__discovered_files)
             elif change == CustomFileChangeCommand.FORCE_RERUN_DETECTORS:
                 self.__force_run_detectors = True
+            elif change == CustomFileChangeCommand.FORCE_RERUN_PRINTERS:
+                self.__force_run_printers = True
         elif isinstance(change, CreateFilesParams):
             for file in change.files:
                 path = uri_to_path(file.uri)
@@ -1045,17 +1068,119 @@ class LspCompiler:
         for path, errors in errors_per_file.items():
             await self.__diagnostic_queue.put((path, errors))
 
-        await self.__run_detectors_wrapper()
-
         if len(files_to_recompile) > 0:
             # avoid infinite recursion
             if files_to_recompile != files_to_compile or full_compile:
                 await self.__compile(files_to_recompile, False, errors_per_cu)
 
         if full_compile:
+            await self.__run_detectors_wrapper()
             self.__latest_errors_per_cu = errors_per_cu
 
+    async def __run_printers(self) -> None:
+        self.__printers_lsp_provider.clear()
+
+        progress_token = await self.__server.progress_begin("Running printers")
+
+        all_printers = run_print.list_commands(
+            None,  # pyright: ignore reportGeneralTypeIssues
+            plugin_paths={  # pyright: ignore reportGeneralTypeIssues
+                self.__config.project_root_path / "printers"
+            },
+            force_load_plugins=True,  # pyright: ignore reportGeneralTypeIssues
+            verify_paths=False,  # pyright: ignore reportGeneralTypeIssues
+        )
+
+        for (
+            package,
+            e,
+        ) in (
+            run_print.failed_plugin_entry_points  # pyright: ignore reportGeneralTypeIssues
+        ):
+            await self.__server.show_message(
+                f"Failed to load printers from plugin module {package}: {e}",
+                MessageType.ERROR,
+            )
+            await self.__server.log_message(
+                f"Failed to load printers from plugin module {package}: {e}",
+                MessageType.ERROR,
+            )
+        for (
+            path,
+            e,
+        ) in run_print.failed_plugin_paths:  # pyright: ignore reportGeneralTypeIssues
+            await self.__server.show_message(
+                f"Failed to load printers from path {path}: {e}",
+                MessageType.ERROR,
+            )
+            await self.__server.log_message(
+                f"Failed to load printers from path {path}: {e}",
+                MessageType.ERROR,
+            )
+
+        try:
+            logging_buffer = []
+            logging_handler = LspLoggingHandler(logging_buffer)
+
+            console = Console(file=open(os.devnull, "w"))
+
+            _, printer_exceptions = run_printers(
+                all_printers,
+                self.last_build,
+                self.last_build_info,
+                self.__last_graph,
+                self.__config,
+                console,
+                None,
+                self.__printers_lsp_provider,
+                verify_paths=False,
+                capture_exceptions=True,
+                logging_handler=logging_handler,
+                extra={"lsp": True},
+            )
+            exceptions = {name: repr(e) for name, e in printer_exceptions.items()}
+
+            for log, log_type in logging_buffer:
+                await self.__server.log_message(log, log_type)
+
+            for printer_name, exception_str in exceptions.items():
+                await self.__server.show_message(
+                    f"Exception while running printer {printer_name}: {exception_str}",
+                    MessageType.ERROR,
+                )
+                await self.__server.log_message(
+                    f"Exception while running printer {printer_name}: {exception_str}",
+                    MessageType.ERROR,
+                )
+        except Exception:
+            await self.__server.show_message(
+                f"Exception occurred while running printers:\n{traceback.format_exc()}",
+                MessageType.ERROR,
+            )
+            await self.__server.log_message(
+                f"Exception occurred while running printers:\n{traceback.format_exc()}",
+                MessageType.ERROR,
+            )
+
+        if progress_token is not None:
+            await self.__server.progress_end(progress_token)
+
+        # make sure that code lenses are refreshed
+        try:
+            await self.__server.send_request(
+                RequestMethodEnum.WORKSPACE_CODE_LENS_REFRESH, None
+            )
+        except LspError:
+            pass
+        # make sure that inline values are refreshed
+        try:
+            await self.__server.send_request(RequestMethodEnum.INLAY_HINT_REFRESH, None)
+        except LspError:
+            pass
+
     async def __run_detectors_wrapper(self) -> None:
+        self.__detectors_lsp_provider.clear()
+
         progress_token = await self.__server.progress_begin("Running detectors")
 
         # discover detectors
@@ -1122,6 +1247,9 @@ class LspCompiler:
                         errors_per_file,
                         exceptions,
                         logging_buffer,
+                        hovers,
+                        inlay_hints,
+                        code_lenses,
                     ) = parent_data_conn.recv()
 
                     for log, log_type in logging_buffer:
@@ -1139,6 +1267,16 @@ class LspCompiler:
                             f"Exception while running detector {detector_name}: {exception_str}",
                             MessageType.ERROR,
                         )
+
+                    self.__detectors_lsp_provider._hovers.update(
+                        hovers
+                    )  # pyright: ignore reportGeneralTypeIssues
+                    self.__detectors_lsp_provider._inlay_hints.update(
+                        inlay_hints
+                    )  # pyright: ignore reportGeneralTypeIssues
+                    self.__detectors_lsp_provider._code_lenses.update(
+                        code_lenses
+                    )  # pyright: ignore reportGeneralTypeIssues
 
                     break
                 elif not p.is_alive():
@@ -1195,6 +1333,19 @@ class LspCompiler:
         if progress_token is not None:
             await self.__server.progress_end(progress_token)
 
+        # make sure that code lenses are refreshed
+        try:
+            await self.__server.send_request(
+                RequestMethodEnum.WORKSPACE_CODE_LENS_REFRESH, None
+            )
+        except LspError:
+            pass
+        # make sure that inline values are refreshed
+        try:
+            await self.__server.send_request(RequestMethodEnum.INLAY_HINT_REFRESH, None)
+        except LspError:
+            pass
+
     def __run_detectors(
         self,
         detector_names: List[str],
@@ -1222,6 +1373,7 @@ class LspCompiler:
                     self.__last_graph,
                     self.__config,
                     None,
+                    self.__detectors_lsp_provider,
                     verify_paths=False,
                     capture_exceptions=True,
                     logging_handler=logging_handler,
@@ -1310,7 +1462,16 @@ class LspCompiler:
                 exceptions = {}
 
             if data_conn is not None:
-                data_conn.send((errors_per_file, exceptions, logging_buffer))
+                data_conn.send(
+                    (
+                        errors_per_file,
+                        exceptions,
+                        logging_buffer,
+                        dict(self.__detectors_lsp_provider._hovers),
+                        dict(self.__detectors_lsp_provider._inlay_hints),
+                        dict(self.__detectors_lsp_provider._code_lenses),
+                    )
+                )
             return errors_per_file, exceptions, logging_buffer
         except Exception:
             if error_conn is not None:
@@ -1326,6 +1487,7 @@ class LspCompiler:
 
             # perform initial compilation
             await self.__compile(self.__discovered_files)
+            await self.__run_printers()
 
         if self.__file_changes_queue.empty():
             self.output_ready.set()
@@ -1356,6 +1518,7 @@ class LspCompiler:
                 await self.__compile(
                     self.__force_compile_files.union(self.__modified_files)
                 )
+                await self.__run_printers()
 
                 self.__force_compile_files.clear()
                 self.__modified_files.clear()
@@ -1364,6 +1527,10 @@ class LspCompiler:
             if self.__force_run_detectors:
                 await self.__run_detectors_wrapper()
                 self.__force_run_detectors = False
+
+            if self.__force_run_printers:
+                await self.__run_printers()
+                self.__force_run_printers = False
 
             if self.__file_changes_queue.empty():
                 self.output_ready.set()
