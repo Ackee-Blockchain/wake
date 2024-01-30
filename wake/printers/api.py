@@ -51,6 +51,7 @@ class Printer(Visitor, metaclass=ABCMeta):
     paths: List[Path]
     extra: Dict[Any, Any]
     lsp_provider: Optional[LspProvider]
+    execution_mode: Literal["cli", "lsp", "both"] = "cli"  # TODO remove both?
 
     @property
     def visit_mode(self) -> Literal["paths", "all"]:
@@ -62,18 +63,6 @@ class Printer(Visitor, metaclass=ABCMeta):
             Visit mode of the printer.
         """
         return "paths"
-
-    # TODO remove both?
-    @property
-    def execution_mode(self) -> Literal["cli", "lsp", "both"]:
-        """
-        Configurable execution mode of the printer. If set to `cli`, the printer will be executed only when running `wake print printer-name`.
-        If set to `lsp`, the printer will be executed by the LSP server. If set to `both`, the printer will be executed in both cases.
-
-        Returns:
-            Execution mode of the printer.
-        """
-        return "cli"
 
     @abstractmethod
     def print(self) -> None:
@@ -292,6 +281,13 @@ def run_printers(
             original_callback = command.callback
             command.callback = partial(_callback, command.name)
 
+            if lsp_provider is not None and cls.execution_mode == "cli":
+                printers.remove(command)
+                continue
+            elif lsp_provider is None and cls.execution_mode == "lsp":
+                printers.remove(command)
+                continue
+
             try:
                 instance = object.__new__(cls)
                 instance.build = build
@@ -316,13 +312,6 @@ def run_printers(
                 )
                 with sub_ctx:
                     sub_ctx.command.invoke(sub_ctx)
-
-                if lsp_provider is not None and instance.execution_mode == "cli":
-                    printers.remove(command)
-                    continue
-                elif lsp_provider is None and instance.execution_mode == "lsp":
-                    printers.remove(command)
-                    continue
 
                 collected_printers[command.name] = instance
                 if instance.visit_mode == "all":

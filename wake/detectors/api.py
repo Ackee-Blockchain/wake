@@ -138,6 +138,7 @@ class Detector(Visitor, metaclass=ABCMeta):
     paths: List[Path]
     extra: Dict[Any, Any]
     lsp_provider: Optional[LspProvider]
+    execution_mode: Literal["cli", "lsp", "both"] = "both"  # TODO is this needed?
 
     @property
     def visit_mode(self) -> Literal["paths", "all"]:
@@ -150,18 +151,6 @@ class Detector(Visitor, metaclass=ABCMeta):
             Visit mode of the detector.
         """
         return "paths"
-
-    # TODO is this needed?
-    @property
-    def execution_mode(self) -> Literal["cli", "lsp", "both"]:
-        """
-        Configurable execution mode of the detector. If set to `cli`, the detector will be executed only when running `wake detect`.
-        If set to `lsp`, the detector will be executed by the LSP server. If set to `both`, the detector will be executed in both cases.
-
-        Returns:
-            Execution mode of the detector.
-        """
-        return "both"
 
     @abstractmethod
     def detect(self) -> List[DetectorResult]:
@@ -497,6 +486,13 @@ def detect(
             original_callback = command.callback
             command.callback = partial(_callback, command.name)
 
+            if lsp_provider is not None and cls.execution_mode == "cli":
+                detectors.remove(command)
+                continue
+            elif lsp_provider is None and cls.execution_mode == "lsp":
+                detectors.remove(command)
+                continue
+
             try:
                 instance = object.__new__(cls)
                 instance.build = build
@@ -520,13 +516,6 @@ def detect(
                 )
                 with sub_ctx:
                     sub_ctx.command.invoke(sub_ctx)
-
-                if lsp_provider is not None and instance.execution_mode == "cli":
-                    detectors.remove(command)
-                    continue
-                elif lsp_provider is None and instance.execution_mode == "lsp":
-                    detectors.remove(command)
-                    continue
 
                 collected_detectors[command.name] = instance
                 if instance.visit_mode == "all":
