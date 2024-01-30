@@ -1111,7 +1111,9 @@ def _get_storage_layout_from_explorer(
     compiler = SolidityCompiler(compilation_config)
 
     graph, _ = compiler.build_graph(
-        sources.keys(), sources, True  # pyright: ignore reportGeneralTypeIssues
+        sources.keys(),
+        {k: v.encode("utf-8") for k, v in sources.items()},
+        True,  # pyright: ignore reportGeneralTypeIssues
     )
     compilation_units = compiler.build_compilation_units_maximize(graph)
     compilation_units = compiler.merge_compilation_units(compilation_units, graph)
