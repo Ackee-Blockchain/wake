@@ -1,7 +1,7 @@
 {{ log.debug("Rendering " + module.path) }}
 
 <div class="doc doc-object doc-module">
-{% with html_id = module.path %}
+{% with obj = module, html_id = module.path %}
 
   {% if root %}
     {% set show_full_path = config.show_root_full_path %}
