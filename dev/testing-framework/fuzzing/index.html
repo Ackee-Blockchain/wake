@@ -5385,15 +5385,15 @@ While debugging, other processes are still running in the background.</p>
 }
 </script>
 
-<p>By default, nothing but status of each test is printed to the console. Using the <code>--passive</code> flag, the output of the first process is printed to the console.
+<p>By default, nothing but status of each test is printed to the console. Using the <code>--attach-first</code> flag, the output of the first process is printed to the console.
 Standard output and standard error of all processes are redirected to the <code>.wake/logs/testing</code> directory.</p>
 <div class="admonition tip">
 <p class="admonition-title">Reproducing a failed test</p>
 <p>For every process, Wake generates a random seed that is used to initialize the random number generator.
 The seed is printed to the console and can be used to reproduce the test failure:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>wake<span class="w"> </span><span class="nb">test</span><span class="w"> </span>tests/test_counter_fuzz.py<span class="w"> </span>-P<span class="w"> </span><span class="m">5</span><span class="w"> </span>-s<span class="w"> </span>62061e838798ad0f
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>wake<span class="w"> </span><span class="nb">test</span><span class="w"> </span>tests/test_counter_fuzz.py<span class="w"> </span>-P<span class="w"> </span><span class="m">5</span><span class="w"> </span>-S<span class="w"> </span>62061e838798ad0f
 </code></pre></div>
-<p>A random seed can be specified using the <code>-s</code> flag. Multiple <code>-s</code> flags are allowed.</p>
+<p>A random seed can be specified using the <code>-S</code> flag. Multiple <code>-S</code> flags are allowed.</p>
 </div>
 
 
