@@ -269,10 +269,12 @@ async def run_init_pytypes(
     from watchdog.observers import Observer
 
     from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
+    from ..compiler.vyper_compiler import VyperCompiler
     from ..compiler.build_data_model import ProjectBuild, ProjectBuildInfo
     from ..compiler.compiler import CompilationFileSystemEventHandler
     from ..compiler.solc_frontend import SolcOutputErrorSeverityEnum
     from ..development.pytypes_generator import TypeGenerator
+    from ..development.vyper_pytypes_generator import VyperPytypesGenerator
     from ..utils.file_utils import is_relative_to
 
     def callback(build: ProjectBuild, build_info: ProjectBuildInfo):
@@ -284,6 +286,7 @@ async def run_init_pytypes(
         console.log(f"[green]Generated pytypes in [bold green]{end - start:.2f} s[/]")
 
     compiler = SolidityCompiler(config)
+    vyper_compiler = VyperCompiler(config)
 
     sol_files: Set[Path] = set()
     start = time.perf_counter()
@@ -301,7 +304,26 @@ async def run_init_pytypes(
         f"[green]Found {len(sol_files)} *.sol files in [bold green]{end - start:.2f} s[/bold green][/]"
     )
 
+    vy_files: Set[Path] = set()
+    start = time.perf_counter()
+    with console.status("[bold green]Searching for *.vy files...[/]"):
+        for file in config.project_root_path.rglob("**/*.vy"):
+            if (
+                not any(
+                    is_relative_to(file, p) for p in config.compiler.vyper.exclude_paths
+                )
+                and file.is_file()
+            ):
+                vy_files.add(file)
+    end = time.perf_counter()
+    console.log(
+        f"[green]Found {len(vy_files)} *.vy files in [bold green]{end - start:.2f} s[/bold green][/]"
+    )
+
     if watch:
+        if len(vy_files) > 0:
+            raise NotImplementedError("Vyper watch not implemented yet")
+
         fs_handler = CompilationFileSystemEventHandler(
             config,
             sol_files,
@@ -336,12 +358,25 @@ async def run_init_pytypes(
         no_warnings=not warnings,
     )
 
-    start = time.perf_counter()
-    with console.status("[bold green]Generating pytypes..."):
-        type_generator = TypeGenerator(config, return_tx)
-        type_generator.generate_types(compiler)
-    end = time.perf_counter()
-    console.log(f"[green]Generated pytypes in [bold green]{end - start:.2f} s[/]")
+    if len(vy_files) > 0:
+        vy_ast = vyper_compiler.compile(vy_files)
+
+        start = time.perf_counter()
+        with console.status("[bold green]Generating pytypes for Vyper..."):
+            pytypes_generator = VyperPytypesGenerator(config)
+            pytypes_generator.generate(vy_ast)
+        end = time.perf_counter()
+        console.log(
+            f"[green]Generated pytypes for Vyper in [bold green]{end - start:.2f} s[/]"
+        )
+
+    if len(sol_files) > 0:
+        start = time.perf_counter()
+        with console.status("[bold green]Generating pytypes..."):
+            type_generator = TypeGenerator(config, return_tx)
+            type_generator.generate_types(compiler)
+        end = time.perf_counter()
+        console.log(f"[green]Generated pytypes in [bold green]{end - start:.2f} s[/]")
 
     if watch:
         assert fs_handler is not None

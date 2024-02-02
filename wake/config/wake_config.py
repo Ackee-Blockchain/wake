@@ -397,6 +397,22 @@ class WakeConfig:
         return SolidityVersion.fromstring("0.8.23")
 
     @property
+    def min_vyper_version(self) -> SolidityVersion:
+        """
+        Returns:
+            Minimum supported Vyper version.
+        """
+        return SolidityVersion.fromstring("0.3.0")
+
+    @property
+    def max_vyper_version(self) -> SolidityVersion:
+        """
+        Returns:
+            Maximum supported Vyper version.
+        """
+        return SolidityVersion.fromstring("0.3.10")
+
+    @property
     def detectors(self) -> DetectorsConfig:
         """
         Returns:

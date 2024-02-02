@@ -30,6 +30,7 @@ async def compile(
         CompilationFileSystemEventHandler,
         SolidityCompiler,
     )
+    from wake.compiler.vyper_compiler import VyperCompiler
     from wake.compiler.solc_frontend.input_data_model import SolcOutputSelectionEnum
 
     from ..compiler.solc_frontend import SolcOutputErrorSeverityEnum
@@ -37,6 +38,7 @@ async def compile(
     from .console import console
 
     compiler = SolidityCompiler(config)
+    vyper_compiler = VyperCompiler(config)
 
     sol_files: Set[Path] = set()
     start = time.perf_counter()
@@ -75,7 +77,48 @@ async def compile(
         f"[green]Found {len(sol_files)} *.sol files in [bold green]{end - start:.2f} s[/bold green][/]"
     )
 
+    vy_files: Set[Path] = set()
+    start = time.perf_counter()
+    with console.status("[bold green]Searching for *.vy files...[/]"):
+        if len(paths) == 0:
+            # TODO do not search for *.vy files in excluded paths
+            for file in config.project_root_path.rglob("**/*.vy"):
+                if (
+                    not any(
+                        is_relative_to(file, p)
+                        for p in config.compiler.vyper.exclude_paths
+                    )
+                    and file.is_file()
+                ):
+                    vy_files.add(file)
+        else:
+            for p in paths:
+                path = Path(p)
+                if path.is_file():
+                    if not path.match("*.vy"):
+                        raise ValueError(f"Argument `{p}` is not a Vyper file.")
+                    vy_files.add(path)
+                elif path.is_dir():
+                    for file in path.rglob("**/*.vy"):
+                        if (
+                            not any(
+                                is_relative_to(file, p)
+                                for p in config.compiler.vyper.exclude_paths
+                            )
+                            and file.is_file()
+                        ):
+                            vy_files.add(file)
+                else:
+                    raise ValueError(f"Argument `{p}` is not a file or directory.")
+    end = time.perf_counter()
+    console.log(
+        f"[green]Found {len(vy_files)} *.vy files in [bold green]{end - start:.2f} s[/bold green][/]"
+    )
+
     if watch:
+        if len(vy_files) > 0:
+            raise NotImplementedError("Watching for *.vy files is not implemented yet.")
+
         fs_handler = CompilationFileSystemEventHandler(
             config,
             sol_files,
@@ -111,6 +154,9 @@ async def compile(
         no_warnings=no_warnings,
         incremental=incremental,
     )
+
+    if len(vy_files) > 0:
+        vyper_compiler.compile(vy_files)
 
     if watch:
         assert fs_handler is not None

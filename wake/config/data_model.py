@@ -169,8 +169,31 @@ class DetectorsLspConfig(WakeConfigModel):
     """
 
 
+class VyperConfig(WakeConfigModel):
+    exclude_paths: FrozenSet[Path] = Field(
+        default_factory=lambda: frozenset(
+            [
+                Path.cwd() / "node_modules",
+                Path.cwd() / "venv",
+                Path.cwd() / ".venv",
+                Path.cwd() / "lib",
+                Path.cwd() / "script",
+                Path.cwd() / "test",
+            ]
+        )
+    )
+    """
+    Vyper files in these paths are excluded from compilation unless imported from a non-excluded file.
+    """
+
+    @validator("exclude_paths", pre=True, each_item=True)
+    def set_exclude_paths(cls, v):
+        return Path(v).resolve()
+
+
 class CompilerConfig(WakeConfigModel):
     solc: SolcConfig = Field(default_factory=SolcConfig)
+    vyper: VyperConfig = Field(default_factory=VyperConfig)
 
 
 class DetectorsConfig(WakeConfigModel):
