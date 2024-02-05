@@ -330,10 +330,13 @@ def write_coverage(
         json.dump(asdict(data), f, indent=4)
 
 
+def returning_none():
+    return None
+
+
 class CoverageHandler:
     _pc_maps: Dict[str, Dict[int, SourceMapPcRecord]]
     _pc_maps_undeployed: Dict[str, Dict[int, SourceMapPcRecord]]
-    _source_units: Dict[pathlib.Path, SourceUnit]
     _interval_trees: Dict[pathlib.Path, IntervalTree]
     _lines_index: Dict[pathlib.Path, List[Tuple[bytes, int]]]
     _statement_coverage: DefaultDict[Union[StatementAbc, YulStatementAbc], int]
@@ -356,15 +359,14 @@ class CoverageHandler:
                 "Failed to load previous build. Run `wake compile` first."
             )
 
-        self._source_units = compiler.latest_build.source_units
-        self._interval_trees = compiler.latest_build.interval_trees
+        self._interval_trees = dict(compiler.latest_build.interval_trees)
         self._lines_index = {}
         self._statement_coverage = defaultdict(int)
         self._function_coverage = defaultdict(int)
         self._modifier_coverage = defaultdict(int)
         self._visited_functions = set()
         self._visited_modifiers = set()
-        self._last_statements = defaultdict(lambda: None)
+        self._last_statements = defaultdict(returning_none)
         self._callback = None
 
         errored = False
