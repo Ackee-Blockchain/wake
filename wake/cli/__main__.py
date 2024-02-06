@@ -52,7 +52,6 @@ def excepthook(attach: bool, type, value, traceback):
 
 
 click.rich_click.COMMAND_GROUPS = {
-    "wake": [{"commands": ["detect", "print"]}],
     "wake detect": [
         {
             "name": "Commands",
