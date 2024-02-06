@@ -83,6 +83,7 @@ nav:
             - tx.origin: 'static-analysis/detectors/tx-origin.md'
             - Unchecked return value: 'static-analysis/detectors/unchecked-return-value.md'
             - Unprotected selfdestruct: 'static-analysis/detectors/unprotected-selfdestruct.md'
+            - Unsafe ERC-20 call: 'static-analysis/detectors/unsafe-erc20-call.md'
             - Unsafe delegatecall: 'static-analysis/detectors/unsafe-delegatecall.md'
             - Unused contract: 'static-analysis/detectors/unused-contract.md'
             - Unused function: 'static-analysis/detectors/unused-function.md'
