@@ -6,6 +6,7 @@ import importlib
 import json
 import math
 import re
+import sys
 from abc import ABC, abstractmethod
 from bdb import BdbQuit
 from collections import ChainMap, defaultdict
@@ -380,6 +381,37 @@ class Address:
 Address.ZERO = Address(0)
 
 
+def detect_default_chain() -> Chain:
+    if "wake.deployment" in sys.modules and "wake.testing" in sys.modules:
+        import wake.deployment
+        import wake.testing
+
+        if (
+            wake.deployment.default_chain.connected
+            and wake.testing.default_chain.connected
+        ):
+            raise ValueError(
+                "Both wake.testing.default_chain and wake.deployment.default_chain are connected. Please specify which chain to use."
+            )
+
+        if wake.deployment.default_chain.connected:
+            return wake.deployment.default_chain
+        elif wake.testing.default_chain.connected:
+            return wake.testing.default_chain
+        else:
+            raise NotConnectedError("default_chain not connected")
+    elif "wake.deployment" in sys.modules:
+        import wake.deployment
+
+        return wake.deployment.default_chain
+    elif "wake.testing" in sys.modules:
+        import wake.testing
+
+        return wake.testing.default_chain
+    else:
+        raise NotConnectedError("default_chain not connected")
+
+
 @functools.total_ordering
 class Account:
     _address: Address
@@ -389,22 +421,7 @@ class Account:
         self, address: Union[Address, str, int], chain: Optional[Chain] = None
     ) -> None:
         if chain is None:
-            import wake.deployment
-            import wake.testing
-
-            if (
-                wake.deployment.default_chain.connected
-                and wake.testing.default_chain.connected
-            ):
-                raise ValueError(
-                    "Both default_chain and wake.deployment.default_chain are connected. Please specify which chain to use."
-                )
-            if wake.deployment.default_chain.connected:
-                chain = wake.deployment.default_chain
-            elif wake.testing.default_chain.connected:
-                chain = wake.testing.default_chain
-            else:
-                raise NotConnectedError("default_chain not connected")
+            chain = detect_default_chain()
 
         if isinstance(address, Address):
             self._address = address
@@ -446,22 +463,7 @@ class Account:
     @classmethod
     def new(cls, chain: Optional[Chain] = None, extra_entropy: bytes = b"") -> Account:
         if chain is None:
-            import wake.deployment
-            import wake.testing
-
-            if (
-                wake.deployment.default_chain.connected
-                and wake.testing.default_chain.connected
-            ):
-                raise ValueError(
-                    "Both default_chain and wake.deployment.default_chain are connected. Please specify which chain to use."
-                )
-            if wake.deployment.default_chain.connected:
-                chain = wake.deployment.default_chain
-            elif wake.testing.default_chain.connected:
-                chain = wake.testing.default_chain
-            else:
-                raise NotConnectedError("default_chain not connected")
+            chain = detect_default_chain()
 
         private_key = chain._new_private_key(extra_entropy)
         address = Address.from_key(private_key)
@@ -2664,22 +2666,7 @@ class Contract(Account):
         confirmations: Optional[int],
     ) -> Any:
         if chain is None:
-            import wake.deployment
-            import wake.testing
-
-            if (
-                wake.deployment.default_chain.connected
-                and wake.testing.default_chain.connected
-            ):
-                raise ValueError(
-                    "Both default_chain and wake.deployment.default_chain are connected. Please specify which chain to use."
-                )
-            if wake.deployment.default_chain.connected:
-                chain = wake.deployment.default_chain
-            elif wake.testing.default_chain.connected:
-                chain = wake.testing.default_chain
-            else:
-                raise NotConnectedError("default_chain not connected")
+            chain = detect_default_chain()
 
         creation_code = cls._creation_code
         for match in LIBRARY_PLACEHOLDER_REGEX.finditer(creation_code):
@@ -2883,22 +2870,7 @@ class Library(Contract):
         confirmations: Optional[int],
     ) -> Any:
         if chain is None:
-            import wake.deployment
-            import wake.testing
-
-            if (
-                wake.deployment.default_chain.connected
-                and wake.testing.default_chain.connected
-            ):
-                raise ValueError(
-                    "Both default_chain and wake.deployment.default_chain are connected. Please specify which chain to use."
-                )
-            if wake.deployment.default_chain.connected:
-                chain = wake.deployment.default_chain
-            elif wake.testing.default_chain.connected:
-                chain = wake.testing.default_chain
-            else:
-                raise NotConnectedError("default_chain not connected")
+            chain = detect_default_chain()
 
         lib = super()._deploy(
             request_type,

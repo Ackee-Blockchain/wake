@@ -6,9 +6,7 @@ from typing import Any, Callable, Dict, Optional, Type
 
 from typing_extensions import Annotated, get_args, get_origin, get_type_hints
 
-import wake.deployment
-import wake.testing
-from wake.development.core import Account, Address, Chain, NotConnectedError, Wei
+from wake.development.core import Account, Address, Chain, Wei, detect_default_chain
 from wake.development.primitive_types import Length, ValueRange
 
 
@@ -20,19 +18,7 @@ def random_account(
     chain: Optional[Chain] = None,
 ) -> Account:
     if chain is None:
-        if (
-            wake.deployment.default_chain.connected
-            and wake.testing.default_chain.connected
-        ):
-            raise ValueError(
-                "Both default_chain and wake.deployment.default_chain are connected. Please specify which chain to use."
-            )
-        if wake.deployment.default_chain.connected:
-            chain = wake.deployment.default_chain
-        elif wake.testing.default_chain.connected:
-            chain = wake.testing.default_chain
-        else:
-            raise NotConnectedError("default_chain not connected")
+        chain = detect_default_chain()
 
     accounts = chain.accounts
     if upper_bound is None:
