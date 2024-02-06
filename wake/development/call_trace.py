@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib
+import reprlib
 from collections import ChainMap
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Tuple, cast
 
@@ -30,7 +31,7 @@ from .core import (
     get_fqn_from_creation_code,
     process_debug_trace_for_fqn_overrides,
 )
-from .globals import get_config
+from .globals import get_config, get_verbosity
 from .internal import read_from_memory
 from .utils import get_contract_info_from_explorer
 
@@ -273,11 +274,18 @@ class CallTrace:
                     )
                 )
 
+        arg_repr = reprlib.Repr()
+        arg_repr.maxstring = 64
+        arg_repr.maxother = 44
+
         if "arguments" in options:
             if self.arguments is not None:
                 ret.append("(")
                 for i, arg in enumerate(self.arguments):
-                    t = Text(repr(arg))
+                    if get_verbosity() > 0:
+                        t = Text(repr(arg))
+                    else:
+                        t = Text(arg_repr.repr(arg))
                     ReprHighlighter().highlight(t)
                     ret.append_text(t)
                     if i < len(self.arguments) - 1:
