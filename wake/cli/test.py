@@ -210,6 +210,13 @@ class FileAndPassParamType(click.ParamType):
     default="duplicated",
     help="Distribution of test cases to processes.",
 )
+@click.option(
+    "-v",
+    "--verbosity",
+    default=0,
+    count=True,
+    help="Increase verbosity. Can be specified multiple times.",
+)
 @click.argument("paths_or_pytest_args", nargs=-1, type=FileAndPassParamType())
 @click.pass_context
 def run_test(
@@ -222,6 +229,7 @@ def run_test(
     seeds: Tuple[str],
     attach_first: bool,
     dist: str,
+    verbosity: int,
     paths_or_pytest_args: Tuple[str, ...],
 ) -> None:
     """Execute Wake tests using pytest."""
@@ -230,7 +238,7 @@ def run_test(
     import pytest
 
     from wake.config import WakeConfig
-    from wake.development.globals import set_config
+    from wake.development.globals import set_config, set_verbosity
 
     if proc_count == -1:
         proc_count = os.cpu_count()
@@ -259,6 +267,8 @@ def run_test(
     set_config(config)
     sys.path.insert(0, str(config.project_root_path))
 
+    set_verbosity(verbosity)
+
     # generate remaining random seeds
     if len(random_seeds) < proc_count:
         for i in range(proc_count - len(random_seeds)):
@@ -276,6 +286,10 @@ def run_test(
         )
     else:
         pytest_args = list(paths_or_pytest_args)
+
+        if verbosity > 0:
+            pytest_args.append("-" + "v" * verbosity)
+
         if s:
             pytest_args.append("-s")
 

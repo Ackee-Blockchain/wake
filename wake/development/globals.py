@@ -30,6 +30,7 @@ _exception_handled = False
 _coverage_handler: Optional[CoverageHandler] = None
 
 _config: Optional[WakeConfig] = None
+_verbosity: int = 0
 
 
 def attach_debugger(e: Exception):
@@ -109,6 +110,15 @@ def set_coverage_handler(coverage_handler: CoverageHandler):
 
 def get_coverage_handler() -> Optional[CoverageHandler]:
     return _coverage_handler
+
+
+def set_verbosity(verbosity: int):
+    global _verbosity
+    _verbosity = verbosity
+
+
+def get_verbosity() -> int:
+    return _verbosity
 
 
 class ChainInterfaceManager:

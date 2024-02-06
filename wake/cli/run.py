@@ -26,9 +26,20 @@ def _get_module_name(path: Path, root: Path) -> str:
     default=False,
     help="Do not print transaction info.",
 )
+@click.option(
+    "-v",
+    default=0,
+    count=True,
+    help="Increase verbosity. Can be specified multiple times.",
+)
 @click.pass_context
 def run_run(
-    ctx: click.Context, paths: Tuple[str, ...], debug: bool, ask: bool, silent: bool
+    ctx: click.Context,
+    paths: Tuple[str, ...],
+    debug: bool,
+    ask: bool,
+    silent: bool,
+    v: int,
 ) -> None:
     """Run a Wake script."""
 
@@ -43,6 +54,7 @@ def run_run(
         get_config,
         reset_exception_handled,
         set_exception_handler,
+        set_verbosity,
     )
 
     from .console import console
@@ -101,6 +113,8 @@ def run_run(
 
     if debug:
         set_exception_handler(attach_debugger)
+
+    set_verbosity(v)
 
     if len(run_functions) == 0:
         console.print("[yellow]No 'main' functions found in scripts.[/]")
