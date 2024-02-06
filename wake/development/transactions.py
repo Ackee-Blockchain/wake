@@ -455,9 +455,10 @@ class TransactionAbc(ABC, Generic[T]):
         if isinstance(chain_interface, AnvilChainInterface) and self.to is not None:
             self._fetch_trace_transaction()
             assert self._trace_transaction is not None
-            revert_data = bytes.fromhex(
-                self._trace_transaction[0]["result"]["output"][2:]
-            )
+            output = self._trace_transaction[0]["result"]["output"]
+            if output.startswith("0x"):
+                output = output[2:]
+            revert_data = bytes.fromhex(output)
         elif isinstance(chain_interface, (AnvilChainInterface, GanacheChainInterface)):
             self._fetch_debug_trace_transaction()
             assert self._debug_trace_transaction is not None
@@ -478,9 +479,10 @@ class TransactionAbc(ABC, Generic[T]):
             try:
                 self._fetch_trace_transaction()
                 assert self._trace_transaction is not None
-                revert_data = bytes.fromhex(
-                    self._trace_transaction[0]["result"]["output"][2:]
-                )
+                output = self._trace_transaction[0]["result"]["output"]
+                if output.startswith("0x"):
+                    output = output[2:]
+                revert_data = bytes.fromhex(output)
             except (JsonRpcError, HTTPError):
                 # TODO make assertions about error.code?
                 try:
@@ -540,7 +542,10 @@ class TransactionAbc(ABC, Generic[T]):
         if isinstance(chain_interface, AnvilChainInterface):
             self._fetch_trace_transaction()
             assert self._trace_transaction is not None
-            output = bytes.fromhex(self._trace_transaction[0]["result"]["output"][2:])
+            o = self._trace_transaction[0]["result"]["output"]
+            if o.startswith("0x"):
+                o = o[2:]
+            output = bytes.fromhex(o)
         elif isinstance(chain_interface, GanacheChainInterface):
             self._fetch_debug_trace_transaction()
             assert self._debug_trace_transaction is not None
@@ -561,9 +566,10 @@ class TransactionAbc(ABC, Generic[T]):
             try:
                 self._fetch_trace_transaction()
                 assert self._trace_transaction is not None
-                output = bytes.fromhex(
-                    self._trace_transaction[0]["result"]["output"][2:]
-                )
+                o = self._trace_transaction[0]["result"]["output"]
+                if o.startswith("0x"):
+                    o = o[2:]
+                output = bytes.fromhex(o)
             except (JsonRpcError, HTTPError):
                 # TODO make assertions about error.code?
                 try:
