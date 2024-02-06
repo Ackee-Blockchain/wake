@@ -62,7 +62,7 @@ Wake can be configured using configuration options loaded from multiple sources 
 
     [general]
     call_trace_options = [
-        "contract_name", "function_name", "arguments", "status",
+        "contract_name", "function_name", "named_arguments", "status",
         "call_type", "value", "return_value", "error"
     ]
     json_rpc_timeout = 15
@@ -188,11 +188,11 @@ min_impact = "high"
 
 ### `general` namespace
 
-| Option                            | Description                                                                                                                                                                                       |
-|:----------------------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| <nobr>`call_trace_options`</nobr> | What information to display in call traces. Possible options: `contract_name`, `address`, `function_name`, `arguments`, `status`, `call_type`, `value`, `gas`, `sender`, `return_value`, `error`. |
-| `json_rpc_timeout`                | Timeout in seconds when communicating with a node via JSON-RPC.                                                                                                                                   |
-| `link_format`                     | Format of links to source code files used in detectors and printers. The link should contain `{path}`, `{line}` and `{col}` placeholders.                                                         |
+| Option                            | Description                                                                                                                                                                                                          |
+|:----------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| <nobr>`call_trace_options`</nobr> | What information to display in call traces. Possible options: `contract_name`, `address`, `function_name`, `named_arguments`, `arguments`, `status`, `call_type`, `value`, `gas`, `sender`, `return_value`, `error`. |
+| `json_rpc_timeout`                | Timeout in seconds when communicating with a node via JSON-RPC.                                                                                                                                                      |
+| `link_format`                     | Format of links to source code files used in detectors and printers. The link should contain `{path}`, `{line}` and `{col}` placeholders.                                                                            |
 
 ### `generator.control_flow_graph` namespace
 Related to the `wake.generate.control_flow_graph` LSP command.

@@ -360,7 +360,7 @@ class GeneralConfig(WakeConfigModel):
         [
             "contract_name",
             "function_name",
-            "arguments",
+            "named_arguments",
             "status",
             "call_type",
             "value",
