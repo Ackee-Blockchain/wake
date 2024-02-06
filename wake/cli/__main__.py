@@ -78,7 +78,7 @@ class AliasedGroup(click.RichGroup):
         return sorted(["up"] + super().list_commands(ctx))
 
 
-@click.group(cls=AliasedGroup)
+@click.group(cls=AliasedGroup, context_settings={"help_option_names": ["-h", "--help"]})
 @click.option(
     "--debug",
     "-d",
