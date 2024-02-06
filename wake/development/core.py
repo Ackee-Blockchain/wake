@@ -689,7 +689,11 @@ class Account:
             if coverage_handler is not None and self._chain._debug_trace_call_supported:
                 ret = self._chain.chain_interface.debug_trace_call(params, block)
                 coverage_handler.add_coverage(params, self._chain, ret)
-                output = bytes.fromhex(ret["returnValue"][2:])
+
+                ret_value = ret["returnValue"]
+                if ret_value.startswith("0x"):
+                    ret_value = ret_value[2:]
+                output = bytes.fromhex(ret_value)
                 if ret["failed"]:
                     raise self._chain._process_revert_data(None, output) from None
             else:
@@ -1963,7 +1967,14 @@ class Chain(ABC):
                     topic_index += 1
                 else:
                     types.append(eth_utils.abi.collapse_if_tuple(input))
-            decoded = list(Abi.decode(types, bytes.fromhex(log["data"][2:])))
+            decoded = list(
+                Abi.decode(
+                    types,
+                    bytes.fromhex(log["data"][2:])
+                    if log["data"].startswith("0x")
+                    else bytes.fromhex(log["data"]),
+                )
+            )
             merged = []
 
             for input in abi["inputs"]:
@@ -1998,11 +2009,15 @@ class Chain(ABC):
         console_logs = []
         for trace in trace_output:
             if "action" in trace and "to" in trace["action"]:
-                if bytes.fromhex(trace["action"]["to"][2:]) == hardhat_console_address:
+                to = trace["action"]["to"]
+                if to.startswith("0x"):
+                    to = to[2:]
+                if bytes.fromhex(to) == hardhat_console_address:
+                    input = trace["action"]["input"]
+                    if input.startswith("0x"):
+                        input = input[2:]
                     console_logs.append(
-                        self._parse_console_log_data(
-                            bytes.fromhex(trace["action"]["input"][2:])
-                        )
+                        self._parse_console_log_data(bytes.fromhex(input))
                     )
         return console_logs
 
@@ -2144,7 +2159,11 @@ class Chain(ABC):
             if coverage_handler is not None and self._debug_trace_call_supported:
                 ret = self._chain_interface.debug_trace_call(tx_params, block)
                 coverage_handler.add_coverage(tx_params, self, ret)
-                output = bytes.fromhex(ret["returnValue"][2:])
+
+                ret_value = ret["returnValue"]
+                if ret_value.startswith("0x"):
+                    ret_value = ret_value[2:]
+                output = bytes.fromhex(ret_value)
                 if ret["failed"]:
                     raise self._process_revert_data(None, output) from None
             else:
