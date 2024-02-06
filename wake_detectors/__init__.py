@@ -15,6 +15,7 @@ from .tx_origin import TxOriginDetector
 from .unchecked_return_value import UncheckedReturnValueDetector
 from .unprotected_selfdestruct import UnprotectedSelfdestructDetector
 from .unsafe_delegatecall import UnsafeDelegatecallDetector
+from .unsafe_erc20_call import UnsafeErc20CallDetector
 from .unused_contract import UnusedContractDetector
 from .unused_function import UnusedFunctionDetector
 from .unused_import import UnusedImportDetector
