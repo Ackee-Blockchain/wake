@@ -25,6 +25,7 @@ wake.development.core.events = {events}
 wake.development.core.contracts_by_fqn = {contracts_by_fqn}
 wake.development.core.contracts_by_metadata = {contracts_by_metadata}
 wake.development.core.contracts_inheritance = {contracts_inheritance}
+wake.development.core.contracts_revert_constructor_index = {contracts_revert_constructor_index}
 wake.development.core.contracts_revert_index = {contracts_revert_index}
 wake.development.core.creation_code_index = {creation_code_index}
 wake.development.core.user_defined_value_types_index = {user_defined_value_types_index}

@@ -171,6 +171,7 @@ class TypeGenerator:
     __user_defined_value_types_index: Dict[str, str]
     __contracts_by_metadata_index: Dict[bytes, str]
     __contracts_inheritance_index: Dict[str, Tuple[str, ...]]
+    __contracts_revert_constructor_index: Dict[str, Set[int]]
     __contracts_revert_index: Dict[str, Set[int]]
     __creation_code_index: List[Tuple[Tuple[Tuple[int, bytes], ...], str]]
     __line_indexes: Dict[Path, List[Tuple[bytes, int]]]
@@ -198,6 +199,7 @@ class TypeGenerator:
         self.__user_defined_value_types_index = {}
         self.__contracts_by_metadata_index = {}
         self.__contracts_inheritance_index = {}
+        self.__contracts_revert_constructor_index = {}
         self.__contracts_revert_index = {}
         self.__creation_code_index = []
         self.__line_indexes = {}
@@ -460,43 +462,14 @@ class TypeGenerator:
                 2, 'raise Exception("Cannot get creation code of an interface")', 1
             )
 
-    def generate_contract_template(
-        self, contract: ContractDefinition, base_names: str
+    def _process_opcodes_for_revert(
+        self,
+        contract: ContractDefinition,
+        fqn: str,
+        parsed_opcodes,
+        pc_map,
+        index: Dict[str, Set[int]],
     ) -> None:
-        if contract.kind == ContractKind.LIBRARY:
-            self.add_str_to_types(
-                0, "class " + self.get_name(contract) + "(Library):", 1
-            )
-        else:
-            self.add_str_to_types(
-                0, "class " + self.get_name(contract) + "(" + base_names + "):", 1
-            )
-        line, _ = self.__get_line_pos_from_byte_offset(
-            contract.source_unit.file, contract.byte_location[0]
-        )
-        self.add_str_to_types(1, '"""', 1)
-        self.add_str_to_types(
-            1, f"[Source code]({_path_to_uri(contract.source_unit.file)}#{line + 1})", 1
-        )
-        self.add_str_to_types(1, '"""', 1)
-
-        compilation_info = contract.compilation_info
-        assert compilation_info is not None
-        assert compilation_info.abi is not None
-        assert compilation_info.evm is not None
-        assert compilation_info.evm.bytecode is not None
-        assert compilation_info.evm.bytecode.object is not None
-        assert compilation_info.evm.deployed_bytecode is not None
-        assert compilation_info.evm.deployed_bytecode.object is not None
-        assert compilation_info.evm.deployed_bytecode.opcodes is not None
-        assert compilation_info.evm.deployed_bytecode.source_map is not None
-
-        fqn = f"{contract.parent.source_unit_name}:{contract.name}"
-        parsed_opcodes = _parse_opcodes(compilation_info.evm.deployed_bytecode.opcodes)
-        pc_map = _parse_source_map(
-            compilation_info.evm.deployed_bytecode.source_map, parsed_opcodes
-        )
-
         for pc, op, size, argument in parsed_opcodes:
             if op == "REVERT" and pc in pc_map:
                 start, end, file_id, _ = pc_map[pc]
@@ -523,9 +496,58 @@ class TypeGenerator:
                         func_called = node.function_called
                         assert isinstance(func_called, ErrorDefinition)
 
-                        if fqn not in self.__contracts_revert_index:
-                            self.__contracts_revert_index[fqn] = set()
-                        self.__contracts_revert_index[fqn].add(pc)
+                        if fqn not in index:
+                            index[fqn] = set()
+                        index[fqn].add(pc)
+
+    def generate_contract_template(
+        self, contract: ContractDefinition, base_names: str
+    ) -> None:
+        if contract.kind == ContractKind.LIBRARY:
+            self.add_str_to_types(
+                0, "class " + self.get_name(contract) + "(Library):", 1
+            )
+        else:
+            self.add_str_to_types(
+                0, "class " + self.get_name(contract) + "(" + base_names + "):", 1
+            )
+        line, _ = self.__get_line_pos_from_byte_offset(
+            contract.source_unit.file, contract.byte_location[0]
+        )
+        self.add_str_to_types(1, '"""', 1)
+        self.add_str_to_types(
+            1, f"[Source code]({_path_to_uri(contract.source_unit.file)}#{line + 1})", 1
+        )
+        self.add_str_to_types(1, '"""', 1)
+
+        compilation_info = contract.compilation_info
+        assert compilation_info is not None
+        assert compilation_info.abi is not None
+        assert compilation_info.evm is not None
+        assert compilation_info.evm.bytecode is not None
+        assert compilation_info.evm.bytecode.object is not None
+        assert compilation_info.evm.bytecode.opcodes is not None
+        assert compilation_info.evm.bytecode.source_map is not None
+        assert compilation_info.evm.deployed_bytecode is not None
+        assert compilation_info.evm.deployed_bytecode.object is not None
+        assert compilation_info.evm.deployed_bytecode.opcodes is not None
+        assert compilation_info.evm.deployed_bytecode.source_map is not None
+
+        fqn = f"{contract.parent.source_unit_name}:{contract.name}"
+
+        for bytecode, index in [
+            (compilation_info.evm.bytecode, self.__contracts_revert_constructor_index),
+            (compilation_info.evm.deployed_bytecode, self.__contracts_revert_index),
+        ]:
+            parsed_opcodes = _parse_opcodes(bytecode.opcodes)
+            pc_map = _parse_source_map(bytecode.source_map, parsed_opcodes)
+            self._process_opcodes_for_revert(
+                contract,
+                fqn,
+                parsed_opcodes,
+                pc_map,
+                index,
+            )
 
         if len(compilation_info.evm.deployed_bytecode.object) > 0:
             metadata = bytes.fromhex(
@@ -1780,6 +1802,7 @@ class TypeGenerator:
                 contracts_by_fqn=self.__contracts_index,
                 contracts_by_metadata=self.__contracts_by_metadata_index,
                 contracts_inheritance=self.__contracts_inheritance_index,
+                contracts_revert_constructor_index=self.__contracts_revert_constructor_index,
                 contracts_revert_index=self.__contracts_revert_index,
                 creation_code_index=self.__creation_code_index,
                 user_defined_value_types_index=self.__user_defined_value_types_index,
