@@ -91,6 +91,8 @@ contracts_by_fqn: Dict[str, Any] = {}
 contracts_by_metadata: Dict[bytes, str] = {}
 # contract_fqn => tuple of linearized base contract fqns
 contracts_inheritance: Dict[str, Tuple[str, ...]] = {}
+# contract_fqn => set of REVERT opcode PCs belonging to a revert statement for contract deployment/constructor
+contracts_revert_constructor_index: Dict[str, Set[int]] = {}
 # contract_fqn => set of REVERT opcode PCs belonging to a revert statement
 contracts_revert_index: Dict[str, Set[int]] = {}
 # list of pairs of (creation code segments, contract_fqn)
@@ -2485,14 +2487,21 @@ def process_debug_trace_for_revert(
             fqn_overrides.maps.pop(0)
             fqn = fqns.pop()
             addresses.pop()
-            trace_is_create.pop()
+            is_create = trace_is_create.pop()
 
-            if (
-                trace["op"] == "REVERT"
-                and fqn in contracts_revert_index
-                and pc in contracts_revert_index[fqn]
-            ):
-                last_revert_origin = fqn
+            if trace["op"] == "REVERT":
+                if (
+                    is_create
+                    and fqn in contracts_revert_constructor_index
+                    and pc in contracts_revert_constructor_index[fqn]
+                ):
+                    last_revert_origin = fqn
+                elif (
+                    not is_create
+                    and fqn in contracts_revert_index
+                    and pc in contracts_revert_index[fqn]
+                ):
+                    last_revert_origin = fqn
         elif trace["op"] in {"RETURN", "STOP", "SELFDESTRUCT"}:
             if len(fqn_overrides.maps) > 1:
                 fqn_overrides.maps[1].update(fqn_overrides.maps[0])
