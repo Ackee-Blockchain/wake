@@ -949,13 +949,13 @@ def _detect_erc20_slots_from_storage_layout(
                 keccak256(Abi.encode(["address", "uint256"], [account, i.slot])),
                 byteorder="big",
             )
-            for i in storage_layout
+            for i in storage_layout.storage
             if i.type == "t_mapping(t_address,t_uint256)"
             and "balanc" in i.label.lower()
         },
         {
             i.label: i.slot
-            for i in storage_layout
+            for i in storage_layout.storage
             if i.type == "t_uint256" and "total" in i.label.lower()
         },
     )
