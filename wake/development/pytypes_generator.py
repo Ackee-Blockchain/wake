@@ -177,6 +177,8 @@ class TypeGenerator:
     __line_indexes: Dict[Path, List[Tuple[bytes, int]]]
     # source unit name -> other source unit names in the cycle
     __cyclic_source_units: DefaultDict[str, Set[str]]
+    # used to generate ListN types for N > 32
+    __fixed_size_arrays: Set[int]
 
     def __init__(self, config: WakeConfig, return_tx_obj: bool):
         self.__config = config
@@ -204,6 +206,7 @@ class TypeGenerator:
         self.__creation_code_index = []
         self.__line_indexes = {}
         self.__cyclic_source_units = defaultdict(set)
+        self.__fixed_size_arrays = set()
 
         # built-in Error(str) and Panic(uint256) errors
         error_abi = {
@@ -1026,7 +1029,8 @@ class TypeGenerator:
             elif expr.length <= 32:
                 return f"List{expr.length}[{self.parse_type_and_import(expr.base_type, return_types)}]"
             else:
-                return f"Annotated[List[{self.parse_type_and_import(expr.base_type, return_types)}], Length({expr.length})]"
+                self.__fixed_size_arrays.add(expr.length)
+                return f"List{expr.length}[{self.parse_type_and_import(expr.base_type, return_types)}]"
         elif isinstance(expr, types.Contract):
             self.__imports.generate_contract_import(expr.ir_node)
             return self.get_name(expr.ir_node)
@@ -1572,16 +1576,21 @@ class TypeGenerator:
         self.__pytypes_dir.mkdir(exist_ok=True)
 
     def write_source_unit_to_file(self, contract_name: str):
+        lists = ""
+        for a in self.__fixed_size_arrays:
+            lists += f"class List{a}(FixedSizeList[T]):\n    length = {a}\n\n\n"
+
         self.__pytypes_dir.mkdir(exist_ok=True)
         contract_name = _make_path_alphanum(contract_name[:-3])
         unit_path = (self.__pytypes_dir / contract_name).with_suffix(".py")
         unit_path.parent.mkdir(parents=True, exist_ok=True)
-        unit_path.write_text(str(self.__imports) + self.__source_unit_types)
+        unit_path.write_text(str(self.__imports) + lists + self.__source_unit_types)
 
     # clean the instance variables to enable generating a new source unit
     def cleanup_source_unit(self):
         self.__source_unit_types = ""
         self.__imports.cleanup_imports()
+        self.__fixed_size_arrays.clear()
 
     def add_func_overload_if_match(
         self, fn: FunctionDefinition, contract: ContractDefinition
@@ -2045,6 +2054,10 @@ class NameSanitizer:
             "uint",
             "str",
             "bool",
+            "FixedSizeList",
+            "T",
+            "FixedSizeBytes",
+            "Integer",
         }
 
         for i in range(8, 257, 8):
