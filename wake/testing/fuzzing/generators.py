@@ -7,7 +7,7 @@ from typing import Any, Callable, Dict, Optional, Type
 from typing_extensions import Annotated, get_args, get_origin, get_type_hints
 
 from wake.development.core import Account, Address, Chain, Wei, detect_default_chain
-from wake.development.primitive_types import Length, ValueRange
+from wake.development.primitive_types import FixedSizeBytes, Integer
 
 
 def random_account(
@@ -147,41 +147,30 @@ generators_map = {
 }
 
 
-def generate(t: Type, options: Optional[Dict[str, Any]] = None):
-    if options is None:
-        options = {}
-
-    if "length" in options:
-        min_len = options["length"]
-        max_len = options["length"]
-    else:
-        min_len = 0
-        max_len = 64
+def generate(t: Type):
+    min_len = 0
+    max_len = 64
 
     try:
         return generators_map[t]()
     except KeyError:
-        if get_origin(t) is Annotated:
-            args = get_args(t)
-            opt = {}
-
-            for arg in args[1:]:
-                if isinstance(arg, Length):
-                    opt["length"] = arg.length
-                elif isinstance(arg, ValueRange):
-                    opt["min"] = arg.min
-                    opt["max"] = arg.max
-
-            return generate(args[0], opt)
-        elif get_origin(t) is list:
-            return [
-                generate(get_args(t)[0])
-                for _ in range(random.randint(min_len, max_len))
-            ]
+        origin = get_origin(t)
+        if isinstance(origin, type) and issubclass(origin, list):
+            if hasattr(origin, "length"):
+                length = getattr(origin, "length")
+                return [generate(get_args(t)[0]) for _ in range(length)]
+            else:
+                return [
+                    generate(get_args(t)[0])
+                    for _ in range(random.randint(min_len, max_len))
+                ]
+        elif isinstance(t, type) and issubclass(t, Integer):
+            return random.randint(t.min, t.max)
+        elif isinstance(t, type) and issubclass(t, FixedSizeBytes):
+            return random_bytes(t.length, t.length)
         elif t is int:
-            min = options.get("min", -(2**255))
-            max = options.get("max", 2**255 - 1)
-            return random.randint(min, max)
+            # fallback for int used directly
+            return random.randint(-(2**255), 2**255 - 1)
         elif t is bytes:
             return bytes(random_bytes(min_len, max_len))
         elif t is bytearray:

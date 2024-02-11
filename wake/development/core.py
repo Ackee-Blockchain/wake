@@ -71,7 +71,7 @@ from .globals import (
 )
 from .internal import UnknownEvent, read_from_memory
 from .json_rpc.communicator import JsonRpcError
-from .primitive_types import Length, ValueRange
+from .primitive_types import FixedSizeBytes, Integer
 
 if TYPE_CHECKING:
     from .transactions import (
@@ -904,43 +904,28 @@ class Account:
     def _prepare_eip712_dict(
         self, message: Any, domain: Eip712Domain, client_signing: bool
     ) -> Dict[str, Any]:
-        def _get_type(t: Type, options: Optional[Dict[str, Any]] = None) -> str:
-            if options is None:
-                options = {}
+        def _get_type(t: Type) -> str:
+            origin = get_origin(t)
 
-            if get_origin(t) is Annotated:
-                args = get_args(t)
-                opt = {}
-
-                for arg in args[1:]:
-                    if isinstance(arg, Length):
-                        opt["length"] = arg.length
-                    elif isinstance(arg, ValueRange):
-                        opt["min"] = arg.min
-                        opt["max"] = arg.max
-
-                return _get_type(args[0], opt)
-            elif get_origin(t) is list:
-                if "length" in options:
-                    return f"{_get_type(get_args(t)[0])}[{options['length']}]"
+            if isinstance(origin, type) and issubclass(origin, list):
+                if hasattr(origin, "length"):
+                    return f"{_get_type(get_args(t)[0])}[{getattr(origin, 'length')}]"
                 else:
                     return f"{_get_type(get_args(t)[0])}[]"
+            elif isinstance(t, type) and issubclass(t, Integer):
+                if t.min == 0:
+                    bits = math.ceil(math.log2(t.max + 1))
+                    return f"uint{bits}"
+                else:
+                    bits = math.ceil(math.log2(t.max - t.min + 1))
+                    return f"int{bits}"
+            elif isinstance(t, type) and issubclass(t, FixedSizeBytes):
+                return f"bytes{t.length}"
             elif t is int:
-                if "min" in options and "max" in options:
-                    if options["min"] == 0:
-                        bits = math.ceil(math.log2(options["max"] + 1))
-                        return f"uint{bits}"
-                    else:
-                        bits = math.ceil(math.log2(options["max"] - options["min"] + 1))
-                        return f"int{bits}"
-                else:
-                    # kind of fallback, but it's better than nothing
-                    return "int256"
+                # fallback for int used directly
+                return "int256"
             elif t is bytes or t is bytearray:
-                if "length" in options:
-                    return f"bytes{options['length']}"
-                else:
-                    return "bytes"
+                return "bytes"
             elif t is str:
                 return "string"
             elif issubclass(t, Enum):
@@ -981,9 +966,8 @@ class Account:
             for f in dataclasses.fields(t):
                 assert f.name in hints
                 field_type = hints[f.name]
-                while (
-                    get_origin(field_type) is Annotated
-                    or get_origin(field_type) is list
+                while isinstance(get_origin(field_type), type) and issubclass(
+                    get_origin(field_type), list
                 ):
                     field_type = get_args(field_type)[0]
                 if dataclasses.is_dataclass(field_type):
@@ -1724,6 +1708,8 @@ class Chain(ABC):
     def _convert_from_web3_type(
         self, tx: Optional[TransactionAbc], value: Any, expected_type: Type
     ) -> Any:
+        origin = get_origin(expected_type)
+
         if isinstance(expected_type, type(None)):
             return None
         elif expected_type is Callable:
@@ -1750,12 +1736,20 @@ class Chain(ABC):
             raise ValueError(
                 f"Unable to find function with selector {selector.hex()} in contract {fqn}"
             )
-        elif get_origin(expected_type) is list:
-            return [
-                self._convert_from_web3_type(tx, v, get_args(expected_type)[0])
-                for v in value
-            ]
-        elif get_origin(expected_type) is tuple:
+        elif isinstance(origin, type) and issubclass(origin, list):
+            return origin(
+                [
+                    self._convert_from_web3_type(tx, v, get_args(expected_type)[0])
+                    for v in value
+                ]
+            )
+        elif isinstance(expected_type, type) and issubclass(expected_type, Integer):
+            return expected_type(value)
+        elif isinstance(expected_type, type) and issubclass(
+            expected_type, FixedSizeBytes
+        ):
+            return expected_type(value)
+        elif origin is tuple:
             return tuple(
                 self._convert_from_web3_type(tx, v, t)
                 for v, t in zip(value, get_args(expected_type))
