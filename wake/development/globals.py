@@ -4,9 +4,19 @@ import logging
 from collections import defaultdict
 from pathlib import Path
 from types import TracebackType
-from typing import TYPE_CHECKING, Callable, DefaultDict, List, Optional, Set, Tuple
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    DefaultDict,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+)
 from urllib.error import HTTPError
 
+import rich.traceback
 import rich_click
 from ipdb.__main__ import _init_pdb
 
@@ -24,7 +34,16 @@ logger = get_logger(__name__)
 
 
 # must be declared before functions that use it because of a bug in Python (https://bugs.python.org/issue34939)
-_exception_handler: Optional[Callable[[Exception], None]] = None
+_exception_handler: Optional[
+    Callable[
+        [
+            Optional[Type[BaseException]],
+            Optional[BaseException],
+            Optional[TracebackType],
+        ],
+        None,
+    ]
+] = None
 _exception_handled = False
 
 _coverage_handler: Optional[CoverageHandler] = None
@@ -33,21 +52,27 @@ _config: Optional[WakeConfig] = None
 _verbosity: int = 0
 
 
-def attach_debugger(e: Exception):
+def attach_debugger(
+    e_type: Optional[Type[BaseException]],
+    e: Optional[BaseException],
+    tb: Optional[TracebackType],
+):
     global _exception_handled
 
     if _exception_handled:
         return
     _exception_handled = True
 
-    import sys
     import traceback
 
     from wake.cli.console import console
 
-    tb: Optional[TracebackType] = sys.exc_info()[2]
+    assert e_type is not None
+    assert e is not None
     assert tb is not None
-    console.print_exception()
+
+    rich_tb = rich.traceback.Traceback.from_exception(e_type, e, tb)
+    console.print(rich_tb)
 
     frames = []
 
@@ -71,11 +96,29 @@ def attach_debugger(e: Exception):
     p.interaction(None, tb)
 
 
-def get_exception_handler() -> Optional[Callable[[Exception], None]]:
+def get_exception_handler() -> Optional[
+    Callable[
+        [
+            Optional[Type[BaseException]],
+            Optional[BaseException],
+            Optional[TracebackType],
+        ],
+        None,
+    ]
+]:
     return _exception_handler
 
 
-def set_exception_handler(handler: Callable[[Exception], None]):
+def set_exception_handler(
+    handler: Callable[
+        [
+            Optional[Type[BaseException]],
+            Optional[BaseException],
+            Optional[TracebackType],
+        ],
+        None,
+    ]
+):
     global _exception_handler
     _exception_handler = handler
 
