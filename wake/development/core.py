@@ -1590,7 +1590,7 @@ class Chain(ABC):
             if not isinstance(e, BdbQuit):
                 exception_handler = get_exception_handler()
                 if exception_handler is not None:
-                    exception_handler(e)
+                    exception_handler(*sys.exc_info())
                 raise
         finally:
             self._connect_finalize()
@@ -1752,7 +1752,7 @@ class Chain(ABC):
             if not isinstance(e, BdbQuit):
                 exception_handler = get_exception_handler()
                 if exception_handler is not None:
-                    exception_handler(e)
+                    exception_handler(*sys.exc_info())
                 raise
         finally:
             self._chain_interface.set_automine(automine_was)
@@ -1835,7 +1835,7 @@ class Chain(ABC):
             if not isinstance(e, BdbQuit):
                 exception_handler = get_exception_handler()
                 if exception_handler is not None:
-                    exception_handler(e)
+                    exception_handler(*sys.exc_info())
                 raise
         finally:
             self.revert(snapshot_id)

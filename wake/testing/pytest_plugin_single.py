@@ -41,6 +41,10 @@ class PytestWakePluginSingle:
     def pytest_runtest_setup(self, item):
         reset_exception_handled()
 
+    def pytest_exception_interact(self, node, call, report):
+        if self._debug:
+            attach_debugger(call.excinfo.type, call.excinfo.value, call.excinfo.tb)
+
     def pytest_runtestloop(self, session: Session):
         if (
             session.testsfailed

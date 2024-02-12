@@ -9,7 +9,8 @@ import sys
 import time
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
-from typing import List, Optional
+from types import TracebackType
+from typing import List, Optional, Type
 
 import pytest
 from pathvalidate import sanitize_filename
@@ -36,6 +37,7 @@ class PytestWakePluginMultiprocess:
     _random_seed: bytes
     _tee: bool
     _debug: bool
+    _exception_handled: bool
 
     _ctx_managers: List
 
@@ -58,6 +60,7 @@ class PytestWakePluginMultiprocess:
         self._random_seed = random_seed
         self._tee = tee
         self._debug = debug
+        self._exception_handled = False
 
         self._ctx_managers = []
 
@@ -77,6 +80,34 @@ class PytestWakePluginMultiprocess:
             ctx_manager.__exit__(None, None, None)
         self._ctx_managers.clear()
 
+    def _exception_handler(
+        self,
+        e_type: Optional[Type[BaseException]],
+        e: Optional[BaseException],
+        tb: Optional[TracebackType],
+    ) -> None:
+        self._cleanup_stdio()
+        self._exception_handled = True
+
+        assert e_type is not None
+        assert e is not None
+        assert tb is not None
+
+        try:
+            pickled = pickle.dumps((e_type, e, tb))
+        except Exception:
+            pickled = pickle.dumps((e_type, Exception(repr(e)), tb))
+        self._queue.put(("exception", self._index, pickled), block=True)
+
+        attach: bool = self._conn.recv()
+        try:
+            if attach:
+                sys.stdin = os.fdopen(0)
+                attach_debugger(e_type, e, tb)
+        finally:
+            self._setup_stdio()
+            self._conn.send(("exception_handled",))
+
     def pytest_configure(self, config: pytest.Config):
         self._f = open(self._log_file, "w")
         self._setup_stdio()
@@ -95,6 +126,7 @@ class PytestWakePluginMultiprocess:
 
     def pytest_runtest_setup(self, item):
         reset_exception_handled()
+        self._exception_handled = False
 
     def pytest_internalerror(
         self, excrepr, excinfo: pytest.ExceptionInfo[BaseException]
@@ -106,6 +138,12 @@ class PytestWakePluginMultiprocess:
                 (excinfo.type, Exception(repr(excinfo.value)), excinfo.traceback)
             )
         self._queue.put(("pytest_internalerror", self._index, pickled), block=True)
+
+    def pytest_exception_interact(self, node, call, report):
+        if self._debug and not self._exception_handled:
+            self._exception_handler(
+                call.excinfo.type, call.excinfo.value, call.excinfo.tb
+            )
 
     def pytest_runtestloop(self, session: Session):
         if (
@@ -119,27 +157,6 @@ class PytestWakePluginMultiprocess:
 
         if session.config.option.collectonly:
             return True
-
-        def exception_handler(e: Exception) -> None:
-            self._cleanup_stdio()
-
-            exc_info = sys.exc_info()
-            try:
-                pickled = pickle.dumps(exc_info)
-            except Exception:
-                pickled = pickle.dumps(
-                    (exc_info[0], Exception(repr(exc_info[1])), exc_info[2])
-                )
-            self._queue.put(("exception", self._index, pickled), block=True)
-
-            attach: bool = self._conn.recv()
-            try:
-                if attach:
-                    sys.stdin = os.fdopen(0)
-                    attach_debugger(e)
-            finally:
-                self._setup_stdio()
-                self._conn.send(("exception_handled",))
 
         last_coverage_sync = time.perf_counter()
 
@@ -167,7 +184,7 @@ class PytestWakePluginMultiprocess:
         signal.signal(signal.SIGTERM, signal_handler)
 
         if self._debug:
-            set_exception_handler(exception_handler)
+            set_exception_handler(self._exception_handler)
         if self._coverage is not None:
             set_coverage_handler(self._coverage)
             self._coverage.set_callback(coverage_callback)

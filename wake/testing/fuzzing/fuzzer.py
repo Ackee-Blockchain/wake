@@ -10,7 +10,7 @@ import time
 import types
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional
+from typing import Any, Callable, Dict, Iterable, List, Optional, Type
 
 import rich.progress
 from pathvalidate import sanitize_filename  # type: ignore
@@ -35,26 +35,6 @@ from wake.testing.coverage import (
 from wake.utils.tee import StderrTee, StdoutTee
 
 
-def _run_core(
-    fuzz_test: Callable,
-    index: int,
-    random_seed: bytes,
-    finished_event: multiprocessing.synchronize.Event,
-    err_child_conn: multiprocessing.connection.Connection,
-    cov_child_conn: multiprocessing.connection.Connection,
-    coverage: Optional[CoverageHandler],
-):
-    console.print(f"Using random seed '{random_seed.hex()}' for process #{index}")
-
-    fuzz_test()
-
-    err_child_conn.send(None)
-    if coverage is not None:
-        # final coverage update
-        cov_child_conn.send(coverage.get_contract_ide_coverage())
-    finished_event.set()
-
-
 def _run(
     fuzz_test: Callable,
     index: int,
@@ -66,18 +46,26 @@ def _run(
     cov_child_conn: multiprocessing.connection.Connection,
     coverage: Optional[CoverageHandler],
 ):
-    def exception_handler(e: Exception) -> None:
+    def exception_handler(
+        e_type: Optional[Type[BaseException]],
+        e: Optional[BaseException],
+        tb: Optional[types.TracebackType],
+    ) -> None:
         for ctx_manager in ctx_managers:
             ctx_manager.__exit__(None, None, None)
         ctx_managers.clear()
 
-        exc_info = sys.exc_info()
+        assert e_type is not None
+        assert e is not None
+        assert tb is not None
+
+        nonlocal exception_handled
+        exception_handled = True
+
         try:
-            pickled = pickle.dumps(exc_info)
+            pickled = pickle.dumps((e_type, e, tb))
         except Exception:
-            pickled = pickle.dumps(
-                (exc_info[0], Exception(repr(exc_info[1])), exc_info[2])
-            )
+            pickled = pickle.dumps((e_type, Exception(repr(e)), tb))
         err_child_conn.send(pickled)
         finished_event.set()
 
@@ -85,10 +73,11 @@ def _run(
             attach: bool = err_child_conn.recv()
             if attach:
                 sys.stdin = os.fdopen(0)
-                attach_debugger(e)
+                attach_debugger(e_type, e, tb)
         finally:
             finished_event.set()
 
+    exception_handled = False
     last_coverage_sync = time.perf_counter()
 
     def coverage_callback() -> None:
@@ -122,15 +111,20 @@ def _run(
         for ctx_manager in ctx_managers:
             ctx_manager.__enter__()
 
-        _run_core(
-            fuzz_test,
-            index,
-            random_seed,
-            finished_event,
-            err_child_conn,
-            cov_child_conn,
-            coverage,
-        )
+        console.print(f"Using random seed '{random_seed.hex()}' for process #{index}")
+
+        try:
+            fuzz_test()
+        except Exception:
+            if not exception_handled:
+                exception_handler(*sys.exc_info())
+            raise
+
+        err_child_conn.send(None)
+        if coverage is not None:
+            # final coverage update
+            cov_child_conn.send(coverage.get_contract_ide_coverage())
+        finished_event.set()
     except Exception:
         pass
     finally:

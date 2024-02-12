@@ -95,7 +95,12 @@ def run_no_pytest(
 
         try:
             for _, func in test_functions:
-                func()
+                try:
+                    func()
+                except Exception:
+                    if debug:
+                        attach_debugger(*sys.exc_info())
+                    raise
                 reset_exception_handled()
         finally:
             if coverage:
