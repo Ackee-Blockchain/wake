@@ -302,6 +302,29 @@ class abi:
             raise ValueError(f"Unsupported type {type(args)}")
 
     @classmethod
+    def _types_from_string(cls, s: str) -> List[str]:
+        ret = []
+        current = []
+        depth = 0
+
+        for char in s:
+            if char == "(":
+                depth += 1
+                current.append(char)
+            elif char == ")":
+                depth -= 1
+                current.append(char)
+            elif char == "," and depth == 0:
+                ret.append("".join(current).strip())
+                current = []
+            else:
+                current.append(char)
+
+        if current:
+            ret.append("".join(current).strip())
+        return ret
+
+    @classmethod
     def encode(cls, *args) -> bytes:
         return eth_abi.abi.encode(
             [cls._types_from_args(a) for a in args], cls._normalize_input(args)
@@ -322,12 +345,25 @@ class abi:
         selector = keccak.new(data=signature.encode("utf-8"), digest_bits=256).digest()[
             :4
         ]
-        return cls.encode_with_selector(selector, *args)
+        signature_args = signature[signature.find("(") + 1 : -1]
+        return selector + eth_abi.abi.encode(
+            cls._types_from_string(signature_args), cls._normalize_input(args)
+        )
 
     @classmethod
     def encode_call(cls, func: Callable, args: Iterable) -> bytes:
         selector = func.selector
-        return cls.encode_with_selector(selector, *args)
+        contract = get_class_that_defined_method(func)
+        assert selector in contract._abi  # pyright: ignore reportGeneralTypeIssues
+        types = [
+            eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
+            for arg in fix_library_abi(
+                contract._abi[selector][  # pyright: ignore reportGeneralTypeIssues
+                    "inputs"
+                ]
+            )
+        ]
+        return selector + eth_abi.abi.encode(types, cls._normalize_input(args))
 
     @classmethod
     def decode(cls, data: bytes, types: Sequence[Type]) -> Any:
