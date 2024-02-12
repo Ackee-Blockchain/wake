@@ -1491,6 +1491,8 @@
       
         
       
+        
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -1790,6 +1792,26 @@
   
   <span class="md-ellipsis">
     Unprotected selfdestruct
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../static-analysis/detectors/unsafe-erc20-call/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Unsafe ERC-20 call
   </span>
   
 
@@ -5278,7 +5300,7 @@ LSP configuration options are not included in this snippet.
 <a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>
 <a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="k">[general]</span>
 <a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="n">call_trace_options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="w">    </span><span class="s2">&quot;contract_name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;function_name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;arguments&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;status&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="w">    </span><span class="s2">&quot;contract_name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;function_name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;named_arguments&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;status&quot;</span><span class="p">,</span>
 <a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="w">    </span><span class="s2">&quot;call_type&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;value&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;return_value&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;error&quot;</span>
 <a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="p">]</span>
 <a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="n">json_rpc_timeout</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">15</span>
@@ -5452,7 +5474,7 @@ Every dector supports at least the <code>min_confidence</code> and <code>min_imp
 <tbody>
 <tr>
 <td style="text-align: left;"><nobr><code>call_trace_options</code></nobr></td>
-<td style="text-align: left;">What information to display in call traces. Possible options: <code>contract_name</code>, <code>address</code>, <code>function_name</code>, <code>arguments</code>, <code>status</code>, <code>call_type</code>, <code>value</code>, <code>gas</code>, <code>sender</code>, <code>return_value</code>, <code>error</code>.</td>
+<td style="text-align: left;">What information to display in call traces. Possible options: <code>contract_name</code>, <code>address</code>, <code>function_name</code>, <code>named_arguments</code>, <code>arguments</code>, <code>status</code>, <code>call_type</code>, <code>value</code>, <code>gas</code>, <code>sender</code>, <code>return_value</code>, <code>error</code>.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>json_rpc_timeout</code></td>

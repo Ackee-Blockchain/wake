@@ -1250,6 +1250,8 @@
       
         
       
+        
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -1549,6 +1551,26 @@
   
   <span class="md-ellipsis">
     Unprotected selfdestruct
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../static-analysis/detectors/unsafe-erc20-call/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Unsafe ERC-20 call
   </span>
   
 
@@ -7909,7 +7931,7 @@ Useful for ignoring detections in Solidity test files.</p>
 <a id="__codelineno-0-360" name="__codelineno-0-360"></a>        <span class="p">[</span>
 <a id="__codelineno-0-361" name="__codelineno-0-361"></a>            <span class="s2">&quot;contract_name&quot;</span><span class="p">,</span>
 <a id="__codelineno-0-362" name="__codelineno-0-362"></a>            <span class="s2">&quot;function_name&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-363" name="__codelineno-0-363"></a>            <span class="s2">&quot;arguments&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-363" name="__codelineno-0-363"></a>            <span class="s2">&quot;named_arguments&quot;</span><span class="p">,</span>
 <a id="__codelineno-0-364" name="__codelineno-0-364"></a>            <span class="s2">&quot;status&quot;</span><span class="p">,</span>
 <a id="__codelineno-0-365" name="__codelineno-0-365"></a>            <span class="s2">&quot;call_type&quot;</span><span class="p">,</span>
 <a id="__codelineno-0-366" name="__codelineno-0-366"></a>            <span class="s2">&quot;value&quot;</span><span class="p">,</span>
@@ -7946,7 +7968,7 @@ Useful for ignoring detections in Solidity test files.</p>
 
 
 <h3 id="wake.config.data_model.GeneralConfig.call_trace_options" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">call_trace_options</span><span class="p">:</span> <span class="n">FrozenSet</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s1">&#39;contract_name&#39;</span><span class="p">,</span> <span class="s1">&#39;function_name&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">,</span> <span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;call_type&#39;</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="s1">&#39;return_value&#39;</span><span class="p">,</span> <span class="s1">&#39;error&#39;</span><span class="p">])</span></code>
+          <code class="highlight language-python"><span class="n">call_trace_options</span><span class="p">:</span> <span class="n">FrozenSet</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s1">&#39;contract_name&#39;</span><span class="p">,</span> <span class="s1">&#39;function_name&#39;</span><span class="p">,</span> <span class="s1">&#39;named_arguments&#39;</span><span class="p">,</span> <span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;call_type&#39;</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="s1">&#39;return_value&#39;</span><span class="p">,</span> <span class="s1">&#39;error&#39;</span><span class="p">])</span></code>
   
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
