@@ -1165,6 +1165,12 @@ class LspCompiler:
         if progress_token is not None:
             await self.__server.progress_end(progress_token)
 
+        commands = self.__printers_lsp_provider.get_commands()
+        if len(commands) > 0:
+            await self.__server.send_notification(
+                "wake/executeCommands", list(commands)
+            )
+
         # make sure that code lenses are refreshed
         try:
             await self.__server.send_request(
