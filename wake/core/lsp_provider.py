@@ -1,6 +1,6 @@
 from collections import defaultdict
 from pathlib import Path
-from typing import DefaultDict, Dict, NamedTuple, Optional, Set, Tuple
+from typing import DefaultDict, Dict, List, NamedTuple, Optional, Set, Tuple
 
 import wake.ir as ir
 
@@ -25,11 +25,19 @@ class LspProvider:
     _hovers: DefaultDict[Path, DefaultDict[Tuple[int, int], Set[HoverOptions]]]
     _code_lenses: DefaultDict[Path, DefaultDict[Tuple[int, int], Set[CodeLensOptions]]]
     _inlay_hints: DefaultDict[Path, DefaultDict[int, Set[InlayHintOptions]]]
+    _commands: List[str]
 
     def __init__(self) -> None:
         self._hovers = defaultdict(lambda: defaultdict(set))
         self._code_lenses = defaultdict(lambda: defaultdict(set))
         self._inlay_hints = defaultdict(lambda: defaultdict(set))
+        self._commands = []
+
+    def add_commands(self, commands: List[str]) -> None:
+        self._commands.extend(commands)
+
+    def get_commands(self) -> Tuple[str, ...]:
+        return tuple(self._commands)
 
     def get_hovers(
         self, path: Path, byte_offset: int, nested_most_node_offsets: Tuple[int, int]
@@ -112,3 +120,4 @@ class LspProvider:
         self._hovers.clear()
         self._code_lenses.clear()
         self._inlay_hints.clear()
+        self._commands.clear()
