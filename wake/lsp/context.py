@@ -35,8 +35,8 @@ class LspContext:
         self.__server = server
         self.__workspace_config = config
         self.__diagnostics_queue = asyncio.Queue()
-        self.__detectors_lsp_provider = LspProvider()
-        self.__printers_lsp_provider = LspProvider()
+        self.__detectors_lsp_provider = LspProvider("detector")
+        self.__printers_lsp_provider = LspProvider("printer")
         self.__compiler = LspCompiler(
             server,
             self.__diagnostics_queue,
