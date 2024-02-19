@@ -149,6 +149,7 @@ class CommandsEnum(StrEnum):
     LSP_FORCE_RERUN_DETECTORS = "wake.lsp.force_rerun_detectors"
     INIT_DETECTOR = "wake.init.detector"
     INIT_PRINTER = "wake.init.printer"
+    CALLBACK = "wake.callback"
 
 
 def key_in_nested_dict(key: Tuple, d: Dict) -> bool:
@@ -1315,6 +1316,29 @@ class LspServer:
                 raise LspError(
                     ErrorCodes.InvalidParams,
                     f"Expected 2 arguments for `{CommandsEnum.INIT_PRINTER}` command",
+                )
+        elif command == CommandsEnum.CALLBACK:
+            if params.arguments is not None and len(params.arguments) == 3:
+                if params.arguments[1] not in {"detector", "printer"}:
+                    raise LspError(
+                        ErrorCodes.InvalidParams,
+                        f"Invalid callback type: {params.arguments[1]}",
+                    )
+                document_uri = DocumentUri(params.arguments[0])
+                context = await self._get_workspace(document_uri)
+                if params.arguments[1] == "detector":
+                    context.detectors_lsp_provider.get_callback(params.arguments[2])()
+                else:
+                    context.printers_lsp_provider.get_callback(params.arguments[2])()
+
+                commands = context.printers_lsp_provider.get_commands()
+                if len(commands) > 0:
+                    await self.send_notification("wake/executeCommands", list(commands))
+                return ""  # TODO
+            else:
+                raise LspError(
+                    ErrorCodes.InvalidParams,
+                    f"Expected 3 arguments for `{CommandsEnum.CALLBACK}` command",
                 )
 
         raise LspError(ErrorCodes.InvalidRequest, f"Unknown command: {command}")

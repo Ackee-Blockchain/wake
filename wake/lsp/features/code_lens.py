@@ -187,15 +187,22 @@ async def code_lens(
         context.printers_lsp_provider.get_code_lenses(path).items(),
     ):
         for code_lens_options in code_lens_items:
-            code_lens.append(
-                CodeLens(
-                    range=context.compiler.get_range_from_byte_offsets(path, offsets),
-                    command=Command(
-                        title=code_lens_options.title,
-                        command="",
-                    ),
-                )
+            lens = CodeLens(
+                range=context.compiler.get_range_from_byte_offsets(path, offsets),
+                command=Command(
+                    title=code_lens_options.title,
+                    command="Tools-for-Solidity.wake_callback"
+                    if code_lens_options.callback_id is not None
+                    else "",
+                ),
             )
+            if code_lens_options.callback_id is not None:
+                lens.command.arguments = [  # pyright: ignore reportGeneralTypeIssues
+                    params.text_document.uri,
+                    code_lens_options.callback_kind,
+                    code_lens_options.callback_id,
+                ]
+            code_lens.append(lens)
 
     for node in source_unit:
         if isinstance(node, DeclarationAbc):
