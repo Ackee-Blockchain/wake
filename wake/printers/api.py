@@ -22,7 +22,7 @@ import rich_click as click
 from typing_extensions import Literal
 
 from wake.cli.print import PrintCli, run_print
-from wake.core.visitor import Visitor, visit_map
+from wake.core.visitor import Visitor, group_map, visit_map
 from wake.utils import get_class_that_defined_method, is_relative_to
 
 from ..core import get_logger
@@ -81,6 +81,10 @@ class Printer(Visitor, metaclass=ABCMeta):
                 or any(is_relative_to(path, p) for p in self.paths)
             ):
                 for node in source_unit:
+                    self.visit_ir_abc(node)
+                    if node.ast_node.node_type in group_map:
+                        for group in group_map[node.ast_node.node_type]:
+                            visit_map[group](self, node)
                     visit_map[node.ast_node.node_type](self, node)
 
         self.print()
@@ -393,6 +397,10 @@ def run_printers(
             for printer_name in list(target_printers):
                 printer = collected_printers[printer_name]
                 try:
+                    printer.visit_ir_abc(node)
+                    if node.ast_node.node_type in group_map:
+                        for group in group_map[node.ast_node.node_type]:
+                            visit_map[group](printer, node)
                     visit_map[node.ast_node.node_type](printer, node)
                 except Exception as e:
                     if not capture_exceptions:
