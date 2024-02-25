@@ -26,7 +26,7 @@ from typing_extensions import Literal
 
 from wake.cli.detect import DetectCli, run_detect
 from wake.core import get_logger
-from wake.core.visitor import Visitor, visit_map
+from wake.core.visitor import Visitor, group_map, visit_map
 from wake.core.wake_comments import WakeComment, error_commented_out
 from wake.utils import StrEnum, get_class_that_defined_method
 from wake.utils.file_utils import is_relative_to
@@ -623,6 +623,10 @@ def detect(
                 for detector_name in list(target_detectors):
                     detector = collected_detectors[detector_name]
                     try:
+                        detector.visit_ir_abc(node)
+                        if node.ast_node.node_type in group_map:
+                            for group in group_map[node.ast_node.node_type]:
+                                visit_map[group](detector, node)
                         visit_map[node.ast_node.node_type](detector, node)
                     except Exception as e:
                         if not capture_exceptions:

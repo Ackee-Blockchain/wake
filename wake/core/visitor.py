@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Dict, Union
+from typing import TYPE_CHECKING, Callable, Dict, List, Union
 
 import wake.ir as ir
 
@@ -14,7 +14,93 @@ if TYPE_CHECKING:
     from wake.config import WakeConfig
 
 
+group_map: Dict[str, List[str]] = {
+    # declarations
+    "ContractDefinition": ["SolidityAbc", "DeclarationAbc"],
+    "EnumDefinition": ["SolidityAbc", "DeclarationAbc"],
+    "EnumValue": ["SolidityAbc", "DeclarationAbc"],
+    "ErrorDefinition": ["SolidityAbc", "DeclarationAbc"],
+    "EventDefinition": ["SolidityAbc", "DeclarationAbc"],
+    "FunctionDefinition": ["SolidityAbc", "DeclarationAbc"],
+    "ModifierDefinition": ["SolidityAbc", "DeclarationAbc"],
+    "StructDefinition": ["SolidityAbc", "DeclarationAbc"],
+    "UserDefinedValueTypeDefinition": ["SolidityAbc", "DeclarationAbc"],
+    "VariableDeclaration": ["SolidityAbc", "DeclarationAbc"],
+    # expressions
+    "Assignment": ["SolidityAbc", "ExpressionAbc"],
+    "BinaryOperation": ["SolidityAbc", "ExpressionAbc"],
+    "Conditional": ["SolidityAbc", "ExpressionAbc"],
+    "ElementaryTypeNameExpression": ["SolidityAbc", "ExpressionAbc"],
+    "FunctionCall": ["SolidityAbc", "ExpressionAbc"],
+    "FunctionCallOptions": ["SolidityAbc", "ExpressionAbc"],
+    "Identifier": ["SolidityAbc", "ExpressionAbc"],
+    "IndexAccess": ["SolidityAbc", "ExpressionAbc"],
+    "IndexRangeAccess": ["SolidityAbc", "ExpressionAbc"],
+    "Literal": ["SolidityAbc", "ExpressionAbc"],
+    "MemberAccess": ["SolidityAbc", "ExpressionAbc"],
+    "NewExpression": ["SolidityAbc", "ExpressionAbc"],
+    "TupleExpression": ["SolidityAbc", "ExpressionAbc"],
+    "UnaryOperation": ["SolidityAbc", "ExpressionAbc"],
+    # meta
+    "IdentifierPath": ["SolidityAbc"],
+    "ImportDirective": ["SolidityAbc"],
+    "InheritanceSpecifier": ["SolidityAbc"],
+    "ModifierInvocation": ["SolidityAbc"],
+    "OverrideSpecifier": ["SolidityAbc"],
+    "ParameterList": ["SolidityAbc"],
+    "PragmaDirective": ["SolidityAbc"],
+    "SourceUnit": ["SolidityAbc"],
+    "StructuredDocumentation": ["SolidityAbc"],
+    "TryCatchClause": ["SolidityAbc"],
+    "UsingForDirective": ["SolidityAbc"],
+    # statements
+    "Block": ["SolidityAbc", "StatementAbc"],
+    "Break": ["SolidityAbc", "StatementAbc"],
+    "Continue": ["SolidityAbc", "StatementAbc"],
+    "DoWhileStatement": ["SolidityAbc", "StatementAbc"],
+    "EmitStatement": ["SolidityAbc", "StatementAbc"],
+    "ExpressionStatement": ["SolidityAbc", "StatementAbc"],
+    "ForStatement": ["SolidityAbc", "StatementAbc"],
+    "IfStatement": ["SolidityAbc", "StatementAbc"],
+    "InlineAssembly": ["SolidityAbc", "StatementAbc"],
+    "PlaceholderStatement": ["SolidityAbc", "StatementAbc"],
+    "Return": ["SolidityAbc", "StatementAbc"],
+    "RevertStatement": ["SolidityAbc", "StatementAbc"],
+    "TryStatement": ["SolidityAbc", "StatementAbc"],
+    "UncheckedBlock": ["SolidityAbc", "StatementAbc"],
+    "VariableDeclarationStatement": ["SolidityAbc", "StatementAbc"],
+    "WhileStatement": ["SolidityAbc", "StatementAbc"],
+    # type names
+    "ArrayTypeName": ["SolidityAbc", "TypeNameAbc"],
+    "ElementaryTypeName": ["SolidityAbc", "TypeNameAbc"],
+    "FunctionTypeName": ["SolidityAbc", "TypeNameAbc"],
+    "Mapping": ["SolidityAbc", "TypeNameAbc"],
+    "UserDefinedTypeName": ["SolidityAbc", "TypeNameAbc"],
+    # yul
+    "YulAssignment": ["YulAbc", "YulStatementAbc"],
+    "YulBlock": ["YulAbc", "YulStatementAbc"],
+    "YulBreak": ["YulAbc", "YulStatementAbc"],
+    "YulCase": ["YulAbc"],
+    "YulContinue": ["YulAbc", "YulStatementAbc"],
+    "YulExpressionStatement": ["YulAbc", "YulStatementAbc"],
+    "YulForLoop": ["YulAbc", "YulStatementAbc"],
+    "YulFunctionCall": ["YulAbc"],
+    "YulFunctionDefinition": ["YulAbc", "YulStatementAbc"],
+    "YulIdentifier": ["YulAbc"],
+    "YulIf": ["YulAbc", "YulStatementAbc"],
+    "YulLeave": ["YulAbc", "YulStatementAbc"],
+    "YulLiteral": ["YulAbc"],
+    "YulSwitch": ["YulAbc", "YulStatementAbc"],
+    "YulTypedName": ["YulAbc"],
+    "YulVariableDeclaration": ["YulAbc", "YulStatementAbc"],
+}
+
+
 visit_map: Dict[str, Callable] = {
+    "SolidityAbc": lambda self, node: self.visit_solidity_abc(node),
+    "YulAbc": lambda self, node: self.visit_yul_abc(node),
+    # declarations
+    "DeclarationAbc": lambda self, node: self.visit_declaration_abc(node),
     "ContractDefinition": lambda self, node: self.visit_contract_definition(node),
     "EnumDefinition": lambda self, node: self.visit_enum_definition(node),
     "EnumValue": lambda self, node: self.visit_enum_value(node),
@@ -27,6 +113,8 @@ visit_map: Dict[str, Callable] = {
         node
     ),
     "VariableDeclaration": lambda self, node: self.visit_variable_declaration(node),
+    # expressions
+    "ExpressionAbc": lambda self, node: self.visit_expression_abc(node),
     "Assignment": lambda self, node: self.visit_assignment(node),
     "BinaryOperation": lambda self, node: self.visit_binary_operation(node),
     "Conditional": lambda self, node: self.visit_conditional(node),
@@ -43,6 +131,7 @@ visit_map: Dict[str, Callable] = {
     "NewExpression": lambda self, node: self.visit_new_expression(node),
     "TupleExpression": lambda self, node: self.visit_tuple_expression(node),
     "UnaryOperation": lambda self, node: self.visit_unary_operation(node),
+    # meta
     "IdentifierPath": lambda self, node: self.visit_identifier_path(node),
     "ImportDirective": lambda self, node: self.visit_import_directive(node),
     "InheritanceSpecifier": lambda self, node: self.visit_inheritance_specifier(node),
@@ -56,6 +145,8 @@ visit_map: Dict[str, Callable] = {
     ),
     "TryCatchClause": lambda self, node: self.visit_try_catch_clause(node),
     "UsingForDirective": lambda self, node: self.visit_using_for_directive(node),
+    # statements
+    "StatementAbc": lambda self, node: self.visit_statement_abc(node),
     "Block": lambda self, node: self.visit_block(node),
     "Break": lambda self, node: self.visit_break(node),
     "Continue": lambda self, node: self.visit_continue(node),
@@ -74,11 +165,15 @@ visit_map: Dict[str, Callable] = {
         node
     ),
     "WhileStatement": lambda self, node: self.visit_while_statement(node),
+    # type names
+    "TypeNameAbc": lambda self, node: self.visit_type_name_abc(node),
     "ArrayTypeName": lambda self, node: self.visit_array_type_name(node),
     "ElementaryTypeName": lambda self, node: self.visit_elementary_type_name(node),
     "FunctionTypeName": lambda self, node: self.visit_function_type_name(node),
     "Mapping": lambda self, node: self.visit_mapping(node),
     "UserDefinedTypeName": lambda self, node: self.visit_user_defined_type_name(node),
+    # yul
+    "YulStatementAbc": lambda self, node: self.visit_yul_statement_abc(node),
     "YulAssignment": lambda self, node: self.visit_yul_assignment(node),
     "YulBlock": lambda self, node: self.visit_yul_block(node),
     "YulBreak": lambda self, node: self.visit_yul_break(node),
@@ -135,6 +230,32 @@ class Visitor:
     imports_graph: nx.DiGraph
     logger: logging.Logger
 
+    def visit_ir_abc(self, node: ir.IrAbc):
+        """
+        Visit any [IrAbc][wake.ir.abc.IrAbc] node.
+        """
+
+    def visit_solidity_abc(self, node: ir.SolidityAbc):
+        """
+        Visit any [SolidityAbc][wake.ir.abc.SolidityAbc] node.
+        """
+
+    def visit_yul_abc(self, node: ir.YulAbc):
+        """
+        Visit any [YulAbc][wake.ir.yul.abc.YulAbc] node.
+        """
+
+    def visit_yul_statement_abc(self, node: ir.YulStatementAbc):
+        """
+        Visit any [YulStatementAbc][wake.ir.yul.abc.YulStatementAbc] node.
+        """
+
+    # declarations
+    def visit_declaration_abc(self, node: ir.DeclarationAbc):
+        """
+        Visit any [DeclarationAbc][wake.ir.declarations.abc.DeclarationAbc] node.
+        """
+
     def visit_contract_definition(self, node: ir.ContractDefinition):
         """
         Visit [ContractDefinition][wake.ir.declarations.contract_definition.ContractDefinition] node.
@@ -188,6 +309,11 @@ class Visitor:
         """
 
     # expressions
+    def visit_expression_abc(self, node: ir.ExpressionAbc):
+        """
+        Visit any [ExpressionAbc][wake.ir.expressions.abc.ExpressionAbc] node.
+        """
+
     def visit_assignment(self, node: ir.Assignment):
         """
         Visit [Assignment][wake.ir.expressions.assignment.Assignment] node.
@@ -317,6 +443,11 @@ class Visitor:
         """
 
     # statements
+    def visit_statement_abc(self, node: ir.StatementAbc):
+        """
+        Visit any [StatementAbc][wake.ir.statements.abc.StatementAbc] node.
+        """
+
     def visit_block(self, node: ir.Block):
         """
         Visit [Block][wake.ir.statements.block.Block] node.
@@ -400,6 +531,11 @@ class Visitor:
         """
 
     # type names
+    def visit_type_name_abc(self, node: ir.TypeNameAbc):
+        """
+        Visit any [TypeNameAbc][wake.ir.type_names.abc.TypeNameAbc] node.
+        """
+
     def visit_array_type_name(self, node: ir.ArrayTypeName):
         """
         Visit [ArrayTypeName][wake.ir.type_names.array_type_name.ArrayTypeName] node.
