@@ -12,7 +12,7 @@ from wake.ir.ast import (
 )
 from wake.ir.utils import IrInitTuple
 from wake.ir.yul.abc import YulAbc, YulStatementAbc
-from wake.ir.yul.case_statement import YulCase
+from wake.ir.yul.case_ import YulCase
 from wake.ir.yul.function_call import YulFunctionCall
 from wake.ir.yul.identifier import YulIdentifier
 from wake.ir.yul.literal import YulLiteral

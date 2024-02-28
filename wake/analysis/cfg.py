@@ -1054,14 +1054,14 @@ class CfgNode:
         next = CfgNode()
         graph.add_node(next)
 
-        for case_statement in switch.cases:
+        for case_ in switch.cases:
             case_node = CfgNode()
             graph.add_node(case_node)
             graph.add_edge(
                 prev,
                 case_node,
-                condition=(TransitionConditionKind.SWITCH_MATCHED, case_statement.value)
-                if case_statement.value != "default"
+                condition=(TransitionConditionKind.SWITCH_MATCHED, case_.value)
+                if case_.value != "default"
                 else (TransitionConditionKind.SWITCH_DEFAULT, None),
             )
             case_node_end = cls.from_statement(
@@ -1071,7 +1071,7 @@ class CfgNode:
                 revert_end,
                 case_node,
                 next,
-                case_statement.body,
+                case_.body,
             )
             graph.add_edge(
                 case_node_end, next, condition=(TransitionConditionKind.ALWAYS, None)

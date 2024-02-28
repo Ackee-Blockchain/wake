@@ -196,7 +196,7 @@ nav:
               - assignment: 'api-reference/ir/yul/assignment.md'
               - block: 'api-reference/ir/yul/block.md'
               - break_statement: 'api-reference/ir/yul/break-statement.md'
-              - case_statement: 'api-reference/ir/yul/case-statement.md'
+              - case: 'api-reference/ir/yul/case.md'
               - continue_statement: 'api-reference/ir/yul/continue-statement.md'
               - expression_statement: 'api-reference/ir/yul/expression-statement.md'
               - for_loop: 'api-reference/ir/yul/for-loop.md'

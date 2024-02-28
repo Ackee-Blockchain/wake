@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from ..statements.abc import StatementAbc
     from .assignment import YulAssignment
     from .break_statement import YulBreak
-    from .case_statement import YulCase
+    from .case_ import YulCase
     from .continue_statement import YulContinue
     from .expression_statement import YulExpressionStatement
     from .for_loop import YulForLoop
