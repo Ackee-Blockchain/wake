@@ -284,24 +284,30 @@ def run_printers(
                 instance.imports_graph = (
                     imports_graph.copy()
                 )  # pyright: ignore reportGeneralTypeIssues
+                instance.lsp_provider = lsp_provider
                 instance.logger = get_logger(cls.__name__)
                 if logging_handler is not None:
                     instance.logger.addHandler(logging_handler)
-                instance.lsp_provider = lsp_provider
-                instance.__init__()
 
-                sub_ctx = command.make_context(
-                    command.name,
-                    list(args),
-                    parent=ctx,
-                    default_map=default_map,
-                )
-                with sub_ctx:
-                    sub_ctx.command.invoke(sub_ctx)
+                try:
+                    instance.__init__()
 
-                collected_printers[command.name] = instance
-                if instance.visit_mode == "all":
-                    visit_all_printers.add(command.name)
+                    sub_ctx = command.make_context(
+                        command.name,
+                        list(args),
+                        parent=ctx,
+                        default_map=default_map,
+                    )
+                    with sub_ctx:
+                        sub_ctx.command.invoke(sub_ctx)
+
+                    collected_printers[command.name] = instance
+                    if instance.visit_mode == "all":
+                        visit_all_printers.add(command.name)
+                except Exception:
+                    if logging_handler is not None:
+                        instance.logger.removeHandler(logging_handler)
+                    raise
             except Exception as e:
                 if not capture_exceptions:
                     raise
@@ -353,8 +359,16 @@ def run_printers(
                         logging_handler
                     )
 
-                with sub_ctx:
-                    sub_ctx.command.invoke(sub_ctx)
+                try:
+                    with sub_ctx:
+                        sub_ctx.command.invoke(sub_ctx)
+                finally:
+                    if logging_handler is not None:
+                        sub_ctx.obj[
+                            "logger"
+                        ].removeHandler(  # pyright: ignore reportGeneralTypeIssues
+                            logging_handler
+                        )
             except Exception as e:
                 if not capture_exceptions:
                     raise
@@ -388,6 +402,8 @@ def run_printers(
                     if not capture_exceptions:
                         raise
                     exceptions[printer_name] = e
+                    if logging_handler is not None:
+                        printer.logger.removeHandler(logging_handler)
                     del collected_printers[printer_name]
 
     for printer_name, printer in collected_printers.items():
@@ -397,5 +413,8 @@ def run_printers(
             if not capture_exceptions:
                 raise
             exceptions[printer_name] = e
+        finally:
+            if logging_handler is not None:
+                printer.logger.removeHandler(logging_handler)
 
     return printers, exceptions
