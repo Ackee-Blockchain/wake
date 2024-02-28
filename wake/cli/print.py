@@ -27,7 +27,6 @@ from wake.core.enums import EvmVersionEnum
 
 if TYPE_CHECKING:
     from wake.config import WakeConfig
-    from wake.printers import Printer
 
 
 logger = get_logger(__name__)
@@ -366,11 +365,12 @@ async def print_(
     from rich.terminal_theme import DEFAULT_TERMINAL_THEME, SVG_EXPORT_THEME
     from watchdog.observers import Observer
 
+    from wake.printers.api import run_printers
+
     from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
     from ..compiler.build_data_model import ProjectBuild, ProjectBuildInfo
     from ..compiler.compiler import CompilationFileSystemEventHandler
     from ..compiler.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
-    from ..utils import get_class_that_defined_method
     from ..utils.file_utils import is_relative_to
     from .console import console
 
@@ -396,95 +396,20 @@ async def print_(
 
         assert isinstance(ctx.command, PrintCli)
         assert ctx.invoked_subcommand is not None
-        command = ctx.command.get_command(ctx, ctx.invoked_subcommand)
-        assert command is not None
-        assert command.name is not None
 
-        if hasattr(config.printer, command.name):
-            default_map = getattr(config.printer, command.name)
-        else:
-            default_map = None
-
-        extra = {}
-        cls: Type[Printer] = get_class_that_defined_method(
-            command.callback
-        )  # pyright: ignore reportGeneralTypeIssues
-        if cls is not None:
-
-            def _callback(*args, **kwargs):
-                instance.paths = [Path(p).resolve() for p in kwargs.pop("paths", [])]
-
-                original_callback(
-                    instance, *args, **kwargs
-                )  # pyright: ignore reportOptionalCall
-
-            original_callback = command.callback
-            command.callback = _callback
-
-            try:
-                instance = object.__new__(cls)
-                instance.build = build
-                instance.build_info = build_info
-                instance.config = config
-                instance.extra = extra
-                instance.console = console
-                instance.imports_graph = (  # pyright: ignore reportGeneralTypeIssues
-                    compiler.latest_graph.copy()
-                )
-                instance.logger = get_logger(cls.__name__)
-                instance.__init__()
-
-                sub_ctx = command.make_context(
-                    command.name,
-                    list(ctx_args),
-                    parent=ctx,
-                    default_map=default_map,
-                )
-                with sub_ctx:
-                    sub_ctx.command.invoke(sub_ctx)
-
-                instance._run()
-            except Exception as e:
-                if not ignore_errors:
-                    raise
-                logger.error(f"Error while running printer {command.name}: {e}")
-            finally:
-                command.callback = original_callback
-        else:
-
-            def _callback(*args, **kwargs):
-                click.get_current_context().obj["paths"] = [
-                    Path(p).resolve() for p in kwargs.pop("paths", [])
-                ]
-
-                original_callback(*args, **kwargs)  # pyright: ignore reportOptionalCall
-
-            original_callback = command.callback
-            command.callback = _callback
-            assert original_callback is not None
-
-            try:
-                sub_ctx = command.make_context(
-                    command.name, list(ctx_args), parent=ctx, default_map=default_map
-                )
-                sub_ctx.obj = {
-                    "build": build,
-                    "build_info": build_info,
-                    "config": config,
-                    "extra": extra,
-                    "console": console,
-                    "imports_graph": compiler.latest_graph.copy(),
-                    "logger": get_logger(original_callback.__name__),
-                }
-
-                with sub_ctx:
-                    sub_ctx.command.invoke(sub_ctx)
-            except Exception as e:
-                if not ignore_errors:
-                    raise
-                logger.error(f"Error while running printer {command.name}: {e}")
-            finally:
-                command.callback = original_callback
+        run_printers(
+            ctx.invoked_subcommand,
+            build,
+            build_info,
+            compiler.latest_graph,
+            config,
+            console,
+            ctx,
+            None,
+            args=list(ctx_args),
+            capture_exceptions=ignore_errors,
+            extra={"lsp": False},
+        )
 
         if export == "html":
             console.save_html(
@@ -494,7 +419,7 @@ async def print_(
         elif export == "svg":
             console.save_svg(
                 str(config.project_root_path / "wake-print-output.svg"),
-                title=f"wake print {command.name}",
+                title=f"wake print {ctx.invoked_subcommand}",
                 theme=SVG_EXPORT_THEME if theme == "dark" else DEFAULT_TERMINAL_THEME,
             )
         elif export == "text":
