@@ -71,24 +71,6 @@ class Printer(Visitor, metaclass=ABCMeta):
         """
         ...
 
-    def _run(self) -> None:
-        from wake.utils.file_utils import is_relative_to
-
-        for path, source_unit in self.build.source_units.items():
-            if (
-                self.visit_mode == "all"
-                or len(self.paths) == 0
-                or any(is_relative_to(path, p) for p in self.paths)
-            ):
-                for node in source_unit:
-                    self.visit_ir_abc(node)
-                    if node.ast_node.node_type in group_map:
-                        for group in group_map[node.ast_node.node_type]:
-                            visit_map[group](self, node)
-                    visit_map[node.ast_node.node_type](self, node)
-
-        self.print()
-
 
 def get_printers(
     paths: Set[Path], verify_paths: bool
