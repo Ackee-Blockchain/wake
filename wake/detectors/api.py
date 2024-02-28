@@ -502,24 +502,30 @@ def detect(
                 instance.imports_graph = (
                     imports_graph.copy()
                 )  # pyright: ignore reportGeneralTypeIssues
+                instance.lsp_provider = lsp_provider
                 instance.logger = get_logger(cls.__name__)
                 if logging_handler is not None:
                     instance.logger.addHandler(logging_handler)
-                instance.lsp_provider = lsp_provider
-                instance.__init__()
 
-                sub_ctx = command.make_context(
-                    command.name,
-                    list(args),
-                    parent=ctx,
-                    default_map=default_map,
-                )
-                with sub_ctx:
-                    sub_ctx.command.invoke(sub_ctx)
+                try:
+                    instance.__init__()
 
-                collected_detectors[command.name] = instance
-                if instance.visit_mode == "all":
-                    visit_all_detectors.add(command.name)
+                    sub_ctx = command.make_context(
+                        command.name,
+                        list(args),
+                        parent=ctx,
+                        default_map=default_map,
+                    )
+                    with sub_ctx:
+                        sub_ctx.command.invoke(sub_ctx)
+
+                    collected_detectors[command.name] = instance
+                    if instance.visit_mode == "all":
+                        visit_all_detectors.add(command.name)
+                except Exception:
+                    if logging_handler is not None:
+                        instance.logger.removeHandler(logging_handler)
+                    raise
             except Exception as e:
                 if not capture_exceptions:
                     raise
@@ -577,17 +583,25 @@ def detect(
                         logging_handler
                     )
 
-                with sub_ctx:
-                    d = sub_ctx.command.invoke(sub_ctx)
-                    detections[command.name] = _filter_detections(
-                        command.name,
-                        d,
-                        min_impact_by_detector[command.name],
-                        min_confidence_by_detector[command.name],
-                        config,
-                        wake_comments,
-                        build.source_units,
-                    )
+                try:
+                    with sub_ctx:
+                        d = sub_ctx.command.invoke(sub_ctx)
+                        detections[command.name] = _filter_detections(
+                            command.name,
+                            d,
+                            min_impact_by_detector[command.name],
+                            min_confidence_by_detector[command.name],
+                            config,
+                            wake_comments,
+                            build.source_units,
+                        )
+                finally:
+                    if logging_handler is not None:
+                        sub_ctx.obj[
+                            "logger"
+                        ].removeHandler(  # pyright: ignore reportGeneralTypeIssues
+                            logging_handler
+                        )
             except Exception as e:
                 if not capture_exceptions:
                     raise
@@ -632,6 +646,8 @@ def detect(
                         if not capture_exceptions:
                             raise
                         exceptions[detector_name] = e
+                        if logging_handler is not None:
+                            detector.logger.removeHandler(logging_handler)
                         del collected_detectors[detector_name]
 
     for detector_name, detector in collected_detectors.items():
@@ -649,6 +665,9 @@ def detect(
             if not capture_exceptions:
                 raise
             exceptions[detector_name] = e
+        finally:
+            if logging_handler is not None:
+                detector.logger.removeHandler(logging_handler)
 
     return detectors, detections, exceptions
 
