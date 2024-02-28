@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 import typing as typ
 from abc import ABC, abstractmethod
+from pathlib import Path
 
 if typ.TYPE_CHECKING:
     from wake.ir.declarations.contract_definition import ContractDefinition
@@ -78,7 +79,7 @@ class TypeAbc(ABC):
         elif type_identifier.startswith("t_userDefinedValueType"):
             return UserDefinedValueType(type_identifier, reference_resolver, cu_hash)
         elif type_identifier.startswith("t_module"):
-            return Module(type_identifier)
+            return Module(type_identifier, reference_resolver, cu_hash)
         elif type_identifier.startswith("t_fixed"):
             return Fixed(type_identifier)
         elif type_identifier.startswith("t_ufixed"):
@@ -151,16 +152,21 @@ class Address(TypeAbc):
     Address type.
     """
 
-    __is_payable: bool
+    _is_payable: bool
 
     def __init__(self, type_identifier: StringReader):
         type_identifier.read("t_address")
 
         if type_identifier.startswith("_payable"):
             type_identifier.read("_payable")
-            self.__is_payable = True
+            self._is_payable = True
         else:
-            self.__is_payable = False
+            self._is_payable = False
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Address):
+            return False
+        return self._is_payable == other._is_payable
 
     @property
     def abi_type(self) -> str:
@@ -172,7 +178,7 @@ class Address(TypeAbc):
         Returns:
             `True` if the address is payable, `False` otherwise.
         """
-        return self.__is_payable
+        return self._is_payable
 
 
 class Bool(TypeAbc):
@@ -182,6 +188,9 @@ class Bool(TypeAbc):
 
     def __init__(self, type_identifier: StringReader):
         type_identifier.read("t_bool")
+
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, Bool)
 
     @property
     def abi_type(self) -> str:
@@ -219,6 +228,11 @@ class Int(IntAbc):
         type_identifier.read(number)
         self._bits_count = int(number)
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Int):
+            return False
+        return self._bits_count == other._bits_count
+
     @property
     def abi_type(self) -> str:
         return f"int{self._bits_count}"
@@ -236,6 +250,11 @@ class UInt(IntAbc):
         number = match.group("number")
         type_identifier.read(number)
         self._bits_count = int(number)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, UInt):
+            return False
+        return self._bits_count == other._bits_count
 
     @property
     def abi_type(self) -> str:
@@ -292,6 +311,14 @@ class Fixed(FixedAbc):
         type_identifier.read(fractional_digits)
         self._fractional_digits = int(fractional_digits)
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Fixed):
+            return False
+        return (
+            self._total_bits == other._total_bits
+            and self._fractional_digits == other._fractional_digits
+        )
+
     @property
     def abi_type(self) -> str:
         raise NotImplementedError
@@ -320,6 +347,14 @@ class UFixed(FixedAbc):
         type_identifier.read(fractional_digits)
         self._fractional_digits = int(fractional_digits)
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, UFixed):
+            return False
+        return (
+            self._total_bits == other._total_bits
+            and self._fractional_digits == other._fractional_digits
+        )
+
     @property
     def abi_type(self) -> str:
         raise NotImplementedError
@@ -340,7 +375,7 @@ class StringLiteral(TypeAbc):
         ```
     """
 
-    __keccak256_hash: bytes
+    _keccak256_hash: bytes
 
     def __init__(self, type_identifier: StringReader):
         type_identifier.read("t_stringliteral_")
@@ -348,7 +383,12 @@ class StringLiteral(TypeAbc):
         assert match is not None
         hex = match.group("hex")
         type_identifier.read(hex)
-        self.__keccak256_hash = bytes.fromhex(hex)
+        self._keccak256_hash = bytes.fromhex(hex)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, StringLiteral):
+            return False
+        return self._keccak256_hash == other._keccak256_hash
 
     @property
     def abi_type(self) -> str:
@@ -360,7 +400,7 @@ class StringLiteral(TypeAbc):
         Returns:
             Keccak256 hash of the string literal.
         """
-        return self.__keccak256_hash
+        return self._keccak256_hash
 
 
 class String(TypeAbc):
@@ -368,35 +408,44 @@ class String(TypeAbc):
     String type.
     """
 
-    __data_location: DataLocation
-    __is_pointer: bool
-    __is_slice: bool
+    _data_location: DataLocation
+    _is_pointer: bool
+    _is_slice: bool
 
     def __init__(self, type_identifier: StringReader):
         type_identifier.read("t_string")
         if type_identifier.startswith("_storage"):
-            self.__data_location = DataLocation.STORAGE
+            self._data_location = DataLocation.STORAGE
             type_identifier.read("_storage")
         elif type_identifier.startswith("_memory"):
-            self.__data_location = DataLocation.MEMORY
+            self._data_location = DataLocation.MEMORY
             type_identifier.read("_memory")
         elif type_identifier.startswith("_calldata"):
-            self.__data_location = DataLocation.CALLDATA
+            self._data_location = DataLocation.CALLDATA
             type_identifier.read("_calldata")
         else:
             assert False, f"Unexpected string type data location {type_identifier}"
 
         if type_identifier.startswith("_ptr"):
-            self.__is_pointer = True
+            self._is_pointer = True
             type_identifier.read("_ptr")
         else:
-            self.__is_pointer = False
+            self._is_pointer = False
 
         if type_identifier.startswith("_slice"):
-            self.__is_slice = True
+            self._is_slice = True
             type_identifier.read("_slice")
         else:
-            self.__is_slice = False
+            self._is_slice = False
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, String):
+            return False
+        return (
+            self._data_location == other._data_location
+            and self._is_pointer == other._is_pointer
+            and self._is_slice == other._is_slice
+        )
 
     @property
     def abi_type(self) -> str:
@@ -410,7 +459,7 @@ class String(TypeAbc):
         Returns:
             Data location of the string expression.
         """
-        return self.__data_location
+        return self._data_location
 
     @property
     def is_pointer(self) -> bool:
@@ -426,7 +475,7 @@ class String(TypeAbc):
         Returns:
             Whether the string expression is a pointer to storage.
         """
-        return self.__is_pointer
+        return self._is_pointer
 
     @property
     def is_slice(self) -> bool:
@@ -441,7 +490,7 @@ class String(TypeAbc):
         Returns:
             Whether this is a slice of a string expression.
         """
-        return self.__is_slice
+        return self._is_slice
 
 
 class Bytes(TypeAbc):
@@ -449,35 +498,44 @@ class Bytes(TypeAbc):
     Bytes type.
     """
 
-    __data_location: DataLocation
-    __is_pointer: bool
-    __is_slice: bool
+    _data_location: DataLocation
+    _is_pointer: bool
+    _is_slice: bool
 
     def __init__(self, type_identifier: StringReader):
         type_identifier.read("t_bytes")
         if type_identifier.startswith("_storage"):
-            self.__data_location = DataLocation.STORAGE
+            self._data_location = DataLocation.STORAGE
             type_identifier.read("_storage")
         elif type_identifier.startswith("_memory"):
-            self.__data_location = DataLocation.MEMORY
+            self._data_location = DataLocation.MEMORY
             type_identifier.read("_memory")
         elif type_identifier.startswith("_calldata"):
-            self.__data_location = DataLocation.CALLDATA
+            self._data_location = DataLocation.CALLDATA
             type_identifier.read("_calldata")
         else:
             assert False, f"Unexpected string type data location {type_identifier}"
 
         if type_identifier.startswith("_ptr"):
-            self.__is_pointer = True
+            self._is_pointer = True
             type_identifier.read("_ptr")
         else:
-            self.__is_pointer = False
+            self._is_pointer = False
 
         if type_identifier.startswith("_slice"):
-            self.__is_slice = True
+            self._is_slice = True
             type_identifier.read("_slice")
         else:
-            self.__is_slice = False
+            self._is_slice = False
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Bytes):
+            return False
+        return (
+            self._data_location == other._data_location
+            and self._is_pointer == other._is_pointer
+            and self._is_slice == other._is_slice
+        )
 
     @property
     def abi_type(self) -> str:
@@ -491,7 +549,7 @@ class Bytes(TypeAbc):
         Returns:
             Data location of the bytes expression.
         """
-        return self.__data_location
+        return self._data_location
 
     @property
     def is_pointer(self) -> bool:
@@ -507,7 +565,7 @@ class Bytes(TypeAbc):
         Returns:
             Whether the bytes expression is a pointer to storage.
         """
-        return self.__is_pointer
+        return self._is_pointer
 
     @property
     def is_slice(self) -> bool:
@@ -522,7 +580,7 @@ class Bytes(TypeAbc):
         Returns:
             Whether this is a slice of a bytes expression.
         """
-        return self.__is_slice
+        return self._is_slice
 
 
 class FixedBytes(TypeAbc):
@@ -530,7 +588,7 @@ class FixedBytes(TypeAbc):
     Fixed-size byte array type.
     """
 
-    __bytes_count: int
+    _bytes_count: int
 
     def __init__(self, type_identifier: StringReader):
         type_identifier.read("t_bytes")
@@ -538,11 +596,16 @@ class FixedBytes(TypeAbc):
         assert match is not None
         number = match.group("number")
         type_identifier.read(number)
-        self.__bytes_count = int(number)
+        self._bytes_count = int(number)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, FixedBytes):
+            return False
+        return self._bytes_count == other._bytes_count
 
     @property
     def abi_type(self) -> str:
-        return f"bytes{self.__bytes_count}"
+        return f"bytes{self._bytes_count}"
 
     @property
     def bytes_count(self) -> int:
@@ -552,7 +615,7 @@ class FixedBytes(TypeAbc):
         Returns:
             Number of bytes used to represent this fixed-size byte array.
         """
-        return self.__bytes_count
+        return self._bytes_count
 
 
 class Function(TypeAbc):
@@ -573,14 +636,14 @@ class Function(TypeAbc):
         the type of `foo` is [Function][wake.ir.types.Function], but the type of `:::solidity foo(1, 2)` is [Tuple][wake.ir.types.Tuple].
     """
 
-    __kind: FunctionTypeKind
-    __state_mutability: StateMutability
-    __parameters: typ.Tuple[TypeAbc, ...]
-    __return_parameters: typ.Tuple[TypeAbc, ...]
-    __gas_set: bool
-    __value_set: bool
-    __salt_set: bool
-    __attached_to: typ.Optional[typ.Tuple[TypeAbc, ...]]
+    _kind: FunctionTypeKind
+    _state_mutability: StateMutability
+    _parameters: typ.Tuple[TypeAbc, ...]
+    _return_parameters: typ.Tuple[TypeAbc, ...]
+    _gas_set: bool
+    _value_set: bool
+    _salt_set: bool
+    _attached_to: typ.Optional[typ.Tuple[TypeAbc, ...]]
 
     def __init__(
         self,
@@ -595,65 +658,79 @@ class Function(TypeAbc):
             if type_identifier.startswith(kind):
                 matched.append(kind)
         assert len(matched) >= 1, f"Unexpected function kind {type_identifier}"
-        self.__kind = FunctionTypeKind(max(matched, key=len))
-        type_identifier.read(self.__kind)
+        self._kind = FunctionTypeKind(max(matched, key=len))
+        type_identifier.read(self._kind)
 
         if type_identifier.startswith("_payable"):
-            self.__state_mutability = StateMutability.PAYABLE
+            self._state_mutability = StateMutability.PAYABLE
             type_identifier.read("_payable")
         elif type_identifier.startswith("_pure"):
-            self.__state_mutability = StateMutability.PURE
+            self._state_mutability = StateMutability.PURE
             type_identifier.read("_pure")
         elif type_identifier.startswith("_nonpayable"):
-            self.__state_mutability = StateMutability.NONPAYABLE
+            self._state_mutability = StateMutability.NONPAYABLE
             type_identifier.read("_nonpayable")
         elif type_identifier.startswith("_view"):
-            self.__state_mutability = StateMutability.VIEW
+            self._state_mutability = StateMutability.VIEW
             type_identifier.read("_view")
         else:
             assert False, f"Unexpected function state mutability {type_identifier}"
 
         parameters = _parse_list(type_identifier, reference_resolver, cu_hash)
         assert not any(param is None for param in parameters)
-        self.__parameters = parameters  # type: ignore
+        self._parameters = parameters  # type: ignore
 
         type_identifier.read("returns")
         return_parameters = _parse_list(type_identifier, reference_resolver, cu_hash)
         assert not any(param is None for param in return_parameters)
-        self.__return_parameters = return_parameters  # type: ignore
+        self._return_parameters = return_parameters  # type: ignore
 
         if type_identifier.startswith("gas"):
-            self.__gas_set = True
+            self._gas_set = True
             type_identifier.read("gas")
         else:
-            self.__gas_set = False
+            self._gas_set = False
 
         if type_identifier.startswith("value"):
-            self.__value_set = True
+            self._value_set = True
             type_identifier.read("value")
         else:
-            self.__value_set = False
+            self._value_set = False
 
         if type_identifier.startswith("salt"):
-            self.__salt_set = True
+            self._salt_set = True
             type_identifier.read("salt")
         else:
-            self.__salt_set = False
+            self._salt_set = False
 
         if type_identifier.startswith("bound_to"):
             type_identifier.read("bound_to")
             bound_to = _parse_list(type_identifier, reference_resolver, cu_hash)
             assert not any(param is None for param in bound_to)
-            self.__attached_to = bound_to  # type: ignore
+            self._attached_to = bound_to  # type: ignore
         elif type_identifier.startswith(
             "attached_to"
         ):  # bound_to was renamed to attached_to in 0.8.18
             type_identifier.read("attached_to")
             attached_to = _parse_list(type_identifier, reference_resolver, cu_hash)
             assert not any(param is None for param in attached_to)
-            self.__attached_to = attached_to  # type: ignore
+            self._attached_to = attached_to  # type: ignore
         else:
-            self.__attached_to = None
+            self._attached_to = None
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Function):
+            return False
+        return (
+            self._kind == other._kind
+            and self._state_mutability == other._state_mutability
+            and self._parameters == other._parameters
+            and self._return_parameters == other._return_parameters
+            and self._gas_set == other._gas_set
+            and self._value_set == other._value_set
+            and self._salt_set == other._salt_set
+            and self._attached_to == other._attached_to
+        )
 
     @property
     def abi_type(self) -> str:
@@ -665,7 +742,7 @@ class Function(TypeAbc):
         Returns:
             Kind of the function type.
         """
-        return self.__kind
+        return self._kind
 
     @property
     def state_mutability(self) -> StateMutability:
@@ -673,7 +750,7 @@ class Function(TypeAbc):
         Returns:
             State mutability of the function type.
         """
-        return self.__state_mutability
+        return self._state_mutability
 
     @property
     def parameters(self) -> typ.Tuple[TypeAbc, ...]:
@@ -681,7 +758,7 @@ class Function(TypeAbc):
         Returns:
             Expression types of the parameters of the function type.
         """
-        return self.__parameters
+        return self._parameters
 
     @property
     def return_parameters(self) -> typ.Tuple[TypeAbc, ...]:
@@ -689,7 +766,7 @@ class Function(TypeAbc):
         Returns:
             Expression types of the return parameters of the function type.
         """
-        return self.__return_parameters
+        return self._return_parameters
 
     @property
     def gas_set(self) -> bool:
@@ -708,7 +785,7 @@ class Function(TypeAbc):
         Returns:
             `True` if the gas is set in the function type.
         """
-        return self.__gas_set
+        return self._gas_set
 
     @property
     def value_set(self) -> bool:
@@ -727,7 +804,7 @@ class Function(TypeAbc):
         Returns:
             `True` if the value is set in the function type.
         """
-        return self.__value_set
+        return self._value_set
 
     @property
     def salt_set(self) -> bool:
@@ -741,7 +818,7 @@ class Function(TypeAbc):
         Returns:
             `True` if the salt is set in the function type.
         """
-        return self.__salt_set
+        return self._salt_set
 
     @property
     def attached_to(self) -> typ.Optional[typ.Tuple[TypeAbc, ...]]:
@@ -771,7 +848,7 @@ class Function(TypeAbc):
         Returns:
             Type to which the function is attached to.
         """
-        return self.__attached_to
+        return self._attached_to
 
 
 class Tuple(TypeAbc):
@@ -779,7 +856,7 @@ class Tuple(TypeAbc):
     Tuple type.
     """
 
-    __components: typ.Tuple[typ.Optional[TypeAbc], ...]
+    _components: typ.Tuple[typ.Optional[TypeAbc], ...]
 
     def __init__(
         self,
@@ -788,17 +865,22 @@ class Tuple(TypeAbc):
         cu_hash: bytes,
     ):
         type_identifier.read("t_tuple")
-        self.__components = _parse_list(type_identifier, reference_resolver, cu_hash)
+        self._components = _parse_list(type_identifier, reference_resolver, cu_hash)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Tuple):
+            return False
+        return self._components == other._components
 
     @property
     def abi_type(self) -> str:
-        if any(component is None for component in self.__components):
+        if any(component is None for component in self._components):
             raise NotImplementedError
         return (
             "("
             + ",".join(
                 component.abi_type  # pyright: ignore reportOptionalMemberAccess
-                for component in self.__components
+                for component in self._components
             )
             + ")"
         )
@@ -817,7 +899,7 @@ class Tuple(TypeAbc):
         Returns:
             Expression types of the components of the tuple type.
         """
-        return self.__components
+        return self._components
 
 
 class Type(TypeAbc):
@@ -825,7 +907,7 @@ class Type(TypeAbc):
     Type type. As opposed to other types, this type describes the type of a type, not the type of an instance of a type.
     """
 
-    __actual_type: TypeAbc
+    _actual_type: TypeAbc
 
     def __init__(
         self,
@@ -836,7 +918,12 @@ class Type(TypeAbc):
         type_identifier.read("t_type")
         actual_type = _parse_list(type_identifier, reference_resolver, cu_hash)
         assert len(actual_type) == 1 and actual_type[0] is not None
-        self.__actual_type = actual_type[0]
+        self._actual_type = actual_type[0]
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Type):
+            return False
+        return self._actual_type == other._actual_type
 
     @property
     def abi_type(self) -> str:
@@ -873,7 +960,7 @@ class Type(TypeAbc):
         Returns:
             Actual type of the type type.
         """
-        return self.__actual_type
+        return self._actual_type
 
 
 class Rational(TypeAbc):
@@ -884,23 +971,23 @@ class Rational(TypeAbc):
         `:::solidity 1`, `:::solidity 0x1234`, `:::solidity 1e18`, `:::solidity 1 * 2 / 3` are all of the [Rational][wake.ir.types.Rational] type.
     """
 
-    __numerator: int
-    __denominator: int
+    _numerator: int
+    _denominator: int
 
     def __init__(self, type_identifier: StringReader):
         type_identifier.read("t_rational_")
 
         if type_identifier.startswith("minus_"):
             type_identifier.read("minus_")
-            self.__numerator = -1
+            self._numerator = -1
         else:
-            self.__numerator = 1
+            self._numerator = 1
 
         match = NUMBER_RE.match(type_identifier.data)
         assert match is not None, f"{type_identifier} is not a valid rational"
         number = match.group("number")
         type_identifier.read(number)
-        self.__numerator *= int(number)
+        self._numerator *= int(number)
 
         type_identifier.read("_by_")
 
@@ -908,7 +995,15 @@ class Rational(TypeAbc):
         assert match is not None, f"{type_identifier} is not a valid rational"
         number = match.group("number")
         type_identifier.read(number)
-        self.__denominator = int(number)
+        self._denominator = int(number)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Rational):
+            return False
+        return (
+            self._numerator == other._numerator
+            and self._denominator == other._denominator
+        )
 
     @property
     def abi_type(self) -> str:
@@ -922,7 +1017,7 @@ class Rational(TypeAbc):
         Returns:
             Numerator of the rational number.
         """
-        return self.__numerator
+        return self._numerator
 
     @property
     def denominator(self) -> int:
@@ -930,7 +1025,7 @@ class Rational(TypeAbc):
         Returns:
             Denominator of the rational number.
         """
-        return self.__denominator
+        return self._denominator
 
 
 class Modifier(TypeAbc):
@@ -938,7 +1033,7 @@ class Modifier(TypeAbc):
     Modifier type.
     """
 
-    __parameters: typ.Tuple[TypeAbc, ...]
+    _parameters: typ.Tuple[TypeAbc, ...]
 
     def __init__(
         self,
@@ -949,7 +1044,12 @@ class Modifier(TypeAbc):
         type_identifier.read("t_modifier")
         parameters = _parse_list(type_identifier, reference_resolver, cu_hash)
         assert not any(param is None for param in parameters)
-        self.__parameters = parameters  # type: ignore
+        self._parameters = parameters  # type: ignore
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Modifier):
+            return False
+        return self._parameters == other._parameters
 
     @property
     def abi_type(self) -> str:
@@ -961,7 +1061,7 @@ class Modifier(TypeAbc):
         Returns:
             Expression types of the parameters of the modifier.
         """
-        return self.__parameters
+        return self._parameters
 
 
 class Array(TypeAbc):
@@ -969,11 +1069,11 @@ class Array(TypeAbc):
     Array type.
     """
 
-    __base_type: TypeAbc
-    __length: typ.Optional[int]
-    __data_location: DataLocation
-    __is_pointer: bool
-    __is_slice: bool
+    _base_type: TypeAbc
+    _length: typ.Optional[int]
+    _data_location: DataLocation
+    _is_pointer: bool
+    _is_slice: bool
 
     def __init__(
         self,
@@ -986,40 +1086,51 @@ class Array(TypeAbc):
         assert (
             len(base_type) == 1 and base_type[0] is not None
         ), f"Unexpected array base type {type_identifier}"
-        self.__base_type = base_type[0]
+        self._base_type = base_type[0]
 
         if type_identifier.startswith("dyn"):
-            self.__length = None
+            self._length = None
             type_identifier.read("dyn")
         else:
             match = NUMBER_RE.match(type_identifier.data)
             assert match is not None, f"{type_identifier} is not a valid array length"
-            self.__length = int(match.group("number"))
+            self._length = int(match.group("number"))
             type_identifier.read(match.group("number"))
 
         if type_identifier.startswith("_storage"):
-            self.__data_location = DataLocation.STORAGE
+            self._data_location = DataLocation.STORAGE
             type_identifier.read("_storage")
         elif type_identifier.startswith("_memory"):
-            self.__data_location = DataLocation.MEMORY
+            self._data_location = DataLocation.MEMORY
             type_identifier.read("_memory")
         elif type_identifier.startswith("_calldata"):
-            self.__data_location = DataLocation.CALLDATA
+            self._data_location = DataLocation.CALLDATA
             type_identifier.read("_calldata")
         else:
             assert False, f"Unexpected array type data location {type_identifier}"
 
         if type_identifier.startswith("_ptr"):
-            self.__is_pointer = True
+            self._is_pointer = True
             type_identifier.read("_ptr")
         else:
-            self.__is_pointer = False
+            self._is_pointer = False
 
         if type_identifier.startswith("_slice"):
-            self.__is_slice = True
+            self._is_slice = True
             type_identifier.read("_slice")
         else:
-            self.__is_slice = False
+            self._is_slice = False
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Array):
+            return False
+        return (
+            self._base_type == other._base_type
+            and self._length == other._length
+            and self._data_location == other._data_location
+            and self._is_pointer == other._is_pointer
+            and self._is_slice == other._is_slice
+        )
 
     @property
     def abi_type(self) -> str:
@@ -1034,7 +1145,7 @@ class Array(TypeAbc):
         Returns:
             Base type of the array.
         """
-        return self.__base_type
+        return self._base_type
 
     @property
     def length(self) -> typ.Optional[int]:
@@ -1042,7 +1153,7 @@ class Array(TypeAbc):
         Returns:
             Length of the array. `None` if the array is dynamic (not fixed size).
         """
-        return self.__length
+        return self._length
 
     @property
     def data_location(self) -> DataLocation:
@@ -1050,7 +1161,7 @@ class Array(TypeAbc):
         Returns:
             Data location of the array.
         """
-        return self.__data_location
+        return self._data_location
 
     @property
     def is_pointer(self) -> bool:
@@ -1066,7 +1177,7 @@ class Array(TypeAbc):
         Returns:
             Whether the array expression is a pointer to storage.
         """
-        return self.__is_pointer
+        return self._is_pointer
 
     @property
     def is_slice(self) -> bool:
@@ -1081,7 +1192,7 @@ class Array(TypeAbc):
         Returns:
             Whether this is a slice of an array expression.
         """
-        return self.__is_slice
+        return self._is_slice
 
 
 class Mapping(TypeAbc):
@@ -1089,8 +1200,8 @@ class Mapping(TypeAbc):
     Mapping type.
     """
 
-    __key_type: TypeAbc
-    __value_type: TypeAbc
+    _key_type: TypeAbc
+    _value_type: TypeAbc
 
     def __init__(
         self,
@@ -1103,8 +1214,15 @@ class Mapping(TypeAbc):
         assert len(key_value) == 2, f"{type_identifier} is not a valid mapping"
         assert key_value[0] is not None, f"{type_identifier} is not a valid mapping"
         assert key_value[1] is not None, f"{type_identifier} is not a valid mapping"
-        self.__key_type = key_value[0]
-        self.__value_type = key_value[1]
+        self._key_type = key_value[0]
+        self._value_type = key_value[1]
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Mapping):
+            return False
+        return (
+            self._key_type == other._key_type and self._value_type == other._value_type
+        )
 
     @property
     def abi_type(self) -> str:
@@ -1116,7 +1234,7 @@ class Mapping(TypeAbc):
         Returns:
             Key type of the mapping.
         """
-        return self.__key_type
+        return self._key_type
 
     @property
     def value_type(self) -> TypeAbc:
@@ -1124,15 +1242,15 @@ class Mapping(TypeAbc):
         Returns:
             Value type of the mapping.
         """
-        return self.__value_type
+        return self._value_type
 
 
 class Contract(TypeAbc):
-    __is_super: bool
-    __name: str
-    __ast_id: AstNodeId
-    __reference_resolver: ReferenceResolver
-    __cu_hash: bytes
+    _is_super: bool
+    _name: str
+    _ast_id: AstNodeId
+    _reference_resolver: ReferenceResolver
+    _cu_hash: bytes
 
     def __init__(
         self,
@@ -1141,22 +1259,31 @@ class Contract(TypeAbc):
         cu_hash: bytes,
     ):
         if type_identifier.startswith("t_contract"):
-            self.__is_super = False
+            self._is_super = False
             type_identifier.read("t_contract")
         elif type_identifier.startswith("t_super"):
-            self.__is_super = True
+            self._is_super = True
             type_identifier.read("t_super")
         else:
             assert False, f"Unexpected contract type {type_identifier}"
-        self.__name = _parse_user_identifier(type_identifier)
+        self._name = _parse_user_identifier(type_identifier)
 
         match = NUMBER_RE.match(type_identifier.data)
         assert match is not None, f"{type_identifier} is not a valid contract"
-        self.__ast_id = AstNodeId(int(match.group("number")))
+        self._ast_id = AstNodeId(int(match.group("number")))
         type_identifier.read(match.group("number"))
 
-        self.__reference_resolver = reference_resolver
-        self.__cu_hash = cu_hash
+        self._reference_resolver = reference_resolver
+        self._cu_hash = cu_hash
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Contract):
+            return False
+        return (
+            self._is_super == other._is_super
+            and self._name == other._name
+            and self.ir_node == other.ir_node
+        )
 
     @property
     def abi_type(self) -> str:
@@ -1185,7 +1312,7 @@ class Contract(TypeAbc):
         Returns:
             `True` if the expression is the `super` keyword.
         """
-        return self.__is_super
+        return self._is_super
 
     @property
     def name(self) -> str:
@@ -1193,7 +1320,7 @@ class Contract(TypeAbc):
         Returns:
             Name of the contract.
         """
-        return self.__name
+        return self._name
 
     @property
     def ir_node(self) -> ContractDefinition:
@@ -1203,7 +1330,7 @@ class Contract(TypeAbc):
         """
         from wake.ir.declarations.contract_definition import ContractDefinition
 
-        node = self.__reference_resolver.resolve_node(self.__ast_id, self.__cu_hash)
+        node = self._reference_resolver.resolve_node(self._ast_id, self._cu_hash)
         assert isinstance(node, ContractDefinition)
         return node
 
@@ -1213,12 +1340,12 @@ class Struct(TypeAbc):
     Struct type.
     """
 
-    __name: str
-    __ast_id: AstNodeId
-    __data_location: DataLocation
-    __is_pointer: bool
-    __reference_resolver: ReferenceResolver
-    __cu_hash: bytes
+    _name: str
+    _ast_id: AstNodeId
+    _data_location: DataLocation
+    _is_pointer: bool
+    _reference_resolver: ReferenceResolver
+    _cu_hash: bytes
 
     def __init__(
         self,
@@ -1227,33 +1354,43 @@ class Struct(TypeAbc):
         cu_hash: bytes,
     ):
         type_identifier.read("t_struct")
-        self.__name = _parse_user_identifier(type_identifier)
+        self._name = _parse_user_identifier(type_identifier)
 
         match = NUMBER_RE.match(type_identifier.data)
         assert match is not None, f"{type_identifier} is not a valid struct"
-        self.__ast_id = AstNodeId(int(match.group("number")))
+        self._ast_id = AstNodeId(int(match.group("number")))
         type_identifier.read(match.group("number"))
 
         if type_identifier.startswith("_storage"):
-            self.__data_location = DataLocation.STORAGE
+            self._data_location = DataLocation.STORAGE
             type_identifier.read("_storage")
         elif type_identifier.startswith("_memory"):
-            self.__data_location = DataLocation.MEMORY
+            self._data_location = DataLocation.MEMORY
             type_identifier.read("_memory")
         elif type_identifier.startswith("_calldata"):
-            self.__data_location = DataLocation.CALLDATA
+            self._data_location = DataLocation.CALLDATA
             type_identifier.read("_calldata")
         else:
             assert False, f"Unexpected array type data location {type_identifier}"
 
         if type_identifier.startswith("_ptr"):
-            self.__is_pointer = True
+            self._is_pointer = True
             type_identifier.read("_ptr")
         else:
-            self.__is_pointer = False
+            self._is_pointer = False
 
-        self.__reference_resolver = reference_resolver
-        self.__cu_hash = cu_hash
+        self._reference_resolver = reference_resolver
+        self._cu_hash = cu_hash
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Struct):
+            return False
+        return (
+            self._name == other._name
+            and self._data_location == other._data_location
+            and self._is_pointer == other._is_pointer
+            and self.ir_node == other.ir_node
+        )
 
     @property
     def abi_type(self) -> str:
@@ -1269,7 +1406,7 @@ class Struct(TypeAbc):
         Returns:
             Name of the struct.
         """
-        return self.__name
+        return self._name
 
     @property
     def data_location(self) -> DataLocation:
@@ -1277,7 +1414,7 @@ class Struct(TypeAbc):
         Returns:
             Data location of the struct.
         """
-        return self.__data_location
+        return self._data_location
 
     @property
     def is_pointer(self) -> bool:
@@ -1293,7 +1430,7 @@ class Struct(TypeAbc):
         Returns:
             Whether the struct expression is a pointer to storage.
         """
-        return self.__is_pointer
+        return self._is_pointer
 
     @property
     def ir_node(self) -> StructDefinition:
@@ -1303,7 +1440,7 @@ class Struct(TypeAbc):
         """
         from wake.ir.declarations.struct_definition import StructDefinition
 
-        node = self.__reference_resolver.resolve_node(self.__ast_id, self.__cu_hash)
+        node = self._reference_resolver.resolve_node(self._ast_id, self._cu_hash)
         assert isinstance(node, StructDefinition)
         return node
 
@@ -1316,10 +1453,10 @@ class Enum(TypeAbc):
         Enum values are of the [Enum][wake.ir.types.Enum] type and enums are of the [Type][wake.ir.types.Type] type with [Enum][wake.ir.types.Enum] as the [actual_type][wake.ir.types.Type.actual_type].
     """
 
-    __name: str
-    __ast_id: AstNodeId
-    __reference_resolver: ReferenceResolver
-    __cu_hash: bytes
+    _name: str
+    _ast_id: AstNodeId
+    _reference_resolver: ReferenceResolver
+    _cu_hash: bytes
 
     def __init__(
         self,
@@ -1328,15 +1465,20 @@ class Enum(TypeAbc):
         cu_hash: bytes,
     ):
         type_identifier.read("t_enum")
-        self.__name = _parse_user_identifier(type_identifier)
+        self._name = _parse_user_identifier(type_identifier)
 
         match = NUMBER_RE.match(type_identifier.data)
         assert match is not None, f"{type_identifier} is not a valid enum"
-        self.__ast_id = AstNodeId(int(match.group("number")))
+        self._ast_id = AstNodeId(int(match.group("number")))
         type_identifier.read(match.group("number"))
 
-        self.__reference_resolver = reference_resolver
-        self.__cu_hash = cu_hash
+        self._reference_resolver = reference_resolver
+        self._cu_hash = cu_hash
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Enum):
+            return False
+        return self._name == other._name and self.ir_node == other.ir_node
 
     @property
     def abi_type(self) -> str:
@@ -1348,7 +1490,7 @@ class Enum(TypeAbc):
         Returns:
             Name of the enum.
         """
-        return self.__name
+        return self._name
 
     @property
     def ir_node(self) -> EnumDefinition:
@@ -1358,7 +1500,7 @@ class Enum(TypeAbc):
         """
         from wake.ir.declarations.enum_definition import EnumDefinition
 
-        node = self.__reference_resolver.resolve_node(self.__ast_id, self.__cu_hash)
+        node = self._reference_resolver.resolve_node(self._ast_id, self._cu_hash)
         assert isinstance(node, EnumDefinition)
         return node
 
@@ -1368,8 +1510,8 @@ class Magic(TypeAbc):
     Magic type represents Solidity language built-in objects.
     """
 
-    __kind: MagicTypeKind
-    __meta_argument_type: typ.Optional[TypeAbc]
+    _kind: MagicTypeKind
+    _meta_argument_type: typ.Optional[TypeAbc]
 
     def __init__(
         self,
@@ -1382,21 +1524,29 @@ class Magic(TypeAbc):
         matched = False
         for kind in MagicTypeKind:
             if type_identifier.startswith(kind):
-                self.__kind = MagicTypeKind(kind)
+                self._kind = MagicTypeKind(kind)
                 type_identifier.read(kind)
                 matched = True
                 break
         assert matched, f"Unexpected magic kind {type_identifier}"
 
-        if self.__kind == MagicTypeKind.META_TYPE:
+        if self._kind == MagicTypeKind.META_TYPE:
             type_identifier.read("_")
             meta_argument_type = TypeAbc.from_type_identifier(
                 type_identifier, reference_resolver, cu_hash
             )
             assert meta_argument_type is not None
-            self.__meta_argument_type = meta_argument_type
+            self._meta_argument_type = meta_argument_type
         else:
-            self.__meta_argument_type = None
+            self._meta_argument_type = None
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Magic):
+            return False
+        return (
+            self._kind == other._kind
+            and self._meta_argument_type == other._meta_argument_type
+        )
 
     @property
     def abi_type(self) -> str:
@@ -1408,7 +1558,7 @@ class Magic(TypeAbc):
         Returns:
             Kind of the magic type.
         """
-        return self.__kind
+        return self._kind
 
     @property
     def meta_argument_type(self) -> typ.Optional[TypeAbc]:
@@ -1420,14 +1570,14 @@ class Magic(TypeAbc):
         Returns:
             Type of the meta expression argument.
         """
-        return self.__meta_argument_type
+        return self._meta_argument_type
 
 
 class UserDefinedValueType(TypeAbc):
-    __name: str
-    __ast_id: AstNodeId
-    __reference_resolver: ReferenceResolver
-    __cu_hash: bytes
+    _name: str
+    _ast_id: AstNodeId
+    _reference_resolver: ReferenceResolver
+    _cu_hash: bytes
 
     def __init__(
         self,
@@ -1436,15 +1586,20 @@ class UserDefinedValueType(TypeAbc):
         cu_hash: bytes,
     ):
         type_identifier.read("t_userDefinedValueType")
-        self.__name = _parse_user_identifier(type_identifier)
+        self._name = _parse_user_identifier(type_identifier)
 
         match = NUMBER_RE.match(type_identifier.data)
         assert match is not None, f"{type_identifier} is not a valid enum"
-        self.__ast_id = AstNodeId(int(match.group("number")))
+        self._ast_id = AstNodeId(int(match.group("number")))
         type_identifier.read(match.group("number"))
 
-        self.__reference_resolver = reference_resolver
-        self.__cu_hash = cu_hash
+        self._reference_resolver = reference_resolver
+        self._cu_hash = cu_hash
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, UserDefinedValueType):
+            return False
+        return self._name == other._name and self.ir_node == other.ir_node
 
     @property
     def abi_type(self) -> str:
@@ -1456,7 +1611,7 @@ class UserDefinedValueType(TypeAbc):
         Returns:
             Name of the user defined value type.
         """
-        return self.__name
+        return self._name
 
     @property
     def ir_node(self) -> UserDefinedValueTypeDefinition:
@@ -1468,7 +1623,7 @@ class UserDefinedValueType(TypeAbc):
             UserDefinedValueTypeDefinition,
         )
 
-        node = self.__reference_resolver.resolve_node(self.__ast_id, self.__cu_hash)
+        node = self._reference_resolver.resolve_node(self._ast_id, self._cu_hash)
         assert isinstance(node, UserDefinedValueTypeDefinition)
         return node
 
@@ -1480,9 +1635,16 @@ class Module(TypeAbc):
         It is probably currently not possible to create an expression of this type.
     """
 
-    __source_unit_id: int
+    _source_unit_id: int
+    _reference_resolver: ReferenceResolver
+    _cu_hash: bytes
 
-    def __init__(self, type_identifier: StringReader):
+    def __init__(
+        self,
+        type_identifier: StringReader,
+        reference_resolver: ReferenceResolver,
+        cu_hash: bytes,
+    ):
         type_identifier.read("t_module_")
 
         match = NUMBER_RE.match(type_identifier.data)
@@ -1490,8 +1652,26 @@ class Module(TypeAbc):
         self.__ast_id = AstNodeId(int(match.group("number")))
         type_identifier.read(match.group("number"))
 
-        self.__source_unit_id = int(match.group("number"))
+        self._source_unit_id = int(match.group("number"))
+
+        self._reference_resolver = reference_resolver
+        self._cu_hash = cu_hash
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Module):
+            return False
+        return self.file == other.file
 
     @property
     def abi_type(self) -> str:
         raise NotImplementedError
+
+    @property
+    def file(self) -> Path:
+        """
+        Returns:
+            Path representing the source file (module).
+        """
+        return self._reference_resolver.resolve_source_file_id(
+            self._source_unit_id, self._cu_hash
+        )
