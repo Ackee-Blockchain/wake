@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from ..expressions.abc import ExpressionAbc
     from ..statements.abc import StatementAbc
     from .assignment import YulAssignment
-    from .case_statement import YulCase
+    from .case_ import YulCase
     from .expression_statement import YulExpressionStatement
     from .for_loop import YulForLoop
     from .function_call import YulFunctionCall

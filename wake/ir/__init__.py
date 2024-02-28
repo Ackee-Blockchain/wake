@@ -66,7 +66,7 @@ from .yul.abc import YulAbc, YulStatementAbc
 from .yul.assignment import YulAssignment
 from .yul.block import YulBlock
 from .yul.break_statement import YulBreak
-from .yul.case_statement import YulCase
+from .yul.case_ import YulCase
 from .yul.continue_statement import YulContinue
 from .yul.expression_statement import YulExpressionStatement
 from .yul.for_loop import YulForLoop

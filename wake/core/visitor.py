@@ -579,7 +579,7 @@ class Visitor:
 
     def visit_yul_case(self, node: ir.YulCase):
         """
-        Visit [YulCase][wake.ir.yul.case_statement.YulCase] node.
+        Visit [YulCase][wake.ir.yul.case_.YulCase] node.
         """
 
     def visit_yul_continue(self, node: ir.YulContinue):
