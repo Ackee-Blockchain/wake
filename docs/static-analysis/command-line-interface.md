@@ -50,7 +50,7 @@ Additionally, the `SolidityName` type accepts the following boolean keyword argu
 In order to have the shell completions as quick as possible, all unnecessary imports should be avoided or delayed for the time when the command is actually run.
 To achieve this, it is the best to follow these recommendations:
 
-- It is strongly recommended to start with the templates provided by the `wake init` command.
+- It is strongly recommended to start with the templates provided by the `wake up` command.
 - Any additionally needed imports should be placed inside functions and methods, not at the top of the file.
 - `networkx`, `wake.ir` and `wake.ir.types` modules are lazy-loaded, their members should not be accessed at the top level of the file or at the top level of the detector/printer class.
     - This is not necessary for type annotations as long as `:::python from __future__ import annotations` is used.

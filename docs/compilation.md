@@ -11,7 +11,7 @@ wake compile
 The `--help` flag can be used to display additional options.
 
 !!! tip
-    Wake comes with `wake init` (to initialize a new or existing project) and `wake init config` (to prepare just the `wake.toml` config file) commands.
+    Wake comes with `wake up` (to initialize a new or existing project) and `wake up config` (to prepare just the `wake.toml` config file) commands.
     The commands can automatically set remappings for Foundry projects and enable the solc optimizer if needed.
 
 ## Include paths

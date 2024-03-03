@@ -69,8 +69,8 @@ click.rich_click.COMMAND_GROUPS = {
 
 class AliasedGroup(click.RichGroup):
     def get_command(self, ctx: Context, cmd_name: str) -> Optional[click.Command]:
-        if cmd_name == "up":
-            cmd_name = "init"
+        if cmd_name == "init":
+            cmd_name = "up"
         return super().get_command(ctx, cmd_name)
 
     def list_commands(self, ctx: Context) -> List[str]:

@@ -5,7 +5,7 @@
 In Wake, contract types must be imported from `pytypes`, a directory generated using:
 
 ```shell
-wake init pytypes
+wake up pytypes
 ```
 
 An optional `-w` flag can be used to generate `pytypes` in a watch mode.

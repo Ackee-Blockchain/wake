@@ -13,7 +13,7 @@ This guide explains how to run the first test in Wake development and testing fr
     ```
 
 !!! tip
-    The command `wake init --example counter` can be used to generate an example project in the empty current working directory.
+    The command `wake up --example counter` can be used to generate an example project in the empty current working directory.
 
     Code snippets in this guide are based on the example project.
 
@@ -24,7 +24,7 @@ This guide explains how to run the first test in Wake development and testing fr
 The first step is to generate `pytypes` by running the following command:
 
 ```shell
-wake init
+wake up
 ```
 
 The command prepares `wake.toml` in the current working directory, updates `.gitignore`, prepares a basic directory structure, and generates `pytypes` for all Solidity source files found.
@@ -37,8 +37,8 @@ The command prepares `wake.toml` in the current working directory, updates `.git
 Alternatively, the following commands can be used just to setup the config file and generate `pytypes`:
 
 ```shell
-wake init config
-wake init pytypes -w
+wake up config
+wake up pytypes -w
 ```
 
 The `-w` flag tells Wake to watch for changes in the smart contracts and automatically regenerate `pytypes` when a change is detected.
