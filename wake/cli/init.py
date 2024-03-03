@@ -94,7 +94,7 @@ def update_gitignore(file: Path) -> None:
             f.write("\n" + "\n".join(new_lines))
 
 
-@click.group(name="init", invoke_without_command=True)
+@click.group(name="up", invoke_without_command=True)
 @click.option(
     "--force", "-f", is_flag=True, default=False, help="Force overwrite existing files."
 )

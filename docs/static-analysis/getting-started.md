@@ -12,13 +12,13 @@ Both detectors and printers may be implemented as project-specific or global.
 The best way to get started is to use
 
 ```bash
-wake init detector detector-name
+wake up detector detector-name
 ```
 
 or
 
 ```bash
-wake init printer printer-name
+wake up printer printer-name
 ```
 
 commands, which will create a template detector or printer in `./detectors` or `./printers` respectively.
