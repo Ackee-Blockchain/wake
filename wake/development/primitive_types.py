@@ -143,269 +143,404 @@ if TYPE_CHECKING:
 else:
 
     class Integer(int, abc.ABC):
-        min: int
-        max: int
+        def __new__(cls, value):
+            ret = super().__new__(cls, value)
+            if not hasattr(cls, "min") or not hasattr(cls, "max"):
+                return ret
+            if ret < cls.min or ret > cls.max:
+                raise ValueError(
+                    f"Expected value within range [{cls.min}, {cls.max}], got {ret}"
+                )
+            return ret
 
     class uint8(Integer):
-        min = 0
-        max = 2**8 - 1
+        pass
+
+    uint8.min = uint8(0)
+    uint8.max = uint8(2**8 - 1)
 
     class uint16(Integer):
-        min = 0
-        max = 2**16 - 1
+        pass
+
+    uint16.min = uint16(0)
+    uint16.max = uint16(2**16 - 1)
 
     class uint24(Integer):
-        min = 0
-        max = 2**24 - 1
+        pass
+
+    uint24.min = uint24(0)
+    uint24.max = uint24(2**24 - 1)
 
     class uint32(Integer):
-        min = 0
-        max = 2**32 - 1
+        pass
+
+    uint32.min = uint32(0)
+    uint32.max = uint32(2**32 - 1)
 
     class uint40(Integer):
-        min = 0
-        max = 2**40 - 1
+        pass
+
+    uint40.min = uint40(0)
+    uint40.max = uint40(2**40 - 1)
 
     class uint48(Integer):
-        min = 0
-        max = 2**48 - 1
+        pass
+
+    uint48.min = uint48(0)
+    uint48.max = uint48(2**48 - 1)
 
     class uint56(Integer):
-        min = 0
-        max = 2**56 - 1
+        pass
+
+    uint56.min = uint56(0)
+    uint56.max = uint56(2**56 - 1)
 
     class uint64(Integer):
-        min = 0
-        max = 2**64 - 1
+        pass
+
+    uint64.min = uint64(0)
+    uint64.max = uint64(2**64 - 1)
 
     class uint72(Integer):
-        min = 0
-        max = 2**72 - 1
+        pass
+
+    uint72.min = uint72(0)
+    uint72.max = uint72(2**72 - 1)
 
     class uint80(Integer):
-        min = 0
-        max = 2**80 - 1
+        pass
+
+    uint80.min = uint80(0)
+    uint80.max = uint80(2**80 - 1)
 
     class uint88(Integer):
-        min = 0
-        max = 2**88 - 1
+        pass
+
+    uint88.min = uint88(0)
+    uint88.max = uint88(2**88 - 1)
 
     class uint96(Integer):
-        min = 0
-        max = 2**96 - 1
+        pass
+
+    uint96.min = uint96(0)
+    uint96.max = uint96(2**96 - 1)
 
     class uint104(Integer):
-        min = 0
-        max = 2**104 - 1
+        pass
+
+    uint104.min = uint104(0)
+    uint104.max = uint104(2**104 - 1)
 
     class uint112(Integer):
-        min = 0
-        max = 2**112 - 1
+        pass
+
+    uint112.min = uint112(0)
+    uint112.max = uint112(2**112 - 1)
 
     class uint120(Integer):
-        min = 0
-        max = 2**120 - 1
+        pass
+
+    uint120.min = uint120(0)
+    uint120.max = uint120(2**120 - 1)
 
     class uint128(Integer):
-        min = 0
-        max = 2**128 - 1
+        pass
+
+    uint128.min = uint128(0)
+    uint128.max = uint128(2**128 - 1)
 
     class uint136(Integer):
-        min = 0
-        max = 2**136 - 1
+        pass
+
+    uint136.min = uint136(0)
+    uint136.max = uint136(2**136 - 1)
 
     class uint144(Integer):
-        min = 0
-        max = 2**144 - 1
+        pass
+
+    uint144.min = uint144(0)
+    uint144.max = uint144(2**144 - 1)
 
     class uint152(Integer):
-        min = 0
-        max = 2**152 - 1
+        pass
+
+    uint152.min = uint152(0)
+    uint152.max = uint152(2**152 - 1)
 
     class uint160(Integer):
-        min = 0
-        max = 2**160 - 1
+        pass
+
+    uint160.min = uint160(0)
+    uint160.max = uint160(2**160 - 1)
 
     class uint168(Integer):
-        min = 0
-        max = 2**168 - 1
+        pass
+
+    uint168.min = uint168(0)
+    uint168.max = uint168(2**168 - 1)
 
     class uint176(Integer):
-        min = 0
-        max = 2**176 - 1
+        pass
+
+    uint176.min = uint176(0)
+    uint176.max = uint176(2**176 - 1)
 
     class uint184(Integer):
-        min = 0
-        max = 2**184 - 1
+        pass
+
+    uint184.min = uint184(0)
+    uint184.max = uint184(2**184 - 1)
 
     class uint192(Integer):
-        min = 0
-        max = 2**192 - 1
+        pass
+
+    uint192.min = uint192(0)
+    uint192.max = uint192(2**192 - 1)
 
     class uint200(Integer):
-        min = 0
-        max = 2**200 - 1
+        pass
+
+    uint200.min = uint200(0)
+    uint200.max = uint200(2**200 - 1)
 
     class uint208(Integer):
-        min = 0
-        max = 2**208 - 1
+        pass
+
+    uint208.min = uint208(0)
+    uint208.max = uint208(2**208 - 1)
 
     class uint216(Integer):
-        min = 0
-        max = 2**216 - 1
+        pass
+
+    uint216.min = uint216(0)
+    uint216.max = uint216(2**216 - 1)
 
     class uint224(Integer):
-        min = 0
-        max = 2**224 - 1
+        pass
+
+    uint224.min = uint224(0)
+    uint224.max = uint224(2**224 - 1)
 
     class uint232(Integer):
-        min = 0
-        max = 2**232 - 1
+        pass
+
+    uint232.min = uint232(0)
+    uint232.max = uint232(2**232 - 1)
 
     class uint240(Integer):
-        min = 0
-        max = 2**240 - 1
+        pass
+
+    uint240.min = uint240(0)
+    uint240.max = uint240(2**240 - 1)
 
     class uint248(Integer):
-        min = 0
-        max = 2**248 - 1
+        pass
+
+    uint248.min = uint248(0)
+    uint248.max = uint248(2**248 - 1)
 
     class uint256(Integer):
-        min = 0
-        max = 2**256 - 1
+        pass
+
+    uint256.min = uint256(0)
+    uint256.max = uint256(2**256 - 1)
 
     uint = uint256
 
     class int8(Integer):
-        min = -(2**7)
-        max = 2**7 - 1
+        pass
+
+    int8.min = int8(-(2**7))
+    int8.max = int8(2**7 - 1)
 
     class int16(Integer):
-        min = -(2**15)
-        max = 2**15 - 1
+        pass
+
+    int16.min = int16(-(2**15))
+    int16.max = int16(2**15 - 1)
 
     class int24(Integer):
-        min = -(2**23)
-        max = 2**23 - 1
+        pass
+
+    int24.min = int24(-(2**23))
+    int24.max = int24(2**23 - 1)
 
     class int32(Integer):
-        min = -(2**31)
-        max = 2**31 - 1
+        pass
+
+    int32.min = int32(-(2**31))
+    int32.max = int32(2**31 - 1)
 
     class int40(Integer):
-        min = -(2**39)
-        max = 2**39 - 1
+        pass
+
+    int40.min = int40(-(2**39))
+    int40.max = int40(2**39 - 1)
 
     class int48(Integer):
-        min = -(2**47)
-        max = 2**47 - 1
+        pass
+
+    int48.min = int48(-(2**47))
+    int48.max = int48(2**47 - 1)
 
     class int56(Integer):
-        min = -(2**55)
-        max = 2**55 - 1
+        pass
+
+    int56.min = int56(-(2**55))
+    int56.max = int56(2**55 - 1)
 
     class int64(Integer):
-        min = -(2**63)
-        max = 2**63 - 1
+        pass
+
+    int64.min = int64(-(2**63))
+    int64.max = int64(2**63 - 1)
 
     class int72(Integer):
-        min = -(2**71)
-        max = 2**71 - 1
+        pass
+
+    int72.min = int72(-(2**71))
+    int72.max = int72(2**71 - 1)
 
     class int80(Integer):
-        min = -(2**79)
-        max = 2**79 - 1
+        pass
+
+    int80.min = int80(-(2**79))
+    int80.max = int80(2**79 - 1)
 
     class int88(Integer):
-        min = -(2**87)
-        max = 2**87 - 1
+        pass
+
+    int88.min = int88(-(2**87))
+    int88.max = int88(2**87 - 1)
 
     class int96(Integer):
-        min = -(2**95)
-        max = 2**95 - 1
+        pass
+
+    int96.min = int96(-(2**95))
+    int96.max = int96(2**95 - 1)
 
     class int104(Integer):
-        min = -(2**103)
-        max = 2**103 - 1
+        pass
+
+    int104.min = int104(-(2**103))
+    int104.max = int104(2**103 - 1)
 
     class int112(Integer):
-        min = -(2**111)
-        max = 2**111 - 1
+        pass
+
+    int112.min = int112(-(2**111))
+    int112.max = int112(2**111 - 1)
 
     class int120(Integer):
-        min = -(2**119)
-        max = 2**119 - 1
+        pass
+
+    int120.min = int120(-(2**119))
+    int120.max = int120(2**119 - 1)
 
     class int128(Integer):
-        min = -(2**127)
-        max = 2**127 - 1
+        pass
+
+    int128.min = int128(-(2**127))
+    int128.max = int128(2**127 - 1)
 
     class int136(Integer):
-        min = -(2**135)
-        max = 2**135 - 1
+        pass
+
+    int136.min = int136(-(2**135))
+    int136.max = int136(2**135 - 1)
 
     class int144(Integer):
-        min = -(2**143)
-        max = 2**143 - 1
+        pass
+
+    int144.min = int144(-(2**143))
+    int144.max = int144(2**143 - 1)
 
     class int152(Integer):
-        min = -(2**151)
-        max = 2**151 - 1
+        pass
+
+    int152.min = int152(-(2**151))
+    int152.max = int152(2**151 - 1)
 
     class int160(Integer):
-        min = -(2**159)
-        max = 2**159 - 1
+        pass
+
+    int160.min = int160(-(2**159))
+    int160.max = int160(2**159 - 1)
 
     class int168(Integer):
-        min = -(2**167)
-        max = 2**167 - 1
+        pass
+
+    int168.min = int168(-(2**167))
+    int168.max = int168(2**167 - 1)
 
     class int176(Integer):
-        min = -(2**175)
-        max = 2**175 - 1
+        pass
+
+    int176.min = int176(-(2**175))
+    int176.max = int176(2**175 - 1)
 
     class int184(Integer):
-        min = -(2**183)
-        max = 2**183 - 1
+        pass
+
+    int184.min = int184(-(2**183))
+    int184.max = int184(2**183 - 1)
 
     class int192(Integer):
-        min = -(2**191)
-        max = 2**191 - 1
+        pass
+
+    int192.min = int192(-(2**191))
+    int192.max = int192(2**191 - 1)
 
     class int200(Integer):
-        min = -(2**199)
-        max = 2**199 - 1
+        pass
+
+    int200.min = int200(-(2**199))
+    int200.max = int200(2**199 - 1)
 
     class int208(Integer):
-        min = -(2**207)
-        max = 2**207 - 1
+        pass
+
+    int208.min = int208(-(2**207))
+    int208.max = int208(2**207 - 1)
 
     class int216(Integer):
-        min = -(2**215)
-        max = 2**215 - 1
+        pass
+
+    int216.min = int216(-(2**215))
+    int216.max = int216(2**215 - 1)
 
     class int224(Integer):
-        min = -(2**223)
-        max = 2**223 - 1
+        pass
+
+    int224.min = int224(-(2**223))
+    int224.max = int224(2**223 - 1)
 
     class int232(Integer):
-        min = -(2**231)
-        max = 2**231 - 1
+        pass
+
+    int232.min = int232(-(2**231))
+    int232.max = int232(2**231 - 1)
 
     class int240(Integer):
-        min = -(2**239)
-        max = 2**239 - 1
+        pass
+
+    int240.min = int240(-(2**239))
+    int240.max = int240(2**239 - 1)
 
     class int248(Integer):
-        min = -(2**247)
-        max = 2**247 - 1
+        pass
+
+    int248.min = int248(-(2**247))
+    int248.max = int248(2**247 - 1)
 
     class int256(Integer):
-        min = -(2**255)
-        max = 2**255 - 1
+        pass
+
+    int256.min = int256(-(2**255))
+    int256.max = int256(2**255 - 1)
 
     class FixedSizeBytes(bytes, abc.ABC):
-        length: int
+        length: uint8
 
         def __new__(cls, value):
             ret = super().__new__(cls, value)
@@ -419,105 +554,105 @@ else:
             return ret
 
     class bytes1(FixedSizeBytes):
-        length = 1
+        length = uint8(1)
 
     class bytes2(FixedSizeBytes):
-        length = 2
+        length = uint8(2)
 
     class bytes3(FixedSizeBytes):
-        length = 3
+        length = uint8(3)
 
     class bytes4(FixedSizeBytes):
-        length = 4
+        length = uint8(4)
 
     class bytes5(FixedSizeBytes):
-        length = 5
+        length = uint8(5)
 
     class bytes6(FixedSizeBytes):
-        length = 6
+        length = uint8(6)
 
     class bytes7(FixedSizeBytes):
-        length = 7
+        length = uint8(7)
 
     class bytes8(FixedSizeBytes):
-        length = 8
+        length = uint8(8)
 
     class bytes9(FixedSizeBytes):
-        length = 9
+        length = uint8(9)
 
     class bytes10(FixedSizeBytes):
-        length = 10
+        length = uint8(10)
 
     class bytes11(FixedSizeBytes):
-        length = 11
+        length = uint8(11)
 
     class bytes12(FixedSizeBytes):
-        length = 12
+        length = uint8(12)
 
     class bytes13(FixedSizeBytes):
-        length = 13
+        length = uint8(13)
 
     class bytes14(FixedSizeBytes):
-        length = 14
+        length = uint8(14)
 
     class bytes15(FixedSizeBytes):
-        length = 15
+        length = uint8(15)
 
     class bytes16(FixedSizeBytes):
-        length = 16
+        length = uint8(16)
 
     class bytes17(FixedSizeBytes):
-        length = 17
+        length = uint8(17)
 
     class bytes18(FixedSizeBytes):
-        length = 18
+        length = uint8(18)
 
     class bytes19(FixedSizeBytes):
-        length = 19
+        length = uint8(19)
 
     class bytes20(FixedSizeBytes):
-        length = 20
+        length = uint8(20)
 
     class bytes21(FixedSizeBytes):
-        length = 21
+        length = uint8(21)
 
     class bytes22(FixedSizeBytes):
-        length = 22
+        length = uint8(22)
 
     class bytes23(FixedSizeBytes):
-        length = 23
+        length = uint8(23)
 
     class bytes24(FixedSizeBytes):
-        length = 24
+        length = uint8(24)
 
     class bytes25(FixedSizeBytes):
-        length = 25
+        length = uint8(25)
 
     class bytes26(FixedSizeBytes):
-        length = 26
+        length = uint8(26)
 
     class bytes27(FixedSizeBytes):
-        length = 27
+        length = uint8(27)
 
     class bytes28(FixedSizeBytes):
-        length = 28
+        length = uint8(28)
 
     class bytes29(FixedSizeBytes):
-        length = 29
+        length = uint8(29)
 
     class bytes30(FixedSizeBytes):
-        length = 30
+        length = uint8(30)
 
     class bytes31(FixedSizeBytes):
-        length = 31
+        length = uint8(31)
 
     class bytes32(FixedSizeBytes):
-        length = 32
+        length = uint8(32)
 
     T = TypeVar("T")
 
     class FixedSizeList(List[T], abc.ABC):
-        length: int
+        length: uint256
 
         def __init__(self, items: Iterable[T]):
             super().__init__(items)
@@ -527,97 +662,97 @@ else:
                 )
 
     class List1(FixedSizeList[T]):
-        length = 1
+        length = uint256(1)
 
     class List2(FixedSizeList[T]):
-        length = 2
+        length = uint256(2)
 
     class List3(FixedSizeList[T]):
-        length = 3
+        length = uint256(3)
 
     class List4(FixedSizeList[T]):
-        length = 4
+        length = uint256(4)
 
     class List5(FixedSizeList[T]):
-        length = 5
+        length = uint256(5)
 
     class List6(FixedSizeList[T]):
-        length = 6
+        length = uint256(6)
 
     class List7(FixedSizeList[T]):
-        length = 7
+        length = uint256(7)
 
     class List8(FixedSizeList[T]):
-        length = 8
+        length = uint256(8)
 
     class List9(FixedSizeList[T]):
-        length = 9
+        length = uint256(9)
 
     class List10(FixedSizeList[T]):
-        length = 10
+        length = uint256(10)
 
     class List11(FixedSizeList[T]):
-        length = 11
+        length = uint256(11)
 
     class List12(FixedSizeList[T]):
-        length = 12
+        length = uint256(12)
 
     class List13(FixedSizeList[T]):
-        length = 13
+        length = uint256(13)
 
     class List14(FixedSizeList[T]):
-        length = 14
+        length = uint256(14)
 
     class List15(FixedSizeList[T]):
-        length = 15
+        length = uint256(15)
 
     class List16(FixedSizeList[T]):
-        length = 16
+        length = uint256(16)
 
     class List17(FixedSizeList[T]):
-        length = 17
+        length = uint256(17)
 
     class List18(FixedSizeList[T]):
-        length = 18
+        length = uint256(18)
 
     class List19(FixedSizeList[T]):
-        length = 19
+        length = uint256(19)
 
     class List20(FixedSizeList[T]):
-        length = 20
+        length = uint256(20)
 
     class List21(FixedSizeList[T]):
-        length = 21
+        length = uint256(21)
 
     class List22(FixedSizeList[T]):
-        length = 22
+        length = uint256(22)
 
     class List23(FixedSizeList[T]):
-        length = 23
+        length = uint256(23)
 
     class List24(FixedSizeList[T]):
-        length = 24
+        length = uint256(24)
 
     class List25(FixedSizeList[T]):
-        length = 25
+        length = uint256(25)
 
     class List26(FixedSizeList[T]):
-        length = 26
+        length = uint256(26)
 
     class List27(FixedSizeList[T]):
-        length = 27
+        length = uint256(27)
 
     class List28(FixedSizeList[T]):
-        length = 28
+        length = uint256(28)
 
     class List29(FixedSizeList[T]):
-        length = 29
+        length = uint256(29)
 
     class List30(FixedSizeList[T]):
-        length = 30
+        length = uint256(30)
 
     class List31(FixedSizeList[T]):
-        length = 31
+        length = uint256(31)
 
     class List32(FixedSizeList[T]):
-        length = 32
+        length = uint256(32)
