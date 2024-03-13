@@ -1250,6 +1250,8 @@
       
         
       
+        
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -1289,6 +1291,26 @@
   
   <span class="md-ellipsis">
     abi.encodeWithSignature
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../static-analysis/detectors/axelar-proxy-contract-id/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Axelar proxy contractId
   </span>
   
 
@@ -4407,11 +4429,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../../ir/yul/case-statement/" class="md-nav__link">
+      <a href="../../ir/yul/case/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    case_statement
+    case
   </span>
   
 
@@ -5014,21 +5036,7 @@ In this case, the printer should operate on all paths. May be ignored unless <a 
 <span class="normal"><a href="#__codelineno-0-69">69</a></span>
 <span class="normal"><a href="#__codelineno-0-70">70</a></span>
 <span class="normal"><a href="#__codelineno-0-71">71</a></span>
-<span class="normal"><a href="#__codelineno-0-72">72</a></span>
-<span class="normal"><a href="#__codelineno-0-73">73</a></span>
-<span class="normal"><a href="#__codelineno-0-74">74</a></span>
-<span class="normal"><a href="#__codelineno-0-75">75</a></span>
-<span class="normal"><a href="#__codelineno-0-76">76</a></span>
-<span class="normal"><a href="#__codelineno-0-77">77</a></span>
-<span class="normal"><a href="#__codelineno-0-78">78</a></span>
-<span class="normal"><a href="#__codelineno-0-79">79</a></span>
-<span class="normal"><a href="#__codelineno-0-80">80</a></span>
-<span class="normal"><a href="#__codelineno-0-81">81</a></span>
-<span class="normal"><a href="#__codelineno-0-82">82</a></span>
-<span class="normal"><a href="#__codelineno-0-83">83</a></span>
-<span class="normal"><a href="#__codelineno-0-84">84</a></span>
-<span class="normal"><a href="#__codelineno-0-85">85</a></span>
-<span class="normal"><a href="#__codelineno-0-86">86</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-40" name="__codelineno-0-40"></a><span class="k">class</span> <span class="nc">Printer</span><span class="p">(</span><span class="n">Visitor</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-72">72</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-40" name="__codelineno-0-40"></a><span class="k">class</span> <span class="nc">Printer</span><span class="p">(</span><span class="n">Visitor</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
 <a id="__codelineno-0-41" name="__codelineno-0-41"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-42" name="__codelineno-0-42"></a><span class="sd">    Base class for printers.</span>
 <a id="__codelineno-0-43" name="__codelineno-0-43"></a>
@@ -5061,20 +5069,6 @@ In this case, the printer should operate on all paths. May be ignored unless <a 
 <a id="__codelineno-0-70" name="__codelineno-0-70"></a><span class="sd">        Abstract method that must be implemented in every printer. This method is called after all `visit_` methods have been called.</span>
 <a id="__codelineno-0-71" name="__codelineno-0-71"></a><span class="sd">        &quot;&quot;&quot;</span>
 <a id="__codelineno-0-72" name="__codelineno-0-72"></a>        <span class="o">...</span>
-<a id="__codelineno-0-73" name="__codelineno-0-73"></a>
-<a id="__codelineno-0-74" name="__codelineno-0-74"></a>    <span class="k">def</span> <span class="nf">_run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-75" name="__codelineno-0-75"></a>        <span class="kn">from</span> <span class="nn">wake.utils.file_utils</span> <span class="kn">import</span> <span class="n">is_relative_to</span>
-<a id="__codelineno-0-76" name="__codelineno-0-76"></a>
-<a id="__codelineno-0-77" name="__codelineno-0-77"></a>        <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">source_unit</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">build</span><span class="o">.</span><span class="n">source_units</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-<a id="__codelineno-0-78" name="__codelineno-0-78"></a>            <span class="k">if</span> <span class="p">(</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79"></a>                <span class="bp">self</span><span class="o">.</span><span class="n">visit_mode</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span>
-<a id="__codelineno-0-80" name="__codelineno-0-80"></a>                <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">paths</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
-<a id="__codelineno-0-81" name="__codelineno-0-81"></a>                <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="n">is_relative_to</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">paths</span><span class="p">)</span>
-<a id="__codelineno-0-82" name="__codelineno-0-82"></a>            <span class="p">):</span>
-<a id="__codelineno-0-83" name="__codelineno-0-83"></a>                <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">source_unit</span><span class="p">:</span>
-<a id="__codelineno-0-84" name="__codelineno-0-84"></a>                    <span class="n">visit_map</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">ast_node</span><span class="o">.</span><span class="n">node_type</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
-<a id="__codelineno-0-85" name="__codelineno-0-85"></a>
-<a id="__codelineno-0-86" name="__codelineno-0-86"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">print</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
         </details>
 

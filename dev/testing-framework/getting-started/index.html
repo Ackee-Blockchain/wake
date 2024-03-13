@@ -1335,6 +1335,8 @@
       
         
       
+        
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -1374,6 +1376,26 @@
   
   <span class="md-ellipsis">
     abi.encodeWithSignature
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../static-analysis/detectors/axelar-proxy-contract-id/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Axelar proxy contractId
   </span>
   
 
@@ -4490,11 +4512,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api-reference/ir/yul/case-statement/" class="md-nav__link">
+      <a href="../../api-reference/ir/yul/case/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    case_statement
+    case
   </span>
   
 
@@ -4932,13 +4954,13 @@ To install the latest version of Anvil, run the following command:</p>
 </div>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
-<p>The command <code>wake init --example counter</code> can be used to generate an example project in the empty current working directory.</p>
+<p>The command <code>wake up --example counter</code> can be used to generate an example project in the empty current working directory.</p>
 <p>Code snippets in this guide are based on the example project.</p>
 </div>
 <h2 id="generating-pytypes">Generating pytypes<a class="headerlink" href="#generating-pytypes" title="Permanent link">#</a></h2>
 <p><code>pytypes</code> are Python-native equivalents of Solidity types. They are generated from Solidity source code and used in tests and deployment scripts to interact with smart contracts.</p>
 <p>The first step is to generate <code>pytypes</code> by running the following command:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>wake<span class="w"> </span>init
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>wake<span class="w"> </span>up
 </code></pre></div>
 <p>The command prepares <code>wake.toml</code> in the current working directory, updates <code>.gitignore</code>, prepares a basic directory structure, and generates <code>pytypes</code> for all Solidity source files found.</p>
 <div class="admonition note">
@@ -4948,8 +4970,8 @@ However, in some cases, it may be necessary to configure the compilation process
 For more information, see the <a href="../../compilation/">Compilation</a> page.</p>
 </div>
 <p>Alternatively, the following commands can be used just to setup the config file and generate <code>pytypes</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>wake<span class="w"> </span>init<span class="w"> </span>config
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>wake<span class="w"> </span>init<span class="w"> </span>pytypes<span class="w"> </span>-w
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>wake<span class="w"> </span>up<span class="w"> </span>config
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>wake<span class="w"> </span>up<span class="w"> </span>pytypes<span class="w"> </span>-w
 </code></pre></div>
 <p>The <code>-w</code> flag tells Wake to watch for changes in the smart contracts and automatically regenerate <code>pytypes</code> when a change is detected.</p>
 <div id="generating-pytypes-asciinema" style="z-index: 1; position: relative;"></div>
