@@ -6,6 +6,7 @@ import importlib
 import inspect
 import json
 import math
+import warnings
 from dataclasses import dataclass
 from functools import lru_cache
 from json import JSONDecodeError
@@ -1090,11 +1091,21 @@ def _update_erc20_balance(
     if total_supply_slot is None:
         supply_data = _detect_erc20_total_supply_slot(contract)
         if supply_data is None:
-            raise ValueError("Could not detect ERC20 total supply slot")
-        supply_contract, total_supply_slot = supply_data
+            supply_contract = None
+            total_supply_slot = None
+        else:
+            supply_contract, total_supply_slot = supply_data
 
     _try_change_erc20_balance(contract, balance_contract, account, balance_slot, amount)
-    _try_change_erc20_supply(contract, supply_contract, total_supply_slot, amount)
+    if total_supply_slot is not None:
+        try:
+            _try_change_erc20_supply(
+                contract, supply_contract, total_supply_slot, amount
+            )
+        except Exception:
+            warnings.warn(f"Could not update total supply of {contract.address}")
+    else:
+        warnings.warn(f"Could not update total supply of {contract.address}")
 
 
 def _get_storage_layout(
