@@ -274,7 +274,13 @@ class FunctionCall(ExpressionAbc):
             elif called_function == GlobalSymbol.ADDRESS_DELEGATECALL:
                 ret |= {(self, ModifiesStateFlag.PERFORMS_DELEGATECALL)}
             elif (
-                called_function in {GlobalSymbol.ARRAY_PUSH, GlobalSymbol.ARRAY_POP}
+                called_function
+                in {
+                    GlobalSymbol.ARRAY_PUSH,
+                    GlobalSymbol.ARRAY_POP,
+                    GlobalSymbol.BYTES_PUSH,
+                    GlobalSymbol.BYTES_POP,
+                }
                 and self.expression.is_ref_to_state_variable
             ):
                 ret |= {(self, ModifiesStateFlag.MODIFIES_STATE_VAR)}
