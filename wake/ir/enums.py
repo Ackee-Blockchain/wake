@@ -18,6 +18,11 @@ class GlobalSymbol(IntEnum):
     ECRECOVER = -6
     GASLEFT = -7
     KECCAK256 = -8
+    LOG0 = -10  # removed in Solidity 0.8.0
+    LOG1 = -11  # removed in Solidity 0.8.0
+    LOG2 = -12  # removed in Solidity 0.8.0
+    LOG3 = -13  # removed in Solidity 0.8.0
+    LOG4 = -14  # removed in Solidity 0.8.0
     MSG = -15
     MULMOD = -16
     NOW = -17
