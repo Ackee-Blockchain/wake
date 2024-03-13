@@ -67,6 +67,7 @@ class GlobalSymbol(IntEnum):
     BYTES_CONCAT = -500
     BYTES_LENGTH = -501
     BYTES_PUSH = -502
+    BYTES_POP = -503
 
     STRING_CONCAT = -600
 
@@ -387,7 +388,7 @@ class FunctionTypeKind(StrEnum):
     ADD_MOD = "addmod"
     MUL_MOD = "mulmod"
     ARRAY_PUSH = "arraypush"
-    ARRAY_POP = "arraypop"
+    ARRAY_POP = "arraypop"  # TODO also used for byte array pop, distinguish?
     BYTE_ARRAY_PUSH = "bytearraypush"
     BYTES_CONCAT = "bytesconcat"
     STRING_CONCAT = "stringconcat"
