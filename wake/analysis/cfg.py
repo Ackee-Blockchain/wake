@@ -254,8 +254,17 @@ class ControlFlowGraph:
         start_node = self._statements_lookup[start]
         end_node = self._statements_lookup[end]
         if start_node == end_node:
+            if start == start_node.control_statement:
+                if end == start_node.control_statement:
+                    return True
+                try:
+                    nx.find_cycle(self._graph, start_node)
+                    return True
+                except nx.NetworkXNoCycle:
+                    return False
             if end == end_node.control_statement:
                 return True
+
             start_index = start_node.statements.index(start)
             end_index = end_node.statements.index(end)
             if start_index <= end_index:  # also EQUAL?
@@ -605,12 +614,17 @@ class CfgNode:
                         return True
                     else:
                         return False
+                else:
+                    return False
 
             prev._statements.append(statement)
             next = CfgNode()
             graph.add_node(next)
 
-            if process_expression(statement.expression, prev):
+            if process_expression(
+                statement.expression,  # pyright: ignore reportArgumentType
+                prev,
+            ):
                 return next
             else:
                 graph.remove_node(next)
