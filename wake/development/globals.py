@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 from pathlib import Path
+from random import Random
 from types import TracebackType
 from typing import (
     TYPE_CHECKING,
@@ -31,6 +32,9 @@ if TYPE_CHECKING:
 
 
 logger = get_logger(__name__)
+
+
+random = Random()
 
 
 # must be declared before functions that use it because of a bug in Python (https://bugs.python.org/issue34939)

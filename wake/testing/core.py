@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import random
 from contextlib import contextmanager
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, cast
 
@@ -19,7 +18,7 @@ from wake.development.core import (
     check_connected,
     fix_library_abi,
 )
-from wake.development.globals import chain_interfaces_manager
+from wake.development.globals import chain_interfaces_manager, random
 from wake.development.json_rpc import JsonRpcError
 
 from ..development.chain_interfaces import AnvilChainInterface

@@ -138,6 +138,10 @@ The invariant `invariant_count` is executed after every 10 flows.
 
 There are two ways to generate random data in Wake fuzz tests.
 
+!!! warning
+    Do not use the `random` module from the Python standard library to generate random data in fuzz tests.
+    Instead, use `random` defined in the `wake.testing` module.
+
 ### Flow arguments
 
 Every flow function can accept additional arguments to the implicit `self`. These arguments are generated based on the type hints:

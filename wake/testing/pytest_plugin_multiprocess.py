@@ -3,7 +3,6 @@ import multiprocessing.connection
 import os
 import pickle
 import queue
-import random
 import signal
 import sys
 import time
@@ -21,6 +20,7 @@ from wake.cli.console import console
 from wake.development.globals import (
     attach_debugger,
     chain_interfaces_manager,
+    random,
     reset_exception_handled,
     set_coverage_handler,
     set_exception_handler,

@@ -1,13 +1,18 @@
 import dataclasses
 import enum
-import random
 import string
-from typing import Any, Callable, Dict, Optional, Type
+from typing import Callable, Optional, Type
 
-from typing_extensions import Annotated, get_args, get_origin, get_type_hints
+from typing_extensions import get_args, get_origin, get_type_hints
 
 from wake.development.core import Account, Address, Chain, Wei, detect_default_chain
-from wake.development.primitive_types import FixedSizeBytes, Integer
+from wake.development.globals import random
+from wake.development.primitive_types import (
+    FixedSizeBytes,  # pyright: ignore reportAttributeAccessIssue
+)
+from wake.development.primitive_types import (
+    Integer,  # pyright: ignore reportAttributeAccessIssue
+)
 
 
 def random_account(

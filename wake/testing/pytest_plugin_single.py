@@ -1,4 +1,3 @@
-import random
 from typing import Iterable, List, Optional
 
 from pytest import Session
@@ -9,6 +8,7 @@ from wake.development.globals import (
     attach_debugger,
     chain_interfaces_manager,
     get_coverage_handler,
+    random,
     reset_exception_handled,
     set_coverage_handler,
     set_exception_handler,

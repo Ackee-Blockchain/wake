@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import random
 import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable, Iterable, List, Optional, Tuple
@@ -34,6 +33,7 @@ def run_no_pytest(
         attach_debugger,
         chain_interfaces_manager,
         get_coverage_handler,
+        random,
         reset_exception_handled,
         set_coverage_handler,
         set_exception_handler,
