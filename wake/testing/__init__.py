@@ -1,6 +1,7 @@
 from rich import print
 
 from wake.development.core import Abi, Account, Address, Eip712Domain, Wei, abi
+from wake.development.globals import random
 from wake.development.internal import UnknownEvent
 from wake.development.primitive_types import *
 from wake.development.transactions import (

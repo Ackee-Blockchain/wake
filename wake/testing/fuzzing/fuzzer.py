@@ -4,7 +4,6 @@ import multiprocessing.connection
 import multiprocessing.synchronize
 import os
 import pickle
-import random
 import sys
 import time
 import types
@@ -22,6 +21,7 @@ from wake.config import WakeConfig
 from wake.development.globals import (
     attach_debugger,
     chain_interfaces_manager,
+    random,
     set_coverage_handler,
     set_exception_handler,
 )

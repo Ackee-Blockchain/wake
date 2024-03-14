@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-import random
 from collections import defaultdict
 from typing import Callable, DefaultDict, List, Optional
 
 from typing_extensions import get_type_hints
+
+from wake.development.globals import random
 
 from ..core import get_connected_chains
 from .generators import generate
