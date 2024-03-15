@@ -360,6 +360,10 @@ class SolcSourceUnit(SolidityNode):
 AstSolc = SolcSourceUnit
 
 
+# isConstant, isPure, isLValue was unset in <=0.7.2 when representing False (i.e. only set when True)
+# see https://github.com/ethereum/solidity/commit/dd81d0555954678119d3920861645bb310f193ad
+
+
 class SolcPragmaDirective(SolidityNode):
     # override alias
     node_type: Literal["PragmaDirective"] = Field(alias="nodeType")
@@ -800,9 +804,9 @@ class SolcAssignment(SolidityNode):
     # override alias
     node_type: Literal["Assignment"] = Field(alias="nodeType")
     # required
-    is_constant: StrictBool
-    is_l_value: StrictBool
-    is_pure: StrictBool
+    is_constant: StrictBool = False
+    is_l_value: StrictBool = False
+    is_pure: StrictBool = False
     l_value_requested: StrictBool
     type_descriptions: TypeDescriptionsModel
     left_hand_side: SolcExpressionUnion
@@ -816,9 +820,9 @@ class SolcBinaryOperation(SolidityNode):
     # override alias
     node_type: Literal["BinaryOperation"] = Field(alias="nodeType")
     # required
-    is_constant: StrictBool
-    is_l_value: StrictBool
-    is_pure: StrictBool
+    is_constant: StrictBool = False
+    is_l_value: StrictBool = False
+    is_pure: StrictBool = False
     l_value_requested: StrictBool
     type_descriptions: TypeDescriptionsModel
     common_type: TypeDescriptionsModel
@@ -834,9 +838,9 @@ class SolcConditional(SolidityNode):
     # override alias
     node_type: Literal["Conditional"] = Field(alias="nodeType")
     # required
-    is_constant: StrictBool
-    is_l_value: StrictBool
-    is_pure: StrictBool
+    is_constant: StrictBool = False
+    is_l_value: StrictBool = False
+    is_pure: StrictBool = False
     l_value_requested: StrictBool
     type_descriptions: TypeDescriptionsModel
     condition: SolcExpressionUnion
@@ -850,9 +854,9 @@ class SolcElementaryTypeNameExpression(SolidityNode):
     # override alias
     node_type: Literal["ElementaryTypeNameExpression"] = Field(alias="nodeType")
     # required
-    is_constant: StrictBool
-    is_l_value: StrictBool
-    is_pure: StrictBool
+    is_constant: StrictBool = False
+    is_l_value: StrictBool = False
+    is_pure: StrictBool = False
     l_value_requested: StrictBool
     type_descriptions: TypeDescriptionsModel
     type_name: "SolcElementaryTypeName"  # in versions < 0.6.0 this was a string
@@ -864,9 +868,9 @@ class SolcFunctionCall(SolidityNode):
     # override alias
     node_type: Literal["FunctionCall"] = Field(alias="nodeType")
     # required
-    is_constant: StrictBool
-    is_l_value: StrictBool
-    is_pure: StrictBool
+    is_constant: StrictBool = False
+    is_l_value: StrictBool = False
+    is_pure: StrictBool = False
     l_value_requested: StrictBool
     type_descriptions: TypeDescriptionsModel
     arguments: List[SolcExpressionUnion]
@@ -883,8 +887,9 @@ class SolcFunctionCallOptions(SolidityNode):
     # override alias
     node_type: Literal["FunctionCallOptions"] = Field(alias="nodeType")
     # required
-    is_constant: StrictBool
-    is_pure: StrictBool
+    is_constant: StrictBool = False
+    is_l_value: StrictBool = False
+    is_pure: StrictBool = False
     l_value_requested: StrictBool
     type_descriptions: TypeDescriptionsModel
     expression: SolcExpressionUnion
@@ -892,7 +897,6 @@ class SolcFunctionCallOptions(SolidityNode):
     options: List[SolcExpressionUnion]
     # optional
     # TODO:
-    is_l_value: Optional[StrictBool]
     argument_types: Optional[List[TypeDescriptionsModel]]
 
 
@@ -912,9 +916,9 @@ class SolcIndexAccess(SolidityNode):
     # override alias
     node_type: Literal["IndexAccess"] = Field(alias="nodeType")
     # required
-    is_constant: StrictBool
-    is_l_value: StrictBool
-    is_pure: StrictBool
+    is_constant: StrictBool = False
+    is_l_value: StrictBool = False
+    is_pure: StrictBool = False
     l_value_requested: StrictBool
     type_descriptions: TypeDescriptionsModel
     base_expression: SolcExpressionUnion
@@ -927,9 +931,9 @@ class SolcIndexRangeAccess(SolidityNode):
     # override alias
     node_type: Literal["IndexRangeAccess"] = Field(alias="nodeType")
     # required
-    is_constant: StrictBool
-    is_l_value: StrictBool
-    is_pure: StrictBool
+    is_constant: StrictBool = False
+    is_l_value: StrictBool = False
+    is_pure: StrictBool = False
     l_value_requested: StrictBool
     type_descriptions: TypeDescriptionsModel
     base_expression: SolcExpressionUnion
@@ -943,9 +947,9 @@ class SolcLiteral(SolidityNode):
     # override alias
     node_type: Literal["Literal"] = Field(alias="nodeType")
     # required
-    is_constant: StrictBool
-    is_l_value: StrictBool
-    is_pure: StrictBool
+    is_constant: StrictBool = False
+    is_l_value: StrictBool = False
+    is_pure: StrictBool = False
     l_value_requested: StrictBool
     type_descriptions: TypeDescriptionsModel
     hex_value: StrictStr
@@ -960,9 +964,9 @@ class SolcMemberAccess(SolidityNode):
     # override alias
     node_type: Literal["MemberAccess"] = Field(alias="nodeType")
     # required
-    is_constant: StrictBool
-    is_l_value: StrictBool
-    is_pure: StrictBool
+    is_constant: StrictBool = False
+    is_l_value: StrictBool = False
+    is_pure: StrictBool = False
     l_value_requested: StrictBool
     type_descriptions: TypeDescriptionsModel
     expression: SolcExpressionUnion
@@ -979,23 +983,23 @@ class SolcNewExpression(SolidityNode):
     # override alias
     node_type: Literal["NewExpression"] = Field(alias="nodeType")
     # required
-    is_constant: StrictBool
-    is_pure: StrictBool
+    is_constant: StrictBool = False
+    is_l_value: StrictBool = False
+    is_pure: StrictBool = False
     l_value_requested: StrictBool
     type_descriptions: TypeDescriptionsModel
     type_name: SolcTypeNameUnion
     # optional
     argument_types: Optional[List[TypeDescriptionsModel]]
-    is_l_value: Optional[StrictBool]
 
 
 class SolcTupleExpression(SolidityNode):
     # override alias
     node_type: Literal["TupleExpression"] = Field(alias="nodeType")
     # required
-    is_constant: StrictBool
-    is_l_value: StrictBool
-    is_pure: StrictBool
+    is_constant: StrictBool = False
+    is_l_value: StrictBool = False
+    is_pure: StrictBool = False
     l_value_requested: StrictBool
     type_descriptions: TypeDescriptionsModel
     components: List[OptionalSolcExpressionUnion]
@@ -1008,9 +1012,9 @@ class SolcUnaryOperation(SolidityNode):
     # override alias
     node_type: Literal["UnaryOperation"] = Field(alias="nodeType")
     # required
-    is_constant: StrictBool
-    is_l_value: StrictBool
-    is_pure: StrictBool
+    is_constant: StrictBool = False
+    is_l_value: StrictBool = False
+    is_pure: StrictBool = False
     l_value_requested: StrictBool
     type_descriptions: TypeDescriptionsModel
     operator: UnaryOpOperator
