@@ -355,7 +355,7 @@ class ModifierDefinition(DeclarationAbc):
 
             `B2.mod` on lines 12-14 has an override specifier with the [overrides][wake.ir.meta.override_specifier.OverrideSpecifier.overrides] property empty.
 
-            `C.mod` on lines 18-20 has an override specifier with the [overrides][wake.ir.meta.override_specifier.OverrideSpecifier.overrides] property containg two items referencing the contracts `B1` and `B2` ([ContractDefinition][wake.ir.declarations.contract_definition.ContractDefinition]).
+            `C.mod` on lines 18-20 has an override specifier with the [overrides][wake.ir.meta.override_specifier.OverrideSpecifier.overrides] property containing two items referencing the contracts `B1` and `B2` ([ContractDefinition][wake.ir.declarations.contract_definition.ContractDefinition]).
             ```solidity linenums="1"
             abstract contract A {
                 modifier mod virtual;
