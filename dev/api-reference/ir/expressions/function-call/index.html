@@ -5288,7 +5288,13 @@
 <span class="normal"><a href="#__codelineno-0-306">306</a></span>
 <span class="normal"><a href="#__codelineno-0-307">307</a></span>
 <span class="normal"><a href="#__codelineno-0-308">308</a></span>
-<span class="normal"><a href="#__codelineno-0-309">309</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="k">class</span> <span class="nc">FunctionCall</span><span class="p">(</span><span class="n">ExpressionAbc</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-309">309</a></span>
+<span class="normal"><a href="#__codelineno-0-310">310</a></span>
+<span class="normal"><a href="#__codelineno-0-311">311</a></span>
+<span class="normal"><a href="#__codelineno-0-312">312</a></span>
+<span class="normal"><a href="#__codelineno-0-313">313</a></span>
+<span class="normal"><a href="#__codelineno-0-314">314</a></span>
+<span class="normal"><a href="#__codelineno-0-315">315</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="k">class</span> <span class="nc">FunctionCall</span><span class="p">(</span><span class="n">ExpressionAbc</span><span class="p">):</span>
 <a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="sd">    Represents:</span>
 <a id="__codelineno-0-46" name="__codelineno-0-46"></a>
@@ -5522,39 +5528,45 @@
 <a id="__codelineno-0-274" name="__codelineno-0-274"></a>            <span class="k">elif</span> <span class="n">called_function</span> <span class="o">==</span> <span class="n">GlobalSymbol</span><span class="o">.</span><span class="n">ADDRESS_DELEGATECALL</span><span class="p">:</span>
 <a id="__codelineno-0-275" name="__codelineno-0-275"></a>                <span class="n">ret</span> <span class="o">|=</span> <span class="p">{(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ModifiesStateFlag</span><span class="o">.</span><span class="n">PERFORMS_DELEGATECALL</span><span class="p">)}</span>
 <a id="__codelineno-0-276" name="__codelineno-0-276"></a>            <span class="k">elif</span> <span class="p">(</span>
-<a id="__codelineno-0-277" name="__codelineno-0-277"></a>                <span class="n">called_function</span> <span class="ow">in</span> <span class="p">{</span><span class="n">GlobalSymbol</span><span class="o">.</span><span class="n">ARRAY_PUSH</span><span class="p">,</span> <span class="n">GlobalSymbol</span><span class="o">.</span><span class="n">ARRAY_POP</span><span class="p">}</span>
-<a id="__codelineno-0-278" name="__codelineno-0-278"></a>                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">expression</span><span class="o">.</span><span class="n">is_ref_to_state_variable</span>
-<a id="__codelineno-0-279" name="__codelineno-0-279"></a>            <span class="p">):</span>
-<a id="__codelineno-0-280" name="__codelineno-0-280"></a>                <span class="n">ret</span> <span class="o">|=</span> <span class="p">{(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ModifiesStateFlag</span><span class="o">.</span><span class="n">MODIFIES_STATE_VAR</span><span class="p">)}</span>
-<a id="__codelineno-0-281" name="__codelineno-0-281"></a>            <span class="k">elif</span> <span class="n">called_function</span> <span class="o">==</span> <span class="n">GlobalSymbol</span><span class="o">.</span><span class="n">FUNCTION_VALUE</span><span class="p">:</span>
-<a id="__codelineno-0-282" name="__codelineno-0-282"></a>                <span class="n">ret</span> <span class="o">|=</span> <span class="p">{(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ModifiesStateFlag</span><span class="o">.</span><span class="n">SENDS_ETHER</span><span class="p">)}</span>
-<a id="__codelineno-0-283" name="__codelineno-0-283"></a>            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">called_function</span><span class="p">,</span> <span class="n">FunctionDefinition</span><span class="p">):</span>
-<a id="__codelineno-0-284" name="__codelineno-0-284"></a>                <span class="k">if</span> <span class="n">called_function</span><span class="o">.</span><span class="n">state_mutability</span> <span class="ow">in</span> <span class="p">{</span>
-<a id="__codelineno-0-285" name="__codelineno-0-285"></a>                    <span class="n">StateMutability</span><span class="o">.</span><span class="n">PURE</span><span class="p">,</span>
-<a id="__codelineno-0-286" name="__codelineno-0-286"></a>                    <span class="n">StateMutability</span><span class="o">.</span><span class="n">VIEW</span><span class="p">,</span>
-<a id="__codelineno-0-287" name="__codelineno-0-287"></a>                <span class="p">}:</span>
-<a id="__codelineno-0-288" name="__codelineno-0-288"></a>                    <span class="k">pass</span>
-<a id="__codelineno-0-289" name="__codelineno-0-289"></a>                <span class="k">elif</span> <span class="n">called_function</span><span class="o">.</span><span class="n">body</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-290" name="__codelineno-0-290"></a>                    <span class="n">ret</span> <span class="o">|=</span> <span class="n">called_function</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">modifies_state</span>
-<a id="__codelineno-0-291" name="__codelineno-0-291"></a>                    <span class="k">for</span> <span class="n">modifier</span> <span class="ow">in</span> <span class="n">called_function</span><span class="o">.</span><span class="n">modifiers</span><span class="p">:</span>
-<a id="__codelineno-0-292" name="__codelineno-0-292"></a>                        <span class="n">modifier_def</span> <span class="o">=</span> <span class="n">modifier</span><span class="o">.</span><span class="n">modifier_name</span><span class="o">.</span><span class="n">referenced_declaration</span>
-<a id="__codelineno-0-293" name="__codelineno-0-293"></a>                        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">modifier_def</span><span class="p">,</span> <span class="n">ModifierDefinition</span><span class="p">)</span>
-<a id="__codelineno-0-294" name="__codelineno-0-294"></a>                        <span class="k">if</span> <span class="n">modifier_def</span><span class="o">.</span><span class="n">body</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-295" name="__codelineno-0-295"></a>                            <span class="n">ret</span> <span class="o">|=</span> <span class="n">modifier_def</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">modifies_state</span>
-<a id="__codelineno-0-296" name="__codelineno-0-296"></a>                <span class="k">elif</span> <span class="n">called_function</span><span class="o">.</span><span class="n">state_mutability</span> <span class="o">==</span> <span class="n">StateMutability</span><span class="o">.</span><span class="n">NONPAYABLE</span><span class="p">:</span>
-<a id="__codelineno-0-297" name="__codelineno-0-297"></a>                    <span class="n">ret</span> <span class="o">|=</span> <span class="p">{</span>
-<a id="__codelineno-0-298" name="__codelineno-0-298"></a>                        <span class="p">(</span>
-<a id="__codelineno-0-299" name="__codelineno-0-299"></a>                            <span class="bp">self</span><span class="p">,</span>
-<a id="__codelineno-0-300" name="__codelineno-0-300"></a>                            <span class="n">ModifiesStateFlag</span><span class="o">.</span><span class="n">CALLS_UNIMPLEMENTED_NONPAYABLE_FUNCTION</span><span class="p">,</span>
-<a id="__codelineno-0-301" name="__codelineno-0-301"></a>                        <span class="p">)</span>
-<a id="__codelineno-0-302" name="__codelineno-0-302"></a>                    <span class="p">}</span>
-<a id="__codelineno-0-303" name="__codelineno-0-303"></a>                <span class="k">elif</span> <span class="n">called_function</span><span class="o">.</span><span class="n">state_mutability</span> <span class="o">==</span> <span class="n">StateMutability</span><span class="o">.</span><span class="n">PAYABLE</span><span class="p">:</span>
-<a id="__codelineno-0-304" name="__codelineno-0-304"></a>                    <span class="n">ret</span> <span class="o">|=</span> <span class="p">{</span>
-<a id="__codelineno-0-305" name="__codelineno-0-305"></a>                        <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ModifiesStateFlag</span><span class="o">.</span><span class="n">CALLS_UNIMPLEMENTED_PAYABLE_FUNCTION</span><span class="p">)</span>
-<a id="__codelineno-0-306" name="__codelineno-0-306"></a>                    <span class="p">}</span>
-<a id="__codelineno-0-307" name="__codelineno-0-307"></a>                <span class="k">else</span><span class="p">:</span>
-<a id="__codelineno-0-308" name="__codelineno-0-308"></a>                    <span class="k">assert</span> <span class="kc">False</span>
-<a id="__codelineno-0-309" name="__codelineno-0-309"></a>        <span class="k">return</span> <span class="n">ret</span>
+<a id="__codelineno-0-277" name="__codelineno-0-277"></a>                <span class="n">called_function</span>
+<a id="__codelineno-0-278" name="__codelineno-0-278"></a>                <span class="ow">in</span> <span class="p">{</span>
+<a id="__codelineno-0-279" name="__codelineno-0-279"></a>                    <span class="n">GlobalSymbol</span><span class="o">.</span><span class="n">ARRAY_PUSH</span><span class="p">,</span>
+<a id="__codelineno-0-280" name="__codelineno-0-280"></a>                    <span class="n">GlobalSymbol</span><span class="o">.</span><span class="n">ARRAY_POP</span><span class="p">,</span>
+<a id="__codelineno-0-281" name="__codelineno-0-281"></a>                    <span class="n">GlobalSymbol</span><span class="o">.</span><span class="n">BYTES_PUSH</span><span class="p">,</span>
+<a id="__codelineno-0-282" name="__codelineno-0-282"></a>                    <span class="n">GlobalSymbol</span><span class="o">.</span><span class="n">BYTES_POP</span><span class="p">,</span>
+<a id="__codelineno-0-283" name="__codelineno-0-283"></a>                <span class="p">}</span>
+<a id="__codelineno-0-284" name="__codelineno-0-284"></a>                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">expression</span><span class="o">.</span><span class="n">is_ref_to_state_variable</span>
+<a id="__codelineno-0-285" name="__codelineno-0-285"></a>            <span class="p">):</span>
+<a id="__codelineno-0-286" name="__codelineno-0-286"></a>                <span class="n">ret</span> <span class="o">|=</span> <span class="p">{(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ModifiesStateFlag</span><span class="o">.</span><span class="n">MODIFIES_STATE_VAR</span><span class="p">)}</span>
+<a id="__codelineno-0-287" name="__codelineno-0-287"></a>            <span class="k">elif</span> <span class="n">called_function</span> <span class="o">==</span> <span class="n">GlobalSymbol</span><span class="o">.</span><span class="n">FUNCTION_VALUE</span><span class="p">:</span>
+<a id="__codelineno-0-288" name="__codelineno-0-288"></a>                <span class="n">ret</span> <span class="o">|=</span> <span class="p">{(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ModifiesStateFlag</span><span class="o">.</span><span class="n">SENDS_ETHER</span><span class="p">)}</span>
+<a id="__codelineno-0-289" name="__codelineno-0-289"></a>            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">called_function</span><span class="p">,</span> <span class="n">FunctionDefinition</span><span class="p">):</span>
+<a id="__codelineno-0-290" name="__codelineno-0-290"></a>                <span class="k">if</span> <span class="n">called_function</span><span class="o">.</span><span class="n">state_mutability</span> <span class="ow">in</span> <span class="p">{</span>
+<a id="__codelineno-0-291" name="__codelineno-0-291"></a>                    <span class="n">StateMutability</span><span class="o">.</span><span class="n">PURE</span><span class="p">,</span>
+<a id="__codelineno-0-292" name="__codelineno-0-292"></a>                    <span class="n">StateMutability</span><span class="o">.</span><span class="n">VIEW</span><span class="p">,</span>
+<a id="__codelineno-0-293" name="__codelineno-0-293"></a>                <span class="p">}:</span>
+<a id="__codelineno-0-294" name="__codelineno-0-294"></a>                    <span class="k">pass</span>
+<a id="__codelineno-0-295" name="__codelineno-0-295"></a>                <span class="k">elif</span> <span class="n">called_function</span><span class="o">.</span><span class="n">body</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-296" name="__codelineno-0-296"></a>                    <span class="n">ret</span> <span class="o">|=</span> <span class="n">called_function</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">modifies_state</span>
+<a id="__codelineno-0-297" name="__codelineno-0-297"></a>                    <span class="k">for</span> <span class="n">modifier</span> <span class="ow">in</span> <span class="n">called_function</span><span class="o">.</span><span class="n">modifiers</span><span class="p">:</span>
+<a id="__codelineno-0-298" name="__codelineno-0-298"></a>                        <span class="n">modifier_def</span> <span class="o">=</span> <span class="n">modifier</span><span class="o">.</span><span class="n">modifier_name</span><span class="o">.</span><span class="n">referenced_declaration</span>
+<a id="__codelineno-0-299" name="__codelineno-0-299"></a>                        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">modifier_def</span><span class="p">,</span> <span class="n">ModifierDefinition</span><span class="p">)</span>
+<a id="__codelineno-0-300" name="__codelineno-0-300"></a>                        <span class="k">if</span> <span class="n">modifier_def</span><span class="o">.</span><span class="n">body</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-301" name="__codelineno-0-301"></a>                            <span class="n">ret</span> <span class="o">|=</span> <span class="n">modifier_def</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">modifies_state</span>
+<a id="__codelineno-0-302" name="__codelineno-0-302"></a>                <span class="k">elif</span> <span class="n">called_function</span><span class="o">.</span><span class="n">state_mutability</span> <span class="o">==</span> <span class="n">StateMutability</span><span class="o">.</span><span class="n">NONPAYABLE</span><span class="p">:</span>
+<a id="__codelineno-0-303" name="__codelineno-0-303"></a>                    <span class="n">ret</span> <span class="o">|=</span> <span class="p">{</span>
+<a id="__codelineno-0-304" name="__codelineno-0-304"></a>                        <span class="p">(</span>
+<a id="__codelineno-0-305" name="__codelineno-0-305"></a>                            <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-306" name="__codelineno-0-306"></a>                            <span class="n">ModifiesStateFlag</span><span class="o">.</span><span class="n">CALLS_UNIMPLEMENTED_NONPAYABLE_FUNCTION</span><span class="p">,</span>
+<a id="__codelineno-0-307" name="__codelineno-0-307"></a>                        <span class="p">)</span>
+<a id="__codelineno-0-308" name="__codelineno-0-308"></a>                    <span class="p">}</span>
+<a id="__codelineno-0-309" name="__codelineno-0-309"></a>                <span class="k">elif</span> <span class="n">called_function</span><span class="o">.</span><span class="n">state_mutability</span> <span class="o">==</span> <span class="n">StateMutability</span><span class="o">.</span><span class="n">PAYABLE</span><span class="p">:</span>
+<a id="__codelineno-0-310" name="__codelineno-0-310"></a>                    <span class="n">ret</span> <span class="o">|=</span> <span class="p">{</span>
+<a id="__codelineno-0-311" name="__codelineno-0-311"></a>                        <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ModifiesStateFlag</span><span class="o">.</span><span class="n">CALLS_UNIMPLEMENTED_PAYABLE_FUNCTION</span><span class="p">)</span>
+<a id="__codelineno-0-312" name="__codelineno-0-312"></a>                    <span class="p">}</span>
+<a id="__codelineno-0-313" name="__codelineno-0-313"></a>                <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-314" name="__codelineno-0-314"></a>                    <span class="k">assert</span> <span class="kc">False</span>
+<a id="__codelineno-0-315" name="__codelineno-0-315"></a>        <span class="k">return</span> <span class="n">ret</span>
 </code></pre></div></td></tr></table></div>
         </details>
 

@@ -5248,6 +5248,11 @@ That means that the probability of `flow_1` being executed is `100 / (100 + 50) 
 The invariant <code>invariant_count</code> is executed after every 10 flows.</p>
 <h2 id="generating-random-data">Generating random data<a class="headerlink" href="#generating-random-data" title="Permanent link">#</a></h2>
 <p>There are two ways to generate random data in Wake fuzz tests.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Do not use the <code>random</code> module from the Python standard library to generate random data in fuzz tests.
+Instead, use <code>random</code> defined in the <code>wake.testing</code> module.</p>
+</div>
 <h3 id="flow-arguments">Flow arguments<a class="headerlink" href="#flow-arguments" title="Permanent link">#</a></h3>
 <p>Every flow function can accept additional arguments to the implicit <code>self</code>. These arguments are generated based on the type hints:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nd">@flow</span><span class="p">()</span>
