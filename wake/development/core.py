@@ -257,6 +257,9 @@ class abi:
         if isinstance(args, tuple):
             return f"({','.join(cls._types_from_args(arg) for arg in args)})"
         elif isinstance(args, list):
+            if len(args) == 0:
+                return "uint256[]"  # should not matter what type is used
+
             for arg in args:
                 try:
                     arg_type = cls._types_from_args(arg)
