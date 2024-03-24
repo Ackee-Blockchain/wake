@@ -5,6 +5,7 @@ from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass, field
 from functools import partial, total_ordering
+from itertools import chain
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
@@ -213,11 +214,13 @@ def _strip_excluded_subdetections(
     if len(detection.subdetections) == 0:
         return detection
 
+    wake_contracts_path = Path(__file__).parent.parent / "contracts"
+
     subdetections = []
     for d in detection.subdetections:
         if not any(
             is_relative_to(d.ir_node.source_unit.file, p)
-            for p in config.detectors.exclude_paths
+            for p in chain(config.detectors.exclude_paths, [wake_contracts_path])
         ):
             subdetections.append(d)
             continue
@@ -320,9 +323,11 @@ def _filter_detections(
         ):
             continue
 
+        wake_contracts_path = Path(__file__).parent.parent / "contracts"
+
         if any(
             is_relative_to(detection.detection.ir_node.source_unit.file, p)
-            for p in config.detectors.exclude_paths
+            for p in chain(config.detectors.exclude_paths, [wake_contracts_path])
         ):
             detection = DetectorResult(
                 _strip_excluded_subdetections(detection.detection, config),
