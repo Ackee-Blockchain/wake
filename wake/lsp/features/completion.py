@@ -3,6 +3,7 @@ from __future__ import annotations
 import enum
 import logging
 from itertools import chain
+from pathlib import Path
 from typing import Any, List, Optional, Union
 
 from wake.core import get_logger
@@ -536,9 +537,12 @@ async def completion(
     if node is None:
         return None
 
+    wake_contracts_path = Path(__file__).parent.parent.parent / "contracts"
+
     this_source_unit_name = None
     for include_path in chain(
-        context.config.compiler.solc.include_paths, [context.config.project_root_path]
+        context.config.compiler.solc.include_paths,
+        [context.config.project_root_path, wake_contracts_path],
     ):
         try:
             rel_path = str(path.relative_to(include_path).as_posix())
@@ -572,7 +576,7 @@ async def completion(
 
         for include_path in chain(
             context.config.compiler.solc.include_paths,
-            [context.config.project_root_path],
+            [context.config.project_root_path, wake_contracts_path],
         ):
             if include_path.is_dir():
                 for p in include_path.iterdir():
@@ -598,7 +602,7 @@ async def completion(
     else:
         for include_path in chain(
             context.config.compiler.solc.include_paths,
-            [context.config.project_root_path],
+            [context.config.project_root_path, wake_contracts_path],
         ):
             if include_path.is_dir():
                 dir = include_path / parent
