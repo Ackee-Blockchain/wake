@@ -4,7 +4,7 @@ import os
 import platform
 import sys
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, List, Optional, Sequence
 
 import rich_click as click
 from click.core import Context
@@ -75,6 +75,38 @@ class AliasedGroup(click.RichGroup):
 
     def list_commands(self, ctx: Context) -> List[str]:
         return sorted(["up"] + super().list_commands(ctx))
+
+    def main(
+        self,
+        args: Optional[Sequence[str]] = None,
+        prog_name: Optional[str] = None,
+        complete_var: Optional[str] = None,
+        standalone_mode: bool = True,
+        windows_expand_args: bool = True,
+        **extra: Any,
+    ) -> Any:
+        if "_WAKE_COMPLETE" in os.environ:
+            import warnings
+
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                return super().main(
+                    args=args,
+                    prog_name=prog_name,
+                    complete_var=complete_var,
+                    standalone_mode=standalone_mode,
+                    windows_expand_args=windows_expand_args,
+                    **extra,
+                )
+        else:
+            return super().main(
+                args=args,
+                prog_name=prog_name,
+                complete_var=complete_var,
+                standalone_mode=standalone_mode,
+                windows_expand_args=windows_expand_args,
+                **extra,
+            )
 
 
 @click.group(cls=AliasedGroup, context_settings={"help_option_names": ["-h", "--help"]})
