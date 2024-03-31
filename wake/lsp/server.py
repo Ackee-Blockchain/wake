@@ -844,6 +844,10 @@ class LspServer:
                 context.use_toml = raw_config["configuration"]["use_toml_if_present"]
             raw_config.pop("configuration")
 
+        config_clone = WakeConfig.fromdict(
+            context.config.todict(), project_root_path=context.config.project_root_path
+        )
+
         if context.use_toml and context.toml_path.exists():
             if (
                 original_toml_path != context.toml_path
@@ -856,8 +860,10 @@ class LspServer:
                     )
                     config.load_configs()
 
-                    context.config.local_config_path = context.toml_path
-                    changed = context.config.update(config.todict(), set())
+                    local_config_path = context.toml_path
+                    config_update = config.todict()
+                    removed_options = set()
+                    changed = config_clone.update(config_update, removed_options)
                 except tomli.TOMLDecodeError:
                     await self.log_message(
                         f"Failed to parse {context.toml_path}.",
@@ -874,7 +880,10 @@ class LspServer:
                     await self.show_message(message, MessageType.ERROR)
                     return
             else:
+                local_config_path = context.config.local_config_path  # still the same
                 changed = {}
+                config_update = {}
+                removed_options = set()
         else:
             raw_config_copy = deepcopy(raw_config)
             (
@@ -885,9 +894,14 @@ class LspServer:
                 raw_config_copy, context.config.project_root_path
             )
 
-            changed = context.config.update(
-                raw_config_copy, invalid_options.union(removed_options)
-            )
+            config_update = raw_config_copy
+            local_config_path = context.config.local_config_path
+            removed_options = invalid_options.union(removed_options)
+            changed = config_clone.update(config_update, removed_options)
+
+        await context.compiler.update_config(
+            config_update, removed_options, local_config_path
+        )
 
         if key_in_nested_dict(("compiler", "solc"), changed):
             await context.compiler.force_recompile()
@@ -897,6 +911,10 @@ class LspServer:
             or key_in_nested_dict(("detector",), changed)
         ):
             await context.compiler.force_rerun_detectors()
+        if key_in_nested_dict(("printers",), changed) or key_in_nested_dict(
+            ("printer",), changed
+        ):
+            await context.compiler.force_rerun_printers()
         if key_in_nested_dict(("lsp", "code_lens"), changed):
             try:
                 await self.send_request(
@@ -997,6 +1015,11 @@ class LspServer:
         latest_configuration = None
 
         for context in self.__workspaces.values():
+            config_clone = WakeConfig.fromdict(
+                context.config.todict(),
+                project_root_path=context.config.project_root_path,
+            )
+
             if (
                 context.use_toml
                 and context.toml_path.exists()
@@ -1009,14 +1032,25 @@ class LspServer:
                     )
                     config.load_configs()
 
-                    changed = context.config.update(config.todict(), set())
+                    config_update = config.todict()
+                    changed = config_clone.update(config_update, set())
+
+                    await context.compiler.update_config(
+                        config_update, set(), context.toml_path
+                    )
 
                     if key_in_nested_dict(("compiler", "solc"), changed):
                         await context.compiler.force_recompile()
-                    if key_in_nested_dict(
-                        ("lsp", "detectors"), changed
-                    ) or key_in_nested_dict(("detectors",), changed):
+                    if (
+                        key_in_nested_dict(("lsp", "detectors"), changed)
+                        or key_in_nested_dict(("detectors",), changed)
+                        or key_in_nested_dict(("detector",), changed)
+                    ):
                         await context.compiler.force_rerun_detectors()
+                    if key_in_nested_dict(("printers",), changed) or key_in_nested_dict(
+                        ("printer",), changed
+                    ):
+                        await context.compiler.force_rerun_printers()
                     if key_in_nested_dict(("lsp", "code_lens"), changed):
                         try:
                             await self.send_request(
@@ -1079,7 +1113,10 @@ class LspServer:
             for context in self.__workspaces.values():
                 await self._handle_config_change(context, params.settings["wake"])
 
-    async def _get_workspace(self, uri: DocumentUri) -> LspContext:
+    async def _get_workspace(
+        self,
+        uri: DocumentUri,  # pyright: ignore reportInvalidTypeForm
+    ) -> LspContext:
         path = uri_to_path(uri)
         matching_workspaces = []
         for workspace in self.__workspaces.values():
