@@ -13,6 +13,7 @@ import time
 import traceback
 from collections import deque
 from copy import deepcopy
+from dataclasses import dataclass
 from functools import lru_cache
 from itertools import chain
 from pathlib import Path
@@ -146,6 +147,13 @@ class CustomFileChangeCommand(StrEnum):
     FORCE_RECOMPILE = "force_recompile"
     FORCE_RERUN_DETECTORS = "force_rerun_detectors"
     FORCE_RERUN_PRINTERS = "force_rerun_printers"
+
+
+@dataclass
+class ConfigUpdate:
+    update: Dict
+    removed_options: Set
+    local_config_path: Path
 
 
 class DetectionAdditionalInfo(LspModel):
@@ -409,6 +417,13 @@ class LspCompiler:
         self.output_ready.clear()
         await self.__file_changes_queue.put(change)
 
+    async def update_config(
+        self, update: Dict, removed_options: Set, local_config_path: Path
+    ):
+        await self.__file_changes_queue.put(
+            ConfigUpdate(update, removed_options, local_config_path)
+        )
+
     async def force_recompile(self) -> None:
         self.__output_ready.clear()
         await self.__file_changes_queue.put(CustomFileChangeCommand.FORCE_RECOMPILE)
@@ -472,6 +487,8 @@ class LspCompiler:
             DidOpenTextDocumentParams,
             DidCloseTextDocumentParams,
             DidChangeTextDocumentParams,
+            CustomFileChangeCommand,
+            ConfigUpdate,
             None,
         ],
     ) -> None:
@@ -497,6 +514,9 @@ class LspCompiler:
                 self.__force_run_detectors = True
             elif change == CustomFileChangeCommand.FORCE_RERUN_PRINTERS:
                 self.__force_run_printers = True
+        elif isinstance(change, ConfigUpdate):
+            self.__config.local_config_path = change.local_config_path
+            self.__config.update(change.update, change.removed_options)
         elif isinstance(change, CreateFilesParams):
             for file in change.files:
                 path = uri_to_path(file.uri)
@@ -697,7 +717,9 @@ class LspCompiler:
                 else:
                     merged_compilation_units.append(
                         CompilationUnit(
-                            graph.subgraph(source_unit_names).copy(),
+                            graph.subgraph(
+                                source_unit_names
+                            ).copy(),  # pyright: ignore reportArgumentType
                             versions,
                         )
                     )
@@ -706,7 +728,9 @@ class LspCompiler:
 
             merged_compilation_units.append(
                 CompilationUnit(
-                    graph.subgraph(source_unit_names).copy(),
+                    graph.subgraph(
+                        source_unit_names
+                    ).copy(),  # pyright: ignore reportArgumentType
                     versions,
                 )
             )
