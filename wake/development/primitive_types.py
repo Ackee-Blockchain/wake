@@ -347,6 +347,41 @@ else:
 
     uint = uint256
 
+    uint_map = {
+        8: uint8,
+        16: uint16,
+        24: uint24,
+        32: uint32,
+        40: uint40,
+        48: uint48,
+        56: uint56,
+        64: uint64,
+        72: uint72,
+        80: uint80,
+        88: uint88,
+        96: uint96,
+        104: uint104,
+        112: uint112,
+        120: uint120,
+        128: uint128,
+        136: uint136,
+        144: uint144,
+        152: uint152,
+        160: uint160,
+        168: uint168,
+        176: uint176,
+        184: uint184,
+        192: uint192,
+        200: uint200,
+        208: uint208,
+        216: uint216,
+        224: uint224,
+        232: uint232,
+        240: uint240,
+        248: uint248,
+        256: uint256,
+    }
+
     class int8(Integer):
         pass
 
@@ -539,6 +574,41 @@ else:
     int256.min = int256(-(2**255))
     int256.max = int256(2**255 - 1)
 
+    int_map = {
+        8: int8,
+        16: int16,
+        24: int24,
+        32: int32,
+        40: int40,
+        48: int48,
+        56: int56,
+        64: int64,
+        72: int72,
+        80: int80,
+        88: int88,
+        96: int96,
+        104: int104,
+        112: int112,
+        120: int120,
+        128: int128,
+        136: int136,
+        144: int144,
+        152: int152,
+        160: int160,
+        168: int168,
+        176: int176,
+        184: int184,
+        192: int192,
+        200: int200,
+        208: int208,
+        216: int216,
+        224: int224,
+        232: int232,
+        240: int240,
+        248: int248,
+        256: int256,
+    }
+
     class FixedSizeBytes(bytes, abc.ABC):
         length: uint8
 
@@ -649,6 +719,41 @@ else:
     class bytes32(FixedSizeBytes):
         length = uint8(32)
 
+    fixed_bytes_map = {
+        1: bytes1,
+        2: bytes2,
+        3: bytes3,
+        4: bytes4,
+        5: bytes5,
+        6: bytes6,
+        7: bytes7,
+        8: bytes8,
+        9: bytes9,
+        10: bytes10,
+        11: bytes11,
+        12: bytes12,
+        13: bytes13,
+        14: bytes14,
+        15: bytes15,
+        16: bytes16,
+        17: bytes17,
+        18: bytes18,
+        19: bytes19,
+        20: bytes20,
+        21: bytes21,
+        22: bytes22,
+        23: bytes23,
+        24: bytes24,
+        25: bytes25,
+        26: bytes26,
+        27: bytes27,
+        28: bytes28,
+        29: bytes29,
+        30: bytes30,
+        31: bytes31,
+        32: bytes32,
+    }
+
     T = TypeVar("T")
 
     class FixedSizeList(List[T], abc.ABC):
@@ -756,3 +861,38 @@ else:
 
     class List32(FixedSizeList[T]):
         length = uint256(32)
+
+    fixed_list_map = {
+        1: List1,
+        2: List2,
+        3: List3,
+        4: List4,
+        5: List5,
+        6: List6,
+        7: List7,
+        8: List8,
+        9: List9,
+        10: List10,
+        11: List11,
+        12: List12,
+        13: List13,
+        14: List14,
+        15: List15,
+        16: List16,
+        17: List17,
+        18: List18,
+        19: List19,
+        20: List20,
+        21: List21,
+        22: List22,
+        23: List23,
+        24: List24,
+        25: List25,
+        26: List26,
+        27: List27,
+        28: List28,
+        29: List29,
+        30: List30,
+        31: List31,
+        32: List32,
+    }

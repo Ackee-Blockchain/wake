@@ -55,7 +55,7 @@ from .core import (
     get_user_defined_value_types_index,
 )
 from .globals import get_config
-from .primitive_types import uint256
+from .primitive_types import FixedSizeList, bytes32, fixed_list_map, uint256
 
 # pyright: reportGeneralTypeIssues=false, reportOptionalIterable=false, reportOptionalSubscript=false, reportOptionalMemberAccess=false
 
@@ -228,9 +228,9 @@ def partition(
     return p, not_p
 
 
-def keccak256(b: bytes) -> bytes:
+def keccak256(b: bytes) -> bytes32:
     h = keccak.new(data=b, digest_bits=256)
-    return h.digest()
+    return bytes32(h.digest())
 
 
 def get_current_fn_name(back_count=1) -> str:
@@ -415,33 +415,43 @@ def read_storage_variable(
             if type_info.encoding == "dynamic_array":
                 slot = int.from_bytes(keccak256(slot.to_bytes(32, "big")), "big")
                 length = Abi.decode(["uint256"], slot_data)[0]
+                target_type = list
             else:
                 length = int(type_info.label.split("[")[-1][:-1])
+                target_type = (
+                    fixed_list_map[length]
+                    if length <= 32
+                    else type(f"List{length}", (FixedSizeList,), {"length": length})
+                )
 
             if len(keys) == 0:
                 # reading whole array
                 if items_per_slot > 0:
-                    return [
-                        _get_storage_value(
-                            slot + i // items_per_slot,
-                            (i % items_per_slot) * base_type.number_of_bytes,
-                            keys[1:],
-                            type_info.base,
-                            types,
-                        )
-                        for i in range(length)
-                    ]
+                    return target_type(
+                        [
+                            _get_storage_value(
+                                slot + i // items_per_slot,
+                                (i % items_per_slot) * base_type.number_of_bytes,
+                                keys[1:],
+                                type_info.base,
+                                types,
+                            )
+                            for i in range(length)
+                        ]
+                    )
                 else:
-                    return [
-                        _get_storage_value(
-                            slot + (base_type.number_of_bytes * i) // 32,
-                            0,
-                            keys[1:],
-                            type_info.base,
-                            types,
-                        )
-                        for i in range(length)
-                    ]
+                    return target_type(
+                        [
+                            _get_storage_value(
+                                slot + (base_type.number_of_bytes * i) // 32,
+                                0,
+                                keys[1:],
+                                type_info.base,
+                                types,
+                            )
+                            for i in range(length)
+                        ]
+                    )
             else:
                 if not isinstance(keys[0], int):
                     raise ValueError(

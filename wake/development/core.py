@@ -71,7 +71,15 @@ from .globals import (
 )
 from .internal import UnknownEvent, read_from_memory
 from .json_rpc.communicator import JsonRpcError
-from .primitive_types import FixedSizeBytes, Integer
+from .primitive_types import (
+    FixedSizeBytes,
+    FixedSizeList,
+    Integer,
+    fixed_bytes_map,
+    fixed_list_map,
+    int_map,
+    uint_map,
+)
 
 if TYPE_CHECKING:
     from .transactions import (
@@ -397,22 +405,44 @@ class Abi:
     def _normalize_output(types: Sequence[str], arguments: Sequence) -> Tuple:
         ret = []
         assert len(types) == len(arguments)
-        for type, arg in zip(types, arguments):
-            type = type.strip()
-            if type == "address":
+        for t, arg in zip(types, arguments):
+            t = t.strip()
+            if t == "address":
                 ret.append(Address(arg))
-            elif type.endswith("]"):
-                args_type = type[: type.rfind("[")]
+            elif t.endswith("]"):
+                args_type = t[: t.rfind("[")]
+
+                if t[-2] == "[":
+                    target_type = list
+                else:
+                    length = int(t[t.rfind("[") + 1 : -1])
+                    target_type = (
+                        fixed_list_map[length]
+                        if length <= 32
+                        else type(f"List{length}", (FixedSizeList,), {"length": length})
+                    )
                 assert isinstance(arg, (list, tuple))
-                ret.append(Abi._normalize_output([args_type] * len(arg), arg))
-            elif type.startswith("(") and type.endswith(")"):
-                abi_type = eth_abi.grammar.parse(type)
+                ret.append(
+                    target_type(Abi._normalize_output([args_type] * len(arg), arg))
+                )
+            elif t.startswith("(") and t.endswith(")"):
+                abi_type = eth_abi.grammar.parse(t)
                 assert isinstance(abi_type, eth_abi.grammar.TupleType)
                 ret.append(
                     Abi._normalize_output(
                         [c.to_type_str() for c in abi_type.components], arg
                     )
                 )
+            elif t.startswith("int"):
+                length = int(t[3:])
+                ret.append(int_map[length](arg))
+            elif t.startswith("uint"):
+                length = int(t[4:])
+                ret.append(uint_map[length](arg))
+            elif t.startswith("bytes") and t != "bytes":
+                # bytes1 - bytes32
+                length = int(t[5:])
+                ret.append(fixed_bytes_map[length](arg))
             else:
                 ret.append(arg)
         return tuple(ret)
