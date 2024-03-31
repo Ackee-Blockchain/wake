@@ -171,7 +171,18 @@ For generating fine-tuned random data, it is recommended to use the random funct
 
 ### Random functions
 
-Wake testing framework provides a set of random functions that can be used to generate random data.
+Additionally to the methods provided by the standard [random](https://docs.python.org/3/library/random.html) module, Wake testing framework provides a set of random functions that can be used to generate random data.
+
+!!! warning
+    Never import the standard `random` module in Wake tests.
+
+    ```python
+    from wake.testing import *
+
+    import random  # never do this
+    ```
+
+    Wake already provides a custom isolated `random` instance that can be imported from `wake.testing`.
 
 #### random_account()
 
@@ -261,3 +272,14 @@ Standard output and standard error of all processes are redirected to the `.wake
     ```
 
     A random seed can be specified using the `-S` flag. Multiple `-S` flags are allowed.
+
+!!! warning "Non-deterministic tests with `set`"
+    Python built-in `set` is an unordered container.
+    Given the unordered behavior, the following code will lead to different fuzz test results with the same random seed:
+
+    ```python
+    items = {1, 2, 3}
+    item = random.choice(list(items))
+    ```
+
+    It is highly recommended to use [OrderedSet](https://pypi.org/project/ordered-set/) in fuzz tests instead of the built-in `set`.
