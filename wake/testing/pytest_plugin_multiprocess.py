@@ -242,3 +242,7 @@ class PytestWakePluginMultiprocess:
 
     def pytest_sessionfinish(self, session: Session, exitstatus: int):
         self._queue.put(("pytest_sessionfinish", self._index, exitstatus))
+
+    def pytest_terminal_summary(self, terminalreporter, exitstatus, config):
+        terminalreporter.section("Wake")
+        terminalreporter.write_line("Random seed: " + self._random_seed.hex())

@@ -89,3 +89,7 @@ class PytestWakePluginSingle:
             chain_interfaces_manager.close_all()
 
         return True
+
+    def pytest_terminal_summary(self, terminalreporter, exitstatus, config):
+        terminalreporter.section("Wake")
+        terminalreporter.write_line("Random seed: " + self._random_seeds[0].hex())

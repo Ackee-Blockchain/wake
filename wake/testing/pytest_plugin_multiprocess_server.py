@@ -286,6 +286,10 @@ class PytestWakePluginMultiprocessServer:
 
         return True
 
+    def pytest_terminal_summary(self, terminalreporter, exitstatus, config):
+        terminalreporter.section("Wake")
+        terminalreporter.write_line("Random seeds: " + ", ".join(s.hex() for s in self._random_seeds[:self._proc_count]))
+
     def _update_progress(
         self,
         progress: rich.progress.Progress,
