@@ -652,7 +652,7 @@ class LspCompiler:
 
         try:
             if full_compile:
-                graph, _ = self.__compiler.build_graph(
+                graph, source_units_to_paths = self.__compiler.build_graph(
                     self.__discovered_files,
                     {
                         path: info.text.encode("utf-8")
@@ -660,6 +660,13 @@ class LspCompiler:
                     },
                     True,
                 )
+
+                # add to deleted files previously compiled files that are now excluded from build
+                # will trigger post-destroy callbacks and remove them from source units
+                for p in self.__source_units:
+                    # use graph.nodes - i.e. discovered files + their dependencies from exclude paths
+                    if p not in source_units_to_paths.values():
+                        self.__deleted_files.add(p)
                 self.__last_graph = graph
             else:
                 graph, _ = self.__compiler.build_graph(
