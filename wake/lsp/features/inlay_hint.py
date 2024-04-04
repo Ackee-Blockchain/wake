@@ -82,16 +82,34 @@ async def inlay_hint(
     ):
         for inlay_hint_options in inlay_hint_items:
             line, col = context.compiler.get_line_pos_from_byte_offset(path, offset)
+
+            parts = []
+            for label, tooltip, callback_id in zip(
+                inlay_hint_options.label,
+                inlay_hint_options.tooltip,
+                inlay_hint_options.callback_id,
+            ):
+                part = InlayHintLabelPart(value=label)
+                if tooltip is not None:
+                    part.tooltip = tooltip
+                if callback_id is not None:
+                    part.command = Command(
+                        title=label,
+                        command="Tools-for-Solidity.wake_callback",
+                        arguments=[
+                            params.text_document.uri,
+                            inlay_hint_options.callback_kind,
+                            callback_id,
+                        ],
+                    )
+                parts.append(part)
+
             inlay_hint = InlayHint(
                 position=Position(line=line, character=col),
-                label=inlay_hint_options.label,
+                label=parts,
                 padding_left=inlay_hint_options.padding_left,
                 padding_right=inlay_hint_options.padding_right,
             )
-            if inlay_hint_options.tooltip is not None:
-                inlay_hint.tooltip = MarkupContent(
-                    kind=MarkupKind.MARKDOWN, value=inlay_hint_options.tooltip
-                )
             inlay_hints.append(inlay_hint)
 
     return inlay_hints

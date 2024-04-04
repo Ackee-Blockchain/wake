@@ -1198,6 +1198,7 @@ class LspCompiler:
 
         commands = self.__printers_lsp_provider.get_commands()
         if len(commands) > 0:
+            self.__printers_lsp_provider.clear_commands()
             await self.__server.send_notification(
                 "wake/executeCommands", list(commands)
             )

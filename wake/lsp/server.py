@@ -1370,7 +1370,10 @@ class LspServer:
 
                 commands = context.printers_lsp_provider.get_commands()
                 if len(commands) > 0:
-                    await self.send_notification("wake/executeCommands", list(commands))
+                    context.printers_lsp_provider.clear_commands()
+                    await self.send_notification(
+                        "wake/executeCommands", {"commands": commands}
+                    )
                 return ""  # TODO
             else:
                 raise LspError(
