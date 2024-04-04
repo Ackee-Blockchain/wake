@@ -3,6 +3,7 @@ from typing import Optional, Tuple, Union
 import wake.ir as ir
 import wake.ir.types as types
 from wake.core.logging import get_logger
+from wake.utils.decorators import return_on_recursion
 
 from .utils import get_function_implementations
 
@@ -52,6 +53,7 @@ def expression_is_global_symbol(
     return False
 
 
+@return_on_recursion((None,))
 def get_variable_declarations_from_expression(
     expr: ir.ExpressionAbc,
 ) -> Tuple[Optional[ir.VariableDeclaration], ...]:
