@@ -30,6 +30,7 @@ from typing import (
     Type,
     Union,
     cast,
+    overload,
 )
 from urllib.error import HTTPError
 
@@ -1909,6 +1910,173 @@ class Chain(ABC):
         finally:
             self.revert(snapshot_id)
 
+    @overload
+    def deploy(
+        self,
+        creation_code: bytes,
+        *,
+        request_type: Literal["call"],
+        return_tx: Literal[False] = False,
+        from_: Optional[Union[Account, Address, str]] = None,
+        value: Union[int, str] = 0,
+        gas_limit: Optional[Union[int, Literal["max", "auto"]]] = None,
+        gas_price: Optional[Union[int, str]] = None,
+        max_fee_per_gas: Optional[Union[int, str]] = None,
+        max_priority_fee_per_gas: Optional[Union[int, str]] = None,
+        access_list: Optional[
+            Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
+        ] = None,
+        type: Optional[int] = None,
+        block: Optional[
+            Union[int, Literal["latest", "pending", "earliest", "safe", "finalized"]]
+        ] = None,
+        confirmations: Optional[int] = None,
+    ) -> bytearray:
+        ...
+
+    @overload
+    def deploy(
+        self,
+        creation_code: bytes,
+        *,
+        request_type: Literal["tx"] = "tx",
+        return_tx: Literal[False] = False,
+        from_: Optional[Union[Account, Address, str]] = None,
+        value: Union[int, str] = 0,
+        gas_limit: Optional[Union[int, Literal["max", "auto"]]] = None,
+        gas_price: Optional[Union[int, str]] = None,
+        max_fee_per_gas: Optional[Union[int, str]] = None,
+        max_priority_fee_per_gas: Optional[Union[int, str]] = None,
+        access_list: Optional[
+            Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
+        ] = None,
+        type: Optional[int] = None,
+        block: Optional[
+            Union[int, Literal["latest", "pending", "earliest", "safe", "finalized"]]
+        ] = None,
+        confirmations: Optional[int] = None,
+    ) -> Contract:
+        ...
+
+    @overload
+    def deploy(
+        self,
+        creation_code: bytes,
+        *,
+        request_type: Literal["estimate"],
+        return_tx: Literal[False] = False,
+        from_: Optional[Union[Account, Address, str]] = None,
+        value: Union[int, str] = 0,
+        gas_limit: Optional[Union[int, Literal["max", "auto"]]] = None,
+        gas_price: Optional[Union[int, str]] = None,
+        max_fee_per_gas: Optional[Union[int, str]] = None,
+        max_priority_fee_per_gas: Optional[Union[int, str]] = None,
+        access_list: Optional[
+            Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
+        ] = None,
+        type: Optional[int] = None,
+        block: Optional[
+            Union[int, Literal["latest", "pending", "earliest", "safe", "finalized"]]
+        ] = None,
+        confirmations: Optional[int] = None,
+    ) -> int:
+        ...
+
+    @overload
+    def deploy(
+        self,
+        creation_code: bytes,
+        *,
+        request_type: Literal["access_list"],
+        return_tx: Literal[False] = False,
+        from_: Optional[Union[Account, Address, str]] = None,
+        value: Union[int, str] = 0,
+        gas_limit: Optional[Union[int, Literal["max", "auto"]]] = None,
+        gas_price: Optional[Union[int, str]] = None,
+        max_fee_per_gas: Optional[Union[int, str]] = None,
+        max_priority_fee_per_gas: Optional[Union[int, str]] = None,
+        access_list: Optional[
+            Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
+        ] = None,
+        type: Optional[int] = None,
+        block: Optional[
+            Union[int, Literal["latest", "pending", "earliest", "safe", "finalized"]]
+        ] = None,
+        confirmations: Optional[int] = None,
+    ) -> Tuple[Dict[Address, List[int]], int]:
+        ...
+
+    @overload
+    def deploy(
+        self,
+        creation_code: bytes,
+        *,
+        request_type: Literal["tx"] = "tx",
+        return_tx: Literal[True],
+        from_: Optional[Union[Account, Address, str]] = None,
+        value: Union[int, str] = 0,
+        gas_limit: Optional[Union[int, Literal["max", "auto"]]] = None,
+        gas_price: Optional[Union[int, str]] = None,
+        max_fee_per_gas: Optional[Union[int, str]] = None,
+        max_priority_fee_per_gas: Optional[Union[int, str]] = None,
+        access_list: Optional[
+            Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
+        ] = None,
+        type: Optional[int] = None,
+        block: Optional[
+            Union[int, Literal["latest", "pending", "earliest", "safe", "finalized"]]
+        ] = None,
+        confirmations: Optional[int] = None,
+    ) -> TransactionAbc[Contract]:
+        ...
+
+    def deploy(
+        self,
+        creation_code: bytes,
+        *,
+        request_type: RequestType = "tx",
+        return_tx: bool = False,
+        from_: Optional[Union[Account, Address, str]] = None,
+        value: Union[int, str] = 0,
+        gas_limit: Optional[Union[int, Literal["max", "auto"]]] = None,
+        gas_price: Optional[Union[int, str]] = None,
+        max_fee_per_gas: Optional[Union[int, str]] = None,
+        max_priority_fee_per_gas: Optional[Union[int, str]] = None,
+        access_list: Optional[
+            Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
+        ] = None,
+        type: Optional[int] = None,
+        block: Optional[
+            Union[int, Literal["latest", "pending", "earliest", "safe", "finalized"]]
+        ] = None,
+        confirmations: Optional[int] = None,
+    ) -> Union[
+        bytearray,
+        Contract,
+        int,
+        Tuple[Dict[Address, List[int]], int],
+        TransactionAbc[Contract],
+    ]:
+        return Contract._execute(
+            self,
+            request_type,
+            creation_code.hex(),
+            [],
+            return_tx,
+            Contract,
+            from_,
+            None,
+            value,
+            gas_limit,
+            gas_price,
+            max_fee_per_gas,
+            max_priority_fee_per_gas,
+            access_list,
+            type,
+            block,
+            confirmations,
+        )
+
     def _update_nonce(self, address: Address, nonce: int) -> None:
         self._nonces[address] = nonce
 
@@ -3067,7 +3235,11 @@ class Contract(Account):
         params["data"] = bytes.fromhex(data)
 
         if to is None:
-            abi = cls._abi["constructor"] if "constructor" in cls._abi else None
+            abi = (
+                cls._abi["constructor"]
+                if hasattr(cls, "_abi") and "constructor" in cls._abi
+                else None
+            )
         else:
             abi = cls._abi[params["data"]]
 
