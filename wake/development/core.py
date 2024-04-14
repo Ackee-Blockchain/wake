@@ -2558,6 +2558,9 @@ class Chain(ABC):
                         except Exception:
                             raise e
                     self._update_nonce(sender.address, tx_params["nonce"] + 1)
+
+        self._txs.register_tx(tx_hash)
+
         return tx_hash
 
     @check_connected
