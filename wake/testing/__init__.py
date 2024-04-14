@@ -31,3 +31,5 @@ from wake.development.utils import (
 )
 
 from .core import Chain, default_chain
+
+chain = default_chain
