@@ -162,7 +162,7 @@ def _get_results_from_node(
     return list(definitions)
 
 
-async def _get_definition_from_cache(
+def _get_definition_from_cache(
     path: Path,
     position: Position,
     context: LspContext,
@@ -250,7 +250,7 @@ async def definition(
     ):
         # try to use old build artifacts
         try:
-            return await _get_definition_from_cache(path, params.position, context)
+            return _get_definition_from_cache(path, params.position, context)
         except Exception:
             pass
 

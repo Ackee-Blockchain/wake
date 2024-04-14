@@ -94,7 +94,7 @@ def _get_results_from_node(
         return None
 
 
-async def _get_type_definition_from_cache(
+def _get_type_definition_from_cache(
     path: Path,
     position: Position,
     context: LspContext,
@@ -190,7 +190,7 @@ async def type_definition(
     ):
         # try to use old build artifacts
         try:
-            return await _get_type_definition_from_cache(path, params.position, context)
+            return _get_type_definition_from_cache(path, params.position, context)
         except Exception:
             pass
 
