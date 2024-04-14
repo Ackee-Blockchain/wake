@@ -87,12 +87,17 @@ def _fetch_tx_receipt(f):
 class ChainTransactions:
     _chain: Chain
     _transactions: Dict[str, TransactionAbc]
+    _tx_hashes: List[str]
 
     def __init__(self, chain: Chain):
         self._chain = chain
         self._transactions = {}
+        self._tx_hashes = []
 
-    def __getitem__(self, key: str) -> TransactionAbc:
+    def __getitem__(self, key: Union[str, int]) -> TransactionAbc:
+        if isinstance(key, int):
+            key = self._tx_hashes[key]
+
         if not key.startswith("0x"):
             key = "0x" + key
         key = key.lower()
@@ -178,6 +183,9 @@ class ChainTransactions:
 
         self._transactions[key] = tx
         return tx
+
+    def register_tx(self, tx_hash: str):
+        self._tx_hashes.append(tx_hash)
 
 
 class TransactionAbc(ABC, Generic[T]):

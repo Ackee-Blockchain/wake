@@ -89,6 +89,7 @@ class Chain(wake.development.core.Chain):
             "default_call_account": self._default_call_account,
             "default_tx_account": self._default_tx_account,
             "txs": dict(self._txs._transactions),
+            "tx_hashes": list(self._txs._tx_hashes),
             "blocks": dict(self._blocks._blocks),
         }
         return snapshot_id
@@ -105,6 +106,7 @@ class Chain(wake.development.core.Chain):
         self._default_call_account = snapshot["default_call_account"]
         self._default_tx_account = snapshot["default_tx_account"]
         self._txs._transactions = snapshot["txs"]
+        self._txs._tx_hashes = snapshot["tx_hashes"]
         self._blocks._blocks = snapshot["blocks"]
         del self._snapshots[snapshot_id]
 
