@@ -86,7 +86,7 @@ class PytestWakePluginMultiprocessServer:
                             i,
                             child_conn,  # pyright: ignore reportGeneralTypeIssues
                             self._queue,
-                            empty_coverage,
+                            empty_coverage if i < self._coverage else None,
                             logs_dir,
                             self._random_seeds[i],
                             self._attach_first and i == 0,
@@ -258,7 +258,7 @@ class PytestWakePluginMultiprocessServer:
                                 test_reports[index],
                             )
                     elif msg[0] == "pytest_warning_recorded":
-                        session.config.hook.pytest_warning_recorded.call_historic(
+                        session.config.hook.pytest_warning_recorded.call_historic(  # pyright: ignore reportFunctionMemberAccess
                             kwargs={
                                 "warning_message": msg[2],
                                 "when": msg[3],
@@ -288,7 +288,10 @@ class PytestWakePluginMultiprocessServer:
 
     def pytest_terminal_summary(self, terminalreporter, exitstatus, config):
         terminalreporter.section("Wake")
-        terminalreporter.write_line("Random seeds: " + ", ".join(s.hex() for s in self._random_seeds[:self._proc_count]))
+        terminalreporter.write_line(
+            "Random seeds: "
+            + ", ".join(s.hex() for s in self._random_seeds[: self._proc_count])
+        )
 
     def _update_progress(
         self,
