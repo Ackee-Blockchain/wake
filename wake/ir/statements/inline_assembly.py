@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from bisect import bisect
 from functools import lru_cache, partial
 from typing import TYPE_CHECKING, FrozenSet, Iterator, Optional, Set, Tuple, Union
 
@@ -20,6 +21,7 @@ from wake.ir.statements.abc import StatementAbc
 from wake.ir.utils import IrInitTuple
 from wake.ir.yul.block import YulBlock
 
+from ...regex_parser import SoliditySourceParser
 from ..yul.identifier import YulIdentifier
 
 if TYPE_CHECKING:
@@ -142,10 +144,23 @@ class ExternalReference:
         Returns:
             Byte offsets (start and end) of the identifier representing the external reference in the source file.
         """
-        match = IDENTIFIER_RE.match(self._source)
+        source = bytearray(self._source)
+        _, stripped_sums = SoliditySourceParser.strip_comments(source)
+
+        match = IDENTIFIER_RE.match(source)
         assert match
-        start = self.byte_location[0] + match.start()
-        end = self.byte_location[0] + match.end()
+
+        if len(stripped_sums) == 0:
+            stripped = 0
+        else:
+            index = bisect([s[0] for s in stripped_sums], match.start())
+            if index == 0:
+                stripped = 0
+            else:
+                stripped = stripped_sums[index - 1][1]
+
+        start = self.byte_location[0] + match.start() + stripped
+        end = self.byte_location[0] + match.end() + stripped
         return start, end
 
     @property

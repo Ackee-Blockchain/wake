@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from bisect import bisect
 from collections import deque
 from pathlib import Path
 from typing import TYPE_CHECKING, Deque, Iterator, Optional, Set, Tuple, Union
@@ -8,6 +9,7 @@ from intervaltree import IntervalTree
 
 from wake.ir.types import Contract, Enum, Struct, UserDefinedValueType
 
+from ...regex_parser import SoliditySourceParser
 from ..reference_resolver import CallbackParams
 
 if TYPE_CHECKING:
@@ -168,7 +170,10 @@ class UserDefinedTypeName(TypeNameAbc):
 
         from ..meta.source_unit import SourceUnit
 
-        matches = list(IDENTIFIER_RE.finditer(self._source))
+        source = bytearray(self._source)
+        _, stripped_sums = SoliditySourceParser.strip_comments(source)
+
+        matches = list(IDENTIFIER_RE.finditer(source))
         groups_count = len(matches)
         assert groups_count > 0
 
@@ -205,8 +210,17 @@ class UserDefinedTypeName(TypeNameAbc):
                 )
             )
 
-            start = self.byte_location[0] + match.start()
-            end = self.byte_location[0] + match.end()
+            if len(stripped_sums) == 0:
+                stripped = 0
+            else:
+                index = bisect([s[0] for s in stripped_sums], match.start())
+                if index == 0:
+                    stripped = 0
+                else:
+                    stripped = stripped_sums[index - 1][1]
+
+            start = self.byte_location[0] + match.start() + stripped
+            end = self.byte_location[0] + match.end() + stripped
             self._parts[start:end] = IdentifierPathPart(
                 self,
                 (start, end),

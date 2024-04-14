@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import re
+from bisect import bisect
 from collections import deque
 from functools import lru_cache, partial
 from typing import (
@@ -28,6 +29,7 @@ from wake.ir.types import TypeAbc
 from wake.ir.utils import IrInitTuple
 from wake.utils.string import StringReader
 
+from ...regex_parser import SoliditySourceParser
 from ..meta.override_specifier import OverrideSpecifier
 from ..reference_resolver import CallbackParams
 
@@ -226,6 +228,8 @@ class VariableDeclaration(DeclarationAbc):
         else:
             length_without_value = self._value.byte_location[0] - self.byte_location[0]
             source_without_value = self._source[:length_without_value]
+        source_without_value = bytearray(source_without_value)
+        _, stripped_sums = SoliditySourceParser.strip_comments(source_without_value)
 
         IDENTIFIER = r"[a-zA-Z$_][a-zA-Z0-9$_]*"
         VARIABLE_RE = re.compile(
@@ -236,7 +240,20 @@ class VariableDeclaration(DeclarationAbc):
         match = VARIABLE_RE.search(source_without_value)
         assert match
         byte_start = self._ast_node.src.byte_offset
-        return byte_start + match.start("name"), byte_start + match.end("name")
+
+        if len(stripped_sums) == 0:
+            stripped = 0
+        else:
+            index = bisect([s[0] for s in stripped_sums], match.start("name"))
+            if index == 0:
+                stripped = 0
+            else:
+                stripped = stripped_sums[index - 1][1]
+
+        return (
+            byte_start + match.start("name") + stripped,
+            byte_start + match.end("name") + stripped,
+        )
 
     def get_all_references(
         self, include_declarations: bool
