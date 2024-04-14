@@ -310,7 +310,7 @@ def _get_results_from_node(
     return None
 
 
-async def _get_hover_from_cache(path: Path, position: Position, context: LspContext):
+def _get_hover_from_cache(path: Path, position: Position, context: LspContext):
     new_byte_offset = context.compiler.get_byte_offset_from_line_pos(
         path, position.line, position.character
     )
@@ -374,7 +374,7 @@ async def hover(context: LspContext, params: HoverParams) -> Optional[Hover]:
         or not context.compiler.output_ready.is_set()
     ):
         try:
-            return await _get_hover_from_cache(path, params.position, context)
+            return _get_hover_from_cache(path, params.position, context)
         except Exception:
             pass
 
