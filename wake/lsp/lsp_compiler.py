@@ -562,8 +562,6 @@ class LspCompiler:
                 self.__force_compile_files.add(path)
             elif change.text_document.text != self.get_compiled_file(path).text:
                 self.__force_compile_files.add(path)
-            else:
-                self.__output_contents[path] = self.__opened_files[path]
 
         elif isinstance(change, DidCloseTextDocumentParams):
             pass
@@ -651,13 +649,18 @@ class LspCompiler:
             return
 
         try:
+            modified_files = {
+                path: info.text.encode("utf-8")
+                for path, info in self.__opened_files.items()
+            }
+            for p in self.__output_contents:
+                if p not in modified_files:
+                    modified_files[p] = self.__output_contents[p].text.encode("utf-8")
+
             if full_compile:
                 graph, source_units_to_paths = self.__compiler.build_graph(
                     self.__discovered_files,
-                    {
-                        path: info.text.encode("utf-8")
-                        for path, info in self.__opened_files.items()
-                    },
+                    modified_files,
                     True,
                 )
 
@@ -671,12 +674,21 @@ class LspCompiler:
             else:
                 graph, _ = self.__compiler.build_graph(
                     files_to_compile,
-                    {
-                        path: info.text.encode("utf-8")
-                        for path, info in self.__opened_files.items()
-                    },
+                    modified_files,
                     True,
                 )
+
+            for source_unit_name in graph.nodes:
+                path = graph.nodes[source_unit_name]["path"]
+                content = graph.nodes[source_unit_name]["content"]
+                if (
+                    path not in self.__opened_files
+                    and path not in self.__output_contents
+                ):
+                    self.__output_contents[path] = VersionedFile(
+                        content.decode(encoding="utf-8"), None
+                    )
+
         except CompilationError as e:
             await self.__server.log_message(str(e), MessageType.ERROR)
             for file in self.__discovered_files:
