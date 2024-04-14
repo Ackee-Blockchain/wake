@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import re
+from bisect import bisect
 from functools import lru_cache, partial
 from typing import TYPE_CHECKING, FrozenSet, Iterator, List, Optional, Set, Tuple, Union
 
+from ...regex_parser import SoliditySourceParser
 from ..abc import IrAbc
 from ..meta.inheritance_specifier import InheritanceSpecifier
 from ..meta.using_for_directive import UsingForDirective
@@ -268,19 +270,32 @@ class ContractDefinition(DeclarationAbc):
             ).encode("utf-8")
         )
 
+        source = bytearray(self._source)
+        _, stripped_sums = SoliditySourceParser.strip_comments(source)
+
         if self.kind == ContractKind.CONTRACT:
-            match = CONTRACT_RE.match(self._source)
+            match = CONTRACT_RE.match(source)
         elif self.kind == ContractKind.INTERFACE:
-            match = INTERFACE_RE.match(self._source)
+            match = INTERFACE_RE.match(source)
         elif self.kind == ContractKind.LIBRARY:
-            match = LIBRARY_RE.match(self._source)
+            match = LIBRARY_RE.match(source)
         else:
             raise ValueError(f"Unknown contract kind: {self.kind}")
         assert match
 
-        return self.byte_location[0] + match.start("name"), self.byte_location[
-            0
-        ] + match.end("name")
+        if len(stripped_sums) == 0:
+            stripped = 0
+        else:
+            index = bisect([s[0] for s in stripped_sums], match.start("name"))
+            if index == 0:
+                stripped = 0
+            else:
+                stripped = stripped_sums[index - 1][1]
+
+        return (
+            self.byte_location[0] + match.start("name") + stripped,
+            self.byte_location[0] + match.end("name") + stripped,
+        )
 
     @property
     def parent(self) -> SourceUnit:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from bisect import bisect
 from collections import deque
 from functools import lru_cache, partial
 from typing import (
@@ -15,6 +16,7 @@ from typing import (
     Union,
 )
 
+from ...regex_parser import SoliditySourceParser
 from ..meta.override_specifier import OverrideSpecifier
 from ..reference_resolver import CallbackParams
 from ..statements.block import Block
@@ -127,10 +129,26 @@ class ModifierDefinition(DeclarationAbc):
             ).encode("utf-8")
         )
 
+        source = bytearray(self._source)
+        _, stripped_sums = SoliditySourceParser.strip_comments(source)
+
         byte_start = self._ast_node.src.byte_offset
-        match = MODIFIER_RE.match(self._source)
+        match = MODIFIER_RE.match(source)
         assert match
-        return byte_start + match.start("name"), byte_start + match.end("name")
+
+        if len(stripped_sums) == 0:
+            stripped = 0
+        else:
+            index = bisect([s[0] for s in stripped_sums], match.start("name"))
+            if index == 0:
+                stripped = 0
+            else:
+                stripped = stripped_sums[index - 1][1]
+
+        return (
+            byte_start + match.start("name") + stripped,
+            byte_start + match.end("name") + stripped,
+        )
 
     def get_all_references(
         self, include_declarations: bool

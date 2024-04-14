@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from bisect import bisect
 from functools import lru_cache, partial
 from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
 
@@ -29,6 +30,8 @@ from wake.ir.types import (
     UserDefinedValueType,
 )
 from wake.ir.utils import IrInitTuple
+
+from ...regex_parser import SoliditySourceParser
 
 if TYPE_CHECKING:
     from ..statements.abc import StatementAbc
@@ -413,11 +416,25 @@ class MemberAccess(ExpressionAbc):
         relative_expression_end = (
             self._expression.byte_location[1] - self.byte_location[0]
         )
-        match = MEMBER_RE.match(self._source[relative_expression_end:])
+        source = bytearray(self._source[relative_expression_end:])
+        _, stripped_sums = SoliditySourceParser.strip_comments(source)
+
+        match = MEMBER_RE.match(source)
         assert match
-        return self._expression.byte_location[1] + match.start(
-            "member"
-        ), self._expression.byte_location[1] + match.end("member")
+
+        if len(stripped_sums) == 0:
+            stripped = 0
+        else:
+            index = bisect([s[0] for s in stripped_sums], match.start("member"))
+            if index == 0:
+                stripped = 0
+            else:
+                stripped = stripped_sums[index - 1][1]
+
+        return (
+            self._expression.byte_location[1] + match.start("member") + stripped,
+            self._expression.byte_location[1] + match.end("member") + stripped,
+        )
 
     @property
     def referenced_declaration(

@@ -7,8 +7,10 @@ base_path = Path(__file__).parent.resolve() / "re_parsing_sources"
 
 def test_comment_stripping():
     test_cases = [
-        (b"abc // ikejfurgdi", b"abc "),
-        (b"xy/*1234*/z", b"xyz"),
+        (b"", b"", []),
+        (b"/*aaa*//*bbb*/", b"", [(0, 14)]),
+        (b"abc // ikejfurgdi", b"abc ", [(4, 13)]),
+        (b"xy/*1234*/z", b"xyz", [(2, 8)]),
         (
             b"""
             import "abc.sol"; // test
@@ -25,12 +27,13 @@ def test_comment_stripping():
             import "de*/f.sol";
             import  "helper.sol";
             """,
+            [(31, 7), (129, 22), (149, 49)],
         ),
     ]
 
-    for original, stripped in test_cases:
+    for original, stripped, sums in test_cases:
         b = bytearray(original)
-        SoliditySourceParser.strip_comments(b)
+        assert SoliditySourceParser.strip_comments(b)[1] == sums
         assert b == stripped
 
 

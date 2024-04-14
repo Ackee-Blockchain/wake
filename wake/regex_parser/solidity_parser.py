@@ -164,14 +164,17 @@ class SoliditySourceParser:
     @classmethod
     def strip_comments(
         cls, source_code: bytearray
-    ) -> Dict[str, List[Tuple[List[str], Tuple[int, int]]]]:
+    ) -> Tuple[
+        Dict[str, List[Tuple[List[str], Tuple[int, int]]]], List[Tuple[int, int]]
+    ]:
         if len(source_code) == 0:
-            return {}
+            return {}, []
 
         wake_comments: DefaultDict[
             str, List[Tuple[List[str], Tuple[int, int]]]
         ] = defaultdict(list)
         stripped_sum = 0
+        stripped_sums: List[Tuple[int, int]] = []
         search_start = 0
 
         while len(source_code) > search_start:
@@ -234,7 +237,12 @@ class SoliditySourceParser:
             search_start = match.end() - stripped
             stripped_sum += stripped
 
-        return wake_comments
+            if len(stripped_sums) > 0 and stripped_sums[-1][0] == match.start():
+                stripped_sums[-1] = (match.start(), stripped_sum)
+            else:
+                stripped_sums.append((match.start(), stripped_sum))
+
+        return wake_comments, stripped_sums
 
     @classmethod
     def parse(
@@ -255,7 +263,7 @@ class SoliditySourceParser:
 
         # strip all comments, parse wake comments
         stripped_content = bytearray(raw_content)
-        wake_comments = cls.strip_comments(stripped_content)
+        wake_comments, _ = cls.strip_comments(stripped_content)
 
         return (
             cls._parse_version_pragma(stripped_content, ignore_errors),
@@ -284,7 +292,7 @@ class SoliditySourceParser:
 
         # strip all comments, parse wake comments
         stripped_source_code = bytearray(source_code)
-        wake_comments = cls.strip_comments(stripped_source_code)
+        wake_comments, _ = cls.strip_comments(stripped_source_code)
 
         return (
             cls._parse_version_pragma(stripped_source_code, ignore_errors),

@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import logging
 import re
+from bisect import bisect
 from collections import deque
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Deque, Iterator, List, Optional, Set, Tuple
 
+from ...regex_parser import SoliditySourceParser
 from ..expressions.identifier import Identifier
 from ..reference_resolver import CallbackParams
 
@@ -283,9 +285,24 @@ class ImportDirective(SolidityAbc):
             IMPORT_AS_RE,
             IMPORT_ALIAS_LIST,
         )
-        matches = list(re.match(self._source) for re in res)
+
+        source = bytearray(self._source)
+        _, stripped_sums = SoliditySourceParser.strip_comments(source)
+
+        matches = list(re.match(source) for re in res)
         assert any(matches)
         match = next(m for m in matches if m)
-        return source_start + match.start("filename"), source_start + match.end(
-            "filename"
+
+        if len(stripped_sums) == 0:
+            stripped = 0
+        else:
+            index = bisect([s[0] for s in stripped_sums], match.start("filename"))
+            if index == 0:
+                stripped = 0
+            else:
+                stripped = stripped_sums[index - 1][1]
+
+        return (
+            source_start + match.start("filename") + stripped,
+            source_start + match.end("filename") + stripped,
         )
