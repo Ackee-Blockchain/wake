@@ -1,6 +1,6 @@
 import logging
 from collections import deque
-from typing import Optional, Set, Tuple, Union
+from typing import FrozenSet, Optional, Set, Tuple, Union
 
 import wake.ir.types as types
 from wake.analysis.cfg import CfgNode, ControlFlowGraph, TransitionConditionKind
@@ -44,9 +44,10 @@ from .expressions import (
 logger = get_logger(__name__)
 
 
+@return_on_recursion(False)
 def expression_is_only_owner(
     expression: ExpressionAbc,
-    msg_sender_variables: Set[VariableDeclaration],
+    msg_sender_variables: FrozenSet[VariableDeclaration],
     check_only_eoa: bool = False,
     inverted: bool = False,
 ) -> bool:
@@ -155,7 +156,7 @@ def expression_is_only_owner(
             if len(returns) > 0 and all(
                 expression_is_only_owner(
                     return_.expression,
-                    sender_variables,
+                    frozenset(sender_variables),
                     check_only_eoa=check_only_eoa,
                     inverted=inverted,
                 )
@@ -307,7 +308,7 @@ def _cfg_block_or_statement_is_publicly_reachable(
                         and condition[1] is not None
                         and expression_is_only_owner(
                             condition[1],  # pyright: ignore reportGeneralTypeIssues
-                            set(),
+                            frozenset(),
                             check_only_eoa=check_only_eoa,
                         )
                     )
@@ -316,7 +317,7 @@ def _cfg_block_or_statement_is_publicly_reachable(
                         and condition[1] is not None
                         and expression_is_only_owner(
                             condition[1],  # pyright: ignore reportGeneralTypeIssues
-                            set(),
+                            frozenset(),
                             check_only_eoa=check_only_eoa,
                             inverted=True,
                         )
