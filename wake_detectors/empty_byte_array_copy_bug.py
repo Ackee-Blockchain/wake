@@ -84,7 +84,10 @@ class EmptyByteArrayCopyBugDetector(Detector):
                 continue
 
             # .push() may happen after the assignment
-            if cfg.is_reachable(ref.statement, node.statement):
+            if (
+                cfg.is_reachable(ref.statement, node.statement)
+                or ref.statement == node.statement
+            ):
                 self._detections.append(
                     DetectorResult(
                         Detection(

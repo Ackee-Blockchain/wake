@@ -121,7 +121,10 @@ def _process_assigned_vars(address_balance: ir.ExpressionAbc) -> List[Detection]
             if ref_statement is None or ref_statement == assigned_var_statement:
                 continue
 
-            if cfg.is_reachable(assigned_var_statement, ref_statement):
+            if (
+                cfg.is_reachable(assigned_var_statement, ref_statement)
+                or assigned_var_statement == ref_statement
+            ):
                 ret.extend(_process_assigned_vars(ref))
     return ret
 

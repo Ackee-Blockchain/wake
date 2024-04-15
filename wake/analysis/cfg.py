@@ -244,6 +244,8 @@ class ControlFlowGraph:
         end: Union[StatementAbc, YulStatementAbc],
     ) -> bool:
         """
+        Returns False for `start == end` unless there is a loop in the CFG containing `start`.
+
         Args:
             start: Statement that is expected to be executed before `end`.
             end: Statement that is expected to be executed after `start`.
