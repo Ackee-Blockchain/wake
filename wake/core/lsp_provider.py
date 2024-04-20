@@ -241,9 +241,9 @@ class LspProvider:
         )
 
     def add_hover_from_offsets(
-        self, path: Path, start: int, end: int, text: str, *, on_child: bool = False
+        self, path: Path, start: int, end: int, text: str,
     ) -> None:
-        self._hovers[path][(start, end)].add(HoverOptions(text, on_child))
+        self._hovers[path][(start, end)].add(HoverOptions(text, True))
 
     def add_code_lens(
         self,
