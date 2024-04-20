@@ -254,26 +254,24 @@ class ControlFlowGraph:
         start_node = self._statements_lookup[start]
         end_node = self._statements_lookup[end]
         if start_node == end_node:
-            if start == start_node.control_statement:
-                if end == start_node.control_statement:
-                    return True
-                try:
-                    nx.find_cycle(self._graph, start_node)
-                    return True
-                except nx.NetworkXNoCycle:
-                    return False
-            if end == end_node.control_statement:
+            start_index = (
+                start_node.statements.index(start)
+                if start != start_node.control_statement
+                else len(start_node.statements)
+            )
+            end_index = (
+                end_node.statements.index(end)
+                if end != end_node.control_statement
+                else len(end_node.statements)
+            )
+            if start_index < end_index:
                 return True
 
-            start_index = start_node.statements.index(start)
-            end_index = end_node.statements.index(end)
-            if start_index <= end_index:  # also EQUAL?
-                return True
-            try:
-                nx.find_cycle(self._graph, start_node)
-                return True
-            except nx.NetworkXNoCycle:
-                return False
+            for _, to in nx.edge_dfs(self._graph, start_node):
+                if to == end_node:
+                    return True
+
+            return False
         else:
             return nx.has_path(self._graph, start_node, end_node)
 
