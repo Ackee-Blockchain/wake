@@ -32,9 +32,9 @@ pip3 install eth-wake
 
 ## Documentation & Contribution
 
-Wake documentation can be found [here](https://ackeeblockchain.com/wake/docs/latest).
+Wake documentation can be found [here](https://ackee.xyz/wake/docs/latest).
 
-There you can also find a section on [contributing](https://ackeeblockchain.com/wake/docs/latest/contributing/).
+There you can also find a section on [contributing](https://ackee.xyz/wake/docs/latest/contributing/).
 
 ## Discovered vulnerabilities
 
@@ -56,7 +56,7 @@ There you can also find a section on [contributing](https://ackeeblockchain.com/
 
 ### Testing framework
 
-See [examples](https://github.com/Ackee-Blockchain/wake/tree/main/examples) and [documentation](https://ackeeblockchain.com/wake/docs/latest/testing-framework/overview) for more information.
+See [examples](https://github.com/Ackee-Blockchain/wake/tree/main/examples) and [documentation](https://ackee.xyz/wake/docs/latest/testing-framework/overview) for more information.
 
 Writing tests is as simple as:
 
@@ -123,7 +123,7 @@ A specific detector can be run using:
 wake detect <detector-name>
 ```
 
-See the [documentation](https://ackeeblockchain.com/wake/docs/latest/static-analysis/using-detectors/) for a list of all detectors.
+See the [documentation](https://ackee.xyz/wake/docs/latest/static-analysis/using-detectors/) for a list of all detectors.
 
 ### Printers
 
@@ -132,11 +132,11 @@ A specific printer can be run using:
 wake print <printer-name>
 ```
 
-See the [documentation](https://ackeeblockchain.com/wake/docs/latest/static-analysis/using-printers/) for a list of all printers.
+See the [documentation](https://ackee.xyz/wake/docs/latest/static-analysis/using-printers/) for a list of all printers.
 
 ### Custom detectors & printers
 
-Refer to the [getting started](https://ackeeblockchain.com/wake/docs/latest/static-analysis/getting-started/) guide for more information.
+Refer to the [getting started](https://ackee.xyz/wake/docs/latest/static-analysis/getting-started/) guide for more information.
 Also check out [wake_detectors](https://github.com/Ackee-Blockchain/wake/tree/main/wake_detectors) and [wake_printers](https://github.com/Ackee-Blockchain/wake/tree/main/wake_printers) for the implementation of built-in detectors and printers.
 
 ### LSP server
@@ -155,7 +155,7 @@ Or with an optional --port argument (default 65432):
 wake lsp --port 1234
 ```
 
-All LSP server features can be found in the [documentation](https://ackeeblockchain.com/wake/docs/latest/language-server/).
+All LSP server features can be found in the [documentation](https://ackee.xyz/wake/docs/latest/language-server/).
 
 ## License
 
