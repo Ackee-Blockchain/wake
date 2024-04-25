@@ -80,6 +80,7 @@ from .primitive_types import (
     fixed_list_map,
     int_map,
     uint_map,
+    uint256,
 )
 
 if TYPE_CHECKING:
@@ -1681,8 +1682,8 @@ class Chain(ABC):
 
     @property
     @check_connected
-    def chain_id(self) -> int:
-        return self._chain_id
+    def chain_id(self) -> uint256:
+        return uint256(self._chain_id)
 
     @property
     @check_connected
