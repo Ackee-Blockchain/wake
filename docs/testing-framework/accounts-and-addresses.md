@@ -207,6 +207,13 @@ def test_accounts():
 
 The previous example shows how to transfer Wei from one account to another.
 
+!!! info "Low-level contract creation"
+    To deploy a contract from creation code, use `chain.deploy`:
+
+    ```python
+    default_chain.deploy(Counter.get_creation_code())
+    ```
+
 ## Contract accounts
 
 Contract accounts are accounts that have non-empty code. Everything that applies to `Account` instances

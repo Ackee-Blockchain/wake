@@ -53,6 +53,7 @@ The `Chain` object has the following methods:
 | `snapshot`                                     | take a snapshot of the chain state; return a snapshot ID                                   |
 | <nobr>`snapshot_and_revert`</nobr>             | context manager to take a snapshot and revert to it after the context ends                 |
 | `update_accounts`                              | update the accounts list                                                                   |
+| `deploy`                                       | low-level method for deploying contracts from creation code                                |
 
 It is recommended to use the context managers `change_automine` and `snapshot_and_revert` instead of setting the `automine` property directly or calling `snapshot` and `revert` manually.
 
