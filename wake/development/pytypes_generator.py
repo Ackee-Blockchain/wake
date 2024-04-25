@@ -2129,12 +2129,36 @@ class NameSanitizer:
             or keyword.iskeyword(name)
         )
 
-    def _check_contract(self, name: str, contract: ContractDefinition) -> bool:
+    def _check_contract(
+        self, name: str, selector: Optional[bytes], contract: ContractDefinition
+    ) -> bool:
+        occupied = False
+        for c in contract.linearized_base_contracts:
+            same_name = [k for k, v in self.__contract_renames[c].items() if v == name]
+            if selector is None and len(same_name) > 0:
+                occupied = True
+            else:
+                for declaration in same_name:
+                    if isinstance(declaration, FunctionDefinition):
+                        if declaration.function_selector != selector:
+                            occupied = True
+                            break
+                    elif isinstance(declaration, VariableDeclaration):
+                        if declaration.function_selector != selector:
+                            occupied = True
+                            break
+                    else:
+                        occupied = True
+                        break
+
+            if occupied:
+                break
+
         return (
             name in self.__global_reserved
             or name in set(self.__global_renames)
             or name in self.__contract_reserved
-            or name in set(self.__contract_renames[contract].values())
+            or occupied
             or keyword.iskeyword(name)
             or (
                 name.startswith("__")
@@ -2217,7 +2241,9 @@ class NameSanitizer:
             check = self._check_global
             renames = self.__global_renames
         elif isinstance(parent, ContractDefinition):
-            check = lambda name: self._check_contract(name, parent)
+            check = lambda name: self._check_contract(
+                name, getattr(declaration, "function_selector", None), parent
+            )
             renames = self.__contract_renames[parent]
         elif isinstance(parent, StructDefinition):
             check = lambda name: self._check_struct(name, parent)
