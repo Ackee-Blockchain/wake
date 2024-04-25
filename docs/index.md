@@ -16,7 +16,7 @@
 
 ## Discovered vulnerabilities
 
-Wake is used by the Ackee Blockchain team to perform smart contract audits - and it helped to discover a bunch of high and critical vulnerabilities.
+Wake is used by the Ackee team to perform smart contract audits - and it helped to discover a bunch of high and critical vulnerabilities.
 
 | Vulnerability                                   | Severity | Project | Method           | Resources                                                                                                                                                                                                                       |
 |-------------------------------------------------|----------|---------|------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|

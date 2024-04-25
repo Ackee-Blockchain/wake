@@ -10,11 +10,11 @@ if [[ -z "${DOMAIN_TOKEN}" ]]; then
     exit 1
 fi
 
-SITEMAP_URL="https://ackeeblockchain.com/wake/docs/latest/sitemap.xml"
+SITEMAP_URL="https://ackee.xyz/wake/docs/latest/sitemap.xml"
 PURGE_URLS=$(curl -s $SITEMAP_URL | grep -Eo '<loc>[^<]*' | cut -d '>' -f 2)
 
-PURGE_URLS+=" https://ackeeblockchain.com/wake/docs/versions.json"
-PURGE_URLS+=" https://ackeeblockchain.com/wake/docs/latest/search/search_index.json"
+PURGE_URLS+=" https://ackee.xyz/wake/docs/versions.json"
+PURGE_URLS+=" https://ackee.xyz/wake/docs/latest/search/search_index.json"
 
 for url in $PURGE_URLS
 do
