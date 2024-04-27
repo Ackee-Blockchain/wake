@@ -23,7 +23,7 @@ logger = get_logger(__name__)
 
 
 class DocumentLinkOptions(WorkDoneProgressOptions):
-    resolve_provider: Optional[bool]
+    resolve_provider: Optional[bool] = None
     """
     Document links have a resolve provider as well.
     """
@@ -41,11 +41,11 @@ class DocumentLink(LspModel):
     """
     The range this link applies to.
     """
-    target: Optional[DocumentUri]
+    target: Optional[DocumentUri] = None
     """
     The uri this link points to. If missing a resolve request is sent later.
     """
-    tooltip: Optional[str]
+    tooltip: Optional[str] = None
     """
     The tooltip text when you hover over this link.
     
@@ -56,7 +56,7 @@ class DocumentLink(LspModel):
     
     @since 3.15.0
     """
-    data: Optional[Any]
+    data: Optional[Any] = None
     """
     A data entry field that is preserved on a document link between a
     DocumentLinkRequest and a DocumentLinkResolveRequest.

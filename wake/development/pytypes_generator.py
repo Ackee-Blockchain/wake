@@ -678,7 +678,7 @@ class TypeGenerator:
         if compilation_info.storage_layout is not None:
             self.add_str_to_types(
                 1,
-                f"_storage_layout = {compilation_info.storage_layout.json(by_alias=True, exclude_none=True)}",
+                f"_storage_layout = {compilation_info.storage_layout.model_dump_json(by_alias=True, exclude_none=True)}",
                 1,
             )
 

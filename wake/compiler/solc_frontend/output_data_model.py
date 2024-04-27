@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional, Tuple
 
-from pydantic import BaseModel, Extra
+from pydantic import BaseModel, ConfigDict, Extra
 
 from wake.utils import StrEnum
 
@@ -13,9 +13,10 @@ def _to_camel(s: str) -> str:
 
 
 class SolcOutputModel(BaseModel):
-    class Config:
-        alias_generator = _to_camel
-        extra = Extra.forbid
+    model_config = ConfigDict(
+        alias_generator=_to_camel,
+        extra=Extra.forbid,
+    )
 
 
 class SolcOutputErrorSourceLocation(SolcOutputModel):
@@ -36,9 +37,9 @@ class SolcOutputErrorSourceLocation(SolcOutputModel):
 
 
 class SolcOutputErrorSecondarySourceLocation(SolcOutputModel):
-    file: Optional[str]
-    start: Optional[int]
-    end: Optional[int]
+    file: Optional[str] = None
+    start: Optional[int] = None
+    end: Optional[int] = None
     message: str
 
     def __members(self) -> Tuple:
@@ -106,14 +107,16 @@ class SolcOutputStorageLayoutTypeEncodingEnum(StrEnum):
 
 
 class SolcOutputError(SolcOutputModel):
-    source_location: Optional[SolcOutputErrorSourceLocation]
-    secondary_source_locations: Optional[List[SolcOutputErrorSecondarySourceLocation]]
+    source_location: Optional[SolcOutputErrorSourceLocation] = None
+    secondary_source_locations: Optional[
+        List[SolcOutputErrorSecondarySourceLocation]
+    ] = None
     type: SolcOutputErrorTypeEnum
     component: str
     severity: SolcOutputErrorSeverityEnum
-    error_code: Optional[str]
+    error_code: Optional[str] = None
     message: str
-    formatted_message: Optional[str]
+    formatted_message: Optional[str] = None
 
     def __members(self) -> Tuple:
         return (
@@ -140,7 +143,7 @@ class SolcOutputError(SolcOutputModel):
 
 class SolcOutputSourceInfo(SolcOutputModel):
     id: int
-    ast: Optional[Dict]
+    ast: Optional[Dict] = None
 
 
 class SolcOutputStorageLayoutStorage(SolcOutputModel):
@@ -168,8 +171,8 @@ class SolcOutputStorageLayout(SolcOutputModel):
 
 
 class SolcOutputEvmBytecodeFunctionDebugData(SolcOutputModel):
-    entry_point: Optional[int]
-    id: Optional[int]
+    entry_point: Optional[int] = None
+    id: Optional[int] = None
     parameter_slots: int
     return_slots: int
 
@@ -216,9 +219,9 @@ class SolcOutputEvmData(SolcOutputModel):
 
 
 class SolcOutputEwasmData(SolcOutputModel):
-    wast: Optional[str]
+    wast: Optional[str] = None
     """S-expressions format"""
-    wasm: Optional[str]
+    wasm: Optional[str] = None
     """Binary format (hex string)"""
 
 

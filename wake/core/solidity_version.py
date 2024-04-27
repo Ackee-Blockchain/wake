@@ -3,6 +3,9 @@ import re
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Iterable, Optional, Tuple, Type, TypeVar, Union
 
+from pydantic import GetCoreSchemaHandler
+from pydantic_core import CoreSchema, core_schema
+
 """
 This module implements semantic version (and `npm` semantic version range) parsing as described
 by `NPM semver <https://www.npmjs.com/package/semver>`_ and `solc source code <https://github.com/ethereum/solidity/blob/55467c1ccaffd5fcf6ea988d5e091d468a08f533/liblangutil/SemVerHandler.cpp>`_.
@@ -58,8 +61,10 @@ class VersionAbc(ABC):
         raise TypeError()
 
     @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
+    def __get_pydantic_core_schema__(
+        cls, source_type: Any, handler: GetCoreSchemaHandler
+    ) -> CoreSchema:
+        return core_schema.no_info_plain_validator_function(cls.validate)
 
 
 T = TypeVar("T", bound="SemanticVersion")

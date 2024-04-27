@@ -1064,7 +1064,8 @@ class SolidityCompiler:
 
             source_units_info = {
                 str(source_unit): SourceUnitInfo(
-                    graph.nodes[source_unit]["path"], graph.nodes[source_unit]["hash"]
+                    fs_path=graph.nodes[source_unit]["path"],
+                    blake2b_hash=graph.nodes[source_unit]["hash"],
                 )
                 for source_unit in graph.nodes
                 if graph.nodes[source_unit]["path"] not in deleted_files
@@ -1080,12 +1081,12 @@ class SolidityCompiler:
 
                 for source_unit_name, raw_ast in solc_output.sources.items():
                     source_units_info[source_unit_name] = SourceUnitInfo(
-                        graph.nodes[source_unit_name]["path"],
-                        graph.nodes[source_unit_name]["hash"],
+                        fs_path=graph.nodes[source_unit_name]["path"],
+                        blake2b_hash=graph.nodes[source_unit_name]["hash"],
                     )
 
                     path = cu.source_unit_name_to_path(source_unit_name)
-                    ast = AstSolc.parse_obj(raw_ast.ast)
+                    ast = AstSolc.model_validate(raw_ast.ast)
 
                     build.reference_resolver.register_source_file_id(
                         raw_ast.id, path, cu.hash
@@ -1285,7 +1286,7 @@ class SolidityCompiler:
             build_path.mkdir(parents=True, exist_ok=True)
 
             with (build_path / "build.json").open("w") as f:
-                f.write(self._latest_build_info.json(by_alias=True, exclude_none=True))
+                f.write(self._latest_build_info.model_dump_json(by_alias=True))
 
             with (build_path / "build.bin").open("wb") as data_file, (
                 build_path / "build.bin.sig"

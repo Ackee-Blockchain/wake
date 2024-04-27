@@ -75,7 +75,7 @@ async def open_address(
     import urllib.request
 
     import tomli_w
-    from pydantic import ValidationError, parse_raw_as
+    from pydantic import TypeAdapter, ValidationError
 
     from wake.compiler.solc_frontend import SolcInput, SolcInputSource
     from wake.config import WakeConfig
@@ -143,7 +143,7 @@ async def open_address(
 
     code = parsed["result"][0]["SourceCode"]
     try:
-        standard_input: SolcInput = SolcInput.parse_raw(code[1:-1])
+        standard_input: SolcInput = SolcInput.model_validate_json(code[1:-1])
         if any(
             PurePosixPath(filename).is_absolute()
             for filename in standard_input.sources.keys()
@@ -179,7 +179,8 @@ async def open_address(
         }
     except ValidationError as e:
         try:
-            s = parse_raw_as(Dict[str, SolcInputSource], code)
+            a = TypeAdapter(Dict[str, SolcInputSource])
+            s = a.validate_json(code)
             if any(PurePosixPath(filename).is_absolute() for filename in s.keys()):
                 raise ValueError("Absolute paths are not supported")
 

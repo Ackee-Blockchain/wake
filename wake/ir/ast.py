@@ -1,16 +1,24 @@
 import re
-from dataclasses import dataclass
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
-from pydantic import BaseModel, Field, StrictBool, StrictInt, StrictStr
-from pydantic.class_validators import root_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Extra,
+    Field,
+    GetCoreSchemaHandler,
+    StrictBool,
+    StrictInt,
+    StrictStr,
+    model_validator,
+)
+from pydantic.dataclasses import dataclass
+from pydantic_core import CoreSchema, core_schema
 from typing_extensions import Annotated, Literal
 
 from .enums import *
 
 REGEX_SRC = re.compile(r"(-?\d+):(-?\d+):(-?\d+)")
-PYDANTIC_CONFIG_EXTRA = "forbid"
-PYDANTIC_CONFIG_ALLOW_MUTATION = False
 
 
 def to_camel(s: str) -> str:
@@ -19,10 +27,11 @@ def to_camel(s: str) -> str:
 
 
 class AstModel(BaseModel):
-    class Config:
-        alias_generator = to_camel
-        extra = PYDANTIC_CONFIG_EXTRA
-        allow_mutation = PYDANTIC_CONFIG_ALLOW_MUTATION
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        extra=Extra.forbid,
+        frozen=True,
+    )
 
 
 SolcTopLevelMemberUnion = Annotated[
@@ -260,8 +269,10 @@ Override = Annotated[
 
 class AstNodeId(int):
     @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
+    def __get_pydantic_core_schema__(
+        cls, source_type: Any, handler: GetCoreSchemaHandler
+    ) -> CoreSchema:
+        return core_schema.no_info_before_validator_function(cls.validate, handler(int))
 
     @classmethod
     def validate(cls, v):
@@ -279,31 +290,28 @@ class Src:
     byte_length: int
     file_id: int
 
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
+    @model_validator(mode="before")
     def validate(cls, v):
-        if not isinstance(v, str):
-            raise TypeError(f"{cls.__name__} must be a str")
-        match = re.search(REGEX_SRC, v)
-        assert (
-            match
-        ), f"Src must be in the format '<byte_offset>:<byte_length>:<file_id>': {v}"
-        [m1, m2, m3] = [int(match.group(i)) for i in range(1, 4)]
-        return Src(byte_offset=m1, byte_length=m2, file_id=m3)
+        if isinstance(v, str):
+            match = re.search(REGEX_SRC, v)
+            assert (
+                match
+            ), f"Src must be in the format '<byte_offset>:<byte_length>:<file_id>': {v}"
+            [m1, m2, m3] = [int(match.group(i)) for i in range(1, 4)]
+            return {"byte_offset": m1, "byte_length": m2, "file_id": m3}
+            # return Src(byte_offset=m1, byte_length=m2, file_id=m3)
+        return v
 
 
 class TypeDescriptionsModel(AstModel):
-    type_identifier: Optional[StrictStr]
-    type_string: Optional[StrictStr]
+    type_identifier: Optional[StrictStr] = None
+    type_string: Optional[StrictStr] = None
 
 
 class SymbolAliasModel(AstModel):  # helper class
     foreign: "SolcIdentifier"
-    local: Optional[StrictStr]
-    name_location: Optional[Src]  # new in 0.8.2
+    local: Optional[StrictStr] = None
+    name_location: Optional[Src] = None  # new in 0.8.2
 
 
 # InlineAssembly
@@ -313,7 +321,7 @@ class ExternalReferenceModel(AstModel):  # helper class
     is_slot: StrictBool
     src: Src
     value_size: StrictInt
-    suffix: Optional[InlineAssemblySuffix]
+    suffix: Optional[InlineAssemblySuffix] = None
 
 
 class SolcNode(AstModel):
@@ -342,7 +350,7 @@ class SolidityNode(SolcNode):
 
 
 class YulNode(SolcNode):
-    native_src: Optional[Src]  # new in 0.8.21
+    native_src: Optional[Src] = None  # new in 0.8.21
 
 
 class SolcSourceUnit(SolidityNode):
@@ -353,7 +361,7 @@ class SolcSourceUnit(SolidityNode):
     exported_symbols: Dict[StrictStr, List[AstNodeId]]
     nodes: List[SolcTopLevelMemberUnion]
     # optional
-    license: Optional[StrictStr]
+    license: Optional[StrictStr] = None
 
 
 # todo: replace by __root__
@@ -381,7 +389,7 @@ class SolcImportDirective(SolidityNode):
     symbol_aliases: List[SymbolAliasModel]
     unit_alias: StrictStr
     # optional
-    name_location: Optional[Src]  # new in 0.8.2
+    name_location: Optional[Src] = None  # new in 0.8.2
 
     def __iter__(self):
         for symbol_alias in self.symbol_aliases:
@@ -401,20 +409,22 @@ class SolcVariableDeclaration(SolidityNode):
     type_descriptions: "TypeDescriptionsModel"
     visibility: Visibility
     # optional
-    name_location: Optional[Src]  # new in 0.8.2
+    name_location: Optional[Src] = None  # new in 0.8.2
     # immutable is new in 0.6.5 but `mutability` field is set in >=0.6.6
     # in 0.6.5 `mutability` field is not exported for immutable variables because of a bug
     # constant variables were distinguished by `constant` field in versions <= 0.6.5 (this field is still present in newer versions)
-    mutability: Optional[Mutability]
-    base_functions: Optional[List[AstNodeId]]
+    mutability: Optional[Mutability] = None
+    base_functions: Optional[List[AstNodeId]] = None
     documentation: Optional[
         "SolcStructuredDocumentation"
-    ]  # added in 0.6.9 for state variables
-    function_selector: Optional[StrictStr]
-    indexed: Optional[StrictBool]
-    overrides: Optional["SolcOverrideSpecifier"]
-    type_name: OptionalSolcTypeNameUnion  # is None only for <0.5.0 where `var` keyword was supported
-    value: OptionalSolcExpressionUnion
+    ] = None  # added in 0.6.9 for state variables
+    function_selector: Optional[StrictStr] = None
+    indexed: Optional[StrictBool] = None
+    overrides: Optional["SolcOverrideSpecifier"] = None
+    type_name: OptionalSolcTypeNameUnion = (
+        None  # is None only for <0.5.0 where `var` keyword was supported
+    )
+    value: OptionalSolcExpressionUnion = None
 
 
 class SolcEnumDefinition(SolidityNode):
@@ -425,8 +435,8 @@ class SolcEnumDefinition(SolidityNode):
     canonical_name: StrictStr
     members: List["SolcEnumValue"]
     # optional
-    name_location: Optional[Src]  # new in 0.8.2
-    documentation: Optional["SolcStructuredDocumentation"]  # new in 0.8.20
+    name_location: Optional[Src] = None  # new in 0.8.2
+    documentation: Optional["SolcStructuredDocumentation"] = None  # new in 0.8.20
 
 
 class SolcFunctionDefinition(SolidityNode):
@@ -444,12 +454,12 @@ class SolcFunctionDefinition(SolidityNode):
     virtual: StrictBool
     visibility: Visibility
     # optional
-    name_location: Optional[Src]  # new in 0.8.2
-    base_functions: Optional[List[AstNodeId]]
-    documentation: Optional[Union["SolcStructuredDocumentation", str]]
-    function_selector: Optional[StrictStr]
-    body: Optional["SolcBlock"]
-    overrides: Optional["SolcOverrideSpecifier"]
+    name_location: Optional[Src] = None  # new in 0.8.2
+    base_functions: Optional[List[AstNodeId]] = None
+    documentation: Union["SolcStructuredDocumentation", str, None] = None
+    function_selector: Optional[StrictStr] = None
+    body: Optional["SolcBlock"] = None
+    overrides: Optional["SolcOverrideSpecifier"] = None
 
 
 class SolcStructDefinition(SolidityNode):
@@ -462,8 +472,8 @@ class SolcStructDefinition(SolidityNode):
     scope: AstNodeId
     visibility: Visibility
     # optional
-    name_location: Optional[Src]  # new in 0.8.2
-    documentation: Optional["SolcStructuredDocumentation"]  # new in 0.8.20
+    name_location: Optional[Src] = None  # new in 0.8.2
+    documentation: Optional["SolcStructuredDocumentation"] = None  # new in 0.8.20
 
 
 # new in 0.8.4
@@ -475,8 +485,8 @@ class SolcErrorDefinition(SolidityNode):
     name_location: Src
     parameters: "SolcParameterList"
     # optional
-    documentation: Optional["SolcStructuredDocumentation"]
-    error_selector: Optional[StrictStr]
+    documentation: Optional["SolcStructuredDocumentation"] = None
+    error_selector: Optional[StrictStr] = None
 
 
 # new in 0.8.0
@@ -487,10 +497,10 @@ class SolcUserDefinedValueTypeDefinition(SolidityNode):
     name: StrictStr
     underlying_type: "SolcElementaryTypeName"
     # optional
-    name_location: Optional[Src]  # new in 0.8.2
+    name_location: Optional[Src] = None  # new in 0.8.2
     canonical_name: Optional[
         StrictStr
-    ]  # should be present but because of a bug it is exported in >=0.8.9
+    ] = None  # should be present but because of a bug it is exported in >=0.8.9
 
 
 class SolcContractDefinition(SolidityNode):
@@ -506,18 +516,18 @@ class SolcContractDefinition(SolidityNode):
     nodes: List[SolcContractMemberUnion]
     scope: AstNodeId
     # optional
-    name_location: Optional[Src]  # new in 0.8.2
+    name_location: Optional[Src] = None  # new in 0.8.2
     canonical_name: Optional[
         StrictStr
-    ]  # should be present but because of a bug it is exported in >=0.8.9
+    ] = None  # should be present but because of a bug it is exported in >=0.8.9
     fully_implemented: Optional[
         StrictBool
-    ]  # missing when a file that imports the contract cannot be compiled
-    documentation: Optional[Union["SolcStructuredDocumentation", str]]
-    used_errors: Optional[List[AstNodeId]]  # new in 0.8.4
-    used_events: Optional[List[AstNodeId]]  # new in 0.8.20
+    ] = None  # missing when a file that imports the contract cannot be compiled
+    documentation: Union["SolcStructuredDocumentation", str, None] = None
+    used_errors: Optional[List[AstNodeId]] = None  # new in 0.8.4
+    used_events: Optional[List[AstNodeId]] = None  # new in 0.8.20
     internal_function_ids: Optional[Dict[int, StrictInt]] = Field(
-        alias="internalFunctionIDs"
+        None, alias="internalFunctionIDs"
     )
 
 
@@ -529,11 +539,11 @@ class SolcEventDefinition(SolidityNode):
     anonymous: StrictBool
     parameters: "SolcParameterList"
     # optional
-    name_location: Optional[Src]  # new in 0.8.2
-    documentation: Optional[Union["SolcStructuredDocumentation", str]]
+    name_location: Optional[Src] = None  # new in 0.8.2
+    documentation: Optional[Union["SolcStructuredDocumentation", str]] = None
     event_selector: Optional[
         StrictStr
-    ]  # an example: "0d3648bd0f6ba80134a33ba9275ac585d9d315f0ad8355cddefde31afa28d0e9"
+    ] = None  # an example: "0d3648bd0f6ba80134a33ba9275ac585d9d315f0ad8355cddefde31afa28d0e9"
 
 
 class SolcModifierDefinition(SolidityNode):
@@ -545,17 +555,19 @@ class SolcModifierDefinition(SolidityNode):
     virtual: StrictBool
     visibility: Visibility
     # optional
-    body: Optional["SolcBlock"]
-    name_location: Optional[Src]  # new in 0.8.2
-    base_modifiers: Optional[List[AstNodeId]]
-    documentation: Optional[Union["SolcStructuredDocumentation", str]]
-    overrides: Optional["SolcOverrideSpecifier"]
+    body: Optional["SolcBlock"] = None
+    name_location: Optional[Src] = None  # new in 0.8.2
+    base_modifiers: Optional[List[AstNodeId]] = None
+    documentation: Optional[Union["SolcStructuredDocumentation", str]] = None
+    overrides: Optional["SolcOverrideSpecifier"] = None
 
 
 class UsingForDirectiveFunction(AstModel):
-    function: Optional["SolcIdentifierPath"]
-    definition: Optional["SolcIdentifierPath"]  # added in 0.8.19
-    operator: Optional[Union[UnaryOpOperator, BinaryOpOperator]]  # added in 0.8.19
+    function: Optional["SolcIdentifierPath"] = None
+    definition: Optional["SolcIdentifierPath"] = None  # added in 0.8.19
+    operator: Optional[
+        Union[UnaryOpOperator, BinaryOpOperator]
+    ] = None  # added in 0.8.19
 
 
 class SolcUsingForDirective(SolidityNode):
@@ -563,10 +575,10 @@ class SolcUsingForDirective(SolidityNode):
     node_type: Literal["UsingForDirective"] = Field(alias="nodeType")
     # required
     # optional
-    function_list: Optional[List[UsingForDirectiveFunction]]
-    library_name: OptionalSolcLibraryNameUnion
-    type_name: OptionalSolcTypeNameUnion
-    global_: Optional[StrictBool] = Field(alias="global")
+    function_list: Optional[List[UsingForDirectiveFunction]] = None
+    library_name: OptionalSolcLibraryNameUnion = None
+    type_name: OptionalSolcTypeNameUnion = None
+    global_: Optional[StrictBool] = Field(None, alias="global")
 
     def __iter__(self):
         if self.function_list is not None:
@@ -592,7 +604,7 @@ class SolcArrayTypeName(SolidityNode):
     type_descriptions: TypeDescriptionsModel
     base_type: SolcTypeNameUnion
     # optional
-    length: OptionalSolcExpressionUnion
+    length: OptionalSolcExpressionUnion = None
 
 
 class SolcElementaryTypeName(SolidityNode):
@@ -602,7 +614,7 @@ class SolcElementaryTypeName(SolidityNode):
     type_descriptions: TypeDescriptionsModel
     name: StrictStr
     # optional
-    state_mutability: Optional[StateMutability]
+    state_mutability: Optional[StateMutability] = None
 
 
 class SolcFunctionTypeName(SolidityNode):
@@ -625,10 +637,10 @@ class SolcMapping(SolidityNode):
     key_type: SolcTypeNameUnion
     value_type: SolcTypeNameUnion
     # optional
-    key_name: Optional[StrictStr]  # new in 0.8.18
-    key_name_location: Optional[Src]  # new in 0.8.18
-    value_name: Optional[StrictStr]  # new in 0.8.18
-    value_name_location: Optional[Src]  # new in 0.8.18
+    key_name: Optional[StrictStr] = None  # new in 0.8.18
+    key_name_location: Optional[Src] = None  # new in 0.8.18
+    value_name: Optional[StrictStr] = None  # new in 0.8.18
+    value_name_location: Optional[Src] = None  # new in 0.8.18
 
 
 class SolcUserDefinedTypeName(SolidityNode):
@@ -637,9 +649,9 @@ class SolcUserDefinedTypeName(SolidityNode):
     type_descriptions: TypeDescriptionsModel
     referenced_declaration: AstNodeId
     # optional
-    contract_scope: Optional[AstNodeId]  # removed in 0.8.0
-    name: Optional[StrictStr]  # removed in 0.8.0 in favor of path_node
-    path_node: Optional["SolcIdentifierPath"]  # added in 0.8.0
+    contract_scope: Optional[AstNodeId] = None  # removed in 0.8.0
+    name: Optional[StrictStr] = None  # removed in 0.8.0 in favor of path_node
+    path_node: Optional["SolcIdentifierPath"] = None  # added in 0.8.0
 
 
 class SolcBlock(SolidityNode):
@@ -648,7 +660,7 @@ class SolcBlock(SolidityNode):
     statements: List[SolcStatementUnion]
     # required
     # optional
-    documentation: Optional[StrictStr]
+    documentation: Optional[StrictStr] = None
 
 
 class SolcBreak(SolidityNode):
@@ -656,7 +668,7 @@ class SolcBreak(SolidityNode):
     node_type: Literal["Break"] = Field(alias="nodeType")
     # required
     # optional
-    documentation: Optional[StrictStr]
+    documentation: Optional[StrictStr] = None
 
 
 class SolcContinue(SolidityNode):
@@ -664,7 +676,7 @@ class SolcContinue(SolidityNode):
     node_type: Literal["Continue"] = Field(alias="nodeType")
     # required
     # optional
-    documentation: Optional[StrictStr]
+    documentation: Optional[StrictStr] = None
 
 
 class SolcDoWhileStatement(SolidityNode):
@@ -674,7 +686,7 @@ class SolcDoWhileStatement(SolidityNode):
     body: SolcStatementUnion
     condition: SolcExpressionUnion
     # optional
-    documentation: Optional[StrictStr]
+    documentation: Optional[StrictStr] = None
 
 
 class SolcEmitStatement(SolidityNode):
@@ -683,7 +695,7 @@ class SolcEmitStatement(SolidityNode):
     # required
     event_call: "SolcFunctionCall"
     # optional
-    documentation: Optional[StrictStr]
+    documentation: Optional[StrictStr] = None
 
 
 class SolcExpressionStatement(SolidityNode):
@@ -692,7 +704,7 @@ class SolcExpressionStatement(SolidityNode):
     # required
     expression: SolcExpressionUnion
     # optional
-    documentation: Optional[StrictStr]
+    documentation: Optional[StrictStr] = None
 
 
 class SolcForStatement(SolidityNode):
@@ -701,11 +713,11 @@ class SolcForStatement(SolidityNode):
     # required
     body: SolcStatementUnion
     # optional
-    documentation: Optional[StrictStr]
-    condition: OptionalSolcExpressionUnion
-    initialization_expression: OptionalSolcInitExprUnion
-    loop_expression: Optional[SolcExpressionStatement]
-    is_simple_counter_loop: Optional[bool]  # new in 0.8.22
+    documentation: Optional[StrictStr] = None
+    condition: OptionalSolcExpressionUnion = None
+    initialization_expression: OptionalSolcInitExprUnion = None
+    loop_expression: Optional[SolcExpressionStatement] = None
+    is_simple_counter_loop: Optional[bool] = None  # new in 0.8.22
 
 
 class SolcIfStatement(SolidityNode):
@@ -715,8 +727,8 @@ class SolcIfStatement(SolidityNode):
     condition: SolcExpressionUnion
     true_body: SolcStatementUnion
     # optional
-    documentation: Optional[StrictStr]
-    false_body: OptionalSolcStatementUnion
+    documentation: Optional[StrictStr] = None
+    false_body: OptionalSolcStatementUnion = None
 
 
 class SolcInlineAssembly(SolidityNode):
@@ -728,8 +740,8 @@ class SolcInlineAssembly(SolidityNode):
     evm_version: InlineAssemblyEvmVersion
     external_references: List[ExternalReferenceModel]
     # optional
-    documentation: Optional[StrictStr]
-    flags: Optional[List[InlineAssemblyFlag]]
+    documentation: Optional[StrictStr] = None
+    flags: Optional[List[InlineAssemblyFlag]] = None
 
 
 class SolcPlaceholderStatement(SolidityNode):
@@ -737,7 +749,7 @@ class SolcPlaceholderStatement(SolidityNode):
     node_type: Literal["PlaceholderStatement"] = Field(alias="nodeType")
     # required
     # optional
-    documentation: Optional[StrictStr]
+    documentation: Optional[StrictStr] = None
 
 
 class SolcReturn(SolidityNode):
@@ -745,9 +757,9 @@ class SolcReturn(SolidityNode):
     node_type: Literal["Return"] = Field(alias="nodeType")
     # required
     # optional
-    function_return_parameters: Optional[AstNodeId]
-    documentation: Optional[StrictStr]
-    expression: OptionalSolcExpressionUnion
+    function_return_parameters: Optional[AstNodeId] = None
+    documentation: Optional[StrictStr] = None
+    expression: OptionalSolcExpressionUnion = None
 
 
 class SolcRevertStatement(SolidityNode):
@@ -756,7 +768,7 @@ class SolcRevertStatement(SolidityNode):
     # required
     error_call: "SolcFunctionCall"
     # optional
-    documentation: Optional[StrictStr]
+    documentation: Optional[StrictStr] = None
 
 
 class SolcTryStatement(SolidityNode):
@@ -766,7 +778,7 @@ class SolcTryStatement(SolidityNode):
     clauses: List["SolcTryCatchClause"]
     external_call: "SolcFunctionCall"
     # optional
-    documentation: Optional[StrictStr]
+    documentation: Optional[StrictStr] = None
 
 
 # new in 0.8.0
@@ -776,18 +788,18 @@ class SolcUncheckedBlock(SolidityNode):
     # required
     statements: List[SolcStatementUnion]
     # optional
-    documentation: Optional[StrictStr]
+    documentation: Optional[StrictStr] = None
 
 
 class SolcVariableDeclarationStatement(SolidityNode):
     # override alias
     node_type: Literal["VariableDeclarationStatement"] = Field(alias="nodeType")
     # required
-    assignments: List[Optional[AstNodeId]]
-    declarations: List[Optional["SolcVariableDeclaration"]]
+    assignments: List[Optional[AstNodeId]] = None
+    declarations: List[Optional["SolcVariableDeclaration"]] = None
     # optional
-    documentation: Optional[StrictStr]
-    initial_value: OptionalSolcExpressionUnion
+    documentation: Optional[StrictStr] = None
+    initial_value: OptionalSolcExpressionUnion = None
 
 
 class SolcWhileStatement(SolidityNode):
@@ -797,7 +809,7 @@ class SolcWhileStatement(SolidityNode):
     body: SolcStatementUnion
     condition: SolcExpressionUnion
     # optional
-    documentation: Optional[StrictStr]
+    documentation: Optional[StrictStr] = None
 
 
 class SolcAssignment(SolidityNode):
@@ -813,7 +825,7 @@ class SolcAssignment(SolidityNode):
     operator: AssignmentOperator
     right_hand_side: SolcExpressionUnion
     # optional
-    argument_types: Optional[List[TypeDescriptionsModel]]
+    argument_types: Optional[List[TypeDescriptionsModel]] = None
 
 
 class SolcBinaryOperation(SolidityNode):
@@ -830,8 +842,8 @@ class SolcBinaryOperation(SolidityNode):
     operator: BinaryOpOperator
     right_expression: SolcExpressionUnion
     # optional
-    argument_types: Optional[List[TypeDescriptionsModel]]
-    function: Optional[AstNodeId]  # added in 0.8.19
+    argument_types: Optional[List[TypeDescriptionsModel]] = None
+    function: Optional[AstNodeId] = None  # added in 0.8.19
 
 
 class SolcConditional(SolidityNode):
@@ -847,7 +859,7 @@ class SolcConditional(SolidityNode):
     false_expression: SolcExpressionUnion
     true_expression: SolcExpressionUnion
     # optional
-    argument_types: Optional[List[TypeDescriptionsModel]]
+    argument_types: Optional[List[TypeDescriptionsModel]] = None
 
 
 class SolcElementaryTypeNameExpression(SolidityNode):
@@ -861,7 +873,7 @@ class SolcElementaryTypeNameExpression(SolidityNode):
     type_descriptions: TypeDescriptionsModel
     type_name: "SolcElementaryTypeName"  # in versions < 0.6.0 this was a string
     # optional
-    argument_types: Optional[List[TypeDescriptionsModel]]
+    argument_types: Optional[List[TypeDescriptionsModel]] = None
 
 
 class SolcFunctionCall(SolidityNode):
@@ -879,8 +891,8 @@ class SolcFunctionCall(SolidityNode):
     names: List[StrictStr]
     try_call: StrictBool
     # optional
-    argument_types: Optional[List[TypeDescriptionsModel]]
-    name_locations: Optional[List[Src]]  # added in 0.8.16
+    argument_types: Optional[List[TypeDescriptionsModel]] = None
+    name_locations: Optional[List[Src]] = None  # added in 0.8.16
 
 
 class SolcFunctionCallOptions(SolidityNode):
@@ -897,7 +909,7 @@ class SolcFunctionCallOptions(SolidityNode):
     options: List[SolcExpressionUnion]
     # optional
     # TODO:
-    argument_types: Optional[List[TypeDescriptionsModel]]
+    argument_types: Optional[List[TypeDescriptionsModel]] = None
 
 
 class SolcIdentifier(SolidityNode):
@@ -908,8 +920,8 @@ class SolcIdentifier(SolidityNode):
     overloaded_declarations: List[AstNodeId]
     type_descriptions: TypeDescriptionsModel
     # optional
-    argument_types: Optional[List[TypeDescriptionsModel]]
-    referenced_declaration: Optional[AstNodeId]
+    argument_types: Optional[List[TypeDescriptionsModel]] = None
+    referenced_declaration: Optional[AstNodeId] = None
 
 
 class SolcIndexAccess(SolidityNode):
@@ -923,8 +935,8 @@ class SolcIndexAccess(SolidityNode):
     type_descriptions: TypeDescriptionsModel
     base_expression: SolcExpressionUnion
     # optional
-    argument_types: Optional[List[TypeDescriptionsModel]]
-    index_expression: OptionalSolcExpressionUnion  # example when this can be None: `abi.decode(params, (address[], uint256))`
+    argument_types: Optional[List[TypeDescriptionsModel]] = None
+    index_expression: OptionalSolcExpressionUnion = None  # example when this can be None: `abi.decode(params, (address[], uint256))`
 
 
 class SolcIndexRangeAccess(SolidityNode):
@@ -938,9 +950,9 @@ class SolcIndexRangeAccess(SolidityNode):
     type_descriptions: TypeDescriptionsModel
     base_expression: SolcExpressionUnion
     # optional
-    argument_types: Optional[List[TypeDescriptionsModel]]
-    end_expression: OptionalSolcExpressionUnion
-    start_expression: OptionalSolcExpressionUnion
+    argument_types: Optional[List[TypeDescriptionsModel]] = None
+    end_expression: OptionalSolcExpressionUnion = None
+    start_expression: OptionalSolcExpressionUnion = None
 
 
 class SolcLiteral(SolidityNode):
@@ -955,9 +967,9 @@ class SolcLiteral(SolidityNode):
     hex_value: StrictStr
     kind: LiteralKind  # hexString new in 0.7.0, prior to 0.7.0 hex strings were marked as strings
     # optional
-    argument_types: Optional[List[TypeDescriptionsModel]]
-    subdenomination: Optional[StrictStr]  # can be for example "days" or "ether"
-    value: Optional[StrictStr]
+    argument_types: Optional[List[TypeDescriptionsModel]] = None
+    subdenomination: Optional[StrictStr] = None  # can be for example "days" or "ether"
+    value: Optional[StrictStr] = None
 
 
 class SolcMemberAccess(SolidityNode):
@@ -972,11 +984,11 @@ class SolcMemberAccess(SolidityNode):
     expression: SolcExpressionUnion
     member_name: StrictStr
     # optional
-    argument_types: Optional[List[TypeDescriptionsModel]]
+    argument_types: Optional[List[TypeDescriptionsModel]] = None
     referenced_declaration: Optional[
         AstNodeId
-    ]  # because of a bug this is None for enum value access in versions prior to 0.8.2
-    member_location: Optional[Src]  # added in 0.8.16
+    ] = None  # because of a bug this is None for enum value access in versions prior to 0.8.2
+    member_location: Optional[Src] = None  # added in 0.8.16
 
 
 class SolcNewExpression(SolidityNode):
@@ -990,7 +1002,7 @@ class SolcNewExpression(SolidityNode):
     type_descriptions: TypeDescriptionsModel
     type_name: SolcTypeNameUnion
     # optional
-    argument_types: Optional[List[TypeDescriptionsModel]]
+    argument_types: Optional[List[TypeDescriptionsModel]] = None
 
 
 class SolcTupleExpression(SolidityNode):
@@ -1002,10 +1014,10 @@ class SolcTupleExpression(SolidityNode):
     is_pure: StrictBool = False
     l_value_requested: StrictBool
     type_descriptions: TypeDescriptionsModel
-    components: List[OptionalSolcExpressionUnion]
+    components: List[OptionalSolcExpressionUnion] = None
     is_inline_array: StrictBool
     # optional
-    argument_types: Optional[List[TypeDescriptionsModel]]
+    argument_types: Optional[List[TypeDescriptionsModel]] = None
 
 
 class SolcUnaryOperation(SolidityNode):
@@ -1021,8 +1033,8 @@ class SolcUnaryOperation(SolidityNode):
     prefix: StrictBool
     sub_expression: SolcExpressionUnion
     # optional
-    argument_types: Optional[List[TypeDescriptionsModel]]
-    function: Optional[AstNodeId]  # added in 0.8.19
+    argument_types: Optional[List[TypeDescriptionsModel]] = None
+    function: Optional[AstNodeId] = None  # added in 0.8.19
 
 
 class SolcOverrideSpecifier(SolidityNode):
@@ -1040,7 +1052,7 @@ class SolcIdentifierPath(SolidityNode):
     name: StrictStr
     referenced_declaration: AstNodeId
     # optional
-    name_locations: Optional[List[Src]]  # added in 0.8.16
+    name_locations: Optional[List[Src]] = None  # added in 0.8.16
 
 
 class SolcParameterList(SolidityNode):
@@ -1058,7 +1070,7 @@ class SolcTryCatchClause(SolidityNode):
     block: "SolcBlock"
     error_name: StrictStr
     # optional
-    parameters: Optional["SolcParameterList"]
+    parameters: Optional["SolcParameterList"] = None
 
 
 class SolcStructuredDocumentation(SolidityNode):
@@ -1075,7 +1087,7 @@ class SolcEnumValue(SolidityNode):
     # required
     name: StrictStr
     # optional
-    name_location: Optional[Src]  # new in 0.8.2
+    name_location: Optional[Src] = None  # new in 0.8.2
 
 
 class SolcInheritanceSpecifier(SolidityNode):
@@ -1084,7 +1096,7 @@ class SolcInheritanceSpecifier(SolidityNode):
     # required
     base_name: BaseName
     # optional
-    arguments: Optional[List[SolcExpressionUnion]]
+    arguments: Optional[List[SolcExpressionUnion]] = None
 
 
 class SolcModifierInvocation(SolidityNode):
@@ -1093,10 +1105,10 @@ class SolcModifierInvocation(SolidityNode):
     # required
     modifier_name: ModifierName
     # optional
-    arguments: Optional[List[SolcExpressionUnion]]
+    arguments: Optional[List[SolcExpressionUnion]] = None
     kind: Optional[
         ModifierInvocationKind
-    ]  # new in 0.8.3, fixed in 0.8.4 for base constructor calls
+    ] = None  # new in 0.8.3, fixed in 0.8.4 for base constructor calls
 
 
 class SolcYulAssignment(YulNode):
@@ -1163,8 +1175,8 @@ class SolcYulFunctionDefinition(YulNode):
     body: "SolcYulBlock"
     name: StrictStr
     # optional
-    parameters: Optional[List["SolcYulTypedName"]]
-    return_variables: Optional[List["SolcYulTypedName"]]
+    parameters: Optional[List["SolcYulTypedName"]] = None
+    return_variables: Optional[List["SolcYulTypedName"]] = None
 
 
 class SolcYulIf(YulNode):
@@ -1191,7 +1203,7 @@ class SolcYulVariableDeclaration(YulNode):
     # required
     variables: List["SolcYulTypedName"]
     # optional
-    value: OptionalSolcYulExpressionUnion
+    value: OptionalSolcYulExpressionUnion = None
 
 
 class SolcYulFunctionCall(YulNode):
@@ -1218,16 +1230,15 @@ class SolcYulLiteral(YulNode):
     kind: YulLiteralKind
     type: StrictStr
     # at least one of these should be set
-    value: Optional[StrictStr]
-    hex_value: Optional[StrictStr]  # sice 0.8.5
+    value: Optional[StrictStr] = None
+    hex_value: Optional[StrictStr] = None  # sice 0.8.5
 
-    @root_validator
-    def value_or_hex_value_set(cls, values):
-        value, hex_value = values.get("value"), values.get("hex_value")
+    @model_validator(mode="after")
+    def value_or_hex_value_set(cls, value: "SolcYulLiteral"):
         assert (
-            value is not None or hex_value is not None
+            value.value is not None or value.hex_value is not None
         ), "YulLiteral: either 'value' or 'hex_value' must be set"
-        return values
+        return value
 
 
 class SolcYulTypedName(YulNode):
@@ -1248,77 +1259,78 @@ class SolcYulCase(YulNode):
     # optional
 
 
-# region update_forward_refs
-SolcSourceUnit.update_forward_refs()
-SolcPragmaDirective.update_forward_refs()
-SolcImportDirective.update_forward_refs()
-SolcVariableDeclaration.update_forward_refs()
-SolcEnumDefinition.update_forward_refs()
-SolcFunctionDefinition.update_forward_refs()
-SolcStructDefinition.update_forward_refs()
-SolcErrorDefinition.update_forward_refs()
-SolcUserDefinedValueTypeDefinition.update_forward_refs()
-SolcContractDefinition.update_forward_refs()
-SolcEventDefinition.update_forward_refs()
-SolcModifierDefinition.update_forward_refs()
-UsingForDirectiveFunction.update_forward_refs()
-SolcUsingForDirective.update_forward_refs()
-SolcArrayTypeName.update_forward_refs()
-SolcElementaryTypeName.update_forward_refs()
-SolcFunctionTypeName.update_forward_refs()
-SolcMapping.update_forward_refs()
-SolcUserDefinedTypeName.update_forward_refs()
-SolcBlock.update_forward_refs()
-SolcBreak.update_forward_refs()
-SolcContinue.update_forward_refs()
-SolcDoWhileStatement.update_forward_refs()
-SolcEmitStatement.update_forward_refs()
-SolcExpressionStatement.update_forward_refs()
-SolcForStatement.update_forward_refs()
-SolcIfStatement.update_forward_refs()
-SolcInlineAssembly.update_forward_refs()
-SolcPlaceholderStatement.update_forward_refs()
-SolcReturn.update_forward_refs()
-SolcRevertStatement.update_forward_refs()
-SolcTryStatement.update_forward_refs()
-SolcUncheckedBlock.update_forward_refs()
-SolcVariableDeclarationStatement.update_forward_refs()
-SolcWhileStatement.update_forward_refs()
-SolcAssignment.update_forward_refs()
-SolcBinaryOperation.update_forward_refs()
-SolcConditional.update_forward_refs()
-SolcElementaryTypeNameExpression.update_forward_refs()
-SolcFunctionCall.update_forward_refs()
-SolcFunctionCallOptions.update_forward_refs()
-SolcIdentifier.update_forward_refs()
-SolcIndexAccess.update_forward_refs()
-SolcIndexRangeAccess.update_forward_refs()
-SolcLiteral.update_forward_refs()
-SolcMemberAccess.update_forward_refs()
-SolcNewExpression.update_forward_refs()
-SolcTupleExpression.update_forward_refs()
-SolcUnaryOperation.update_forward_refs()
-SolcOverrideSpecifier.update_forward_refs()
-SolcIdentifierPath.update_forward_refs()
-SolcParameterList.update_forward_refs()
-SolcTryCatchClause.update_forward_refs()
-SolcStructuredDocumentation.update_forward_refs()
-SolcEnumValue.update_forward_refs()
-SymbolAliasModel.update_forward_refs()
-SolcYulAssignment.update_forward_refs()
-SolcYulBlock.update_forward_refs()
-SolcYulBreak.update_forward_refs()
-SolcYulContinue.update_forward_refs()
-SolcYulExpressionStatement.update_forward_refs()
-SolcYulLeave.update_forward_refs()
-SolcYulForLoop.update_forward_refs()
-SolcYulFunctionDefinition.update_forward_refs()
-SolcYulIf.update_forward_refs()
-SolcYulSwitch.update_forward_refs()
-SolcYulVariableDeclaration.update_forward_refs()
-SolcYulFunctionCall.update_forward_refs()
-SolcYulIdentifier.update_forward_refs()
-SolcYulLiteral.update_forward_refs()
-SolcYulTypedName.update_forward_refs()
-SolcYulCase.update_forward_refs()
-# endregion update_forward_refs
+# region model_rebuild
+SolcContractDefinition.model_rebuild()
+SolcSourceUnit.model_rebuild()
+SolcPragmaDirective.model_rebuild()
+SolcImportDirective.model_rebuild()
+SolcVariableDeclaration.model_rebuild()
+SolcEnumDefinition.model_rebuild()
+SolcFunctionDefinition.model_rebuild()
+SolcStructDefinition.model_rebuild()
+SolcErrorDefinition.model_rebuild()
+SolcUserDefinedValueTypeDefinition.model_rebuild()
+SolcContractDefinition.model_rebuild()
+SolcEventDefinition.model_rebuild()
+SolcModifierDefinition.model_rebuild()
+UsingForDirectiveFunction.model_rebuild()
+SolcUsingForDirective.model_rebuild()
+SolcArrayTypeName.model_rebuild()
+SolcElementaryTypeName.model_rebuild()
+SolcFunctionTypeName.model_rebuild()
+SolcMapping.model_rebuild()
+SolcUserDefinedTypeName.model_rebuild()
+SolcBlock.model_rebuild()
+SolcBreak.model_rebuild()
+SolcContinue.model_rebuild()
+SolcDoWhileStatement.model_rebuild()
+SolcEmitStatement.model_rebuild()
+SolcExpressionStatement.model_rebuild()
+SolcForStatement.model_rebuild()
+SolcIfStatement.model_rebuild()
+SolcInlineAssembly.model_rebuild()
+SolcPlaceholderStatement.model_rebuild()
+SolcReturn.model_rebuild()
+SolcRevertStatement.model_rebuild()
+SolcTryStatement.model_rebuild()
+SolcUncheckedBlock.model_rebuild()
+SolcVariableDeclarationStatement.model_rebuild()
+SolcWhileStatement.model_rebuild()
+SolcAssignment.model_rebuild()
+SolcBinaryOperation.model_rebuild()
+SolcConditional.model_rebuild()
+SolcElementaryTypeNameExpression.model_rebuild()
+SolcFunctionCall.model_rebuild()
+SolcFunctionCallOptions.model_rebuild()
+SolcIdentifier.model_rebuild()
+SolcIndexAccess.model_rebuild()
+SolcIndexRangeAccess.model_rebuild()
+SolcLiteral.model_rebuild()
+SolcMemberAccess.model_rebuild()
+SolcNewExpression.model_rebuild()
+SolcTupleExpression.model_rebuild()
+SolcUnaryOperation.model_rebuild()
+SolcOverrideSpecifier.model_rebuild()
+SolcIdentifierPath.model_rebuild()
+SolcParameterList.model_rebuild()
+SolcTryCatchClause.model_rebuild()
+SolcStructuredDocumentation.model_rebuild()
+SolcEnumValue.model_rebuild()
+SymbolAliasModel.model_rebuild()
+SolcYulAssignment.model_rebuild()
+SolcYulBlock.model_rebuild()
+SolcYulBreak.model_rebuild()
+SolcYulContinue.model_rebuild()
+SolcYulExpressionStatement.model_rebuild()
+SolcYulLeave.model_rebuild()
+SolcYulForLoop.model_rebuild()
+SolcYulFunctionDefinition.model_rebuild()
+SolcYulIf.model_rebuild()
+SolcYulSwitch.model_rebuild()
+SolcYulVariableDeclaration.model_rebuild()
+SolcYulFunctionCall.model_rebuild()
+SolcYulIdentifier.model_rebuild()
+SolcYulLiteral.model_rebuild()
+SolcYulTypedName.model_rebuild()
+SolcYulCase.model_rebuild()
+# endregion model_rebuild

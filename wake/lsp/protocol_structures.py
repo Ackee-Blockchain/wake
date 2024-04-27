@@ -18,7 +18,7 @@ class RequestMessage(Message):
     """
     The method to be invoked.
     """
-    params: Optional[Any]
+    params: Optional[Any] = None
 
 
 class ResponseError(LspModel):
@@ -30,7 +30,7 @@ class ResponseError(LspModel):
     """
     A string providing a short description of the error.
     """
-    data: Optional[Any]
+    data: Optional[Any] = None
     """
     A primitive or structured value that contains additional
     information about the error. Can be omitted.
@@ -42,12 +42,12 @@ class ResponseMessage(Message):
     """
     The request id.
     """
-    result: Optional[Any]
+    result: Optional[Any] = None
     """
     The result of a request. This member is REQUIRED on success.
     This member MUST NOT exist if there was an error invoking the method.
     """
-    error: Optional[ResponseError]
+    error: Optional[ResponseError] = None
     """
     The error object in case a request fails.
     """
@@ -58,7 +58,7 @@ class NotificationMessage(Message):
     """
     The method to be invoked.
     """
-    params: Optional[Any]
+    params: Optional[Any] = None
     """
     The notification's params.
     """

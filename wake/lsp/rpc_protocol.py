@@ -55,10 +55,10 @@ class RpcProtocol:
 
         if "id" in raw_message:
             if "method" in raw_message:
-                return RequestMessage.parse_obj(raw_message)
+                return RequestMessage.model_validate(raw_message)
             else:
-                return ResponseMessage.parse_obj(raw_message)
-        return NotificationMessage.parse_obj(raw_message)
+                return ResponseMessage.model_validate(raw_message)
+        return NotificationMessage.model_validate(raw_message)
 
     async def _send(self, message: str) -> None:
         content_length = len(message)
@@ -73,4 +73,4 @@ class RpcProtocol:
             ResponseMessage, RequestMessage, ResponseError, NotificationMessage
         ],
     ) -> None:
-        await self._send(message.json(exclude_unset=True, by_alias=True))
+        await self._send(message.model_dump_json(exclude_unset=True, by_alias=True))

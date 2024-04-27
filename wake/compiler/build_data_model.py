@@ -1,11 +1,19 @@
 from pathlib import Path
 from types import MappingProxyType
-from typing import Dict, FrozenSet, List, NamedTuple, Optional
+from typing import Any, Dict, FrozenSet, List, Optional
 
-import networkx as nx
-import pydantic
 from intervaltree import IntervalTree
-from pydantic import BaseModel, Extra
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Extra,
+    PlainSerializer,
+    PlainValidator,
+    WithJsonSchema,
+    errors,
+    field_serializer,
+)
+from typing_extensions import Annotated
 
 from wake.compiler.solc_frontend import SolcInputSettings, SolcOutputError
 from wake.core.solidity_version import SolidityVersion
@@ -13,12 +21,29 @@ from wake.ir import SourceUnit
 from wake.ir.reference_resolver import ReferenceResolver
 
 
+def hex_bytes_validator(val: Any) -> bytes:
+    if isinstance(val, bytes):
+        return val
+    elif isinstance(val, bytearray):
+        return bytes(val)
+    elif isinstance(val, str):
+        return bytes.fromhex(val)
+    raise errors.BytesError()
+
+
+HexBytes = Annotated[
+    bytes,
+    PlainValidator(hex_bytes_validator),
+    PlainSerializer(lambda b: b.hex()),
+    WithJsonSchema({"type": "string"}),
+]
+
+
 class BuildInfoModel(BaseModel):
-    class Config:
-        extra = Extra.allow
-        allow_mutation = False
-        arbitrary_types_allowed = True
-        json_encoders = {SolidityVersion: str, bytes: lambda b: b.hex()}
+    model_config = ConfigDict(
+        extra=Extra.allow,
+        frozen=True,
+    )
 
 
 class CompilationUnitBuildInfo(BuildInfoModel):
@@ -34,27 +59,7 @@ class CompilationUnitBuildInfo(BuildInfoModel):
     errors: List[SolcOutputError]
 
 
-class HexBytes(bytes):
-    """
-    Workaround for pydantic bytes [JSON encode bug](https://github.com/pydantic/pydantic/issues/3756)
-    """
-
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v):
-        if isinstance(v, bytes):
-            return v
-        elif isinstance(v, bytearray):
-            return bytes(v)
-        elif isinstance(v, str):
-            return bytes.fromhex(v)
-        raise pydantic.errors.BytesError()
-
-
-class SourceUnitInfo(NamedTuple):
+class SourceUnitInfo(BuildInfoModel):
     """
     Attributes:
         fs_path: Path to the source unit.
@@ -88,6 +93,10 @@ class ProjectBuildInfo(BuildInfoModel):
     target_solidity_version: Optional[SolidityVersion]
     wake_version: str
     incremental: bool
+
+    @field_serializer("target_solidity_version", when_used="json")
+    def serialize_target_version(self, version: Optional[SolidityVersion], info):
+        return str(version) if version is not None else None
 
 
 class ProjectBuild:

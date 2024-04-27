@@ -171,7 +171,6 @@ class CopyToClipboardCommand(CommandAbc):
 
 
 class ShowDotCommand(CommandAbc):
-    command = "showDot"
     dot: str
 
     def __init__(self, *args, **kwargs) -> None:
@@ -241,7 +240,11 @@ class LspProvider:
         )
 
     def add_hover_from_offsets(
-        self, path: Path, start: int, end: int, text: str,
+        self,
+        path: Path,
+        start: int,
+        end: int,
+        text: str,
     ) -> None:
         self._hovers[path][(start, end)].add(HoverOptions(text, True))
 

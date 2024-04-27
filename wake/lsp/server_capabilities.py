@@ -44,7 +44,7 @@ class FileOperationPatternKind(StrEnum):
 
 
 class FileOperationPatternOptions(LspModel):
-    ignore_case: Optional[bool]
+    ignore_case: Optional[bool] = None
 
 
 class FileOperationPattern(LspModel):
@@ -166,9 +166,9 @@ class ServerCapabilities(LspModel):
 
 class InitializeResultServerInfo(LspModel):
     name: str
-    version: Optional[str]
+    version: Optional[str] = None
 
 
 class InitializeResult(LspModel):
     capabilities: ServerCapabilities
-    server_info: Optional[InitializeResultServerInfo]
+    server_info: Optional[InitializeResultServerInfo] = None

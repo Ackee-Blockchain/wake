@@ -88,11 +88,13 @@ class SolcFrontend:
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
-        standard_input_json = standard_input.json(by_alias=True, exclude_none=True)
+        standard_input_json = standard_input.model_dump_json(
+            by_alias=True, exclude_none=True
+        )
         logger.debug(f"solc input: {standard_input_json}")
 
         out, err = await proc.communicate(standard_input_json.encode("utf-8"))
         if proc.returncode != 0:
             raise SolcCompilationError(err)
 
-        return SolcOutput.parse_raw(out)
+        return SolcOutput.model_validate_json(out)
