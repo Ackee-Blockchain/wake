@@ -112,7 +112,7 @@ class ClientCapabilitiesCompletionItemResolveSupport(LspModel):
 
 
 class ClientCapabilitiesCompletionItemKind(LspModel):
-    value_set: Optional[List[CompletionItemKind]]
+    value_set: Optional[List[CompletionItemKind]] = None
     """
     If this property is not present the client only supports
     the completion items kinds from `Text` to `Reference` as defined in
@@ -129,7 +129,7 @@ class ClientCapabilitiesCompletionItemInsertTextModeSupport(LspModel):
 
 
 class ClientCapabilitiesCompletionItem(LspModel):
-    snippet_support: Optional[bool]
+    snippet_support: Optional[bool] = None
     """
     Client supports snippets as insert text.
     A snippet can define tab stops and placeholders with `$1`, `$2`
@@ -137,36 +137,36 @@ class ClientCapabilitiesCompletionItem(LspModel):
     the end of the snippet. Placeholders with equal identifiers are
     linked, that is typing in one will update others too.
     """
-    commit_characters_support: Optional[bool]
+    commit_characters_support: Optional[bool] = None
     """
     Client supports commit characters on a completion item.
     """
-    documentation_format: Optional[List[MarkupKind]]
+    documentation_format: Optional[List[MarkupKind]] = None
     """
     Client supports the following content formats for the documentation
     property. The order describes the preferred format of the client.
     """
-    deprecated_support: Optional[bool]
+    deprecated_support: Optional[bool] = None
     """
     Client supports the deprecated property on a completion item.
     """
-    preselect_support: Optional[bool]
+    preselect_support: Optional[bool] = None
     """
     Client supports the preselect property on a completion item.
     """
-    tag_support: Optional[ClientCapabilitiesCompletionItemTagSupport]
+    tag_support: Optional[ClientCapabilitiesCompletionItemTagSupport] = None
     """
     Client supports the tag property on a completion item. Clients
     supporting tags have to handle unknown tags gracefully. Clients
     especially need to preserve unknown tags when sending a completion
     item back to the server in a resolve call.
     """
-    insert_replace_support: Optional[bool]
+    insert_replace_support: Optional[bool] = None
     """
     Client supports insert replace edit to control different behavior if
     a completion item is inserted in the text or should replace text.
     """
-    resolve_support: Optional[ClientCapabilitiesCompletionItemResolveSupport]
+    resolve_support: Optional[ClientCapabilitiesCompletionItemResolveSupport] = None
     """
     Indicates which properties a client can resolve lazily on a
     completion item. Before version 3.16.0 only the predefined properties
@@ -174,17 +174,17 @@ class ClientCapabilitiesCompletionItem(LspModel):
     """
     insert_text_mode_support: Optional[
         ClientCapabilitiesCompletionItemInsertTextModeSupport
-    ]
+    ] = None
     """
     The client supports the `insertTextMode` property on
     a completion item to override the whitespace handling mode
     as defined by the client (see `insertTextMode`).
     """
-    label_details_support: Optional[bool]
+    label_details_support: Optional[bool] = None
 
 
 class ClientCapabilitiesCompletionList(LspModel):
-    item_defaults: Optional[List[str]]
+    item_defaults: Optional[List[str]] = None
     """
     The value lists the supported property names of the
     `CompletionList.itemDefaults` object. If omitted
@@ -196,33 +196,33 @@ class ClientCapabilitiesCompletionList(LspModel):
 
 
 class CompletionClientCapabilities(LspModel):
-    dynamic_registration: Optional[bool]
+    dynamic_registration: Optional[bool] = None
     """
     Whether completion supports dynamic registration.
     """
-    completion_item: Optional[ClientCapabilitiesCompletionItem]
+    completion_item: Optional[ClientCapabilitiesCompletionItem] = None
     """
     The client supports the following `CompletionItem` specific
     capabilities.
     """
-    completion_item_kind: Optional[ClientCapabilitiesCompletionItemKind]
+    completion_item_kind: Optional[ClientCapabilitiesCompletionItemKind] = None
     """
     The completion item kind values the client supports. When this
     property exists the client also guarantees that it will
     handle values outside its set gracefully and falls back
     to a default value when unknown.
     """
-    context_support: Optional[bool]
+    context_support: Optional[bool] = None
     """
     The client supports to send additional context information for a
     `textDocument/completion` request.
     """
-    insert_text_mode: Optional[InsertTextMode]
+    insert_text_mode: Optional[InsertTextMode] = None
     """
     The client's default when the completion item doesn't provide a
     `insertTextMode` property.
     """
-    completion_list: Optional[ClientCapabilitiesCompletionList]
+    completion_list: Optional[ClientCapabilitiesCompletionList] = None
     """
     The client supports the following `CompletionList` specific
     capabilities.
@@ -234,7 +234,7 @@ class CompletionClientCapabilities(LspModel):
 
 
 class OptionsCompletionItem(LspModel):
-    label_details_support: Optional[bool]
+    label_details_support: Optional[bool] = None
     """
     The server has support for completion item label
     details (see also `CompletionItemLabelDetails`) when receiving
@@ -246,25 +246,25 @@ class OptionsCompletionItem(LspModel):
 
 
 class CompletionOptions(WorkDoneProgressOptions):
-    trigger_characters: Optional[List[str]]
+    trigger_characters: Optional[List[str]] = None
     """
     If code complete should automatically be trigger on characters not being
     valid inside an identifier (for example `.` in JavaScript) list them in
     `triggerCharacters`.
     """
-    all_commit_characters: Optional[List[str]]
+    all_commit_characters: Optional[List[str]] = None
     """
     The list of all possible characters that commit a completion. This field
     can be used if clients don't support individual commit characters per
     completion item. See client capability
     `completion.completionItem.commitCharactersSupport`.
     """
-    resolve_provider: Optional[bool]
+    resolve_provider: Optional[bool] = None
     """
     The server provides support to resolve additional
     information for a completion item.
     """
-    completion_item: Optional[OptionsCompletionItem]
+    completion_item: Optional[OptionsCompletionItem] = None
 
 
 class CompletionRegistrationOptions(TextDocumentRegistrationOptions, CompletionOptions):
@@ -302,7 +302,7 @@ class CompletionContext(LspModel):
     """
     How the completion was triggered.
     """
-    trigger_character: Optional[str]
+    trigger_character: Optional[str] = None
     """
     The trigger character (a single character) that has trigger code
     complete. Is undefined if
@@ -313,7 +313,7 @@ class CompletionContext(LspModel):
 class CompletionParams(
     TextDocumentPositionParams, WorkDoneProgressParams, PartialResultParams
 ):
-    context: Optional[CompletionContext]
+    context: Optional[CompletionContext] = None
 
 
 class CompletionListItemDefaultsEditRange(LspModel):
@@ -322,23 +322,23 @@ class CompletionListItemDefaultsEditRange(LspModel):
 
 
 class CompletionListItemDefaults(LspModel):
-    commit_characters: Optional[List[str]]
+    commit_characters: Optional[List[str]] = None
     """
     A default commit character set.
     """
-    edit_range: Optional[Union[Range, CompletionListItemDefaultsEditRange]]
+    edit_range: Optional[Union[Range, CompletionListItemDefaultsEditRange]] = None
     """
     A default edit range.
     """
-    insert_text_format: Optional[InsertTextFormat]
+    insert_text_format: Optional[InsertTextFormat] = None
     """
     A default insert text format.
     """
-    insert_text_mode: Optional[InsertTextMode]
+    insert_text_mode: Optional[InsertTextMode] = None
     """
     A default insert text mode.
     """
-    data: Optional[Any]
+    data: Optional[Any] = None
     """
     A default data value.
     """
@@ -398,13 +398,13 @@ class CompletionItemLabelDetails(LspModel):
     * Additional details for a completion item label.
     """
 
-    detail: Optional[str]
+    detail: Optional[str] = None
     """
     An optional string which is rendered less prominently directly after
     {@link CompletionItem.label label}, without any spacing. Should be
     used for function signatures or type annotations.
     """
-    description: Optional[str]
+    description: Optional[str] = None
     """
     An optional string which is rendered less prominently after
     {@link CompletionItemLabelDetails.detail}. Should be used for fully qualified

@@ -37,8 +37,8 @@ logger = get_logger(__name__)
 
 
 class HoverClientCapabilities(LspModel):
-    dynamic_registration: Optional[bool]
-    content_format: Optional[List[MarkupKind]]
+    dynamic_registration: Optional[bool] = None
+    content_format: Optional[List[MarkupKind]] = None
 
 
 class HoverOptions(WorkDoneProgressOptions):
@@ -63,7 +63,7 @@ MarkedStringType = Union[str, MarkedString]
 
 class Hover(LspModel):
     contents: Union[MarkedStringType, List[MarkedStringType], MarkupContent]
-    range: Optional[Range]
+    range: Optional[Range] = None
 
 
 def _append_openzeppelin_docs(

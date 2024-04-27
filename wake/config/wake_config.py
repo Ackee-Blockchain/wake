@@ -119,14 +119,14 @@ class WakeConfig:
         self.__loaded_files = set()
         with change_cwd(self.__project_root_path):
             self.__config = TopLevelConfig()
-        self.__config_raw = self.__config.dict(by_alias=True)
+        self.__config_raw = self.__config.model_dump(by_alias=True)
 
     def __str__(self) -> str:
         """
         Returns:
             JSON representation of the config.
         """
-        return self.__config.json(by_alias=True, exclude_unset=True)
+        return self.__config.model_dump_json(by_alias=True, exclude_unset=True)
 
     def __repr__(self) -> str:
         """
@@ -198,11 +198,13 @@ class WakeConfig:
                     raise ValueError(error)
 
                 # validate the loaded config
-                parsed_config = TopLevelConfig.parse_obj(loaded_config)
+                parsed_config = TopLevelConfig.model_validate(loaded_config)
 
                 # rebuild the loaded config from the pydantic model
                 # this ensures that all stored paths are absolute
-                loaded_config = parsed_config.dict(by_alias=True, exclude_unset=True)
+                loaded_config = parsed_config.model_dump(
+                    by_alias=True, exclude_unset=True
+                )
 
                 # merge the original config and the newly loaded config
                 self.__merge_dicts(new_config, loaded_config)
@@ -227,8 +229,10 @@ class WakeConfig:
         """
         instance = cls(project_root_path=project_root_path)
         with change_cwd(instance.project_root_path):
-            parsed_config = TopLevelConfig.parse_obj(config_dict)
-        instance.__config_raw = parsed_config.dict(by_alias=True, exclude_unset=True)
+            parsed_config = TopLevelConfig.model_validate(config_dict)
+        instance.__config_raw = parsed_config.model_dump(
+            by_alias=True, exclude_unset=True
+        )
         instance.__config = parsed_config
         return instance
 
@@ -255,8 +259,8 @@ class WakeConfig:
             Dictionary containing the modified config options.
         """
         with change_cwd(self.project_root_path):
-            parsed_config = TopLevelConfig.parse_obj(config_dict)
-        parsed_config_raw = parsed_config.dict(by_alias=True, exclude_unset=True)
+            parsed_config = TopLevelConfig.model_validate(config_dict)
+        parsed_config_raw = parsed_config.model_dump(by_alias=True, exclude_unset=True)
 
         original_config = deepcopy(self.__config_raw)
         self.__merge_dicts(self.__config_raw, parsed_config_raw)
@@ -281,11 +285,11 @@ class WakeConfig:
                 except ValueError:
                     pass
 
-        self.__config = TopLevelConfig.parse_obj(self.__config_raw)
+        self.__config = TopLevelConfig.model_validate(self.__config_raw)
         modified_keys = {}
         self.__modified_keys(
             original_config,
-            self.__config.dict(by_alias=True, exclude_unset=True),
+            self.__config.model_dump(by_alias=True, exclude_unset=True),
             modified_keys,
         )
         return modified_keys
@@ -299,7 +303,7 @@ class WakeConfig:
         self.__loaded_files = set()
         with change_cwd(self.__project_root_path):
             self.__config = TopLevelConfig()
-        self.__config_raw = self.__config.dict(by_alias=True)
+        self.__config_raw = self.__config.model_dump(by_alias=True)
 
         self.load(self.global_config_path)
         self.load(self.local_config_path)
@@ -317,7 +321,7 @@ class WakeConfig:
 
         self.__load_file(None, path.resolve(), config_raw_copy, subconfigs_graph)
 
-        config = TopLevelConfig.parse_obj(config_raw_copy)
+        config = TopLevelConfig.model_validate(config_raw_copy)
         self.__config_raw = config_raw_copy
         self.__config = config
         self.__loaded_files.update(

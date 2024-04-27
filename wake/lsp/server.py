@@ -537,7 +537,7 @@ class LspServer:
             raise NotImplementedError()
 
         if params_type is not None:
-            await n(params_type.parse_obj(notification.params))
+            await n(params_type.model_validate(notification.params))
         else:
             await n(None)
 
@@ -564,7 +564,7 @@ class LspServer:
             raise NotImplementedError()
 
         if params_type is not None:
-            response = await m(params_type.parse_obj(request.params))
+            response = await m(params_type.model_validate(request.params))
         else:
             response = await m(None)
 

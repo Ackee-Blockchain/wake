@@ -262,12 +262,14 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         try:
             with urllib.request.urlopen(self.__solc_list_url, timeout=0.25) as response:
                 json = response.read()
-                self.__solc_builds = SolcBuilds.parse_raw(json)
+                self.__solc_builds = SolcBuilds.model_validate_json(json)
                 self.__solc_list_path.write_bytes(json)
         except (urllib.error.URLError, OSError) as e:
             # in case of networking issues try to use the locally downloaded solc builds file as a fallback
             if self.__solc_list_path.is_file():
-                self.__solc_builds = SolcBuilds.parse_file(self.__solc_list_path)
+                self.__solc_builds = SolcBuilds.model_validate_json(
+                    self.__solc_list_path.read_text()
+                )
             else:
                 raise
 

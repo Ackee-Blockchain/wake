@@ -22,7 +22,7 @@ from wake.lsp.utils import uri_to_path
 
 
 class InlayHintOptions(WorkDoneProgressOptions):
-    resolve_provider: Optional[bool]
+    resolve_provider: Optional[bool] = None
 
 
 class InlayHintRegistrationOptions(
@@ -38,9 +38,9 @@ class InlayHintParams(WorkDoneProgressParams):
 
 class InlayHintLabelPart(LspModel):
     value: str
-    tooltip: Optional[Union[str, MarkupContent]]
-    location: Optional[Location]
-    command: Optional[Command]
+    tooltip: Optional[Union[str, MarkupContent]] = None
+    location: Optional[Location] = None
+    command: Optional[Command] = None
 
 
 class InlayHintKind(IntEnum):

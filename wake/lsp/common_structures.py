@@ -17,7 +17,7 @@ class RegularExpressionsClientCapabilities(LspModel):
     """
     The engine's name.
     """
-    version: Optional[str]
+    version: Optional[str] = None
     """
     The engine's version.
     """
@@ -79,7 +79,7 @@ class Location(LspModel):
 
 
 class LocationLink(LspModel):
-    origin_selection_range: Optional[Range]
+    origin_selection_range: Optional[Range] = None
     """
     Span of the origin of this link.
     Used as the underlined span for mouse interaction.
@@ -248,11 +248,11 @@ class ChangeAnnotation(LspModel):
     """
     A human-readable string describing the actual change.
     """
-    needs_confirmation: Optional[bool]
+    needs_confirmation: Optional[bool] = None
     """
     A flag which indicates that user confirmation is needed before applying the change.
     """
-    description: Optional[str]
+    description: Optional[str] = None
     """
     A human-readable string which is rendered less prominent in the user interface.
     """
@@ -282,7 +282,7 @@ class VersionedTextDocumentIdentifier(TextDocumentIdentifier):
 
 
 class OptionalVersionedTextDocumentIdentifier(TextDocumentIdentifier):
-    version: Optional[Union[int, None]]
+    version: Optional[Union[int, None]] = None
     """
     The version number of this document. If an optional versioned text document
     identifier is sent from the server to the client and the file is not
@@ -296,7 +296,7 @@ class OptionalVersionedTextDocumentIdentifier(TextDocumentIdentifier):
 
 
 class TextDocumentEdit(LspModel):
-    text_document: OptionalVersionedTextDocumentIdentifier
+    text_document: OptionalVersionedTextDocumentIdentifier = None
     """
     The text document to change.
     """
@@ -311,11 +311,11 @@ class CreateFileOptions(LspModel):
     Options to create a file.
     """
 
-    overwrite: Optional[bool]
+    overwrite: Optional[bool] = None
     """
     Overwrite existing file. Overwrite wins over `ignoreIfExists`
     """
-    ignore_if_exists: Optional[bool]
+    ignore_if_exists: Optional[bool] = None
     """
     Ignore if exists.
     """
@@ -334,11 +334,11 @@ class CreateFile(LspModel):
     """
     The resource to create.
     """
-    options: Optional[CreateFileOptions]
+    options: Optional[CreateFileOptions] = None
     """
     Additional options.
     """
-    annotation_id: Optional[ChangeAnnotationIdentifier]
+    annotation_id: Optional[ChangeAnnotationIdentifier] = None
     """
     An optional annotation identifier describing the operation.
     """
@@ -349,11 +349,11 @@ class RenameFileOptions(LspModel):
     Rename file options.
     """
 
-    overwrite: Optional[bool]
+    overwrite: Optional[bool] = None
     """
     Overwrite target if existing. Overwrite wins over `ignoreIfExists`.
     """
-    ignore_if_exists: Optional[bool]
+    ignore_if_exists: Optional[bool] = None
     """
     Ignores if target exists.
     """
@@ -376,11 +376,11 @@ class RenameFile(LspModel):
     """
     The new location.
     """
-    options: Optional[RenameFileOptions]
+    options: Optional[RenameFileOptions] = None
     """
     Rename options.
     """
-    annotation_id: Optional[ChangeAnnotationIdentifier]
+    annotation_id: Optional[ChangeAnnotationIdentifier] = None
     """
     An optional annotation identifier describing the operation.
     """
@@ -391,11 +391,11 @@ class DeleteFileOptions(LspModel):
     Delete file options.
     """
 
-    recursive: Optional[bool]
+    recursive: Optional[bool] = None
     """
     Delete the content recursively if a folder denoted.
     """
-    ignore_if_not_exists: Optional[bool]
+    ignore_if_not_exists: Optional[bool] = None
     """
     Ignore the operation if the file does not exists.
     """
@@ -414,11 +414,11 @@ class DeleteFile(LspModel):
     """
     The file to delete
     """
-    options: Optional[RenameFileOptions]
+    options: Optional[RenameFileOptions] = None
     """
     Delete options.
     """
-    annotation_id: Optional[ChangeAnnotationIdentifier]
+    annotation_id: Optional[ChangeAnnotationIdentifier] = None
     """
     An optional annotation identifier describing the operation.
     """
@@ -474,31 +474,31 @@ class FailureHandlingKind(StrEnum):
 
 
 class ChangeAnnotationsSupport(LspModel):
-    groups_on_label: Optional[bool]
+    groups_on_label: Optional[bool] = None
 
 
 class WorkspaceEditClientCapabilities(LspModel):
-    document_changes: Optional[bool]
+    document_changes: Optional[bool] = None
     """
     The client supports versioned document changes in `WorkspaceEdit`s
     """
-    resource_operations: Optional[List[ResourceOperationKind]]
+    resource_operations: Optional[List[ResourceOperationKind]] = None
     """
     The resource operations the client supports.
     Clients should at least support 'create', 'rename' and 'delete' files and folders.
     """
-    failure_handling: Optional[FailureHandlingKind]
+    failure_handling: Optional[FailureHandlingKind] = None
     """
     The failure handling strategy of a client if applying the workspace edit fails.
     """
-    normalizes_line_endings: Optional[bool]
+    normalizes_line_endings: Optional[bool] = None
     """
     Whether the client normalizes line endings to the client specific setting.
     If set to `true` the client will normalize line ending characters
     in a workspace edit to the client specific new line character(s).
     """
     # ?
-    change_annotation_support: Optional[ChangeAnnotationsSupport]
+    change_annotation_support: Optional[ChangeAnnotationsSupport] = None
     """
     Whether the client in general supports change annotations on text edits,
     create file, rename file and delete file changes.
@@ -605,11 +605,11 @@ class MarkupClientCapabilities(LspModel):
     """
     The name of the parser.
     """
-    version: Optional[str]
+    version: Optional[str] = None
     """
     The version of the parser.
     """
-    allowed_tags: Optional[List[str]]
+    allowed_tags: Optional[List[str]] = None
     """
     A list of HTML tags that the client allows / supports in Markdown.
 
@@ -632,13 +632,13 @@ class WorkDoneProgressBegin(LspModel):
 
     Examples: "Indexing" or "Linking dependencies".
     """
-    cancellable: Optional[bool]
+    cancellable: Optional[bool] = None
     """
     Controls if a cancel button should show to allow the user to cancel the
     long running operation. Clients that don't support cancellation are
     allowed to ignore the setting.
     """
-    message: Optional[str]
+    message: Optional[str] = None
     """
     Optional, more detailed associated progress message. Contains
     complementary information to the `title`.
@@ -646,7 +646,7 @@ class WorkDoneProgressBegin(LspModel):
     Examples: "3/25 files", "project/src/module2", "node_modules/some_dep".
     If unset, the previous progress message (if any) is still valid.
     """
-    percentage: Optional[int]  # uint8
+    percentage: Optional[int] = None
     """
     Optional progress percentage to display (value 100 is considered 100%).
     If not provided infinite progress is assumed and clients are allowed
@@ -656,18 +656,18 @@ class WorkDoneProgressBegin(LspModel):
 
 class WorkDoneProgressReport(LspModel):
     kind: str = "report"
-    cancellable: Optional[bool]
+    cancellable: Optional[bool] = None
     """
     Controls if a cancel button should show to allow the user to cancel the
     long running operation. Clients that don't support cancellation are
     allowed to ignore the setting.
     """
-    message: Optional[str]
+    message: Optional[str] = None
     """
     Optional, more detailed associated progress message. Contains
     complementary information to the `title`.
     """
-    percentage: Optional[int]  # uint8
+    percentage: Optional[int] = None
     """
     Optional progress percentage to display (value 100 is considered 100%).
     If not provided infinite progress is assumed and clients are allowed
@@ -677,7 +677,7 @@ class WorkDoneProgressReport(LspModel):
 
 class WorkDoneProgressEnd(LspModel):
     kind: str = "end"
-    message: Optional[str]
+    message: Optional[str] = None
     """
     Optional, a final message indicating to for example indicate the outcome
     of the operation.
@@ -685,7 +685,7 @@ class WorkDoneProgressEnd(LspModel):
 
 
 class WorkDoneProgressParams(LspModel):
-    work_done_token: Optional[ProgressToken]
+    work_done_token: Optional[ProgressToken] = None
     """
     An optional token that a server can use to report work done progress.
     """
@@ -696,7 +696,7 @@ class WorkDoneProgressOptions(LspModel):
 
 
 class PartialResultParams(LspModel):
-    partial_result_token: Optional[ProgressToken]
+    partial_result_token: Optional[ProgressToken] = None
     """
     An optional token that a server can use to report partial results (e.g.streaming)
     to the client.
@@ -707,13 +707,13 @@ class PartialResultParams(LspModel):
 
 
 class ClientCapabilitiesWorkspaceFileOperation(LspModel):
-    dynamic_registration: Optional[bool]
-    did_create: Optional[bool]
-    will_create: Optional[bool]
-    did_rename: Optional[bool]
-    will_rename: Optional[bool]
-    did_delete: Optional[bool]
-    will_delete: Optional[bool]
+    dynamic_registration: Optional[bool] = None
+    did_create: Optional[bool] = None
+    will_create: Optional[bool] = None
+    did_rename: Optional[bool] = None
+    will_rename: Optional[bool] = None
+    did_delete: Optional[bool] = None
+    will_delete: Optional[bool] = None
 
 
 class InitializeErrorCodes(IntEnum):
@@ -741,11 +741,13 @@ class ShowMessageParams(LspModel):
 
 
 class ShowMessageRequestClientCapabilitiesMessageActionItem(LspModel):
-    additional_properties_support: Optional[bool]
+    additional_properties_support: Optional[bool] = None
 
 
 class ShowMessageRequestClientCapabilities(LspModel):
-    message_action_item: Optional[ShowMessageRequestClientCapabilitiesMessageActionItem]
+    message_action_item: Optional[
+        ShowMessageRequestClientCapabilitiesMessageActionItem
+    ] = None
 
 
 class MessageActionItem(LspModel):
@@ -755,7 +757,7 @@ class MessageActionItem(LspModel):
 class ShowMessageRequestParams(LspModel):
     type: MessageType
     message: str
-    actions: Optional[List[MessageActionItem]]
+    actions: Optional[List[MessageActionItem]] = None
 
 
 class ShowDocumentClientCapabilities(LspModel):
@@ -764,9 +766,9 @@ class ShowDocumentClientCapabilities(LspModel):
 
 class ShowDocumentParams(LspModel):
     uri: URI
-    external: Optional[bool]
-    take_focus: Optional[bool]
-    selection: Optional[Range]
+    external: Optional[bool] = None
+    take_focus: Optional[bool] = None
+    selection: Optional[Range] = None
 
 
 class ShowDocumentResult(LspModel):
@@ -792,7 +794,7 @@ class PublishDiagnosticsParams(LspModel):
     """
     The URI for which diagnostic information is reported.
     """
-    version: Optional[int]
+    version: Optional[int] = None
     """
     Optional the version number of the document the diagnostics are published for.
 
@@ -825,7 +827,7 @@ class Registration(LspModel):
     """
     The method / capability to register for.
     """
-    register_options: Optional[Any]
+    register_options: Optional[Any] = None
     """
     Options necessary for the registration.
     """
@@ -863,7 +865,7 @@ class LogTraceParams(LspModel):
     """
     The message to be logged.
     """
-    verbose: Optional[str]
+    verbose: Optional[str] = None
     """
     Additional information that can be computed if the `trace` configuration
     is set to `'verbose'`
@@ -928,14 +930,14 @@ class DocumentSymbol(LspModel):
 class SymbolInformation(LspModel):
     name: str
     kind: SymbolKind
-    tags: Optional[List[SymbolTag]]
-    deprecated: Optional[bool]
+    tags: Optional[List[SymbolTag]] = None
+    deprecated: Optional[bool] = None
     location: Location
-    container_name: Optional[str]
+    container_name: Optional[str] = None
 
 
 class WorkspaceSymbolClientCapabilitiesSymbolKind(LspModel):
-    value_set: Optional[List[SymbolKind]]
+    value_set: Optional[List[SymbolKind]] = None
 
 
 class WorkspaceSymbolClientCapabilitiesTagSupport(LspModel):
@@ -947,14 +949,14 @@ class WorkspaceSymbolClientCapabilitiesResolveSupport(LspModel):
 
 
 class WorkspaceSymbolClientCapabilities(LspModel):
-    dynamic_registration: Optional[bool]
-    symbol_kind: Optional[WorkspaceSymbolClientCapabilitiesSymbolKind]
-    tag_support: Optional[WorkspaceSymbolClientCapabilitiesTagSupport]
-    resolve_support: Optional[WorkspaceSymbolClientCapabilitiesResolveSupport]
+    dynamic_registration: Optional[bool] = None
+    symbol_kind: Optional[WorkspaceSymbolClientCapabilitiesSymbolKind] = None
+    tag_support: Optional[WorkspaceSymbolClientCapabilitiesTagSupport] = None
+    resolve_support: Optional[WorkspaceSymbolClientCapabilitiesResolveSupport] = None
 
 
 class WorkspaceSymbolOptions(WorkDoneProgressOptions):
-    resolve_provider: Optional[bool]
+    resolve_provider: Optional[bool] = None
 
 
 class WorkspaceSymbolRegistrationOptions(WorkspaceSymbolOptions):
@@ -968,9 +970,9 @@ class WorkspaceSymbolParams(WorkDoneProgressParams, PartialResultParams):
 class WorkspaceSymbol(LspModel):
     name: str
     kind: SymbolKind
-    tags: Optional[List[SymbolTag]]
+    tags: Optional[List[SymbolTag]] = None
     location: Union[Location, DocumentUri]
-    container_name: Optional[str]
+    container_name: Optional[str] = None
 
 
 class ConfigurationItem(LspModel):
@@ -983,7 +985,7 @@ class ConfigurationParams(LspModel):
 
 
 class DidChangeConfigurationClientCapabilities(LspModel):
-    dynamic_registration: Optional[bool]
+    dynamic_registration: Optional[bool] = None
 
 
 class DidChangeConfigurationParams(LspModel):
@@ -1030,7 +1032,7 @@ class DeleteFilesParams(LspModel):
 
 
 class DidChangeWatchedFilesClientCapabilities(LspModel):
-    dynamic_registration: Optional[bool]
+    dynamic_registration: Optional[bool] = None
 
 
 class RelativePattern(LspModel):
@@ -1040,7 +1042,7 @@ class RelativePattern(LspModel):
 
 class FileSystemWatcher(LspModel):
     glob_pattern: Union[str, RelativePattern]
-    kind: Optional[int]  # uint
+    kind: Optional[int] = None
 
 
 class DidChangeWatchedFilesRegistrationOptions(LspModel):
@@ -1069,7 +1071,7 @@ class DidChangeWatchedFilesParams(LspModel):
 
 
 class ExecuteCommandClientCapabilities(LspModel):
-    dynamic_registration: Optional[bool]
+    dynamic_registration: Optional[bool] = None
 
 
 class ExecuteCommandOptions(WorkDoneProgressOptions):
@@ -1082,31 +1084,31 @@ class ExecuteCommandRegistrationOptions(ExecuteCommandOptions):
 
 class ExecuteCommandParams(WorkDoneProgressParams):
     command: str
-    arguments: Optional[List[Any]]
+    arguments: Optional[List[Any]] = None
 
 
 class ApplyWorkspaceEditParams(LspModel):
-    label: Optional[str]
+    label: Optional[str] = None
     edit: WorkspaceEdit
 
 
 class ApplyWorkspaceEditResult(LspModel):
     applied: bool
-    failure_reason: Optional[str]
-    failed_change: Optional[int]  # uint
+    failure_reason: Optional[str] = None
+    failed_change: Optional[int] = None
 
 
 class CodeLensWorkspaceClientCapabilities(LspModel):
-    refresh_support: Optional[bool]
+    refresh_support: Optional[bool] = None
 
 
 class SemanticTokensClientCapabilitiesRequestsFull(LspModel):
-    delta: Optional[bool]
+    delta: Optional[bool] = None
 
 
 class SemanticTokensClientCapabilitiesRequests(LspModel):
-    range: Optional[bool]
-    full: Optional[Union[bool, SemanticTokensClientCapabilitiesRequestsFull]]
+    range: Optional[bool] = None
+    full: Optional[Union[bool, SemanticTokensClientCapabilitiesRequestsFull]] = None
 
 
 class TokenFormat(LspModel):
@@ -1114,44 +1116,44 @@ class TokenFormat(LspModel):
 
 
 class SemanticTokensClientCapabilities(LspModel):
-    dynamic_registration: Optional[bool]
-    requests: Optional[SemanticTokensClientCapabilitiesRequests]
+    dynamic_registration: Optional[bool] = None
+    requests: Optional[SemanticTokensClientCapabilitiesRequests] = None
     token_types: List[str] = []
     token_modifiers: List[str] = []
     formats: List[TokenFormat] = []
-    overlapping_token_support: Optional[bool]
-    multiline_token_support: Optional[bool]
-    server_cancel_support: Optional[bool]
-    augments_syntax_tokens: Optional[bool]
+    overlapping_token_support: Optional[bool] = None
+    multiline_token_support: Optional[bool] = None
+    server_cancel_support: Optional[bool] = None
+    augments_syntax_tokens: Optional[bool] = None
 
 
 class SemanticTokensWorkspaceClientCapabilities(LspModel):
-    refresh_support: Optional[bool]
+    refresh_support: Optional[bool] = None
 
 
 class TextDocumentSyncClientCapabilities(LspModel):
-    dynamic_registration: Optional[bool]
-    will_save: Optional[bool]
-    will_save_wait_until: Optional[bool]
-    did_save: Optional[bool]
+    dynamic_registration: Optional[bool] = None
+    will_save: Optional[bool] = None
+    will_save_wait_until: Optional[bool] = None
+    did_save: Optional[bool] = None
 
 
 class ClientCapabilitiesWorkspace(LspModel):
-    apply_edit: Optional[bool]
-    workspace_edit: Optional[WorkspaceEditClientCapabilities]
-    did_change_configuration: Optional[DidChangeConfigurationClientCapabilities]
-    did_change_watched_files: Optional[DidChangeWatchedFilesClientCapabilities]
-    symbol: Optional[WorkspaceSymbolClientCapabilities]
-    execute_command: Optional[ExecuteCommandClientCapabilities]
-    workspace_folders: Optional[bool]
-    configuration: Optional[bool]
-    semantic_tokens: Optional[SemanticTokensWorkspaceClientCapabilities]
-    code_lens: Optional[CodeLensWorkspaceClientCapabilities]
-    file_operations: Optional[ClientCapabilitiesWorkspaceFileOperation]
+    apply_edit: Optional[bool] = None
+    workspace_edit: Optional[WorkspaceEditClientCapabilities] = None
+    did_change_configuration: Optional[DidChangeConfigurationClientCapabilities] = None
+    did_change_watched_files: Optional[DidChangeWatchedFilesClientCapabilities] = None
+    symbol: Optional[WorkspaceSymbolClientCapabilities] = None
+    execute_command: Optional[ExecuteCommandClientCapabilities] = None
+    workspace_folders: Optional[bool] = None
+    configuration: Optional[bool] = None
+    semantic_tokens: Optional[SemanticTokensWorkspaceClientCapabilities] = None
+    code_lens: Optional[CodeLensWorkspaceClientCapabilities] = None
+    file_operations: Optional[ClientCapabilitiesWorkspaceFileOperation] = None
 
 
 class TextDocumentClientCapabilities(LspModel):
-    synchronization: Optional[TextDocumentSyncClientCapabilities]
+    synchronization: Optional[TextDocumentSyncClientCapabilities] = None
     """
     completion: Optional[CompletionClientCapabilities]
     hover: Optional[HoverClientCapabilities]
@@ -1195,23 +1197,23 @@ class PositionEncodingKind(StrEnum):
 
 
 class ClientCapabilitiesGeneral(LspModel):
-    stale_request_support: Optional[ClientCapabilitiesGeneralStaleRequestSupport]
-    regular_expressions: Optional[RegularExpressionsClientCapabilities]
-    position_encodings: Optional[List[PositionEncodingKind]]
+    stale_request_support: Optional[ClientCapabilitiesGeneralStaleRequestSupport] = None
+    regular_expressions: Optional[RegularExpressionsClientCapabilities] = None
+    position_encodings: Optional[List[PositionEncodingKind]] = None
     """
     markdown: Optional[MarkdownClientCapabilities]
     """
 
 
 class ClientCapabilitiesWindow(LspModel):
-    work_done_progress: Optional[bool]
-    show_message: Optional[ShowMessageRequestClientCapabilities]
-    show_document: Optional[ShowDocumentClientCapabilities]
+    work_done_progress: Optional[bool] = None
+    show_message: Optional[ShowMessageRequestClientCapabilities] = None
+    show_document: Optional[ShowDocumentClientCapabilities] = None
 
 
 class NotebookDocumentSyncClientCapabilities(LspModel):
-    dynamic_registration: Optional[bool]
-    execution_summary_support: Optional[bool]
+    dynamic_registration: Optional[bool] = None
+    execution_summary_support: Optional[bool] = None
 
 
 class NotebookDocumentClientCapabilities(LspModel):
@@ -1219,26 +1221,26 @@ class NotebookDocumentClientCapabilities(LspModel):
 
 
 class ClientCapabilities(LspModel):
-    workspace: Optional[ClientCapabilitiesWorkspace]
-    text_document: Optional[TextDocumentClientCapabilities]
-    notebook_document: Optional[NotebookDocumentClientCapabilities]
-    window: Optional[ClientCapabilitiesWindow]
-    general: Optional[ClientCapabilitiesGeneral]
-    experimental: Optional[Any]
+    workspace: Optional[ClientCapabilitiesWorkspace] = None
+    text_document: Optional[TextDocumentClientCapabilities] = None
+    notebook_document: Optional[NotebookDocumentClientCapabilities] = None
+    window: Optional[ClientCapabilitiesWindow] = None
+    general: Optional[ClientCapabilitiesGeneral] = None
+    experimental: Optional[Any] = None
 
 
 class InitializeParamsClientInfo(LspModel):
     name: str
-    version: Optional[str]
+    version: Optional[str] = None
 
 
 class InitializeParams(LspModel):
-    process_id: Optional[int]
-    client_info: Optional[InitializeParamsClientInfo]
-    locale: Optional[str]
-    root_path: Optional[str]
-    root_uri: Optional[DocumentUri]
-    initialization_options: Optional[Any]
+    process_id: Optional[int] = None
+    client_info: Optional[InitializeParamsClientInfo] = None
+    locale: Optional[str] = None
+    root_path: Optional[str] = None
+    root_uri: Optional[DocumentUri] = None
+    initialization_options: Optional[Any] = None
     capabilities: ClientCapabilities
-    trace: Optional[TraceValue]
-    workspace_folders: Optional[List[WorkspaceFolder]]
+    trace: Optional[TraceValue] = None
+    workspace_folders: Optional[List[WorkspaceFolder]] = None

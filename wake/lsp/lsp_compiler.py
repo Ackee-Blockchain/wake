@@ -341,12 +341,8 @@ class LspCompiler:
             },
             source_units_info={
                 node: SourceUnitInfo(
-                    self.__last_graph.nodes[  # pyright: ignore reportGeneralTypeIssues
-                        node
-                    ]["path"],
-                    self.__last_graph.nodes[  # pyright: ignore reportGeneralTypeIssues
-                        node
-                    ]["hash"],
+                    fs_path=self.__last_graph.nodes[node]["path"],
+                    blake2b_hash=self.__last_graph.nodes[node]["hash"],
                 )
                 for node in self.__last_graph
             },
@@ -1044,7 +1040,7 @@ class LspCompiler:
 
             for source_unit_name, raw_ast in solc_output.sources.items():
                 path: Path = cu.source_unit_name_to_path(source_unit_name)
-                ast = AstSolc.parse_obj(raw_ast.ast)
+                ast = AstSolc.model_validate(raw_ast.ast)
 
                 self.__ir_reference_resolver.index_nodes(ast, path, cu.hash)
 

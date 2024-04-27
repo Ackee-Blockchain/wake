@@ -34,7 +34,7 @@ logger = get_logger(__name__)
 
 
 class CodeLensOptions(WorkDoneProgressOptions):
-    resolve_provider: Optional[bool]
+    resolve_provider: Optional[bool] = None
     """
     Code lens has a resolve provider as well.
     """

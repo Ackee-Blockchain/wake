@@ -31,7 +31,7 @@ class TextDocumentSyncKind(IntEnum):
 
 
 class SaveOptions(LspModel):
-    include_text: Optional[bool]
+    include_text: Optional[bool] = None
 
 
 class TextDocumentSyncOptions(LspModel):
@@ -59,7 +59,7 @@ class TextDocumentContentChangeEvent(LspModel):
     """
     The range of the document that changed.
     """
-    range_length: Optional[int]  # uint ?
+    range_length: Optional[int] = None
     """
     The optional length of the range that got replaced.
     """
@@ -87,7 +87,7 @@ class WillSaveTextDocumentParams(LspModel):
 
 class DidSaveTextDocumentParams(LspModel):
     text_document: TextDocumentIdentifier
-    text: Optional[str]
+    text: Optional[str] = None
 
 
 class TextDocumentSaveRegistrationOptions(TextDocumentRegistrationOptions):
@@ -95,7 +95,7 @@ class TextDocumentSaveRegistrationOptions(TextDocumentRegistrationOptions):
     """
     The document that was saved.
     """
-    text: Optional[str]
+    text: Optional[str] = None
 
 
 class DidCloseTextDocumentParams(LspModel):

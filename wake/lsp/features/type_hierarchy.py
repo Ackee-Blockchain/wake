@@ -65,11 +65,11 @@ class TypeHierarchyItem(LspModel):
     """
     The kind of this item.
     """
-    tags: Optional[List[SymbolTag]]
+    tags: Optional[List[SymbolTag]] = None
     """
     Tags for this item.
     """
-    detail: Optional[str]
+    detail: Optional[str] = None
     """
     More detail for this item, e.g. the signature of a function.
     """

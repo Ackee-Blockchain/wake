@@ -30,7 +30,7 @@ from urllib.request import Request, urlopen
 
 from Crypto.Hash import keccak
 from eth_utils.abi import function_abi_to_4byte_selector
-from pydantic import ValidationError, parse_raw_as
+from pydantic import TypeAdapter, ValidationError
 
 from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
 from ..compiler.solc_frontend import (
@@ -1125,7 +1125,7 @@ def _get_storage_layout(
         if not hasattr(contract, "_storage_layout"):
             raise ValueError("Could not get storage layout from contract source code")
 
-        return SolcOutputStorageLayout.parse_obj(contract._storage_layout)
+        return SolcOutputStorageLayout.model_validate(contract._storage_layout)
 
     fqn = get_fqn_from_address(contract.address, "latest", contract.chain)
     if fqn is None:
@@ -1153,7 +1153,7 @@ def _get_storage_layout(
         if not hasattr(obj, "_storage_layout"):
             raise ValueError("Could not get storage layout from contract source code")
 
-        return SolcOutputStorageLayout.parse_obj(obj._storage_layout)
+        return SolcOutputStorageLayout.model_validate(obj._storage_layout)
 
 
 @functools.lru_cache(maxsize=64)
@@ -1224,7 +1224,7 @@ def _get_storage_layout_from_explorer(
 
     code = parsed["result"][0]["SourceCode"]
     try:
-        standard_input: SolcInput = SolcInput.parse_raw(code[1:-1])
+        standard_input: SolcInput = SolcInput.model_validate_json(code[1:-1])
         if any(
             PurePosixPath(filename).is_absolute()
             for filename in standard_input.sources.keys()
@@ -1247,7 +1247,8 @@ def _get_storage_layout_from_explorer(
         }
     except ValidationError:
         try:
-            s = parse_raw_as(Dict[str, SolcInputSource], code)
+            a = TypeAdapter(Dict[str, SolcInputSource])
+            s = a.validate_json(code)
             if any(PurePosixPath(filename).is_absolute() for filename in s.keys()):
                 raise ValueError("Absolute paths not allowed")
 
