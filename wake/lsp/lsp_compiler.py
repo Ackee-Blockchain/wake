@@ -1161,22 +1161,23 @@ class LspCompiler:
             logging_buffer = []
             logging_handler = LspLoggingHandler(logging_buffer)
 
-            console = Console(file=open(os.devnull, "w"))
+            with open(os.devnull, "w") as devnull:
+                console = Console(file=devnull)
 
-            _, printer_exceptions = run_printers(
-                all_printers,
-                self.last_build,
-                self.last_build_info,
-                self.__last_graph,
-                self.__config,
-                console,
-                None,
-                self.__printers_lsp_provider,
-                verify_paths=False,
-                capture_exceptions=True,
-                logging_handler=logging_handler,
-                extra={"lsp": True},
-            )
+                _, printer_exceptions = run_printers(
+                    all_printers,
+                    self.last_build,
+                    self.last_build_info,
+                    self.__last_graph,
+                    self.__config,
+                    console,
+                    None,
+                    self.__printers_lsp_provider,
+                    verify_paths=False,
+                    capture_exceptions=True,
+                    logging_handler=logging_handler,
+                    extra={"lsp": True},
+                )
             exceptions = {name: repr(e) for name, e in printer_exceptions.items()}
 
             for log, log_type in logging_buffer:
