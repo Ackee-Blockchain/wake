@@ -180,7 +180,25 @@ class abi:
             elif isinstance(arg, (list, tuple)):
                 ret.append(cls._normalize_input(arg))
             elif dataclasses.is_dataclass(arg):
-                ret.append(cls._normalize_input(dataclasses.astuple(arg)))
+                if hasattr(arg, "_abi") and hasattr(arg, "selector"):
+                    input_names = [
+                        input["name"] for input in getattr(arg, "_abi")["inputs"]
+                    ]
+                    inputs = []
+                    fields = dataclasses.fields(arg)
+                    for name in input_names:
+                        if hasattr(arg, name):
+                            inputs.append(getattr(arg, name))
+                        else:
+                            f = next(
+                                f
+                                for f in fields
+                                if f.metadata.get("original_name", None) == name
+                            )
+                            inputs.append(getattr(arg, f.name))
+                    ret.append(cls._normalize_input(inputs))
+                else:
+                    ret.append(cls._normalize_input(dataclasses.astuple(arg)))
             else:
                 ret.append(arg)
         return ret
@@ -339,6 +357,33 @@ class abi:
 
     @classmethod
     def encode(cls, *args) -> bytes:
+        from .transactions import (
+            TransactionRevertedError,
+            UnknownTransactionRevertedError,
+        )
+
+        if (
+            len(args) == 1
+            and hasattr(args[0], "_abi")
+            and hasattr(args[0], "selector")
+            and isinstance(args[0], TransactionRevertedError)
+        ):
+            abi = args[0]._abi["inputs"]
+            if len(abi) > 0:
+                types = [
+                    eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
+                    for arg in fix_library_abi(abi)
+                ]
+                return args[0].selector + eth_abi.abi.encode(
+                    types, cls._normalize_input(args)[0]
+                )
+            else:
+                return args[0].selector
+        elif len(args) == 1 and isinstance(args[0], UnknownTransactionRevertedError):
+            return args[0].data
+        elif any(isinstance(a, TransactionRevertedError) for a in args):
+            raise ValueError("Encoding multiple errors is not supported")
+
         return eth_abi.abi.encode(
             [cls._types_from_args(a) for a in args], cls._normalize_input(args)
         )
@@ -380,6 +425,48 @@ class abi:
 
     @classmethod
     def decode(cls, data: bytes, types: Sequence[Type]) -> Any:
+        from .transactions import (
+            TransactionRevertedError,
+            UnknownTransactionRevertedError,
+        )
+
+        if (
+            len(types) == 1
+            and hasattr(types[0], "_abi")
+            and hasattr(types[0], "selector")
+            and issubclass(types[0], TransactionRevertedError)
+        ):
+            if not data.startswith(types[0].selector):
+                raise ValueError("Selector does not match data")
+
+            data = data[len(types[0].selector) :]
+            abi = types[0]._abi["inputs"]
+            if len(abi) == 0:
+                return types[0]()
+            else:
+                t = types[0]
+                hints = get_type_hints(
+                    t,  # pyright: ignore reportGeneralTypeIssues
+                    include_extras=True,
+                )
+                return cls._normalize_output(
+                    types,
+                    [
+                        eth_abi.abi.decode(
+                            [
+                                cls._types_from_type(hints[f.name])
+                                for f in dataclasses.fields(t)
+                                if f.name != "tx"
+                            ],
+                            data,
+                        )
+                    ],
+                )[0]
+        elif len(types) == 1 and issubclass(types[0], UnknownTransactionRevertedError):
+            return UnknownTransactionRevertedError(data)
+        elif any(issubclass(t, TransactionRevertedError) for t in types):
+            raise ValueError("Decoding multiple errors is not supported")
+
         ret = cls._normalize_output(
             types, eth_abi.abi.decode([cls._types_from_type(t) for t in types], data)
         )
