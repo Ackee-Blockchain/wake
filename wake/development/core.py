@@ -180,7 +180,26 @@ class abi:
             elif isinstance(arg, (list, tuple)):
                 ret.append(cls._normalize_input(arg))
             elif dataclasses.is_dataclass(arg):
-                ret.append(cls._normalize_input(dataclasses.astuple(arg)))
+                if hasattr(arg, "_abi") and hasattr(arg, "selector"):
+                    hints = get_type_hints(
+                        type(arg),  # pyright: ignore reportGeneralTypeIssues
+                        include_extras=True,
+                    )
+                    input_names = [
+                        input["name"]
+                        for input in getattr(arg, "_abi")["inputs"]
+                    ]
+                    inputs = []
+                    fields = dataclasses.fields(arg)
+                    for name in input_names:
+                        if hasattr(arg, name):
+                            inputs.append(getattr(arg, name))
+                        else:
+                            f = next(f for f in fields if f.metadata.get("original_name", None) == name)
+                            inputs.append(getattr(arg, f.name))
+                    ret.append(cls._normalize_input(inputs))
+                else:
+                    ret.append(cls._normalize_input(dataclasses.astuple(arg)))
             else:
                 ret.append(arg)
         return ret
@@ -254,6 +273,13 @@ class abi:
         elif issubclass(t, (Account, Address)):
             return "address"
         elif dataclasses.is_dataclass(t):
+            if hasattr(t, "_abi") and hasattr(t, "selector"):
+                types = [
+                    eth_utils.abi.collapse_if_tuple(cast(Dict[str, Any], arg))
+                    for arg in fix_library_abi(getattr(t, "_abi")["inputs"])
+                ]
+                return f"({','.join(types)})"
+
             hints = get_type_hints(
                 t,  # pyright: ignore reportGeneralTypeIssues
                 include_extras=True,
@@ -339,6 +365,15 @@ class abi:
 
     @classmethod
     def encode(cls, *args) -> bytes:
+        if len(args) == 1 and hasattr(args[0], "_abi") and hasattr(args[0], "selector"):
+            abi = args[0]._abi["inputs"]
+            if len(abi) > 0:
+                return args[0].selector + eth_abi.abi.encode(
+                    [cls._types_from_args(a) for a in args], cls._normalize_input(args)
+                )
+            else:
+                return args[0].selector
+
         return eth_abi.abi.encode(
             [cls._types_from_args(a) for a in args], cls._normalize_input(args)
         )
