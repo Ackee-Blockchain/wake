@@ -742,6 +742,7 @@ class Error(TransactionRevertedError):
         "type": "error",
         "inputs": [{"internalType": "string", "name": "message", "type": "string"}],
     }
+    selector = bytes.fromhex("08c379a0")
     message: str
 
 
@@ -775,6 +776,7 @@ class Panic(TransactionRevertedError):
         "type": "error",
         "inputs": [{"internalType": "uint256", "name": "code", "type": "uint256"}],
     }
+    selector = bytes.fromhex("4e487b71")
     code: "PanicCodeEnum"
 
 
