@@ -122,9 +122,9 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         return frozenset(self._printer_collisions)
 
     def format_help(self, ctx: click.Context, formatter: click.HelpFormatter) -> None:
-        self.formatter.config.commands_panel_title = "Printers"
+        formatter.config.commands_panel_title = "Printers"
         super().format_help(ctx, formatter)
-        self.formatter.config.commands_panel_title = "Commands"
+        formatter.config.commands_panel_title = "Commands"
 
     def add_verified_plugin_path(self, path: Path) -> None:
         import tomli
