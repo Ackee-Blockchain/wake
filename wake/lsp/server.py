@@ -353,6 +353,12 @@ class LspServer:
         except asyncio.CancelledError:
             pass
 
+        for workspace in self.__workspaces.values():
+            try:
+                await workspace.compiler.stop()
+            except Exception:
+                pass
+
     async def _main_task(self) -> None:
         messages_queue = asyncio.Queue()
         self.create_task(self._messages_loop(messages_queue))
@@ -1364,13 +1370,15 @@ class LspServer:
                 document_uri = DocumentUri(params.arguments[0])
                 context = await self._get_workspace(document_uri)
                 if params.arguments[1] == "detector":
-                    context.detectors_lsp_provider.get_callback(params.arguments[2])()
+                    commands = await context.compiler.run_detector_callback(
+                        params.arguments[2]
+                    )
                 else:
-                    context.printers_lsp_provider.get_callback(params.arguments[2])()
+                    commands = await context.compiler.run_printer_callback(
+                        params.arguments[2]
+                    )
 
-                commands = context.printers_lsp_provider.get_commands()
                 if len(commands) > 0:
-                    context.printers_lsp_provider.clear_commands()
                     await self.send_notification(
                         "wake/executeCommands", {"commands": commands}
                     )

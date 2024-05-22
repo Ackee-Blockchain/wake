@@ -183,8 +183,8 @@ async def code_lens(
     _code_lens_cache[path] = []
 
     for offsets, code_lens_items in chain(
-        context.detectors_lsp_provider.get_code_lenses(path).items(),
-        context.printers_lsp_provider.get_code_lenses(path).items(),
+        context.compiler.get_detector_code_lenses(path).items(),
+        context.compiler.get_printer_code_lenses(path).items(),
     ):
         for code_lens_options in code_lens_items:
             lens = CodeLens(

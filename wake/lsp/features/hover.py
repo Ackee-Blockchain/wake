@@ -408,10 +408,8 @@ async def hover(context: LspContext, params: HoverParams) -> Optional[Hover]:
         results.append(definition_result[0])
 
     for hover_options in chain(
-        context.detectors_lsp_provider.get_hovers(
-            path, byte_offset, node.byte_location
-        ),
-        context.printers_lsp_provider.get_hovers(path, byte_offset, node.byte_location),
+        context.compiler.get_detector_hovers(path, byte_offset, node.byte_location),
+        context.compiler.get_printer_hovers(path, byte_offset, node.byte_location),
     ):
         results.append(hover_options.text)
 
