@@ -19,7 +19,7 @@ from typing import (
 )
 
 import tomli
-from pydantic.error_wrappers import ValidationError
+from pydantic import ValidationError
 
 from wake.core import get_logger
 from wake.utils import StrEnum, is_relative_to
