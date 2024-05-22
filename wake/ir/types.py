@@ -208,6 +208,12 @@ class Address(TypeAbc):
             return False
         return self._is_payable == other._is_payable
 
+    def __hash__(self):
+        return hash(self._is_payable)
+
+    def __repr__(self):
+        return f"Address(is_payable={self._is_payable})"
+
     @classmethod
     def from_type_identifier(
         cls,
@@ -243,6 +249,12 @@ class Bool(TypeAbc):
 
     def __eq__(self, other: object) -> bool:
         return isinstance(other, Bool)
+
+    def __hash__(self):
+        return hash("bool")
+
+    def __repr__(self):
+        return "Bool()"
 
     @classmethod
     def from_type_identifier(
@@ -290,6 +302,12 @@ class Int(IntAbc):
             return False
         return self._bits_count == other._bits_count
 
+    def __hash__(self):
+        return hash(self._bits_count)
+
+    def __repr__(self):
+        return f"Int(bits_count={self._bits_count})"
+
     @classmethod
     def from_type_identifier(
         cls,
@@ -321,6 +339,12 @@ class UInt(IntAbc):
         if not isinstance(other, UInt):
             return False
         return self._bits_count == other._bits_count
+
+    def __hash__(self):
+        return hash(self._bits_count)
+
+    def __repr__(self):
+        return f"UInt(bits_count={self._bits_count})"
 
     @classmethod
     def from_type_identifier(
@@ -387,6 +411,12 @@ class Fixed(FixedAbc):
             and self._fractional_digits == other._fractional_digits
         )
 
+    def __hash__(self):
+        return hash((self._total_bits, self._fractional_digits))
+
+    def __repr__(self):
+        return f"Fixed(total_bits={self._total_bits}, fractional_digits={self._fractional_digits})"
+
     @classmethod
     def from_type_identifier(
         cls,
@@ -431,6 +461,12 @@ class UFixed(FixedAbc):
             self._total_bits == other._total_bits
             and self._fractional_digits == other._fractional_digits
         )
+
+    def __hash__(self):
+        return hash((self._total_bits, self._fractional_digits))
+
+    def __repr__(self):
+        return f"UFixed(total_bits={self._total_bits}, fractional_digits={self._fractional_digits})"
 
     @classmethod
     def from_type_identifier(
@@ -483,6 +519,12 @@ class StringLiteral(TypeAbc):
             return False
         return self._keccak256_hash == other._keccak256_hash
 
+    def __hash__(self):
+        return hash(self._keccak256_hash)
+
+    def __repr__(self):
+        return f'StringLiteral(keccak256_hash=b"{self._keccak256_hash}"'
+
     @classmethod
     def from_type_identifier(
         cls,
@@ -532,6 +574,12 @@ class String(TypeAbc):
             and self._is_pointer == other._is_pointer
             and self._is_slice == other._is_slice
         )
+
+    def __hash__(self):
+        return hash((self._data_location, self._is_pointer, self._is_slice))
+
+    def __repr__(self):
+        return f"String(data_location={self._data_location}, is_pointer={self._is_pointer}, is_slice={self._is_slice})"
 
     @classmethod
     def from_type_identifier(
@@ -636,6 +684,12 @@ class Bytes(TypeAbc):
             and self._is_slice == other._is_slice
         )
 
+    def __hash__(self):
+        return hash((self._data_location, self._is_pointer, self._is_slice))
+
+    def __repr__(self):
+        return f"Bytes(data_location={self._data_location}, is_pointer={self._is_pointer}, is_slice={self._is_slice})"
+
     @classmethod
     def from_type_identifier(
         cls,
@@ -731,6 +785,12 @@ class FixedBytes(TypeAbc):
             return False
         return self._bytes_count == other._bytes_count
 
+    def __hash__(self):
+        return hash(self._bytes_count)
+
+    def __repr__(self):
+        return f"FixedBytes(bytes_count={self._bytes_count})"
+
     @classmethod
     def from_type_identifier(
         cls,
@@ -823,6 +883,23 @@ class Function(TypeAbc):
             and self._salt_set == other._salt_set
             and self._attached_to == other._attached_to
         )
+
+    def __hash__(self):
+        return hash(
+            (
+                self._kind,
+                self._state_mutability,
+                self._parameters,
+                self._return_parameters,
+                self._gas_set,
+                self._value_set,
+                self._salt_set,
+                self._attached_to,
+            )
+        )
+
+    def __repr__(self):
+        return f"Function(kind={self._kind}, state_mutability={self._state_mutability}, parameters={self._parameters}, return_parameters={self._return_parameters}, gas_set={self._gas_set}, value_set={self._value_set}, salt_set={self._salt_set}, attached_to={self._attached_to})"
 
     @classmethod
     def from_type_identifier(
@@ -1040,6 +1117,12 @@ class Tuple(TypeAbc):
             return False
         return self._components == other._components
 
+    def __hash__(self):
+        return hash(self._components)
+
+    def __repr__(self):
+        return f"Tuple(components={self._components})"
+
     @classmethod
     def from_type_identifier(
         cls,
@@ -1095,6 +1178,12 @@ class Type(TypeAbc):
         if not isinstance(other, Type):
             return False
         return self._actual_type == other._actual_type
+
+    def __hash__(self):
+        return hash(self._actual_type)
+
+    def __repr__(self):
+        return f"Type(actual_type={self._actual_type})"
 
     @classmethod
     def from_type_identifier(
@@ -1169,6 +1258,12 @@ class Rational(TypeAbc):
             and self._denominator == other._denominator
         )
 
+    def __hash__(self):
+        return hash((self._numerator, self._denominator))
+
+    def __repr__(self):
+        return f"Rational(numerator={self._numerator}, denominator={self._denominator})"
+
     @classmethod
     def from_type_identifier(
         cls,
@@ -1237,6 +1332,12 @@ class Modifier(TypeAbc):
             return False
         return self._parameters == other._parameters
 
+    def __hash__(self):
+        return hash(self._parameters)
+
+    def __repr__(self):
+        return f"Modifier(parameters={self._parameters})"
+
     @classmethod
     def from_type_identifier(
         cls,
@@ -1297,6 +1398,20 @@ class Array(TypeAbc):
             and self._is_pointer == other._is_pointer
             and self._is_slice == other._is_slice
         )
+
+    def __hash__(self):
+        return hash(
+            (
+                self._base_type,
+                self._length,
+                self._data_location,
+                self._is_pointer,
+                self._is_slice,
+            )
+        )
+
+    def __repr__(self):
+        return f"Array(base_type={self._base_type}, length={self._length}, data_location={self._data_location}, is_pointer={self._is_pointer}, is_slice={self._is_slice})"
 
     @classmethod
     def from_type_identifier(
@@ -1429,6 +1544,12 @@ class Mapping(TypeAbc):
             self._key_type == other._key_type and self._value_type == other._value_type
         )
 
+    def __hash__(self):
+        return hash((self._key_type, self._value_type))
+
+    def __repr__(self):
+        return f"Mapping(key_type={self._key_type}, value_type={self._value_type})"
+
     @classmethod
     def from_type_identifier(
         cls,
@@ -1493,6 +1614,12 @@ class Contract(TypeAbc):
             and self._name == other._name
             and self.ir_node == other.ir_node
         )
+
+    def __hash__(self):
+        return hash((self._is_super, self._name, self.ir_node))
+
+    def __repr__(self):
+        return f"Contract(is_super={self._is_super}, name={self._name}, ir_node={self.ir_node})"
 
     @classmethod
     def from_type_identifier(
@@ -1605,6 +1732,19 @@ class Struct(TypeAbc):
             and self._is_pointer == other._is_pointer
             and self.ir_node == other.ir_node
         )
+
+    def __hash__(self):
+        return hash(
+            (
+                self._name,
+                self._data_location,
+                self._is_pointer,
+                self.ir_node,
+            )
+        )
+
+    def __repr__(self):
+        return f"Struct(name={self._name}, data_location={self._data_location}, is_pointer={self._is_pointer}, ir_node={self.ir_node})"
 
     @classmethod
     def from_type_identifier(
@@ -1726,6 +1866,12 @@ class Enum(TypeAbc):
             return False
         return self._name == other._name and self.ir_node == other.ir_node
 
+    def __hash__(self):
+        return hash((self._name, self.ir_node))
+
+    def __repr__(self):
+        return f"Enum(name={self._name}, ir_node={self.ir_node})"
+
     @classmethod
     def from_type_identifier(
         cls,
@@ -1786,6 +1932,14 @@ class Magic(TypeAbc):
         return (
             self._kind == other._kind
             and self._meta_argument_type == other._meta_argument_type
+        )
+
+    def __hash__(self):
+        return hash((self._kind, self._meta_argument_type))
+
+    def __repr__(self):
+        return (
+            f"Magic(kind={self._kind}, meta_argument_type={self._meta_argument_type})"
         )
 
     @classmethod
@@ -1864,6 +2018,12 @@ class UserDefinedValueType(TypeAbc):
             return False
         return self._name == other._name and self.ir_node == other.ir_node
 
+    def __hash__(self):
+        return hash((self._name, self.ir_node))
+
+    def __repr__(self):
+        return f"UserDefinedValueType(name={self._name}, ir_node={self.ir_node})"
+
     @classmethod
     def from_type_identifier(
         cls,
@@ -1930,6 +2090,12 @@ class Module(TypeAbc):
         if not isinstance(other, Module):
             return False
         return self.file == other.file
+
+    def __hash__(self):
+        return hash(self.file)
+
+    def __repr__(self):
+        return f"Module(file={self.file})"
 
     @classmethod
     def from_type_identifier(
