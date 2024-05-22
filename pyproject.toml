@@ -25,8 +25,8 @@ wake-detectors = "wake_detectors"
 wake-printers = "wake_printers"
 
 [tool.poetry.dependencies]
-python = "^3.7.9"
-pydantic = "^2.3"
+python = "^3.8"
+pydantic = "^2.7"
 typing-extensions = "^4"
 aiohttp = [
     { version = "^3.8", python = "<3.12" },
@@ -99,7 +99,7 @@ target-version = ["py37"]
 [tool.pyright]
 include = ["**/*.py"]
 exclude = ["examples"]
-pythonVersion = "3.7"
+pythonVersion = "3.8"
 pythonPlatform = "All"
 
 [tool.isort]

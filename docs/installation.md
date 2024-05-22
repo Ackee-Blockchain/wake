@@ -1,5 +1,5 @@
 # Installation
-Wake requires Python 3.7 or higher.
+Wake requires Python 3.8 or higher.
 
 !!! warning
     Python 3.12 is experimentally supported.
