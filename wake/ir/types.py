@@ -130,6 +130,10 @@ class TypeAbc(ABC):
             return UFixed.from_type_identifier(
                 type_identifier, reference_resolver, cu_hash
             )
+        elif type_identifier.startswith("t_error"):
+            return Error.from_type_identifier(
+                type_identifier, reference_resolver, cu_hash
+            )
         else:
             return None
 
@@ -2126,3 +2130,32 @@ class Module(TypeAbc):
         return self._reference_resolver.resolve_source_file_id(
             self._source_unit_id, self._cu_hash
         )
+
+
+class Error(TypeAbc):
+    """
+    Error type.
+    """
+
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, Error)
+
+    def __hash__(self):
+        return hash("Error")
+
+    def __repr__(self):
+        return "Error"
+
+    @classmethod
+    def from_type_identifier(
+        cls,
+        type_identifier: StringReader,
+        reference_resolver: ReferenceResolver,
+        cu_hash: bytes,
+    ) -> Error:
+        type_identifier.read("t_error")
+        return Error()
+
+    @property
+    def abi_type(self) -> str:
+        raise NotImplementedError
