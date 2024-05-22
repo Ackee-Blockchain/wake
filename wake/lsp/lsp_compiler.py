@@ -2,24 +2,21 @@ from __future__ import annotations
 
 import asyncio
 import difflib
-import logging
 import multiprocessing
 import multiprocessing.connection
-import os
-import platform
+import queue
 import re
 import threading
 import time
-import traceback
-from collections import deque
+from collections import defaultdict, deque
 from copy import deepcopy
 from dataclasses import dataclass
 from functools import lru_cache
-from itertools import chain
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     AbstractSet,
+    Any,
     Deque,
     Dict,
     Iterable,
@@ -32,7 +29,6 @@ from typing import (
 )
 
 import packaging.version
-from rich.console import Console
 
 from wake.compiler.exceptions import CompilationError
 
@@ -44,17 +40,15 @@ from ..compiler.build_data_model import (
     ProjectBuildInfo,
     SourceUnitInfo,
 )
-from ..core.lsp_provider import LspProvider
 from ..core.solidity_version import SolidityVersionRange, SolidityVersionRanges
 from ..core.wake_comments import error_commented_out
-from ..detectors.api import DetectorConfidence, DetectorImpact, detect
-from ..printers.api import run_printers
 from ..utils import StrEnum, get_package_version
 from ..utils.file_utils import is_relative_to
 from .exceptions import LspError
-from .logging_handler import LspLoggingHandler
 from .lsp_data_model import LspModel
 from .methods import RequestMethodEnum
+from .protocol_structures import ErrorCodes
+from .subprocess_runner import SubprocessCommandType, run_subprocess
 
 if TYPE_CHECKING:
     from .server import LspServer
@@ -72,7 +66,13 @@ from wake.compiler.solc_frontend import (
 )
 from wake.config import WakeConfig
 from wake.core import get_logger
-from wake.ir import DeclarationAbc, SourceUnit
+from wake.core.lsp_provider import (
+    CodeLensOptions,
+    CommandAbc,
+    HoverOptions,
+    InlayHintOptions,
+)
+from wake.ir import SourceUnit
 from wake.ir.ast import AstSolc
 from wake.ir.reference_resolver import CallbackParams, ReferenceResolver
 from wake.ir.utils import IrInitTuple
@@ -85,7 +85,6 @@ from wake.lsp.utils.uri import path_to_uri, uri_to_path
 
 from ..svm import SolcVersionManager
 from .common_structures import (
-    CodeDescription,
     CreateFilesParams,
     DeleteFilesParams,
     Diagnostic,
@@ -156,29 +155,6 @@ class ConfigUpdate:
     local_config_path: Path
 
 
-class DetectionAdditionalInfo(LspModel):
-    impact: DetectorImpact
-    confidence: DetectorConfidence
-    ignored: bool
-    source_unit_name: str
-
-    def __members(self) -> Tuple:
-        return (
-            self.impact,
-            self.confidence,
-            self.ignored,
-            self.source_unit_name,
-        )
-
-    def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return self.__members() == other.__members()
-        return NotImplemented
-
-    def __hash__(self):
-        return hash(self.__members())
-
-
 class CompilationErrorAdditionalInfo(LspModel):
     severity: SolcOutputErrorSeverityEnum
     ignored: bool
@@ -229,19 +205,30 @@ class LspCompiler:
     __all_detectors: List[str]
     __latest_errors_per_cu: Dict[bytes, Set[SolcOutputError]]
     __ignored_detections_supported: bool
-    __detectors_lsp_provider: LspProvider
-    __printers_lsp_provider: LspProvider
 
     __ir_reference_resolver: ReferenceResolver
 
     __output_ready: asyncio.Event
 
+    __subprocess: Optional[multiprocessing.Process]
+    __subprocess_in_queue: multiprocessing.Queue
+    __subprocess_out_queue: multiprocessing.Queue
+    __subprocess_command_id: int
+    __subprocess_responses: Dict[int, Tuple[SubprocessCommandType, Any]]
+    __detectors_task: Optional[asyncio.Task]
+    __printers_task: Optional[asyncio.Task]
+
+    __detector_code_lenses: Dict[Path, Dict[Tuple[int, int], Set[CodeLensOptions]]]
+    __printer_code_lenses: Dict[Path, Dict[Tuple[int, int], Set[CodeLensOptions]]]
+    __detector_hovers: Dict[Path, Dict[Tuple[int, int], Set[HoverOptions]]]
+    __printer_hovers: Dict[Path, Dict[Tuple[int, int], Set[HoverOptions]]]
+    __detector_inlay_hints: Dict[Path, Dict[int, List[InlayHintOptions]]]
+    __printer_inlay_hints: Dict[Path, Dict[int, List[InlayHintOptions]]]
+
     def __init__(
         self,
         server: LspServer,
         diagnostic_queue: asyncio.Queue,
-        detectors_lsp_provider: LspProvider,
-        printers_lsp_provider: LspProvider,
         perform_files_discovery: bool,
     ):
         self.__server = server
@@ -272,8 +259,6 @@ class LspCompiler:
         self.__wake_version = get_package_version("eth-wake")
         self.__all_detectors = []
         self.__latest_errors_per_cu = {}
-        self.__detectors_lsp_provider = detectors_lsp_provider
-        self.__printers_lsp_provider = printers_lsp_provider
 
         try:
             if server.tfs_version is not None and packaging.version.parse(
@@ -286,12 +271,169 @@ class LspCompiler:
             self.__ignored_detections_supported = False
 
         self.__ir_reference_resolver = ReferenceResolver()
+        self.__detectors_task = None
+        self.__printers_task = None
+        self.__subprocess = None
+
+        self.__detector_code_lenses = {}
+        self.__printer_code_lenses = {}
+        self.__detector_hovers = {}
+        self.__printer_hovers = {}
+        self.__detector_inlay_hints = {}
+        self.__printer_inlay_hints = {}
 
     async def run(self, config: WakeConfig):
         self.__config = config
         self.__svm = SolcVersionManager(config)
         self.__compiler = SolidityCompiler(config)
+        self.__subprocess_in_queue = multiprocessing.Queue()
+        self.__subprocess_out_queue = multiprocessing.Queue()
+        self.__subprocess_command_id = 0
+        self.__subprocess_responses = {}
+        # TODO process recovery?
+        self.__subprocess = multiprocessing.Process(
+            target=run_subprocess,
+            args=(
+                self.__subprocess_out_queue,
+                self.__subprocess_in_queue,
+                config,
+                self.__ignored_detections_supported,
+            ),
+        )
+        self.__subprocess.start()
         await self.__compilation_loop()
+
+    async def stop(self):
+        if self.__subprocess is not None:
+            self.__subprocess.terminate()
+            await asyncio.sleep(0.5)
+
+            if self.__subprocess.is_alive():
+                self.__subprocess.kill()
+
+    def send_subprocess_command(self, command: SubprocessCommandType, data: Any) -> int:
+        self.__subprocess_out_queue.put((command, self.__subprocess_command_id, data))
+        ret = self.__subprocess_command_id
+        self.__subprocess_command_id += 1
+        return ret
+
+    async def wait_subprocess_response(
+        self, command_id: int
+    ) -> Tuple[SubprocessCommandType, Any]:
+        while True:
+            if command_id in self.__subprocess_responses:
+                return self.__subprocess_responses.pop(command_id)
+
+            try:
+                response = self.__subprocess_in_queue.get_nowait()
+                if response[1] == command_id:
+                    return response[0], response[2]
+                else:
+                    self.__subprocess_responses[response[1]] = (
+                        response[0],
+                        response[2],
+                    )
+            except queue.Empty:
+                await asyncio.sleep(0.1)
+
+    async def run_detector_callback(self, callback_id: str) -> List[CommandAbc]:
+        command_id = self.send_subprocess_command(
+            SubprocessCommandType.RUN_DETECTOR_CALLBACK,
+            callback_id,
+        )
+
+        command, data = await self.wait_subprocess_response(command_id)
+        if command == SubprocessCommandType.DETECTOR_CALLBACK_SUCCESS:
+            return data
+        elif command == SubprocessCommandType.DETECTOR_CALLBACK_FAILURE:
+            raise LspError(ErrorCodes.RequestFailed, data)
+        else:
+            raise LspError(
+                ErrorCodes.InternalError, "Unexpected response from subprocess"
+            )
+
+    async def run_printer_callback(self, callback_id: str) -> List[CommandAbc]:
+        command_id = self.send_subprocess_command(
+            SubprocessCommandType.RUN_PRINTER_CALLBACK,
+            callback_id,
+        )
+
+        command, data = await self.wait_subprocess_response(command_id)
+        if command == SubprocessCommandType.PRINTER_CALLBACK_SUCCESS:
+            return data
+        elif command == SubprocessCommandType.PRINTER_CALLBACK_FAILURE:
+            raise LspError(ErrorCodes.RequestFailed, data)
+        else:
+            raise LspError(
+                ErrorCodes.InternalError,
+                f"Unexpected response from subprocess: {command}",
+            )
+
+    def get_detector_code_lenses(
+        self, path: Path
+    ) -> Dict[Tuple[int, int], Set[CodeLensOptions]]:
+        return self.__detector_code_lenses.get(path, {})
+
+    def get_printer_code_lenses(
+        self, path: Path
+    ) -> Dict[Tuple[int, int], Set[CodeLensOptions]]:
+        return self.__printer_code_lenses.get(path, {})
+
+    def get_detector_hovers(
+        self,
+        path: Path,
+        byte_offset: int,
+        nested_most_node_offsets: Tuple[int, int],
+    ) -> Set[HoverOptions]:
+        ret = set()
+        for (start, end), hovers in self.__detector_hovers.get(path, {}).items():
+            for hover in hovers:
+                if not (start <= byte_offset <= end):
+                    continue
+                if (
+                    hover.on_child
+                    or nested_most_node_offsets[0] == start
+                    and nested_most_node_offsets[1] == end
+                ):
+                    ret.add(hover)
+        return ret
+
+    def get_printer_hovers(
+        self,
+        path: Path,
+        byte_offset: int,
+        nested_most_node_offsets: Tuple[int, int],
+    ) -> Set[HoverOptions]:
+        ret = set()
+        for (start, end), hovers in self.__printer_hovers.get(path, {}).items():
+            for hover in hovers:
+                if not (start <= byte_offset <= end):
+                    continue
+                if (
+                    hover.on_child
+                    or nested_most_node_offsets[0] == start
+                    and nested_most_node_offsets[1] == end
+                ):
+                    ret.add(hover)
+        return ret
+
+    def get_detector_inlay_hints(
+        self, path: Path, byte_offsets: Tuple[int, int]
+    ) -> Dict[int, Set[InlayHintOptions]]:
+        ret = defaultdict(set)
+        for offset, hints in self.__detector_inlay_hints.get(path, {}).items():
+            if byte_offsets[0] <= offset <= byte_offsets[1]:
+                ret[offset].update(hints)
+        return ret
+
+    def get_printer_inlay_hints(
+        self, path: Path, byte_offsets: Tuple[int, int]
+    ) -> Dict[int, Set[InlayHintOptions]]:
+        ret = defaultdict(set)
+        for offset, hints in self.__printer_inlay_hints.get(path, {}).items():
+            if byte_offsets[0] <= offset <= byte_offsets[1]:
+                ret[offset].update(hints)
+        return ret
 
     @property
     def output_ready(self) -> asyncio.Event:
@@ -477,6 +619,14 @@ class LspCompiler:
         line_offset = len(line_bytes.decode("utf-8")[:col].encode("utf-8"))
         return prefix + line_offset
 
+    async def __refresh_code_lenses(self) -> None:
+        try:
+            await self.__server.send_request(
+                RequestMethodEnum.WORKSPACE_CODE_LENS_REFRESH, None
+            )
+        except LspError:
+            pass
+
     async def _handle_change(
         self,
         change: Union[
@@ -513,6 +663,8 @@ class LspCompiler:
         elif isinstance(change, ConfigUpdate):
             self.__config.local_config_path = change.local_config_path
             self.__config.update(change.update, change.removed_options)
+
+            self.send_subprocess_command(SubprocessCommandType.CONFIG, self.__config)
         elif isinstance(change, CreateFilesParams):
             for file in change.files:
                 path = uri_to_path(file.uri)
@@ -630,6 +782,8 @@ class LspCompiler:
             self.__interval_trees.clear()
             self.__source_units.clear()
             self.__ir_reference_resolver.clear_all_indexed_nodes()
+            self.__last_graph = nx.DiGraph()
+            self.__latest_errors_per_cu = {}
             return
         if target_version is not None and target_version > max_version:
             await self.__server.log_message(
@@ -642,6 +796,8 @@ class LspCompiler:
             self.__interval_trees.clear()
             self.__source_units.clear()
             self.__ir_reference_resolver.clear_all_indexed_nodes()
+            self.__last_graph = nx.DiGraph()
+            self.__latest_errors_per_cu = {}
             return
 
         try:
@@ -693,6 +849,8 @@ class LspCompiler:
             self.__interval_trees.clear()
             self.__source_units.clear()
             self.__ir_reference_resolver.clear_all_indexed_nodes()
+            self.__last_graph = nx.DiGraph()
+            self.__latest_errors_per_cu = {}
             return
 
         compilation_units = self.__compiler.build_compilation_units_maximize(graph)
@@ -875,6 +1033,8 @@ class LspCompiler:
             self.__interval_trees.clear()
             self.__source_units.clear()
             self.__ir_reference_resolver.clear_all_indexed_nodes()
+            self.__last_graph = nx.DiGraph()
+            self.__latest_errors_per_cu = {}
             return
 
         errors_without_location: Set[SolcOutputError] = set()
@@ -918,6 +1078,7 @@ class LspCompiler:
             self.__interval_trees.clear()
             self.__source_units.clear()
             self.__ir_reference_resolver.clear_all_indexed_nodes()
+            self.__latest_errors_per_cu = errors_per_cu
             return
 
         # files passed as files_to_compile and files importing them
@@ -1113,246 +1274,208 @@ class LspCompiler:
                 await self.__compile(files_to_recompile, False, errors_per_cu)
 
         if full_compile:
-            await self.__run_detectors_wrapper()
             self.__latest_errors_per_cu = errors_per_cu
 
-    async def __run_printers(self) -> None:
-        self.__printers_lsp_provider.clear()
+    async def __run_detectors_task(self) -> None:
+        if self.__detectors_task is not None:
+            self.__detectors_task.cancel()
 
+            try:
+                await self.__detectors_task
+            except asyncio.CancelledError:
+                pass
+
+        if self.__config.lsp.detectors.enable:
+            self.__detectors_task = self.__server.create_task(self.__run_detectors())
+
+    async def __run_printers_task(self) -> None:
+        if self.__printers_task is not None:
+            self.__printers_task.cancel()
+
+            try:
+                await self.__printers_task
+            except asyncio.CancelledError:
+                pass
+
+        self.__printers_task = self.__server.create_task(self.__run_printers())
+
+    async def __run_printers(self) -> None:
         progress_token = await self.__server.progress_begin("Running printers")
 
-        all_printers = run_print.list_commands(
-            None,  # pyright: ignore reportGeneralTypeIssues
-            plugin_paths={  # pyright: ignore reportGeneralTypeIssues
-                self.__config.project_root_path / "printers"
-            },
-            force_load_plugins=True,  # pyright: ignore reportGeneralTypeIssues
-            verify_paths=False,  # pyright: ignore reportGeneralTypeIssues
-        )
-
-        for (
-            package,
-            e,
-        ) in (
-            run_print.failed_plugin_entry_points  # pyright: ignore reportGeneralTypeIssues
-        ):
-            await self.__server.show_message(
-                f"Failed to load printers from plugin module {package}: {e}",
-                MessageType.ERROR,
-            )
-            await self.__server.log_message(
-                f"Failed to load printers from plugin module {package}: {e}",
-                MessageType.ERROR,
-            )
-        for (
-            path,
-            e,
-        ) in run_print.failed_plugin_paths:  # pyright: ignore reportGeneralTypeIssues
-            await self.__server.show_message(
-                f"Failed to load printers from path {path}: {e}",
-                MessageType.ERROR,
-            )
-            await self.__server.log_message(
-                f"Failed to load printers from path {path}: {e}",
-                MessageType.ERROR,
-            )
-
         try:
-            logging_buffer = []
-            logging_handler = LspLoggingHandler(logging_buffer)
+            all_printers = run_print.list_commands(
+                None,  # pyright: ignore reportGeneralTypeIssues
+                plugin_paths={  # pyright: ignore reportGeneralTypeIssues
+                    self.__config.project_root_path / "printers"
+                },
+                force_load_plugins=True,  # pyright: ignore reportGeneralTypeIssues
+                verify_paths=False,  # pyright: ignore reportGeneralTypeIssues
+            )
 
-            with open(os.devnull, "w") as devnull:
-                console = Console(file=devnull)
-
-                _, printer_exceptions = run_printers(
-                    all_printers,
-                    self.last_build,
-                    self.last_build_info,
-                    self.__last_graph,
-                    self.__config,
-                    console,
-                    None,
-                    self.__printers_lsp_provider,
-                    verify_paths=False,
-                    capture_exceptions=True,
-                    logging_handler=logging_handler,
-                    extra={"lsp": True},
-                )
-            exceptions = {name: repr(e) for name, e in printer_exceptions.items()}
-
-            for log, log_type in logging_buffer:
-                await self.__server.log_message(log, log_type)
-
-            for printer_name, exception_str in exceptions.items():
+            for (
+                package,
+                e,
+            ) in (
+                run_print.failed_plugin_entry_points  # pyright: ignore reportGeneralTypeIssues
+            ):
                 await self.__server.show_message(
-                    f"Exception while running printer {printer_name}: {exception_str}",
+                    f"Failed to load printers from plugin module {package}: {e}",
                     MessageType.ERROR,
                 )
                 await self.__server.log_message(
-                    f"Exception while running printer {printer_name}: {exception_str}",
+                    f"Failed to load printers from plugin module {package}: {e}",
                     MessageType.ERROR,
                 )
-        except Exception:
-            await self.__server.show_message(
-                f"Exception occurred while running printers:\n{traceback.format_exc()}",
-                MessageType.ERROR,
-            )
-            await self.__server.log_message(
-                f"Exception occurred while running printers:\n{traceback.format_exc()}",
-                MessageType.ERROR,
+            for (
+                path,
+                e,
+            ) in (
+                run_print.failed_plugin_paths
+            ):  # pyright: ignore reportGeneralTypeIssues
+                await self.__server.show_message(
+                    f"Failed to load printers from path {path}: {e}",
+                    MessageType.ERROR,
+                )
+                await self.__server.log_message(
+                    f"Failed to load printers from path {path}: {e}",
+                    MessageType.ERROR,
+                )
+
+            command_id = self.send_subprocess_command(
+                SubprocessCommandType.RUN_PRINTERS, all_printers
             )
 
-        if progress_token is not None:
-            await self.__server.progress_end(progress_token)
+            command, data = await self.wait_subprocess_response(command_id)
+            if command == SubprocessCommandType.PRINTERS_SUCCESS:
+                (
+                    exceptions,
+                    logging_buffer,
+                    commands,
+                    self.__printer_code_lenses,
+                    self.__printer_hovers,
+                    self.__printer_inlay_hints,
+                ) = data
 
-        commands = self.__printers_lsp_provider.get_commands()
-        if len(commands) > 0:
-            self.__printers_lsp_provider.clear_commands()
-            await self.__server.send_notification(
-                "wake/executeCommands", list(commands)
-            )
+                for log, log_type in logging_buffer:
+                    await self.__server.log_message(log, log_type)
+
+                for printer_name, exception_str in exceptions.items():
+                    await self.__server.show_message(
+                        f"Exception while running printer {printer_name}: {exception_str}",
+                        MessageType.ERROR,
+                    )
+                    await self.__server.log_message(
+                        f"Exception while running printer {printer_name}: {exception_str}",
+                        MessageType.ERROR,
+                    )
+
+                if len(commands) > 0:
+                    await self.__server.send_notification(
+                        "wake/executeCommands", list(commands)
+                    )
+            elif command == SubprocessCommandType.PRINTERS_FAILURE:
+                self.__printer_code_lenses = {}
+                self.__printer_hovers = {}
+                self.__printer_inlay_hints = {}
+
+                await self.__server.show_message(
+                    f"Exception occurred while running printers:\n{data}",
+                    MessageType.ERROR,
+                )
+                await self.__server.log_message(
+                    f"Exception occurred while running printers:\n{data}",
+                    MessageType.ERROR,
+                )
+            elif command == SubprocessCommandType.PRINTERS_CANCELLED:
+                return
+            else:
+                await self.__server.show_message(
+                    f"Unexpected response from subprocess: {command}", MessageType.ERROR
+                )
+                await self.__server.log_message(
+                    f"Unexpected response from subprocess: {command}", MessageType.ERROR
+                )
+        finally:
+            if progress_token is not None:
+                await self.__server.progress_end(progress_token)
 
         # make sure that code lenses are refreshed
-        try:
-            await self.__server.send_request(
-                RequestMethodEnum.WORKSPACE_CODE_LENS_REFRESH, None
-            )
-        except LspError:
-            pass
+        await self.__refresh_code_lenses()
+
         # make sure that inline values are refreshed
         try:
             await self.__server.send_request(RequestMethodEnum.INLAY_HINT_REFRESH, None)
         except LspError:
             pass
 
-    async def __run_detectors_wrapper(self) -> None:
-        self.__detectors_lsp_provider.clear()
-
+    async def __run_detectors(self) -> None:
         progress_token = await self.__server.progress_begin("Running detectors")
 
-        # discover detectors
-        all_detectors = run_detect.list_commands(
-            None,  # pyright: ignore reportGeneralTypeIssues
-            plugin_paths={  # pyright: ignore reportGeneralTypeIssues
-                self.__config.project_root_path / "detectors"
-            },
-            force_load_plugins=True,  # pyright: ignore reportGeneralTypeIssues
-            verify_paths=False,  # pyright: ignore reportGeneralTypeIssues
-        )
+        try:
+            # discover detectors
+            all_detectors = run_detect.list_commands(
+                None,  # pyright: ignore reportGeneralTypeIssues
+                plugin_paths={  # pyright: ignore reportGeneralTypeIssues
+                    self.__config.project_root_path / "detectors"
+                },
+                force_load_plugins=True,  # pyright: ignore reportGeneralTypeIssues
+                verify_paths=False,  # pyright: ignore reportGeneralTypeIssues
+            )
 
-        for detector_name in self.__config.detectors.exclude.union(
-            self.__config.detectors.only or set()
-        ):
-            if detector_name not in all_detectors:
+            for detector_name in self.__config.detectors.exclude.union(
+                self.__config.detectors.only or set()
+            ):
+                if detector_name not in all_detectors:
+                    await self.__server.log_message(
+                        f"Detector {detector_name} not found", MessageType.WARNING
+                    )
+
+            for (
+                package,
+                e,
+            ) in (
+                run_detect.failed_plugin_entry_points  # pyright: ignore reportGeneralTypeIssues
+            ):
+                await self.__server.show_message(
+                    f"Failed to load detectors from plugin module {package}: {e}",
+                    MessageType.ERROR,
+                )
                 await self.__server.log_message(
-                    f"Detector {detector_name} not found", MessageType.WARNING
+                    f"Failed to load detectors from plugin module {package}: {e}",
+                    MessageType.ERROR,
+                )
+            for (
+                path,
+                e,
+            ) in (
+                run_detect.failed_plugin_paths
+            ):  # pyright: ignore reportGeneralTypeIssues
+                await self.__server.show_message(
+                    f"Failed to load detectors from path {path}: {e}",
+                    MessageType.ERROR,
+                )
+                await self.__server.log_message(
+                    f"Failed to load detectors from path {path}: {e}",
+                    MessageType.ERROR,
                 )
 
-        for (
-            package,
-            e,
-        ) in (
-            run_detect.failed_plugin_entry_points  # pyright: ignore reportGeneralTypeIssues
-        ):
-            await self.__server.show_message(
-                f"Failed to load detectors from plugin module {package}: {e}",
-                MessageType.ERROR,
-            )
-            await self.__server.log_message(
-                f"Failed to load detectors from plugin module {package}: {e}",
-                MessageType.ERROR,
-            )
-        for (
-            path,
-            e,
-        ) in run_detect.failed_plugin_paths:  # pyright: ignore reportGeneralTypeIssues
-            await self.__server.show_message(
-                f"Failed to load detectors from path {path}: {e}",
-                MessageType.ERROR,
-            )
-            await self.__server.log_message(
-                f"Failed to load detectors from path {path}: {e}",
-                MessageType.ERROR,
+            command_id = self.send_subprocess_command(
+                SubprocessCommandType.RUN_DETECTORS, all_detectors
             )
 
-        if platform.system() == "Linux":
-            # run detectors in a separate process
-            parent_data_conn, child_data_conn = multiprocessing.Pipe()
-            parent_error_conn, child_error_conn = multiprocessing.Pipe()
-            p = multiprocessing.Process(
-                target=self.__run_detectors,
-                args=(
-                    [d for d in all_detectors if d not in {"all", "list"}],
-                    child_data_conn,
-                    child_error_conn,
-                ),
-            )
-            p.start()
-            while True:
-                if parent_data_conn.poll():
-                    (
-                        errors_per_file,
-                        exceptions,
-                        logging_buffer,
-                        hovers,
-                        inlay_hints,
-                        code_lenses,
-                    ) = parent_data_conn.recv()
-
-                    for log, log_type in logging_buffer:
-                        await self.__server.log_message(log, log_type)
-
-                    # send both compiler and detector warnings and errors
-                    for path, errors in errors_per_file.items():
-                        await self.__diagnostic_queue.put((path, errors))
-                    for detector_name, exception_str in exceptions.items():
-                        await self.__server.show_message(
-                            f"Exception while running detector {detector_name}: {exception_str}",
-                            MessageType.ERROR,
-                        )
-                        await self.__server.log_message(
-                            f"Exception while running detector {detector_name}: {exception_str}",
-                            MessageType.ERROR,
-                        )
-
-                    self.__detectors_lsp_provider._hovers.update(
-                        hovers
-                    )  # pyright: ignore reportGeneralTypeIssues
-                    self.__detectors_lsp_provider._inlay_hints.update(
-                        inlay_hints
-                    )  # pyright: ignore reportGeneralTypeIssues
-                    self.__detectors_lsp_provider._code_lenses.update(
-                        code_lenses
-                    )  # pyright: ignore reportGeneralTypeIssues
-
-                    break
-                elif not p.is_alive():
-                    if parent_error_conn.poll():
-                        error = parent_error_conn.recv()
-                        await self.__server.show_message(
-                            f"Exception occurred while running detectors:\n{error}",
-                            MessageType.ERROR,
-                        )
-                        await self.__server.log_message(
-                            f"Exception occurred while running detectors:\n{error}",
-                            MessageType.ERROR,
-                        )
-                    break
-
-                await asyncio.sleep(0.1)
-        else:
-            # on Windows, forking is not available,
-            # on macOS, forking is available, but it's not recommended
-            # pickling and unpickling of whole IR model with spawn/forkserver would be too slow
-
-            # not in a subprocess, use try/except to avoid crashing the server by detectors
-            try:
-                errors_per_file, exceptions, logging_buffer = self.__run_detectors(
-                    [d for d in all_detectors if d not in {"all", "list"}], None, None
-                )
+            command, data = await self.wait_subprocess_response(command_id)
+            if command == SubprocessCommandType.DETECTORS_SUCCESS:
+                errors_per_file, exceptions, logging_buffer, commands = data
 
                 for log, log_type in logging_buffer:
                     await self.__server.log_message(log, log_type)
+
+                # merge compilation errors and detector errors
+                for path, errors in self.__compilation_errors.items():
+                    if path in errors_per_file:
+                        errors_per_file[path].update(errors)
+                    else:
+                        errors_per_file[path] = errors
 
                 # send both compiler and detector warnings and errors
                 for path, errors in errors_per_file.items():
@@ -1367,163 +1490,41 @@ class LspCompiler:
                         f"Exception while running detector {detector_name}: {exception_str}",
                         MessageType.ERROR,
                     )
-            except Exception:
+
+                if len(commands) > 0:
+                    await self.__server.send_notification(
+                        "wake/executeCommands", list(commands)
+                    )
+            elif command == SubprocessCommandType.DETECTORS_FAILURE:
                 await self.__server.show_message(
-                    f"Exception occurred while running detectors:\n{traceback.format_exc()}",
+                    f"Exception occurred while running detectors:\n{data}",
                     MessageType.ERROR,
                 )
                 await self.__server.log_message(
-                    f"Exception occurred while running detectors:\n{traceback.format_exc()}",
+                    f"Exception occurred while running detectors:\n{data}",
                     MessageType.ERROR,
                 )
-
-        if progress_token is not None:
-            await self.__server.progress_end(progress_token)
+            elif command == SubprocessCommandType.DETECTORS_CANCELLED:
+                return
+            else:
+                await self.__server.show_message(
+                    f"Unexpected response from subprocess: {command}", MessageType.ERROR
+                )
+                await self.__server.log_message(
+                    f"Unexpected response from subprocess: {command}", MessageType.ERROR
+                )
+        finally:
+            if progress_token is not None:
+                await self.__server.progress_end(progress_token)
 
         # make sure that code lenses are refreshed
-        try:
-            await self.__server.send_request(
-                RequestMethodEnum.WORKSPACE_CODE_LENS_REFRESH, None
-            )
-        except LspError:
-            pass
+        await self.__refresh_code_lenses()
+
         # make sure that inline values are refreshed
         try:
             await self.__server.send_request(RequestMethodEnum.INLAY_HINT_REFRESH, None)
         except LspError:
             pass
-
-    def __run_detectors(
-        self,
-        detector_names: List[str],
-        data_conn: Optional[multiprocessing.connection.Connection],
-        error_conn: Optional[multiprocessing.connection.Connection],
-    ) -> Tuple[
-        Dict[Path, Set[Diagnostic]], Dict[str, str], List[Tuple[str, MessageType]]
-    ]:
-        try:
-            errors_per_file: Dict[Path, Set[Diagnostic]]
-            if data_conn is not None:
-                # in forked process, original dictionary won't be modified anyway
-                errors_per_file = self.__compilation_errors
-            else:
-                errors_per_file = deepcopy(self.__compilation_errors)
-
-            logging_buffer = []
-            logging_handler = LspLoggingHandler(logging_buffer)
-
-            if self.__config.lsp.detectors.enable:
-                _, detections, detector_exceptions = detect(
-                    detector_names,
-                    self.last_build,
-                    self.last_build_info,
-                    self.__last_graph,
-                    self.__config,
-                    None,
-                    self.__detectors_lsp_provider,
-                    verify_paths=False,
-                    capture_exceptions=True,
-                    logging_handler=logging_handler,
-                    extra={"lsp": True},
-                )
-                exceptions = {name: repr(e) for name, e in detector_exceptions.items()}
-
-                if self.__ignored_detections_supported:
-                    detection_gen = (
-                        (detector_name, ignored, result)
-                        for detector_name in detections.keys()
-                        for ignored, result in chain(
-                            ((False, r) for r in detections[detector_name][0]),
-                            ((True, r) for r in detections[detector_name][1]),
-                        )
-                    )
-                else:
-                    detection_gen = (
-                        (detector_name, False, result)
-                        for detector_name in detections.keys()
-                        for result in detections[detector_name][0]
-                    )
-
-                for detector_name, ignored, result in detection_gen:
-                    file = result.detection.ir_node.source_unit.file
-                    if len(result.detection.subdetections) > 0:
-                        related_info = [
-                            DiagnosticRelatedInformation(
-                                location=Location(
-                                    uri=DocumentUri(
-                                        path_to_uri(info.ir_node.source_unit.file)
-                                    ),
-                                    range=self.get_range_from_byte_offsets(
-                                        info.ir_node.source_unit.file,
-                                        info.lsp_range
-                                        if info.lsp_range is not None
-                                        else info.ir_node.name_location
-                                        if isinstance(info.ir_node, DeclarationAbc)
-                                        else info.ir_node.byte_location,
-                                    ),
-                                ),
-                                message=info.message,
-                            )
-                            for info in result.detection.subdetections
-                        ]
-                    else:
-                        related_info = None
-
-                    if file not in errors_per_file:
-                        errors_per_file[file] = set()
-                    errors_per_file[file].add(
-                        Diagnostic(
-                            range=self.get_range_from_byte_offsets(
-                                file,
-                                result.detection.lsp_range
-                                if result.detection.lsp_range is not None
-                                else result.detection.ir_node.name_location
-                                if isinstance(result.detection.ir_node, DeclarationAbc)
-                                else result.detection.ir_node.byte_location,
-                            ),
-                            severity=(
-                                DiagnosticSeverity.INFORMATION
-                                if result.impact == DetectorImpact.INFO
-                                else DiagnosticSeverity.WARNING
-                                if result.impact == DetectorImpact.WARNING
-                                else DiagnosticSeverity.ERROR
-                            ),
-                            source="Wake",
-                            message=result.detection.message,
-                            code=detector_name,
-                            related_information=related_info,
-                            code_description=CodeDescription(
-                                href=result.uri,  # pyright: ignore reportGeneralTypeIssues
-                            )
-                            if result.uri is not None
-                            else None,
-                            data=DetectionAdditionalInfo(
-                                confidence=result.confidence,
-                                impact=result.impact,
-                                source_unit_name=result.detection.ir_node.source_unit.source_unit_name,
-                                ignored=ignored,
-                            ),
-                        )
-                    )
-            else:
-                exceptions = {}
-
-            if data_conn is not None:
-                data_conn.send(
-                    (
-                        errors_per_file,
-                        exceptions,
-                        logging_buffer,
-                        dict(self.__detectors_lsp_provider._hovers),
-                        dict(self.__detectors_lsp_provider._inlay_hints),
-                        dict(self.__detectors_lsp_provider._code_lenses),
-                    )
-                )
-            return errors_per_file, exceptions, logging_buffer
-        except Exception:
-            if error_conn is not None:
-                error_conn.send(traceback.format_exc())
-            raise
 
     async def __compilation_loop(self):
         if self.__perform_files_discovery:
@@ -1534,7 +1535,14 @@ class LspCompiler:
 
             # perform initial compilation
             await self.__compile(self.__discovered_files)
-            await self.__run_printers()
+            await self.__refresh_code_lenses()
+
+            self.send_subprocess_command(
+                SubprocessCommandType.BUILD,
+                (self.last_build, self.last_build_info, self.last_graph),
+            )
+            await self.__run_detectors_task()
+            await self.__run_printers_task()
 
         if self.__file_changes_queue.empty():
             self.output_ready.set()
@@ -1562,25 +1570,40 @@ class LspCompiler:
                 or len(self.__modified_files) > 0
                 or len(self.__deleted_files) > 0
             ):
+                self.__detector_code_lenses.clear()
+                self.__printer_code_lenses.clear()
+                self.__detector_hovers.clear()
+                self.__printer_hovers.clear()
+                self.__detector_inlay_hints.clear()
+                self.__printer_inlay_hints.clear()
+                await self.__refresh_code_lenses()
+
                 await self.__compile(
                     self.__force_compile_files.union(self.__modified_files)
                 )
-                await self.__run_printers()
 
+                self.__force_run_detectors = True
+                self.__force_run_printers = True
                 self.__force_compile_files.clear()
                 self.__modified_files.clear()
                 self.__deleted_files.clear()
 
-            if self.__force_run_detectors:
-                await self.__run_detectors_wrapper()
-                self.__force_run_detectors = False
-
-            if self.__force_run_printers:
-                await self.__run_printers()
-                self.__force_run_printers = False
-
             if self.__file_changes_queue.empty():
                 self.output_ready.set()
+
+                if self.__force_run_detectors or self.__force_run_printers:
+                    self.send_subprocess_command(
+                        SubprocessCommandType.BUILD,
+                        (self.last_build, self.last_build_info, self.last_graph),
+                    )
+
+                if self.__force_run_detectors:
+                    await self.__run_detectors_task()
+                if self.__force_run_printers:
+                    await self.__run_printers_task()
+
+                self.__force_run_detectors = False
+                self.__force_run_printers = False
 
     def __setup_line_index(self, file: Path):
         content = self.get_compiled_file(file).text

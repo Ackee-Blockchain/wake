@@ -77,8 +77,8 @@ async def inlay_hint(
 
     inlay_hints = []
     for offset, inlay_hint_items in chain(
-        context.detectors_lsp_provider.get_inlay_hints(path, (start, end)).items(),
-        context.printers_lsp_provider.get_inlay_hints(path, (start, end)).items(),
+        context.compiler.get_detector_inlay_hints(path, (start, end)).items(),
+        context.compiler.get_printer_inlay_hints(path, (start, end)).items(),
     ):
         for inlay_hint_options in inlay_hint_items:
             line, col = context.compiler.get_line_pos_from_byte_offset(path, offset)

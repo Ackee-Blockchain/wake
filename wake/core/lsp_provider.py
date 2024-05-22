@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from collections import defaultdict
 from pathlib import Path
 from typing import (
     Callable,
-    DefaultDict,
+    Collection,
     Dict,
     Iterable,
     List,
@@ -178,18 +177,18 @@ class ShowDotCommand(CommandAbc):
 
 
 class LspProvider:
-    _hovers: DefaultDict[Path, DefaultDict[Tuple[int, int], Set[HoverOptions]]]
-    _code_lenses: DefaultDict[Path, DefaultDict[Tuple[int, int], Set[CodeLensOptions]]]
-    _inlay_hints: DefaultDict[Path, DefaultDict[int, Set[InlayHintOptions]]]
+    _hovers: Dict[Path, Dict[Tuple[int, int], Set[HoverOptions]]]
+    _code_lenses: Dict[Path, Dict[Tuple[int, int], Set[CodeLensOptions]]]
+    _inlay_hints: Dict[Path, Dict[int, Set[InlayHintOptions]]]
     _commands: List[CommandAbc]
     _callbacks: Dict[str, Callable[[], None]]
     _callback_counter: int
     _callback_kind: str
 
     def __init__(self, callback_kind: str) -> None:
-        self._hovers = defaultdict(lambda: defaultdict(set))
-        self._code_lenses = defaultdict(lambda: defaultdict(set))
-        self._inlay_hints = defaultdict(lambda: defaultdict(set))
+        self._hovers = {}
+        self._code_lenses = {}
+        self._inlay_hints = {}
         self._commands = []
         self._callbacks = {}
         self._callback_counter = 0
@@ -204,37 +203,12 @@ class LspProvider:
     def get_callback(self, callback_id: str) -> Callable[[], None]:
         return self._callbacks[callback_id]
 
-    def get_hovers(
-        self, path: Path, byte_offset: int, nested_most_node_offsets: Tuple[int, int]
-    ) -> Set[HoverOptions]:
-        ret = set()
-        for (start, end), hovers in self._hovers[path].items():
-            for hover in hovers:
-                if not (start <= byte_offset <= end):
-                    continue
-                if (
-                    hover.on_child
-                    or nested_most_node_offsets[0] == start
-                    and nested_most_node_offsets[1] == end
-                ):
-                    ret.add(hover)
-        return ret
-
-    def get_code_lenses(
-        self, path: Path
-    ) -> Dict[Tuple[int, int], Set[CodeLensOptions]]:
-        return self._code_lenses[path]
-
-    def get_inlay_hints(
-        self, path: Path, offsets: Tuple[int, int]
-    ) -> Dict[int, Set[InlayHintOptions]]:
-        ret = defaultdict(set)
-        for offset, hints in self._inlay_hints[path].items():
-            if offsets[0] <= offset <= offsets[1]:
-                ret[offset].update(hints)
-        return ret
-
     def add_hover(self, node: ir.IrAbc, text: str, *, on_child: bool = False) -> None:
+        if node.source_unit.file not in self._hovers:
+            self._hovers[node.source_unit.file] = {}
+        if node.byte_location not in self._hovers[node.source_unit.file]:
+            self._hovers[node.source_unit.file][node.byte_location] = set()
+
         self._hovers[node.source_unit.file][node.byte_location].add(
             HoverOptions(text, on_child)
         )
@@ -246,6 +220,11 @@ class LspProvider:
         end: int,
         text: str,
     ) -> None:
+        if path not in self._hovers:
+            self._hovers[path] = {}
+        if (start, end) not in self._hovers[path]:
+            self._hovers[path][(start, end)] = set()
+
         self._hovers[path][(start, end)].add(HoverOptions(text, True))
 
     def add_code_lens(
@@ -279,6 +258,11 @@ class LspProvider:
         else:
             callback_id = None
 
+        if path not in self._code_lenses:
+            self._code_lenses[path] = {}
+        if (start, end) not in self._code_lenses[path]:
+            self._code_lenses[path][(start, end)] = set()
+
         self._code_lenses[path][(start, end)].add(
             CodeLensOptions(title, callback_id, self._callback_kind)
         )
@@ -286,11 +270,11 @@ class LspProvider:
     def add_inlay_hint(
         self,
         node: ir.IrAbc,
-        label: Union[str, Iterable[str]],
+        label: Union[str, Collection[str]],
         *,
-        tooltip: Union[Optional[str], Iterable[Optional[str]]] = None,
+        tooltip: Union[Optional[str], Collection[Optional[str]]] = None,
         on_click: Union[
-            Optional[Callable[[], None]], Iterable[Optional[Callable[[], None]]]
+            Optional[Callable[[], None]], Collection[Optional[Callable[[], None]]]
         ] = None,
         padding_left: bool = True,
         padding_right: bool = True,
@@ -309,11 +293,11 @@ class LspProvider:
         self,
         path: Path,
         offset: int,
-        label: Union[str, Iterable[str]],
+        label: Union[str, Collection[str]],
         *,
-        tooltip: Union[Optional[str], Iterable[Optional[str]]] = None,
+        tooltip: Union[Optional[str], Collection[Optional[str]]] = None,
         on_click: Union[
-            Optional[Callable[[], None]], Iterable[Optional[Callable[[], None]]]
+            Optional[Callable[[], None]], Collection[Optional[Callable[[], None]]]
         ] = None,
         padding_left: bool = True,
         padding_right: bool = True,
@@ -329,7 +313,9 @@ class LspProvider:
         if on_click is None:
             on_click = [None] * len(label)
         elif not isinstance(on_click, (list, tuple)):
-            on_click = [on_click]
+            on_click = [on_click]  # pyright: ignore reportAssignmentType
+
+        assert isinstance(on_click, (list, tuple))
 
         if len(label) != len(tooltip) or len(label) != len(on_click):
             raise ValueError("label, tooltip and on_click must have the same length")
@@ -343,6 +329,11 @@ class LspProvider:
                 self._callback_counter += 1
             else:
                 callback_ids.append(None)
+
+        if path not in self._inlay_hints:
+            self._inlay_hints[path] = {}
+        if offset not in self._inlay_hints[path]:
+            self._inlay_hints[path][offset] = set()
 
         self._inlay_hints[path][offset].add(
             InlayHintOptions(

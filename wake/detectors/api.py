@@ -34,6 +34,8 @@ from wake.utils.file_utils import is_relative_to
 from wake.utils.keyed_default_dict import KeyedDefaultDict
 
 if TYPE_CHECKING:
+    import threading
+
     import networkx as nx
     import rich.console
     from rich.syntax import SyntaxTheme
@@ -368,6 +370,7 @@ def detect(
     capture_exceptions: bool = False,
     logging_handler: Optional[logging.Handler] = None,
     extra: Optional[Dict[Any, Any]] = None,
+    cancel_event: Optional[threading.Event] = None,
 ) -> Tuple[
     List[click.Command],
     Dict[str, Tuple[List[DetectorResult], List[DetectorResult]]],
@@ -375,6 +378,7 @@ def detect(
 ]:
     from contextlib import nullcontext
 
+    from wake.core.exceptions import ThreadCancelledError
     from wake.utils import get_package_version
 
     if extra is None:
@@ -454,6 +458,9 @@ def detect(
     )
 
     for command in list(detectors):
+        if cancel_event is not None and cancel_event.is_set():
+            raise ThreadCancelledError()
+
         assert command is not None
         assert command.name is not None
 
@@ -624,6 +631,9 @@ def detect(
     )
     with ctx_manager as status:
         for path, source_unit in build.source_units.items():
+            if cancel_event is not None and cancel_event.is_set():
+                raise ThreadCancelledError()
+
             if any(is_relative_to(path, p) for p in config.detectors.ignore_paths):
                 continue
 
@@ -656,6 +666,9 @@ def detect(
                         del collected_detectors[detector_name]
 
     for detector_name, detector in collected_detectors.items():
+        if cancel_event is not None and cancel_event.is_set():
+            raise ThreadCancelledError()
+
         try:
             detections[detector_name] = _filter_detections(
                 detector_name,
