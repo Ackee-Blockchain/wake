@@ -121,7 +121,7 @@ from .protocol_structures import (
     ResponseMessage,
 )
 from .rpc_protocol import RpcProtocol
-from .sake import sake_compile
+from .sake import SakeContext, SakeDeployParams
 from .server_capabilities import (
     FileOperationFilter,
     FileOperationPattern,
@@ -169,6 +169,7 @@ class LspServer:
     __workspaces: Dict[Path, LspContext]
     __user_config: Optional[WakeConfig]
     __main_workspace: Optional[LspContext]
+    __sake_context: Optional[SakeContext]
     __workspace_path: Optional[Path]
     __protocol: RpcProtocol
     __run: bool
@@ -194,6 +195,7 @@ class LspServer:
         self.__workspaces = {}
         self.__user_config = None
         self.__main_workspace = None
+        self.__sake_context = None
         self.__workspace_path = None
         self.__protocol = RpcProtocol(reader, writer)
         self.__run = True
@@ -251,10 +253,16 @@ class LspServer:
             RequestMethodEnum.CODE_ACTION: (self._workspace_route, CodeActionParams),
             RequestMethodEnum.INLAY_HINT: (self._workspace_route, InlayHintParams),
             RequestMethodEnum.SAKE_COMPILE: (
-                lambda x: sake_compile(
-                    self.__main_workspace  # pyright: ignore reportArgumentType
-                ),
+                self.__sake_context.compile,  # pyright: ignore reportAttributeAccessIssue
                 None,
+            ),
+            RequestMethodEnum.SAKE_GET_ACCOUNTS: (
+                self.__sake_context.get_accounts,  # pyright: ignore reportAttributeAccessIssue
+                None,
+            ),
+            RequestMethodEnum.SAKE_DEPLOY: (
+                self.__sake_context.deploy,  # pyright: ignore reportAttributeAccessIssue
+                SakeDeployParams,
             ),
         }
 
@@ -365,6 +373,15 @@ class LspServer:
                 await workspace.compiler.stop()
             except Exception:
                 pass
+
+        try:
+            if (
+                self.__sake_context is not None
+                and self.__sake_context.chain_handle is not None
+            ):
+                self.__sake_context.chain_handle.__exit__(None, None, None)
+        except Exception:
+            pass
 
     async def _main_task(self) -> None:
         messages_queue = asyncio.Queue()
@@ -1017,6 +1034,7 @@ class LspServer:
                 self.__workspace_path
             )
             self.__main_workspace = LspContext(self, config, True)
+            self.__sake_context = SakeContext(self.__main_workspace)
             self.__main_workspace.use_toml = use_toml
             self.__main_workspace.toml_path = toml_path
             self.__workspaces[self.__workspace_path] = self.__main_workspace
