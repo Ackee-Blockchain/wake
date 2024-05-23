@@ -250,7 +250,7 @@ class LspServer:
             RequestMethodEnum.COMPLETION: (self._workspace_route, CompletionParams),
             RequestMethodEnum.CODE_ACTION: (self._workspace_route, CodeActionParams),
             RequestMethodEnum.INLAY_HINT: (self._workspace_route, InlayHintParams),
-            "wake/sake/compile": (
+            RequestMethodEnum.SAKE_COMPILE: (
                 lambda x: sake_compile(
                     self.__main_workspace  # pyright: ignore reportArgumentType
                 ),
