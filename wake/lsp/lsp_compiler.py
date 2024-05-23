@@ -39,7 +39,11 @@ from ..compiler.build_data_model import (
     ProjectBuildInfo,
     SourceUnitInfo,
 )
-from ..core.solidity_version import SolidityVersionRange, SolidityVersionRanges
+from ..core.solidity_version import (
+    SolidityVersion,
+    SolidityVersionRange,
+    SolidityVersionRanges,
+)
 from ..core.wake_comments import error_commented_out
 from ..utils import StrEnum, get_package_version
 from ..utils.file_utils import is_relative_to
@@ -59,7 +63,7 @@ if TYPE_CHECKING:
 import networkx as nx
 from intervaltree import IntervalTree
 
-from wake.compiler import SolcOutputSelectionEnum
+from wake.compiler import SolcOutput, SolcOutputSelectionEnum
 from wake.compiler.compilation_unit import CompilationUnit
 from wake.compiler.compiler import SolidityCompiler
 from wake.compiler.solc_frontend import (
@@ -854,6 +858,280 @@ class LspCompiler:
         else:
             raise Exception("Unknown change type")
 
+    async def __check_target_version(self) -> None:
+        target_version = self.__config.compiler.solc.target_version
+        min_version = self.__config.min_solidity_version
+        max_version = self.__config.max_solidity_version
+        if target_version is not None and target_version < min_version:
+            await self.__server.log_message(
+                f"The minimum supported version of Solidity is {min_version}. Version {target_version} is selected in settings.",
+                MessageType.WARNING,
+            )
+            for file in self.__discovered_files:
+                # clear diagnostics
+                await self.__diagnostic_queue.put((file, set()))
+            raise CompilationError("Invalid target version")
+        if target_version is not None and target_version > max_version:
+            await self.__server.log_message(
+                f"The maximum supported version of Solidity is {max_version}. Version {target_version} is selected in settings.",
+                MessageType.WARNING,
+            )
+            for file in self.__discovered_files:
+                # clear diagnostics
+                await self.__diagnostic_queue.put((file, set()))
+            raise CompilationError("Invalid target version")
+
+    async def __detect_target_versions(
+        self, compilation_units: List[CompilationUnit]
+    ) -> Tuple[List[SolidityVersion], List[CompilationUnit]]:
+        min_version = self.__config.min_solidity_version
+        max_version = self.__config.max_solidity_version
+        target_versions = []
+        skipped_compilation_units = []
+
+        for compilation_unit in compilation_units:
+            target_version = self.__config.compiler.solc.target_version
+            if target_version is not None:
+                if target_version not in compilation_unit.versions:
+                    await self.__server.log_message(
+                        f"Unable to compile the following files with solc version `{target_version}` set in config:\n"
+                        + "\n".join(
+                            path_to_uri(path) for path in compilation_unit.files
+                        ),
+                        MessageType.ERROR,
+                    )
+                    skipped_compilation_units.append(compilation_unit)
+                    continue
+            else:
+                # use the latest matching version
+                matching_versions = [
+                    version
+                    for version in reversed(self.__svm.list_all())
+                    if version in compilation_unit.versions
+                ]
+                if len(matching_versions) == 0:
+                    await self.__server.log_message(
+                        f"Unable to find a matching version of Solidity for the following files:\n"
+                        + "\n".join(
+                            path_to_uri(path) for path in compilation_unit.files
+                        ),
+                        MessageType.ERROR,
+                    )
+                    skipped_compilation_units.append(compilation_unit)
+                    continue
+                try:
+                    target_version = next(
+                        version
+                        for version in matching_versions
+                        if version <= max_version
+                    )
+                except StopIteration:
+                    await self.__server.log_message(
+                        f"The maximum supported version of Solidity is {max_version}, unable to compile the following files:\n"
+                        + "\n".join(
+                            path_to_uri(path) for path in compilation_unit.files
+                        ),
+                        MessageType.ERROR,
+                    )
+                    skipped_compilation_units.append(compilation_unit)
+                    continue
+
+                if target_version < min_version:
+                    await self.__server.log_message(
+                        f"The minimum supported version of Solidity is {min_version}, unable to compile the following files:\n"
+                        + "\n".join(
+                            path_to_uri(path) for path in compilation_unit.files
+                        ),
+                        MessageType.ERROR,
+                    )
+                    skipped_compilation_units.append(compilation_unit)
+                    continue
+            target_versions.append(target_version)
+
+        return target_versions, skipped_compilation_units
+
+    def __merge_compilation_units(
+        self, compilation_units: List[CompilationUnit], graph: nx.DiGraph
+    ) -> List[CompilationUnit]:
+        if all(len(cu.versions) for cu in compilation_units):
+            compilation_units = sorted(
+                compilation_units,
+                key=lambda cu: (
+                    cu.versions.version_ranges[0].lower,
+                    cu.versions.version_ranges[0].higher
+                    or self.__config.max_solidity_version,
+                ),
+            )
+            supported_versions = SolidityVersionRanges(
+                [
+                    SolidityVersionRange(
+                        self.__config.min_solidity_version, True, None, None
+                    )
+                ]
+            )
+
+            merged_compilation_units: List[CompilationUnit] = []
+            source_unit_names: Set = set(compilation_units[0].source_unit_names)
+            versions = compilation_units[0].versions
+
+            for cu in compilation_units[1:]:
+                # only merge compilation units satisfying the minimum version
+                if versions & cu.versions and (
+                    (supported_versions & versions)
+                    and (supported_versions & cu.versions)
+                    or not (supported_versions & versions)
+                    and not (supported_versions & cu.versions)
+                ):
+                    source_unit_names |= cu.source_unit_names
+                    versions &= cu.versions
+                else:
+                    merged_compilation_units.append(
+                        CompilationUnit(
+                            graph.subgraph(
+                                source_unit_names
+                            ).copy(),  # pyright: ignore reportArgumentType
+                            versions,
+                        )
+                    )
+                    source_unit_names = set(cu.source_unit_names)
+                    versions = cu.versions
+
+            merged_compilation_units.append(
+                CompilationUnit(
+                    graph.subgraph(
+                        source_unit_names
+                    ).copy(),  # pyright: ignore reportArgumentType
+                    versions,
+                )
+            )
+            return merged_compilation_units
+        else:
+            return compilation_units
+
+    async def __install_solc(self, target_versions: List[SolidityVersion]) -> None:
+        for version in set(target_versions):
+            if not self.__svm.installed(version):
+                progress_token = await self.__server.progress_begin(
+                    "Downloading", f"solc {version}", 0
+                )
+                if progress_token is not None:
+
+                    async def on_progress(downloaded: int, total: int) -> None:
+                        assert progress_token is not None
+                        await self.__server.progress_report(
+                            progress_token,
+                            f"solc {version}",
+                            (100 * downloaded) // total,
+                        )
+
+                    await self.__svm.install(version, progress=on_progress)
+                    await self.__server.progress_end(progress_token)
+                else:
+                    await self.__svm.install(version)
+
+    async def bytecode_compile(self) -> Tuple[bool, Dict[str, List]]:
+        try:
+            await self.__check_target_version()
+        except CompilationError:
+            return False, {}
+
+        modified_files = {
+            path: info.text.encode("utf-8")
+            for path, info in self.__opened_files.items()
+        }
+        for p in self.__output_contents:
+            if p not in modified_files:
+                modified_files[p] = self.__output_contents[p].text.encode("utf-8")
+
+        try:
+            graph, source_units_to_paths = self.__compiler.build_graph(
+                self.__discovered_files,
+                modified_files,
+                True,
+            )
+        except CompilationError as e:
+            await self.__server.log_message(str(e), MessageType.ERROR)
+            return False, {}
+
+        compilation_units = self.__compiler.build_compilation_units_maximize(graph)
+        if len(compilation_units) == 0:
+            return False, {}
+
+        build_settings = self.__compiler.create_build_settings(
+            [SolcOutputSelectionEnum.ABI, SolcOutputSelectionEnum.EVM_BYTECODE_OBJECT]
+        )
+
+        # optimization - merge compilation units that can be compiled together
+        compilation_units = self.__merge_compilation_units(compilation_units, graph)
+
+        (
+            target_versions,
+            skipped_compilation_units,
+        ) = await self.__detect_target_versions(compilation_units)
+        if len(skipped_compilation_units) > 0:
+            return False, {}
+
+        await self.__install_solc(target_versions)
+
+        progress_token = await self.__server.progress_begin("Compiling")
+
+        tasks = []
+        for compilation_unit, target_version in zip(compilation_units, target_versions):
+            task = self.__server.create_task(
+                self.__compiler.compile_unit_raw(
+                    compilation_unit,
+                    target_version,
+                    build_settings,
+                )
+            )
+            tasks.append(task)
+
+        # wait for compilation of all compilation units
+        try:
+            ret = await asyncio.gather(*tasks)
+        except Exception as e:
+            for task in tasks:
+                task.cancel()
+            await self.__server.log_message(str(e), MessageType.ERROR)
+            if progress_token is not None:
+                await self.__server.progress_end(progress_token)
+
+            return False, {}
+
+        result: Dict[str, List] = {}
+
+        solc_output: SolcOutput
+        for cu, solc_output in zip(compilation_units, ret):
+            for error in solc_output.errors:
+                # log errors without location
+                if error.source_location is None:
+                    if error.severity == SolcOutputErrorSeverityEnum.ERROR:
+                        error_type = MessageType.ERROR
+                    elif error.severity == SolcOutputErrorSeverityEnum.WARNING:
+                        error_type = MessageType.WARNING
+                    elif error.severity == SolcOutputErrorSeverityEnum.INFO:
+                        error_type = MessageType.INFO
+                    else:
+                        error_type = MessageType.LOG
+                    await self.__server.show_message(error.message, error_type)
+                    await self.__server.log_message(error.message, error_type)
+
+            for source_unit_name in solc_output.contracts.keys():
+                for contract_name, info in solc_output.contracts[
+                    source_unit_name
+                ].items():
+                    fqn = f"{source_unit_name}:{contract_name}"
+                    if fqn in result:
+                        continue
+
+                    assert info.abi is not None
+                    result[fqn] = info.abi
+
+        if progress_token is not None:
+            await self.__server.progress_end(progress_token)
+
+        return True, result
+
     async def __compile(
         self,
         files_to_compile: Set[Path],
@@ -866,32 +1144,9 @@ class LspCompiler:
         if compilation_units_per_file is None:
             compilation_units_per_file = defaultdict(set)
 
-        target_version = self.__config.compiler.solc.target_version
-        min_version = self.__config.min_solidity_version
-        max_version = self.__config.max_solidity_version
-        if target_version is not None and target_version < min_version:
-            await self.__server.log_message(
-                f"The minimum supported version of Solidity is {min_version}. Version {target_version} is selected in settings.",
-                MessageType.WARNING,
-            )
-            for file in self.__discovered_files:
-                # clear diagnostics
-                await self.__diagnostic_queue.put((file, set()))
-            self.__interval_trees.clear()
-            self.__source_units.clear()
-            self.__ir_reference_resolver.clear_all_registered_nodes()
-            self.__ir_reference_resolver.clear_all_indexed_nodes()
-            self.__last_graph = nx.DiGraph()
-            self.__latest_errors_per_cu = {}
-            return True
-        if target_version is not None and target_version > max_version:
-            await self.__server.log_message(
-                f"The maximum supported version of Solidity is {max_version}. Version {target_version} is selected in settings.",
-                MessageType.WARNING,
-            )
-            for file in self.__discovered_files:
-                # clear diagnostics
-                await self.__diagnostic_queue.put((file, set()))
+        try:
+            await self.__check_target_version()
+        except CompilationError:
             self.__interval_trees.clear()
             self.__source_units.clear()
             self.__ir_reference_resolver.clear_all_registered_nodes()
@@ -985,144 +1240,16 @@ class LspCompiler:
             self.__last_build_settings = build_settings
 
         # optimization - merge compilation units that can be compiled together
-        if all(len(cu.versions) for cu in compilation_units):
-            compilation_units = sorted(
-                compilation_units,
-                key=lambda cu: (
-                    cu.versions.version_ranges[0].lower,
-                    cu.versions.version_ranges[0].higher
-                    or self.__config.max_solidity_version,
-                ),
-            )
-            supported_versions = SolidityVersionRanges(
-                [
-                    SolidityVersionRange(
-                        self.__config.min_solidity_version, True, None, None
-                    )
-                ]
-            )
-
-            merged_compilation_units: List[CompilationUnit] = []
-            source_unit_names: Set = set(compilation_units[0].source_unit_names)
-            versions = compilation_units[0].versions
-
-            for cu in compilation_units[1:]:
-                # only merge compilation units satisfying the minimum version
-                if versions & cu.versions and (
-                    (supported_versions & versions)
-                    and (supported_versions & cu.versions)
-                    or not (supported_versions & versions)
-                    and not (supported_versions & cu.versions)
-                ):
-                    source_unit_names |= cu.source_unit_names
-                    versions &= cu.versions
-                else:
-                    merged_compilation_units.append(
-                        CompilationUnit(
-                            graph.subgraph(
-                                source_unit_names
-                            ).copy(),  # pyright: ignore reportArgumentType
-                            versions,
-                        )
-                    )
-                    source_unit_names = set(cu.source_unit_names)
-                    versions = cu.versions
-
-            merged_compilation_units.append(
-                CompilationUnit(
-                    graph.subgraph(
-                        source_unit_names
-                    ).copy(),  # pyright: ignore reportArgumentType
-                    versions,
-                )
-            )
-
-            compilation_units = merged_compilation_units
-
+        compilation_units = self.__merge_compilation_units(compilation_units, graph)
         for cu in compilation_units:
             for path in cu.files:
                 compilation_units_per_file[path].add(cu)
 
-        target_versions = []
-        skipped_compilation_units = []
-        for compilation_unit in compilation_units:
-            target_version = self.__config.compiler.solc.target_version
-            if target_version is not None:
-                if target_version not in compilation_unit.versions:
-                    await self.__server.log_message(
-                        f"Unable to compile the following files with solc version `{target_version}` set in config:\n"
-                        + "\n".join(
-                            path_to_uri(path) for path in compilation_unit.files
-                        ),
-                        MessageType.WARNING,
-                    )
-                    skipped_compilation_units.append(compilation_unit)
-                    continue
-            else:
-                # use the latest matching version
-                matching_versions = [
-                    version
-                    for version in reversed(self.__svm.list_all())
-                    if version in compilation_unit.versions
-                ]
-                if len(matching_versions) == 0:
-                    await self.__server.log_message(
-                        f"Unable to find a matching version of Solidity for the following files:\n"
-                        + "\n".join(
-                            path_to_uri(path) for path in compilation_unit.files
-                        ),
-                        MessageType.WARNING,
-                    )
-                    skipped_compilation_units.append(compilation_unit)
-                    continue
-                try:
-                    target_version = next(
-                        version
-                        for version in matching_versions
-                        if version <= max_version
-                    )
-                except StopIteration:
-                    await self.__server.log_message(
-                        f"The maximum supported version of Solidity is {max_version}, unable to compile the following files:\n"
-                        + "\n".join(
-                            path_to_uri(path) for path in compilation_unit.files
-                        ),
-                        MessageType.WARNING,
-                    )
-                    skipped_compilation_units.append(compilation_unit)
-                    continue
-
-                if target_version < min_version:
-                    await self.__server.log_message(
-                        f"The minimum supported version of Solidity is {min_version}, unable to compile the following files:\n"
-                        + "\n".join(
-                            path_to_uri(path) for path in compilation_unit.files
-                        ),
-                        MessageType.WARNING,
-                    )
-                    skipped_compilation_units.append(compilation_unit)
-                    continue
-            target_versions.append(target_version)
-
-        for version in set(target_versions):
-            if not self.__svm.installed(version):
-                progress_token = await self.__server.progress_begin(
-                    "Downloading", f"solc {version}", 0
-                )
-                if progress_token is not None:
-
-                    async def on_progress(downloaded: int, total: int) -> None:
-                        assert progress_token is not None
-                        await self.__server.progress_report(
-                            progress_token,
-                            f"solc {version}",
-                            (100 * downloaded) // total,
-                        )
-
-                    await self.__svm.install(version, progress=on_progress)
-                    await self.__server.progress_end(progress_token)
-                else:
-                    await self.__svm.install(version)
+        (
+            target_versions,
+            skipped_compilation_units,
+        ) = await self.__detect_target_versions(compilation_units)
+        await self.__install_solc(target_versions)
 
         for compilation_unit in skipped_compilation_units:
             for file in compilation_unit.files:
