@@ -121,3 +121,5 @@ class RequestMethodEnum(StrEnum):
 
     # Sake
     SAKE_COMPILE = "wake/sake/compile"
+    SAKE_GET_ACCOUNTS = "wake/sake/getAccounts"
+    SAKE_DEPLOY = "wake/sake/deploy"
