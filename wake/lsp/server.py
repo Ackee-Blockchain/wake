@@ -121,6 +121,7 @@ from .protocol_structures import (
     ResponseMessage,
 )
 from .rpc_protocol import RpcProtocol
+from .sake import sake_compile
 from .server_capabilities import (
     FileOperationFilter,
     FileOperationPattern,
@@ -249,6 +250,12 @@ class LspServer:
             RequestMethodEnum.COMPLETION: (self._workspace_route, CompletionParams),
             RequestMethodEnum.CODE_ACTION: (self._workspace_route, CodeActionParams),
             RequestMethodEnum.INLAY_HINT: (self._workspace_route, InlayHintParams),
+            "wake/sake/compile": (
+                lambda x: sake_compile(
+                    self.__main_workspace  # pyright: ignore reportArgumentType
+                ),
+                None,
+            ),
         }
 
         self.__notification_mapping = {
