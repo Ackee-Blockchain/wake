@@ -273,7 +273,7 @@ class LspServer:
                 ),
                 WorkspaceSymbol,
             ),
-            "wake/sake/compile": (
+            RequestMethodEnum.SAKE_COMPILE: (
                 lambda x: sake_compile(
                     self.__main_workspace  # pyright: ignore reportArgumentType
                 ),
