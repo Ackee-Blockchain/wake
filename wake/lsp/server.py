@@ -126,6 +126,7 @@ from .protocol_structures import (
     ResponseMessage,
 )
 from .rpc_protocol import RpcProtocol
+from .sake import sake_compile
 from .server_capabilities import (
     FileOperationFilter,
     FileOperationPattern,
@@ -271,6 +272,12 @@ class LspServer:
                     )
                 ),
                 WorkspaceSymbol,
+            ),
+            "wake/sake/compile": (
+                lambda x: sake_compile(
+                    self.__main_workspace  # pyright: ignore reportArgumentType
+                ),
+                None,
             ),
         }
 
