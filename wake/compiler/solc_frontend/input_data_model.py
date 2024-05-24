@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional
 
-from pydantic import BaseModel, ConfigDict, Extra, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from wake.core.enums import EvmVersionEnum
 from wake.utils import StrEnum
@@ -130,7 +130,7 @@ def _to_camel(s: str) -> str:
 class SolcInputModel(BaseModel):
     model_config = ConfigDict(
         alias_generator=_to_camel,
-        extra=Extra.allow,
+        extra="allow",
         protected_namespaces=(),
     )
 

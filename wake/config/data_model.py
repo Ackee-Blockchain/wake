@@ -6,7 +6,6 @@ from typing import Dict, FrozenSet, List, Optional
 from pydantic import (
     BaseModel,
     ConfigDict,
-    Extra,
     Field,
     PlainSerializer,
     field_serializer,
@@ -22,7 +21,7 @@ from wake.utils import StrEnum
 
 class WakeConfigModel(BaseModel):
     model_config = ConfigDict(
-        extra=Extra.forbid,
+        extra="forbid",
         frozen=True,
     )
 
@@ -227,7 +226,7 @@ class DetectorsConfig(WakeConfigModel):
 
 
 # namespace for detector configs
-class DetectorConfig(WakeConfigModel, extra=Extra.allow):
+class DetectorConfig(WakeConfigModel, extra="allow"):
     """
     Namespace for detector-specific config options.
     Each attribute should be named after the detector name and hold a dictionary with string keys matching the Click option names.
@@ -398,7 +397,7 @@ class PrintersConfig(WakeConfigModel):
 
 
 # namespace for printer configs
-class PrinterConfig(WakeConfigModel, extra=Extra.allow):
+class PrinterConfig(WakeConfigModel, extra="allow"):
     """
     Namespace for printer-specific config options.
     Each attribute should be named after the printer name and hold a dictionary with string keys matching the Click option names.

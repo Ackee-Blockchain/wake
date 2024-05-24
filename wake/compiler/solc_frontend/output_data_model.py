@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional, Tuple
 
-from pydantic import BaseModel, ConfigDict, Extra
+from pydantic import BaseModel, ConfigDict
 
 from wake.utils import StrEnum
 
@@ -15,7 +15,7 @@ def _to_camel(s: str) -> str:
 class SolcOutputModel(BaseModel):
     model_config = ConfigDict(
         alias_generator=_to_camel,
-        extra=Extra.forbid,
+        extra="forbid",
     )
 
 

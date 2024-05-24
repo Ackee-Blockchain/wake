@@ -6,7 +6,6 @@ from intervaltree import IntervalTree
 from pydantic import (
     BaseModel,
     ConfigDict,
-    Extra,
     PlainSerializer,
     PlainValidator,
     WithJsonSchema,
@@ -41,7 +40,7 @@ HexBytes = Annotated[
 
 class BuildInfoModel(BaseModel):
     model_config = ConfigDict(
-        extra=Extra.allow,
+        extra="allow",
         frozen=True,
     )
 

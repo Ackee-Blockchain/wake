@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Extra
+from pydantic import BaseModel, ConfigDict
 
 
 def _to_camel(s: str) -> str:
@@ -10,5 +10,5 @@ class LspModel(BaseModel):
     model_config = ConfigDict(
         alias_generator=_to_camel,
         populate_by_name=True,
-        extra=Extra.ignore,
+        extra="ignore",
     )
