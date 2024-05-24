@@ -276,15 +276,23 @@ class LspServer:
                 WorkspaceSymbol,
             ),
             RequestMethodEnum.SAKE_COMPILE: (
-                self.__sake_context.compile,  # pyright: ignore reportAttributeAccessIssue
+                lambda params: (
+                    self.__sake_context.compile()  # pyright: ignore reportAttributeAccessIssue
+                ),
                 None,
             ),
             RequestMethodEnum.SAKE_GET_ACCOUNTS: (
-                self.__sake_context.get_accounts,  # pyright: ignore reportAttributeAccessIssue
+                lambda params: (
+                    self.__sake_context.get_accounts()  # pyright: ignore reportAttributeAccessIssue
+                ),
                 None,
             ),
             RequestMethodEnum.SAKE_DEPLOY: (
-                self.__sake_context.deploy,  # pyright: ignore reportAttributeAccessIssue
+                lambda params: (
+                    self.__sake_context.deploy(  # pyright: ignore reportAttributeAccessIssue
+                        params,
+                    )
+                ),
                 SakeDeployParams,
             ),
         }
