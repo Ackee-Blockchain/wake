@@ -32,8 +32,6 @@ import packaging.version
 
 from wake.compiler.exceptions import CompilationError
 
-from ..cli.detect import run_detect
-from ..cli.print import run_print
 from ..compiler.build_data_model import (
     CompilationUnitBuildInfo,
     ProjectBuild,
@@ -202,7 +200,6 @@ class LspCompiler:
     __force_run_detectors: bool
     __force_run_printers: bool
     __wake_version: str
-    __all_detectors: List[str]
     __latest_errors_per_cu: Dict[bytes, Set[SolcOutputError]]
     __ignored_detections_supported: bool
 
@@ -257,7 +254,6 @@ class LspCompiler:
         self.__force_run_detectors = False
         self.__force_run_printers = False
         self.__wake_version = get_package_version("eth-wake")
-        self.__all_detectors = []
         self.__latest_errors_per_cu = {}
 
         try:
@@ -1303,51 +1299,15 @@ class LspCompiler:
         progress_token = await self.__server.progress_begin("Running printers")
 
         try:
-            all_printers = run_print.list_commands(
-                None,  # pyright: ignore reportGeneralTypeIssues
-                plugin_paths={  # pyright: ignore reportGeneralTypeIssues
-                    self.__config.project_root_path / "printers"
-                },
-                force_load_plugins=True,  # pyright: ignore reportGeneralTypeIssues
-                verify_paths=False,  # pyright: ignore reportGeneralTypeIssues
-            )
-
-            for (
-                package,
-                e,
-            ) in (
-                run_print.failed_plugin_entry_points  # pyright: ignore reportGeneralTypeIssues
-            ):
-                await self.__server.show_message(
-                    f"Failed to load printers from plugin module {package}: {e}",
-                    MessageType.ERROR,
-                )
-                await self.__server.log_message(
-                    f"Failed to load printers from plugin module {package}: {e}",
-                    MessageType.ERROR,
-                )
-            for (
-                path,
-                e,
-            ) in (
-                run_print.failed_plugin_paths
-            ):  # pyright: ignore reportGeneralTypeIssues
-                await self.__server.show_message(
-                    f"Failed to load printers from path {path}: {e}",
-                    MessageType.ERROR,
-                )
-                await self.__server.log_message(
-                    f"Failed to load printers from path {path}: {e}",
-                    MessageType.ERROR,
-                )
-
             command_id = self.send_subprocess_command(
-                SubprocessCommandType.RUN_PRINTERS, all_printers
+                SubprocessCommandType.RUN_PRINTERS, None
             )
 
             command, data = await self.wait_subprocess_response(command_id)
             if command == SubprocessCommandType.PRINTERS_SUCCESS:
                 (
+                    failed_plugin_entry_points,
+                    failed_plugin_paths,
                     exceptions,
                     logging_buffer,
                     commands,
@@ -1355,6 +1315,26 @@ class LspCompiler:
                     self.__printer_hovers,
                     self.__printer_inlay_hints,
                 ) = data
+
+                for package, e in failed_plugin_entry_points:
+                    await self.__server.show_message(
+                        f"Failed to load printers from plugin module {package}: {e}",
+                        MessageType.ERROR,
+                    )
+                    await self.__server.log_message(
+                        f"Failed to load printers from plugin module {package}: {e}",
+                        MessageType.ERROR,
+                    )
+
+                for path, e in failed_plugin_paths:
+                    await self.__server.show_message(
+                        f"Failed to load printers from path {path}: {e}",
+                        MessageType.ERROR,
+                    )
+                    await self.__server.log_message(
+                        f"Failed to load printers from path {path}: {e}",
+                        MessageType.ERROR,
+                    )
 
                 for log, log_type in logging_buffer:
                     await self.__server.log_message(log, log_type)
@@ -1412,60 +1392,40 @@ class LspCompiler:
         progress_token = await self.__server.progress_begin("Running detectors")
 
         try:
-            # discover detectors
-            all_detectors = run_detect.list_commands(
-                None,  # pyright: ignore reportGeneralTypeIssues
-                plugin_paths={  # pyright: ignore reportGeneralTypeIssues
-                    self.__config.project_root_path / "detectors"
-                },
-                force_load_plugins=True,  # pyright: ignore reportGeneralTypeIssues
-                verify_paths=False,  # pyright: ignore reportGeneralTypeIssues
-            )
-
-            for detector_name in self.__config.detectors.exclude.union(
-                self.__config.detectors.only or set()
-            ):
-                if detector_name not in all_detectors:
-                    await self.__server.log_message(
-                        f"Detector {detector_name} not found", MessageType.WARNING
-                    )
-
-            for (
-                package,
-                e,
-            ) in (
-                run_detect.failed_plugin_entry_points  # pyright: ignore reportGeneralTypeIssues
-            ):
-                await self.__server.show_message(
-                    f"Failed to load detectors from plugin module {package}: {e}",
-                    MessageType.ERROR,
-                )
-                await self.__server.log_message(
-                    f"Failed to load detectors from plugin module {package}: {e}",
-                    MessageType.ERROR,
-                )
-            for (
-                path,
-                e,
-            ) in (
-                run_detect.failed_plugin_paths
-            ):  # pyright: ignore reportGeneralTypeIssues
-                await self.__server.show_message(
-                    f"Failed to load detectors from path {path}: {e}",
-                    MessageType.ERROR,
-                )
-                await self.__server.log_message(
-                    f"Failed to load detectors from path {path}: {e}",
-                    MessageType.ERROR,
-                )
-
             command_id = self.send_subprocess_command(
-                SubprocessCommandType.RUN_DETECTORS, all_detectors
+                SubprocessCommandType.RUN_DETECTORS, None
             )
 
             command, data = await self.wait_subprocess_response(command_id)
             if command == SubprocessCommandType.DETECTORS_SUCCESS:
-                errors_per_file, exceptions, logging_buffer, commands = data
+                (
+                    failed_plugin_entry_points,
+                    failed_plugin_paths,
+                    errors_per_file,
+                    exceptions,
+                    logging_buffer,
+                    commands,
+                ) = data
+
+                for package, e in failed_plugin_entry_points:
+                    await self.__server.show_message(
+                        f"Failed to load detectors from plugin module {package}: {e}",
+                        MessageType.ERROR,
+                    )
+                    await self.__server.log_message(
+                        f"Failed to load detectors from plugin module {package}: {e}",
+                        MessageType.ERROR,
+                    )
+
+                for path, e in failed_plugin_paths:
+                    await self.__server.show_message(
+                        f"Failed to load detectors from path {path}: {e}",
+                        MessageType.ERROR,
+                    )
+                    await self.__server.log_message(
+                        f"Failed to load detectors from path {path}: {e}",
+                        MessageType.ERROR,
+                    )
 
                 for log, log_type in logging_buffer:
                     await self.__server.log_message(log, log_type)
