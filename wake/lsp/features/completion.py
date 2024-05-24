@@ -9,6 +9,7 @@ from typing import Any, List, Optional, Union
 from wake.core import get_logger
 
 from ...compiler.source_unit_name_resolver import SourceUnitNameResolver
+from ...utils import wake_contracts_path
 from ..common_structures import (
     Command,
     MarkupContent,
@@ -536,8 +537,6 @@ async def completion(
 
     if node is None:
         return None
-
-    wake_contracts_path = Path(__file__).parent.parent.parent / "contracts"
 
     this_source_unit_name = None
     for include_path in chain(

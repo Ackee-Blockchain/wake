@@ -5,6 +5,8 @@ import shutil
 from os import PathLike
 from typing import Union
 
+wake_contracts_path = pathlib.Path(__file__).parent.parent.parent / "contracts"
+
 
 def is_relative_to(path: pathlib.PurePath, *other: Union[str, PathLike[str]]):
     """

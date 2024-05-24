@@ -4,6 +4,7 @@ from typing import AbstractSet
 
 from wake.config import WakeConfig
 
+from ..utils import wake_contracts_path
 from .exceptions import CompilationResolveError
 
 
@@ -30,7 +31,7 @@ class SourcePathResolver:
         for include_path in itertools.chain(
             [self.__config.project_root_path],
             self.__config.compiler.solc.include_paths,
-            [Path(__file__).parent.parent / "contracts"],
+            [wake_contracts_path],
         ):
             path = include_path / source_unit_name
             if path.is_file():
@@ -57,7 +58,7 @@ class SourcePathResolver:
         for include_path in itertools.chain(
             [self.__config.project_root_path],
             self.__config.compiler.solc.include_paths,
-            [Path(__file__).parent.parent / "contracts"],
+            [wake_contracts_path],
         ):
             path = include_path / source_unit_name
             if path == file:
