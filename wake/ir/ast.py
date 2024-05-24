@@ -4,7 +4,6 @@ from typing import Any, Dict, List, Optional, Union
 from pydantic import (
     BaseModel,
     ConfigDict,
-    Extra,
     Field,
     GetCoreSchemaHandler,
     StrictBool,
@@ -29,7 +28,7 @@ def to_camel(s: str) -> str:
 class AstModel(BaseModel):
     model_config = ConfigDict(
         alias_generator=to_camel,
-        extra=Extra.forbid,
+        extra="forbid",
         frozen=True,
     )
 
