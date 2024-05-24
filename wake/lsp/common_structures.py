@@ -967,11 +967,15 @@ class WorkspaceSymbolParams(WorkDoneProgressParams, PartialResultParams):
     query: str
 
 
+class WorkspaceSymbolUriLocation(LspModel):
+    uri: DocumentUri
+
+
 class WorkspaceSymbol(LspModel):
     name: str
     kind: SymbolKind
     tags: Optional[List[SymbolTag]] = None
-    location: Union[Location, DocumentUri]
+    location: Union[Location, WorkspaceSymbolUriLocation]
     container_name: Optional[str] = None
 
 
