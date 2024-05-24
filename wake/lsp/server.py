@@ -68,6 +68,9 @@ from .common_structures import (
     WorkDoneProgressCreateParams,
     WorkDoneProgressEnd,
     WorkDoneProgressReport,
+    WorkspaceSymbolOptions,
+    WorkspaceSymbolParams,
+    WorkspaceSymbol,
 )
 from .context import LspContext
 from .document_sync import (
@@ -110,6 +113,7 @@ from .features.type_hierarchy import (
     subtypes,
     supertypes,
 )
+from .features.workspace_symbol import workspace_symbol, workspace_symbol_resolve
 from .lsp_data_model import LspModel
 from .methods import RequestMethodEnum
 from .protocol_structures import (
@@ -249,6 +253,24 @@ class LspServer:
             RequestMethodEnum.COMPLETION: (self._workspace_route, CompletionParams),
             RequestMethodEnum.CODE_ACTION: (self._workspace_route, CodeActionParams),
             RequestMethodEnum.INLAY_HINT: (self._workspace_route, InlayHintParams),
+            RequestMethodEnum.WORKSPACE_SYMBOL: (
+                lambda params: (
+                    workspace_symbol(
+                        self.__main_workspace,  # pyright: ignore reportArgumentType
+                        params,
+                    )
+                ),
+                WorkspaceSymbolParams,
+            ),
+            RequestMethodEnum.WORKSPACE_SYMBOL_RESOLVE: (
+                lambda params: (
+                    workspace_symbol_resolve(
+                        self.__main_workspace,  # pyright: ignore reportArgumentType
+                        params,
+                    )
+                ),
+                WorkspaceSymbol,
+            ),
         }
 
         self.__notification_mapping = {
@@ -681,6 +703,9 @@ class LspServer:
                 resolve_provider=False,
             ),
             inlay_hint_provider=True,
+            workspace_symbol_provider=WorkspaceSymbolOptions(
+                resolve_provider=True,
+            ),
         )
         return InitializeResult(capabilities=server_capabilities, server_info=None)
 

@@ -26,6 +26,7 @@ from wake.lsp.common_structures import (
     WorkDoneProgressParams,
 )
 from wake.lsp.context import LspContext
+from wake.lsp.utils import declaration_to_symbol_kind
 from wake.lsp.utils.uri import uri_to_path
 
 logger = get_logger(__name__)
@@ -51,9 +52,8 @@ class DocumentSymbolParams(WorkDoneProgressParams, PartialResultParams):
     text_document: TextDocumentIdentifier
 
 
-def _declaration_to_symbol(
-    declaration: DeclarationAbc, kind: SymbolKind, context: LspContext
-):
+def _declaration_to_symbol(declaration: DeclarationAbc, context: LspContext):
+    kind = declaration_to_symbol_kind(declaration)
     detail = ""
     if isinstance(declaration, ContractDefinition):
         if declaration.kind == ContractKind.CONTRACT:
@@ -122,74 +122,52 @@ async def document_symbol(
         symbols = []
 
         for declared_variable in source_unit.declared_variables:
-            symbols.append(
-                _declaration_to_symbol(declared_variable, SymbolKind.VARIABLE, context)
-            )
+            symbols.append(_declaration_to_symbol(declared_variable, context))
         for enum in source_unit.enums:
-            enum_symbol = _declaration_to_symbol(enum, SymbolKind.ENUM, context)
+            enum_symbol = _declaration_to_symbol(enum, context)
             enum_symbol.children = []
             symbols.append(enum_symbol)
             for enum_value in enum.values:
-                enum_symbol.children.append(
-                    _declaration_to_symbol(enum_value, SymbolKind.ENUMMEMBER, context)
-                )
+                enum_symbol.children.append(_declaration_to_symbol(enum_value, context))
         for function in source_unit.functions:
-            symbols.append(
-                _declaration_to_symbol(function, SymbolKind.FUNCTION, context)
-            )
+            symbols.append(_declaration_to_symbol(function, context))
         for struct in source_unit.structs:
-            symbols.append(_declaration_to_symbol(struct, SymbolKind.STRUCT, context))
+            symbols.append(_declaration_to_symbol(struct, context))
         for error in source_unit.errors:
-            symbols.append(_declaration_to_symbol(error, SymbolKind.OBJECT, context))
+            symbols.append(_declaration_to_symbol(error, context))
         for event in source_unit.events:
-            symbols.append(_declaration_to_symbol(event, SymbolKind.EVENT, context))
+            symbols.append(_declaration_to_symbol(event, context))
         for user_defined_value_type in source_unit.user_defined_value_types:
-            symbols.append(
-                _declaration_to_symbol(
-                    user_defined_value_type, SymbolKind.OBJECT, context
-                )
-            )
+            symbols.append(_declaration_to_symbol(user_defined_value_type, context))
         for contract in source_unit.contracts:
-            contract_symbol = _declaration_to_symbol(
-                contract, SymbolKind.CLASS, context
-            )
+            contract_symbol = _declaration_to_symbol(contract, context)
             contract_symbol.children = []
             symbols.append(contract_symbol)
             for enum in contract.enums:
-                enum_symbol = _declaration_to_symbol(enum, SymbolKind.ENUM, context)
+                enum_symbol = _declaration_to_symbol(enum, context)
                 enum_symbol.children = []
                 contract_symbol.children.append(enum_symbol)
                 for enum_value in enum.values:
                     enum_symbol.children.append(
-                        _declaration_to_symbol(
-                            enum_value, SymbolKind.ENUMMEMBER, context
-                        )
+                        _declaration_to_symbol(enum_value, context)
                     )
             for error in contract.errors:
-                contract_symbol.children.append(
-                    _declaration_to_symbol(error, SymbolKind.OBJECT, context)
-                )
+                contract_symbol.children.append(_declaration_to_symbol(error, context))
             for event in contract.events:
-                contract_symbol.children.append(
-                    _declaration_to_symbol(event, SymbolKind.EVENT, context)
-                )
+                contract_symbol.children.append(_declaration_to_symbol(event, context))
             for function in contract.functions:
                 contract_symbol.children.append(
-                    _declaration_to_symbol(function, SymbolKind.METHOD, context)
+                    _declaration_to_symbol(function, context)
                 )
             for modifier in contract.modifiers:
                 contract_symbol.children.append(
-                    _declaration_to_symbol(modifier, SymbolKind.FUNCTION, context)
+                    _declaration_to_symbol(modifier, context)
                 )
             for struct in contract.structs:
-                contract_symbol.children.append(
-                    _declaration_to_symbol(struct, SymbolKind.STRUCT, context)
-                )
+                contract_symbol.children.append(_declaration_to_symbol(struct, context))
             for user_defined_value_type in contract.user_defined_value_types:
                 contract_symbol.children.append(
-                    _declaration_to_symbol(
-                        user_defined_value_type, SymbolKind.OBJECT, context
-                    )
+                    _declaration_to_symbol(user_defined_value_type, context)
                 )
             for declared_variable in contract.declared_variables:
                 if declared_variable.mutability in {
@@ -197,15 +175,11 @@ async def document_symbol(
                     Mutability.CONSTANT,
                 }:
                     contract_symbol.children.append(
-                        _declaration_to_symbol(
-                            declared_variable, SymbolKind.CONSTANT, context
-                        )
+                        _declaration_to_symbol(declared_variable, context)
                     )
                 else:
                     contract_symbol.children.append(
-                        _declaration_to_symbol(
-                            declared_variable, SymbolKind.VARIABLE, context
-                        )
+                        _declaration_to_symbol(declared_variable, context)
                     )
         return symbols
     return None
