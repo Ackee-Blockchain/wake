@@ -9,6 +9,8 @@ from typing import Dict, List, Optional, Set, Tuple
 import networkx as nx
 from rich.console import Console
 
+from wake.cli.detect import run_detect
+from wake.cli.print import run_print
 from wake.compiler.build_data_model import ProjectBuild, ProjectBuildInfo
 from wake.config import WakeConfig
 from wake.core.exceptions import ThreadCancelledError
@@ -178,6 +180,8 @@ class SubprocessCommandType(StrEnum):
 
 
 def run_detectors_thread(
+    failed_plugin_entry_points: List[Tuple[str, str]],
+    failed_plugin_paths: List[Tuple[Path, str]],
     out_queue: multiprocessing.Queue,
     config: WakeConfig,
     ignored_detections_supported: bool,
@@ -214,6 +218,8 @@ def run_detectors_thread(
                 SubprocessCommandType.DETECTORS_SUCCESS,
                 command_id,
                 (
+                    failed_plugin_entry_points,
+                    failed_plugin_paths,
                     detections_to_diagnostics(detections, ignored_detections_supported),
                     exceptions,
                     logging_buffer,
@@ -236,6 +242,8 @@ def run_detectors_thread(
 
 
 def run_printers_thread(
+    failed_plugin_entry_points: List[Tuple[str, str]],
+    failed_plugin_paths: List[Tuple[Path, str]],
     out_queue: multiprocessing.Queue,
     config: WakeConfig,
     command_id: int,
@@ -275,6 +283,8 @@ def run_printers_thread(
                 SubprocessCommandType.PRINTERS_SUCCESS,
                 command_id,
                 (
+                    failed_plugin_entry_points,
+                    failed_plugin_paths,
                     exceptions,
                     logging_buffer,
                     printers_provider.get_commands(),
@@ -330,19 +340,33 @@ def run_subprocess(
 
             detectors_thread_event.clear()
 
-            detector_names = data
             assert last_build is not None
             assert last_build_info is not None
             assert last_graph is not None
 
+            # discover detectors
+            all_detectors = run_detect.list_commands(
+                None,  # pyright: ignore reportGeneralTypeIssues
+                plugin_paths={  # pyright: ignore reportGeneralTypeIssues
+                    config.project_root_path / "detectors"
+                },
+                force_load_plugins=True,  # pyright: ignore reportGeneralTypeIssues
+                verify_paths=False,  # pyright: ignore reportGeneralTypeIssues
+            )
+
             detectors_thread = threading.Thread(
                 target=run_detectors_thread,
                 args=(
+                    [
+                        (package, repr(e))
+                        for package, e in run_detect.failed_plugin_entry_points
+                    ],
+                    [(path, repr(e)) for path, e in run_detect.failed_plugin_paths],
                     out_queue,
                     config,
                     ignored_detections_supported,
                     command_id,
-                    detector_names,
+                    all_detectors,
                     detectors_provider,
                     last_build,
                     last_build_info,
@@ -379,18 +403,31 @@ def run_subprocess(
 
             printers_thread_event.clear()
 
-            printer_names = data
             assert last_build is not None
             assert last_build_info is not None
             assert last_graph is not None
 
+            all_printers = run_print.list_commands(
+                None,  # pyright: ignore reportGeneralTypeIssues
+                plugin_paths={  # pyright: ignore reportGeneralTypeIssues
+                    config.project_root_path / "printers"
+                },
+                force_load_plugins=True,  # pyright: ignore reportGeneralTypeIssues
+                verify_paths=False,  # pyright: ignore reportGeneralTypeIssues
+            )
+
             printers_thread = threading.Thread(
                 target=run_printers_thread,
                 args=(
+                    [
+                        (package, repr(e))
+                        for package, e in run_print.failed_plugin_entry_points
+                    ],
+                    [(path, repr(e)) for path, e in run_print.failed_plugin_paths],
                     out_queue,
                     config,
                     command_id,
-                    printer_names,
+                    all_printers,
                     printers_provider,
                     last_build,
                     last_build_info,
