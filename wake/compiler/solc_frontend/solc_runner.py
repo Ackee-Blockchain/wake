@@ -8,6 +8,7 @@ from wake.config import WakeConfig
 from wake.core import get_logger
 from wake.core.solidity_version import SolidityVersion
 from wake.svm import SolcVersionManager
+from wake.utils import wake_contracts_path
 
 from .exceptions import SolcCompilationError
 from .input_data_model import (
@@ -74,9 +75,7 @@ class SolcFrontend:
             args.append("--base-path=.")
             for include_path in self.__config.compiler.solc.include_paths:
                 args.append(f"--include-path={include_path}")
-            args.append(
-                f"--include-path={Path(__file__).parent.parent.parent / 'contracts'}"
-            )
+            args.append(f"--include-path={wake_contracts_path}")
 
         logger.debug(f"Running solc: {' '.join(args)}")
 

@@ -30,7 +30,7 @@ from wake.core import get_logger
 from wake.core.visitor import Visitor, group_map, visit_map
 from wake.core.wake_comments import WakeComment, error_commented_out
 from wake.utils import StrEnum, get_class_that_defined_method
-from wake.utils.file_utils import is_relative_to
+from wake.utils.file_utils import is_relative_to, wake_contracts_path
 from wake.utils.keyed_default_dict import KeyedDefaultDict
 
 if TYPE_CHECKING:
@@ -216,8 +216,6 @@ def _strip_excluded_subdetections(
     if len(detection.subdetections) == 0:
         return detection
 
-    wake_contracts_path = Path(__file__).parent.parent / "contracts"
-
     subdetections = []
     for d in detection.subdetections:
         if not any(
@@ -324,8 +322,6 @@ def _filter_detections(
             and detection.detection.subdetections_mandatory
         ):
             continue
-
-        wake_contracts_path = Path(__file__).parent.parent / "contracts"
 
         if any(
             is_relative_to(detection.detection.ir_node.source_unit.file, p)
