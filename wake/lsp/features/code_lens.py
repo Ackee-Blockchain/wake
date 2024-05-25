@@ -281,46 +281,6 @@ async def code_lens(
                     )
                 )
 
-            if (
-                isinstance(node, FunctionDefinition)
-                and node.function_selector is not None
-            ):
-                code_lens.append(
-                    _generate_code_lens(
-                        context,
-                        node.source_unit.file,
-                        f"{node.function_selector.hex()}",
-                        "Tools-for-Solidity.copy_to_clipboard",
-                        [node.function_selector.hex()],
-                        node.name_location,
-                        node.byte_location,
-                    )
-                )
-            elif isinstance(node, ErrorDefinition) and node.error_selector is not None:
-                code_lens.append(
-                    _generate_code_lens(
-                        context,
-                        node.source_unit.file,
-                        f"{node.error_selector.hex()}",
-                        "Tools-for-Solidity.copy_to_clipboard",
-                        [node.error_selector.hex()],
-                        node.name_location,
-                        node.byte_location,
-                    )
-                )
-            elif isinstance(node, EventDefinition) and node.event_selector is not None:
-                code_lens.append(
-                    _generate_code_lens(
-                        context,
-                        node.source_unit.file,
-                        f"{node.event_selector.hex()}",
-                        "Tools-for-Solidity.copy_to_clipboard",
-                        [node.event_selector.hex()],
-                        node.name_location,
-                        node.byte_location,
-                    )
-                )
-
     code_lens.sort(
         key=lambda x: (
             x.range.start.line,
