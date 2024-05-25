@@ -224,6 +224,9 @@ def run_detectors_thread(
                     exceptions,
                     logging_buffer,
                     detectors_provider.get_commands(),
+                    detectors_provider._code_lenses,
+                    detectors_provider._hovers,
+                    detectors_provider._inlay_hints,
                 ),
             )
         )
