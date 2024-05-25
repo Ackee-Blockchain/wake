@@ -791,6 +791,41 @@ class TypeGenerator:
                         f'{member_name}: {member_type} = dataclasses.field(metadata={{"original_name": "{original_name}"}})',
                         1,
                     )
+
+            self.add_str_to_types(0, "", 2)
+            init_params = ", ".join(
+                f"{member_name}: "
+                + (
+                    "Union[Address, Account]"
+                    if member_type == "Address"
+                    else "Union[bytearray, bytes]"
+                    if member_type == "bytearray"
+                    else member_type
+                )
+                for member_name, member_type, _, _ in members
+            )
+            self.add_str_to_types(
+                indent + 1, "def __init__(self, " + init_params + "):", 1
+            )
+
+            for member_name, member_type, _, _ in members:
+                if member_type == "Address":
+                    self.add_str_to_types(
+                        indent + 2,
+                        f"self.{member_name} = {member_name}.address if isinstance({member_name}, Account) else {member_name}",
+                        1,
+                    )
+                elif member_type == "bytearray":
+                    self.add_str_to_types(
+                        indent + 2,
+                        f"self.{member_name} = bytearray({member_name}) if isinstance({member_name}, bytes) else {member_name}",
+                        1,
+                    )
+                else:
+                    self.add_str_to_types(
+                        indent + 2, f"self.{member_name} = {member_name}", 1
+                    )
+
             self.add_str_to_types(0, "", 2)
 
     def generate_types_enum(self, enums: Iterable[EnumDefinition], indent: int) -> None:
@@ -898,6 +933,44 @@ class TypeGenerator:
                     )
             self.add_str_to_types(0, "", 2)
 
+            if len(parameters) == 0:
+                continue
+
+            init_params = ", ".join(
+                f"{param_name}: "
+                + (
+                    "Union[Address, Account]"
+                    if param_type == "Address"
+                    else "Union[bytearray, bytes]"
+                    if param_type == "bytearray"
+                    else param_type
+                )
+                for param_name, param_type, _, _ in parameters
+            )
+            self.add_str_to_types(
+                indent + 1, "def __init__(self, " + init_params + "):", 1
+            )
+
+            for param_name, param_type, _, _ in parameters:
+                if param_type == "Address":
+                    self.add_str_to_types(
+                        indent + 2,
+                        f"self.{param_name} = {param_name}.address if isinstance({param_name}, Account) else {param_name}",
+                        1,
+                    )
+                elif param_type == "bytearray":
+                    self.add_str_to_types(
+                        indent + 2,
+                        f"self.{param_name} = bytearray({param_name}) if isinstance({param_name}, bytes) else {param_name}",
+                        1,
+                    )
+                else:
+                    self.add_str_to_types(
+                        indent + 2, f"self.{param_name} = {param_name}", 1
+                    )
+
+            self.add_str_to_types(0, "", 2)
+
     def generate_types_event(
         self,
         events: Iterable[EventDefinition],
@@ -991,6 +1064,44 @@ class TypeGenerator:
                         f'{param_name}: {param_type} = dataclasses.field(metadata={{"original_name": "{original_name}"}})',
                         1,
                     )
+            self.add_str_to_types(0, "", 2)
+
+            if len(parameters) == 0:
+                continue
+
+            init_params = ", ".join(
+                f"{param_name}: "
+                + (
+                    "Union[Address, Account]"
+                    if param_type == "Address"
+                    else "Union[bytearray, bytes]"
+                    if param_type == "bytearray"
+                    else param_type
+                )
+                for param_name, param_type, _, _ in parameters
+            )
+            self.add_str_to_types(
+                indent + 1, "def __init__(self, " + init_params + "):", 1
+            )
+
+            for param_name, param_type, _, _ in parameters:
+                if param_type == "Address":
+                    self.add_str_to_types(
+                        indent + 2,
+                        f"self.{param_name} = {param_name}.address if isinstance({param_name}, Account) else {param_name}",
+                        1,
+                    )
+                elif param_type == "bytearray":
+                    self.add_str_to_types(
+                        indent + 2,
+                        f"self.{param_name} = bytearray({param_name}) if isinstance({param_name}, bytes) else {param_name}",
+                        1,
+                    )
+                else:
+                    self.add_str_to_types(
+                        indent + 2, f"self.{param_name} = {param_name}", 1
+                    )
+
             self.add_str_to_types(0, "", 2)
 
     # parses the expr to string
