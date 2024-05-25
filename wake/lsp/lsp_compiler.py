@@ -1405,6 +1405,9 @@ class LspCompiler:
                     exceptions,
                     logging_buffer,
                     commands,
+                    self.__detector_code_lenses,
+                    self.__detector_hovers,
+                    self.__detector_inlay_hints,
                 ) = data
 
                 for package, e in failed_plugin_entry_points:
