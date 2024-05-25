@@ -20,7 +20,6 @@ class LspContext:
     __workspace_config: WakeConfig
     __compiler: LspCompiler
     __diagnostics_queue: asyncio.Queue
-    __openzeppelin_contracts_version: Optional[SemanticVersion]
     __parser: LspParser
 
     use_toml: bool
@@ -37,7 +36,6 @@ class LspContext:
             self.__diagnostics_queue,
             perform_files_discovery,
         )
-        self.__openzeppelin_contracts_version = get_contracts_package_version(config)
         self.__parser = LspParser(server)
 
     def run(self) -> None:
@@ -59,10 +57,6 @@ class LspContext:
     @property
     def server(self) -> LspServer:
         return self.__server
-
-    @property
-    def openzeppelin_contracts_version(self) -> Optional[SemanticVersion]:
-        return self.__openzeppelin_contracts_version
 
     @property
     def parser(self) -> LspParser:
