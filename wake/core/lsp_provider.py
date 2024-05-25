@@ -55,6 +55,46 @@ class GoToLocationsCommand(CommandAbc):
         super().__init__(*args, **kwargs, command="goToLocations")
 
     @classmethod
+    def from_offsets(
+        cls,
+        source_units: Dict[Path, ir.SourceUnit],
+        start_path: Path,
+        start_offset: int,
+        locations: Iterable[Tuple[Path, int, int]],
+        multiple: Literal["peek", "gotoAndPeek", "goto"],
+        no_results_message: str = "No results found",
+    ) -> GoToLocationsCommand:
+        from wake.lsp.utils import path_to_uri
+
+        pos_line, pos_col = source_units[start_path].get_line_col_from_byte_offset(
+            start_offset
+        )
+
+        l = []
+        for path, start, end in locations:
+            start_line, start_col = source_units[path].get_line_col_from_byte_offset(
+                start
+            )
+            end_line, end_col = source_units[path].get_line_col_from_byte_offset(end)
+            l.append(
+                Location(
+                    uri=DocumentUri(path_to_uri(path)),
+                    range=Range(
+                        start=Position(line=start_line - 1, character=start_col - 1),
+                        end=Position(line=end_line - 1, character=end_col - 1),
+                    ),
+                )
+            )
+
+        return cls(
+            uri=DocumentUri(path_to_uri(start_path)),
+            position=Position(line=pos_line - 1, character=pos_col - 1),
+            locations=l,
+            multiple=multiple,
+            no_results_message=no_results_message,
+        )
+
+    @classmethod
     def from_nodes(
         cls,
         start: ir.IrAbc,

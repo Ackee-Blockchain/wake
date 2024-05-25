@@ -76,25 +76,6 @@ class CodeLens(LspModel):
     """
 
 
-def _resolve_declaration(declaration: DeclarationAbc, context: LspContext) -> int:
-    refs_count = len(declaration.references)
-
-    if isinstance(declaration, VariableDeclaration):
-        for base_function in declaration.base_functions:
-            refs_count += len(base_function.references)
-    elif isinstance(declaration, FunctionDefinition):
-        for base_function in declaration.base_functions:
-            refs_count += len(base_function.references)
-        for child_function in declaration.child_functions:
-            refs_count += len(child_function.references)
-    elif isinstance(declaration, ModifierDefinition):
-        for base_modifier in declaration.base_modifiers:
-            refs_count += len(base_modifier.references)
-        for child_modifier in declaration.child_modifiers:
-            refs_count += len(child_modifier.references)
-    return refs_count
-
-
 class CodeLensCache(NamedTuple):
     original: CodeLens
     original_byte_range: Tuple[int, int]
@@ -206,41 +187,6 @@ async def code_lens(
 
     for node in source_unit:
         if isinstance(node, DeclarationAbc):
-            refs = list(node.get_all_references(include_declarations=True))
-            refs_count = len(
-                [ref for ref in refs if not isinstance(ref, DeclarationAbc)]
-            )
-            declaration_positions = []
-
-            for ref in refs:
-                if isinstance(ref, DeclarationAbc):
-                    line, col = context.compiler.get_line_pos_from_byte_offset(
-                        ref.source_unit.file, ref.name_location[0]
-                    )
-                    declaration_positions.append(Position(line=line, character=col))
-
-            line, col = context.compiler.get_line_pos_from_byte_offset(
-                node.source_unit.file, node.name_location[0]
-            )
-
-            # should include info to be able to recover command args from cache (positions could have changed)
-            # but references do not work in cache mode (compilation error) anyway
-            code_lens.append(
-                _generate_code_lens(
-                    context,
-                    node.source_unit.file,
-                    f"{refs_count} references" if refs_count != 1 else "1 reference",
-                    "Tools-for-Solidity.execute.references",
-                    [
-                        params.text_document.uri,
-                        Position(line=line, character=col),
-                        declaration_positions,
-                    ],
-                    node.name_location,
-                    node.name_location,
-                )
-            )
-
             if (
                 isinstance(node, (FunctionDefinition, ModifierDefinition))
                 and node.implemented

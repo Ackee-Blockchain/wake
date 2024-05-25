@@ -5,6 +5,7 @@ from .imports_graph import ImportsGraphPrinter
 from .inheritance_graph import InheritanceGraphPrinter
 from .inheritance_tree import InheritanceTreePrinter
 from .lsp_openzeppelin_docs import LspOpenzeppelinDocsPrinter
+from .lsp_references import LspReferencesPrinter
 from .lsp_selectors import LspSelectorsPrinter
 from .lsp_yul_definitions import LspYulDefinitionsPrinter
 from .modifiers import ModifiersPrinter
