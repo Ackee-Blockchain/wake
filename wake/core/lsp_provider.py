@@ -169,6 +169,14 @@ class CopyToClipboardCommand(CommandAbc):
         super().__init__(*args, **kwargs, command="copyToClipboard")
 
 
+class ShowMessageCommand(CommandAbc):
+    message: str
+    kind: Literal["info", "warning", "error"]
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs, command="showMessage")
+
+
 class ShowDotCommand(CommandAbc):
     dot: str
 
