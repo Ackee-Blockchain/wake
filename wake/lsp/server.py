@@ -68,9 +68,9 @@ from .common_structures import (
     WorkDoneProgressCreateParams,
     WorkDoneProgressEnd,
     WorkDoneProgressReport,
+    WorkspaceSymbol,
     WorkspaceSymbolOptions,
     WorkspaceSymbolParams,
-    WorkspaceSymbol,
 )
 from .context import LspContext
 from .document_sync import (
@@ -892,9 +892,9 @@ class LspServer:
                     config.load_configs()
 
                     local_config_path = context.toml_path
-                    config_update = config.todict()
+                    new_config = config.todict()
                     removed_options = set()
-                    changed = config_clone.update(config_update, removed_options)
+                    changed = config_clone.set(new_config, removed_options)
                 except tomli.TOMLDecodeError:
                     await self.log_message(
                         f"Failed to parse {context.toml_path}.",
@@ -913,7 +913,7 @@ class LspServer:
             else:
                 local_config_path = context.config.local_config_path  # still the same
                 changed = {}
-                config_update = {}
+                new_config = context.config.todict()
                 removed_options = set()
         else:
             raw_config_copy = deepcopy(raw_config)
@@ -925,13 +925,13 @@ class LspServer:
                 raw_config_copy, context.config.project_root_path
             )
 
-            config_update = raw_config_copy
+            new_config = raw_config_copy
             local_config_path = context.config.local_config_path
             removed_options = invalid_options.union(removed_options)
-            changed = config_clone.update(config_update, removed_options)
+            changed = config_clone.set(new_config, removed_options)
 
         await context.compiler.update_config(
-            config_update, removed_options, local_config_path
+            new_config, removed_options, local_config_path
         )
 
         if key_in_nested_dict(("compiler", "solc"), changed):
@@ -1063,11 +1063,11 @@ class LspServer:
                     )
                     config.load_configs()
 
-                    config_update = config.todict()
-                    changed = config_clone.update(config_update, set())
+                    new_config = config.todict()
+                    changed = config_clone.set(new_config, set())
 
                     await context.compiler.update_config(
-                        config_update, set(), context.toml_path
+                        new_config, set(), context.toml_path
                     )
 
                     if key_in_nested_dict(("compiler", "solc"), changed):
@@ -1140,9 +1140,16 @@ class LspServer:
         self, params: DidChangeConfigurationParams
     ) -> None:
         logger.debug(f"Received configuration change: {params}")
-        if "wake" in params.settings:
-            for context in self.__workspaces.values():
-                await self._handle_config_change(context, params.settings["wake"])
+
+        # it should not be relied on the settings passed in params
+        # also, changed settings in params cannot describe that a setting was removed
+        code_config = await self.get_configuration()
+        assert isinstance(code_config, list)
+        assert len(code_config) == 1
+        assert isinstance(code_config[0], dict)
+
+        for context in self.__workspaces.values():
+            await self._handle_config_change(context, code_config[0])
 
     async def _get_workspace(
         self,

@@ -243,6 +243,57 @@ class WakeConfig:
         """
         return self.__config_raw
 
+    def set(
+        self,
+        config_dict: Dict[str, Any],
+        deleted_options: Iterable[Tuple[Union[int, str], ...]],
+    ) -> Dict:
+        """
+        Set the config to a new dictionary.
+
+        Args:
+            config_dict: Dictionary containing the new config options.
+            deleted_options: Iterable of config option paths (in the form of tuples of string keys and integer indices) that should be deleted from the config (reset to their default values).
+
+        Returns:
+            Dictionary containing the modified config options.
+        """
+        with change_cwd(self.project_root_path):
+            parsed_config = TopLevelConfig.model_validate(config_dict)
+        parsed_config_raw = parsed_config.model_dump(by_alias=True, exclude_unset=True)
+
+        original_config = deepcopy(self.__config_raw)
+        self.__config_raw = parsed_config_raw
+
+        for deleted_option in deleted_options:
+            conf = self.__config_raw
+            skip = False
+            for segment in deleted_option[:-1]:
+                if segment in conf:
+                    conf = conf[segment]  # type: ignore
+                else:
+                    skip = True
+                    break
+
+            if skip:
+                continue
+            if isinstance(conf, dict):
+                conf.pop(deleted_option[-1], None)  # type: ignore
+            elif isinstance(conf, list):
+                try:
+                    conf.remove(deleted_option[-1])
+                except ValueError:
+                    pass
+
+        self.__config = TopLevelConfig.model_validate(self.__config_raw)
+        modified_keys = {}
+        self.__modified_keys(
+            original_config,
+            self.__config.model_dump(by_alias=True, exclude_unset=True),
+            modified_keys,
+        )
+        return modified_keys
+
     def update(
         self,
         config_dict: Dict[str, Any],
