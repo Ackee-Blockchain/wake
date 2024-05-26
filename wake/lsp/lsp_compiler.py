@@ -148,7 +148,7 @@ class CustomFileChangeCommand(StrEnum):
 
 @dataclass
 class ConfigUpdate:
-    update: Dict
+    new_config: Dict
     removed_options: Set
     local_config_path: Path
 
@@ -552,10 +552,10 @@ class LspCompiler:
         await self.__file_changes_queue.put(change)
 
     async def update_config(
-        self, update: Dict, removed_options: Set, local_config_path: Path
+        self, new_config: Dict, removed_options: Set, local_config_path: Path
     ):
         await self.__file_changes_queue.put(
-            ConfigUpdate(update, removed_options, local_config_path)
+            ConfigUpdate(new_config, removed_options, local_config_path)
         )
 
     async def force_recompile(self) -> None:
@@ -658,7 +658,7 @@ class LspCompiler:
                 self.__force_run_printers = True
         elif isinstance(change, ConfigUpdate):
             self.__config.local_config_path = change.local_config_path
-            self.__config.update(change.update, change.removed_options)
+            self.__config.set(change.new_config, change.removed_options)
 
             self.send_subprocess_command(SubprocessCommandType.CONFIG, self.__config)
         elif isinstance(change, CreateFilesParams):
