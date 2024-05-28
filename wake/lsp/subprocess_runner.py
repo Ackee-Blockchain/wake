@@ -191,6 +191,7 @@ def run_detectors_thread(
     last_build: ProjectBuild,
     last_build_info: ProjectBuildInfo,
     last_graph: nx.DiGraph,
+    detectors_thread_event: threading.Event,
 ):
     detectors_provider.clear()
 
@@ -210,6 +211,7 @@ def run_detectors_thread(
             capture_exceptions=True,
             logging_handler=logging_handler,
             extra={"lsp": True},
+            cancel_event=detectors_thread_event,
         )
         exceptions = {name: repr(e) for name, e in detector_exceptions.items()}
 
@@ -255,6 +257,7 @@ def run_printers_thread(
     last_build: ProjectBuild,
     last_build_info: ProjectBuildInfo,
     last_graph: nx.DiGraph,
+    printers_thread_event: threading.Event,
 ):
     printers_provider.clear()
 
@@ -278,6 +281,7 @@ def run_printers_thread(
                 capture_exceptions=True,
                 logging_handler=logging_handler,
                 extra={"lsp": True},
+                cancel_event=printers_thread_event,
             )
         exceptions = {name: repr(e) for name, e in printer_exceptions.items()}
 
@@ -307,7 +311,7 @@ def run_printers_thread(
         printers_provider.clear_commands()
 
 
-def run_subprocess(
+def run_detectors_subprocess(
     in_queue: multiprocessing.Queue,
     out_queue: multiprocessing.Queue,
     config: WakeConfig,
@@ -317,31 +321,61 @@ def run_subprocess(
     last_build_info: Optional[ProjectBuildInfo] = None
     last_graph: Optional[nx.DiGraph] = None
 
-    detectors_provider = LspProvider("detector")
-    printers_provider = LspProvider("printer")
+    lsp_provider = LspProvider("detector")
 
-    detectors_thread: Optional[threading.Thread] = None
-    detectors_thread_event = multiprocessing.Event()
-    printers_thread: Optional[threading.Thread] = None
-    printers_thread_event = multiprocessing.Event()
+    thread: Optional[threading.Thread] = None
+    thread_event = threading.Event()
 
     while True:
-        command, command_id, data = in_queue.get()
+        run_detectors = False
+        run_detectors_command_ids = []
 
-        if command == SubprocessCommandType.CONFIG:
-            config = data
-        elif command == SubprocessCommandType.BUILD:
-            last_build, last_build_info, last_graph = data
+        while not in_queue.empty():
+            command, command_id, data = in_queue.get()
 
-            # cancel previous threads
-            detectors_thread_event.set()
-            printers_thread_event.set()
-        elif command == SubprocessCommandType.RUN_DETECTORS:
-            if detectors_thread is not None:
-                detectors_thread_event.set()
-                detectors_thread.join()
+            if command == SubprocessCommandType.CONFIG:
+                config = data
+            elif command == SubprocessCommandType.BUILD:
+                last_build, last_build_info, last_graph = data
+            elif command == SubprocessCommandType.RUN_DETECTORS:
+                thread_event.set()
+                run_detectors = True
+                run_detectors_command_ids.append(command_id)
+            elif command == SubprocessCommandType.RUN_DETECTOR_CALLBACK:
+                callback_id = data
+                try:
+                    lsp_provider.get_callback(callback_id)()
+                    out_queue.put(
+                        (
+                            SubprocessCommandType.DETECTOR_CALLBACK_SUCCESS,
+                            command_id,
+                            lsp_provider.get_commands(),
+                        )
+                    )
+                except Exception:
+                    out_queue.put(
+                        (
+                            SubprocessCommandType.DETECTOR_CALLBACK_FAILURE,
+                            command_id,
+                            traceback.format_exc(),
+                        )
+                    )
+                finally:
+                    lsp_provider.clear_commands()
+            else:
+                pass
 
-            detectors_thread_event.clear()
+        if run_detectors:
+            if thread is not None:
+                thread_event.set()
+                thread.join()
+
+            thread_event.clear()
+
+            for command_id in run_detectors_command_ids[:-1]:
+                out_queue.put(
+                    (SubprocessCommandType.DETECTORS_CANCELLED, command_id, None)
+                )
 
             assert last_build is not None
             assert last_build_info is not None
@@ -368,43 +402,82 @@ def run_subprocess(
                     out_queue,
                     config,
                     ignored_detections_supported,
-                    command_id,
+                    run_detectors_command_ids[-1],
                     all_detectors,
-                    detectors_provider,
+                    lsp_provider,
                     last_build,
                     last_build_info,
                     last_graph,
+                    thread_event,
                 ),
             )
             detectors_thread.start()
-        elif command == SubprocessCommandType.RUN_DETECTOR_CALLBACK:
-            callback_id = data
-            try:
-                detectors_provider.get_callback(callback_id)()
 
-                out_queue.put(
-                    (
-                        SubprocessCommandType.DETECTOR_CALLBACK_SUCCESS,
-                        command_id,
-                        detectors_provider.get_commands(),
-                    )
-                )
-            except Exception:
-                out_queue.put(
-                    (
-                        SubprocessCommandType.DETECTOR_CALLBACK_FAILURE,
-                        command_id,
-                        traceback.format_exc(),
-                    )
-                )
-            finally:
-                detectors_provider.clear_commands()
-        elif command == SubprocessCommandType.RUN_PRINTERS:
-            if printers_thread is not None:
-                printers_thread_event.set()
-                printers_thread.join()
 
-            printers_thread_event.clear()
+def run_printers_subprocess(
+    in_queue: multiprocessing.Queue,
+    out_queue: multiprocessing.Queue,
+    config: WakeConfig,
+):
+    last_build: Optional[ProjectBuild] = None
+    last_build_info: Optional[ProjectBuildInfo] = None
+    last_graph: Optional[nx.DiGraph] = None
+
+    lsp_provider = LspProvider("printer")
+
+    thread: Optional[threading.Thread] = None
+    thread_event = threading.Event()
+
+    while True:
+        run_printers = False
+        run_printers_command_ids = []
+
+        while not in_queue.empty():
+            command, command_id, data = in_queue.get()
+
+            if command == SubprocessCommandType.CONFIG:
+                config = data
+            elif command == SubprocessCommandType.BUILD:
+                last_build, last_build_info, last_graph = data
+            elif command == SubprocessCommandType.RUN_PRINTERS:
+                thread_event.set()
+                run_printers = True
+                run_printers_command_ids.append(command_id)
+            elif command == SubprocessCommandType.RUN_PRINTER_CALLBACK:
+                callback_id = data
+                try:
+                    lsp_provider.get_callback(callback_id)()
+                    out_queue.put(
+                        (
+                            SubprocessCommandType.PRINTER_CALLBACK_SUCCESS,
+                            command_id,
+                            lsp_provider.get_commands(),
+                        )
+                    )
+                except Exception:
+                    out_queue.put(
+                        (
+                            SubprocessCommandType.PRINTER_CALLBACK_FAILURE,
+                            command_id,
+                            traceback.format_exc(),
+                        )
+                    )
+                finally:
+                    lsp_provider.clear_commands()
+            else:
+                pass
+
+        if run_printers:
+            if thread is not None:
+                thread_event.set()
+                thread.join()
+
+            thread_event.clear()
+
+            for command_id in run_printers_command_ids[:-1]:
+                out_queue.put(
+                    (SubprocessCommandType.PRINTERS_CANCELLED, command_id, None)
+                )
 
             assert last_build is not None
             assert last_build_info is not None
@@ -429,36 +502,13 @@ def run_subprocess(
                     [(path, repr(e)) for path, e in run_print.failed_plugin_paths],
                     out_queue,
                     config,
-                    command_id,
+                    run_printers_command_ids[-1],
                     all_printers,
-                    printers_provider,
+                    lsp_provider,
                     last_build,
                     last_build_info,
                     last_graph,
+                    thread_event,
                 ),
             )
             printers_thread.start()
-        elif command == SubprocessCommandType.RUN_PRINTER_CALLBACK:
-            callback_id = data
-            try:
-                printers_provider.get_callback(callback_id)()
-
-                out_queue.put(
-                    (
-                        SubprocessCommandType.PRINTER_CALLBACK_SUCCESS,
-                        command_id,
-                        printers_provider.get_commands(),
-                    )
-                )
-            except Exception:
-                out_queue.put(
-                    (
-                        SubprocessCommandType.PRINTER_CALLBACK_FAILURE,
-                        command_id,
-                        traceback.format_exc(),
-                    )
-                )
-            finally:
-                printers_provider.clear_commands()
-        else:
-            raise ValueError(f"Unknown command: {command}")
