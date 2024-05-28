@@ -46,7 +46,11 @@ from .exceptions import LspError
 from .lsp_data_model import LspModel
 from .methods import RequestMethodEnum
 from .protocol_structures import ErrorCodes
-from .subprocess_runner import SubprocessCommandType, run_subprocess
+from .subprocess_runner import (
+    SubprocessCommandType,
+    run_detectors_subprocess,
+    run_printers_subprocess,
+)
 
 if TYPE_CHECKING:
     from .server import LspServer
@@ -153,6 +157,18 @@ class ConfigUpdate:
     local_config_path: Path
 
 
+@dataclass
+class Subprocess:
+    process: Optional[multiprocessing.Process]
+    in_queue: multiprocessing.Queue
+    out_queue: multiprocessing.Queue
+    command_id: int
+    responses: Dict[int, Tuple[SubprocessCommandType, Any]]
+    code_lenses: Dict[Path, Dict[Tuple[int, int], Set[CodeLensOptions]]]
+    hovers: Dict[Path, Dict[Tuple[int, int], Set[HoverOptions]]]
+    inlay_hints: Dict[Path, Dict[int, List[InlayHintOptions]]]
+
+
 class CompilationErrorAdditionalInfo(LspModel):
     severity: SolcOutputErrorSeverityEnum
     ignored: bool
@@ -207,20 +223,11 @@ class LspCompiler:
 
     __output_ready: asyncio.Event
 
-    __subprocess: Optional[multiprocessing.Process]
-    __subprocess_in_queue: multiprocessing.Queue
-    __subprocess_out_queue: multiprocessing.Queue
-    __subprocess_command_id: int
-    __subprocess_responses: Dict[int, Tuple[SubprocessCommandType, Any]]
+    __detectors_subprocess: Subprocess
+    __printers_subprocess: Subprocess
+
     __detectors_task: Optional[asyncio.Task]
     __printers_task: Optional[asyncio.Task]
-
-    __detector_code_lenses: Dict[Path, Dict[Tuple[int, int], Set[CodeLensOptions]]]
-    __printer_code_lenses: Dict[Path, Dict[Tuple[int, int], Set[CodeLensOptions]]]
-    __detector_hovers: Dict[Path, Dict[Tuple[int, int], Set[HoverOptions]]]
-    __printer_hovers: Dict[Path, Dict[Tuple[int, int], Set[HoverOptions]]]
-    __detector_inlay_hints: Dict[Path, Dict[int, List[InlayHintOptions]]]
-    __printer_inlay_hints: Dict[Path, Dict[int, List[InlayHintOptions]]]
 
     def __init__(
         self,
@@ -271,6 +278,27 @@ class LspCompiler:
         self.__printers_task = None
         self.__subprocess = None
 
+        self.__detectors_subprocess = Subprocess(
+            None,
+            multiprocessing.Queue(),
+            multiprocessing.Queue(),
+            0,
+            {},
+            {},
+            {},
+            {},
+        )
+        self.__printers_subprocess = Subprocess(
+            None,
+            multiprocessing.Queue(),
+            multiprocessing.Queue(),
+            0,
+            {},
+            {},
+            {},
+            {},
+        )
+
         self.__detector_code_lenses = {}
         self.__printer_code_lenses = {}
         self.__detector_hovers = {}
@@ -282,21 +310,29 @@ class LspCompiler:
         self.__config = config
         self.__svm = SolcVersionManager(config)
         self.__compiler = SolidityCompiler(config)
-        self.__subprocess_in_queue = multiprocessing.Queue()
-        self.__subprocess_out_queue = multiprocessing.Queue()
-        self.__subprocess_command_id = 0
-        self.__subprocess_responses = {}
+
         # TODO process recovery?
-        self.__subprocess = multiprocessing.Process(
-            target=run_subprocess,
+        self.__detectors_subprocess.process = multiprocessing.Process(
+            target=run_detectors_subprocess,
             args=(
-                self.__subprocess_out_queue,
-                self.__subprocess_in_queue,
+                self.__detectors_subprocess.out_queue,
+                self.__detectors_subprocess.in_queue,
                 config,
                 self.__ignored_detections_supported,
             ),
         )
-        self.__subprocess.start()
+        self.__detectors_subprocess.process.start()
+
+        self.__printers_subprocess.process = multiprocessing.Process(
+            target=run_printers_subprocess,
+            args=(
+                self.__printers_subprocess.out_queue,
+                self.__printers_subprocess.in_queue,
+                config,
+            ),
+        )
+        self.__printers_subprocess.process.start()
+
         await self.__compilation_loop()
 
     async def stop(self):
@@ -307,25 +343,29 @@ class LspCompiler:
             if self.__subprocess.is_alive():
                 self.__subprocess.kill()
 
-    def send_subprocess_command(self, command: SubprocessCommandType, data: Any) -> int:
-        self.__subprocess_out_queue.put((command, self.__subprocess_command_id, data))
-        ret = self.__subprocess_command_id
-        self.__subprocess_command_id += 1
+    @staticmethod
+    def send_subprocess_command(
+        subprocess: Subprocess, command: SubprocessCommandType, data: Any
+    ) -> int:
+        subprocess.out_queue.put((command, subprocess.command_id, data))
+        ret = subprocess.command_id
+        subprocess.command_id += 1
         return ret
 
+    @staticmethod
     async def wait_subprocess_response(
-        self, command_id: int
+        subprocess: Subprocess, command_id: int
     ) -> Tuple[SubprocessCommandType, Any]:
         while True:
-            if command_id in self.__subprocess_responses:
-                return self.__subprocess_responses.pop(command_id)
+            if command_id in subprocess.responses:
+                return subprocess.responses.pop(command_id)
 
             try:
-                response = self.__subprocess_in_queue.get_nowait()
+                response = subprocess.in_queue.get_nowait()
                 if response[1] == command_id:
                     return response[0], response[2]
                 else:
-                    self.__subprocess_responses[response[1]] = (
+                    subprocess.responses[response[1]] = (
                         response[0],
                         response[2],
                     )
@@ -334,11 +374,14 @@ class LspCompiler:
 
     async def run_detector_callback(self, callback_id: str) -> List[CommandAbc]:
         command_id = self.send_subprocess_command(
+            self.__detectors_subprocess,
             SubprocessCommandType.RUN_DETECTOR_CALLBACK,
             callback_id,
         )
 
-        command, data = await self.wait_subprocess_response(command_id)
+        command, data = await self.wait_subprocess_response(
+            self.__detectors_subprocess, command_id
+        )
         if command == SubprocessCommandType.DETECTOR_CALLBACK_SUCCESS:
             return data
         elif command == SubprocessCommandType.DETECTOR_CALLBACK_FAILURE:
@@ -350,11 +393,14 @@ class LspCompiler:
 
     async def run_printer_callback(self, callback_id: str) -> List[CommandAbc]:
         command_id = self.send_subprocess_command(
+            self.__printers_subprocess,
             SubprocessCommandType.RUN_PRINTER_CALLBACK,
             callback_id,
         )
 
-        command, data = await self.wait_subprocess_response(command_id)
+        command, data = await self.wait_subprocess_response(
+            self.__printers_subprocess, command_id
+        )
         if command == SubprocessCommandType.PRINTER_CALLBACK_SUCCESS:
             return data
         elif command == SubprocessCommandType.PRINTER_CALLBACK_FAILURE:
@@ -660,7 +706,12 @@ class LspCompiler:
             self.__config.local_config_path = change.local_config_path
             self.__config.set(change.new_config, change.removed_options)
 
-            self.send_subprocess_command(SubprocessCommandType.CONFIG, self.__config)
+            self.send_subprocess_command(
+                self.__detectors_subprocess, SubprocessCommandType.CONFIG, self.__config
+            )
+            self.send_subprocess_command(
+                self.__printers_subprocess, SubprocessCommandType.CONFIG, self.__config
+            )
         elif isinstance(change, CreateFilesParams):
             for file in change.files:
                 path = uri_to_path(file.uri)
@@ -1300,10 +1351,12 @@ class LspCompiler:
 
         try:
             command_id = self.send_subprocess_command(
-                SubprocessCommandType.RUN_PRINTERS, None
+                self.__printers_subprocess, SubprocessCommandType.RUN_PRINTERS, None
             )
 
-            command, data = await self.wait_subprocess_response(command_id)
+            command, data = await self.wait_subprocess_response(
+                self.__printers_subprocess, command_id
+            )
             if command == SubprocessCommandType.PRINTERS_SUCCESS:
                 (
                     failed_plugin_entry_points,
@@ -1393,10 +1446,12 @@ class LspCompiler:
 
         try:
             command_id = self.send_subprocess_command(
-                SubprocessCommandType.RUN_DETECTORS, None
+                self.__detectors_subprocess, SubprocessCommandType.RUN_DETECTORS, None
             )
 
-            command, data = await self.wait_subprocess_response(command_id)
+            command, data = await self.wait_subprocess_response(
+                self.__detectors_subprocess, command_id
+            )
             if command == SubprocessCommandType.DETECTORS_SUCCESS:
                 (
                     failed_plugin_entry_points,
@@ -1501,11 +1556,17 @@ class LspCompiler:
             await self.__refresh_code_lenses()
 
             self.send_subprocess_command(
+                self.__printers_subprocess,
+                SubprocessCommandType.BUILD,
+                (self.last_build, self.last_build_info, self.last_graph),
+            )
+            await self.__run_printers_task()
+            self.send_subprocess_command(
+                self.__detectors_subprocess,
                 SubprocessCommandType.BUILD,
                 (self.last_build, self.last_build_info, self.last_graph),
             )
             await self.__run_detectors_task()
-            await self.__run_printers_task()
 
         if self.__file_changes_queue.empty():
             self.output_ready.set()
@@ -1554,16 +1615,20 @@ class LspCompiler:
             if self.__file_changes_queue.empty():
                 self.output_ready.set()
 
-                if self.__force_run_detectors or self.__force_run_printers:
+                if self.__force_run_printers:
                     self.send_subprocess_command(
+                        self.__printers_subprocess,
                         SubprocessCommandType.BUILD,
                         (self.last_build, self.last_build_info, self.last_graph),
                     )
-
-                if self.__force_run_detectors:
-                    await self.__run_detectors_task()
-                if self.__force_run_printers:
                     await self.__run_printers_task()
+                if self.__force_run_detectors:
+                    self.send_subprocess_command(
+                        self.__detectors_subprocess,
+                        SubprocessCommandType.BUILD,
+                        (self.last_build, self.last_build_info, self.last_graph),
+                    )
+                    await self.__run_detectors_task()
 
                 self.__force_run_detectors = False
                 self.__force_run_printers = False
