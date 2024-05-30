@@ -2,15 +2,15 @@ from typing import List
 
 from wake.ir import ContractDefinition
 from wake.lsp.common_structures import (
-    WorkspaceSymbolParams,
-    WorkspaceSymbol,
     Location,
+    WorkspaceSymbol,
+    WorkspaceSymbolParams,
     WorkspaceSymbolUriLocation,
 )
 from wake.lsp.context import LspContext
 from wake.lsp.exceptions import LspError
 from wake.lsp.protocol_structures import ErrorCodes
-from wake.lsp.utils import path_to_uri, declaration_to_symbol_kind, uri_to_path
+from wake.lsp.utils import declaration_to_symbol_kind, path_to_uri, uri_to_path
 
 
 async def workspace_symbol(
@@ -27,19 +27,23 @@ async def workspace_symbol(
                 continue
 
             symbols.append(
-                WorkspaceSymbol(
-                    name=decl.name,
-                    kind=declaration_to_symbol_kind(decl),
-                    container_name=decl.parent.name
-                    if isinstance(decl.parent, ContractDefinition)
-                    else None,
-                    location=WorkspaceSymbolUriLocation(
-                        uri=path_to_uri(source_unit.file)
+                (
+                    WorkspaceSymbol(
+                        name=decl.name,
+                        kind=declaration_to_symbol_kind(decl),
+                        container_name=decl.parent.name
+                        if isinstance(decl.parent, ContractDefinition)
+                        else None,
+                        location=WorkspaceSymbolUriLocation(
+                            uri=path_to_uri(source_unit.file)
+                        ),
                     ),
+                    source_unit,
                 )
             )
 
-    return symbols
+    symbols.sort(key=lambda x: (x[0].name, x[1].source_unit_name))
+    return [x[0] for x in symbols]
 
 
 async def workspace_symbol_resolve(
