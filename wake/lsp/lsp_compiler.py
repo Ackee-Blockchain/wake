@@ -276,7 +276,6 @@ class LspCompiler:
         self.__ir_reference_resolver = ReferenceResolver()
         self.__detectors_task = None
         self.__printers_task = None
-        self.__subprocess = None
 
         self.__detectors_subprocess = Subprocess(
             None,
@@ -336,12 +335,19 @@ class LspCompiler:
         await self.__compilation_loop()
 
     async def stop(self):
-        if self.__subprocess is not None:
-            self.__subprocess.terminate()
+        if self.__detectors_subprocess.process is not None:
+            self.__detectors_subprocess.process.terminate()
             await asyncio.sleep(0.5)
 
-            if self.__subprocess.is_alive():
-                self.__subprocess.kill()
+            if self.__detectors_subprocess.process.is_alive():
+                self.__detectors_subprocess.process.kill()
+
+        if self.__printers_subprocess.process is not None:
+            self.__printers_subprocess.process.terminate()
+            await asyncio.sleep(0.5)
+
+            if self.__printers_subprocess.process.is_alive():
+                self.__printers_subprocess.process.kill()
 
     @staticmethod
     def send_subprocess_command(

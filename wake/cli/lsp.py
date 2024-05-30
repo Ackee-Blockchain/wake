@@ -23,8 +23,11 @@ async def run_server(config: WakeConfig, port: int) -> None:
     ) -> None:
         lsp_server = LspServer(config, reader, writer)
         logger.info("Client connected")
-        await lsp_server.run()
-        writer.close()
+        try:
+            await lsp_server.run()
+        finally:
+            await lsp_server.close()
+            writer.close()
         logger.info("Client disconnected")
 
     server = await asyncio.start_server(client_callback, port=port)
