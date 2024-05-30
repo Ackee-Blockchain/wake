@@ -375,6 +375,7 @@ class LspServer:
         except asyncio.CancelledError:
             pass
 
+    async def close(self) -> None:
         for workspace in self.__workspaces.values():
             try:
                 await workspace.compiler.stop()
