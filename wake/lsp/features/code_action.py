@@ -87,7 +87,7 @@ async def code_action(
         except KeyError:
             continue
 
-        if diag.code == 4937:
+        if diag.code in {4937, "4937"}:
             # No visibility specified. Did you intend to add "public"?
             while node is not None:
                 if node.type == "function_definition":
@@ -123,7 +123,7 @@ async def code_action(
                                 ),
                             )
                         )
-        elif diag.code == 2018:
+        elif diag.code in {2018, "2018"}:
             # Function state mutability can be restricted to pure/view
             if "pure" in diag.message:
                 mutability = "pure"
@@ -171,7 +171,7 @@ async def code_action(
                     ),
                 )
             )
-        elif diag.code == 1878:
+        elif diag.code in {1878, "1878"}:
             # SPDX license identifier not provided in source file
             for license in [
                 "MIT",
