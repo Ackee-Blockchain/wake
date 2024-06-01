@@ -55,6 +55,15 @@ class SakeContext:
     async def compile(self) -> CompilationResult:
         success, abi = await self.lsp_context.compiler.bytecode_compile()
 
+        if success:
+            self.compilation = {
+                fqn: ContractInfo(
+                    abi=abi[fqn],
+                    bytecode=b"", # TODO
+                )
+                for fqn in abi
+            }
+
         return CompilationResult(success=success, contracts=abi)
 
     @launch_chain
