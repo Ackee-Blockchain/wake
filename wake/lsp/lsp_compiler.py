@@ -158,6 +158,10 @@ class ConfigUpdate:
     removed_options: Set
     local_config_path: Path
 
+@dataclass
+class BytecodeCompileResult:
+    abi: List
+    bytecode: bytes
 
 class CompilationErrorAdditionalInfo(LspModel):
     severity: SolcOutputErrorSeverityEnum
@@ -918,7 +922,7 @@ class LspCompiler:
                 else:
                     await self.__svm.install(version)
 
-    async def bytecode_compile(self) -> Tuple[bool, Dict[str, List]]:
+    async def bytecode_compile(self) -> Tuple[bool, Dict[str, BytecodeCompileResult]]:
         try:
             await self.__check_target_version()
         except CompilationError:
@@ -1014,7 +1018,11 @@ class LspCompiler:
                         continue
 
                     assert info.abi is not None
-                    result[fqn] = info.abi
+                    assert info.evm is not None
+                    result[fqn] = BytecodeCompileResult(
+                        abi=info.abi,
+                        bytecode=info.evm.bytecode.object.encode()
+                    )
 
         if progress_token is not None:
             await self.__server.progress_end(progress_token)
