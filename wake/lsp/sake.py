@@ -87,7 +87,7 @@ class SakeContext:
 
         try:
             tx = self.chain.deploy(
-                bytecode + bytes.fromhex(params.calldata),
+                bytes.fromhex(bytecode + params.calldata),
                 from_=params.sender,
                 value=params.value,
                 return_tx=True,

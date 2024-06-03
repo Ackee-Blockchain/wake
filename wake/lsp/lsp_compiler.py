@@ -1021,7 +1021,7 @@ class LspCompiler:
                     assert info.evm is not None
                     result[fqn] = BytecodeCompileResult(
                         abi=info.abi,
-                        bytecode=info.evm.bytecode.object.encode()
+                        bytecode=info.evm.bytecode.object
                     )
 
         if progress_token is not None:
