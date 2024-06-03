@@ -53,18 +53,20 @@ class SakeContext:
         self.compilation = {}
 
     async def compile(self) -> CompilationResult:
-        success, abi = await self.lsp_context.compiler.bytecode_compile()
+        success, bytecode_result = await self.lsp_context.compiler.bytecode_compile()
 
         if success:
             self.compilation = {
                 fqn: ContractInfo(
-                    abi=abi[fqn],
-                    bytecode=b"", # TODO
+                    abi=info.abi,
+                    bytecode=info.bytecode,
                 )
-                for fqn in abi
+                for fqn, info in bytecode_result.items()
             }
 
-        return CompilationResult(success=success, contracts=abi)
+        _contracts = {fqn: info.abi for fqn, info in self.compilation.items()}
+
+        return CompilationResult(success=success, contracts=_contracts)
 
     @launch_chain
     async def get_accounts(self) -> List[str]:
