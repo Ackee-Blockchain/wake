@@ -3,13 +3,7 @@ from dataclasses import astuple
 from pathlib import Path
 from typing import Dict, FrozenSet, List, Optional
 
-from pydantic import (
-    BaseModel,
-    ConfigDict,
-    Field,
-    PlainSerializer,
-    field_serializer,
-)
+from pydantic import BaseModel, ConfigDict, Field, PlainSerializer, field_serializer
 from pydantic.dataclasses import dataclass
 from pydantic.functional_validators import BeforeValidator
 from typing_extensions import Annotated
@@ -388,11 +382,18 @@ class GeneralConfig(WakeConfigModel):
     """
 
 
-# currently unused
 class PrintersConfig(WakeConfigModel):
     """
     Holds general printer config options for all printers.
-    Currently unused.
+    """
+
+    exclude: FrozenSet[str] = frozenset()
+    """
+    Names of printers that should not be loaded.
+    """
+    only: Optional[FrozenSet[str]] = None
+    """
+    Names of printers that should only be loaded.
     """
 
 

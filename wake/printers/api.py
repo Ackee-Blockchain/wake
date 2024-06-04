@@ -214,10 +214,19 @@ def run_printers(
                 raise
             exceptions[printer_names] = e
     elif isinstance(printer_names, list):
-        # TODO config only and exclude
+        if config.printers.only is None:
+            only = set(printer_names)
+        else:
+            only = set(config.printers.only)
+
         for printer_name in printer_names:
-            if printer_name == "list":
+            if (
+                printer_name not in only
+                or printer_name in config.printers.exclude
+                or printer_name == "list"
+            ):
                 continue
+
             command = run_print.get_command(
                 None,  # pyright: ignore reportGeneralTypeIssues
                 printer_name,
