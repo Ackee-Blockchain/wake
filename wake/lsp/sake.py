@@ -8,7 +8,7 @@ from wake.lsp.context import LspContext
 from wake.lsp.exceptions import LspError
 from wake.lsp.lsp_data_model import LspModel
 from wake.lsp.protocol_structures import ErrorCodes
-from wake.testing import Chain
+from wake.testing import Chain, Account,
 
 
 class CompilationResult(LspModel):
@@ -23,6 +23,13 @@ class ContractInfo(NamedTuple):
 
 class SakeDeployParams(LspModel):
     contract_fqn: str
+    sender: str
+    calldata: str
+    value: int
+
+
+class SakeCallParams(LspModel):
+    contract_address: str
     sender: str
     calldata: str
     value: int
@@ -94,6 +101,24 @@ class SakeContext:
             )
             assert tx._tx_receipt is not None
             return tx._tx_receipt
+        except TransactionRevertedError as e:
+            assert e.tx is not None
+            assert e.tx._tx_receipt is not None
+            return e.tx._tx_receipt
+        except Exception as e:
+            raise LspError(ErrorCodes.InternalError, str(e)) from None
+
+    @launch_chain
+    async def call(self, params: SakeCallParams):
+        assert self.chain is not None
+
+        try:
+            Account(params.contract_address).call(
+                bytes.fromhex(params.calldata),
+                params.value,
+                params.contract_address,
+            )
+            # TODO: does not return tx, cannot get tx_receipt
         except TransactionRevertedError as e:
             assert e.tx is not None
             assert e.tx._tx_receipt is not None
