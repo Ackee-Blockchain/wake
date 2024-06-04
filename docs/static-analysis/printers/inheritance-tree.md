@@ -1,5 +1,7 @@
 # Inheritance tree printer
 
+Name: `inheritance-tree`
+
 Prints inheritance trees of contracts in given paths or in the whole project.
 
 ## Example

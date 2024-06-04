@@ -1,5 +1,7 @@
 # Unprotected selfdestruct detector
 
+Name: `unprotected-selfdestruct`
+
 Reports selfdestruct calls that are not protected by an `onlyOwner` modifier or similar logic.
 
 More precisely, access controls based on `msg.sender` are checked in the detector.

@@ -1,5 +1,7 @@
 # Unsafe ERC-20 call detector
 
+Name: `unsafe-erc20-call`
+
 Reports ERC-20 `approve`, `transfer`, and `transferFrom` calls.
 These calls are unsafe as some non-compliant ERC-20 tokens may revert on failure instead of returning `false`.
 On success, the token may not return any data causing an ABI decoding error.

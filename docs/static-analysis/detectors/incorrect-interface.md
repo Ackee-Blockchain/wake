@@ -1,5 +1,7 @@
 # Incorrect interface detector
 
+Name: `incorrect-interface`
+
 Reports multiple different issues when implementing [ERC-20](https://eips.ethereum.org/EIPS/eip-20)/[ERC-721](https://eips.ethereum.org/EIPS/eip-721)/[ERC-1155](https://eips.ethereum.org/EIPS/eip-1155) interfaces.
 
 ## Missing functions & events

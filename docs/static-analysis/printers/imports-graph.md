@@ -1,5 +1,7 @@
 # Imports graph printer
 
+Name: `imports-graph`
+
 Generates an imports graph of Solidity source files into a Graphviz `.dot` file.
 
 ## Example

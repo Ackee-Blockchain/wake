@@ -1,5 +1,7 @@
 # Control flow graph printer
 
+Name: `control-flow-graph`
+
 Generates control flow graphs of functions and modifiers into Graphviz `.dot` files.
 
 ## Example

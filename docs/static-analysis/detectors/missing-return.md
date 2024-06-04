@@ -1,5 +1,7 @@
 # Missing return detector
 
+Name: `missing-return`
+
 Reports functions that contain at least one execution path that does not set all return variables.
 
 ## Example

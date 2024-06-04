@@ -1,5 +1,7 @@
 # Tokens printer
 
+Name: `tokens`
+
 The printer prints the list of all [ERC-20](https://eips.ethereum.org/EIPS/eip-20), [ERC-721](https://eips.ethereum.org/EIPS/eip-721), and [ERC-1155](https://eips.ethereum.org/EIPS/eip-1155) tokens detected in the analyzed contracts.
 
 ## Example

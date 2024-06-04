@@ -1,5 +1,7 @@
 # State changes printer
 
+Name: `state-changes`
+
 Prints all blockchain state changes performed by a function/modifier and all subsequent function calls.
 
 ## Example

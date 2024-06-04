@@ -1,5 +1,7 @@
 # Unsafe delegatecall detector
 
+Name: `unsafe-delegatecall`
+
 The `unsafe-delegatecall` detector reports `delegatecall` calls to possibly untrusted contracts.
 
 Calls are ignored if they the `delegatecall` target is trusted (e.g. `this`) or if the call is protected by an `onlyOwner` modifier or similar logic.

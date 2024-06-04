@@ -1,5 +1,7 @@
 # Inheritance graph printer
 
+Name: `inheritance-graph`
+
 Generates inheritance graphs of contracts into Graphviz `.dot` files.
 
 ## Example

@@ -1,5 +1,7 @@
 # `abi.encodeWithSignature` detector
 
+Name: `abi-encode-with-signature`
+
 The detector checks for incorrect ABI signatures in `ABI.encodeWithSignature` calls.
 The most common mistake is the use of `uint` instead of `uint256` or `int` instead of `int256`.
 

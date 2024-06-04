@@ -1,5 +1,7 @@
 # Unchecked return value detector
 
+Name: `unchecked-return-value`
+
 Reports when a function call return value is unused.
 
 

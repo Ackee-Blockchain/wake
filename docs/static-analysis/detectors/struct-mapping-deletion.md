@@ -1,5 +1,7 @@
 # Struct mapping deletion detector
 
+Name: `struct-mapping-deletion`
+
 Using `delete` on a (possibly nested) struct containing a mapping member does not delete the mapping.
 
 ## Example

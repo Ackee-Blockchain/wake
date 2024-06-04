@@ -1,5 +1,7 @@
 # Call options not called detector
 
+Name: `call-options-not-called`
+
 Reports when a function call option (`gas`, `salt` or `value`) is used but the corresponding function is not called.
 Both old-style syntax `:::solidity .value(...)` and new-style syntax `:::solidity {value: ...}` are supported.
 

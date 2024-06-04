@@ -1,5 +1,7 @@
 # Calldata tuple reencoding head overflow bug detector
 
+Name: `calldata-tuple-reencoding-head-overflow-bug`
+
 Reports a possibility of triggering a compiler bug when ABI-encoding a tuple with at least one dynamic component and the last component as a statically-sized `calldata` array.
 
 The bug would cause malformed output of the ABI encoder caused by overwriting some of the encoded values.
