@@ -104,6 +104,7 @@ class ReferenceResolver:
         for node in root_node:
             if check:
                 skip = False
+                prev_other_type = self._node_types[path].get(index - 1)
                 other_type = self._node_types[path].get(index)
 
                 while other_type != node.node_type:
@@ -116,7 +117,7 @@ class ReferenceResolver:
                         prev_type = "StructuredDocumentation"
                         break
                     elif (
-                        self._node_types[path][index - 1] == "UserDefinedTypeName"
+                        prev_other_type == "UserDefinedTypeName"
                         and prev_type == "UserDefinedTypeName"
                     ):
                         if other_type == "IdentifierPath":
