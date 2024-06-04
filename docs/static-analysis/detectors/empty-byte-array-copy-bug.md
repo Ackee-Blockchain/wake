@@ -1,5 +1,7 @@
 # Empty byte array copy bug detector
 
+Name: `empty-byte-array-copy-bug`
+
 Reports a possibility of triggering a compiler bug when copying empty `calldata` or `memory` bytes to `storage` bytes and then extending the `storage` bytes using `.push()`.
 See the bug [announcement](https://soliditylang.org/blog/2020/10/19/empty-byte-array-copy-bug/) for more details.
 The bug was fixed in Solidity 0.7.4.

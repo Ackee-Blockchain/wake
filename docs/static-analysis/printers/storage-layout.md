@@ -1,5 +1,7 @@
 # Storage layout printer
 
+Name: `storage-layout`
+
 Prints storage layout of contracts in given paths or in the whole project.
 
 ## Example

@@ -1,5 +1,7 @@
 # `msg.value` non-payable function
 
+Name: `msg-value-nonpayable-function`
+
 Reports uses of `msg.value` in functions that are never called from a payable function.
 The value of `msg.value` is always zero in such functions.
 

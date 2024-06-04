@@ -1,5 +1,7 @@
 # Unused contract detector
 
+Name: `unused-contract`
+
 Reports abstract contracts, interfaces, and libraries that are not used in the source code.
 
 ## Example

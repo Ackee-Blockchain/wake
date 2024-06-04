@@ -1,5 +1,7 @@
 # Unused import detector
 
+Name: `unused-import`
+
 The `unused-import` detector reports import directives that may be removed from the source code.
 
 ## Example

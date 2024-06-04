@@ -1,5 +1,7 @@
 # Modifiers printer
 
+Name: `modifiers`
+
 Prints modifiers with their usages.
 
 ## Example

@@ -1,5 +1,7 @@
 # C3 linearization printer
 
+Name: `c3-linearization`
+
 Prints the [C3 linearization](https://docs.soliditylang.org/en/latest/contracts.html#multiple-inheritance-and-linearization) of a contract.
 
 ## Example

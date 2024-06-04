@@ -1,5 +1,7 @@
 # Axelar proxy `contractId` detector
 
+Name: `axelar-proxy-contract-id`
+
 The detector detects Axelar proxy and implementation contracts that use the `contractId` method as an additional check for deploying the contracts and when performing an upgrade.
 
 ## Proxy `contractId` shared between multiple contracts

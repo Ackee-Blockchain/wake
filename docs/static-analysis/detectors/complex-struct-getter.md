@@ -1,5 +1,7 @@
 # Complex struct getter detector
 
+Name: `complex-struct-getter`
+
 Solidity-generated getters for public state variables do not return array and mapping members of (possible nested) structs.
 See the [Solidity docs](https://docs.soliditylang.org/en/latest/contracts.html#getter-functions) for more details.
 

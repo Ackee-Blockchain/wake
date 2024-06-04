@@ -1,5 +1,7 @@
 # Balance relied on detector
 
+Name: `balance-relied-on`
+
 Reports uses of `address.balance` in strict equality comparisons and in state variable assignments.
 
 A contract may forcefully receive Ether without a single `payable` function implemented.

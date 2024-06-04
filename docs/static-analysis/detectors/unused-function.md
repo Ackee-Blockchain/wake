@@ -1,5 +1,7 @@
 # Unused function detector
 
+Name: `unused-function`
+
 Reports private and internal functions that are not used in the source code.
 
 ## Example

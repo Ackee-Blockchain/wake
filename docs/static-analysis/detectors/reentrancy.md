@@ -1,5 +1,7 @@
 # Reentrancy detector
 
+Name: `reentrancy`
+
 Reports calls to external contracts that may allow reentrancy attacks.
 The vulnerability is only reported if there is at least one public/external function in the contract that can be called
 by anyone, serving as an entry point for the reentrancy attack. The entry points are reported as subdetections.

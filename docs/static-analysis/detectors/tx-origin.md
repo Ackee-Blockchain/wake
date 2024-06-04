@@ -1,5 +1,7 @@
 # `tx.origin` detector
 
+Name: `tx-origin`
+
 ## Phishing attacks
 
 Access controls based on `tx.origin` are vulnerable to phishing attacks. The

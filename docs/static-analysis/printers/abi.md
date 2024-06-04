@@ -1,5 +1,7 @@
 # ABI printer
 
+Name: `abi`
+
 Prints ABI of contracts in given paths or in the whole project.
 
 ## Example

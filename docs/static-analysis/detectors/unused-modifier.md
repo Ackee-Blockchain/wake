@@ -1,5 +1,7 @@
 # Unused modifier detector
 
+Name: `unused-modifier`
+
 Reports unused modifiers.
 
 ## Example
