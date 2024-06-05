@@ -198,7 +198,7 @@ class abi:
                             inputs.append(getattr(arg, f.name))
                     ret.append(cls._normalize_input(inputs))
                 else:
-                    ret.append(cls._normalize_input(dataclasses.astuple(arg)))
+                    ret.append(cls._normalize_input([getattr(arg, f.name) for f in dataclasses.fields(arg)]))
             else:
                 ret.append(arg)
         return ret
