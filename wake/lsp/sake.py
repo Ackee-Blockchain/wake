@@ -8,7 +8,7 @@ from wake.lsp.context import LspContext
 from wake.lsp.exceptions import LspError
 from wake.lsp.lsp_data_model import LspModel
 from wake.lsp.protocol_structures import ErrorCodes
-from wake.testing import Chain, Account,
+from wake.testing import Chain, Account
 
 
 class CompilationResult(LspModel):
@@ -113,11 +113,12 @@ class SakeContext:
         assert self.chain is not None
 
         try:
-            Account(params.contract_address).call(
+            return Account(params.contract_address, self.chain).call(
                 bytes.fromhex(params.calldata),
                 params.value,
-                params.contract_address,
+                params.sender,
             )
+
             # TODO: does not return tx, cannot get tx_receipt
         except TransactionRevertedError as e:
             assert e.tx is not None

@@ -126,7 +126,7 @@ from .protocol_structures import (
     ResponseMessage,
 )
 from .rpc_protocol import RpcProtocol
-from .sake import SakeContext, SakeDeployParams
+from .sake import SakeCallParams, SakeContext, SakeDeployParams
 from .server_capabilities import (
     FileOperationFilter,
     FileOperationPattern,
@@ -295,6 +295,14 @@ class LspServer:
                 ),
                 SakeDeployParams,
             ),
+            RequestMethodEnum.SAKE_CALL: (
+                lambda params: (
+                    self.__sake_context.call(
+                        params,
+                    )
+                ),
+                SakeCallParams,
+            )
         }
 
         self.__notification_mapping = {
