@@ -163,10 +163,12 @@ class ConfigUpdate:
     removed_options: Set
     local_config_path: Path
 
+
 @dataclass
 class BytecodeCompileResult:
     abi: List
-    bytecode: bytes
+    bytecode: str
+
 
 @dataclass
 class Subprocess:
@@ -1102,7 +1104,7 @@ class LspCompiler:
 
             return False, {}
 
-        result: Dict[str, List] = {}
+        result: Dict[str, BytecodeCompileResult] = {}
 
         solc_output: SolcOutput
         for cu, solc_output in zip(compilation_units, ret):
@@ -1130,9 +1132,10 @@ class LspCompiler:
 
                     assert info.abi is not None
                     assert info.evm is not None
+                    assert info.evm.bytecode is not None
+                    assert info.evm.bytecode.object is not None
                     result[fqn] = BytecodeCompileResult(
-                        abi=info.abi,
-                        bytecode=info.evm.bytecode.object
+                        abi=info.abi, bytecode=info.evm.bytecode.object
                     )
 
         if progress_token is not None:
