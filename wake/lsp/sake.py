@@ -8,7 +8,7 @@ from wake.lsp.context import LspContext
 from wake.lsp.exceptions import LspError
 from wake.lsp.lsp_data_model import LspModel
 from wake.lsp.protocol_structures import ErrorCodes
-from wake.testing import Chain, Account
+from wake.testing import Account, Chain
 
 
 class CompilationResult(LspModel):
@@ -16,9 +16,23 @@ class CompilationResult(LspModel):
     contracts: Dict[str, List]  # fqn -> ABI
 
 
+class DeployResult(LspModel):
+    success: bool
+    contract_address: Optional[str]
+    tx_receipt: Dict[str, Any]
+    call_trace: str
+
+
+class CallResult(LspModel):
+    success: bool
+    return_value: bytes
+    tx_receipt: Dict[str, Any]
+    call_trace: str
+
+
 class ContractInfo(NamedTuple):
     abi: List
-    bytecode: bytes
+    bytecode: str
 
 
 class SakeDeployParams(LspModel):
@@ -82,7 +96,7 @@ class SakeContext:
         return [str(a.address) for a in self.chain.accounts]
 
     @launch_chain
-    async def deploy(self, params: SakeDeployParams) -> Dict[str, Any]:
+    async def deploy(self, params: SakeDeployParams) -> DeployResult:
         assert self.chain is not None
 
         try:
@@ -100,29 +114,51 @@ class SakeContext:
                 return_tx=True,
             )
             assert tx._tx_receipt is not None
-            return tx._tx_receipt
+            return DeployResult(
+                success=True,
+                contract_address=str(tx.return_value.address),
+                tx_receipt=tx._tx_receipt,
+                call_trace=str(tx.call_trace),
+            )
         except TransactionRevertedError as e:
             assert e.tx is not None
             assert e.tx._tx_receipt is not None
-            return e.tx._tx_receipt
+            return DeployResult(
+                success=False,
+                contract_address=None,
+                tx_receipt=e.tx._tx_receipt,
+                call_trace=str(e.tx.call_trace),
+            )
         except Exception as e:
             raise LspError(ErrorCodes.InternalError, str(e)) from None
 
     @launch_chain
-    async def call(self, params: SakeCallParams):
+    async def call(self, params: SakeCallParams) -> CallResult:
         assert self.chain is not None
 
         try:
-            return Account(params.contract_address, self.chain).call(
-                bytes.fromhex(params.calldata),
-                params.value,
-                params.sender,
+            tx = Account(params.contract_address, self.chain).transact(
+                data=bytes.fromhex(params.calldata),
+                value=params.value,
+                from_=params.sender,
             )
-
-            # TODO: does not return tx, cannot get tx_receipt
+            assert tx._tx_receipt is not None
+            assert isinstance(tx.raw_return_value, bytearray)
+            return CallResult(
+                success=True,
+                return_value=tx.raw_return_value,
+                tx_receipt=tx._tx_receipt,
+                call_trace=str(tx.call_trace),
+            )
         except TransactionRevertedError as e:
             assert e.tx is not None
             assert e.tx._tx_receipt is not None
-            return e.tx._tx_receipt
+            assert e.tx.raw_error is not None
+            return CallResult(
+                success=False,
+                return_value=e.tx.raw_error.data,
+                tx_receipt=e.tx._tx_receipt,
+                call_trace=str(e.tx.call_trace),
+            )
         except Exception as e:
             raise LspError(ErrorCodes.InternalError, str(e)) from None
