@@ -29,6 +29,7 @@ class CodeLensOptions(NamedTuple):
     title: str
     callback_id: Optional[str]
     callback_kind: str
+    sort_tag: str
 
 
 class InlayHintOptions(NamedTuple):
@@ -38,6 +39,7 @@ class InlayHintOptions(NamedTuple):
     padding_right: bool
     callback_id: Tuple[Optional[str], ...]
     callback_kind: str
+    sort_tag: str
 
 
 class CommandAbc(LspModel):
@@ -218,6 +220,7 @@ class ShowMessageCommand(CommandAbc):
 
 
 class ShowDotCommand(CommandAbc):
+    title: str
     dot: str
 
     def __init__(self, *args, **kwargs) -> None:
@@ -229,9 +232,10 @@ class LspProvider:
     _code_lenses: Dict[Path, Dict[Tuple[int, int], Set[CodeLensOptions]]]
     _inlay_hints: Dict[Path, Dict[int, Set[InlayHintOptions]]]
     _commands: List[CommandAbc]
-    _callbacks: Dict[str, Callable[[], None]]
+    _callbacks: Dict[str, Tuple[str, Callable[[], None]]]
     _callback_counter: int
     _callback_kind: str
+    _current_sort_tag: str
 
     def __init__(self, callback_kind: str) -> None:
         self._hovers = {}
@@ -248,7 +252,7 @@ class LspProvider:
     def get_commands(self) -> Tuple[CommandAbc, ...]:
         return tuple(self._commands)
 
-    def get_callback(self, callback_id: str) -> Callable[[], None]:
+    def get_callback(self, callback_id: str) -> Tuple[str, Callable[[], None]]:
         return self._callbacks[callback_id]
 
     def add_hover(self, node: ir.IrAbc, text: str, *, on_child: bool = False) -> None:
@@ -280,6 +284,7 @@ class LspProvider:
         node: ir.IrAbc,
         title: str,
         *,
+        sort_tag: Optional[str] = None,
         on_click: Optional[Callable[[], None]] = None,
     ) -> None:
         self.add_code_lens_from_offsets(
@@ -287,6 +292,7 @@ class LspProvider:
             node.byte_location[0],
             node.byte_location[1],
             title,
+            sort_tag=sort_tag,
             on_click=on_click,
         )
 
@@ -297,11 +303,15 @@ class LspProvider:
         end: int,
         title: str,
         *,
+        sort_tag: Optional[str] = None,
         on_click: Optional[Callable[[], None]] = None,
     ) -> None:
+        if sort_tag is None:
+            sort_tag = self._current_sort_tag
+
         if on_click is not None:
             callback_id = f"callback_{self._callback_counter}"
-            self._callbacks[callback_id] = on_click
+            self._callbacks[callback_id] = (sort_tag, on_click)
             self._callback_counter += 1
         else:
             callback_id = None
@@ -312,7 +322,7 @@ class LspProvider:
             self._code_lenses[path][(start, end)] = set()
 
         self._code_lenses[path][(start, end)].add(
-            CodeLensOptions(title, callback_id, self._callback_kind)
+            CodeLensOptions(title, callback_id, self._callback_kind, sort_tag)
         )
 
     def add_inlay_hint(
@@ -324,6 +334,7 @@ class LspProvider:
         on_click: Union[
             Optional[Callable[[], None]], Collection[Optional[Callable[[], None]]]
         ] = None,
+        sort_tag: Optional[str] = None,
         padding_left: bool = True,
         padding_right: bool = True,
     ) -> None:
@@ -335,6 +346,7 @@ class LspProvider:
             padding_left=padding_left,
             padding_right=padding_right,
             on_click=on_click,
+            sort_tag=sort_tag,
         )
 
     def add_inlay_hint_from_offset(
@@ -347,11 +359,15 @@ class LspProvider:
         on_click: Union[
             Optional[Callable[[], None]], Collection[Optional[Callable[[], None]]]
         ] = None,
+        sort_tag: Optional[str] = None,
         padding_left: bool = True,
         padding_right: bool = True,
     ) -> None:
         if isinstance(label, str):
             label = [label]
+
+        if sort_tag is None:
+            sort_tag = self._current_sort_tag
 
         if tooltip is None:
             tooltip = [None] * len(label)
@@ -372,7 +388,7 @@ class LspProvider:
         for callback in on_click:
             if callback is not None:
                 callback_id = f"callback_{self._callback_counter}"
-                self._callbacks[callback_id] = callback
+                self._callbacks[callback_id] = (sort_tag, callback)
                 callback_ids.append(callback_id)
                 self._callback_counter += 1
             else:
@@ -391,6 +407,7 @@ class LspProvider:
                 padding_right,
                 tuple(callback_ids),
                 self._callback_kind,
+                sort_tag,
             )
         )
 

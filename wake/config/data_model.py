@@ -165,6 +165,26 @@ class CodeLensConfig(WakeConfigModel):
     """
     Show code lenses.
     """
+    sort_tag_priority: List[str] = [
+        "lsp-references",
+        "lsp-selectors",
+        "lsp-inheritance-graph",
+        "lsp-linearized-inheritance-graph",
+    ]
+    """
+    Order of code lens with the same start and end position based on sort tags used in detectors/printers. Sort tags default to the printer/detector name.
+    """
+
+
+class InlayHintsConfig(WakeConfigModel):
+    enable: bool = True
+    """
+    Show inlay hints.
+    """
+    sort_tag_priority: List[str] = []
+    """
+    Order of inlay hints with the same position based on sort tags used in detectors/printers. Sort tags default to the printer/detector name.
+    """
 
 
 class DetectorsLspConfig(WakeConfigModel):
@@ -243,6 +263,10 @@ class LspConfig(WakeConfigModel):
     find_references: FindReferencesConfig = Field(default_factory=FindReferencesConfig)
     """
     Find references config options.
+    """
+    inlay_hints: InlayHintsConfig = Field(default_factory=InlayHintsConfig)
+    """
+    Inlay hints config options.
     """
 
 

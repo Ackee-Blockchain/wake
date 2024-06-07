@@ -1,24 +1,11 @@
 from itertools import chain
-from pathlib import Path
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
-
-from intervaltree import IntervalTree
+from typing import Any, List, Optional, Tuple, Union
 
 from wake.core import get_logger
-from wake.ir import (
-    ContractDefinition,
-    DeclarationAbc,
-    ErrorDefinition,
-    EventDefinition,
-    FunctionDefinition,
-    ModifierDefinition,
-    VariableDeclaration,
-)
 from wake.lsp.common_structures import (
     Command,
     MessageType,
     PartialResultParams,
-    Position,
     Range,
     TextDocumentIdentifier,
     TextDocumentRegistrationOptions,
@@ -27,7 +14,6 @@ from wake.lsp.common_structures import (
 )
 from wake.lsp.context import LspContext
 from wake.lsp.lsp_data_model import LspModel
-from wake.lsp.utils.position import changes_to_byte_offset
 from wake.lsp.utils.uri import uri_to_path
 
 logger = get_logger(__name__)
@@ -76,72 +62,6 @@ class CodeLens(LspModel):
     """
 
 
-class CodeLensCache(NamedTuple):
-    original: CodeLens
-    original_byte_range: Tuple[int, int]
-    validity_byte_range: Tuple[int, int]
-
-
-_code_lens_cache: Dict[Path, List[CodeLensCache]] = {}
-
-
-def _get_code_lens_from_cache(
-    context: LspContext, path: Path, forward_changes: IntervalTree
-) -> Optional[List[CodeLens]]:
-    if path not in _code_lens_cache:
-        return None
-    ret = []
-    for cached_code_lens in _code_lens_cache[path]:
-        changes_at_range = forward_changes[
-            cached_code_lens.validity_byte_range[
-                0
-            ] : cached_code_lens.validity_byte_range[1]
-        ]
-        start, end = cached_code_lens.original_byte_range
-        if len(changes_at_range) > 0:
-            # changes at range, invalidate code lens
-            continue
-        if start == 0:
-            ret.append(cached_code_lens.original)
-        else:
-            # recompute code lens range
-            new_start = changes_to_byte_offset(forward_changes[0:start]) + start
-            new_end = changes_to_byte_offset(forward_changes[0:end]) + end
-            ret.append(
-                CodeLens(
-                    range=context.compiler.get_range_from_byte_offsets(
-                        path, (new_start, new_end)
-                    ),
-                    command=cached_code_lens.original.command,
-                    data=cached_code_lens.original.data,
-                )
-            )
-
-    return ret
-
-
-def _generate_code_lens(
-    context: LspContext,
-    path: Path,
-    title: str,
-    command: str,
-    arguments: Optional[List],
-    byte_range: Tuple[int, int],
-    validity_range: Tuple[int, int],
-) -> CodeLens:
-    ret = CodeLens(
-        range=context.compiler.get_range_from_byte_offsets(path, byte_range),
-        command=Command(
-            title=title,
-            command=command,
-            arguments=arguments,
-        ),
-        data=None,
-    )
-    _code_lens_cache[path].append(CodeLensCache(ret, byte_range, validity_range))
-    return ret
-
-
 async def code_lens(
     context: LspContext, params: CodeLensParams
 ) -> Union[None, List[CodeLens]]:
@@ -153,15 +73,9 @@ async def code_lens(
     path = uri_to_path(params.text_document.uri).resolve()
 
     if path not in context.compiler.source_units:
-        forward_changes = context.compiler.get_last_compilation_forward_changes(path)
-        if forward_changes is None:
-            return None
-        return _get_code_lens_from_cache(context, path, forward_changes)
+        return None
 
-    code_lens: List[CodeLens] = []
-    source_unit = context.compiler.source_units[path]
-
-    _code_lens_cache[path] = []
+    code_lens: List[Tuple[CodeLens, str]] = []
 
     for offsets, code_lens_items in chain(
         context.compiler.get_detector_code_lenses(path).items(),
@@ -183,56 +97,20 @@ async def code_lens(
                     code_lens_options.callback_kind,
                     code_lens_options.callback_id,
                 ]
-            code_lens.append(lens)
+            code_lens.append((lens, code_lens_options.sort_tag))
 
-    for node in source_unit:
-        if isinstance(node, DeclarationAbc):
-            if (
-                isinstance(node, (FunctionDefinition, ModifierDefinition))
-                and node.implemented
-            ):
-                code_lens.append(
-                    _generate_code_lens(
-                        context,
-                        node.source_unit.file,
-                        "Control flow graph",
-                        "Tools-for-Solidity.generate.control_flow_graph",
-                        [params.text_document.uri, node.canonical_name],
-                        node.name_location,
-                        node.byte_location,
-                    )
-                )
-            elif isinstance(node, ContractDefinition):
-                code_lens.append(
-                    _generate_code_lens(
-                        context,
-                        node.source_unit.file,
-                        "Inheritance graph",
-                        "Tools-for-Solidity.generate.inheritance_graph",
-                        [params.text_document.uri, node.canonical_name],
-                        node.name_location,
-                        node.name_location,
-                    )
-                )
-
-                code_lens.append(
-                    _generate_code_lens(
-                        context,
-                        node.source_unit.file,
-                        "Linearized inheritance graph",
-                        "Tools-for-Solidity.generate.linearized_inheritance_graph",
-                        [params.text_document.uri, node.canonical_name],
-                        node.name_location,
-                        node.name_location,
-                    )
-                )
+    sort_tags = {sort_tag for _, sort_tag in code_lens}
+    sort_tags_priority = context.config.lsp.code_lens.sort_tag_priority + sorted(
+        sort_tags - set(context.config.lsp.code_lens.sort_tag_priority)
+    )
 
     code_lens.sort(
         key=lambda x: (
-            x.range.start.line,
-            x.range.start.character,
-            x.range.end.line,
-            x.range.end.character,
+            x[0].range.start.line,
+            x[0].range.start.character,
+            x[0].range.end.line,
+            x[0].range.end.character,
+            sort_tags_priority.index(x[1]),
         )
     )
-    return code_lens
+    return [lens for lens, _ in code_lens]

@@ -460,6 +460,9 @@ def detect(
         assert command is not None
         assert command.name is not None
 
+        if lsp_provider is not None:
+            lsp_provider._current_sort_tag = command.name
+
         if hasattr(config.detector, command.name):
             default_map = getattr(config.detector, command.name)
         else:
@@ -646,6 +649,9 @@ def detect(
 
             for node in source_unit:
                 for detector_name in list(target_detectors):
+                    if lsp_provider is not None:
+                        lsp_provider._current_sort_tag = detector_name
+
                     detector = collected_detectors[detector_name]
                     try:
                         detector.visit_ir_abc(node)
@@ -664,6 +670,9 @@ def detect(
     for detector_name, detector in collected_detectors.items():
         if cancel_event is not None and cancel_event.is_set():
             raise ThreadCancelledError()
+
+        if lsp_provider is not None:
+            lsp_provider._current_sort_tag = detector_name
 
         try:
             detections[detector_name] = _filter_detections(

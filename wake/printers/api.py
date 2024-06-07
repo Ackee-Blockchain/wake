@@ -256,6 +256,9 @@ def run_printers(
         assert command is not None
         assert command.name is not None
 
+        if lsp_provider is not None:
+            lsp_provider._current_sort_tag = command.name
+
         if hasattr(config.printer, command.name):
             default_map = getattr(config.printer, command.name)
         else:
@@ -410,6 +413,9 @@ def run_printers(
 
         for node in source_unit:
             for printer_name in list(target_printers):
+                if lsp_provider is not None:
+                    lsp_provider._current_sort_tag = printer_name
+
                 printer = collected_printers[printer_name]
                 try:
                     printer.visit_ir_abc(node)
@@ -428,6 +434,9 @@ def run_printers(
     for printer_name, printer in collected_printers.items():
         if cancel_event is not None and cancel_event.is_set():
             raise ThreadCancelledError()
+
+        if lsp_provider is not None:
+            lsp_provider._current_sort_tag = printer_name
 
         try:
             printer.print()
