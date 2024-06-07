@@ -52,6 +52,20 @@ def random_int(
     max_prob: Optional[float] = None,
     edge_values_prob: Optional[float] = None,
 ) -> int:
+    """
+    Generates a random integer between min and max, both inclusive.
+
+    Args:
+        min: lower bound of the random integer
+        max: upper bound of the random integer
+        min_prob: probability of returning min
+        zero_prob: probability of returning 0
+        max_prob: probability of returning max
+        edge_values_prob: probability of returning each of min, 0, and max; if min is zero or max is zero, the probability of returning 0 is set to edge_values_prob (it is not accounted twice)
+    """
+    if min > max:
+        raise ValueError("Lower bound (min) is greater than upper bound (max)")
+
     p = random.random()
 
     if min_prob is None:
