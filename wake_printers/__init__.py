@@ -4,6 +4,9 @@ from .control_flow_graph import ControlFlowGraphPrinter
 from .imports_graph import ImportsGraphPrinter
 from .inheritance_graph import InheritanceGraphPrinter
 from .inheritance_tree import InheritanceTreePrinter
+from .lsp_control_flow_graph import LspControlFlowGraphPrinter
+from .lsp_inheritance_graph import LspInheritanceGraphPrinter
+from .lsp_linearized_inheritance_graph import LspLinearizedInheritanceGraphPrinter
 from .lsp_openzeppelin_docs import LspOpenzeppelinDocsPrinter
 from .lsp_references import LspReferencesPrinter
 from .lsp_selectors import LspSelectorsPrinter
