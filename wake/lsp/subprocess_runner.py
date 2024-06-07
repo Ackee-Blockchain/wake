@@ -343,7 +343,9 @@ def run_detectors_subprocess(
         elif command == SubprocessCommandType.RUN_DETECTOR_CALLBACK:
             callback_id = data
             try:
-                lsp_provider.get_callback(callback_id)()
+                detector_name, callback = lsp_provider.get_callback(callback_id)
+                lsp_provider._current_sort_tag = detector_name
+                callback()
                 out_queue.put(
                     (
                         SubprocessCommandType.DETECTOR_CALLBACK_SUCCESS,
@@ -447,7 +449,9 @@ def run_printers_subprocess(
         elif command == SubprocessCommandType.RUN_PRINTER_CALLBACK:
             callback_id = data
             try:
-                lsp_provider.get_callback(callback_id)()
+                printer_name, callback = lsp_provider.get_callback(callback_id)
+                lsp_provider._current_sort_tag = printer_name
+                callback()
                 out_queue.put(
                     (
                         SubprocessCommandType.PRINTER_CALLBACK_SUCCESS,

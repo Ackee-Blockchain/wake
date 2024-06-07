@@ -1,12 +1,11 @@
 from enum import IntEnum
 from itertools import chain
-from typing import Any, List, Optional, Union
+from typing import Any, List, Optional, Tuple, Union
 
 from wake.lsp.common_structures import (
     Command,
     Location,
     MarkupContent,
-    MarkupKind,
     Position,
     Range,
     StaticRegistrationOptions,
@@ -62,6 +61,9 @@ class InlayHint(LspModel):
 async def inlay_hint(
     context: LspContext, params: InlayHintParams
 ) -> Union[None, List[InlayHint]]:
+    if not context.config.lsp.inlay_hints.enable:
+        return None
+
     await context.compiler.output_ready.wait()
 
     path = uri_to_path(params.text_document.uri).resolve()
@@ -75,7 +77,7 @@ async def inlay_hint(
         path, params.range.end.line, params.range.end.character
     )
 
-    inlay_hints = []
+    inlay_hints: List[Tuple[InlayHint, str]] = []
     for offset, inlay_hint_items in chain(
         context.compiler.get_detector_inlay_hints(path, (start, end)).items(),
         context.compiler.get_printer_inlay_hints(path, (start, end)).items(),
@@ -110,6 +112,19 @@ async def inlay_hint(
                 padding_left=inlay_hint_options.padding_left,
                 padding_right=inlay_hint_options.padding_right,
             )
-            inlay_hints.append(inlay_hint)
+            inlay_hints.append((inlay_hint, inlay_hint_options.sort_tag))
 
-    return inlay_hints
+    sort_tags = {sort_tag for _, sort_tag in inlay_hints}
+    sort_tags_priority = context.config.lsp.inlay_hints.sort_tag_priority + sorted(
+        sort_tags - set(context.config.lsp.inlay_hints.sort_tag_priority)
+    )
+
+    inlay_hints.sort(
+        key=lambda x: (
+            x[0].position.line,
+            x[0].position.character,
+            sort_tags_priority.index(x[1]),
+        )
+    )
+
+    return [hint for hint, _ in inlay_hints]
