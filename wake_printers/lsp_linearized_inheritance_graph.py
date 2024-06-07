@@ -76,7 +76,7 @@ class LspLinearizedInheritanceGraphPrinter(Printer):
 
     @printer.command(name="lsp-linearized-inheritance-graph")
     @click.option(
-        "--direction", type=click.Choice(["LR", "RL", "TB", "BT"]), default="LR"
+        "--direction", type=click.Choice(["LR", "RL", "TB", "BT"]), default="TB"
     )
     @click.option("--urls", is_flag=True, default=True)
     def cli(self, direction: Literal["LR", "RL", "TB", "BT"], urls: bool) -> None:
