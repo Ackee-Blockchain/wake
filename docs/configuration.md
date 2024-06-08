@@ -12,7 +12,6 @@ Wake can be configured using configuration options loaded from multiple sources 
 
 ???+ info
     The following TOML snippet shows the default values of all configuration options.
-    LSP configuration options are not included in this snippet.
     ```toml
     subconfigs = []
 
@@ -60,6 +59,32 @@ Wake can be configured using configuration options loaded from multiple sources 
     ignore_paths = ["venv", ".venv", "test"]
     exclude_paths = ["node_modules", "lib", "script"]
 
+    [printers]
+    exclude = []
+    # only (unset - all printers are enabled)
+
+    [printer]
+
+    [lsp]
+    compilation_delay = 0
+
+    [lsp.code_lens]
+    enable = true
+    sort_tag_priority = [
+        "lsp-references", "lsp-selectors", "lsp-inheritance-graph",
+        "lsp-linearized-inheritance-graph"
+    ]
+
+    [lsp.detectors]
+    enable = true
+
+    [lsp.find_references]
+    include_declarations = false
+
+    [lsp.inlay_hints]
+    enable = true
+    sort_tag_priority = []
+
     [general]
     call_trace_options = [
         "contract_name", "function_name", "named_arguments", "status",
@@ -67,8 +92,6 @@ Wake can be configured using configuration options loaded from multiple sources 
     ]
     json_rpc_timeout = 15
     link_format = "vscode://file/{path}:{line}:{col}"
-
-    [printer]
 
     [testing]
     cmd = "anvil"
@@ -169,13 +192,14 @@ For optimizer details, see the [Solidity docs](https://docs.soliditylang.org/en/
 
 This namespace contains detector-specific configuration options. See the documentation of each detector for more information.
 Each detector has its own namespace under the `detector` namespace, e.g. `detector.reentrancy`.
-Every dector supports at least the `min_confidence` and `min_impact` options:
+Every detector supports at least the `min_confidence` and `min_impact` options:
 
-```toml
-[detector."unchecked-return-value"]
-min_confidence = "medium"
-min_impact = "high"
-```
+!!! example
+    ```toml
+    [detector."unchecked-return-value"]
+    min_confidence = "medium"
+    min_impact = "high"
+    ```
 
 ### `detectors` namespace
 
@@ -184,7 +208,7 @@ min_impact = "high"
 | `exclude`                    | List of detectors that should not be enabled.                                                                                    |
 | `only`                       | List of detectors that should only be enabled.                                                                                   |
 | <nobr>`ignore_paths`</nobr>  | Detections or subdetections in these paths are always ignored. Intended for files that will never be deployed (e.g. test files). |
-| <nobr>`exclude_paths`</nobr> | Detections are excluded if a whole detection (including subdetections) is in these paths. Intended for dependencies.              |
+| <nobr>`exclude_paths`</nobr> | Detections are excluded if a whole detection (including subdetections) is in these paths. Intended for dependencies.             |
 
 ### `general` namespace
 
@@ -237,28 +261,56 @@ Related to the `wake.generate.linearized_inheritance_graph` LSP command.
 
 ### `lsp` namespace
 
-| Option                           | Description                                                        | Default value |
-|:---------------------------------|:-------------------------------------------------------------------|:--------------|
-| <nobr>`compilation_delay`</nobr> | Delay in seconds before the project is compiled after a keystroke. | `0`           |
+| Option                           | Description                                                        |
+|:---------------------------------|:-------------------------------------------------------------------|
+| <nobr>`compilation_delay`</nobr> | Delay in seconds before the project is compiled after a keystroke. |
 
 ### `lsp.code_lens` namespace
 
-| Option   | Description                            | Default value |
-|:---------|:---------------------------------------|:--------------|
-| `enable` | Enable LSP code lens language feature. | `true`        |
+| Option                           | Description                                                                                                                                            |
+|:---------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `enable`                         | Enable LSP code lens language server feature.                                                                                                          |
+| <nobr>`sort_tag_priority`</nobr> | Order of code lens with the same start and end position based on sort tags used in detectors/printers. Sort tags default to the printer/detector name. |
 
 ### `lsp.detectors` namespace
 
-| Option   | Description                                       | Default value |
-|:---------|:--------------------------------------------------|:--------------|
-| `enable` | Enable vulnerability detectors in the LSP server. | `true`        |
+| Option   | Description                                       |
+|:---------|:--------------------------------------------------|
+| `enable` | Enable vulnerability detectors in the LSP server. |
 
 ### `lsp.find_references` namespace
 Configuration options specific to the LSP `Find references` request.
 
-| Option                              | Description                                                     | Default value |
-|:------------------------------------|:----------------------------------------------------------------|:--------------|
-| <nobr>`include_declarations`</nobr> | Also include declarations in `Find references` request results. | `false`       |
+| Option                              | Description                                                     |
+|:------------------------------------|:----------------------------------------------------------------|
+| <nobr>`include_declarations`</nobr> | Also include declarations in `Find references` request results. |
+
+### `lsp.inlay_hints` namespace
+
+| Option                           | Description                                                                                                                                |
+|:---------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------|
+| `enable`                         | Enable inlay hints language server feature.                                                                                                |
+| <nobr>`sort_tag_priority`</nobr> | Order of inlay hints with the same position based on sort tags used in detectors/printers. Sort tags default to the printer/detector name. |
+
+### `printer` namespace
+
+This namespace contains printer-specific configuration options. See the documentation of each printer for more information.
+Each printer has its own namespace under the `printer` namespace, e.g. `printer."lsp-references"`.
+
+!!! example
+    ```toml
+    [printer."lsp-references"]
+    local_variables = false
+    ```
+
+### `printers` namespace
+
+The following settings mainly apply to LSP printers that are run automatically by the LSP server.
+
+| Option                       | Description                                   |
+|:-----------------------------|:----------------------------------------------|
+| `exclude`                    | List of printers that should not be enabled.  |
+| `only`                       | List of printers that should only be enabled. |
 
 ### `testing` namespace
 
