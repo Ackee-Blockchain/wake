@@ -889,10 +889,14 @@ class LspCompiler:
                 if (
                     path not in self.__opened_files
                     and path not in self.__output_contents
+                    and path.is_file()
                 ):
-                    self.__output_contents[path] = VersionedFile(
-                        content.decode(encoding="utf-8"), None
-                    )
+                    try:
+                        self.__output_contents[path] = VersionedFile(
+                            content.decode(encoding="utf-8"), None
+                        )
+                    except UnicodeDecodeError:
+                        pass
 
         except CompilationError as e:
             await self.__server.log_message(str(e), MessageType.ERROR)
