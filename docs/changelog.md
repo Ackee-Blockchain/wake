@@ -6,6 +6,14 @@ small.label {
 }
 </style>
 
+## 4.10.1 <small>(Jun 11, 2024)</small> { id="4.10.1" }
+
+Fixes:
+
+- fixed language server unicode decoding crash when trying to read from non-existent files <small class="label">[language server]</small>
+- fixed Yul definitions of `shl`, `shr` and `sar` instructions in `lsp-yul-definitions` printer <small class="label">[language server]</small>
+- fixed handling of language server subprocess crashes <small class="label">[language server]</small>
+
 ## 4.10.0 <small>(Jun 11, 2024)</small> { id="4.10.0" }
 
 Features & improvements:
