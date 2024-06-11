@@ -310,7 +310,6 @@ class LspCompiler:
         self.__svm = SolcVersionManager(config)
         self.__compiler = SolidityCompiler(config)
 
-        # TODO process recovery?
         self.__detectors_subprocess.process = multiprocessing.Process(
             target=run_detectors_subprocess,
             args=(
@@ -377,6 +376,9 @@ class LspCompiler:
                     )
             except queue.Empty:
                 await asyncio.sleep(0.1)
+
+            if subprocess.process is not None and not subprocess.process.is_alive():
+                raise RuntimeError("Subprocess has terminated unexpectedly")
 
     async def run_detector_callback(self, callback_id: str) -> List[CommandAbc]:
         command_id = self.send_subprocess_command(

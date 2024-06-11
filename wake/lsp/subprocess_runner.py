@@ -186,7 +186,6 @@ def run_detectors_thread(
     config: WakeConfig,
     ignored_detections_supported: bool,
     command_id: int,
-    detector_names: List[str],
     detectors_provider: LspProvider,
     last_build: ProjectBuild,
     last_build_info: ProjectBuildInfo,
@@ -198,6 +197,16 @@ def run_detectors_thread(
     try:
         logging_buffer = []
         logging_handler = LspLoggingHandler(logging_buffer)
+
+        # discover detectors
+        detector_names = run_detect.list_commands(
+            None,  # pyright: ignore reportGeneralTypeIssues
+            plugin_paths={  # pyright: ignore reportGeneralTypeIssues
+                config.project_root_path / "detectors"
+            },
+            force_load_plugins=True,  # pyright: ignore reportGeneralTypeIssues
+            verify_paths=False,  # pyright: ignore reportGeneralTypeIssues
+        )
 
         _, detections, detector_exceptions = detect(
             detector_names,
@@ -252,7 +261,6 @@ def run_printers_thread(
     out_queue: multiprocessing.Queue,
     config: WakeConfig,
     command_id: int,
-    printer_names: List[str],
     printers_provider: LspProvider,
     last_build: ProjectBuild,
     last_build_info: ProjectBuildInfo,
@@ -264,6 +272,15 @@ def run_printers_thread(
     try:
         logging_buffer = []
         logging_handler = LspLoggingHandler(logging_buffer)
+
+        printer_names = run_print.list_commands(
+            None,  # pyright: ignore reportGeneralTypeIssues
+            plugin_paths={  # pyright: ignore reportGeneralTypeIssues
+                config.project_root_path / "printers"
+            },
+            force_load_plugins=True,  # pyright: ignore reportGeneralTypeIssues
+            verify_paths=False,  # pyright: ignore reportGeneralTypeIssues
+        )
 
         with open(os.devnull, "w") as devnull:
             console = Console(file=devnull)
@@ -382,17 +399,7 @@ def run_detectors_subprocess(
             assert last_build_info is not None
             assert last_graph is not None
 
-            # discover detectors
-            all_detectors = run_detect.list_commands(
-                None,  # pyright: ignore reportGeneralTypeIssues
-                plugin_paths={  # pyright: ignore reportGeneralTypeIssues
-                    config.project_root_path / "detectors"
-                },
-                force_load_plugins=True,  # pyright: ignore reportGeneralTypeIssues
-                verify_paths=False,  # pyright: ignore reportGeneralTypeIssues
-            )
-
-            detectors_thread = threading.Thread(
+            thread = threading.Thread(
                 target=run_detectors_thread,
                 args=(
                     [
@@ -404,7 +411,6 @@ def run_detectors_subprocess(
                     config,
                     ignored_detections_supported,
                     run_detectors_command_ids[-1],
-                    all_detectors,
                     lsp_provider,
                     last_build,
                     last_build_info,
@@ -412,7 +418,7 @@ def run_detectors_subprocess(
                     thread_event,
                 ),
             )
-            detectors_thread.start()
+            thread.start()
 
             run_detectors = False
             run_detectors_command_ids = []
@@ -488,16 +494,7 @@ def run_printers_subprocess(
             assert last_build_info is not None
             assert last_graph is not None
 
-            all_printers = run_print.list_commands(
-                None,  # pyright: ignore reportGeneralTypeIssues
-                plugin_paths={  # pyright: ignore reportGeneralTypeIssues
-                    config.project_root_path / "printers"
-                },
-                force_load_plugins=True,  # pyright: ignore reportGeneralTypeIssues
-                verify_paths=False,  # pyright: ignore reportGeneralTypeIssues
-            )
-
-            printers_thread = threading.Thread(
+            thread = threading.Thread(
                 target=run_printers_thread,
                 args=(
                     [
@@ -508,7 +505,6 @@ def run_printers_subprocess(
                     out_queue,
                     config,
                     run_printers_command_ids[-1],
-                    all_printers,
                     lsp_provider,
                     last_build,
                     last_build_info,
@@ -516,7 +512,7 @@ def run_printers_subprocess(
                     thread_event,
                 ),
             )
-            printers_thread.start()
+            thread.start()
 
             run_printers = False
             run_printers_command_ids = []
