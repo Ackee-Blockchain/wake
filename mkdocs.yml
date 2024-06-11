@@ -43,6 +43,7 @@ nav:
       - Installation: 'installation.md'
       - Configuration: 'configuration.md'
       - Compilation: 'compilation.md'
+      - Changelog: 'changelog.md'
       - Contributing: 'contributing.md'
   - Development and testing framework:
       - Overview: 'testing-framework/overview.md'
