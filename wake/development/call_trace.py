@@ -179,7 +179,11 @@ def _decode_args(
 ) -> Tuple[Optional[List], Optional[List[Optional[str]]]]:
     def normalize(arg, a):
         if a["type"] == "address":
-            return Account(Address(arg), chain)
+            acc = Account(Address(arg), chain)
+            if acc.label is not None:
+                return acc
+            else:
+                return Address(arg)
         elif a["type"].endswith("]"):
             assert a["internalType"].endswith("]")
             prev_type = a["type"]
