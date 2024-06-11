@@ -771,7 +771,7 @@ class Account:
         self._chain = chain
 
     def __str__(self) -> str:
-        return self._chain._labels.get(self._address, str(self._address))
+        return self._chain._labels.get(self._address, f"Account({self._address})")
 
     __repr__ = __str__
 
