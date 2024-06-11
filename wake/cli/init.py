@@ -120,7 +120,7 @@ def run_init(ctx: Context, force: bool, example: Optional[str]):
     from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
     from ..compiler.solc_frontend import SolcOutputErrorSeverityEnum
     from ..development.pytypes_generator import TypeGenerator
-    from ..utils.file_utils import copy_dir, is_relative_to
+    from ..utils.file_utils import copy_dir, is_relative_to, wake_contracts_path
 
     if example is None:
         # create tests directory
@@ -173,6 +173,8 @@ def run_init(ctx: Context, force: bool, example: Optional[str]):
                 and file.is_file()
             ):
                 sol_files.add(file)
+        for file in wake_contracts_path.rglob("**/*.sol"):
+            sol_files.add(file)
     end = time.perf_counter()
     console.log(
         f"[green]Found {len(sol_files)} *.sol files in [bold green]{end - start:.2f} s[/bold green][/]"
@@ -273,7 +275,7 @@ async def run_init_pytypes(
     from ..compiler.compiler import CompilationFileSystemEventHandler
     from ..compiler.solc_frontend import SolcOutputErrorSeverityEnum
     from ..development.pytypes_generator import TypeGenerator
-    from ..utils.file_utils import is_relative_to
+    from ..utils.file_utils import is_relative_to, wake_contracts_path
 
     def callback(build: ProjectBuild, build_info: ProjectBuildInfo):
         start = time.perf_counter()
@@ -296,6 +298,8 @@ async def run_init_pytypes(
                 and file.is_file()
             ):
                 sol_files.add(file)
+        for file in wake_contracts_path.rglob("**/*.sol"):
+            sol_files.add(file)
     end = time.perf_counter()
     console.log(
         f"[green]Found {len(sol_files)} *.sol files in [bold green]{end - start:.2f} s[/bold green][/]"
