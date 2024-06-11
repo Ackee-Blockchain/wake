@@ -6,7 +6,35 @@ small.label {
 }
 </style>
 
-## 4.9.0 <small>(Apr 25, 2024)</small>
+## 4.10.0 <small>(Jun 11, 2024)</small> { id="4.10.0" }
+
+Features & improvements:
+
+- implemented abi encoding & decoding of errors <small class="label">[testing framework]</small>
+- included standard Solidity interfaces, Create3 deployer and ERC-1967 factory into bundled-in contracts <small class="label">[testing framework]</small>
+- detectors & printers now run in subprocesses in LSP <small class="label">[language server]</small>
+- implemented LSP workspace symbols feature <small class="label">[language server]</small>
+- added support for Solidity 0.8.26 <small class="label">[core]</small>
+- implemented `exclude` and `only` config options for printers <small class="label">[core]</small>
+
+Changes:
+
+- improved `random_int` documentation & incorrect value checking <small class="label">[testing framework]</small>
+- changed `__str__` and `__repr__` of `Account` for easier debugging <small class="label">[testing framework]</small>
+- code lens LSP features re-implemented as LSP printers + created docs <small class="label">[language server]</small>
+- dropped support for Python 3.7 <small class="label">[core]</small>
+- upgraded pydantic to 2.x <small class="label">[core]</small>
+
+Fixes:
+
+- fixed pickling error when encoding dataclasses using new abi encoder <small class="label">[testing framework]</small>
+- fixed file descriptors leak in LSP <small class="label">[language server]</small>
+- fixed misbehavior of LSP configuration key removal <small class="label">[language server]</small>
+- fixed LSP connection crash due to incorrect content length with unicode characters <small class="label">[language server]</small>
+- fixed rare compilation pipeline crash with multiple solc versions <small class="label">[core]</small>
+- fixed `wake detect` & `wake print` commands with latest `rich-click` <small class="label">[cli]</small>
+
+## 4.9.0 <small>(Apr 25, 2024)</small> { id="4.9.0" }
 
 Features & improvements:
 
@@ -25,7 +53,7 @@ Fixes:
 - fixed recursion in `expression_is_only_owner` function <small class="label">[static analysis]</small>
 - fixed regex parsing from source code containing comments <small class="label">[core]</small>
 
-## 4.8.0 <small>(Apr 5, 2024)</small>
+## 4.8.0 <small>(Apr 5, 2024)</small> { id="4.8.0" }
 
 Features & improvements:
 
@@ -45,7 +73,7 @@ Fixes:
 - primitive types (e.g. `bytes32`) are now returned from `keccak256` and `read_storage_variable`
 - fixed `get_variable_declarations_from_expression` recursion bug
 
-## 4.7.0 <small>(Mar 16, 2024)</small>
+## 4.7.0 <small>(Mar 16, 2024)</small> { id="4.7.0" }
 
 Features:
 
@@ -58,7 +86,7 @@ Fixes:
 - fixed `random` affected by `logging` - created custom `Random` instance
 - fixed compilation crashes in AST validation with Solidity <= 0.7.2
 
-## 4.6.0 <small>(Mar 13, 2024)</small>
+## 4.6.0 <small>(Mar 13, 2024)</small> { id="4.6.0" }
 
 Features:
 
@@ -76,14 +104,14 @@ Fixes:
 - fixed the type of `.min` `.max` members of primitive integer types
 - fixed `is_reachable` helper function in `ControlFlowGraph`
 
-## 4.5.1 <small>(Feb 17, 2024)</small>
+## 4.5.1 <small>(Feb 17, 2024)</small> { id="4.5.1" }
 
 Fixes:
 
 - `ValueError` is no longer raised for experimental `abi.encode_with_signature` and `abi.encode_call` with ambiguous integers
 - fixed `mint_erc20`/`burn_erc20` for most tokens
 
-## 4.5.0 <small>(Feb 12, 2024)</small>
+## 4.5.0 <small>(Feb 12, 2024)</small> { id="4.5.0" }
 
 Features:
 
@@ -103,7 +131,7 @@ Fixes:
 - fixed ERC- slots detection using storage layout
 - fixed debugger attachment when chain is not connected
 
-## 4.4.1 <small>(Jan 30, 2024)</small>
+## 4.4.1 <small>(Jan 30, 2024)</small> { id="4.4.1" }
 
 Fixes:
 
@@ -111,7 +139,7 @@ Fixes:
     - fixes `OSError(30, 'Read-only file system')` error messages in LSP on macOS
 - fixed compiling projects from sources on Etherscan-like explorers in testing framework helper functions
 
-## 4.4.0 <small>(Jan 27, 2024)</small>
+## 4.4.0 <small>(Jan 27, 2024)</small> { id="4.4.0" }
 
 Features:
 
@@ -124,14 +152,14 @@ Fixes:
 - fixed `pair_function_call_arguments` - struct construction with (possibly nested) mapping in Solidity < 0.7
 - fixed LSP crash on file opened but not saved on disk
 
-## 4.3.2 <small>(Jan 23, 2024)</small>
+## 4.3.2 <small>(Jan 23, 2024)</small> { id="4.3.2" }
 
 Fixes:
 
 - fixed issue when generating pytypes for cyclically imported Solidity files with inheritance
 - fixed `wake test` multiprocessing mode on macOS and Windows
 
-## 4.3.1 <small>(Jan 9, 2024)</small>
+## 4.3.1 <small>(Jan 9, 2024)</small> { id="4.3.1" }
 
 Fixes:
 
@@ -139,7 +167,7 @@ Fixes:
 - fixed global TOML config file not always loaded with local `wake.toml` in LSP
 - fixed counter example README
 
-## 4.3.0 <small>(Dec 24, 2023)</small>
+## 4.3.0 <small>(Dec 24, 2023)</small> { id="4.3.0" }
 
 Features:
 
@@ -156,7 +184,7 @@ Fixes:
 - fixed detectors were not re-run after changing a detector-specific setting
 - bumped `abch-tree-sitter` minimal version, fixing the language server crashes caused by `distutils` not being available in Python 3.12
 
-## 4.2.0 <small>(Dec 11, 2023)</small>
+## 4.2.0 <small>(Dec 11, 2023)</small> { id="4.2.0" }
 
 Features:
 
@@ -174,19 +202,19 @@ Fixes:
 
 - fixed compiler crashes when using SMTChecker
 
-## 4.1.2 <small>(Dec 3 , 2023)</small>
+## 4.1.2 <small>(Dec 3 , 2023)</small> { id="4.1.2" }
 
 Fixes:
 
 - `solc` binaries are automatically re-installed if corrupted
 - added `--silent` mode to fix LSP server crashes on Windows because of unicode
 
-## 4.1.1 <small>(Nov 28, 2023)</small>
+## 4.1.1 <small>(Nov 28, 2023)</small> { id="4.1.1" }
 
 - fixed script responsible for migration to XDG paths when the global config file already exists
 - fixed assertion error in ownable pattern detection, manifested mainly by `reentrancy` detector crashes
 
-## 4.1.0 <small>(Nov 28, 2023)</small>
+## 4.1.0 <small>(Nov 28, 2023)</small> { id="4.1.0" }
 
 - added new printers:
     - `control-flow-graph`
@@ -202,14 +230,14 @@ Fixes:
 - state changes are now evaluated even for Yul blocks
 - fixed crashes caused by `YulLiteral.value` being unset
 
-## 4.0.1 <small>(Nov 22, 2023)</small>
+## 4.0.1 <small>(Nov 22, 2023)</small> { id="4.0.1" }
 
 - fixed SARIF export crashing in Github action
 - fixed `wake detect` incorrect exit codes
 - fixed exporting ignored detections in SARIF format
 - minor changes to the documentation
 
-## 4.0.0 <small>(Nov 20, 2023)</small>
+## 4.0.0 <small>(Nov 20, 2023)</small> { id="4.0.0" }
 
 - reviewed, updated and documented IR model
     - all IR nodes are now documented, generated docs available in [API reference](./api-reference/ir/abc.md) section
