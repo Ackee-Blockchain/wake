@@ -73,4 +73,7 @@ class RpcProtocol:
             ResponseMessage, RequestMessage, ResponseError, NotificationMessage
         ],
     ) -> None:
-        await self._send(message.model_dump_json(exclude_unset=True, by_alias=True))
+        try:
+            await self._send(message.model_dump_json(exclude_unset=True, by_alias=True))
+        except Exception as e:
+            raise RpcProtocolError(f"Error sending message: {e}, message: {message}")
