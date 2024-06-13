@@ -24,7 +24,7 @@ class DeployResult(LspModel):
 
 class CallResult(LspModel):
     success: bool
-    return_value: bytes
+    return_value: str
     tx_receipt: Dict[str, Any]
     # call_trace: str
 
@@ -145,7 +145,7 @@ class SakeContext:
             assert isinstance(tx.raw_return_value, bytearray)
             return CallResult(
                 success=True,
-                return_value=tx.raw_return_value,
+                return_value=tx.raw_return_value.hex(),
                 tx_receipt=tx._tx_receipt,
                 # call_trace=str(tx.call_trace),
             )
@@ -155,7 +155,7 @@ class SakeContext:
             assert e.tx.raw_error is not None
             return CallResult(
                 success=False,
-                return_value=e.tx.raw_error.data,
+                return_value=e.tx.raw_error.data.hex(),
                 tx_receipt=e.tx._tx_receipt,
                 # call_trace=str(e.tx.call_trace),
             )
