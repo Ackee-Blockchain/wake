@@ -20,14 +20,13 @@ class DeployResult(LspModel):
     success: bool
     contract_address: Optional[str]
     tx_receipt: Dict[str, Any]
-    call_trace: str
-
+    # call_trace: str
 
 class CallResult(LspModel):
     success: bool
     return_value: bytes
     tx_receipt: Dict[str, Any]
-    call_trace: str
+    # call_trace: str
 
 
 class ContractInfo(NamedTuple):
@@ -118,7 +117,7 @@ class SakeContext:
                 success=True,
                 contract_address=str(tx.return_value.address),
                 tx_receipt=tx._tx_receipt,
-                call_trace=str(tx.call_trace),
+                # call_trace=str(tx.call_trace),
             )
         except TransactionRevertedError as e:
             assert e.tx is not None
@@ -127,7 +126,7 @@ class SakeContext:
                 success=False,
                 contract_address=None,
                 tx_receipt=e.tx._tx_receipt,
-                call_trace=str(e.tx.call_trace),
+                # call_trace=str(e.tx.call_trace),
             )
         except Exception as e:
             raise LspError(ErrorCodes.InternalError, str(e)) from None
@@ -148,7 +147,7 @@ class SakeContext:
                 success=True,
                 return_value=tx.raw_return_value,
                 tx_receipt=tx._tx_receipt,
-                call_trace=str(tx.call_trace),
+                # call_trace=str(tx.call_trace),
             )
         except TransactionRevertedError as e:
             assert e.tx is not None
@@ -158,7 +157,7 @@ class SakeContext:
                 success=False,
                 return_value=e.tx.raw_error.data,
                 tx_receipt=e.tx._tx_receipt,
-                call_trace=str(e.tx.call_trace),
+                # call_trace=str(e.tx.call_trace),
             )
         except Exception as e:
             raise LspError(ErrorCodes.InternalError, str(e)) from None
