@@ -126,7 +126,13 @@ from .protocol_structures import (
     ResponseMessage,
 )
 from .rpc_protocol import RpcProtocol
-from .sake import SakeCallParams, SakeContext, SakeDeployParams
+from .sake import (
+    SakeCallParams,
+    SakeContext,
+    SakeDeployParams,
+    SakeGetBalancesParams,
+    SakeSetBalancesParams,
+)
 from .server_capabilities import (
     FileOperationFilter,
     FileOperationPattern,
@@ -297,12 +303,28 @@ class LspServer:
             ),
             RequestMethodEnum.SAKE_CALL: (
                 lambda params: (
-                    self.__sake_context.call(
+                    self.__sake_context.call(  # pyright: ignore reportAttributeAccessIssue
                         params,
                     )
                 ),
                 SakeCallParams,
-            )
+            ),
+            RequestMethodEnum.SAKE_GET_BALANCES: (
+                lambda params: (
+                    self.__sake_context.get_balances(  # pyright: ignore reportAttributeAccessIssue
+                        params,
+                    )
+                ),
+                SakeGetBalancesParams,
+            ),
+            RequestMethodEnum.SAKE_SET_BALANCES: (
+                lambda params: (
+                    self.__sake_context.set_balances(  # pyright: ignore reportAttributeAccessIssue
+                        params,
+                    )
+                ),
+                SakeSetBalancesParams,
+            ),
         }
 
         self.__notification_mapping = {
