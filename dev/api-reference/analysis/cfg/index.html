@@ -12,7 +12,7 @@
         <meta name="author" content="Ackee Blockchain">
       
       
-        <link rel="canonical" href="https://ackeeblockchain.com/wake/docs/latest/api-reference/analysis/cfg/">
+        <link rel="canonical" href="https://ackee.xyz/wake/docs/latest/api-reference/analysis/cfg/">
       
       
         <link rel="prev" href="../../../solc-version-manager/">
@@ -22,7 +22,7 @@
       
       
       <link rel="icon" href="../../../images/wake-favicon.svg">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.2.6">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.26">
     
     
       
@@ -30,10 +30,10 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.0e669242.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.6543a935.min.css">
       
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.85d0ee34.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
       
       
 
@@ -81,7 +81,7 @@
       
         <meta  property="og:description"  content="Wake is a Python-based Solidity development and testing framework with built-in vulnerability detectors." >
       
-        <meta  property="og:image"  content="https://ackeeblockchain.com/wake/docs/latest/assets/images/social/api-reference/analysis/cfg.png" >
+        <meta  property="og:image"  content="https://ackee.xyz/wake/docs/latest/assets/images/social/api-reference/analysis/cfg.png" >
       
         <meta  property="og:image:type"  content="image/png" >
       
@@ -89,7 +89,7 @@
       
         <meta  property="og:image:height"  content="630" >
       
-        <meta  property="og:url"  content="https://ackeeblockchain.com/wake/docs/latest/api-reference/analysis/cfg/" >
+        <meta  property="og:url"  content="https://ackee.xyz/wake/docs/latest/api-reference/analysis/cfg/" >
       
         <meta  name="twitter:card"  content="summary_large_image" >
       
@@ -97,7 +97,7 @@
       
         <meta  name="twitter:description"  content="Wake is a Python-based Solidity development and testing framework with built-in vulnerability detectors." >
       
-        <meta  name="twitter:image"  content="https://ackeeblockchain.com/wake/docs/latest/assets/images/social/api-reference/analysis/cfg.png" >
+        <meta  name="twitter:image"  content="https://ackee.xyz/wake/docs/latest/assets/images/social/api-reference/analysis/cfg.png" >
       
     
     
@@ -113,9 +113,6 @@
     
     <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
   
-    
-    
-      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
@@ -138,7 +135,7 @@
             <div class="md-banner__inner md-grid md-typeset">
               
   <span class="twemoji">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.3 27.7.2 40.1S486.3 480 472 480H40c-14.3 0-27.6-7.7-34.7-20.1s-7-27.8.2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24v112c0 13.3 10.7 24 24 24s24-10.7 24-24V184c0-13.3-10.7-24-24-24zm32 224a32 32 0 1 0-64 0 32 32 0 1 0 64 0z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.3 27.7.2 40.1S486.3 480 472 480H40c-14.3 0-27.6-7.7-34.7-20.1s-7-27.8.2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24v112c0 13.3 10.7 24 24 24s24-10.7 24-24V184c0-13.3-10.7-24-24-24zm32 224a32 32 0 1 0-64 0 32 32 0 1 0 64 0z"/></svg>
   </span>
   You're not viewing the latest version.
 
@@ -189,9 +186,9 @@
     
     
     
-    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
     
-      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3Z"/></svg>
       </label>
     
@@ -199,15 +196,18 @@
     
     
     
-    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
     
-      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6zm0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4zM7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
       </label>
     
   
 </form>
       
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
     
     
     
@@ -236,7 +236,7 @@
       
     </form>
     <div class="md-search__output">
-      <div class="md-search__scrollwrap" data-md-scrollfix>
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
         <div class="md-search-result" data-md-component="search-result">
           <div class="md-search-result__meta">
             Initializing search
@@ -253,7 +253,7 @@
         <a href="https://github.com/Ackee-Blockchain/wake" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
   </div>
   <div class="md-source__repository">
     Ackee-Blockchain/wake
@@ -436,7 +436,7 @@
       <a href="https://github.com/Ackee-Blockchain/wake" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
   </div>
   <div class="md-source__repository">
     Ackee-Blockchain/wake
@@ -448,6 +448,7 @@
     
       
       
+  
   
   
   
@@ -466,12 +467,18 @@
       
         
       
+        
+      
+    
+    
+      
+      
+        
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
       
-        
-        
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
@@ -489,7 +496,8 @@
 
             </a>
             
-              <label class="md-nav__link " for="__nav_1">
+              
+              <label class="md-nav__link " for="__nav_1" id="__nav_1_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
@@ -506,6 +514,7 @@
             
               
                 
+  
   
   
   
@@ -529,6 +538,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../../configuration/" class="md-nav__link">
         
@@ -549,6 +559,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../../compilation/" class="md-nav__link">
         
@@ -566,6 +577,28 @@
             
               
                 
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../changelog/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Changelog
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
   
   
   
@@ -596,6 +629,7 @@
   
   
   
+  
     
     
       
@@ -620,6 +654,12 @@
         
       
         
+      
+        
+      
+    
+    
+      
       
         
       
@@ -629,10 +669,9 @@
       
         
         
-        
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
         
+          
           <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
             
   
@@ -656,6 +695,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../../testing-framework/overview/" class="md-nav__link">
         
@@ -676,6 +716,7 @@
   
   
   
+  
     
     
       
@@ -696,15 +737,18 @@
     
     
       
-    
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
-        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" >
         
+          
           <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
             
   
@@ -728,6 +772,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../../testing-framework/getting-started/" class="md-nav__link">
         
@@ -745,6 +790,7 @@
             
               
                 
+  
   
   
   
@@ -768,6 +814,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../../testing-framework/accounts-and-addresses/" class="md-nav__link">
         
@@ -785,6 +832,7 @@
             
               
                 
+  
   
   
   
@@ -808,6 +856,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../../testing-framework/transaction-objects/" class="md-nav__link">
         
@@ -828,6 +877,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../../testing-framework/events-and-errors/" class="md-nav__link">
         
@@ -845,6 +895,7 @@
             
               
                 
+  
   
   
   
@@ -876,6 +927,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../../testing-framework/fuzzing/" class="md-nav__link">
         
@@ -893,6 +945,7 @@
             
               
                 
+  
   
   
   
@@ -916,6 +969,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../../testing-framework/deployment/" class="md-nav__link">
         
@@ -933,6 +987,7 @@
             
               
                 
+  
   
   
   
@@ -956,6 +1011,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../../testing-framework/coverage-analysis/" class="md-nav__link">
         
@@ -973,6 +1029,7 @@
             
               
                 
+  
   
   
   
@@ -996,6 +1053,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../../testing-framework/migrating-from-ape-and-brownie/" class="md-nav__link">
         
@@ -1013,6 +1071,7 @@
             
               
                 
+  
   
   
   
@@ -1036,6 +1095,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../../testing-framework/migrating-from-woke-3/" class="md-nav__link">
         
@@ -1053,6 +1113,7 @@
             
               
                 
+  
   
   
   
@@ -1083,6 +1144,7 @@
   
   
   
+  
     
     
       
@@ -1091,6 +1153,12 @@
         
       
         
+      
+        
+      
+    
+    
+      
       
         
       
@@ -1100,10 +1168,9 @@
       
         
         
-        
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
         
+          
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
             
   
@@ -1127,6 +1194,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../../static-analysis/using-detectors/" class="md-nav__link">
         
@@ -1144,6 +1212,7 @@
             
               
                 
+  
   
   
   
@@ -1167,6 +1236,7 @@
   
   
   
+  
     
     
       
@@ -1177,15 +1247,18 @@
     
     
       
-    
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
-        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
         
+          
           <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
             
   
@@ -1209,6 +1282,7 @@
   
   
   
+  
     
     
       
@@ -1251,6 +1325,12 @@
         
       
         
+      
+        
+      
+    
+    
+      
       
         
       
@@ -1260,10 +1340,9 @@
       
         
         
-        
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3_1" >
         
+          
           <label class="md-nav__link" for="__nav_3_3_1" id="__nav_3_3_1_label" tabindex="0">
             
   
@@ -1287,6 +1366,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../../static-analysis/detectors/abi-encode-with-signature/" class="md-nav__link">
         
@@ -1304,6 +1384,7 @@
             
               
                 
+  
   
   
   
@@ -1327,6 +1408,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../../static-analysis/detectors/balance-relied-on/" class="md-nav__link">
         
@@ -1344,6 +1426,7 @@
             
               
                 
+  
   
   
   
@@ -1367,6 +1450,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../../static-analysis/detectors/call-options-not-called/" class="md-nav__link">
         
@@ -1384,6 +1468,7 @@
             
               
                 
+  
   
   
   
@@ -1407,6 +1492,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../../static-analysis/detectors/empty-byte-array-copy-bug/" class="md-nav__link">
         
@@ -1424,6 +1510,7 @@
             
               
                 
+  
   
   
   
@@ -1447,6 +1534,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../../static-analysis/detectors/missing-return/" class="md-nav__link">
         
@@ -1464,6 +1552,7 @@
             
               
                 
+  
   
   
   
@@ -1487,6 +1576,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../../static-analysis/detectors/reentrancy/" class="md-nav__link">
         
@@ -1504,6 +1594,7 @@
             
               
                 
+  
   
   
   
@@ -1527,6 +1618,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../../static-analysis/detectors/tx-origin/" class="md-nav__link">
         
@@ -1544,6 +1636,7 @@
             
               
                 
+  
   
   
   
@@ -1567,6 +1660,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../../static-analysis/detectors/unprotected-selfdestruct/" class="md-nav__link">
         
@@ -1584,6 +1678,7 @@
             
               
                 
+  
   
   
   
@@ -1607,6 +1702,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../../static-analysis/detectors/unsafe-delegatecall/" class="md-nav__link">
         
@@ -1624,6 +1720,7 @@
             
               
                 
+  
   
   
   
@@ -1647,6 +1744,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../../static-analysis/detectors/unused-function/" class="md-nav__link">
         
@@ -1667,6 +1765,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../../static-analysis/detectors/unused-import/" class="md-nav__link">
         
@@ -1684,6 +1783,7 @@
             
               
                 
+  
   
   
   
@@ -1715,6 +1815,7 @@
   
   
   
+  
     
     
       
@@ -1735,6 +1836,26 @@
         
       
         
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
       
         
       
@@ -1744,10 +1865,9 @@
       
         
         
-        
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3_2" >
         
+          
           <label class="md-nav__link" for="__nav_3_3_2" id="__nav_3_3_2_label" tabindex="0">
             
   
@@ -1771,6 +1891,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../../static-analysis/printers/abi/" class="md-nav__link">
         
@@ -1788,6 +1909,7 @@
             
               
                 
+  
   
   
   
@@ -1811,6 +1933,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../../static-analysis/printers/control-flow-graph/" class="md-nav__link">
         
@@ -1828,6 +1951,7 @@
             
               
                 
+  
   
   
   
@@ -1851,6 +1975,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../../static-analysis/printers/inheritance-graph/" class="md-nav__link">
         
@@ -1868,6 +1993,7 @@
             
               
                 
+  
   
   
   
@@ -1891,6 +2017,154 @@
   
   
   
+  
+    <li class="md-nav__item">
+      <a href="../../../static-analysis/printers/lsp-control-flow-graph/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    LSP control flow graph
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../static-analysis/printers/lsp-inheritance-graph/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    LSP inheritance graph
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../static-analysis/printers/lsp-linearized-inheritance-graph/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    LSP linearized inheritance graph
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../static-analysis/printers/lsp-openzeppelin-docs/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    LSP OpenZeppelin docs
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../static-analysis/printers/lsp-references/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    LSP references
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../static-analysis/printers/lsp-selectors/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    LSP selectors
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../static-analysis/printers/lsp-yul-definitions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    LSP Yul definitions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
     <li class="md-nav__item">
       <a href="../../../static-analysis/printers/modifiers/" class="md-nav__link">
         
@@ -1908,6 +2182,7 @@
             
               
                 
+  
   
   
   
@@ -1931,6 +2206,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../../static-analysis/printers/storage-layout/" class="md-nav__link">
         
@@ -1948,6 +2224,7 @@
             
               
                 
+  
   
   
   
@@ -1987,6 +2264,7 @@
   
   
   
+  
     
     
       
@@ -1999,15 +2277,18 @@
     
     
       
-    
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
-        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
         
+          
           <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
             
   
@@ -2031,6 +2312,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../../static-analysis/getting-started/" class="md-nav__link">
         
@@ -2051,6 +2333,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../../static-analysis/working-with-ir/" class="md-nav__link">
         
@@ -2068,6 +2351,7 @@
             
               
                 
+  
   
   
   
@@ -2106,6 +2390,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../../language-server/" class="md-nav__link">
         
@@ -2122,6 +2407,7 @@
     
       
       
+  
   
   
   
@@ -2146,6 +2432,7 @@
     
   
   
+  
     
     
       
@@ -2165,15 +2452,23 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
         
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
             
   
   <span class="md-ellipsis">
@@ -2198,6 +2493,7 @@
     
   
   
+  
     
     
       
@@ -2208,16 +2504,22 @@
     
     
       
+      
+        
+          
+          
+        
+      
+    
     
     <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1" checked>
         
-          <label class="md-nav__link" for="__nav_6_1" id="__nav_6_1_label" tabindex="0">
+          
+          <label class="md-nav__link" for="__nav_6_1" id="__nav_6_1_label" tabindex="">
             
   
   <span class="md-ellipsis">
@@ -2240,6 +2542,7 @@
   
   
     
+  
   
   
     <li class="md-nav__item md-nav__item--active">
@@ -2288,7 +2591,9 @@
       
         <li class="md-nav__item">
   <a href="#wake.analysis.cfg.TransitionConditionKind" class="md-nav__link">
-    TransitionConditionKind
+    <span class="md-ellipsis">
+      TransitionConditionKind
+    </span>
   </a>
   
     <nav class="md-nav" aria-label="TransitionConditionKind">
@@ -2296,70 +2601,90 @@
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.TransitionConditionKind.IS_TRUE" class="md-nav__link">
-    IS_TRUE
+    <span class="md-ellipsis">
+      IS_TRUE
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.TransitionConditionKind.IS_FALSE" class="md-nav__link">
-    IS_FALSE
+    <span class="md-ellipsis">
+      IS_FALSE
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.TransitionConditionKind.ALWAYS" class="md-nav__link">
-    ALWAYS
+    <span class="md-ellipsis">
+      ALWAYS
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.TransitionConditionKind.NEVER" class="md-nav__link">
-    NEVER
+    <span class="md-ellipsis">
+      NEVER
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.TransitionConditionKind.TRY_SUCCEEDED" class="md-nav__link">
-    TRY_SUCCEEDED
+    <span class="md-ellipsis">
+      TRY_SUCCEEDED
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.TransitionConditionKind.TRY_REVERTED" class="md-nav__link">
-    TRY_REVERTED
+    <span class="md-ellipsis">
+      TRY_REVERTED
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.TransitionConditionKind.TRY_PANICKED" class="md-nav__link">
-    TRY_PANICKED
+    <span class="md-ellipsis">
+      TRY_PANICKED
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.TransitionConditionKind.TRY_FAILED" class="md-nav__link">
-    TRY_FAILED
+    <span class="md-ellipsis">
+      TRY_FAILED
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.TransitionConditionKind.SWITCH_MATCHED" class="md-nav__link">
-    SWITCH_MATCHED
+    <span class="md-ellipsis">
+      SWITCH_MATCHED
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.TransitionConditionKind.SWITCH_DEFAULT" class="md-nav__link">
-    SWITCH_DEFAULT
+    <span class="md-ellipsis">
+      SWITCH_DEFAULT
+    </span>
   </a>
   
 </li>
@@ -2371,7 +2696,9 @@
       
         <li class="md-nav__item">
   <a href="#wake.analysis.cfg.ControlFlowGraph" class="md-nav__link">
-    ControlFlowGraph
+    <span class="md-ellipsis">
+      ControlFlowGraph
+    </span>
   </a>
   
     <nav class="md-nav" aria-label="ControlFlowGraph">
@@ -2379,49 +2706,63 @@
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.ControlFlowGraph.graph" class="md-nav__link">
-    graph
+    <span class="md-ellipsis">
+      graph
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.ControlFlowGraph.declaration" class="md-nav__link">
-    declaration
+    <span class="md-ellipsis">
+      declaration
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.ControlFlowGraph.start_node" class="md-nav__link">
-    start_node
+    <span class="md-ellipsis">
+      start_node
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.ControlFlowGraph.success_end_node" class="md-nav__link">
-    success_end_node
+    <span class="md-ellipsis">
+      success_end_node
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.ControlFlowGraph.revert_end_node" class="md-nav__link">
-    revert_end_node
+    <span class="md-ellipsis">
+      revert_end_node
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.ControlFlowGraph.get_cfg_node" class="md-nav__link">
-    get_cfg_node
+    <span class="md-ellipsis">
+      get_cfg_node
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.ControlFlowGraph.is_reachable" class="md-nav__link">
-    is_reachable
+    <span class="md-ellipsis">
+      is_reachable
+    </span>
   </a>
   
 </li>
@@ -2433,7 +2774,9 @@
       
         <li class="md-nav__item">
   <a href="#wake.analysis.cfg.CfgNode" class="md-nav__link">
-    CfgNode
+    <span class="md-ellipsis">
+      CfgNode
+    </span>
   </a>
   
     <nav class="md-nav" aria-label="CfgNode">
@@ -2441,21 +2784,27 @@
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.CfgNode.id" class="md-nav__link">
-    id
+    <span class="md-ellipsis">
+      id
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.CfgNode.statements" class="md-nav__link">
-    statements
+    <span class="md-ellipsis">
+      statements
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.CfgNode.control_statement" class="md-nav__link">
-    control_statement
+    <span class="md-ellipsis">
+      control_statement
+    </span>
   </a>
   
 </li>
@@ -2476,6 +2825,7 @@
             
               
                 
+  
   
   
   
@@ -2507,6 +2857,7 @@
   
   
   
+  
     
     
       
@@ -2517,16 +2868,22 @@
     
     
       
+      
+        
+          
+          
+        
+      
+    
     
     <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_2" >
         
-          <label class="md-nav__link" for="__nav_6_2" id="__nav_6_2_label" tabindex="0">
+          
+          <label class="md-nav__link" for="__nav_6_2" id="__nav_6_2_label" tabindex="">
             
   
   <span class="md-ellipsis">
@@ -2549,6 +2906,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../config/data-model/" class="md-nav__link">
         
@@ -2566,6 +2924,7 @@
             
               
                 
+  
   
   
   
@@ -2597,6 +2956,7 @@
   
   
   
+  
     
     
       
@@ -2605,16 +2965,22 @@
     
     
       
+      
+        
+          
+          
+        
+      
+    
     
     <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_3" >
         
-          <label class="md-nav__link" for="__nav_6_3" id="__nav_6_3_label" tabindex="0">
+          
+          <label class="md-nav__link" for="__nav_6_3" id="__nav_6_3_label" tabindex="">
             
   
   <span class="md-ellipsis">
@@ -2634,6 +3000,7 @@
             
               
                 
+  
   
   
   
@@ -2665,6 +3032,7 @@
   
   
   
+  
     
     
       
@@ -2675,16 +3043,22 @@
     
     
       
+      
+        
+          
+          
+        
+      
+    
     
     <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_4" >
         
-          <label class="md-nav__link" for="__nav_6_4" id="__nav_6_4_label" tabindex="0">
+          
+          <label class="md-nav__link" for="__nav_6_4" id="__nav_6_4_label" tabindex="">
             
   
   <span class="md-ellipsis">
@@ -2707,6 +3081,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../core/solidity-version/" class="md-nav__link">
         
@@ -2724,6 +3099,7 @@
             
               
                 
+  
   
   
   
@@ -2755,6 +3131,7 @@
   
   
   
+  
     
     
       
@@ -2763,16 +3140,22 @@
     
     
       
+      
+        
+          
+          
+        
+      
+    
     
     <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_5" >
         
-          <label class="md-nav__link" for="__nav_6_5" id="__nav_6_5_label" tabindex="0">
+          
+          <label class="md-nav__link" for="__nav_6_5" id="__nav_6_5_label" tabindex="">
             
   
   <span class="md-ellipsis">
@@ -2792,6 +3175,7 @@
             
               
                 
+  
   
   
   
@@ -2823,6 +3207,7 @@
   
   
   
+  
     
     
       
@@ -2849,16 +3234,22 @@
     
     
       
+      
+        
+          
+          
+        
+      
+    
     
     <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_6" >
         
-          <label class="md-nav__link" for="__nav_6_6" id="__nav_6_6_label" tabindex="0">
+          
+          <label class="md-nav__link" for="__nav_6_6" id="__nav_6_6_label" tabindex="">
             
   
   <span class="md-ellipsis">
@@ -2878,6 +3269,7 @@
             
               
                 
+  
   
   
   
@@ -2901,6 +3293,7 @@
   
   
   
+  
     
     
       
@@ -2923,6 +3316,12 @@
         
       
         
+      
+        
+      
+    
+    
+      
       
         
       
@@ -2932,10 +3331,9 @@
       
         
         
-        
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_6_2" >
         
+          
           <label class="md-nav__link" for="__nav_6_6_2" id="__nav_6_6_2_label" tabindex="0">
             
   
@@ -2959,6 +3357,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/declarations/abc/" class="md-nav__link">
         
@@ -2976,6 +3375,7 @@
             
               
                 
+  
   
   
   
@@ -2999,6 +3399,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/declarations/enum-definition/" class="md-nav__link">
         
@@ -3016,6 +3417,7 @@
             
               
                 
+  
   
   
   
@@ -3039,6 +3441,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/declarations/error-definition/" class="md-nav__link">
         
@@ -3056,6 +3459,7 @@
             
               
                 
+  
   
   
   
@@ -3079,6 +3483,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/declarations/function-definition/" class="md-nav__link">
         
@@ -3096,6 +3501,7 @@
             
               
                 
+  
   
   
   
@@ -3119,6 +3525,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/declarations/struct-definition/" class="md-nav__link">
         
@@ -3139,6 +3546,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/declarations/user-defined-value-type-definition/" class="md-nav__link">
         
@@ -3156,6 +3564,7 @@
             
               
                 
+  
   
   
   
@@ -3187,6 +3596,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/enums/" class="md-nav__link">
         
@@ -3207,6 +3617,7 @@
   
   
   
+  
     
     
       
@@ -3237,6 +3648,12 @@
         
       
         
+      
+        
+      
+    
+    
+      
       
         
       
@@ -3246,10 +3663,9 @@
       
         
         
-        
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_6_4" >
         
+          
           <label class="md-nav__link" for="__nav_6_6_4" id="__nav_6_6_4_label" tabindex="0">
             
   
@@ -3273,6 +3689,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/expressions/abc/" class="md-nav__link">
         
@@ -3290,6 +3707,7 @@
             
               
                 
+  
   
   
   
@@ -3313,6 +3731,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/expressions/binary-operation/" class="md-nav__link">
         
@@ -3330,6 +3749,7 @@
             
               
                 
+  
   
   
   
@@ -3353,6 +3773,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/expressions/elementary-type-name-expression/" class="md-nav__link">
         
@@ -3370,6 +3791,7 @@
             
               
                 
+  
   
   
   
@@ -3393,6 +3815,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/expressions/function-call-options/" class="md-nav__link">
         
@@ -3410,6 +3833,7 @@
             
               
                 
+  
   
   
   
@@ -3433,6 +3857,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/expressions/index-access/" class="md-nav__link">
         
@@ -3450,6 +3875,7 @@
             
               
                 
+  
   
   
   
@@ -3473,6 +3899,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/expressions/literal/" class="md-nav__link">
         
@@ -3490,6 +3917,7 @@
             
               
                 
+  
   
   
   
@@ -3513,6 +3941,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/expressions/new-expression/" class="md-nav__link">
         
@@ -3533,6 +3962,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/expressions/tuple-expression/" class="md-nav__link">
         
@@ -3550,6 +3980,7 @@
             
               
                 
+  
   
   
   
@@ -3581,6 +4012,7 @@
   
   
   
+  
     
     
       
@@ -3603,6 +4035,12 @@
         
       
         
+      
+        
+      
+    
+    
+      
       
         
       
@@ -3612,10 +4050,9 @@
       
         
         
-        
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_6_5" >
         
+          
           <label class="md-nav__link" for="__nav_6_6_5" id="__nav_6_6_5_label" tabindex="0">
             
   
@@ -3639,6 +4076,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/meta/identifier-path/" class="md-nav__link">
         
@@ -3656,6 +4094,7 @@
             
               
                 
+  
   
   
   
@@ -3679,6 +4118,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/meta/inheritance-specifier/" class="md-nav__link">
         
@@ -3696,6 +4136,7 @@
             
               
                 
+  
   
   
   
@@ -3719,6 +4160,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/meta/override-specifier/" class="md-nav__link">
         
@@ -3736,6 +4178,7 @@
             
               
                 
+  
   
   
   
@@ -3759,6 +4202,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/meta/pragma-directive/" class="md-nav__link">
         
@@ -3776,6 +4220,7 @@
             
               
                 
+  
   
   
   
@@ -3799,6 +4244,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/meta/structured-documentation/" class="md-nav__link">
         
@@ -3819,6 +4265,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/meta/try-catch-clause/" class="md-nav__link">
         
@@ -3836,6 +4283,7 @@
             
               
                 
+  
   
   
   
@@ -3867,6 +4315,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/reference-resolver/" class="md-nav__link">
         
@@ -3887,6 +4336,7 @@
   
   
   
+  
     
     
       
@@ -3921,6 +4371,12 @@
         
       
         
+      
+        
+      
+    
+    
+      
       
         
       
@@ -3930,10 +4386,9 @@
       
         
         
-        
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_6_7" >
         
+          
           <label class="md-nav__link" for="__nav_6_6_7" id="__nav_6_6_7_label" tabindex="0">
             
   
@@ -3957,6 +4412,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/statements/abc/" class="md-nav__link">
         
@@ -3974,6 +4430,7 @@
             
               
                 
+  
   
   
   
@@ -3997,6 +4454,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/statements/break-statement/" class="md-nav__link">
         
@@ -4014,6 +4472,7 @@
             
               
                 
+  
   
   
   
@@ -4037,6 +4496,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/statements/do-while-statement/" class="md-nav__link">
         
@@ -4054,6 +4514,7 @@
             
               
                 
+  
   
   
   
@@ -4077,6 +4538,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/statements/expression-statement/" class="md-nav__link">
         
@@ -4094,6 +4556,7 @@
             
               
                 
+  
   
   
   
@@ -4117,6 +4580,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/statements/if-statement/" class="md-nav__link">
         
@@ -4134,6 +4598,7 @@
             
               
                 
+  
   
   
   
@@ -4157,6 +4622,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/statements/placeholder-statement/" class="md-nav__link">
         
@@ -4174,6 +4640,7 @@
             
               
                 
+  
   
   
   
@@ -4197,6 +4664,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/statements/revert-statement/" class="md-nav__link">
         
@@ -4214,6 +4682,7 @@
             
               
                 
+  
   
   
   
@@ -4237,6 +4706,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/statements/unchecked-block/" class="md-nav__link">
         
@@ -4257,6 +4727,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/statements/variable-declaration-statement/" class="md-nav__link">
         
@@ -4274,6 +4745,7 @@
             
               
                 
+  
   
   
   
@@ -4305,6 +4777,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/types/" class="md-nav__link">
         
@@ -4325,6 +4798,7 @@
   
   
   
+  
     
     
       
@@ -4337,6 +4811,12 @@
         
       
         
+      
+        
+      
+    
+    
+      
       
         
       
@@ -4346,10 +4826,9 @@
       
         
         
-        
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_6_9" >
         
+          
           <label class="md-nav__link" for="__nav_6_6_9" id="__nav_6_6_9_label" tabindex="0">
             
   
@@ -4373,6 +4852,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/type-names/abc/" class="md-nav__link">
         
@@ -4390,6 +4870,7 @@
             
               
                 
+  
   
   
   
@@ -4413,6 +4894,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/type-names/elementary-type-name/" class="md-nav__link">
         
@@ -4430,6 +4912,7 @@
             
               
                 
+  
   
   
   
@@ -4453,6 +4936,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/type-names/mapping/" class="md-nav__link">
         
@@ -4470,6 +4954,7 @@
             
               
                 
+  
   
   
   
@@ -4501,6 +4986,7 @@
   
   
   
+  
     
     
       
@@ -4535,6 +5021,12 @@
         
       
         
+      
+        
+      
+    
+    
+      
       
         
       
@@ -4544,10 +5036,9 @@
       
         
         
-        
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_6_10" >
         
+          
           <label class="md-nav__link" for="__nav_6_6_10" id="__nav_6_6_10_label" tabindex="0">
             
   
@@ -4571,6 +5062,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/yul/abc/" class="md-nav__link">
         
@@ -4588,6 +5080,7 @@
             
               
                 
+  
   
   
   
@@ -4611,6 +5104,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/yul/block/" class="md-nav__link">
         
@@ -4628,6 +5122,7 @@
             
               
                 
+  
   
   
   
@@ -4651,6 +5146,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/yul/case/" class="md-nav__link">
         
@@ -4668,6 +5164,7 @@
             
               
                 
+  
   
   
   
@@ -4691,6 +5188,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/yul/expression-statement/" class="md-nav__link">
         
@@ -4708,6 +5206,7 @@
             
               
                 
+  
   
   
   
@@ -4731,6 +5230,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/yul/function-call/" class="md-nav__link">
         
@@ -4748,6 +5248,7 @@
             
               
                 
+  
   
   
   
@@ -4771,6 +5272,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/yul/identifier/" class="md-nav__link">
         
@@ -4788,6 +5290,7 @@
             
               
                 
+  
   
   
   
@@ -4811,6 +5314,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/yul/leave/" class="md-nav__link">
         
@@ -4828,6 +5332,7 @@
             
               
                 
+  
   
   
   
@@ -4851,6 +5356,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/yul/switch/" class="md-nav__link">
         
@@ -4871,6 +5377,7 @@
   
   
   
+  
     <li class="md-nav__item">
       <a href="../../ir/yul/typed-name/" class="md-nav__link">
         
@@ -4888,6 +5395,7 @@
             
               
                 
+  
   
   
   
@@ -4927,6 +5435,7 @@
   
   
   
+  
     
     
       
@@ -4935,16 +5444,22 @@
     
     
       
+      
+        
+          
+          
+        
+      
+    
     
     <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_7" >
         
-          <label class="md-nav__link" for="__nav_6_7" id="__nav_6_7_label" tabindex="0">
+          
+          <label class="md-nav__link" for="__nav_6_7" id="__nav_6_7_label" tabindex="">
             
   
   <span class="md-ellipsis">
@@ -4964,6 +5479,7 @@
             
               
                 
+  
   
   
   
@@ -5025,7 +5541,9 @@
       
         <li class="md-nav__item">
   <a href="#wake.analysis.cfg.TransitionConditionKind" class="md-nav__link">
-    TransitionConditionKind
+    <span class="md-ellipsis">
+      TransitionConditionKind
+    </span>
   </a>
   
     <nav class="md-nav" aria-label="TransitionConditionKind">
@@ -5033,70 +5551,90 @@
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.TransitionConditionKind.IS_TRUE" class="md-nav__link">
-    IS_TRUE
+    <span class="md-ellipsis">
+      IS_TRUE
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.TransitionConditionKind.IS_FALSE" class="md-nav__link">
-    IS_FALSE
+    <span class="md-ellipsis">
+      IS_FALSE
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.TransitionConditionKind.ALWAYS" class="md-nav__link">
-    ALWAYS
+    <span class="md-ellipsis">
+      ALWAYS
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.TransitionConditionKind.NEVER" class="md-nav__link">
-    NEVER
+    <span class="md-ellipsis">
+      NEVER
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.TransitionConditionKind.TRY_SUCCEEDED" class="md-nav__link">
-    TRY_SUCCEEDED
+    <span class="md-ellipsis">
+      TRY_SUCCEEDED
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.TransitionConditionKind.TRY_REVERTED" class="md-nav__link">
-    TRY_REVERTED
+    <span class="md-ellipsis">
+      TRY_REVERTED
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.TransitionConditionKind.TRY_PANICKED" class="md-nav__link">
-    TRY_PANICKED
+    <span class="md-ellipsis">
+      TRY_PANICKED
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.TransitionConditionKind.TRY_FAILED" class="md-nav__link">
-    TRY_FAILED
+    <span class="md-ellipsis">
+      TRY_FAILED
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.TransitionConditionKind.SWITCH_MATCHED" class="md-nav__link">
-    SWITCH_MATCHED
+    <span class="md-ellipsis">
+      SWITCH_MATCHED
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.TransitionConditionKind.SWITCH_DEFAULT" class="md-nav__link">
-    SWITCH_DEFAULT
+    <span class="md-ellipsis">
+      SWITCH_DEFAULT
+    </span>
   </a>
   
 </li>
@@ -5108,7 +5646,9 @@
       
         <li class="md-nav__item">
   <a href="#wake.analysis.cfg.ControlFlowGraph" class="md-nav__link">
-    ControlFlowGraph
+    <span class="md-ellipsis">
+      ControlFlowGraph
+    </span>
   </a>
   
     <nav class="md-nav" aria-label="ControlFlowGraph">
@@ -5116,49 +5656,63 @@
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.ControlFlowGraph.graph" class="md-nav__link">
-    graph
+    <span class="md-ellipsis">
+      graph
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.ControlFlowGraph.declaration" class="md-nav__link">
-    declaration
+    <span class="md-ellipsis">
+      declaration
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.ControlFlowGraph.start_node" class="md-nav__link">
-    start_node
+    <span class="md-ellipsis">
+      start_node
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.ControlFlowGraph.success_end_node" class="md-nav__link">
-    success_end_node
+    <span class="md-ellipsis">
+      success_end_node
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.ControlFlowGraph.revert_end_node" class="md-nav__link">
-    revert_end_node
+    <span class="md-ellipsis">
+      revert_end_node
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.ControlFlowGraph.get_cfg_node" class="md-nav__link">
-    get_cfg_node
+    <span class="md-ellipsis">
+      get_cfg_node
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.ControlFlowGraph.is_reachable" class="md-nav__link">
-    is_reachable
+    <span class="md-ellipsis">
+      is_reachable
+    </span>
   </a>
   
 </li>
@@ -5170,7 +5724,9 @@
       
         <li class="md-nav__item">
   <a href="#wake.analysis.cfg.CfgNode" class="md-nav__link">
-    CfgNode
+    <span class="md-ellipsis">
+      CfgNode
+    </span>
   </a>
   
     <nav class="md-nav" aria-label="CfgNode">
@@ -5178,21 +5734,27 @@
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.CfgNode.id" class="md-nav__link">
-    id
+    <span class="md-ellipsis">
+      id
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.CfgNode.statements" class="md-nav__link">
-    statements
+    <span class="md-ellipsis">
+      statements
+    </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#wake.analysis.cfg.CfgNode.control_statement" class="md-nav__link">
-    control_statement
+    <span class="md-ellipsis">
+      control_statement
+    </span>
   </a>
   
 </li>
@@ -5971,36 +6533,36 @@ The visualized CFGs are stripped of empty nodes, so they may slightly differ fro
 <a id="__codelineno-0-244" name="__codelineno-0-244"></a>        <span class="n">end</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">StatementAbc</span><span class="p">,</span> <span class="n">YulStatementAbc</span><span class="p">],</span>
 <a id="__codelineno-0-245" name="__codelineno-0-245"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <a id="__codelineno-0-246" name="__codelineno-0-246"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-247" name="__codelineno-0-247"></a><span class="sd">        Args:</span>
-<a id="__codelineno-0-248" name="__codelineno-0-248"></a><span class="sd">            start: Statement that is expected to be executed before `end`.</span>
-<a id="__codelineno-0-249" name="__codelineno-0-249"></a><span class="sd">            end: Statement that is expected to be executed after `start`.</span>
-<a id="__codelineno-0-250" name="__codelineno-0-250"></a>
-<a id="__codelineno-0-251" name="__codelineno-0-251"></a><span class="sd">        Returns:</span>
-<a id="__codelineno-0-252" name="__codelineno-0-252"></a><span class="sd">            True if there is an execution path from `start` to `end` in this CFG, False otherwise.</span>
-<a id="__codelineno-0-253" name="__codelineno-0-253"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-254" name="__codelineno-0-254"></a>        <span class="n">start_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_statements_lookup</span><span class="p">[</span><span class="n">start</span><span class="p">]</span>
-<a id="__codelineno-0-255" name="__codelineno-0-255"></a>        <span class="n">end_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_statements_lookup</span><span class="p">[</span><span class="n">end</span><span class="p">]</span>
-<a id="__codelineno-0-256" name="__codelineno-0-256"></a>        <span class="k">if</span> <span class="n">start_node</span> <span class="o">==</span> <span class="n">end_node</span><span class="p">:</span>
-<a id="__codelineno-0-257" name="__codelineno-0-257"></a>            <span class="k">if</span> <span class="n">start</span> <span class="o">==</span> <span class="n">start_node</span><span class="o">.</span><span class="n">control_statement</span><span class="p">:</span>
-<a id="__codelineno-0-258" name="__codelineno-0-258"></a>                <span class="k">if</span> <span class="n">end</span> <span class="o">==</span> <span class="n">start_node</span><span class="o">.</span><span class="n">control_statement</span><span class="p">:</span>
-<a id="__codelineno-0-259" name="__codelineno-0-259"></a>                    <span class="k">return</span> <span class="kc">True</span>
-<a id="__codelineno-0-260" name="__codelineno-0-260"></a>                <span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-0-261" name="__codelineno-0-261"></a>                    <span class="n">nx</span><span class="o">.</span><span class="n">find_cycle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="n">start_node</span><span class="p">)</span>
-<a id="__codelineno-0-262" name="__codelineno-0-262"></a>                    <span class="k">return</span> <span class="kc">True</span>
-<a id="__codelineno-0-263" name="__codelineno-0-263"></a>                <span class="k">except</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXNoCycle</span><span class="p">:</span>
-<a id="__codelineno-0-264" name="__codelineno-0-264"></a>                    <span class="k">return</span> <span class="kc">False</span>
-<a id="__codelineno-0-265" name="__codelineno-0-265"></a>            <span class="k">if</span> <span class="n">end</span> <span class="o">==</span> <span class="n">end_node</span><span class="o">.</span><span class="n">control_statement</span><span class="p">:</span>
-<a id="__codelineno-0-266" name="__codelineno-0-266"></a>                <span class="k">return</span> <span class="kc">True</span>
-<a id="__codelineno-0-267" name="__codelineno-0-267"></a>
-<a id="__codelineno-0-268" name="__codelineno-0-268"></a>            <span class="n">start_index</span> <span class="o">=</span> <span class="n">start_node</span><span class="o">.</span><span class="n">statements</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
-<a id="__codelineno-0-269" name="__codelineno-0-269"></a>            <span class="n">end_index</span> <span class="o">=</span> <span class="n">end_node</span><span class="o">.</span><span class="n">statements</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">end</span><span class="p">)</span>
-<a id="__codelineno-0-270" name="__codelineno-0-270"></a>            <span class="k">if</span> <span class="n">start_index</span> <span class="o">&lt;=</span> <span class="n">end_index</span><span class="p">:</span>  <span class="c1"># also EQUAL?</span>
-<a id="__codelineno-0-271" name="__codelineno-0-271"></a>                <span class="k">return</span> <span class="kc">True</span>
-<a id="__codelineno-0-272" name="__codelineno-0-272"></a>            <span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-0-273" name="__codelineno-0-273"></a>                <span class="n">nx</span><span class="o">.</span><span class="n">find_cycle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="n">start_node</span><span class="p">)</span>
-<a id="__codelineno-0-274" name="__codelineno-0-274"></a>                <span class="k">return</span> <span class="kc">True</span>
-<a id="__codelineno-0-275" name="__codelineno-0-275"></a>            <span class="k">except</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXNoCycle</span><span class="p">:</span>
-<a id="__codelineno-0-276" name="__codelineno-0-276"></a>                <span class="k">return</span> <span class="kc">False</span>
+<a id="__codelineno-0-247" name="__codelineno-0-247"></a><span class="sd">        Returns False for `start == end` unless there is a loop in the CFG containing `start`.</span>
+<a id="__codelineno-0-248" name="__codelineno-0-248"></a>
+<a id="__codelineno-0-249" name="__codelineno-0-249"></a><span class="sd">        Args:</span>
+<a id="__codelineno-0-250" name="__codelineno-0-250"></a><span class="sd">            start: Statement that is expected to be executed before `end`.</span>
+<a id="__codelineno-0-251" name="__codelineno-0-251"></a><span class="sd">            end: Statement that is expected to be executed after `start`.</span>
+<a id="__codelineno-0-252" name="__codelineno-0-252"></a>
+<a id="__codelineno-0-253" name="__codelineno-0-253"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-254" name="__codelineno-0-254"></a><span class="sd">            True if there is an execution path from `start` to `end` in this CFG, False otherwise.</span>
+<a id="__codelineno-0-255" name="__codelineno-0-255"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-256" name="__codelineno-0-256"></a>        <span class="n">start_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_statements_lookup</span><span class="p">[</span><span class="n">start</span><span class="p">]</span>
+<a id="__codelineno-0-257" name="__codelineno-0-257"></a>        <span class="n">end_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_statements_lookup</span><span class="p">[</span><span class="n">end</span><span class="p">]</span>
+<a id="__codelineno-0-258" name="__codelineno-0-258"></a>        <span class="k">if</span> <span class="n">start_node</span> <span class="o">==</span> <span class="n">end_node</span><span class="p">:</span>
+<a id="__codelineno-0-259" name="__codelineno-0-259"></a>            <span class="n">start_index</span> <span class="o">=</span> <span class="p">(</span>
+<a id="__codelineno-0-260" name="__codelineno-0-260"></a>                <span class="n">start_node</span><span class="o">.</span><span class="n">statements</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
+<a id="__codelineno-0-261" name="__codelineno-0-261"></a>                <span class="k">if</span> <span class="n">start</span> <span class="o">!=</span> <span class="n">start_node</span><span class="o">.</span><span class="n">control_statement</span>
+<a id="__codelineno-0-262" name="__codelineno-0-262"></a>                <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">start_node</span><span class="o">.</span><span class="n">statements</span><span class="p">)</span>
+<a id="__codelineno-0-263" name="__codelineno-0-263"></a>            <span class="p">)</span>
+<a id="__codelineno-0-264" name="__codelineno-0-264"></a>            <span class="n">end_index</span> <span class="o">=</span> <span class="p">(</span>
+<a id="__codelineno-0-265" name="__codelineno-0-265"></a>                <span class="n">end_node</span><span class="o">.</span><span class="n">statements</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">end</span><span class="p">)</span>
+<a id="__codelineno-0-266" name="__codelineno-0-266"></a>                <span class="k">if</span> <span class="n">end</span> <span class="o">!=</span> <span class="n">end_node</span><span class="o">.</span><span class="n">control_statement</span>
+<a id="__codelineno-0-267" name="__codelineno-0-267"></a>                <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">end_node</span><span class="o">.</span><span class="n">statements</span><span class="p">)</span>
+<a id="__codelineno-0-268" name="__codelineno-0-268"></a>            <span class="p">)</span>
+<a id="__codelineno-0-269" name="__codelineno-0-269"></a>            <span class="k">if</span> <span class="n">start_index</span> <span class="o">&lt;</span> <span class="n">end_index</span><span class="p">:</span>
+<a id="__codelineno-0-270" name="__codelineno-0-270"></a>                <span class="k">return</span> <span class="kc">True</span>
+<a id="__codelineno-0-271" name="__codelineno-0-271"></a>
+<a id="__codelineno-0-272" name="__codelineno-0-272"></a>            <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">to</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">edge_dfs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="n">start_node</span><span class="p">):</span>
+<a id="__codelineno-0-273" name="__codelineno-0-273"></a>                <span class="k">if</span> <span class="n">to</span> <span class="o">==</span> <span class="n">end_node</span><span class="p">:</span>
+<a id="__codelineno-0-274" name="__codelineno-0-274"></a>                    <span class="k">return</span> <span class="kc">True</span>
+<a id="__codelineno-0-275" name="__codelineno-0-275"></a>
+<a id="__codelineno-0-276" name="__codelineno-0-276"></a>            <span class="k">return</span> <span class="kc">False</span>
 <a id="__codelineno-0-277" name="__codelineno-0-277"></a>        <span class="k">else</span><span class="p">:</span>
 <a id="__codelineno-0-278" name="__codelineno-0-278"></a>            <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">has_path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="n">start_node</span><span class="p">,</span> <span class="n">end_node</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
@@ -6393,6 +6955,7 @@ serve as containers for other statements and so may be contained in multiple CFG
 
   <div class="doc doc-contents ">
   
+      <p>Returns False for <code>start == end</code> unless there is a loop in the CFG containing <code>start</code>.</p>
 
 
 
@@ -6507,36 +7070,36 @@ serve as containers for other statements and so may be contained in multiple CFG
 <a id="__codelineno-0-244" name="__codelineno-0-244"></a>    <span class="n">end</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">StatementAbc</span><span class="p">,</span> <span class="n">YulStatementAbc</span><span class="p">],</span>
 <a id="__codelineno-0-245" name="__codelineno-0-245"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <a id="__codelineno-0-246" name="__codelineno-0-246"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-247" name="__codelineno-0-247"></a><span class="sd">    Args:</span>
-<a id="__codelineno-0-248" name="__codelineno-0-248"></a><span class="sd">        start: Statement that is expected to be executed before `end`.</span>
-<a id="__codelineno-0-249" name="__codelineno-0-249"></a><span class="sd">        end: Statement that is expected to be executed after `start`.</span>
-<a id="__codelineno-0-250" name="__codelineno-0-250"></a>
-<a id="__codelineno-0-251" name="__codelineno-0-251"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-252" name="__codelineno-0-252"></a><span class="sd">        True if there is an execution path from `start` to `end` in this CFG, False otherwise.</span>
-<a id="__codelineno-0-253" name="__codelineno-0-253"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-254" name="__codelineno-0-254"></a>    <span class="n">start_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_statements_lookup</span><span class="p">[</span><span class="n">start</span><span class="p">]</span>
-<a id="__codelineno-0-255" name="__codelineno-0-255"></a>    <span class="n">end_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_statements_lookup</span><span class="p">[</span><span class="n">end</span><span class="p">]</span>
-<a id="__codelineno-0-256" name="__codelineno-0-256"></a>    <span class="k">if</span> <span class="n">start_node</span> <span class="o">==</span> <span class="n">end_node</span><span class="p">:</span>
-<a id="__codelineno-0-257" name="__codelineno-0-257"></a>        <span class="k">if</span> <span class="n">start</span> <span class="o">==</span> <span class="n">start_node</span><span class="o">.</span><span class="n">control_statement</span><span class="p">:</span>
-<a id="__codelineno-0-258" name="__codelineno-0-258"></a>            <span class="k">if</span> <span class="n">end</span> <span class="o">==</span> <span class="n">start_node</span><span class="o">.</span><span class="n">control_statement</span><span class="p">:</span>
-<a id="__codelineno-0-259" name="__codelineno-0-259"></a>                <span class="k">return</span> <span class="kc">True</span>
-<a id="__codelineno-0-260" name="__codelineno-0-260"></a>            <span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-0-261" name="__codelineno-0-261"></a>                <span class="n">nx</span><span class="o">.</span><span class="n">find_cycle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="n">start_node</span><span class="p">)</span>
-<a id="__codelineno-0-262" name="__codelineno-0-262"></a>                <span class="k">return</span> <span class="kc">True</span>
-<a id="__codelineno-0-263" name="__codelineno-0-263"></a>            <span class="k">except</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXNoCycle</span><span class="p">:</span>
-<a id="__codelineno-0-264" name="__codelineno-0-264"></a>                <span class="k">return</span> <span class="kc">False</span>
-<a id="__codelineno-0-265" name="__codelineno-0-265"></a>        <span class="k">if</span> <span class="n">end</span> <span class="o">==</span> <span class="n">end_node</span><span class="o">.</span><span class="n">control_statement</span><span class="p">:</span>
-<a id="__codelineno-0-266" name="__codelineno-0-266"></a>            <span class="k">return</span> <span class="kc">True</span>
-<a id="__codelineno-0-267" name="__codelineno-0-267"></a>
-<a id="__codelineno-0-268" name="__codelineno-0-268"></a>        <span class="n">start_index</span> <span class="o">=</span> <span class="n">start_node</span><span class="o">.</span><span class="n">statements</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
-<a id="__codelineno-0-269" name="__codelineno-0-269"></a>        <span class="n">end_index</span> <span class="o">=</span> <span class="n">end_node</span><span class="o">.</span><span class="n">statements</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">end</span><span class="p">)</span>
-<a id="__codelineno-0-270" name="__codelineno-0-270"></a>        <span class="k">if</span> <span class="n">start_index</span> <span class="o">&lt;=</span> <span class="n">end_index</span><span class="p">:</span>  <span class="c1"># also EQUAL?</span>
-<a id="__codelineno-0-271" name="__codelineno-0-271"></a>            <span class="k">return</span> <span class="kc">True</span>
-<a id="__codelineno-0-272" name="__codelineno-0-272"></a>        <span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-0-273" name="__codelineno-0-273"></a>            <span class="n">nx</span><span class="o">.</span><span class="n">find_cycle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="n">start_node</span><span class="p">)</span>
-<a id="__codelineno-0-274" name="__codelineno-0-274"></a>            <span class="k">return</span> <span class="kc">True</span>
-<a id="__codelineno-0-275" name="__codelineno-0-275"></a>        <span class="k">except</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXNoCycle</span><span class="p">:</span>
-<a id="__codelineno-0-276" name="__codelineno-0-276"></a>            <span class="k">return</span> <span class="kc">False</span>
+<a id="__codelineno-0-247" name="__codelineno-0-247"></a><span class="sd">    Returns False for `start == end` unless there is a loop in the CFG containing `start`.</span>
+<a id="__codelineno-0-248" name="__codelineno-0-248"></a>
+<a id="__codelineno-0-249" name="__codelineno-0-249"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-250" name="__codelineno-0-250"></a><span class="sd">        start: Statement that is expected to be executed before `end`.</span>
+<a id="__codelineno-0-251" name="__codelineno-0-251"></a><span class="sd">        end: Statement that is expected to be executed after `start`.</span>
+<a id="__codelineno-0-252" name="__codelineno-0-252"></a>
+<a id="__codelineno-0-253" name="__codelineno-0-253"></a><span class="sd">    Returns:</span>
+<a id="__codelineno-0-254" name="__codelineno-0-254"></a><span class="sd">        True if there is an execution path from `start` to `end` in this CFG, False otherwise.</span>
+<a id="__codelineno-0-255" name="__codelineno-0-255"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-256" name="__codelineno-0-256"></a>    <span class="n">start_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_statements_lookup</span><span class="p">[</span><span class="n">start</span><span class="p">]</span>
+<a id="__codelineno-0-257" name="__codelineno-0-257"></a>    <span class="n">end_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_statements_lookup</span><span class="p">[</span><span class="n">end</span><span class="p">]</span>
+<a id="__codelineno-0-258" name="__codelineno-0-258"></a>    <span class="k">if</span> <span class="n">start_node</span> <span class="o">==</span> <span class="n">end_node</span><span class="p">:</span>
+<a id="__codelineno-0-259" name="__codelineno-0-259"></a>        <span class="n">start_index</span> <span class="o">=</span> <span class="p">(</span>
+<a id="__codelineno-0-260" name="__codelineno-0-260"></a>            <span class="n">start_node</span><span class="o">.</span><span class="n">statements</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
+<a id="__codelineno-0-261" name="__codelineno-0-261"></a>            <span class="k">if</span> <span class="n">start</span> <span class="o">!=</span> <span class="n">start_node</span><span class="o">.</span><span class="n">control_statement</span>
+<a id="__codelineno-0-262" name="__codelineno-0-262"></a>            <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">start_node</span><span class="o">.</span><span class="n">statements</span><span class="p">)</span>
+<a id="__codelineno-0-263" name="__codelineno-0-263"></a>        <span class="p">)</span>
+<a id="__codelineno-0-264" name="__codelineno-0-264"></a>        <span class="n">end_index</span> <span class="o">=</span> <span class="p">(</span>
+<a id="__codelineno-0-265" name="__codelineno-0-265"></a>            <span class="n">end_node</span><span class="o">.</span><span class="n">statements</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">end</span><span class="p">)</span>
+<a id="__codelineno-0-266" name="__codelineno-0-266"></a>            <span class="k">if</span> <span class="n">end</span> <span class="o">!=</span> <span class="n">end_node</span><span class="o">.</span><span class="n">control_statement</span>
+<a id="__codelineno-0-267" name="__codelineno-0-267"></a>            <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">end_node</span><span class="o">.</span><span class="n">statements</span><span class="p">)</span>
+<a id="__codelineno-0-268" name="__codelineno-0-268"></a>        <span class="p">)</span>
+<a id="__codelineno-0-269" name="__codelineno-0-269"></a>        <span class="k">if</span> <span class="n">start_index</span> <span class="o">&lt;</span> <span class="n">end_index</span><span class="p">:</span>
+<a id="__codelineno-0-270" name="__codelineno-0-270"></a>            <span class="k">return</span> <span class="kc">True</span>
+<a id="__codelineno-0-271" name="__codelineno-0-271"></a>
+<a id="__codelineno-0-272" name="__codelineno-0-272"></a>        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">to</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">edge_dfs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="n">start_node</span><span class="p">):</span>
+<a id="__codelineno-0-273" name="__codelineno-0-273"></a>            <span class="k">if</span> <span class="n">to</span> <span class="o">==</span> <span class="n">end_node</span><span class="p">:</span>
+<a id="__codelineno-0-274" name="__codelineno-0-274"></a>                <span class="k">return</span> <span class="kc">True</span>
+<a id="__codelineno-0-275" name="__codelineno-0-275"></a>
+<a id="__codelineno-0-276" name="__codelineno-0-276"></a>        <span class="k">return</span> <span class="kc">False</span>
 <a id="__codelineno-0-277" name="__codelineno-0-277"></a>    <span class="k">else</span><span class="p">:</span>
 <a id="__codelineno-0-278" name="__codelineno-0-278"></a>        <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">has_path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="n">start_node</span><span class="p">,</span> <span class="n">end_node</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
@@ -8391,6 +8954,16 @@ of the <a class="autorefs autorefs-internal" href="../../ir/statements/if-statem
 </div>
 
 
+
+
+
+
+
+  
+  
+
+
+
   
 
 
@@ -8403,13 +8976,14 @@ of the <a class="autorefs autorefs-internal" href="../../ir/statements/if-statem
           
   <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
 
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
         
           <button type="button" class="md-top md-icon" data-md-component="top" hidden>
-            
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
-            Back to top
-          </button>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -8418,7 +8992,7 @@ of the <a class="autorefs autorefs-internal" href="../../ir/statements/if-statem
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
       <div class="md-copyright">
-    <span><a href="https://getwake.io">Wake</a> is developed by <a href="https://ackeeblockchain.com" target="_blank">Ackee Blockchain</a></span>
+    <span><a href="https://getwake.io">Wake</a> is developed by <a href="https://ackee.xyz" target="_blank">Ackee</a></span>
 </div>
       
         <div class="md-social">
@@ -8431,7 +9005,7 @@ of the <a class="autorefs autorefs-internal" href="../../ir/statements/if-statem
       
     
     <a href="https://github.com/Ackee-Blockchain/wake" target="_blank" rel="noopener" title="github.com" class="md-social__link">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
     </a>
   
     
@@ -8442,7 +9016,7 @@ of the <a class="autorefs autorefs-internal" href="../../ir/statements/if-statem
       
     
     <a href="https://twitter.com/WakeFramework" target="_blank" rel="noopener" title="twitter.com" class="md-social__link">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M459.37 151.716c.325 4.548.325 9.097.325 13.645 0 138.72-105.583 298.558-298.558 298.558-59.452 0-114.68-17.219-161.137-47.106 8.447.974 16.568 1.299 25.34 1.299 49.055 0 94.213-16.568 130.274-44.832-46.132-.975-84.792-31.188-98.112-72.772 6.498.974 12.995 1.624 19.818 1.624 9.421 0 18.843-1.3 27.614-3.573-48.081-9.747-84.143-51.98-84.143-102.985v-1.299c13.969 7.797 30.214 12.67 47.431 13.319-28.264-18.843-46.781-51.005-46.781-87.391 0-19.492 5.197-37.36 14.294-52.954 51.655 63.675 129.3 105.258 216.365 109.807-1.624-7.797-2.599-15.918-2.599-24.04 0-57.828 46.782-104.934 104.934-104.934 30.213 0 57.502 12.67 76.67 33.137 23.715-4.548 46.456-13.32 66.599-25.34-7.798 24.366-24.366 44.833-46.132 57.827 21.117-2.273 41.584-8.122 60.426-16.243-14.292 20.791-32.161 39.308-52.628 54.253z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M459.37 151.716c.325 4.548.325 9.097.325 13.645 0 138.72-105.583 298.558-298.558 298.558-59.452 0-114.68-17.219-161.137-47.106 8.447.974 16.568 1.299 25.34 1.299 49.055 0 94.213-16.568 130.274-44.832-46.132-.975-84.792-31.188-98.112-72.772 6.498.974 12.995 1.624 19.818 1.624 9.421 0 18.843-1.3 27.614-3.573-48.081-9.747-84.143-51.98-84.143-102.985v-1.299c13.969 7.797 30.214 12.67 47.431 13.319-28.264-18.843-46.781-51.005-46.781-87.391 0-19.492 5.197-37.36 14.294-52.954 51.655 63.675 129.3 105.258 216.365 109.807-1.624-7.797-2.599-15.918-2.599-24.04 0-57.828 46.782-104.934 104.934-104.934 30.213 0 57.502 12.67 76.67 33.137 23.715-4.548 46.456-13.32 66.599-25.34-7.798 24.366-24.366 44.833-46.132 57.827 21.117-2.273 41.584-8.122 60.426-16.243-14.292 20.791-32.161 39.308-52.628 54.253z"/></svg>
     </a>
   
     
@@ -8452,19 +9026,8 @@ of the <a class="autorefs autorefs-internal" href="../../ir/statements/if-statem
       
       
     
-    <a href="https://t.me/wakeframework" target="_blank" rel="noopener" title="t.me" class="md-social__link">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M248 8C111.033 8 0 119.033 0 256s111.033 248 248 248 248-111.033 248-248S384.967 8 248 8Zm114.952 168.66c-3.732 39.215-19.881 134.378-28.1 178.3-3.476 18.584-10.322 24.816-16.948 25.425-14.4 1.326-25.338-9.517-39.287-18.661-21.827-14.308-34.158-23.215-55.346-37.177-24.485-16.135-8.612-25 5.342-39.5 3.652-3.793 67.107-61.51 68.335-66.746.153-.655.3-3.1-1.154-4.384s-3.59-.849-5.135-.5q-3.283.746-104.608 69.142-14.845 10.194-26.894 9.934c-8.855-.191-25.888-5.006-38.551-9.123-15.531-5.048-27.875-7.717-26.8-16.291q.84-6.7 18.45-13.7 108.446-47.248 144.628-62.3c68.872-28.647 83.183-33.623 92.511-33.789 2.052-.034 6.639.474 9.61 2.885a10.452 10.452 0 0 1 3.53 6.716 43.765 43.765 0 0 1 .417 9.769Z"/></svg>
-    </a>
-  
-    
-    
-    
-    
-      
-      
-    
-    <a href="https://t.me/wake_group" target="_blank" rel="noopener" title="t.me" class="md-social__link">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M248 8C111.033 8 0 119.033 0 256s111.033 248 248 248 248-111.033 248-248S384.967 8 248 8Zm114.952 168.66c-3.732 39.215-19.881 134.378-28.1 178.3-3.476 18.584-10.322 24.816-16.948 25.425-14.4 1.326-25.338-9.517-39.287-18.661-21.827-14.308-34.158-23.215-55.346-37.177-24.485-16.135-8.612-25 5.342-39.5 3.652-3.793 67.107-61.51 68.335-66.746.153-.655.3-3.1-1.154-4.384s-3.59-.849-5.135-.5q-3.283.746-104.608 69.142-14.845 10.194-26.894 9.934c-8.855-.191-25.888-5.006-38.551-9.123-15.531-5.048-27.875-7.717-26.8-16.291q.84-6.7 18.45-13.7 108.446-47.248 144.628-62.3c68.872-28.647 83.183-33.623 92.511-33.789 2.052-.034 6.639.474 9.61 2.885a10.452 10.452 0 0 1 3.53 6.716 43.765 43.765 0 0 1 .417 9.769Z"/></svg>
+    <a href="https://discord.gg/YE9hntHvAe" target="_blank" rel="noopener" title="discord.gg" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M524.531 69.836a1.5 1.5 0 0 0-.764-.7A485.065 485.065 0 0 0 404.081 32.03a1.816 1.816 0 0 0-1.923.91 337.461 337.461 0 0 0-14.9 30.6 447.848 447.848 0 0 0-134.426 0 309.541 309.541 0 0 0-15.135-30.6 1.89 1.89 0 0 0-1.924-.91 483.689 483.689 0 0 0-119.688 37.107 1.712 1.712 0 0 0-.788.676C39.068 183.651 18.186 294.69 28.43 404.354a2.016 2.016 0 0 0 .765 1.375 487.666 487.666 0 0 0 146.825 74.189 1.9 1.9 0 0 0 2.063-.676A348.2 348.2 0 0 0 208.12 430.4a1.86 1.86 0 0 0-1.019-2.588 321.173 321.173 0 0 1-45.868-21.853 1.885 1.885 0 0 1-.185-3.126 251.047 251.047 0 0 0 9.109-7.137 1.819 1.819 0 0 1 1.9-.256c96.229 43.917 200.41 43.917 295.5 0a1.812 1.812 0 0 1 1.924.233 234.533 234.533 0 0 0 9.132 7.16 1.884 1.884 0 0 1-.162 3.126 301.407 301.407 0 0 1-45.89 21.83 1.875 1.875 0 0 0-1 2.611 391.055 391.055 0 0 0 30.014 48.815 1.864 1.864 0 0 0 2.063.7A486.048 486.048 0 0 0 610.7 405.729a1.882 1.882 0 0 0 .765-1.352c12.264-126.783-20.532-236.912-86.934-334.541ZM222.491 337.58c-28.972 0-52.844-26.587-52.844-59.239s23.409-59.241 52.844-59.241c29.665 0 53.306 26.82 52.843 59.239 0 32.654-23.41 59.241-52.843 59.241Zm195.38 0c-28.971 0-52.843-26.587-52.843-59.239s23.409-59.241 52.843-59.241c29.667 0 53.307 26.82 52.844 59.239 0 32.654-23.177 59.241-52.844 59.241Z"/></svg>
     </a>
   
 </div>
@@ -8478,10 +9041,11 @@ of the <a class="autorefs autorefs-internal" href="../../ir/statements/if-statem
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.annotate", "content.code.copy", "content.tabs.link", "navigation.tracking", "navigation.sections", "navigation.indexes", "navigation.top", "navigation.tabs"], "search": "../../../assets/javascripts/workers/search.dfff1995.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.annotate", "content.code.copy", "content.tabs.link", "navigation.tracking", "navigation.sections", "navigation.indexes", "navigation.top", "navigation.tabs"], "search": "../../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.78eede0e.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.ad660dcc.min.js"></script>
       
         <script src="../../../js/mathjax.js"></script>
       
