@@ -829,7 +829,7 @@ class LspCompiler:
         if target_version is not None and target_version < min_version:
             await self.__server.log_message(
                 f"The minimum supported version of Solidity is {min_version}. Version {target_version} is selected in settings.",
-                MessageType.ERROR,
+                MessageType.WARNING,
             )
             for file in self.__discovered_files:
                 # clear diagnostics
@@ -843,7 +843,7 @@ class LspCompiler:
         if target_version is not None and target_version > max_version:
             await self.__server.log_message(
                 f"The maximum supported version of Solidity is {max_version}. Version {target_version} is selected in settings.",
-                MessageType.ERROR,
+                MessageType.WARNING,
             )
             for file in self.__discovered_files:
                 # clear diagnostics
@@ -980,7 +980,7 @@ class LspCompiler:
                         + "\n".join(
                             path_to_uri(path) for path in compilation_unit.files
                         ),
-                        MessageType.ERROR,
+                        MessageType.WARNING,
                     )
                     skipped_compilation_units.append(compilation_unit)
                     continue
@@ -997,7 +997,7 @@ class LspCompiler:
                         + "\n".join(
                             path_to_uri(path) for path in compilation_unit.files
                         ),
-                        MessageType.ERROR,
+                        MessageType.WARNING,
                     )
                     skipped_compilation_units.append(compilation_unit)
                     continue
@@ -1013,7 +1013,7 @@ class LspCompiler:
                         + "\n".join(
                             path_to_uri(path) for path in compilation_unit.files
                         ),
-                        MessageType.ERROR,
+                        MessageType.WARNING,
                     )
                     skipped_compilation_units.append(compilation_unit)
                     continue
@@ -1024,7 +1024,7 @@ class LspCompiler:
                         + "\n".join(
                             path_to_uri(path) for path in compilation_unit.files
                         ),
-                        MessageType.ERROR,
+                        MessageType.WARNING,
                     )
                     skipped_compilation_units.append(compilation_unit)
                     continue
