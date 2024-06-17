@@ -1274,7 +1274,9 @@ def _get_storage_layout_from_explorer(
         True,  # pyright: ignore reportGeneralTypeIssues
     )
     compilation_units = compiler.build_compilation_units_maximize(graph)
-    compilation_units = compiler.merge_compilation_units(compilation_units, graph)
+    compilation_units = compiler.merge_compilation_units(
+        compilation_units, graph, compilation_config
+    )
     if len(compilation_units) != 1:
         raise ValueError("More than one compilation unit")
     solc_output = loop.run_until_complete(
