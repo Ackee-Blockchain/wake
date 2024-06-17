@@ -759,23 +759,35 @@ class SolidityCompiler:
     def merge_compilation_units(
         compilation_units: List[CompilationUnit],
         graph: nx.DiGraph,
+        config: WakeConfig,
     ) -> List[CompilationUnit]:
         # optimization - merge compilation units that can be compiled together
         if len(compilation_units) > 0 and all(
             len(cu.versions) for cu in compilation_units
         ):
             compilation_units = sorted(
-                compilation_units, key=lambda cu: cu.versions.version_ranges[0].lower
+                compilation_units,
+                key=lambda cu: (
+                    cu.versions.version_ranges[0].lower,
+                    cu.versions.version_ranges[0].higher or config.max_solidity_version,
+                ),
+            )
+            supported_versions = SolidityVersionRanges(
+                [SolidityVersionRange(config.min_solidity_version, True, None, None)]
             )
 
             merged_compilation_units: List[CompilationUnit] = []
-            source_unit_names: Set = set()
-            versions = SolidityVersionRanges(
-                [SolidityVersionRange(None, None, None, None)]
-            )
+            source_unit_names: Set = set(compilation_units[0].source_unit_names)
+            versions = compilation_units[0].versions
 
             for cu in compilation_units:
-                if versions & cu.versions:
+                # only merge compilation units satisfying the minimum version
+                if versions & cu.versions and (
+                    (supported_versions & versions)
+                    and (supported_versions & cu.versions)
+                    or not (supported_versions & versions)
+                    and not (supported_versions & cu.versions)
+                ):
                     source_unit_names |= cu.source_unit_names
                     versions &= cu.versions
                 else:
@@ -887,7 +899,9 @@ class SolidityCompiler:
 
             if not incremental:
                 compilation_units = self.merge_compilation_units(
-                    compilation_units, graph
+                    compilation_units,
+                    graph,
+                    self.__config,
                 )
         else:
             # TODO this is not needed? graph contains hash of modified files
@@ -910,7 +924,9 @@ class SolidityCompiler:
 
             if not incremental:
                 compilation_units = self.merge_compilation_units(
-                    compilation_units, graph
+                    compilation_units,
+                    graph,
+                    self.__config,
                 )
 
             for cu_hash, cu_data in self._latest_build_info.compilation_units.items():

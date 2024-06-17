@@ -933,17 +933,33 @@ class LspCompiler:
         # optimization - merge compilation units that can be compiled together
         if all(len(cu.versions) for cu in compilation_units):
             compilation_units = sorted(
-                compilation_units, key=lambda cu: cu.versions.version_ranges[0].lower
+                compilation_units,
+                key=lambda cu: (
+                    cu.versions.version_ranges[0].lower,
+                    cu.versions.version_ranges[0].higher
+                    or self.__config.max_solidity_version,
+                ),
+            )
+            supported_versions = SolidityVersionRanges(
+                [
+                    SolidityVersionRange(
+                        self.__config.min_solidity_version, True, None, None
+                    )
+                ]
             )
 
             merged_compilation_units: List[CompilationUnit] = []
-            source_unit_names: Set = set()
-            versions = SolidityVersionRanges(
-                [SolidityVersionRange(None, None, None, None)]
-            )
+            source_unit_names: Set = set(compilation_units[0].source_unit_names)
+            versions = compilation_units[0].versions
 
-            for cu in compilation_units:
-                if versions & cu.versions:
+            for cu in compilation_units[1:]:
+                # only merge compilation units satisfying the minimum version
+                if versions & cu.versions and (
+                    (supported_versions & versions)
+                    and (supported_versions & cu.versions)
+                    or not (supported_versions & versions)
+                    and not (supported_versions & cu.versions)
+                ):
                     source_unit_names |= cu.source_unit_names
                     versions &= cu.versions
                 else:
