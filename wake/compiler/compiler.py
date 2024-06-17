@@ -602,8 +602,9 @@ class SolidityCompiler:
 
     def determine_solc_versions(
         self, compilation_units: Iterable[CompilationUnit]
-    ) -> List[SolidityVersion]:
+    ) -> Tuple[List[SolidityVersion], List[CompilationUnit]]:
         target_versions = []
+        skipped_compilation_units = []
         min_version = self.__config.min_solidity_version
         max_version = self.__config.max_solidity_version
         for compilation_unit in compilation_units:
@@ -611,10 +612,12 @@ class SolidityCompiler:
             if target_version is not None:
                 if target_version not in compilation_unit.versions:
                     files_str = "\n".join(str(path) for path in compilation_unit.files)
-                    raise CompilationError(
+                    logger.warning(
                         f"Unable to compile following files with solc version `{target_version}` set in config files:\n"
                         + files_str
                     )
+                    skipped_compilation_units.append(compilation_unit)
+                    continue
             else:
                 # use the latest matching version
                 matching_versions = [
@@ -624,10 +627,12 @@ class SolidityCompiler:
                 ]
                 if len(matching_versions) == 0:
                     files_str = "\n".join(str(path) for path in compilation_unit.files)
-                    raise CompilationError(
+                    logger.warning(
                         f"Unable to compile following files with any solc version:\n"
                         + files_str
                     )
+                    skipped_compilation_units.append(compilation_unit)
+                    continue
                 try:
                     target_version = next(
                         version
@@ -636,18 +641,23 @@ class SolidityCompiler:
                     )
                 except StopIteration:
                     files_str = "\n".join(str(path) for path in compilation_unit.files)
-                    raise CompilationError(
+                    logger.warning(
                         f"The maximum supported version of Solidity is {max_version}, unable to compile the following files:\n"
-                        + files_str,
+                        + files_str
                     )
+                    skipped_compilation_units.append(compilation_unit)
+                    continue
                 if target_version < min_version:
                     files_str = "\n".join(str(path) for path in compilation_unit.files)
-                    raise CompilationError(
+                    logger.warning(
                         f"The minimum supported version of Solidity is {min_version}, unable to compile the following files:\n"
-                        + files_str,
+                        + files_str
                     )
+                    skipped_compilation_units.append(compilation_unit)
+                    continue
             target_versions.append(target_version)
-        return target_versions
+
+        return target_versions, skipped_compilation_units
 
     async def _install_solc(
         self,
@@ -947,8 +957,20 @@ class SolidityCompiler:
 
             build = self._latest_build
 
-        target_versions = self.determine_solc_versions(compilation_units)
+        target_versions, skipped_compilation_units = self.determine_solc_versions(
+            compilation_units
+        )
+
         await self._install_solc(target_versions, console)
+
+        for cu in skipped_compilation_units:
+            for file in cu.files:
+                if file in build.source_units:
+                    build.reference_resolver.run_destroy_callbacks(file)
+                    build._source_units.pop(file)
+                if file in build.interval_trees:
+                    build._interval_trees.pop(file)
+            compilation_units.remove(cu)
 
         tasks = []
         for compilation_unit, target_version in zip(compilation_units, target_versions):
