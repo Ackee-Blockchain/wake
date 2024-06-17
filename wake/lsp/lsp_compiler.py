@@ -819,9 +819,12 @@ class LspCompiler:
         files_to_compile: AbstractSet[Path],
         full_compile: bool = True,
         errors_per_cu: Optional[Dict[bytes, Set[SolcOutputError]]] = None,
+        compilation_units_per_file: Optional[Dict[Path, Set[CompilationUnit]]] = None,
     ) -> None:
         if errors_per_cu is None:
             errors_per_cu = {}
+        if compilation_units_per_file is None:
+            compilation_units_per_file = defaultdict(set)
 
         target_version = self.__config.compiler.solc.target_version
         min_version = self.__config.min_solidity_version
@@ -915,14 +918,20 @@ class LspCompiler:
         compilation_units = self.__compiler.build_compilation_units_maximize(graph)
 
         # filter out only compilation units that need to be compiled
-        compilation_units = [
+        needed_compilation_units = [
             cu
             for cu in compilation_units
             if (cu.files & files_to_compile)
             or cu.contains_unresolved_file(self.__deleted_files, self.__config)
         ]
-        if len(compilation_units) == 0:
+        if len(needed_compilation_units) == 0:
             return
+
+        for cu in set(compilation_units) - set(needed_compilation_units):
+            for path in cu.files:
+                compilation_units_per_file[path].add(cu)
+
+        compilation_units = needed_compilation_units
 
         build_settings = self.__compiler.create_build_settings(
             [SolcOutputSelectionEnum.AST]
@@ -984,6 +993,10 @@ class LspCompiler:
             )
 
             compilation_units = merged_compilation_units
+
+        for cu in compilation_units:
+            for path in cu.files:
+                compilation_units_per_file[path].add(cu)
 
         target_versions = []
         skipped_compilation_units = []
@@ -1068,13 +1081,16 @@ class LspCompiler:
 
         for compilation_unit in skipped_compilation_units:
             for file in compilation_unit.files:
-                # clear diagnostics
-                await self.__diagnostic_queue.put((file, set()))
-                if file in self.__interval_trees:
-                    self.__interval_trees.pop(file)
-                if file in self.__source_units:
-                    self.__ir_reference_resolver.run_destroy_callbacks(file)
-                    self.__source_units.pop(file)
+                compilation_units_per_file[file].remove(compilation_unit)
+
+                if len(compilation_units_per_file[file]) == 0:
+                    # clear diagnostics
+                    await self.__diagnostic_queue.put((file, set()))
+                    if file in self.__interval_trees:
+                        self.__interval_trees.pop(file)
+                    if file in self.__source_units:
+                        self.__ir_reference_resolver.run_destroy_callbacks(file)
+                        self.__source_units.pop(file)
             compilation_units.remove(compilation_unit)
 
         progress_token = await self.__server.progress_begin(
@@ -1241,11 +1257,14 @@ class LspCompiler:
                 files_to_recompile.discard(file)
                 # an error occurred during compilation
                 # AST still may be provided, but it must NOT be parsed (pydantic model is not defined for this case)
-                if file in self.__source_units:
-                    self.__ir_reference_resolver.run_destroy_callbacks(file)
-                    self.__source_units.pop(file)
-                if file in self.__interval_trees:
-                    self.__interval_trees.pop(file)
+
+                compilation_units_per_file[file].remove(cu)
+                if len(compilation_units_per_file[file]) == 0:
+                    if file in self.__source_units:
+                        self.__ir_reference_resolver.run_destroy_callbacks(file)
+                        self.__source_units.pop(file)
+                    if file in self.__interval_trees:
+                        self.__interval_trees.pop(file)
 
             if len(errored_files) == 0:
                 successful_compilation_units.append((cu, solc_output))
@@ -1346,7 +1365,9 @@ class LspCompiler:
         if len(files_to_recompile) > 0:
             # avoid infinite recursion
             if files_to_recompile != files_to_compile or full_compile:
-                await self.__compile(files_to_recompile, False, errors_per_cu)
+                await self.__compile(
+                    files_to_recompile, False, errors_per_cu, compilation_units_per_file
+                )
 
         if full_compile:
             self.__latest_errors_per_cu = errors_per_cu
