@@ -890,6 +890,7 @@ class SolidityCompiler:
                 build_settings_changed = True
 
         errors_per_cu: DefaultDict[bytes, Set[SolcOutputError]] = defaultdict(set)
+        compilation_units_per_file: Dict[Path, Set[CompilationUnit]]
 
         if (
             force_recompile
@@ -913,6 +914,11 @@ class SolidityCompiler:
                     graph,
                     self.__config,
                 )
+
+            compilation_units_per_file = {
+                path: {cu for cu in compilation_units if path in cu.files}
+                for path in source_units_to_paths.values()
+            }
         else:
             # TODO this is not needed? graph contains hash of modified files
             # files_to_compile = set(modified_files.keys())
@@ -943,6 +949,11 @@ class SolidityCompiler:
                 if any(cu.hash.hex() == cu_hash for cu in compilation_units):
                     errors_per_cu[bytes.fromhex(cu_hash)] = set(cu_data.errors)
 
+            compilation_units_per_file = {
+                path: {cu for cu in compilation_units if path in cu.files}
+                for path in source_units_to_paths.values()
+            }
+
             # select only compilation units that need to be compiled
             compilation_units = [
                 cu
@@ -965,11 +976,14 @@ class SolidityCompiler:
 
         for cu in skipped_compilation_units:
             for file in cu.files:
-                if file in build.source_units:
-                    build.reference_resolver.run_destroy_callbacks(file)
-                    build._source_units.pop(file)
-                if file in build.interval_trees:
-                    build._interval_trees.pop(file)
+                compilation_units_per_file[file].remove(cu)
+
+                if len(compilation_units_per_file[file]) == 0:
+                    if file in build.source_units:
+                        build.reference_resolver.run_destroy_callbacks(file)
+                        build._source_units.pop(file)
+                    if file in build.interval_trees:
+                        build._interval_trees.pop(file)
             compilation_units.remove(cu)
 
         tasks = []
@@ -1065,11 +1079,14 @@ class SolidityCompiler:
                 all_errored_files |= errored_files
 
                 for file in errored_files:
-                    if file in build.source_units:
-                        build.reference_resolver.run_destroy_callbacks(file)
-                        build._source_units.pop(file)
-                    if file in build.interval_trees:
-                        build._interval_trees.pop(file)
+                    compilation_units_per_file[file].remove(cu)
+
+                    if len(compilation_units_per_file[file]) == 0:
+                        if file in build.source_units:
+                            build.reference_resolver.run_destroy_callbacks(file)
+                            build._source_units.pop(file)
+                        if file in build.interval_trees:
+                            build._interval_trees.pop(file)
 
                 if len(errored_files) == 0:
                     successful_compilation_units.append((cu, solc_output))
