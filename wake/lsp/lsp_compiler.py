@@ -1170,6 +1170,7 @@ class LspCompiler:
             self.__source_units.clear()
             self.__ir_reference_resolver.clear_all_indexed_nodes()
             self.__latest_errors_per_cu = errors_per_cu
+            self.__compilation_errors = {}
             return
 
         # files passed as files_to_compile and files importing them
