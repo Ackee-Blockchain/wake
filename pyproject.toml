@@ -47,7 +47,7 @@ eth-account = "^0.8"
 eth-utils = "^2.1"
 eth-abi = { version = "^4.0.0b2", allow-prereleases = true }
 parsimonious = "^0.9"
-eth-hash = { version = "^0.5.1", extras = ["pycryptodome"] }
+pycryptodome = ">=3.19.0"
 websocket-client = "^1.4"
 pywin32 = { version = ">= 302", platform = "win32" }
 watchdog = "^4"
