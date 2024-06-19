@@ -1,0 +1,74 @@
+name: Build linux-arm64 conda environment
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-linux-arm:
+    strategy:
+      matrix:
+        python-version: ["3.10"]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Run ARM environment in Docker
+        run: |
+          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace --platform linux/arm64 \
+            condaforge/miniforge3 bash -c "
+              conda create -n wake --platform linux-aarch64 python=3.10 -y && \
+              source activate wake && \
+              conda install -c conda-forge conda-pack -y && \
+              python -m pip install . && \
+              VERSION=\$(wake --version) && \
+              echo \"VERSION=\${VERSION}\" >> /workspace/filename_env && \
+              FILENAME=wake-\${VERSION}-linux-arm64.tar.gz && \
+              echo \"FILENAME=\${FILENAME}\" >> /workspace/filename_env && \
+              conda-pack -n wake -o \${FILENAME} && \
+              sha256sum \${FILENAME} > \${FILENAME}.sha256 && \
+              echo '${{ secrets.CONDA_PRIVATE_KEY }}' > key.pem && \
+              openssl dgst -sha256 -sign key.pem -out \${FILENAME}.sha256.sig \${FILENAME}.sha256
+            "
+
+      - name: Append FILENAME to GITHUB_ENV
+        run: |
+          cat ${{ github.workspace }}/filename_env >> $GITHUB_ENV
+
+      - name: Adjust permissions
+        run: sudo chmod -R 777 ${{ github.workspace }}
+
+      - name: Auth to Google Storage
+        uses: 'google-github-actions/auth@v2'
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Upload tarball
+        uses: 'google-github-actions/upload-cloud-storage@v2'
+        with:
+          path: '${{ env.FILENAME }}'
+          destination: 'wake-venv'
+          headers: |-
+            x-goog-meta-version: ${{ env.VERSION }}
+            x-goog-meta-os: linux
+            x-goog-meta-arch: arm64
+            x-goog-meta-python: ${{ matrix.python-version }}
+
+      - name: Upload checksum
+        uses: 'google-github-actions/upload-cloud-storage@v2'
+        with:
+          path: ${{ env.FILENAME }}.sha256
+          destination: 'wake-venv'
+
+      - name: Upload signature
+        uses: 'google-github-actions/upload-cloud-storage@v2'
+        with:
+          path: ${{ env.FILENAME }}.sha256.sig
+          destination: 'wake-venv'
