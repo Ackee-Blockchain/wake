@@ -41,12 +41,15 @@ class UnusedImportDetector(Detector):
             for predecessor in graph_iter(
                 self.imports_graph, imported_source_unit_name, "in"
             ):
-                predecessor_path = (
-                    self.imports_graph.nodes[  # pyright: ignore reportGeneralTypeIssues
+                try:
+                    predecessor_path = self.imports_graph.nodes[  # pyright: ignore reportGeneralTypeIssues
                         predecessor
-                    ]["path"]
-                )
-                source_unit = self.build.source_units[predecessor_path]
+                    ][
+                        "path"
+                    ]
+                    source_unit = self.build.source_units[predecessor_path]
+                except KeyError:
+                    continue
 
                 # should not be needed to check for aliases, as there still should be original global declarations referenced
 
