@@ -81,6 +81,10 @@ class ReferenceResolver:
         self._global_symbol_references = defaultdict(list)
         self._node_types = {}
 
+    def clear_registered_nodes(self, paths: Iterable[Path]) -> None:
+        for path in paths:
+            self._registered_nodes.pop(path, None)
+
     def clear_indexed_nodes(self, paths: Iterable[Path]) -> None:
         for path in paths:
             self._node_types.pop(path, None)

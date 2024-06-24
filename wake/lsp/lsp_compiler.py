@@ -1320,6 +1320,9 @@ class LspCompiler:
                     self.__ir_reference_resolver,
                     None,
                 )
+                self.__ir_reference_resolver.clear_registered_nodes(
+                    [path]
+                )  # prevents keeping in memory old nodes
                 self.__source_units[path] = SourceUnit(init, ast)
                 self.__interval_trees[path] = interval_tree
 
