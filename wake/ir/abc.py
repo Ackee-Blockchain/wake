@@ -1,14 +1,20 @@
 from __future__ import annotations
 
+import weakref
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Iterator, Optional, Tuple
 
-from wake.ir.ast import SolcNode, SolidityNode
+from wake.ir.ast import AstNodeId, SolcNode, SolidityNode
 from wake.ir.reference_resolver import ReferenceResolver
 from wake.ir.utils import IrInitTuple
 
 if TYPE_CHECKING:
     from wake.ir.meta.source_unit import SourceUnit
+
+
+def is_not_none(value):
+    assert value is not None, "Weak reference target freed prematurely"
+    return value
 
 
 class IrAbc(ABC):
@@ -27,22 +33,24 @@ class IrAbc(ABC):
 
     _source: bytes
     _ast_node: SolcNode
-    _parent: Optional[IrAbc]
+    _parent: weakref.ReferenceType[Optional[IrAbc]]
     _depth: int
-    _source_unit: SourceUnit
+    _source_unit: weakref.ReferenceType[SourceUnit]
     _reference_resolver: ReferenceResolver
 
     def __init__(self, init: IrInitTuple, solc_node: SolcNode, parent: Optional[IrAbc]):
         self._ast_node = solc_node
-        self._parent = parent
-        if self._parent is not None:
-            self._depth = self._parent.ast_tree_depth + 1
+        if parent is not None:
+            self._parent = weakref.ref(parent)
+            self._depth = parent.ast_tree_depth + 1
         else:
+            self._parent = None
             self._depth = 0
 
         assert init.source_unit is not None
-        self._source_unit = init.source_unit
-        self._reference_resolver = init.reference_resolver
+        self._source_unit = weakref.ref(init.source_unit)
+        # reference resolver can be considered internal and so we use weakref.proxy to avoid circular references
+        self._reference_resolver = weakref.proxy(init.reference_resolver)
 
         source_start = solc_node.src.byte_offset
         source_end = source_start + solc_node.src.byte_length
@@ -57,8 +65,21 @@ class IrAbc(ABC):
         """
         yield self
 
+    @classmethod
+    def _strip_weakrefs(cls, state: dict):
+        del state["_parent"]
+        del state["_source_unit"]
+        del state["_reference_resolver"]
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        self._strip_weakrefs(state)
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+
     @property
-    @abstractmethod
     def parent(self) -> Optional[IrAbc]:
         """
         The parent node of this node. Can only be `None` for the root ([Source unit][wake.ir.meta.source_unit.SourceUnit]) node.
@@ -66,7 +87,15 @@ class IrAbc(ABC):
         Returns:
             Parent node of this node.
         """
-        ...
+        return is_not_none(self._parent()) if self._parent is not None else None
+
+    @property
+    def children(self) -> Iterator[IrAbc]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        return iter([])
 
     @property
     @abstractmethod
@@ -119,7 +148,7 @@ class IrAbc(ABC):
         Returns:
             Source unit that contains this node.
         """
-        return self._source_unit
+        return is_not_none(self._source_unit())
 
 
 class SolidityAbc(IrAbc, ABC):
@@ -142,5 +171,5 @@ class SolidityAbc(IrAbc, ABC):
         return self._ast_node
 
     @property
-    def ast_node_id(self) -> int:
+    def ast_node_id(self) -> AstNodeId:
         return self._ast_node.id

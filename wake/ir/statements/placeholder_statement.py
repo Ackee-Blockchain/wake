@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from typing import TYPE_CHECKING, Set, Tuple, Union
 
 from wake.ir.abc import SolidityAbc
@@ -32,7 +33,9 @@ class PlaceholderStatement(StatementAbc):
     """
 
     _ast_node: SolcPlaceholderStatement
-    _parent: Union[Block, DoWhileStatement, ForStatement, IfStatement, WhileStatement]
+    _parent: weakref.ReferenceType[
+        Union[Block, DoWhileStatement, ForStatement, IfStatement, WhileStatement]
+    ]
 
     def __init__(
         self,
@@ -50,7 +53,7 @@ class PlaceholderStatement(StatementAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
 
     @property
     def modifies_state(

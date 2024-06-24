@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from functools import reduce
 from operator import or_
 from typing import TYPE_CHECKING, Iterator, List, Set, Tuple, Union
@@ -45,14 +46,16 @@ class YulFunctionCall(YulAbc):
         ```
     """
 
-    _parent: Union[
-        YulAssignment,
-        YulExpressionStatement,
-        YulForLoop,
-        YulIf,
-        YulSwitch,
-        YulVariableDeclaration,
-        YulFunctionCall,
+    _parent: weakref.ReferenceType[
+        Union[
+            YulAssignment,
+            YulExpressionStatement,
+            YulForLoop,
+            YulIf,
+            YulSwitch,
+            YulVariableDeclaration,
+            YulFunctionCall,
+        ]
     ]
     _arguments: List[Union[YulFunctionCall, YulIdentifier, YulLiteral]]
     _function_name: YulIdentifier
@@ -107,7 +110,16 @@ class YulFunctionCall(YulAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
+
+    @property
+    def children(self) -> Iterator[Union[YulFunctionCall, YulIdentifier, YulLiteral]]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield self._function_name
+        yield from self._arguments
 
     @property
     def arguments(

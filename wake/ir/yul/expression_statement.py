@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from typing import TYPE_CHECKING, Iterator, Set, Tuple, Union
 
 from wake.ir.ast import SolcYulExpressionStatement, SolcYulFunctionCall
@@ -27,7 +28,7 @@ class YulExpressionStatement(YulStatementAbc):
         ```
     """
 
-    _parent: YulBlock
+    _parent: weakref.ReferenceType[YulBlock]
     _expression: YulFunctionCall
 
     def __init__(
@@ -52,7 +53,15 @@ class YulExpressionStatement(YulStatementAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
+
+    @property
+    def children(self) -> Iterator[YulFunctionCall]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield self._expression
 
     @property
     def expression(self) -> YulFunctionCall:

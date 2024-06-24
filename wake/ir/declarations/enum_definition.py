@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import re
+import weakref
 from bisect import bisect
 from functools import lru_cache
 from typing import TYPE_CHECKING, FrozenSet, Iterator, List, Optional, Tuple, Union
@@ -10,7 +11,7 @@ from wake.core import get_logger
 from wake.ir.ast import SolcEnumDefinition
 
 from ...regex_parser import SoliditySourceParser
-from ..abc import IrAbc, SolidityAbc
+from ..abc import IrAbc, SolidityAbc, is_not_none
 from ..meta.structured_documentation import StructuredDocumentation
 from ..utils import IrInitTuple
 from .abc import DeclarationAbc
@@ -38,7 +39,7 @@ class EnumDefinition(DeclarationAbc):
     """
 
     _ast_node: SolcEnumDefinition
-    _parent: Union[ContractDefinition, SourceUnit]
+    _parent: weakref.ReferenceType[Union[ContractDefinition, SourceUnit]]
 
     _canonical_name: str
     _values: List[EnumValue]
@@ -99,7 +100,15 @@ class EnumDefinition(DeclarationAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
+
+    @property
+    def children(self) -> Iterator[EnumValue]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield from self._values
 
     @property
     def canonical_name(self) -> str:
@@ -145,14 +154,14 @@ class EnumDefinition(DeclarationAbc):
         from ..expressions.member_access import MemberAccess
         from ..meta.identifier_path import IdentifierPathPart
 
+        refs = [is_not_none(r()) for r in self._references]
+
         try:
             ref = next(
                 ref
-                for ref in self._references
+                for ref in refs
                 if not isinstance(ref, (Identifier, IdentifierPathPart, MemberAccess))
             )
             raise AssertionError(f"Unexpected reference type: {ref}")
         except StopIteration:
-            return frozenset(
-                self._references
-            )  # pyright: ignore reportGeneralTypeIssues
+            return frozenset(refs)  # pyright: ignore reportGeneralTypeIssues

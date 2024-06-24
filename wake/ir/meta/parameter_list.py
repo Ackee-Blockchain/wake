@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import weakref
 from typing import TYPE_CHECKING, Iterator, List, Tuple, Union
 
 if TYPE_CHECKING:
@@ -70,13 +71,15 @@ class ParameterList(SolidityAbc):
     """
 
     _ast_node: SolcParameterList
-    _parent: Union[
-        ErrorDefinition,
-        EventDefinition,
-        FunctionDefinition,
-        FunctionTypeName,
-        ModifierDefinition,
-        TryCatchClause,
+    _parent: weakref.ReferenceType[
+        Union[
+            ErrorDefinition,
+            EventDefinition,
+            FunctionDefinition,
+            FunctionTypeName,
+            ModifierDefinition,
+            TryCatchClause,
+        ]
     ]
 
     _parameters: List[VariableDeclaration]
@@ -110,7 +113,15 @@ class ParameterList(SolidityAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
+
+    @property
+    def children(self) -> Iterator[VariableDeclaration]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield from self._parameters
 
     @property
     def parameters(self) -> Tuple[VariableDeclaration, ...]:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from functools import lru_cache, partial
 from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
 
@@ -25,7 +26,7 @@ class UnaryOperation(ExpressionAbc):
     """
 
     _ast_node: SolcUnaryOperation
-    _parent: SolidityAbc
+    _parent: weakref.ReferenceType[SolidityAbc]
 
     _operator: UnaryOpOperator
     _prefix: bool
@@ -65,7 +66,15 @@ class UnaryOperation(ExpressionAbc):
 
     @property
     def parent(self) -> SolidityAbc:
-        return self._parent
+        return super().parent
+
+    @property
+    def children(self) -> Iterator[ExpressionAbc]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield self._sub_expression
 
     @property
     def operator(self) -> UnaryOpOperator:

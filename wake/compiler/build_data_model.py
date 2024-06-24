@@ -1,3 +1,4 @@
+import weakref
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any, Dict, FrozenSet, List, Optional
@@ -16,7 +17,24 @@ from typing_extensions import Annotated
 
 from wake.compiler.solc_frontend import SolcInputSettings, SolcOutputError
 from wake.core.solidity_version import SolidityVersion
-from wake.ir import SourceUnit
+from wake.ir import (
+    BinaryOperation,
+    ContractDefinition,
+    DeclarationAbc,
+    EventDefinition,
+    FunctionDefinition,
+    Identifier,
+    IdentifierPath,
+    InlineAssembly,
+    MemberAccess,
+    ModifierDefinition,
+    SourceUnit,
+    UnaryOperation,
+    UserDefinedTypeName,
+    VariableDeclaration,
+    YulAbc,
+    YulIdentifier,
+)
 from wake.ir.reference_resolver import ReferenceResolver
 
 
@@ -144,3 +162,98 @@ class ProjectBuild:
         return MappingProxyType(
             self._source_units
         )  # pyright: ignore reportGeneralTypeIssues
+
+    def fix_after_deserialization(self):
+        """
+        Fix the internal state of the project build after pickle deserialization.
+        """
+        for source_unit in self._source_units.values():
+            source_unit._parent = None
+            inline_assembly = None
+
+            for node in source_unit:
+                r = weakref.ref(node)
+                for child in node.children:
+                    child._parent = r
+
+                node._source_unit = weakref.ref(source_unit)
+                node._reference_resolver = weakref.proxy(self._reference_resolver)
+
+                if isinstance(node, InlineAssembly):
+                    inline_assembly = node
+
+                    for external_ref in node.external_references:
+                        external_ref._inline_assembly = weakref.ref(inline_assembly)
+                        external_ref._source_unit = weakref.ref(source_unit)
+                        external_ref._reference_resolver = weakref.proxy(
+                            self._reference_resolver
+                        )
+
+                        external_ref.referenced_declaration.register_reference(
+                            external_ref
+                        )
+                elif isinstance(node, (IdentifierPath, UserDefinedTypeName)):
+                    for part in node.identifier_path_parts:
+                        part._underlying_node = weakref.ref(node)
+                        part._source_unit = weakref.ref(source_unit)
+                        part._reference_resolver = weakref.proxy(
+                            self._reference_resolver
+                        )
+
+                        ref_decl = part.referenced_declaration
+                        if isinstance(ref_decl, DeclarationAbc):
+                            ref_decl.register_reference(part)
+                elif isinstance(node, (Identifier, MemberAccess)):
+                    ref_decl = node.referenced_declaration
+                    if isinstance(ref_decl, DeclarationAbc):
+                        ref_decl.register_reference(node)
+                elif isinstance(node, (BinaryOperation, UnaryOperation)):
+                    if node.function is not None:
+                        node.function.register_reference(node)
+                elif isinstance(node, YulAbc):
+                    node._inline_assembly = weakref.ref(inline_assembly)
+
+                    if isinstance(node, YulIdentifier):
+                        external_ref = next(
+                            (
+                                r
+                                for r in inline_assembly.external_references
+                                if r.yul_identifier == node
+                            ),
+                            None,
+                        )
+                        node._external_reference = (
+                            weakref.ref(external_ref)
+                            if external_ref is not None
+                            else None
+                        )
+                elif isinstance(node, ModifierDefinition):
+                    for base_modifier in node.base_modifiers:
+                        base_modifier._child_modifiers.add(weakref.ref(node))
+                elif isinstance(node, FunctionDefinition):
+                    for base_function in node.base_functions:
+                        base_function._child_functions.add(weakref.ref(node))
+                elif isinstance(node, VariableDeclaration):
+                    for base_function in node.base_functions:
+                        base_function._child_functions.add(weakref.ref(node))
+                elif isinstance(node, ContractDefinition):
+                    for event_id in node._used_event_ids:
+                        # use event ids to avoid double iteration
+                        event = self._reference_resolver.resolve_node(
+                            event_id, source_unit.cu_hash
+                        )
+                        assert isinstance(event, EventDefinition)
+                        event._used_in.add(weakref.ref(node))
+                        node._used_events.add(weakref.ref(event))
+
+                    for error in node.used_errors:
+                        error._used_in.add(weakref.ref(node))
+
+                    for base_contract in node.base_contracts:
+                        # cannot use base_contract.base_name.referenced_declaration because reference_resolver is not yet fixed
+                        c = self._reference_resolver.resolve_node(
+                            base_contract.base_name._referenced_declaration_id,
+                            source_unit.cu_hash,
+                        )
+                        assert isinstance(c, ContractDefinition)
+                        c._child_contracts.add(weakref.ref(node))

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from typing import TYPE_CHECKING, Iterator, Set, Tuple, Union
 
 from wake.ir.ast import (
@@ -42,7 +43,7 @@ class YulForLoop(YulStatementAbc):
         ```
     """
 
-    _parent: YulBlock
+    _parent: weakref.ReferenceType[YulBlock]
     _body: YulBlock
     _condition: Union[YulFunctionCall, YulIdentifier, YulLiteral]
     _post: YulBlock
@@ -75,7 +76,20 @@ class YulForLoop(YulStatementAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
+
+    @property
+    def children(
+        self,
+    ) -> Iterator[Union[YulBlock, YulFunctionCall, YulIdentifier, YulLiteral]]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield self._pre
+        yield self._condition
+        yield self._body
+        yield self._post
 
     @property
     def body(self) -> YulBlock:

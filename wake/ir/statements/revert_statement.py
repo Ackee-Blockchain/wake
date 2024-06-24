@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from functools import lru_cache
 from typing import TYPE_CHECKING, Iterator, Set, Tuple, Union
 
@@ -35,13 +36,15 @@ class RevertStatement(StatementAbc):
     """
 
     _ast_node: SolcRevertStatement
-    _parent: Union[
-        Block,
-        DoWhileStatement,
-        ForStatement,
-        IfStatement,
-        UncheckedBlock,
-        WhileStatement,
+    _parent: weakref.ReferenceType[
+        Union[
+            Block,
+            DoWhileStatement,
+            ForStatement,
+            IfStatement,
+            UncheckedBlock,
+            WhileStatement,
+        ]
     ]
 
     _error_call: FunctionCall
@@ -71,7 +74,15 @@ class RevertStatement(StatementAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
+
+    @property
+    def children(self) -> Iterator[FunctionCall]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield self._error_call
 
     @property
     def error_call(self) -> FunctionCall:

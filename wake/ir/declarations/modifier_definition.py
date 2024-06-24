@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import weakref
 from bisect import bisect
 from collections import deque
 from functools import lru_cache, partial
@@ -17,6 +18,7 @@ from typing import (
 )
 
 from ...regex_parser import SoliditySourceParser
+from ..abc import is_not_none
 from ..meta.override_specifier import OverrideSpecifier
 from ..reference_resolver import CallbackParams
 from ..statements.block import Block
@@ -54,8 +56,8 @@ class ModifierDefinition(DeclarationAbc):
     """
 
     _ast_node: SolcModifierDefinition
-    _parent: ContractDefinition
-    _child_modifiers: Set[ModifierDefinition]
+    _parent: weakref.ReferenceType[ContractDefinition]
+    _child_modifiers: Set[weakref.ReferenceType[ModifierDefinition]]
 
     _body: Optional[Block]
     _implemented: bool
@@ -109,17 +111,27 @@ class ModifierDefinition(DeclarationAbc):
         if self._overrides is not None:
             yield from self._overrides
 
+    def __setstate__(self, state):
+        super().__setstate__(state)
+        self._child_modifiers = set()
+
+    @classmethod
+    def _strip_weakrefs(cls, state: dict):
+        super()._strip_weakrefs(state)
+        del state["_child_modifiers"]
+
     def _post_process(self, callback_params: CallbackParams):
         base_modifiers = self.base_modifiers
         for base_modifier in base_modifiers:
-            base_modifier._child_modifiers.add(self)
+            base_modifier._child_modifiers.add(weakref.ref(self))
         self._reference_resolver.register_destroy_callback(
             self.source_unit.file, partial(self._destroy, base_modifiers)
         )
 
     def _destroy(self, base_modifiers: Tuple[ModifierDefinition, ...]) -> None:
         for base_modifier in base_modifiers:
-            base_modifier._child_modifiers.remove(self)
+            ref = next(m for m in base_modifier._child_modifiers if m() is self)
+            base_modifier._child_modifiers.remove(ref)
 
     def _parse_name_location(self) -> Tuple[int, int]:
         IDENTIFIER = r"[a-zA-Z$_][a-zA-Z0-9$_]*"
@@ -187,11 +199,25 @@ class ModifierDefinition(DeclarationAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
+
+    @property
+    def children(self) -> Iterator[IrAbc]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        if self._body is not None:
+            yield self._body
+        yield self._parameters
+        if isinstance(self._documentation, StructuredDocumentation):
+            yield self._documentation
+        if self._overrides is not None:
+            yield self._overrides
 
     @property
     def canonical_name(self) -> str:
-        return f"{self._parent.canonical_name}.{self._name}"
+        return f"{self.parent.canonical_name}.{self._name}"
 
     @property
     @lru_cache(maxsize=2048)
@@ -350,7 +376,7 @@ class ModifierDefinition(DeclarationAbc):
         Returns:
             Modifiers that list this modifier in their [base_modifiers][wake.ir.declarations.modifier_definition.ModifierDefinition.base_modifiers] property.
         """
-        return frozenset(self._child_modifiers)
+        return frozenset(is_not_none(m()) for m in self._child_modifiers)
 
     @property
     def documentation(self) -> Optional[Union[StructuredDocumentation, str]]:
@@ -434,14 +460,14 @@ class ModifierDefinition(DeclarationAbc):
         from ..expressions.identifier import Identifier
         from ..meta.identifier_path import IdentifierPathPart
 
+        refs = [is_not_none(r()) for r in self._references]
+
         try:
             ref = next(
                 ref
-                for ref in self._references
+                for ref in refs
                 if not isinstance(ref, (Identifier, IdentifierPathPart))
             )
             raise AssertionError(f"Unexpected reference type: {ref}")
         except StopIteration:
-            return frozenset(
-                self._references
-            )  # pyright: ignore reportGeneralTypeIssues
+            return frozenset(refs)  # pyright: ignore reportGeneralTypeIssues

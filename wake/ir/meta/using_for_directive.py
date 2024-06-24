@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
 
 from wake.ir.enums import BinaryOpOperator, UnaryOpOperator
@@ -54,7 +55,7 @@ class UsingForDirective(SolidityAbc):
     """
 
     _ast_node: SolcUsingForDirective
-    _parent: Union[ContractDefinition, SourceUnit]
+    _parent: weakref.ReferenceType[Union[ContractDefinition, SourceUnit]]
 
     _functions: List[IdentifierPath]
     _operator_functions: List[
@@ -125,7 +126,23 @@ class UsingForDirective(SolidityAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
+
+    @property
+    def children(
+        self,
+    ) -> Iterator[Union[IdentifierPath, UserDefinedTypeName, TypeNameAbc]]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield from self._functions
+        for function, _ in self._operator_functions:
+            yield function
+        if self._library_name is not None:
+            yield self._library_name
+        if self._type_name is not None:
+            yield self._type_name
 
     @property
     def functions(self) -> Tuple[IdentifierPath, ...]:

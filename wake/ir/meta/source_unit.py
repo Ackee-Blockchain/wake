@@ -1,7 +1,7 @@
 import logging
 from bisect import bisect_right
 from pathlib import Path
-from typing import Iterator, List, Optional, Tuple
+from typing import Iterator, List, Optional, Tuple, Union
 
 from wake.core import get_logger
 from wake.ir.abc import IrAbc, SolidityAbc
@@ -168,6 +168,40 @@ class SourceUnit(SolidityAbc):
             Does not have a parent.
         """
         return None
+
+    @property
+    def children(
+        self,
+    ) -> Iterator[
+        Union[
+            PragmaDirective,
+            ImportDirective,
+            VariableDeclaration,
+            EnumDefinition,
+            FunctionDefinition,
+            StructDefinition,
+            ErrorDefinition,
+            UserDefinedValueTypeDefinition,
+            ContractDefinition,
+            UsingForDirective,
+            EventDefinition,
+        ]
+    ]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield from self._pragmas
+        yield from self._imports
+        yield from self._declared_variables
+        yield from self._enums
+        yield from self._functions
+        yield from self._structs
+        yield from self._errors
+        yield from self._user_defined_value_types
+        yield from self._contracts
+        yield from self._using_for_directives
+        yield from self._events
 
     @property
     def file_source(self) -> bytes:

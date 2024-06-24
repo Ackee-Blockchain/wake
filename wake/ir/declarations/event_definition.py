@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import weakref
 from bisect import bisect
 from functools import lru_cache
 from typing import TYPE_CHECKING, FrozenSet, Iterator, Optional, Set, Tuple, Union
@@ -8,6 +9,7 @@ from typing import TYPE_CHECKING, FrozenSet, Iterator, Optional, Set, Tuple, Uni
 from Crypto.Hash import keccak
 
 from ...regex_parser import SoliditySourceParser
+from ..abc import is_not_none
 from .abc import DeclarationAbc
 
 if TYPE_CHECKING:
@@ -33,7 +35,7 @@ class EventDefinition(DeclarationAbc):
     """
 
     _ast_node: SolcEventDefinition
-    _parent: Union[ContractDefinition, SourceUnit]
+    _parent: weakref.ReferenceType[Union[ContractDefinition, SourceUnit]]
 
     _anonymous: bool
     _parameters: ParameterList
@@ -41,7 +43,7 @@ class EventDefinition(DeclarationAbc):
     _event_selector: Optional[bytes]
 
     # not a part of the AST
-    _used_in: Set[ContractDefinition]
+    _used_in: Set[weakref.ReferenceType[ContractDefinition]]
 
     def __init__(
         self, init: IrInitTuple, event: SolcEventDefinition, parent: SolidityAbc
@@ -72,6 +74,15 @@ class EventDefinition(DeclarationAbc):
         yield from self._parameters
         if isinstance(self._documentation, StructuredDocumentation):
             yield from self._documentation
+
+    def __setstate__(self, state):
+        super().__setstate__(state)
+        self._used_in = set()
+
+    @classmethod
+    def _strip_weakrefs(cls, state: dict):
+        super()._strip_weakrefs(state)
+        del state["_used_in"]
 
     def _parse_name_location(self) -> Tuple[int, int]:
         IDENTIFIER = r"[a-zA-Z$_][a-zA-Z0-9$_]*"
@@ -108,14 +119,24 @@ class EventDefinition(DeclarationAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
+
+    @property
+    def children(self) -> Iterator[Union[ParameterList, StructuredDocumentation]]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield self._parameters
+        if isinstance(self._documentation, StructuredDocumentation):
+            yield self._documentation
 
     @property
     def canonical_name(self) -> str:
         from .contract_definition import ContractDefinition
 
-        if isinstance(self._parent, ContractDefinition):
-            return f"{self._parent.canonical_name}.{self._name}"
+        if isinstance(self.parent, ContractDefinition):
+            return f"{self.parent.canonical_name}.{self._name}"
         return self._name
 
     @property
@@ -196,7 +217,7 @@ class EventDefinition(DeclarationAbc):
         Returns:
             Contracts (including child contracts) that emit this event, a contract that defines this event and contracts that inherit this event.
         """
-        return frozenset(self._used_in)
+        return frozenset(is_not_none(r()) for r in self._used_in)
 
     @property
     def references(
@@ -209,14 +230,12 @@ class EventDefinition(DeclarationAbc):
         from ..expressions.identifier import Identifier
         from ..expressions.member_access import MemberAccess
 
+        refs = [is_not_none(r()) for r in self._references]
+
         try:
             ref = next(
-                ref
-                for ref in self._references
-                if not isinstance(ref, (Identifier, MemberAccess))
+                ref for ref in refs if not isinstance(ref, (Identifier, MemberAccess))
             )
             raise AssertionError(f"Unexpected reference type: {ref}")
         except StopIteration:
-            return frozenset(
-                self._references
-            )  # pyright: ignore reportGeneralTypeIssues
+            return frozenset(refs)  # pyright: ignore reportGeneralTypeIssues

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from typing import TYPE_CHECKING, Union
 
 from wake.ir.abc import SolidityAbc
@@ -35,15 +36,17 @@ class StructuredDocumentation(SolidityAbc):
     """
 
     _ast_node: SolcStructuredDocumentation
-    _parent: Union[
-        ContractDefinition,
-        EnumDefinition,
-        ErrorDefinition,
-        EventDefinition,
-        FunctionDefinition,
-        ModifierDefinition,
-        StructDefinition,
-        VariableDeclaration,
+    _parent: weakref.ReferenceType[
+        Union[
+            ContractDefinition,
+            EnumDefinition,
+            ErrorDefinition,
+            EventDefinition,
+            FunctionDefinition,
+            ModifierDefinition,
+            StructDefinition,
+            VariableDeclaration,
+        ]
     ]
 
     _text: str
@@ -74,7 +77,7 @@ class StructuredDocumentation(SolidityAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
 
     @property
     def text(self) -> str:

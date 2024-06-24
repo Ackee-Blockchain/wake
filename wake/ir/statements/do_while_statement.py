@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from functools import lru_cache
 from typing import TYPE_CHECKING, Iterator, Set, Tuple, Union
 
@@ -33,13 +34,15 @@ class DoWhileStatement(StatementAbc):
     """
 
     _ast_node: SolcDoWhileStatement
-    _parent: Union[
-        Block,
-        DoWhileStatement,
-        ForStatement,
-        IfStatement,
-        UncheckedBlock,
-        WhileStatement,
+    _parent: weakref.ReferenceType[
+        Union[
+            Block,
+            DoWhileStatement,
+            ForStatement,
+            IfStatement,
+            UncheckedBlock,
+            WhileStatement,
+        ]
     ]
 
     _body: StatementAbc
@@ -72,7 +75,16 @@ class DoWhileStatement(StatementAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
+
+    @property
+    def children(self) -> Iterator[Union[ExpressionAbc, StatementAbc]]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield self._body
+        yield self._condition
 
     @property
     def body(self) -> StatementAbc:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
 
 from wake.ir.enums import ModifierInvocationKind
@@ -38,7 +39,7 @@ class ModifierInvocation(SolidityAbc):
     """
 
     _ast_node: SolcModifierInvocation
-    _parent: FunctionDefinition
+    _parent: weakref.ReferenceType[FunctionDefinition]
 
     _kind: Optional[ModifierInvocationKind]
     _modifier_name: Union[Identifier, IdentifierPath]
@@ -96,7 +97,17 @@ class ModifierInvocation(SolidityAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
+
+    @property
+    def children(self) -> Iterator[Union[Identifier, IdentifierPath, ExpressionAbc]]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield self._modifier_name
+        if self._arguments is not None:
+            yield from self._arguments
 
     @property
     def kind(self) -> ModifierInvocationKind:

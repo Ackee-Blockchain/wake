@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import weakref
 from bisect import bisect
 from functools import lru_cache, partial
 from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
@@ -49,7 +50,7 @@ class MemberAccess(ExpressionAbc):
     """
 
     _ast_node: SolcMemberAccess
-    _parent: SolidityAbc  # TODO: make this more specific
+    _parent: weakref.ReferenceType[SolidityAbc]  # TODO: make this more specific
 
     _expression: ExpressionAbc
     _member_name: str
@@ -385,7 +386,15 @@ class MemberAccess(ExpressionAbc):
 
     @property
     def parent(self) -> SolidityAbc:
-        return self._parent
+        return self._parent()
+
+    @property
+    def children(self) -> Iterator[ExpressionAbc]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield self._expression
 
     @property
     def expression(self) -> ExpressionAbc:

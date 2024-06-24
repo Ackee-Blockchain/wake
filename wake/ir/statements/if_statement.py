@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from functools import lru_cache
 from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
 
@@ -35,13 +36,15 @@ class IfStatement(StatementAbc):
     """
 
     _ast_node: SolcIfStatement
-    _parent: Union[
-        Block,
-        DoWhileStatement,
-        ForStatement,
-        IfStatement,
-        UncheckedBlock,
-        WhileStatement,
+    _parent: weakref.ReferenceType[
+        Union[
+            Block,
+            DoWhileStatement,
+            ForStatement,
+            IfStatement,
+            UncheckedBlock,
+            WhileStatement,
+        ]
     ]
 
     _condition: ExpressionAbc
@@ -82,7 +85,18 @@ class IfStatement(StatementAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
+
+    @property
+    def children(self) -> Iterator[Union[ExpressionAbc, StatementAbc]]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield self._condition
+        yield self._true_body
+        if self._false_body is not None:
+            yield self._false_body
 
     @property
     def condition(self) -> ExpressionAbc:

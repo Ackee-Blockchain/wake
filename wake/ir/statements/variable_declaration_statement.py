@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from functools import lru_cache
 from typing import TYPE_CHECKING, Iterator, List, Optional, Set, Tuple, Union
 
@@ -35,13 +36,15 @@ class VariableDeclarationStatement(StatementAbc):
     """
 
     _ast_node: SolcVariableDeclarationStatement
-    _parent: Union[
-        Block,
-        DoWhileStatement,
-        ForStatement,
-        IfStatement,
-        UncheckedBlock,
-        WhileStatement,
+    _parent: weakref.ReferenceType[
+        Union[
+            Block,
+            DoWhileStatement,
+            ForStatement,
+            IfStatement,
+            UncheckedBlock,
+            WhileStatement,
+        ]
     ]
 
     _assignments: List[Optional[AstNodeId]]
@@ -94,7 +97,19 @@ class VariableDeclarationStatement(StatementAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
+
+    @property
+    def children(self) -> Iterator[Union[VariableDeclaration, ExpressionAbc]]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        for declaration in self.declarations:
+            if declaration is not None:
+                yield declaration
+        if self.initial_value is not None:
+            yield self.initial_value
 
     @property
     def declarations(self) -> Tuple[Optional[VariableDeclaration], ...]:

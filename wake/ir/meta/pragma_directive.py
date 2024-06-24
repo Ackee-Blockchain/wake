@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import weakref
 from typing import TYPE_CHECKING, List, Tuple
 
 if TYPE_CHECKING:
@@ -17,7 +18,7 @@ logger = get_logger(__name__)
 
 class PragmaDirective(SolidityAbc):
     _ast_node: SolcPragmaDirective
-    _parent: SourceUnit
+    _parent: weakref.ReferenceType[SourceUnit]
 
     _literals: List[str]
 
@@ -33,7 +34,7 @@ class PragmaDirective(SolidityAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
 
     @property
     def literals(self) -> Tuple[str, ...]:

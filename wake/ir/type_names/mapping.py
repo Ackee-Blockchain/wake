@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
 
 from .elementary_type_name import ElementaryTypeName
@@ -49,7 +50,9 @@ class Mapping(TypeNameAbc):
     """
 
     _ast_node: SolcMapping
-    _parent: Union[VariableDeclaration, UsingForDirective, ArrayTypeName, Mapping]
+    _parent: weakref.ReferenceType[
+        Union[VariableDeclaration, UsingForDirective, ArrayTypeName, Mapping]
+    ]
 
     _key_type: Union[ElementaryTypeName, UserDefinedTypeName]
     _value_type: TypeNameAbc
@@ -98,7 +101,16 @@ class Mapping(TypeNameAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
+
+    @property
+    def children(self) -> Iterator[TypeNameAbc]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield self._key_type
+        yield self._value_type
 
     @property
     def type(self) -> types.Mapping:

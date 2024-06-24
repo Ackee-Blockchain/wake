@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from functools import reduce
 from operator import or_
 from typing import TYPE_CHECKING, Iterator, List, Set, Tuple, Union
@@ -45,8 +46,10 @@ class YulBlock(YulStatementAbc):
     Block statements group multiple statements into a single block.
     """
 
-    _parent: Union[
-        InlineAssembly, YulBlock, YulForLoop, YulFunctionDefinition, YulIf, YulCase
+    _parent: weakref.ReferenceType[
+        Union[
+            InlineAssembly, YulBlock, YulForLoop, YulFunctionDefinition, YulIf, YulCase
+        ]
     ]
     _statements: List[YulStatementAbc]
 
@@ -110,7 +113,17 @@ class YulBlock(YulStatementAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
+
+    @property
+    def children(
+        self,
+    ) -> Iterator[YulStatementAbc]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield from self._statements
 
     @property
     def statements(

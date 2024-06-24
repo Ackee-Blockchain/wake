@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from typing import TYPE_CHECKING, Iterator, Set, Tuple, Union
 
 from wake.ir.ast import (
@@ -45,7 +46,7 @@ class YulIf(YulStatementAbc):
         There is no `else` branch in Yul. It must be implemented using a second `if` statement when needed.
     """
 
-    _parent: YulBlock
+    _parent: weakref.ReferenceType[YulBlock]
     _body: YulBlock
     _condition: Union[YulFunctionCall, YulIdentifier, YulLiteral]
 
@@ -72,7 +73,18 @@ class YulIf(YulStatementAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
+
+    @property
+    def children(
+        self,
+    ) -> Iterator[Union[YulBlock, YulFunctionCall, YulIdentifier, YulLiteral]]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield self._body
+        yield self._condition
 
     @property
     def body(self) -> YulBlock:

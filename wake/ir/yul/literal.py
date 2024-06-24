@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from typing import TYPE_CHECKING, Optional, Set, Tuple, Union
 
 from wake.ir.ast import SolcYulLiteral
@@ -42,15 +43,17 @@ class YulLiteral(YulAbc):
         ```
     """
 
-    _parent: Union[
-        YulAssignment,
-        YulExpressionStatement,
-        YulForLoop,
-        YulIf,
-        YulSwitch,
-        YulVariableDeclaration,
-        YulFunctionCall,
-        YulCase,
+    _parent: weakref.ReferenceType[
+        Union[
+            YulAssignment,
+            YulExpressionStatement,
+            YulForLoop,
+            YulIf,
+            YulSwitch,
+            YulVariableDeclaration,
+            YulFunctionCall,
+            YulCase,
+        ]
     ]
     _kind: YulLiteralKind
     _type: str
@@ -86,7 +89,7 @@ class YulLiteral(YulAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
 
     @property
     def kind(self) -> YulLiteralKind:

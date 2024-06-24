@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from functools import reduce
 from operator import or_
 from typing import TYPE_CHECKING, Iterator, List, Set, Tuple, Union
@@ -52,7 +53,7 @@ class YulSwitch(YulStatementAbc):
         ```
     """
 
-    _parent: YulBlock
+    _parent: weakref.ReferenceType[YulBlock]
     _cases: List[YulCase]
     _expression: Union[YulFunctionCall, YulIdentifier, YulLiteral]
 
@@ -80,7 +81,18 @@ class YulSwitch(YulStatementAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
+
+    @property
+    def children(
+        self,
+    ) -> Iterator[Union[YulFunctionCall, YulIdentifier, YulLiteral, YulCase]]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield self._expression
+        yield from self._cases
 
     @property
     def cases(self) -> Tuple[YulCase, ...]:

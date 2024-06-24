@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import weakref
 from typing import TYPE_CHECKING, Optional, Set, Tuple, Union
 
 from wake.ir.ast import SolcYulIdentifier
 
+from ..abc import is_not_none
 from ..enums import ModifiesStateFlag
 from ..utils import IrInitTuple
 from .abc import YulAbc
@@ -26,17 +28,19 @@ class YulIdentifier(YulAbc):
     Represents an identifier referencing a [YulFunctionDefinition][wake.ir.yul.function_definition.YulFunctionDefinition], a [YulVariableDeclaration][wake.ir.yul.variable_declaration.YulVariableDeclaration], or a Solidity [VariableDeclaration][wake.ir.declarations.variable_declaration.VariableDeclaration] through an [ExternalReference][wake.ir.statements.inline_assembly.ExternalReference].
     """
 
-    _parent: Union[
-        YulAssignment,
-        YulExpressionStatement,
-        YulForLoop,
-        YulIf,
-        YulSwitch,
-        YulVariableDeclaration,
-        YulFunctionCall,
+    _parent: weakref.ReferenceType[
+        Union[
+            YulAssignment,
+            YulExpressionStatement,
+            YulForLoop,
+            YulIf,
+            YulSwitch,
+            YulVariableDeclaration,
+            YulFunctionCall,
+        ]
     ]
     _name: str
-    _external_reference: Optional[ExternalReference]
+    _external_reference: Optional[weakref.ReferenceType[ExternalReference]]
 
     def __init__(
         self, init: IrInitTuple, identifier: SolcYulIdentifier, parent: YulAbc
@@ -44,6 +48,11 @@ class YulIdentifier(YulAbc):
         super().__init__(init, identifier, parent)
         self._name = identifier.name
         self._external_reference = None
+
+    @classmethod
+    def _strip_weakrefs(cls, state: dict):
+        super()._strip_weakrefs(state)
+        del state["_external_reference"]
 
     @property
     def parent(
@@ -61,7 +70,7 @@ class YulIdentifier(YulAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
 
     @property
     def name(self) -> str:
@@ -89,7 +98,10 @@ class YulIdentifier(YulAbc):
         Returns:
             Object describing the external reference to a Solidity variable.
         """
-        return self._external_reference
+        if self._external_reference is None:
+            return None
+        else:
+            return is_not_none(self._external_reference())
 
     @property
     def modifies_state(

@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import re
+import weakref
 from bisect import bisect
 from functools import lru_cache
 from typing import TYPE_CHECKING, FrozenSet, Iterator, Tuple, Union
 
 from ...regex_parser import SoliditySourceParser
+from ..abc import is_not_none
 from ..type_names.elementary_type_name import ElementaryTypeName
 from .abc import DeclarationAbc
 
@@ -32,7 +34,7 @@ class UserDefinedValueTypeDefinition(DeclarationAbc):
     """
 
     _ast_node: SolcUserDefinedValueTypeDefinition
-    _parent: Union[ContractDefinition, SourceUnit]
+    _parent: weakref.ReferenceType[Union[ContractDefinition, SourceUnit]]
 
     _underlying_type: ElementaryTypeName
 
@@ -86,15 +88,23 @@ class UserDefinedValueTypeDefinition(DeclarationAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
+
+    @property
+    def children(self) -> Iterator[ElementaryTypeName]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield self._underlying_type
 
     @property
     @lru_cache(maxsize=2048)
     def canonical_name(self) -> str:
         from .contract_definition import ContractDefinition
 
-        if isinstance(self._parent, ContractDefinition):
-            return f"{self._parent.canonical_name}.{self._name}"
+        if isinstance(self.parent, ContractDefinition):
+            return f"{self.parent.canonical_name}.{self._name}"
         return self._name
 
     @property
@@ -122,14 +132,14 @@ class UserDefinedValueTypeDefinition(DeclarationAbc):
         from ..expressions.member_access import MemberAccess
         from ..meta.identifier_path import IdentifierPathPart
 
+        refs = [is_not_none(r()) for r in self._references]
+
         try:
             ref = next(
                 ref
-                for ref in self._references
+                for ref in refs
                 if not isinstance(ref, (Identifier, IdentifierPathPart, MemberAccess))
             )
             raise AssertionError(f"Unexpected reference type: {ref}")
         except StopIteration:
-            return frozenset(
-                self._references
-            )  # pyright: ignore reportGeneralTypeIssues
+            return frozenset(refs)  # pyright: ignore reportGeneralTypeIssues

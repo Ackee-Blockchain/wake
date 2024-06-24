@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from typing import TYPE_CHECKING, Iterator, Union
 
 from wake.ir.types import Function
@@ -52,7 +53,9 @@ class FunctionTypeName(TypeNameAbc):
     """
 
     _ast_node: SolcFunctionTypeName
-    _parent: Union[VariableDeclaration, UsingForDirective, ArrayTypeName, Mapping]
+    _parent: weakref.ReferenceType[
+        Union[VariableDeclaration, UsingForDirective, ArrayTypeName, Mapping]
+    ]
 
     _parameter_types: ParameterList
     _return_parameter_types: ParameterList
@@ -88,7 +91,16 @@ class FunctionTypeName(TypeNameAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
+
+    @property
+    def children(self) -> Iterator[ParameterList]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield self._parameter_types
+        yield self._return_parameter_types
 
     @property
     def type(self) -> Function:

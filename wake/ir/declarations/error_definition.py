@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from functools import lru_cache
 from typing import TYPE_CHECKING, FrozenSet, Iterator, Optional, Set, Tuple, Union
 
@@ -9,6 +10,7 @@ from wake.ir.abc import IrAbc, SolidityAbc
 from wake.ir.ast import SolcErrorDefinition
 from wake.ir.utils import IrInitTuple
 
+from ..abc import is_not_none
 from ..meta.parameter_list import ParameterList
 from ..meta.structured_documentation import StructuredDocumentation
 from .abc import DeclarationAbc
@@ -31,14 +33,14 @@ class ErrorDefinition(DeclarationAbc):
     """
 
     _ast_node: SolcErrorDefinition
-    _parent: Union[ContractDefinition, SourceUnit]
+    _parent: weakref.ReferenceType[Union[ContractDefinition, SourceUnit]]
 
     _parameters: ParameterList
     _documentation: Optional[StructuredDocumentation]
     _error_selector: Optional[bytes]
 
     # not a part of the AST
-    _used_in: Set[ContractDefinition]
+    _used_in: Set[weakref.ReferenceType[ContractDefinition]]
 
     def __init__(
         self, init: IrInitTuple, error: SolcErrorDefinition, parent: SolidityAbc
@@ -61,6 +63,15 @@ class ErrorDefinition(DeclarationAbc):
         if self._documentation is not None:
             yield from self._documentation
 
+    def __setstate__(self, state):
+        super().__setstate__(state)
+        self._used_in = set()
+
+    @classmethod
+    def _strip_weakrefs(cls, state: dict):
+        super()._strip_weakrefs(state)
+        del state["_used_in"]
+
     def _parse_name_location(self) -> Tuple[int, int]:
         # SolcErrorDefinition node always contains name_location attribute
         # this method is implemented here just for completeness and to satisfy the linter
@@ -74,15 +85,25 @@ class ErrorDefinition(DeclarationAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
+
+    @property
+    def children(self) -> Iterator[Union[ParameterList, StructuredDocumentation]]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield self._parameters
+        if self._documentation is not None:
+            yield self._documentation
 
     @property
     @lru_cache(maxsize=2048)
     def canonical_name(self) -> str:
         from .contract_definition import ContractDefinition
 
-        if isinstance(self._parent, ContractDefinition):
-            return f"{self._parent.canonical_name}.{self._name}"
+        if isinstance(self.parent, ContractDefinition):
+            return f"{self.parent.canonical_name}.{self._name}"
         return self._name
 
     @property
@@ -144,7 +165,7 @@ class ErrorDefinition(DeclarationAbc):
         Returns:
             Contracts (including child contracts) that use this error in a revert statement, a contract that defines this error and contracts that inherit this error.
         """
-        return frozenset(self._used_in)
+        return frozenset(is_not_none(c()) for c in self._used_in)
 
     @property
     def references(
@@ -157,14 +178,12 @@ class ErrorDefinition(DeclarationAbc):
         from ..expressions.identifier import Identifier
         from ..expressions.member_access import MemberAccess
 
+        refs = [is_not_none(r()) for r in self._references]
+
         try:
             ref = next(
-                ref
-                for ref in self._references
-                if not isinstance(ref, (Identifier, MemberAccess))
+                ref for ref in refs if not isinstance(ref, (Identifier, MemberAccess))
             )
             raise AssertionError(f"Unexpected reference type: {ref}")
         except StopIteration:
-            return frozenset(
-                self._references
-            )  # pyright: ignore reportGeneralTypeIssues
+            return frozenset(refs)  # pyright: ignore reportGeneralTypeIssues

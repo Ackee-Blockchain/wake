@@ -353,6 +353,7 @@ def run_detectors_subprocess(
             config = data
         elif command == SubprocessCommandType.BUILD:
             last_build, last_build_info, last_graph = data
+            last_build.fix_after_deserialization()
         elif command == SubprocessCommandType.RUN_DETECTORS:
             thread_event.set()
             run_detectors = True
@@ -448,6 +449,7 @@ def run_printers_subprocess(
             config = data
         elif command == SubprocessCommandType.BUILD:
             last_build, last_build_info, last_graph = data
+            last_build.fix_after_deserialization()
         elif command == SubprocessCommandType.RUN_PRINTERS:
             thread_event.set()
             run_printers = True
