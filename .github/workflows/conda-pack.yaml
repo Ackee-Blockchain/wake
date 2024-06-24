@@ -3,6 +3,7 @@ name: Build native conda environments
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 jobs:
   build:
