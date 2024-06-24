@@ -21,6 +21,7 @@ from wake.ir.reference_resolver import CallbackParams, ReferenceResolver
 from wake.ir.statements.abc import StatementAbc
 from wake.ir.utils import IrInitTuple
 from wake.ir.yul.block import YulBlock
+from wake.utils.decorators import weak_self_lru_cache
 
 from ...regex_parser import SoliditySourceParser
 from ..yul.identifier import YulIdentifier
@@ -132,7 +133,7 @@ class ExternalReference:
         )
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def identifier_location(self) -> Tuple[int, int]:
         """
         !!! example
@@ -364,7 +365,7 @@ class InlineAssembly(StatementAbc):
         return intervals.pop().data
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def modifies_state(
         self,
     ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:

@@ -6,6 +6,8 @@ from bisect import bisect
 from functools import lru_cache
 from typing import TYPE_CHECKING, FrozenSet, Iterator, Tuple, Union
 
+from wake.utils.decorators import weak_self_lru_cache
+
 from ...regex_parser import SoliditySourceParser
 from ..abc import is_not_none
 from ..type_names.elementary_type_name import ElementaryTypeName
@@ -99,7 +101,7 @@ class UserDefinedValueTypeDefinition(DeclarationAbc):
         yield self._underlying_type
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def canonical_name(self) -> str:
         from .contract_definition import ContractDefinition
 
@@ -108,7 +110,7 @@ class UserDefinedValueTypeDefinition(DeclarationAbc):
         return self._name
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def declaration_string(self) -> str:
         return f"type {self.name} is {self._underlying_type.source}"
 

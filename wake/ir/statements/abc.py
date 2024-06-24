@@ -26,6 +26,7 @@ from wake.ir.ast import (
 )
 from wake.ir.enums import ModifiesStateFlag
 from wake.ir.utils import IrInitTuple
+from wake.utils.decorators import weak_self_lru_cache
 
 if TYPE_CHECKING:
     from ..declarations.function_definition import FunctionDefinition
@@ -162,7 +163,7 @@ class StatementAbc(SolidityAbc, ABC):
         return self._documentation
 
     @property
-    @lru_cache(maxsize=512)
+    @weak_self_lru_cache(maxsize=512)
     def declaration(self) -> Union[FunctionDefinition, ModifierDefinition]:
         """
         Returns:

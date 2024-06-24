@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
 
 from wake.ir.enums import ModifiesStateFlag
 from wake.ir.expressions.abc import ExpressionAbc
+from wake.utils.decorators import weak_self_lru_cache
 
 from .abc import StatementAbc
 
@@ -128,7 +129,7 @@ class Return(StatementAbc):
         return self._expression
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def modifies_state(
         self,
     ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:

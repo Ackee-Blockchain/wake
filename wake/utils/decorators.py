@@ -1,6 +1,27 @@
+import weakref
 from functools import lru_cache, wraps
 
 from .context_managers import recursion_guard
+
+
+def weak_self_lru_cache(maxsize=128, typed=False):
+    def decorator(method):
+        @wraps(method)
+        def wrapper(self, *args, **kwargs):
+            weak_self = weakref.ref(self)
+
+            @lru_cache(maxsize=maxsize, typed=typed)
+            def cached_method(weak_self_ref, *args, **kwargs):
+                self = weak_self_ref()
+                if self is None:
+                    raise ReferenceError("Weak reference to object no longer exists")
+                return method(self, *args, **kwargs)
+
+            return cached_method(weak_self, *args, **kwargs)
+
+        return wrapper
+
+    return decorator
 
 
 def return_on_recursion(default):

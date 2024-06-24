@@ -6,6 +6,8 @@ from bisect import bisect
 from functools import lru_cache
 from typing import TYPE_CHECKING, FrozenSet, Iterator, List, Optional, Tuple, Union
 
+from wake.utils.decorators import weak_self_lru_cache
+
 from ...regex_parser import SoliditySourceParser
 from ..abc import is_not_none
 from ..meta.structured_documentation import StructuredDocumentation
@@ -125,7 +127,7 @@ class StructDefinition(DeclarationAbc):
         return self._canonical_name
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def declaration_string(self) -> str:
         return (
             f"struct {self.name}"

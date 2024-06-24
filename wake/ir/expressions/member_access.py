@@ -31,6 +31,7 @@ from wake.ir.types import (
     UserDefinedValueType,
 )
 from wake.ir.utils import IrInitTuple
+from wake.utils.decorators import weak_self_lru_cache
 
 from ...regex_parser import SoliditySourceParser
 
@@ -413,7 +414,7 @@ class MemberAccess(ExpressionAbc):
         return self._member_name
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def member_location(self) -> Tuple[int, int]:
         """
         In the case of [MemberAccess][wake.ir.expressions.member_access.MemberAccess], [byte_location][wake.ir.abc.IrAbc.byte_location] returns the byte location including the expression, whose member is accessed.
@@ -464,7 +465,7 @@ class MemberAccess(ExpressionAbc):
         return node
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def is_ref_to_state_variable(self) -> bool:
         referenced_declaration = self.referenced_declaration
         return (
@@ -474,7 +475,7 @@ class MemberAccess(ExpressionAbc):
         )
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def modifies_state(
         self,
     ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:

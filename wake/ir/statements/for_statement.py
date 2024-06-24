@@ -18,6 +18,7 @@ from wake.ir.statements.variable_declaration_statement import (
     VariableDeclarationStatement,
 )
 from wake.ir.utils import IrInitTuple
+from wake.utils.decorators import weak_self_lru_cache
 
 if TYPE_CHECKING:
     from ..yul.abc import YulAbc
@@ -193,7 +194,7 @@ class ForStatement(StatementAbc):
         return self._loop_expression
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def modifies_state(
         self,
     ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:

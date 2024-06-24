@@ -28,6 +28,7 @@ from wake.ir.ast import (
 from wake.ir.enums import ModifiesStateFlag
 from wake.ir.types import TypeAbc
 from wake.ir.utils import IrInitTuple
+from wake.utils.decorators import weak_self_lru_cache
 from wake.utils.string import StringReader
 
 if TYPE_CHECKING:
@@ -100,7 +101,7 @@ class ExpressionAbc(SolidityAbc, ABC):
             return UnaryOperation(init, expression, parent)
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def type(self) -> Optional[TypeAbc]:
         """
         Can be `None` in case of an [Identifier][wake.ir.expressions.identifier.Identifier] in an [ImportDirective][wake.ir.meta.import_directive.ImportDirective].
@@ -182,7 +183,7 @@ class ExpressionAbc(SolidityAbc, ABC):
         ...
 
     @property
-    @lru_cache(maxsize=512)
+    @weak_self_lru_cache(maxsize=512)
     def statement(self) -> Optional[StatementAbc]:
         """
         May be `None` if the expression is not part of a function or modifier body.

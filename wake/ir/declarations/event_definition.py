@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING, FrozenSet, Iterator, Optional, Set, Tuple, Uni
 
 from Crypto.Hash import keccak
 
+from wake.utils.decorators import weak_self_lru_cache
+
 from ...regex_parser import SoliditySourceParser
 from ..abc import is_not_none
 from .abc import DeclarationAbc
@@ -140,7 +142,7 @@ class EventDefinition(DeclarationAbc):
         return self._name
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def declaration_string(self) -> str:
         ret = (
             f"event {self._name}("
@@ -198,7 +200,7 @@ class EventDefinition(DeclarationAbc):
         return self._documentation
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def event_selector(self) -> bytes:
         """
         Returns:

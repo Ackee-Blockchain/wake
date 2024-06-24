@@ -10,6 +10,7 @@ from wake.ir.ast import SolcBlock
 from wake.ir.enums import ModifiesStateFlag
 from wake.ir.statements.abc import StatementAbc
 from wake.ir.utils import IrInitTuple
+from wake.utils.decorators import weak_self_lru_cache
 
 if TYPE_CHECKING:
     from ..declarations.function_definition import FunctionDefinition
@@ -109,7 +110,7 @@ class Block(StatementAbc):
         return tuple(self._statements)
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def modifies_state(
         self,
     ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:

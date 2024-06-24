@@ -8,6 +8,7 @@ from wake.ir.abc import IrAbc, SolidityAbc
 from wake.ir.ast import SolcConditional
 from wake.ir.enums import ModifiesStateFlag
 from wake.ir.utils import IrInitTuple
+from wake.utils.decorators import weak_self_lru_cache
 
 from .abc import ExpressionAbc
 
@@ -88,7 +89,7 @@ class Conditional(ExpressionAbc):
         return self._true_expression
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def is_ref_to_state_variable(self) -> bool:
         return (
             self.true_expression.is_ref_to_state_variable
@@ -96,7 +97,7 @@ class Conditional(ExpressionAbc):
         )
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def modifies_state(
         self,
     ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:

@@ -17,6 +17,8 @@ from typing import (
     Union,
 )
 
+from wake.utils.decorators import weak_self_lru_cache
+
 from ...regex_parser import SoliditySourceParser
 from ..abc import is_not_none
 from ..meta.override_specifier import OverrideSpecifier
@@ -220,7 +222,7 @@ class ModifierDefinition(DeclarationAbc):
         return f"{self.parent.canonical_name}.{self._name}"
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def declaration_string(self) -> str:
         ret = f"modifier {self._name}"
         ret += (
@@ -430,7 +432,7 @@ class ModifierDefinition(DeclarationAbc):
         return self._overrides
 
     @property
-    @lru_cache(maxsize=128)
+    @weak_self_lru_cache(maxsize=128)
     def cfg(self) -> ControlFlowGraph:
         """
         Raises:
