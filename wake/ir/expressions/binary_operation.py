@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from functools import lru_cache, partial
 from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
 
@@ -26,7 +27,7 @@ class BinaryOperation(ExpressionAbc):
     """
 
     _ast_node: SolcBinaryOperation
-    _parent: SolidityAbc  # TODO: make this more specific
+    _parent: weakref.ReferenceType[SolidityAbc]  # TODO: make this more specific
 
     _left_expression: ExpressionAbc
     _operator: BinaryOpOperator
@@ -69,7 +70,16 @@ class BinaryOperation(ExpressionAbc):
 
     @property
     def parent(self) -> SolidityAbc:
-        return self._parent
+        return super().parent
+
+    @property
+    def children(self) -> Iterator[ExpressionAbc]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield self._left_expression
+        yield self._right_expression
 
     @property
     def operator(self) -> BinaryOpOperator:

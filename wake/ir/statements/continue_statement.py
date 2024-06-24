@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from typing import TYPE_CHECKING, Set, Tuple, Union
 
 from wake.ir.abc import SolidityAbc
@@ -34,13 +35,15 @@ class Continue(StatementAbc):
     """
 
     _ast_node: SolcContinue
-    _parent: Union[
-        Block,
-        DoWhileStatement,
-        ForStatement,
-        IfStatement,
-        UncheckedBlock,
-        WhileStatement,
+    _parent: weakref.ReferenceType[
+        Union[
+            Block,
+            DoWhileStatement,
+            ForStatement,
+            IfStatement,
+            UncheckedBlock,
+            WhileStatement,
+        ]
     ]
 
     def __init__(self, init: IrInitTuple, continue_: SolcContinue, parent: SolidityAbc):
@@ -61,7 +64,7 @@ class Continue(StatementAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
 
     @property
     def modifies_state(

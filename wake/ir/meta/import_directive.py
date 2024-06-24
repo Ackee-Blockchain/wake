@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import re
+import weakref
 from bisect import bisect
 from collections import deque
 from dataclasses import dataclass
@@ -87,7 +88,7 @@ class ImportDirective(SolidityAbc):
     """
 
     _ast_node: SolcImportDirective
-    _parent: SourceUnit
+    _parent: weakref.ReferenceType[SourceUnit]
 
     _imported_source_unit_name: str
     _import_string: str
@@ -195,7 +196,16 @@ class ImportDirective(SolidityAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
+
+    @property
+    def children(self) -> Iterator[Identifier]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        for symbol_alias in self._symbol_aliases:
+            yield symbol_alias.foreign
 
     @property
     def imported_source_unit_name(self) -> str:

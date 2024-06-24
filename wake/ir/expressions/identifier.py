@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from functools import lru_cache, partial
 from typing import TYPE_CHECKING, FrozenSet, List, Set, Tuple, Union
 
@@ -26,7 +27,7 @@ class Identifier(ExpressionAbc):
     """
 
     _ast_node: SolcIdentifier
-    _parent: SolidityAbc  # TODO: make this more specific
+    _parent: weakref.ReferenceType[SolidityAbc]  # TODO: make this more specific
 
     _name: str
     _overloaded_declarations: List[AstNodeId]
@@ -41,7 +42,7 @@ class Identifier(ExpressionAbc):
         self._name = identifier.name
         self._overloaded_declarations = list(identifier.overloaded_declarations)
         if identifier.referenced_declaration is None:
-            assert isinstance(self._parent, ImportDirective)
+            assert isinstance(self.parent, ImportDirective)
             self._referenced_declaration_ids = set()
         else:
             self._referenced_declaration_ids = {identifier.referenced_declaration}
@@ -107,7 +108,7 @@ class Identifier(ExpressionAbc):
 
     @property
     def parent(self) -> SolidityAbc:
-        return self._parent
+        return super().parent
 
     @property
     def name(self) -> str:

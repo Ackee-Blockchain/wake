@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from typing import TYPE_CHECKING, Optional, Union
 
 from wake.ir.types import (
@@ -82,14 +83,16 @@ class ElementaryTypeName(TypeNameAbc):
     """
 
     _ast_node: SolcElementaryTypeName
-    _parent: Union[
-        VariableDeclaration,
-        UserDefinedValueTypeDefinition,
-        ElementaryTypeNameExpression,
-        NewExpression,
-        UsingForDirective,
-        ArrayTypeName,
-        Mapping,
+    _parent: weakref.ReferenceType[
+        Union[
+            VariableDeclaration,
+            UserDefinedValueTypeDefinition,
+            ElementaryTypeNameExpression,
+            NewExpression,
+            UsingForDirective,
+            ArrayTypeName,
+            Mapping,
+        ]
     ]
 
     _name: str
@@ -133,7 +136,7 @@ class ElementaryTypeName(TypeNameAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
 
     @property
     def type(

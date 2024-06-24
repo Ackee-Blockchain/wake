@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from typing import TYPE_CHECKING, Iterator, Set, Tuple, Union
 
 from wake.ir.abc import IrAbc, SolidityAbc
@@ -25,7 +26,7 @@ class NewExpression(ExpressionAbc):
     """
 
     _ast_node: SolcNewExpression
-    _parent: SolidityAbc  # TODO: make this more specific
+    _parent: weakref.ReferenceType[SolidityAbc]  # TODO: make this more specific
 
     _type_name: TypeNameAbc
 
@@ -41,7 +42,15 @@ class NewExpression(ExpressionAbc):
 
     @property
     def parent(self) -> SolidityAbc:
-        return self._parent
+        return super().parent
+
+    @property
+    def children(self) -> Iterator[TypeNameAbc]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield self._type_name
 
     @property
     def type_name(self) -> TypeNameAbc:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from functools import lru_cache, reduce
 from operator import or_
 from typing import TYPE_CHECKING, Iterator, List, Optional, Set, Tuple, Union
@@ -28,7 +29,7 @@ class TupleExpression(ExpressionAbc):
     """
 
     _ast_node: SolcTupleExpression
-    _parent: SolidityAbc  # TODO: make this more specific
+    _parent: weakref.ReferenceType[SolidityAbc]  # TODO: make this more specific
 
     _components: List[Optional[ExpressionAbc]]
     _is_inline_array: bool
@@ -57,7 +58,17 @@ class TupleExpression(ExpressionAbc):
 
     @property
     def parent(self) -> SolidityAbc:
-        return self._parent
+        return super().parent
+
+    @property
+    def children(self) -> Iterator[ExpressionAbc]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        for component in self._components:
+            if component is not None:
+                yield component
 
     @property
     def is_inline_array(self) -> bool:

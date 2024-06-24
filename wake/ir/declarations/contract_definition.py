@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import re
+import weakref
 from bisect import bisect
 from functools import lru_cache, partial
 from typing import TYPE_CHECKING, FrozenSet, Iterator, List, Optional, Set, Tuple, Union
 
 from ...regex_parser import SoliditySourceParser
-from ..abc import IrAbc
+from ..abc import IrAbc, is_not_none
 from ..meta.inheritance_specifier import InheritanceSpecifier
 from ..meta.using_for_directive import UsingForDirective
 from ..reference_resolver import CallbackParams
@@ -76,7 +77,7 @@ class ContractDefinition(DeclarationAbc):
     """
 
     _ast_node: SolcContractDefinition
-    _parent: SourceUnit
+    _parent: weakref.ReferenceType[SourceUnit]
 
     _abstract: bool
     _base_contracts: List[InheritanceSpecifier]
@@ -99,10 +100,10 @@ class ContractDefinition(DeclarationAbc):
     _declared_variables: List[VariableDeclaration]
 
     _used_event_ids: List[AstNodeId]
-    _used_events: Set[EventDefinition]
+    _used_events: Set[weakref.ReferenceType[EventDefinition]]
     # _internal_function_ids
 
-    _child_contracts: Set[ContractDefinition]
+    _child_contracts: Set[weakref.ReferenceType[ContractDefinition]]
 
     def __init__(
         self, init: IrInitTuple, contract: SolcContractDefinition, parent: SourceUnit
@@ -204,16 +205,27 @@ class ContractDefinition(DeclarationAbc):
         for declared_variable in self._declared_variables:
             yield from declared_variable
 
+    def __setstate__(self, state):
+        super().__setstate__(state)
+        self._used_events = set()
+        self._child_contracts = set()
+
+    @classmethod
+    def _strip_weakrefs(cls, state: dict):
+        super()._strip_weakrefs(state)
+        del state["_used_events"]
+        del state["_child_contracts"]
+
     def _post_process(self, callback_params: CallbackParams):
         base_contracts = []
         for base_contract in self._base_contracts:
             contract = base_contract.base_name.referenced_declaration
             assert isinstance(contract, ContractDefinition)
-            contract._child_contracts.add(self)
+            contract._child_contracts.add(weakref.ref(self))
             base_contracts.append(contract)
 
         for error in self.used_errors:
-            error._used_in.add(self)
+            error._used_in.add(weakref.ref(self))
 
         # in case used_events are set in the AST in solc >= 0.8.20
         for event_id in self._used_event_ids:
@@ -221,11 +233,11 @@ class ContractDefinition(DeclarationAbc):
                 event_id, self.source_unit.cu_hash
             )
             assert isinstance(event, EventDefinition)
-            self._used_events.add(event)
+            self._used_events.add(weakref.ref(event))
 
         # in case used_events are not set in the AST in solc < 0.8.20
         for event in self._events:
-            self._used_events.add(event)
+            self._used_events.add(weakref.ref(event))
 
         self._reference_resolver.register_destroy_callback(
             self.source_unit.file, partial(self._destroy, base_contracts)
@@ -233,10 +245,23 @@ class ContractDefinition(DeclarationAbc):
 
     def _post_process_events(self, callback_params: CallbackParams):
         for base in self.linearized_base_contracts:
-            self._used_events.update(base.used_events)
+            for event in base.used_events:
+                self._used_events.add(weakref.ref(event))
 
+        # populate self._used_event_ids so it can be later used during pickle deserialization
+        used_event_ids = []
         for event in self.used_events:
-            event._used_in.add(self)
+            event._used_in.add(weakref.ref(self))
+
+            node_path_order = self._reference_resolver.get_node_path_order(
+                event.ast_node_id, event.source_unit.cu_hash
+            )
+            used_event_ids.append(
+                self._reference_resolver.get_ast_id_from_cu_node_path_order(
+                    node_path_order, self.source_unit.cu_hash
+                )
+            )
+        self._used_event_ids = used_event_ids
 
         self._reference_resolver.register_destroy_callback(
             self.source_unit.file, self._destroy_events
@@ -244,13 +269,16 @@ class ContractDefinition(DeclarationAbc):
 
     def _destroy(self, base_contracts: List[ContractDefinition]) -> None:
         for base_contract in base_contracts:
-            base_contract._child_contracts.remove(self)
+            ref = next(c for c in base_contract._child_contracts if c() is self)
+            base_contract._child_contracts.remove(ref)
         for error in self.used_errors:
-            error._used_in.remove(self)
+            ref = next(c for c in error._used_in if c() is self)
+            error._used_in.remove(ref)
 
     def _destroy_events(self) -> None:
         for event in self.used_events:
-            event._used_in.remove(self)
+            ref = next(c for c in event._used_in if c() is self)
+            event._used_in.remove(ref)
 
     def _parse_name_location(self) -> Tuple[int, int]:
         IDENTIFIER = r"[a-zA-Z$_][a-zA-Z0-9$_]*"
@@ -303,7 +331,42 @@ class ContractDefinition(DeclarationAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
+
+    @property
+    def children(
+        self,
+    ) -> Iterator[
+        Union[
+            InheritanceSpecifier,
+            StructuredDocumentation,
+            EnumDefinition,
+            ErrorDefinition,
+            EventDefinition,
+            FunctionDefinition,
+            ModifierDefinition,
+            StructDefinition,
+            UserDefinedValueTypeDefinition,
+            UsingForDirective,
+            VariableDeclaration,
+        ]
+    ]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield from self._base_contracts
+        if isinstance(self._documentation, StructuredDocumentation):
+            yield self._documentation
+        yield from self._enums
+        yield from self._errors
+        yield from self._events
+        yield from self._functions
+        yield from self._modifiers
+        yield from self._structs
+        yield from self._user_defined_value_types
+        yield from self._using_for_directives
+        yield from self._declared_variables
 
     @property
     def canonical_name(self) -> str:
@@ -375,7 +438,7 @@ class ContractDefinition(DeclarationAbc):
         Returns:
             Contracts that list this contract in their [base_contracts][wake.ir.declarations.contract_definition.ContractDefinition.base_contracts] property.
         """
-        return frozenset(self._child_contracts)
+        return frozenset(is_not_none(c()) for c in self._child_contracts)
 
     @property
     def kind(self) -> ContractKind:
@@ -431,7 +494,7 @@ class ContractDefinition(DeclarationAbc):
         Returns:
             Events emitted by the contract (or its base contracts) as well as all events defined and inherited by the contract.
         """
-        return frozenset(self._used_events)
+        return frozenset(is_not_none(e()) for e in self._used_events)
 
     @property
     def documentation(self) -> Optional[Union[StructuredDocumentation, str]]:
@@ -547,14 +610,14 @@ class ContractDefinition(DeclarationAbc):
         from ..expressions.member_access import MemberAccess
         from ..meta.identifier_path import IdentifierPathPart
 
+        refs = [is_not_none(r()) for r in self._references]
+
         try:
             ref = next(
                 ref
-                for ref in self._references
+                for ref in refs
                 if not isinstance(ref, (Identifier, IdentifierPathPart, MemberAccess))
             )
             raise AssertionError(f"Unexpected reference type: {ref}")
         except StopIteration:
-            return frozenset(
-                self._references
-            )  # pyright: ignore reportGeneralTypeIssues
+            return frozenset(refs)  # pyright: ignore reportGeneralTypeIssues

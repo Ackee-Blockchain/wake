@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from typing import TYPE_CHECKING, Iterator, List, Optional, Union
 
 from ..expressions.abc import ExpressionAbc
@@ -36,7 +37,7 @@ class InheritanceSpecifier(SolidityAbc):
     """
 
     _ast_node: SolcInheritanceSpecifier
-    _parent: ContractDefinition
+    _parent: weakref.ReferenceType[ContractDefinition]
 
     _base_name: Union[IdentifierPath, UserDefinedTypeName]
     _arguments: Optional[List[ExpressionAbc]]
@@ -78,7 +79,19 @@ class InheritanceSpecifier(SolidityAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
+
+    @property
+    def children(
+        self,
+    ) -> Iterator[Union[IdentifierPath, UserDefinedTypeName, ExpressionAbc]]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield self._base_name
+        if self._arguments is not None:
+            yield from self._arguments
 
     @property
     def base_name(self) -> Union[IdentifierPath, UserDefinedTypeName]:

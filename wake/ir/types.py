@@ -32,7 +32,7 @@ class TypeAbc(ABC):
     def from_type_identifier(
         cls,
         type_identifier: StringReader,
-        reference_resolver: ReferenceResolver,
+        reference_resolver: ReferenceResolver,  # this actually is weakref.proxy
         cu_hash: bytes,
     ) -> typ.Optional[TypeAbc]:
         if type_identifier.startswith("t_address"):

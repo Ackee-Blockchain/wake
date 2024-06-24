@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from functools import lru_cache
 from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
 
@@ -43,7 +44,7 @@ class Assignment(ExpressionAbc):
     """
 
     _ast_node: SolcAssignment
-    _parent: SolidityAbc  # TODO: make this more specific
+    _parent: weakref.ReferenceType[SolidityAbc]  # TODO: make this more specific
 
     _left_expression: ExpressionAbc
     _right_expression: ExpressionAbc
@@ -68,7 +69,16 @@ class Assignment(ExpressionAbc):
 
     @property
     def parent(self) -> SolidityAbc:
-        return self._parent
+        return super().parent
+
+    @property
+    def children(self) -> Iterator[ExpressionAbc]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield self._left_expression
+        yield self._right_expression
 
     @property
     def left_expression(self) -> ExpressionAbc:

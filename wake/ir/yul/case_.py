@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from typing import TYPE_CHECKING, Iterator, Set, Tuple, Union
 
 from typing_extensions import Literal
@@ -42,7 +43,7 @@ class YulCase(YulAbc):
         ```
     """
 
-    _parent: YulSwitch
+    _parent: weakref.ReferenceType[YulSwitch]
     _body: YulBlock
     _value: Union[Literal["default"], YulLiteral]
 
@@ -66,7 +67,17 @@ class YulCase(YulAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
+
+    @property
+    def children(self) -> Iterator[Union[YulBlock, YulLiteral]]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield self._body
+        if self._value != "default":
+            yield self._value
 
     @property
     def body(self) -> YulBlock:

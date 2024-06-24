@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from typing import TYPE_CHECKING, Set, Tuple, Union
 
 from wake.ir.ast import SolcYulTypedName
@@ -34,7 +35,7 @@ class YulTypedName(YulAbc):
         ```
     """
 
-    _parent: Union[YulFunctionDefinition, YulVariableDeclaration]
+    _parent: weakref.ReferenceType[Union[YulFunctionDefinition, YulVariableDeclaration]]
     _name: str
     _type: str
 
@@ -48,7 +49,7 @@ class YulTypedName(YulAbc):
 
     @property
     def parent(self) -> Union[YulFunctionDefinition, YulVariableDeclaration]:
-        return self._parent
+        return super().parent
 
     @property
     def name(self) -> str:

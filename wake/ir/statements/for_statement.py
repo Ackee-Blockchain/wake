@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from functools import lru_cache
 from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
 
@@ -41,13 +42,15 @@ class ForStatement(StatementAbc):
     """
 
     _ast_node: SolcForStatement
-    _parent: Union[
-        Block,
-        DoWhileStatement,
-        ForStatement,
-        IfStatement,
-        UncheckedBlock,
-        WhileStatement,
+    _parent: weakref.ReferenceType[
+        Union[
+            Block,
+            DoWhileStatement,
+            ForStatement,
+            IfStatement,
+            UncheckedBlock,
+            WhileStatement,
+        ]
     ]
 
     _body: StatementAbc
@@ -112,7 +115,21 @@ class ForStatement(StatementAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
+
+    @property
+    def children(self) -> Iterator[Union[ExpressionAbc, StatementAbc]]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield self._body
+        if self._condition is not None:
+            yield self._condition
+        if self._initialization_expression is not None:
+            yield self._initialization_expression
+        if self._loop_expression is not None:
+            yield self._loop_expression
 
     @property
     def body(self) -> StatementAbc:

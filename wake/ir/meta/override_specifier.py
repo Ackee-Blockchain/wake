@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from typing import TYPE_CHECKING, Iterator, List, Tuple, Union
 
 from ..type_names.user_defined_type_name import UserDefinedTypeName
@@ -58,7 +59,9 @@ class OverrideSpecifier(SolidityAbc):
     """
 
     _ast_node: SolcOverrideSpecifier
-    _parent: Union[FunctionDefinition, ModifierDefinition, VariableDeclaration]
+    _parent: weakref.ReferenceType[
+        Union[FunctionDefinition, ModifierDefinition, VariableDeclaration]
+    ]
 
     _overrides: List[Union[IdentifierPath, UserDefinedTypeName]]
 
@@ -90,7 +93,15 @@ class OverrideSpecifier(SolidityAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
+
+    @property
+    def children(self) -> Iterator[Union[IdentifierPath, UserDefinedTypeName]]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield from self._overrides
 
     @property
     def overrides(self) -> Tuple[Union[IdentifierPath, UserDefinedTypeName], ...]:

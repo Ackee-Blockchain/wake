@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from functools import lru_cache
 from typing import TYPE_CHECKING, Iterator, Set, Tuple, Union
 
@@ -24,7 +25,7 @@ class Conditional(ExpressionAbc):
     """
 
     _ast_node: SolcConditional
-    _parent: SolidityAbc  # TODO: make this more specific
+    _parent: weakref.ReferenceType[SolidityAbc]  # TODO: make this more specific
 
     _condition: ExpressionAbc
     _false_expression: ExpressionAbc
@@ -50,7 +51,17 @@ class Conditional(ExpressionAbc):
 
     @property
     def parent(self) -> SolidityAbc:
-        return self._parent
+        return super().parent
+
+    @property
+    def children(self) -> Iterator[ExpressionAbc]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield self._condition
+        yield self._false_expression
+        yield self._true_expression
 
     @property
     def condition(self) -> ExpressionAbc:

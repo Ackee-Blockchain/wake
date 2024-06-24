@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import logging
+import weakref
 from typing import TYPE_CHECKING, FrozenSet, Tuple
 
+from ..abc import is_not_none
 from .abc import DeclarationAbc
 
 if TYPE_CHECKING:
@@ -29,7 +31,7 @@ class EnumValue(DeclarationAbc):
     """
 
     _ast_node: SolcEnumValue
-    _parent: EnumDefinition
+    _parent: weakref.ReferenceType[EnumDefinition]
 
     def __init__(self, init: IrInitTuple, value: SolcEnumValue, parent: SolidityAbc):
         super().__init__(init, value, parent)
@@ -44,11 +46,11 @@ class EnumValue(DeclarationAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
 
     @property
     def canonical_name(self) -> str:
-        return f"{self._parent.canonical_name}.{self._name}"
+        return f"{self.parent.canonical_name}.{self._name}"
 
     @property
     def declaration_string(self) -> str:
@@ -64,12 +66,10 @@ class EnumValue(DeclarationAbc):
         """
         from ..expressions.member_access import MemberAccess
 
+        refs = [is_not_none(r()) for r in self._references]
+
         try:
-            ref = next(
-                ref for ref in self._references if not isinstance(ref, MemberAccess)
-            )
+            ref = next(ref for ref in refs if not isinstance(ref, MemberAccess))
             raise AssertionError(f"Unexpected reference type: {ref}")
         except StopIteration:
-            return frozenset(
-                self._references
-            )  # pyright: ignore reportGeneralTypeIssues
+            return frozenset(refs)  # pyright: ignore reportGeneralTypeIssues

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from typing import TYPE_CHECKING, Iterator, Optional, Union
 
 from wake.ir.types import Array
@@ -61,8 +62,14 @@ class ArrayTypeName(TypeNameAbc):
     """
 
     _ast_node: SolcArrayTypeName
-    _parent: Union[
-        VariableDeclaration, NewExpression, UsingForDirective, ArrayTypeName, Mapping
+    _parent: weakref.ReferenceType[
+        Union[
+            VariableDeclaration,
+            NewExpression,
+            UsingForDirective,
+            ArrayTypeName,
+            Mapping,
+        ]
     ]
 
     _base_type: TypeNameAbc
@@ -95,7 +102,17 @@ class ArrayTypeName(TypeNameAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
+
+    @property
+    def children(self) -> Iterator[Union[TypeNameAbc, ExpressionAbc]]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield self._base_type
+        if self._length is not None:
+            yield self._length
 
     @property
     def type(self) -> Array:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import weakref
 from bisect import bisect
 from collections import deque
 from functools import lru_cache, partial
@@ -17,6 +18,7 @@ from typing import (
 )
 
 from ...regex_parser import SoliditySourceParser
+from ..abc import is_not_none
 from ..meta.modifier_invocation import ModifierInvocation
 from ..meta.override_specifier import OverrideSpecifier
 from ..reference_resolver import CallbackParams
@@ -90,8 +92,10 @@ class FunctionDefinition(DeclarationAbc):
     """
 
     _ast_node: SolcFunctionDefinition
-    _parent: Union[ContractDefinition, SourceUnit]
-    _child_functions: Set[Union[FunctionDefinition, VariableDeclaration]]
+    _parent: weakref.ReferenceType[Union[ContractDefinition, SourceUnit]]
+    _child_functions: Set[
+        weakref.ReferenceType[Union[FunctionDefinition, VariableDeclaration]]
+    ]
 
     _implemented: bool
     _kind: FunctionKind
@@ -184,17 +188,27 @@ class FunctionDefinition(DeclarationAbc):
         if self._overrides is not None:
             yield from self._overrides
 
+    def __setstate__(self, state):
+        super().__setstate__(state)
+        self._child_functions = set()
+
+    @classmethod
+    def _strip_weakrefs(cls, state: dict):
+        super()._strip_weakrefs(state)
+        del state["_child_functions"]
+
     def _post_process(self, callback_params: CallbackParams):
         base_functions = self.base_functions
         for base_function in base_functions:
-            base_function._child_functions.add(self)
+            base_function._child_functions.add(weakref.ref(self))
         self._reference_resolver.register_destroy_callback(
             self.source_unit.file, partial(self._destroy, base_functions)
         )
 
     def _destroy(self, base_functions: Tuple[FunctionDefinition, ...]) -> None:
         for base_function in base_functions:
-            base_function._child_functions.remove(self)
+            ref = next(f for f in base_function._child_functions if f() is self)
+            base_function._child_functions.remove(ref)
 
     def _parse_name_location(self) -> Tuple[int, int]:
         IDENTIFIER = r"[a-zA-Z$_][a-zA-Z0-9$_]*"
@@ -276,15 +290,41 @@ class FunctionDefinition(DeclarationAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
+
+    @property
+    def children(
+        self,
+    ) -> Iterator[
+        Union[
+            ModifierInvocation,
+            ParameterList,
+            StructuredDocumentation,
+            Block,
+            OverrideSpecifier,
+        ]
+    ]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield from self._modifiers
+        yield self._parameters
+        yield self._return_parameters
+        if isinstance(self._documentation, StructuredDocumentation):
+            yield self._documentation
+        if self._body is not None:
+            yield self._body
+        if self._overrides is not None:
+            yield self._overrides
 
     @property
     @lru_cache(maxsize=2048)
     def canonical_name(self) -> str:
         from .contract_definition import ContractDefinition
 
-        if isinstance(self._parent, ContractDefinition):
-            return f"{self._parent.canonical_name}.{self._name}({','.join(param.type_name.type_string for param in self._parameters.parameters)})"
+        if isinstance(self.parent, ContractDefinition):
+            return f"{self.parent.canonical_name}.{self._name}({','.join(param.type_name.type_string for param in self._parameters.parameters)})"
         return f"{self._name}({','.join(param.type_name.type_string for param in self._parameters.parameters)})"
 
     @property
@@ -503,7 +543,7 @@ class FunctionDefinition(DeclarationAbc):
         Returns:
             Functions that list this function in their [base_functions][wake.ir.declarations.function_definition.FunctionDefinition.base_functions] property.
         """
-        return frozenset(self._child_functions)
+        return frozenset(is_not_none(f()) for f in self._child_functions)
 
     @property
     def documentation(self) -> Optional[Union[StructuredDocumentation, str]]:
@@ -605,10 +645,12 @@ class FunctionDefinition(DeclarationAbc):
         from ..expressions.unary_operation import UnaryOperation
         from ..meta.identifier_path import IdentifierPathPart
 
+        refs = [is_not_none(r()) for r in self._references]
+
         try:
             ref = next(
                 ref
-                for ref in self._references
+                for ref in refs
                 if not isinstance(
                     ref,
                     (
@@ -622,6 +664,4 @@ class FunctionDefinition(DeclarationAbc):
             )
             raise AssertionError(f"Unexpected reference type: {ref}")
         except StopIteration:
-            return frozenset(
-                self._references
-            )  # pyright: ignore reportGeneralTypeIssues
+            return frozenset(refs)  # pyright: ignore reportGeneralTypeIssues

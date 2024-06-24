@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from functools import lru_cache
 from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
 
@@ -20,7 +21,7 @@ class IndexAccess(ExpressionAbc):
     """
 
     _ast_node: SolcIndexAccess
-    _parent: SolidityAbc  # TODO: make this more specific
+    _parent: weakref.ReferenceType[SolidityAbc]  # TODO: make this more specific
 
     _base_expression: ExpressionAbc
     _index_expression: Optional[ExpressionAbc]
@@ -48,7 +49,17 @@ class IndexAccess(ExpressionAbc):
 
     @property
     def parent(self) -> SolidityAbc:
-        return self._parent
+        return super().parent
+
+    @property
+    def children(self) -> Iterator[ExpressionAbc]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield self._base_expression
+        if self._index_expression is not None:
+            yield self._index_expression
 
     @property
     def base_expression(self) -> ExpressionAbc:

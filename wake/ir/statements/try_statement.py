@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from functools import lru_cache, reduce
 from operator import or_
 from typing import TYPE_CHECKING, Iterator, List, Set, Tuple, Union
@@ -40,13 +41,15 @@ class TryStatement(StatementAbc):
     """
 
     _ast_node: SolcTryStatement
-    _parent: Union[
-        Block,
-        DoWhileStatement,
-        ForStatement,
-        IfStatement,
-        UncheckedBlock,
-        WhileStatement,
+    _parent: weakref.ReferenceType[
+        Union[
+            Block,
+            DoWhileStatement,
+            ForStatement,
+            IfStatement,
+            UncheckedBlock,
+            WhileStatement,
+        ]
     ]
 
     _clauses: List[TryCatchClause]
@@ -82,7 +85,16 @@ class TryStatement(StatementAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
+
+    @property
+    def children(self) -> Iterator[Union[TryCatchClause, FunctionCall]]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield from self._clauses
+        yield self._external_call
 
     @property
     def clauses(self) -> Tuple[TryCatchClause, ...]:

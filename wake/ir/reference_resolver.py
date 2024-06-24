@@ -63,7 +63,7 @@ class ReferenceResolver:
     _ordered_nodes: DefaultDict[bytes, Dict[AstNodeId, Tuple[Path, int]]]
     _ordered_nodes_inverted: DefaultDict[bytes, Dict[Tuple[Path, int], AstNodeId]]
     _registered_source_files: DefaultDict[bytes, Dict[int, Path]]
-    _registered_nodes: Dict[Tuple[Path, int], SolidityAbc]
+    _registered_nodes: Dict[Path, Dict[int, SolidityAbc]]
     _post_process_callbacks: List[PostProcessQueueItem]
     _destroy_callbacks: DefaultDict[Path, List[Callable[[], None]]]
     _global_symbol_references: DefaultDict[
@@ -75,7 +75,7 @@ class ReferenceResolver:
         self._ordered_nodes = defaultdict(dict)
         self._ordered_nodes_inverted = defaultdict(dict)
         self._registered_source_files = defaultdict(dict)
-        self._registered_nodes = {}
+        self._registered_nodes = defaultdict(dict)
         self._post_process_callbacks = []
         self._destroy_callbacks = defaultdict(list)
         self._global_symbol_references = defaultdict(list)
@@ -188,8 +188,8 @@ class ReferenceResolver:
     def register_node(self, node: SolidityAbc, node_id: AstNodeId, cu_hash: bytes):
         assert cu_hash in self._ordered_nodes
         assert node_id in self._ordered_nodes[cu_hash]
-        node_path_order = self._ordered_nodes[cu_hash][node_id]
-        self._registered_nodes[node_path_order] = node
+        path, order = self._ordered_nodes[cu_hash][node_id]
+        self._registered_nodes[path][order] = node
 
     def resolve_node(self, node_id: AstNodeId, cu_hash: bytes) -> SolidityAbc:
         """
@@ -202,8 +202,8 @@ class ReferenceResolver:
         Returns:
             IR node for the given AST node ID in the given CU
         """
-        node_path_order = self._ordered_nodes[cu_hash][node_id]
-        return self._registered_nodes[node_path_order]
+        path, order = self._ordered_nodes[cu_hash][node_id]
+        return self._registered_nodes[path][order]
 
     def resolve_source_file_id(self, source_file_id: int, cu_hash: bytes) -> Path:
         """

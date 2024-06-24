@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from typing import TYPE_CHECKING, Optional, Set, Tuple, Union
 
 from wake.ir.abc import SolidityAbc
@@ -25,7 +26,7 @@ class Literal(ExpressionAbc):
     """
 
     _ast_node: SolcLiteral
-    _parent: SolidityAbc  # TODO: make this more specific
+    _parent: weakref.ReferenceType[SolidityAbc]  # TODO: make this more specific
 
     _hex_value: bytes
     _kind: LiteralKind
@@ -45,7 +46,7 @@ class Literal(ExpressionAbc):
 
     @property
     def parent(self) -> SolidityAbc:
-        return self._parent
+        return super().parent
 
     @property
     def hex_value(self) -> bytes:

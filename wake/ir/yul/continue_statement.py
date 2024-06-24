@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from typing import TYPE_CHECKING, Set, Tuple, Union
 
 from ..enums import ModifiesStateFlag
@@ -26,7 +27,7 @@ class YulContinue(YulStatementAbc):
         ```
     """
 
-    _parent: YulBlock
+    _parent: weakref.ReferenceType[YulBlock]
 
     @property
     def parent(self) -> YulBlock:
@@ -34,7 +35,7 @@ class YulContinue(YulStatementAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
 
     @property
     def modifies_state(

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, FrozenSet, Iterator, Optional, Set, Tuple, Union
 
@@ -13,6 +14,7 @@ if TYPE_CHECKING:
 
 from wake.ir.abc import SolidityAbc
 from wake.ir.ast import (
+    AstNodeId,
     SolcContractDefinition,
     SolcEnumDefinition,
     SolcEnumValue,
@@ -48,13 +50,15 @@ class DeclarationAbc(SolidityAbc, ABC):
     _name: str
     _name_location: Optional[Tuple[int, int]]
     _references: Set[
-        Union[
-            Identifier,
-            IdentifierPathPart,
-            MemberAccess,
-            ExternalReference,
-            UnaryOperation,
-            BinaryOperation,
+        weakref.ReferenceType[
+            Union[
+                Identifier,
+                IdentifierPathPart,
+                MemberAccess,
+                ExternalReference,
+                UnaryOperation,
+                BinaryOperation,
+            ]
         ]
     ]
 
@@ -73,6 +77,15 @@ class DeclarationAbc(SolidityAbc, ABC):
             )
         self._references = set()
 
+    def __setstate__(self, state):
+        super().__setstate__(state)
+        self._references = set()
+
+    @classmethod
+    def _strip_weakrefs(cls, state: dict):
+        super()._strip_weakrefs(state)
+        del state["_references"]
+
     def register_reference(
         self,
         reference: Union[
@@ -84,7 +97,7 @@ class DeclarationAbc(SolidityAbc, ABC):
             BinaryOperation,
         ],
     ):
-        self._references.add(reference)
+        self._references.add(weakref.ref(reference))
 
     def unregister_reference(
         self,
@@ -97,7 +110,8 @@ class DeclarationAbc(SolidityAbc, ABC):
             BinaryOperation,
         ],
     ):
-        self._references.remove(reference)
+        ref = next(r for r in self._references if r() is reference)
+        self._references.remove(ref)
 
     def get_all_references(
         self, include_declarations: bool

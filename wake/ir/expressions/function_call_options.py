@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from functools import lru_cache, reduce
 from operator import or_
 from typing import TYPE_CHECKING, Iterator, List, Set, Tuple, Union
@@ -31,7 +32,7 @@ class FunctionCallOptions(ExpressionAbc):
     """
 
     _ast_node: SolcFunctionCallOptions
-    _parent: SolidityAbc  # TODO: make this more specific
+    _parent: weakref.ReferenceType[SolidityAbc]  # TODO: make this more specific
 
     _expression: ExpressionAbc
     _names: List[str]
@@ -61,7 +62,16 @@ class FunctionCallOptions(ExpressionAbc):
 
     @property
     def parent(self) -> SolidityAbc:
-        return self._parent
+        return super().parent
+
+    @property
+    def children(self) -> Iterator[ExpressionAbc]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield self._expression
+        yield from self._options
 
     @property
     def expression(self) -> ExpressionAbc:

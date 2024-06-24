@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from bisect import bisect
 from collections import deque
 from pathlib import Path
@@ -96,14 +97,16 @@ class UserDefinedTypeName(TypeNameAbc):
     """
 
     _ast_node: SolcUserDefinedTypeName
-    _parent: Union[
-        VariableDeclaration,
-        NewExpression,
-        InheritanceSpecifier,
-        OverrideSpecifier,
-        UsingForDirective,
-        ArrayTypeName,
-        Mapping,
+    _parent: weakref.ReferenceType[
+        Union[
+            VariableDeclaration,
+            NewExpression,
+            InheritanceSpecifier,
+            OverrideSpecifier,
+            UsingForDirective,
+            ArrayTypeName,
+            Mapping,
+        ]
     ]
 
     _referenced_declaration_id: AstNodeId
@@ -227,7 +230,7 @@ class UserDefinedTypeName(TypeNameAbc):
                 name,
                 referenced_node_id,
                 self._reference_resolver,
-                self.source_unit,
+                self._source_unit,
             )
 
     def __iter__(self) -> Iterator[IrAbc]:
@@ -251,7 +254,16 @@ class UserDefinedTypeName(TypeNameAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
+
+    @property
+    def children(self) -> Iterator[IdentifierPath]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        if self._path_node is not None:
+            yield self._path_node
 
     @property
     def type(self) -> Union[Contract, Struct, Enum, UserDefinedValueType]:

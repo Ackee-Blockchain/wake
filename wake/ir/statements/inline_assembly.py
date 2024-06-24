@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import re
+import weakref
 from bisect import bisect
 from functools import lru_cache, partial
 from typing import TYPE_CHECKING, FrozenSet, Iterator, Optional, Set, Tuple, Union
 
 from intervaltree import IntervalTree
 
-from wake.ir.abc import IrAbc, SolidityAbc
+from wake.ir.abc import IrAbc, SolidityAbc, is_not_none
 from wake.ir.ast import AstNodeId, ExternalReferenceModel, SolcInlineAssembly
 from wake.ir.declarations.variable_declaration import VariableDeclaration
 from wake.ir.enums import (
@@ -47,11 +48,11 @@ class ExternalReference:
         Since this is not an IR node, there must still be a Yul IR node ([YulIdentifier][wake.ir.yul.identifier.YulIdentifier]) in the source code that represents the identifier.
     """
 
-    _inline_assembly: InlineAssembly
+    _inline_assembly: weakref.ReferenceType[InlineAssembly]
     _external_reference_model: ExternalReferenceModel
     _reference_resolver: ReferenceResolver
     _source: bytes
-    _source_unit: SourceUnit
+    _source_unit: weakref.ReferenceType[SourceUnit]
 
     _referenced_declaration_id: AstNodeId
     _value_size: int
@@ -64,12 +65,12 @@ class ExternalReference:
         init: IrInitTuple,
         external_reference_model: ExternalReferenceModel,
     ):
-        self._inline_assembly = inline_assembly
+        self._inline_assembly = weakref.ref(inline_assembly)
         self._external_reference_model = external_reference_model
-        self._reference_resolver = init.reference_resolver
+        self._reference_resolver = weakref.proxy(init.reference_resolver)
         self._source = init.source[self.byte_location[0] : self.byte_location[1]]
         assert init.source_unit is not None
-        self._source_unit = init.source_unit
+        self._source_unit = weakref.ref(init.source_unit)
 
         self._referenced_declaration_id = external_reference_model.declaration
         assert self._referenced_declaration_id >= 0
@@ -84,13 +85,20 @@ class ExternalReference:
 
         self._reference_resolver.register_post_process_callback(self._post_process)
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state["_inline_assembly"]
+        del state["_source_unit"]
+        del state["_reference_resolver"]
+        return state
+
     def _post_process(self, callback_params: CallbackParams):
         referenced_declaration = self.referenced_declaration
         referenced_declaration.register_reference(self)
         self._reference_resolver.register_destroy_callback(
-            self._source_unit.file, partial(self._destroy, referenced_declaration)
+            self.source_unit.file, partial(self._destroy, referenced_declaration)
         )
-        interval_tree = callback_params.interval_trees[self._source_unit.file]
+        interval_tree = callback_params.interval_trees[self.source_unit.file]
         start, end = self.byte_location
         nodes = interval_tree[start:end]
         node = next(node for node in nodes if node.begin == start and node.end == end)
@@ -98,7 +106,7 @@ class ExternalReference:
             node.data, YulIdentifier
         ), f"Expected Identifier, got {type(node.data)}"
         self._yul_identifier = node.data
-        self._yul_identifier._external_reference = self
+        self._yul_identifier._external_reference = weakref.ref(self)
 
     def _destroy(self, referenced_declaration: VariableDeclaration) -> None:
         referenced_declaration.unregister_reference(self)
@@ -109,7 +117,7 @@ class ExternalReference:
         Returns:
             Source unit that contains this node.
         """
-        return self._source_unit
+        return is_not_none(self._source_unit())
 
     @property
     def byte_location(self) -> Tuple[int, int]:
@@ -170,7 +178,7 @@ class ExternalReference:
             Solidity variable declaration referenced by this external reference.
         """
         node = self._reference_resolver.resolve_node(
-            self._referenced_declaration_id, self._source_unit.cu_hash
+            self._referenced_declaration_id, self.source_unit.cu_hash
         )
         assert isinstance(node, VariableDeclaration)
         return node
@@ -181,7 +189,7 @@ class ExternalReference:
         Returns:
             Inline assembly block this external references belongs to.
         """
-        return self._inline_assembly
+        return is_not_none(self._inline_assembly())
 
     @property
     def yul_identifier(self) -> YulIdentifier:
@@ -226,13 +234,15 @@ class InlineAssembly(StatementAbc):
     """
 
     _ast_node: SolcInlineAssembly
-    _parent: Union[
-        Block,
-        DoWhileStatement,
-        ForStatement,
-        IfStatement,
-        UncheckedBlock,
-        WhileStatement,
+    _parent: weakref.ReferenceType[
+        Union[
+            Block,
+            DoWhileStatement,
+            ForStatement,
+            IfStatement,
+            UncheckedBlock,
+            WhileStatement,
+        ]
     ]
 
     _yul_block: YulBlock
@@ -284,7 +294,15 @@ class InlineAssembly(StatementAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
+
+    @property
+    def children(self) -> Iterator[YulBlock]:
+        """
+        Yields:
+            Direct children of this node.
+        """
+        yield self._yul_block
 
     @property
     def yul_block(self) -> YulBlock:

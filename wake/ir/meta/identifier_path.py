@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import weakref
 from bisect import bisect
 from collections import deque
 from functools import partial
@@ -19,7 +20,7 @@ if TYPE_CHECKING:
 
 from intervaltree import IntervalTree
 
-from wake.ir.abc import SolidityAbc
+from wake.ir.abc import SolidityAbc, is_not_none
 from wake.ir.ast import AstNodeId, SolcIdentifierPath
 from wake.ir.declarations.abc import DeclarationAbc
 from wake.ir.reference_resolver import CallbackParams, ReferenceResolver
@@ -34,11 +35,11 @@ class IdentifierPathPart:
     """
 
     _reference_resolver: ReferenceResolver
-    _underlying_node: Union[IdentifierPath, UserDefinedTypeName]
+    _underlying_node: weakref.ReferenceType[Union[IdentifierPath, UserDefinedTypeName]]
     _referenced_declaration_id: Optional[AstNodeId]
     _byte_location: Tuple[int, int]
     _name: str
-    _source_unit: SourceUnit
+    _source_unit: weakref.ReferenceType[SourceUnit]
 
     def __init__(
         self,
@@ -47,10 +48,12 @@ class IdentifierPathPart:
         name: str,
         referenced_declaration_id: AstNodeId,
         reference_resolver: ReferenceResolver,
-        source_unit: SourceUnit,
+        source_unit: weakref.ReferenceType[SourceUnit],
     ):
-        self._underlying_node = underlying_node
-        self._reference_resolver = reference_resolver
+        self._underlying_node = weakref.ref(underlying_node)
+        self._reference_resolver = (
+            reference_resolver  # reference_resolver already is a weakref.proxy
+        )
         self._referenced_declaration_id = referenced_declaration_id
         self._byte_location = byte_location
         self._name = name
@@ -58,12 +61,19 @@ class IdentifierPathPart:
 
         self._reference_resolver.register_post_process_callback(self._post_process)
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state["_underlying_node"]
+        del state["_source_unit"]
+        del state["_reference_resolver"]
+        return state
+
     def _post_process(self, callback_params: CallbackParams):
         referenced_declaration = self.referenced_declaration
         if isinstance(referenced_declaration, DeclarationAbc):
             referenced_declaration.register_reference(self)
             self._reference_resolver.register_destroy_callback(
-                self._source_unit.file, partial(self._destroy, referenced_declaration)
+                self.source_unit.file, partial(self._destroy, referenced_declaration)
             )
 
     def _destroy(self, referenced_declaration: DeclarationAbc) -> None:
@@ -75,7 +85,7 @@ class IdentifierPathPart:
         Returns:
             Underlying IR node (parent) of this identifier path part.
         """
-        return self._underlying_node
+        return is_not_none(self._underlying_node())
 
     @property
     def byte_location(self) -> Tuple[int, int]:
@@ -92,7 +102,7 @@ class IdentifierPathPart:
         Returns:
             Source unit that contains this node.
         """
-        return self._source_unit
+        return is_not_none(self._source_unit())
 
     @property
     def name(self) -> str:
@@ -123,7 +133,7 @@ class IdentifierPathPart:
 
         assert self._referenced_declaration_id is not None
         node = self._reference_resolver.resolve_node(
-            self._referenced_declaration_id, self._source_unit.cu_hash
+            self._referenced_declaration_id, self.source_unit.cu_hash
         )
         assert isinstance(node, (DeclarationAbc, SourceUnit))
         return node
@@ -136,12 +146,14 @@ class IdentifierPath(SolidityAbc):
     """
 
     _ast_node: SolcIdentifierPath
-    _parent: Union[
-        InheritanceSpecifier,
-        ModifierInvocation,
-        OverrideSpecifier,
-        UsingForDirective,
-        UserDefinedTypeName,
+    _parent: weakref.ReferenceType[
+        Union[
+            InheritanceSpecifier,
+            ModifierInvocation,
+            OverrideSpecifier,
+            UsingForDirective,
+            UserDefinedTypeName,
+        ]
     ]
 
     _name: str
@@ -255,7 +267,7 @@ class IdentifierPath(SolidityAbc):
                 name,
                 referenced_node_id,
                 self._reference_resolver,
-                self.source_unit,
+                self._source_unit,
             )
 
     @property
@@ -272,7 +284,7 @@ class IdentifierPath(SolidityAbc):
         Returns:
             Parent IR node.
         """
-        return self._parent
+        return super().parent
 
     @property
     def name(self) -> str:
