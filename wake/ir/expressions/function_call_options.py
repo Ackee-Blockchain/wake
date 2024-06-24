@@ -10,6 +10,7 @@ from wake.ir.ast import SolcFunctionCallOptions
 from wake.ir.enums import ModifiesStateFlag
 from wake.ir.expressions.abc import ExpressionAbc
 from wake.ir.utils import IrInitTuple
+from wake.utils.decorators import weak_self_lru_cache
 
 if TYPE_CHECKING:
     from ..statements.abc import StatementAbc
@@ -112,7 +113,7 @@ class FunctionCallOptions(ExpressionAbc):
         return False
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def modifies_state(
         self,
     ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:

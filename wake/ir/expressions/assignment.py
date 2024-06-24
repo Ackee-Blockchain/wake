@@ -10,6 +10,7 @@ from wake.ir.abc import IrAbc, SolidityAbc
 from wake.ir.ast import SolcAssignment
 from wake.ir.enums import AssignmentOperator, GlobalSymbol, ModifiesStateFlag
 from wake.ir.utils import IrInitTuple
+from wake.utils.decorators import weak_self_lru_cache
 
 from ..declarations.abc import DeclarationAbc
 from ..declarations.function_definition import FunctionDefinition
@@ -107,12 +108,12 @@ class Assignment(ExpressionAbc):
         return self._operator
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def is_ref_to_state_variable(self) -> bool:
         return self.left_expression.is_ref_to_state_variable
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def modifies_state(
         self,
     ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
@@ -122,7 +123,7 @@ class Assignment(ExpressionAbc):
         return ret
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def assigned_variables(self) -> Tuple[Optional[Set[AssignedVariablePath]], ...]:
         """
         WARNING:

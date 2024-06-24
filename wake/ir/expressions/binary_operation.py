@@ -8,6 +8,7 @@ from wake.ir.abc import IrAbc, SolidityAbc
 from wake.ir.ast import AstNodeId, SolcBinaryOperation
 from wake.ir.enums import BinaryOpOperator, ModifiesStateFlag
 from wake.ir.utils import IrInitTuple
+from wake.utils.decorators import weak_self_lru_cache
 
 from ..declarations.function_definition import FunctionDefinition
 from ..reference_resolver import CallbackParams
@@ -110,7 +111,7 @@ class BinaryOperation(ExpressionAbc):
         return False
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def modifies_state(
         self,
     ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:

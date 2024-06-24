@@ -12,6 +12,7 @@ from wake.ir.expressions.function_call import FunctionCall
 from wake.ir.meta.try_catch_clause import TryCatchClause
 from wake.ir.statements.abc import StatementAbc
 from wake.ir.utils import IrInitTuple
+from wake.utils.decorators import weak_self_lru_cache
 
 if TYPE_CHECKING:
     from ..expressions.abc import ExpressionAbc
@@ -113,7 +114,7 @@ class TryStatement(StatementAbc):
         return self._external_call
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def modifies_state(
         self,
     ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:

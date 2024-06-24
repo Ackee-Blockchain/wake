@@ -12,6 +12,7 @@ from wake.ir.enums import GlobalSymbol, ModifiesStateFlag
 from wake.ir.expressions.abc import ExpressionAbc
 from wake.ir.reference_resolver import CallbackParams
 from wake.ir.utils import IrInitTuple
+from wake.utils.decorators import weak_self_lru_cache
 
 if TYPE_CHECKING:
     from ..declarations.function_definition import FunctionDefinition
@@ -211,7 +212,7 @@ class Identifier(ExpressionAbc):
             return ret  # pyright: ignore reportGeneralTypeIssues
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def is_ref_to_state_variable(self) -> bool:
         referenced_declaration = self.referenced_declaration
         return (

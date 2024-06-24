@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, FrozenSet, Iterator, List, Optional, Tuple, Un
 
 from wake.core import get_logger
 from wake.ir.ast import SolcEnumDefinition
+from wake.utils.decorators import weak_self_lru_cache
 
 from ...regex_parser import SoliditySourceParser
 from ..abc import IrAbc, SolidityAbc, is_not_none
@@ -115,7 +116,7 @@ class EnumDefinition(DeclarationAbc):
         return self._canonical_name
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def declaration_string(self) -> str:
         return (
             f"enum {self.name}"

@@ -13,6 +13,7 @@ from wake.ir.enums import (
     ModifiesStateFlag,
     StateMutability,
 )
+from wake.utils.decorators import weak_self_lru_cache
 
 from ...utils import cached_return_on_recursion
 from ..ast import SolcFunctionCall
@@ -159,7 +160,7 @@ class FunctionCall(ExpressionAbc):
         return tuple(self._arguments)
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def function_called(
         self,
     ) -> Optional[
@@ -252,7 +253,7 @@ class FunctionCall(ExpressionAbc):
                 ), f"Unexpected function call child node: {node}\n{self.source}"
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def is_ref_to_state_variable(self) -> bool:
         if self.kind == FunctionCallKind.TYPE_CONVERSION:
             return self.expression.is_ref_to_state_variable

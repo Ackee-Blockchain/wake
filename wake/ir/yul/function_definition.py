@@ -5,6 +5,7 @@ from functools import lru_cache
 from typing import TYPE_CHECKING, Iterator, List, Optional, Set, Tuple, Union
 
 from wake.ir.ast import SolcYulFunctionDefinition
+from wake.utils.decorators import weak_self_lru_cache
 
 from ..enums import ModifiesStateFlag
 from ..utils import IrInitTuple
@@ -125,7 +126,7 @@ class YulFunctionDefinition(YulStatementAbc):
         return tuple(self._return_variables)
 
     @property
-    @lru_cache(maxsize=64)
+    @weak_self_lru_cache(maxsize=64)
     def cfg(self) -> ControlFlowGraph:
         """
         Returns:

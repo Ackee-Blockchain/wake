@@ -5,6 +5,8 @@ from abc import ABC, abstractmethod
 from functools import lru_cache
 from typing import TYPE_CHECKING, Union
 
+from wake.utils.decorators import weak_self_lru_cache
+
 if TYPE_CHECKING:
     from ..declarations.variable_declaration import VariableDeclaration
     from ..declarations.user_defined_value_type_definition import (
@@ -108,7 +110,7 @@ class TypeNameAbc(SolidityAbc, ABC):
         ...
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def type(
         self,
     ) -> Union[

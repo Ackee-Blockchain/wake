@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Iterator, Set, Tuple, Union
 
 from wake.ir.ast import SolcEmitStatement
 from wake.ir.utils import IrInitTuple
+from wake.utils.decorators import weak_self_lru_cache
 
 from ..abc import IrAbc, SolidityAbc
 from ..enums import ModifiesStateFlag
@@ -99,7 +100,7 @@ class EmitStatement(StatementAbc):
         return self._event_call
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def modifies_state(
         self,
     ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:

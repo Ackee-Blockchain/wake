@@ -43,6 +43,7 @@ from wake.ir.enums import FunctionKind, StateMutability, Visibility
 from wake.ir.meta.parameter_list import ParameterList
 from wake.ir.meta.structured_documentation import StructuredDocumentation
 from wake.ir.utils import IrInitTuple
+from wake.utils.decorators import weak_self_lru_cache
 
 
 class FunctionDefinition(DeclarationAbc):
@@ -319,7 +320,7 @@ class FunctionDefinition(DeclarationAbc):
             yield self._overrides
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def canonical_name(self) -> str:
         from .contract_definition import ContractDefinition
 
@@ -328,7 +329,7 @@ class FunctionDefinition(DeclarationAbc):
         return f"{self._name}({','.join(param.type_name.type_string for param in self._parameters.parameters)})"
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def declaration_string(self) -> str:
         if self.kind == FunctionKind.CONSTRUCTOR:
             ret = "constructor"
@@ -607,7 +608,7 @@ class FunctionDefinition(DeclarationAbc):
         return self._overrides
 
     @property
-    @lru_cache(maxsize=128)
+    @weak_self_lru_cache(maxsize=128)
     def cfg(self) -> ControlFlowGraph:
         """
         Raises:

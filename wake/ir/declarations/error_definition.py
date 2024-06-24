@@ -9,6 +9,7 @@ from Crypto.Hash import keccak
 from wake.ir.abc import IrAbc, SolidityAbc
 from wake.ir.ast import SolcErrorDefinition
 from wake.ir.utils import IrInitTuple
+from wake.utils.decorators import weak_self_lru_cache
 
 from ..abc import is_not_none
 from ..meta.parameter_list import ParameterList
@@ -98,7 +99,7 @@ class ErrorDefinition(DeclarationAbc):
             yield self._documentation
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def canonical_name(self) -> str:
         from .contract_definition import ContractDefinition
 
@@ -107,7 +108,7 @@ class ErrorDefinition(DeclarationAbc):
         return self._name
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def declaration_string(self) -> str:
         ret = (
             f"error {self._name}("
@@ -142,7 +143,7 @@ class ErrorDefinition(DeclarationAbc):
         return self._documentation
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def error_selector(self) -> bytes:
         """
         Returns:

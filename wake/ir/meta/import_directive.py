@@ -10,6 +10,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Deque, Iterator, List, Optional, Set, Tuple
 
+from wake.utils.decorators import weak_self_lru_cache
+
 from ...regex_parser import SoliditySourceParser
 from ..expressions.identifier import Identifier
 from ..reference_resolver import CallbackParams
@@ -281,7 +283,7 @@ class ImportDirective(SolidityAbc):
         return self._unit_alias
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def import_string_location(self) -> Tuple[int, int]:
         """
         Returns:

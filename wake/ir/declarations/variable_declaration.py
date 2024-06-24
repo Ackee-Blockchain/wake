@@ -28,6 +28,7 @@ from wake.ir.meta.structured_documentation import StructuredDocumentation
 from wake.ir.type_names.abc import TypeNameAbc
 from wake.ir.types import TypeAbc
 from wake.ir.utils import IrInitTuple
+from wake.utils.decorators import weak_self_lru_cache
 from wake.utils.string import StringReader
 
 from ...regex_parser import SoliditySourceParser
@@ -334,7 +335,7 @@ class VariableDeclaration(DeclarationAbc):
             yield self._value
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def canonical_name(self) -> str:
         node = self.parent
         while node is not None:
@@ -346,7 +347,7 @@ class VariableDeclaration(DeclarationAbc):
         return f"{node.canonical_name}.{self.name}"
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def declaration_string(self) -> str:
         ret = self.type_name.source
         ret += f" {self.visibility}" if self.is_state_variable else ""
@@ -552,7 +553,7 @@ class VariableDeclaration(DeclarationAbc):
         return self._value
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def type(self) -> TypeAbc:
         """
         Returns:

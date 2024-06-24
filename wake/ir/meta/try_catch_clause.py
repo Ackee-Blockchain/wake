@@ -5,6 +5,7 @@ from functools import lru_cache
 from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
 
 from wake.ir.enums import ModifiesStateFlag
+from wake.utils.decorators import weak_self_lru_cache
 
 from ..statements.block import Block
 from ..utils import IrInitTuple
@@ -161,7 +162,7 @@ class TryCatchClause(SolidityAbc):
         return self._parameters
 
     @property
-    @lru_cache(maxsize=2048)
+    @weak_self_lru_cache(maxsize=2048)
     def modifies_state(
         self,
     ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
