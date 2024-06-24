@@ -111,7 +111,6 @@ class StatementAbc(SolidityAbc, ABC):
         assert False, f"Unknown statement type: {type(statement)}"
 
     @property
-    @abstractmethod
     def parent(
         self,
     ) -> Union[
@@ -129,7 +128,7 @@ class StatementAbc(SolidityAbc, ABC):
         Returns:
             Parent node of the statement.
         """
-        ...
+        return super().parent
 
     @property
     @abstractmethod

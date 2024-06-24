@@ -91,7 +91,6 @@ class TypeNameAbc(SolidityAbc, ABC):
             return UserDefinedTypeName(init, type_name, parent)
 
     @property
-    @abstractmethod
     def parent(
         self,
     ) -> Union[
@@ -107,7 +106,7 @@ class TypeNameAbc(SolidityAbc, ABC):
         Returns:
             Parent node of the type name.
         """
-        ...
+        return super().parent
 
     @property
     @weak_self_lru_cache(maxsize=2048)
