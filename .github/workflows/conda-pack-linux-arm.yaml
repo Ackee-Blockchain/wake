@@ -3,6 +3,7 @@ name: Build linux-arm64 conda environment
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 jobs:
   build-linux-arm:
