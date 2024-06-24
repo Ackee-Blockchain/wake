@@ -1169,6 +1169,9 @@ class SolidityCompiler:
                         if source_unit_name in solc_output.contracts
                         else None,
                     )
+                    build._reference_resolver.clear_registered_nodes(
+                        [path]
+                    )  # prevent memory leak
                     build._source_units[path] = SourceUnit(init, ast)
                     build._interval_trees[path] = interval_tree
 
