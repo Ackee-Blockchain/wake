@@ -207,6 +207,9 @@ class ProjectBuild:
                     ref_decl = node.referenced_declaration
                     if isinstance(ref_decl, DeclarationAbc):
                         ref_decl.register_reference(node)
+                    elif isinstance(ref_decl, set):
+                        for d in ref_decl:
+                            d.register_reference(node)
                 elif isinstance(node, (BinaryOperation, UnaryOperation)):
                     if node.function is not None:
                         node.function.register_reference(node)
