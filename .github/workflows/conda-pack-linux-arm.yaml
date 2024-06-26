@@ -55,7 +55,7 @@ jobs:
         uses: 'google-github-actions/upload-cloud-storage@v2'
         with:
           path: '${{ env.FILENAME }}'
-          destination: 'wake-venv'
+          destination: 'wake-conda'
           headers: |-
             x-goog-meta-version: ${{ env.VERSION }}
             x-goog-meta-os: linux
@@ -66,10 +66,10 @@ jobs:
         uses: 'google-github-actions/upload-cloud-storage@v2'
         with:
           path: ${{ env.FILENAME }}.sha256
-          destination: 'wake-venv'
+          destination: 'wake-conda'
 
       - name: Upload signature
         uses: 'google-github-actions/upload-cloud-storage@v2'
         with:
           path: ${{ env.FILENAME }}.sha256.sig
-          destination: 'wake-venv'
+          destination: 'wake-conda'
