@@ -22,7 +22,7 @@
       
       
       <link rel="icon" href="../../../images/wake-favicon.svg">
-      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.26">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.27">
     
     
       
@@ -7104,7 +7104,7 @@
 <a id="__codelineno-0-32" name="__codelineno-0-32"></a>    <span class="k">def</span> <span class="nf">from_type_identifier</span><span class="p">(</span>
 <a id="__codelineno-0-33" name="__codelineno-0-33"></a>        <span class="bp">cls</span><span class="p">,</span>
 <a id="__codelineno-0-34" name="__codelineno-0-34"></a>        <span class="n">type_identifier</span><span class="p">:</span> <span class="n">StringReader</span><span class="p">,</span>
-<a id="__codelineno-0-35" name="__codelineno-0-35"></a>        <span class="n">reference_resolver</span><span class="p">:</span> <span class="n">ReferenceResolver</span><span class="p">,</span>
+<a id="__codelineno-0-35" name="__codelineno-0-35"></a>        <span class="n">reference_resolver</span><span class="p">:</span> <span class="n">ReferenceResolver</span><span class="p">,</span>  <span class="c1"># this actually is weakref.proxy</span>
 <a id="__codelineno-0-36" name="__codelineno-0-36"></a>        <span class="n">cu_hash</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span>
 <a id="__codelineno-0-37" name="__codelineno-0-37"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typ</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">TypeAbc</span><span class="p">]:</span>
 <a id="__codelineno-0-38" name="__codelineno-0-38"></a>        <span class="k">if</span> <span class="n">type_identifier</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;t_address&quot;</span><span class="p">):</span>
