@@ -126,7 +126,7 @@ class CounterTest(FuzzTest):
         assert self.counter.count() == self.count
 
 
-@default_chain.connect()
+@chain.connect()
 def test_counter():
     CounterTest().run(sequences_count=30, flows_count=100)
 ```
@@ -193,7 +193,7 @@ Additionally to the methods provided by the standard [random](https://docs.pytho
 | <nobr>`lower_bound`</nobr> | lower bound index of `chain.accounts` to choose from | `0`                                 |
 | <nobr>`upper_bound`</nobr> | upper bound index of `chain.accounts` to choose from | `None` (i.e. `len(chain.accounts)`) |
 | `predicate`                | predicate that the account must satisfy              | `None` (i.e. no predicate)          |
-| `chain`                    | chain to choose the account from                     | `default_chain`                     |
+| `chain`                    | chain to choose the account from                     | `chain`                     |
 
 #### random_address()
 

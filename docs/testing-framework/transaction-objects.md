@@ -16,9 +16,9 @@ def tx_callback(tx: TransactionAbc):
     print(tx.console_logs)
 
 
-@default_chain.connect()
+@chain.connect()
 def test_callback():
-    default_chain.tx_callback = tx_callback
+    chain.tx_callback = tx_callback
 
     counter = Counter.deploy()
     counter.increment()
@@ -101,17 +101,17 @@ from wake.testing import *
 from pytypes.contracts.Counter import Counter
 
 
-@default_chain.connect()
+@chain.connect()
 def test_multiple_txs():
     counter = Counter.deploy()
 
     # temporarily disable automine
-    with default_chain.change_automine(False):
+    with chain.change_automine(False):
         tx1 = counter.increment(confirmations=0, gas_limit="auto")
         tx2 = counter.increment(confirmations=0, gas_limit="auto")
         tx3 = counter.increment(confirmations=0, gas_limit="auto")
 
-    default_chain.mine()
+    chain.mine()
 
     assert tx1.block == tx2.block == tx3.block
 ```

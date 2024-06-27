@@ -91,10 +91,10 @@ from pytypes.contracts.Counter import Counter
 ALCHEMY_API_KEY = "YOUR_ALCHEMY_API_KEY"
 
 
-@default_chain.connect(f"wss://eth-mainnet.g.alchemy.com/v2/{ALCHEMY_API_KEY}")
+@chain.connect(f"wss://eth-mainnet.g.alchemy.com/v2/{ALCHEMY_API_KEY}")
 def main():
     acc = Account.from_alias("deployment")
-    default_chain.set_default_accounts(acc)
+    chain.set_default_accounts(acc)
 
     counter = Counter.deploy()
     print(counter)

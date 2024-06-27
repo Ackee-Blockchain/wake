@@ -1,6 +1,6 @@
 # Chains and blocks
 
-For single chain tests, Wake provides the global `default_chain` variable. This
+For single chain tests, Wake provides the global `chain` variable. This
 variable is a `Chain` object that can be used to change the chain parameters
 or access the chain data. Other `Chain` instances can be created, which is
 useful in [Cross-chain testing](cross-chain-testing.md).
@@ -60,28 +60,28 @@ It is recommended to use the context managers `change_automine` and `snapshot_an
 The following example presents the use of `Chain` methods:
 
 ```python
-from wake.testing import default_chain
+from wake.testing import chain
 
 
 def test_chain():
     # launch a chain and connect to it
-    with default_chain.connect(), default_chain.snapshot_and_revert():
+    with chain.connect(), chain.snapshot_and_revert():
         # mine a block with the timestamp 1 greater than the previous block
-        default_chain.mine(lambda x: x + 1)
+        chain.mine(lambda x: x + 1)
 ```
 
 All `Chain` context managers can be used as decorators:
 
 ```python
-from wake.testing import default_chain
+from wake.testing import chain
 
 
-@default_chain.connect()
-@default_chain.snapshot_and_revert()
-@default_chain.change_automine(False)
+@chain.connect()
+@chain.snapshot_and_revert()
+@chain.change_automine(False)
 def test_chain():
     # mine a block with the timestamp 1 greater than the previous block
-    default_chain.mine(lambda x: x + 1)
+    chain.mine(lambda x: x + 1)
 ```
 
 ### `connect` keyword arguments
@@ -102,16 +102,16 @@ The `connect` context manager accepts keyword arguments that can override the co
     Also, it is not possible to set these keyword arguments when working with Hardhat.
 
 ```python
-from wake.testing import default_chain
+from wake.testing import chain
 
 
-@default_chain.connect(
+@chain.connect(
     accounts=15,
     chain_id=1020,
 )
 def test_chain():
-    assert len(default_chain.accounts) == 15
-    assert default_chain.chain_id == 1020
+    assert len(chain.accounts) == 15
+    assert chain.chain_id == 1020
 ```
 
 ## Accessing chain blocks
@@ -120,34 +120,34 @@ The `chain.blocks` property can be used to access up-to-date chain blocks data.
 It can be indexed by an integer or string literals `latest`, `pending`, `earliest`, `safe`, and `finalized`:
 
 ```python
-from wake.testing import default_chain
+from wake.testing import chain
 from pytypes.contracts.Counter import Counter
 
 
-@default_chain.connect()
+@chain.connect()
 def test_chain_blocks():
-    default_chain.set_default_accounts(default_chain.accounts[0])
+    chain.set_default_accounts(chain.accounts[0])
 
     # get the block 0
-    block0 = default_chain.blocks[0]
+    block0 = chain.blocks[0]
     # block 0 and earliest are the same
-    assert block0 == default_chain.blocks["earliest"]
+    assert block0 == chain.blocks["earliest"]
 
     counter = Counter.deploy()
 
     # find the first block with non-zero transactions count
-    block = next(block for block in default_chain.blocks if len(block.txs) > 0)
+    block = next(block for block in chain.blocks if len(block.txs) > 0)
 
     assert block.txs[0].return_value == counter
 
-    with default_chain.change_automine(False):
+    with chain.change_automine(False):
         # block -1 and latest are the same
-        assert default_chain.blocks[-1] == default_chain.blocks["latest"]
+        assert chain.blocks[-1] == chain.blocks["latest"]
 
         tx = counter.increment(confirmations=0)
 
         # pending block contains the transaction
-        assert tx in default_chain.blocks["pending"].txs
+        assert tx in chain.blocks["pending"].txs
 ```
 
 ## Block properties

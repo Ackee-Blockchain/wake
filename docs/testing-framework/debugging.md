@@ -11,10 +11,10 @@ It is also possible to enter the debugger manually by inserting a `breakpoint()`
 from wake.testing import *
 
 
-@default_chain.connect()
+@chain.connect()
 def test_breakpoint():
     breakpoint()
-    block = default_chain.blocks[0]
+    block = chain.blocks[0]
 ```
 
 !!! info
@@ -54,7 +54,7 @@ from pytypes.contracts.Counter import Counter
 from pytypes.contracts.Gateway import Gateway
 
 
-@default_chain.connect()
+@chain.connect()
 def test_call_trace():
     gateway = Gateway.deploy()
     counter = Counter.deploy()
@@ -93,9 +93,9 @@ from wake.testing import *
 from pytypes.contracts.Counter import Counter
 
 
-@default_chain.connect()
+@chain.connect()
 def test_console_logs():
-    default_chain.tx_callback = lambda tx: print(tx.console_logs)
+    chain.tx_callback = lambda tx: print(tx.console_logs)
 
     counter = Counter.deploy()
     counter.increment()

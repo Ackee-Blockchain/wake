@@ -44,7 +44,7 @@ from wake.testing import *
 from pytypes.contracts.Counter import Counter
 
 
-@default_chain.connect()
+@chain.connect()
 def test_events():
     counter = Counter.deploy()
     tx = counter.increment()
@@ -64,9 +64,9 @@ def tx_callback(tx: TransactionAbc):
             print(f"Count of Counter({tx.to}) was set to {event.count}")
 
 
-@default_chain.connect()
+@chain.connect()
 def test_events():
-    default_chain.tx_callback = tx_callback
+    chain.tx_callback = tx_callback
 
     counter = Counter.deploy()
     counter.setCount(42)
@@ -130,14 +130,14 @@ from wake.testing import *
 from pytypes.contracts.Counter import Counter
 
 
-@default_chain.connect()
+@chain.connect()
 def test_errors():
-    counter = Counter.deploy(from_=default_chain.accounts[0])
+    counter = Counter.deploy(from_=chain.accounts[0])
 
     try:
         counter.addToWhitelist(
-            default_chain.accounts[1],
-            from_=default_chain.accounts[1],
+            chain.accounts[1],
+            from_=chain.accounts[1],
         )
         assert False, "Should have reverted"
     except TransactionRevertedError as e:
@@ -159,7 +159,7 @@ from wake.testing import *
 from pytypes.contracts.Counter import Counter
 
 
-@default_chain.connect()
+@chain.connect()
 def test_errors():
     counter = Counter.deploy()
     try:
