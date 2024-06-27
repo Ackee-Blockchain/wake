@@ -981,6 +981,10 @@ class LspServer:
                                             kind=None,
                                         ),
                                         FileSystemWatcher(
+                                            glob_pattern="**/*.sol",
+                                            kind=None,
+                                        ),
+                                        FileSystemWatcher(
                                             glob_pattern=RelativePattern(
                                                 base_uri=URI(
                                                     str(
@@ -1048,6 +1052,11 @@ class LspServer:
         self, params: DidChangeWatchedFilesParams
     ) -> None:
         latest_configuration = None
+
+        if self.__main_workspace is not None:
+            for ch in params.changes:
+                if ch.uri.endswith(".sol"):
+                    await self.__main_workspace.compiler.add_change(ch)
 
         for context in self.__workspaces.values():
             config_clone = WakeConfig.fromdict(
