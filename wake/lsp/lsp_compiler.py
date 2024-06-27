@@ -15,7 +15,6 @@ from functools import lru_cache
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
-    AbstractSet,
     Any,
     Deque,
     Dict,
@@ -93,6 +92,8 @@ from .common_structures import (
     DiagnosticRelatedInformation,
     DiagnosticSeverity,
     DocumentUri,
+    FileChangeType,
+    FileEvent,
     Location,
     MessageType,
     Position,
@@ -198,6 +199,7 @@ class LspCompiler:
     __diagnostic_queue: asyncio.Queue
     __discovered_files: Set[Path]
     __deleted_files: Set[Path]
+    __disk_changed_files: Set[Path]
     __opened_files: Dict[Path, VersionedFile]
     __modified_files: Set[Path]
     __force_compile_files: Set[Path]
@@ -241,6 +243,7 @@ class LspCompiler:
         self.__stop_event = threading.Event()
         self.__discovered_files = set()
         self.__deleted_files = set()
+        self.__disk_changed_files = set()
         self.__opened_files = {}
         self.__modified_files = set()
         self.__force_compile_files = set()
@@ -600,6 +603,7 @@ class LspCompiler:
             CreateFilesParams,
             RenameFilesParams,
             DeleteFilesParams,
+            FileEvent,
         ],
     ) -> None:
         self.output_ready.clear()
@@ -631,7 +635,7 @@ class LspCompiler:
             file = uri_to_path(file)
         if file not in self.__output_contents:
             self.__output_contents[file] = VersionedFile(
-                file.read_bytes().decode(encoding="utf-8"), None
+                file.read_text(encoding="utf-8"), None
             )
         return self.__output_contents[file]
 
@@ -680,11 +684,15 @@ class LspCompiler:
     async def _handle_change(
         self,
         change: Union[
+            CustomFileChangeCommand,
+            ConfigUpdate,
+            CreateFilesParams,
+            RenameFilesParams,
+            DeleteFilesParams,
+            FileEvent,
             DidOpenTextDocumentParams,
             DidCloseTextDocumentParams,
             DidChangeTextDocumentParams,
-            CustomFileChangeCommand,
-            ConfigUpdate,
             None,
         ],
     ) -> None:
@@ -751,6 +759,35 @@ class LspCompiler:
                 self.__deleted_files.add(path)
                 self.__discovered_files.discard(path)
                 self.__opened_files.pop(path, None)
+        elif isinstance(change, FileEvent):
+            if change.type == FileChangeType.CREATED:
+                path = uri_to_path(change.uri).resolve()
+                if (
+                    path not in self.__discovered_files
+                    and not self.__file_excluded(path)
+                    and path.suffix == ".sol"
+                ):
+                    self.__discovered_files.add(path)
+                    self.__force_compile_files.add(path)
+                elif path.suffix == ".sol":
+                    self.__disk_changed_files.add(path)
+            elif change.type == FileChangeType.DELETED:
+                path = uri_to_path(change.uri).resolve()
+                self.__deleted_files.add(path)
+                self.__discovered_files.discard(path)
+                self.__opened_files.pop(path, None)
+                self.__disk_changed_files.discard(path)
+            elif change.type == FileChangeType.CHANGED:
+                path = uri_to_path(change.uri).resolve()
+                if (
+                    path not in self.__discovered_files
+                    and not self.__file_excluded(path)
+                    and path.suffix == ".sol"
+                ):
+                    self.__discovered_files.add(path)
+                    self.__force_compile_files.add(path)
+                elif path.suffix == ".sol":
+                    self.__disk_changed_files.add(path)
         elif isinstance(change, DidOpenTextDocumentParams):
             path = uri_to_path(change.text_document.uri).resolve()
             self.__opened_files[path] = VersionedFile(
@@ -767,7 +804,8 @@ class LspCompiler:
                 self.__force_compile_files.add(path)
 
         elif isinstance(change, DidCloseTextDocumentParams):
-            pass
+            path = uri_to_path(change.text_document.uri).resolve()
+            self.__opened_files.pop(path, None)
         elif isinstance(change, DidChangeTextDocumentParams):
             path = uri_to_path(change.text_document.uri).resolve()
             self.__modified_files.add(path)
@@ -816,7 +854,7 @@ class LspCompiler:
 
     async def __compile(
         self,
-        files_to_compile: AbstractSet[Path],
+        files_to_compile: Set[Path],
         full_compile: bool = True,
         errors_per_cu: Optional[Dict[bytes, Set[SolcOutputError]]] = None,
         compilation_units_per_file: Optional[Dict[Path, Set[CompilationUnit]]] = None,
@@ -863,9 +901,6 @@ class LspCompiler:
                 path: info.text.encode("utf-8")
                 for path, info in self.__opened_files.items()
             }
-            for p in self.__output_contents:
-                if p not in modified_files:
-                    modified_files[p] = self.__output_contents[p].text.encode("utf-8")
 
             if full_compile:
                 graph, source_units_to_paths = self.__compiler.build_graph(
@@ -888,21 +923,6 @@ class LspCompiler:
                     True,
                 )
 
-            for source_unit_name in graph.nodes:
-                path = graph.nodes[source_unit_name]["path"]
-                content = graph.nodes[source_unit_name]["content"]
-                if (
-                    path not in self.__opened_files
-                    and path not in self.__output_contents
-                    and path.is_file()
-                ):
-                    try:
-                        self.__output_contents[path] = VersionedFile(
-                            content.decode(encoding="utf-8"), None
-                        )
-                    except UnicodeDecodeError:
-                        pass
-
         except CompilationError as e:
             await self.__server.log_message(str(e), MessageType.ERROR)
             for file in self.__discovered_files:
@@ -915,7 +935,20 @@ class LspCompiler:
             self.__latest_errors_per_cu = {}
             return
 
+        # whole CU may be deleted -> there are no CUs to compile
+        # but errors still need to be cleared and callbacks run
+        for deleted_file in self.__deleted_files:
+            await self.__diagnostic_queue.put((deleted_file, []))
+            if deleted_file in self.__source_units:
+                self.__ir_reference_resolver.run_destroy_callbacks(deleted_file)
+                self.__source_units.pop(deleted_file)
+
         compilation_units = self.__compiler.build_compilation_units_maximize(graph)
+
+        for changed_file in self.__disk_changed_files:
+            # if the file appears in any CU then it's relevant for compilation
+            if any(cu for cu in compilation_units if changed_file in cu.files):
+                files_to_compile.add(changed_file)
 
         # filter out only compilation units that need to be compiled
         needed_compilation_units = [
@@ -1194,12 +1227,6 @@ class LspCompiler:
         # clear indexed node types responsible for handling multiple structurally different ASTs for the same file
         self.__ir_reference_resolver.clear_indexed_nodes(files_to_recompile)
 
-        for deleted_file in self.__deleted_files:
-            await self.__diagnostic_queue.put((deleted_file, []))
-            if deleted_file in self.__source_units:
-                self.__ir_reference_resolver.run_destroy_callbacks(deleted_file)
-                self.__source_units.pop(deleted_file)
-
         successful_compilation_units = []
         for cu, solc_output in zip(compilation_units, ret):
             for file in cu.files:
@@ -1207,6 +1234,13 @@ class LspCompiler:
                     self.__line_indexes.pop(file)
                 if file in self.__opened_files:
                     self.__output_contents[file] = self.__opened_files[file]
+                else:
+                    self.__output_contents[file] = VersionedFile(
+                        graph.nodes[next(iter(cu.path_to_source_unit_names(file)))][
+                            "content"
+                        ].decode("utf-8"),
+                        None,
+                    )
 
             errored_files: Set[Path] = set()
 
@@ -1636,7 +1670,7 @@ class LspCompiler:
                 except asyncio.QueueEmpty:
                     if (
                         time.perf_counter() - start
-                        > self.__config.lsp.compilation_delay
+                        > self.__config.lsp.compilation_delay + 0.4
                     ):
                         break
                     await asyncio.sleep(0.1)
@@ -1646,6 +1680,7 @@ class LspCompiler:
                 len(self.__force_compile_files) > 0
                 or len(self.__modified_files) > 0
                 or len(self.__deleted_files) > 0
+                or len(self.__disk_changed_files) > 0
             ):
                 self.__detector_code_lenses.clear()
                 self.__printer_code_lenses.clear()
@@ -1664,6 +1699,7 @@ class LspCompiler:
                 self.__force_compile_files.clear()
                 self.__modified_files.clear()
                 self.__deleted_files.clear()
+                self.__disk_changed_files.clear()
 
             if self.__file_changes_queue.empty():
                 self.output_ready.set()
