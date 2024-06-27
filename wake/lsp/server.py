@@ -338,9 +338,12 @@ class LspServer:
 
             logger.exception(e)
             try:
-                t = asyncio.create_task(
-                    self.log_message(traceback.format_exc(), MessageType.ERROR)
-                )
+
+                async def log(exc: str) -> None:
+                    await self.log_message(exc, MessageType.ERROR)
+                    await self.show_message(exc, MessageType.ERROR)
+
+                t = asyncio.create_task(log(traceback.format_exc()))
                 t.add_done_callback(_callback)
             except Exception as e:
                 logger.exception(e)
