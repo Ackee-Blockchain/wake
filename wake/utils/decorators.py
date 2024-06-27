@@ -6,20 +6,27 @@ from .context_managers import recursion_guard
 
 def weak_self_lru_cache(maxsize=128, typed=False):
     def decorator(method):
+        cache = weakref.WeakKeyDictionary()
+
         @wraps(method)
-        def wrapper(self, *args, **kwargs):
-            weak_self = weakref.ref(self)
+        def cached_method(self, *args, **kwargs):
+            bound_cache_method = cache.get(self)
+            if bound_cache_method is None:
+                wself = weakref.ref(self)
 
-            @lru_cache(maxsize=maxsize, typed=typed)
-            def cached_method(weak_self_ref, *args, **kwargs):
-                self = weak_self_ref()
-                if self is None:
-                    raise ReferenceError("Weak reference to object no longer exists")
-                return method(self, *args, **kwargs)
+                @wraps(method)
+                @lru_cache(maxsize=maxsize, typed=typed)
+                def bound_cache_method(*args, **kwargs):
+                    self = wself()
+                    if self is None:
+                        raise RuntimeError("Method called on freed weakref")
+                    return method(self, *args, **kwargs)
 
-            return cached_method(weak_self, *args, **kwargs)
+                cache[self] = bound_cache_method
 
-        return wrapper
+            return bound_cache_method(*args, **kwargs)
+
+        return cached_method
 
     return decorator
 
