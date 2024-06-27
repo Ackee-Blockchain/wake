@@ -25,16 +25,16 @@ All default accounts use `chain.accounts[0]` as the default value. The default a
 from wake.testing import *
 
 
-@default_chain.connect()
+@chain.connect()
 def test_accounts():
     # assign each default account manually
-    default_chain.default_tx_account = default_chain.accounts[1]
-    default_chain.default_call_account = default_chain.accounts[1]
-    default_chain.default_estimate_account = default_chain.accounts[1]
-    default_chain.default_access_list_account = default_chain.accounts[1]
+    chain.default_tx_account = chain.accounts[1]
+    chain.default_call_account = chain.accounts[1]
+    chain.default_estimate_account = chain.accounts[1]
+    chain.default_access_list_account = chain.accounts[1]
 
     # or assign all default accounts at once
-    default_chain.set_default_accounts(default_chain.accounts[2])
+    chain.set_default_accounts(chain.accounts[2])
 ```
 
 !!! note
@@ -47,9 +47,9 @@ from wake.testing import *
 from pytypes.contracts.Counter import Counter
 
 
-@default_chain.connect()
+@chain.connect()
 def test_accounts():
-    default_chain.set_default_accounts(default_chain.accounts[0])
+    chain.set_default_accounts(chain.accounts[0])
     counter = Counter.deploy()
 
     # performs a call
@@ -122,9 +122,9 @@ Low-level methods also accept the `data` keyword argument (of type `bytes` or `b
     from wake.testing import *
     from pytypes.contracts.Counter import Counter
 
-    @default_chain.connect()
+    @chain.connect()
     def test_low_level_transact():
-        default_chain.default_tx_account = default_chain.accounts[0]
+        chain.default_tx_account = chain.accounts[0]
 
         counter = Counter.deploy()
 

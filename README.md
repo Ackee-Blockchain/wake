@@ -64,7 +64,7 @@ Writing tests is as simple as:
 from wake.testing import *
 from pytypes.contracts.Counter import Counter
 
-@default_chain.connect()
+@chain.connect()
 def test_counter():
     counter = Counter.deploy()
     assert counter.count() == 0
@@ -106,7 +106,7 @@ class CounterTest(FuzzTest):
     def count(self) -> None:
         assert self.counter.count() == self.count
 
-@default_chain.connect()
+@chain.connect()
 def test_counter():
     CounterTest().run(sequences_count=30, flows_count=100)
 ```

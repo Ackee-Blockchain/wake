@@ -72,11 +72,11 @@ The test files should start with `test_` or end with `_test.py` to be collected.
     ```python
     @fixture
     def chain():
-        if default_chain.connected:
-            return default_chain
+        if chain.connected:
+            return chain
         else:
-            with default_chain.connect():
-                yield default_chain
+            with chain.connect():
+                yield chain
     ```
 
 The recommended project structure is as follows:
@@ -96,7 +96,7 @@ The recommended project structure is as follows:
 
 ### Connecting to a chain
 
-In single-chain tests, it is recommended to use the `default_chain` object that is automatically created by Wake.
+In single-chain tests, it is recommended to use the `chain` object that is automatically created by Wake.
 The `connect` decorator either launches a new development chain or connects to an existing one, if an argument is specified.
 It is possible to connect using:
 
@@ -109,11 +109,11 @@ from wake.testing import *
 
 
 # launch a new development chain
-@default_chain.connect()
+@chain.connect()
 # or connect to an existing chain
-# @default_chain.connect("ws://localhost:8545")
+# @chain.connect("ws://localhost:8545")
 def test_counter():
-    print(default_chain.chain_id)
+    print(chain.chain_id)
 ```
 
 To run the test, execute the following command:
@@ -140,7 +140,7 @@ from wake.testing import *
 from pytypes.contracts.Counter import Counter
 
 
-@default_chain.connect()
+@chain.connect()
 def test_example():
     counter = Counter.deploy()
     print(counter)
@@ -157,10 +157,10 @@ from wake.testing import *
 from pytypes.contracts.Counter import Counter
 
 
-@default_chain.connect()
+@chain.connect()
 def test_counter():
-    owner = default_chain.accounts[0]
-    other = default_chain.accounts[1]
+    owner = chain.accounts[0]
+    other = chain.accounts[1]
 
     counter = Counter.deploy(from_=owner)
 

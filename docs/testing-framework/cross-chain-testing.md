@@ -9,8 +9,8 @@ all API functions that accept a `chain` keyword argument, that is:
     - including contract instances (e.g. `IERC20(erc20, chain=chain1)`),
 - with `random_account()` (e.g. `random_account(chain=chain1)`).
 
-!!! tip "Cross-chain testing and `default_chain`"
-    It is highly recommended not to use the `default_chain` global variable in cross-chain tests.
+!!! tip "Cross-chain testing and `chain`"
+    It is highly recommended not to use the `chain` global variable in cross-chain tests.
     Leaving it unconnected helps to find bugs in the code when `chain` was forgotten to be passed to a function.
 
     In this case, `NotConnectedError: Not connected to a chain` is raised.

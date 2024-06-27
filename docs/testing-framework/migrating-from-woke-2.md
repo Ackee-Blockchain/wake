@@ -73,7 +73,7 @@ counter.increment(type=0)
 or use:
 
 ```python
-default_chain.default_tx_type = 0
+chain.default_tx_type = 0
 ```
 
 to set the default transaction type for the chain.

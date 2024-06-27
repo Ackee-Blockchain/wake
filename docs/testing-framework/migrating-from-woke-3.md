@@ -21,7 +21,7 @@ All 4 default accounts for each request type are now set to `chain.accounts[0]` 
 It is no longer needed to set the default accounts manually, like this:
 
 ```python
-default_chain.set_default_accounts(default_chain.accounts[0])
+chain.set_default_accounts(chain.accounts[0])
 ```
 
 ## `detect` CLI command

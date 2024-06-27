@@ -203,7 +203,7 @@ def revert_handler(e: TransactionRevertedError):
         print(e.tx.console_logs)
 
 
-@default_chain.connect()
+@chain.connect()
 @on_revert(revert_handler)
 def test_reverts():
     ...

@@ -24,23 +24,23 @@ from pytypes.node_modules.openzeppelin.contracts.proxy.ERC1967.ERC1967Proxy impo
 
 ## Accessing accounts
 
-In Wake, accounts are a property of a chain. With the default chain instance named `default_chain`:
+In Wake, accounts are a property of a chain. With the default chain instance named `chain`:
 
 ```python
 from wake.testing import *
 
 
-@default_chain.connect()
+@chain.connect()
 def test_accounts():
-    print(default_chain.accounts)
+    print(chain.accounts)
 ```
 
 ## Configuring networks
 
 Wake does not support configuring networks in configuration files. Instead, a chain instance can be created:
 
-- without a URI (`@default_chain.connect()`), which will launch a new development chain,
-- with a URI (`@default_chain.connect("http://localhost:8545")`), which will connect to an existing chain.
+- without a URI (`@chain.connect()`), which will launch a new development chain,
+- with a URI (`@chain.connect("http://localhost:8545")`), which will connect to an existing chain.
 
 A development chain executable and its arguments can be configured in `wake.toml` in the project root:
 
@@ -52,10 +52,10 @@ cmd = "anvil"  # other options: "hardhat", "ganache"
 cmd_args = "--prune-history 100 --transaction-block-keeper 10 --steps-tracing --silent"
 ```
 
-Commonly used parameters can be set as keyword arguments in `@default_chain.connect()`:
+Commonly used parameters can be set as keyword arguments in `@chain.connect()`:
 
 ```python
-@default_chain.connect(
+@chain.connect(
     accounts=20,  # number of accounts to generate
     chain_id=1337,  # chain ID
     fork="https://eth-mainnet.alchemyapi.io/v2/...@12345678",  # fork from a block
@@ -74,13 +74,13 @@ from wake.testing import *
 from pytypes.contracts.Counter import Counter
 
 
-@default_chain.connect()
+@chain.connect()
 def test_counter():
     counter = Counter.deploy()
     tx = counter.increment()
     assert Counter.Incremented() in tx.events
 
-    acc = default_chain.accounts[1]
+    acc = chain.accounts[1]
     with must_revert(Counter.NotOwner()):
         counter.addToWhitelist(acc, from_=acc)
 ```

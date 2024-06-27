@@ -31,7 +31,7 @@ def revert_handler(e: TransactionRevertedError):
         print(e.tx.call_trace)
 
 
-@default_chain.connect()
+@chain.connect()
 @on_revert(revert_handler)
 def test_reverting():
     r = Reverting.deploy(Address("0x9a6A6920008318b3556702b5115680E048c2c8dB"))

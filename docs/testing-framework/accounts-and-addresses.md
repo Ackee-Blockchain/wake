@@ -29,14 +29,14 @@ assert Address(1) > Address(0)
 
 `Account` is an `Address` bound to a specific `Chain`. It can be constructed from
 an `Address`, a hex string or an integer. Optionally, a chain can be specified, otherwise
-the `default_chain` global object is used:
+the `chain` global object is used:
 
 ```python
-from wake.testing import Account, Chain, default_chain
+from wake.testing import Account, Chain, chain
 
 other_chain = Chain()
 
-assert Account(0) == Account(0, default_chain)
+assert Account(0) == Account(0, chain)
 assert Account(0) != Account(0, other_chain)
 ```
 
@@ -131,7 +131,7 @@ signature = account.sign_structured(
     ),
     domain=Eip712Domain(
         name="Test",
-        chainId=default_chain.chain_id,
+        chainId=chain.chain_id,
     )
 )
 ```
@@ -192,10 +192,10 @@ requests (see [Interacting with contracts](./interacting-with-contracts.md)):
 from wake.testing import *
 
 
-@default_chain.connect()
+@chain.connect()
 def test_accounts():
-    alice = default_chain.accounts[0]
-    bob = default_chain.accounts[1]
+    alice = chain.accounts[0]
+    bob = chain.accounts[1]
 
     alice.balance = 100
     bob.balance = 0
@@ -211,7 +211,7 @@ The previous example shows how to transfer Wei from one account to another.
     To deploy a contract from creation code, use `chain.deploy`:
 
     ```python
-    default_chain.deploy(Counter.get_creation_code())
+    chain.deploy(Counter.get_creation_code())
     ```
 
 ## Contract accounts
@@ -241,7 +241,7 @@ Every method of a contract generated in `pytypes` has a `selector` property.
     from pytypes.contracts.Counter import Counter
     from pytypes.openzeppelin.contracts.proxy.ERC1967.ERC1967Proxy import ERC1967Proxy
 
-    @default_chain.connect()
+    @chain.connect()
     def test_proxy():
         impl = Counter.deploy()
         proxy = ERC1967Proxy.deploy(impl, b"")
