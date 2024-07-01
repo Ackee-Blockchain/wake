@@ -257,17 +257,8 @@ def wake_solc() -> None:
         console.print(f"solc version {version} is not installed.")
         sys.exit(1)
 
-    if (
-        platform.system() == "Darwin"
-        and platform.machine() == "arm64"
-        and version < "0.8.24"
-    ):
-        args = ["arch", "-x86_64", str(solc_path)] + sys.argv[1:]
-    else:
-        args = [str(solc_path)] + sys.argv[1:]
-
     proc = subprocess.run(
-        args,
+        [str(solc_path)] + sys.argv[1:],
         stdin=None,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
