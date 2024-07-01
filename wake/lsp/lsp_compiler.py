@@ -1414,6 +1414,11 @@ class LspCompiler:
         for path, errors in errors_per_file.items():
             await self.__diagnostic_queue.put((path, errors))
 
+        # only recompile files we are interested in
+        files_to_recompile = {
+            p for p in files_to_recompile if not self.__file_excluded(p)
+        }
+
         if len(files_to_recompile) > 0:
             # avoid infinite recursion
             if files_to_recompile != files_to_compile or full_compile:
