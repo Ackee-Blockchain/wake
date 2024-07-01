@@ -5472,11 +5472,11 @@ The test files should start with <code>test_</code> or end with <code>_test.py</
 The best way to achieve this is to prepare a fixture that connects to the chain and use it wherever needed.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nd">@fixture</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="k">def</span> <span class="nf">chain</span><span class="p">():</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="k">if</span> <span class="n">default_chain</span><span class="o">.</span><span class="n">connected</span><span class="p">:</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>        <span class="k">return</span> <span class="n">default_chain</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="k">if</span> <span class="n">chain</span><span class="o">.</span><span class="n">connected</span><span class="p">:</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>        <span class="k">return</span> <span class="n">chain</span>
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="k">else</span><span class="p">:</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>        <span class="k">with</span> <span class="n">default_chain</span><span class="o">.</span><span class="n">connect</span><span class="p">():</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>            <span class="k">yield</span> <span class="n">default_chain</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>        <span class="k">with</span> <span class="n">chain</span><span class="o">.</span><span class="n">connect</span><span class="p">():</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>            <span class="k">yield</span> <span class="n">chain</span>
 </code></pre></div>
 </div>
 <p>The recommended project structure is as follows:</p>
@@ -5492,7 +5492,7 @@ The best way to achieve this is to prepare a fixture that connects to the chain 
 <a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    └── test_counter.py
 </code></pre></div>
 <h3 id="connecting-to-a-chain">Connecting to a chain<a class="headerlink" href="#connecting-to-a-chain" title="Permanent link">#</a></h3>
-<p>In single-chain tests, it is recommended to use the <code>default_chain</code> object that is automatically created by Wake.
+<p>In single-chain tests, it is recommended to use the <code>chain</code> object that is automatically created by Wake.
 The <code>connect</code> decorator either launches a new development chain or connects to an existing one, if an argument is specified.
 It is possible to connect using:</p>
 <ul>
@@ -5504,11 +5504,11 @@ It is possible to connect using:</p>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
 <a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="c1"># launch a new development chain</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="nd">@default_chain</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="nd">@chain</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
 <a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="c1"># or connect to an existing chain</span>
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="c1"># @default_chain.connect(&quot;ws://localhost:8545&quot;)</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="c1"># @chain.connect(&quot;ws://localhost:8545&quot;)</span>
 <a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="k">def</span> <span class="nf">test_counter</span><span class="p">():</span>
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">default_chain</span><span class="o">.</span><span class="n">chain_id</span><span class="p">)</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">chain_id</span><span class="p">)</span>
 </code></pre></div>
 <p>To run the test, execute the following command:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>wake<span class="w"> </span><span class="nb">test</span><span class="w"> </span>tests/test_counter.py<span class="w"> </span>-d
@@ -5526,7 +5526,7 @@ All keyword arguments are described in the <a href="../interacting-with-contract
 <a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="kn">from</span> <span class="nn">pytypes.contracts.Counter</span> <span class="kn">import</span> <span class="n">Counter</span>
 <a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>
 <a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="nd">@default_chain</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="nd">@chain</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
 <a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="k">def</span> <span class="nf">test_example</span><span class="p">():</span>
 <a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>    <span class="n">counter</span> <span class="o">=</span> <span class="n">Counter</span><span class="o">.</span><span class="n">deploy</span><span class="p">()</span>
 <a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">counter</span><span class="p">)</span>
@@ -5539,10 +5539,10 @@ Additional keyword arguments can configure the execution of a function like with
 <a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="kn">from</span> <span class="nn">pytypes.contracts.Counter</span> <span class="kn">import</span> <span class="n">Counter</span>
 <a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
 <a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>
-<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="nd">@default_chain</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="nd">@chain</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
 <a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="k">def</span> <span class="nf">test_counter</span><span class="p">():</span>
-<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>    <span class="n">owner</span> <span class="o">=</span> <span class="n">default_chain</span><span class="o">.</span><span class="n">accounts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>    <span class="n">other</span> <span class="o">=</span> <span class="n">default_chain</span><span class="o">.</span><span class="n">accounts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>    <span class="n">owner</span> <span class="o">=</span> <span class="n">chain</span><span class="o">.</span><span class="n">accounts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>    <span class="n">other</span> <span class="o">=</span> <span class="n">chain</span><span class="o">.</span><span class="n">accounts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 <a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>
 <a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>    <span class="n">counter</span> <span class="o">=</span> <span class="n">Counter</span><span class="o">.</span><span class="n">deploy</span><span class="p">(</span><span class="n">from_</span><span class="o">=</span><span class="n">owner</span><span class="p">)</span>
 <a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>

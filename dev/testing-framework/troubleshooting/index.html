@@ -5514,7 +5514,7 @@ This section describes the most common cases and how to debug them.</p>
 <a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>        <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">tx</span><span class="o">.</span><span class="n">call_trace</span><span class="p">)</span>
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
 <a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="nd">@default_chain</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="nd">@chain</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
 <a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="nd">@on_revert</span><span class="p">(</span><span class="n">revert_handler</span><span class="p">)</span>
 <a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="k">def</span> <span class="nf">test_reverting</span><span class="p">():</span>
 <a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>    <span class="n">r</span> <span class="o">=</span> <span class="n">Reverting</span><span class="o">.</span><span class="n">deploy</span><span class="p">(</span><span class="n">Address</span><span class="p">(</span><span class="s2">&quot;0x9a6A6920008318b3556702b5115680E048c2c8dB&quot;</span><span class="p">))</span>

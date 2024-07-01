@@ -5413,7 +5413,7 @@ The same migration process is also performed in the <a href="https://marketplace
 <h2 id="default-accounts">Default accounts<a class="headerlink" href="#default-accounts" title="Permanent link">#</a></h2>
 <p>All 4 default accounts for each request type are now set to <code>chain.accounts[0]</code> (if available).</p>
 <p>It is no longer needed to set the default accounts manually, like this:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">default_chain</span><span class="o">.</span><span class="n">set_default_accounts</span><span class="p">(</span><span class="n">default_chain</span><span class="o">.</span><span class="n">accounts</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">chain</span><span class="o">.</span><span class="n">set_default_accounts</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">accounts</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 </code></pre></div>
 <h2 id="detect-cli-command"><code>detect</code> CLI command<a class="headerlink" href="#detect-cli-command" title="Permanent link">#</a></h2>
 <p>The <code>detect</code> CLI command was re-implemented together with the new API for detectors.

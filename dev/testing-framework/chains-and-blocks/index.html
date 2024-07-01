@@ -5415,7 +5415,7 @@
 
 
 <h1 id="chains-and-blocks">Chains and blocks<a class="headerlink" href="#chains-and-blocks" title="Permanent link">#</a></h1>
-<p>For single chain tests, Wake provides the global <code>default_chain</code> variable. This
+<p>For single chain tests, Wake provides the global <code>chain</code> variable. This
 variable is a <code>Chain</code> object that can be used to change the chain parameters
 or access the chain data. Other <code>Chain</code> instances can be created, which is
 useful in <a href="../cross-chain-testing/">Cross-chain testing</a>.</p>
@@ -5582,25 +5582,25 @@ useful in <a href="../cross-chain-testing/">Cross-chain testing</a>.</p>
 </table>
 <p>It is recommended to use the context managers <code>change_automine</code> and <code>snapshot_and_revert</code> instead of setting the <code>automine</code> property directly or calling <code>snapshot</code> and <code>revert</code> manually.</p>
 <p>The following example presents the use of <code>Chain</code> methods:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">wake.testing</span> <span class="kn">import</span> <span class="n">default_chain</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">wake.testing</span> <span class="kn">import</span> <span class="n">chain</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="k">def</span> <span class="nf">test_chain</span><span class="p">():</span>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="c1"># launch a chain and connect to it</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="k">with</span> <span class="n">default_chain</span><span class="o">.</span><span class="n">connect</span><span class="p">(),</span> <span class="n">default_chain</span><span class="o">.</span><span class="n">snapshot_and_revert</span><span class="p">():</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="k">with</span> <span class="n">chain</span><span class="o">.</span><span class="n">connect</span><span class="p">(),</span> <span class="n">chain</span><span class="o">.</span><span class="n">snapshot_and_revert</span><span class="p">():</span>
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        <span class="c1"># mine a block with the timestamp 1 greater than the previous block</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        <span class="n">default_chain</span><span class="o">.</span><span class="n">mine</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        <span class="n">chain</span><span class="o">.</span><span class="n">mine</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
 </code></pre></div>
 <p>All <code>Chain</code> context managers can be used as decorators:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span> <span class="nn">wake.testing</span> <span class="kn">import</span> <span class="n">default_chain</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span> <span class="nn">wake.testing</span> <span class="kn">import</span> <span class="n">chain</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="nd">@default_chain</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="nd">@default_chain</span><span class="o">.</span><span class="n">snapshot_and_revert</span><span class="p">()</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="nd">@default_chain</span><span class="o">.</span><span class="n">change_automine</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="nd">@chain</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="nd">@chain</span><span class="o">.</span><span class="n">snapshot_and_revert</span><span class="p">()</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="nd">@chain</span><span class="o">.</span><span class="n">change_automine</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
 <a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="k">def</span> <span class="nf">test_chain</span><span class="p">():</span>
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="c1"># mine a block with the timestamp 1 greater than the previous block</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    <span class="n">default_chain</span><span class="o">.</span><span class="n">mine</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    <span class="n">chain</span><span class="o">.</span><span class="n">mine</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="connect-keyword-arguments"><code>connect</code> keyword arguments<a class="headerlink" href="#connect-keyword-arguments" title="Permanent link">#</a></h3>
 <p>The <code>connect</code> context manager accepts keyword arguments that can override the command line arguments set in <a href="../../configuration/#testing-namespace">configuration</a> files:</p>
@@ -5650,48 +5650,48 @@ useful in <a href="../cross-chain-testing/">Cross-chain testing</a>.</p>
 <p><code>connect</code> keyword arguments can only be used when launching a new development chain.
 Also, it is not possible to set these keyword arguments when working with Hardhat.</p>
 </div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">wake.testing</span> <span class="kn">import</span> <span class="n">default_chain</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">wake.testing</span> <span class="kn">import</span> <span class="n">chain</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="nd">@default_chain</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="nd">@chain</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">accounts</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
 <a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">chain_id</span><span class="o">=</span><span class="mi">1020</span><span class="p">,</span>
 <a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="p">)</span>
 <a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="k">def</span> <span class="nf">test_chain</span><span class="p">():</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">default_chain</span><span class="o">.</span><span class="n">accounts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">15</span>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    <span class="k">assert</span> <span class="n">default_chain</span><span class="o">.</span><span class="n">chain_id</span> <span class="o">==</span> <span class="mi">1020</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">accounts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">15</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    <span class="k">assert</span> <span class="n">chain</span><span class="o">.</span><span class="n">chain_id</span> <span class="o">==</span> <span class="mi">1020</span>
 </code></pre></div>
 <h2 id="accessing-chain-blocks">Accessing chain blocks<a class="headerlink" href="#accessing-chain-blocks" title="Permanent link">#</a></h2>
 <p>The <code>chain.blocks</code> property can be used to access up-to-date chain blocks data.
 It can be indexed by an integer or string literals <code>latest</code>, <code>pending</code>, <code>earliest</code>, <code>safe</code>, and <code>finalized</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span> <span class="nn">wake.testing</span> <span class="kn">import</span> <span class="n">default_chain</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span> <span class="nn">wake.testing</span> <span class="kn">import</span> <span class="n">chain</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kn">from</span> <span class="nn">pytypes.contracts.Counter</span> <span class="kn">import</span> <span class="n">Counter</span>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="nd">@default_chain</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="nd">@chain</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
 <a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="k">def</span> <span class="nf">test_chain_blocks</span><span class="p">():</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">default_chain</span><span class="o">.</span><span class="n">set_default_accounts</span><span class="p">(</span><span class="n">default_chain</span><span class="o">.</span><span class="n">accounts</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">chain</span><span class="o">.</span><span class="n">set_default_accounts</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">accounts</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 <a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>
 <a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="c1"># get the block 0</span>
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    <span class="n">block0</span> <span class="o">=</span> <span class="n">default_chain</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    <span class="n">block0</span> <span class="o">=</span> <span class="n">chain</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 <a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    <span class="c1"># block 0 and earliest are the same</span>
-<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>    <span class="k">assert</span> <span class="n">block0</span> <span class="o">==</span> <span class="n">default_chain</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="s2">&quot;earliest&quot;</span><span class="p">]</span>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>    <span class="k">assert</span> <span class="n">block0</span> <span class="o">==</span> <span class="n">chain</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="s2">&quot;earliest&quot;</span><span class="p">]</span>
 <a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>
 <a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>    <span class="n">counter</span> <span class="o">=</span> <span class="n">Counter</span><span class="o">.</span><span class="n">deploy</span><span class="p">()</span>
 <a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>
 <a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>    <span class="c1"># find the first block with non-zero transactions count</span>
-<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>    <span class="n">block</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">block</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">default_chain</span><span class="o">.</span><span class="n">blocks</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">txs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>    <span class="n">block</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">block</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">chain</span><span class="o">.</span><span class="n">blocks</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">txs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
 <a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>
 <a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>    <span class="k">assert</span> <span class="n">block</span><span class="o">.</span><span class="n">txs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">return_value</span> <span class="o">==</span> <span class="n">counter</span>
 <a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>
-<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>    <span class="k">with</span> <span class="n">default_chain</span><span class="o">.</span><span class="n">change_automine</span><span class="p">(</span><span class="kc">False</span><span class="p">):</span>
+<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>    <span class="k">with</span> <span class="n">chain</span><span class="o">.</span><span class="n">change_automine</span><span class="p">(</span><span class="kc">False</span><span class="p">):</span>
 <a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>        <span class="c1"># block -1 and latest are the same</span>
-<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>        <span class="k">assert</span> <span class="n">default_chain</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">default_chain</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="s2">&quot;latest&quot;</span><span class="p">]</span>
+<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>        <span class="k">assert</span> <span class="n">chain</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">chain</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="s2">&quot;latest&quot;</span><span class="p">]</span>
 <a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>
 <a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>        <span class="n">tx</span> <span class="o">=</span> <span class="n">counter</span><span class="o">.</span><span class="n">increment</span><span class="p">(</span><span class="n">confirmations</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 <a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a>
 <a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a>        <span class="c1"># pending block contains the transaction</span>
-<a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a>        <span class="k">assert</span> <span class="n">tx</span> <span class="ow">in</span> <span class="n">default_chain</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="s2">&quot;pending&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">txs</span>
+<a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a>        <span class="k">assert</span> <span class="n">tx</span> <span class="ow">in</span> <span class="n">chain</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="s2">&quot;pending&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">txs</span>
 </code></pre></div>
 <h2 id="block-properties">Block properties<a class="headerlink" href="#block-properties" title="Permanent link">#</a></h2>
 <p>The following table lists the most important block properties:</p>

@@ -5341,8 +5341,8 @@ all API functions that accept a <code>chain</code> keyword argument, that is:</p
 <li>with <code>random_account()</code> (e.g. <code>random_account(chain=chain1)</code>).</li>
 </ul>
 <div class="admonition tip">
-<p class="admonition-title">Cross-chain testing and <code>default_chain</code></p>
-<p>It is highly recommended not to use the <code>default_chain</code> global variable in cross-chain tests.
+<p class="admonition-title">Cross-chain testing and <code>chain</code></p>
+<p>It is highly recommended not to use the <code>chain</code> global variable in cross-chain tests.
 Leaving it unconnected helps to find bugs in the code when <code>chain</code> was forgotten to be passed to a function.</p>
 <p>In this case, <code>NotConnectedError: Not connected to a chain</code> is raised.</p>
 </div>

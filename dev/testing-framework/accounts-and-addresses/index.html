@@ -5554,12 +5554,12 @@ a hex string or an integer:</p>
 <h2 id="accounts">Accounts<a class="headerlink" href="#accounts" title="Permanent link">#</a></h2>
 <p><code>Account</code> is an <code>Address</code> bound to a specific <code>Chain</code>. It can be constructed from
 an <code>Address</code>, a hex string or an integer. Optionally, a chain can be specified, otherwise
-the <code>default_chain</code> global object is used:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">wake.testing</span> <span class="kn">import</span> <span class="n">Account</span><span class="p">,</span> <span class="n">Chain</span><span class="p">,</span> <span class="n">default_chain</span>
+the <code>chain</code> global object is used:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">wake.testing</span> <span class="kn">import</span> <span class="n">Account</span><span class="p">,</span> <span class="n">Chain</span><span class="p">,</span> <span class="n">chain</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">other_chain</span> <span class="o">=</span> <span class="n">Chain</span><span class="p">()</span>
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="k">assert</span> <span class="n">Account</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">==</span> <span class="n">Account</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">default_chain</span><span class="p">)</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="k">assert</span> <span class="n">Account</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">==</span> <span class="n">Account</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">chain</span><span class="p">)</span>
 <a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="k">assert</span> <span class="n">Account</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">!=</span> <span class="n">Account</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">other_chain</span><span class="p">)</span>
 </code></pre></div>
 <p><code>Address</code> and <code>Account</code> instances cannot be compared with each other. <code>Account</code> instances belonging to different
@@ -5629,7 +5629,7 @@ the client (the account must be present in <code>chain.accounts</code>).</p>
 <a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a>    <span class="p">),</span>
 <a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a>    <span class="n">domain</span><span class="o">=</span><span class="n">Eip712Domain</span><span class="p">(</span>
 <a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a>        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Test&quot;</span><span class="p">,</span>
-<a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a>        <span class="n">chainId</span><span class="o">=</span><span class="n">default_chain</span><span class="o">.</span><span class="n">chain_id</span><span class="p">,</span>
+<a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a>        <span class="n">chainId</span><span class="o">=</span><span class="n">chain</span><span class="o">.</span><span class="n">chain_id</span><span class="p">,</span>
 <a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a>    <span class="p">)</span>
 <a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a><span class="p">)</span>
 </code></pre></div>
@@ -5702,10 +5702,10 @@ requests (see <a href="../interacting-with-contracts/">Interacting with contract
 <div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kn">from</span> <span class="nn">wake.testing</span> <span class="kn">import</span> <span class="o">*</span>
 <a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
 <a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
-<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="nd">@default_chain</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="nd">@chain</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
 <a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="k">def</span> <span class="nf">test_accounts</span><span class="p">():</span>
-<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>    <span class="n">alice</span> <span class="o">=</span> <span class="n">default_chain</span><span class="o">.</span><span class="n">accounts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>    <span class="n">bob</span> <span class="o">=</span> <span class="n">default_chain</span><span class="o">.</span><span class="n">accounts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>    <span class="n">alice</span> <span class="o">=</span> <span class="n">chain</span><span class="o">.</span><span class="n">accounts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>    <span class="n">bob</span> <span class="o">=</span> <span class="n">chain</span><span class="o">.</span><span class="n">accounts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 <a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>
 <a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>    <span class="n">alice</span><span class="o">.</span><span class="n">balance</span> <span class="o">=</span> <span class="mi">100</span>
 <a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>    <span class="n">bob</span><span class="o">.</span><span class="n">balance</span> <span class="o">=</span> <span class="mi">0</span>
@@ -5718,7 +5718,7 @@ requests (see <a href="../interacting-with-contracts/">Interacting with contract
 <div class="admonition info">
 <p class="admonition-title">Low-level contract creation</p>
 <p>To deploy a contract from creation code, use <code>chain.deploy</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">default_chain</span><span class="o">.</span><span class="n">deploy</span><span class="p">(</span><span class="n">Counter</span><span class="o">.</span><span class="n">get_creation_code</span><span class="p">())</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">chain</span><span class="o">.</span><span class="n">deploy</span><span class="p">(</span><span class="n">Counter</span><span class="o">.</span><span class="n">get_creation_code</span><span class="p">())</span>
 </code></pre></div>
 </div>
 <h2 id="contract-accounts">Contract accounts<a class="headerlink" href="#contract-accounts" title="Permanent link">#</a></h2>
@@ -5743,7 +5743,7 @@ when interacting with contracts through proxies:</p>
 <a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="kn">from</span> <span class="nn">pytypes.contracts.Counter</span> <span class="kn">import</span> <span class="n">Counter</span>
 <a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="kn">from</span> <span class="nn">pytypes.openzeppelin.contracts.proxy.ERC1967.ERC1967Proxy</span> <span class="kn">import</span> <span class="n">ERC1967Proxy</span>
 <a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>
-<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="nd">@default_chain</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="nd">@chain</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
 <a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="k">def</span> <span class="nf">test_proxy</span><span class="p">():</span>
 <a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>    <span class="n">impl</span> <span class="o">=</span> <span class="n">Counter</span><span class="o">.</span><span class="n">deploy</span><span class="p">()</span>
 <a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>    <span class="n">proxy</span> <span class="o">=</span> <span class="n">ERC1967Proxy</span><span class="o">.</span><span class="n">deploy</span><span class="p">(</span><span class="n">impl</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
