@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import weakref
-from functools import lru_cache, reduce
+from functools import reduce
 from operator import or_
 from typing import TYPE_CHECKING, Iterator, List, Optional, Set, Tuple, Union
 
@@ -160,7 +160,6 @@ class FunctionCall(ExpressionAbc):
         return tuple(self._arguments)
 
     @property
-    @weak_self_lru_cache(maxsize=2048)
     def function_called(
         self,
     ) -> Optional[

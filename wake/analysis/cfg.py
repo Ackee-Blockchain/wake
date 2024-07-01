@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from typing import Dict, List, Optional, Tuple, Union
 
 import networkx as nx
@@ -108,7 +109,9 @@ class ControlFlowGraph:
     """
 
     _graph: nx.DiGraph
-    _declaration: Union[FunctionDefinition, ModifierDefinition, YulFunctionDefinition]
+    _declaration: weakref.ReferenceType[
+        Union[FunctionDefinition, ModifierDefinition, YulFunctionDefinition]
+    ]
     _statements_lookup: Dict[Union[StatementAbc, YulStatementAbc], CfgNode]
     _start_node: CfgNode
     _success_end_node: CfgNode
@@ -122,7 +125,7 @@ class ControlFlowGraph:
     ):
         if declaration.body is None:
             raise ValueError("Function body is None.")
-        self._declaration = declaration
+        self._declaration = weakref.ref(declaration)
 
         self._graph = nx.DiGraph()
         self._start_node = CfgNode()
@@ -187,7 +190,7 @@ class ControlFlowGraph:
         Returns:
             Function or modifier definition for which this CFG was constructed.
         """
-        return self._declaration
+        return self._declaration()
 
     @property
     def start_node(self) -> CfgNode:
