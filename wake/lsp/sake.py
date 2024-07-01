@@ -16,13 +16,17 @@ class SakeResult(LspModel):
 
 
 class SakeCompilationResult(SakeResult):
-    contracts: Dict[str, List]  # fqn -> ABI
+    contracts: Dict[str, ContractInfoLsp]  # fqn -> ABI
 
 
 class ContractInfo(NamedTuple):
     abi: List
     bytecode: str
 
+# @dev used for api to include name in json, otherwise tuple is converted to array
+class ContractInfoLsp(LspModel):
+    abi: List
+    bytecode: str
 
 class SakeDeployParams(LspModel):
     contract_fqn: str
@@ -34,7 +38,7 @@ class SakeDeployParams(LspModel):
 class SakeDeployResult(SakeResult):
     contract_address: Optional[str]
     tx_receipt: Dict[str, Any]
-    # call_trace: str
+    call_trace: str
 
 
 class SakeCallParams(LspModel):
@@ -47,7 +51,7 @@ class SakeCallParams(LspModel):
 class SakeCallResult(SakeResult):
     return_value: str
     tx_receipt: Dict[str, Any]
-    # call_trace: str
+    call_trace: str
 
 
 class SakeGetBalancesParams(LspModel):
@@ -93,18 +97,21 @@ class SakeContext:
     async def compile(self) -> SakeCompilationResult:
         success, bytecode_result = await self.lsp_context.compiler.bytecode_compile()
 
+        _compilation = {
+            fqn: ContractInfo(
+                abi=info.abi,
+                bytecode=info.bytecode,
+            )
+            for fqn, info in bytecode_result.items()
+        }
+
         if success:
-            self.compilation = {
-                fqn: ContractInfo(
-                    abi=info.abi,
-                    bytecode=info.bytecode,
-                )
-                for fqn, info in bytecode_result.items()
-            }
+            self.compilation = _compilation
 
-        _contracts = {fqn: info.abi for fqn, info in self.compilation.items()}
-
-        return SakeCompilationResult(success=success, contracts=_contracts)
+        return SakeCompilationResult(success=success, contracts={
+            fqn: ContractInfoLsp(abi=info.abi, bytecode=info.bytecode)
+            for fqn, info in _compilation.items()
+        })
 
     @launch_chain
     async def get_accounts(self) -> List[str]:
@@ -135,7 +142,7 @@ class SakeContext:
                 success=True,
                 contract_address=str(tx.return_value.address),
                 tx_receipt=tx._tx_receipt,
-                # call_trace=str(tx.call_trace),
+                call_trace=str(tx.call_trace),
             )
         except TransactionRevertedError as e:
             assert e.tx is not None
@@ -144,7 +151,7 @@ class SakeContext:
                 success=False,
                 contract_address=None,
                 tx_receipt=e.tx._tx_receipt,
-                # call_trace=str(e.tx.call_trace),
+                call_trace=str(e.tx.call_trace),
             )
         except Exception as e:
             raise LspError(ErrorCodes.InternalError, str(e)) from None
@@ -165,7 +172,7 @@ class SakeContext:
                 success=True,
                 return_value=tx.raw_return_value.hex(),
                 tx_receipt=tx._tx_receipt,
-                # call_trace=str(tx.call_trace),
+                call_trace=str(tx.call_trace),
             )
         except TransactionRevertedError as e:
             assert e.tx is not None
@@ -175,7 +182,7 @@ class SakeContext:
                 success=False,
                 return_value=e.tx.raw_error.data.hex(),
                 tx_receipt=e.tx._tx_receipt,
-                # call_trace=str(e.tx.call_trace),
+                call_trace=str(e.tx.call_trace),
             )
         except Exception as e:
             raise LspError(ErrorCodes.InternalError, str(e)) from None
