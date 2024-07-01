@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import platform
 import subprocess
 from pathlib import Path
 from typing import Dict
@@ -65,15 +64,7 @@ class SolcFrontend:
             raise SolcCompilationError(
                 f"solc version `{target_version}` is not installed."
             )
-
-        if (
-            platform.system() == "Darwin"
-            and platform.machine() == "arm64"
-            and target_version < "0.8.24"
-        ):
-            args = ["arch", "-x86_64", str(path.resolve()), "--standard-json"]
-        else:
-            args = [str(path.resolve()), "--standard-json"]
+        args = [str(path.resolve()), "--standard-json"]
 
         allow_paths = ",".join(
             str(path) for path in self.__config.compiler.solc.allow_paths
