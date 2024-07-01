@@ -118,3 +118,11 @@ class RequestMethodEnum(StrEnum):
     PROGRESS = "$/progress"
     LOG_TRACE = "$/logTrace"  # Notification
     SET_TRACE = "$/setTrace"  # Notification
+
+    # Sake
+    SAKE_COMPILE = "wake/sake/compile"
+    SAKE_GET_ACCOUNTS = "wake/sake/getAccounts"
+    SAKE_DEPLOY = "wake/sake/deploy"
+    SAKE_CALL = "wake/sake/call"
+    SAKE_GET_BALANCES = "wake/sake/getBalances"
+    SAKE_SET_BALANCES = "wake/sake/setBalances"
