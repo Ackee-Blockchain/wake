@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+import weakref
 from abc import ABC, abstractmethod
-from functools import lru_cache
 from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
 
-from wake.ir.abc import IrAbc, SolidityAbc
+from wake.ir.abc import SolidityAbc, is_not_none
 from wake.ir.ast import (
     SolcBlock,
     SolcBreak,
@@ -26,7 +26,6 @@ from wake.ir.ast import (
 )
 from wake.ir.enums import ModifiesStateFlag
 from wake.ir.utils import IrInitTuple
-from wake.utils.decorators import weak_self_lru_cache
 
 if TYPE_CHECKING:
     from ..declarations.function_definition import FunctionDefinition
@@ -48,12 +47,20 @@ class StatementAbc(SolidityAbc, ABC):
     """
 
     _documentation: Optional[str]
+    _declaration_cache: weakref.ReferenceType[
+        Union[FunctionDefinition, ModifierDefinition]
+    ]
 
     def __init__(
         self, init: IrInitTuple, statement: SolcStatementUnion, parent: SolidityAbc
     ):
         super().__init__(init, statement, parent)
         self._documentation = statement.documentation
+
+    @classmethod
+    def _strip_weakrefs(cls, state: dict):
+        super()._strip_weakrefs(state)
+        state.pop("_declaration_cache", None)
 
     @staticmethod
     def from_ast(
@@ -162,18 +169,23 @@ class StatementAbc(SolidityAbc, ABC):
         return self._documentation
 
     @property
-    @weak_self_lru_cache(maxsize=512)
     def declaration(self) -> Union[FunctionDefinition, ModifierDefinition]:
         """
         Returns:
             [FunctionDefinition][wake.ir.declarations.function_definition.FunctionDefinition] or [ModifierDefinition][wake.ir.declarations.modifier_definition.ModifierDefinition] that contains the statement.
         """
-        from ..declarations.function_definition import FunctionDefinition
-        from ..declarations.modifier_definition import ModifierDefinition
+        if not hasattr(self, "_declaration_cache"):
+            from ..declarations.function_definition import FunctionDefinition
+            from ..declarations.modifier_definition import ModifierDefinition
 
-        node = self
-        while node is not None:
-            if isinstance(node, (FunctionDefinition, ModifierDefinition)):
-                return node
-            node = node.parent
-        assert False, f"Statement {self.source} is not part of a function or modifier"
+            node = self
+            while node is not None:
+                if isinstance(node, (FunctionDefinition, ModifierDefinition)):
+                    self._declaration_cache = weakref.ref(node)
+                    return node
+                node = node.parent
+            assert (
+                False
+            ), f"Statement {self.source} is not part of a function or modifier"
+        else:
+            return is_not_none(self._declaration_cache())

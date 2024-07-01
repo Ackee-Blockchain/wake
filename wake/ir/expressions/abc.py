@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import logging
+import weakref
 from abc import ABC, abstractmethod
-from functools import lru_cache
 from typing import TYPE_CHECKING, Optional, Set, Tuple, Union
 
 from wake.core import get_logger
-from wake.ir.abc import SolidityAbc
+from wake.ir.abc import SolidityAbc, is_not_none
 from wake.ir.ast import (
     SolcAssignment,
     SolcBinaryOperation,
@@ -45,12 +45,18 @@ class ExpressionAbc(SolidityAbc, ABC):
     """
 
     _type_descriptions: TypeDescriptionsModel
+    _statement_cache: Optional[weakref.ReferenceType[StatementAbc]]
 
     def __init__(
         self, init: IrInitTuple, expression: SolcExpressionUnion, parent: SolidityAbc
     ):
         super().__init__(init, expression, parent)
         self._type_descriptions = expression.type_descriptions
+
+    @classmethod
+    def _strip_weakrefs(cls, state: dict):
+        super()._strip_weakrefs(state)
+        state.pop("_statement_cache", None)
 
     @staticmethod
     def from_ast(
@@ -183,7 +189,6 @@ class ExpressionAbc(SolidityAbc, ABC):
         ...
 
     @property
-    @weak_self_lru_cache(maxsize=512)
     def statement(self) -> Optional[StatementAbc]:
         """
         May be `None` if the expression is not part of a function or modifier body.
@@ -197,11 +202,20 @@ class ExpressionAbc(SolidityAbc, ABC):
         Returns:
             Statement that contains the expression.
         """
-        from ..statements.abc import StatementAbc
+        if not hasattr(self, "_statement_cache"):
+            from ..statements.abc import StatementAbc
 
-        node = self
-        while node is not None:
-            if isinstance(node, StatementAbc):
-                return node
-            node = node.parent
-        return None
+            node = self
+            while node is not None:
+                if isinstance(node, StatementAbc):
+                    self._statement_cache = weakref.ref(node)
+                    return node
+                node = node.parent
+            self._statement_cache = None
+            return None
+        else:
+            return (
+                is_not_none(self._statement_cache())
+                if self._statement_cache is not None
+                else None
+            )

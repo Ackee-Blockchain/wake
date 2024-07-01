@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import weakref
-from functools import lru_cache
 from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
 
 from typing_extensions import Literal
@@ -123,7 +122,6 @@ class Assignment(ExpressionAbc):
         return ret
 
     @property
-    @weak_self_lru_cache(maxsize=2048)
     def assigned_variables(self) -> Tuple[Optional[Set[AssignedVariablePath]], ...]:
         """
         WARNING:
