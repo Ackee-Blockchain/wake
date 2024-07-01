@@ -4,7 +4,7 @@ import re
 import weakref
 from bisect import bisect
 from functools import lru_cache, partial
-from typing import TYPE_CHECKING, FrozenSet, Iterator, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, FrozenSet, Iterator, List, Optional, Set, Tuple, Union, Iterable
 
 from wake.utils.decorators import weak_self_lru_cache
 
@@ -242,7 +242,7 @@ class ContractDefinition(DeclarationAbc):
             self._used_events.add(weakref.ref(event))
 
         self._reference_resolver.register_destroy_callback(
-            self.source_unit.file, partial(self._destroy, base_contracts)
+            self.source_unit.file, partial(self._destroy, base_contracts, self.used_errors)
         )
 
     def _post_process_events(self, callback_params: CallbackParams):
@@ -266,19 +266,19 @@ class ContractDefinition(DeclarationAbc):
         self._used_event_ids = used_event_ids
 
         self._reference_resolver.register_destroy_callback(
-            self.source_unit.file, self._destroy_events
+            self.source_unit.file, partial(self._destroy_events, self.used_events),
         )
 
-    def _destroy(self, base_contracts: List[ContractDefinition]) -> None:
+    def _destroy(self, base_contracts: List[ContractDefinition], used_errors: Iterable[ErrorDefinition]) -> None:
         for base_contract in base_contracts:
             ref = next(c for c in base_contract._child_contracts if c() is self)
             base_contract._child_contracts.remove(ref)
-        for error in self.used_errors:
+        for error in used_errors:
             ref = next(c for c in error._used_in if c() is self)
             error._used_in.remove(ref)
 
-    def _destroy_events(self) -> None:
-        for event in self.used_events:
+    def _destroy_events(self, used_events: Iterable[EventDefinition]) -> None:
+        for event in used_events:
             ref = next(c for c in event._used_in if c() is self)
             event._used_in.remove(ref)
 

@@ -696,6 +696,7 @@ class LspCompiler:
             None,
         ],
     ) -> None:
+        # cannot rely on that a file is cleared from __discovered_files when deleted
         if isinstance(change, CustomFileChangeCommand):
             if change == CustomFileChangeCommand.FORCE_RECOMPILE:
                 for file in self.__discovered_files:
@@ -731,11 +732,7 @@ class LspCompiler:
         elif isinstance(change, CreateFilesParams):
             for file in change.files:
                 path = uri_to_path(file.uri)
-                if (
-                    path not in self.__discovered_files
-                    and not self.__file_excluded(path)
-                    and path.suffix == ".sol"
-                ):
+                if not self.__file_excluded(path) and path.suffix == ".sol":
                     self.__discovered_files.add(path)
                     self.__force_compile_files.add(path)
         elif isinstance(change, RenameFilesParams):
@@ -746,11 +743,7 @@ class LspCompiler:
                 self.__opened_files.pop(old_path, None)
 
                 new_path = uri_to_path(rename.new_uri)
-                if (
-                    new_path not in self.__discovered_files
-                    and not self.__file_excluded(new_path)
-                    and new_path.suffix == ".sol"
-                ):
+                if not self.__file_excluded(new_path) and new_path.suffix == ".sol":
                     self.__discovered_files.add(new_path)
                     self.__force_compile_files.add(new_path)
         elif isinstance(change, DeleteFilesParams):
@@ -762,21 +755,28 @@ class LspCompiler:
         elif isinstance(change, FileEvent):
             if change.type == FileChangeType.CREATED:
                 path = uri_to_path(change.uri).resolve()
-                if (
-                    path not in self.__discovered_files
-                    and not self.__file_excluded(path)
-                    and path.suffix == ".sol"
-                ):
+                if not self.__file_excluded(path) and path.suffix == ".sol":
                     self.__discovered_files.add(path)
                     self.__force_compile_files.add(path)
                 elif path.suffix == ".sol":
                     self.__disk_changed_files.add(path)
             elif change.type == FileChangeType.DELETED:
                 path = uri_to_path(change.uri).resolve()
-                self.__deleted_files.add(path)
-                self.__discovered_files.discard(path)
-                self.__opened_files.pop(path, None)
-                self.__disk_changed_files.discard(path)
+                for p in list(self.__discovered_files):
+                    if is_relative_to(p, path):
+                        self.__discovered_files.remove(p)
+
+                for p in list(self.__opened_files):
+                    if is_relative_to(p, path):
+                        self.__opened_files.pop(p)
+
+                for p in list(self.__disk_changed_files):
+                    if is_relative_to(p, path):
+                        self.__disk_changed_files.remove(p)
+
+                for p in list(self.__output_contents):
+                    if is_relative_to(p, path):
+                        self.__deleted_files.add(p)
             elif change.type == FileChangeType.CHANGED:
                 path = uri_to_path(change.uri).resolve()
                 if (
@@ -877,6 +877,7 @@ class LspCompiler:
                 await self.__diagnostic_queue.put((file, set()))
             self.__interval_trees.clear()
             self.__source_units.clear()
+            self.__ir_reference_resolver.clear_all_registered_nodes()
             self.__ir_reference_resolver.clear_all_indexed_nodes()
             self.__last_graph = nx.DiGraph()
             self.__latest_errors_per_cu = {}
@@ -891,16 +892,16 @@ class LspCompiler:
                 await self.__diagnostic_queue.put((file, set()))
             self.__interval_trees.clear()
             self.__source_units.clear()
+            self.__ir_reference_resolver.clear_all_registered_nodes()
             self.__ir_reference_resolver.clear_all_indexed_nodes()
             self.__last_graph = nx.DiGraph()
             self.__latest_errors_per_cu = {}
             return
 
         try:
-            modified_files = {
-                path: info.text.encode("utf-8")
-                for path, info in self.__opened_files.items()
-            }
+            modified_files = {f: f.read_bytes() for f in self.__disk_changed_files}
+            for path, info in self.__opened_files.items():
+                modified_files[path] = info.text.encode("utf-8")
 
             if full_compile:
                 graph, source_units_to_paths = self.__compiler.build_graph(
@@ -930,6 +931,7 @@ class LspCompiler:
                 await self.__diagnostic_queue.put((file, set()))
             self.__interval_trees.clear()
             self.__source_units.clear()
+            self.__ir_reference_resolver.clear_all_registered_nodes()
             self.__ir_reference_resolver.clear_all_indexed_nodes()
             self.__last_graph = nx.DiGraph()
             self.__latest_errors_per_cu = {}
@@ -941,14 +943,22 @@ class LspCompiler:
             await self.__diagnostic_queue.put((deleted_file, []))
             if deleted_file in self.__source_units:
                 self.__ir_reference_resolver.run_destroy_callbacks(deleted_file)
+                self.__ir_reference_resolver.clear_registered_nodes([deleted_file])
                 self.__source_units.pop(deleted_file)
+                self.__interval_trees.pop(deleted_file)
+                self.__compilation_errors.pop(deleted_file, None)
 
         compilation_units = self.__compiler.build_compilation_units_maximize(graph)
 
-        for changed_file in self.__disk_changed_files:
-            # if the file appears in any CU then it's relevant for compilation
-            if any(cu for cu in compilation_units if changed_file in cu.files):
-                files_to_compile.add(changed_file)
+        for source_unit_name in graph.nodes:
+            path = graph.nodes[source_unit_name]["path"]
+            content = graph.nodes[source_unit_name]["content"]
+            if (
+                path not in self.__output_contents
+                or self.__output_contents[path].text.encode("utf-8") != content
+            ):
+                if path not in files_to_compile:
+                    files_to_compile.add(path)
 
         # filter out only compilation units that need to be compiled
         needed_compilation_units = [
@@ -1123,6 +1133,7 @@ class LspCompiler:
                         self.__interval_trees.pop(file)
                     if file in self.__source_units:
                         self.__ir_reference_resolver.run_destroy_callbacks(file)
+                        self.__ir_reference_resolver.clear_registered_nodes([file])
                         self.__source_units.pop(file)
             compilation_units.remove(compilation_unit)
 
@@ -1156,6 +1167,7 @@ class LspCompiler:
                 await self.__diagnostic_queue.put((file, set()))
             self.__interval_trees.clear()
             self.__source_units.clear()
+            self.__ir_reference_resolver.clear_all_registered_nodes()
             self.__ir_reference_resolver.clear_all_indexed_nodes()
             self.__last_graph = nx.DiGraph()
             self.__latest_errors_per_cu = {}
@@ -1201,6 +1213,7 @@ class LspCompiler:
                 await self.__diagnostic_queue.put((file, set()))
             self.__interval_trees.clear()
             self.__source_units.clear()
+            self.__ir_reference_resolver.clear_all_registered_nodes()
             self.__ir_reference_resolver.clear_all_indexed_nodes()
             self.__latest_errors_per_cu = errors_per_cu
             self.__compilation_errors = {}
@@ -1297,6 +1310,7 @@ class LspCompiler:
                 if len(compilation_units_per_file[file]) == 0:
                     if file in self.__source_units:
                         self.__ir_reference_resolver.run_destroy_callbacks(file)
+                        self.__ir_reference_resolver.clear_registered_nodes([file])
                         self.__source_units.pop(file)
                     if file in self.__interval_trees:
                         self.__interval_trees.pop(file)

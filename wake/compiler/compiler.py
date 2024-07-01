@@ -982,8 +982,8 @@ class SolidityCompiler:
                 if len(compilation_units_per_file[file]) == 0:
                     if file in build.source_units:
                         build.reference_resolver.run_destroy_callbacks(file)
+                        build.reference_resolver.clear_registered_nodes([file])
                         build._source_units.pop(file)
-                    if file in build.interval_trees:
                         build._interval_trees.pop(file)
             compilation_units.remove(cu)
 
@@ -1027,7 +1027,9 @@ class SolidityCompiler:
         for deleted_file in deleted_files:
             if deleted_file in build.source_units:
                 build.reference_resolver.run_destroy_callbacks(deleted_file)
+                build.reference_resolver.clear_registered_nodes([deleted_file])
                 build._source_units.pop(deleted_file)
+                build._interval_trees.pop(deleted_file)
 
         ctx_manager = (
             console.status(f"[bold green]Processing compilation results...[/]")
@@ -1085,8 +1087,8 @@ class SolidityCompiler:
                     if len(compilation_units_per_file[file]) == 0:
                         if file in build.source_units:
                             build.reference_resolver.run_destroy_callbacks(file)
+                            build.reference_resolver.clear_registered_nodes([file])
                             build._source_units.pop(file)
-                        if file in build.interval_trees:
                             build._interval_trees.pop(file)
 
                 if len(errored_files) == 0:
@@ -1112,10 +1114,10 @@ class SolidityCompiler:
                 if file in build.source_units:
                     build.reference_resolver.run_destroy_callbacks(file)
                     build._source_units.pop(file)
-                if file in build.interval_trees:
                     build._interval_trees.pop(file)
 
             # clear indexed node types responsible for handling multiple structurally different ASTs for the same file
+            build.reference_resolver.clear_registered_nodes(files_to_recompile)
             build.reference_resolver.clear_indexed_nodes(files_to_recompile)
 
             source_units_info = {
@@ -1171,7 +1173,7 @@ class SolidityCompiler:
                     )
                     build._reference_resolver.clear_registered_nodes(
                         [path]
-                    )  # prevent memory leak
+                    )
                     build._source_units[path] = SourceUnit(init, ast)
                     build._interval_trees[path] = interval_tree
 
