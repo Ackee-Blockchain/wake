@@ -9,10 +9,12 @@ import re
 import threading
 import time
 from collections import defaultdict, deque
+from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
+from pickle import dumps as pickle_dumps
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -858,7 +860,7 @@ class LspCompiler:
         full_compile: bool = True,
         errors_per_cu: Optional[Dict[bytes, Set[SolcOutputError]]] = None,
         compilation_units_per_file: Optional[Dict[Path, Set[CompilationUnit]]] = None,
-    ) -> None:
+    ) -> bool:
         if errors_per_cu is None:
             errors_per_cu = {}
         if compilation_units_per_file is None:
@@ -881,7 +883,7 @@ class LspCompiler:
             self.__ir_reference_resolver.clear_all_indexed_nodes()
             self.__last_graph = nx.DiGraph()
             self.__latest_errors_per_cu = {}
-            return
+            return True
         if target_version is not None and target_version > max_version:
             await self.__server.log_message(
                 f"The maximum supported version of Solidity is {max_version}. Version {target_version} is selected in settings.",
@@ -896,7 +898,7 @@ class LspCompiler:
             self.__ir_reference_resolver.clear_all_indexed_nodes()
             self.__last_graph = nx.DiGraph()
             self.__latest_errors_per_cu = {}
-            return
+            return True
 
         try:
             modified_files = {f: f.read_bytes() for f in self.__disk_changed_files}
@@ -935,7 +937,7 @@ class LspCompiler:
             self.__ir_reference_resolver.clear_all_indexed_nodes()
             self.__last_graph = nx.DiGraph()
             self.__latest_errors_per_cu = {}
-            return
+            return True
 
         # whole CU may be deleted -> there are no CUs to compile
         # but errors still need to be cleared and callbacks run
@@ -968,7 +970,7 @@ class LspCompiler:
             or cu.contains_unresolved_file(self.__deleted_files, self.__config)
         ]
         if len(needed_compilation_units) == 0:
-            return
+            return len(self.__deleted_files) > 0
 
         for cu in set(compilation_units) - set(needed_compilation_units):
             for path in cu.files:
@@ -1171,7 +1173,7 @@ class LspCompiler:
             self.__ir_reference_resolver.clear_all_indexed_nodes()
             self.__last_graph = nx.DiGraph()
             self.__latest_errors_per_cu = {}
-            return
+            return True
 
         errors_without_location: Set[SolcOutputError] = set()
         errors_per_file: Dict[Path, Set[Diagnostic]] = deepcopy(
@@ -1217,7 +1219,7 @@ class LspCompiler:
             self.__ir_reference_resolver.clear_all_indexed_nodes()
             self.__latest_errors_per_cu = errors_per_cu
             self.__compilation_errors = {}
-            return
+            return True
 
         # files passed as files_to_compile and files importing them
         files_to_recompile = set(
@@ -1428,6 +1430,8 @@ class LspCompiler:
 
         if full_compile:
             self.__latest_errors_per_cu = errors_per_cu
+
+        return True
 
     async def __run_detectors_task(self) -> None:
         if self.__detectors_task is not None:
@@ -1651,95 +1655,113 @@ class LspCompiler:
             pass
 
     async def __compilation_loop(self):
-        if self.__perform_files_discovery:
-            # perform Solidity files discovery
-            for file in self.__config.project_root_path.rglob("**/*.sol"):
-                if not self.__file_excluded(file) and file.is_file():
-                    self.__discovered_files.add(file.resolve())
+        loop = asyncio.get_event_loop()
 
-            # perform initial compilation
-            await self.__compile(self.__discovered_files)
-            await self.__refresh_code_lenses()
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            if self.__perform_files_discovery:
+                # perform Solidity files discovery
+                for file in self.__config.project_root_path.rglob("**/*.sol"):
+                    if not self.__file_excluded(file) and file.is_file():
+                        self.__discovered_files.add(file.resolve())
 
-            self.send_subprocess_command(
-                self.__printers_subprocess,
-                SubprocessCommandType.BUILD,
-                (self.last_build, self.last_build_info, self.last_graph),
-            )
-            await self.__run_printers_task()
-            self.send_subprocess_command(
-                self.__detectors_subprocess,
-                SubprocessCommandType.BUILD,
-                (self.last_build, self.last_build_info, self.last_graph),
-            )
-            await self.__run_detectors_task()
-
-        if self.__file_changes_queue.empty():
-            self.output_ready.set()
-
-        while True:
-            change = await self.__file_changes_queue.get()
-            start = time.perf_counter()
-            await self._handle_change(change)
-            while True:
-                try:
-                    change = self.__file_changes_queue.get_nowait()
-                    start = time.perf_counter()
-                    await self._handle_change(change)
-                except asyncio.QueueEmpty:
-                    if (
-                        time.perf_counter() - start
-                        > self.__config.lsp.compilation_delay + 0.4
-                    ):
-                        break
-                    await asyncio.sleep(0.1)
-
-            # run the compilation
-            if (
-                len(self.__force_compile_files) > 0
-                or len(self.__modified_files) > 0
-                or len(self.__deleted_files) > 0
-                or len(self.__disk_changed_files) > 0
-            ):
-                self.__detector_code_lenses.clear()
-                self.__printer_code_lenses.clear()
-                self.__detector_hovers.clear()
-                self.__printer_hovers.clear()
-                self.__detector_inlay_hints.clear()
-                self.__printer_inlay_hints.clear()
+                # perform initial compilation
+                await self.__compile(self.__discovered_files.copy())
                 await self.__refresh_code_lenses()
 
-                await self.__compile(
-                    self.__force_compile_files.union(self.__modified_files)
+                serialized = await loop.run_in_executor(
+                    executor,
+                    pickle_dumps,
+                    (self.last_build, self.last_build_info, self.last_graph),
                 )
 
-                self.__force_run_detectors = True
-                self.__force_run_printers = True
-                self.__force_compile_files.clear()
-                self.__modified_files.clear()
-                self.__deleted_files.clear()
-                self.__disk_changed_files.clear()
+                self.send_subprocess_command(
+                    self.__printers_subprocess,
+                    SubprocessCommandType.BUILD,
+                    serialized,
+                )
+                await self.__run_printers_task()
+                self.send_subprocess_command(
+                    self.__detectors_subprocess,
+                    SubprocessCommandType.BUILD,
+                    serialized,
+                )
+                await self.__run_detectors_task()
 
             if self.__file_changes_queue.empty():
                 self.output_ready.set()
 
-                if self.__force_run_printers:
-                    self.send_subprocess_command(
-                        self.__printers_subprocess,
-                        SubprocessCommandType.BUILD,
-                        (self.last_build, self.last_build_info, self.last_graph),
-                    )
-                    await self.__run_printers_task()
-                if self.__force_run_detectors:
-                    self.send_subprocess_command(
-                        self.__detectors_subprocess,
-                        SubprocessCommandType.BUILD,
-                        (self.last_build, self.last_build_info, self.last_graph),
-                    )
-                    await self.__run_detectors_task()
+            while True:
+                change = await self.__file_changes_queue.get()
+                start = time.perf_counter()
+                await self._handle_change(change)
+                while True:
+                    try:
+                        change = self.__file_changes_queue.get_nowait()
+                        start = time.perf_counter()
+                        await self._handle_change(change)
+                    except asyncio.QueueEmpty:
+                        if (
+                            time.perf_counter() - start
+                            > self.__config.lsp.compilation_delay + 0.4
+                        ):
+                            break
+                        await asyncio.sleep(0.1)
 
-                self.__force_run_detectors = False
-                self.__force_run_printers = False
+                # run the compilation
+                if (
+                    len(self.__force_compile_files) > 0
+                    or len(self.__modified_files) > 0
+                    or len(self.__deleted_files) > 0
+                    or len(self.__disk_changed_files) > 0
+                ):
+                    self.__detector_code_lenses.clear()
+                    self.__printer_code_lenses.clear()
+                    self.__detector_hovers.clear()
+                    self.__printer_hovers.clear()
+                    self.__detector_inlay_hints.clear()
+                    self.__printer_inlay_hints.clear()
+                    await self.__refresh_code_lenses()
+
+                    new_build = await self.__compile(
+                        self.__force_compile_files.union(self.__modified_files),
+                    )
+
+                    if new_build:
+                        self.__force_run_detectors = True
+                        self.__force_run_printers = True
+
+                    self.__force_compile_files.clear()
+                    self.__modified_files.clear()
+                    self.__deleted_files.clear()
+                    self.__disk_changed_files.clear()
+
+                if self.__file_changes_queue.empty():
+                    self.output_ready.set()
+
+                    if self.__force_run_printers or self.__force_run_detectors:
+                        serialized = await loop.run_in_executor(
+                            executor,
+                            pickle_dumps,
+                            (self.last_build, self.last_build_info, self.last_graph),
+                        )
+
+                        if self.__force_run_printers:
+                            self.send_subprocess_command(
+                                self.__printers_subprocess,
+                                SubprocessCommandType.BUILD,
+                                serialized,
+                            )
+                            await self.__run_printers_task()
+                        if self.__force_run_detectors:
+                            self.send_subprocess_command(
+                                self.__detectors_subprocess,
+                                SubprocessCommandType.BUILD,
+                                serialized,
+                            )
+                            await self.__run_detectors_task()
+
+                    self.__force_run_detectors = False
+                    self.__force_run_printers = False
 
     def __setup_line_index(self, file: Path):
         content = self.get_compiled_file(file).text

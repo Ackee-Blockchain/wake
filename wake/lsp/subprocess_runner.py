@@ -1,5 +1,6 @@
 import multiprocessing
 import os
+import pickle
 import threading
 import traceback
 from itertools import chain
@@ -352,7 +353,8 @@ def run_detectors_subprocess(
         if command == SubprocessCommandType.CONFIG:
             config = data
         elif command == SubprocessCommandType.BUILD:
-            last_build, last_build_info, last_graph = data
+            last_build, last_build_info, last_graph = pickle.loads(data)
+            assert last_build is not None
             last_build.fix_after_deserialization()
         elif command == SubprocessCommandType.RUN_DETECTORS:
             thread_event.set()
@@ -448,7 +450,8 @@ def run_printers_subprocess(
         if command == SubprocessCommandType.CONFIG:
             config = data
         elif command == SubprocessCommandType.BUILD:
-            last_build, last_build_info, last_graph = data
+            last_build, last_build_info, last_graph = pickle.loads(data)
+            assert last_build is not None
             last_build.fix_after_deserialization()
         elif command == SubprocessCommandType.RUN_PRINTERS:
             thread_event.set()
