@@ -89,6 +89,9 @@ class ReferenceResolver:
         for path in paths:
             self._node_types.pop(path, None)
 
+    def clear_all_registered_nodes(self) -> None:
+        self._registered_nodes.clear()
+
     def clear_all_indexed_nodes(self) -> None:
         self._node_types.clear()
 

@@ -64,6 +64,7 @@ from .common_structures import (
     SetTraceParams,
     ShowMessageParams,
     ShowMessageRequestParams,
+    WatchKind,
     WorkDoneProgressBegin,
     WorkDoneProgressCreateParams,
     WorkDoneProgressEnd,
@@ -972,7 +973,7 @@ class LspServer:
                     RegistrationParams(
                         registrations=[
                             Registration(
-                                id="watched-files-toml",
+                                id="wake-watched-files",
                                 method="workspace/didChangeWatchedFiles",
                                 register_options=DidChangeWatchedFilesRegistrationOptions(
                                     watchers=[
@@ -983,6 +984,10 @@ class LspServer:
                                         FileSystemWatcher(
                                             glob_pattern="**/*.sol",
                                             kind=None,
+                                        ),
+                                        FileSystemWatcher(  # whole dir containing *.{toml,sol} may be deleted
+                                            glob_pattern="**/*/",
+                                            kind=WatchKind.DELETE,
                                         ),
                                         FileSystemWatcher(
                                             glob_pattern=RelativePattern(
@@ -1055,8 +1060,7 @@ class LspServer:
 
         if self.__main_workspace is not None:
             for ch in params.changes:
-                if ch.uri.endswith(".sol"):
-                    await self.__main_workspace.compiler.add_change(ch)
+                await self.__main_workspace.compiler.add_change(ch)
 
         for context in self.__workspaces.values():
             config_clone = WakeConfig.fromdict(
@@ -1117,7 +1121,7 @@ class LspServer:
                     await self.show_message(message, MessageType.ERROR)
                     return
             elif context.use_toml and any(
-                uri_to_path(ch.uri) == context.toml_path
+                is_relative_to(context.toml_path, uri_to_path(ch.uri))
                 and ch.type == FileChangeType.DELETED
                 for ch in params.changes
             ):
