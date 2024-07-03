@@ -715,6 +715,13 @@ class LspCompiler:
                     # clear diagnostics
                     await self.__diagnostic_queue.put((file, set()))
 
+                self.__interval_trees.clear()
+                self.__source_units.clear()
+                self.__ir_reference_resolver.clear_all_registered_nodes()
+                self.__ir_reference_resolver.clear_all_indexed_nodes()
+                self.__latest_errors_per_cu = {}
+                self.__compilation_errors = {}
+
                 self.__discovered_files.clear()
                 self.__compilation_errors.clear()
                 if self.__perform_files_discovery:
