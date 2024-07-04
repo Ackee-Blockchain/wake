@@ -59,14 +59,20 @@ class SolcVersionManager(CompilerVersionManagerAbc):
 
     def __init__(self, wake_config: WakeConfig):
         system = platform.system()
-        if system == "Linux":
+        machine = platform.machine()
+        amd64 = {"x86_64", "amd64", "AMD64", "x86-64"}
+        arm64 = {"aarch64", "arm64", "AARCH64", "ARM64"}
+
+        if system == "Linux" and machine in amd64:
             self.__platform = "linux-amd64"
-        elif system == "Darwin":
+        elif system == "Darwin" and machine in amd64.union(arm64):
             self.__platform = "macosx-amd64"
-        elif system == "Windows":
+        elif system == "Windows" and machine in amd64.union(arm64):
             self.__platform = "windows-amd64"
         else:
-            raise UnsupportedPlatformError(f"Platform `{system}` is not supported.")
+            raise UnsupportedPlatformError(
+                f"Solidity compiler binaries are not available for {system}-{machine}."
+            )
 
         self.__solc_list_url = f"{self.BINARIES_URL}/{self.__platform}/list.json"
         self.__compilers_path = wake_config.global_data_path / "compilers"
