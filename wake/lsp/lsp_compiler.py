@@ -1387,6 +1387,12 @@ class LspCompiler:
         # clear indexed node types responsible for handling multiple structurally different ASTs for the same file
         self.__ir_reference_resolver.clear_indexed_nodes(files_to_recompile)
 
+        # we don't want to recompile files that we cannot compile due to version restrictions
+        for skipped_compilation_unit in skipped_compilation_units:
+            for file in skipped_compilation_unit.files:
+                if not any(cu for cu in compilation_units if file in cu.files):
+                    files_to_recompile.discard(file)
+
         successful_compilation_units = []
         for cu, solc_output in zip(compilation_units, ret):
             for file in cu.files:
