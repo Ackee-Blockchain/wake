@@ -886,7 +886,9 @@ class TypeGenerator:
             self.add_str_to_types(indent + 1, '"""', 1)
             self.add_str_to_types(indent + 1, f"_abi = {error_abi}", 1)
             self.add_str_to_types(indent + 1, f"original_name = '{error.name}'", 1)
-            self.add_str_to_types(indent + 1, f"selector = {error.error_selector}", 2)
+            self.add_str_to_types(
+                indent + 1, f"selector = bytes4({error.error_selector})", 2
+            )
             for param_name, param_type, _, original_name in parameters:
                 if param_name == original_name:
                     self.add_str_to_types(indent + 1, f"{param_name}: {param_type}", 1)
@@ -981,7 +983,9 @@ class TypeGenerator:
                 1,
             )
             self.add_str_to_types(indent + 1, f"original_name = '{event.name}'", 1)
-            self.add_str_to_types(indent + 1, f"selector = {event.event_selector}", 2)
+            self.add_str_to_types(
+                indent + 1, f"selector = bytes32({event.event_selector})", 2
+            )
             for param_name, param_type, _, original_name in parameters:
                 if param_name == original_name:
                     self.add_str_to_types(indent + 1, f"{param_name}: {param_type}", 1)
@@ -1546,7 +1550,9 @@ class TypeGenerator:
 
         for fn_name, selector in selector_assignments:
             self.add_str_to_types(
-                0, f"{self.get_name(contract)}.{fn_name}.selector = {selector}", 1
+                0,
+                f"{self.get_name(contract)}.{fn_name}.selector = bytes4({selector})",
+                1,
             )
 
     def generate_types_source_unit(self, unit: SourceUnit) -> None:
