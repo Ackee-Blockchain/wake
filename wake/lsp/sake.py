@@ -50,7 +50,7 @@ class SakeDeployParams(LspModel):
 class SakeDeployResult(SakeResult):
     contract_address: Optional[str]
     tx_receipt: Dict[str, Any]
-    call_trace: str
+    call_trace: Dict[str, Optional[str]]
 
 
 class SakeTransactParams(LspModel):
@@ -63,7 +63,7 @@ class SakeTransactParams(LspModel):
 class SakeTransactResult(SakeResult):
     return_value: str
     tx_receipt: Dict[str, Any]
-    call_trace: str
+    call_trace: Dict[str, Optional[str]]
 
 
 class SakeCallParams(LspModel):
@@ -75,7 +75,7 @@ class SakeCallParams(LspModel):
 
 class SakeCallResult(SakeResult):
     return_value: str
-    call_trace: Optional[str]
+    call_trace: Optional[Dict[str, Optional[str]]]
 
 
 class SakeGetBalancesParams(LspModel):
@@ -287,7 +287,7 @@ class SakeContext:
                 success=True,
                 contract_address=str(tx.return_value.address) if success else None,
                 tx_receipt=tx._tx_receipt,
-                call_trace=str(call_trace),
+                call_trace=call_trace.dict(self.lsp_context.config),
             )
         except Exception as e:
             raise LspError(ErrorCodes.InternalError, str(e)) from None
@@ -336,7 +336,7 @@ class SakeContext:
                 success=success,
                 return_value=return_value.hex(),
                 tx_receipt=tx._tx_receipt,
-                call_trace=str(call_trace),
+                call_trace=call_trace.dict(self.lsp_context.config),
             )
         except Exception as e:
             raise LspError(ErrorCodes.InternalError, str(e)) from None
@@ -380,7 +380,7 @@ class SakeContext:
             return SakeCallResult(
                 success=(not trace["failed"]),
                 return_value=ret_value[2:] if ret_value.startswith("0x") else ret_value,
-                call_trace=str(call_trace),
+                call_trace=call_trace.dict(self.lsp_context.config),
             )
         except JsonRpcError:
             # debug_traceCall not available
