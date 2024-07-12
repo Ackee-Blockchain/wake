@@ -65,6 +65,8 @@ class EnumDefinition(DeclarationAbc):
         yield self
         for value in self._values:
             yield from value
+        if self._documentation is not None:
+            yield from self._documentation
 
     def _parse_name_location(self) -> Tuple[int, int]:
         IDENTIFIER = r"[a-zA-Z$_][a-zA-Z0-9$_]*"
@@ -110,6 +112,8 @@ class EnumDefinition(DeclarationAbc):
             Direct children of this node.
         """
         yield from self._values
+        if self._documentation is not None:
+            yield self._documentation
 
     @property
     def canonical_name(self) -> str:
