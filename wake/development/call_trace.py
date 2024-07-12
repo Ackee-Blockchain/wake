@@ -3,14 +3,17 @@ from __future__ import annotations
 import reprlib
 from collections import ChainMap
 from typing import (
+    TYPE_CHECKING,
+    AbstractSet,
     Any,
+    Callable,
     Dict,
     Iterable,
     List,
     Optional,
     Tuple,
     Union,
-    cast, Callable, AbstractSet
+    cast,
 )
 
 import eth_abi
@@ -40,6 +43,9 @@ from .core import (
 from .globals import get_config, get_verbosity
 from .internal import read_from_memory
 from .utils import get_contract_info_from_explorer
+
+if TYPE_CHECKING:
+    from wake.config import WakeConfig
 
 
 def get_precompiled_info(
@@ -551,6 +557,122 @@ class CallTrace:
 
         return ret
 
+    def dict(self, config: WakeConfig) -> Dict[str, Optional[str]]:
+        options = config.general.call_trace_options
+        ret: Dict[str, Optional[str]] = {}
+
+        if "contract_name" in options:
+            ret["contract_name"] = self.contract_name or "Unknown"
+        else:
+            ret["contract_name"] = None
+
+        if "address" in options and self.address is not None:
+            ret["address"] = Account(self.address, self.chain).label or str(self.address)
+        else:
+            ret["address"] = None
+
+        if "function_name" in options:
+            if self.function_is_special:
+                ret["function_name"] = "<" + (self.function_name or "???") + ">"
+            else:
+                ret["function_name"] = self.function_name or "???"
+        else:
+            ret["function_name"] = None
+
+        if "named_arguments" in options:
+            if self.arguments is not None:
+                assert self.argument_names is not None
+                ret["arguments"] = "("
+                for i, (arg, arg_name) in enumerate(
+                    zip(self.arguments, self.argument_names)
+                ):
+                    if arg_name is not None and len(arg_name.strip()) > 0:
+                        ret["arguments"] += f"{arg_name.strip()}={repr(arg)}"
+                    else:
+                        ret["arguments"] += repr(arg)
+
+                    if i < len(self.arguments) - 1:
+                        ret["arguments"] += ", "
+                ret["arguments"] += ")"
+            else:
+                ret["arguments"] = "(???)"
+        elif "arguments" in options:
+            if self.arguments is not None:
+                ret["arguments"] = "("
+                for i, arg in enumerate(self.arguments):
+                    ret["arguments"] += repr(arg)
+                    if i < len(self.arguments) - 1:
+                        ret["arguments"] += ", "
+                ret["arguments"] += ")"
+            else:
+                ret["arguments"] = "(???)"
+        else:
+            ret["arguments"] = None
+
+        if "status" in options:
+            ret["status"] = "✓" if self.status else "✗"
+        else:
+            ret["status"] = None
+
+        if "call_type" in options:
+            ret["call_type"] = self.kind
+        else:
+            ret["call_type"] = None
+
+        if "value" in options:
+            ret["value"] = format_wei(self.value)
+        else:
+            ret["value"] = None
+
+        if "gas" in options:
+            ret["gas"] = f"{self.gas:,}"
+        else:
+            ret["gas"] = None
+
+        if "sender" in options and self.sender is not None:
+            ret["sender"] = str(self.sender)
+        else:
+            ret["sender"] = None
+
+        if (
+            "return_value" in options
+            and self._return_value is not None
+            and len(self._return_value) > 0
+        ):
+            assert self._return_names is not None
+
+            ret["return_value"] = ""
+            for i, (arg, arg_name) in enumerate(
+                zip(self._return_value, self._return_names)
+            ):
+                if arg_name is not None and len(arg_name.strip()) > 0:
+                    ret["return_value"] += f"{arg_name.strip()}={repr(arg)}"
+                else:
+                    ret["return_value"] += repr(arg)
+
+                if i < len(self._return_value) - 1:
+                    ret["return_value"] += ", "
+        else:
+            ret["return_value"] = None
+
+        if "error" in options and self._error_name is not None:
+            ret["error"] = self._error_name + "("
+
+            for i, (arg, arg_name) in enumerate(
+                zip(self.error_arguments or [], self._error_names or [])
+            ):
+                if arg_name is not None and len(arg_name.strip()) > 0:
+                    ret["error"] += f"{arg_name.strip()}={repr(arg)}"
+                else:
+                    ret["error"] += repr(arg)
+
+                if i < len(self.error_arguments or []) - 1:
+                    ret["error"] += ", "
+        else:
+            ret["error"] = None
+
+        return ret
+
     @property
     def subtraces(self) -> Tuple[CallTrace, ...]:
         return tuple(self._subtraces)
@@ -677,9 +799,7 @@ class CallTrace:
             if to.address in fqn_overrides:
                 origin_fqn = fqn_overrides[to.address]
             else:
-                origin_fqn = get_fqn_from_address(
-                    to.address, fqn_block_number, chain
-                )
+                origin_fqn = get_fqn_from_address(to.address, fqn_block_number, chain)
 
         contracts = [origin_fqn]
         values = [0 if "value" not in tx_params else tx_params["value"]]
@@ -693,9 +813,7 @@ class CallTrace:
 
         explorer_info = None
         precompiled_info = None
-        if (
-            origin_fqn is None or origin_fqn not in all_fqns
-        ) and to is not None:
+        if (origin_fqn is None or origin_fqn not in all_fqns) and to is not None:
             if Address(0) < to.address <= Address(9):
                 precompiled_info = get_precompiled_info(
                     to.address, b"" if "data" not in tx_params else tx_params["data"]
@@ -1009,9 +1127,7 @@ class CallTrace:
                         if data[:4] in hardhat_console.abis:
                             fn_abi = hardhat_console.abis[data[:4]]
                             try:
-                                args, arg_names = _decode_args(
-                                    fn_abi, data[4:], chain
-                                )
+                                args, arg_names = _decode_args(fn_abi, data[4:], chain)
                             except Exception:
                                 args = None
                                 arg_names = None
