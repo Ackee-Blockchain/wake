@@ -131,7 +131,7 @@ from .sake import (
     SakeContext,
     SakeDeployParams,
     SakeGetBalancesParams,
-    SakeSetBalancesParams,
+    SakeSetBalancesParams, SakeTransactParams, SakeSetLabelParams,
 )
 from .server_capabilities import (
     FileOperationFilter,
@@ -301,6 +301,14 @@ class LspServer:
                 ),
                 SakeDeployParams,
             ),
+            RequestMethodEnum.SAKE_TRANSACT: (
+                lambda params: (
+                    self.__sake_context.transact(  # pyright: ignore reportAttributeAccessIssue
+                        params,
+                    )
+                ),
+                SakeTransactParams,
+            ),
             RequestMethodEnum.SAKE_CALL: (
                 lambda params: (
                     self.__sake_context.call(  # pyright: ignore reportAttributeAccessIssue
@@ -308,6 +316,14 @@ class LspServer:
                     )
                 ),
                 SakeCallParams,
+            ),
+            RequestMethodEnum.SAKE_SET_LABEL: (
+                lambda params: (
+                    self.__sake_context.set_label(  # pyright: ignore reportAttributeAccessIssue
+                        params,
+                    )
+                ),
+                SakeSetLabelParams,
             ),
             RequestMethodEnum.SAKE_GET_BALANCES: (
                 lambda params: (

@@ -2543,7 +2543,7 @@ class Chain(ABC):
 
         return console_logs
 
-    def _process_call_revert(self, e: JsonRpcError) -> TransactionRevertedError:
+    def _process_call_revert_data(self, e: JsonRpcError) -> bytes:
         try:
             # Hermez does not provide revert data for estimate
             if (
@@ -2572,7 +2572,11 @@ class Chain(ABC):
         if revert_data.startswith("0x"):
             revert_data = revert_data[2:]
 
-        return self._process_revert_data(None, bytes.fromhex(revert_data))
+        return bytes.fromhex(revert_data)
+
+    def _process_call_revert(self, e: JsonRpcError) -> TransactionRevertedError:
+
+        return self._process_revert_data(None, self._process_call_revert_data(e))
 
     def _send_transaction(
         self, tx_params: TxParams, from_: Optional[Union[Account, Address, str]]

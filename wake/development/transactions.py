@@ -4,6 +4,7 @@ import functools
 import importlib
 import inspect
 from abc import ABC, abstractmethod
+from collections import ChainMap
 from contextlib import contextmanager
 from dataclasses import dataclass, field, fields
 from enum import IntEnum
@@ -41,9 +42,11 @@ from .core import (
     Address,
     Chain,
     Wei,
+    get_contracts_by_fqn,
     get_contract_from_fqn,
     get_fqn_from_address,
     get_fqn_from_creation_code,
+    process_debug_trace_for_fqn_overrides,
 )
 from .internal import UnknownEvent, read_from_memory
 from .json_rpc import JsonRpcError
@@ -603,11 +606,40 @@ class TransactionAbc(ABC, Generic[T]):
         assert self._debug_trace_transaction is not None
         assert self._tx_data is not None
 
+        fqn_overrides: ChainMap[Address, Optional[str]] = ChainMap()
+
+        # process fqn_overrides for all txs before this one in the same block
+        for i in range(self.tx_index):
+            tx_before = self.block.txs[i]
+            tx_before._fetch_debug_trace_transaction()
+            process_debug_trace_for_fqn_overrides(
+                tx_before,
+                tx_before._debug_trace_transaction,  # pyright: ignore reportGeneralTypeIssues
+                fqn_overrides,
+            )
+
+        assert len(fqn_overrides.maps) == 1
+
+        contracts_by_fqn = get_contracts_by_fqn()
+
+        def fqn_to_contract_abi(fqn: str):
+            module_name, attrs = contracts_by_fqn[fqn]
+            obj = getattr(importlib.import_module(module_name), attrs[0])
+            for attr in attrs[1:]:
+                obj = getattr(obj, attr)
+            contract_abi = obj._abi
+            return obj, contract_abi
+
         return CallTrace.from_debug_trace(
-            self,
             self._debug_trace_transaction,  # pyright: ignore reportGeneralTypeIssues
             self._tx_params,
-            int(self._tx_data["gas"], 16),
+            self.chain,
+            self.to,
+            self.return_value if self.status == TransactionStatusEnum.SUCCESS else None,
+            fqn_overrides,
+            self.block_number - 1,
+            contracts_by_fqn.keys(),
+            fqn_to_contract_abi,
         )
 
     @property

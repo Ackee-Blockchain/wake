@@ -63,7 +63,7 @@ if TYPE_CHECKING:
 import networkx as nx
 from intervaltree import IntervalTree
 
-from wake.compiler import SolcOutput, SolcOutputSelectionEnum
+from wake.compiler import SolcOutput, SolcOutputContractInfo, SolcOutputSelectionEnum
 from wake.compiler.compilation_unit import CompilationUnit
 from wake.compiler.compiler import SolidityCompiler
 from wake.compiler.solc_frontend import (
@@ -1042,11 +1042,13 @@ class LspCompiler:
                 else:
                     await self.__svm.install(version)
 
-    async def bytecode_compile(self) -> Tuple[bool, Dict[str, BytecodeCompileResult]]:
+    async def bytecode_compile(
+        self,
+    ) -> Tuple[bool, Dict[str, SolcOutputContractInfo], Dict[str, Dict]]:
         try:
             await self.__check_target_version()
         except CompilationError:
-            return False, {}
+            return False, {}, {}
 
         modified_files = {
             path: info.text.encode("utf-8")
@@ -1064,14 +1066,18 @@ class LspCompiler:
             )
         except CompilationError as e:
             await self.__server.log_message(str(e), MessageType.ERROR)
-            return False, {}
+            return False, {}, {}
 
         compilation_units = self.__compiler.build_compilation_units_maximize(graph)
         if len(compilation_units) == 0:
-            return False, {}
+            return False, {}, {}
 
         build_settings = self.__compiler.create_build_settings(
-            [SolcOutputSelectionEnum.ABI, SolcOutputSelectionEnum.EVM_BYTECODE_OBJECT]
+            [
+                SolcOutputSelectionEnum.ABI,
+                SolcOutputSelectionEnum.EVM_BYTECODE_OBJECT,
+                SolcOutputSelectionEnum.AST,
+            ]
         )
 
         # optimization - merge compilation units that can be compiled together
@@ -1082,7 +1088,7 @@ class LspCompiler:
             skipped_compilation_units,
         ) = await self.__detect_target_versions(compilation_units)
         if len(skipped_compilation_units) > 0:
-            return False, {}
+            return False, {}, {}
 
         await self.__install_solc(target_versions)
 
@@ -1109,9 +1115,10 @@ class LspCompiler:
             if progress_token is not None:
                 await self.__server.progress_end(progress_token)
 
-            return False, {}
+            return False, {}, {}
 
-        result: Dict[str, BytecodeCompileResult] = {}
+        contract_info: Dict[str, SolcOutputContractInfo] = {}
+        asts: Dict[str, Dict] = {}
 
         solc_output: SolcOutput
         for cu, solc_output in zip(compilation_units, ret):
@@ -1134,21 +1141,18 @@ class LspCompiler:
                     source_unit_name
                 ].items():
                     fqn = f"{source_unit_name}:{contract_name}"
-                    if fqn in result:
+                    if fqn in contract_info:
                         continue
+                    contract_info[fqn] = info
 
-                    assert info.abi is not None
-                    assert info.evm is not None
-                    assert info.evm.bytecode is not None
-                    assert info.evm.bytecode.object is not None
-                    result[fqn] = BytecodeCompileResult(
-                        abi=info.abi, bytecode=info.evm.bytecode.object
-                    )
+            for source_unit_name, ast in solc_output.sources.items():
+                if ast.ast is not None:
+                    asts[source_unit_name] = ast.ast
 
         if progress_token is not None:
             await self.__server.progress_end(progress_token)
 
-        return True, result
+        return True, contract_info, asts
 
     async def __compile(
         self,
