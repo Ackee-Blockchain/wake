@@ -123,6 +123,8 @@ class RequestMethodEnum(StrEnum):
     SAKE_COMPILE = "wake/sake/compile"
     SAKE_GET_ACCOUNTS = "wake/sake/getAccounts"
     SAKE_DEPLOY = "wake/sake/deploy"
+    SAKE_TRANSACT = "wake/sake/transact"
     SAKE_CALL = "wake/sake/call"
+    SAKE_SET_LABEL = "wake/sake/setLabel"
     SAKE_GET_BALANCES = "wake/sake/getBalances"
     SAKE_SET_BALANCES = "wake/sake/setBalances"
