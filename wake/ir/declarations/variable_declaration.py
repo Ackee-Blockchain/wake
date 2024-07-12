@@ -244,6 +244,10 @@ class VariableDeclaration(DeclarationAbc):
             )
         )
         match = VARIABLE_RE.search(source_without_value)
+        if not match:
+            # the variable has no name
+            byte_end = self._ast_node.src.byte_offset + len(source_without_value)
+            return byte_end, byte_end
         assert match
         byte_start = self._ast_node.src.byte_offset
 
