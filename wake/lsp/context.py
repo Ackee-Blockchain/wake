@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import weakref
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
@@ -28,7 +29,7 @@ class LspContext:
     def __init__(
         self, server: LspServer, config: WakeConfig, perform_files_discovery: bool
     ) -> None:
-        self.__server = server
+        self.__server = weakref.proxy(server)
         self.__workspace_config = config
         self.__diagnostics_queue = asyncio.Queue()
         self.__compiler = LspCompiler(

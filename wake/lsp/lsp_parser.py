@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import (
@@ -67,7 +68,7 @@ class LspParser:
     _server: LspServer
 
     def __init__(self, server: LspServer):
-        self._server = server
+        self._server = weakref.proxy(server)
         self._files = {}
         self._trees = {}
         self._tree_changed = defaultdict(bool)
