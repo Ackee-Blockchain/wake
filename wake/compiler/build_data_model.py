@@ -33,8 +33,9 @@ from wake.ir import (
     UserDefinedTypeName,
     VariableDeclaration,
     YulAbc,
-    YulIdentifier,
+    YulIdentifier, SolidityAbc,
 )
+from wake.ir.enums import GlobalSymbol
 from wake.ir.reference_resolver import ReferenceResolver
 
 
@@ -163,10 +164,16 @@ class ProjectBuild:
             self._source_units
         )  # pyright: ignore reportGeneralTypeIssues
 
-    def fix_after_deserialization(self):
+    def fix_after_deserialization(self, lsp: bool):
         """
         Fix the internal state of the project build after pickle deserialization.
         """
+        if lsp:
+            for source_unit in self._source_units.values():
+                for node in source_unit:
+                    if isinstance(node, SolidityAbc):
+                        self._reference_resolver.register_node(node, node.ast_node_id, source_unit.cu_hash)
+
         for source_unit in self._source_units.values():
             source_unit._parent = None
             inline_assembly = None
@@ -210,6 +217,9 @@ class ProjectBuild:
                     elif isinstance(ref_decl, set):
                         for d in ref_decl:
                             d.register_reference(node)
+
+                    if lsp and isinstance(ref_decl, GlobalSymbol):
+                        self._reference_resolver.register_global_symbol_reference(ref_decl, node)
                 elif isinstance(node, (BinaryOperation, UnaryOperation)):
                     if node.function is not None:
                         node.function.register_reference(node)

@@ -187,7 +187,7 @@ class TypeGenerator:
         self.__already_generated_contracts = set()
         self.__source_units = {}
         self.__interval_trees = {}
-        self.__reference_resolver = ReferenceResolver()
+        self.__reference_resolver = ReferenceResolver(lsp=False)
         self.__imports = SourceUnitImports(self)
         self.__name_sanitizer = NameSanitizer()
         self.__current_source_unit = ""

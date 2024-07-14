@@ -4,17 +4,18 @@ import asyncio
 import difflib
 import multiprocessing
 import multiprocessing.connection
+import pickle
 import queue
 import re
 import threading
 import time
-from collections import defaultdict, deque
+import weakref
+from collections import Counter, defaultdict, deque
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from pickle import dumps as pickle_dumps
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -33,6 +34,7 @@ import packaging.version
 
 from wake.compiler.exceptions import CompilationError
 
+from ..analysis.utils import get_all_base_and_child_declarations
 from ..compiler.build_data_model import (
     CompilationUnitBuildInfo,
     ProjectBuild,
@@ -45,6 +47,7 @@ from ..core.solidity_version import (
     SolidityVersionRanges,
 )
 from ..core.wake_comments import error_commented_out
+from ..ir.enums import GlobalSymbol
 from ..utils import StrEnum, get_package_version
 from ..utils.file_utils import is_relative_to
 from .exceptions import LspError
@@ -79,7 +82,21 @@ from wake.core.lsp_provider import (
     HoverOptions,
     InlayHintOptions,
 )
-from wake.ir import SourceUnit
+from wake.ir import (
+    BinaryOperation,
+    DeclarationAbc,
+    FunctionDefinition,
+    Identifier,
+    IdentifierPath,
+    IdentifierPathPart,
+    MemberAccess,
+    ModifierDefinition,
+    SourceUnit,
+    UnaryOperation,
+    UserDefinedTypeName,
+    VariableDeclaration,
+    YulIdentifier,
+)
 from wake.ir.ast import AstSolc
 from wake.ir.reference_resolver import CallbackParams, ReferenceResolver
 from wake.ir.utils import IrInitTuple
@@ -212,13 +229,16 @@ class LspCompiler:
     __discovered_files: Set[Path]
     __deleted_files: Set[Path]
     __disk_changed_files: Set[Path]
+    early_opened_files: Dict[
+        Path, VersionedFile
+    ]  # opened files contents as soon as they arrive
     __opened_files: Dict[Path, VersionedFile]
     __modified_files: Set[Path]
     __force_compile_files: Set[Path]
     __compiler: SolidityCompiler
     __output_contents: Dict[Path, VersionedFile]
     __compilation_errors: Dict[Path, Set[Diagnostic]]
-    __last_successful_compilation_contents: Dict[Path, VersionedFile]
+    __last_successful_compilation_contents: Dict[Path, Dict[Path, bytes]]
     __interval_trees: Dict[Path, IntervalTree]
     __source_units: Dict[Path, SourceUnit]
     __last_compilation_interval_trees: Dict[Path, IntervalTree]
@@ -226,12 +246,16 @@ class LspCompiler:
     __last_graph: nx.DiGraph
     __last_build_settings: SolcInputSettings
     __line_indexes: Dict[Path, List[Tuple[bytes, int]]]
+    __early_line_indexes: Dict[Path, List[Tuple[bytes, int]]]
     __perform_files_discovery: bool
     __force_run_detectors: bool
     __force_run_printers: bool
     __wake_version: str
     __latest_errors_per_cu: Dict[bytes, Set[SolcOutputError]]
     __ignored_detections_supported: bool
+    __cu_counter: Counter[
+        bytes
+    ]  # how many source units of each cu hash are still present in self.__source_units
 
     __ir_reference_resolver: ReferenceResolver
 
@@ -242,6 +266,18 @@ class LspCompiler:
 
     __detectors_task: Optional[asyncio.Task]
     __printers_task: Optional[asyncio.Task]
+
+    go_to_definition_cache: weakref.WeakKeyDictionary[
+        Union[
+            Identifier,
+            MemberAccess,
+            IdentifierPathPart,
+            YulIdentifier,
+            UnaryOperation,
+            BinaryOperation,
+        ],
+        Dict[Path, Set[Tuple[int, int]]],
+    ]
 
     def __init__(
         self,
@@ -256,6 +292,7 @@ class LspCompiler:
         self.__discovered_files = set()
         self.__deleted_files = set()
         self.__disk_changed_files = set()
+        self.early_opened_files = {}
         self.__opened_files = {}
         self.__modified_files = set()
         self.__force_compile_files = set()
@@ -268,6 +305,7 @@ class LspCompiler:
             SolcInputSettings()
         )  # pyright: ignore reportGeneralTypeIssues
         self.__line_indexes = {}
+        self.__early_line_indexes = {}
         self.__output_contents = dict()
         self.__compilation_errors = dict()
         self.__last_successful_compilation_contents = dict()
@@ -277,6 +315,8 @@ class LspCompiler:
         self.__force_run_printers = False
         self.__wake_version = get_package_version("eth-wake")
         self.__latest_errors_per_cu = {}
+        self.__cu_counter = Counter()
+        self.go_to_definition_cache = weakref.WeakKeyDictionary()
 
         try:
             if server.tfs_version is not None and packaging.version.parse(
@@ -288,7 +328,7 @@ class LspCompiler:
         except packaging.version.InvalidVersion:
             self.__ignored_detections_supported = False
 
-        self.__ir_reference_resolver = ReferenceResolver()
+        self.__ir_reference_resolver = ReferenceResolver(lsp=True)
         self.__detectors_task = None
         self.__printers_task = None
 
@@ -576,9 +616,9 @@ class LspCompiler:
 
     @lru_cache(maxsize=128)
     def _compute_diff_interval_tree(
-        self, a: VersionedFile, b: VersionedFile
+        self, a: bytes, b: bytes
     ) -> IntervalTree:
-        seq_matcher = difflib.SequenceMatcher(None, a.text, b.text)
+        seq_matcher = difflib.SequenceMatcher(None, a, b)
         interval_tree = IntervalTree()
         for tag, i1, i2, j1, j2 in seq_matcher.get_opcodes():
             if tag == "equal":
@@ -587,23 +627,53 @@ class LspCompiler:
         return interval_tree
 
     def get_last_compilation_forward_changes(
-        self, path: Path
+        self, context_file: Path, file: Path
     ) -> Optional[IntervalTree]:
-        if path not in self.__last_successful_compilation_contents:
+        """
+        Returns diff changes of the content of `file` at the time of the last successful compilation of `context_file`
+        compared to the current content of `file`.
+        """
+        if (
+            context_file not in self.__last_successful_compilation_contents
+            or file not in self.__last_successful_compilation_contents[context_file]
+        ):
             return None
+
+        if file in self.early_opened_files:
+            current_content = self.early_opened_files[file].text.encode("utf-8")
+        elif file.exists():
+            current_content = file.read_bytes()  # TODO cache?
+        else:
+            return None
+
         return self._compute_diff_interval_tree(
-            self.__last_successful_compilation_contents[path],
-            self.get_compiled_file(path),
+            self.__last_successful_compilation_contents[context_file][file],
+            current_content,
         )
 
     def get_last_compilation_backward_changes(
-        self, path: Path
+        self, context_file: Path, file: Path
     ) -> Optional[IntervalTree]:
-        if path not in self.__last_successful_compilation_contents:
+        """
+        Returns diff changes of the current content of `file` compared to the content of `file` at the time of the last
+        successful compilation of `context_file`.
+        """
+        if (
+            context_file not in self.__last_successful_compilation_contents or
+            file not in self.__last_successful_compilation_contents[context_file]
+        ):
             return None
+
+        if file in self.early_opened_files:
+            current_content = self.early_opened_files[file].text.encode("utf-8")
+        elif file.exists():
+            current_content = file.read_bytes()  # TODO cache?
+        else:
+            return None
+
         return self._compute_diff_interval_tree(
-            self.get_compiled_file(path),
-            self.__last_successful_compilation_contents[path],
+            current_content,
+            self.__last_successful_compilation_contents[context_file][file],
         )
 
     async def add_change(
@@ -620,6 +690,61 @@ class LspCompiler:
     ) -> None:
         self.output_ready.clear()
         await self.__file_changes_queue.put(change)
+
+        if isinstance(change, FileEvent):
+            if change.type == FileChangeType.CHANGED:
+                path = uri_to_path(change.uri).resolve()
+                self.__early_line_indexes.pop(path, None)
+        elif isinstance(change, DidOpenTextDocumentParams):
+            path = uri_to_path(change.text_document.uri).resolve()
+            self.early_opened_files[path] = VersionedFile(
+                change.text_document.text, change.text_document.version
+            )
+        elif isinstance(change, DidCloseTextDocumentParams):
+            path = uri_to_path(change.text_document.uri).resolve()
+            self.early_opened_files.pop(path, None)
+        elif isinstance(change, DidChangeTextDocumentParams):
+            path = uri_to_path(change.text_document.uri).resolve()
+            for content_change in change.content_changes:
+                start = content_change.range.start
+                end = content_change.range.end
+
+                # str.splitlines() removes empty lines => cannot be used
+                # str.split() removes separators => cannot be used
+                tmp_lines = re.split(r"(\r?\n)", self.early_opened_files[path].text)
+                tmp_lines2: List[str] = []
+                for line in tmp_lines:
+                    if line in {"\r\n", "\n"}:
+                        tmp_lines2[-1] += line
+                    else:
+                        tmp_lines2.append(line)
+
+                lines: List[bytearray] = [
+                    bytearray(line.encode(ENCODING)) for line in tmp_lines2
+                ]
+
+                if start.line == end.line:
+                    line = lines[start.line]
+                    line[start.character * 2 : end.character * 2] = b""
+                    line[
+                        start.character * 2 : start.character * 2
+                    ] = content_change.text.encode(ENCODING)
+                else:
+                    start_line = lines[start.line]
+                    end_line = lines[end.line]
+                    start_line[start.character * 2 :] = content_change.text.encode(
+                        ENCODING
+                    )
+                    end_line[: end.character * 2] = b""
+
+                    for i in range(start.line + 1, end.line):
+                        lines[i] = bytearray(b"")
+
+                self.early_opened_files[path] = VersionedFile(
+                    "".join(line.decode(ENCODING) for line in lines),
+                    change.text_document.version,
+                )
+                self.__early_line_indexes.pop(path, None)
 
     async def update_config(
         self, new_config: Dict, removed_options: Set, local_config_path: Path
@@ -655,9 +780,27 @@ class LspCompiler:
         self, file: Path, byte_offset: int
     ) -> Tuple[int, int]:
         if file not in self.__line_indexes:
-            self.__setup_line_index(file)
+            self.__line_indexes[file] = self.__setup_line_index(
+                self.get_compiled_file(file).text
+            )
 
         encoded_lines = self.__line_indexes[file]
+        line_num = _binary_search(encoded_lines, byte_offset)
+        line_data, prefix_sum = encoded_lines[line_num]
+        line_offset = byte_offset - prefix_sum
+        return line_num, line_offset
+
+    def get_early_line_pos_from_byte_offset(
+        self, file: Path, byte_offset: int
+    ) -> Tuple[int, int]:
+        if file not in self.__early_line_indexes:
+            self.__early_line_indexes[file] = self.__setup_line_index(
+                self.early_opened_files[file].text
+                if file in self.early_opened_files
+                else file.read_text("utf-8")
+            )
+
+        encoded_lines = self.__early_line_indexes[file]
         line_num = _binary_search(encoded_lines, byte_offset)
         line_data, prefix_sum = encoded_lines[line_num]
         line_offset = byte_offset - prefix_sum
@@ -676,11 +819,43 @@ class LspCompiler:
             end=Position(line=end_line, character=end_column),
         )
 
+    def get_early_range_from_byte_offsets(
+        self, file: Path, byte_offsets: Tuple[int, int]
+    ) -> Range:
+        start_line, start_column = self.get_early_line_pos_from_byte_offset(
+            file, byte_offsets[0]
+        )
+        end_line, end_column = self.get_early_line_pos_from_byte_offset(
+            file, byte_offsets[1]
+        )
+
+        return Range(
+            start=Position(line=start_line, character=start_column),
+            end=Position(line=end_line, character=end_column),
+        )
+
     def get_byte_offset_from_line_pos(self, file: Path, line: int, col: int) -> int:
         if file not in self.__line_indexes:
-            self.__setup_line_index(file)
+            self.__line_indexes[file] = self.__setup_line_index(
+                self.get_compiled_file(file).text
+            )
 
         encoded_lines = self.__line_indexes[file]
+        line_bytes, prefix = encoded_lines[line]
+        line_offset = len(line_bytes.decode("utf-8")[:col].encode("utf-8"))
+        return prefix + line_offset
+
+    def get_early_byte_offset_from_line_pos(
+        self, file: Path, line: int, col: int
+    ) -> int:
+        if file not in self.__early_line_indexes:
+            self.__early_line_indexes[file] = self.__setup_line_index(
+                self.early_opened_files[file].text
+                if file in self.early_opened_files
+                else file.read_text("utf-8")
+            )
+
+        encoded_lines = self.__early_line_indexes[file]
         line_bytes, prefix = encoded_lines[line]
         line_offset = len(line_bytes.decode("utf-8")[:col].encode("utf-8"))
         return prefix + line_offset
@@ -690,6 +865,12 @@ class LspCompiler:
             await self.__server.send_request(
                 RequestMethodEnum.WORKSPACE_CODE_LENS_REFRESH, None
             )
+        except LspError:
+            pass
+
+    async def __refresh_inlay_hints(self) -> None:
+        try:
+            await self.__server.send_request(RequestMethodEnum.INLAY_HINT_REFRESH, None)
         except LspError:
             pass
 
@@ -719,6 +900,7 @@ class LspCompiler:
                 self.__source_units.clear()
                 self.__ir_reference_resolver.clear_all_registered_nodes()
                 self.__ir_reference_resolver.clear_all_indexed_nodes()
+                self.__ir_reference_resolver.clear_all_cu_metadata()
                 self.__latest_errors_per_cu = {}
                 self.__compilation_errors = {}
 
@@ -1157,6 +1339,8 @@ class LspCompiler:
     async def __compile(
         self,
         files_to_compile: Set[Path],
+        compiled_files: Set[Path],
+        executor: ThreadPoolExecutor,
         full_compile: bool = True,
         errors_per_cu: Optional[Dict[bytes, Set[SolcOutputError]]] = None,
         compilation_units_per_file: Optional[Dict[Path, Set[CompilationUnit]]] = None,
@@ -1173,6 +1357,7 @@ class LspCompiler:
             self.__source_units.clear()
             self.__ir_reference_resolver.clear_all_registered_nodes()
             self.__ir_reference_resolver.clear_all_indexed_nodes()
+            self.__ir_reference_resolver.clear_all_cu_metadata()
             self.__last_graph = nx.DiGraph()
             self.__latest_errors_per_cu = {}
             return True
@@ -1212,6 +1397,7 @@ class LspCompiler:
             self.__source_units.clear()
             self.__ir_reference_resolver.clear_all_registered_nodes()
             self.__ir_reference_resolver.clear_all_indexed_nodes()
+            self.__ir_reference_resolver.clear_all_cu_metadata()
             self.__last_graph = nx.DiGraph()
             self.__latest_errors_per_cu = {}
             return True
@@ -1223,9 +1409,10 @@ class LspCompiler:
             if deleted_file in self.__source_units:
                 self.__ir_reference_resolver.run_destroy_callbacks(deleted_file)
                 self.__ir_reference_resolver.clear_registered_nodes([deleted_file])
-                self.__source_units.pop(deleted_file)
+                source_unit = self.__source_units.pop(deleted_file)
                 self.__interval_trees.pop(deleted_file)
                 self.__compilation_errors.pop(deleted_file, None)
+                self.__cu_counter[source_unit.cu_hash] -= 1
 
         compilation_units = self.__compiler.build_compilation_units_maximize(graph)
 
@@ -1285,12 +1472,11 @@ class LspCompiler:
                     if file in self.__source_units:
                         self.__ir_reference_resolver.run_destroy_callbacks(file)
                         self.__ir_reference_resolver.clear_registered_nodes([file])
-                        self.__source_units.pop(file)
+                        source_unit = self.__source_units.pop(file)
+                        self.__cu_counter[source_unit.cu_hash] -= 1
             compilation_units.remove(compilation_unit)
 
-        progress_token = await self.__server.progress_begin(
-            "Compiling", f"0/{len(compilation_units)}", 0
-        )
+        progress_token = await self.__server.progress_begin("Compiling")
 
         tasks = []
         for compilation_unit, target_version in zip(compilation_units, target_versions):
@@ -1320,6 +1506,7 @@ class LspCompiler:
             self.__source_units.clear()
             self.__ir_reference_resolver.clear_all_registered_nodes()
             self.__ir_reference_resolver.clear_all_indexed_nodes()
+            self.__ir_reference_resolver.clear_all_cu_metadata()
             self.__last_graph = nx.DiGraph()
             self.__latest_errors_per_cu = {}
             return True
@@ -1366,6 +1553,7 @@ class LspCompiler:
             self.__source_units.clear()
             self.__ir_reference_resolver.clear_all_registered_nodes()
             self.__ir_reference_resolver.clear_all_indexed_nodes()
+            self.__ir_reference_resolver.clear_all_cu_metadata()
             self.__latest_errors_per_cu = errors_per_cu
             self.__compilation_errors = {}
             return True
@@ -1468,7 +1656,8 @@ class LspCompiler:
                     if file in self.__source_units:
                         self.__ir_reference_resolver.run_destroy_callbacks(file)
                         self.__ir_reference_resolver.clear_registered_nodes([file])
-                        self.__source_units.pop(file)
+                        source_unit = self.__source_units.pop(file)
+                        self.__cu_counter[source_unit.cu_hash] -= 1
                     if file in self.__interval_trees:
                         self.__interval_trees.pop(file)
 
@@ -1494,73 +1683,58 @@ class LspCompiler:
                 self.__ir_reference_resolver.run_destroy_callbacks(path)
 
         processed_files: Set[Path] = set()
-        for cu_index, (cu, solc_output) in enumerate(successful_compilation_units):
-            # files requested to be compiled and files that import these files (even indirectly)
-            recompiled_files: Set[Path] = set()
-            _out_edge_bfs(cu, files_to_compile & cu.files, recompiled_files)
 
-            for source_unit_name, raw_ast in solc_output.sources.items():
-                path: Path = cu.source_unit_name_to_path(source_unit_name)
-                ast = AstSolc.model_validate(raw_ast.ast)
 
-                self.__ir_reference_resolver.index_nodes(ast, path, cu.hash)
+        def index_new_nodes():
+            for cu_index, (cu, solc_output) in enumerate(successful_compilation_units):
+                # files requested to be compiled and files that import these files (even indirectly)
+                recompiled_files: Set[Path] = set()
+                _out_edge_bfs(cu, files_to_compile & cu.files, recompiled_files)
 
-                files_to_recompile.discard(path)
+                for source_unit_name, raw_ast in solc_output.sources.items():
+                    path: Path = cu.source_unit_name_to_path(source_unit_name)
+                    ast = AstSolc.model_validate(raw_ast.ast)
 
-                # give a chance to other tasks (LSP requests) to be processed
-                await asyncio.sleep(0)
+                    self.__ir_reference_resolver.index_nodes(ast, path, cu.hash)
 
-                if (
-                    path in self.__source_units and path not in recompiled_files
-                ) or path in processed_files:
-                    continue
-                processed_files.add(path)
+                    files_to_recompile.discard(path)
 
-                interval_tree = IntervalTree()
-                init = IrInitTuple(
-                    path,
-                    self.get_compiled_file(path).text.encode("utf-8"),
-                    cu,
-                    interval_tree,
-                    self.__ir_reference_resolver,
-                    None,
-                )
-                self.__ir_reference_resolver.clear_registered_nodes(
-                    [path]
-                )  # prevents keeping in memory old nodes
-                self.__source_units[path] = SourceUnit(init, ast)
-                self.__interval_trees[path] = interval_tree
+                    if (
+                        path in self.__source_units and path not in recompiled_files
+                    ) or path in processed_files:
+                        continue
+                    processed_files.add(path)
 
-                self.__last_compilation_source_units[path] = self.__source_units[path]
-                self.__last_compilation_interval_trees[path] = self.__interval_trees[
-                    path
-                ]
-
-                if path in self.__opened_files:
-                    self.__last_successful_compilation_contents[
-                        path
-                    ] = self.__opened_files[path]
-                else:
-                    self.__last_successful_compilation_contents[path] = VersionedFile(
-                        cu.graph.nodes[  # pyright: ignore reportGeneralTypeIssues
-                            source_unit_name
-                        ]["content"],
+                    interval_tree = IntervalTree()
+                    init = IrInitTuple(
+                        path,
+                        self.get_compiled_file(path).text.encode("utf-8"),
+                        cu,
+                        interval_tree,
+                        self.__ir_reference_resolver,
                         None,
                     )
+                    self.__ir_reference_resolver.clear_registered_nodes(
+                        [path]
+                    )  # prevents keeping in memory old nodes
+                    if path in self.__source_units:
+                        self.__cu_counter[self.__source_units[path].cu_hash] -= 1
+                    self.__source_units[path] = SourceUnit(init, ast)
+                    self.__interval_trees[path] = interval_tree
 
-            self.__ir_reference_resolver.run_post_process_callbacks(
-                CallbackParams(
-                    interval_trees=self.__interval_trees,
-                    source_units=self.__source_units,
-                )
-            )
+                    self.__cu_counter[cu.hash] += 1
 
-            if progress_token is not None:
-                await self.__server.progress_report(
-                    progress_token,
-                    f"{cu_index + 1}/{len(compilation_units)}",
-                    ((cu_index + 1) * 100) // len(compilation_units),
+                    compiled_files.add(path)
+
+                self.__ir_reference_resolver.run_post_process_callbacks(
+                    CallbackParams(
+                        interval_trees=self.__interval_trees,
+                        source_units=self.__source_units,
+                    )
                 )
+
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(executor, index_new_nodes)
 
         if progress_token is not None:
             await self.__server.progress_end(progress_token)
@@ -1580,7 +1754,12 @@ class LspCompiler:
             # avoid infinite recursion
             if files_to_recompile != files_to_compile or full_compile:
                 await self.__compile(
-                    files_to_recompile, False, errors_per_cu, compilation_units_per_file
+                    files_to_recompile,
+                    compiled_files,
+                    executor,
+                    False,
+                    errors_per_cu,
+                    compilation_units_per_file,
                 )
 
         if full_compile:
@@ -1701,10 +1880,7 @@ class LspCompiler:
         await self.__refresh_code_lenses()
 
         # make sure that inline values are refreshed
-        try:
-            await self.__server.send_request(RequestMethodEnum.INLAY_HINT_REFRESH, None)
-        except LspError:
-            pass
+        await self.__refresh_inlay_hints()
 
     async def __run_detectors(self) -> None:
         progress_token = await self.__server.progress_begin("Running detectors")
@@ -1804,51 +1980,22 @@ class LspCompiler:
         await self.__refresh_code_lenses()
 
         # make sure that inline values are refreshed
-        try:
-            await self.__server.send_request(RequestMethodEnum.INLAY_HINT_REFRESH, None)
-        except LspError:
-            pass
+        await self.__refresh_inlay_hints()
 
     async def __compilation_loop(self):
-        loop = asyncio.get_event_loop()
-
         with ThreadPoolExecutor(max_workers=1) as executor:
+            updated_files: Set[Path] = set()
+
             if self.__perform_files_discovery:
                 # perform Solidity files discovery
                 for file in self.__config.project_root_path.rglob("**/*.sol"):
                     if not self.__file_excluded(file) and file.is_file():
                         self.__discovered_files.add(file.resolve())
 
-                # perform initial compilation
-                await self.__compile(self.__discovered_files.copy())
-                await self.__refresh_code_lenses()
+                self.__force_compile_files.update(self.__discovered_files)
 
-                serialized = await loop.run_in_executor(
-                    executor,
-                    pickle_dumps,
-                    (self.last_build, self.last_build_info, self.last_graph),
-                )
-
-                self.send_subprocess_command(
-                    self.__printers_subprocess,
-                    SubprocessCommandType.BUILD,
-                    serialized,
-                )
-                await self.__run_printers_task()
-                self.send_subprocess_command(
-                    self.__detectors_subprocess,
-                    SubprocessCommandType.BUILD,
-                    serialized,
-                )
-                await self.__run_detectors_task()
-
-            if self.__file_changes_queue.empty():
-                self.output_ready.set()
-
+            start = time.perf_counter()
             while True:
-                change = await self.__file_changes_queue.get()
-                start = time.perf_counter()
-                await self._handle_change(change)
                 while True:
                     try:
                         change = self.__file_changes_queue.get_nowait()
@@ -1879,7 +2026,15 @@ class LspCompiler:
 
                     new_build = await self.__compile(
                         self.__force_compile_files.union(self.__modified_files),
+                        updated_files,
+                        executor,
                     )
+
+                    # clear CU metadata in reference resolver for CUs that are no longer in use
+                    for cu_hash in list(self.__cu_counter):
+                        if self.__cu_counter[cu_hash] == 0:
+                            self.__ir_reference_resolver.clear_cu_metadata(cu_hash)
+                            del self.__cu_counter[cu_hash]
 
                     if new_build:
                         self.__force_run_detectors = True
@@ -1893,33 +2048,115 @@ class LspCompiler:
                 if self.__file_changes_queue.empty():
                     self.output_ready.set()
 
+                    for updated_file in updated_files:
+                        # updated_file might got removed in one of the following __compile calls
+                        if updated_file in self.__source_units:
+                            self.__cache_diff_build(self.__source_units[updated_file])
+
+                            self.__last_compilation_source_units[
+                                updated_file
+                            ] = self.__source_units[
+                                updated_file
+                            ]
+                            self.__last_compilation_interval_trees[
+                                updated_file
+                            ] = self.__interval_trees[updated_file]
+
+                    updated_files.clear()
+
                     if self.__force_run_printers or self.__force_run_detectors:
-                        serialized = await loop.run_in_executor(
-                            executor,
-                            pickle_dumps,
-                            (self.last_build, self.last_build_info, self.last_graph),
-                        )
+                        build = {
+                            "build_info": pickle.dumps(self.last_build_info),
+                            "graph": pickle.dumps(self.last_graph),
+                            "reference_resolver": pickle.dumps(self.last_build.reference_resolver),
+                            "source_units": {},
+                        }
+                        await asyncio.sleep(0)
+                        for path in self.last_build.source_units:
+                            build["source_units"][path] = pickle.dumps(
+                                (self.last_build.source_units[path], self.last_build.interval_trees[path])
+                            )
+                            await asyncio.sleep(0)
 
                         if self.__force_run_printers:
                             self.send_subprocess_command(
                                 self.__printers_subprocess,
                                 SubprocessCommandType.BUILD,
-                                serialized,
+                                build,
                             )
                             await self.__run_printers_task()
                         if self.__force_run_detectors:
                             self.send_subprocess_command(
                                 self.__detectors_subprocess,
                                 SubprocessCommandType.BUILD,
-                                serialized,
+                                build,
                             )
                             await self.__run_detectors_task()
 
                     self.__force_run_detectors = False
                     self.__force_run_printers = False
 
-    def __setup_line_index(self, file: Path):
-        content = self.get_compiled_file(file).text
+                change = await self.__file_changes_queue.get()
+                start = time.perf_counter()
+                await self._handle_change(change)
+
+    def __cache_diff_build(self, source_unit: SourceUnit):
+        def resolve(
+            node: Union[DeclarationAbc, SourceUnit, GlobalSymbol, Set[FunctionDefinition]]
+        ) -> Dict[Path, Set[Tuple[int, int]]]:
+            ret = defaultdict(set)
+            if isinstance(
+                node, (FunctionDefinition, ModifierDefinition, VariableDeclaration)
+            ):
+                for decl in get_all_base_and_child_declarations(node):
+                    if isinstance(decl, VariableDeclaration) or decl.implemented:
+                        ret[decl.source_unit.file].add(decl.name_location)
+                        self.__last_successful_compilation_contents[
+                            source_unit.file
+                        ][decl.source_unit.file] = decl.source_unit.file_source
+            elif isinstance(node, SourceUnit):
+                ret[node.file].add(node.byte_location)
+                self.__last_successful_compilation_contents[
+                    source_unit.file
+                ][node.file] = node.file_source
+            elif isinstance(node, GlobalSymbol):
+                pass
+            elif isinstance(node, set):
+                for n in node:
+                    ret.update(resolve(n))
+            else:
+                ret[node.source_unit.file].add(node.name_location)
+                self.__last_successful_compilation_contents[
+                    source_unit.file
+                ][node.source_unit.file] = node.source_unit.file_source
+
+            return ret
+
+        self.__last_successful_compilation_contents[source_unit.file] = {
+            source_unit.file: source_unit.file_source
+        }
+
+        for node in source_unit:
+            if isinstance(node, (Identifier, MemberAccess)):
+                self.go_to_definition_cache[node] = resolve(node.referenced_declaration)
+            elif isinstance(node, (IdentifierPath, UserDefinedTypeName)):
+                for part in node.identifier_path_parts:
+                    self.go_to_definition_cache[part] = resolve(
+                        part.referenced_declaration
+                    )
+            elif (
+                isinstance(node, YulIdentifier) and node.external_reference is not None
+            ):
+                self.go_to_definition_cache[node] = resolve(
+                    node.external_reference.referenced_declaration
+                )
+            elif (
+                isinstance(node, (UnaryOperation, BinaryOperation))
+                and node.function is not None
+            ):
+                self.go_to_definition_cache[node] = resolve(node.function)
+
+    def __setup_line_index(self, content: str):
         tmp_lines = re.split(r"(\r?\n)", content)
         lines: List[str] = []
         for line in tmp_lines:
@@ -1935,7 +2172,7 @@ class LspCompiler:
             encoded_line = line.encode("utf-8")
             encoded_lines.append((encoded_line, prefix_sum))
             prefix_sum += len(encoded_line)
-        self.__line_indexes[file] = encoded_lines
+        return encoded_lines
 
     def __solc_error_to_diagnostic(
         self, error: SolcOutputError, path: Path, cu: CompilationUnit, ignored: bool

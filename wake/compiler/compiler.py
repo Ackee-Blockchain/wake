@@ -758,7 +758,7 @@ class SolidityCompiler:
                 if console is not None:
                     console.log("[red]Failed to load previous build artifacts[/red]")
                 return
-            self._latest_build.fix_after_deserialization()
+            self._latest_build.fix_after_deserialization(lsp=False)
 
         if console is not None:
             end = time.perf_counter()
@@ -902,7 +902,7 @@ class SolidityCompiler:
             logger.debug("Performing full recompile")
             build = ProjectBuild(
                 interval_trees={},
-                reference_resolver=ReferenceResolver(),
+                reference_resolver=ReferenceResolver(lsp=False),
                 source_units={},
             )
             files_to_compile = set(
