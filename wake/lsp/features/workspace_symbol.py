@@ -1,3 +1,4 @@
+import asyncio
 from typing import List
 
 from wake.ir import ContractDefinition
@@ -20,7 +21,12 @@ async def workspace_symbol(
     query = params.query.lower()
     declarations = []
 
-    if not context.compiler.output_ready.is_set():
+    await asyncio.wait(
+        [context.compiler.compilation_ready.wait(), context.compiler.cache_ready.wait()],
+        return_when=asyncio.FIRST_COMPLETED,
+    )
+
+    if not context.compiler.compilation_ready.is_set():
         for path, source_unit in context.compiler.last_compilation_source_units.items():
             if path not in context.compiler.early_opened_files and not path.exists():
                 continue
@@ -31,14 +37,14 @@ async def workspace_symbol(
                 if query in decl.name.lower()
             )
     else:
-        await context.compiler.output_ready.wait()
-
         for source_unit in context.compiler.source_units.values():
             declarations.extend(
                 decl
                 for decl in source_unit.declarations_iter()
                 if query in decl.name.lower()
             )
+
+        await context.compiler.cache_ready.wait()
 
         # also process files that could not be compiled in the last run but still exist
         for path, source_unit in context.compiler.last_compilation_source_units.items():
@@ -80,16 +86,20 @@ async def workspace_symbol_resolve(
         return symbol
 
     path = uri_to_path(symbol.location.uri)
+
+    await next(asyncio.as_completed(
+        [context.compiler.compilation_ready.wait(), context.compiler.cache_ready.wait()]
+    ))
+
     forward_changes = context.compiler.get_last_compilation_forward_changes(path, path)
+    cache_checked = False
 
     if (
-        not context.compiler.output_ready.is_set()
+        not context.compiler.compilation_ready.is_set()
         and forward_changes is not None
         and path in context.compiler.last_compilation_source_units
     ):
-        if path not in context.compiler.last_compilation_source_units:
-            raise LspError(ErrorCodes.InvalidParams, f"Unknown file {path}")
-
+        cache_checked = True
         for decl in context.compiler.last_compilation_source_units[
             path
         ].declarations_iter():
@@ -121,7 +131,7 @@ async def workspace_symbol_resolve(
             )
             return symbol
 
-    await context.compiler.output_ready.wait()
+    await context.compiler.compilation_ready.wait()
 
     if path in context.compiler.source_units:
         for decl in context.compiler.source_units[path].declarations_iter():
@@ -143,7 +153,14 @@ async def workspace_symbol_resolve(
                 ),
             )
             return symbol
-    elif (
+
+    if cache_checked:
+        raise LspError(ErrorCodes.InvalidParams, f"Unknown symbol {symbol.name}")
+
+    await context.compiler.cache_ready.wait()
+    forward_changes = context.compiler.get_last_compilation_forward_changes(path, path)
+
+    if (
         forward_changes is not None
         and (path in context.compiler.early_opened_files or path.exists())
         and path in context.compiler.last_compilation_source_units
