@@ -20,7 +20,7 @@ async def generate_cfg_handler(
     logger.debug(
         f"Control flow graph for function {canonical_name} in file {uri} requested"
     )
-    await context.compiler.output_ready.wait()
+    await context.compiler.compilation_ready.wait()
 
     path = uri_to_path(uri).resolve()
 

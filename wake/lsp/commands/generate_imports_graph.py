@@ -12,7 +12,7 @@ logger = get_logger(__name__)
 async def generate_imports_graph_handler(context: LspContext) -> str:
     logger.debug(f"Requested imports graph")
 
-    await context.compiler.output_ready.wait()
+    await context.compiler.compilation_ready.wait()
 
     config = context.config.generator.imports_graph
 

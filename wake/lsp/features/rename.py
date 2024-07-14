@@ -147,7 +147,7 @@ async def rename(
 
     logger.debug(f"Waiting for compiler")
 
-    await context.compiler.output_ready.wait()
+    await context.compiler.compilation_ready.wait()
 
     logger.debug(f"Waiting done")
 
@@ -214,7 +214,7 @@ async def prepare_rename(
         f"Requested prepare rename for file {params.text_document.uri} at {params.position}"
     )
 
-    await context.compiler.output_ready.wait()
+    await context.compiler.compilation_ready.wait()
 
     path = uri_to_path(params.text_document.uri).resolve()
     if path not in context.compiler.interval_trees:

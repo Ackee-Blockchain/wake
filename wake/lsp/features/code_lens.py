@@ -68,7 +68,7 @@ async def code_lens(
     logger.debug(f"Code lens for file {params.text_document.uri} requested")
     if not context.config.lsp.code_lens.enable:
         return None
-    await context.compiler.output_ready.wait()
+    await context.compiler.compilation_ready.wait()
 
     path = uri_to_path(params.text_document.uri).resolve()
 

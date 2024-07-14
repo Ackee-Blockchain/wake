@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple, Union
@@ -247,17 +248,23 @@ async def definition(
     )
 
     path = uri_to_path(params.text_document.uri).resolve()
+
+    await next(asyncio.as_completed(
+        [context.compiler.compilation_ready.wait(), context.compiler.cache_ready.wait()]
+    ))
+
     if (
         path not in context.compiler.interval_trees
-        or not context.compiler.output_ready.is_set()
+        or not context.compiler.compilation_ready.is_set()
     ):
         # try to use old build artifacts
         try:
+            await context.compiler.cache_ready.wait()
             return _get_definition_from_cache(path, params.position, context)
         except Exception:
             pass
 
-    await context.compiler.output_ready.wait()
+    await context.compiler.compilation_ready.wait()
     if path not in context.compiler.interval_trees:
         return None
 

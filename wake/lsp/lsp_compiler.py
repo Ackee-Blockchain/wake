@@ -259,7 +259,8 @@ class LspCompiler:
 
     __ir_reference_resolver: ReferenceResolver
 
-    __output_ready: asyncio.Event
+    __compilation_ready: asyncio.Event
+    __cache_ready: asyncio.Event
 
     __detectors_subprocess: Subprocess
     __printers_subprocess: Subprocess
@@ -277,6 +278,17 @@ class LspCompiler:
             BinaryOperation,
         ],
         Dict[Path, Set[Tuple[int, int]]],
+    ]
+    hover_cache: weakref.WeakKeyDictionary[
+        Union[
+            Identifier,
+            MemberAccess,
+            IdentifierPathPart,
+            YulIdentifier,
+            UnaryOperation,
+            BinaryOperation,
+        ],
+        str,
     ]
 
     def __init__(
@@ -309,7 +321,8 @@ class LspCompiler:
         self.__output_contents = dict()
         self.__compilation_errors = dict()
         self.__last_successful_compilation_contents = dict()
-        self.__output_ready = asyncio.Event()
+        self.__compilation_ready = asyncio.Event()
+        self.__cache_ready = asyncio.Event()
         self.__perform_files_discovery = perform_files_discovery
         self.__force_run_detectors = False
         self.__force_run_printers = False
@@ -317,6 +330,7 @@ class LspCompiler:
         self.__latest_errors_per_cu = {}
         self.__cu_counter = Counter()
         self.go_to_definition_cache = weakref.WeakKeyDictionary()
+        self.hover_cache = weakref.WeakKeyDictionary()
 
         try:
             if server.tfs_version is not None and packaging.version.parse(
@@ -541,8 +555,12 @@ class LspCompiler:
         return ret
 
     @property
-    def output_ready(self) -> asyncio.Event:
-        return self.__output_ready
+    def compilation_ready(self) -> asyncio.Event:
+        return self.__compilation_ready
+
+    @property
+    def cache_ready(self) -> asyncio.Event:
+        return self.__cache_ready
 
     @property
     def ir_reference_resolver(self) -> ReferenceResolver:
@@ -688,7 +706,7 @@ class LspCompiler:
             FileEvent,
         ],
     ) -> None:
-        self.output_ready.clear()
+        self.compilation_ready.clear()
         await self.__file_changes_queue.put(change)
 
         if isinstance(change, FileEvent):
@@ -754,7 +772,7 @@ class LspCompiler:
         )
 
     async def force_recompile(self) -> None:
-        self.__output_ready.clear()
+        self.__compilation_ready.clear()
         await self.__file_changes_queue.put(CustomFileChangeCommand.FORCE_RECOMPILE)
 
     async def force_rerun_detectors(self) -> None:
@@ -1983,6 +2001,8 @@ class LspCompiler:
         await self.__refresh_inlay_hints()
 
     async def __compilation_loop(self):
+        loop = asyncio.get_event_loop()
+
         with ThreadPoolExecutor(max_workers=1) as executor:
             updated_files: Set[Path] = set()
 
@@ -2046,22 +2066,27 @@ class LspCompiler:
                     self.__disk_changed_files.clear()
 
                 if self.__file_changes_queue.empty():
-                    self.output_ready.set()
+                    self.compilation_ready.set()
+                    self.__cache_ready.clear()
 
-                    for updated_file in updated_files:
-                        # updated_file might got removed in one of the following __compile calls
-                        if updated_file in self.__source_units:
-                            self.__cache_diff_build(self.__source_units[updated_file])
+                    def update_cache():
+                        for updated_file in updated_files:
+                            # updated_file might got removed in one of the following __compile calls
+                            if updated_file in self.__source_units:
+                                self.__cache_diff_build(self.__source_units[updated_file])
 
-                            self.__last_compilation_source_units[
-                                updated_file
-                            ] = self.__source_units[
-                                updated_file
-                            ]
-                            self.__last_compilation_interval_trees[
-                                updated_file
-                            ] = self.__interval_trees[updated_file]
+                                self.__last_compilation_source_units[
+                                    updated_file
+                                ] = self.__source_units[
+                                    updated_file
+                                ]
+                                self.__last_compilation_interval_trees[
+                                    updated_file
+                                ] = self.__interval_trees[updated_file]
 
+                    await loop.run_in_executor(executor, update_cache)
+
+                    self.__cache_ready.set()
                     updated_files.clear()
 
                     if self.__force_run_printers or self.__force_run_detectors:
@@ -2101,7 +2126,7 @@ class LspCompiler:
                 await self._handle_change(change)
 
     def __cache_diff_build(self, source_unit: SourceUnit):
-        def resolve(
+        def resolve_go_to_def(
             node: Union[DeclarationAbc, SourceUnit, GlobalSymbol, Set[FunctionDefinition]]
         ) -> Dict[Path, Set[Tuple[int, int]]]:
             ret = defaultdict(set)
@@ -2123,7 +2148,7 @@ class LspCompiler:
                 pass
             elif isinstance(node, set):
                 for n in node:
-                    ret.update(resolve(n))
+                    ret.update(resolve_go_to_def(n))
             else:
                 ret[node.source_unit.file].add(node.name_location)
                 self.__last_successful_compilation_contents[
@@ -2132,29 +2157,53 @@ class LspCompiler:
 
             return ret
 
+        def resolve_hover(
+            node: Union[DeclarationAbc, SourceUnit, GlobalSymbol, Set[FunctionDefinition]]
+        ) -> Optional[str]:
+            if isinstance(node, DeclarationAbc):
+                return f"```solidity\n{node.declaration_string}\n```"
+            elif isinstance(node, set):
+                return "\n".join(
+                    f"```solidity\n{n.declaration_string}\n```"
+                    for n in node
+                )
+            return None
+
         self.__last_successful_compilation_contents[source_unit.file] = {
             source_unit.file: source_unit.file_source
         }
 
         for node in source_unit:
             if isinstance(node, (Identifier, MemberAccess)):
-                self.go_to_definition_cache[node] = resolve(node.referenced_declaration)
+                self.go_to_definition_cache[node] = resolve_go_to_def(node.referenced_declaration)
+                hover = resolve_hover(node.referenced_declaration)
+                if hover is not None:
+                    self.hover_cache[node] = hover
             elif isinstance(node, (IdentifierPath, UserDefinedTypeName)):
                 for part in node.identifier_path_parts:
-                    self.go_to_definition_cache[part] = resolve(
+                    self.go_to_definition_cache[part] = resolve_go_to_def(
                         part.referenced_declaration
                     )
+                    hover = resolve_hover(part.referenced_declaration)
+                    if hover is not None:
+                        self.hover_cache[part] = hover
             elif (
                 isinstance(node, YulIdentifier) and node.external_reference is not None
             ):
-                self.go_to_definition_cache[node] = resolve(
+                self.go_to_definition_cache[node] = resolve_go_to_def(
                     node.external_reference.referenced_declaration
                 )
+                hover = resolve_hover(node.external_reference.referenced_declaration)
+                if hover is not None:
+                    self.hover_cache[node] = hover
             elif (
                 isinstance(node, (UnaryOperation, BinaryOperation))
                 and node.function is not None
             ):
-                self.go_to_definition_cache[node] = resolve(node.function)
+                self.go_to_definition_cache[node] = resolve_go_to_def(node.function)
+                hover = resolve_hover(node.function)
+                if hover is not None:
+                    self.hover_cache[node] = hover
 
     def __setup_line_index(self, content: str):
         tmp_lines = re.split(r"(\r?\n)", content)

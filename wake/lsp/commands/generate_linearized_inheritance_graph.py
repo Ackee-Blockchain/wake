@@ -18,7 +18,7 @@ async def generate_linearized_inheritance_graph_handler(
     logger.debug(
         f"Linearized inheritance graph for contract {canonical_name} in file {uri} requested"
     )
-    await context.compiler.output_ready.wait()
+    await context.compiler.compilation_ready.wait()
 
     path = uri_to_path(uri).resolve()
 

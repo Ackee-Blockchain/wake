@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from pathlib import Path
 from typing import Callable, List, Optional, Union
@@ -251,16 +252,22 @@ async def document_symbol(
     logger.debug(f"Document symbols for file {params.text_document.uri} requested")
 
     path = uri_to_path(params.text_document.uri).resolve()
+
+    await next(asyncio.as_completed(
+        [context.compiler.compilation_ready.wait(), context.compiler.cache_ready.wait()]
+    ))
+
     if (
         path not in context.compiler.source_units
-        or not context.compiler.output_ready.is_set()
+        or not context.compiler.compilation_ready.is_set()
     ):
         try:
+            await context.compiler.cache_ready.wait()
             return _get_document_symbol_from_cache(path, context)
         except Exception:
             pass
 
-    await context.compiler.output_ready.wait()
+    await context.compiler.compilation_ready.wait()
 
     if path in context.compiler.source_units:
 

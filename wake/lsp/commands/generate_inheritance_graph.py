@@ -24,7 +24,7 @@ async def generate_inheritance_graph_handler(
         logger.debug(
             f"Inheritance graph for contract {contract_info[1]} in file {contract_info[0]} requested"
         )
-    await context.compiler.output_ready.wait()
+    await context.compiler.compilation_ready.wait()
 
     queue: Deque[Tuple[ContractDefinition, bool, bool]] = deque()
     visited: Set[ContractDefinition] = set()

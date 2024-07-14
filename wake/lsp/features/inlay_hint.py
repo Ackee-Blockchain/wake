@@ -64,7 +64,7 @@ async def inlay_hint(
     if not context.config.lsp.inlay_hints.enable:
         return None
 
-    await context.compiler.output_ready.wait()
+    await context.compiler.compilation_ready.wait()
 
     path = uri_to_path(params.text_document.uri).resolve()
     if path not in context.compiler.source_units:

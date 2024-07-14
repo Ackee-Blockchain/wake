@@ -186,7 +186,7 @@ async def type_definition(
     path = uri_to_path(params.text_document.uri).resolve()
     if (
         path not in context.compiler.interval_trees
-        or not context.compiler.output_ready.is_set()
+        or not context.compiler.compilation_ready.is_set()
     ):
         # try to use old build artifacts
         try:
@@ -194,7 +194,7 @@ async def type_definition(
         except Exception:
             pass
 
-    await context.compiler.output_ready.wait()
+    await context.compiler.compilation_ready.wait()
     if path not in context.compiler.interval_trees:
         return None
 
