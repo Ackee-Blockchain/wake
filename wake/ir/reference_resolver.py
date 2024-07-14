@@ -70,8 +70,9 @@ class ReferenceResolver:
         GlobalSymbol, List[Union[Identifier, MemberAccess]]
     ]
     _node_types: Dict[Path, Dict[int, str]]
+    _lsp: bool
 
-    def __init__(self):
+    def __init__(self, lsp: bool):
         self._ordered_nodes = defaultdict(dict)
         self._ordered_nodes_inverted = defaultdict(dict)
         self._registered_source_files = defaultdict(dict)
@@ -80,6 +81,24 @@ class ReferenceResolver:
         self._destroy_callbacks = defaultdict(list)
         self._global_symbol_references = defaultdict(list)
         self._node_types = {}
+        self._lsp = lsp
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        if self._lsp:
+            del state["_registered_nodes"]
+            del state["_post_process_callbacks"]
+            del state["_destroy_callbacks"]
+            del state["_global_symbol_references"]
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        if self._lsp:
+            self._registered_nodes = defaultdict(dict)
+            self._post_process_callbacks = []
+            self._destroy_callbacks = defaultdict(list)
+            self._global_symbol_references = defaultdict(list)
 
     def clear_registered_nodes(self, paths: Iterable[Path]) -> None:
         for path in paths:
@@ -94,6 +113,16 @@ class ReferenceResolver:
 
     def clear_all_indexed_nodes(self) -> None:
         self._node_types.clear()
+
+    def clear_cu_metadata(self, cu_hash: bytes) -> None:
+        self._ordered_nodes.pop(cu_hash, None)
+        self._ordered_nodes_inverted.pop(cu_hash, None)
+        self._registered_source_files.pop(cu_hash, None)
+
+    def clear_all_cu_metadata(self) -> None:
+        self._ordered_nodes.clear()
+        self._ordered_nodes_inverted.clear()
+        self._registered_source_files.clear()
 
     def index_nodes(self, root_node: AstSolc, path: Path, cu_hash: bytes) -> None:
         if path not in self._node_types:

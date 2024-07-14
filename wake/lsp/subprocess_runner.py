@@ -353,9 +353,23 @@ def run_detectors_subprocess(
         if command == SubprocessCommandType.CONFIG:
             config = data
         elif command == SubprocessCommandType.BUILD:
-            last_build, last_build_info, last_graph = pickle.loads(data)
+            build = data
+            last_build_info = pickle.loads(build["build_info"])
+            last_graph = pickle.loads(build["graph"])
+            source_units = {}
+            interval_trees = {}
+            for path in build["source_units"]:
+                source_unit, interval_tree = pickle.loads(build["source_units"][path])
+                source_units[path] = source_unit
+                interval_trees[path] = interval_tree
+
+            last_build = ProjectBuild(
+                interval_trees,
+                pickle.loads(build["reference_resolver"]),
+                source_units,
+            )
             assert last_build is not None
-            last_build.fix_after_deserialization()
+            last_build.fix_after_deserialization(lsp=True)
         elif command == SubprocessCommandType.RUN_DETECTORS:
             thread_event.set()
             run_detectors = True
@@ -450,9 +464,23 @@ def run_printers_subprocess(
         if command == SubprocessCommandType.CONFIG:
             config = data
         elif command == SubprocessCommandType.BUILD:
-            last_build, last_build_info, last_graph = pickle.loads(data)
+            build = data
+            last_build_info = pickle.loads(build["build_info"])
+            last_graph = pickle.loads(build["graph"])
+            source_units = {}
+            interval_trees = {}
+            for path in build["source_units"]:
+                source_unit, interval_tree = pickle.loads(build["source_units"][path])
+                source_units[path] = source_unit
+                interval_trees[path] = interval_tree
+
+            last_build = ProjectBuild(
+                interval_trees,
+                pickle.loads(build["reference_resolver"]),
+                source_units,
+            )
             assert last_build is not None
-            last_build.fix_after_deserialization()
+            last_build.fix_after_deserialization(lsp=True)
         elif command == SubprocessCommandType.RUN_PRINTERS:
             thread_event.set()
             run_printers = True
