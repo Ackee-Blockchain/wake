@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import List, Optional, Set, Tuple, Union
+from typing import Dict, List, Optional, Set, Tuple, Union
 
 from wake.core import get_logger
 from wake.ir import (
@@ -167,10 +167,12 @@ def _get_definition_from_cache(
     position: Position,
     context: LspContext,
 ):
-    new_byte_offset = context.compiler.get_byte_offset_from_line_pos(
+    new_byte_offset = context.compiler.get_early_byte_offset_from_line_pos(
         path, position.line, position.character
     )
-    backward_changes = context.compiler.get_last_compilation_backward_changes(path)
+    backward_changes = context.compiler.get_last_compilation_backward_changes(
+        path, path
+    )
     if backward_changes is None:
         raise Exception("No backward changes found")
     changes_before = backward_changes[0:new_byte_offset]
@@ -185,54 +187,55 @@ def _get_definition_from_cache(
 
     node = max(nodes, key=lambda n: n.ast_tree_depth)
 
-    if isinstance(node, (DeclarationAbc, SourceUnit)):
-        if isinstance(node, DeclarationAbc):
-            location = node.name_location
-        else:
-            location = node.byte_location
-        forward_changes = context.compiler.get_last_compilation_forward_changes(path)
-        if forward_changes is None:
-            raise Exception("No forward changes found")
-        new_start = (
-            changes_to_byte_offset(forward_changes[0 : location[0]]) + location[0]
-        )
-        new_end = changes_to_byte_offset(forward_changes[0 : location[1]]) + location[1]
-        node_name_location = (new_start, new_end)
-    else:
-        node_name_location = None
+    if isinstance(node, (IdentifierPath, UserDefinedTypeName)):
+        node = node.identifier_path_part_at(old_byte_offset)
 
-    result = _get_results_from_node(
-        node, position, context, old_byte_offset, node_name_location
-    )
-
-    if result is None:
+    try:
+        result: Dict[
+            Path, Set[Tuple[int, int]]
+        ] = context.compiler.go_to_definition_cache[
+            node  # pyright: ignore reportArgumentType
+        ]
+    except KeyError:
         return None
 
-    if len(result) == 1:
-        path, location = result[0]
-        forward_changes = context.compiler.get_last_compilation_forward_changes(path)
+    ret = []
+    for location_path in result.keys():
+        if not result[location_path]:
+            continue
+
+        forward_changes = context.compiler.get_last_compilation_forward_changes(
+            path, location_path
+        )
         if forward_changes is None:
             raise Exception("No forward changes found")
-        new_start = (
-            changes_to_byte_offset(forward_changes[0 : location[0]]) + location[0]
-        )
-        new_end = changes_to_byte_offset(forward_changes[0 : location[1]]) + location[1]
-        return _create_location(path, (new_start, new_end), context.compiler)
-    else:
-        ret = []
-        for path, location in result:
-            forward_changes = context.compiler.get_last_compilation_forward_changes(
-                path
-            )
-            if forward_changes is None:
-                raise Exception("No forward changes found")
+
+        for location in result[location_path]:
+            # make sure the location was not removed
+            if len(forward_changes[location[0] : location[1]]) > 0:
+                continue
+
             new_start = (
                 changes_to_byte_offset(forward_changes[0 : location[0]]) + location[0]
             )
             new_end = (
                 changes_to_byte_offset(forward_changes[0 : location[1]]) + location[1]
             )
-            ret.append(_create_location(path, (new_start, new_end), context.compiler))
+
+            ret.append(
+                Location(
+                    uri=DocumentUri(path_to_uri(location_path)),
+                    range=context.compiler.get_early_range_from_byte_offsets(
+                        location_path, (new_start, new_end)
+                    ),
+                )
+            )
+
+    if len(ret) == 0:
+        return None
+    elif len(ret) == 1:
+        return ret[0]
+    else:
         return ret
 
 
