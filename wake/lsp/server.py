@@ -183,7 +183,6 @@ class LspServer:
     __sake_context: Optional[SakeContext]
     __workspace_path: Optional[Path]
     __protocol: RpcProtocol
-    __run: bool
     __request_id_counter: int
     __sent_requests: Dict[Union[int, str], asyncio.Event]
     __message_responses: Dict[Union[int, str], ResponseMessage]
@@ -209,7 +208,6 @@ class LspServer:
         self.__sake_context = None
         self.__workspace_path = None
         self.__protocol = RpcProtocol(reader, writer)
-        self.__run = True
         self.__request_id_counter = 0
         self.__sent_requests = {}
         self.__message_responses = {}
@@ -464,12 +462,15 @@ class LspServer:
         except Exception:
             pass
 
+        self.__method_mapping.clear()
+        self.__notification_mapping.clear()
+
     async def _main_task(self) -> None:
         messages_queue = asyncio.Queue()
         self.create_task(self._messages_loop(messages_queue))
 
         try:
-            while self.__run:
+            while True:
                 message = await self.__protocol.receive()
                 if isinstance(message, ResponseMessage):
                     await self._handle_response(message)
@@ -477,9 +478,6 @@ class LspServer:
                     await messages_queue.put(message)
         except ConnectionError:
             pass
-
-        for task in self.__running_tasks:
-            task.cancel()
 
     async def _messages_loop(self, queue: asyncio.Queue) -> NoReturn:
         while True:
@@ -807,7 +805,8 @@ class LspServer:
         pass
 
     async def _shutdown(self, params: Any) -> None:
-        self.__run = False
+        for task in self.__running_tasks:
+            task.cancel()
 
     async def _parse_config(
         self, raw_config: dict, workspace_path: Path

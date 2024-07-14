@@ -285,7 +285,7 @@ class LspCompiler:
         diagnostic_queue: asyncio.Queue,
         perform_files_discovery: bool,
     ):
-        self.__server = server
+        self.__server = weakref.proxy(server)
         self.__file_changes_queue = asyncio.Queue()
         self.__diagnostic_queue = diagnostic_queue
         self.__stop_event = threading.Event()
