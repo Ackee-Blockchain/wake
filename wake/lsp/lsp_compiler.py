@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
+    Callable,
     Deque,
     Dict,
     Iterable,
@@ -32,6 +33,7 @@ from typing import (
 
 import packaging.version
 
+import wake.lsp.callback_commands as callback_commands
 from wake.compiler.exceptions import CompilationError
 
 from ..analysis.utils import get_all_base_and_child_declarations
@@ -59,6 +61,7 @@ from .subprocess_runner import (
     run_detectors_subprocess,
     run_printers_subprocess,
 )
+from .utils.position import changes_to_byte_offset
 
 if TYPE_CHECKING:
     from .server import LspServer
@@ -78,9 +81,15 @@ from wake.config import WakeConfig
 from wake.core import get_logger
 from wake.core.lsp_provider import (
     CodeLensOptions,
-    CommandAbc,
+    CommandType,
+    CopyToClipboardCommand,
+    GoToLocationsCommand,
     HoverOptions,
     InlayHintOptions,
+    OpenCommand,
+    PeekLocationsCommand,
+    ShowDotCommand,
+    ShowMessageCommand,
 )
 from wake.ir import (
     BinaryOperation,
@@ -453,7 +462,86 @@ class LspCompiler:
             if subprocess.process is not None and not subprocess.process.is_alive():
                 raise RuntimeError("Subprocess has terminated unexpectedly")
 
-    async def run_detector_callback(self, callback_id: str) -> List[CommandAbc]:
+    def __process_commands(
+        self,
+        commands: List[CommandType],
+        get_forward_changes: Callable[[Path], Optional[IntervalTree]],
+    ) -> List[callback_commands.CommandAbc]:
+        ret = []
+        for command in commands:
+            if isinstance(command, (GoToLocationsCommand, PeekLocationsCommand)):
+                forward_changes = get_forward_changes(command.path)
+                if (
+                    forward_changes is None
+                    or len(forward_changes[command.byte_offset]) > 0
+                ):
+                    continue
+
+                line, col = self.get_early_line_pos_from_byte_offset(
+                    command.path,
+                    changes_to_byte_offset(forward_changes[0 : command.byte_offset])
+                    + command.byte_offset,
+                )
+
+                locations = []
+                for path, start, end in command.locations:
+                    forward_changes = get_forward_changes(path)
+                    if forward_changes is None or len(forward_changes[start:end]) > 0:
+                        continue
+
+                    new_start = changes_to_byte_offset(forward_changes[0:start]) + start
+                    new_end = changes_to_byte_offset(forward_changes[0:end]) + end
+
+                    locations.append(
+                        Location(
+                            uri=path_to_uri(path),
+                            range=self.get_early_range_from_byte_offsets(
+                                path, (new_start, new_end)
+                            ),
+                        )
+                    )
+
+                if isinstance(command, GoToLocationsCommand):
+                    ret.append(
+                        callback_commands.GoToLocationsCommand(
+                            uri=path_to_uri(command.path),
+                            position=Position(line=line, character=col),
+                            locations=locations,
+                            multiple=command.multiple,
+                            no_results_message=command.no_results_message,
+                        )
+                    )
+                else:
+                    ret.append(
+                        callback_commands.PeekLocationsCommand(
+                            uri=path_to_uri(command.path),
+                            position=Position(line=line, character=col),
+                            locations=locations,
+                            multiple=command.multiple,
+                        )
+                    )
+            elif isinstance(command, OpenCommand):
+                ret.append(callback_commands.OpenCommand(uri=DocumentUri(command.uri)))
+            elif isinstance(command, CopyToClipboardCommand):
+                ret.append(callback_commands.CopyToClipboardCommand(text=command.text))
+            elif isinstance(command, ShowMessageCommand):
+                ret.append(
+                    callback_commands.ShowMessageCommand(
+                        message=command.message, kind=command.kind
+                    )
+                )
+            elif isinstance(command, ShowDotCommand):
+                ret.append(
+                    callback_commands.ShowDotCommand(
+                        title=command.title, dot=command.dot
+                    )
+                )
+
+        return ret
+
+    async def run_detector_callback(
+        self, callback_id: str
+    ) -> List[callback_commands.CommandAbc]:
         command_id = self.send_subprocess_command(
             self.__detectors_subprocess,
             SubprocessCommandType.RUN_DETECTOR_CALLBACK,
@@ -464,7 +552,7 @@ class LspCompiler:
             self.__detectors_subprocess, command_id
         )
         if command == SubprocessCommandType.DETECTOR_CALLBACK_SUCCESS:
-            return data
+            return self.__process_commands(data, self.get_detector_forward_changes)
         elif command == SubprocessCommandType.DETECTOR_CALLBACK_FAILURE:
             raise LspError(ErrorCodes.RequestFailed, data)
         else:
@@ -472,7 +560,9 @@ class LspCompiler:
                 ErrorCodes.InternalError, "Unexpected response from subprocess"
             )
 
-    async def run_printer_callback(self, callback_id: str) -> List[CommandAbc]:
+    async def run_printer_callback(
+        self, callback_id: str
+    ) -> List[callback_commands.CommandAbc]:
         command_id = self.send_subprocess_command(
             self.__printers_subprocess,
             SubprocessCommandType.RUN_PRINTER_CALLBACK,
@@ -483,7 +573,7 @@ class LspCompiler:
             self.__printers_subprocess, command_id
         )
         if command == SubprocessCommandType.PRINTER_CALLBACK_SUCCESS:
-            return data
+            return self.__process_commands(data, self.get_printer_forward_changes)
         elif command == SubprocessCommandType.PRINTER_CALLBACK_FAILURE:
             raise LspError(ErrorCodes.RequestFailed, data)
         else:
@@ -637,9 +727,7 @@ class LspCompiler:
         return self.__last_graph
 
     @lru_cache(maxsize=128)
-    def _compute_diff_interval_tree(
-        self, a: bytes, b: bytes
-    ) -> IntervalTree:
+    def _compute_diff_interval_tree(self, a: bytes, b: bytes) -> IntervalTree:
         seq_matcher = difflib.SequenceMatcher(None, a, b)
         interval_tree = IntervalTree()
         for tag, i1, i2, j1, j2 in seq_matcher.get_opcodes():
@@ -681,8 +769,8 @@ class LspCompiler:
         successful compilation of `context_file`.
         """
         if (
-            context_file not in self.__last_successful_compilation_contents or
-            file not in self.__last_successful_compilation_contents[context_file]
+            context_file not in self.__last_successful_compilation_contents
+            or file not in self.__last_successful_compilation_contents[context_file]
         ):
             return None
 
@@ -1864,7 +1952,9 @@ class LspCompiler:
                 pass
 
         if self.__config.lsp.detectors.enable:
-            self.__detectors_task = self.__server.create_task(self.__run_detectors(contents))
+            self.__detectors_task = self.__server.create_task(
+                self.__run_detectors(contents)
+            )
 
     async def __run_printers_task(self, contents: Dict[Path, bytes]) -> None:
         if self.__printers_task is not None:
@@ -2142,13 +2232,13 @@ class LspCompiler:
                         for updated_file in updated_files:
                             # updated_file might got removed in one of the following __compile calls
                             if updated_file in self.__source_units:
-                                self.__cache_diff_build(self.__source_units[updated_file])
+                                self.__cache_diff_build(
+                                    self.__source_units[updated_file]
+                                )
 
                                 self.__last_compilation_source_units[
                                     updated_file
-                                ] = self.__source_units[
-                                    updated_file
-                                ]
+                                ] = self.__source_units[updated_file]
                                 self.__last_compilation_interval_trees[
                                     updated_file
                                 ] = self.__interval_trees[updated_file]
@@ -2162,13 +2252,18 @@ class LspCompiler:
                         build = {
                             "build_info": pickle.dumps(self.last_build_info),
                             "graph": pickle.dumps(self.last_graph),
-                            "reference_resolver": pickle.dumps(self.last_build.reference_resolver),
+                            "reference_resolver": pickle.dumps(
+                                self.last_build.reference_resolver
+                            ),
                             "source_units": {},
                         }
                         await asyncio.sleep(0)
                         for path in self.last_build.source_units:
                             build["source_units"][path] = pickle.dumps(
-                                (self.last_build.source_units[path], self.last_build.interval_trees[path])
+                                (
+                                    self.last_build.source_units[path],
+                                    self.last_build.interval_trees[path],
+                                )
                             )
                             await asyncio.sleep(0)
 
@@ -2178,20 +2273,24 @@ class LspCompiler:
                                 SubprocessCommandType.BUILD,
                                 build,
                             )
-                            await self.__run_printers_task({
-                                path: source_unit.file_source
-                                for path, source_unit in self.last_build.source_units.items()
-                            })
+                            await self.__run_printers_task(
+                                {
+                                    path: source_unit.file_source
+                                    for path, source_unit in self.last_build.source_units.items()
+                                }
+                            )
                         if self.__force_run_detectors:
                             self.send_subprocess_command(
                                 self.__detectors_subprocess,
                                 SubprocessCommandType.BUILD,
                                 build,
                             )
-                            await self.__run_detectors_task({
-                                path: source_unit.file_source
-                                for path, source_unit in self.last_build.source_units.items()
-                            })
+                            await self.__run_detectors_task(
+                                {
+                                    path: source_unit.file_source
+                                    for path, source_unit in self.last_build.source_units.items()
+                                }
+                            )
 
                     self.__force_run_detectors = False
                     self.__force_run_printers = False
@@ -2202,7 +2301,9 @@ class LspCompiler:
 
     def __cache_diff_build(self, source_unit: SourceUnit):
         def resolve_go_to_def(
-            node: Union[DeclarationAbc, SourceUnit, GlobalSymbol, Set[FunctionDefinition]]
+            node: Union[
+                DeclarationAbc, SourceUnit, GlobalSymbol, Set[FunctionDefinition]
+            ]
         ) -> Dict[Path, Set[Tuple[int, int]]]:
             ret = defaultdict(set)
             if isinstance(
@@ -2211,14 +2312,14 @@ class LspCompiler:
                 for decl in get_all_base_and_child_declarations(node):
                     if isinstance(decl, VariableDeclaration) or decl.implemented:
                         ret[decl.source_unit.file].add(decl.name_location)
-                        self.__last_successful_compilation_contents[
-                            source_unit.file
-                        ][decl.source_unit.file] = decl.source_unit.file_source
+                        self.__last_successful_compilation_contents[source_unit.file][
+                            decl.source_unit.file
+                        ] = decl.source_unit.file_source
             elif isinstance(node, SourceUnit):
                 ret[node.file].add(node.byte_location)
-                self.__last_successful_compilation_contents[
-                    source_unit.file
-                ][node.file] = node.file_source
+                self.__last_successful_compilation_contents[source_unit.file][
+                    node.file
+                ] = node.file_source
             elif isinstance(node, GlobalSymbol):
                 pass
             elif isinstance(node, set):
@@ -2226,21 +2327,22 @@ class LspCompiler:
                     ret.update(resolve_go_to_def(n))
             else:
                 ret[node.source_unit.file].add(node.name_location)
-                self.__last_successful_compilation_contents[
-                    source_unit.file
-                ][node.source_unit.file] = node.source_unit.file_source
+                self.__last_successful_compilation_contents[source_unit.file][
+                    node.source_unit.file
+                ] = node.source_unit.file_source
 
             return ret
 
         def resolve_hover(
-            node: Union[DeclarationAbc, SourceUnit, GlobalSymbol, Set[FunctionDefinition]]
+            node: Union[
+                DeclarationAbc, SourceUnit, GlobalSymbol, Set[FunctionDefinition]
+            ]
         ) -> Optional[str]:
             if isinstance(node, DeclarationAbc):
                 return f"```solidity\n{node.declaration_string}\n```"
             elif isinstance(node, set):
                 return "\n".join(
-                    f"```solidity\n{n.declaration_string}\n```"
-                    for n in node
+                    f"```solidity\n{n.declaration_string}\n```" for n in node
                 )
             return None
 
@@ -2250,7 +2352,9 @@ class LspCompiler:
 
         for node in source_unit:
             if isinstance(node, (Identifier, MemberAccess)):
-                self.go_to_definition_cache[node] = resolve_go_to_def(node.referenced_declaration)
+                self.go_to_definition_cache[node] = resolve_go_to_def(
+                    node.referenced_declaration
+                )
                 hover = resolve_hover(node.referenced_declaration)
                 if hover is not None:
                     self.hover_cache[node] = hover
