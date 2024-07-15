@@ -1,13 +1,11 @@
 import asyncio
 import logging
-from itertools import chain
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
 from wake.core import get_logger
 from wake.ir import (
     BinaryOperation,
-    ContractDefinition,
     DeclarationAbc,
     Identifier,
     IdentifierPath,
@@ -18,7 +16,6 @@ from wake.ir import (
     YulIdentifier,
 )
 
-from ...core.solidity_version import SemanticVersion
 from ..common_structures import (
     MarkupContent,
     MarkupKind,
@@ -147,6 +144,8 @@ def _get_hover_from_cache(path: Path, position: Position, context: LspContext):
 
     if isinstance(node, (IdentifierPath, UserDefinedTypeName)):
         node = node.identifier_path_part_at(old_byte_offset)
+        if node is None:
+            return None
 
     results = []
     if isinstance(node, DeclarationAbc):
@@ -158,11 +157,13 @@ def _get_hover_from_cache(path: Path, position: Position, context: LspContext):
         except KeyError:
             pass
 
-    for hover_options in chain(
-        context.compiler.get_detector_hovers(path, old_byte_offset, node.byte_location),
-        context.compiler.get_printer_hovers(path, old_byte_offset, node.byte_location),
-    ):
-        results.append(hover_options.text)
+    forward_changes = context.compiler.get_last_compilation_forward_changes(path, path)
+    if forward_changes is not None:
+        new_node_start = changes_to_byte_offset(forward_changes[0 : node.byte_location[0]]) + node.byte_location[0]
+        new_node_end = changes_to_byte_offset(forward_changes[0 : node.byte_location[1]]) + node.byte_location[1]
+
+        results.extend(_get_hover_from_printers(context, path, new_byte_offset, (new_node_start, new_node_end)))
+        results.extend(_get_hover_from_detectors(context, path, new_byte_offset, (new_node_start, new_node_end)))
 
     if len(results) == 0:
         return None
@@ -179,6 +180,36 @@ def _get_hover_from_cache(path: Path, position: Position, context: LspContext):
         ),
         range=context.compiler.get_early_range_from_byte_offsets(path, (new_start, new_end)),
     )
+
+
+def _get_hover_from_printers(context: LspContext, path: Path, byte_offset: int, node_offsets: Tuple[int, int]) -> List[str]:
+    backward_changes = context.compiler.get_printer_backward_changes(path)
+    if backward_changes is None or len(backward_changes[node_offsets[0]:node_offsets[1]]) > 0:
+        return []
+
+    old_byte_offset = changes_to_byte_offset(backward_changes[0:byte_offset]) + byte_offset
+    old_node_start = changes_to_byte_offset(backward_changes[0:node_offsets[0]]) + node_offsets[0]
+    old_node_end = changes_to_byte_offset(backward_changes[0:node_offsets[1]]) + node_offsets[1]
+
+    return [
+        o.text
+        for o in context.compiler.get_printer_hovers(path, old_byte_offset, (old_node_start, old_node_end))
+    ]
+
+
+def _get_hover_from_detectors(context: LspContext, path: Path, byte_offset: int, node_offsets: Tuple[int, int]) -> List[str]:
+    backward_changes = context.compiler.get_detector_backward_changes(path)
+    if backward_changes is None or len(backward_changes[node_offsets[0]:node_offsets[1]]) > 0:
+        return []
+
+    old_byte_offset = changes_to_byte_offset(backward_changes[0:byte_offset]) + byte_offset
+    old_node_start = changes_to_byte_offset(backward_changes[0:node_offsets[0]]) + node_offsets[0]
+    old_node_end = changes_to_byte_offset(backward_changes[0:node_offsets[1]]) + node_offsets[1]
+
+    return [
+        o.text
+        for o in context.compiler.get_detector_hovers(path, old_byte_offset, (old_node_start, old_node_end))
+    ]
 
 
 async def hover(context: LspContext, params: HoverParams) -> Optional[Hover]:
@@ -231,11 +262,8 @@ async def hover(context: LspContext, params: HoverParams) -> Optional[Hover]:
     if definition_result is not None:
         results.append(definition_result[0])
 
-    for hover_options in chain(
-        context.compiler.get_detector_hovers(path, byte_offset, node.byte_location),
-        context.compiler.get_printer_hovers(path, byte_offset, node.byte_location),
-    ):
-        results.append(hover_options.text)
+    results.extend(_get_hover_from_printers(context, path, byte_offset, node.byte_location))
+    results.extend(_get_hover_from_detectors(context, path, byte_offset, node.byte_location))
 
     return Hover(
         contents=MarkupContent(
