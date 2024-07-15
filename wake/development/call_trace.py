@@ -557,9 +557,9 @@ class CallTrace:
 
         return ret
 
-    def dict(self, config: WakeConfig) -> Dict[str, Optional[str]]:
+    def dict(self, config: WakeConfig) -> Dict[str, Union[Optional[str], List]]:
         options = config.general.call_trace_options
-        ret: Dict[str, Optional[str]] = {}
+        ret: Dict[str, Union[Optional[str], List]] = {}
 
         if "contract_name" in options:
             ret["contract_name"] = self.contract_name or "Unknown"
@@ -671,6 +671,8 @@ class CallTrace:
             ret["error"] += ")"
         else:
             ret["error"] = None
+
+        ret["subtraces"] = [sub.dict(config) for sub in self.subtraces]
 
         return ret
 
