@@ -241,6 +241,7 @@ class LspCompiler:
     early_opened_files: Dict[
         Path, VersionedFile
     ]  # opened files contents as soon as they arrive
+    __early_disk_contents: Dict[Path, bytes]
     __opened_files: Dict[Path, VersionedFile]
     __modified_files: Set[Path]
     __force_compile_files: Set[Path]
@@ -316,6 +317,7 @@ class LspCompiler:
         self.__deleted_files = set()
         self.__disk_changed_files = set()
         self.early_opened_files = {}
+        self.__early_disk_contents = {}
         self.__opened_files = {}
         self.__modified_files = set()
         self.__force_compile_files = set()
@@ -751,8 +753,10 @@ class LspCompiler:
 
         if file in self.early_opened_files:
             current_content = self.early_opened_files[file].text.encode("utf-8")
+        elif file in self.__early_disk_contents:
+            current_content = self.__early_disk_contents[file]
         elif file.exists():
-            current_content = file.read_bytes()  # TODO cache?
+            current_content = file.read_bytes()
         else:
             return None
 
@@ -776,8 +780,10 @@ class LspCompiler:
 
         if file in self.early_opened_files:
             current_content = self.early_opened_files[file].text.encode("utf-8")
+        elif file in self.__early_disk_contents:
+            current_content = self.__early_disk_contents[file]
         elif file.exists():
-            current_content = file.read_bytes()  # TODO cache?
+            current_content = file.read_bytes()
         else:
             return None
 
@@ -792,8 +798,10 @@ class LspCompiler:
 
         if file in self.early_opened_files:
             current_content = self.early_opened_files[file].text.encode("utf-8")
+        elif file in self.__early_disk_contents:
+            current_content = self.__early_disk_contents[file]
         elif file.exists():
-            current_content = file.read_bytes()  # TODO cache?
+            current_content = file.read_bytes()
         else:
             return None
 
@@ -808,8 +816,10 @@ class LspCompiler:
 
         if file in self.early_opened_files:
             current_content = self.early_opened_files[file].text.encode("utf-8")
+        elif file in self.__early_disk_contents:
+            current_content = self.__early_disk_contents[file]
         elif file.exists():
-            current_content = file.read_bytes()  # TODO cache?
+            current_content = file.read_bytes()
         else:
             return None
 
@@ -824,8 +834,10 @@ class LspCompiler:
 
         if file in self.early_opened_files:
             current_content = self.early_opened_files[file].text.encode("utf-8")
+        elif file in self.__early_disk_contents:
+            current_content = self.__early_disk_contents[file]
         elif file.exists():
-            current_content = file.read_bytes()  # TODO cache?
+            current_content = file.read_bytes()
         else:
             return None
 
@@ -840,8 +852,10 @@ class LspCompiler:
 
         if file in self.early_opened_files:
             current_content = self.early_opened_files[file].text.encode("utf-8")
+        elif file in self.__early_disk_contents:
+            current_content = self.__early_disk_contents[file]
         elif file.exists():
-            current_content = file.read_bytes()  # TODO cache?
+            current_content = file.read_bytes()
         else:
             return None
 
@@ -866,14 +880,22 @@ class LspCompiler:
         await self.__file_changes_queue.put(change)
 
         if isinstance(change, FileEvent):
-            if change.type == FileChangeType.CHANGED:
-                path = uri_to_path(change.uri).resolve()
+            path = uri_to_path(change.uri).resolve()
+            if change.type == FileChangeType.CREATED:
+                self.__early_disk_contents[path] = path.read_bytes()
+                self.__early_line_indexes.pop(path, None)
+            elif change.type == FileChangeType.CHANGED:
+                self.__early_disk_contents[path] = path.read_bytes()
+                self.__early_line_indexes.pop(path, None)
+            elif change.type == FileChangeType.DELETED:
+                self.__early_disk_contents.pop(path, None)
                 self.__early_line_indexes.pop(path, None)
         elif isinstance(change, DidOpenTextDocumentParams):
             path = uri_to_path(change.text_document.uri).resolve()
             self.early_opened_files[path] = VersionedFile(
                 change.text_document.text, change.text_document.version
             )
+            self.__early_disk_contents.pop(path, None)
         elif isinstance(change, DidCloseTextDocumentParams):
             path = uri_to_path(change.text_document.uri).resolve()
             self.early_opened_files.pop(path, None)
@@ -918,6 +940,26 @@ class LspCompiler:
                     "".join(line.decode(ENCODING) for line in lines),
                     change.text_document.version,
                 )
+                self.__early_line_indexes.pop(path, None)
+        elif isinstance(change, CreateFilesParams):
+            for file in change.files:
+                path = uri_to_path(file.uri).resolve()
+                self.__early_disk_contents[path] = path.read_bytes()
+                self.__early_line_indexes.pop(path, None)
+        elif isinstance(change, RenameFilesParams):
+            for rename in change.files:
+                old_path = uri_to_path(rename.old_uri).resolve()
+                new_path = uri_to_path(rename.new_uri).resolve()
+                self.__early_disk_contents[new_path] = self.__early_disk_contents.pop(
+                    old_path
+                )
+                self.__early_line_indexes[new_path] = self.__early_line_indexes.pop(
+                    old_path
+                )
+        elif isinstance(change, DeleteFilesParams):
+            for file in change.files:
+                path = uri_to_path(file.uri).resolve()
+                self.__early_disk_contents.pop(path)
                 self.__early_line_indexes.pop(path, None)
 
     async def update_config(
