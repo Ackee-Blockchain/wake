@@ -212,9 +212,9 @@ class SakeContext:
 
             assert info.evm.deployed_bytecode is not None
             assert info.evm.deployed_bytecode.object is not None
-            if len(info.evm.deployed_bytecode.object) > 0:
+            if len(info.evm.deployed_bytecode.object) >= 108:
                 fqn_by_metadata[
-                    bytes.fromhex(info.evm.deployed_bytecode.object[-106][2:])
+                    bytes.fromhex(info.evm.deployed_bytecode.object[-106])
                 ] = fqn
 
             _compilation[fqn] = ContractInfo(
