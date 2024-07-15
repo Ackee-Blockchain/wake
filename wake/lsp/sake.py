@@ -131,110 +131,115 @@ class SakeContext:
         self.abi_by_fqn = {}
 
     async def compile(self) -> SakeCompilationResult:
-        (
-            success,
-            contract_info,
-            asts,
-        ) = await self.lsp_context.compiler.bytecode_compile()
+        try:
+            (
+                success,
+                contract_info,
+                asts,
+            ) = await self.lsp_context.compiler.bytecode_compile()
 
-        self.abi_by_fqn.clear()
-        fqn_by_metadata: Dict[bytes, str] = {}
-        creation_code_index: List[Tuple[Tuple[Tuple[int, bytes], ...], str]] = []
-        _compilation = {}
+            self.abi_by_fqn.clear()
+            fqn_by_metadata: Dict[bytes, str] = {}
+            creation_code_index: List[Tuple[Tuple[Tuple[int, bytes], ...], str]] = []
+            _compilation = {}
 
-        for fqn, info in contract_info.items():
-            source_unit_name = fqn.split(":")[0]
-            try:
-                ast = asts[source_unit_name]
-                contract_node = next(
-                    n
-                    for n in ast["nodes"]
-                    if n["nodeType"] == "ContractDefinition"
-                    and n["name"] == fqn.split(":")[1]
-                )
-            except (StopIteration, KeyError):
-                continue
+            for fqn, info in contract_info.items():
+                source_unit_name = fqn.split(":")[0]
+                try:
+                    ast = asts[source_unit_name]
+                    contract_node = next(
+                        n
+                        for n in ast["nodes"]
+                        if n["nodeType"] == "ContractDefinition"
+                        and n["name"] == fqn.split(":")[1]
+                    )
+                except (StopIteration, KeyError):
+                    continue
 
-            assert info.abi is not None
-            self.abi_by_fqn[fqn] = {}
-            for item in info.abi:
-                if item["type"] == "function":
-                    if contract_node["contractKind"] == "library":
-                        for arg in item["inputs"]:
-                            if arg["internalType"].startswith("contract "):
-                                arg["internalType"] = arg["internalType"][9:]
-                            elif arg["internalType"].startswith("struct "):
-                                arg["internalType"] = arg["internalType"][7:]
-                            elif arg["internalType"].startswith("enum "):
-                                arg["internalType"] = arg["internalType"][5:]
+                assert info.abi is not None
+                self.abi_by_fqn[fqn] = {}
+                for item in info.abi:
+                    if item["type"] == "function":
+                        if contract_node["contractKind"] == "library":
+                            for arg in item["inputs"]:
+                                if arg["internalType"].startswith("contract "):
+                                    arg["internalType"] = arg["internalType"][9:]
+                                elif arg["internalType"].startswith("struct "):
+                                    arg["internalType"] = arg["internalType"][7:]
+                                elif arg["internalType"].startswith("enum "):
+                                    arg["internalType"] = arg["internalType"][5:]
 
-                        selector = keccak.new(
-                            data=f"{item['name']}({','.join(arg['internalType'] for arg in item['inputs'])})".encode(
-                                "utf-8"
-                            ),
-                            digest_bits=256,
-                        ).digest()[:4]
-                    else:
+                            selector = keccak.new(
+                                data=f"{item['name']}({','.join(arg['internalType'] for arg in item['inputs'])})".encode(
+                                    "utf-8"
+                                ),
+                                digest_bits=256,
+                            ).digest()[:4]
+                        else:
+                            selector = eth_utils.abi.function_abi_to_4byte_selector(
+                                item
+                            )
+                        self.abi_by_fqn[fqn][selector] = item
+                    elif item["type"] == "error":
                         selector = eth_utils.abi.function_abi_to_4byte_selector(item)
-                    self.abi_by_fqn[fqn][selector] = item
-                elif item["type"] == "error":
-                    selector = eth_utils.abi.function_abi_to_4byte_selector(item)
-                    self.abi_by_fqn[fqn][selector] = item
-                elif item["type"] == "event":
-                    selector = eth_utils.abi.event_abi_to_log_topic(item)
-                    self.abi_by_fqn[fqn][selector] = item
-                elif item["type"] in {"constructor", "fallback", "receive"}:
-                    self.abi_by_fqn[fqn][item["type"]] = item
-                else:
-                    raise ValueError(f"Unknown ABI item type: {item['type']}")
+                        self.abi_by_fqn[fqn][selector] = item
+                    elif item["type"] == "event":
+                        selector = eth_utils.abi.event_abi_to_log_topic(item)
+                        self.abi_by_fqn[fqn][selector] = item
+                    elif item["type"] in {"constructor", "fallback", "receive"}:
+                        self.abi_by_fqn[fqn][item["type"]] = item
+                    else:
+                        raise ValueError(f"Unknown ABI item type: {item['type']}")
 
-            assert info.evm is not None
-            assert info.evm.bytecode is not None
-            assert info.evm.bytecode.object is not None
-            bytecode = info.evm.bytecode.object
-            if len(bytecode) > 0:
-                bytecode_segments: List[Tuple[int, bytes]] = []
-                start = 0
+                assert info.evm is not None
+                assert info.evm.bytecode is not None
+                assert info.evm.bytecode.object is not None
+                bytecode = info.evm.bytecode.object
+                if len(bytecode) > 0:
+                    bytecode_segments: List[Tuple[int, bytes]] = []
+                    start = 0
 
-                for match in LIBRARY_PLACEHOLDER_REGEX.finditer(bytecode):
-                    s = match.start()
-                    e = match.end()
-                    segment = bytes.fromhex(bytecode[start:s])
+                    for match in LIBRARY_PLACEHOLDER_REGEX.finditer(bytecode):
+                        s = match.start()
+                        e = match.end()
+                        segment = bytes.fromhex(bytecode[start:s])
+                        h = BLAKE2b.new(data=segment, digest_bits=256).digest()
+                        bytecode_segments.append((len(segment), h))
+                        start = e
+
+                    segment = bytes.fromhex(bytecode[start:])
                     h = BLAKE2b.new(data=segment, digest_bits=256).digest()
                     bytecode_segments.append((len(segment), h))
-                    start = e
 
-                segment = bytes.fromhex(bytecode[start:])
-                h = BLAKE2b.new(data=segment, digest_bits=256).digest()
-                bytecode_segments.append((len(segment), h))
+                    creation_code_index.append((tuple(bytecode_segments), fqn))
 
-                creation_code_index.append((tuple(bytecode_segments), fqn))
+                assert info.evm.deployed_bytecode is not None
+                assert info.evm.deployed_bytecode.object is not None
+                if len(info.evm.deployed_bytecode.object) >= 106:
+                    fqn_by_metadata[
+                        bytes.fromhex(info.evm.deployed_bytecode.object[-106:])
+                    ] = fqn
 
-            assert info.evm.deployed_bytecode is not None
-            assert info.evm.deployed_bytecode.object is not None
-            if len(info.evm.deployed_bytecode.object) >= 108:
-                fqn_by_metadata[
-                    bytes.fromhex(info.evm.deployed_bytecode.object[-106])
-                ] = fqn
+                _compilation[fqn] = ContractInfo(
+                    abi=info.abi,
+                    bytecode=bytes.fromhex(bytecode),
+                )
 
-            _compilation[fqn] = ContractInfo(
-                abi=info.abi,
-                bytecode=bytes.fromhex(bytecode),
+            wake.development.core.creation_code_index = creation_code_index
+            wake.development.core.contracts_by_metadata = fqn_by_metadata
+
+            if success:
+                self.compilation = _compilation
+
+            return SakeCompilationResult(
+                success=success,
+                contracts={
+                    fqn: ContractInfoLsp(abi=info.abi, is_deployable=bool(info.abi))
+                    for fqn, info in _compilation.items()
+                },
             )
-
-        wake.development.core.creation_code_index = creation_code_index
-        wake.development.core.contracts_by_metadata = fqn_by_metadata
-
-        if success:
-            self.compilation = _compilation
-
-        return SakeCompilationResult(
-            success=success,
-            contracts={
-                fqn: ContractInfoLsp(abi=info.abi, is_deployable=bool(info.abi))
-                for fqn, info in _compilation.items()
-            },
-        )
+        except Exception as e:
+            raise LspError(ErrorCodes.InternalError, str(e)) from None
 
     @launch_chain
     async def get_accounts(self) -> List[str]:
@@ -348,22 +353,24 @@ class SakeContext:
         def fqn_to_contract_abi(fqn: str):
             return None, self.abi_by_fqn[fqn]
 
-        account = Account(params.contract_address, chain=self.chain)
-        tx_params = account._setup_tx_params(
-            RequestType.CALL,
-            bytes.fromhex(params.calldata),
-            params.value,
-            params.sender,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-        )
-        tx_params = self.chain._build_transaction(RequestType.CALL, tx_params, [], None)
-
         try:
+            account = Account(params.contract_address, chain=self.chain)
+            tx_params = account._setup_tx_params(
+                RequestType.CALL,
+                bytes.fromhex(params.calldata),
+                params.value,
+                params.sender,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            tx_params = self.chain._build_transaction(
+                RequestType.CALL, tx_params, [], None
+            )
+
             trace = self.chain.chain_interface.debug_trace_call(tx_params)
             ret_value = trace["returnValue"]
             call_trace = CallTrace.from_debug_trace(
@@ -385,7 +392,9 @@ class SakeContext:
         except JsonRpcError:
             # debug_traceCall not available
             try:
-                ret_value = self.chain.chain_interface.call(tx_params)
+                ret_value = self.chain.chain_interface.call(
+                    tx_params  # pyright: ignore reportPossiblyUnboundVariable
+                )
                 return SakeCallResult(
                     success=True,
                     return_value=ret_value.hex(),
@@ -401,6 +410,8 @@ class SakeContext:
                     )
                 except Exception:
                     raise LspError(ErrorCodes.InternalError, str(e)) from None
+        except Exception as e:
+            raise LspError(ErrorCodes.InternalError, str(e)) from None
 
     @launch_chain
     async def get_balances(
@@ -436,4 +447,7 @@ class SakeContext:
     async def set_label(self, params: SakeSetLabelParams) -> None:
         assert self.chain is not None
 
-        Account(params.address, chain=self.chain).label = params.label
+        try:
+            Account(params.address, chain=self.chain).label = params.label
+        except Exception as e:
+            raise LspError(ErrorCodes.InternalError, str(e)) from None
