@@ -1,5 +1,6 @@
 from itertools import chain
-from typing import Any, List, Optional, Tuple, Union
+from pathlib import Path
+from typing import Any, List, Optional, Tuple, Union, Dict, Set
 
 from wake.core import get_logger
 from wake.lsp.common_structures import (
@@ -14,7 +15,9 @@ from wake.lsp.common_structures import (
 )
 from wake.lsp.context import LspContext
 from wake.lsp.lsp_data_model import LspModel
+from wake.lsp.utils.position import changes_to_byte_offset
 from wake.lsp.utils.uri import uri_to_path
+from wake.core.lsp_provider import CodeLensOptions as ProviderCodeLensOptions
 
 logger = get_logger(__name__)
 
@@ -62,28 +65,63 @@ class CodeLens(LspModel):
     """
 
 
+def _get_code_lens_from_detectors(
+    context: LspContext,
+    path: Path,
+) -> Dict[Tuple[int, int], Set[ProviderCodeLensOptions]]:
+    forward_changes = context.compiler.get_detector_forward_changes(path)
+    if forward_changes is None:
+        return {}
+
+    code_lens = {}
+    for offsets, items in context.compiler.get_detector_code_lenses(path).items():
+        if len(forward_changes[offsets[0]:offsets[1]]) > 0:
+            continue
+
+        new_start = changes_to_byte_offset(forward_changes[0:offsets[0]]) + offsets[0]
+        new_end = changes_to_byte_offset(forward_changes[0:offsets[1]]) + offsets[1]
+        code_lens[(new_start, new_end)] = items
+
+    return code_lens
+
+
+def _get_code_lens_from_printers(
+    context: LspContext,
+    path: Path,
+) -> Dict[Tuple[int, int], Set[ProviderCodeLensOptions]]:
+    forward_changes = context.compiler.get_printer_forward_changes(path)
+    if forward_changes is None:
+        return {}
+
+    code_lens = {}
+    for offsets, items in context.compiler.get_printer_code_lenses(path).items():
+        if len(forward_changes[offsets[0]:offsets[1]]) > 0:
+            continue
+
+        new_start = changes_to_byte_offset(forward_changes[0:offsets[0]]) + offsets[0]
+        new_end = changes_to_byte_offset(forward_changes[0:offsets[1]]) + offsets[1]
+        code_lens[(new_start, new_end)] = items
+
+    return code_lens
+
+
 async def code_lens(
     context: LspContext, params: CodeLensParams
 ) -> Union[None, List[CodeLens]]:
     logger.debug(f"Code lens for file {params.text_document.uri} requested")
     if not context.config.lsp.code_lens.enable:
         return None
-    await context.compiler.compilation_ready.wait()
 
     path = uri_to_path(params.text_document.uri).resolve()
 
-    if path not in context.compiler.source_units:
-        return None
-
     code_lens: List[Tuple[CodeLens, str]] = []
-
     for offsets, code_lens_items in chain(
-        context.compiler.get_detector_code_lenses(path).items(),
-        context.compiler.get_printer_code_lenses(path).items(),
+        _get_code_lens_from_detectors(context, path).items(),
+        _get_code_lens_from_printers(context, path).items(),
     ):
         for code_lens_options in code_lens_items:
             lens = CodeLens(
-                range=context.compiler.get_range_from_byte_offsets(path, offsets),
+                range=context.compiler.get_early_range_from_byte_offsets(path, offsets),
                 command=Command(
                     title=code_lens_options.title,
                     command="Tools-for-Solidity.wake_callback"

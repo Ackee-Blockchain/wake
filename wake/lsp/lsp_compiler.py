@@ -239,6 +239,8 @@ class LspCompiler:
     __output_contents: Dict[Path, VersionedFile]
     __compilation_errors: Dict[Path, Set[Diagnostic]]
     __last_successful_compilation_contents: Dict[Path, Dict[Path, bytes]]
+    __detector_contents: Dict[Path, bytes]
+    __printer_contents: Dict[Path, bytes]
     __interval_trees: Dict[Path, IntervalTree]
     __source_units: Dict[Path, SourceUnit]
     __last_compilation_interval_trees: Dict[Path, IntervalTree]
@@ -321,6 +323,8 @@ class LspCompiler:
         self.__output_contents = dict()
         self.__compilation_errors = dict()
         self.__last_successful_compilation_contents = dict()
+        self.__detector_contents = dict()
+        self.__printer_contents = dict()
         self.__compilation_ready = asyncio.Event()
         self.__cache_ready = asyncio.Event()
         self.__perform_files_discovery = perform_files_discovery
@@ -692,6 +696,70 @@ class LspCompiler:
         return self._compute_diff_interval_tree(
             current_content,
             self.__last_successful_compilation_contents[context_file][file],
+        )
+
+    def get_detector_forward_changes(self, file: Path) -> Optional[IntervalTree]:
+        if file not in self.__detector_contents:
+            return None
+
+        if file in self.early_opened_files:
+            current_content = self.early_opened_files[file].text.encode("utf-8")
+        elif file.exists():
+            current_content = file.read_bytes()  # TODO cache?
+        else:
+            return None
+
+        return self._compute_diff_interval_tree(
+            self.__detector_contents[file],
+            current_content,
+        )
+
+    def get_detector_backward_changes(self, file: Path) -> Optional[IntervalTree]:
+        if file not in self.__detector_contents:
+            return None
+
+        if file in self.early_opened_files:
+            current_content = self.early_opened_files[file].text.encode("utf-8")
+        elif file.exists():
+            current_content = file.read_bytes()  # TODO cache?
+        else:
+            return None
+
+        return self._compute_diff_interval_tree(
+            current_content,
+            self.__detector_contents[file],
+        )
+
+    def get_printer_forward_changes(self, file: Path) -> Optional[IntervalTree]:
+        if file not in self.__printer_contents:
+            return None
+
+        if file in self.early_opened_files:
+            current_content = self.early_opened_files[file].text.encode("utf-8")
+        elif file.exists():
+            current_content = file.read_bytes()  # TODO cache?
+        else:
+            return None
+
+        return self._compute_diff_interval_tree(
+            self.__printer_contents[file],
+            current_content,
+        )
+
+    def get_printer_backward_changes(self, file: Path) -> Optional[IntervalTree]:
+        if file not in self.__printer_contents:
+            return None
+
+        if file in self.early_opened_files:
+            current_content = self.early_opened_files[file].text.encode("utf-8")
+        elif file.exists():
+            current_content = file.read_bytes()  # TODO cache?
+        else:
+            return None
+
+        return self._compute_diff_interval_tree(
+            current_content,
+            self.__printer_contents[file],
         )
 
     async def add_change(
@@ -1786,7 +1854,7 @@ class LspCompiler:
 
         return True
 
-    async def __run_detectors_task(self) -> None:
+    async def __run_detectors_task(self, contents: Dict[Path, bytes]) -> None:
         if self.__detectors_task is not None:
             self.__detectors_task.cancel()
 
@@ -1796,9 +1864,9 @@ class LspCompiler:
                 pass
 
         if self.__config.lsp.detectors.enable:
-            self.__detectors_task = self.__server.create_task(self.__run_detectors())
+            self.__detectors_task = self.__server.create_task(self.__run_detectors(contents))
 
-    async def __run_printers_task(self) -> None:
+    async def __run_printers_task(self, contents: Dict[Path, bytes]) -> None:
         if self.__printers_task is not None:
             self.__printers_task.cancel()
 
@@ -1807,9 +1875,9 @@ class LspCompiler:
             except asyncio.CancelledError:
                 pass
 
-        self.__printers_task = self.__server.create_task(self.__run_printers())
+        self.__printers_task = self.__server.create_task(self.__run_printers(contents))
 
-    async def __run_printers(self) -> None:
+    async def __run_printers(self, contents: Dict[Path, bytes]) -> None:
         progress_token = await self.__server.progress_begin("Running printers")
 
         try:
@@ -1831,6 +1899,7 @@ class LspCompiler:
                     self.__printer_hovers,
                     self.__printer_inlay_hints,
                 ) = data
+                self.__printer_contents = contents
 
                 for package, e in failed_plugin_entry_points:
                     await self.__server.show_message(
@@ -1870,9 +1939,10 @@ class LspCompiler:
                         "wake/executeCommands", list(commands)
                     )
             elif command == SubprocessCommandType.PRINTERS_FAILURE:
-                self.__printer_code_lenses = {}
-                self.__printer_hovers = {}
-                self.__printer_inlay_hints = {}
+                self.__printer_code_lenses.clear()
+                self.__printer_hovers.clear()
+                self.__printer_inlay_hints.clear()
+                self.__printer_contents.clear()
 
                 await self.__server.show_message(
                     f"Exception occurred while running printers:\n{data}",
@@ -1901,7 +1971,7 @@ class LspCompiler:
         # make sure that inline values are refreshed
         await self.__refresh_inlay_hints()
 
-    async def __run_detectors(self) -> None:
+    async def __run_detectors(self, contents: Dict[Path, bytes]) -> None:
         progress_token = await self.__server.progress_begin("Running detectors")
 
         try:
@@ -1924,6 +1994,7 @@ class LspCompiler:
                     self.__detector_hovers,
                     self.__detector_inlay_hints,
                 ) = data
+                self.__detector_contents = contents
 
                 for package, e in failed_plugin_entry_points:
                     await self.__server.show_message(
@@ -1974,6 +2045,11 @@ class LspCompiler:
                         "wake/executeCommands", list(commands)
                     )
             elif command == SubprocessCommandType.DETECTORS_FAILURE:
+                self.__detector_code_lenses.clear()
+                self.__detector_hovers.clear()
+                self.__detector_inlay_hints.clear()
+                self.__detector_contents.clear()
+
                 await self.__server.show_message(
                     f"Exception occurred while running detectors:\n{data}",
                     MessageType.ERROR,
@@ -2037,14 +2113,6 @@ class LspCompiler:
                     or len(self.__deleted_files) > 0
                     or len(self.__disk_changed_files) > 0
                 ):
-                    self.__detector_code_lenses.clear()
-                    self.__printer_code_lenses.clear()
-                    self.__detector_hovers.clear()
-                    self.__printer_hovers.clear()
-                    self.__detector_inlay_hints.clear()
-                    self.__printer_inlay_hints.clear()
-                    await self.__refresh_code_lenses()
-
                     new_build = await self.__compile(
                         self.__force_compile_files.union(self.__modified_files),
                         updated_files,
@@ -2110,14 +2178,20 @@ class LspCompiler:
                                 SubprocessCommandType.BUILD,
                                 build,
                             )
-                            await self.__run_printers_task()
+                            await self.__run_printers_task({
+                                path: source_unit.file_source
+                                for path, source_unit in self.last_build.source_units.items()
+                            })
                         if self.__force_run_detectors:
                             self.send_subprocess_command(
                                 self.__detectors_subprocess,
                                 SubprocessCommandType.BUILD,
                                 build,
                             )
-                            await self.__run_detectors_task()
+                            await self.__run_detectors_task({
+                                path: source_unit.file_source
+                                for path, source_unit in self.last_build.source_units.items()
+                            })
 
                     self.__force_run_detectors = False
                     self.__force_run_printers = False
