@@ -302,6 +302,16 @@ class LspCompiler:
         ],
         str,
     ]
+    go_to_type_definition_cache: weakref.WeakKeyDictionary[
+        Union[
+            Identifier,
+            MemberAccess,
+            IdentifierPathPart,
+            YulIdentifier,
+            VariableDeclaration,
+        ],
+        Tuple[Path, int, int],
+    ]
 
     def __init__(
         self,
@@ -346,6 +356,7 @@ class LspCompiler:
         self.__cu_counter = Counter()
         self.go_to_definition_cache = weakref.WeakKeyDictionary()
         self.hover_cache = weakref.WeakKeyDictionary()
+        self.go_to_type_definition_cache = weakref.WeakKeyDictionary()
 
         try:
             if server.tfs_version is not None and packaging.version.parse(
@@ -2376,17 +2387,36 @@ class LspCompiler:
             return ret
 
         def resolve_hover(
+            original_node,
             node: Union[
                 DeclarationAbc, SourceUnit, GlobalSymbol, Set[FunctionDefinition]
-            ]
-        ) -> Optional[str]:
+            ],
+        ) -> None:
             if isinstance(node, DeclarationAbc):
-                return f"```solidity\n{node.declaration_string}\n```"
+                self.hover_cache[
+                    original_node
+                ] = f"```solidity\n{node.declaration_string}\n```"
             elif isinstance(node, set):
-                return "\n".join(
+                self.hover_cache[original_node] = "\n".join(
                     f"```solidity\n{n.declaration_string}\n```" for n in node
                 )
-            return None
+
+        def resolve_go_to_type_def(original_node, node) -> None:
+            if not isinstance(node, VariableDeclaration):
+                return
+
+            type_name = node.type_name
+            if isinstance(type_name, UserDefinedTypeName):
+                ref_decl = type_name.referenced_declaration
+
+                self.__last_successful_compilation_contents[source_unit.file][
+                    ref_decl.source_unit.file
+                ] = ref_decl.source_unit.file_source
+                self.go_to_type_definition_cache[original_node] = (
+                    ref_decl.source_unit.file,
+                    ref_decl.name_location[0],
+                    ref_decl.name_location[1],
+                )
 
         self.__last_successful_compilation_contents[source_unit.file] = {
             source_unit.file: source_unit.file_source
@@ -2394,37 +2424,32 @@ class LspCompiler:
 
         for node in source_unit:
             if isinstance(node, (Identifier, MemberAccess)):
-                self.go_to_definition_cache[node] = resolve_go_to_def(
-                    node.referenced_declaration
-                )
-                hover = resolve_hover(node.referenced_declaration)
-                if hover is not None:
-                    self.hover_cache[node] = hover
+                ref_decl = node.referenced_declaration
+                self.go_to_definition_cache[node] = resolve_go_to_def(ref_decl)
+                resolve_hover(node, ref_decl)
+                resolve_go_to_type_def(node, ref_decl)
             elif isinstance(node, (IdentifierPath, UserDefinedTypeName)):
                 for part in node.identifier_path_parts:
-                    self.go_to_definition_cache[part] = resolve_go_to_def(
-                        part.referenced_declaration
-                    )
-                    hover = resolve_hover(part.referenced_declaration)
-                    if hover is not None:
-                        self.hover_cache[part] = hover
+                    ref_decl = part.referenced_declaration
+                    self.go_to_definition_cache[part] = resolve_go_to_def(ref_decl)
+                    resolve_hover(part, ref_decl)
+                    resolve_go_to_type_def(part, ref_decl)
             elif (
                 isinstance(node, YulIdentifier) and node.external_reference is not None
             ):
-                self.go_to_definition_cache[node] = resolve_go_to_def(
-                    node.external_reference.referenced_declaration
-                )
-                hover = resolve_hover(node.external_reference.referenced_declaration)
-                if hover is not None:
-                    self.hover_cache[node] = hover
+                ref_decl = node.external_reference.referenced_declaration
+                self.go_to_definition_cache[node] = resolve_go_to_def(ref_decl)
+                resolve_hover(node, ref_decl)
+                resolve_go_to_type_def(node, ref_decl)
             elif (
                 isinstance(node, (UnaryOperation, BinaryOperation))
                 and node.function is not None
             ):
-                self.go_to_definition_cache[node] = resolve_go_to_def(node.function)
-                hover = resolve_hover(node.function)
-                if hover is not None:
-                    self.hover_cache[node] = hover
+                function = node.function
+                self.go_to_definition_cache[node] = resolve_go_to_def(function)
+                resolve_hover(node, function)
+            elif isinstance(node, VariableDeclaration):
+                resolve_go_to_type_def(node, node)
 
     def __setup_line_index(self, content: str):
         tmp_lines = re.split(r"(\r?\n)", content)
