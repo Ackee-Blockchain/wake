@@ -668,6 +668,7 @@ class CallTrace:
 
                 if i < len(self.error_arguments or []) - 1:
                     ret["error"] += ", "
+            ret["error"] += ")"
         else:
             ret["error"] = None
 
