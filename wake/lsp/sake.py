@@ -50,7 +50,7 @@ class SakeDeployParams(LspModel):
 class SakeDeployResult(SakeResult):
     contract_address: Optional[str]
     tx_receipt: Dict[str, Any]
-    call_trace: Dict[str, Optional[str]]
+    call_trace: Dict[str, Union[Optional[str], List]]
 
 
 class SakeTransactParams(LspModel):
@@ -63,7 +63,7 @@ class SakeTransactParams(LspModel):
 class SakeTransactResult(SakeResult):
     return_value: str
     tx_receipt: Dict[str, Any]
-    call_trace: Dict[str, Optional[str]]
+    call_trace: Dict[str, Union[Optional[str], List]]
 
 
 class SakeCallParams(LspModel):
@@ -75,7 +75,7 @@ class SakeCallParams(LspModel):
 
 class SakeCallResult(SakeResult):
     return_value: str
-    call_trace: Optional[Dict[str, Optional[str]]]
+    call_trace: Optional[Dict[str, Union[Optional[str], List]]]
 
 
 class SakeGetBalancesParams(LspModel):
