@@ -1276,6 +1276,7 @@ class LspCompiler:
             [
                 SolcOutputSelectionEnum.ABI,
                 SolcOutputSelectionEnum.EVM_BYTECODE_OBJECT,
+                SolcOutputSelectionEnum.EVM_DEPLOYED_BYTECODE_OBJECT,
                 SolcOutputSelectionEnum.AST,
             ]
         )
