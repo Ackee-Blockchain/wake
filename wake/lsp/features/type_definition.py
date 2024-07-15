@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
@@ -102,7 +103,9 @@ def _get_type_definition_from_cache(
     new_byte_offset = context.compiler.get_byte_offset_from_line_pos(
         path, position.line, position.character
     )
-    backward_changes = context.compiler.get_last_compilation_backward_changes(path)
+    backward_changes = context.compiler.get_last_compilation_backward_changes(
+        path, path
+    )
     if backward_changes is None:
         raise Exception("No backward changes found for path")
     changes_before = backward_changes[0:new_byte_offset]
@@ -119,61 +122,44 @@ def _get_type_definition_from_cache(
 
     if isinstance(node, VariableDeclaration):
         location = node.name_location
-        forward_changes = context.compiler.get_last_compilation_forward_changes(path)
+        forward_changes = context.compiler.get_last_compilation_forward_changes(
+            path, path
+        )
         if forward_changes is None:
             raise Exception("No forward changes found for path")
         new_start = (
             changes_to_byte_offset(forward_changes[0 : location[0]]) + location[0]
         )
         new_end = changes_to_byte_offset(forward_changes[0 : location[1]]) + location[1]
-        node_name_location = (new_start, new_end)
-    else:
-        node_name_location = None
 
-    result = _get_results_from_node(
-        node, position, context, old_byte_offset, node_name_location
-    )
-    if result is None:
+        if new_byte_offset < new_start or new_byte_offset > new_end:
+            return None
+    elif isinstance(node, (IdentifierPath, UserDefinedTypeName)):
+        node = node.identifier_path_part_at(old_byte_offset)
+
+    try:
+        result = context.compiler.go_to_type_definition_cache[node]
+    except KeyError:
         return None
 
-    if len(result) == 1:
-        path, location = result[0]
-        forward_changes = context.compiler.get_last_compilation_forward_changes(path)
-        if forward_changes is None:
-            raise Exception("No forward changes found for path")
-        new_start = (
-            changes_to_byte_offset(forward_changes[0 : location[0]]) + location[0]
-        )
-        new_end = changes_to_byte_offset(forward_changes[0 : location[1]]) + location[1]
-        return Location(
-            uri=DocumentUri(path_to_uri(path)),
-            range=context.compiler.get_range_from_byte_offsets(
-                path, (new_start, new_end)
-            ),
-        )
-    else:
-        ret = []
-        for path, location in result:
-            forward_changes = context.compiler.get_last_compilation_forward_changes(
-                path
-            )
-            if forward_changes is None:
-                raise Exception("No forward changes found for path")
-            new_start = (
-                changes_to_byte_offset(forward_changes[0 : location[0]]) + location[0]
-            )
-            new_end = (
-                changes_to_byte_offset(forward_changes[0 : location[1]]) + location[1]
-            )
-            ret.append(
-                Location(
-                    uri=DocumentUri(path_to_uri(path)),
-                    range=context.compiler.get_range_from_byte_offsets(
-                        path, (new_start, new_end)
-                    ),
-                )
-            )
-        return ret
+    forward_changes = context.compiler.get_last_compilation_forward_changes(
+        path, result[0]
+    )
+    if forward_changes is None:
+        raise Exception("No forward changes found for path")
+
+    if len(forward_changes[result[1] : result[2]]) > 0:
+        return None
+
+    new_start = changes_to_byte_offset(forward_changes[0 : result[1]]) + result[1]
+    new_end = changes_to_byte_offset(forward_changes[0 : result[2]]) + result[2]
+
+    return Location(
+        uri=DocumentUri(path_to_uri(result[0])),
+        range=context.compiler.get_early_range_from_byte_offsets(
+            result[0], (new_start, new_end)
+        ),
+    )
 
 
 async def type_definition(
@@ -184,12 +170,23 @@ async def type_definition(
     )
 
     path = uri_to_path(params.text_document.uri).resolve()
+
+    await next(
+        asyncio.as_completed(
+            [
+                context.compiler.compilation_ready.wait(),
+                context.compiler.cache_ready.wait(),
+            ]
+        )
+    )
+
     if (
         path not in context.compiler.interval_trees
         or not context.compiler.compilation_ready.is_set()
     ):
         # try to use old build artifacts
         try:
+            await context.compiler.cache_ready.wait()
             return _get_type_definition_from_cache(path, params.position, context)
         except Exception:
             pass
@@ -239,44 +236,3 @@ async def type_definition(
             )
             for path, location in result
         ]
-
-    if isinstance(node, VariableDeclaration):
-        name_location_range = context.compiler.get_range_from_byte_offsets(
-            node.source_unit.file, node.name_location
-        )
-        if not position_within_range(params.position, name_location_range):
-            return None
-
-    if isinstance(node, (Identifier, MemberAccess)):
-        node = node.referenced_declaration
-        if node is None:
-            return None
-    elif isinstance(node, (IdentifierPath, UserDefinedTypeName)):
-        part = node.identifier_path_part_at(byte_offset)
-        if part is None:
-            return None
-        node = part.referenced_declaration
-    elif isinstance(node, yul.Identifier):
-        external_reference = node.external_reference
-        if external_reference is None:
-            return None
-        node = external_reference.referenced_declaration
-
-    if not isinstance(node, VariableDeclaration):
-        return None
-
-    type_name = node.type_name
-    if isinstance(type_name, UserDefinedTypeName):
-        return [
-            Location(
-                uri=DocumentUri(
-                    path_to_uri(type_name.referenced_declaration.source_unit.file)
-                ),
-                range=context.compiler.get_range_from_byte_offsets(
-                    type_name.referenced_declaration.source_unit.file,
-                    type_name.referenced_declaration.name_location,
-                ),
-            )
-        ]
-    else:
-        return None
