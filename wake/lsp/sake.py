@@ -289,7 +289,7 @@ class SakeContext:
             assert tx._tx_receipt is not None
 
             return SakeDeployResult(
-                success=True,
+                success=success,
                 contract_address=str(tx.return_value.address) if success else None,
                 tx_receipt=tx._tx_receipt,
                 call_trace=call_trace.dict(self.lsp_context.config),
