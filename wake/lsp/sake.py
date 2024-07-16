@@ -27,6 +27,7 @@ class SakeResult(LspModel):
 
 class SakeCompilationResult(SakeResult):
     contracts: Dict[str, ContractInfoLsp]  # fqn -> ABI
+    errors: Dict[str, List[str]]
 
 
 class ContractInfo(NamedTuple):
@@ -136,6 +137,7 @@ class SakeContext:
                 success,
                 contract_info,
                 asts,
+                errors,
             ) = await self.lsp_context.compiler.bytecode_compile()
 
             self.abi_by_fqn.clear()
@@ -236,6 +238,10 @@ class SakeContext:
                 contracts={
                     fqn: ContractInfoLsp(abi=info.abi, is_deployable=bool(info.abi))
                     for fqn, info in _compilation.items()
+                },
+                errors={
+                    source_unit_name: list(messages)
+                    for source_unit_name, messages in errors.items()
                 },
             )
         except Exception as e:

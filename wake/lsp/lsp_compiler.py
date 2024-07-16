@@ -1280,31 +1280,37 @@ class LspCompiler:
         else:
             raise Exception("Unknown change type")
 
-    async def __check_target_version(self) -> None:
+    async def __check_target_version(self, *, show_message: bool) -> None:
         target_version = self.__config.compiler.solc.target_version
         min_version = self.__config.min_solidity_version
         max_version = self.__config.max_solidity_version
         if target_version is not None and target_version < min_version:
-            await self.__server.log_message(
-                f"The minimum supported version of Solidity is {min_version}. Version {target_version} is selected in settings.",
-                MessageType.WARNING,
-            )
+            message = f"The minimum supported version of Solidity is {min_version}. Version {target_version} is selected in settings."
+
+            await self.__server.log_message(message, MessageType.WARNING)
+            if show_message:
+                await self.__server.show_message(message, MessageType.WARNING)
+
             for file in self.__discovered_files:
                 # clear diagnostics
                 await self.__diagnostic_queue.put((file, set()))
+
             raise CompilationError("Invalid target version")
         if target_version is not None and target_version > max_version:
-            await self.__server.log_message(
-                f"The maximum supported version of Solidity is {max_version}. Version {target_version} is selected in settings.",
-                MessageType.WARNING,
-            )
+            message = f"The maximum supported version of Solidity is {max_version}. Version {target_version} is selected in settings."
+
+            await self.__server.log_message(message, MessageType.WARNING)
+            if show_message:
+                await self.__server.show_message(message, MessageType.WARNING)
+
             for file in self.__discovered_files:
                 # clear diagnostics
                 await self.__diagnostic_queue.put((file, set()))
+
             raise CompilationError("Invalid target version")
 
     async def __detect_target_versions(
-        self, compilation_units: List[CompilationUnit]
+        self, compilation_units: List[CompilationUnit], *, show_message: bool
     ) -> Tuple[List[SolidityVersion], List[CompilationUnit]]:
         min_version = self.__config.min_solidity_version
         max_version = self.__config.max_solidity_version
@@ -1315,13 +1321,17 @@ class LspCompiler:
             target_version = self.__config.compiler.solc.target_version
             if target_version is not None:
                 if target_version not in compilation_unit.versions:
-                    await self.__server.log_message(
+                    message = (
                         f"Unable to compile the following files with solc version `{target_version}` set in config:\n"
                         + "\n".join(
                             path_to_uri(path) for path in compilation_unit.files
-                        ),
-                        MessageType.ERROR,
+                        )
                     )
+
+                    await self.__server.log_message(message, MessageType.WARNING)
+                    if show_message:
+                        await self.__server.show_message(message, MessageType.WARNING)
+
                     skipped_compilation_units.append(compilation_unit)
                     continue
             else:
@@ -1332,13 +1342,17 @@ class LspCompiler:
                     if version in compilation_unit.versions
                 ]
                 if len(matching_versions) == 0:
-                    await self.__server.log_message(
+                    message = (
                         f"Unable to find a matching version of Solidity for the following files:\n"
                         + "\n".join(
                             path_to_uri(path) for path in compilation_unit.files
-                        ),
-                        MessageType.ERROR,
+                        )
                     )
+
+                    await self.__server.log_message(message, MessageType.WARNING)
+                    if show_message:
+                        await self.__server.show_message(message, MessageType.WARNING)
+
                     skipped_compilation_units.append(compilation_unit)
                     continue
                 try:
@@ -1348,24 +1362,32 @@ class LspCompiler:
                         if version <= max_version
                     )
                 except StopIteration:
-                    await self.__server.log_message(
+                    message = (
                         f"The maximum supported version of Solidity is {max_version}, unable to compile the following files:\n"
                         + "\n".join(
                             path_to_uri(path) for path in compilation_unit.files
-                        ),
-                        MessageType.ERROR,
+                        )
                     )
+
+                    await self.__server.log_message(message, MessageType.WARNING)
+                    if show_message:
+                        await self.__server.show_message(message, MessageType.WARNING)
+
                     skipped_compilation_units.append(compilation_unit)
                     continue
 
                 if target_version < min_version:
-                    await self.__server.log_message(
+                    message = (
                         f"The minimum supported version of Solidity is {min_version}, unable to compile the following files:\n"
                         + "\n".join(
                             path_to_uri(path) for path in compilation_unit.files
-                        ),
-                        MessageType.ERROR,
+                        )
                     )
+
+                    await self.__server.log_message(message, MessageType.WARNING)
+                    if show_message:
+                        await self.__server.show_message(message, MessageType.WARNING)
+
                     skipped_compilation_units.append(compilation_unit)
                     continue
             target_versions.append(target_version)
@@ -1453,11 +1475,13 @@ class LspCompiler:
 
     async def bytecode_compile(
         self,
-    ) -> Tuple[bool, Dict[str, SolcOutputContractInfo], Dict[str, Dict]]:
+    ) -> Tuple[
+        bool, Dict[str, SolcOutputContractInfo], Dict[str, Dict], Dict[str, Set[str]]
+    ]:
         try:
-            await self.__check_target_version()
+            await self.__check_target_version(show_message=True)
         except CompilationError:
-            return False, {}, {}
+            return False, {}, {}, {}
 
         modified_files = {
             path: info.text.encode("utf-8")
@@ -1474,12 +1498,13 @@ class LspCompiler:
                 True,
             )
         except CompilationError as e:
+            await self.__server.show_message(str(e), MessageType.ERROR)
             await self.__server.log_message(str(e), MessageType.ERROR)
-            return False, {}, {}
+            return False, {}, {}, {}
 
         compilation_units = self.__compiler.build_compilation_units_maximize(graph)
         if len(compilation_units) == 0:
-            return False, {}, {}
+            return False, {}, {}, {}
 
         build_settings = self.__compiler.create_build_settings(
             [
@@ -1496,9 +1521,7 @@ class LspCompiler:
         (
             target_versions,
             skipped_compilation_units,
-        ) = await self.__detect_target_versions(compilation_units)
-        if len(skipped_compilation_units) > 0:
-            return False, {}, {}
+        ) = await self.__detect_target_versions(compilation_units, show_message=True)
 
         await self.__install_solc(target_versions)
 
@@ -1521,14 +1544,16 @@ class LspCompiler:
         except Exception as e:
             for task in tasks:
                 task.cancel()
+            await self.__server.show_message(str(e), MessageType.ERROR)
             await self.__server.log_message(str(e), MessageType.ERROR)
             if progress_token is not None:
                 await self.__server.progress_end(progress_token)
 
-            return False, {}, {}
+            return False, {}, {}, {}
 
         contract_info: Dict[str, SolcOutputContractInfo] = {}
         asts: Dict[str, Dict] = {}
+        errors: Dict[str, Set[str]] = defaultdict(set)
 
         solc_output: SolcOutput
         for cu, solc_output in zip(compilation_units, ret):
@@ -1545,6 +1570,8 @@ class LspCompiler:
                         error_type = MessageType.LOG
                     await self.__server.show_message(error.message, error_type)
                     await self.__server.log_message(error.message, error_type)
+                else:
+                    errors[error.source_location.file].add(error.message)
 
             for source_unit_name in solc_output.contracts.keys():
                 for contract_name, info in solc_output.contracts[
@@ -1562,7 +1589,7 @@ class LspCompiler:
         if progress_token is not None:
             await self.__server.progress_end(progress_token)
 
-        return True, contract_info, asts
+        return True, contract_info, asts, errors
 
     async def __compile(
         self,
@@ -1579,7 +1606,7 @@ class LspCompiler:
             compilation_units_per_file = defaultdict(set)
 
         try:
-            await self.__check_target_version()
+            await self.__check_target_version(show_message=False)
         except CompilationError:
             self.__interval_trees.clear()
             self.__source_units.clear()
@@ -1685,7 +1712,7 @@ class LspCompiler:
         (
             target_versions,
             skipped_compilation_units,
-        ) = await self.__detect_target_versions(compilation_units)
+        ) = await self.__detect_target_versions(compilation_units, show_message=False)
         await self.__install_solc(target_versions)
 
         for compilation_unit in skipped_compilation_units:
