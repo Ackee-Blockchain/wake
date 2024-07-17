@@ -10,6 +10,11 @@ from wake.development.globals import random
 from ..core import get_connected_chains
 from .generators import generate
 
+from enum import Enum
+
+class FlowResult(Enum):
+    UNCOUNT = 1
+    REPEAT = 2
 
 def flow(
     *,
@@ -82,7 +87,8 @@ class FuzzTest:
             self._sequence_num = i
             self.pre_sequence()
 
-            for j in range(flows_count):
+            j = 0
+            while j <flows_count:
                 valid_flows = [
                     f
                     for f in flows
@@ -113,17 +119,25 @@ class FuzzTest:
                         f"Could not find a valid flow to run.\nFlows that have reached their max_times: {max_times_flows}\nFlows that do not satisfy their precondition: {precondition_flows}"
                     )
                 flow = random.choices(valid_flows, weights=weights)[0]
-                flow_params = [
-                    generate(v)
-                    for k, v in get_type_hints(flow, include_extras=True).items()
-                    if k != "return"
-                ]
-
                 self._flow_num = j
                 self.pre_flow(flow)
-                flow(self, *flow_params)
-                flows_counter[flow] += 1
-                self.post_flow(flow)
+
+                while True:
+                    flow_params = [
+                        generate(v)
+                        for k, v in get_type_hints(flow, include_extras=True).items()
+                        if k != "return"
+                    ]
+                    ret = flow(self, *flow_params)
+                    if ret == FlowResult.UNCOUNT:
+                        break
+                    elif ret == FlowResult.REPEAT:
+                        continue
+                    else:
+                        j+=1
+                        flows_counter[flow] += 1
+                        self.post_flow(flow)
+                        break
 
                 if not dry_run:
                     self.pre_invariants()
