@@ -121,8 +121,8 @@ class FuzzTest:
                 flow = random.choices(valid_flows, weights=weights)[0]
                 self._flow_num = j
                 self.pre_flow(flow)
-
-                while True:
+                keep_loop = True
+                while keep_loop:
                     flow_params = [
                         generate(v)
                         for k, v in get_type_hints(flow, include_extras=True).items()
@@ -130,27 +130,27 @@ class FuzzTest:
                     ]
                     ret = flow(self, *flow_params)
                     if ret == FlowResult.UNCOUNT:
-                        break
+                        keep_loop = False
                     elif ret == FlowResult.REPEAT:
-                        continue
+                        keep_loop = True
                     else:
                         j+=1
                         flows_counter[flow] += 1
                         self.post_flow(flow)
-                        break
+                        keep_loop = False
+                       
+                    if not dry_run:
+                        self.pre_invariants()
+                        for inv in invariants:
+                            if invariant_periods[inv] == 0:
+                                self.pre_invariant(inv)
+                                inv(self)
+                                self.post_invariant(inv)
 
-                if not dry_run:
-                    self.pre_invariants()
-                    for inv in invariants:
-                        if invariant_periods[inv] == 0:
-                            self.pre_invariant(inv)
-                            inv(self)
-                            self.post_invariant(inv)
-
-                        invariant_periods[inv] += 1
-                        if invariant_periods[inv] == getattr(inv, "period"):
-                            invariant_periods[inv] = 0
-                    self.post_invariants()
+                            invariant_periods[inv] += 1
+                            if invariant_periods[inv] == getattr(inv, "period"):
+                                invariant_periods[inv] = 0
+                        self.post_invariants()
 
             self.post_sequence()
 
