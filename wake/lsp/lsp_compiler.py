@@ -1570,7 +1570,7 @@ class LspCompiler:
                         error_type = MessageType.LOG
                     await self.__server.show_message(error.message, error_type)
                     await self.__server.log_message(error.message, error_type)
-                else:
+                elif error.severity == SolcOutputErrorSeverityEnum.ERROR:
                     errors[error.source_location.file].add(error.message)
 
             for source_unit_name in solc_output.contracts.keys():

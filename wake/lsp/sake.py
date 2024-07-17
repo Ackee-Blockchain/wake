@@ -236,7 +236,7 @@ class SakeContext:
             return SakeCompilationResult(
                 success=success,
                 contracts={
-                    fqn: ContractInfoLsp(abi=info.abi, is_deployable=bool(info.abi))
+                    fqn: ContractInfoLsp(abi=info.abi, is_deployable=(len(info.bytecode) > 0))
                     for fqn, info in _compilation.items()
                 },
                 errors={
