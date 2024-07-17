@@ -21,9 +21,13 @@ async def workspace_symbol(
     query = params.query.lower()
     declarations = []
 
-    await asyncio.wait(
-        [context.compiler.compilation_ready.wait(), context.compiler.cache_ready.wait()],
-        return_when=asyncio.FIRST_COMPLETED,
+    await next(
+        asyncio.as_completed(
+            [
+                context.compiler.compilation_ready.wait(),
+                context.compiler.cache_ready.wait(),
+            ]
+        )
     )
 
     if not context.compiler.compilation_ready.is_set():
