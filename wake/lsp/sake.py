@@ -413,7 +413,7 @@ class SakeContext:
                 RequestType.CALL, tx_params, [], None
             )
 
-            trace = self.chain.chain_interface.debug_trace_call(tx_params)
+            trace = self.chain.chain_interface.debug_trace_call(tx_params, options={"disableMemory": False})
             ret_value = trace["returnValue"]
             call_trace = CallTrace.from_debug_trace(
                 trace,
