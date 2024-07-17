@@ -32,7 +32,7 @@ class SakeCompilationResult(SakeResult):
 
 class ContractInfo(NamedTuple):
     abi: List
-    bytecode: bytes
+    bytecode: str
 
 
 # @dev used for api to include name in json, otherwise tuple is converted to array
@@ -123,6 +123,7 @@ class SakeContext:
     abi_by_fqn: Dict[
         str, Dict[Union[bytes, Literal["constructor", "fallback", "receive"]], List]
     ]  # fqn -> ABI
+    libraries: Dict[bytes, str]  # lib_id -> fqn
 
     def __init__(self, lsp_context: LspContext):
         self.lsp_context = lsp_context
@@ -130,6 +131,7 @@ class SakeContext:
         self.chain_handle = None
         self.compilation = {}
         self.abi_by_fqn = {}
+        self.libraries = {}
 
     async def compile(self) -> SakeCompilationResult:
         try:
@@ -141,6 +143,7 @@ class SakeContext:
             ) = await self.lsp_context.compiler.bytecode_compile()
 
             self.abi_by_fqn.clear()
+            self.libraries.clear()
             fqn_by_metadata: Dict[bytes, str] = {}
             creation_code_index: List[Tuple[Tuple[Tuple[int, bytes], ...], str]] = []
             _compilation = {}
@@ -157,6 +160,12 @@ class SakeContext:
                     )
                 except (StopIteration, KeyError):
                     continue
+
+                if contract_node["contractKind"] == "library":
+                    lib_id = keccak.new(
+                        data=fqn.encode("utf-8"), digest_bits=256
+                    ).digest()[:17]
+                    self.libraries[lib_id] = fqn
 
                 assert info.abi is not None
                 self.abi_by_fqn[fqn] = {}
@@ -224,7 +233,7 @@ class SakeContext:
 
                 _compilation[fqn] = ContractInfo(
                     abi=info.abi,
-                    bytecode=bytes.fromhex(bytecode),
+                    bytecode=bytecode,
                 )
 
             wake.development.core.creation_code_index = creation_code_index
@@ -236,7 +245,9 @@ class SakeContext:
             return SakeCompilationResult(
                 success=success,
                 contracts={
-                    fqn: ContractInfoLsp(abi=info.abi, is_deployable=(len(info.bytecode) > 0))
+                    fqn: ContractInfoLsp(
+                        abi=info.abi, is_deployable=(len(info.bytecode) > 0)
+                    )
                     for fqn, info in _compilation.items()
                 },
                 errors={
@@ -262,6 +273,24 @@ class SakeContext:
 
         try:
             bytecode = self.compilation[params.contract_fqn].bytecode
+
+            for match in LIBRARY_PLACEHOLDER_REGEX.finditer(bytecode):
+                lib_id = bytes.fromhex(match.group(0)[3:-3])
+                assert lib_id in self.libraries
+
+                if lib_id in self.chain._deployed_libraries:
+                    lib_addr = str(self.chain._deployed_libraries[lib_id][-1].address)[
+                        2:
+                    ]
+                else:
+                    raise LspError(
+                        ErrorCodes.RequestFailed,
+                        f"Library {self.libraries[lib_id].split(':')[1]} must be deployed first",
+                    )
+
+                bytecode = (
+                    bytecode[: match.start()] + lib_addr + bytecode[match.end() :]
+                )
         except KeyError:
             raise LspError(
                 ErrorCodes.InvalidParams, f"Contract {params.contract_fqn} not compiled"
@@ -269,7 +298,7 @@ class SakeContext:
 
         try:
             tx = self.chain.deploy(
-                bytecode + bytes.fromhex(params.calldata),
+                bytes.fromhex(bytecode + params.calldata),
                 from_=params.sender,
                 value=params.value,
                 return_tx=True,
@@ -293,6 +322,13 @@ class SakeContext:
             )
 
             assert tx._tx_receipt is not None
+
+            if success:
+                lib_id = keccak.new(
+                    data=params.contract_fqn.encode("utf-8"), digest_bits=256
+                ).digest()[:17]
+                if lib_id in self.libraries:
+                    self.chain._deployed_libraries[lib_id].append(tx.return_value)
 
             return SakeDeployResult(
                 success=success,
