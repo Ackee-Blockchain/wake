@@ -409,6 +409,7 @@ class GeneralConfig(WakeConfigModel):
     Prefix to add to links in contract pytypes.
     """
 
+
 class PrintersConfig(WakeConfigModel):
     """
     Holds general printer config options for all printers.
