@@ -1130,6 +1130,7 @@ class LspCompiler:
                 self.__ir_reference_resolver.clear_all_cu_metadata()
                 self.__latest_errors_per_cu = {}
                 self.__compilation_errors = {}
+                self.__cu_counter.clear()
 
                 self.__discovered_files.clear()
                 self.__compilation_errors.clear()
