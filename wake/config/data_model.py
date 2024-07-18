@@ -404,7 +404,10 @@ class GeneralConfig(WakeConfigModel):
     """
     Format of links used in detectors and printers.
     """
-
+    pytypes_link_prefix: str = ""
+    """
+    Prefix to add to links in contract pytypes.
+    """
 
 class PrintersConfig(WakeConfigModel):
     """

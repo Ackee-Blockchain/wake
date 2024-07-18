@@ -87,11 +87,11 @@ def _binary_search(lines: List[Tuple[bytes, int]], x: int) -> int:
     return l - 1
 
 
-def _path_to_uri(path: Path) -> str:
+def _path_to_uri(path: Path, config: WakeConfig) -> str:
     if os.name == "nt":
-        return "file:" + pathname2url(str(path.resolve()))
+        return "file:" + config.general.pytypes_link_prefix + pathname2url(str(path.resolve()))
     else:
-        return "file://" + pathname2url(str(path.resolve()))
+        return "file://" + config.general.pytypes_link_prefix + pathname2url(str(path.resolve()))
 
 
 def _parse_opcodes(opcodes: str) -> List[Tuple[int, str, int, Optional[int]]]:
@@ -339,7 +339,7 @@ class TypeGenerator:
                     fn.source_unit.file, fn.byte_location[0]
                 )
                 source_code_link = (
-                    f"[Source code]({_path_to_uri(fn.source_unit.file)}#{line + 1})"
+                    f"[Source code]({_path_to_uri(fn.source_unit.file, self.__config)}#{line + 1})"
                 )
                 break
 
@@ -519,7 +519,7 @@ class TypeGenerator:
         )
         self.add_str_to_types(1, '"""', 1)
         self.add_str_to_types(
-            1, f"[Source code]({_path_to_uri(contract.source_unit.file)}#{line + 1})", 1
+            1, f"[Source code]({_path_to_uri(contract.source_unit.file, self.__config)}#{line + 1})", 1
         )
         self.add_str_to_types(1, '"""', 1)
 
@@ -769,7 +769,7 @@ class TypeGenerator:
             )
             self.add_str_to_types(
                 indent + 1,
-                f"[Source code]({_path_to_uri(struct.source_unit.file)}#{line + 1})",
+                f"[Source code]({_path_to_uri(struct.source_unit.file, self.__config)}#{line + 1})",
                 2,
             )
             self.add_str_to_types(indent + 1, "Attributes:", 1)
@@ -803,7 +803,7 @@ class TypeGenerator:
             self.add_str_to_types(indent + 1, '"""', 1)
             self.add_str_to_types(
                 indent + 1,
-                f"[Source code]({_path_to_uri(enum.source_unit.file)}#{line + 1})",
+                f"[Source code]({_path_to_uri(enum.source_unit.file, self.__config)}#{line + 1})",
                 2,
             )
             self.add_str_to_types(indent + 1, '"""', 1)
@@ -872,7 +872,7 @@ class TypeGenerator:
             self.add_str_to_types(indent + 1, '"""', 1)
             self.add_str_to_types(
                 indent + 1,
-                f"[Source code]({_path_to_uri(error.source_unit.file)}#{line + 1})",
+                f"[Source code]({_path_to_uri(error.source_unit.file, self.__config)}#{line + 1})",
                 1 if len(parameters) == 0 else 2,
             )
 
@@ -962,7 +962,7 @@ class TypeGenerator:
             self.add_str_to_types(indent + 1, '"""', 1)
             self.add_str_to_types(
                 indent + 1,
-                f"[Source code]({_path_to_uri(event.source_unit.file)}#{line + 1})",
+                f"[Source code]({_path_to_uri(event.source_unit.file, self.__config)}#{line + 1})",
                 1 if len(parameters) == 0 else 2,
             )
 
@@ -1344,7 +1344,7 @@ class TypeGenerator:
         self.add_str_to_types(2, '"""', 1)
         self.add_str_to_types(
             2,
-            f"[Source code]({_path_to_uri(declaration.source_unit.file)}#{line + 1})",
+            f"[Source code]({_path_to_uri(declaration.source_unit.file, self.__config)}#{line + 1})",
             1 if len(param_names) + len(returns) == 0 else 2,
         )
         if len(param_names) > 0:
@@ -1398,7 +1398,7 @@ class TypeGenerator:
         self.add_str_to_types(2, '"""', 1)
         self.add_str_to_types(
             2,
-            f"[Source code]({_path_to_uri(declaration.source_unit.file)}#{line + 1})",
+            f"[Source code]({_path_to_uri(declaration.source_unit.file, self.__config)}#{line + 1})",
             1 if len(param_names) + len(returns) == 0 else 2,
         )
         if len(param_names) > 0:
