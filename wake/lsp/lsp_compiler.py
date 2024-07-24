@@ -1312,11 +1312,12 @@ class LspCompiler:
 
     async def __detect_target_versions(
         self, compilation_units: List[CompilationUnit], *, show_message: bool
-    ) -> Tuple[List[SolidityVersion], List[CompilationUnit]]:
+    ) -> Tuple[List[SolidityVersion], List[CompilationUnit], List[str]]:
         min_version = self.__config.min_solidity_version
         max_version = self.__config.max_solidity_version
         target_versions = []
         skipped_compilation_units = []
+        skipped_reasons = []
 
         for compilation_unit in compilation_units:
             target_version = self.__config.compiler.solc.target_version
@@ -1334,6 +1335,9 @@ class LspCompiler:
                         await self.__server.show_message(message, MessageType.WARNING)
 
                     skipped_compilation_units.append(compilation_unit)
+                    skipped_reasons.append(
+                        f"Cannot be compiled with version {target_version} set in config"
+                    )
                     continue
             else:
                 # use the latest matching version
@@ -1355,6 +1359,10 @@ class LspCompiler:
                         await self.__server.show_message(message, MessageType.WARNING)
 
                     skipped_compilation_units.append(compilation_unit)
+                    source_unit_names = "\n".join(compilation_unit.source_unit_names)
+                    skipped_reasons.append(
+                        f"Cannot be compiled with other files:\n{source_unit_names}"
+                    )
                     continue
                 try:
                     target_version = next(
@@ -1375,6 +1383,9 @@ class LspCompiler:
                         await self.__server.show_message(message, MessageType.WARNING)
 
                     skipped_compilation_units.append(compilation_unit)
+                    skipped_reasons.append(
+                        f"Cannot be compiled due to the maximum supported version of Solidity being {max_version}"
+                    )
                     continue
 
                 if target_version < min_version:
@@ -1390,10 +1401,13 @@ class LspCompiler:
                         await self.__server.show_message(message, MessageType.WARNING)
 
                     skipped_compilation_units.append(compilation_unit)
+                    skipped_reasons.append(
+                        f"Cannot be compiled due to the minimum supported version of Solidity being {min_version}"
+                    )
                     continue
             target_versions.append(target_version)
 
-        return target_versions, skipped_compilation_units
+        return target_versions, skipped_compilation_units, skipped_reasons
 
     def __merge_compilation_units(
         self, compilation_units: List[CompilationUnit], graph: nx.DiGraph
@@ -1477,12 +1491,16 @@ class LspCompiler:
     async def bytecode_compile(
         self,
     ) -> Tuple[
-        bool, Dict[str, SolcOutputContractInfo], Dict[str, Dict], Dict[str, Set[str]]
+        bool,
+        Dict[str, SolcOutputContractInfo],
+        Dict[str, Dict],
+        Dict[str, Set[str]],
+        Dict[str, str],
     ]:
         try:
             await self.__check_target_version(show_message=True)
         except CompilationError:
-            return False, {}, {}, {}
+            return False, {}, {}, {}, {}
 
         modified_files = {
             path: info.text.encode("utf-8")
@@ -1501,11 +1519,11 @@ class LspCompiler:
         except CompilationError as e:
             await self.__server.show_message(str(e), MessageType.ERROR)
             await self.__server.log_message(str(e), MessageType.ERROR)
-            return False, {}, {}, {}
+            return False, {}, {}, {}, {}
 
         compilation_units = self.__compiler.build_compilation_units_maximize(graph)
         if len(compilation_units) == 0:
-            return False, {}, {}, {}
+            return False, {}, {}, {}, {}
 
         build_settings = self.__compiler.create_build_settings(
             [
@@ -1522,7 +1540,18 @@ class LspCompiler:
         (
             target_versions,
             skipped_compilation_units,
+            skipped_reasons,
         ) = await self.__detect_target_versions(compilation_units, show_message=True)
+
+        skipped_source_units = {}
+        for compilation_unit, reason in zip(skipped_compilation_units, skipped_reasons):
+            for source_unit_name in compilation_unit.source_unit_names:
+                skipped_source_units[source_unit_name] = reason
+
+        compilation_units = [
+            cu for cu in compilation_units if cu not in skipped_compilation_units
+        ]
+        assert len(compilation_units) == len(target_versions)
 
         await self.__install_solc(target_versions)
 
@@ -1550,7 +1579,7 @@ class LspCompiler:
             if progress_token is not None:
                 await self.__server.progress_end(progress_token)
 
-            return False, {}, {}, {}
+            return False, {}, {}, {}, {}
 
         contract_info: Dict[str, SolcOutputContractInfo] = {}
         asts: Dict[str, Dict] = {}
@@ -1584,13 +1613,15 @@ class LspCompiler:
                     contract_info[fqn] = info
 
             for source_unit_name, ast in solc_output.sources.items():
+                skipped_source_units.pop(source_unit_name, None)
+
                 if ast.ast is not None:
                     asts[source_unit_name] = ast.ast
 
         if progress_token is not None:
             await self.__server.progress_end(progress_token)
 
-        return True, contract_info, asts, errors
+        return True, contract_info, asts, errors, skipped_source_units
 
     async def __compile(
         self,
@@ -1713,6 +1744,7 @@ class LspCompiler:
         (
             target_versions,
             skipped_compilation_units,
+            _,
         ) = await self.__detect_target_versions(compilation_units, show_message=False)
         await self.__install_solc(target_versions)
 
@@ -1939,7 +1971,6 @@ class LspCompiler:
                 self.__ir_reference_resolver.run_destroy_callbacks(path)
 
         processed_files: Set[Path] = set()
-
 
         def index_new_nodes():
             for cu_index, (cu, solc_output) in enumerate(successful_compilation_units):

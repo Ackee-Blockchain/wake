@@ -28,6 +28,7 @@ class SakeResult(LspModel):
 class SakeCompilationResult(SakeResult):
     contracts: Dict[str, ContractInfoLsp]  # fqn -> ABI
     errors: Dict[str, List[str]]
+    skipped: Dict[str, str]
 
 
 class ContractInfo(NamedTuple):
@@ -140,6 +141,7 @@ class SakeContext:
                 contract_info,
                 asts,
                 errors,
+                skipped_source_units,
             ) = await self.lsp_context.compiler.bytecode_compile()
 
             self.abi_by_fqn.clear()
@@ -254,6 +256,7 @@ class SakeContext:
                     source_unit_name: list(messages)
                     for source_unit_name, messages in errors.items()
                 },
+                skipped=skipped_source_units,
             )
         except Exception as e:
             raise LspError(ErrorCodes.InternalError, str(e)) from None
@@ -413,7 +416,9 @@ class SakeContext:
                 RequestType.CALL, tx_params, [], None
             )
 
-            trace = self.chain.chain_interface.debug_trace_call(tx_params, options={"disableMemory": False})
+            trace = self.chain.chain_interface.debug_trace_call(
+                tx_params, options={"disableMemory": False}
+            )
             ret_value = trace["returnValue"]
             call_trace = CallTrace.from_debug_trace(
                 trace,
