@@ -1409,64 +1409,6 @@ class LspCompiler:
 
         return target_versions, skipped_compilation_units, skipped_reasons
 
-    def __merge_compilation_units(
-        self, compilation_units: List[CompilationUnit], graph: nx.DiGraph
-    ) -> List[CompilationUnit]:
-        if all(len(cu.versions) for cu in compilation_units):
-            compilation_units = sorted(
-                compilation_units,
-                key=lambda cu: (
-                    cu.versions.version_ranges[0].lower,
-                    cu.versions.version_ranges[0].higher
-                    or self.__config.max_solidity_version,
-                ),
-            )
-            supported_versions = SolidityVersionRanges(
-                [
-                    SolidityVersionRange(
-                        self.__config.min_solidity_version, True, None, None
-                    )
-                ]
-            )
-
-            merged_compilation_units: List[CompilationUnit] = []
-            source_unit_names: Set = set(compilation_units[0].source_unit_names)
-            versions = compilation_units[0].versions
-
-            for cu in compilation_units[1:]:
-                # only merge compilation units satisfying the minimum version
-                if versions & cu.versions and (
-                    (supported_versions & versions)
-                    and (supported_versions & cu.versions)
-                    or not (supported_versions & versions)
-                    and not (supported_versions & cu.versions)
-                ):
-                    source_unit_names |= cu.source_unit_names
-                    versions &= cu.versions
-                else:
-                    merged_compilation_units.append(
-                        CompilationUnit(
-                            graph.subgraph(
-                                source_unit_names
-                            ).copy(),  # pyright: ignore reportArgumentType
-                            versions,
-                        )
-                    )
-                    source_unit_names = set(cu.source_unit_names)
-                    versions = cu.versions
-
-            merged_compilation_units.append(
-                CompilationUnit(
-                    graph.subgraph(
-                        source_unit_names
-                    ).copy(),  # pyright: ignore reportArgumentType
-                    versions,
-                )
-            )
-            return merged_compilation_units
-        else:
-            return compilation_units
-
     async def __install_solc(self, target_versions: List[SolidityVersion]) -> None:
         for version in set(target_versions):
             if not self.__svm.installed(version):
@@ -1535,7 +1477,9 @@ class LspCompiler:
         )
 
         # optimization - merge compilation units that can be compiled together
-        compilation_units = self.__merge_compilation_units(compilation_units, graph)
+        compilation_units = SolidityCompiler.merge_compilation_units(
+            compilation_units, graph, self.__config
+        )
 
         (
             target_versions,
@@ -1736,7 +1680,9 @@ class LspCompiler:
             self.__last_build_settings = build_settings
 
         # optimization - merge compilation units that can be compiled together
-        compilation_units = self.__merge_compilation_units(compilation_units, graph)
+        compilation_units = SolidityCompiler.merge_compilation_units(
+            compilation_units, graph, self.__config
+        )
         for cu in compilation_units:
             for path in cu.files:
                 compilation_units_per_file[path].add(cu)
