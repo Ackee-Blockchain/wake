@@ -25,9 +25,16 @@ class SakeResult(LspModel):
     success: bool
 
 
+class ErrorInfo(LspModel):
+    message: str
+    path: str
+    start_offset: int
+    end_offset: int
+
+
 class SakeCompilationResult(SakeResult):
     contracts: Dict[str, ContractInfoLsp]  # fqn -> ABI
-    errors: Dict[str, List[str]]
+    errors: Dict[str, List[ErrorInfo]]
     skipped: Dict[str, str]
 
 
@@ -253,8 +260,16 @@ class SakeContext:
                     for fqn, info in _compilation.items()
                 },
                 errors={
-                    source_unit_name: list(messages)
-                    for source_unit_name, messages in errors.items()
+                    source_unit_name: [
+                        ErrorInfo(
+                            message=error[0],
+                            path=str(error[1]),
+                            start_offset=error[2],
+                            end_offset=error[3],
+                        )
+                        for error in e
+                    ]
+                    for source_unit_name, e in errors.items()
                 },
                 skipped=skipped_source_units,
             )

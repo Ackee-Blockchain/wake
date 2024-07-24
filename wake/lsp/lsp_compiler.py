@@ -1436,7 +1436,7 @@ class LspCompiler:
         bool,
         Dict[str, SolcOutputContractInfo],
         Dict[str, Dict],
-        Dict[str, Set[str]],
+        Dict[str, Set[Tuple[str, Path, int, int]]],
         Dict[str, str],
     ]:
         try:
@@ -1527,7 +1527,7 @@ class LspCompiler:
 
         contract_info: Dict[str, SolcOutputContractInfo] = {}
         asts: Dict[str, Dict] = {}
-        errors: Dict[str, Set[str]] = defaultdict(set)
+        errors: Dict[str, Set[Tuple[str, Path, int, int]]] = defaultdict(set)
 
         solc_output: SolcOutput
         for cu, solc_output in zip(compilation_units, ret):
@@ -1545,7 +1545,14 @@ class LspCompiler:
                     await self.__server.show_message(error.message, error_type)
                     await self.__server.log_message(error.message, error_type)
                 elif error.severity == SolcOutputErrorSeverityEnum.ERROR:
-                    errors[error.source_location.file].add(error.message)
+                    errors[error.source_location.file].add(
+                        (
+                            error.message,
+                            cu.source_unit_name_to_path(error.source_location.file),
+                            error.source_location.start,
+                            error.source_location.end,
+                        )
+                    )
 
             for source_unit_name in solc_output.contracts.keys():
                 for contract_name, info in solc_output.contracts[
