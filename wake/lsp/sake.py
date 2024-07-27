@@ -32,10 +32,15 @@ class ErrorInfo(LspModel):
     end_offset: int
 
 
+class SkippedInfo(LspModel):
+    message: str
+    path: str
+
+
 class SakeCompilationResult(SakeResult):
     contracts: Dict[str, ContractInfoLsp]  # fqn -> ABI
     errors: Dict[str, List[ErrorInfo]]
-    skipped: Dict[str, str]
+    skipped: Dict[str, SkippedInfo]
 
 
 class ContractInfo(NamedTuple):
@@ -271,7 +276,12 @@ class SakeContext:
                     ]
                     for source_unit_name, e in errors.items()
                 },
-                skipped=skipped_source_units,
+                skipped={
+                    source_unit_name: SkippedInfo(
+                        message=skipped[0], path=str(skipped[1])
+                    )
+                    for source_unit_name, skipped in skipped_source_units.items()
+                },
             )
         except Exception as e:
             raise LspError(ErrorCodes.InternalError, str(e)) from None
