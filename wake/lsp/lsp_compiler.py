@@ -1437,7 +1437,7 @@ class LspCompiler:
         Dict[str, SolcOutputContractInfo],
         Dict[str, Dict],
         Dict[str, Set[Tuple[str, Path, int, int]]],
-        Dict[str, str],
+        Dict[str, Tuple[str, Path]],
     ]:
         try:
             await self.__check_target_version(show_message=True)
@@ -1490,7 +1490,10 @@ class LspCompiler:
         skipped_source_units = {}
         for compilation_unit, reason in zip(skipped_compilation_units, skipped_reasons):
             for source_unit_name in compilation_unit.source_unit_names:
-                skipped_source_units[source_unit_name] = reason
+                skipped_source_units[source_unit_name] = (
+                    reason,
+                    compilation_unit.source_unit_name_to_path(source_unit_name),
+                )
 
         compilation_units = [
             cu for cu in compilation_units if cu not in skipped_compilation_units
