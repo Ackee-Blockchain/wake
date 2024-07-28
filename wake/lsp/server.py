@@ -131,7 +131,9 @@ from .sake import (
     SakeContext,
     SakeDeployParams,
     SakeGetBalancesParams,
-    SakeSetBalancesParams, SakeTransactParams, SakeSetLabelParams,
+    SakeSetBalancesParams,
+    SakeTransactParams,
+    SakeSetLabelParams,
 )
 from .server_capabilities import (
     FileOperationFilter,
@@ -178,6 +180,7 @@ class LspServer:
     __tfs_version: Optional[str]
     __cli_config: WakeConfig
     __workspaces: Dict[Path, LspContext]
+    __workspace_lock: asyncio.Lock
     __user_config: Optional[WakeConfig]
     __main_workspace: Optional[LspContext]
     __sake_context: Optional[SakeContext]
@@ -203,6 +206,7 @@ class LspServer:
         self.__initialized = False
         self.__cli_config = config
         self.__workspaces = {}
+        self.__workspace_lock = asyncio.Lock()
         self.__user_config = None
         self.__main_workspace = None
         self.__sake_context = None
@@ -348,7 +352,7 @@ class LspServer:
             RequestMethodEnum.LOG_TRACE: (self._log_trace, LogTraceParams),
             RequestMethodEnum.SET_TRACE: (self._set_trace, SetTraceParams),
             RequestMethodEnum.TEXT_DOCUMENT_DID_OPEN: (
-                self._text_document_did_open,
+                self._workspace_route,
                 DidOpenTextDocumentParams,
             ),
             RequestMethodEnum.TEXT_DOCUMENT_DID_CHANGE: (
@@ -1250,26 +1254,32 @@ class LspServer:
         self,
         uri: DocumentUri,  # pyright: ignore reportInvalidTypeForm
     ) -> LspContext:
-        path = uri_to_path(uri)
-        matching_workspaces = []
-        for workspace in self.__workspaces.values():
-            try:
-                matching_workspaces.append(
-                    (workspace, path.relative_to(workspace.config.project_root_path))
-                )
-            except ValueError:
-                pass
+        # prevent race conditions caused by awaiting on _create_config
+        # that would cause multiple workspaces to be created for the same project root path
+        async with self.__workspace_lock:
+            path = uri_to_path(uri)
+            matching_workspaces = []
+            for workspace in self.__workspaces.values():
+                try:
+                    matching_workspaces.append(
+                        (
+                            workspace,
+                            path.relative_to(workspace.config.project_root_path),
+                        )
+                    )
+                except ValueError:
+                    pass
 
-        if len(matching_workspaces) == 0:
-            config, use_toml, toml_path = await self._create_config(path.parent)
-            context = LspContext(self, config, False)
-            context.use_toml = use_toml
-            context.toml_path = toml_path
-            self.__workspaces[path.parent] = context
-            context.run()
-            return context
-        else:
-            return min(matching_workspaces, key=lambda x: len(x[1].parts))[0]
+            if len(matching_workspaces) == 0:
+                config, use_toml, toml_path = await self._create_config(path.parent)
+                context = LspContext(self, config, False)
+                context.use_toml = use_toml
+                context.toml_path = toml_path
+                self.__workspaces[path.parent] = context
+                context.run()
+                return context
+            else:
+                return min(matching_workspaces, key=lambda x: len(x[1].parts))[0]
 
     async def _workspace_route(self, params: Any) -> Any:
         if isinstance(
@@ -1305,6 +1315,8 @@ class LspServer:
             return await prepare_rename(context, params)
         elif isinstance(params, RenameParams):
             return await rename(context, params)
+        elif isinstance(params, DidOpenTextDocumentParams):
+            return await self._text_document_did_open(context, params)
         elif isinstance(params, DidChangeTextDocumentParams):
             return await self._text_document_did_change(context, params)
         elif isinstance(params, WillSaveTextDocumentParams):
@@ -1324,27 +1336,10 @@ class LspServer:
         else:
             raise NotImplementedError(f"Unhandled request: {type(params)}")
 
-    async def _text_document_did_open(self, params: DidOpenTextDocumentParams) -> None:
-        path = uri_to_path(params.text_document.uri)
-        matching_workspaces = []
-        for workspace in self.__workspaces.values():
-            try:
-                matching_workspaces.append(
-                    (workspace, path.relative_to(workspace.config.project_root_path))
-                )
-            except ValueError:
-                pass
-
-        if len(matching_workspaces) == 0:
-            config, use_toml, toml_path = await self._create_config(path.parent)
-            context = LspContext(self, config, False)
-            context.use_toml = use_toml
-            context.toml_path = toml_path
-            self.__workspaces[path.parent] = context
-            context.run()
-        else:
-            context = min(matching_workspaces, key=lambda x: len(x[1].parts))[0]
-
+    @staticmethod
+    async def _text_document_did_open(
+        context: LspContext, params: DidOpenTextDocumentParams
+    ) -> None:
         await context.compiler.add_change(params)
         await context.parser.add_change(params)
 
