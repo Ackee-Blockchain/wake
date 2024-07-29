@@ -44,6 +44,23 @@ jobs:
       run: |
         conda-pack -n wake -o ${{ env.FILENAME }}
 
+    - name: Sign Python binary on MacOS
+      if: runner.os == 'macOS'
+      run: |
+        security create-keychain -p "temp" build.keychain
+        curl -O https://www.apple.com/certificateauthority/DeveloperIDG2CA.cer
+        security import DeveloperIDG2CA.cer -k build.keychain
+        echo "${{ secrets.CONDA_MACOS_SIGNING_KEY }}" | base64 --decode > signing_certificate.p12
+        security import signing_certificate.p12 -P "" -T /usr/bin/codesign -k build.keychain
+        tar -xzf ${{ env.FILENAME }} --directory wake
+        security default-keychain -s build.keychain
+        security set-key-partition-list -S apple-tool:,apple: -s -k "temp" build.keychain > /dev/null
+        security unlock-keychain -p "temp" build.keychain
+        codesign --force -s "${{ secrets.CONDA_MACOS_SIGNING_IDENTITY }}" ./wake/bin/python
+        tar -czf ${{ env.FILENAME }} wake
+        security delete-keychain build.keychain
+        rm signing_certificate.p12
+
     - name: Generate checksum Linux & Windows
       if: runner.os != 'macOS'
       run: |
