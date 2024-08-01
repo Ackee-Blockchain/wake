@@ -52,12 +52,13 @@ jobs:
         security import DeveloperIDG2CA.cer -k build.keychain
         echo "${{ secrets.CONDA_MACOS_SIGNING_KEY }}" | base64 --decode > signing_certificate.p12
         security import signing_certificate.p12 -P "" -T /usr/bin/codesign -k build.keychain
-        tar -xzf ${{ env.FILENAME }} --directory wake
+        mkdir wake-conda
+        tar -xzf ${{ env.FILENAME }} --directory wake-conda
         security default-keychain -s build.keychain
         security set-key-partition-list -S apple-tool:,apple: -s -k "temp" build.keychain > /dev/null
         security unlock-keychain -p "temp" build.keychain
-        codesign --force -s "${{ secrets.CONDA_MACOS_SIGNING_IDENTITY }}" ./wake/bin/python
-        tar -czf ${{ env.FILENAME }} wake
+        codesign --force -s "${{ secrets.CONDA_MACOS_SIGNING_IDENTITY }}" ./wake-conda/bin/python
+        tar -czf ${{ env.FILENAME }} -C wake-conda .
         security delete-keychain build.keychain
         rm signing_certificate.p12
 
