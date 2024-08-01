@@ -62,7 +62,7 @@ yul_definitions = {
     "extcodecopy": "// copy code at address to memory\nextcodecopy(address, memStart, codeStart, length)",
     "returndatasize": "// size of return data buffer\nreturndatasize()",
     "returndatacopy": "// copy return data to memory\nreturndatacopy(memStart, returnDataStart, length)",
-    "mcopy": "// copy memory to memory\nmcopy(memStartFrom, memStartTo, length)",
+    "mcopy": "// copy memory to memory\nmcopy(memStartTo, memStartFrom, length)",
     "extcodehash": "// Keccak-256 hash of code at address\nextcodehash(address)",
     "create": "// create contract with code from memory and value in wei, return new address or 0 on error\ncreate(value, memStart, length)",
     "create2": "// create contract from salt with code from memory and value in wei, return new address or 0 on error\ncreate2(value, memStart, length, salt)",
