@@ -117,9 +117,15 @@ def launch_chain(f):
     @wraps(f)
     async def wrapper(context: SakeContext, *args, **kwargs):
         if context.chain is None:
-            context.chain = Chain()
-            context.chain_handle = context.chain.connect()
-            context.chain_handle.__enter__()
+            try:
+                context.chain = Chain()
+                context.chain_handle = context.chain.connect()
+                context.chain_handle.__enter__()
+            except FileNotFoundError:
+                raise LspError(ErrorCodes.AnvilNotFound, "Anvil executable not found")
+            except Exception as e:
+                raise LspError(ErrorCodes.InternalError, str(e)) from None
+
         return await f(context, *args, **kwargs)
 
     return wrapper
