@@ -83,6 +83,7 @@ class ErrorCodes(enum.IntEnum):
     ServerCancelled = -32802
     ContentModified = -32801
     RequestCancelled = -32800
+    AnvilNotFound = -33000
     # jsonrpcReservedErrorRangeStart = -32099
     # jsonrpcReservedErrorRangeEnd = -32000
     # lspReservedErrorRangeStart = -32899
