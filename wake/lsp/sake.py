@@ -10,8 +10,10 @@ from Crypto.Hash import BLAKE2b, keccak
 from typing_extensions import Literal
 
 import wake.development.core
+from wake.config import WakeConfig
 from wake.development.call_trace import CallTrace
 from wake.development.core import RequestType
+from wake.development.globals import set_config
 from wake.development.json_rpc import JsonRpcError
 from wake.development.transactions import TransactionStatusEnum
 from wake.lsp.context import LspContext
@@ -118,6 +120,16 @@ def launch_chain(f):
     async def wrapper(context: SakeContext, *args, **kwargs):
         if context.chain is None:
             try:
+                config_clone = WakeConfig.fromdict(
+                    context.lsp_context.config.todict(),
+                    project_root_path=context.lsp_context.config.project_root_path,
+                )
+                # reset Anvil args & always use Anvil
+                config_clone.update(
+                    {},
+                    deleted_options=[("testing", "cmd"), ("testing", "anvil", "cmd_args")],
+                )
+                set_config(config_clone)
                 context.chain = Chain()
                 context.chain_handle = context.chain.connect()
                 context.chain_handle.__enter__()
