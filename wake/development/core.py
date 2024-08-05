@@ -1659,7 +1659,7 @@ class Chain(ABC):
                             }
                         )
                         self._default_tx_type = 2
-                    except JsonRpcError:
+                    except (JsonRpcError, HTTPError):
                         try:
                             self._chain_interface.call(
                                 {
@@ -1668,7 +1668,7 @@ class Chain(ABC):
                                 }
                             )
                             self._default_tx_type = 1
-                        except JsonRpcError:
+                        except (JsonRpcError, HTTPError):
                             self._default_tx_type = 0
             elif isinstance(self._chain_interface, GanacheChainInterface):
                 if fork is not None:
@@ -1695,7 +1695,7 @@ class Chain(ABC):
                     self._chain_interface.set_next_block_base_fee_per_gas(
                         block_base_fee_per_gas
                     )
-                except JsonRpcError:
+                except (JsonRpcError, HTTPError):
                     pass
 
             from .transactions import ChainTransactions
