@@ -1656,6 +1656,7 @@ class Chain(ABC):
                             {
                                 "type": 2,
                                 "maxPriorityFeePerGas": 0,
+                                "to": "0x0000000000000000000000000000000000000000",
                             }
                         )
                         self._default_tx_type = 2
@@ -1665,6 +1666,7 @@ class Chain(ABC):
                                 {
                                     "type": 1,
                                     "accessList": [],
+                                    "to": "0x0000000000000000000000000000000000000000",
                                 }
                             )
                             self._default_tx_type = 1
