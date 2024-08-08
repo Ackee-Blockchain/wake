@@ -176,11 +176,12 @@ def key_in_nested_dict(key: Tuple, d: Dict) -> bool:
 
 
 class LspServer:
-    __initialized: bool
+    __initialized: bool  # signals initialize request was received
     __tfs_version: Optional[str]
     __cli_config: WakeConfig
     __workspaces: Dict[Path, LspContext]
     __workspace_lock: asyncio.Lock
+    __initialized_event: asyncio.Event  # signals initialized notification logic finished
     __user_config: Optional[WakeConfig]
     __main_workspace: Optional[LspContext]
     __sake_context: Optional[SakeContext]
@@ -207,6 +208,7 @@ class LspServer:
         self.__cli_config = config
         self.__workspaces = {}
         self.__workspace_lock = asyncio.Lock()
+        self.__initialized_event = asyncio.Event()
         self.__user_config = None
         self.__main_workspace = None
         self.__sake_context = None
@@ -619,14 +621,17 @@ class LspServer:
         logger.info(f"Message received: {request}")
 
         # Init before request needed
-        if request.method != RequestMethodEnum.INITIALIZE and not self.__initialized:
-            response = self._serve_error(
-                request,
-                ErrorCodes.ServerNotInitialized,
-                "Server has not been initialized",
-            )
-            await self.__protocol.send(response)
-            return
+        if request.method != RequestMethodEnum.INITIALIZE:
+            if not self.__initialized:
+                response = self._serve_error(
+                    request,
+                    ErrorCodes.ServerNotInitialized,
+                    "Server has not been initialized",
+                )
+                await self.__protocol.send(response)
+                return
+
+            await self.__initialized_event.wait()
 
         # Handling request
         try:
@@ -640,6 +645,9 @@ class LspServer:
 
         if not self.__initialized and notification.method != RequestMethodEnum.EXIT:
             return
+
+        if notification.method != RequestMethodEnum.INITIALIZED:
+            await self.__initialized_event.wait()
 
         try:
             n, params_type = self.__notification_mapping[notification.method]
@@ -1134,6 +1142,8 @@ class LspServer:
             self.__main_workspace.toml_path = toml_path
             self.__workspaces[self.__workspace_path] = self.__main_workspace
             self.__main_workspace.run()
+
+            self.__initialized_event.set()
 
     async def _workspace_did_change_watched_files(
         self, params: DidChangeWatchedFilesParams
