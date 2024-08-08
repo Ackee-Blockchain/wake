@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 from typing import (
     Callable,
@@ -17,7 +18,6 @@ from typing import (
 from typing_extensions import Literal
 
 import wake.ir as ir
-from wake.lsp.common_structures import DocumentUri, Location, LspModel, Position, Range
 
 
 class HoverOptions(NamedTuple):
@@ -42,56 +42,28 @@ class InlayHintOptions(NamedTuple):
     sort_tag: str
 
 
-class CommandAbc(LspModel):
-    command: str
-
-
-class GoToLocationsCommand(CommandAbc):
-    uri: DocumentUri  # pyright: ignore reportInvalidTypeForm
-    position: Position
-    locations: List[Location]
+@dataclass
+class GoToLocationsCommand:
+    path: Path
+    byte_offset: int
+    locations: List[Tuple[Path, int, int]]
     multiple: Literal["peek", "gotoAndPeek", "goto"]
     no_results_message: str
-
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs, command="goToLocations")
 
     @classmethod
     def from_offsets(
         cls,
-        source_units: Dict[Path, ir.SourceUnit],
+        source_units: Dict[Path, ir.SourceUnit],  # unused
         start_path: Path,
         start_offset: int,
         locations: Iterable[Tuple[Path, int, int]],
         multiple: Literal["peek", "gotoAndPeek", "goto"],
         no_results_message: str = "No results found",
     ) -> GoToLocationsCommand:
-        from wake.lsp.utils import path_to_uri
-
-        pos_line, pos_col = source_units[start_path].get_line_col_from_byte_offset(
-            start_offset
-        )
-
-        l = []
-        for path, start, end in locations:
-            start_line, start_col = source_units[path].get_line_col_from_byte_offset(
-                start
-            )
-            end_line, end_col = source_units[path].get_line_col_from_byte_offset(end)
-            l.append(
-                Location(
-                    uri=DocumentUri(path_to_uri(path)),
-                    range=Range(
-                        start=Position(line=start_line - 1, character=start_col - 1),
-                        end=Position(line=end_line - 1, character=end_col - 1),
-                    ),
-                )
-            )
-
         return cls(
-            uri=DocumentUri(path_to_uri(start_path)),
-            position=Position(line=pos_line - 1, character=pos_col - 1),
-            locations=l,
+            path=start_path,
+            byte_offset=start_offset,
+            locations=list(locations),
             multiple=multiple,
             no_results_message=no_results_message,
         )
@@ -104,53 +76,30 @@ class GoToLocationsCommand(CommandAbc):
         multiple: Literal["peek", "gotoAndPeek", "goto"],
         no_results_message: str = "No results found",
     ) -> GoToLocationsCommand:
-        from wake.lsp.utils import path_to_uri
-
-        pos_line, pos_col = start.source_unit.get_line_col_from_byte_offset(
-            start.name_location[0]
-            if isinstance(start, ir.DeclarationAbc)
-            else start.byte_location[0]
-        )
-
-        l = []
-        for loc in locations:
-            start_line, start_col = loc.source_unit.get_line_col_from_byte_offset(
-                loc.name_location[0]
-                if isinstance(loc, ir.DeclarationAbc)
-                else loc.byte_location[0]
-            )
-            end_line, end_col = loc.source_unit.get_line_col_from_byte_offset(
-                loc.name_location[1]
-                if isinstance(loc, ir.DeclarationAbc)
-                else loc.byte_location[1]
-            )
-            l.append(
-                Location(
-                    uri=DocumentUri(path_to_uri(loc.source_unit.file)),
-                    range=Range(
-                        start=Position(line=start_line - 1, character=start_col - 1),
-                        end=Position(line=end_line - 1, character=end_col - 1),
-                    ),
-                )
-            )
-
         return cls(
-            uri=DocumentUri(path_to_uri(start.source_unit.file)),
-            position=Position(line=pos_line - 1, character=pos_col - 1),
-            locations=l,
+            path=start.source_unit.file,
+            byte_offset=(
+                start.name_location[0]
+                if isinstance(start, ir.DeclarationAbc)
+                else start.byte_location[0]
+            ),
+            locations=[
+                (loc.source_unit.file, loc.name_location[0], loc.name_location[1])
+                if isinstance(loc, ir.DeclarationAbc)
+                else (loc.source_unit.file, loc.byte_location[0], loc.byte_location[1])
+                for loc in locations
+            ],
             multiple=multiple,
             no_results_message=no_results_message,
         )
 
 
-class PeekLocationsCommand(CommandAbc):
-    uri: DocumentUri  # pyright: ignore reportInvalidTypeForm
-    position: Position
-    locations: List[Location]
+@dataclass
+class PeekLocationsCommand:
+    path: Path
+    byte_offset: int
+    locations: List[Tuple[Path, int, int]]
     multiple: Literal["peek", "gotoAndPeek", "goto"]
-
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs, command="peekLocations")
 
     @classmethod
     def from_nodes(
@@ -159,79 +108,60 @@ class PeekLocationsCommand(CommandAbc):
         locations: Iterable[ir.IrAbc],
         multiple: Literal["peek", "gotoAndPeek", "goto"],
     ) -> PeekLocationsCommand:
-        from wake.lsp.utils import path_to_uri
-
-        pos_line, pos_col = start.source_unit.get_line_col_from_byte_offset(
-            start.name_location[0]
-            if isinstance(start, ir.DeclarationAbc)
-            else start.byte_location[0]
-        )
-
-        l = []
-        for loc in locations:
-            start_line, start_col = loc.source_unit.get_line_col_from_byte_offset(
-                loc.name_location[0]
-                if isinstance(loc, ir.DeclarationAbc)
-                else loc.byte_location[0]
-            )
-            end_line, end_col = loc.source_unit.get_line_col_from_byte_offset(
-                loc.name_location[1]
-                if isinstance(loc, ir.DeclarationAbc)
-                else loc.byte_location[1]
-            )
-            l.append(
-                Location(
-                    uri=DocumentUri(path_to_uri(loc.source_unit.file)),
-                    range=Range(
-                        start=Position(line=start_line - 1, character=start_col - 1),
-                        end=Position(line=end_line - 1, character=end_col - 1),
-                    ),
-                )
-            )
-
         return cls(
-            uri=DocumentUri(path_to_uri(start.source_unit.file)),
-            position=Position(line=pos_line - 1, character=pos_col - 1),
-            locations=l,
+            path=start.source_unit.file,
+            byte_offset=(
+                start.name_location[0]
+                if isinstance(start, ir.DeclarationAbc)
+                else start.byte_location[0]
+            ),
+            locations=[
+                (loc.source_unit.file, loc.name_location[0], loc.name_location[1])
+                if isinstance(loc, ir.DeclarationAbc)
+                else (loc.source_unit.file, loc.byte_location[0], loc.byte_location[1])
+                for loc in locations
+            ],
             multiple=multiple,
         )
 
 
-class OpenCommand(CommandAbc):
-    uri: DocumentUri  # pyright: ignore reportInvalidTypeForm
-
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs, command="open")
+@dataclass
+class OpenCommand:
+    uri: str
 
 
-class CopyToClipboardCommand(CommandAbc):
+@dataclass
+class CopyToClipboardCommand:
     text: str
 
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs, command="copyToClipboard")
 
-
-class ShowMessageCommand(CommandAbc):
+@dataclass
+class ShowMessageCommand:
     message: str
     kind: Literal["info", "warning", "error"]
 
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs, command="showMessage")
 
-
-class ShowDotCommand(CommandAbc):
+@dataclass
+class ShowDotCommand:
     title: str
     dot: str
 
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs, command="showDot")
+
+CommandType = Union[
+    GoToLocationsCommand,
+    PeekLocationsCommand,
+    OpenCommand,
+    CopyToClipboardCommand,
+    ShowMessageCommand,
+    ShowDotCommand,
+]
 
 
 class LspProvider:
     _hovers: Dict[Path, Dict[Tuple[int, int], Set[HoverOptions]]]
     _code_lenses: Dict[Path, Dict[Tuple[int, int], Set[CodeLensOptions]]]
     _inlay_hints: Dict[Path, Dict[int, Set[InlayHintOptions]]]
-    _commands: List[CommandAbc]
+    _commands: List[CommandType]
     _callbacks: Dict[str, Tuple[str, Callable[[], None]]]
     _callback_counter: int
     _callback_kind: str
@@ -246,10 +176,10 @@ class LspProvider:
         self._callback_counter = 0
         self._callback_kind = callback_kind
 
-    def add_commands(self, commands: List[CommandAbc]) -> None:
+    def add_commands(self, commands: List[CommandType]) -> None:
         self._commands.extend(commands)
 
-    def get_commands(self) -> Tuple[CommandAbc, ...]:
+    def get_commands(self) -> Tuple[CommandType, ...]:
         return tuple(self._commands)
 
     def get_callback(self, callback_id: str) -> Tuple[str, Callable[[], None]]:

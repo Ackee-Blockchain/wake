@@ -1,12 +1,11 @@
+import asyncio
 import logging
-from itertools import chain
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
 from wake.core import get_logger
 from wake.ir import (
     BinaryOperation,
-    ContractDefinition,
     DeclarationAbc,
     Identifier,
     IdentifierPath,
@@ -17,7 +16,6 @@ from wake.ir import (
     YulIdentifier,
 )
 
-from ...core.solidity_version import SemanticVersion
 from ..common_structures import (
     MarkupContent,
     MarkupKind,
@@ -124,10 +122,12 @@ def _get_results_from_node(
 
 
 def _get_hover_from_cache(path: Path, position: Position, context: LspContext):
-    new_byte_offset = context.compiler.get_byte_offset_from_line_pos(
+    new_byte_offset = context.compiler.get_early_byte_offset_from_line_pos(
         path, position.line, position.character
     )
-    backward_changes = context.compiler.get_last_compilation_backward_changes(path)
+    backward_changes = context.compiler.get_last_compilation_backward_changes(
+        path, path
+    )
     if backward_changes is None:
         raise Exception("No backward changes found")
     changes_before = backward_changes[0:new_byte_offset]
@@ -142,38 +142,74 @@ def _get_hover_from_cache(path: Path, position: Position, context: LspContext):
 
     node = max(nodes, key=lambda n: n.ast_tree_depth)
 
-    if isinstance(node, DeclarationAbc):
-        location = node.name_location
-        forward_changes = context.compiler.get_last_compilation_forward_changes(path)
-        if forward_changes is None:
-            raise Exception("No forward changes found")
-        new_start = (
-            changes_to_byte_offset(forward_changes[0 : location[0]]) + location[0]
-        )
-        new_end = changes_to_byte_offset(forward_changes[0 : location[1]]) + location[1]
-        node_name_location = (new_start, new_end)
-    else:
-        node_name_location = None
+    if isinstance(node, (IdentifierPath, UserDefinedTypeName)):
+        node = node.identifier_path_part_at(old_byte_offset)
+        if node is None:
+            return None
 
-    result = _get_results_from_node(
-        node, position, old_byte_offset, context, node_name_location
-    )
-    if result is None:
+    results = []
+    if isinstance(node, DeclarationAbc):
+        if node.name_location[0] <= old_byte_offset < node.name_location[1]:
+            results.append(f"```solidity\n{node.declaration_string}\n```")
+    else:
+        try:
+            results.append(context.compiler.hover_cache[node])
+        except KeyError:
+            pass
+
+    forward_changes = context.compiler.get_last_compilation_forward_changes(path, path)
+    if forward_changes is not None:
+        new_node_start = changes_to_byte_offset(forward_changes[0 : node.byte_location[0]]) + node.byte_location[0]
+        new_node_end = changes_to_byte_offset(forward_changes[0 : node.byte_location[1]]) + node.byte_location[1]
+
+        results.extend(_get_hover_from_printers(context, path, new_byte_offset, (new_node_start, new_node_end)))
+        results.extend(_get_hover_from_detectors(context, path, new_byte_offset, (new_node_start, new_node_end)))
+
+    if len(results) == 0:
         return None
 
-    value, location = result
-    forward_changes = context.compiler.get_last_compilation_forward_changes(path)
+    forward_changes = context.compiler.get_last_compilation_forward_changes(path, path)
     if forward_changes is None:
         raise Exception("No forward changes found")
-    new_start = changes_to_byte_offset(forward_changes[0 : location[0]]) + location[0]
-    new_end = changes_to_byte_offset(forward_changes[0 : location[1]]) + location[1]
+    new_start = changes_to_byte_offset(forward_changes[0 : node.byte_location[0]]) + node.byte_location[0]
+    new_end = changes_to_byte_offset(forward_changes[0 : node.byte_location[1]]) + node.byte_location[1]
     return Hover(
         contents=MarkupContent(
             kind=MarkupKind.MARKDOWN,
-            value=value,
+            value="\n***\n".join(results),
         ),
-        range=context.compiler.get_range_from_byte_offsets(path, (new_start, new_end)),
+        range=context.compiler.get_early_range_from_byte_offsets(path, (new_start, new_end)),
     )
+
+
+def _get_hover_from_printers(context: LspContext, path: Path, byte_offset: int, node_offsets: Tuple[int, int]) -> List[str]:
+    backward_changes = context.compiler.get_printer_backward_changes(path)
+    if backward_changes is None or len(backward_changes[node_offsets[0]:node_offsets[1]]) > 0:
+        return []
+
+    old_byte_offset = changes_to_byte_offset(backward_changes[0:byte_offset]) + byte_offset
+    old_node_start = changes_to_byte_offset(backward_changes[0:node_offsets[0]]) + node_offsets[0]
+    old_node_end = changes_to_byte_offset(backward_changes[0:node_offsets[1]]) + node_offsets[1]
+
+    return [
+        o.text
+        for o in context.compiler.get_printer_hovers(path, old_byte_offset, (old_node_start, old_node_end))
+    ]
+
+
+def _get_hover_from_detectors(context: LspContext, path: Path, byte_offset: int, node_offsets: Tuple[int, int]) -> List[str]:
+    backward_changes = context.compiler.get_detector_backward_changes(path)
+    if backward_changes is None or len(backward_changes[node_offsets[0]:node_offsets[1]]) > 0:
+        return []
+
+    old_byte_offset = changes_to_byte_offset(backward_changes[0:byte_offset]) + byte_offset
+    old_node_start = changes_to_byte_offset(backward_changes[0:node_offsets[0]]) + node_offsets[0]
+    old_node_end = changes_to_byte_offset(backward_changes[0:node_offsets[1]]) + node_offsets[1]
+
+    return [
+        o.text
+        for o in context.compiler.get_detector_hovers(path, old_byte_offset, (old_node_start, old_node_end))
+    ]
 
 
 async def hover(context: LspContext, params: HoverParams) -> Optional[Hover]:
@@ -182,16 +218,22 @@ async def hover(context: LspContext, params: HoverParams) -> Optional[Hover]:
     )
 
     path = uri_to_path(params.text_document.uri).resolve()
+
+    await next(asyncio.as_completed(
+        [context.compiler.compilation_ready.wait(), context.compiler.cache_ready.wait()]
+    ))
+
     if (
         path not in context.compiler.interval_trees
-        or not context.compiler.output_ready.is_set()
+        or not context.compiler.compilation_ready.is_set()
     ):
         try:
+            await context.compiler.cache_ready.wait()
             return _get_hover_from_cache(path, params.position, context)
         except Exception:
             pass
 
-    await context.compiler.output_ready.wait()
+    await context.compiler.compilation_ready.wait()
     if path not in context.compiler.interval_trees:
         return None
 
@@ -220,11 +262,8 @@ async def hover(context: LspContext, params: HoverParams) -> Optional[Hover]:
     if definition_result is not None:
         results.append(definition_result[0])
 
-    for hover_options in chain(
-        context.compiler.get_detector_hovers(path, byte_offset, node.byte_location),
-        context.compiler.get_printer_hovers(path, byte_offset, node.byte_location),
-    ):
-        results.append(hover_options.text)
+    results.extend(_get_hover_from_printers(context, path, byte_offset, node.byte_location))
+    results.extend(_get_hover_from_detectors(context, path, byte_offset, node.byte_location))
 
     return Hover(
         contents=MarkupContent(

@@ -758,7 +758,7 @@ class SolidityCompiler:
                 if console is not None:
                     console.log("[red]Failed to load previous build artifacts[/red]")
                 return
-            self._latest_build.fix_after_deserialization()
+            self._latest_build.fix_after_deserialization(lsp=False)
 
         if console is not None:
             end = time.perf_counter()
@@ -790,15 +790,33 @@ class SolidityCompiler:
             merged_compilation_units: List[CompilationUnit] = []
             source_unit_names: Set = set(compilation_units[0].source_unit_names)
             versions = compilation_units[0].versions
+            target_version = config.compiler.solc.target_version
 
-            for cu in compilation_units:
-                # only merge compilation units satisfying the minimum version
-                if versions & cu.versions and (
-                    (supported_versions & versions)
-                    and (supported_versions & cu.versions)
-                    or not (supported_versions & versions)
-                    and not (supported_versions & cu.versions)
+            for cu in compilation_units[1:]:
+                if (
+                    target_version is None
+                    and versions & cu.versions
+                    and (
+                        (supported_versions & versions)
+                        and (supported_versions & cu.versions)
+                        or not (supported_versions & versions)
+                        and not (supported_versions & cu.versions)
+                    )
                 ):
+                    # if target_version is unset, only merge compilation units satisfying the minimum version
+                    source_unit_names |= cu.source_unit_names
+                    versions &= cu.versions
+                elif (
+                    target_version is not None
+                    and versions & cu.versions
+                    and (
+                        target_version in versions
+                        and target_version in cu.versions
+                        or target_version not in versions
+                        and target_version not in cu.versions
+                    )
+                ):
+                    # if target_version is set, only merge compilation units satisfying the target version
                     source_unit_names |= cu.source_unit_names
                     versions &= cu.versions
                 else:
@@ -902,7 +920,7 @@ class SolidityCompiler:
             logger.debug("Performing full recompile")
             build = ProjectBuild(
                 interval_trees={},
-                reference_resolver=ReferenceResolver(),
+                reference_resolver=ReferenceResolver(lsp=False),
                 source_units={},
             )
             files_to_compile = set(

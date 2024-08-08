@@ -44,7 +44,7 @@ class CodeActionOptions(WorkDoneProgressOptions):
 
 class CodeActionContext(LspModel):
     diagnostics: List[Diagnostic]
-    only: Optional[List[CodeActionKind]] = None
+    only: Optional[List[Union[CodeActionKind, str]]] = None
     trigger_kind: Optional[CodeActionTriggerKind] = None
 
 

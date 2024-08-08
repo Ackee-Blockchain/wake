@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import platform
 import subprocess
 from pathlib import Path
 from typing import Dict
@@ -80,13 +81,25 @@ class SolcFrontend:
         logger.debug(f"Running solc: {' '.join(args)}")
 
         # the first argument in this call cannot be `Path` because of https://bugs.python.org/issue35246
-        proc = await asyncio.create_subprocess_exec(
-            *args,
-            cwd=self.__config.project_root_path,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                *args,
+                cwd=self.__config.project_root_path,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+        except OSError as e:
+            if (
+                e.errno == 86
+                and platform.system() == "Darwin"
+                and platform.machine() in {"aarch64", "arm64", "AARCH64", "ARM64"}
+            ):
+                raise RuntimeError(
+                    "Rosetta 2 must be installed to run Solidity compiler on Apple Silicon. Run `softwareupdate --install-rosetta` to install it."
+                )
+            raise
+
         standard_input_json = standard_input.model_dump_json(
             by_alias=True, exclude_none=True
         )

@@ -164,7 +164,7 @@ async def prepare_type_hierarchy(
     logger.debug(
         f"Type hierarchy for file {params.text_document.uri} at position {params.position} requested"
     )
-    await context.compiler.output_ready.wait()
+    await context.compiler.compilation_ready.wait()
 
     path = uri_to_path(params.text_document.uri).resolve()
 

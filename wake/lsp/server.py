@@ -126,6 +126,15 @@ from .protocol_structures import (
     ResponseMessage,
 )
 from .rpc_protocol import RpcProtocol
+from .sake import (
+    SakeCallParams,
+    SakeContext,
+    SakeDeployParams,
+    SakeGetBalancesParams,
+    SakeSetBalancesParams,
+    SakeTransactParams,
+    SakeSetLabelParams,
+)
 from .server_capabilities import (
     FileOperationFilter,
     FileOperationPattern,
@@ -167,15 +176,17 @@ def key_in_nested_dict(key: Tuple, d: Dict) -> bool:
 
 
 class LspServer:
-    __initialized: bool
+    __initialized: bool  # signals initialize request was received
     __tfs_version: Optional[str]
     __cli_config: WakeConfig
     __workspaces: Dict[Path, LspContext]
+    __workspace_lock: asyncio.Lock
+    __initialized_event: asyncio.Event  # signals initialized notification logic finished
     __user_config: Optional[WakeConfig]
     __main_workspace: Optional[LspContext]
+    __sake_context: Optional[SakeContext]
     __workspace_path: Optional[Path]
     __protocol: RpcProtocol
-    __run: bool
     __request_id_counter: int
     __sent_requests: Dict[Union[int, str], asyncio.Event]
     __message_responses: Dict[Union[int, str], ResponseMessage]
@@ -196,11 +207,13 @@ class LspServer:
         self.__initialized = False
         self.__cli_config = config
         self.__workspaces = {}
+        self.__workspace_lock = asyncio.Lock()
+        self.__initialized_event = asyncio.Event()
         self.__user_config = None
         self.__main_workspace = None
+        self.__sake_context = None
         self.__workspace_path = None
         self.__protocol = RpcProtocol(reader, writer)
-        self.__run = True
         self.__request_id_counter = 0
         self.__sent_requests = {}
         self.__message_responses = {}
@@ -272,6 +285,66 @@ class LspServer:
                 ),
                 WorkspaceSymbol,
             ),
+            RequestMethodEnum.SAKE_COMPILE: (
+                lambda params: (
+                    self.__sake_context.compile()  # pyright: ignore reportAttributeAccessIssue
+                ),
+                None,
+            ),
+            RequestMethodEnum.SAKE_GET_ACCOUNTS: (
+                lambda params: (
+                    self.__sake_context.get_accounts()  # pyright: ignore reportAttributeAccessIssue
+                ),
+                None,
+            ),
+            RequestMethodEnum.SAKE_DEPLOY: (
+                lambda params: (
+                    self.__sake_context.deploy(  # pyright: ignore reportAttributeAccessIssue
+                        params,
+                    )
+                ),
+                SakeDeployParams,
+            ),
+            RequestMethodEnum.SAKE_TRANSACT: (
+                lambda params: (
+                    self.__sake_context.transact(  # pyright: ignore reportAttributeAccessIssue
+                        params,
+                    )
+                ),
+                SakeTransactParams,
+            ),
+            RequestMethodEnum.SAKE_CALL: (
+                lambda params: (
+                    self.__sake_context.call(  # pyright: ignore reportAttributeAccessIssue
+                        params,
+                    )
+                ),
+                SakeCallParams,
+            ),
+            RequestMethodEnum.SAKE_SET_LABEL: (
+                lambda params: (
+                    self.__sake_context.set_label(  # pyright: ignore reportAttributeAccessIssue
+                        params,
+                    )
+                ),
+                SakeSetLabelParams,
+            ),
+            RequestMethodEnum.SAKE_GET_BALANCES: (
+                lambda params: (
+                    self.__sake_context.get_balances(  # pyright: ignore reportAttributeAccessIssue
+                        params,
+                    )
+                ),
+                SakeGetBalancesParams,
+            ),
+            RequestMethodEnum.SAKE_SET_BALANCES: (
+                lambda params: (
+                    self.__sake_context.set_balances(  # pyright: ignore reportAttributeAccessIssue
+                        params,
+                    )
+                ),
+                SakeSetBalancesParams,
+            ),
         }
 
         self.__notification_mapping = {
@@ -281,7 +354,7 @@ class LspServer:
             RequestMethodEnum.LOG_TRACE: (self._log_trace, LogTraceParams),
             RequestMethodEnum.SET_TRACE: (self._set_trace, SetTraceParams),
             RequestMethodEnum.TEXT_DOCUMENT_DID_OPEN: (
-                self._text_document_did_open,
+                self._workspace_route,
                 DidOpenTextDocumentParams,
             ),
             RequestMethodEnum.TEXT_DOCUMENT_DID_CHANGE: (
@@ -386,12 +459,24 @@ class LspServer:
             except Exception:
                 pass
 
+        try:
+            if (
+                self.__sake_context is not None
+                and self.__sake_context.chain_handle is not None
+            ):
+                self.__sake_context.chain_handle.__exit__(None, None, None)
+        except Exception:
+            pass
+
+        self.__method_mapping.clear()
+        self.__notification_mapping.clear()
+
     async def _main_task(self) -> None:
         messages_queue = asyncio.Queue()
         self.create_task(self._messages_loop(messages_queue))
 
         try:
-            while self.__run:
+            while True:
                 message = await self.__protocol.receive()
                 if isinstance(message, ResponseMessage):
                     await self._handle_response(message)
@@ -399,9 +484,6 @@ class LspServer:
                     await messages_queue.put(message)
         except ConnectionError:
             pass
-
-        for task in self.__running_tasks:
-            task.cancel()
 
     async def _messages_loop(self, queue: asyncio.Queue) -> NoReturn:
         while True:
@@ -539,14 +621,17 @@ class LspServer:
         logger.info(f"Message received: {request}")
 
         # Init before request needed
-        if request.method != RequestMethodEnum.INITIALIZE and not self.__initialized:
-            response = self._serve_error(
-                request,
-                ErrorCodes.ServerNotInitialized,
-                "Server has not been initialized",
-            )
-            await self.__protocol.send(response)
-            return
+        if request.method != RequestMethodEnum.INITIALIZE:
+            if not self.__initialized:
+                response = self._serve_error(
+                    request,
+                    ErrorCodes.ServerNotInitialized,
+                    "Server has not been initialized",
+                )
+                await self.__protocol.send(response)
+                return
+
+            await self.__initialized_event.wait()
 
         # Handling request
         try:
@@ -560,6 +645,9 @@ class LspServer:
 
         if not self.__initialized and notification.method != RequestMethodEnum.EXIT:
             return
+
+        if notification.method != RequestMethodEnum.INITIALIZED:
+            await self.__initialized_event.wait()
 
         try:
             n, params_type = self.__notification_mapping[notification.method]
@@ -729,7 +817,8 @@ class LspServer:
         pass
 
     async def _shutdown(self, params: Any) -> None:
-        self.__run = False
+        for task in self.__running_tasks:
+            task.cancel()
 
     async def _parse_config(
         self, raw_config: dict, workspace_path: Path
@@ -1048,10 +1137,13 @@ class LspServer:
                 self.__workspace_path
             )
             self.__main_workspace = LspContext(self, config, True)
+            self.__sake_context = SakeContext(self.__main_workspace)
             self.__main_workspace.use_toml = use_toml
             self.__main_workspace.toml_path = toml_path
             self.__workspaces[self.__workspace_path] = self.__main_workspace
             self.__main_workspace.run()
+
+            self.__initialized_event.set()
 
     async def _workspace_did_change_watched_files(
         self, params: DidChangeWatchedFilesParams
@@ -1172,26 +1264,32 @@ class LspServer:
         self,
         uri: DocumentUri,  # pyright: ignore reportInvalidTypeForm
     ) -> LspContext:
-        path = uri_to_path(uri)
-        matching_workspaces = []
-        for workspace in self.__workspaces.values():
-            try:
-                matching_workspaces.append(
-                    (workspace, path.relative_to(workspace.config.project_root_path))
-                )
-            except ValueError:
-                pass
+        # prevent race conditions caused by awaiting on _create_config
+        # that would cause multiple workspaces to be created for the same project root path
+        async with self.__workspace_lock:
+            path = uri_to_path(uri)
+            matching_workspaces = []
+            for workspace in self.__workspaces.values():
+                try:
+                    matching_workspaces.append(
+                        (
+                            workspace,
+                            path.relative_to(workspace.config.project_root_path),
+                        )
+                    )
+                except ValueError:
+                    pass
 
-        if len(matching_workspaces) == 0:
-            config, use_toml, toml_path = await self._create_config(path.parent)
-            context = LspContext(self, config, False)
-            context.use_toml = use_toml
-            context.toml_path = toml_path
-            self.__workspaces[path.parent] = context
-            context.run()
-            return context
-        else:
-            return min(matching_workspaces, key=lambda x: len(x[1].parts))[0]
+            if len(matching_workspaces) == 0:
+                config, use_toml, toml_path = await self._create_config(path.parent)
+                context = LspContext(self, config, False)
+                context.use_toml = use_toml
+                context.toml_path = toml_path
+                self.__workspaces[path.parent] = context
+                context.run()
+                return context
+            else:
+                return min(matching_workspaces, key=lambda x: len(x[1].parts))[0]
 
     async def _workspace_route(self, params: Any) -> Any:
         if isinstance(
@@ -1227,6 +1325,8 @@ class LspServer:
             return await prepare_rename(context, params)
         elif isinstance(params, RenameParams):
             return await rename(context, params)
+        elif isinstance(params, DidOpenTextDocumentParams):
+            return await self._text_document_did_open(context, params)
         elif isinstance(params, DidChangeTextDocumentParams):
             return await self._text_document_did_change(context, params)
         elif isinstance(params, WillSaveTextDocumentParams):
@@ -1246,27 +1346,10 @@ class LspServer:
         else:
             raise NotImplementedError(f"Unhandled request: {type(params)}")
 
-    async def _text_document_did_open(self, params: DidOpenTextDocumentParams) -> None:
-        path = uri_to_path(params.text_document.uri)
-        matching_workspaces = []
-        for workspace in self.__workspaces.values():
-            try:
-                matching_workspaces.append(
-                    (workspace, path.relative_to(workspace.config.project_root_path))
-                )
-            except ValueError:
-                pass
-
-        if len(matching_workspaces) == 0:
-            config, use_toml, toml_path = await self._create_config(path.parent)
-            context = LspContext(self, config, False)
-            context.use_toml = use_toml
-            context.toml_path = toml_path
-            self.__workspaces[path.parent] = context
-            context.run()
-        else:
-            context = min(matching_workspaces, key=lambda x: len(x[1].parts))[0]
-
+    @staticmethod
+    async def _text_document_did_open(
+        context: LspContext, params: DidOpenTextDocumentParams
+    ) -> None:
         await context.compiler.add_change(params)
         await context.parser.add_change(params)
 

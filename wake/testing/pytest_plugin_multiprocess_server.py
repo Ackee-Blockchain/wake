@@ -268,7 +268,8 @@ class PytestWakePluginMultiprocessServer:
                         )
                     elif msg[0] == "pytest_sessionfinish":
                         if progress is not None:
-                            progress.update(tasks[index], description=f"Finished")
+                            text = f"#{index} finished [green]✓[/green]" if msg[2] == 0 else f"#{index} failed [red]✗[/red]"
+                            progress.update(tasks[index], description=text)
 
                         self._processes.pop(index)
                     elif msg[0] == "pytest_internalerror":
