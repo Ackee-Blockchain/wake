@@ -146,7 +146,7 @@ from .server_capabilities import (
     ServerCapabilitiesWorkspaceFileOperations,
     WorkspaceFoldersServerCapabilities,
 )
-from .utils.uri import uri_to_path
+from .utils.uri import uri_to_path, path_to_uri
 
 logger = get_logger(__name__)
 
@@ -1081,7 +1081,7 @@ class LspServer:
                                         FileSystemWatcher(
                                             glob_pattern=RelativePattern(
                                                 base_uri=URI(
-                                                    str(
+                                                    path_to_uri(
                                                         self.__workspace_path
                                                         / "detectors"
                                                     )
@@ -1093,7 +1093,7 @@ class LspServer:
                                         FileSystemWatcher(
                                             glob_pattern=RelativePattern(
                                                 base_uri=URI(
-                                                    str(
+                                                    path_to_uri(
                                                         self.__cli_config.global_data_path
                                                         / "global-detectors"
                                                     )
@@ -1105,7 +1105,7 @@ class LspServer:
                                         FileSystemWatcher(
                                             glob_pattern=RelativePattern(
                                                 base_uri=URI(
-                                                    str(
+                                                    path_to_uri(
                                                         self.__workspace_path
                                                         / "printers"
                                                     )
@@ -1117,7 +1117,7 @@ class LspServer:
                                         FileSystemWatcher(
                                             glob_pattern=RelativePattern(
                                                 base_uri=URI(
-                                                    str(
+                                                    path_to_uri(
                                                         self.__cli_config.global_data_path
                                                         / "global-printers"
                                                     )
