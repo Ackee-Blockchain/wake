@@ -962,16 +962,19 @@ class LspCompiler:
             for rename in change.files:
                 old_path = uri_to_path(rename.old_uri).resolve()
                 new_path = uri_to_path(rename.new_uri).resolve()
-                self.__early_disk_contents[new_path] = self.__early_disk_contents.pop(
-                    old_path
-                )
-                self.__early_line_indexes[new_path] = self.__early_line_indexes.pop(
-                    old_path
-                )
+
+                if old_path in self.__early_disk_contents:
+                    self.__early_disk_contents[
+                        new_path
+                    ] = self.__early_disk_contents.pop(old_path)
+                if old_path in self.__early_line_indexes:
+                    self.__early_line_indexes[new_path] = self.__early_line_indexes.pop(
+                        old_path
+                    )
         elif isinstance(change, DeleteFilesParams):
             for file in change.files:
                 path = uri_to_path(file.uri).resolve()
-                self.__early_disk_contents.pop(path)
+                self.__early_disk_contents.pop(path, None)
                 self.__early_line_indexes.pop(path, None)
 
     async def update_config(
