@@ -6,6 +6,35 @@ small.label {
 }
 </style>
 
+## 4.11.0 <small>(Aug 13, 2024)</small> { id="4.11.0" }
+
+Features & improvements:
+
+- improved merging of compilation units in context of min. supported version and target version set in config <small class="label">[core]</small>
+- CLI does not raise exception on compilation of files with Solidity version lower than min. supported version <small class="label">[core]</small>
+- Wake IR now uses weak references to avoid cyclic references preventing garbage collection <small class="label">[core]</small>
+- improved error messages when Rosetta is not enabled on macOS <small class="label">[core]</small>
+- added optional `--incremental` CLI option to `wake up` commands <small class="label">[core]</small>
+- language server now watches for external changes to Solidity files (e.g. through git branch switch) and recompiles automatically <small class="label">[language server]</small>
+- improved language server RAM usage <small class="label">[language server]</small>
+- improved language server responsiveness, especially when recompiling <small class="label">[language server]</small>
+- improved multiprocessing test status messages <small class="label">[testing framework]</small>
+
+Fixes:
+
+- added `certifi` dependency on macOS - should resolve SSL certificates error when downloading solc binaries <small class="label">[core]</small>
+- fixed imported source unit removed from build artifacts while importing source unit kept in build artifacts <small class="label">[core]</small>
+- fixed variable name location parsing when variable has empty name <small class="label">[core]</small>
+- fixed sending compilation build to detectors/printers subprocess causing crashes due to build size & cyclic references <small class="label">[language server]</small>
+- fixed multiple memory leaks in LSP <small class="label">[language server]</small>
+- fixed LSP `mcopy` definition - thanks to @madlabman <small class="label">[language server]</small>
+- fixed language server crashes due to unexpected code action kinds <small class="label">[language server]</small>
+- fixed race conditions when creating language server context and initialising server <small class="label">[language server]</small>
+- fixed LSP watchdog URI format causing crashes in Neovim <small class="label">[language server]</small>
+- fixed multiple other LSP compilation bugs <small class="label">[language server]</small>
+- fixed max. supported tx type detection with DRPC node <small class="label">[deployment framework]</small>
+- fixed `.selector` types in pytypes (`bytes4` and `bytes32` instead of `bytes`) <small class="label">[testing & deployment framework]</small>
+
 ## 4.10.1 <small>(Jun 11, 2024)</small> { id="4.10.1" }
 
 Fixes:
