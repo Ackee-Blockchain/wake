@@ -631,6 +631,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#4.11.0" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.11.0 (Aug 13, 2024)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#4.10.1" class="md-nav__link">
     <span class="md-ellipsis">
       4.10.1 (Jun 11, 2024)
@@ -5461,6 +5470,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#4.11.0" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.11.0 (Aug 13, 2024)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#4.10.1" class="md-nav__link">
     <span class="md-ellipsis">
       4.10.1 (Jun 11, 2024)
@@ -5656,6 +5674,34 @@ small.label {
 }
 </style>
 
+<h2 id="4.11.0">4.11.0 <small>(Aug 13, 2024)</small><a class="headerlink" href="#4.11.0" title="Permanent link">#</a></h2>
+<p>Features &amp; improvements:</p>
+<ul>
+<li>improved merging of compilation units in context of min. supported version and target version set in config <small class="label">[core]</small></li>
+<li>CLI does not raise exception on compilation of files with Solidity version lower than min. supported version <small class="label">[core]</small></li>
+<li>Wake IR now uses weak references to avoid cyclic references preventing garbage collection <small class="label">[core]</small></li>
+<li>improved error messages when Rosetta is not enabled on macOS <small class="label">[core]</small></li>
+<li>added optional <code>--incremental</code> CLI option to <code>wake up</code> commands <small class="label">[core]</small></li>
+<li>language server now watches for external changes to Solidity files (e.g. through git branch switch) and recompiles automatically <small class="label">[language server]</small></li>
+<li>improved language server RAM usage <small class="label">[language server]</small></li>
+<li>improved language server responsiveness, especially when recompiling <small class="label">[language server]</small></li>
+<li>improved multiprocessing test status messages <small class="label">[testing framework]</small></li>
+</ul>
+<p>Fixes:</p>
+<ul>
+<li>added <code>certifi</code> dependency on macOS - should resolve SSL certificates error when downloading solc binaries <small class="label">[core]</small></li>
+<li>fixed imported source unit removed from build artifacts while importing source unit kept in build artifacts <small class="label">[core]</small></li>
+<li>fixed variable name location parsing when variable has empty name <small class="label">[core]</small></li>
+<li>fixed sending compilation build to detectors/printers subprocess causing crashes due to build size &amp; cyclic references <small class="label">[language server]</small></li>
+<li>fixed multiple memory leaks in LSP <small class="label">[language server]</small></li>
+<li>fixed LSP <code>mcopy</code> definition - thanks to @madlabman <small class="label">[language server]</small></li>
+<li>fixed language server crashes due to unexpected code action kinds <small class="label">[language server]</small></li>
+<li>fixed race conditions when creating language server context and initialising server <small class="label">[language server]</small></li>
+<li>fixed LSP watchdog URI format causing crashes in Neovim <small class="label">[language server]</small></li>
+<li>fixed multiple other LSP compilation bugs <small class="label">[language server]</small></li>
+<li>fixed max. supported tx type detection with DRPC node <small class="label">[deployment framework]</small></li>
+<li>fixed <code>.selector</code> types in pytypes (<code>bytes4</code> and <code>bytes32</code> instead of <code>bytes</code>) <small class="label">[testing &amp; deployment framework]</small></li>
+</ul>
 <h2 id="4.10.1">4.10.1 <small>(Jun 11, 2024)</small><a class="headerlink" href="#4.10.1" title="Permanent link">#</a></h2>
 <p>Fixes:</p>
 <ul>
