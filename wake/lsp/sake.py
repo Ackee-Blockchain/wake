@@ -460,7 +460,7 @@ class SakeContext:
             )
 
             trace = self.chain.chain_interface.debug_trace_call(
-                tx_params, options={"disableMemory": False}
+                tx_params, options={"enableMemory": True}
             )
             ret_value = trace["returnValue"]
             call_trace = CallTrace.from_debug_trace(
