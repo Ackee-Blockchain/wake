@@ -15,3 +15,4 @@ from .modifiers import ModifiersPrinter
 from .state_changes import StateChangesPrinter
 from .storage_layout import StorageLayoutPrinter
 from .tokens import TokensPrinter
+from .lsp_global_symbols_printer import LspGlobalSymbolsPrinterPrinter
