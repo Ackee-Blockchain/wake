@@ -394,6 +394,7 @@ async def detect_(
     watch: bool,
     ignore_disable_overrides: bool,
 ):
+    import glob
     import os
 
     from jschema_to_python.to_json import to_json
@@ -572,7 +573,8 @@ async def detect_(
     sol_files: Set[Path] = set()
     start = time.perf_counter()
     with console.status("[bold green]Searching for *.sol files...[/]"):
-        for file in config.project_root_path.rglob("**/*.sol"):
+        for f in glob.iglob(str(config.project_root_path / "**/*.sol"), recursive=True):
+            file = Path(f)
             if (
                 not any(
                     is_relative_to(file, p) for p in config.compiler.solc.exclude_paths

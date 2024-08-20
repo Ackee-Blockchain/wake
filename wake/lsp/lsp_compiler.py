@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import difflib
+import glob
 import multiprocessing
 import multiprocessing.connection
 import pickle
@@ -1139,7 +1140,8 @@ class LspCompiler:
                 self.__discovered_files.clear()
                 self.__compilation_errors.clear()
                 if self.__perform_files_discovery:
-                    for file in self.__config.project_root_path.rglob("**/*.sol"):
+                    for f in glob.iglob(str(self.__config.project_root_path / "**/*.sol"), recursive=True):
+                        file = Path(f)
                         if not self.__file_excluded(file) and file.is_file():
                             self.__discovered_files.add(file.resolve())
 
@@ -2248,7 +2250,8 @@ class LspCompiler:
 
             if self.__perform_files_discovery:
                 # perform Solidity files discovery
-                for file in self.__config.project_root_path.rglob("**/*.sol"):
+                for f in glob.iglob(str(self.__config.project_root_path / "**/*.sol"), recursive=True):
+                    file = Path(f)
                     if not self.__file_excluded(file) and file.is_file():
                         self.__discovered_files.add(file.resolve())
 
