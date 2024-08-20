@@ -1140,10 +1140,16 @@ class LspCompiler:
                 self.__discovered_files.clear()
                 self.__compilation_errors.clear()
                 if self.__perform_files_discovery:
-                    for f in glob.iglob(str(self.__config.project_root_path / "**/*.sol"), recursive=True):
-                        file = Path(f)
-                        if not self.__file_excluded(file) and file.is_file():
-                            self.__discovered_files.add(file.resolve())
+                    while True:
+                        try:
+                            for f in glob.iglob(str(self.__config.project_root_path / "**/*.sol"), recursive=True):
+                                file = Path(f)
+                                if not self.__file_excluded(file) and file.is_file():
+                                    self.__discovered_files.add(file.resolve())
+                            break
+                        except FileNotFoundError:
+                            self.__discovered_files.clear()
+                            await asyncio.sleep(0.1)
 
                 for file in self.__opened_files.keys():
                     if not self.__file_excluded(file):
@@ -2250,10 +2256,16 @@ class LspCompiler:
 
             if self.__perform_files_discovery:
                 # perform Solidity files discovery
-                for f in glob.iglob(str(self.__config.project_root_path / "**/*.sol"), recursive=True):
-                    file = Path(f)
-                    if not self.__file_excluded(file) and file.is_file():
-                        self.__discovered_files.add(file.resolve())
+                while True:
+                    try:
+                        for f in glob.iglob(str(self.__config.project_root_path / "**/*.sol"), recursive=True):
+                            file = Path(f)
+                            if not self.__file_excluded(file) and file.is_file():
+                                self.__discovered_files.add(file.resolve())
+                        break
+                    except FileNotFoundError:
+                        self.__discovered_files.clear()
+                        await asyncio.sleep(0.1)
 
                 self.__force_compile_files.update(self.__discovered_files)
 
