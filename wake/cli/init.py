@@ -124,6 +124,7 @@ def run_init(
     if ctx.invoked_subcommand is not None:
         return
 
+    import glob
     import subprocess
 
     from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
@@ -174,7 +175,8 @@ def run_init(
     sol_files: Set[Path] = set()
     start = time.perf_counter()
     with console.status("[bold green]Searching for *.sol files...[/]"):
-        for file in config.project_root_path.rglob("**/*.sol"):
+        for f in glob.iglob(str(config.project_root_path / "**/*.sol"), recursive=True):
+            file = Path(f)
             if (
                 not any(
                     is_relative_to(file, p) for p in config.compiler.solc.exclude_paths
@@ -284,6 +286,8 @@ async def run_init_pytypes(
     watch: bool,
     incremental: Optional[bool],
 ):
+    import glob
+
     from watchdog.observers import Observer
 
     from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
@@ -306,7 +310,8 @@ async def run_init_pytypes(
     sol_files: Set[Path] = set()
     start = time.perf_counter()
     with console.status("[bold green]Searching for *.sol files...[/]"):
-        for file in config.project_root_path.rglob("**/*.sol"):
+        for f in glob.iglob(str(config.project_root_path / "**/*.sol"), recursive=True):
+            file = Path(f)
             if (
                 not any(
                     is_relative_to(file, p) for p in config.compiler.solc.exclude_paths
@@ -560,6 +565,7 @@ def init_pytypes(
 @click.pass_context
 def run_init_config(ctx: Context, force: bool, incremental: Optional[bool]):
     """Initialize project config file."""
+    import glob
     import subprocess
 
     from wake.config import WakeConfig
@@ -589,7 +595,8 @@ def run_init_config(ctx: Context, force: bool, incremental: Optional[bool]):
     sol_files: Set[Path] = set()
     start = time.perf_counter()
     with console.status("[bold green]Searching for *.sol files...[/]"):
-        for file in config.project_root_path.rglob("**/*.sol"):
+        for f in glob.iglob(str(config.project_root_path / "**/*.sol"), recursive=True):
+            file = Path(f)
             if (
                 not any(
                     is_relative_to(file, p) for p in config.compiler.solc.exclude_paths

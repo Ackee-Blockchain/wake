@@ -24,6 +24,8 @@ async def compile(
     watch: bool,
     incremental: Optional[bool],
 ):
+    import glob
+
     from watchdog.observers import Observer
 
     from wake.compiler.compiler import (
@@ -42,7 +44,8 @@ async def compile(
     start = time.perf_counter()
     with console.status("[bold green]Searching for *.sol files...[/]"):
         if len(paths) == 0:
-            for file in config.project_root_path.rglob("**/*.sol"):
+            for f in glob.iglob(str(config.project_root_path / "**/*.sol"), recursive=True):
+                file = Path(f)
                 if (
                     not any(
                         is_relative_to(file, p)
@@ -59,7 +62,8 @@ async def compile(
                         raise ValueError(f"Argument `{p}` is not a Solidity file.")
                     sol_files.add(path)
                 elif path.is_dir():
-                    for file in path.rglob("**/*.sol"):
+                    for f in glob.iglob(str(path / "**/*.sol"), recursive=True):
+                        file = Path(f)
                         if (
                             not any(
                                 is_relative_to(file, p)

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import glob
 import json
 import logging
 import os
@@ -217,7 +218,8 @@ class CompilationFileSystemEventHandler(FileSystemEventHandler):
             start = time.perf_counter()
             files = set()
             with ctx_manager:
-                for file in self._config.project_root_path.rglob("**/*.sol"):
+                for f in glob.iglob(str(self._config.project_root_path / "**/*.sol"), recursive=True):
+                    file = Path(f)
                     if (
                         not any(
                             is_relative_to(file, p)
