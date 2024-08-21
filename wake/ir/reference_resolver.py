@@ -172,6 +172,14 @@ class ReferenceResolver:
                         and node.node_type == "IdentifierPath"
                     ):
                         break
+                    elif (
+                        other_type == "IdentifierPath"
+                        and node.node_type == "Identifier"
+                    ) or (
+                        other_type == "Identifier"
+                        and node.node_type == "IdentifierPath"
+                    ):
+                        break
 
                     assert (
                         other_type == node.node_type
