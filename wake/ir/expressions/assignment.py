@@ -165,6 +165,8 @@ class Assignment(ExpressionAbc):
                     return {(function_called,)}
                 else:
                     assert False, f"Unexpected node type: {type(node)}\n{self.source}"
+            elif isinstance(node, TupleExpression) and len(node.components) == 1:
+                return resolve_node(node.components[0])
             else:
                 assert False, f"Unexpected node type: {type(node)}\n{self.source}"
 
