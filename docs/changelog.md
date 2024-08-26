@@ -6,6 +6,19 @@ small.label {
 }
 </style>
 
+## 4.11.1 <small>(Aug 26, 2024)</small> { id="4.11.1" }
+
+Changes:
+
+- Wake now does not scan for Solidity files in hidden directories both in CLI and LSP <small class="label">[core]</small>
+
+Fixes:
+
+- fixed exception when accessing `Assignment.assigned_variables` for array access with base enclosed in parentheses <small class="label">[core]</small>
+- fixed indexing of Solidity AST compiled with both >=0.8 and <0.8 versions with AST node represented by `IdentifierPath` in >=0.8 and `Identifier` in <0.8 <small class="label">[core]</small>
+- fixed memory not always available in call traces in LSP contract deployment & interaction <small class="label">[language server]</small>
+- fixed `FileNotFoundError` when scanning for Solidity files in LSP <small class="label">[language server]</small>
+
 ## 4.11.0 <small>(Aug 13, 2024)</small> { id="4.11.0" }
 
 Features & improvements:
@@ -15,6 +28,7 @@ Features & improvements:
 - Wake IR now uses weak references to avoid cyclic references preventing garbage collection <small class="label">[core]</small>
 - improved error messages when Rosetta is not enabled on macOS <small class="label">[core]</small>
 - added optional `--incremental` CLI option to `wake up` commands <small class="label">[core]</small>
+- introduced API for deployment & interaction with Solidity contracts through LSP <small class="label">[language server]</small>
 - language server now watches for external changes to Solidity files (e.g. through git branch switch) and recompiles automatically <small class="label">[language server]</small>
 - improved language server RAM usage <small class="label">[language server]</small>
 - improved language server responsiveness, especially when recompiling <small class="label">[language server]</small>
