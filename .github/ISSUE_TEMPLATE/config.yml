@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Wake Community Chat
+    url: https://t.me/wake_group
+    about: Anything you want to quickly discuss about Wake without opening an issue.
