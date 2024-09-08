@@ -8,6 +8,7 @@ from typing import Any, Dict, FrozenSet, Iterable, Optional, Set, Tuple, Union
 
 import networkx as nx
 import tomli
+from typing_extensions import Literal
 
 from wake.core import get_logger
 from wake.utils import change_cwd
@@ -236,12 +237,12 @@ class WakeConfig:
         instance.__config = parsed_config
         return instance
 
-    def todict(self) -> Dict[str, Any]:
+    def todict(self, *, mode: Literal["python", "json"] = "python") -> Dict[str, Any]:
         """
         Returns:
             Dictionary containing the config options.
         """
-        return self.__config_raw
+        return self.__config.model_dump(by_alias=True, exclude_unset=True, mode=mode)
 
     def set(
         self,

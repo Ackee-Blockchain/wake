@@ -393,14 +393,17 @@ async def detect_(
     theme: str,
     watch: bool,
     ignore_disable_overrides: bool,
+    import_json: Optional[str],
 ):
     import glob
+    import json
     import os
 
     from jschema_to_python.to_json import to_json
     from rich.terminal_theme import DEFAULT_TERMINAL_THEME, SVG_EXPORT_THEME
     from watchdog.observers import Observer
 
+    from wake.config import WakeConfig
     from wake.detectors.api import (
         DetectorConfidence,
         DetectorImpact,
@@ -414,6 +417,7 @@ async def detect_(
     from ..compiler.compiler import CompilationFileSystemEventHandler
     from ..compiler.solc_frontend import SolcOutputError, SolcOutputErrorSeverityEnum
     from ..utils.file_utils import is_relative_to
+    from ..utils.version import get_package_version
     from .console import console
 
     severity_map: Dict[DetectorImpact, Dict[DetectorConfidence, int]] = {
@@ -570,27 +574,51 @@ async def detect_(
         if not watch:
             sys.exit(0 if len(all_detections) == 0 else 3)
 
-    sol_files: Set[Path] = set()
-    start = time.perf_counter()
-    with console.status("[bold green]Searching for *.sol files...[/]"):
-        for f in glob.iglob(str(config.project_root_path / "**/*.sol"), recursive=True):
-            file = Path(f)
-            if (
-                not any(
-                    is_relative_to(file, p) for p in config.compiler.solc.exclude_paths
-                )
-                and file.is_file()
-            ):
-                sol_files.add(file)
-    end = time.perf_counter()
-    console.log(
-        f"[green]Found {len(sol_files)} *.sol files in [bold green]{end - start:.2f} s[/bold green][/]"
-    )
+    if import_json is None:
+        sol_files: Set[Path] = set()
+        modified_files: Dict[Path, bytes] = {}
+        start = time.perf_counter()
+        with console.status("[bold green]Searching for *.sol files...[/]"):
+            for f in glob.iglob(str(config.project_root_path / "**/*.sol"), recursive=True):
+                file = Path(f)
+                if (
+                    not any(
+                        is_relative_to(file, p) for p in config.compiler.solc.exclude_paths
+                    )
+                    and file.is_file()
+                ):
+                    sol_files.add(file)
+        end = time.perf_counter()
+        console.log(
+            f"[green]Found {len(sol_files)} *.sol files in [bold green]{end - start:.2f} s[/bold green][/]"
+        )
+    else:
+        with open(import_json, "r") as f:
+            loaded = json.load(f)
+
+        if loaded["version"] != get_package_version("eth-wake"):
+            raise click.BadParameter(f"JSON file was created with version {loaded['version']} of eth-wake, while the current version is {get_package_version('eth-wake')}")
+
+        config = WakeConfig.fromdict(loaded["config"])
+        # add project root as an include path (for solc to resolve imports correctly)
+        config.update({"compiler": {"solc": {"include_paths": set(config.compiler.solc.include_paths) | {Path(loaded["project_root"]), }}}}, [])
+        modified_files = {
+            Path(path): source['content'].encode("utf-8") for path, source in loaded["sources"].items()
+        }
+        sol_files = {
+            path for path in modified_files.keys()
+            if not any(is_relative_to(path, p) for p in config.compiler.solc.exclude_paths)
+        }
 
     compiler = SolidityCompiler(config)
-    compiler.load(console=console)
+
+    if import_json is None:
+        compiler.load(console=console)
 
     if watch:
+        if import_json is not None:
+            raise click.BadParameter("Cannot watch when importing from JSON")
+
         fs_handler = CompilationFileSystemEventHandler(
             config,
             sol_files,
@@ -622,6 +650,7 @@ async def detect_(
         write_artifacts=not no_artifacts,
         console=console,
         no_warnings=True,
+        modified_files=modified_files,
     )
 
     assert compiler.latest_build_info is not None
@@ -655,6 +684,11 @@ async def detect_(
     is_flag=True,
     default=False,
     help="Ignore compilation errors and detector exceptions.",
+)
+@click.option(
+    "--import-json",
+    type=click.Path(exists=True, dir_okay=False),
+    help="Import project build info from JSON file.",
 )
 @click.option(
     "--export",
@@ -794,6 +828,7 @@ def run_detect(
     ctx: click.Context,
     no_artifacts: bool,
     ignore_errors: bool,
+    import_json: Optional[str],
     export: Optional[str],
     theme: str,
     watch: bool,
@@ -883,6 +918,7 @@ def run_detect(
             theme,
             watch,
             ignore_disable_overrides,
+            import_json,
         )
     )
 
