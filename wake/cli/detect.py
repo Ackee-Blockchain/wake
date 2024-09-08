@@ -531,14 +531,15 @@ async def detect_(
             )
         )
 
-        for detector_name, detection in all_detections:
-            print_detection(
-                detector_name,
-                detection,
-                config,
-                console,
-                "monokai" if theme == "dark" else "default",
-            )
+        if export != "json":
+            for detector_name, detection in all_detections:
+                print_detection(
+                    detector_name,
+                    detection,
+                    config,
+                    console,
+                    "monokai" if theme == "dark" else "default",
+                )
 
         if len(all_detections) == 0:
             console.print("No detections found")
@@ -567,6 +568,56 @@ async def detect_(
             log = create_sarif_log(used_detectors, all_detections)
             (config.project_root_path / "wake-detections.sarif").write_text(
                 to_json(log)
+            )
+        elif export == "json":
+            def process_detection(detection: Detection) -> Dict[str, Any]:
+                start_line, start_col = detection.ir_node.source_unit.get_line_col_from_byte_offset(detection.ir_node.byte_location[0])
+                end_line, end_col = detection.ir_node.source_unit.get_line_col_from_byte_offset(detection.ir_node.byte_location[1])
+                ret = {
+                    "message":  detection.message,
+                    "location": {
+                        "path": str(detection.ir_node.source_unit.file),
+                        "source_unit_name": detection.ir_node.source_unit.source_unit_name,
+                        "start_offset": detection.ir_node.byte_location[0],
+                        "end_offset": detection.ir_node.byte_location[1],
+                        "start_line": start_line,
+                        "start_col": start_col,
+                        "end_line": end_line,
+                        "end_col": end_col,
+                    }
+                }
+                if detection.subdetections:
+                    ret["subdetections"] = [process_detection(d) for d in detection.subdetections]
+
+                return ret
+
+            (config.project_root_path / ".wake" / "detections").mkdir(parents=True, exist_ok=True)
+
+            data = []
+            for i, (detector_name, detection) in enumerate(all_detections):
+                print_detection(
+                    detector_name,
+                    detection,
+                    config,
+                    console,
+                    "monokai" if theme == "dark" else "default",
+                    file_link=False,
+                )
+                console.save_html(
+                    str(config.project_root_path / ".wake" / "detections" / f"{i}.html"),
+                    theme=SVG_EXPORT_THEME if theme == "dark" else DEFAULT_TERMINAL_THEME,
+                )
+                data.append({
+                    "id": i,
+                    "detector_name": detector_name,
+                    "impact": detection.impact.value,
+                    "confidence": detection.confidence.value,
+                    "uri": detection.uri,
+                    "detection": process_detection(detection.detection),
+                })
+
+            (config.project_root_path / ".wake" / "detections" / "detections.json").write_text(
+                to_json(data)
             )
 
         console.record = False
@@ -692,7 +743,7 @@ async def detect_(
 )
 @click.option(
     "--export",
-    type=click.Choice(["svg", "html", "text", "ansi", "sarif"], case_sensitive=False),
+    type=click.Choice(["svg", "html", "text", "ansi", "sarif", "json"], case_sensitive=False),
     help="Export detections to file.",
 )
 @click.option(
