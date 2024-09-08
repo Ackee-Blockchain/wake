@@ -701,6 +701,8 @@ def print_detection(
     config: WakeConfig,
     console: rich.console.Console,
     theme: Union[str, SyntaxTheme] = "monokai",
+    *,
+    file_link: bool = True,
 ) -> None:
     from rich.panel import Panel
     from rich.syntax import Syntax
@@ -733,7 +735,10 @@ def print_detection(
             line=line + 1,
             col=col,
         )
-        subtitle = f"[link={link}]{source_unit.source_unit_name}[/link]"
+        if file_link:
+            subtitle = f"[link={link}]{source_unit.source_unit_name}[/link]"
+        else:
+            subtitle = source_unit.source_unit_name
 
         title = ""
         if isinstance(info, DetectorResult):
