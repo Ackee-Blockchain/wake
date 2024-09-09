@@ -191,7 +191,7 @@ class ChainInterfaceAbc(ABC):
                 args += ["-k", hardfork]
 
         console.print(f"Launching {' '.join(args)}")
-        process = subprocess.Popen(args, stdout=subprocess.DEVNULL)
+        process = subprocess.Popen(args, stdout=subprocess.DEVNULL, start_new_session=True)
 
         try:
             start = time.perf_counter()

@@ -247,6 +247,9 @@ class ChainInterfaceManager:
                             snapshot_reverted = True
                     except JsonRpcError:
                         pass
+                    except Exception: 
+                        logger.warning("Exception happen", exc_info=True)
+                        pass
                     break
 
         if snapshot_reverted and params is not None:
