@@ -236,22 +236,21 @@ class ChainInterfaceManager:
     def free(self, chain_interface: ChainInterfaceAbc) -> None:
         snapshot_reverted = False
         params = None
-
+        index = None
         for chain_params, chain_interfaces in self._chain_interfaces.items():
             for i, (c, snapshot) in enumerate(chain_interfaces):
                 if c == chain_interface:
                     params = chain_params
-                    self._chain_interfaces[chain_params].pop(i)
+                    index = i
                     try:
                         if snapshot is not None and chain_interface.revert(snapshot):
                             snapshot_reverted = True
                     except JsonRpcError:
                         pass
                     except Exception: 
-                        logger.warning("Exception happen", exc_info=True)
                         pass
                     break
-
+        self._chain_interfaces[chain_params].pop(index)
         if snapshot_reverted and params is not None:
             logger.debug(
                 "Freeing chain with uri=%s, accounts=%s, chain_id=%s, fork=%s, hardfork=%s",

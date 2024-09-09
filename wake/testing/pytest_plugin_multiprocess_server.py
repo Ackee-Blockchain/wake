@@ -106,7 +106,10 @@ class PytestWakePluginMultiprocessServer:
         self._queue.cancel_join_thread()
         for p, conn in self._processes.values():
             p.terminate()
-            p.join()
+            p.join(timeout=5)
+            if p.is_alive():
+                p.kill()
+                p.join()
             conn.close()
 
         self._queue.close()

@@ -80,7 +80,8 @@ class Chain(wake.development.core.Chain):
             self.gas_price = self._chain_interface.get_gas_price()
 
     def _connect_finalize(self) -> None:
-        connected_chains.remove(self)
+        if self._chain_interface in connected_chains:
+            connected_chains.remove(self)
         chain_interfaces_manager.free(self._chain_interface)
 
     def _new_private_key(self, extra_entropy: bytes = b"") -> bytes:
