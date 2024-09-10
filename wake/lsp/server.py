@@ -279,7 +279,15 @@ class LspServer:
                     )
                 ),
                 SakeCallParams,
-            )
+            ),
+            RequestMethodEnum.SAKE_GET_BYTECODE: (
+                lambda params: (
+                    self.__sake_context.get_bytecode(
+                        params,
+                    )
+                ),
+                WakeGetBytecodeRequestParams,
+            ),
         }
 
         self.__notification_mapping = {

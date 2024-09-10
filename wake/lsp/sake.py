@@ -47,6 +47,13 @@ class SakeCallParams(LspModel):
     calldata: str
     value: int
 
+class WakeGetBytecodeRequestParams:
+    contract_fqn: str
+
+class WakeGetBytecodeResponse(LspModel):
+    success: bool
+    bytecode: str
+
 
 def launch_chain(f):
     @wraps(f)
@@ -58,7 +65,6 @@ def launch_chain(f):
         return await f(context, *args, **kwargs)
 
     return wrapper
-
 
 class SakeContext:
     lsp_context: LspContext
@@ -93,6 +99,16 @@ class SakeContext:
         assert self.chain is not None
 
         return [str(a.address) for a in self.chain.accounts]
+
+    @launch_chain
+    async def get_bytecode(self, params: WakeGetBytecodeRequestParams) -> WakeGetBytecodeResponse:
+        assert self.chain is not None
+
+        try:
+            bytecode = self.compilation[params.contract_fqn].bytecode
+            return WakeGetBytecodeResponse(success=True, bytecode=bytecode)
+        except KeyError:
+            return WakeGetBytecodeResponse(success=False, bytecode="")
 
     @launch_chain
     async def deploy(self, params: SakeDeployParams) -> DeployResult:
