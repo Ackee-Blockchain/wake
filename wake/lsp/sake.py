@@ -114,6 +114,12 @@ class SakeSetLabelParams(LspModel):
     address: str
     label: Optional[str]
 
+class SakeGetBytecodeParams(LspModel):
+    contract_fqn: str
+
+class SakeGetBytecodeResult(SakeResult):
+    bytecode: str
+
 
 def launch_chain(f):
     @wraps(f)
@@ -541,3 +547,13 @@ class SakeContext:
             Account(params.address, chain=self.chain).label = params.label
         except Exception as e:
             raise LspError(ErrorCodes.InternalError, str(e)) from None
+
+    @launch_chain
+    async def get_bytecode(self, params: SakeGetBytecodeParams) -> SakeGetBytecodeResult:
+        assert self.chain is not None
+
+        try:
+            bytecode = self.compilation[params.contract_fqn].bytecode
+            return SakeGetBytecodeResult(success=True, bytecode=bytecode)
+        except KeyError:
+            return SakeGetBytecodeResult(success=False, bytecode="")

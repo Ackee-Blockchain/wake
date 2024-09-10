@@ -128,3 +128,4 @@ class RequestMethodEnum(StrEnum):
     SAKE_SET_LABEL = "wake/sake/setLabel"
     SAKE_GET_BALANCES = "wake/sake/getBalances"
     SAKE_SET_BALANCES = "wake/sake/setBalances"
+    SAKE_GET_BYTECODE = "wake/sake/getBytecode"
