@@ -40,6 +40,7 @@ class PytestWakePluginMultiprocess:
     _exception_handled: bool
 
     _ctx_managers: List
+    _keyboard_interrupt: bool
 
     def __init__(
         self,
@@ -62,6 +63,7 @@ class PytestWakePluginMultiprocess:
         self._debug = debug
         self._exception_handled = False
 
+        self._keyboard_interrupt = False
         self._ctx_managers = []
 
     def _setup_stdio(self):
@@ -86,6 +88,11 @@ class PytestWakePluginMultiprocess:
         e: Optional[BaseException],
         tb: Optional[TracebackType],
     ) -> None:
+
+        # After the keyboard interrupt, we do not interested in debugging.
+        if self._keyboard_interrupt:
+            return
+
         self._cleanup_stdio()
         self._exception_handled = True
 
@@ -177,11 +184,14 @@ class PytestWakePluginMultiprocess:
                 except queue.Full:
                     pass
 
-        def signal_handler(sig, frame):
-            raise KeyboardInterrupt()
-
         pickling_support.install()
-        signal.signal(signal.SIGTERM, signal_handler)
+
+        def sigint_handler(signum, frame):
+            self._keyboard_interrupt = True
+            self._queue.put(("keyboard_interrupt", self._index))
+            pytest.exit("Keyboard interrupt", returncode=0)
+
+        signal.signal(signal.SIGINT, sigint_handler)
 
         if self._debug:
             set_exception_handler(self._exception_handler)
@@ -226,6 +236,9 @@ class PytestWakePluginMultiprocess:
     # do not forward pytest_runtest_logstart and pytest_runtest_logfinish as they write item location to stdout which may be different for each process
 
     def pytest_runtest_logreport(self, report: pytest.TestReport):
+        # not sending exception report since the reason of exception is keyboard interrupt or at least triggered by keyboard interrupt
+        if self._keyboard_interrupt:
+            return
         self._queue.put(("pytest_runtest_logreport", self._index, report))
 
     def pytest_warning_recorded(self, warning_message, when, nodeid, location):
