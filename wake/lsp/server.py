@@ -131,6 +131,7 @@ from .sake import (
     SakeContext,
     SakeDeployParams,
     SakeGetBalancesParams,
+    SakeGetBytecodeParams,
     SakeSetBalancesParams,
     SakeTransactParams,
     SakeSetLabelParams,
@@ -344,6 +345,14 @@ class LspServer:
                     )
                 ),
                 SakeSetBalancesParams,
+            ),
+            RequestMethodEnum.SAKE_GET_BYTECODE: (
+                lambda params: (
+                    self.__sake_context.get_bytecode(  # pyright: ignore reportAttributeAccessIssue
+                        params,
+                    )
+                ),
+                SakeGetBytecodeParams,
             ),
         }
 
