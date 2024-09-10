@@ -1,7 +1,9 @@
 import multiprocessing
 import multiprocessing.connection
+import os
 import pickle
 import shutil
+import signal
 from contextlib import nullcontext
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
@@ -101,14 +103,15 @@ class PytestWakePluginMultiprocessServer:
                 parent_conn,
             )
             p.start()
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
 
     def pytest_sessionfinish(self, session: pytest.Session):
         self._queue.cancel_join_thread()
         for p, conn in self._processes.values():
-            p.terminate()
+            if p.pid is not None:
+                os.kill(p.pid, signal.SIGINT)
             p.join()
             conn.close()
-
         self._queue.close()
 
         # flush coverage
@@ -177,6 +180,7 @@ class PytestWakePluginMultiprocessServer:
         )
 
         try:
+            keyboard_interrupt = [False for _ in range(self._proc_count)]
             with ctx as progress:
                 if progress is not None:
                     tasks = [
@@ -296,7 +300,12 @@ class PytestWakePluginMultiprocessServer:
                         )
                     elif msg[0] == "pytest_sessionfinish":
                         if progress is not None:
-                            text = f"#{index} finished [green]✓[/green]" if msg[2] == 0 else f"#{index} failed [red]✗[/red]"
+                            if keyboard_interrupt[index]:
+                                text = f"#{index} interrupted [yellow]⚠[/yellow]"
+                            elif msg[2] == 0:
+                                text = f"#{index} finished [green]✓[/green]"
+                            else:
+                                text = f"#{index} failed [red]✗[/red]"
                             progress.update(tasks[index], description=text)
 
                         self._processes.pop(index)
@@ -308,6 +317,11 @@ class PytestWakePluginMultiprocessServer:
                         session.config.hook.pytest_internalerror(
                             excrepr=exc_info.getrepr(style="short"), excinfo=exc_info
                         )
+                    elif msg[0] == "keyboard_interrupt":
+                        keyboard_interrupt[index] = True
+
+            if True in keyboard_interrupt:
+                raise KeyboardInterrupt
         finally:
             print("")
             for report in reports:
