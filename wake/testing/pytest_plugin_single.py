@@ -1,6 +1,8 @@
-from typing import Iterable, List, Optional
+from typing import Iterable, List, Optional, Type
 
 from pytest import Session
+
+from types import TracebackType
 
 from wake.cli.console import console
 from wake.config import WakeConfig
@@ -25,6 +27,7 @@ class PytestWakePluginSingle:
     _cov_proc_count: Optional[int]
     _random_seeds: List[bytes]
     _debug: bool
+    _exception_handled: bool
 
     def __init__(
         self,
@@ -40,10 +43,22 @@ class PytestWakePluginSingle:
 
     def pytest_runtest_setup(self, item):
         reset_exception_handled()
+        self._exception_handled = False
 
     def pytest_exception_interact(self, node, call, report):
-        if self._debug:
-            attach_debugger(call.excinfo.type, call.excinfo.value, call.excinfo.tb)
+        if self._debug and not self._exception_handled:
+            self._exception_handler(call.excinfo.type, call.excinfo.value, call.excinfo.tb)
+            
+
+    def _exception_handler(
+        self,
+        e_type: Optional[Type[BaseException]],
+        e: Optional[BaseException],
+        tb: Optional[TracebackType],
+    ) -> None:
+        self._exception_handled = True
+        console.print(f"Used random seed '{self._random_seeds[0].hex()}'")
+        attach_debugger(e_type, e, tb)
 
     def pytest_runtestloop(self, session: Session):
         if (
@@ -64,7 +79,7 @@ class PytestWakePluginSingle:
         console.print(f"Using random seed '{self._random_seeds[0].hex()}'")
 
         if self._debug:
-            set_exception_handler(attach_debugger)
+            set_exception_handler(self._exception_handler)
         if coverage:
             set_coverage_handler(CoverageHandler(self._config))
 
