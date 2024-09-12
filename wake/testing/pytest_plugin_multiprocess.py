@@ -25,8 +25,11 @@ from wake.development.globals import (
     set_coverage_handler,
     set_exception_handler,
 )
+from ipdb.__main__ import _init_pdb
 from wake.testing.coverage import CoverageHandler
 from wake.utils.tee import StderrTee, StdoutTee
+
+from wake.testing.custom_pdb import CustomPdb
 
 
 class PytestWakePluginMultiprocess:
@@ -176,6 +179,22 @@ class PytestWakePluginMultiprocess:
                     last_coverage_sync = t
                 except queue.Full:
                     pass
+
+        def custom_debugger():
+            self._cleanup_stdio()
+            self._queue.put(("breakpoint", self._index), block=True)
+            attach: bool = self._conn.recv()
+            if attach:
+                prev = sys.stdin
+                sys.stdin = os.fdopen(0)
+                frame = sys._getframe(1)
+                p = CustomPdb(prev, self._conn)
+                p.set_trace(frame)
+            else:
+                # trace nothing, same as continue
+                self._conn.send(("breakpoint_handled",))  
+       
+        sys.breakpointhook = custom_debugger
 
         def signal_handler(sig, frame):
             raise KeyboardInterrupt()
