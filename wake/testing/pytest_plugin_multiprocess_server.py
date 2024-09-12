@@ -248,6 +248,34 @@ class PytestWakePluginMultiprocessServer:
                         )
                         if progress is not None:
                             progress.start()
+                    elif msg[0] == "breakpoint":
+                        if progress is not None:
+                            progress.stop()
+                            console.print(
+                                f"Process #{index} reach breakpoint."
+                            )
+
+                            attach = None
+                            while attach is None:
+                                response = input(
+                                    "Would you like to attach the debugger? [y/n] ('n' to continue operations)"
+                                )
+                                if response == "y":
+                                    attach = True
+                                elif response == "n":
+                                    attach = False
+                        else:
+                            attach = False
+
+                        self._processes[index][1].send(attach)
+
+                        # wait for debugger to finish
+                        assert self._processes[index][1].recv() == (
+                            "breakpoint_handled",
+                        )
+                        if progress is not None:
+                            progress.start()
+               
                     elif msg[0] == "pytest_runtest_logreport":
                         report: pytest.TestReport = msg[2]
                         reports.append(report)
