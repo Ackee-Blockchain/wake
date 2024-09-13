@@ -1,7 +1,8 @@
 import pdb
 import sys
+from IPython.terminal.debugger import TerminalPdb  # Import the correct Pdb class
 
-class CustomPdb(pdb.Pdb):
+class CustomPdb(TerminalPdb):
     def __init__(self, prev_stdin, conn, *args, **kwargs):
         """
         Custom Pdb constructor to accept the stdin and connection.
