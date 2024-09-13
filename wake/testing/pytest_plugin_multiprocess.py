@@ -198,7 +198,7 @@ class PytestWakePluginMultiprocess:
                 prev = sys.stdin
                 sys.stdin = os.fdopen(0)
                 frame = sys._getframe(1)
-                p = CustomPdb(prev, self._conn)
+                p = CustomPdb(self)
                 p.set_trace(frame)
             else:
                 # trace nothing, same as continue
