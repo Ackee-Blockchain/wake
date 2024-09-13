@@ -1,15 +1,13 @@
-import pdb
-import sys
-from IPython.terminal.debugger import TerminalPdb  # Import the correct Pdb class
+from IPython.terminal.debugger import TerminalPdb
+from typing import Any
 
 class CustomPdb(TerminalPdb):
-    def __init__(self, prev_stdin, conn, *args, **kwargs):
+    def __init__(self, program_instance, *args, **kwargs):
         """
         Custom Pdb constructor to accept the stdin and connection.
         """
         super().__init__(*args, **kwargs)  # Initialize the base Pdb class
-        self.prev_stdin = prev_stdin  # Store the original stdin
-        self.conn = conn  # Store the connection for parent communication
+        self._program_instance = program_instance
 
     def do_continue(self, arg):
         """
@@ -34,5 +32,5 @@ class CustomPdb(TerminalPdb):
         This function performs the cleanup before exiting the debugger.
         """
         print("Performing cleanup before exiting the debugger...")
-        sys.stdin = self.prev_stdin  # Restore stdin to its original state
-        self.conn.send(("breakpoint_handled",))  
+        self._program_instance._setup_stdio()
+        self._program_instance._conn.send(("breakpoint_handled",))
