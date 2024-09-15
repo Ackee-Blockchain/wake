@@ -36,7 +36,9 @@ def export_json(config: WakeConfig, compiler: SolidityCompiler, build: ProjectBu
             "content": source_unit.file_source.decode("utf-8"),
         }
 
-    (config.project_root_path / ".wake" / "sources.json").write_text(json.dumps(out))
+    output_dir = config.project_root_path / ".wake"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    (output_dir / "sources.json").write_text(json.dumps(out))
 
 
 async def compile(

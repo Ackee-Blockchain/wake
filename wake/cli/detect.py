@@ -651,8 +651,12 @@ async def detect_(
             raise click.BadParameter(f"JSON file was created with version {loaded['version']} of eth-wake, while the current version is {get_package_version('eth-wake')}")
 
         config = WakeConfig.fromdict(loaded["config"])
+        original_project_root = Path(loaded["project_root"])
+
         # add project root as an include path (for solc to resolve imports correctly)
-        config.update({"compiler": {"solc": {"include_paths": set(config.compiler.solc.include_paths) | {Path(loaded["project_root"]), }}}}, [])
+        if config.project_root_path != original_project_root:
+            config.update({"compiler": {"solc": {"include_paths": set(config.compiler.solc.include_paths) | {original_project_root}, }}}, [])
+
         modified_files = {
             Path(path): source['content'].encode("utf-8") for path, source in loaded["sources"].items()
         }
