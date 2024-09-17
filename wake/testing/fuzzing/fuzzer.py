@@ -73,7 +73,7 @@ def _run(
             attach: bool = err_child_conn.recv()
             if attach:
                 sys.stdin = os.fdopen(0)
-                attach_debugger(e_type, e, tb)
+                attach_debugger(e_type, e, tb, seed=random_seed)
         finally:
             finished_event.set()
 

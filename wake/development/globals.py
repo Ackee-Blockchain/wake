@@ -60,6 +60,7 @@ def attach_debugger(
     e_type: Optional[Type[BaseException]],
     e: Optional[BaseException],
     tb: Optional[TracebackType],
+    seed: Optional[bytes] = None,
 ):
     global _exception_handled
 
@@ -93,9 +94,13 @@ def attach_debugger(
             break
         frames_up += 1
 
-    p = _init_pdb(
-        commands=["up %d" % frames_up] if frames_up > 0 else [],
-    )
+    commands = []
+    if frames_up > 0:
+        commands.append("up %d" % frames_up)
+    if seed is not None:
+        commands.append(f"random_seed = bytes.fromhex('{seed.hex()}')")
+
+    p = _init_pdb(commands=commands)
     p.reset()
     p.interaction(None, tb)
 

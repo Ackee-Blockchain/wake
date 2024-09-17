@@ -28,6 +28,7 @@ def run_no_pytest(
     import importlib.util
     import inspect
     import shutil
+    from functools import partial
 
     from wake.development.globals import (
         attach_debugger,
@@ -88,7 +89,7 @@ def run_no_pytest(
         console.print(f"Using random seed {random_seeds[0].hex()}")
 
         if debug:
-            set_exception_handler(attach_debugger)
+            set_exception_handler(partial(attach_debugger, seed=random_seeds[0]))
 
         if coverage:
             set_coverage_handler(CoverageHandler(config))
@@ -99,7 +100,7 @@ def run_no_pytest(
                     func()
                 except Exception:
                     if debug:
-                        attach_debugger(*sys.exc_info())
+                        attach_debugger(*sys.exc_info(), seed=random_seeds[0])
                     raise
                 reset_exception_handled()
         finally:
