@@ -31,6 +31,4 @@ class CustomPdb(TerminalPdb):
         """
         This function performs the cleanup before exiting the debugger.
         """
-        print("Performing cleanup before exiting the debugger...")
-        self._program_instance._setup_stdio()
-        self._program_instance._conn.send(("breakpoint_handled",))
+        self._program_instance.exit_debugger()

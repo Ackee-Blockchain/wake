@@ -254,7 +254,7 @@ class PytestWakePluginMultiprocessServer:
                             attach = None
                             while attach is None:
                                 response = input(
-                                    "Would you like to attach the debugger? [y/n] ('n' to continue operations)"
+                                    "Would you like to attach the debugger? [y/n] "
                                 )
                                 if response == "y":
                                     attach = True

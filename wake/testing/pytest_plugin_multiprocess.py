@@ -147,6 +147,10 @@ class PytestWakePluginMultiprocess:
             self._exception_handler(
                 call.excinfo.type, call.excinfo.value, call.excinfo.tb
             )
+            
+    def exit_debugger(self):
+        self._setup_stdio()
+        self._conn.send(("breakpoint_handled",))
 
     def pytest_runtestloop(self, session: Session):
         if (
@@ -192,7 +196,7 @@ class PytestWakePluginMultiprocess:
                 p.set_trace(frame)
             else:
                 # trace nothing, same as continue
-                self._conn.send(("breakpoint_handled",))  
+                self.exit_debugger()
        
         sys.breakpointhook = custom_debugger
 
