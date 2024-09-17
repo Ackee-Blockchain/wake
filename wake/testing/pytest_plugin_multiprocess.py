@@ -106,8 +106,7 @@ class PytestWakePluginMultiprocess:
         try:
             if attach:
                 sys.stdin = os.fdopen(0)
-                console.print(f"Used random seed '{self._random_seed.hex()}'")
-                attach_debugger(e_type, e, tb)
+                attach_debugger(e_type, e, tb, seed=self._random_seed)
         finally:
             self._setup_stdio()
             self._conn.send(("exception_handled",))
