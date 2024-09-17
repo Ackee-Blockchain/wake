@@ -98,7 +98,7 @@ def attach_debugger(
     if frames_up > 0:
         commands.append("up %d" % frames_up)
     if seed is not None:
-        commands.append(f"random_seed = bytes.fromhex('{seed.hex()}')")
+        commands.append(f"wake_random_seed = bytes.fromhex('{seed.hex()}')")
 
     p = _init_pdb(commands=commands)
     p.reset()
