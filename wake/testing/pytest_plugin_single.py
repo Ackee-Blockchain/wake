@@ -67,6 +67,7 @@ class PytestWakePluginSingle:
         coverage = self._cov_proc_count == 1 or self._cov_proc_count == -1
 
         random.seed(self._random_seeds[0])
+        console.print(f"Using random seed '{self._random_seeds[0].hex()}'")
 
         if self._debug:
             set_exception_handler(partial(attach_debugger, seed=self._random_seeds[0]))
