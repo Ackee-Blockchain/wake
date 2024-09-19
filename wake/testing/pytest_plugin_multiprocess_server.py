@@ -40,6 +40,7 @@ class PytestWakePluginMultiprocessServer:
     _exported_coverages: Dict[
         int, Dict[Path, Dict[IdePosition, IdeFunctionCoverageRecord]]
     ]
+    _keyboard_interrupt_received: bool
 
     def __init__(
         self,
@@ -62,6 +63,7 @@ class PytestWakePluginMultiprocessServer:
         self._dist = dist
         self._pytest_args = pytest_args
         self._exported_coverages = {i: {} for i in range(self._proc_count)}
+        self._keyboard_interrupt_received = False
 
     def pytest_sessionstart(self, session: pytest.Session):
         if self._coverage != 0:
@@ -103,7 +105,11 @@ class PytestWakePluginMultiprocessServer:
                 parent_conn,
             )
             p.start()
-        signal.signal(signal.SIGINT, signal.SIG_IGN)
+            
+        def signal_handler(sig, frame):
+            self._keyboard_interrupt_received = True
+            
+        signal.signal(signal.SIGINT, signal_handler)
 
     def pytest_sessionfinish(self, session: pytest.Session):
         self._queue.cancel_join_thread()
@@ -212,7 +218,8 @@ class PytestWakePluginMultiprocessServer:
                         write_coverage(
                             res, self._config.project_root_path / "wake-coverage.cov"
                         )
-                    elif msg[0] == "exception":
+                    # User already type control+c then child process are finished, so do not communicate with child process.
+                    elif msg[0] == "exception" and self._keyboard_interrupt_received == False:
                         exception_info = pickle.loads(msg[2])
                         tb = rich.traceback.Traceback.from_exception(
                             exception_info[0],
@@ -228,51 +235,81 @@ class PytestWakePluginMultiprocessServer:
                                 f"Process #{index} failed with an exception above."
                             )
 
+                            
+                            default_sigint_handler = signal.getsignal(signal.SIGINT)
+                            def input_signal_handler(sig, frame):
+                                self._keyboard_interrupt_received = True
+                                raise KeyboardInterrupt
+                            signal.signal(signal.SIGINT, input_signal_handler)
                             attach = None
                             while attach is None:
-                                response = input(
-                                    "Would you like to attach the debugger? [y/n] "
-                                )
-                                if response == "y":
-                                    attach = True
-                                elif response == "n":
+                                try:
+                                    response = input(
+                                        "Would you like to attach the debugger? [y/n] "
+                                    )
+                                    if response == "y":
+                                        attach = True
+                                    elif response == "n":
+                                        attach = False
+                                except (EOFError, KeyboardInterrupt):
                                     attach = False
+                                finally:
+                                    signal.signal(signal.SIGINT, default_sigint_handler)
                         else:
                             attach = False
+                        
+                        # User type control+c then child process are finished, so do not communicate with child process.
+                        if not self._keyboard_interrupt_received:
+                            self._processes[index][1].send(attach)
 
-                        self._processes[index][1].send(attach)
-
-                        # wait for debugger to finish
-                        assert self._processes[index][1].recv() == (
-                            "exception_handled",
-                        )
+                            # wait for debugger to finish
+                            assert self._processes[index][1].recv() == (
+                                "exception_handled",
+                            )
+                            
                         if progress is not None:
                             progress.start()
-                    elif msg[0] == "breakpoint":
+                    # If _keyboard_interrupt_received is received, the child process is finished, so it is unable to communicate.
+                    # So debugging is ignore.
+                    elif msg[0] == "breakpoint" and self._keyboard_interrupt_received == False:
+                        
                         if progress is not None:
                             progress.stop()
                             console.print(
                                 f"Process #{index} reach breakpoint."
                             )
-
+                            
+                            default_sigint_handler = signal.getsignal(signal.SIGINT)
+                            def input_signal_handler(sig, frame):
+                                self._keyboard_interrupt_received = True
+                                raise KeyboardInterrupt
+                            signal.signal(signal.SIGINT, input_signal_handler)
+                            
                             attach = None
                             while attach is None:
-                                response = input(
-                                    "Would you like to attach the debugger? [y/n] "
-                                )
-                                if response == "y":
-                                    attach = True
-                                elif response == "n":
+                                try:
+                                    response = input(
+                                        "Would you like to attach the debugger? [y/n] "
+                                    )
+                                    if response == "y":
+                                        attach = True
+                                    elif response == "n":
+                                        attach = False
+                                except (EOFError, KeyboardInterrupt):
                                     attach = False
+                                finally:
+                                    signal.signal(signal.SIGINT, default_sigint_handler)
                         else:
                             attach = False
 
-                        self._processes[index][1].send(attach)
+                        if not self._keyboard_interrupt_received:
+                            self._processes[index][1].send(attach)
 
-                        # wait for debugger to finish
-                        assert self._processes[index][1].recv() == (
-                            "breakpoint_handled",
-                        )
+                            # wait for debugger to finish
+                            assert self._processes[index][1].recv() == (
+                                "breakpoint_handled",
+                            )
+                            
                         if progress is not None:
                             progress.start()
                
