@@ -44,12 +44,13 @@ from ..config import WakeConfig
 from ..core.solidity_version import SolidityVersion
 from ..svm import SolcVersionManager
 from ..utils import get_package_version
+from wake_rs import abi, Abi, Account, Address, Contract
 from .core import (
-    Abi,
-    Account,
-    Address,
-    Contract,
-    abi,
+    #Abi,
+    #Account,
+    #Address,
+    #Contract,
+    #abi,
     get_contracts_by_fqn,
     get_fqn_from_address,
     get_user_defined_value_types_index,

@@ -778,6 +778,11 @@ class Error(TransactionRevertedError):
     message: str
 
 
+@dataclass
+class Halt(TransactionRevertedError):
+    message: str
+
+
 class PanicCodeEnum(IntEnum):
     GENERIC = 0
     "Generic compiler panic"
