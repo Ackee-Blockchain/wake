@@ -17,4 +17,5 @@ class ConnectContext:
         def wrapper(*args, **kwargs):
             with self:
                 return fn(*args, **kwargs)
+
         return wrapper

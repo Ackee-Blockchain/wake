@@ -1,4 +1,3 @@
-
 class SnapshotRevertContext:
     def __init__(self, chain):
         self.chain = chain
