@@ -3,13 +3,14 @@ import os
 import platform
 import reprlib
 from copy import deepcopy
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import Any, Dict, FrozenSet, Iterable, Optional, Set, Tuple, Union
 
 import networkx as nx
 import tomli
 from typing_extensions import Literal
 
+import wake.utils.file_utils
 from wake.core import get_logger
 from wake.utils import change_cwd
 
@@ -44,6 +45,7 @@ class WakeConfig:
 
     __local_config_path: Path
     __project_root_path: Path
+    __wake_contracts_path: PurePath
     __global_config_path: Path
     __global_data_path: Path
     __global_cache_path: Path
@@ -56,6 +58,7 @@ class WakeConfig:
         *_,
         local_config_path: Optional[Union[str, Path]] = None,
         project_root_path: Optional[Union[str, Path]] = None,
+        wake_contracts_path: Optional[PurePath] = None,
     ):
         """
         Initialize the `WakeConfig` class. If `project_root_path` is not provided, the current working directory is used.
@@ -111,6 +114,11 @@ class WakeConfig:
             self.__local_config_path = self.__project_root_path / "wake.toml"
         else:
             self.__local_config_path = Path(local_config_path).resolve()
+
+        if wake_contracts_path is None:
+            self.__wake_contracts_path = wake.utils.file_utils.wake_contracts_path
+        else:
+            self.__wake_contracts_path = wake_contracts_path
 
         if not self.__project_root_path.is_dir():
             raise ValueError(
@@ -219,6 +227,7 @@ class WakeConfig:
         config_dict: Dict[str, Any],
         *,
         project_root_path: Optional[Union[str, Path]] = None,
+        wake_contracts_path: Optional[PurePath] = None,
     ) -> "WakeConfig":
         """
         Args:
@@ -228,7 +237,7 @@ class WakeConfig:
         Returns:
             Instance of the `WakeConfig` class with the provided config options.
         """
-        instance = cls(project_root_path=project_root_path)
+        instance = cls(project_root_path=project_root_path, wake_contracts_path=wake_contracts_path)
         with change_cwd(instance.project_root_path):
             parsed_config = TopLevelConfig.model_validate(config_dict)
         instance.__config_raw = parsed_config.model_dump(
@@ -435,6 +444,14 @@ class WakeConfig:
             System path to the project root directory.
         """
         return self.__project_root_path
+
+    @property
+    def wake_contracts_path(self) -> PurePath:
+        """
+        Returns:
+            System path to the Wake contracts directory.
+        """
+        return self.__wake_contracts_path
 
     @property
     def min_solidity_version(self) -> SolidityVersion:

@@ -30,7 +30,7 @@ from wake.core import get_logger
 from wake.core.visitor import Visitor, group_map, visit_map
 from wake.core.wake_comments import WakeComment, error_commented_out
 from wake.utils import StrEnum, get_class_that_defined_method
-from wake.utils.file_utils import is_relative_to, wake_contracts_path
+from wake.utils.file_utils import is_relative_to
 from wake.utils.keyed_default_dict import KeyedDefaultDict
 
 if TYPE_CHECKING:
@@ -220,7 +220,7 @@ def _strip_excluded_subdetections(
     for d in detection.subdetections:
         if not any(
             is_relative_to(d.ir_node.source_unit.file, p)
-            for p in chain(config.detectors.exclude_paths, [wake_contracts_path])
+            for p in chain(config.detectors.exclude_paths, [config.wake_contracts_path])
         ):
             subdetections.append(d)
             continue
@@ -325,7 +325,7 @@ def _filter_detections(
 
         if any(
             is_relative_to(detection.detection.ir_node.source_unit.file, p)
-            for p in chain(config.detectors.exclude_paths, [wake_contracts_path])
+            for p in chain(config.detectors.exclude_paths, [config.wake_contracts_path])
         ):
             detection = DetectorResult(
                 _strip_excluded_subdetections(detection.detection, config),

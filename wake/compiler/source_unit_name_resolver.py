@@ -4,7 +4,6 @@ from typing import List
 
 from wake.config import WakeConfig
 from wake.config.data_model import SolcRemapping
-from wake.utils import wake_contracts_path
 
 
 class SourceUnitNameResolver:
@@ -121,7 +120,7 @@ class SourceUnitNameResolver:
         for include_path in itertools.chain(
             [self.__config.project_root_path],
             self.__config.compiler.solc.include_paths,
-            [wake_contracts_path],
+            [self.__config.wake_contracts_path],
         ):
             try:
                 return str(PurePosixPath(pure_path.relative_to(include_path)))
