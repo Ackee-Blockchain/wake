@@ -9,7 +9,7 @@ import time
 import types
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Type
+from typing import Any, Callable, Dict, Iterable, List, Optional, Type, Tuple
 
 import rich.progress
 from pathvalidate import sanitize_filename  # type: ignore
@@ -39,6 +39,7 @@ def _run(
     fuzz_test: Callable,
     index: int,
     random_seed: bytes,
+    random_state: Optional[bytes],
     log_file: Path,
     tee: bool,
     finished_event: multiprocessing.synchronize.Event,
@@ -91,6 +92,8 @@ def _run(
 
     pickling_support.install()
     random.seed(random_seed)
+    if random_state is not None:
+        random.setstate(pickle.loads(random_state))
 
     set_exception_handler(exception_handler)
     if coverage is not None:
@@ -159,6 +162,7 @@ def fuzz(
     fuzz_test: types.FunctionType,
     process_count: int,
     random_seeds: Iterable[bytes],
+    random_state: Optional[List[bytes]],
     logs_dir: Path,
     attach_first: bool,
     cov_proc_num: int,
@@ -187,6 +191,7 @@ def fuzz(
                 fuzz_test,
                 i,
                 seed,
+                random_state[i] if random_state is not None and i < len(random_state) else None,
                 log_path,
                 attach_first and i == 0,
                 finished_event,

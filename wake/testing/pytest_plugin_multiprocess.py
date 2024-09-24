@@ -24,12 +24,17 @@ from wake.development.globals import (
     reset_exception_handled,
     set_coverage_handler,
     set_exception_handler,
+    get_sequence_initial_internal_state
 )
 from ipdb.__main__ import _init_pdb
 from wake.testing.coverage import CoverageHandler
 from wake.utils.tee import StderrTee, StdoutTee
 
 from wake.testing.custom_pdb import CustomPdb
+from datetime import datetime
+
+import rich.traceback
+from rich.console import Console
 
 
 class PytestWakePluginMultiprocess:
@@ -37,7 +42,9 @@ class PytestWakePluginMultiprocess:
     _conn: multiprocessing.connection.Connection
     _coverage: Optional[CoverageHandler]
     _log_file: Path
+    _crash_log_file: Path
     _random_seed: bytes
+    _random_state: Optional[bytes]
     _tee: bool
     _debug: bool
     _exception_handled: bool
@@ -52,7 +59,9 @@ class PytestWakePluginMultiprocess:
         queue: multiprocessing.Queue,
         coverage: Optional[CoverageHandler],
         log_dir: Path,
+        crash_log_dir: Path,
         random_seed: bytes,
+        random_state: Optional[bytes],
         tee: bool,
         debug: bool,
     ):
@@ -61,7 +70,9 @@ class PytestWakePluginMultiprocess:
         self._queue = queue
         self._coverage = coverage
         self._log_file = log_dir / sanitize_filename(f"process-{index}.ansi")
+        self._crash_log_dir = crash_log_dir
         self._random_seed = random_seed
+        self._random_state = random_state
         self._tee = tee
         self._debug = debug
         self._exception_handled = False
@@ -157,6 +168,20 @@ class PytestWakePluginMultiprocess:
             self._exception_handler(
                 call.excinfo.type, call.excinfo.value, call.excinfo.tb
             )
+
+        state = get_sequence_initial_internal_state()
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+
+        crash_log_file = self._crash_log_dir / F"crash_log_{timestamp}.txt"
+
+        with crash_log_file.open('w') as f:
+            # Create the rich traceback object
+            rich_tb = rich.traceback.Traceback.from_exception(
+                call.excinfo.type, call.excinfo.value, call.excinfo.tb
+            )
+            file_console = Console(file=f, force_terminal=False)
+            file_console.print(rich_tb)
+            f.write(f"\nInternal state of beginning of sequence : \n{state.hex()}")
 
     def pytest_runtestloop(self, session: Session):
         if (
@@ -256,8 +281,12 @@ class PytestWakePluginMultiprocess:
             indexes = self._conn.recv()
             for i in range(len(indexes)):
                 # set random seed before each test item
-                random.seed(self._random_seed)
-                console.print(f"Setting random seed '{self._random_seed.hex()}'")
+                if self._random_state is not None:
+                    random.setstate(pickle.loads(self._random_state))
+                    console.print(f"Using random state '{random.getstate()[1]}'")
+                else:
+                    random.seed(self._random_seed)
+                    console.print(f"Setting random seed '{self._random_seed.hex()}'")
 
                 item = session.items[indexes[i]]
                 nextitem = (

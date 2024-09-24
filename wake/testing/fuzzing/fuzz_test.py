@@ -5,11 +5,12 @@ from typing import Callable, DefaultDict, List, Optional
 
 from typing_extensions import get_type_hints
 
-from wake.development.globals import random
+from wake.development.globals import random, set_sequence_initial_internal_state
 
 from ..core import get_connected_chains
 from .generators import generate
 
+import pickle
 
 def flow(
     *,
@@ -78,6 +79,13 @@ class FuzzTest:
             )
 
             snapshots = [chain.snapshot() for chain in chains]
+            
+            set_sequence_initial_internal_state(
+                    pickle.dumps(
+                    random.getstate()
+                )
+            )
+                
             self._flow_num = 0
             self._sequence_num = i
             self.pre_sequence()
