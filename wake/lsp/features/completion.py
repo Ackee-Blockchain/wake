@@ -9,7 +9,6 @@ from typing import Any, List, Optional, Union
 from wake.core import get_logger
 
 from ...compiler.source_unit_name_resolver import SourceUnitNameResolver
-from ...utils import wake_contracts_path
 from ..common_structures import (
     Command,
     MarkupContent,
@@ -541,7 +540,7 @@ async def completion(
     this_source_unit_name = None
     for include_path in chain(
         context.config.compiler.solc.include_paths,
-        [context.config.project_root_path, wake_contracts_path],
+        [context.config.project_root_path, context.config.wake_contracts_path],
     ):
         try:
             rel_path = str(path.relative_to(include_path).as_posix())
@@ -575,7 +574,7 @@ async def completion(
 
         for include_path in chain(
             context.config.compiler.solc.include_paths,
-            [context.config.project_root_path, wake_contracts_path],
+            [context.config.project_root_path, Path(context.config.wake_contracts_path)],
         ):
             if include_path.is_dir():
                 for p in include_path.iterdir():
@@ -601,7 +600,7 @@ async def completion(
     else:
         for include_path in chain(
             context.config.compiler.solc.include_paths,
-            [context.config.project_root_path, wake_contracts_path],
+            [context.config.project_root_path, Path(context.config.wake_contracts_path)],
         ):
             if include_path.is_dir():
                 dir = include_path / parent

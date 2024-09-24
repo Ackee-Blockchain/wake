@@ -19,6 +19,7 @@ if TYPE_CHECKING:
 
 def export_json(config: WakeConfig, compiler: SolidityCompiler, build: ProjectBuild, build_info: ProjectBuildInfo):
     import json
+    import platform
 
     config_dict = config.todict(mode="json")
     del config_dict["subconfigs"]
@@ -26,7 +27,9 @@ def export_json(config: WakeConfig, compiler: SolidityCompiler, build: ProjectBu
 
     out = {
         "version": build_info.wake_version,
+        "system": platform.system(),
         "project_root": str(config.project_root_path),
+        "wake_contracts_path": str(config.wake_contracts_path),
         "config": config_dict,
         "sources": {},
     }

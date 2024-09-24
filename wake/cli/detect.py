@@ -4,7 +4,7 @@ import asyncio
 import logging
 import sys
 import time
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import (
     TYPE_CHECKING,
     AbstractSet,
@@ -650,7 +650,12 @@ async def detect_(
         if loaded["version"] != get_package_version("eth-wake"):
             raise click.BadParameter(f"JSON file was created with version {loaded['version']} of eth-wake, while the current version is {get_package_version('eth-wake')}")
 
-        config = WakeConfig.fromdict(loaded["config"])
+        if loaded["system"] == "Windows":
+            wake_contracts_path = PureWindowsPath(loaded["wake_contracts_path"])
+        else:
+            wake_contracts_path = PurePosixPath(loaded["wake_contracts_path"])
+
+        config = WakeConfig.fromdict(loaded["config"], wake_contracts_path=wake_contracts_path)
         original_project_root = Path(loaded["project_root"])
 
         # add project root as an include path (for solc to resolve imports correctly)

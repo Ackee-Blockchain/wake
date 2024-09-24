@@ -130,7 +130,7 @@ def run_init(
     from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
     from ..compiler.solc_frontend import SolcOutputErrorSeverityEnum
     from ..development.pytypes_generator import TypeGenerator
-    from ..utils.file_utils import copy_dir, is_relative_to, wake_contracts_path
+    from ..utils.file_utils import copy_dir, is_relative_to
 
     if example is None:
         # create tests directory
@@ -184,7 +184,7 @@ def run_init(
                 and file.is_file()
             ):
                 sol_files.add(file)
-        for file in wake_contracts_path.rglob("**/*.sol"):
+        for file in Path(config.wake_contracts_path).rglob("**/*.sol"):
             sol_files.add(file)
     end = time.perf_counter()
     console.log(
@@ -295,7 +295,7 @@ async def run_init_pytypes(
     from ..compiler.compiler import CompilationFileSystemEventHandler
     from ..compiler.solc_frontend import SolcOutputErrorSeverityEnum
     from ..development.pytypes_generator import TypeGenerator
-    from ..utils.file_utils import is_relative_to, wake_contracts_path
+    from ..utils.file_utils import is_relative_to
 
     def callback(build: ProjectBuild, build_info: ProjectBuildInfo):
         start = time.perf_counter()
@@ -319,7 +319,7 @@ async def run_init_pytypes(
                 and file.is_file()
             ):
                 sol_files.add(file)
-        for file in wake_contracts_path.rglob("**/*.sol"):
+        for file in Path(config.wake_contracts_path).rglob("**/*.sol"):
             sol_files.add(file)
     end = time.perf_counter()
     console.log(
