@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING, Callable, Iterable, List, Optional, Tuple
 import click.shell_completion as shell_completion
 import rich_click as click
 
+import pickle
+
 if TYPE_CHECKING:
     from wake.config import WakeConfig
 
@@ -22,6 +24,7 @@ def run_no_pytest(
     proc_count: int,
     coverage: int,
     random_seeds: List[bytes],
+    random_states: Optional[List[bytes]],
     attach_first: bool,
     args: Tuple[str, ...],
 ) -> None:
@@ -85,8 +88,13 @@ def run_no_pytest(
             test_functions.append((func_name, func))
 
     if proc_count == 1:
-        random.seed(random_seeds[0])
-        console.print(f"Using random seed {random_seeds[0].hex()}")
+
+        if random_states:
+            random.setstate(pickle.loads(random_states[0]))
+            console.print(f"Using random state {random_states[0].hex()}")
+        else:
+            random.seed(random_seeds[0])
+            console.print(f"Using random seed {random_seeds[0].hex()}")
 
         if debug:
             set_exception_handler(partial(attach_debugger, seed=random_seeds[0]))
@@ -129,6 +137,7 @@ def run_no_pytest(
                     func,
                     proc_count,
                     random_seeds,
+                    random_states,
                     logs_dir,
                     attach_first,
                     coverage,
@@ -205,6 +214,14 @@ class FileAndPassParamType(click.ParamType):
     help="Random seeds",
 )
 @click.option(
+    "--random-state",
+    "-RS",
+    "random_states",
+    multiple=True,
+    type=str,
+    help="Random statuses",
+)
+@click.option(
     "--attach-first",
     is_flag=True,
     default=False,
@@ -223,6 +240,7 @@ class FileAndPassParamType(click.ParamType):
     count=True,
     help="Increase verbosity. Can be specified multiple times.",
 )
+
 @click.argument("paths_or_pytest_args", nargs=-1, type=FileAndPassParamType())
 @click.pass_context
 def run_test(
@@ -233,6 +251,7 @@ def run_test(
     coverage: int,
     no_pytest: bool,
     seeds: Tuple[str],
+    random_states: Tuple[str],
     attach_first: bool,
     dist: str,
     verbosity: int,
@@ -267,6 +286,11 @@ def run_test(
     except ValueError:
         raise click.BadParameter("Seeds must be hex numbers.")
 
+    try:
+        random_states_byte = [bytes.fromhex(random_state) for random_state in random_states]
+    except ValueError:
+        raise click.BadParameter("Random states must be hex numbers.")
+
     config = WakeConfig(local_config_path=context.obj.get("local_config_path", None))
     config.load_configs()
 
@@ -287,6 +311,7 @@ def run_test(
             proc_count,
             coverage,
             random_seeds,
+            random_states_byte,
             attach_first,
             paths_or_pytest_args,
         )
@@ -325,6 +350,7 @@ def run_test(
                             coverage,
                             proc_count,
                             random_seeds,
+                            random_states_byte,
                             attach_first,
                             debug,
                             dist,
@@ -340,7 +366,7 @@ def run_test(
                 pytest.main(
                     pytest_args,
                     plugins=[
-                        PytestWakePluginSingle(config, debug, coverage, random_seeds)
+                        PytestWakePluginSingle(config, debug, coverage, random_seeds, random_states_byte)
                     ],
                 )
             )

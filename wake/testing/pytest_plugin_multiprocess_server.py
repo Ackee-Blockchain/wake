@@ -33,6 +33,7 @@ class PytestWakePluginMultiprocessServer:
         int, Tuple[multiprocessing.Process, multiprocessing.connection.Connection]
     ]
     _random_seeds: List[bytes]
+    _random_states: Optional[List[bytes]]
     _attach_first: bool
     _debug: bool
     _pytest_args: List[str]
@@ -47,6 +48,7 @@ class PytestWakePluginMultiprocessServer:
         coverage: int,
         proc_count: int,
         random_seeds: List[bytes],
+        raondom_states: Optional[List[bytes]],
         attach_first: bool,
         debug: bool,
         dist: str,
@@ -57,6 +59,7 @@ class PytestWakePluginMultiprocessServer:
         self._proc_count = proc_count
         self._processes = {}
         self._random_seeds = random_seeds
+        self._random_states = raondom_states
         self._attach_first = attach_first
         self._debug = debug
         self._dist = dist
@@ -74,10 +77,18 @@ class PytestWakePluginMultiprocessServer:
         logs_dir = self._config.project_root_path / ".wake" / "logs" / "testing"
         shutil.rmtree(logs_dir, ignore_errors=True)
         logs_dir.mkdir(parents=True, exist_ok=True)
+        
+        crash_logs_dir = self._config.project_root_path / ".wake" / "crash_logs" / "testing"
+        crash_logs_dir.mkdir(parents=True, exist_ok=True)
+        # write crash log file.
+    
 
         self._queue = multiprocessing.Queue(1000)
 
         for i in range(self._proc_count):
+            crash_logs_process_dir = crash_logs_dir  / f"process-{i}"
+            crash_logs_process_dir.mkdir(parents=True, exist_ok=True)
+        
             parent_conn, child_conn = multiprocessing.Pipe()
             p = multiprocessing.Process(
                 target=pytest.main,
@@ -90,7 +101,9 @@ class PytestWakePluginMultiprocessServer:
                             self._queue,
                             empty_coverage if i < self._coverage else None,
                             logs_dir,
+                            crash_logs_process_dir,
                             self._random_seeds[i],
+                            self._random_states[i] if self._random_states else None,
                             self._attach_first and i == 0,
                             self._debug,
                         ),

@@ -3,6 +3,10 @@ from typing import Iterable, List, Optional
 
 from pytest import Session
 
+from datetime import datetime
+import rich.traceback
+from rich.console import Console
+
 from wake.cli.console import console
 from wake.config import WakeConfig
 from wake.development.globals import (
@@ -13,18 +17,20 @@ from wake.development.globals import (
     reset_exception_handled,
     set_coverage_handler,
     set_exception_handler,
+    get_sequence_initial_internal_state
 )
 from wake.testing.coverage import (
     CoverageHandler,
     export_merged_ide_coverage,
     write_coverage,
 )
-
+import pickle
 
 class PytestWakePluginSingle:
     _config: WakeConfig
     _cov_proc_count: Optional[int]
     _random_seeds: List[bytes]
+    _random_states: List[Optional[bytes]]
     _debug: bool
 
     def __init__(
@@ -33,11 +39,13 @@ class PytestWakePluginSingle:
         debug: bool,
         cov_proc_count: Optional[int],
         random_seeds: Iterable[bytes],
+        random_states: Iterable[Optional[bytes]],
     ):
         self._config = config
         self._debug = debug
         self._cov_proc_count = cov_proc_count
         self._random_seeds = list(random_seeds)
+        self._random_states = list(random_states)
 
     def pytest_runtest_setup(self, item):
         reset_exception_handled()
@@ -50,7 +58,25 @@ class PytestWakePluginSingle:
                 call.excinfo.tb,
                 seed=self._random_seeds[0],
             )
+        state = get_sequence_initial_internal_state()
+        crash_logs_dir = self._config.project_root_path / ".wake" / "crash_logs" / "testing"
+        # shutil.rmtree(crash_logs_dir, ignore_errors=True)
+        crash_logs_dir.mkdir(parents=True, exist_ok=True)
+        # write crash log file.
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        # Assuming `call.execinfo` contains the crash information
+        crash_log_file = crash_logs_dir / F"crash_log_{timestamp}.txt"
 
+        # Write contents to the crash log file
+        with crash_log_file.open('w') as f:
+            # Create the rich traceback object
+            rich_tb = rich.traceback.Traceback.from_exception(
+                call.excinfo.type, call.excinfo.value, call.excinfo.tb
+            )
+            file_console = Console(file=f, force_terminal=False)
+            file_console.print(rich_tb)
+            f.write(f"\nInternal state of beginning of sequence : \n{state.hex()}")
+        
     def pytest_runtestloop(self, session: Session):
         if (
             session.testsfailed
@@ -66,8 +92,14 @@ class PytestWakePluginSingle:
 
         coverage = self._cov_proc_count == 1 or self._cov_proc_count == -1
 
-        random.seed(self._random_seeds[0])
-        console.print(f"Using random seed '{self._random_seeds[0].hex()}'")
+       
+        if len(self._random_states) > 0:
+            assert self._random_states[0] is not None
+            random.setstate(pickle.loads(self._random_states[0]))
+            console.print(f"Using random state '{random.getstate()[1]}'")
+        else:
+            random.seed(self._random_seeds[0])
+            console.print(f"Using random seed '{self._random_seeds[0].hex()}'")
 
         if self._debug:
             set_exception_handler(partial(attach_debugger, seed=self._random_seeds[0]))
