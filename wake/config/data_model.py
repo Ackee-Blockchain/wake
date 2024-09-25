@@ -1,9 +1,9 @@
 import re
 from dataclasses import astuple
-from pathlib import Path
-from typing import Dict, FrozenSet, List, Optional
+from pathlib import Path, PurePath, PurePosixPath, PureWindowsPath
+from typing import Dict, FrozenSet, List, Optional, Iterable
 
-from pydantic import BaseModel, ConfigDict, Field, PlainSerializer, field_serializer
+from pydantic import BaseModel, ConfigDict, Field, PlainSerializer, field_serializer, field_validator, ValidationInfo
 from pydantic.dataclasses import dataclass
 from pydantic.functional_validators import BeforeValidator
 from typing_extensions import Annotated
@@ -18,6 +18,16 @@ class WakeConfigModel(BaseModel):
         extra="forbid",
         frozen=True,
     )
+
+
+def normalize_paths(paths: Iterable[str], info: ValidationInfo) -> FrozenSet[PurePath]:
+    if info.context and info.context.get("paths_mode") is not None:
+        if info.context["paths_mode"] == "Windows":
+            return frozenset(PureWindowsPath(path) for path in paths)
+        else:
+            return frozenset(PurePosixPath(path) for path in paths)
+    else:
+        return frozenset(Path(path).resolve() for path in paths)
 
 
 @dataclass
@@ -96,15 +106,11 @@ def convert_remapping(v):
 
 
 class SolcConfig(WakeConfigModel):
-    allow_paths: FrozenSet[
-        Annotated[Path, BeforeValidator(lambda p: Path(p).resolve())]
-    ] = frozenset()
+    allow_paths: FrozenSet[PurePath] = frozenset()
     """Wake should set solc `--allow-paths` automatically. This option allows to specify additional allowed paths."""
     evm_version: Optional[EvmVersionEnum] = None
     """Version of the EVM to compile for. Leave unset to let the solc decide."""
-    exclude_paths: FrozenSet[
-        Annotated[Path, BeforeValidator(lambda p: Path(p).resolve())]
-    ] = Field(
+    exclude_paths: FrozenSet[PurePath] = Field(
         default_factory=lambda: frozenset(
             [
                 Path.cwd() / "node_modules",
@@ -119,9 +125,7 @@ class SolcConfig(WakeConfigModel):
     """
     Solidity files in these paths are excluded from compilation unless imported from a non-excluded file.
     """
-    include_paths: FrozenSet[
-        Annotated[Path, BeforeValidator(lambda p: Path(p).resolve())]
-    ] = Field(default_factory=lambda: frozenset([Path.cwd() / "node_modules"]))
+    include_paths: FrozenSet[PurePath] = Field(default_factory=lambda: frozenset([Path.cwd() / "node_modules"]))
     """
     Paths where to search for Solidity files imported using direct (non-relative) import paths.
     """
@@ -147,6 +151,8 @@ class SolcConfig(WakeConfigModel):
     """
     Use new IR-based compiler pipeline.
     """
+
+    _normalize_paths = field_validator("allow_paths", "include_paths", "exclude_paths", mode="before")(normalize_paths)
 
     @field_serializer("target_version", when_used="json")
     def serialize_target_version(self, version: Optional[SolidityVersion], info):
@@ -207,9 +213,7 @@ class DetectorsConfig(WakeConfigModel):
     """
     Names of detectors that should only be loaded.
     """
-    ignore_paths: FrozenSet[
-        Annotated[Path, BeforeValidator(lambda p: Path(p).resolve())]
-    ] = Field(
+    ignore_paths: FrozenSet[PurePath] = Field(
         default_factory=lambda: frozenset(
             [
                 Path.cwd() / "venv",
@@ -222,9 +226,7 @@ class DetectorsConfig(WakeConfigModel):
     Detections in these paths must be ignored under all circumstances.
     Useful for ignoring detections in Solidity test files.
     """
-    exclude_paths: FrozenSet[
-        Annotated[Path, BeforeValidator(lambda p: Path(p).resolve())]
-    ] = Field(
+    exclude_paths: FrozenSet[PurePath] = Field(
         default_factory=lambda: frozenset(
             [
                 Path.cwd() / "node_modules",
@@ -237,6 +239,8 @@ class DetectorsConfig(WakeConfigModel):
     Detections in these paths are ignored unless linked to a (sub)detection in a non-excluded path.
     Useful for ignoring detections in dependencies.
     """
+
+    _normalize_paths = field_validator("ignore_paths", "exclude_paths", mode="before")(normalize_paths)
 
 
 # namespace for detector configs

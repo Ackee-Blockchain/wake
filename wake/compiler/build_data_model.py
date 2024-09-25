@@ -1,5 +1,5 @@
 import weakref
-from pathlib import Path
+from pathlib import Path, PurePath
 from types import MappingProxyType
 from typing import Any, Dict, FrozenSet, List, Optional
 
@@ -104,9 +104,9 @@ class ProjectBuildInfo(BuildInfoModel):
 
     compilation_units: Dict[str, CompilationUnitBuildInfo]
     source_units_info: Dict[str, SourceUnitInfo]
-    allow_paths: FrozenSet[Path]
-    exclude_paths: FrozenSet[Path]
-    include_paths: FrozenSet[Path]
+    allow_paths: FrozenSet[PurePath]
+    exclude_paths: FrozenSet[PurePath]
+    include_paths: FrozenSet[PurePath]
     settings: SolcInputSettings
     target_solidity_version: Optional[SolidityVersion]
     wake_version: str

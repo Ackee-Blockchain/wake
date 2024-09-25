@@ -652,15 +652,16 @@ async def detect_(
 
         if loaded["system"] == "Windows":
             wake_contracts_path = PureWindowsPath(loaded["wake_contracts_path"])
+            original_project_root = PureWindowsPath(loaded["project_root"])
         else:
             wake_contracts_path = PurePosixPath(loaded["wake_contracts_path"])
+            original_project_root = PurePosixPath(loaded["project_root"])
 
-        config = WakeConfig.fromdict(loaded["config"], wake_contracts_path=wake_contracts_path)
-        original_project_root = Path(loaded["project_root"])
+        config = WakeConfig.fromdict(loaded["config"], wake_contracts_path=wake_contracts_path, paths_mode=loaded["system"])
 
         # add project root as an include path (for solc to resolve imports correctly)
         if config.project_root_path != original_project_root:
-            config.update({"compiler": {"solc": {"include_paths": set(config.compiler.solc.include_paths) | {original_project_root}, }}}, [])
+            config.update({"compiler": {"solc": {"include_paths": set(config.compiler.solc.include_paths) | {original_project_root}, }}}, [], paths_mode=loaded["system"])
 
         modified_files = {
             Path(path): source['content'].encode("utf-8") for path, source in loaded["sources"].items()
