@@ -531,15 +531,14 @@ async def detect_(
             )
         )
 
-        if export != "json":
-            for detector_name, detection in all_detections:
-                print_detection(
-                    detector_name,
-                    detection,
-                    config,
-                    console,
-                    "monokai" if theme == "dark" else "default",
-                )
+        for detector_name, detection in all_detections:
+            print_detection(
+                detector_name,
+                detection,
+                config,
+                console,
+                "monokai" if theme == "dark" else "default",
+            )
 
         if len(all_detections) == 0:
             console.print("No detections found")
@@ -573,11 +572,23 @@ async def detect_(
             def process_detection(detection: Detection) -> Dict[str, Any]:
                 start_line, start_col = detection.ir_node.source_unit.get_line_col_from_byte_offset(detection.ir_node.byte_location[0])
                 end_line, end_col = detection.ir_node.source_unit.get_line_col_from_byte_offset(detection.ir_node.byte_location[1])
+
+                source_unit = detection.ir_node.source_unit
+                assert source_unit._lines_index is not None
+                start_line_index = max(0, start_line - 4)
+                end_line_index = min(len(source_unit._lines_index), start_line + 3)
+
+                source = ""
+                for i in range(start_line_index, end_line_index):
+                    source += source_unit._lines_index[i][0].decode("utf-8")
+
                 ret = {
                     "message":  detection.message,
                     "location": {
-                        "path": str(detection.ir_node.source_unit.file),
-                        "source_unit_name": detection.ir_node.source_unit.source_unit_name,
+                        "path": str(source_unit.file),
+                        "source": source.rstrip(),
+                        "source_start_line": start_line_index + 1,
+                        "source_unit_name": source_unit.source_unit_name,
                         "start_offset": detection.ir_node.byte_location[0],
                         "end_offset": detection.ir_node.byte_location[1],
                         "start_line": start_line,
@@ -591,24 +602,11 @@ async def detect_(
 
                 return ret
 
-            (config.project_root_path / ".wake" / "detections").mkdir(parents=True, exist_ok=True)
+            (config.project_root_path / ".wake").mkdir(parents=True, exist_ok=True)
 
             data = []
-            for i, (detector_name, detection) in enumerate(all_detections):
-                print_detection(
-                    detector_name,
-                    detection,
-                    config,
-                    console,
-                    "monokai" if theme == "dark" else "default",
-                    file_link=False,
-                )
-                console.save_html(
-                    str(config.project_root_path / ".wake" / "detections" / f"{i}.html"),
-                    theme=SVG_EXPORT_THEME if theme == "dark" else DEFAULT_TERMINAL_THEME,
-                )
+            for detector_name, detection in all_detections:
                 data.append({
-                    "id": i,
                     "detector_name": detector_name,
                     "impact": detection.impact.value,
                     "confidence": detection.confidence.value,
@@ -616,7 +614,7 @@ async def detect_(
                     "detection": process_detection(detection.detection),
                 })
 
-            (config.project_root_path / ".wake" / "detections" / "detections.json").write_text(
+            (config.project_root_path / ".wake" / "detections.json").write_text(
                 to_json(data)
             )
 
