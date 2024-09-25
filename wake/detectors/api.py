@@ -726,7 +726,7 @@ def print_detection(
         line -= 1
         source = ""
         start_line_index = max(0, line - 3)
-        end_line_index = min(len(source_unit._lines_index), line + 3)
+        end_line_index = min(len(source_unit._lines_index), line + 4)
         for i in range(start_line_index, end_line_index):
             source += source_unit._lines_index[i][0].decode("utf-8")
 
@@ -770,7 +770,7 @@ def print_detection(
 
         panel = Panel.fit(
             Syntax(
-                source,
+                source.rstrip(),
                 "solidity",
                 theme=theme,
                 line_numbers=True,
