@@ -1,6 +1,7 @@
 import json
 import platform
 import subprocess
+from pathlib import Path
 from typing import Optional
 
 from wake.config import WakeConfig
@@ -11,7 +12,7 @@ def get_contracts_package_version(config: WakeConfig) -> Optional[SemanticVersio
     try:
         node_modules_path = next(
             path
-            for path in config.compiler.solc.include_paths
+            for path in (Path(p) for p in config.compiler.solc.include_paths)
             if "node_modules" in path.stem and path.is_dir()
         )
     except StopIteration:

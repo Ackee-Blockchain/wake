@@ -228,6 +228,7 @@ class WakeConfig:
         *,
         project_root_path: Optional[Union[str, Path]] = None,
         wake_contracts_path: Optional[PurePath] = None,
+        paths_mode: Optional[str] = None,
     ) -> "WakeConfig":
         """
         Args:
@@ -239,7 +240,7 @@ class WakeConfig:
         """
         instance = cls(project_root_path=project_root_path, wake_contracts_path=wake_contracts_path)
         with change_cwd(instance.project_root_path):
-            parsed_config = TopLevelConfig.model_validate(config_dict)
+            parsed_config = TopLevelConfig.model_validate(config_dict, context={"paths_mode": paths_mode})
         instance.__config_raw = parsed_config.model_dump(
             by_alias=True, exclude_unset=True
         )
@@ -308,6 +309,7 @@ class WakeConfig:
         self,
         config_dict: Dict[str, Any],
         deleted_options: Iterable[Tuple[Union[int, str], ...]],
+        paths_mode: Optional[str] = None,
     ) -> Dict:
         """
         Update the config with a new dictionary.
@@ -320,7 +322,7 @@ class WakeConfig:
             Dictionary containing the modified config options.
         """
         with change_cwd(self.project_root_path):
-            parsed_config = TopLevelConfig.model_validate(config_dict)
+            parsed_config = TopLevelConfig.model_validate(config_dict, context={"paths_mode": paths_mode})
         parsed_config_raw = parsed_config.model_dump(by_alias=True, exclude_unset=True)
 
         original_config = deepcopy(self.__config_raw)
@@ -346,7 +348,7 @@ class WakeConfig:
                 except ValueError:
                     pass
 
-        self.__config = TopLevelConfig.model_validate(self.__config_raw)
+        self.__config = TopLevelConfig.model_validate(self.__config_raw, context={"paths_mode": paths_mode})
         modified_keys = {}
         self.__modified_keys(
             original_config,

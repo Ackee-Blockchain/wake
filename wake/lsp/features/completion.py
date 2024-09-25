@@ -574,8 +574,9 @@ async def completion(
 
         for include_path in chain(
             context.config.compiler.solc.include_paths,
-            [context.config.project_root_path, Path(context.config.wake_contracts_path)],
+            [context.config.project_root_path, context.config.wake_contracts_path],
         ):
+            include_path = Path(include_path)
             if include_path.is_dir():
                 for p in include_path.iterdir():
                     if p.is_dir():
@@ -600,8 +601,9 @@ async def completion(
     else:
         for include_path in chain(
             context.config.compiler.solc.include_paths,
-            [context.config.project_root_path, Path(context.config.wake_contracts_path)],
+            [context.config.project_root_path, context.config.wake_contracts_path],
         ):
+            include_path = Path(include_path)
             if include_path.is_dir():
                 dir = include_path / parent
                 if dir.is_dir():
