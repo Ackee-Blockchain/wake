@@ -240,6 +240,14 @@ class FileAndPassParamType(click.ParamType):
     count=True,
     help="Increase verbosity. Can be specified multiple times.",
 )
+@click.option(
+    "--shrink",
+    type=click.Path(exists=True, dir_okay=False, readable=True),  # Ensure it's an existing file
+    help="Path to the shrink log file.",
+    is_flag=False,
+    flag_value=-1,
+    default=None,
+)
 
 @click.argument("paths_or_pytest_args", nargs=-1, type=FileAndPassParamType())
 @click.pass_context
@@ -255,6 +263,7 @@ def run_test(
     attach_first: bool,
     dist: str,
     verbosity: int,
+    shrink: Optional[str],
     paths_or_pytest_args: Tuple[str, ...],
 ) -> None:
     """Execute Wake tests using pytest."""
@@ -361,6 +370,48 @@ def run_test(
             )
         else:
             from wake.testing.pytest_plugin_single import PytestWakePluginSingle
+            from wake.development.globals import set_fuzz_mode,set_sequence_initial_internal_state, set_error_flow_num
+
+            def extract_executed_flow_number(crash_log_file_path):
+                if crash_log_file_path is not None:
+                    with open(crash_log_file_path, 'r') as file:
+                        for line in file:
+                            if "executed flow number" in line:
+                                # Extract the number after the colon
+                                parts = line.split(":")
+                                if len(parts) == 2:
+                                    try:
+                                        executed_flow_number = int(parts[1].strip())
+                                        return executed_flow_number
+                                    except ValueError:
+                                        pass  # Handle the case where the value after ":" is not an integer
+                return None
+
+            def extract_internal_state(crash_log_file_path):
+                if crash_log_file_path is not None:
+                    with open(crash_log_file_path, 'r') as file:
+                        for line in file:
+                            if "Internal state of beginning of sequence" in line:
+                                # Extract the part after the colon
+                                parts = line.split(":")
+                                if len(parts) == 2:
+                                    hex_string = parts[1].strip()
+                                    try:
+                                        # Convert the hex string to bytes
+                                        internal_state_bytes = bytes.fromhex(hex_string)
+                                        return internal_state_bytes
+                                    except ValueError:
+                                        pass  # Handle the case where the value after ":" is not a valid hex string
+                return None
+
+            if shrink is not None:
+                number = extract_executed_flow_number(shrink)
+                assert number is not None, "Unexpected file format"
+                set_fuzz_mode(1)
+                set_error_flow_num(number)
+                beginning_random_state_bytes = extract_internal_state(shrink)
+                assert beginning_random_state_bytes is not None, "Unexpected file format"
+                set_sequence_initial_internal_state(beginning_random_state_bytes)
 
             sys.exit(
                 pytest.main(

@@ -5,7 +5,7 @@ from typing import Callable, DefaultDict, List, Optional
 
 from typing_extensions import get_type_hints
 
-from wake.development.globals import random, set_sequence_initial_internal_state
+from wake.development.globals import random, set_sequence_initial_internal_state, get_fuzz_mode, get_sequence_initial_internal_state, set_error_flow_num, get_error_flow_num
 
 from ..core import get_connected_chains
 from .generators import generate
@@ -71,85 +71,317 @@ class FuzzTest:
 
         flows: List[Callable] = self.__get_methods("flow")
         invariants: List[Callable] = self.__get_methods("invariant")
+        fuzz_mode = get_fuzz_mode()
+        if fuzz_mode == 0:
+            for i in range(sequences_count):
+                flows_counter: DefaultDict[Callable, int] = defaultdict(int)
+                invariant_periods: DefaultDict[Callable[[None], None], int] = defaultdict(
+                    int
+                )
 
-        for i in range(sequences_count):
+                snapshots = [chain.snapshot() for chain in chains]
+
+                set_sequence_initial_internal_state(
+                        pickle.dumps(
+                        random.getstate()
+                    )
+                )
+
+                self._flow_num = 0
+                self._sequence_num = i
+                self.pre_sequence()
+
+                for j in range(flows_count):
+                    valid_flows = [
+                        f
+                        for f in flows
+                        if (
+                            not hasattr(f, "max_times")
+                            or flows_counter[f] < getattr(f, "max_times")
+                        )
+                        and (
+                            not hasattr(f, "precondition")
+                            or getattr(f, "precondition")(self)
+                        )
+                    ]
+                    weights = [getattr(f, "weight") for f in valid_flows]
+                    if len(valid_flows) == 0:
+                        max_times_flows = [
+                            f
+                            for f in flows
+                            if hasattr(f, "max_times")
+                            and flows_counter[f] >= getattr(f, "max_times")
+                        ]
+                        precondition_flows = [
+                            f
+                            for f in flows
+                            if hasattr(f, "precondition")
+                            and not getattr(f, "precondition")(self)
+                        ]
+                        raise Exception(
+                            f"Could not find a valid flow to run.\nFlows that have reached their max_times: {max_times_flows}\nFlows that do not satisfy their precondition: {precondition_flows}"
+                        )
+                    flow = random.choices(valid_flows, weights=weights)[0]
+                    flow_params = [
+                        generate(v)
+                        for k, v in get_type_hints(flow, include_extras=True).items()
+                        if k != "return"
+                    ]
+
+                    self._flow_num = j
+                    set_error_flow_num(j)
+                    self.pre_flow(flow)
+                    flow(self, *flow_params)
+                    flows_counter[flow] += 1
+                    self.post_flow(flow)
+
+                    if not dry_run:
+                        self.pre_invariants()
+                        for inv in invariants:
+                            if invariant_periods[inv] == 0:
+                                self.pre_invariant(inv)
+                                inv(self)
+                                self.post_invariant(inv)
+
+                            invariant_periods[inv] += 1
+                            if invariant_periods[inv] == getattr(inv, "period"):
+                                invariant_periods[inv] = 0
+                        self.post_invariants()
+
+                self.post_sequence()
+
+                for snapshot, chain in zip(snapshots, chains):
+                    chain.revert(snapshot)
+
+        elif(fuzz_mode == 1):
+
+            error_flow_num = get_error_flow_num()
+            random_stored_states: List[bytes] = []
+
             flows_counter: DefaultDict[Callable, int] = defaultdict(int)
             invariant_periods: DefaultDict[Callable[[None], None], int] = defaultdict(
                 int
             )
 
             snapshots = [chain.snapshot() for chain in chains]
-            
-            set_sequence_initial_internal_state(
-                    pickle.dumps(
-                    random.getstate()
-                )
-            )
-                
+
+            state = get_sequence_initial_internal_state()
+            random.setstate(pickle.loads(state))
+
             self._flow_num = 0
-            self._sequence_num = i
+            self._sequence_num = 0
             self.pre_sequence()
 
-            for j in range(flows_count):
-                valid_flows = [
-                    f
-                    for f in flows
-                    if (
-                        not hasattr(f, "max_times")
-                        or flows_counter[f] < getattr(f, "max_times")
-                    )
-                    and (
-                        not hasattr(f, "precondition")
-                        or getattr(f, "precondition")(self)
-                    )
-                ]
-                weights = [getattr(f, "weight") for f in valid_flows]
-                if len(valid_flows) == 0:
-                    max_times_flows = [
+            exception = False
+            try:
+                for j in range(flows_count):
+                    valid_flows = [
                         f
                         for f in flows
-                        if hasattr(f, "max_times")
-                        and flows_counter[f] >= getattr(f, "max_times")
+                        if (
+                            not hasattr(f, "max_times")
+                            or flows_counter[f] < getattr(f, "max_times")
+                        )
+                        and (
+                            not hasattr(f, "precondition")
+                            or getattr(f, "precondition")(self)
+                        )
                     ]
-                    precondition_flows = [
-                        f
-                        for f in flows
-                        if hasattr(f, "precondition")
-                        and not getattr(f, "precondition")(self)
+                    weights = [getattr(f, "weight") for f in valid_flows]
+                    if len(valid_flows) == 0:
+                        max_times_flows = [
+                            f
+                            for f in flows
+                            if hasattr(f, "max_times")
+                            and flows_counter[f] >= getattr(f, "max_times")
+                        ]
+                        precondition_flows = [
+                            f
+                            for f in flows
+                            if hasattr(f, "precondition")
+                            and not getattr(f, "precondition")(self)
+                        ]
+                        raise Exception(
+                            f"Could not find a valid flow to run.\nFlows that have reached their max_times: {max_times_flows}\nFlows that do not satisfy their precondition: {precondition_flows}"
+                        )
+                    random_stored_states.append(pickle.dumps(random.getstate()))
+                    flow = random.choices(valid_flows, weights=weights)[0]
+                    flow_params = [
+                        generate(v)
+                        for k, v in get_type_hints(flow, include_extras=True).items()
+                        if k != "return"
                     ]
-                    raise Exception(
-                        f"Could not find a valid flow to run.\nFlows that have reached their max_times: {max_times_flows}\nFlows that do not satisfy their precondition: {precondition_flows}"
+
+                    self._flow_num = j
+                    self.pre_flow(flow)
+                    flow(self, *flow_params)
+                    flows_counter[flow] += 1
+                    self.post_flow(flow)
+
+                    if not dry_run:
+                        self.pre_invariants()
+                        for inv in invariants:
+                            if invariant_periods[inv] == 0:
+                                self.pre_invariant(inv)
+                                inv(self)
+                                self.post_invariant(inv)
+
+                            invariant_periods[inv] += 1
+                            if invariant_periods[inv] == getattr(inv, "period"):
+                                invariant_periods[inv] = 0
+                        self.post_invariants()
+                self.post_sequence()
+
+                for snapshot, chain in zip(snapshots, chains):
+                    chain.revert(snapshot)
+            except Exception:
+                exception = True
+
+                for snapshot, chain in zip(snapshots, chains):
+                    chain.revert(snapshot)
+
+                assert self._flow_num == error_flow_num, "Unexpected failing flow"
+            if exception == False:
+                raise Exception("Exception not raised unexpected state changes")
+
+
+
+            print("Random state corrected: ", error_flow_num)
+            print("Starting shrinking")
+
+            run_flows: List[bool] = [True] * (error_flow_num+1)
+
+            curr = 0 # current testing flow index
+
+            class OverRunException(Exception):
+                def __init__(self):
+                    super().__init__("Overrun")
+
+            while curr <= error_flow_num:
+                run_flows[curr] = False
+
+                flows_counter: DefaultDict[Callable, int] = defaultdict(int)
+                invariant_periods: DefaultDict[Callable[[None], None], int] = defaultdict(
+                    int
+                )
+                snapshots = [chain.snapshot() for chain in chains]
+
+                set_sequence_initial_internal_state(
+                        pickle.dumps(
+                        random.getstate()
                     )
-                flow = random.choices(valid_flows, weights=weights)[0]
-                flow_params = [
-                    generate(v)
-                    for k, v in get_type_hints(flow, include_extras=True).items()
-                    if k != "return"
-                ]
+                )
+                self._flow_num = 0
+                self._sequence_num = 0
+                self.pre_sequence()
+                exception = False
+                try:
 
-                self._flow_num = j
-                self.pre_flow(flow)
-                flow(self, *flow_params)
-                flows_counter[flow] += 1
-                self.post_flow(flow)
+                    for j in range(flows_count):
+                        if self._flow_num > error_flow_num:
+                            raise OverRunException()
 
-                if not dry_run:
-                    self.pre_invariants()
-                    for inv in invariants:
-                        if invariant_periods[inv] == 0:
-                            self.pre_invariant(inv)
-                            inv(self)
-                            self.post_invariant(inv)
+                        valid_flows = [
+                            f
+                            for f in flows
+                            if (
+                                not hasattr(f, "max_times")
+                                or flows_counter[f] < getattr(f, "max_times")
+                            )
+                            and (
+                                not hasattr(f, "precondition")
+                                or getattr(f, "precondition")(self)
+                            )
+                        ]
+                        weights = [getattr(f, "weight") for f in valid_flows]
+                        if len(valid_flows) == 0:
+                            max_times_flows = [
+                                f
+                                for f in flows
+                                if hasattr(f, "max_times")
+                                and flows_counter[f] >= getattr(f, "max_times")
+                            ]
+                            precondition_flows = [
+                                f
+                                for f in flows
+                                if hasattr(f, "precondition")
+                                and not getattr(f, "precondition")(self)
+                            ]
+                            raise Exception(
+                                f"Could not find a valid flow to run.\nFlows that have reached their max_times: {max_times_flows}\nFlows that do not satisfy their precondition: {precondition_flows}"
+                            )
 
-                        invariant_periods[inv] += 1
-                        if invariant_periods[inv] == getattr(inv, "period"):
-                            invariant_periods[inv] = 0
-                    self.post_invariants()
+                        random.setstate(pickle.loads(random_stored_states[j]))
+                        flow = random.choices(valid_flows, weights=weights)[0]
+                        flow_params = [
+                            generate(v)
+                            for k, v in get_type_hints(flow, include_extras=True).items()
+                            if k != "return"
+                        ]
+                        # print(j)
+                        if run_flows[j]:
+                            self._flow_num = j
+                            self.pre_flow(flow)
+                            flow(self, *flow_params)
+                            flows_counter[flow] += 1
+                            self.post_flow(flow)
 
-            self.post_sequence()
+                        if not dry_run:
+                            self.pre_invariants()
+                            for inv in invariants:
+                                if invariant_periods[inv] == 0:
+                                    self.pre_invariant(inv)
+                                    inv(self)
+                                    self.post_invariant(inv)
 
-            for snapshot, chain in zip(snapshots, chains):
-                chain.revert(snapshot)
+                                invariant_periods[inv] += 1
+                                if invariant_periods[inv] == getattr(inv, "period"):
+                                    invariant_periods[inv] = 0
+                            self.post_invariants()
+                    self.post_sequence()
+                except OverRunException:
+                    exception = False # since it is not test exception
+                except Exception:
+                    exception = True
+                    for snapshot, chain in zip(snapshots, chains):
+                        chain.revert(snapshot)
+
+                    if self._flow_num == error_flow_num:
+                        # the removed flow is not required to reproduce same error. @ try remove next flow
+                        print("remove worked!!, ", curr)
+                        assert run_flows[curr] == False
+                        if curr == error_flow_num:
+                            # the final flow is required since it caused the error
+                            run_flows[curr] = True
+                        # run_flows[curr] = False
+                        pass
+                    else:
+                        # the removing flow caused different error . @this flow should not removed restore current flow and remove next flow
+                        run_flows[curr] = True
+                        pass
+
+                if exception == False:
+                    for snapshot, chain in zip(snapshots, chains):
+                        chain.revert(snapshot)
+
+                    run_flows[curr] = True
+                    # the removed flow is required to reproduce same error. @ this flow should not removed # restore current flow and remove next flow
+
+                print("True!!", run_flows[curr], curr)
+                curr += 1
+
+
+                print("Shrinking flow: ", curr)
+                print("sum flows: ", error_flow_num)
+
+            print("Shrinking completed")
+            print(run_flows)
+            print(len(run_flows))
+            print(sum(run_flows))
+
+
+        else:
+            raise Exception("Invalid fuzz mode")
 
     def pre_sequence(self) -> None:
         pass
