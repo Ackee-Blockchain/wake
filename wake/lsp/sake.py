@@ -181,6 +181,15 @@ class SakeContext:
             _compilation = {}
 
             for fqn, info in contract_info.items():
+                if (
+                    info.evm is None
+                    or info.evm.bytecode is None
+                    or info.evm.bytecode.object is None
+                    or info.evm.deployed_bytecode is None
+                    or info.evm.deployed_bytecode.object is None
+                ):
+                    continue
+
                 source_unit_name = fqn.split(":")[0]
                 try:
                     ast = asts[source_unit_name]
@@ -234,9 +243,6 @@ class SakeContext:
                     else:
                         raise ValueError(f"Unknown ABI item type: {item['type']}")
 
-                assert info.evm is not None
-                assert info.evm.bytecode is not None
-                assert info.evm.bytecode.object is not None
                 bytecode = info.evm.bytecode.object
                 if len(bytecode) > 0:
                     bytecode_segments: List[Tuple[int, bytes]] = []
@@ -256,8 +262,6 @@ class SakeContext:
 
                     creation_code_index.append((tuple(bytecode_segments), fqn))
 
-                assert info.evm.deployed_bytecode is not None
-                assert info.evm.deployed_bytecode.object is not None
                 if len(info.evm.deployed_bytecode.object) >= 106:
                     fqn_by_metadata[
                         bytes.fromhex(info.evm.deployed_bytecode.object[-106:])
