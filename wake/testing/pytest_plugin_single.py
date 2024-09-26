@@ -17,7 +17,8 @@ from wake.development.globals import (
     reset_exception_handled,
     set_coverage_handler,
     set_exception_handler,
-    get_sequence_initial_internal_state
+    get_sequence_initial_internal_state,
+    get_error_flow_num,
 )
 from wake.testing.coverage import (
     CoverageHandler,
@@ -75,8 +76,9 @@ class PytestWakePluginSingle:
             )
             file_console = Console(file=f, force_terminal=False)
             file_console.print(rich_tb)
-            f.write(f"\nInternal state of beginning of sequence : \n{state.hex()}")
-        
+            f.write(f"\nInternal state of beginning of sequence : {state.hex()}\n")
+            f.write(f"executed flow number : {get_error_flow_num()}\n")
+
     def pytest_runtestloop(self, session: Session):
         if (
             session.testsfailed
@@ -92,7 +94,7 @@ class PytestWakePluginSingle:
 
         coverage = self._cov_proc_count == 1 or self._cov_proc_count == -1
 
-       
+
         if len(self._random_states) > 0:
             assert self._random_states[0] is not None
             random.setstate(pickle.loads(self._random_states[0]))
