@@ -447,12 +447,16 @@ class TransactionAbc(ABC, Generic[T]):
         raw_error = self.raw_error
         assert raw_error is not None
 
+        if isinstance(raw_error, Halt):
+            self._error = raw_error
+            return self._error
+
         self._error = self._chain._process_revert_data(self, raw_error.data)
         return self._error
 
     @property
     @_fetch_tx_receipt
-    def raw_error(self) -> Optional[UnknownTransactionRevertedError]:
+    def raw_error(self) -> Optional[Union[UnknownTransactionRevertedError, Halt]]:
         if self.status == TransactionStatusEnum.SUCCESS:
             return None
 
@@ -462,9 +466,16 @@ class TransactionAbc(ABC, Generic[T]):
         chain_interface = self._chain.chain_interface
 
         assert self._tx_receipt is not None
+
+        if isinstance(chain_interface, AnvilChainInterface):
+            self._fetch_trace_transaction()
+            assert self._trace_transaction is not None
+
+            if self._trace_transaction[0]["result"] is None:
+                return Halt(self._trace_transaction[0]["error"])
+
         # due to a bug, Anvil does not return revert data for failed contract creations
         if isinstance(chain_interface, AnvilChainInterface) and self.to is not None:
-            self._fetch_trace_transaction()
             assert self._trace_transaction is not None
             output = self._trace_transaction[0]["result"]["output"]
             if output.startswith("0x"):
@@ -775,6 +786,11 @@ class Error(TransactionRevertedError):
         "inputs": [{"internalType": "string", "name": "message", "type": "string"}],
     }
     selector = bytes.fromhex("08c379a0")
+    message: str
+
+
+@dataclass
+class Halt(TransactionRevertedError):
     message: str
 
 
