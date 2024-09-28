@@ -1,9 +1,17 @@
 import re
 from dataclasses import astuple
 from pathlib import Path, PurePath, PurePosixPath, PureWindowsPath
-from typing import Dict, FrozenSet, List, Optional, Iterable
+from typing import Dict, FrozenSet, Iterable, List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, PlainSerializer, field_serializer, field_validator, ValidationInfo
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    PlainSerializer,
+    ValidationInfo,
+    field_serializer,
+    field_validator,
+)
 from pydantic.dataclasses import dataclass
 from pydantic.functional_validators import BeforeValidator
 from typing_extensions import Annotated
@@ -153,6 +161,21 @@ class SolcConfig(WakeConfigModel):
     """
 
     _normalize_paths = field_validator("allow_paths", "include_paths", "exclude_paths", mode="before")(normalize_paths)
+
+    @field_serializer("target_version", when_used="json")
+    def serialize_target_version(self, version: Optional[SolidityVersion], info):
+        return str(version) if version is not None else None
+
+
+class SubprojectConfig(WakeConfigModel):
+    paths: FrozenSet[PurePath] = frozenset()
+    target_version: Optional[SolidityVersion] = None
+    evm_version: Optional[EvmVersionEnum] = None
+    optimizer: SolcOptimizerConfig = Field(default_factory=SolcOptimizerConfig)
+    target_version: Optional[SolidityVersion] = None
+    via_IR: Optional[bool] = None
+
+    _normalize_paths = field_validator("paths", mode="before")(normalize_paths)
 
     @field_serializer("target_version", when_used="json")
     def serialize_target_version(self, version: Optional[SolidityVersion], info):
@@ -437,6 +460,7 @@ class TopLevelConfig(WakeConfigModel):
     subconfigs: List[Annotated[Path, BeforeValidator(lambda p: Path(p).resolve())]] = []
     api_keys: Dict[str, str] = {}
     compiler: CompilerConfig = Field(default_factory=CompilerConfig)
+    subproject: Dict[str, SubprojectConfig] = {}
     detectors: DetectorsConfig = Field(default_factory=DetectorsConfig)
     detector: DetectorConfig = Field(default_factory=DetectorConfig)
     generator: GeneratorConfig = Field(default_factory=GeneratorConfig)

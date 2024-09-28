@@ -1,6 +1,6 @@
 from collections import defaultdict
 from pathlib import Path
-from typing import DefaultDict, FrozenSet, Iterable, Set
+from typing import DefaultDict, FrozenSet, Iterable, Optional, Set
 
 import networkx as nx
 from Crypto.Hash import BLAKE2b
@@ -15,12 +15,19 @@ from wake.core.solidity_version import SolidityVersionRanges
 class CompilationUnit:
     __unit_graph: nx.DiGraph
     __version_ranges: SolidityVersionRanges
+    __subproject: Optional[str]
     __hash: bytes
     __paths_to_source_unit_names: DefaultDict[Path, Set[str]]
 
-    def __init__(self, unit_graph: nx.DiGraph, version_ranges: SolidityVersionRanges):
+    def __init__(
+        self,
+        unit_graph: nx.DiGraph,
+        version_ranges: SolidityVersionRanges,
+        subproject: Optional[str],
+    ):
         self.__unit_graph = unit_graph
         self.__version_ranges = version_ranges
+        self.__subproject = subproject
         self.__paths_to_source_unit_names = defaultdict(set)
 
         self.__hash = bytes([0] * 32)
@@ -87,6 +94,10 @@ class CompilationUnit:
     @property
     def versions(self) -> SolidityVersionRanges:
         return self.__version_ranges
+
+    @property
+    def subproject(self) -> Optional[str]:
+        return self.__subproject
 
     @property
     def hash(self) -> bytes:

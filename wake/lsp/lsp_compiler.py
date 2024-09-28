@@ -16,6 +16,7 @@ from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from dataclasses import dataclass
 from functools import lru_cache
+from itertools import chain
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
@@ -257,7 +258,7 @@ class LspCompiler:
     __last_compilation_interval_trees: Dict[Path, IntervalTree]
     __last_compilation_source_units: Dict[Path, SourceUnit]
     __last_graph: nx.DiGraph
-    __last_build_settings: SolcInputSettings
+    __last_build_settings: Dict[Optional[str], SolcInputSettings]
     __line_indexes: Dict[Path, List[Tuple[bytes, int]]]
     __early_line_indexes: Dict[Path, List[Tuple[bytes, int]]]
     __perform_files_discovery: bool
@@ -337,9 +338,7 @@ class LspCompiler:
         self.__last_compilation_interval_trees = {}
         self.__last_compilation_source_units = {}
         self.__last_graph = nx.DiGraph()
-        self.__last_build_settings = (
-            SolcInputSettings()
-        )  # pyright: ignore reportGeneralTypeIssues
+        self.__last_build_settings = {}
         self.__line_indexes = {}
         self.__early_line_indexes = {}
         self.__output_contents = dict()
@@ -707,6 +706,11 @@ class LspCompiler:
     @property
     def last_build_info(self) -> ProjectBuildInfo:
         # TODO config may be subject to race conditions
+        target_versions: Dict[Optional[str], Optional[SolidityVersion]] = {
+            s: info.target_version for s, info in self.__config.subproject.items()
+        }
+        target_versions[None] = self.__config.compiler.solc.target_version
+
         return ProjectBuildInfo(
             compilation_units={
                 cu_hash.hex(): CompilationUnitBuildInfo(errors=list(errors))
@@ -723,7 +727,7 @@ class LspCompiler:
             exclude_paths=self.__config.compiler.solc.exclude_paths,
             include_paths=self.__config.compiler.solc.include_paths,
             settings=self.__last_build_settings,
-            target_solidity_version=self.__config.compiler.solc.target_version,
+            target_solidity_versions=target_versions,
             wake_version=self.__wake_version,
             incremental=True,
         )
@@ -1294,34 +1298,38 @@ class LspCompiler:
         else:
             raise Exception("Unknown change type")
 
-    async def __check_target_version(self, *, show_message: bool) -> None:
-        target_version = self.__config.compiler.solc.target_version
+    async def __check_target_versions(self, *, show_message: bool) -> None:
         min_version = self.__config.min_solidity_version
         max_version = self.__config.max_solidity_version
-        if target_version is not None and target_version < min_version:
-            message = f"The minimum supported version of Solidity is {min_version}. Version {target_version} is selected in settings."
 
-            await self.__server.log_message(message, MessageType.WARNING)
-            if show_message:
-                await self.__server.show_message(message, MessageType.WARNING)
+        for target_version in chain(
+            [s.target_version for s in self.__config.subproject.values()],
+            [self.__config.compiler.solc.target_version],
+        ):
+            if target_version is not None and target_version < min_version:
+                message = f"The minimum supported version of Solidity is {min_version}. Version {target_version} is selected in settings."
 
-            for file in self.__discovered_files:
-                # clear diagnostics
-                await self.__diagnostic_queue.put((file, set()))
+                await self.__server.log_message(message, MessageType.WARNING)
+                if show_message:
+                    await self.__server.show_message(message, MessageType.WARNING)
 
-            raise CompilationError("Invalid target version")
-        if target_version is not None and target_version > max_version:
-            message = f"The maximum supported version of Solidity is {max_version}. Version {target_version} is selected in settings."
+                for file in self.__discovered_files:
+                    # clear diagnostics
+                    await self.__diagnostic_queue.put((file, set()))
 
-            await self.__server.log_message(message, MessageType.WARNING)
-            if show_message:
-                await self.__server.show_message(message, MessageType.WARNING)
+                raise CompilationError("Invalid target version")
+            if target_version is not None and target_version > max_version:
+                message = f"The maximum supported version of Solidity is {max_version}. Version {target_version} is selected in settings."
 
-            for file in self.__discovered_files:
-                # clear diagnostics
-                await self.__diagnostic_queue.put((file, set()))
+                await self.__server.log_message(message, MessageType.WARNING)
+                if show_message:
+                    await self.__server.show_message(message, MessageType.WARNING)
 
-            raise CompilationError("Invalid target version")
+                for file in self.__discovered_files:
+                    # clear diagnostics
+                    await self.__diagnostic_queue.put((file, set()))
+
+                raise CompilationError("Invalid target version")
 
     async def __detect_target_versions(
         self, compilation_units: List[CompilationUnit], *, show_message: bool
@@ -1333,7 +1341,13 @@ class LspCompiler:
         skipped_reasons = []
 
         for compilation_unit in compilation_units:
-            target_version = self.__config.compiler.solc.target_version
+            target_version = (
+                self.__config.compiler.solc.target_version
+                if compilation_unit.subproject is None
+                else self.__config.subproject[
+                    compilation_unit.subproject
+                ].target_version
+            )
             if target_version is not None:
                 if target_version not in compilation_unit.versions:
                     message = (
@@ -1453,7 +1467,7 @@ class LspCompiler:
         Dict[str, Tuple[str, Path]],
     ]:
         try:
-            await self.__check_target_version(show_message=True)
+            await self.__check_target_versions(show_message=True)
         except CompilationError:
             return False, {}, {}, {}, {}
 
@@ -1480,14 +1494,19 @@ class LspCompiler:
         if len(compilation_units) == 0:
             return False, {}, {}, {}, {}
 
-        build_settings = self.__compiler.create_build_settings(
-            [
-                SolcOutputSelectionEnum.ABI,
-                SolcOutputSelectionEnum.EVM_BYTECODE_OBJECT,
-                SolcOutputSelectionEnum.EVM_DEPLOYED_BYTECODE_OBJECT,
-                SolcOutputSelectionEnum.AST,
-            ]
-        )
+        subprojects = {cu.subproject for cu in compilation_units}
+        build_settings = {
+            subproject: self.__compiler.create_build_settings(
+                [
+                    SolcOutputSelectionEnum.ABI,
+                    SolcOutputSelectionEnum.EVM_BYTECODE_OBJECT,
+                    SolcOutputSelectionEnum.EVM_DEPLOYED_BYTECODE_OBJECT,
+                    SolcOutputSelectionEnum.AST,
+                ],
+                subproject,
+            )
+            for subproject in subprojects
+        }
 
         # optimization - merge compilation units that can be compiled together
         compilation_units = SolidityCompiler.merge_compilation_units(
@@ -1523,7 +1542,7 @@ class LspCompiler:
                 self.__compiler.compile_unit_raw(
                     compilation_unit,
                     target_version,
-                    build_settings,
+                    build_settings[compilation_unit.subproject],
                 )
             )
             tasks.append(task)
@@ -1571,6 +1590,9 @@ class LspCompiler:
                     )
 
             for source_unit_name in solc_output.contracts.keys():
+                if graph.nodes[source_unit_name]["subproject"] != cu.subproject:
+                    continue
+
                 for contract_name, info in solc_output.contracts[
                     source_unit_name
                 ].items():
@@ -1580,6 +1602,9 @@ class LspCompiler:
                     contract_info[fqn] = info
 
             for source_unit_name, ast in solc_output.sources.items():
+                if graph.nodes[source_unit_name]["subproject"] != cu.subproject:
+                    continue
+
                 skipped_source_units.pop(source_unit_name, None)
 
                 if ast.ast is not None:
@@ -1605,7 +1630,7 @@ class LspCompiler:
             compilation_units_per_file = defaultdict(set)
 
         try:
-            await self.__check_target_version(show_message=False)
+            await self.__check_target_versions(show_message=False)
         except CompilationError:
             self.__interval_trees.clear()
             self.__source_units.clear()
@@ -1692,13 +1717,25 @@ class LspCompiler:
 
         for cu in set(compilation_units) - set(needed_compilation_units):
             for path in cu.files:
-                compilation_units_per_file[path].add(cu)
+                if (
+                    graph.nodes[next(iter(cu.path_to_source_unit_names(path)))][
+                        "subproject"
+                    ]
+                    == cu.subproject
+                ):
+                    compilation_units_per_file[path].add(cu)
 
         compilation_units = needed_compilation_units
+        subprojects = {cu.subproject for cu in compilation_units}
 
-        build_settings = self.__compiler.create_build_settings(
-            [SolcOutputSelectionEnum.AST]
-        )
+        build_settings = {
+            subproject: self.__compiler.create_build_settings(
+                [SolcOutputSelectionEnum.AST],
+                subproject,
+            )
+            for subproject in subprojects
+        }
+
         if full_compile:
             self.__last_build_settings = build_settings
 
@@ -1708,7 +1745,13 @@ class LspCompiler:
         )
         for cu in compilation_units:
             for path in cu.files:
-                compilation_units_per_file[path].add(cu)
+                if (
+                    graph.nodes[next(iter(cu.path_to_source_unit_names(path)))][
+                        "subproject"
+                    ]
+                    == cu.subproject
+                ):
+                    compilation_units_per_file[path].add(cu)
 
         (
             target_versions,
@@ -1719,18 +1762,38 @@ class LspCompiler:
 
         for compilation_unit in skipped_compilation_units:
             for file in compilation_unit.files:
-                compilation_units_per_file[file].remove(compilation_unit)
+                try:
+                    compilation_units_per_file[file].remove(compilation_unit)
+                except KeyError:
+                    # prevent triggering the following if condition multiple times
+                    continue
 
                 if len(compilation_units_per_file[file]) == 0:
-                    # clear diagnostics
-                    await self.__diagnostic_queue.put((file, set()))
-                    if file in self.__interval_trees:
-                        self.__interval_trees.pop(file)
-                    if file in self.__source_units:
-                        self.__ir_reference_resolver.run_destroy_callbacks(file)
-                        self.__ir_reference_resolver.clear_registered_nodes([file])
-                        source_unit = self.__source_units.pop(file)
-                        self.__cu_counter[source_unit.cu_hash] -= 1
+                    # this file won't be present in the final build
+                    # however, there may be other CUs compiling this file (for different subprojects) where compilation was successful
+                    # to prevent the case where files from different subprojects depending on this file would be left orphaned,
+                    # we need to remove them from the build as well
+                    for (_, to) in nx.edge_bfs(graph, [
+                        source_unit_name
+                        for source_unit_name in graph.nodes
+                        if graph.nodes[source_unit_name]["path"] == file
+                    ]):
+                        file = source_units_to_paths[to]
+                        # this file won't be taken from any CU, even if compiled successfully
+                        compilation_units_per_file[file].clear()
+
+                        # clear diagnostics
+                        await self.__diagnostic_queue.put((file, set()))
+
+                        if file in self.__interval_trees:
+                            self.__interval_trees.pop(file)
+
+                        if file in self.__source_units:
+                            self.__ir_reference_resolver.run_destroy_callbacks(file)
+                            self.__ir_reference_resolver.clear_registered_nodes([file])
+                            source_unit = self.__source_units.pop(file)
+                            self.__cu_counter[source_unit.cu_hash] -= 1
+
             compilation_units.remove(compilation_unit)
 
         progress_token = await self.__server.progress_begin("Compiling")
@@ -1741,7 +1804,7 @@ class LspCompiler:
                 self.__compiler.compile_unit_raw(
                     compilation_unit,
                     target_version,
-                    build_settings,
+                    build_settings[compilation_unit.subproject],
                 )
             )
             tasks.append(task)
@@ -1908,15 +1971,34 @@ class LspCompiler:
                 # an error occurred during compilation
                 # AST still may be provided, but it must NOT be parsed (pydantic model is not defined for this case)
 
-                compilation_units_per_file[file].remove(cu)
+                try:
+                    compilation_units_per_file[file].remove(cu)
+                except KeyError:
+                    # prevent triggering the following if condition multiple times
+                    continue
+
                 if len(compilation_units_per_file[file]) == 0:
-                    if file in self.__source_units:
-                        self.__ir_reference_resolver.run_destroy_callbacks(file)
-                        self.__ir_reference_resolver.clear_registered_nodes([file])
-                        source_unit = self.__source_units.pop(file)
-                        self.__cu_counter[source_unit.cu_hash] -= 1
-                    if file in self.__interval_trees:
-                        self.__interval_trees.pop(file)
+                    # this file won't be present in the final build
+                    # however, there may be other CUs compiling this file (for different subprojects) where compilation was successful
+                    # to prevent the case where files from different subprojects depending on this file would be left orphaned,
+                    # we need to remove them from the build as well
+                    for (_, to) in nx.edge_bfs(graph, [
+                        source_unit_name
+                        for source_unit_name in graph.nodes
+                        if graph.nodes[source_unit_name]["path"] == file
+                    ]):
+                        file = source_units_to_paths[to]
+                        # this file won't be taken from any CU, even if compiled successfully
+                        compilation_units_per_file[file].clear()
+
+                        if file in self.__source_units:
+                            self.__ir_reference_resolver.run_destroy_callbacks(file)
+                            self.__ir_reference_resolver.clear_registered_nodes([file])
+                            source_unit = self.__source_units.pop(file)
+                            self.__cu_counter[source_unit.cu_hash] -= 1
+
+                        if file in self.__interval_trees:
+                            self.__interval_trees.pop(file)
 
             if len(errored_files) == 0:
                 successful_compilation_units.append((cu, solc_output))
@@ -1956,9 +2038,15 @@ class LspCompiler:
                     files_to_recompile.discard(path)
 
                     if (
-                        path in self.__source_units and path not in recompiled_files
-                    ) or path in processed_files:
+                        (path in self.__source_units and path not in recompiled_files)
+                        or path in processed_files
+                        or cu not in compilation_units_per_file[path]
+                    ):
+                        # either file already in build artifacts and not needed to be recompiled (not changed since last compilation)
+                        # or file already processed in this compilation run (and added to the build)
+                        # or file needed to be compiled by different CU due to different compilation settings for subprojects
                         continue
+
                     processed_files.add(path)
 
                     interval_tree = IntervalTree()
@@ -1982,12 +2070,15 @@ class LspCompiler:
 
                     compiled_files.add(path)
 
-                self.__ir_reference_resolver.run_post_process_callbacks(
-                    CallbackParams(
-                        interval_trees=self.__interval_trees,
-                        source_units=self.__source_units,
-                    )
+            # must be run after all CUs processed
+            # this is due to callbacks may require source units present in same CU but precessed in different CU
+            # source unit may be processed later in different CU due to subproject requirement
+            self.__ir_reference_resolver.run_post_process_callbacks(
+                CallbackParams(
+                    interval_trees=self.__interval_trees,
+                    source_units=self.__source_units,
                 )
+            )
 
         loop = asyncio.get_event_loop()
         await loop.run_in_executor(executor, index_new_nodes)

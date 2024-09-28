@@ -435,6 +435,17 @@ class SolidityCompiler:
                 versions, imports, h, wake_comments = SoliditySourceParser.parse_source(
                     content, ignore_errors
                 )
+
+            subprojects = [
+                s
+                for s, info in self.__config.subproject.items()
+                if any(is_relative_to(path, p) for p in info.paths)
+            ]
+            if len(subprojects) > 1:
+                raise CompilationError(
+                    f"Source file {path} is included in multiple subprojects: {', '.join(subprojects)}"
+                )
+
             graph.add_node(
                 source_unit_name,
                 path=path,
@@ -443,6 +454,7 @@ class SolidityCompiler:
                 content=content,
                 unresolved_imports=set(),
                 wake_comments=self._prepare_wake_comments(path, content, wake_comments),
+                subproject=subprojects[0] if subprojects else None,
             )
             source_units[source_unit_name] = path
 
@@ -488,7 +500,7 @@ class SolidityCompiler:
         """
 
         def __build_compilation_unit(
-            graph: nx.DiGraph, start: Iterable[str]
+            graph: nx.DiGraph, start: Iterable[str], subproject: Optional[str]
         ) -> CompilationUnit:
             nodes_subset = set()
             nodes_queue: deque[str] = deque(start)
@@ -498,11 +510,13 @@ class SolidityCompiler:
 
             while len(nodes_queue) > 0:
                 node = nodes_queue.pop()
-                versions &= graph.nodes[node]["versions"]
 
                 if node in nodes_subset:
                     continue
+
                 nodes_subset.add(node)
+                versions &= graph.nodes[node]["versions"]
+                compiled_with[node].add(subproject)
 
                 for in_edge in graph.in_edges(node):
                     _from, to = in_edge
@@ -510,43 +524,68 @@ class SolidityCompiler:
                         nodes_queue.append(_from)
 
             subgraph = graph.subgraph(nodes_subset).copy()
-            return CompilationUnit(subgraph, versions)
+            return CompilationUnit(subgraph, versions, subproject)
 
-        sinks = [node for node, out_degree in graph.out_degree() if out_degree == 0]
+        graph = graph.copy()
         compilation_units = []
+        compiled_with = defaultdict(set)
 
-        for sink in sinks:
-            compilation_unit = __build_compilation_unit(graph, [sink])
-            compilation_units.append(compilation_unit)
+        while graph.nodes:
+            sinks = [node for node, out_degree in graph.out_degree() if out_degree == 0]
 
-        # cycles can also be "sinks" in terms of compilation units
-        generated_cycles: Set[FrozenSet[str]] = set()
-        simple_cycles = [set(c) for c in nx.simple_cycles(graph)]
-        for simple_cycle in simple_cycles:
-            if any(simple_cycle.issubset(c) for c in generated_cycles):
-                # this cycle was already merged with another cycle
-                continue
+            for sink in sinks:
+                subproject = graph.nodes[sink]["subproject"]
+                if subproject not in compiled_with[sink]:
+                    compilation_unit = __build_compilation_unit(
+                        graph, [sink], subproject
+                    )
+                    compilation_units.append(compilation_unit)
 
-            # merge with as many other cycles as possible (create transitive closure)
-            for other_cycle in simple_cycles:
-                if len(simple_cycle & other_cycle) > 0:
-                    simple_cycle |= other_cycle
+                graph.remove_node(sink)
 
-            is_closed_cycle = True
-            for node in simple_cycle:
-                if any(edge[1] not in simple_cycle for edge in graph.out_edges(node)):
-                    is_closed_cycle = False
-                    break
+            # cycles can also be "sinks" in terms of compilation units
+            generated_cycles: Set[FrozenSet[str]] = set()
+            simple_cycles = [set(c) for c in nx.simple_cycles(graph)]
+            for simple_cycle in simple_cycles:
+                if any(simple_cycle.issubset(c) for c in generated_cycles):
+                    # this cycle was already merged with another cycle
+                    continue
 
-            if is_closed_cycle:
-                generated_cycles.add(frozenset(simple_cycle))
-                compilation_unit = __build_compilation_unit(graph, simple_cycle)
-                compilation_units.append(compilation_unit)
+                # merge with as many other cycles as possible (create transitive closure)
+                for other_cycle in simple_cycles:
+                    if len(simple_cycle & other_cycle) > 0:
+                        simple_cycle |= other_cycle
+
+                is_closed_cycle = True
+                for node in simple_cycle:
+                    if any(
+                        edge[1] not in simple_cycle for edge in graph.out_edges(node)
+                    ):
+                        is_closed_cycle = False
+                        break
+
+                if is_closed_cycle:
+                    subprojects = {
+                        graph.nodes[node]["subproject"] for node in simple_cycle
+                    }
+                    for subproject in subprojects:
+                        if any(
+                            subproject not in compiled_with[n] for n in simple_cycle
+                        ):
+                            compilation_unit = __build_compilation_unit(
+                                graph, simple_cycle, subproject
+                            )
+                            compilation_units.append(compilation_unit)
+
+                    generated_cycles.add(frozenset(simple_cycle))
+                    graph.remove_nodes_from(simple_cycle)
 
         return compilation_units
 
     def create_build_settings(
-        self, output_types: Collection[SolcOutputSelectionEnum]
+        self,
+        output_types: Collection[SolcOutputSelectionEnum],
+        subproject: Optional[str],
     ) -> SolcInputSettings:
         settings = SolcInputSettings()  # type: ignore
         # TODO Allow setting all solc build settings
@@ -554,36 +593,40 @@ class SolidityCompiler:
         # These include: stopAfter, optimizer, via_IR, debug, metadata, libraries and model checker settings.
         # See https://docs.soliditylang.org/en/v0.8.12/using-the-compiler.html#input-description.
         # Also it is not possible to specify solc output per contract or per source file.
+
+        if subproject is None:
+            solc_settings = self.__config.compiler.solc
+        else:
+            solc_settings = self.__config.subproject[subproject]
+
         settings.remappings = [
             str(remapping) for remapping in self.__config.compiler.solc.remappings
         ]
-        settings.evm_version = self.__config.compiler.solc.evm_version
-        settings.via_IR = self.__config.compiler.solc.via_IR
+        settings.evm_version = solc_settings.evm_version
+        settings.via_IR = solc_settings.via_IR
         settings.optimizer = SolcInputOptimizerSettings(
-            enabled=self.__config.compiler.solc.optimizer.enabled,
-            runs=self.__config.compiler.solc.optimizer.runs,
+            enabled=solc_settings.optimizer.enabled,
+            runs=solc_settings.optimizer.runs,
             details=SolcInputOptimizerDetailsSettings(
-                peephole=self.__config.compiler.solc.optimizer.details.peephole,
-                inliner=self.__config.compiler.solc.optimizer.details.inliner,
-                jumpdest_remover=self.__config.compiler.solc.optimizer.details.jumpdest_remover,
-                order_literals=self.__config.compiler.solc.optimizer.details.order_literals,
-                deduplicate=self.__config.compiler.solc.optimizer.details.deduplicate,
-                cse=self.__config.compiler.solc.optimizer.details.cse,
-                constant_optimizer=self.__config.compiler.solc.optimizer.details.constant_optimizer,
-                simple_counter_for_loop_unchecked_increment=self.__config.compiler.solc.optimizer.details.simple_counter_for_loop_unchecked_increment,
+                peephole=solc_settings.optimizer.details.peephole,
+                inliner=solc_settings.optimizer.details.inliner,
+                jumpdest_remover=solc_settings.optimizer.details.jumpdest_remover,
+                order_literals=solc_settings.optimizer.details.order_literals,
+                deduplicate=solc_settings.optimizer.details.deduplicate,
+                cse=solc_settings.optimizer.details.cse,
+                constant_optimizer=solc_settings.optimizer.details.constant_optimizer,
+                simple_counter_for_loop_unchecked_increment=solc_settings.optimizer.details.simple_counter_for_loop_unchecked_increment,
             ),
         )
 
         if (
-            self.__config.compiler.solc.optimizer.details.yul_details.stack_allocation
-            is not None
-            or self.__config.compiler.solc.optimizer.details.yul_details.optimizer_steps
-            is not None
+            solc_settings.optimizer.details.yul_details.stack_allocation is not None
+            or solc_settings.optimizer.details.yul_details.optimizer_steps is not None
         ):
             assert settings.optimizer.details is not None
             settings.optimizer.details.yul_details = SolcInputOptimizerYulDetailsSettings(
-                stack_allocation=self.__config.compiler.solc.optimizer.details.yul_details.stack_allocation,
-                optimizer_steps=self.__config.compiler.solc.optimizer.details.yul_details.optimizer_steps,
+                stack_allocation=solc_settings.optimizer.details.yul_details.stack_allocation,
+                optimizer_steps=solc_settings.optimizer.details.yul_details.optimizer_steps,
             )
 
         settings.output_selection = {"*": {}}
@@ -603,14 +646,20 @@ class SolidityCompiler:
         return settings
 
     def determine_solc_versions(
-        self, compilation_units: Iterable[CompilationUnit]
+        self,
+        compilation_units: Iterable[CompilationUnit],
+        target_versions_by_subproject: Mapping[
+            Optional[str], Optional[SolidityVersion]
+        ],
     ) -> Tuple[List[SolidityVersion], List[CompilationUnit]]:
         target_versions = []
         skipped_compilation_units = []
         min_version = self.__config.min_solidity_version
         max_version = self.__config.max_solidity_version
         for compilation_unit in compilation_units:
-            target_version = self.__config.compiler.solc.target_version
+            target_version = target_versions_by_subproject.get(
+                compilation_unit.subproject
+            )
             if target_version is not None:
                 if target_version not in compilation_unit.versions:
                     files_str = "\n".join(str(path) for path in compilation_unit.files)
@@ -774,10 +823,18 @@ class SolidityCompiler:
         graph: nx.DiGraph,
         config: WakeConfig,
     ) -> List[CompilationUnit]:
+        merged_compilation_units: List[CompilationUnit] = []
+        compilation_units_by_subproject: DefaultDict[
+            Optional[str], List[CompilationUnit]
+        ] = defaultdict(list)
+        for cu in compilation_units:
+            if len(cu.versions) > 0:
+                compilation_units_by_subproject[cu.subproject].append(cu)
+            else:
+                merged_compilation_units.append(cu)
+
         # optimization - merge compilation units that can be compiled together
-        if len(compilation_units) > 0 and all(
-            len(cu.versions) for cu in compilation_units
-        ):
+        for subproject, compilation_units in compilation_units_by_subproject.items():
             compilation_units = sorted(
                 compilation_units,
                 key=lambda cu: (
@@ -789,10 +846,13 @@ class SolidityCompiler:
                 [SolidityVersionRange(config.min_solidity_version, True, None, None)]
             )
 
-            merged_compilation_units: List[CompilationUnit] = []
             source_unit_names: Set = set(compilation_units[0].source_unit_names)
             versions = compilation_units[0].versions
-            target_version = config.compiler.solc.target_version
+            target_version = (
+                config.compiler.solc.target_version
+                if subproject is None
+                else config.subproject[subproject].target_version
+            )
 
             for cu in compilation_units[1:]:
                 if (
@@ -826,6 +886,7 @@ class SolidityCompiler:
                         CompilationUnit(
                             graph.subgraph(source_unit_names).copy(),
                             versions,
+                            subproject,
                         )
                     )
                     source_unit_names = set(cu.source_unit_names)
@@ -835,15 +896,15 @@ class SolidityCompiler:
                 CompilationUnit(
                     graph.subgraph(source_unit_names).copy(),
                     versions,
+                    subproject,
                 )
             )
 
             logger.debug(
                 f"Merged {len(compilation_units)} compilation units into {len(merged_compilation_units)}"
             )
-            compilation_units = merged_compilation_units
 
-        return compilation_units
+        return merged_compilation_units
 
     async def compile(
         self,
@@ -871,24 +932,38 @@ class SolidityCompiler:
             else:
                 incremental = self._latest_build_info.incremental
 
+        target_versions_by_subproject: Dict[
+            Optional[str], Optional[SolidityVersion]
+        ] = {s: info.target_version for s, info in self.__config.subproject.items()}
+        target_versions_by_subproject[None] = self.__config.compiler.solc.target_version
+
         # validate target solc version (if set)
-        target_version = self.__config.compiler.solc.target_version
         min_version = self.__config.min_solidity_version
         max_version = self.__config.max_solidity_version
-        if target_version is not None and target_version < min_version:
-            raise CompilationError(
-                f"Target configured version {target_version} is lower than minimum supported version {min_version}"
-            )
-        if target_version is not None and target_version > max_version:
-            raise CompilationError(
-                f"Target configured version {target_version} is higher than maximum supported version {max_version}"
-            )
+        for target_version in target_versions_by_subproject.values():
+            if target_version is not None and target_version < min_version:
+                raise CompilationError(
+                    f"Target configured version {target_version} is lower than minimum supported version {min_version}"
+                )
+            if target_version is not None and target_version > max_version:
+                raise CompilationError(
+                    f"Target configured version {target_version} is higher than maximum supported version {max_version}"
+                )
+
+        # ensure no subproject is named "__null__"
+        # this is reserved for JSON serialization of None in dicts
+        if any(s == "__null__" for s in self.__config.subproject.keys()):
+            raise CompilationError("Subproject cannot be named '__null__'")
 
         graph, source_units_to_paths = self.build_graph(
             files, modified_files, ignore_errors=True
         )
         compilation_units = self.build_compilation_units_maximize(graph)
-        build_settings = self.create_build_settings(output_types)
+        subprojects = {cu.subproject for cu in compilation_units}
+        build_settings = {
+            subproject: self.create_build_settings(output_types, subproject)
+            for subproject in subprojects
+        }
 
         self._latest_graph = graph
         self._latest_source_units_to_paths = source_units_to_paths
@@ -903,15 +978,15 @@ class SolidityCompiler:
                 or self._latest_build_info.include_paths
                 != self.__config.compiler.solc.include_paths
                 or self._latest_build_info.settings != build_settings
-                or self._latest_build_info.target_solidity_version
-                != self.__config.compiler.solc.target_version
+                or self._latest_build_info.target_solidity_versions
+                != target_versions_by_subproject
                 or self._latest_build_info.incremental != incremental
             ):
                 logger.debug("Build settings changed")
                 build_settings_changed = True
 
         errors_per_cu: DefaultDict[bytes, Set[SolcOutputError]] = defaultdict(set)
-        compilation_units_per_file: Dict[Path, Set[CompilationUnit]]
+        compilation_units_per_file: Dict[Path, Set[CompilationUnit]] = {}
 
         if (
             force_recompile
@@ -936,10 +1011,15 @@ class SolidityCompiler:
                     self.__config,
                 )
 
-            compilation_units_per_file = {
-                path: {cu for cu in compilation_units if path in cu.files}
-                for path in source_units_to_paths.values()
-            }
+            for source_unit_name, path in source_units_to_paths.items():
+                subproject = graph.nodes[source_unit_name]["subproject"]
+
+                # only consider CUs matching the file's subproject
+                compilation_units_per_file[path] = {
+                    cu
+                    for cu in compilation_units
+                    if path in cu.files and subproject == cu.subproject
+                }
         else:
             # TODO this is not needed? graph contains hash of modified files
             # files_to_compile = set(modified_files.keys())
@@ -970,10 +1050,15 @@ class SolidityCompiler:
                 if any(cu.hash.hex() == cu_hash for cu in compilation_units):
                     errors_per_cu[bytes.fromhex(cu_hash)] = set(cu_data.errors)
 
-            compilation_units_per_file = {
-                path: {cu for cu in compilation_units if path in cu.files}
-                for path in source_units_to_paths.values()
-            }
+            for source_unit_name, path in source_units_to_paths.items():
+                subproject = graph.nodes[source_unit_name]["subproject"]
+
+                # only consider CUs matching the file's subproject
+                compilation_units_per_file[path] = {
+                    cu
+                    for cu in compilation_units
+                    if path in cu.files and subproject == cu.subproject
+                }
 
             # select only compilation units that need to be compiled
             compilation_units = [
@@ -990,27 +1075,49 @@ class SolidityCompiler:
             build = self._latest_build
 
         target_versions, skipped_compilation_units = self.determine_solc_versions(
-            compilation_units
+            compilation_units, target_versions_by_subproject
         )
 
         await self._install_solc(target_versions, console)
 
         for cu in skipped_compilation_units:
             for file in cu.files:
-                compilation_units_per_file[file].remove(cu)
+                try:
+                    compilation_units_per_file[file].remove(cu)
+                except KeyError:
+                    # prevent triggering the following if condition multiple times
+                    continue
 
                 if len(compilation_units_per_file[file]) == 0:
-                    if file in build.source_units:
-                        build.reference_resolver.run_destroy_callbacks(file)
-                        build.reference_resolver.clear_registered_nodes([file])
-                        build._source_units.pop(file)
-                        build._interval_trees.pop(file)
+                    # this file won't be present in the final build
+                    # however, there may be other CUs compiling this file (for different subprojects) where compilation was successful
+                    # to prevent the case where files from different subprojects depending on this file would be left orphaned,
+                    # we need to remove them from the build as well
+                    for (_, to) in nx.edge_bfs(graph, [
+                        source_unit_name
+                        for source_unit_name in graph.nodes
+                        if graph.nodes[source_unit_name]["path"] == file
+                    ]):
+                        file = source_units_to_paths[to]
+                        # this file won't be taken from any CU, even if compiled successfully
+                        compilation_units_per_file[file].clear()
+
+                        if file in build.source_units:
+                            build.reference_resolver.run_destroy_callbacks(file)
+                            build.reference_resolver.clear_registered_nodes([file])
+                            build._source_units.pop(file)
+                            build._interval_trees.pop(file)
+
             compilation_units.remove(cu)
 
         tasks = []
         for compilation_unit, target_version in zip(compilation_units, target_versions):
             task = asyncio.create_task(
-                self.compile_unit_raw(compilation_unit, target_version, build_settings)
+                self.compile_unit_raw(
+                    compilation_unit,
+                    target_version,
+                    build_settings[compilation_unit.subproject],
+                )
             )
             tasks.append(task)
 
@@ -1102,14 +1209,31 @@ class SolidityCompiler:
                 all_errored_files |= errored_files
 
                 for file in errored_files:
-                    compilation_units_per_file[file].remove(cu)
+                    try:
+                        compilation_units_per_file[file].remove(cu)
+                    except KeyError:
+                        # prevent triggering the following if condition multiple times
+                        continue
 
                     if len(compilation_units_per_file[file]) == 0:
-                        if file in build.source_units:
-                            build.reference_resolver.run_destroy_callbacks(file)
-                            build.reference_resolver.clear_registered_nodes([file])
-                            build._source_units.pop(file)
-                            build._interval_trees.pop(file)
+                        # this file won't be present in the final build
+                        # however, there may be other CUs compiling this file (for different subprojects) where compilation was successful
+                        # to prevent the case where files from different subprojects depending on this file would be left orphaned,
+                        # we need to remove them from the build as well
+                        for (_, to) in nx.edge_bfs(graph, [
+                            source_unit_name
+                            for source_unit_name in graph.nodes
+                            if graph.nodes[source_unit_name]["path"] == file
+                        ]):
+                            file = source_units_to_paths[to]
+                            # this file won't be taken from any CU, even if compiled successfully
+                            compilation_units_per_file[file].clear()
+
+                            if file in build.source_units:
+                                build.reference_resolver.run_destroy_callbacks(file)
+                                build.reference_resolver.clear_registered_nodes([file])
+                                build._source_units.pop(file)
+                                build._interval_trees.pop(file)
 
                 if len(errored_files) == 0:
                     successful_compilation_units.append((cu, solc_output))
@@ -1172,9 +1296,15 @@ class SolidityCompiler:
                     build.reference_resolver.index_nodes(ast, path, cu.hash)
 
                     if (
-                        path in build.source_units and path not in recompiled_files
-                    ) or path in processed_files:
+                        (path in build.source_units and path not in recompiled_files)
+                        or path in processed_files
+                        or cu not in compilation_units_per_file[path]
+                    ):
+                        # either file already in build artifacts and not needed to be recompiled (not changed since last compilation)
+                        # or file already processed in this compilation run (and added to the build)
+                        # or file needed to be compiled by different CU due to different compilation settings for subprojects
                         continue
+
                     processed_files.add(path)
                     assert (
                         source_unit_name in graph.nodes
@@ -1197,12 +1327,15 @@ class SolidityCompiler:
                     build._source_units[path] = SourceUnit(init, ast)
                     build._interval_trees[path] = interval_tree
 
-                build.reference_resolver.run_post_process_callbacks(
-                    CallbackParams(
-                        interval_trees=build.interval_trees,
-                        source_units=build.source_units,
-                    )
+            # must be run after all CUs processed
+            # this is due to callbacks may require source units present in same CU but precessed in different CU
+            # source unit may be processed later in different CU due to subproject requirement
+            build.reference_resolver.run_post_process_callbacks(
+                CallbackParams(
+                    interval_trees=build.interval_trees,
+                    source_units=build.source_units,
                 )
+            )
 
             if write_artifacts:
                 for source_unit in build._source_units.values():
@@ -1268,7 +1401,7 @@ class SolidityCompiler:
             include_paths=self.__config.compiler.solc.include_paths,
             settings=build_settings,
             source_units_info=source_units_info,
-            target_solidity_version=self.__config.compiler.solc.target_version,
+            target_solidity_versions=target_versions_by_subproject,
             wake_version=get_package_version("eth-wake"),
             incremental=incremental,
         )
