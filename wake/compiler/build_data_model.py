@@ -12,6 +12,7 @@ from pydantic import (
     WithJsonSchema,
     errors,
     field_serializer,
+    field_validator,
 )
 from typing_extensions import Annotated
 
@@ -28,12 +29,13 @@ from wake.ir import (
     InlineAssembly,
     MemberAccess,
     ModifierDefinition,
+    SolidityAbc,
     SourceUnit,
     UnaryOperation,
     UserDefinedTypeName,
     VariableDeclaration,
     YulAbc,
-    YulIdentifier, SolidityAbc,
+    YulIdentifier,
 )
 from wake.ir.enums import GlobalSymbol
 from wake.ir.reference_resolver import ReferenceResolver
@@ -107,14 +109,39 @@ class ProjectBuildInfo(BuildInfoModel):
     allow_paths: FrozenSet[PurePath]
     exclude_paths: FrozenSet[PurePath]
     include_paths: FrozenSet[PurePath]
-    settings: SolcInputSettings
-    target_solidity_version: Optional[SolidityVersion]
+    settings: Dict[Optional[str], SolcInputSettings]
+    target_solidity_versions: Dict[Optional[str], Optional[SolidityVersion]]
     wake_version: str
     incremental: bool
 
-    @field_serializer("target_solidity_version", when_used="json")
-    def serialize_target_version(self, version: Optional[SolidityVersion], info):
-        return str(version) if version is not None else None
+    @field_serializer("settings", when_used="json")
+    def serialize_settings(
+        self, settings: Dict[Optional[str], SolcInputSettings], info
+    ):
+        return {k if k is not None else "__null__": v for k, v in settings.items()}
+
+    @field_validator("settings", mode="before")
+    def validate_settings(cls, v: Dict[Optional[str], SolcInputSettings], info: Any):
+        if "__null__" in v:
+            v[None] = v.pop("__null__")
+        return v
+
+    @field_serializer("target_solidity_versions", when_used="json")
+    def serialize_target_versions(
+        self, versions: Dict[Optional[str], Optional[SolidityVersion]], info
+    ):
+        return {
+            k if k is not None else "__null__": str(v) if v is not None else None
+            for k, v in versions.items()
+        }
+
+    @field_validator("target_solidity_versions", mode="before")
+    def validate_target_versions(
+        cls, v: Dict[Optional[str], Optional[SolidityVersion]], info: Any
+    ):
+        if "__null__" in v:
+            v[None] = v.pop("__null__")
+        return v
 
 
 class ProjectBuild:

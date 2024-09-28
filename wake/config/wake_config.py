@@ -25,6 +25,7 @@ from .data_model import (
     LspConfig,
     PrinterConfig,
     PrintersConfig,
+    SubprojectConfig,
     TestingConfig,
     TopLevelConfig,
 )
@@ -502,6 +503,14 @@ class WakeConfig:
             Compiler config options.
         """
         return self.__config.compiler
+
+    @property
+    def subproject(self) -> Dict[str, SubprojectConfig]:
+        """
+        Returns:
+            Compilation config options for subprojects.
+        """
+        return self.__config.subproject
 
     @property
     def generator(self) -> GeneratorConfig:

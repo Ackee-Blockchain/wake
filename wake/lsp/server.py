@@ -1028,7 +1028,10 @@ class LspServer:
             new_config, removed_options, local_config_path
         )
 
-        if key_in_nested_dict(("compiler", "solc"), changed):
+        if (
+            key_in_nested_dict(("compiler", "solc"), changed)
+            or key_in_nested_dict(("subproject",), changed)
+        ):
             await context.compiler.force_recompile()
         if (
             key_in_nested_dict(("lsp", "detectors"), changed)
@@ -1179,7 +1182,10 @@ class LspServer:
                         new_config, set(), context.toml_path
                     )
 
-                    if key_in_nested_dict(("compiler", "solc"), changed):
+                    if (
+                        key_in_nested_dict(("compiler", "solc"), changed)
+                        or key_in_nested_dict(("subproject",), changed)
+                    ):
                         await context.compiler.force_recompile()
                     if (
                         key_in_nested_dict(("lsp", "detectors"), changed)
