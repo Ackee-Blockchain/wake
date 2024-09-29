@@ -109,12 +109,12 @@ class DiagnosticSeverity(IntEnum):
 
 class DiagnosticTag(IntEnum):
     UNNECESSARY = 1
-    """ 
+    """
     Unused or unnecessary code
     """
     DEPRECATED = 2
     """
-    Deprecated or obsolete code 
+    Deprecated or obsolete code
     """
 
 
@@ -1248,3 +1248,11 @@ class InitializeParams(LspModel):
     capabilities: ClientCapabilities
     trace: Optional[TraceValue] = None
     workspace_folders: Optional[List[WorkspaceFolder]] = None
+
+
+class TextDocumentContentParams(LspModel):
+    uri: DocumentUri
+
+
+class TextDocumentContentResult(LspModel):
+    text: str

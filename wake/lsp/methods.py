@@ -39,6 +39,7 @@ class RequestMethodEnum(StrEnum):
     WORKSPACE_CODE_LENS_REFRESH = "workspace/codeLens/refresh"
     WORKSPACE_DIAGNOSTIC = "workspace/diagnostic"
     WORKSPACE_DIAGNOSTIC_REFRESH = "workspace/diagnostic/refresh"
+    WORKSPACE_FOLDING_RANGE_REFRESH = "workspace/foldingRange/refresh"
 
     # File Operations
     WORKSPACE_WILL_CREATE_FILES = "workspace/willCreateFiles"
@@ -50,6 +51,8 @@ class RequestMethodEnum(StrEnum):
     WORKSPACE_DID_CHANGE_WATCHED_FILES = (
         "workspace/didChangeWatchedFiles"  # Notification
     )
+    WORKSPACE_TEXT_DOCUMENT_CONTENT = "workspace/textDocumentContent"
+    WORKSPACE_TEXT_DOCUMENT_CONTENT_REFRESH = "workspace/textDocumentContent/refresh"
 
     # Text Synchronization
     TEXT_DOCUMENT_DID_OPEN = "textDocument/didOpen"  # Notification
@@ -108,10 +111,12 @@ class RequestMethodEnum(StrEnum):
     COLOR_PRESENTATION = "textDocument/colorPresentation"
     FORMATTING = "textDocument/formatting"
     RANGE_FORMATTING = "textDocument/rangeFormatting"
+    RANGES_FORMATTING = "textDocument/rangesFormatting"
     ON_TYPE_FORMATTING = "textDocument/onTypeFormatting"
     RENAME = "textDocument/rename"
     PREPARE_RENAME = "textDocument/prepareRename"
     LINKED_EDITING_RANGE = "textDocument/linkedEditingRange"
+    INLINE_COMPLETION = "textDocument/inlineCompletion"
 
     # Other
     CANCEL_REQUEST = "$/cancelRequest"

@@ -64,6 +64,8 @@ from .common_structures import (
     SetTraceParams,
     ShowMessageParams,
     ShowMessageRequestParams,
+    TextDocumentContentParams,
+    TextDocumentContentResult,
     WatchKind,
     WorkDoneProgressBegin,
     WorkDoneProgressCreateParams,
@@ -284,6 +286,10 @@ class LspServer:
                     )
                 ),
                 WorkspaceSymbol,
+            ),
+            RequestMethodEnum.WORKSPACE_TEXT_DOCUMENT_CONTENT: (
+                self._workspace_text_document_content,
+                TextDocumentContentParams,
             ),
             RequestMethodEnum.SAKE_COMPILE: (
                 lambda params: (
@@ -1540,3 +1546,15 @@ class LspServer:
         return await self.send_request(
             RequestMethodEnum.WORKSPACE_CONFIGURATION, params
         )
+
+    async def _workspace_text_document_content(
+        self, params: TextDocumentContentParams
+    ) -> TextDocumentContentResult:
+        file = uri_to_path(params.uri)
+
+        try:
+            return TextDocumentContentResult(text=file.read_text())
+        except FileNotFoundError:
+            raise LspError(ErrorCodes.RequestFailed, f"File not found: {file}")
+        except Exception as e:
+            raise LspError(ErrorCodes.RequestFailed, f"Failed to read file {file}: {e}")
