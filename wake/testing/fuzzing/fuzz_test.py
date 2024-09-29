@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Callable, DefaultDict, List, Optional
+from typing import Callable, DefaultDict, List, Optional, Any
 
 from typing_extensions import get_type_hints
 
@@ -11,6 +11,7 @@ from ..core import get_connected_chains
 from .generators import generate
 
 import pickle
+from dataclasses import dataclass
 
 def flow(
     *,
@@ -154,9 +155,20 @@ class FuzzTest:
                     chain.revert(snapshot)
 
         elif(fuzz_mode == 1):
+            print("fuzz test shrink start! First of all correct random and flow information!!! >_<")
+
+            @dataclass
+            class FlowState:
+                random_state: bytes
+                flow_num: int
+                flow_name: str
+                flow: Callable  # Store the function itself
+                flow_params: List[Any]  # Store the list of arguments
+                required: bool = True
+                before_inv_random_state: bytes = b""
 
             error_flow_num = get_error_flow_num()
-            random_stored_states: List[bytes] = []
+            flow_state: List[FlowState] = []
 
             flows_counter: DefaultDict[Callable, int] = defaultdict(int)
             invariant_periods: DefaultDict[Callable[[None], None], int] = defaultdict(
@@ -165,8 +177,8 @@ class FuzzTest:
 
             snapshots = [chain.snapshot() for chain in chains]
 
-            state = get_sequence_initial_internal_state()
-            random.setstate(pickle.loads(state))
+            initial_state = get_sequence_initial_internal_state()
+            random.setstate(pickle.loads(initial_state))
 
             self._flow_num = 0
             self._sequence_num = 0
@@ -204,19 +216,30 @@ class FuzzTest:
                         raise Exception(
                             f"Could not find a valid flow to run.\nFlows that have reached their max_times: {max_times_flows}\nFlows that do not satisfy their precondition: {precondition_flows}"
                         )
-                    random_stored_states.append(pickle.dumps(random.getstate()))
+
+
                     flow = random.choices(valid_flows, weights=weights)[0]
                     flow_params = [
                         generate(v)
                         for k, v in get_type_hints(flow, include_extras=True).items()
                         if k != "return"
                     ]
+                    random_state = pickle.dumps(random.getstate())
+                    flow_state.append(FlowState(
+                        random_state=random_state,
+                        flow_name=flow.__name__,
+                        flow=flow,
+                        flow_params=flow_params,
+                        flow_num=j
+                    ))
 
                     self._flow_num = j
                     self.pre_flow(flow)
                     flow(self, *flow_params)
                     flows_counter[flow] += 1
                     self.post_flow(flow)
+
+                    flow_state[j].before_inv_random_state = pickle.dumps(random.getstate())
 
                     if not dry_run:
                         self.pre_invariants()
@@ -244,12 +267,8 @@ class FuzzTest:
             if exception == False:
                 raise Exception("Exception not raised unexpected state changes")
 
-
-
             print("Random state corrected: ", error_flow_num)
             print("Starting shrinking")
-
-            run_flows: List[bool] = [True] * (error_flow_num+1)
 
             curr = 0 # current testing flow index
 
@@ -258,74 +277,48 @@ class FuzzTest:
                     super().__init__("Overrun")
 
             while curr <= error_flow_num:
-                run_flows[curr] = False
-
+                assert flow_state[curr].required == True
+                flow_state[curr].required = False
                 flows_counter: DefaultDict[Callable, int] = defaultdict(int)
                 invariant_periods: DefaultDict[Callable[[None], None], int] = defaultdict(
                     int
                 )
                 snapshots = [chain.snapshot() for chain in chains]
 
-                set_sequence_initial_internal_state(
-                        pickle.dumps(
-                        random.getstate()
-                    )
-                )
+
+                random.setstate(pickle.loads(initial_state))
+
                 self._flow_num = 0
                 self._sequence_num = 0
                 self.pre_sequence()
                 exception = False
                 try:
-
                     for j in range(flows_count):
-                        if self._flow_num > error_flow_num:
+
+                        print(j, " ", error_flow_num)
+                        if j > error_flow_num:
                             raise OverRunException()
 
-                        valid_flows = [
-                            f
-                            for f in flows
-                            if (
-                                not hasattr(f, "max_times")
-                                or flows_counter[f] < getattr(f, "max_times")
-                            )
-                            and (
-                                not hasattr(f, "precondition")
-                                or getattr(f, "precondition")(self)
-                            )
-                        ]
-                        weights = [getattr(f, "weight") for f in valid_flows]
-                        if len(valid_flows) == 0:
-                            max_times_flows = [
-                                f
-                                for f in flows
-                                if hasattr(f, "max_times")
-                                and flows_counter[f] >= getattr(f, "max_times")
-                            ]
-                            precondition_flows = [
-                                f
-                                for f in flows
-                                if hasattr(f, "precondition")
-                                and not getattr(f, "precondition")(self)
-                            ]
-                            raise Exception(
-                                f"Could not find a valid flow to run.\nFlows that have reached their max_times: {max_times_flows}\nFlows that do not satisfy their precondition: {precondition_flows}"
-                            )
+                        print(j, "th flow")
+                        curr_flow_state = flow_state[j]
+                        random.setstate(pickle.loads(curr_flow_state.random_state))
+                        flow = curr_flow_state.flow
+                        flow_params = curr_flow_state.flow_params
 
-                        random.setstate(pickle.loads(random_stored_states[j]))
-                        flow = random.choices(valid_flows, weights=weights)[0]
-                        flow_params = [
-                            generate(v)
-                            for k, v in get_type_hints(flow, include_extras=True).items()
-                            if k != "return"
-                        ]
-                        # print(j)
-                        if run_flows[j]:
+
+                        if flow_state[j].required:
                             self._flow_num = j
                             self.pre_flow(flow)
                             flow(self, *flow_params)
                             flows_counter[flow] += 1
                             self.post_flow(flow)
+                            print(flow.__name__, ": is executed")
+                        else:
+                            print("skip flow")
 
+                        assert flow_state[j].before_inv_random_state is not None
+                        random.setstate(pickle.loads(curr_flow_state.before_inv_random_state))
+                        print("flow executed")
                         if not dry_run:
                             self.pre_invariants()
                             for inv in invariants:
@@ -338,46 +331,50 @@ class FuzzTest:
                                 if invariant_periods[inv] == getattr(inv, "period"):
                                     invariant_periods[inv] = 0
                             self.post_invariants()
+                        print(f"success {j} th")
                     self.post_sequence()
                 except OverRunException:
+                    print("overrun")
                     exception = False # since it is not test exception
-                except Exception:
+                except Exception as e:
                     exception = True
+                    print("exception in ", j)
                     for snapshot, chain in zip(snapshots, chains):
                         chain.revert(snapshot)
 
                     if self._flow_num == error_flow_num:
                         # the removed flow is not required to reproduce same error. @ try remove next flow
                         print("remove worked!!, ", curr)
-                        assert run_flows[curr] == False
-                        if curr == error_flow_num:
-                            # the final flow is required since it caused the error
-                            run_flows[curr] = True
-                        # run_flows[curr] = False
-                        pass
+                        assert flow_state[curr].required == False
                     else:
+                        print(e)
                         # the removing flow caused different error . @this flow should not removed restore current flow and remove next flow
-                        run_flows[curr] = True
-                        pass
+                        flow_state[curr].required = True
+
+                        print("remove failed!!, ", curr)
 
                 if exception == False:
                     for snapshot, chain in zip(snapshots, chains):
                         chain.revert(snapshot)
 
-                    run_flows[curr] = True
+                    print("probably overrun!")
+                    flow_state[curr].required = True
                     # the removed flow is required to reproduce same error. @ this flow should not removed # restore current flow and remove next flow
 
-                print("True!!", run_flows[curr], curr)
+                print("True!!", flow_state[curr].required, curr)
                 curr += 1
 
 
-                print("Shrinking flow: ", curr)
-                print("sum flows: ", error_flow_num)
+
 
             print("Shrinking completed")
-            print(run_flows)
-            print(len(run_flows))
-            print(sum(run_flows))
+            print("Error flow number: ", error_flow_num)
+            print("Shrinked flow count:", sum([1 for i in range(len(flow_state)) if flow_state[i].required == True]))
+            print("Those flow were required to reproduce the error")
+            for i in range(len(flow_state)):
+                if flow_state[i].required:
+                    print(flow_state[i].flow_name, " : ", flow_state[i].flow_params)
+
 
 
         else:

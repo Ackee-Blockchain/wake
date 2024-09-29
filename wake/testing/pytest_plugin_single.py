@@ -60,13 +60,13 @@ class PytestWakePluginSingle:
                 seed=self._random_seeds[0],
             )
         state = get_sequence_initial_internal_state()
-        crash_logs_dir = self._config.project_root_path / ".wake" / "crash_logs" / "testing"
+        crash_logs_dir = self._config.project_root_path / ".wake" / "logs" / "crashes"
         # shutil.rmtree(crash_logs_dir, ignore_errors=True)
         crash_logs_dir.mkdir(parents=True, exist_ok=True)
         # write crash log file.
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         # Assuming `call.execinfo` contains the crash information
-        crash_log_file = crash_logs_dir / F"crash_log_{timestamp}.txt"
+        crash_log_file = crash_logs_dir / F"{timestamp}.txt"
 
         # Write contents to the crash log file
         with crash_log_file.open('w') as f:

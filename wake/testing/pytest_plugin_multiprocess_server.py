@@ -77,18 +77,17 @@ class PytestWakePluginMultiprocessServer:
         logs_dir = self._config.project_root_path / ".wake" / "logs" / "testing"
         shutil.rmtree(logs_dir, ignore_errors=True)
         logs_dir.mkdir(parents=True, exist_ok=True)
-        
-        crash_logs_dir = self._config.project_root_path / ".wake" / "crash_logs" / "testing"
+
+        crash_logs_dir = self._config.project_root_path / ".wake" / "logs" / "crashes"
         crash_logs_dir.mkdir(parents=True, exist_ok=True)
         # write crash log file.
-    
 
         self._queue = multiprocessing.Queue(1000)
 
         for i in range(self._proc_count):
             crash_logs_process_dir = crash_logs_dir  / f"process-{i}"
             crash_logs_process_dir.mkdir(parents=True, exist_ok=True)
-        
+
             parent_conn, child_conn = multiprocessing.Pipe()
             p = multiprocessing.Process(
                 target=pytest.main,
