@@ -471,7 +471,7 @@ class TransactionAbc(ABC, Generic[T]):
             self._fetch_trace_transaction()
             assert self._trace_transaction is not None
 
-            if self._trace_transaction[0]["result"] is None:
+            if "result" not in self._trace_transaction[0] or self._trace_transaction[0]["result"] is None:
                 return Halt(self._trace_transaction[0]["error"])
 
         # due to a bug, Anvil does not return revert data for failed contract creations
