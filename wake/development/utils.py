@@ -7,6 +7,7 @@ import inspect
 import json
 import math
 import warnings
+import logging
 from dataclasses import dataclass
 from functools import lru_cache
 from json import JSONDecodeError
@@ -58,6 +59,11 @@ from .globals import get_config
 from .primitive_types import FixedSizeList, bytes32, fixed_list_map, uint256
 
 # pyright: reportGeneralTypeIssues=false, reportOptionalIterable=false, reportOptionalSubscript=false, reportOptionalMemberAccess=false
+
+
+dummy_logger = logging.getLogger('dummy')
+dummy_logger.addHandler(logging.NullHandler())
+dummy_logger.propagate = False
 
 
 @dataclass
@@ -1273,7 +1279,7 @@ def _get_storage_layout_from_explorer(
         {k: v.encode("utf-8") for k, v in sources.items()},
         True,  # pyright: ignore reportGeneralTypeIssues
     )
-    compilation_units = compiler.build_compilation_units_maximize(graph)
+    compilation_units = compiler.build_compilation_units_maximize(graph, dummy_logger)
     compilation_units = compiler.merge_compilation_units(
         compilation_units, graph, compilation_config
     )
@@ -1283,7 +1289,7 @@ def _get_storage_layout_from_explorer(
         compiler.compile_unit_raw(
             compilation_units[0],
             parsed_version,
-            compiler.create_build_settings([SolcOutputSelectionEnum.STORAGE_LAYOUT]),
+            compiler.create_build_settings([SolcOutputSelectionEnum.STORAGE_LAYOUT], None),
         )
     )
 

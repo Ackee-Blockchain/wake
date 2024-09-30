@@ -37,6 +37,7 @@ import packaging.version
 
 import wake.lsp.callback_commands as callback_commands
 from wake.compiler.exceptions import CompilationError
+from wake.lsp.logging_handler import LspLoggingHandler
 
 from ..analysis.utils import get_all_base_and_child_declarations
 from ..compiler.build_data_model import (
@@ -1490,7 +1491,16 @@ class LspCompiler:
             await self.__server.log_message(str(e), MessageType.ERROR)
             return False, {}, {}, {}, {}
 
-        compilation_units = self.__compiler.build_compilation_units_maximize(graph)
+        logging_buffer = []
+        handler = LspLoggingHandler(logging_buffer)
+        logger.addHandler(handler)
+
+        compilation_units = self.__compiler.build_compilation_units_maximize(graph, logger)
+
+        logger.removeHandler(handler)
+        for log in logging_buffer:
+            await self.__server.log_message(log[0], log[1])
+
         if len(compilation_units) == 0:
             return False, {}, {}, {}, {}
 
@@ -1661,7 +1671,7 @@ class LspCompiler:
                         self.__deleted_files.add(p)
                 self.__last_graph = graph
             else:
-                graph, _ = self.__compiler.build_graph(
+                graph, source_units_to_paths = self.__compiler.build_graph(
                     files_to_compile,
                     modified_files,
                     True,
@@ -1693,7 +1703,15 @@ class LspCompiler:
                 self.__compilation_errors.pop(deleted_file, None)
                 self.__cu_counter[source_unit.cu_hash] -= 1
 
-        compilation_units = self.__compiler.build_compilation_units_maximize(graph)
+        logging_buffer = []
+        handler = LspLoggingHandler(logging_buffer)
+        logger.addHandler(handler)
+
+        compilation_units = self.__compiler.build_compilation_units_maximize(graph, logger)
+
+        logger.removeHandler(handler)
+        for log in logging_buffer:
+            await self.__server.log_message(log[0], log[1])
 
         for source_unit_name in graph.nodes:
             path = graph.nodes[source_unit_name]["path"]
