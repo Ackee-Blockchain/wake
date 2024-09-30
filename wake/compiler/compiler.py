@@ -494,7 +494,7 @@ class SolidityCompiler:
         return graph, source_units
 
     @staticmethod
-    def build_compilation_units_maximize(graph: nx.DiGraph) -> List[CompilationUnit]:
+    def build_compilation_units_maximize(graph: nx.DiGraph, logger: logging.Logger) -> List[CompilationUnit]:
         """
         Builds a list of compilation units from a graph. Number of compilation units is maximized.
         """
@@ -517,6 +517,9 @@ class SolidityCompiler:
                 nodes_subset.add(node)
                 versions &= graph.nodes[node]["versions"]
                 compiled_with[node].add(subproject)
+
+                if graph.nodes[node]["subproject"] not in {subproject, None} and not node.startswith("wake/"):
+                    logger.warning(f"Including file {node} belonging to subproject '{graph.nodes[node]['subproject'] or '<default>'}' into compilation of subproject '{subproject or '<default>'}'")
 
                 for in_edge in graph.in_edges(node):
                     _from, to = in_edge
@@ -958,7 +961,7 @@ class SolidityCompiler:
         graph, source_units_to_paths = self.build_graph(
             files, modified_files, ignore_errors=True
         )
-        compilation_units = self.build_compilation_units_maximize(graph)
+        compilation_units = self.build_compilation_units_maximize(graph, logger)
         subprojects = {cu.subproject for cu in compilation_units}
         build_settings = {
             subproject: self.create_build_settings(output_types, subproject)

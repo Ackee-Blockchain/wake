@@ -172,7 +172,6 @@ class SubprojectConfig(WakeConfigModel):
     target_version: Optional[SolidityVersion] = None
     evm_version: Optional[EvmVersionEnum] = None
     optimizer: SolcOptimizerConfig = Field(default_factory=SolcOptimizerConfig)
-    target_version: Optional[SolidityVersion] = None
     via_IR: Optional[bool] = None
 
     _normalize_paths = field_validator("paths", mode="before")(normalize_paths)
