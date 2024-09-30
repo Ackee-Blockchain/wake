@@ -93,6 +93,9 @@ class PytestWakePluginMultiprocess:
         if self._keyboard_interrupt:
             return
 
+        if self._exception_handled:
+            return
+
         self._cleanup_stdio()
         self._exception_handled = True
 
