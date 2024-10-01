@@ -107,6 +107,7 @@ class FuzzTest:
 
                 snapshots = [chain.snapshot() for chain in chains]
 
+
                 set_sequence_initial_internal_state(
                         pickle.dumps(
                         random.getstate()
@@ -259,6 +260,7 @@ class FuzzTest:
 
                     flow_state[j].before_inv_random_state = pickle.dumps(random.getstate())
 
+
                     if not dry_run:
                         self.pre_invariants()
                         for inv in invariants:
@@ -277,6 +279,8 @@ class FuzzTest:
                     chain.revert(snapshot)
             except Exception as e:
                 exception_content = e
+                print(type(e))
+                print(e)
 
                 ## LOGGING EXCEPTION RESULT
                 # It could log only flow number,
@@ -357,15 +361,12 @@ class FuzzTest:
                     exception = False # since it is not test exception
                 except Exception as e:
                     exception = True
-                    # print("exception in ", j)
                     for snapshot, chain in zip(snapshots, chains):
                         chain.revert(snapshot)
 
                     def compare_exceptions(e1, e2):
-                        print(type(e1))
-                        print(type(e2))
                         if type(e1) != type(e2):
-                            print("type not equal")
+                            # print("type not equal")
                             return False
 
                         if type(e1) == Error and type(e2) == Error:
@@ -393,10 +394,11 @@ class FuzzTest:
                             ):
                                 break
 
-                        print(frame1)
-                        print(frame2)
+                        # print(frame1)
+                        # print(frame2)
                         if frame1 is None or frame2 is None:
                             print("frame is none!!!!!!!!!!!!!!")
+                            # return False
                         if frame1 is not None and frame2 is not None and (frame1.filename != frame2.filename
                                 or  frame1.lineno != frame2.lineno
                                 or frame1.name != frame2.name
@@ -405,18 +407,19 @@ class FuzzTest:
                         return True
 
                     # Check exception type and exception lines in the testing file.
+                    ignore_flows = True
 
-                    if self._flow_num == error_flow_num and compare_exceptions(e, exception_content):
+                    if (ignore_flows or self._flow_num == error_flow_num) and compare_exceptions(e, exception_content):
 
                         # the removed flow is not required to reproduce same error. @ try remove next flow
-                        print("remove worked!!, ", curr)
+                        print("remove worked!!")
                         assert flow_state[curr].required == False
                     else:
                         print(e)
                         # the removing flow caused different error . @this flow should not removed restore current flow and remove next flow
                         flow_state[curr].required = True
 
-                        print("remove failed!!, ", curr)
+                        print("remove failed!!")
 
                 if exception == False:
                     for snapshot, chain in zip(snapshots, chains):
