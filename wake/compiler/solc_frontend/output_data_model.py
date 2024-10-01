@@ -245,6 +245,8 @@ class SolcOutputContractInfo(SolcOutputModel):
     """AST of intermediate representation after optimization"""
     storage_layout: Optional[SolcOutputStorageLayout] = None
     """See https://docs.soliditylang.org/en/latest/internals/layout_in_storage.html#json-output"""
+    transient_storage_layout: Optional[SolcOutputStorageLayout] = None
+    """See https://docs.soliditylang.org/en/latest/internals/layout_in_storage.html#json-output"""
     evm: Optional[SolcOutputEvmData] = None
     """EVM-related outputs"""
     ewasm: Optional[SolcOutputEwasmData] = None
