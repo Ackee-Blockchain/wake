@@ -249,16 +249,20 @@ class PytestWakePluginMultiprocessServer:
                         if progress is not None:
                             progress.start()
                     elif msg[0] == "breakpoint":
+
+                        (filename, lineno, function_name, syntax) = pickle.loads(msg[2])
                         if progress is not None:
                             progress.stop()
+
+                            console.print(syntax)
                             console.print(
-                                f"Process #{index} reach breakpoint."
+                                f"Process #{index} reach breakpoint in {function_name} at {filename}:{lineno}."
                             )
 
                             attach = None
                             while attach is None:
                                 response = input(
-                                    "Would you like to attach the debugger? [y/n] ('n' to continue operations)"
+                                    "Would you like to attach the debugger? [y/n] ('n' to continue operations) "
                                 )
                                 if response == "y":
                                     attach = True
@@ -275,7 +279,7 @@ class PytestWakePluginMultiprocessServer:
                         )
                         if progress is not None:
                             progress.start()
-               
+
                     elif msg[0] == "pytest_runtest_logreport":
                         report: pytest.TestReport = msg[2]
                         reports.append(report)
