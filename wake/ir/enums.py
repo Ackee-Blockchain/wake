@@ -237,6 +237,7 @@ class DataLocation(StrEnum):
     """
     MEMORY = "memory"
     STORAGE = "storage"
+    TRANSIENT = "transient"
 
 
 # Operations
@@ -311,6 +312,7 @@ class InlineAssemblyEvmVersion(StrEnum):
     PARIS = "paris"
     SHANGHAI = "shanghai"
     CANCUN = "cancun"
+    PRAGUE = "prague"
 
 
 class InlineAssemblySuffix(StrEnum):

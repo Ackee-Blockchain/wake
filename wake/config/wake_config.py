@@ -239,9 +239,13 @@ class WakeConfig:
         Returns:
             Instance of the `WakeConfig` class with the provided config options.
         """
-        instance = cls(project_root_path=project_root_path, wake_contracts_path=wake_contracts_path)
+        instance = cls(
+            project_root_path=project_root_path, wake_contracts_path=wake_contracts_path
+        )
         with change_cwd(instance.project_root_path):
-            parsed_config = TopLevelConfig.model_validate(config_dict, context={"paths_mode": paths_mode})
+            parsed_config = TopLevelConfig.model_validate(
+                config_dict, context={"paths_mode": paths_mode}
+            )
         instance.__config_raw = parsed_config.model_dump(
             by_alias=True, exclude_unset=True
         )
@@ -323,7 +327,9 @@ class WakeConfig:
             Dictionary containing the modified config options.
         """
         with change_cwd(self.project_root_path):
-            parsed_config = TopLevelConfig.model_validate(config_dict, context={"paths_mode": paths_mode})
+            parsed_config = TopLevelConfig.model_validate(
+                config_dict, context={"paths_mode": paths_mode}
+            )
         parsed_config_raw = parsed_config.model_dump(by_alias=True, exclude_unset=True)
 
         original_config = deepcopy(self.__config_raw)
@@ -349,7 +355,9 @@ class WakeConfig:
                 except ValueError:
                     pass
 
-        self.__config = TopLevelConfig.model_validate(self.__config_raw, context={"paths_mode": paths_mode})
+        self.__config = TopLevelConfig.model_validate(
+            self.__config_raw, context={"paths_mode": paths_mode}
+        )
         modified_keys = {}
         self.__modified_keys(
             original_config,
@@ -470,7 +478,7 @@ class WakeConfig:
         Returns:
             Maximum supported Solidity version.
         """
-        return SolidityVersion.fromstring("0.8.26")
+        return SolidityVersion.fromstring("0.8.27")
 
     @property
     def detectors(self) -> DetectorsConfig:
