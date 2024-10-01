@@ -62,6 +62,15 @@ _fuzz_mode: int = 0
 _error_flow_num: int = 0
 
 
+_shrinked_path: Optional[Path] = None
+
+def set_shrinked_path(path: Path):
+    global _shrinked_path
+    _shrinked_path = path
+
+def get_shrinked_path() -> Optional[Path]:
+    return _shrinked_path
+
 
 def attach_debugger(
     e_type: Optional[Type[BaseException]],
