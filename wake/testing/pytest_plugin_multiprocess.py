@@ -167,7 +167,7 @@ class PytestWakePluginMultiprocess:
 
         state = get_sequence_initial_internal_state()
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-       
+
         crash_log_file = self._crash_log_dir / F"crash_log_{timestamp}.txt"
 
         with crash_log_file.open('w') as f:
@@ -229,7 +229,7 @@ class PytestWakePluginMultiprocess:
         try:
             indexes = self._conn.recv()
             for i in range(len(indexes)):
-                # set random seed before each test item    
+                # set random seed before each test item
                 if self._random_state is not None:
                     random.setstate(pickle.loads(self._random_state))
                     console.print(f"Using random state '{random.getstate()[1]}'")

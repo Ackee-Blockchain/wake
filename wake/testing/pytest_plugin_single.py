@@ -79,6 +79,8 @@ class PytestWakePluginSingle:
             f.write(f"\nInternal state of beginning of sequence : {state.hex()}\n")
             f.write(f"executed flow number : {get_error_flow_num()}\n")
 
+        console.print(f"Crash log written to {crash_log_file}")
+
     def pytest_runtestloop(self, session: Session):
         if (
             session.testsfailed

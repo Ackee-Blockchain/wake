@@ -249,6 +249,16 @@ class FileAndPassParamType(click.ParamType):
     default=None,
 )
 
+@click.option(
+    "--shrinked",
+    type=click.Path(exists=True, dir_okay=False, readable=True),  # Ensure it's an existing file
+    help="Path of shrinked file.",
+    is_flag=False,
+    flag_value=-1,
+    default=None,
+)
+
+
 @click.argument("paths_or_pytest_args", nargs=-1, type=FileAndPassParamType())
 @click.pass_context
 def run_test(
@@ -264,6 +274,7 @@ def run_test(
     dist: str,
     verbosity: int,
     shrink: Optional[str],
+    shrinked: Optional[str],
     paths_or_pytest_args: Tuple[str, ...],
 ) -> None:
     """Execute Wake tests using pytest."""
@@ -314,16 +325,7 @@ def run_test(
             random_seeds.append(os.urandom(8))
 
     if no_pytest:
-        run_no_pytest(
-            config,
-            debug,
-            proc_count,
-            coverage,
-            random_seeds,
-            random_states_byte,
-            attach_first,
-            paths_or_pytest_args,
-        )
+        pass
     else:
         pytest_args = list(paths_or_pytest_args)
 
@@ -370,7 +372,7 @@ def run_test(
             )
         else:
             from wake.testing.pytest_plugin_single import PytestWakePluginSingle
-            from wake.development.globals import set_fuzz_mode,set_sequence_initial_internal_state, set_error_flow_num
+            from wake.development.globals import set_fuzz_mode,set_sequence_initial_internal_state, set_error_flow_num, set_shrinked_path
 
             def extract_executed_flow_number(crash_log_file_path):
                 if crash_log_file_path is not None:
@@ -404,6 +406,9 @@ def run_test(
                                         pass  # Handle the case where the value after ":" is not a valid hex string
                 return None
 
+            if shrinked is not None and shrink is not None:
+                raise click.BadParameter("Both shrink and shrieked cannot be provided at the same time.")
+
             if shrink is not None:
                 number = extract_executed_flow_number(shrink)
                 assert number is not None, "Unexpected file format"
@@ -413,6 +418,9 @@ def run_test(
                 assert beginning_random_state_bytes is not None, "Unexpected file format"
                 set_sequence_initial_internal_state(beginning_random_state_bytes)
 
+            if shrinked:
+                set_fuzz_mode(2)
+                set_shrinked_path(Path(shrinked))
             sys.exit(
                 pytest.main(
                     pytest_args,
