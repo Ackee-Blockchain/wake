@@ -192,7 +192,38 @@ class PytestWakePluginMultiprocess:
 
         def custom_debugger():
             self._cleanup_stdio()
-            self._queue.put(("breakpoint", self._index), block=True)
+            import inspect
+
+            current_frame = inspect.currentframe()
+            assert current_frame is not None
+            caller_frame = current_frame.f_back
+            assert caller_frame is not None
+            filename = caller_frame.f_code.co_filename
+            lineno = caller_frame.f_lineno
+            function_name = caller_frame.f_code.co_name
+
+            source_lines, starting_line_no = inspect.getsourcelines(caller_frame)
+            lines_to_show = 10
+            relative_lineno = lineno - starting_line_no
+
+            start_line = max(0, relative_lineno - lines_to_show // 2)
+            end_line = min(len(source_lines), relative_lineno + lines_to_show // 2)
+
+            source_lines_subset = source_lines[start_line:end_line]
+
+            max_line_number = starting_line_no + end_line
+            line_number_width = len(str(max_line_number))
+
+            for idx, line in enumerate(source_lines_subset):
+                if start_line + idx == relative_lineno:
+                    source_lines_subset[idx] = f"--> {starting_line_no + start_line + idx:>{line_number_width}} {line}"  # Add '>>>' marker
+                else:
+                    source_lines_subset[idx] = f"    {starting_line_no + start_line + idx:>{line_number_width}} {line}"
+
+            source_code = ''.join(source_lines_subset)
+
+            debugging_data = pickle.dumps((filename, lineno, function_name, source_code))
+            self._queue.put(("breakpoint", self._index, debugging_data), block=True)
             attach: bool = self._conn.recv()
             if attach:
                 prev = sys.stdin
