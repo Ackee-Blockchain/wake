@@ -256,13 +256,13 @@ class PytestWakePluginMultiprocessServer:
 
                             console.print(syntax)
                             console.print(
-                                f"Process #{index} reach breakpoint in {function_name} at {filename}:{lineno}."
+                                f"Process #{index} reached breakpoint in {function_name} at {filename}:{lineno}."
                             )
 
                             attach = None
                             while attach is None:
                                 response = input(
-                                    "Would you like to attach the debugger? [y/n] ('n' to continue operations) "
+                                    "Would you like to attach the debugger? ('n' to continue operations) [y/n] "
                                 )
                                 if response == "y":
                                     attach = True

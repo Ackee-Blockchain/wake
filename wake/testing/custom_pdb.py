@@ -1,5 +1,7 @@
-from IPython.terminal.debugger import TerminalPdb
 from typing import Any
+
+from IPython.terminal.debugger import TerminalPdb
+
 
 class CustomPdb(TerminalPdb):
     def __init__(self, program_instance, *args, **kwargs):
@@ -15,7 +17,7 @@ class CustomPdb(TerminalPdb):
         """
         self.cleanup_before_exit()
         return super().do_continue(arg)
-    
+
     do_c = do_cont = do_continue
 
     def do_quit(self, arg):
@@ -24,13 +26,12 @@ class CustomPdb(TerminalPdb):
         """
         self.cleanup_before_exit()
         return super().do_quit(arg)
-    
-    do_q = do_exit = do_quit 
+
+    do_q = do_exit = do_quit
 
     def cleanup_before_exit(self):
         """
         This function performs the cleanup before exiting the debugger.
         """
-        print("Performing cleanup before exiting the debugger...")
         self._program_instance._setup_stdio()
         self._program_instance._conn.send(("breakpoint_handled",))
