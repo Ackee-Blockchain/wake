@@ -491,7 +491,12 @@ class FuzzTest:
                 self.pre_flow(flow)
                 flow(self, *flow_params)
                 self.post_flow(flow)
-                random.setstate(pickle.loads(store_data.required_flows[j].before_inv_random_state))
+
+                try:
+                    random.setstate(pickle.loads(store_data.required_flows[j].before_inv_random_state))
+                except Exception as e:
+                    pass
+
                 if not dry_run:
                     self.pre_invariants()
                     for inv in invariants:
@@ -505,6 +510,7 @@ class FuzzTest:
                             invariant_periods[inv] = 0
                     self.post_invariants()
 
+            print("seems fixed >_<")
         else:
             raise Exception("Invalid fuzz mode")
 
