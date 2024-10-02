@@ -6,6 +6,24 @@ small.label {
 }
 </style>
 
+## 4.12.0 <small>(Oct 2, 2024)</small> { id="4.12.0" }
+
+Features & improvements:
+
+- added support for Solidity 0.8.27 <small class="label">[core]</small>
+- implemented `wake compile` and `wake detect` JSON export <small class="label">[core]</small>
+- introduced support for subprojects compilation <small class="label">[core]</small>
+- added initial support for LSP 3.18 specification <small class="label">[language server]</small>
+- injected `wake_random_seed` variable into debugger instances <small class="label">[testing framework]</small>
+- transaction revert and EVM halt errors are now properly distinguished with Anvil <small class="label">[testing framework]</small>
+
+Fixes:
+
+- fixed `wake detect` detection code snippets trailing blank lines <small class="label">[core]</small>
+- fixed Deploy & Interact compilation of contracts without provided bytecode <small class="label">[language server]</small>
+- `KeyboardInterrupt` is now handled correctly in multiprocess testing <small class="label">[testing framework]</small>
+- `breakpoint` is now supported in multiprocess testing <small class="label">[testing framework]</small>
+
 ## 4.11.1 <small>(Aug 26, 2024)</small> { id="4.11.1" }
 
 Changes:
