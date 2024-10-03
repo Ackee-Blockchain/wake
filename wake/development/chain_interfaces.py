@@ -261,6 +261,15 @@ class ChainInterfaceAbc(ABC):
             communicator.__exit__(None, None, None)
             raise
 
+    @property
+    def connection_uri(self) -> str:
+        return self._communicator.uri
+
+    @property
+    @abstractmethod
+    def type(self) -> str:
+        ...
+
     def close(self) -> None:
         self._communicator.__exit__(None, None, None)
         if self._process is not None:
@@ -533,6 +542,10 @@ class ChainInterfaceAbc(ABC):
 
 
 class HardhatChainInterface(ChainInterfaceAbc):
+    @property
+    def type(self) -> str:
+        return "hardhat"
+
     def get_accounts(self) -> List[str]:
         return self._communicator.send_request("eth_accounts")
 
@@ -604,6 +617,10 @@ class HardhatChainInterface(ChainInterfaceAbc):
 
 
 class AnvilChainInterface(ChainInterfaceAbc):
+    @property
+    def type(self) -> str:
+        return "anvil"
+
     def get_accounts(self) -> List[str]:
         return self._communicator.send_request("eth_accounts")
 
@@ -671,6 +688,10 @@ class AnvilChainInterface(ChainInterfaceAbc):
 
 
 class GanacheChainInterface(ChainInterfaceAbc):
+    @property
+    def type(self) -> str:
+        return "ganache"
+
     def get_accounts(self) -> List[str]:
         return self._communicator.send_request("eth_accounts")
 
@@ -742,6 +763,10 @@ class GanacheChainInterface(ChainInterfaceAbc):
 
 
 class GethLikeChainInterfaceAbc(ChainInterfaceAbc, ABC):
+    @property
+    def type(self) -> str:
+        return self._name.lower()
+
     @property
     @abstractmethod
     def _name(self) -> str:
