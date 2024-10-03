@@ -135,6 +135,7 @@ from .sake import (
     SakeCreateChainParams,
     SakeDeployParams,
     SakeGetBalancesParams,
+    SakeLoadStateParams,
     SakeParams,
     SakeSetBalancesParams,
     SakeSetLabelParams,
@@ -317,6 +318,22 @@ class LspServer:
                     )
                 ),
                 SakeParams,
+            ),
+            RequestMethodEnum.SAKE_DUMP_STATE: (
+                lambda params: (
+                    self.__sake_context.dump_state(  # pyright: ignore reportAttributeAccessIssue
+                        params,
+                    )
+                ),
+                SakeParams,
+            ),
+            RequestMethodEnum.SAKE_LOAD_STATE: (
+                lambda params: (
+                    self.__sake_context.load_state(  # pyright: ignore reportAttributeAccessIssue
+                        params,
+                    )
+                ),
+                SakeLoadStateParams,
             ),
             RequestMethodEnum.SAKE_COMPILE: (
                 lambda params: (

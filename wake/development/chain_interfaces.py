@@ -686,6 +686,12 @@ class AnvilChainInterface(ChainInterfaceAbc):
             else [hex(num_blocks)],
         )
 
+    def dump_state(self) -> str:
+        return self._communicator.send_request("anvil_dumpState")
+
+    def load_state(self, state: str) -> None:
+        self._communicator.send_request("anvil_loadState", [state])
+
 
 class GanacheChainInterface(ChainInterfaceAbc):
     @property
