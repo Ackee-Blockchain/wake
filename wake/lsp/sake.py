@@ -20,7 +20,7 @@ from wake.lsp.context import LspContext
 from wake.lsp.exceptions import LspError
 from wake.lsp.lsp_data_model import LspModel
 from wake.lsp.protocol_structures import ErrorCodes
-from wake.testing import Account, Chain
+from wake.testing import Account, Chain, UnknownTransactionRevertedError
 
 
 class SakeResult(LspModel):
@@ -90,6 +90,8 @@ class SakeDeployParams(SakeParams):
 
 class SakeDeployResult(SakeResult):
     contract_address: Optional[str]
+    raw_error: Optional[str]  # raw hex encoded bytes, None for Success or Halt
+    error: Optional[str]  # user-friendly error string, None for Success
     tx_receipt: Dict[str, Any]
     call_trace: Dict[str, Union[Optional[str], List]]
 
@@ -102,7 +104,8 @@ class SakeTransactParams(LspModel):
 
 
 class SakeTransactResult(SakeResult):
-    return_value: str
+    return_value: Optional[str]  # raw hex encoded bytes, None for Halt
+    error: Optional[str]  # user-friendly error string, None for Success
     tx_receipt: Dict[str, Any]
     call_trace: Dict[str, Union[Optional[str], List]]
 
@@ -462,6 +465,10 @@ class SakeContext:
 
             return SakeDeployResult(
                 success=success,
+                error=call_trace.error_string,
+                raw_error=tx.raw_error.data.hex()
+                if isinstance(tx.raw_error, UnknownTransactionRevertedError)
+                else None,
                 contract_address=str(tx.return_value.address) if success else None,
                 tx_receipt=tx._tx_receipt,
                 call_trace=call_trace.dict(self.lsp_context.config),
@@ -504,14 +511,19 @@ class SakeContext:
 
             if success:
                 assert isinstance(tx.raw_return_value, bytearray)
-                return_value = tx.raw_return_value
+                return_value = tx.raw_return_value.hex()
             else:
                 assert tx.raw_error is not None
-                return_value = tx.raw_error.data
+                return_value = (
+                    tx.raw_error.data.hex()
+                    if isinstance(tx.raw_error, UnknownTransactionRevertedError)
+                    else None
+                )
 
             return SakeTransactResult(
                 success=success,
-                return_value=return_value.hex(),
+                error=call_trace.error_string,
+                return_value=return_value,
                 tx_receipt=tx._tx_receipt,
                 call_trace=call_trace.dict(self.lsp_context.config),
             )
