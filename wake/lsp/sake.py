@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from collections import ChainMap
+from collections import ChainMap, defaultdict
 from functools import wraps
 from typing import Any, ContextManager, Dict, List, NamedTuple, Optional, Tuple, Union
 
@@ -12,6 +12,7 @@ from typing_extensions import Literal
 import wake.development.core
 from wake.config import WakeConfig
 from wake.development.call_trace import CallTrace
+from wake.development.chain_interfaces import AnvilChainInterface
 from wake.development.core import RequestType
 from wake.development.globals import set_config
 from wake.development.json_rpc import JsonRpcError
@@ -20,7 +21,7 @@ from wake.lsp.context import LspContext
 from wake.lsp.exceptions import LspError
 from wake.lsp.lsp_data_model import LspModel
 from wake.lsp.protocol_structures import ErrorCodes
-from wake.testing import Account, Chain, UnknownTransactionRevertedError
+from wake.testing import Account, Address, Chain, UnknownTransactionRevertedError
 
 
 class SakeResult(LspModel):
@@ -143,6 +144,21 @@ class SakeSetLabelParams(SakeParams):
     label: Optional[str]
 
 
+class SakeStateMetadata(LspModel):
+    labels: Dict[str, str]
+    deployed_libraries: Dict[str, List[str]]
+
+
+class SakeDumpStateResult(SakeResult):
+    metadata: SakeStateMetadata
+    chain_dump: str
+
+
+class SakeLoadStateParams(SakeParams):
+    metadata: SakeStateMetadata
+    chain_dump: str
+
+
 def chain_connected(f):
     @wraps(f)
     async def wrapper(context: SakeContext, params: SakeParams, *args, **kwargs):
@@ -248,6 +264,56 @@ class SakeContext:
         try:
             self.chains[params.session_id][1].__exit__(None, None, None)
             del self.chains[params.session_id]
+        except Exception as e:
+            raise LspError(ErrorCodes.InternalError, str(e)) from None
+
+    @chain_connected
+    async def dump_state(self, params: SakeParams) -> SakeDumpStateResult:
+        chain = self.chains[params.session_id][0]
+
+        if not isinstance(chain.chain_interface, AnvilChainInterface):
+            raise LspError(
+                ErrorCodes.InvalidRequest,
+                "Chain state dump is only supported for Anvil",
+            )
+
+        try:
+            return SakeDumpStateResult(
+                success=True,
+                metadata=SakeStateMetadata(
+                    labels={str(a): label for a, label in chain._labels.items()},
+                    deployed_libraries={
+                        id.hex(): [str(lib.address) for lib in libs]
+                        for id, libs in chain._deployed_libraries.items()
+                    },
+                ),
+                chain_dump=chain.chain_interface.dump_state(),
+            )
+        except Exception as e:
+            raise LspError(ErrorCodes.InternalError, str(e)) from None
+
+    @chain_connected
+    async def load_state(self, params: SakeLoadStateParams) -> None:
+        chain = self.chains[params.session_id][0]
+
+        if not isinstance(chain.chain_interface, AnvilChainInterface):
+            raise LspError(
+                ErrorCodes.InvalidRequest,
+                "Chain state load is only supported for Anvil",
+            )
+
+        try:
+            chain.chain_interface.load_state(params.chain_dump)
+
+            chain._labels = {
+                Address(addr): label for addr, label in params.metadata.labels.items()
+            }
+            chain._deployed_libraries = defaultdict(list)
+            for id, addrs in params.metadata.deployed_libraries.items():
+                chain._deployed_libraries[bytes.fromhex(id)] = [
+                    wake.development.core.Library(Address(addr), chain)
+                    for addr in addrs
+                ]
         except Exception as e:
             raise LspError(ErrorCodes.InternalError, str(e)) from None
 

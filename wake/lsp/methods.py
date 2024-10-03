@@ -128,6 +128,8 @@ class RequestMethodEnum(StrEnum):
     SAKE_CREATE_CHAIN = "wake/sake/createChain"
     SAKE_CONNECT_CHAIN = "wake/sake/connectChain"
     SAKE_DISCONNECT_CHAIN = "wake/sake/disconnectChain"
+    SAKE_DUMP_STATE = "wake/sake/dumpState"
+    SAKE_LOAD_STATE = "wake/sake/loadState"
     SAKE_COMPILE = "wake/sake/compile"
     SAKE_GET_ACCOUNTS = "wake/sake/getAccounts"
     SAKE_DEPLOY = "wake/sake/deploy"
