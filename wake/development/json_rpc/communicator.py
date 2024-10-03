@@ -24,6 +24,7 @@ class JsonRpcCommunicator:
     _protocol: ProtocolAbc
     _request_id: int
     _connected: bool
+    uri: str
 
     def __init__(self, config: WakeConfig, uri: str):
         if uri.startswith(("http://", "https://")):
@@ -37,6 +38,7 @@ class JsonRpcCommunicator:
 
         self._request_id = 0
         self._connected = False
+        self.uri = uri
 
     def __enter__(self):
         self._protocol.__enter__()

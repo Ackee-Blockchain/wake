@@ -130,12 +130,15 @@ from .protocol_structures import (
 from .rpc_protocol import RpcProtocol
 from .sake import (
     SakeCallParams,
+    SakeConnectChainParams,
     SakeContext,
+    SakeCreateChainParams,
     SakeDeployParams,
     SakeGetBalancesParams,
+    SakeParams,
     SakeSetBalancesParams,
-    SakeTransactParams,
     SakeSetLabelParams,
+    SakeTransactParams,
 )
 from .server_capabilities import (
     FileOperationFilter,
@@ -148,7 +151,7 @@ from .server_capabilities import (
     ServerCapabilitiesWorkspaceFileOperations,
     WorkspaceFoldersServerCapabilities,
 )
-from .utils.uri import uri_to_path, path_to_uri
+from .utils.uri import path_to_uri, uri_to_path
 
 logger = get_logger(__name__)
 
@@ -290,6 +293,30 @@ class LspServer:
             RequestMethodEnum.WORKSPACE_TEXT_DOCUMENT_CONTENT: (
                 self._workspace_text_document_content,
                 TextDocumentContentParams,
+            ),
+            RequestMethodEnum.SAKE_CREATE_CHAIN: (
+                lambda params: (
+                    self.__sake_context.create_chain(  # pyright: ignore reportAttributeAccessIssue
+                        params,
+                    )
+                ),
+                SakeCreateChainParams,
+            ),
+            RequestMethodEnum.SAKE_CONNECT_CHAIN: (
+                lambda params: (
+                    self.__sake_context.connect_chain(  # pyright: ignore reportAttributeAccessIssue
+                        params,
+                    )
+                ),
+                SakeConnectChainParams,
+            ),
+            RequestMethodEnum.SAKE_DISCONNECT_CHAIN: (
+                lambda params: (
+                    self.__sake_context.disconnect_chain(  # pyright: ignore reportAttributeAccessIssue
+                        params,
+                    )
+                ),
+                SakeParams,
             ),
             RequestMethodEnum.SAKE_COMPILE: (
                 lambda params: (
@@ -465,14 +492,12 @@ class LspServer:
             except Exception:
                 pass
 
-        try:
-            if (
-                self.__sake_context is not None
-                and self.__sake_context.chain_handle is not None
-            ):
-                self.__sake_context.chain_handle.__exit__(None, None, None)
-        except Exception:
-            pass
+        if self.__sake_context is not None:
+            for _, chain_handle in self.__sake_context.chains.values():
+                try:
+                    chain_handle.__exit__(None, None, None)
+                except Exception:
+                    pass
 
         self.__method_mapping.clear()
         self.__notification_mapping.clear()
@@ -1034,9 +1059,8 @@ class LspServer:
             new_config, removed_options, local_config_path
         )
 
-        if (
-            key_in_nested_dict(("compiler", "solc"), changed)
-            or key_in_nested_dict(("subproject",), changed)
+        if key_in_nested_dict(("compiler", "solc"), changed) or key_in_nested_dict(
+            ("subproject",), changed
         ):
             await context.compiler.force_recompile()
         if (
@@ -1188,10 +1212,9 @@ class LspServer:
                         new_config, set(), context.toml_path
                     )
 
-                    if (
-                        key_in_nested_dict(("compiler", "solc"), changed)
-                        or key_in_nested_dict(("subproject",), changed)
-                    ):
+                    if key_in_nested_dict(
+                        ("compiler", "solc"), changed
+                    ) or key_in_nested_dict(("subproject",), changed):
                         await context.compiler.force_recompile()
                     if (
                         key_in_nested_dict(("lsp", "detectors"), changed)
