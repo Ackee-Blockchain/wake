@@ -27,6 +27,10 @@ class SakeResult(LspModel):
     success: bool
 
 
+class SakeParams(LspModel):
+    session_id: str
+
+
 class ErrorInfo(LspModel):
     message: str
     path: str
@@ -56,7 +60,28 @@ class ContractInfoLsp(LspModel):
     is_deployable: bool
 
 
-class SakeDeployParams(LspModel):
+class SakeCreateChainParams(LspModel):
+    session_id: str
+    chain_id: Optional[int]
+    accounts: Optional[int]
+    fork: Optional[str]
+    hardfork: Optional[str]
+    min_gas_price: Optional[int]
+    block_base_fee_per_gas: Optional[int]
+
+
+class SakeCreateChainResult(SakeResult):
+    accounts: List[str]
+    uri: Optional[str]
+    type: str
+
+
+class SakeConnectChainParams(LspModel):
+    session_id: str
+    uri: str
+
+
+class SakeDeployParams(SakeParams):
     contract_fqn: str
     sender: str
     calldata: str
@@ -82,7 +107,7 @@ class SakeTransactResult(SakeResult):
     call_trace: Dict[str, Union[Optional[str], List]]
 
 
-class SakeCallParams(LspModel):
+class SakeCallParams(SakeParams):
     contract_address: str
     sender: str
     calldata: str
@@ -94,7 +119,7 @@ class SakeCallResult(SakeResult):
     call_trace: Optional[Dict[str, Union[Optional[str], List]]]
 
 
-class SakeGetBalancesParams(LspModel):
+class SakeGetBalancesParams(SakeParams):
     addresses: List[str]
 
 
@@ -102,7 +127,7 @@ class SakeGetBalancesResult(SakeResult):
     balances: Dict[str, int]
 
 
-class SakeSetBalancesParams(LspModel):
+class SakeSetBalancesParams(SakeParams):
     balances: Dict[str, int]
 
 
@@ -110,33 +135,19 @@ class SakeSetBalancesResult(SakeResult):
     pass
 
 
-class SakeSetLabelParams(LspModel):
+class SakeSetLabelParams(SakeParams):
     address: str
     label: Optional[str]
 
 
-def launch_chain(f):
+def chain_connected(f):
     @wraps(f)
-    async def wrapper(context: SakeContext, *args, **kwargs):
-        if context.chain is None:
-            try:
-                config_clone = WakeConfig.fromdict(
-                    context.lsp_context.config.todict(),
-                    project_root_path=context.lsp_context.config.project_root_path,
-                )
-                # reset Anvil args & always use Anvil
-                config_clone.update(
-                    {},
-                    deleted_options=[("testing", "cmd"), ("testing", "anvil", "cmd_args")],
-                )
-                set_config(config_clone)
-                context.chain = Chain()
-                context.chain_handle = context.chain.connect()
-                context.chain_handle.__enter__()
-            except FileNotFoundError:
-                raise LspError(ErrorCodes.AnvilNotFound, "Anvil executable not found")
-            except Exception as e:
-                raise LspError(ErrorCodes.InternalError, str(e)) from None
+    async def wrapper(context: SakeContext, params: SakeParams, *args, **kwargs):
+        if (
+            params.session_id not in context.chains
+            or not context.chains[params.session_id][0].connected
+        ):
+            raise LspError(ErrorCodes.InvalidParams, "Chain instance not connected")
 
         return await f(context, *args, **kwargs)
 
@@ -148,8 +159,7 @@ LIBRARY_PLACEHOLDER_REGEX = re.compile(r"__\$[0-9a-fA-F]{34}\$__")
 
 class SakeContext:
     lsp_context: LspContext
-    chain: Optional[Chain]
-    chain_handle: Optional[ContextManager]
+    chains: Dict[str, Tuple[Chain, ContextManager]]
     compilation: Dict[str, ContractInfo]
     abi_by_fqn: Dict[
         str, Dict[Union[bytes, Literal["constructor", "fallback", "receive"]], List]
@@ -158,11 +168,85 @@ class SakeContext:
 
     def __init__(self, lsp_context: LspContext):
         self.lsp_context = lsp_context
-        self.chain = None
-        self.chain_handle = None
+        self.chains = {}
         self.compilation = {}
         self.abi_by_fqn = {}
         self.libraries = {}
+
+    async def create_chain(
+        self, params: SakeCreateChainParams
+    ) -> SakeCreateChainResult:
+        try:
+            config_clone = WakeConfig.fromdict(
+                self.lsp_context.config.todict(),
+                project_root_path=self.lsp_context.config.project_root_path,
+            )
+            # reset Anvil args & always use Anvil
+            config_clone.update(
+                {},
+                deleted_options=[("testing", "cmd"), ("testing", "anvil", "cmd_args")],
+            )
+            set_config(config_clone)
+            chain = Chain()
+            chain_handle = chain.connect(
+                accounts=params.accounts,
+                chain_id=params.chain_id,
+                fork=params.fork,
+                hardfork=params.hardfork,
+                min_gas_price=params.min_gas_price,
+                block_base_fee_per_gas=params.block_base_fee_per_gas,
+            )
+            chain_handle.__enter__()
+
+            self.chains[params.session_id] = (chain, chain_handle)
+
+            return SakeCreateChainResult(
+                success=True,
+                accounts=[str(a.address) for a in chain.accounts],
+                uri=chain.chain_interface.connection_uri,
+                type=chain.chain_interface.type,
+            )
+        except FileNotFoundError:
+            raise LspError(ErrorCodes.AnvilNotFound, "Anvil executable not found")
+        except Exception as e:
+            raise LspError(ErrorCodes.InternalError, str(e)) from None
+
+    async def connect_chain(
+        self, params: SakeConnectChainParams
+    ) -> SakeCreateChainResult:
+        try:
+            config_clone = WakeConfig.fromdict(
+                self.lsp_context.config.todict(),
+                project_root_path=self.lsp_context.config.project_root_path,
+            )
+            # reset Anvil args & always use Anvil
+            config_clone.update(
+                {},
+                deleted_options=[("testing", "cmd"), ("testing", "anvil", "cmd_args")],
+            )
+            set_config(config_clone)
+            chain = Chain()
+            chain_handle = chain.connect(params.uri)
+            chain_handle.__enter__()
+
+            self.chains[params.session_id] = (chain, chain_handle)
+
+            return SakeCreateChainResult(
+                success=True,
+                accounts=[str(a.address) for a in chain.accounts],
+                uri=chain.chain_interface.connection_uri,
+                type=chain.chain_interface.type,
+            )
+        except Exception as e:
+            raise LspError(ErrorCodes.InternalError, str(e)) from None
+
+    @chain_connected
+    async def disconnect_chain(self, params: SakeParams) -> None:
+        try:
+            self.chains[params.session_id][1].__exit__(None, None, None)
+            del self.chains[params.session_id]
+        except Exception as e:
+            raise LspError(ErrorCodes.InternalError, str(e)) from None
 
     async def compile(self) -> SakeCompilationResult:
         try:
@@ -308,15 +392,13 @@ class SakeContext:
         except Exception as e:
             raise LspError(ErrorCodes.InternalError, str(e)) from None
 
-    @launch_chain
-    async def get_accounts(self) -> List[str]:
-        assert self.chain is not None
+    @chain_connected
+    async def get_accounts(self, params: SakeParams) -> List[str]:
+        return [str(a.address) for a in self.chains[params.session_id][0].accounts]
 
-        return [str(a.address) for a in self.chain.accounts]
-
-    @launch_chain
+    @chain_connected
     async def deploy(self, params: SakeDeployParams) -> SakeDeployResult:
-        assert self.chain is not None
+        chain = self.chains[params.session_id][0]
 
         def fqn_to_contract_abi(fqn: str):
             return None, self.abi_by_fqn[fqn]
@@ -328,10 +410,8 @@ class SakeContext:
                 lib_id = bytes.fromhex(match.group(0)[3:-3])
                 assert lib_id in self.libraries
 
-                if lib_id in self.chain._deployed_libraries:
-                    lib_addr = str(self.chain._deployed_libraries[lib_id][-1].address)[
-                        2:
-                    ]
+                if lib_id in chain._deployed_libraries:
+                    lib_addr = str(chain._deployed_libraries[lib_id][-1].address)[2:]
                 else:
                     raise LspError(
                         ErrorCodes.RequestFailed,
@@ -347,7 +427,7 @@ class SakeContext:
             )
 
         try:
-            tx = self.chain.deploy(
+            tx = chain.deploy(
                 bytes.fromhex(bytecode + params.calldata),
                 from_=params.sender,
                 value=params.value,
@@ -362,7 +442,7 @@ class SakeContext:
             call_trace = CallTrace.from_debug_trace(
                 tx._debug_trace_transaction,  # pyright: ignore reportArgumentType
                 tx._tx_params,
-                self.chain,
+                chain,
                 tx.to,
                 tx.return_value if success else None,
                 ChainMap(),
@@ -378,7 +458,7 @@ class SakeContext:
                     data=params.contract_fqn.encode("utf-8"), digest_bits=256
                 ).digest()[:17]
                 if lib_id in self.libraries:
-                    self.chain._deployed_libraries[lib_id].append(tx.return_value)
+                    chain._deployed_libraries[lib_id].append(tx.return_value)
 
             return SakeDeployResult(
                 success=success,
@@ -389,15 +469,15 @@ class SakeContext:
         except Exception as e:
             raise LspError(ErrorCodes.InternalError, str(e)) from None
 
-    @launch_chain
+    @chain_connected
     async def transact(self, params: SakeCallParams) -> SakeTransactResult:
-        assert self.chain is not None
+        chain = self.chains[params.session_id][0]
 
         def fqn_to_contract_abi(fqn: str):
             return None, self.abi_by_fqn[fqn]
 
         try:
-            tx = Account(params.contract_address, self.chain).transact(
+            tx = Account(params.contract_address, chain).transact(
                 data=bytes.fromhex(params.calldata),
                 value=params.value,
                 from_=params.sender,
@@ -411,7 +491,7 @@ class SakeContext:
             call_trace = CallTrace.from_debug_trace(
                 tx._debug_trace_transaction,  # pyright: ignore reportArgumentType
                 tx._tx_params,
-                self.chain,
+                chain,
                 tx.to,
                 None,
                 ChainMap(),
@@ -438,15 +518,15 @@ class SakeContext:
         except Exception as e:
             raise LspError(ErrorCodes.InternalError, str(e)) from None
 
-    @launch_chain
+    @chain_connected
     async def call(self, params: SakeCallParams) -> SakeCallResult:
-        assert self.chain is not None
+        chain = self.chains[params.session_id][0]
 
         def fqn_to_contract_abi(fqn: str):
             return None, self.abi_by_fqn[fqn]
 
         try:
-            account = Account(params.contract_address, chain=self.chain)
+            account = Account(params.contract_address, chain=chain)
             tx_params = account._setup_tx_params(
                 RequestType.CALL,
                 bytes.fromhex(params.calldata),
@@ -459,22 +539,20 @@ class SakeContext:
                 None,
                 None,
             )
-            tx_params = self.chain._build_transaction(
-                RequestType.CALL, tx_params, [], None
-            )
+            tx_params = chain._build_transaction(RequestType.CALL, tx_params, [], None)
 
-            trace = self.chain.chain_interface.debug_trace_call(
+            trace = chain.chain_interface.debug_trace_call(
                 tx_params, options={"enableMemory": True}
             )
             ret_value = trace["returnValue"]
             call_trace = CallTrace.from_debug_trace(
                 trace,
                 tx_params,
-                self.chain,
+                chain,
                 account,
                 None,
                 ChainMap(),
-                self.chain.blocks["latest"].number,
+                chain.blocks["latest"].number,
                 self.abi_by_fqn.keys(),
                 fqn_to_contract_abi,
             )
@@ -486,7 +564,7 @@ class SakeContext:
         except JsonRpcError:
             # debug_traceCall not available
             try:
-                ret_value = self.chain.chain_interface.call(
+                ret_value = chain.chain_interface.call(
                     tx_params  # pyright: ignore reportPossiblyUnboundVariable
                 )
                 return SakeCallResult(
@@ -496,7 +574,7 @@ class SakeContext:
                 )
             except JsonRpcError as e:
                 try:
-                    revert_data = self.chain._process_call_revert_data(e)
+                    revert_data = chain._process_call_revert_data(e)
                     return SakeCallResult(
                         success=False,
                         return_value=revert_data.hex(),
@@ -507,15 +585,15 @@ class SakeContext:
         except Exception as e:
             raise LspError(ErrorCodes.InternalError, str(e)) from None
 
-    @launch_chain
+    @chain_connected
     async def get_balances(
         self, params: SakeGetBalancesParams
     ) -> SakeGetBalancesResult:
-        assert self.chain is not None
+        chain = self.chains[params.session_id][0]
 
         try:
             balances = {
-                address: self.chain.chain_interface.get_balance(address)
+                address: chain.chain_interface.get_balance(address)
                 for address in params.addresses
             }
 
@@ -523,25 +601,25 @@ class SakeContext:
         except Exception as e:
             raise LspError(ErrorCodes.InternalError, str(e)) from None
 
-    @launch_chain
+    @chain_connected
     async def set_balances(
         self, params: SakeSetBalancesParams
     ) -> SakeSetBalancesResult:
-        assert self.chain is not None
+        chain = self.chains[params.session_id][0]
 
         try:
             for address, balance in params.balances.items():
-                self.chain.chain_interface.set_balance(address, balance)
+                chain.chain_interface.set_balance(address, balance)
 
             return SakeSetBalancesResult(success=True)
         except Exception as e:
             raise LspError(ErrorCodes.InternalError, str(e)) from None
 
-    @launch_chain
+    @chain_connected
     async def set_label(self, params: SakeSetLabelParams) -> None:
-        assert self.chain is not None
+        chain = self.chains[params.session_id][0]
 
         try:
-            Account(params.address, chain=self.chain).label = params.label
+            Account(params.address, chain=chain).label = params.label
         except Exception as e:
             raise LspError(ErrorCodes.InternalError, str(e)) from None
