@@ -557,6 +557,24 @@ class CallTrace:
 
         return ret
 
+    @property
+    def error_string(self) -> Optional[str]:
+        if self._error_name is None:
+            return None
+
+        ret = f"{self._error_name}("
+        for i, (arg, arg_name) in enumerate(
+            zip(self.error_arguments or [], self._error_names or [])
+        ):
+            if arg_name is not None and len(arg_name.strip()) > 0:
+                ret += f"{arg_name.strip()}={repr(arg)}"
+            else:
+                ret += repr(arg)
+            if i < len(self.error_arguments or []) - 1:
+                ret += ", "
+
+        return ret
+
     def dict(self, config: WakeConfig) -> Dict[str, Union[Optional[str], List]]:
         options = config.general.call_trace_options
         ret: Dict[str, Union[Optional[str], List]] = {}
