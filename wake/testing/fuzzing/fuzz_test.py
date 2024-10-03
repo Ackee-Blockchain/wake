@@ -386,7 +386,7 @@ class FuzzTest:
                             ):
                                 break
                         frame2 = None
-                        for frame2 in tb1:
+                        for frame2 in tb2:
                             if is_relative_to(
                                 Path(frame2.filename), Path.cwd()
                             ) and not is_relative_to(
