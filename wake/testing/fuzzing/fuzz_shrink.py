@@ -137,7 +137,7 @@ def shrink_test(test_class: type[FuzzTest], flows_count, dry_run: bool = False):
     snapshots = [chain.snapshot() for chain in chains]
 
     initial_state = get_sequence_initial_internal_state() # argument
-    print(initial_state)
+
     random.setstate(pickle.loads(initial_state))
 
     test_instance._flow_num = 0
@@ -216,24 +216,15 @@ def shrink_test(test_class: type[FuzzTest], flows_count, dry_run: bool = False):
                 test_instance.post_invariants()
         test_instance.post_sequence()
 
-        # Revert all chains back to their initial snapshot
-        for snapshot, chain in zip(snapshots, chains):
-            chain.revert(snapshot)
     except Exception as e:
         exception_content = e
         print(type(e))
         print(e)
-
-        ## LOGGING EXCEPTION RESULT
-        # It could log only flow number,
-        # but ideally, it should log the lines of code in the test.
-
         exception = True
-
+        assert test_instance._flow_num == error_flow_num, "Unexpected failing flow"
+    finally:
         for snapshot, chain in zip(snapshots, chains):
             chain.revert(snapshot)
-
-        assert test_instance._flow_num == error_flow_num, "Unexpected failing flow"
     if exception == False:
         raise Exception("Exception not raised unexpected state changes")
 
@@ -254,9 +245,6 @@ def shrink_test(test_class: type[FuzzTest], flows_count, dry_run: bool = False):
             int
         )
         snapshots = [chain.snapshot() for chain in chains]
-
-        print("Shrinking flow: ", curr)
-
         print("progress: ", (curr* 100) / (error_flow_num+1), "%")
         random.setstate(pickle.loads(initial_state))
 
@@ -265,7 +253,7 @@ def shrink_test(test_class: type[FuzzTest], flows_count, dry_run: bool = False):
         test_instance.pre_sequence()
         exception = False
         try:
-            for j in range(flows_count):
+            for j in range(0, flows_count):
                 if j > error_flow_num:
                     raise OverRunException()
 
@@ -284,7 +272,8 @@ def shrink_test(test_class: type[FuzzTest], flows_count, dry_run: bool = False):
 
 
                 assert flow_state[j].before_inv_random_state is not None
-                random.setstate(pickle.loads(curr_flow_state.before_inv_random_state))
+                if curr_flow_state.before_inv_random_state != b"":
+                    random.setstate(pickle.loads(curr_flow_state.before_inv_random_state))
                 if not dry_run:
                     test_instance.pre_invariants()
                     for inv in invariants:
@@ -302,8 +291,6 @@ def shrink_test(test_class: type[FuzzTest], flows_count, dry_run: bool = False):
             exception = False # since it is not test exception
         except Exception as e:
             exception = True
-            for snapshot, chain in zip(snapshots, chains):
-                chain.revert(snapshot)
 
             def compare_exceptions(e1, e2):
                 if type(e1) != type(e2):
@@ -335,8 +322,6 @@ def shrink_test(test_class: type[FuzzTest], flows_count, dry_run: bool = False):
                     ):
                         break
 
-                # print(frame1)
-                # print(frame2)
                 if frame1 is None or frame2 is None:
                     print("frame is none!!!!!!!!!!!!!!")
                     # return False
@@ -362,11 +347,13 @@ def shrink_test(test_class: type[FuzzTest], flows_count, dry_run: bool = False):
 
                 print("remove failed!!")
 
-        if exception == False:
+        finally:
+            # revert to starting state
             for snapshot, chain in zip(snapshots, chains):
                 chain.revert(snapshot)
 
-            print("probably overrun!")
+        if exception == False:
+            print("overrun!")
             flow_state[curr].required = True
             # the removed flow is required to reproduce same error. @ this flow should not removed # restore current flow and remove next flow
         curr += 1
@@ -390,7 +377,6 @@ def shrink_test(test_class: type[FuzzTest], flows_count, dry_run: bool = False):
 
 
     #initial_state
-
     required_flows: List[FlowState] = []
     for i in range(len(flow_state)):
         if flow_state[i].required:
