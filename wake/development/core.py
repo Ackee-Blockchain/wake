@@ -1458,6 +1458,9 @@ class Chain(ABC):
 
     tx_callback: Optional[Callable[[TransactionAbc], None]]
 
+    def __deepcopy__(self, memo):
+        return self
+
     @abstractmethod
     def _connect_setup(
         self, min_gas_price: Optional[int], block_base_fee_per_gas: Optional[int]
