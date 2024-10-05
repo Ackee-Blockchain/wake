@@ -343,9 +343,11 @@ class LspServer:
             ),
             RequestMethodEnum.SAKE_GET_ACCOUNTS: (
                 lambda params: (
-                    self.__sake_context.get_accounts()  # pyright: ignore reportAttributeAccessIssue
+                    self.__sake_context.get_accounts(  # pyright: ignore reportAttributeAccessIssue
+                        params,
+                    )
                 ),
-                None,
+                SakeParams,
             ),
             RequestMethodEnum.SAKE_DEPLOY: (
                 lambda params: (
