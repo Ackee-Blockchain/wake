@@ -2046,6 +2046,8 @@ class LspCompiler:
         processed_files: Set[Path] = set()
 
         def index_new_nodes():
+            ast_index: Dict[Path, List[Tuple[AstSolc, bytes]]] = defaultdict(list)
+
             for cu_index, (cu, solc_output) in enumerate(successful_compilation_units):
                 # files requested to be compiled and files that import these files (even indirectly)
                 recompiled_files: Set[Path] = set()
@@ -2055,21 +2057,26 @@ class LspCompiler:
                     path: Path = cu.source_unit_name_to_path(source_unit_name)
                     ast = AstSolc.model_validate(raw_ast.ast)
 
-                    self.__ir_reference_resolver.index_nodes(ast, path, cu.hash)
-
                     files_to_recompile.discard(path)
 
-                    if (
-                        (path in self.__source_units and path not in recompiled_files)
-                        or path in processed_files
-                        or cu not in compilation_units_per_file[path]
-                    ):
-                        # either file already in build artifacts and not needed to be recompiled (not changed since last compilation)
-                        # or file already processed in this compilation run (and added to the build)
-                        # or file needed to be compiled by different CU due to different compilation settings for subprojects
+                    if (path in self.__source_units and path not in recompiled_files) or path in processed_files:
+                        # either file was not recompiled or it was already processed
+                        # canonical AST was already indexed
+                        self.__ir_reference_resolver.index_nodes(ast, path, cu.hash)
+                        continue
+                    elif cu not in compilation_units_per_file[path]:
+                        # file recompiled but canonical AST not indexed yet
+                        # must be processed later to preserve the AST structure of the canonical AST
+                        ast_index[path].append((ast, cu.hash))
                         continue
 
                     processed_files.add(path)
+
+                    # process canonical AST first
+                    self.__ir_reference_resolver.index_nodes(ast, path, cu.hash)
+
+                    for prev_ast, prev_cu_hash in ast_index[path]:
+                        self.__ir_reference_resolver.index_nodes(prev_ast, path, prev_cu_hash)
 
                     interval_tree = IntervalTree()
                     init = IrInitTuple(

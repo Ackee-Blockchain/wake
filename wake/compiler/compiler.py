@@ -1283,6 +1283,8 @@ class SolidityCompiler:
             }
 
             processed_files: Set[Path] = set()
+            ast_index: Dict[Path, List[Tuple[AstSolc, bytes]]] = defaultdict(list)
+
             for cu, solc_output in successful_compilation_units:
                 # files requested to be compiled and files that import these files (even indirectly)
                 recompiled_files: Set[Path] = set()
@@ -1300,19 +1302,26 @@ class SolidityCompiler:
                     build.reference_resolver.register_source_file_id(
                         raw_ast.id, path, cu.hash
                     )
-                    build.reference_resolver.index_nodes(ast, path, cu.hash)
 
-                    if (
-                        (path in build.source_units and path not in recompiled_files)
-                        or path in processed_files
-                        or cu not in compilation_units_per_file[path]
-                    ):
-                        # either file already in build artifacts and not needed to be recompiled (not changed since last compilation)
-                        # or file already processed in this compilation run (and added to the build)
-                        # or file needed to be compiled by different CU due to different compilation settings for subprojects
+                    if (path in build.source_units and path not in recompiled_files) or path in processed_files:
+                        # either file was not recompiled or it was already processed
+                        # canonical AST was already indexed
+                        build.reference_resolver.index_nodes(ast, path, cu.hash)
+                        continue
+                    elif cu not in compilation_units_per_file[path]:
+                        # file recompiled but canonical AST not indexed yet
+                        # must be processed later to preserve the AST structure of the canonical AST
+                        ast_index[path].append((ast, cu.hash))
                         continue
 
                     processed_files.add(path)
+
+                    # process canonical AST first
+                    build.reference_resolver.index_nodes(ast, path, cu.hash)
+
+                    for prev_ast, prev_cu_hash in ast_index[path]:
+                        build.reference_resolver.index_nodes(prev_ast, path, prev_cu_hash)
+
                     assert (
                         source_unit_name in graph.nodes
                     ), f"Source unit {source_unit_name} not in graph"
