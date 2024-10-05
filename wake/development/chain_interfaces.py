@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import platform
 import subprocess
 import time
 from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 from urllib.error import URLError
 
@@ -191,7 +193,15 @@ class ChainInterfaceAbc(ABC):
                 args += ["-k", hardfork]
 
         console.print(f"Launching {' '.join(args)}")
-        process = subprocess.Popen(args, stdout=subprocess.DEVNULL)
+        try:
+            process = subprocess.Popen(args, stdout=subprocess.DEVNULL)
+        except FileNotFoundError:
+            if args[0] == "anvil" and platform.system() != "Windows":
+                args[0] = str(Path.home() / ".foundry/bin/anvil")
+                console.print(f"Launching {' '.join(args)}")
+                process = subprocess.Popen(args, stdout=subprocess.DEVNULL)
+            else:
+                raise
 
         try:
             start = time.perf_counter()
