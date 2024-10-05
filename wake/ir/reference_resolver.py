@@ -144,15 +144,12 @@ class ReferenceResolver:
                 other_type = self._node_types[path].get(index)
 
                 while other_type != node.node_type:
-                    if other_type == "StructuredDocumentation":
-                        index += 1
-                        other_type = self._node_types[path].get(index)
-                        continue
-                    elif node.node_type == "StructuredDocumentation":
-                        skip = True
-                        prev_type = "StructuredDocumentation"
-                        break
-                    elif (
+                    # in rare cases, the following 2 ASTs may exist for the same file
+                    #     UserDefinedTypeName -> IdentifierPath
+                    #     UserDefinedTypeName -> StructuredDocumentation
+                    #
+                    # In such cases, UserDefinedTypeName normalization must take precedence over StructuredDocumentation normalization
+                    if (
                         prev_other_type == "UserDefinedTypeName"
                         and prev_type == "UserDefinedTypeName"
                     ):
@@ -164,6 +161,14 @@ class ReferenceResolver:
                             skip = True
                             prev_type = "IdentifierPath"
                             break
+                    elif other_type == "StructuredDocumentation":
+                        index += 1
+                        other_type = self._node_types[path].get(index)
+                        continue
+                    elif node.node_type == "StructuredDocumentation":
+                        skip = True
+                        prev_type = "StructuredDocumentation"
+                        break
                     elif (
                         other_type == "IdentifierPath"
                         and node.node_type == "UserDefinedTypeName"
