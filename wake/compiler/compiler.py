@@ -1096,12 +1096,14 @@ class SolidityCompiler:
                     # however, there may be other CUs compiling this file (for different subprojects) where compilation was successful
                     # to prevent the case where files from different subprojects depending on this file would be left orphaned,
                     # we need to remove them from the build as well
-                    for (_, to) in nx.edge_bfs(graph, [
+                    files = {source_units_to_paths[to] for (_, to) in nx.edge_bfs(graph, [
                         source_unit_name
                         for source_unit_name in graph.nodes
                         if graph.nodes[source_unit_name]["path"] == file
-                    ]):
-                        file = source_units_to_paths[to]
+                    ])}
+                    files.add(file)
+
+                    for file in files:
                         # this file won't be taken from any CU, even if compiled successfully
                         compilation_units_per_file[file].clear()
 
@@ -1223,12 +1225,14 @@ class SolidityCompiler:
                         # however, there may be other CUs compiling this file (for different subprojects) where compilation was successful
                         # to prevent the case where files from different subprojects depending on this file would be left orphaned,
                         # we need to remove them from the build as well
-                        for (_, to) in nx.edge_bfs(graph, [
+                        files = {source_units_to_paths[to] for (_, to) in nx.edge_bfs(graph, [
                             source_unit_name
                             for source_unit_name in graph.nodes
                             if graph.nodes[source_unit_name]["path"] == file
-                        ]):
-                            file = source_units_to_paths[to]
+                        ])}
+                        files.add(file)
+
+                        for file in files:
                             # this file won't be taken from any CU, even if compiled successfully
                             compilation_units_per_file[file].clear()
 
