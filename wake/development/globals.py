@@ -166,6 +166,7 @@ def set_sequence_initial_internal_state(intenral_state: bytes):
     _initial_internal_state = intenral_state
 
 def get_sequence_initial_internal_state() -> bytes:
+    assert _initial_internal_state != b""
     return _initial_internal_state
 
 def reset_exception_handled():
