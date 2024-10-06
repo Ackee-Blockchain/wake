@@ -70,14 +70,15 @@ class PytestWakePluginSingle:
 
         # Write contents to the crash log file
         with crash_log_file.open('w') as f:
+            f.write(f"executed flow number : {get_error_flow_num()}\n")
+            f.write(f"\nInternal state of beginning of sequence : {state.hex()}\n")
             # Create the rich traceback object
             rich_tb = rich.traceback.Traceback.from_exception(
                 call.excinfo.type, call.excinfo.value, call.excinfo.tb
             )
             file_console = Console(file=f, force_terminal=False)
             file_console.print(rich_tb)
-            f.write(f"\nInternal state of beginning of sequence : {state.hex()}\n")
-            f.write(f"executed flow number : {get_error_flow_num()}\n")
+
 
         console.print(f"Crash log written to {crash_log_file}")
 

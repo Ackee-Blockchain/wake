@@ -34,9 +34,6 @@ import os
 from wake.cli.console import console
 from contextlib import contextmanager, redirect_stdout, redirect_stderr
 
-
-
-
 def __get_methods(target, attr: str) -> List[Callable]:
     ret = []
     for x in dir(target):
@@ -151,6 +148,20 @@ class ShrinkedInfoFile:
     required_flows: List[FlowState]
 
 
+@contextmanager
+def print_ignore():
+    ctx_managers = []
+    ctx_managers.append(redirect_stdout(open(os.devnull, 'w')))
+    ctx_managers.append(redirect_stderr(open(os.devnull, 'w')))
+    for ctx_manager in ctx_managers:
+        ctx_manager.__enter__()
+
+    yield
+
+    for ctx_manager in ctx_managers:
+        ctx_manager.__exit__(None, None, None)
+    ctx_managers.clear()
+
 def fuzz_shrink(test_class: type[FuzzTest], sequences_count: int, flows_count: int, dry_run: bool = False):
     assert issubclass(test_class, FuzzTest)
     fuzz_mode = get_fuzz_mode()
@@ -160,7 +171,7 @@ def fuzz_shrink(test_class: type[FuzzTest], sequences_count: int, flows_count: i
         single_fuzz_test(test_class, sequences_count, flows_count, dry_run)
     elif fuzz_mode == 1:
 
-        shrink_test(test_class, flows_count, dry_run)
+        shrink_test(test_class, flows_count)
         pass
 
     elif fuzz_mode == 2:
@@ -214,38 +225,11 @@ def shrank_reproduce(test_class: type[FuzzTest], flows_count, dry_run: bool = Fa
 
     print("seems fixed >_<")
 
-
-def shrink_test(test_class: type[FuzzTest], flows_count, dry_run: bool = False):
-
-    error_flow_num = get_error_flow_num() # argument
-    print("Fuzz test shrink start! First of all, collect random and flow information!!! >_<")
-    test_instance = test_class()
-    chains = get_connected_chains()
-    flows: List[Callable] = __get_methods(test_instance, "flow")
-    invariants: List[Callable] = __get_methods(test_instance, "invariant")
-    dry_run = False
-
-    ctx_managers = []
-
-    @contextmanager
-    def print_ignore():
-        ctx_managers.append(redirect_stdout(open(os.devnull, 'w')))
-        ctx_managers.append(redirect_stderr(open(os.devnull, 'w')))
-        for ctx_manager in ctx_managers:
-            ctx_manager.__enter__()
-
-        yield
-
-        for ctx_manager in ctx_managers:
-            ctx_manager.__exit__(None, None, None)
-        ctx_managers.clear()
-
-    flow_state: List[FlowState] = []
-
+def shrink_collecting_phase(test_instance: FuzzTest,flows, invariants, flow_state:List[FlowState], chains: Tuple[Chain, ...], flows_count) -> Exception:
+    data_time = datetime.now()
     flows_counter: DefaultDict[Callable, int] = defaultdict(int)
     invariant_periods: DefaultDict[Callable[[None], None], int] = defaultdict(int)
-
-    # Snapshot all connected chains
+       # Snapshot all connected chains
     initial_chain_state_snapshots = [chain.snapshot() for chain in chains]
 
     initial_state = get_sequence_initial_internal_state() # argument
@@ -315,18 +299,17 @@ def shrink_test(test_class: type[FuzzTest], flows_count, dry_run: bool = False):
 
                     flow_state[j].before_inv_random_state = pickle.dumps(random.getstate())
 
-                    if not dry_run:
-                        test_instance.pre_invariants()
-                        for inv in invariants:
-                            if invariant_periods[inv] == 0:
-                                test_instance.pre_invariant(inv)
-                                inv(test_instance)
-                                test_instance.post_invariant(inv)
+                    test_instance.pre_invariants()
+                    for inv in invariants:
+                        if invariant_periods[inv] == 0:
+                            test_instance.pre_invariant(inv)
+                            inv(test_instance)
+                            test_instance.post_invariant(inv)
 
-                            invariant_periods[inv] += 1
-                            if invariant_periods[inv] == getattr(inv, "period"):
-                                invariant_periods[inv] = 0
-                        test_instance.post_invariants()
+                        invariant_periods[inv] += 1
+                        if invariant_periods[inv] == getattr(inv, "period"):
+                            invariant_periods[inv] = 0
+                    test_instance.post_invariants()
                 test_instance.post_sequence()
 
         except Exception as e:
@@ -334,7 +317,7 @@ def shrink_test(test_class: type[FuzzTest], flows_count, dry_run: bool = False):
             print(type(e))
             print(e)
             exception = True
-            assert test_instance._flow_num == error_flow_num, "Unexpected failing flow"
+            assert test_instance._flow_num == get_error_flow_num(), "Unexpected failing flow"
         finally:
             for snapshot, chain in zip(initial_chain_state_snapshots, chains):
                 chain.revert(snapshot)
@@ -342,15 +325,31 @@ def shrink_test(test_class: type[FuzzTest], flows_count, dry_run: bool = False):
         if exception == False:
             raise Exception("Exception not raised unexpected state changes")
 
+    # calculate sopent time
+    second_time = datetime.now()
+    time_spent = (second_time - data_time).total_seconds()
+    print("Time spent: ", time_spent)
+    print("estimated to done shrink at most:", (time_spent*get_error_flow_num())/ 2)
+    assert exception_content is not None
+    return exception_content
 
+def shrink_test(test_class: type[FuzzTest], flows_count):
+    error_flow_num = get_error_flow_num() # argument
+    print("Fuzz test shrink start! First of all, collect random and flow information!!! >_<")
+    test_instance = test_class()
+    chains = get_connected_chains()
+    flows: List[Callable] = __get_methods(test_instance, "flow")
+    invariants: List[Callable] = __get_methods(test_instance, "invariant")
+    flow_state: List[FlowState] = []
+
+    exception_content = shrink_collecting_phase(test_instance,flows, invariants, flow_state, chains, flows_count)
     console.print("Starting shrinking")
-
     curr = 0 # current testing flow index
     class OverRunException(Exception):
         def __init__(self):
             super().__init__("Overrun")
 
-    random.setstate(pickle.loads(initial_state))
+    random.setstate(pickle.loads(get_sequence_initial_internal_state()))
 
     with print_ignore():
         test_instance._flow_num = 0
@@ -395,11 +394,9 @@ def shrink_test(test_class: type[FuzzTest], flows_count, dry_run: bool = False):
                         flow(test_instance, *flow_params)
                         test_instance.post_flow(flow)
 
+                        if curr_flow_state.before_inv_random_state != b"":
+                            random.setstate(pickle.loads(curr_flow_state.before_inv_random_state))
 
-                    assert flow_state[j].before_inv_random_state is not None
-                    if curr_flow_state.before_inv_random_state != b"":
-                        random.setstate(pickle.loads(curr_flow_state.before_inv_random_state))
-                    if not dry_run:
                         test_instance.pre_invariants()
                         for inv in invariants:
                             if invariant_periods[inv] == 0:
@@ -470,7 +467,7 @@ def shrink_test(test_class: type[FuzzTest], flows_count, dry_run: bool = False):
             required_flows.append(flow_state[i])
 
     store_data: ShrinkedInfoFile = ShrinkedInfoFile(
-        initial_state=initial_state,
+        initial_state=get_sequence_initial_internal_state(),
         required_flows=required_flows
     )
     # Write to a JSON file
