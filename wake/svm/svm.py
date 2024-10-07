@@ -141,7 +141,7 @@ class SolcVersionManager(CompilerVersionManagerAbc):
 
         for retry in range(self.INSTALL_RETRY_COUNT):
             if http_session is None:
-                async with aiohttp.ClientSession() as session:
+                async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=600)) as session:
                     await self.__download_file(
                         download_url, local_path, session, progress
                     )
@@ -266,7 +266,7 @@ class SolcVersionManager(CompilerVersionManagerAbc):
             return
 
         try:
-            with urllib.request.urlopen(self.__solc_list_url, timeout=0.25) as response:
+            with urllib.request.urlopen(self.__solc_list_url, timeout=0.5) as response:
                 json = response.read()
                 self.__solc_builds = SolcBuilds.model_validate_json(json)
                 self.__solc_list_path.write_bytes(json)
