@@ -1152,7 +1152,7 @@ class LspServer:
             self.__workspaces[self.__workspace_path] = self.__main_workspace
             self.__main_workspace.run()
 
-            self.__initialized_event.set()
+        self.__initialized_event.set()
 
     async def _workspace_did_change_watched_files(
         self, params: DidChangeWatchedFilesParams
