@@ -453,9 +453,8 @@ class LspCompiler:
         subprocess.command_id += 1
         return ret
 
-    @staticmethod
     async def wait_subprocess_response(
-        subprocess: Subprocess, command_id: int
+        self, subprocess: Subprocess, command_id: int
     ) -> Tuple[SubprocessCommandType, Any]:
         while True:
             if command_id in subprocess.responses:
@@ -474,6 +473,19 @@ class LspCompiler:
                 await asyncio.sleep(0.1)
 
             if subprocess.process is not None and not subprocess.process.is_alive():
+                while not subprocess.in_queue.empty():
+                    response = subprocess.in_queue.get_nowait()
+                    subprocess.responses[response[1]] = (
+                        response[0],
+                        response[2],
+                    )
+
+                for command_type, data in subprocess.responses.values():
+                    if command_type == SubprocessCommandType.DETECTORS_FAILURE:
+                        await self.__server.log_message(f"Detectors error: {data}", MessageType.ERROR)
+                    elif command_type == SubprocessCommandType.PRINTERS_FAILURE:
+                        await self.__server.log_message(f"Printers error: {data}", MessageType.ERROR)
+
                 raise RuntimeError("Subprocess has terminated unexpectedly")
 
     def __process_commands(
