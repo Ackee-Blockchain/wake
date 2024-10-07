@@ -6,6 +6,18 @@ small.label {
 }
 </style>
 
+## 4.12.1 <small>(Oct 7, 2024)</small> { id="4.12.1" }
+
+Fixes & improvements:
+
+- fixed removal of errored files from compilation build <small class="label">[core]</small>
+- fixed AST node indexing of multiple structurally different ASTs <small class="label">[core]</small>
+- fixed crashes on non-utf8 files present in workspace on compilation <small class="label">[core]</small>
+- increased timeouts for solc binary installation <small class="label">[core]</small>
+- fixed LSP features not available for files without workspace <small class="label">[language server]</small>
+- improved error logging of LSP subprocesses <small class="label">[language server]</small>
+- Anvil is now also being searched in standard `~/.foundry/bin` directory <small class="label">[testing framework]</small>
+
 ## 4.12.0 <small>(Oct 2, 2024)</small> { id="4.12.0" }
 
 Features & improvements:
