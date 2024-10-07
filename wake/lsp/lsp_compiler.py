@@ -953,10 +953,14 @@ class LspCompiler:
                     for i in range(start.line + 1, end.line):
                         lines[i] = bytearray(b"")
 
-                self.early_opened_files[path] = VersionedFile(
-                    "".join(line.decode(ENCODING) for line in lines),
-                    change.text_document.version,
-                )
+                try:
+                    self.early_opened_files[path] = VersionedFile(
+                        "".join(line.decode(ENCODING) for line in lines),
+                        change.text_document.version,
+                    )
+                except UnicodeDecodeError:
+                    pass
+
                 self.__early_line_indexes.pop(path, None)
         elif isinstance(change, CreateFilesParams):
             for file in change.files:
@@ -1247,8 +1251,12 @@ class LspCompiler:
             ):
                 self.__discovered_files.add(path)
                 self.__force_compile_files.add(path)
-            elif change.text_document.text != self.get_compiled_file(path).text:
-                self.__force_compile_files.add(path)
+            else:
+                try:
+                    if change.text_document.text != self.get_compiled_file(path).text:
+                        self.__force_compile_files.add(path)
+                except UnicodeDecodeError:
+                    pass
 
         elif isinstance(change, DidCloseTextDocumentParams):
             path = uri_to_path(change.text_document.uri).resolve()
@@ -1497,9 +1505,9 @@ class LspCompiler:
 
         compilation_units = self.__compiler.build_compilation_units_maximize(graph, logger)
 
-        logger.removeHandler(handler)
         for log in logging_buffer:
             await self.__server.log_message(log[0], log[1])
+        logging_buffer.clear()
 
         if len(compilation_units) == 0:
             return False, {}, {}, {}, {}
@@ -1553,6 +1561,7 @@ class LspCompiler:
                     compilation_unit,
                     target_version,
                     build_settings[compilation_unit.subproject],
+                    logger,
                 )
             )
             tasks.append(task)
@@ -1569,6 +1578,11 @@ class LspCompiler:
                 await self.__server.progress_end(progress_token)
 
             return False, {}, {}, {}, {}
+        finally:
+            logger.removeHandler(handler)
+
+        for log in logging_buffer:
+            await self.__server.log_message(log[0], log[1])
 
         contract_info: Dict[str, SolcOutputContractInfo] = {}
         asts: Dict[str, Dict] = {}
@@ -1709,9 +1723,9 @@ class LspCompiler:
 
         compilation_units = self.__compiler.build_compilation_units_maximize(graph, logger)
 
-        logger.removeHandler(handler)
         for log in logging_buffer:
             await self.__server.log_message(log[0], log[1])
+        logging_buffer.clear()
 
         for source_unit_name in graph.nodes:
             path = graph.nodes[source_unit_name]["path"]
@@ -1825,6 +1839,7 @@ class LspCompiler:
                     compilation_unit,
                     target_version,
                     build_settings[compilation_unit.subproject],
+                    logger,
                 )
             )
             tasks.append(task)
@@ -1850,6 +1865,11 @@ class LspCompiler:
             self.__last_graph = nx.DiGraph()
             self.__latest_errors_per_cu = {}
             return True
+        finally:
+            logger.removeHandler(handler)
+
+        for log in logging_buffer:
+            await self.__server.log_message(log[0], log[1])
 
         errors_without_location: Set[SolcOutputError] = set()
         errors_per_file: Dict[Path, Set[Diagnostic]] = deepcopy(
@@ -1933,12 +1953,15 @@ class LspCompiler:
                 if file in self.__opened_files:
                     self.__output_contents[file] = self.__opened_files[file]
                 else:
-                    self.__output_contents[file] = VersionedFile(
-                        graph.nodes[next(iter(cu.path_to_source_unit_names(file)))][
-                            "content"
-                        ].decode("utf-8"),
-                        None,
-                    )
+                    try:
+                        self.__output_contents[file] = VersionedFile(
+                            graph.nodes[next(iter(cu.path_to_source_unit_names(file)))][
+                                "content"
+                            ].decode("utf-8"),
+                            None,
+                        )
+                    except UnicodeDecodeError:
+                        pass
 
             errored_files: Set[Path] = set()
 
