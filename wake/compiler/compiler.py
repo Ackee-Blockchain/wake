@@ -1120,6 +1120,7 @@ class SolidityCompiler:
                     compilation_unit,
                     target_version,
                     build_settings[compilation_unit.subproject],
+                    logger,
                 )
             )
             tasks.append(task)
@@ -1526,6 +1527,7 @@ class SolidityCompiler:
         compilation_unit: CompilationUnit,
         target_version: SolidityVersion,
         build_settings: SolcInputSettings,
+        logger: logging.Logger,
     ) -> SolcOutput:
         # Dict[source_unit_name: str, path: Path]
         files = {}
@@ -1537,7 +1539,13 @@ class SolidityCompiler:
             if content is None:
                 files[source_unit_name] = path
             else:
-                sources[source_unit_name] = content.decode("utf-8")
+                try:
+                    sources[source_unit_name] = content.decode("utf-8")
+                except UnicodeDecodeError:
+                    logger.warning(f"Skipping source unit {source_unit_name} with non-utf-8 content")
+
+        if len(sources) == 0 and len(files) == 0:
+            return SolcOutput()
 
         # run the solc executable
         return await self.__solc_frontend.compile(
