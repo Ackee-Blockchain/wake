@@ -149,10 +149,11 @@ class ShrinkedInfoFile:
 
 
 @contextmanager
-def print_ignore():
+def print_ignore(debug: bool = False):
     ctx_managers = []
-    ctx_managers.append(redirect_stdout(open(os.devnull, 'w')))
-    ctx_managers.append(redirect_stderr(open(os.devnull, 'w')))
+    if not debug:
+        ctx_managers.append(redirect_stdout(open(os.devnull, 'w')))
+        ctx_managers.append(redirect_stderr(open(os.devnull, 'w')))
     for ctx_manager in ctx_managers:
         ctx_manager.__enter__()
 
@@ -166,13 +167,11 @@ def fuzz_shrink(test_class: type[FuzzTest], sequences_count: int, flows_count: i
     assert issubclass(test_class, FuzzTest)
     fuzz_mode = get_fuzz_mode()
     if fuzz_mode == 0:
-          # Instantiate the user-defined test class
+        # Instantiate the user-defined test class
         # Fetch connected chains and methods (flows and invariants)
         single_fuzz_test(test_class, sequences_count, flows_count, dry_run)
     elif fuzz_mode == 1:
-
         shrink_test(test_class, flows_count)
-        pass
 
     elif fuzz_mode == 2:
         shrank_reproduce(test_class, flows_count, dry_run)
@@ -225,7 +224,7 @@ def shrank_reproduce(test_class: type[FuzzTest], flows_count, dry_run: bool = Fa
 
     print("seems fixed >_<")
 
-def shrink_collecting_phase(test_instance: FuzzTest,flows, invariants, flow_state:List[FlowState], chains: Tuple[Chain, ...], flows_count) -> Exception:
+def shrink_collecting_phase(test_instance: FuzzTest, flows, invariants, flow_states:List[FlowState], chains: Tuple[Chain, ...], flows_count: int) -> Tuple[Exception, datetime]:
     data_time = datetime.now()
     flows_counter: DefaultDict[Callable, int] = defaultdict(int)
     invariant_periods: DefaultDict[Callable[[None], None], int] = defaultdict(int)
@@ -283,7 +282,7 @@ def shrink_collecting_phase(test_instance: FuzzTest,flows, invariants, flow_stat
                     ]
 
                     random_state = pickle.dumps(random.getstate())
-                    flow_state.append(FlowState(
+                    flow_states.append(FlowState(
                         random_state=random_state,
                         flow_name=flow.__name__,
                         flow=flow,
@@ -297,7 +296,7 @@ def shrink_collecting_phase(test_instance: FuzzTest,flows, invariants, flow_stat
                     flows_counter[flow] += 1
                     test_instance.post_flow(flow)
 
-                    flow_state[j].before_inv_random_state = pickle.dumps(random.getstate())
+                    flow_states[j].before_inv_random_state = pickle.dumps(random.getstate())
 
                     test_instance.pre_invariants()
                     for inv in invariants:
@@ -327,30 +326,31 @@ def shrink_collecting_phase(test_instance: FuzzTest,flows, invariants, flow_stat
 
     # calculate sopent time
     second_time = datetime.now()
-    time_spent = (second_time - data_time).total_seconds()
+    time_spent = (second_time - data_time)
     print("Time spent: ", time_spent)
     print("estimated to done shrink at most:", (time_spent*get_error_flow_num())/ 2)
     assert exception_content is not None
-    return exception_content
+    return exception_content, time_spent
 
-def shrink_test(test_class: type[FuzzTest], flows_count):
+def shrink_test(test_class: type[FuzzTest], flows_count: int):
     error_flow_num = get_error_flow_num() # argument
-    print("Fuzz test shrink start! First of all, collect random and flow information!!! >_<")
+    print("Fuzz test shrink start! First of all, collect random and flow information!!! >_< v0.5")
     test_instance = test_class()
     chains = get_connected_chains()
     flows: List[Callable] = __get_methods(test_instance, "flow")
     invariants: List[Callable] = __get_methods(test_instance, "invariant")
-    flow_state: List[FlowState] = []
+    flow_states: List[FlowState] = []
 
-    exception_content = shrink_collecting_phase(test_instance,flows, invariants, flow_state, chains, flows_count)
+    exception_content, time_spent = shrink_collecting_phase(test_instance,flows, invariants, flow_states, chains, flows_count)
     console.print("Starting shrinking")
-    curr = 0 # current testing flow index
+
     class OverRunException(Exception):
         def __init__(self):
             super().__init__("Overrun")
 
     random.setstate(pickle.loads(get_sequence_initial_internal_state()))
 
+    # ignore print for pre_sequence logging
     with print_ignore():
         test_instance._flow_num = 0
         test_instance._sequence_num = 0
@@ -359,9 +359,104 @@ def shrink_test(test_class: type[FuzzTest], flows_count):
         states = StateSnapShot()
         states.take_snapshot(test_instance,test_class(), chains, overwrite=False)
 
+    print("removing flow by flow kinds")
+    print("estimated to done this test at most:", (len(flows)* time_spent))
+
+    removed_sum = 0
+    # remove flow by flow kinds
+    for i in range(len(flows)):
+        invariant_periods: DefaultDict[Callable[[None], None], int] = defaultdict(int)
+        curr_removing_flow = flows[i]
+        print("try remove flow: ", curr_removing_flow.__name__)
+        print("removing flow by kinds progress: ", i, "/", len(flows), "= ", (i*100/len(flows)), "%")
+        count = 0
+        for flow_state_ in flow_states:
+            if flow_state_.flow == curr_removing_flow:
+                count += 1
+        print("potencial removing count: ", count)
+        success = False
+        with print_ignore(debug=False):
+            try:
+                for j in range(flows_count):
+                    if j == -1: # this condition applies only curr == 0
+                        continue
+
+                    if j > error_flow_num:
+                        raise OverRunException()
+
+                    print("flow: ", j, flow_states[j].flow.__name__ )
+
+                    curr_flow_state = flow_states[j]
+                    random.setstate(pickle.loads(curr_flow_state.random_state))
+                    flow = curr_flow_state.flow
+                    flow_params = curr_flow_state.flow_params
+                    if flow_states[j].required and flow != curr_removing_flow:
+                        test_instance._flow_num = j
+                        test_instance.pre_flow(flow)
+                        flow(test_instance, *flow_params)
+                        test_instance.post_flow(flow)
+
+                        if curr_flow_state.before_inv_random_state != b"":
+                            random.setstate(pickle.loads(curr_flow_state.before_inv_random_state))
+
+                        test_instance.pre_invariants()
+                        for inv in invariants:
+                            if invariant_periods[inv] == 0:
+                                test_instance.pre_invariant(inv)
+                                inv(test_instance)
+                                test_instance.post_invariant(inv)
+
+                            invariant_periods[inv] += 1
+                            if invariant_periods[inv] == getattr(inv, "period"):
+                                invariant_periods[inv] = 0
+                        test_instance.post_invariants()
+                test_instance.post_sequence()
+            except OverRunException:
+                print("overrun!")
+            except Exception as e:
+                # Check exception type and exception lines in the testing file.
+                ignore_flows = True
+
+                if (ignore_flows or test_instance._flow_num == error_flow_num) and compare_exceptions(e, exception_content):
+
+                    # the removed flow is not required to reproduce same error. @ try remove next flow
+                    print("remove worked!!")
+
+                    for flow_state_ in flow_states:
+                        if flow_state_.flow == curr_removing_flow:
+                            flow_state_.required = False
+                            removed_sum += 1
+
+                    success = True
+
+                else:
+                    print(e)
+                    # the removing flow caused different error . @this flow should not removed restore current flow and remove next flow
+                    print("remove failed!!")
+
+
+            finally:
+                # revert to starting state
+                print("revert state!!")
+                states.revert(test_instance, chains)
+                states.take_snapshot(test_instance, test_class(), chains, overwrite=False)
+
+            # the removed flow is required to reproduce same error. @ this flow should not removed # restore current flow and remove next flow
+
+        if success:
+            print("removing flow success")
+        else:
+            print("removing flow failed")
+
+    print("removed sum: ", removed_sum)
+
+
+    curr = 0 # current testing flow index
+    print("removing flow by brute force")
+    # remove flow by brute force
     while curr <= error_flow_num:
-        assert flow_state[curr].required == True
-        flow_state[curr].required = False
+        assert flow_states[curr].required == True
+        flow_states[curr].required = False
         invariant_periods: DefaultDict[Callable[[None], None], int] = defaultdict(
             int
         )
@@ -370,6 +465,8 @@ def shrink_test(test_class: type[FuzzTest], flows_count):
         with print_ignore():
             try:
                 for j in range(curr-1, flows_count):
+                    # Print status as percentage
+                    print(f"Progress: {((j + 1) / flows_count) * 100:.2f}%")
 
                     if j == -1: # this condition applies only curr == 0
                         continue
@@ -380,15 +477,15 @@ def shrink_test(test_class: type[FuzzTest], flows_count):
                     if j == curr:
                         states.take_snapshot(test_instance, test_class(), chains, overwrite=True)
 
-                    print("flow: ", j, flow_state[j].flow.__name__ )
+                    print("flow: ", j, flow_states[j].flow.__name__ )
 
-                    curr_flow_state = flow_state[j]
+                    curr_flow_state = flow_states[j]
                     random.setstate(pickle.loads(curr_flow_state.random_state))
                     flow = curr_flow_state.flow
                     flow_params = curr_flow_state.flow_params
 
 
-                    if flow_state[j].required:
+                    if flow_states[j].required:
                         test_instance._flow_num = j
                         test_instance.pre_flow(flow)
                         flow(test_instance, *flow_params)
@@ -420,35 +517,32 @@ def shrink_test(test_class: type[FuzzTest], flows_count):
 
                     # the removed flow is not required to reproduce same error. @ try remove next flow
                     print("remove worked!!")
-                    assert flow_state[curr].required == False
+                    assert flow_states[curr].required == False
                 else:
                     print(e)
                     # the removing flow caused different error . @this flow should not removed restore current flow and remove next flow
-                    flow_state[curr].required = True
-
+                    flow_states[curr].required = True
                     print("remove failed!!")
 
             finally:
                 # revert to starting state
-                # for snapshot, chain in zip(initial_chain_state_snapshots, chains):
-                #     chain.revert(snapshot)
                 print("revert state!!")
                 states.revert(test_instance, chains)
                 states.take_snapshot(test_instance, test_class(), chains, overwrite=False)
 
             if exception == False:
                 print("overrun!")
-                flow_state[curr].required = True
+                flow_states[curr].required = True
             # the removed flow is required to reproduce same error. @ this flow should not removed # restore current flow and remove next flow
         curr += 1
 
     print("Shrinking completed")
     print("Error flow number: ", error_flow_num)
-    print("Shrinked flow count:", sum([1 for i in range(len(flow_state)) if flow_state[i].required == True]))
+    print("Shrinked flow count:", sum([1 for i in range(len(flow_states)) if flow_states[i].required == True]))
     print("Those flow were required to reproduce the error")
-    for i in range(len(flow_state)):
-        if flow_state[i].required:
-            print(flow_state[i].flow_name, " : ", flow_state[i].flow_params)
+    for i in range(len(flow_states)):
+        if flow_states[i].required:
+            print(flow_states[i].flow_name, " : ", flow_states[i].flow_params)
 
 
     crash_logs_dir = get_config().project_root_path / ".wake" / "logs" / "shrinked"
@@ -462,9 +556,9 @@ def shrink_test(test_class: type[FuzzTest], flows_count):
 
     #initial_state
     required_flows: List[FlowState] = []
-    for i in range(len(flow_state)):
-        if flow_state[i].required:
-            required_flows.append(flow_state[i])
+    for i in range(len(flow_states)):
+        if flow_states[i].required:
+            required_flows.append(flow_states[i])
 
     store_data: ShrinkedInfoFile = ShrinkedInfoFile(
         initial_state=get_sequence_initial_internal_state(),
