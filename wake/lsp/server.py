@@ -305,9 +305,7 @@ class LspServer:
             ),
             RequestMethodEnum.SAKE_PING: (
                 lambda params: (
-                    self.__sake_context.ping(  # pyright: ignore reportAttributeAccessIssue
-                        params,
-                    )
+                    self.__sake_context.ping()  # pyright: ignore reportAttributeAccessIssue
                 ),
                 None,
             ),
