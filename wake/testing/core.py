@@ -68,7 +68,13 @@ class Chain(wake.development.core.Chain):
         if block_base_fee_per_gas is not None:
             self._initial_base_fee_per_gas = Wei(block_base_fee_per_gas)
         else:
-            self._initial_base_fee_per_gas = block_info.get("baseFeePerGas", 0)
+            base_fee = block_info.get("baseFeePerGas", 0)
+            if isinstance(base_fee, str):
+                if base_fee.startswith("0x"):
+                    base_fee = int(base_fee, 16)
+                else:
+                    base_fee = int(base_fee)
+            self._initial_base_fee_per_gas = Wei(base_fee)
 
         if min_gas_price is not None:
             try:
