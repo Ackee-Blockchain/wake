@@ -168,7 +168,7 @@ def chain_connected(f):
         ):
             raise LspError(ErrorCodes.InvalidParams, "Chain instance not connected")
 
-        return await f(context, *args, **kwargs)
+        return await f(context, params, *args, **kwargs)
 
     return wrapper
 
