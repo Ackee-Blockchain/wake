@@ -263,10 +263,11 @@ class SakeContext:
             raise LspError(ErrorCodes.InternalError, str(e)) from None
 
     @chain_connected
-    async def disconnect_chain(self, params: SakeParams) -> None:
+    async def disconnect_chain(self, params: SakeParams) -> SakeResult:
         try:
             self.chains[params.session_id][1].__exit__(None, None, None)
             del self.chains[params.session_id]
+            return SakeResult(success=True)
         except Exception as e:
             raise LspError(ErrorCodes.InternalError, str(e)) from None
 
@@ -296,7 +297,7 @@ class SakeContext:
             raise LspError(ErrorCodes.InternalError, str(e)) from None
 
     @chain_connected
-    async def load_state(self, params: SakeLoadStateParams) -> None:
+    async def load_state(self, params: SakeLoadStateParams) -> SakeResult:
         chain = self.chains[params.session_id][0]
 
         if not isinstance(chain.chain_interface, AnvilChainInterface):
@@ -317,6 +318,7 @@ class SakeContext:
                     wake.development.core.Library(Address(addr), chain)
                     for addr in addrs
                 ]
+            return SakeResult(success=True)
         except Exception as e:
             raise LspError(ErrorCodes.InternalError, str(e)) from None
 
@@ -697,10 +699,11 @@ class SakeContext:
             raise LspError(ErrorCodes.InternalError, str(e)) from None
 
     @chain_connected
-    async def set_label(self, params: SakeSetLabelParams) -> None:
+    async def set_label(self, params: SakeSetLabelParams) -> SakeResult:
         chain = self.chains[params.session_id][0]
 
         try:
             Account(params.address, chain=chain).label = params.label
+            return SakeResult(success=True)
         except Exception as e:
             raise LspError(ErrorCodes.InternalError, str(e)) from None
