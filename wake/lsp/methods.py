@@ -125,6 +125,7 @@ class RequestMethodEnum(StrEnum):
     SET_TRACE = "$/setTrace"  # Notification
 
     # Sake
+    SAKE_PING = "wake/sake/ping"
     SAKE_CREATE_CHAIN = "wake/sake/createChain"
     SAKE_CONNECT_CHAIN = "wake/sake/connectChain"
     SAKE_DISCONNECT_CHAIN = "wake/sake/disconnectChain"

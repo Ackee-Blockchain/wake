@@ -192,6 +192,9 @@ class SakeContext:
         self.abi_by_fqn = {}
         self.libraries = {}
 
+    async def ping(self) -> SakeResult:
+        return SakeResult(success=True)
+
     async def create_chain(
         self, params: SakeCreateChainParams
     ) -> SakeCreateChainResult:
