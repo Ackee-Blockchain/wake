@@ -303,6 +303,14 @@ class LspServer:
                 ),
                 SakeCreateChainParams,
             ),
+            RequestMethodEnum.SAKE_PING: (
+                lambda params: (
+                    self.__sake_context.ping(  # pyright: ignore reportAttributeAccessIssue
+                        params,
+                    )
+                ),
+                None,
+            ),
             RequestMethodEnum.SAKE_CONNECT_CHAIN: (
                 lambda params: (
                     self.__sake_context.connect_chain(  # pyright: ignore reportAttributeAccessIssue
