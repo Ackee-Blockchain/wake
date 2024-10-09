@@ -1173,7 +1173,9 @@ class LspCompiler:
                             await asyncio.sleep(0.1)
 
                 for file in self.__opened_files.keys():
-                    if not self.__file_excluded(file):
+                    # opened files may contain files that are still opened in IDE but already deleted on FS
+                    # ensure such files are not added to discovered files
+                    if not self.__file_excluded(file) and file.is_file():
                         self.__discovered_files.add(file)
 
                 self.__force_compile_files.update(self.__discovered_files)
@@ -1224,14 +1226,13 @@ class LspCompiler:
                     else:
                         self.__disk_changed_files.add(path)
             elif change.type == FileChangeType.DELETED:
+                # cannot remove from __opened_files here because it may be still opened in IDE
+                # a change to the deleted (but IDE-opened) file would cause a crash
+
                 path = uri_to_path(change.uri).resolve()
                 for p in list(self.__discovered_files):
                     if is_relative_to(p, path):
                         self.__discovered_files.remove(p)
-
-                for p in list(self.__opened_files):
-                    if is_relative_to(p, path):
-                        self.__opened_files.pop(p)
 
                 for p in list(self.__disk_changed_files):
                     if is_relative_to(p, path):
