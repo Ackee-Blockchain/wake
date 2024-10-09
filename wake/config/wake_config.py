@@ -478,7 +478,7 @@ class WakeConfig:
         Returns:
             Maximum supported Solidity version.
         """
-        return SolidityVersion.fromstring("0.8.27")
+        return SolidityVersion.fromstring("0.8.28")
 
     @property
     def detectors(self) -> DetectorsConfig:
