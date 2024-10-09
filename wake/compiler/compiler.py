@@ -648,6 +648,29 @@ class SolidityCompiler:
 
         return settings
 
+    @staticmethod
+    def optimize_build_settings(
+        settings: SolcInputSettings,
+        modified_source_units: Iterable[str],
+    ) -> SolcInputSettings:
+        if settings.output_selection is not None and "*" in settings.output_selection["*"]:
+            new_selection = {}
+            if "" in settings.output_selection["*"]:
+                new_selection["*"] = {
+                    "": settings.output_selection["*"][""]
+                }
+
+            for source_unit in modified_source_units:
+                new_selection[source_unit] = {
+                    "*": settings.output_selection["*"]["*"]
+                }
+
+            ret = settings.model_copy()
+            ret.output_selection = new_selection
+            return ret
+        else:
+            return settings
+
     def determine_solc_versions(
         self,
         compilation_units: Iterable[CompilationUnit],
@@ -1006,6 +1029,7 @@ class SolidityCompiler:
             files_to_compile = set(
                 source_units_to_paths[source_unit] for source_unit in graph.nodes
             )
+            source_units_to_compile = set(graph.nodes)
 
             if not incremental:
                 compilation_units = self.merge_compilation_units(
@@ -1027,6 +1051,7 @@ class SolidityCompiler:
             # TODO this is not needed? graph contains hash of modified files
             # files_to_compile = set(modified_files.keys())
             files_to_compile = set()
+            source_units_to_compile = set()
 
             for source_unit in graph.nodes:
                 if (
@@ -1037,6 +1062,7 @@ class SolidityCompiler:
                     != graph.nodes[source_unit]["hash"]
                 ):
                     files_to_compile.add(source_units_to_paths[source_unit])
+                    source_units_to_compile.add(source_unit)
 
             for source_unit, info in self._latest_build_info.source_units_info.items():
                 if source_unit not in graph.nodes:
@@ -1117,11 +1143,16 @@ class SolidityCompiler:
 
         tasks = []
         for compilation_unit, target_version in zip(compilation_units, target_versions):
+            if target_version >= "0.8.28":
+                settings = self.optimize_build_settings(build_settings[compilation_unit.subproject], compilation_unit.source_unit_names & source_units_to_compile)
+            else:
+                settings = build_settings[compilation_unit.subproject]
+
             task = asyncio.create_task(
                 self.compile_unit_raw(
                     compilation_unit,
                     target_version,
-                    build_settings[compilation_unit.subproject],
+                    settings,
                     logger,
                 )
             )
