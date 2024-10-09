@@ -1290,6 +1290,7 @@ def _get_storage_layout_from_explorer(
             compilation_units[0],
             parsed_version,
             compiler.create_build_settings([SolcOutputSelectionEnum.STORAGE_LAYOUT], None),
+            dummy_logger,
         )
     )
 
