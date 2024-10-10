@@ -62,14 +62,14 @@ _fuzz_mode: int = 0
 _error_flow_num: int = 0
 
 
-_shrinked_path: Optional[Path] = None
+_shrank_path: Optional[Path] = None
 
-def set_shrinked_path(path: Path):
-    global _shrinked_path
-    _shrinked_path = path
+def set_shrank_path(path: Path):
+    global _shrank_path
+    _shrank_path = path
 
-def get_shrinked_path() -> Optional[Path]:
-    return _shrinked_path
+def get_shrank_path() -> Optional[Path]:
+    return _shrank_path
 
 
 def attach_debugger(
@@ -166,7 +166,6 @@ def set_sequence_initial_internal_state(intenral_state: bytes):
     _initial_internal_state = intenral_state
 
 def get_sequence_initial_internal_state() -> bytes:
-    assert _initial_internal_state != b""
     return _initial_internal_state
 
 def reset_exception_handled():
