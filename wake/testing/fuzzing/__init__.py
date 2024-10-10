@@ -1,4 +1,4 @@
-from .fuzz_test import FuzzTest, flow, invariant
+from .fuzz_test import FuzzTest, flow, invariant, FlowResult
 from .generators import (
     random_account,
     random_address,
