@@ -377,6 +377,10 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
         flow_states_map[flow_state.flow_name] += 1 # flow_name or flow
     sorted_flows = sorted(flows, key=lambda x: (-flow_states_map[x.__name__], x.__name__))
     assert len(sorted_flows) == len(flows)
+    number_of_multiple_flows = 0
+    for flow_state in flow_states:
+        if flow_states_map[flow_state.flow_name] > 1:
+            number_of_multiple_flows += 1
 
     # Print sorted flows for verification
     for flow in sorted_flows:
@@ -391,7 +395,7 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
 
         print("")
         print(f"Removing flow: {curr_removing_flow.__name__}")
-        print(f"Removing flows by kinds progress: {i}/{len(sorted_flows)} = {(i*100/len(sorted_flows)):.2f}%")
+        print(f"Removing flows by kinds progress: {i}/{number_of_multiple_flows} = {(i*100/number_of_multiple_flows):.2f}%")
         print(f"Shrank flows rate: {removed_sum}/{len(flow_states)} = {(removed_sum*100/len(flow_states)):.2f}%")
 
         if flow_states_map[curr_removing_flow.__name__] <= 1: # since count is 1 is same as brute force test
@@ -413,10 +417,11 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
                     flow = curr_flow_state.flow
                     flow_params = curr_flow_state.flow_params
                     if flow_states[j].required and flow != curr_removing_flow:
-                        test_instance._flow_num = j
-                        test_instance.pre_flow(flow)
-                        flow(test_instance, *flow_params)
-                        test_instance.post_flow(flow)
+                        if not hasattr(flow, "precondition") or getattr(flow, "precondition")(test_instance):
+                            test_instance._flow_num = j
+                            test_instance.pre_flow(flow)
+                            flow(test_instance, *flow_params)
+                            test_instance.post_flow(flow)
 
                     if curr_flow_state.before_inv_random_state != b"":
                         random.setstate(pickle.loads(curr_flow_state.before_inv_random_state))
@@ -517,10 +522,11 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
 
 
                     if flow_states[j].required:
-                        test_instance._flow_num = j
-                        test_instance.pre_flow(flow)
-                        flow(test_instance, *flow_params)
-                        test_instance.post_flow(flow)
+                        if not hasattr(flow, "precondition") or getattr(flow, "precondition")(test_instance):
+                            test_instance._flow_num = j
+                            test_instance.pre_flow(flow)
+                            flow(test_instance, *flow_params)
+                            test_instance.post_flow(flow)
 
                     if curr_flow_state.before_inv_random_state != b"":
                         random.setstate(pickle.loads(curr_flow_state.before_inv_random_state))
