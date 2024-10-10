@@ -171,9 +171,14 @@ class PytestWakePluginMultiprocess:
 
         crash_log_file = self._crash_log_dir / F"crash_log_{timestamp}.txt"
 
+        relative_path = os.path.relpath(node.fspath, self._config.project_root_path)
+
         with crash_log_file.open('w') as f:
+            f.write(f"Current test file: {relative_path}\n")
             f.write(f"executed flow number : {get_error_flow_num()}\n")
-            f.write(f"\nInternal state of beginning of sequence : {state.hex()}\n")
+            f.write(f"Internal state of beginning of sequence : {state.hex()}\n")
+            f.write(f"Assertion type: {call.excinfo.type}\n")
+            f.write(f"Assertion value: {call.excinfo.value}\n")
             # Create the rich traceback object
             rich_tb = rich.traceback.Traceback.from_exception(
                 call.excinfo.type, call.excinfo.value, call.excinfo.tb

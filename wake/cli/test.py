@@ -241,20 +241,25 @@ class FileAndPassParamType(click.ParamType):
     help="Increase verbosity. Can be specified multiple times.",
 )
 @click.option(
+    "-S",
     "--shrink",
-    type=click.Path(exists=True, dir_okay=False, readable=True),  # Ensure it's an existing file
+    # Didn't use click.Path since we accept relative index of crash log file
+    type=str,
     help="Path to the shrink log file.",
     is_flag=False,
-    flag_value=-1,
+    flag_value=0,
     default=None,
 )
 
 @click.option(
-    "--shrinked",
-    type=click.Path(exists=True, dir_okay=False, readable=True),  # Ensure it's an existing file
-    help="Path of shrinked file.",
+    "-SR",
+    "--shrank",
+    "--reproduce",
+    # Didn't use click.Path since we accept relative index of crash log file
+    type=str,
+    help="Path of shrank file.",
     is_flag=False,
-    flag_value=-1,
+    flag_value=0,
     default=None,
 )
 
@@ -274,7 +279,7 @@ def run_test(
     dist: str,
     verbosity: int,
     shrink: Optional[str],
-    shrinked: Optional[str],
+    shrank: Optional[str],
     paths_or_pytest_args: Tuple[str, ...],
 ) -> None:
     """Execute Wake tests using pytest."""
@@ -327,6 +332,9 @@ def run_test(
     if no_pytest:
         pass
     else:
+        pytest_path_specified = False
+        if len(paths_or_pytest_args) > 0:
+            pytest_path_specified = True
         pytest_args = list(paths_or_pytest_args)
 
         if verbosity > 0:
@@ -371,8 +379,19 @@ def run_test(
                 )
             )
         else:
+
             from wake.testing.pytest_plugin_single import PytestWakePluginSingle
-            from wake.development.globals import set_fuzz_mode,set_sequence_initial_internal_state, set_error_flow_num, set_shrinked_path
+            from wake.development.globals import set_fuzz_mode,set_sequence_initial_internal_state, set_error_flow_num, set_shrank_path, get_config
+            def extract_test_path(crash_log_file_path):
+                if crash_log_file_path is not None:
+                    with open(crash_log_file_path, 'r') as file:
+                        for line in file:
+                            if "Current test file" in line:
+                                # Extract the part after the colon
+                                parts = line.split(":")
+                                if len(parts) == 2:
+                                    return parts[1].strip()
+                return None
 
             def extract_executed_flow_number(crash_log_file_path):
                 if crash_log_file_path is not None:
@@ -406,21 +425,75 @@ def run_test(
                                         pass  # Handle the case where the value after ":" is not a valid hex string
                 return None
 
-            if shrinked is not None and shrink is not None:
+            def get_shrink_argument_path(shrink_path_str) -> Path:
+                try:
+                    path = Path(shrink_path_str)
+                    if not path.exists():
+                        raise ValueError(f"Shrink log not found: {path}")
+                    return path
+                except ValueError:
+                    pass
+
+                crash_logs_dir = get_config().project_root_path / ".wake" / "logs" / "crashes"
+                if not crash_logs_dir.exists():
+                    raise click.BadParameter(f"Crash logs directory not found: {crash_logs_dir}")
+                index = int(shrink_path_str)
+                crash_logs = sorted(crash_logs_dir.glob("*.txt"), key=os.path.getmtime, reverse=True)
+                if abs(index) > len(crash_logs):
+                    raise click.BadParameter(f"Invalid crash log index: {index}")
+                return Path(crash_logs[index])
+
+            def get_shrank_argument_path(shrinked_path_str) -> Path:
+                try:
+                    shrinked_path = Path(shrinked_path_str)
+                    if not shrinked_path.exists():
+                        raise ValueError(f"Shrinked file not found: {shrinked_path}")
+                    return shrinked_path
+                except ValueError:
+                    pass
+                shrank_data_path = get_config().project_root_path / ".wake" / "logs" / "shrinked"
+                if not shrank_data_path.exists():
+                    raise click.BadParameter(f"Shrinked file not found: {shrank_data_path}")
+
+                index = int(shrinked_path_str)
+                shrank_files = sorted(shrank_data_path.glob("*.bin"), key=os.path.getmtime, reverse=True)
+                if abs(index) > len(shrank_files):
+                    raise click.BadParameter(f"Invalid crash log index: {index}")
+                return Path(shrank_files[index])
+
+
+
+
+            if shrank is not None and shrink is not None:
                 raise click.BadParameter("Both shrink and shrieked cannot be provided at the same time.")
 
             if shrink is not None:
-                number = extract_executed_flow_number(shrink)
+                shrink_crash_path = get_shrink_argument_path(shrink)
+                path = extract_test_path(shrink_crash_path)
+                number = extract_executed_flow_number(shrink_crash_path)
                 assert number is not None, "Unexpected file format"
                 set_fuzz_mode(1)
                 set_error_flow_num(number)
-                beginning_random_state_bytes = extract_internal_state(shrink)
+                beginning_random_state_bytes = extract_internal_state(shrink_crash_path)
                 assert beginning_random_state_bytes is not None, "Unexpected file format"
                 set_sequence_initial_internal_state(beginning_random_state_bytes)
+                if pytest_path_specified:
+                    assert path == pytest_args[0], "Shrinked test file path must be same as the test file path in pytest_args"
+                else:
+                    pytest_args.insert(0, path)
 
-            if shrinked:
+            if shrank:
                 set_fuzz_mode(2)
-                set_shrinked_path(Path(shrinked))
+                shrank_data_path = get_shrank_argument_path(shrank)
+                from wake.testing.fuzzing.fuzz_shrink import ShrinkedInfoFile
+                with open(shrank_data_path, 'rb') as f:
+                    store_data: ShrinkedInfoFile = pickle.load(f)
+                target_fuzz_path = store_data.target_fuzz_path
+                if pytest_path_specified:
+                    assert target_fuzz_path == pytest_args[0], "Shrinked test file path must be same as the test file path in pytest_args"
+                else:
+                    pytest_args.insert(0, target_fuzz_path)
+                set_shrank_path(shrank_data_path)
             sys.exit(
                 pytest.main(
                     pytest_args,

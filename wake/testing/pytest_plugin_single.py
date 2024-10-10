@@ -19,6 +19,7 @@ from wake.development.globals import (
     set_exception_handler,
     get_sequence_initial_internal_state,
     get_error_flow_num,
+    get_fuzz_mode,
 )
 from wake.testing.coverage import (
     CoverageHandler,
@@ -59,7 +60,13 @@ class PytestWakePluginSingle:
                 call.excinfo.tb,
                 seed=self._random_seeds[0],
             )
+
+        import os
+        if get_fuzz_mode() != 0:
+            return
         state = get_sequence_initial_internal_state()
+        if state == b"":
+            return
         crash_logs_dir = self._config.project_root_path / ".wake" / "logs" / "crashes"
         # shutil.rmtree(crash_logs_dir, ignore_errors=True)
         crash_logs_dir.mkdir(parents=True, exist_ok=True)
@@ -68,10 +75,16 @@ class PytestWakePluginSingle:
         # Assuming `call.execinfo` contains the crash information
         crash_log_file = crash_logs_dir / F"{timestamp}.txt"
 
+        relative_path = os.path.relpath(node.fspath, self._config.project_root_path)
+
+
         # Write contents to the crash log file
         with crash_log_file.open('w') as f:
+            f.write(f"Current test file: {relative_path}\n")
             f.write(f"executed flow number : {get_error_flow_num()}\n")
-            f.write(f"\nInternal state of beginning of sequence : {state.hex()}\n")
+            f.write(f"Internal state of beginning of sequence : {state.hex()}\n")
+            f.write(f"Assertion type: {call.excinfo.type}\n")
+            f.write(f"Assertion value: {call.excinfo.value}\n")
             # Create the rich traceback object
             rich_tb = rich.traceback.Traceback.from_exception(
                 call.excinfo.type, call.excinfo.value, call.excinfo.tb
