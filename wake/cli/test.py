@@ -442,19 +442,19 @@ def run_test(
                     raise click.BadParameter(f"Invalid crash log index: {index}")
                 return Path(crash_logs[index])
 
-            def get_shrank_argument_path(shrinked_path_str) -> Path:
+            def get_shrank_argument_path(shrank_path_str) -> Path:
                 try:
-                    shrinked_path = Path(shrinked_path_str)
-                    if not shrinked_path.exists():
-                        raise ValueError(f"Shrinked file not found: {shrinked_path}")
-                    return shrinked_path
+                    shrank_path = Path(shrank_path_str)
+                    if not shrank_path.exists():
+                        raise ValueError(f"Shrank data file not found: {shrank_path}")
+                    return shrank_path
                 except ValueError:
                     pass
-                shrank_data_path = get_config().project_root_path / ".wake" / "logs" / "shrinked"
+                shrank_data_path = get_config().project_root_path / ".wake" / "logs" / "shrank"
                 if not shrank_data_path.exists():
-                    raise click.BadParameter(f"Shrinked file not found: {shrank_data_path}")
+                    raise click.BadParameter(f"Shrank data file not found: {shrank_data_path}")
 
-                index = int(shrinked_path_str)
+                index = int(shrank_path_str)
                 shrank_files = sorted(shrank_data_path.glob("*.bin"), key=os.path.getmtime, reverse=True)
                 if abs(index) > len(shrank_files):
                     raise click.BadParameter(f"Invalid crash log index: {index}")
@@ -477,19 +477,19 @@ def run_test(
                 assert beginning_random_state_bytes is not None, "Unexpected file format"
                 set_sequence_initial_internal_state(beginning_random_state_bytes)
                 if pytest_path_specified:
-                    assert path == pytest_args[0], "Shrinked test file path must be same as the test file path in pytest_args"
+                    assert path == pytest_args[0], "crash log file path must be same as the test file path in pytest_args"
                 else:
                     pytest_args.insert(0, path)
 
             if shrank:
                 set_fuzz_mode(2)
                 shrank_data_path = get_shrank_argument_path(shrank)
-                from wake.testing.fuzzing.fuzz_shrink import ShrinkedInfoFile
+                from wake.testing.fuzzing.fuzz_shrink import ShrankInfoFile
                 with open(shrank_data_path, 'rb') as f:
-                    store_data: ShrinkedInfoFile = pickle.load(f)
+                    store_data: ShrankInfoFile = pickle.load(f)
                 target_fuzz_path = store_data.target_fuzz_path
                 if pytest_path_specified:
-                    assert target_fuzz_path == pytest_args[0], "Shrinked test file path must be same as the test file path in pytest_args"
+                    assert target_fuzz_path == pytest_args[0], "Shrank data file path must be same as the test file path in pytest_args"
                 else:
                     pytest_args.insert(0, target_fuzz_path)
                 set_shrank_path(shrank_data_path)

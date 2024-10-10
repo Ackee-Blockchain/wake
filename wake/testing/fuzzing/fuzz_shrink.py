@@ -158,7 +158,7 @@ class FlowStateForFile:
     before_inv_random_state: bytes = b""
 
 @dataclass
-class ShrinkedInfoFile:
+class ShrankInfoFile:
     target_fuzz_path: str
     initial_state: bytes
     required_flows: List[FlowStateForFile]
@@ -195,11 +195,11 @@ def shrank_reproduce(test_class: type[FuzzTest], dry_run: bool = False):
 
     flows: List[Callable] = __get_methods(test_instance, "flow")
     invariants: List[Callable] = __get_methods(test_instance, "invariant")
-    shrinked_path = get_shrank_path()
-    if shrinked_path is None:
-        raise Exception("Shrinked path not found")
-    with open(shrinked_path, 'rb') as f:
-            store_data: ShrinkedInfoFile = pickle.load(f)
+    shrank_path = get_shrank_path()
+    if shrank_path is None:
+        raise Exception("Shrank data file path not found")
+    with open(shrank_path, 'rb') as f:
+            store_data: ShrankInfoFile = pickle.load(f)
 
     random.setstate(pickle.loads(store_data.initial_state))
     test_instance._flow_num = 0
@@ -582,7 +582,7 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
     print("")
     project_root_path = get_config().project_root_path
 
-    crash_logs_dir = project_root_path / ".wake" / "logs" / "shrinked"
+    crash_logs_dir = project_root_path / ".wake" / "logs" / "shrank"
 
     crash_logs_dir.mkdir(parents=True, exist_ok=True)
     # write crash log file.
@@ -610,7 +610,7 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
                 before_inv_random_state=flow_states[i].before_inv_random_state
             ))
 
-    store_data: ShrinkedInfoFile = ShrinkedInfoFile(
+    store_data: ShrankInfoFile = ShrankInfoFile(
         target_fuzz_path=relative_test_path,
         initial_state=get_sequence_initial_internal_state(),
         required_flows=required_flows
@@ -618,7 +618,7 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
     # Write to a JSON file
     with open(crash_log_file, 'wb') as f:
         pickle.dump(store_data, f)
-    print(f"shrinked file written to {crash_log_file}")
+    print(f"Shrank data file written to {crash_log_file}")
 
 
 
