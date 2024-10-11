@@ -241,7 +241,7 @@ class FileAndPassParamType(click.ParamType):
     help="Increase verbosity. Can be specified multiple times.",
 )
 @click.option(
-    "-S",
+    "-SH",
     "--shrink",
     # Didn't use click.Path since we accept relative index of crash log file
     type=str,

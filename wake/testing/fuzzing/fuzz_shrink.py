@@ -32,6 +32,9 @@ import sys
 from wake.cli.console import console
 from contextlib import contextmanager, redirect_stdout, redirect_stderr
 
+
+IGNORE_FLOW_INDEX = True # True if you accept the same error happen but more ealier but in different flow.
+
 def __get_methods(target, attr: str) -> List[Callable]:
     ret = []
     for x in dir(target):
@@ -49,7 +52,6 @@ def clear_previous_lines(num_lines):
 
 def compare_exceptions(e1, e2):
     if type(e1) != type(e2):
-        # print("type not equal")
         return False
 
     if type(e1) == Error and type(e2) == Error:
@@ -121,9 +123,6 @@ class StateSnapShot:
         assert self._python_state is not None, "No python state"
         assert self.flow_number is not None, "No flow number"
 
-        print("curr", python_instance._flow_num)
-        print("new", self._python_state._flow_num)
-        # assert python_instance._flow_num != self._python_state._flow_num, "Flow number mismatch"
         python_instance.__dict__.update(copy.deepcopy(self._python_state.__dict__))
 
         assert python_instance._flow_num == self._python_state._flow_num, "update failed"
@@ -210,15 +209,17 @@ def shrank_reproduce(test_class: type[FuzzTest], dry_run: bool = False):
         int
     )
     for j in range(len(store_data.required_flows)):
+
         flow = next((flow for flow in flows if store_data.required_flows[j].flow_name == flow.__name__), None)
         if flow is None:
             raise Exception("Flow not found")
         flow_params = store_data.required_flows[j].flow_params
-
-        random.setstate(pickle.loads(store_data.required_flows[j].random_state))
-        test_instance.pre_flow(flow)
-        flow(test_instance, *flow_params)
-        test_instance.post_flow(flow)
+        test_instance._flow_num = store_data.required_flows[j].flow_num
+        if not hasattr(flow, "precondition") or getattr(flow, "precondition")(test_instance):
+            random.setstate(pickle.loads(store_data.required_flows[j].random_state))
+            test_instance.pre_flow(flow)
+            flow(test_instance, *flow_params)
+            test_instance.post_flow(flow)
 
         try:
             random.setstate(pickle.loads(store_data.required_flows[j].before_inv_random_state))
@@ -353,6 +354,10 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
     flows: List[Callable] = __get_methods(test_instance, "flow")
     invariants: List[Callable] = __get_methods(test_instance, "invariant")
     flow_states: List[FlowState] = []
+    print("Shrinking flow length: ", error_flow_num)
+
+    if error_flow_num < 1:
+        raise Exception("Error flow number is less than 1, which is not supported for shrinking")
 
     exception_content, time_spent_for_one_fuzz = shrink_collecting_phase(test_instance,flows, invariants, flow_states, chains, flows_count)
     print("Estimated to done shrink:", (time_spent_for_one_fuzz*get_error_flow_num())/4 + time_spent_for_one_fuzz * len(flows) * 3 / 4) # estimate around half of flow is not related to the error
@@ -395,7 +400,10 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
 
         print("")
         print(f"Removing flow: {curr_removing_flow.__name__}")
-        print(f"Removing flows by kinds progress: {i}/{number_of_multiple_flows} = {(i*100/number_of_multiple_flows):.2f}%")
+        try:
+            print(f"Removing flows by kinds progress: {i}/{number_of_multiple_flows} = {(i*100/number_of_multiple_flows):.2f}%")
+        except ZeroDivisionError:
+            print(f"Removing flows by kinds progress: {i}/{1} = {0:.2f}%")
         print(f"Shrank flows rate: {removed_sum}/{len(flow_states)} = {(removed_sum*100/len(flow_states)):.2f}%")
 
         if flow_states_map[curr_removing_flow.__name__] <= 1: # since count is 1 is same as brute force test
@@ -416,9 +424,9 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
                     random.setstate(pickle.loads(curr_flow_state.random_state))
                     flow = curr_flow_state.flow
                     flow_params = curr_flow_state.flow_params
+                    test_instance._flow_num = j
                     if flow_states[j].required and flow != curr_removing_flow:
                         if not hasattr(flow, "precondition") or getattr(flow, "precondition")(test_instance):
-                            test_instance._flow_num = j
                             test_instance.pre_flow(flow)
                             flow(test_instance, *flow_params)
                             test_instance.post_flow(flow)
@@ -445,25 +453,19 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
                 pass
             except Exception as e:
                 # Check exception type and exception lines in the testing file.
-                ignore_flows = True
-
-                if (ignore_flows or test_instance._flow_num == error_flow_num) and compare_exceptions(e, exception_content):
+                reason = "at " + str(j) + " with " + str(e)
+                if (IGNORE_FLOW_INDEX or test_instance._flow_num == error_flow_num) and compare_exceptions(e, exception_content):
 
                     # the removed flow is not required to reproduce same error. @ try remove next flow
-                    # print("remove worked!!")
                     for flow_state_ in flow_states:
                         if flow_state_.flow == curr_removing_flow:
                             flow_state_.required = False
                             removed_sum += 1
                     success = True
-
                     new_time_spent_for_one_fuzz = datetime.now() - base_time_spent_for_one_fuzz
                 else:
                     # the removing flow caused different error . @this flow should not removed restore current flow and remove next flow
-                    print("Remove failed!!")
-                    reason = "at " + str(j) + " with " + str(e)
-                    pass
-
+                    success = False
             finally:
                 # revert to starting state
                 states.revert(test_instance, chains)
@@ -483,6 +485,7 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
     base_date_time = datetime.now()
 
     curr = 0 # current testing flow index
+    prev_curr = -1
     print("Removing flows by brute force start")
     print(f"Estimated to done this test at most: (remaining flow count={error_flow_num-removed_sum}) * (time for one fuzz={time_spent_for_one_fuzz}) = {(error_flow_num-removed_sum) * time_spent_for_one_fuzz}")
     while curr < len(flow_states) and flow_states[curr].required == False:
@@ -502,7 +505,9 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
         reason = None
         with print_ignore():
             try:
-                for j in range(curr-1, flows_count):
+            # in here python state or wake state is same as snapshot
+            # and start running from previous curr flow.
+                for j in range(prev_curr, flows_count):
                     # Print status as percentage
                     if j == -1: # this condition applies only curr == 0
                         continue
@@ -510,7 +515,9 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
                     if j > error_flow_num:
                         raise OverRunException()
 
-                    if j == curr:
+                    # execute untill curr flow.(curr flow is not executed yet) and take snapshot, since we still do not know it is required or not.
+                    # event it is not required, invariants are executed. so take snapshot.
+                    if j == curr and curr != 0:# curr == 0 state is already taken.
                         states.take_snapshot(test_instance, test_class(), chains, overwrite=True)
 
                     print("flow: ", j, flow_states[j].flow.__name__ )
@@ -520,10 +527,9 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
                     flow = curr_flow_state.flow
                     flow_params = curr_flow_state.flow_params
 
-
+                    test_instance._flow_num = j
                     if flow_states[j].required:
                         if not hasattr(flow, "precondition") or getattr(flow, "precondition")(test_instance):
-                            test_instance._flow_num = j
                             test_instance.pre_flow(flow)
                             flow(test_instance, *flow_params)
                             test_instance.post_flow(flow)
@@ -549,9 +555,9 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
                 success = False
                 reason = "OverRunException"
             except Exception as e:
+                reason = "at " + str(j) + " with " + str(e)
                 # Check exception type and exception lines in the testing file.
-                ignore_flows = True
-                if (ignore_flows or test_instance._flow_num == error_flow_num) and compare_exceptions(e, exception_content):
+                if (IGNORE_FLOW_INDEX or test_instance._flow_num == error_flow_num) and compare_exceptions(e, exception_content):
                     # the removed flow is not required to reproduce same error. @ try remove next flow
                     assert flow_states[curr].required == False
                     success = True
@@ -559,20 +565,20 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
                     # the removing flow caused different error . @this flow should not removed restore current flow and remove next flow
                     flow_states[curr].required = True
                     success = False
-                    reason = "at " + str(j) + " with " + str(e)
+
             finally:
                 # revert to starting state
                 states.revert(test_instance, chains)
                 states.take_snapshot(test_instance, test_class(), chains, overwrite=False)
 
-            # the removed flow is required to reproduce same error. @ this flow should not removed # restore current flow and remove next flow
         clear_previous_lines(4)
 
         if success:
             removed_sum += 1
             print("Remove result: ", curr, "th flow: ", flow_states[curr].flow_name, " ✅")
         else:
-            print("Remove result: ", curr, "th flow: ", flow_states[curr].flow_name, " ⛔", "Reason:", reason)
+            print("Remove result: ", curr, "th flow: ", flow_states[curr].flow_name, " ⛔ ", "Reason:", reason)
+        prev_curr = curr
         curr += 1
         # go next testing flow.
         while  curr < len(flow_states) and flow_states[curr].required == False:
