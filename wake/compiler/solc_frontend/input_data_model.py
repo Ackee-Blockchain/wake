@@ -130,6 +130,7 @@ def _to_camel(s: str) -> str:
 class SolcInputModel(BaseModel):
     model_config = ConfigDict(
         alias_generator=_to_camel,
+        populate_by_name=True,
         extra="allow",
         protected_namespaces=(),
     )
@@ -206,6 +207,7 @@ class SolcInputDebugSettings(SolcInputModel):
 
 
 class SolcInputMetadataSettings(SolcInputModel):
+    append_CBOR: Optional[bool] = Field(None, alias="appendCBOR")
     use_literal_content: Optional[bool] = None
     bytecode_hash: Optional[MetadataBytecodeHashEnum] = None
 

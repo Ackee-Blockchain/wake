@@ -82,6 +82,7 @@ from .compilation_unit import CompilationUnit
 from .exceptions import CompilationError, CompilationResolveError
 from .solc_frontend import (
     SolcFrontend,
+    SolcInputMetadataSettings,
     SolcInputOptimizerDetailsSettings,
     SolcInputOptimizerSettings,
     SolcInputOptimizerYulDetailsSettings,
@@ -620,6 +621,11 @@ class SolidityCompiler:
                 constant_optimizer=solc_settings.optimizer.details.constant_optimizer,
                 simple_counter_for_loop_unchecked_increment=solc_settings.optimizer.details.simple_counter_for_loop_unchecked_increment,
             ),
+        )
+        settings.metadata = SolcInputMetadataSettings(
+            append_CBOR=solc_settings.metadata.append_CBOR,
+            use_literal_content=solc_settings.metadata.use_literal_content,
+            bytecode_hash=solc_settings.metadata.bytecode_hash,
         )
 
         if (

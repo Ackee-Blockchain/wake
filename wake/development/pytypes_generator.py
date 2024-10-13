@@ -55,7 +55,7 @@ from wake.ir import (
 )
 from wake.ir.enums import ContractKind, FunctionKind, StateMutability, Visibility
 from wake.ir.reference_resolver import ReferenceResolver
-from wake.utils import get_package_version
+from wake.utils import get_package_version, is_relative_to
 
 from .constants import DEFAULT_IMPORTS, INIT_CONTENT, TAB_WIDTH
 
@@ -552,11 +552,31 @@ class TypeGenerator:
                 index,
             )
 
-        if len(compilation_info.evm.deployed_bytecode.object) > 0:
-            metadata = bytes.fromhex(
-                compilation_info.evm.deployed_bytecode.object[-106:]
+        config = next(
+            (
+                config
+                for config in self.__config.subproject.values()
+                if any(
+                    is_relative_to(contract.source_unit.file, p) for p in config.paths
+                )
+            ),
+            self.__config.compiler.solc,
+        )
+
+        if (
+            len(compilation_info.evm.deployed_bytecode.object) > 0
+            and config.metadata.append_CBOR != False
+            and config.metadata.bytecode_hash != "none"
+        ):
+            metadata_length = int.from_bytes(
+                bytes.fromhex(compilation_info.evm.deployed_bytecode.object[-4:]),
+                "big",
             )
-            assert len(metadata) == 53
+            metadata = bytes.fromhex(
+                compilation_info.evm.deployed_bytecode.object[
+                    -metadata_length * 2 - 4 : -4
+                ]
+            )
             assert metadata not in self.__contracts_by_metadata_index
             self.__contracts_by_metadata_index[metadata] = fqn
 

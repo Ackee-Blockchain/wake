@@ -94,6 +94,18 @@ class SolcOptimizerConfig(WakeConfigModel):
     )
 
 
+class MetadataBytecodeHashEnum(StrEnum):
+    NONE = "none"
+    IPFS = "ipfs"
+    BZZR1 = "bzzr1"
+
+
+class SolcMetadataConfig(WakeConfigModel):
+    append_CBOR: Optional[bool] = None
+    use_literal_content: Optional[bool] = None
+    bytecode_hash: Optional[MetadataBytecodeHashEnum] = None
+
+
 def convert_remapping(v):
     if isinstance(v, SolcRemapping):
         return v
@@ -159,6 +171,10 @@ class SolcConfig(WakeConfigModel):
     """
     Use new IR-based compiler pipeline.
     """
+    metadata: SolcMetadataConfig = Field(default_factory=SolcMetadataConfig)
+    """
+    Metadata config options.
+    """
 
     _normalize_paths = field_validator("allow_paths", "include_paths", "exclude_paths", mode="before")(normalize_paths)
 
@@ -173,6 +189,7 @@ class SubprojectConfig(WakeConfigModel):
     evm_version: Optional[EvmVersionEnum] = None
     optimizer: SolcOptimizerConfig = Field(default_factory=SolcOptimizerConfig)
     via_IR: Optional[bool] = None
+    metadata: SolcMetadataConfig = Field(default_factory=SolcMetadataConfig)
 
     _normalize_paths = field_validator("paths", mode="before")(normalize_paths)
 
