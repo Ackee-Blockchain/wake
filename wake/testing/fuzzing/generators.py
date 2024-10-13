@@ -5,14 +5,19 @@ from typing import Callable, Optional, Type
 
 from typing_extensions import get_args, get_origin, get_type_hints
 
-from wake.development.core import Account, Address, Chain, Wei, detect_default_chain
-from wake.development.globals import random
+from wake.development.core import Wei, detect_default_chain
+from wake.development.globals import random, get_config
 from wake.development.primitive_types import (
     FixedSizeBytes,  # pyright: ignore reportAttributeAccessIssue
 )
 from wake.development.primitive_types import (
     Integer,  # pyright: ignore reportAttributeAccessIssue
 )
+
+if get_config().testing.cmd == "revm":
+    from wake_rs import Account, Address, Chain
+else:
+    from wake.development.core import Account, Address, Chain
 
 
 def random_account(
