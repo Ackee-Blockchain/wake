@@ -2851,7 +2851,8 @@ def get_fqn_from_address(
     addr: Address, block_number: Union[int, str], chain: Chain
 ) -> Optional[str]:
     code = chain.chain_interface.get_code(str(addr), block_number)
-    metadata = code[-53:]
+    metadata_length = int.from_bytes(code[-2:], "big")
+    metadata = code[-metadata_length - 2 : -2]
     if metadata in contracts_by_metadata:
         return contracts_by_metadata[metadata]
     else:
