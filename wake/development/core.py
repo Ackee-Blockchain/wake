@@ -733,7 +733,7 @@ def detect_default_chain() -> Chain:
 
         if (
             wake.deployment.default_chain.connected
-            and wake.testing.default_chain.connected
+            and wake.testing.chain.connected
         ):
             raise ValueError(
                 "Both wake.testing.default_chain and wake.deployment.default_chain are connected. Please specify which chain to use."
@@ -741,8 +741,8 @@ def detect_default_chain() -> Chain:
 
         if wake.deployment.default_chain.connected:
             return wake.deployment.default_chain
-        elif wake.testing.default_chain.connected:
-            return wake.testing.default_chain
+        elif wake.testing.chain.connected:
+            return wake.testing.chain
         else:
             raise NotConnectedError("default_chain not connected")
     elif "wake.deployment" in sys.modules:
@@ -752,7 +752,7 @@ def detect_default_chain() -> Chain:
     elif "wake.testing" in sys.modules:
         import wake.testing
 
-        return wake.testing.default_chain
+        return wake.testing.chain
     else:
         raise NotConnectedError("default_chain not connected")
 
