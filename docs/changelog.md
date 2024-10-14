@@ -6,6 +6,20 @@ small.label {
 }
 </style>
 
+## 4.13.0 <small>(Oct 14, 2024)</small> { id="4.13.0" }
+
+Features & improvements:
+
+- added support for Solidity 0.8.28 <small class="label">[core]</small>
+- Github is now used as a secondary source of solc binaries <small class="label">[core]</small>
+- added support for compilation metadata settings <small class="label">[core]</small>
+- optimized compilation with `solc` >= 0.8.28 on CLI <small class="label">[core]</small>
+
+Fixes:
+
+- fixed language server crash on editing files removed on disk but still opened in IDE <small class="label">[language server]</small>
+- fixed compilation of Etherscan contracts <small class="label">[testing framework]</small>
+
 ## 4.12.1 <small>(Oct 7, 2024)</small> { id="4.12.1" }
 
 Fixes & improvements:
