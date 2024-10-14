@@ -1737,7 +1737,7 @@ class TypeGenerator:
                 for node, in_degree in graph.in_degree()  # pyright: ignore reportGeneralTypeIssues
                 if in_degree == 0
             ]
-            heapq.heapify(sources)
+            heapq.heapify(sorted(sources))
             visited: Set[str] = set(sources)
 
             while len(sources) > 0:
@@ -1767,6 +1767,7 @@ class TypeGenerator:
 
             generated_cycles: Set[FrozenSet[str]] = set()
             simple_cycles = [set(c) for c in nx.simple_cycles(graph)]
+            simple_cycles.sort(key=lambda cycle: sorted(cycle))
             if len(simple_cycles) > 0:
                 # used for reporting to user
                 cycles_detected = True

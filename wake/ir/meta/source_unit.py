@@ -1,7 +1,7 @@
 import logging
 from bisect import bisect_right
 from pathlib import Path
-from typing import Iterator, List, Optional, Tuple, Union
+from typing import FrozenSet, Iterator, List, Optional, Set, Tuple, Union
 
 from wake.core import get_logger
 from wake.ir.abc import IrAbc, SolidityAbc
@@ -63,7 +63,7 @@ class SourceUnit(SolidityAbc):
 
     _file_source: bytes
     _license: Optional[str]
-    _source_unit_name: str
+    _source_unit_names: Set[str]
     _pragmas: List[PragmaDirective]
     _imports: List[ImportDirective]
     _declared_variables: List[VariableDeclaration]
@@ -93,7 +93,7 @@ class SourceUnit(SolidityAbc):
         super().__init__(init, source_unit, None)
         self._file_source = init.source
         self._license = source_unit.license
-        self._source_unit_name = source_unit.absolute_path
+        self._source_unit_names = {source_unit.absolute_path}
         self._version_ranges = init.cu.versions
         self._lines_index = None
 
@@ -231,9 +231,18 @@ class SourceUnit(SolidityAbc):
     def source_unit_name(self) -> str:
         """
         Returns:
-            Source unit name of the file.
+            Canonical source unit name of the file.
         """
-        return self._source_unit_name
+        # always return shortest name
+        return min(self._source_unit_names, key=lambda name: (len(name), name))
+
+    @property
+    def source_unit_names(self) -> FrozenSet[str]:
+        """
+        Returns:
+            All source unit names of the file.
+        """
+        return frozenset(self._source_unit_names)
 
     @property
     def pragmas(self) -> Tuple[PragmaDirective, ...]:
