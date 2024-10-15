@@ -51,6 +51,7 @@ There you can also find a section on [contributing](https://ackee.xyz/wake/docs/
 | Liquidation deposits accounted into LP balance  | Medium   | IPOR    | Fuzz test        | Ackee Blockchain | [Report](https://github.com/Ackee-Blockchain/public-audit-reports/blob/master/2023/ackee-blockchain-ipor-protocol-report.pdf), [Wake tests](https://github.com/Ackee-Blockchain/tests-ipor/blob/main/tests/test_st_eth_fuzz.py) |
 | Missing receive function                        | Medium   | Axelar  | Fuzz test        | Ackee Blockchain | [Wake tests](https://github.com/Ackee-Blockchain/tests-axelar-interchain-governance-executor/blob/main/tests/test_fuzz.py)                                                                                                      |
 | `SafeERC20` not used for `approve`              | Medium   | Lido    | Fuzz test        | Ackee Blockchain | [Wake tests](https://github.com/Ackee-Blockchain/tests-lido-stonks/blob/main/tests/test_fuzz.py)                                                                                                                                |
+| Non-optimistic vetting & unbonded keys bad accounting | Medium   | Lido    | Fuzz test        | Ackee Blockchain | [Report](https://github.com/lidofinance/audits/blob/main/Ackee%20Blockchain%20Lido%20Community%20Staking%20Module%20Report%2010-24.pdf), [Wake tests](https://github.com/Ackee-Blockchain/tests-lido-csm/blob/main/tests/test_csm_fuzz.py) |
 
 ## Features
 
