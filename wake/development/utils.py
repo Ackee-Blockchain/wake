@@ -1590,6 +1590,34 @@ def _try_change_erc1155_total_supply(
         raise ValueError("Total supply change failed")
 
 
+def get_info_from_explorer(addr: str, chain_id: int) -> Dict[str, Any]:
+    u = urlparse(chain_explorer_urls[chain_id].url)
+    config = get_config()
+    api_key = config.api_keys.get(".".join(u.netloc.split(".")[:-1]), None)
+    if api_key is None:
+        raise ValueError(f"Contract not found and API key for {u.netloc} not provided")
+
+    url = (
+        chain_explorer_urls[chain_id].api_url
+        + f"?module=contract&action=getsourcecode&address={addr}&apikey={api_key}"
+    )
+    req = Request(
+        url,
+        headers={
+            "Content-Type": "application/json",
+            "User-Agent": f"wake/{get_package_version('eth-wake')}",
+        },
+    )
+
+    with urlopen(req) as response:
+        parsed = json.loads(response.read().decode("utf-8"))
+
+    if parsed["status"] != "1":
+        raise ValueError(f"Request to {u.netloc} failed: {parsed['result']}")
+
+    return parsed["result"][0]
+
+
 @functools.lru_cache(maxsize=64)
 def _get_storage_layout_from_explorer(
     addr: str, chain_id: int
