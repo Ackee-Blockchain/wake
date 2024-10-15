@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 from collections import ChainMap, defaultdict
 from functools import wraps
@@ -13,10 +14,11 @@ import wake.development.core
 from wake.config import WakeConfig
 from wake.development.call_trace import CallTrace
 from wake.development.chain_interfaces import AnvilChainInterface
-from wake.development.core import RequestType
+from wake.development.core import RequestType, get_fqn_from_address
 from wake.development.globals import set_config
 from wake.development.json_rpc import JsonRpcError
 from wake.development.transactions import TransactionStatusEnum
+from wake.development.utils import get_logic_contract, chain_explorer_urls, get_info_from_explorer
 from wake.lsp.context import LspContext
 from wake.lsp.exceptions import LspError
 from wake.lsp.lsp_data_model import LspModel
@@ -159,6 +161,18 @@ class SakeLoadStateParams(SakeParams):
     chain_dump: str
 
 
+class SakeGetAbiParams(SakeParams):
+    address: str
+
+
+class SakeGetAbiResult(SakeResult):
+    name: str
+    abi: List
+    proxy_name: Optional[str]
+    proxy_abi: Optional[List]
+    implementation_address: Optional[str]
+
+
 def chain_connected(f):
     @wraps(f)
     async def wrapper(context: SakeContext, params: SakeParams, *args, **kwargs):
@@ -180,6 +194,7 @@ class SakeContext:
     lsp_context: LspContext
     chains: Dict[str, Tuple[Chain, ContextManager]]
     compilation: Dict[str, ContractInfo]
+    name_by_fqn: Dict[str, str]
     abi_by_fqn: Dict[
         str, Dict[Union[bytes, Literal["constructor", "fallback", "receive"]], List]
     ]  # fqn -> ABI
@@ -189,6 +204,7 @@ class SakeContext:
         self.lsp_context = lsp_context
         self.chains = {}
         self.compilation = {}
+        self.name_by_fqn = {}
         self.abi_by_fqn = {}
         self.libraries = {}
 
@@ -332,6 +348,7 @@ class SakeContext:
                 skipped_source_units,
             ) = await self.lsp_context.compiler.bytecode_compile()
 
+            self.name_by_fqn.clear()
             self.abi_by_fqn.clear()
             self.libraries.clear()
             fqn_by_metadata: Dict[bytes, str] = {}
@@ -367,6 +384,7 @@ class SakeContext:
                     self.libraries[lib_id] = fqn
 
                 assert info.abi is not None
+                self.name_by_fqn[fqn] = contract_node["name"]
                 self.abi_by_fqn[fqn] = {}
                 for item in info.abi:
                     if item["type"] == "function":
@@ -705,5 +723,56 @@ class SakeContext:
         try:
             Account(params.address, chain=chain).label = params.label
             return SakeResult(success=True)
+        except Exception as e:
+            raise LspError(ErrorCodes.InternalError, str(e)) from None
+
+    @chain_connected
+    async def get_abi(self, params: SakeGetAbiParams) -> SakeGetAbiResult:
+        def info_from_address(address: str) -> Tuple[str, List]:
+            fqn = get_fqn_from_address(logic_contract.address, "latest", chain)
+            if fqn is not None:
+                name = self.name_by_fqn[fqn]
+                abi = list(self.abi_by_fqn[fqn].values())
+            elif chain._forked_chain_id in chain_explorer_urls:
+                try:
+                    info = get_info_from_explorer(address, chain._forked_chain_id)
+                    name = info["ContractName"]
+                    abi = json.loads(info["ABI"])
+                except Exception:
+                    name = ""
+                    abi = []
+            else:
+                name = ""
+                abi = []
+
+            return name, abi
+
+        chain = self.chains[params.session_id][0]
+
+        try:
+            contract = Account(params.address, chain=chain)
+            logic_contract = get_logic_contract(contract)
+            name, abi = info_from_address(str(logic_contract.address))
+
+            if contract != logic_contract:
+                return SakeGetAbiResult(
+                    success=True,
+                    name=name,
+                    abi=abi,
+                    proxy_name=None,
+                    proxy_abi=None,
+                    implementation_address=None,
+                )
+            else:
+                proxy_name, proxy_abi = info_from_address(params.address)
+
+                return SakeGetAbiResult(
+                    success=True,
+                    name=name,
+                    abi=abi,
+                    proxy_name=proxy_name,
+                    proxy_abi=proxy_abi,
+                    implementation_address=str(logic_contract.address),
+                )
         except Exception as e:
             raise LspError(ErrorCodes.InternalError, str(e)) from None
