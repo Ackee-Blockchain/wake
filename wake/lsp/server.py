@@ -134,6 +134,7 @@ from .sake import (
     SakeContext,
     SakeCreateChainParams,
     SakeDeployParams,
+    SakeGetAbiParams,
     SakeGetBalancesParams,
     SakeLoadStateParams,
     SakeParams,
@@ -402,6 +403,14 @@ class LspServer:
                     )
                 ),
                 SakeSetBalancesParams,
+            ),
+            RequestMethodEnum.SAKE_GET_ABI: (
+                lambda params: (
+                    self.__sake_context.get_abi(  # pyright: ignore reportAttributeAccessIssue
+                        params,
+                    )
+                ),
+                SakeGetAbiParams,
             ),
         }
 
