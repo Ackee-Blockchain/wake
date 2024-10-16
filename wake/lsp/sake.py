@@ -99,20 +99,6 @@ class SakeDeployResult(SakeResult):
     call_trace: Dict[str, Union[Optional[str], List]]
 
 
-class SakeTransactParams(LspModel):
-    contract_address: str
-    sender: str
-    calldata: str
-    value: int
-
-
-class SakeTransactResult(SakeResult):
-    return_value: Optional[str]  # raw hex encoded bytes, None for Halt
-    error: Optional[str]  # user-friendly error string, None for Success
-    tx_receipt: Dict[str, Any]
-    call_trace: Dict[str, Union[Optional[str], List]]
-
-
 class SakeCallParams(SakeParams):
     contract_address: str
     sender: str
@@ -123,6 +109,16 @@ class SakeCallParams(SakeParams):
 class SakeCallResult(SakeResult):
     return_value: str
     call_trace: Optional[Dict[str, Union[Optional[str], List]]]
+
+
+class SakeTransactParams(SakeCallParams):
+    pass
+
+class SakeTransactResult(SakeResult):
+    return_value: Optional[str]  # raw hex encoded bytes, None for Halt
+    error: Optional[str]  # user-friendly error string, None for Success
+    tx_receipt: Dict[str, Any]
+    call_trace: Dict[str, Union[Optional[str], List]]
 
 
 class SakeGetBalancesParams(SakeParams):
@@ -566,7 +562,7 @@ class SakeContext:
             raise LspError(ErrorCodes.InternalError, str(e)) from None
 
     @chain_connected
-    async def transact(self, params: SakeCallParams) -> SakeTransactResult:
+    async def transact(self, params: SakeTransactParams) -> SakeTransactResult:
         chain = self.chains[params.session_id][0]
 
         def fqn_to_contract_abi(fqn: str):
