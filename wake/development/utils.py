@@ -25,12 +25,11 @@ from typing import (
     TypeVar,
     Union,
 )
-from urllib.error import URLError
+from urllib.error import HTTPError
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
 from Crypto.Hash import keccak
-from eth_utils.abi import function_abi_to_4byte_selector
 from pydantic import TypeAdapter, ValidationError
 
 from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
@@ -147,58 +146,6 @@ chain_explorer_urls: Dict[int, ChainExplorer] = {
         "https://api-holesky.etherscan.io/api",
     ),
 }
-
-
-@lru_cache(maxsize=1024)
-def get_contract_info_from_explorer(
-    addr: Address, chain_id: int
-) -> Optional[Tuple[str, Dict]]:
-    if chain_id not in chain_explorer_urls:
-        return None
-
-    config = get_config()
-    api_key = config.api_keys.get(chain_explorer_urls[chain_id].config_key, None)
-    if api_key is None:
-        return None
-
-    url = (
-        chain_explorer_urls[chain_id].api_url
-        + f"?module=contract&action=getsourcecode&address={addr}&apikey={api_key}"
-    )
-
-    req = Request(
-        url,
-        headers={
-            "Content-Type": "application/json",
-            "User-Agent": f"wake/{get_package_version('eth-wake')}",
-        },
-    )
-
-    try:
-        with urlopen(req) as response:
-            ret = json.loads(response.read().decode("utf-8"))
-    except URLError as e:
-        return None
-
-    if ret["status"] != "1":
-        return None
-
-    data = ret["result"][0]
-    if data["ContractName"] == "":
-        return None
-
-    abi = {}
-    # TODO library ABI is different and has to be fixed to compute the correct selector
-    # however, it is not possible to detect if a contract is a library or not without parsing the source code
-    for abi_item in json.loads(data["ABI"]):
-        if abi_item["type"] in {"constructor", "fallback", "receive"}:
-            abi[abi_item["type"]] = abi_item
-        elif abi_item["type"] == "function":
-            abi[function_abi_to_4byte_selector(abi_item)] = abi_item
-        elif abi_item["type"] == "error":
-            abi[function_abi_to_4byte_selector(abi_item)] = abi_item
-
-    return data["ContractName"], abi
 
 
 def format_int(x: int) -> str:
@@ -1162,139 +1109,186 @@ def _get_storage_layout(
         return SolcOutputStorageLayout.model_validate(obj._storage_layout)
 
 
-def get_info_from_explorer(addr: str, chain_id: int) -> Dict[str, Any]:
-    u = urlparse(chain_explorer_urls[chain_id].url)
-    config = get_config()
-    api_key = config.api_keys.get(".".join(u.netloc.split(".")[:-1]), None)
-    if api_key is None:
-        raise ValueError(f"Contract not found and API key for {u.netloc} not provided")
+@lru_cache(maxsize=1024)
+def get_name_abi_from_explorer(addr: str, chain_id: int) -> Tuple[str, List]:
+    info, source = get_info_from_explorer(addr, chain_id)
 
-    url = (
-        chain_explorer_urls[chain_id].api_url
-        + f"?module=contract&action=getsourcecode&address={addr}&apikey={api_key}"
-    )
-    req = Request(
-        url,
-        headers={
-            "Content-Type": "application/json",
-            "User-Agent": f"wake/{get_package_version('eth-wake')}",
-        },
-    )
-
-    with urlopen(req) as response:
-        parsed = json.loads(response.read().decode("utf-8"))
-
-    if parsed["status"] != "1":
-        raise ValueError(f"Request to {u.netloc} failed: {parsed['result']}")
-
-    return parsed["result"][0]
+    if source == "sourcify":
+        metadata = json.loads(next(f for f in info["files"] if f["name"] == "metadata.json")["content"])
+        name = next(iter(metadata["settings"]["compilationTarget"].values()))
+        abi = metadata["output"]["abi"]
+        return name, abi
+    else:
+        # etherscan-like
+        name = info["ContractName"]
+        try:
+            abi = json.loads(info["ABI"])
+        except JSONDecodeError:
+            u = urlparse(chain_explorer_urls[chain_id].url)
+            raise ValueError(f"Could not get ABI from {u.netloc}")
+        return name, abi
 
 
+def get_info_from_explorer(addr: str, chain_id: int) -> Tuple[Dict[str, Any], str]:
+    if chain_id not in chain_explorer_urls:
+        api_key = None
+    else:
+        u = urlparse(chain_explorer_urls[chain_id].url)
+        config = get_config()
+        api_key = config.api_keys.get(".".join(u.netloc.split(".")[:-1]), None)
+
+    if api_key is not None:
+        url = (
+            chain_explorer_urls[chain_id].api_url
+            + f"?module=contract&action=getsourcecode&address={addr}&apikey={api_key}"
+        )
+        req = Request(
+            url,
+            headers={
+                "Accept": "application/json",
+                "User-Agent": f"wake/{get_package_version('eth-wake')}",
+            },
+        )
+
+        with urlopen(req) as response:
+            parsed = json.loads(response.read().decode("utf-8"))
+
+        if parsed["status"] != "1":
+            raise ValueError(f"Request to {u.netloc} failed: {parsed['result']}")
+
+        return parsed["result"][0], "etherscan"
+    else:
+        url = f"https://sourcify.dev/server/files/any/{chain_id}/{addr}"
+
+        req = Request(
+            url,
+            headers={
+                "Accept": "application/json",
+                "User-Agent": f"wake/{get_package_version('eth-wake')}",
+            },
+        )
+
+        try:
+            with urlopen(req) as response:
+                parsed = json.loads(response.read().decode("utf-8"))
+        except HTTPError as e:
+            if e.code == 404:
+                raise ValueError(f"Contract not found on sourcify.eth") from None
+            else:
+                raise
+
+        return parsed, "sourcify"
+
+
+# should already be called with address of implementation contract
 @functools.lru_cache(maxsize=64)
 def _get_storage_layout_from_explorer(
     addr: str, chain_id: int
 ) -> SolcOutputStorageLayout:
     loop = asyncio.get_event_loop()
 
-    u = urlparse(chain_explorer_urls[chain_id].url)
+    info, source = get_info_from_explorer(addr, chain_id)
     config = get_config()
-    api_key = config.api_keys.get(".".join(u.netloc.split(".")[:-1]), None)
-    if api_key is None:
-        raise ValueError(f"Contract not found and API key for {u.netloc} not provided")
 
-    url = (
-        chain_explorer_urls[chain_id].api_url
-        + f"?module=contract&action=getsourcecode&address={addr}&apikey={api_key}"
-    )
-    req = Request(
-        url,
-        headers={
-            "Content-Type": "application/json",
-            "User-Agent": f"wake/{get_package_version('eth-wake')}",
-        },
-    )
+    if source == "sourcify":
+        # sourcify is currently Solidity-only
+        metadata = json.loads(next(f for f in info["files"] if f["name"] == "metadata.json")["content"])
+        name = next(iter(metadata["settings"]["compilationTarget"].values()))
 
-    with urlopen(req) as response:
-        parsed = json.loads(response.read().decode("utf-8"))
-
-    if parsed["status"] != "1":
-        raise ValueError(f"Request to {u.netloc} failed: {parsed['result']}")
-
-    if "Proxy" in parsed["result"][0] and parsed["result"][0]["Proxy"] == "1":
-        return _get_storage_layout_from_explorer(
-            parsed["result"][0]["Implementation"], chain_id
-        )
-
-    version: str = parsed["result"][0]["CompilerVersion"]
-    if version.startswith("vyper"):
-        raise ValueError("Cannot set balance of Vyper contract")
-
-    if version.startswith("v"):
-        version = version[1:]
-    parsed_version = SolidityVersion.fromstring(version)
-
-    if parsed_version < SolidityVersion(0, 5, 13):
-        # storageLayout is only available in 0.5.13 and above
-        raise ValueError(f"Solidity version {parsed_version} too low, must be >=0.5.13")
-
-    optimizations = bool(parsed["result"][0]["OptimizationUsed"])
-    runs = parsed["result"][0]["Runs"]
-
-    config_dict = {
-        "compiler": {
-            "solc": {
-                "target_version": str(parsed_version),
-                "optimizer": {
-                    "enabled": optimizations,
-                    "runs": runs,
-                },
-            }
-        }
-    }
-
-    svm = SolcVersionManager(config)
-    if not svm.installed(parsed_version):
-        loop.run_until_complete(svm.install(parsed_version))
-
-    code = parsed["result"][0]["SourceCode"]
-    try:
-        standard_input: SolcInput = SolcInput.model_validate_json(code[1:-1])
-        if any(
-            PurePosixPath(filename).is_absolute()
-            for filename in standard_input.sources.keys()
-        ):
-            raise ValueError("Absolute paths not allowed")
-        if (
-            standard_input.settings is not None
-            and standard_input.settings.remappings is not None
-        ):
-            config_dict["compiler"]["solc"][
-                "remappings"
-            ] = standard_input.settings.remappings
-
-        if any(source.urls is not None for source in standard_input.sources.values()):
-            raise NotImplementedError("Compilation from URLs not supported")
+        version = SolidityVersion.fromstring(metadata["compiler"]["version"])
 
         sources = {
-            config.project_root_path / path: source.content
-            for path, source in standard_input.sources.items()
+            config.project_root_path / PurePosixPath(*PurePosixPath(file["path"]).parts[5:]): file["content"]
+            for file in info["files"]
+            if file["name"].endswith(".sol")
         }
-    except ValidationError:
-        try:
-            a = TypeAdapter(Dict[str, SolcInputSource])
-            s = a.validate_json(code)
-            if any(PurePosixPath(filename).is_absolute() for filename in s.keys()):
-                raise ValueError("Absolute paths not allowed")
 
-            if any(source.urls is not None for source in s.values()):
+        config_dict = {
+            "compiler": {
+                "solc": {
+                    "target_version": str(version),
+                    "evm_version": metadata["settings"]["evmVersion"],
+                    "remappings": metadata["settings"]["remappings"],
+                    "optimizer": metadata["settings"]["optimizer"],
+                }
+                # TODO libraries should not be needed
+            }
+        }
+    else:
+        # etherscan-like
+        name = info["ContractName"]
+        compiler_version: str = info["CompilerVersion"]
+        if compiler_version.startswith("vyper"):
+            raise ValueError("Cannot set balance of Vyper contract")
+
+        if compiler_version.startswith("v"):
+            compiler_version = compiler_version[1:]
+        version = SolidityVersion.fromstring(compiler_version)
+
+        optimizations = bool(info["OptimizationUsed"])
+        runs = info["Runs"]
+
+        config_dict = {
+            "compiler": {
+                "solc": {
+                    "target_version": str(version),
+                    "optimizer": {
+                        "enabled": optimizations,
+                        "runs": runs,
+                    },
+                }
+            }
+        }
+        if "EVMVersion" in info and info["EVMVersion"] != "Default":
+            config_dict["compiler"]["solc"]["evm_version"] = info["EVMVersion"]
+
+        code = info["SourceCode"]
+        try:
+            standard_input: SolcInput = SolcInput.model_validate_json(code[1:-1])
+            if any(
+                PurePosixPath(filename).is_absolute()
+                for filename in standard_input.sources.keys()
+            ):
+                raise ValueError("Absolute paths not allowed")
+            if (
+                standard_input.settings is not None
+                and standard_input.settings.remappings is not None
+            ):
+                config_dict["compiler"]["solc"][
+                    "remappings"
+                ] = standard_input.settings.remappings
+
+            if any(source.urls is not None for source in standard_input.sources.values()):
                 raise NotImplementedError("Compilation from URLs not supported")
 
             sources = {
                 config.project_root_path / path: source.content
-                for path, source in s.items()
+                for path, source in standard_input.sources.items()
             }
-        except (ValidationError, JSONDecodeError):
-            sources = {config.project_root_path / "tmp.sol": code}
+        except ValidationError:
+            try:
+                a = TypeAdapter(Dict[str, SolcInputSource])
+                s = a.validate_json(code)
+                if any(PurePosixPath(filename).is_absolute() for filename in s.keys()):
+                    raise ValueError("Absolute paths not allowed")
+
+                if any(source.urls is not None for source in s.values()):
+                    raise NotImplementedError("Compilation from URLs not supported")
+
+                sources = {
+                    config.project_root_path / path: source.content
+                    for path, source in s.items()
+                }
+            except (ValidationError, JSONDecodeError):
+                sources = {config.project_root_path / "tmp.sol": code}
+
+    if version < SolidityVersion(0, 5, 13):
+        # storageLayout is only available in 0.5.13 and above
+        raise ValueError(f"Cannot get storage layout of contract written in Solidity {version}, must be >=0.5.13")
+
+    svm = SolcVersionManager(config)
+    if not svm.installed(version):
+        loop.run_until_complete(svm.install(version))
 
     compilation_config = WakeConfig.fromdict(
         config_dict,
@@ -1316,7 +1310,7 @@ def _get_storage_layout_from_explorer(
     solc_output = loop.run_until_complete(
         compiler.compile_unit_raw(
             compilation_units[0],
-            parsed_version,
+            version,
             compiler.create_build_settings([SolcOutputSelectionEnum.STORAGE_LAYOUT], None),
             dummy_logger,
         )
@@ -1325,12 +1319,11 @@ def _get_storage_layout_from_explorer(
     if any(e.severity == SolcOutputErrorSeverityEnum.ERROR for e in solc_output.errors):
         raise ValueError("Errors during compilation")
 
-    contract_name = parsed["result"][0]["ContractName"]
     try:
         info = next(
-            c[contract_name]
+            c[name]
             for c in solc_output.contracts.values()
-            if contract_name in c
+            if name in c
         )
     except StopIteration:
         raise ValueError("Contract not found in compilation output")
