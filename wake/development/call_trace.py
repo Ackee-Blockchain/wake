@@ -42,7 +42,7 @@ from .core import (
 )
 from .globals import get_config, get_verbosity
 from .internal import read_from_memory
-from .utils import get_contract_info_from_explorer
+from .utils import get_name_abi_from_explorer
 
 if TYPE_CHECKING:
     from wake.config import WakeConfig
@@ -147,6 +147,25 @@ def get_precompiled_info(
         )
     else:
         raise ValueError(f"Unknown precompiled contract address: {addr}")
+
+
+def _get_info_from_explorer(addr: Address, chain_id: int) -> Optional[Tuple[str, Dict]]:
+    try:
+        name, abi = get_name_abi_from_explorer(addr, chain_id)
+    except Exception:
+        return None
+
+    abi_dict = {}
+    # TODO library ABI is different and has to be fixed to compute the correct selector
+    # however, it is not possible to detect if a contract is a library or not without parsing the source code
+    for abi_item in abi:
+        if abi_item["type"] in {"constructor", "fallback", "receive"}:
+            abi_dict[abi_item["type"]] = abi_item
+        elif abi_item["type"] == "function":
+            abi_dict[eth_utils.abi.function_abi_to_4byte_selector(abi_item)] = abi_item
+        elif abi_item["type"] == "error":
+            abi_dict[eth_utils.abi.function_abi_to_4byte_selector(abi_item)] = abi_item
+    return name, abi_dict
 
 
 def _decode_precompiled(
@@ -840,7 +859,7 @@ class CallTrace:
                     to.address, b"" if "data" not in tx_params else tx_params["data"]
                 )
             elif chain._fork is not None:
-                explorer_info = get_contract_info_from_explorer(
+                explorer_info = _get_info_from_explorer(
                     to.address,
                     chain._forked_chain_id
                     if chain._forked_chain_id is not None
@@ -1136,7 +1155,7 @@ class CallTrace:
                     if Address(0) < addr <= Address(9):
                         precompiled_info = get_precompiled_info(addr, data)
                     elif chain._fork is not None:
-                        explorer_info = get_contract_info_from_explorer(
+                        explorer_info = _get_info_from_explorer(
                             addr,
                             chain._forked_chain_id
                             if chain._forked_chain_id is not None
