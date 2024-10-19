@@ -2095,10 +2095,16 @@ class LspCompiler:
 
                     files_to_recompile.discard(path)
 
-                    if (path in self.__source_units and path not in recompiled_files) or path in processed_files:
-                        # either file was not recompiled or it was already processed
-                        # canonical AST was already indexed
+                    if path in self.__source_units and path not in recompiled_files:
+                        # file was not recompiled
+                        # still need to index AST
                         self.__ir_reference_resolver.index_nodes(ast, path, cu.hash)
+                        continue
+                    elif path in processed_files:
+                        # file was already processed
+                        # index AST + register (possibly new) source unit name
+                        self.__ir_reference_resolver.index_nodes(ast, path, cu.hash)
+                        self.__source_units[path]._source_unit_names.add(ast.absolute_path)
                         continue
                     elif cu not in compilation_units_per_file[path]:
                         # file recompiled but canonical AST not indexed yet
