@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import re
 from collections import ChainMap, defaultdict
+from dataclasses import dataclass
 from functools import wraps
 from typing import Any, ContextManager, Dict, List, NamedTuple, Optional, Tuple, Union
 
@@ -18,7 +19,11 @@ from wake.development.core import RequestType, get_fqn_from_address
 from wake.development.globals import set_config
 from wake.development.json_rpc import JsonRpcError
 from wake.development.transactions import TransactionStatusEnum
-from wake.development.utils import get_logic_contract, chain_explorer_urls, get_info_from_explorer
+from wake.development.utils import (
+    get_logic_contract,
+    get_name_abi_from_explorer,
+    AbiNotFound,
+)
 from wake.lsp.context import LspContext
 from wake.lsp.exceptions import LspError
 from wake.lsp.lsp_data_model import LspModel
@@ -169,6 +174,12 @@ class SakeGetAbiResult(SakeResult):
     implementation_address: Optional[str]
 
 
+@dataclass
+class ContractAbiName:
+    name: str
+    abi: Dict[Union[bytes, Literal["constructor", "fallback", "receive"]], List]
+
+
 def chain_connected(f):
     @wraps(f)
     async def wrapper(context: SakeContext, params: SakeParams, *args, **kwargs):
@@ -190,19 +201,19 @@ class SakeContext:
     lsp_context: LspContext
     chains: Dict[str, Tuple[Chain, ContextManager]]
     compilation: Dict[str, ContractInfo]
-    name_by_fqn: Dict[str, str]
-    abi_by_fqn: Dict[
-        str, Dict[Union[bytes, Literal["constructor", "fallback", "receive"]], List]
-    ]  # fqn -> ABI
+    info_by_fqn: Dict[str, ContractAbiName]
     libraries: Dict[bytes, str]  # lib_id -> fqn
+    creation_code_index: List[Tuple[Tuple[Tuple[int, bytes], ...], str]]
+    fqn_by_metadata: Dict[bytes, str]
 
     def __init__(self, lsp_context: LspContext):
         self.lsp_context = lsp_context
         self.chains = {}
         self.compilation = {}
-        self.name_by_fqn = {}
-        self.abi_by_fqn = {}
+        self.info_by_fqn = {}
         self.libraries = {}
+        self.creation_code_index = []
+        self.fqn_by_metadata = {}
 
     async def ping(self) -> SakeResult:
         return SakeResult(success=True)
@@ -344,11 +355,7 @@ class SakeContext:
                 skipped_source_units,
             ) = await self.lsp_context.compiler.bytecode_compile()
 
-            self.name_by_fqn.clear()
-            self.abi_by_fqn.clear()
             self.libraries.clear()
-            fqn_by_metadata: Dict[bytes, str] = {}
-            creation_code_index: List[Tuple[Tuple[Tuple[int, bytes], ...], str]] = []
             _compilation = {}
 
             for fqn, info in contract_info.items():
@@ -380,8 +387,7 @@ class SakeContext:
                     self.libraries[lib_id] = fqn
 
                 assert info.abi is not None
-                self.name_by_fqn[fqn] = contract_node["name"]
-                self.abi_by_fqn[fqn] = {}
+                abi_by_selector = {}
                 for item in info.abi:
                     if item["type"] == "function":
                         if contract_node["contractKind"] == "library":
@@ -403,17 +409,21 @@ class SakeContext:
                             selector = eth_utils.abi.function_abi_to_4byte_selector(
                                 item
                             )
-                        self.abi_by_fqn[fqn][selector] = item
+                        abi_by_selector[selector] = item
                     elif item["type"] == "error":
                         selector = eth_utils.abi.function_abi_to_4byte_selector(item)
-                        self.abi_by_fqn[fqn][selector] = item
+                        abi_by_selector[selector] = item
                     elif item["type"] == "event":
                         selector = eth_utils.abi.event_abi_to_log_topic(item)
-                        self.abi_by_fqn[fqn][selector] = item
+                        abi_by_selector[selector] = item
                     elif item["type"] in {"constructor", "fallback", "receive"}:
-                        self.abi_by_fqn[fqn][item["type"]] = item
+                        abi_by_selector[item["type"]] = item
                     else:
                         raise ValueError(f"Unknown ABI item type: {item['type']}")
+
+                self.info_by_fqn[fqn] = ContractAbiName(
+                    name=contract_node["name"], abi=abi_by_selector
+                )
 
                 bytecode = info.evm.bytecode.object
                 if len(bytecode) > 0:
@@ -432,10 +442,10 @@ class SakeContext:
                     h = BLAKE2b.new(data=segment, digest_bits=256).digest()
                     bytecode_segments.append((len(segment), h))
 
-                    creation_code_index.append((tuple(bytecode_segments), fqn))
+                    self.creation_code_index.append((tuple(bytecode_segments), fqn))
 
                 if len(info.evm.deployed_bytecode.object) >= 106:
-                    fqn_by_metadata[
+                    self.fqn_by_metadata[
                         bytes.fromhex(info.evm.deployed_bytecode.object[-106:])
                     ] = fqn
 
@@ -444,8 +454,8 @@ class SakeContext:
                     bytecode=bytecode,
                 )
 
-            wake.development.core.creation_code_index = creation_code_index
-            wake.development.core.contracts_by_metadata = fqn_by_metadata
+            wake.development.core.creation_code_index = self.creation_code_index
+            wake.development.core.contracts_by_metadata = self.fqn_by_metadata
 
             if success:
                 self.compilation = _compilation
@@ -489,7 +499,7 @@ class SakeContext:
         chain = self.chains[params.session_id][0]
 
         def fqn_to_contract_abi(fqn: str):
-            return None, self.abi_by_fqn[fqn]
+            return None, self.info_by_fqn[fqn].abi
 
         try:
             bytecode = self.compilation[params.contract_fqn].bytecode
@@ -535,7 +545,7 @@ class SakeContext:
                 tx.return_value if success else None,
                 ChainMap(),
                 tx.block_number - 1,
-                self.abi_by_fqn.keys(),
+                self.info_by_fqn.keys(),
                 fqn_to_contract_abi,
             )
 
@@ -551,9 +561,11 @@ class SakeContext:
             return SakeDeployResult(
                 success=success,
                 error=call_trace.error_string,
-                raw_error=tx.raw_error.data.hex()
-                if isinstance(tx.raw_error, UnknownTransactionRevertedError)
-                else None,
+                raw_error=(
+                    tx.raw_error.data.hex()
+                    if isinstance(tx.raw_error, UnknownTransactionRevertedError)
+                    else None
+                ),
                 contract_address=str(tx.return_value.address) if success else None,
                 tx_receipt=tx._tx_receipt,
                 call_trace=call_trace.dict(self.lsp_context.config),
@@ -566,7 +578,7 @@ class SakeContext:
         chain = self.chains[params.session_id][0]
 
         def fqn_to_contract_abi(fqn: str):
-            return None, self.abi_by_fqn[fqn]
+            return None, self.info_by_fqn[fqn].abi
 
         try:
             tx = Account(params.contract_address, chain).transact(
@@ -588,7 +600,7 @@ class SakeContext:
                 None,
                 ChainMap(),
                 tx.block_number - 1,
-                self.abi_by_fqn.keys(),
+                self.info_by_fqn.keys(),
                 fqn_to_contract_abi,
             )
 
@@ -620,7 +632,7 @@ class SakeContext:
         chain = self.chains[params.session_id][0]
 
         def fqn_to_contract_abi(fqn: str):
-            return None, self.abi_by_fqn[fqn]
+            return None, self.info_by_fqn[fqn].abi
 
         try:
             account = Account(params.contract_address, chain=chain)
@@ -650,7 +662,7 @@ class SakeContext:
                 None,
                 ChainMap(),
                 chain.blocks["latest"].number,
-                self.abi_by_fqn.keys(),
+                self.info_by_fqn.keys(),
                 fqn_to_contract_abi,
             )
             return SakeCallResult(
@@ -727,19 +739,39 @@ class SakeContext:
         def info_from_address(address: str) -> Tuple[str, List]:
             fqn = get_fqn_from_address(logic_contract.address, "latest", chain)
             if fqn is not None:
-                name = self.name_by_fqn[fqn]
-                abi = list(self.abi_by_fqn[fqn].values())
-            elif chain._forked_chain_id in chain_explorer_urls:
+                name = self.info_by_fqn[fqn].name
+                abi = list(self.info_by_fqn[fqn].abi.values())
+            elif chain._forked_chain_id is not None:
                 try:
-                    info = get_info_from_explorer(address, chain._forked_chain_id)
-                    name = info["ContractName"]
-                    abi = json.loads(info["ABI"])
-                except Exception:
-                    name = ""
-                    abi = []
+                    name, abi = get_name_abi_from_explorer(
+                        address, chain._forked_chain_id
+                    )
+                except AbiNotFound as e:
+                    if e.api_key_name is not None:
+                        raise LspError(
+                            ErrorCodes.AbiNotFound,
+                            f"ABI not found for {address}",
+                            {
+                                "apiKeyName": e.api_key_name,
+                                "tomlUsed": self.lsp_context.use_toml
+                                and self.lsp_context.toml_path.is_file(),
+                                "configPath": str(
+                                    self.lsp_context.config.global_config_path
+                                ),
+                            },
+                        )
+                    else:
+                        raise LspError(
+                            ErrorCodes.AbiNotFound,
+                            f"ABI not found for {address}",
+                            {},
+                        )
             else:
-                name = ""
-                abi = []
+                raise LspError(
+                    ErrorCodes.AbiNotFound,
+                    f"ABI not found for {address}",
+                    {},
+                )
 
             return name, abi
 
