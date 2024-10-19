@@ -2325,7 +2325,9 @@ class Chain(ABC):
                     fqn_overrides,
                 )
             except ValueError:
-                raise UnknownTransactionRevertedError(revert_data) from None
+                e = UnknownTransactionRevertedError(revert_data)
+                e.tx = tx
+                raise e from None
         else:
             fqn = list(errors[selector].keys())[0]
 
