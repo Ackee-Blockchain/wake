@@ -1109,6 +1109,16 @@ def _get_storage_layout(
         return SolcOutputStorageLayout.model_validate(obj._storage_layout)
 
 
+class AbiNotFound(Exception):
+    method: str
+    api_key_name: Optional[str] = None
+
+    def __init__(self, method: str, api_key_name: Optional[str] = None):
+        self.method = method
+        self.api_key_name = api_key_name
+        super().__init__(f"ABI not found using method: {method}")
+
+
 @lru_cache(maxsize=1024)
 def get_name_abi_from_explorer(addr: str, chain_id: int) -> Tuple[str, List]:
     info, source = get_info_from_explorer(addr, chain_id)
@@ -1124,17 +1134,16 @@ def get_name_abi_from_explorer(addr: str, chain_id: int) -> Tuple[str, List]:
         try:
             abi = json.loads(info["ABI"])
         except JSONDecodeError:
-            u = urlparse(chain_explorer_urls[chain_id].url)
-            raise ValueError(f"Could not get ABI from {u.netloc}")
+            raise AbiNotFound(method="etherscan")
         return name, abi
 
 
 def get_info_from_explorer(addr: str, chain_id: int) -> Tuple[Dict[str, Any], str]:
+    config = get_config()
     if chain_id not in chain_explorer_urls:
         api_key = None
     else:
         u = urlparse(chain_explorer_urls[chain_id].url)
-        config = get_config()
         api_key = config.api_keys.get(".".join(u.netloc.split(".")[:-1]), None)
 
     if api_key is not None:
@@ -1173,7 +1182,11 @@ def get_info_from_explorer(addr: str, chain_id: int) -> Tuple[Dict[str, Any], st
                 parsed = json.loads(response.read().decode("utf-8"))
         except HTTPError as e:
             if e.code == 404:
-                raise ValueError(f"Contract not found on sourcify.eth") from None
+                if chain_id in chain_explorer_urls:
+                    u = urlparse(chain_explorer_urls[chain_id].url)
+                    raise AbiNotFound(method="sourcify", api_key_name=".".join(u.netloc.split(".")[:-1])) from None
+                else:
+                    raise AbiNotFound(method="sourcify") from None
             else:
                 raise
 
