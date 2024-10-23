@@ -542,11 +542,35 @@ class LspServer:
                 pass
 
         if self.__sake_context is not None:
-            for _, chain_handle in self.__sake_context.chains.values():
+            for session_id, (_, chain_handle) in self.__sake_context.chains.items():
+                try:
+                    dump = await self.__sake_context.dump_state(
+                        SakeParams(session_id=session_id)
+                    )
+                    await self.send_notification(
+                        RequestMethodEnum.SAKE_DUMP_STATE,
+                        {
+                            "session_id": session_id,
+                            "metadata": dump.metadata,
+                            "chain_dump": dump.chain_dump,
+                        },
+                    )
+                except Exception:
+                    pass
+
                 try:
                     chain_handle.__exit__(None, None, None)
                 except Exception:
                     pass
+
+            try:
+                workspace_dump = await self.__sake_context.save_workspace_state()
+                await self.send_notification(
+                    RequestMethodEnum.SAKE_SAVE_WORKSPACE_STATE,
+                    {"state": workspace_dump.state},
+                )
+            except Exception:
+                pass
 
         self.__method_mapping.clear()
         self.__notification_mapping.clear()
