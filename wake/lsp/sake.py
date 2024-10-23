@@ -15,14 +15,14 @@ import wake.development.core
 from wake.config import WakeConfig
 from wake.development.call_trace import CallTrace
 from wake.development.chain_interfaces import AnvilChainInterface
-from wake.development.core import RequestType, get_fqn_from_address
+from wake.development.core import Library, RequestType, get_fqn_from_address
 from wake.development.globals import set_config
 from wake.development.json_rpc import JsonRpcError
 from wake.development.transactions import TransactionStatusEnum
 from wake.development.utils import (
+    AbiNotFound,
     get_logic_contract,
     get_name_abi_from_explorer,
-    AbiNotFound,
 )
 from wake.lsp.context import LspContext
 from wake.lsp.exceptions import LspError
@@ -55,11 +55,6 @@ class SakeCompilationResult(SakeResult):
     contracts: Dict[str, ContractInfoLsp]  # fqn -> ABI
     errors: Dict[str, List[ErrorInfo]]
     skipped: Dict[str, SkippedInfo]
-
-
-class ContractInfo(NamedTuple):
-    abi: List
-    bytecode: str
 
 
 # @dev used for api to include name in json, otherwise tuple is converted to array
@@ -119,6 +114,7 @@ class SakeCallResult(SakeResult):
 class SakeTransactParams(SakeCallParams):
     pass
 
+
 class SakeTransactResult(SakeResult):
     return_value: Optional[str]  # raw hex encoded bytes, None for Halt
     error: Optional[str]  # user-friendly error string, None for Success
@@ -174,8 +170,23 @@ class SakeGetAbiResult(SakeResult):
     implementation_address: Optional[str]
 
 
+class WorkspaceState(LspModel):
+    info_by_fqn: Dict[str, ContractInfo]
+    libraries: Dict[str, str]
+    creation_code_index: List[Tuple[Tuple[Tuple[int, str], ...], str]]
+    fqn_by_metadata: Dict[str, str]
+
+
+class SakeLoadWorkspaceStateParams(SakeParams):
+    state: WorkspaceState
+
+
+class SakeSaveWorkspaceStateResult(SakeResult):
+    state: WorkspaceState
+
+
 @dataclass
-class ContractAbiName:
+class ContractInfo:
     name: str
     abi: Dict[Union[bytes, Literal["constructor", "fallback", "receive"]], List]
 
@@ -200,8 +211,8 @@ LIBRARY_PLACEHOLDER_REGEX = re.compile(r"__\$[0-9a-fA-F]{34}\$__")
 class SakeContext:
     lsp_context: LspContext
     chains: Dict[str, Tuple[Chain, ContextManager]]
-    compilation: Dict[str, ContractInfo]
-    info_by_fqn: Dict[str, ContractAbiName]
+    bytecode_by_fqn: Dict[str, str]
+    info_by_fqn: Dict[str, ContractInfo]
     libraries: Dict[bytes, str]  # lib_id -> fqn
     creation_code_index: List[Tuple[Tuple[Tuple[int, bytes], ...], str]]
     fqn_by_metadata: Dict[bytes, str]
@@ -209,14 +220,57 @@ class SakeContext:
     def __init__(self, lsp_context: LspContext):
         self.lsp_context = lsp_context
         self.chains = {}
-        self.compilation = {}
-        self.info_by_fqn = {}
-        self.libraries = {}
-        self.creation_code_index = []
-        self.fqn_by_metadata = {}
+        self.bytecode_by_fqn = {}  # NOT saved in dump
+        self.info_by_fqn = {}  # saved in dump
+        self.libraries = {}  # saved in dump
+        self.creation_code_index = []  # saved in dump
+        self.fqn_by_metadata = {}  # saved in dump
 
     async def ping(self) -> SakeResult:
         return SakeResult(success=True)
+
+    async def load_workspace_state(
+        self, params: SakeLoadWorkspaceStateParams
+    ) -> SakeResult:
+        try:
+            self.info_by_fqn = params.state.info_by_fqn
+            self.libraries = {
+                bytes.fromhex(lib_id): fqn
+                for lib_id, fqn in params.state.libraries.items()
+            }
+            self.creation_code_index = [
+                (tuple((length, bytes.fromhex(h)) for length, h in segments), fqn)
+                for segments, fqn in params.state.creation_code_index
+            ]
+            self.fqn_by_metadata = {
+                bytes.fromhex(metadata): fqn
+                for metadata, fqn in params.state.fqn_by_metadata.items()
+            }
+            return SakeResult(success=True)
+        except Exception as e:
+            raise LspError(ErrorCodes.InternalError, str(e)) from None
+
+    async def save_workspace_state(self) -> SakeSaveWorkspaceStateResult:
+        try:
+            return SakeSaveWorkspaceStateResult(
+                success=True,
+                state=WorkspaceState(
+                    info_by_fqn=self.info_by_fqn,
+                    libraries={
+                        lib_id.hex(): fqn for lib_id, fqn in self.libraries.items()
+                    },
+                    creation_code_index=[
+                        (tuple((length, h.hex()) for length, h in segments), fqn)
+                        for segments, fqn in self.creation_code_index
+                    ],
+                    fqn_by_metadata={
+                        metadata.hex(): fqn
+                        for metadata, fqn in self.fqn_by_metadata.items()
+                    },
+                ),
+            )
+        except Exception as e:
+            raise LspError(ErrorCodes.InternalError, str(e)) from None
 
     async def create_chain(
         self, params: SakeCreateChainParams
@@ -356,7 +410,7 @@ class SakeContext:
             ) = await self.lsp_context.compiler.bytecode_compile()
 
             self.libraries.clear()
-            _compilation = {}
+            bytecode_by_fqn = {}
 
             for fqn, info in contract_info.items():
                 if (
@@ -421,7 +475,7 @@ class SakeContext:
                     else:
                         raise ValueError(f"Unknown ABI item type: {item['type']}")
 
-                self.info_by_fqn[fqn] = ContractAbiName(
+                self.info_by_fqn[fqn] = ContractInfo(
                     name=contract_node["name"], abi=abi_by_selector
                 )
 
@@ -449,24 +503,22 @@ class SakeContext:
                         bytes.fromhex(info.evm.deployed_bytecode.object[-106:])
                     ] = fqn
 
-                _compilation[fqn] = ContractInfo(
-                    abi=info.abi,
-                    bytecode=bytecode,
-                )
+                bytecode_by_fqn[fqn] = bytecode
 
             wake.development.core.creation_code_index = self.creation_code_index
             wake.development.core.contracts_by_metadata = self.fqn_by_metadata
 
             if success:
-                self.compilation = _compilation
+                self.bytecode_by_fqn = bytecode_by_fqn
 
             return SakeCompilationResult(
                 success=success,
                 contracts={
                     fqn: ContractInfoLsp(
-                        abi=info.abi, is_deployable=(len(info.bytecode) > 0)
+                        abi=list(self.info_by_fqn[fqn].abi.values()),
+                        is_deployable=(len(bytecode) > 0),
                     )
-                    for fqn, info in _compilation.items()
+                    for fqn, bytecode in self.bytecode_by_fqn.items()
                 },
                 errors={
                     source_unit_name: [
@@ -502,7 +554,7 @@ class SakeContext:
             return None, self.info_by_fqn[fqn].abi
 
         try:
-            bytecode = self.compilation[params.contract_fqn].bytecode
+            bytecode = self.bytecode_by_fqn[params.contract_fqn]
 
             for match in LIBRARY_PLACEHOLDER_REGEX.finditer(bytecode):
                 lib_id = bytes.fromhex(match.group(0)[3:-3])
@@ -556,7 +608,9 @@ class SakeContext:
                     data=params.contract_fqn.encode("utf-8"), digest_bits=256
                 ).digest()[:17]
                 if lib_id in self.libraries:
-                    chain._deployed_libraries[lib_id].append(tx.return_value)
+                    chain._deployed_libraries[lib_id].append(
+                        Library(tx.return_value, chain)
+                    )
 
             return SakeDeployResult(
                 success=success,

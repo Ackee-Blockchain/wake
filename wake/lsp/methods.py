@@ -126,6 +126,8 @@ class RequestMethodEnum(StrEnum):
 
     # Sake
     SAKE_PING = "wake/sake/ping"
+    SAKE_LOAD_WORKSPACE_STATE = "wake/sake/loadWorkspaceState"
+    SAKE_SAVE_WORKSPACE_STATE = "wake/sake/saveWorkspaceState"
     SAKE_CREATE_CHAIN = "wake/sake/createChain"
     SAKE_CONNECT_CHAIN = "wake/sake/connectChain"
     SAKE_DISCONNECT_CHAIN = "wake/sake/disconnectChain"
