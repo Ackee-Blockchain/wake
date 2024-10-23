@@ -141,6 +141,8 @@ async def rename(
         f"Requested rename for file {params.text_document.uri} at {params.position}"
     )
 
+    assert False
+
     match = IDENTIFIER_RE.match(params.new_name)
     if not match:
         raise LspError(ErrorCodes.InvalidRequest, "Invalid identifier name")
@@ -213,6 +215,8 @@ async def prepare_rename(
     logger.debug(
         f"Requested prepare rename for file {params.text_document.uri} at {params.position}"
     )
+
+    assert False
 
     await context.compiler.compilation_ready.wait()
 
