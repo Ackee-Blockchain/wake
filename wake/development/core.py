@@ -79,8 +79,8 @@ from .primitive_types import (
     fixed_bytes_map,
     fixed_list_map,
     int_map,
-    uint_map,
     uint256,
+    uint_map,
 )
 
 if TYPE_CHECKING:
@@ -198,7 +198,11 @@ class abi:
                             inputs.append(getattr(arg, f.name))
                     ret.append(cls._normalize_input(inputs))
                 else:
-                    ret.append(cls._normalize_input([getattr(arg, f.name) for f in dataclasses.fields(arg)]))
+                    ret.append(
+                        cls._normalize_input(
+                            [getattr(arg, f.name) for f in dataclasses.fields(arg)]
+                        )
+                    )
             else:
                 ret.append(arg)
         return ret
@@ -1612,17 +1616,26 @@ class Chain(ABC):
                 hardfork = info["hardFork"]
                 if hardfork in {
                     "FRONTIER",
+                    "Frontier",
                     "HOMESTEAD",
+                    "Homestead",
                     "TANGERINE",
+                    "Tangerine",
                     "SPURIOUS_DRAGON",
+                    "SpuriousDragon",
                     "BYZANTIUM",
+                    "Byzantium",
                     "CONSTANTINOPLE",
+                    "Constantinople",
                     "PETERSBURG",
+                    "Petersburg",
                     "ISTANBUL",
+                    "Istanbul",
                     "MUIR_GLACIER",
+                    "MuirGlacier",
                 }:
                     self._default_tx_type = 0
-                elif hardfork == "BERLIN":
+                elif hardfork in {"BERLIN", "Berlin"}:
                     self._default_tx_type = 1
                 else:
                     self._default_tx_type = 2
