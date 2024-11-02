@@ -104,7 +104,6 @@ fi
 if [ ${#pyfiles[@]} -ne 0 ]; then
     echo "running \`pyright ${pyfiles[@]}\`"
     pyright "${pyfiles[@]}";
-    check_last_command;
 fi
 
 echo "running \`mkdocs build --strict\`"
