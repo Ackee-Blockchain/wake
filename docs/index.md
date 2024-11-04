@@ -14,6 +14,11 @@
 - VS Code extension ([Tools for Solidity](https://marketplace.visualstudio.com/items?itemName=AckeeBlockchain.tools-for-solidity))
 - solc version manager
 
+## Resources
+
+- [Awesome Wake tests](https://github.com/Ackee-Blockchain/awesome-wake-tests) - collection of fuzz tests and unit tests written in Wake
+- built-in [detectors](https://github.com/Ackee-Blockchain/wake/tree/main/wake_detectors) and [printers](https://github.com/Ackee-Blockchain/wake/tree/main/wake_printers)
+
 ## Discovered vulnerabilities
 
 Wake is used by the Ackee team to perform smart contract audits - and it helped to discover a bunch of high and critical vulnerabilities.
