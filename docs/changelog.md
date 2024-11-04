@@ -6,6 +6,16 @@ small.label {
 }
 </style>
 
+## 4.13.1 <small>(Nov 4, 2024)</small> { id="4.13.1" }
+
+Fixes:
+
+- fixed non-deterministic pytypes generation for source files under multiple different source unit names <small class="label">[testing & deployment framework]</small>
+- fixed pytypes generation for source units with dots in their names <small class="label">[testing & deployment framework]</small>
+- fixed `tx` not assigned on error that could not be resolved <small class="label">[testing & deployment framework]</small>
+- fixed latest supported tx type not properly detected with Anvil caused by breaking change in Anvil <small class="label">[testing framework]</small>
+- fixed base fee parsing with Anvil caused by breaking change in Anvil <small class="label">[testing framework]</small>
+
 ## 4.13.0 <small>(Oct 14, 2024)</small> { id="4.13.0" }
 
 Features & improvements:
