@@ -595,10 +595,6 @@ class TypeGenerator:
             Dict,
         ] = {}
 
-        module_name = "pytypes." + _make_path_alphanum(
-            contract.parent.source_unit_name[:-3]
-        ).replace("/", ".")
-
         for item in compilation_info.abi:
             if item["type"] == "function":
                 if contract.kind == ContractKind.LIBRARY:
@@ -638,7 +634,7 @@ class TypeGenerator:
                 if isinstance(error_decl.parent, ContractDefinition):
                     # error is declared in a contract
                     error_module_name = "pytypes." + _make_path_alphanum(
-                        error_decl.parent.parent.source_unit_name[:-3]
+                        error_decl.parent.parent.source_unit_name[:-4].replace(".", "_")
                     ).replace("/", ".")
                     self.__errors_index[selector][fqn] = (
                         error_module_name,
@@ -646,7 +642,7 @@ class TypeGenerator:
                     )
                 elif isinstance(error_decl.parent, SourceUnit):
                     error_module_name = "pytypes." + _make_path_alphanum(
-                        error_decl.parent.source_unit_name[:-3]
+                        error_decl.parent.source_unit_name[:-4].replace(".", "_")
                     ).replace("/", ".")
                     self.__errors_index[selector][fqn] = (
                         error_module_name,
@@ -673,7 +669,7 @@ class TypeGenerator:
                 if isinstance(event_decl.parent, ContractDefinition):
                     # event is declared in a contract
                     event_module_name = "pytypes." + _make_path_alphanum(
-                        event_decl.parent.parent.source_unit_name[:-3]
+                        event_decl.parent.parent.source_unit_name[:-4].replace(".", "_")
                     ).replace("/", ".")
                     self.__events_index[selector][fqn] = (
                         event_module_name,
@@ -681,7 +677,7 @@ class TypeGenerator:
                     )
                 elif isinstance(event_decl.parent, SourceUnit):
                     event_module_name = "pytypes." + _make_path_alphanum(
-                        event_decl.parent.source_unit_name[:-3]
+                        event_decl.parent.source_unit_name[:-4].replace(".", "_")
                     ).replace("/", ".")
                     self.__events_index[selector][fqn] = (
                         event_module_name,
@@ -1524,7 +1520,7 @@ class TypeGenerator:
                 self.__imports.generate_contract_import(parent_contract, force=True)
 
         contract_module_name = "pytypes." + _make_path_alphanum(
-            contract.parent.source_unit_name[:-3]
+            contract.parent.source_unit_name[:-4].replace(".", "_")
         ).replace("/", ".")
         self.__contracts_index[fqn] = (
             contract_module_name,
@@ -1607,7 +1603,7 @@ class TypeGenerator:
             lists += f"class List{a}(FixedSizeList[T]):\n    length = {a}\n\n\n"
 
         self.__pytypes_dir.mkdir(exist_ok=True)
-        contract_name = _make_path_alphanum(contract_name[:-3])
+        contract_name = _make_path_alphanum(contract_name[:-4].replace(".", "_"))
         unit_path = (self.__pytypes_dir / contract_name).with_suffix(".py")
         unit_path.parent.mkdir(parents=True, exist_ok=True)
         unit_path.write_text(str(self.__imports) + lists + self.__source_unit_types)
@@ -1927,20 +1923,24 @@ class SourceUnitImports:
         *,
         aliased: bool = False,
     ) -> str:
-        source_unit_name = _make_path_alphanum(source_unit_name)
+        source_unit_name = _make_path_alphanum(
+            source_unit_name[:-4].replace(".", "_")
+        ).replace("/", ".")
         name = self.__type_gen.get_name(declaration, force_simple=True)
 
         if aliased:
-            return f"import pytypes.{source_unit_name[:-3].replace('/', '.')} as {name}"
-        return f"from pytypes.{source_unit_name[:-3].replace('/', '.')} import {name}"
+            return f"import pytypes.{source_unit_name} as {name}"
+        return f"from pytypes.{source_unit_name} import {name}"
 
     def __generate_lazy_module(
         self, declaration: DeclarationAbc, source_unit_name: str
     ) -> str:
-        source_unit_name = _make_path_alphanum(source_unit_name)
+        source_unit_name = _make_path_alphanum(
+            source_unit_name[:-4].replace(".", "_")
+        ).replace("/", ".")
         name = self.__type_gen.get_name(declaration, force_simple=True)
 
-        return f"{name} = lazy_import.lazy_module('pytypes.{source_unit_name[:-3].replace('/', '.')}')"
+        return f"{name} = lazy_import.lazy_module('pytypes.{source_unit_name}')"
 
     def __add_str_to_imports(
         self, num_of_indentation: int, string: str, num_of_newlines: int
