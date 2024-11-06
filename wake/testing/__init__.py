@@ -26,6 +26,7 @@ from wake.development.utils import (
     get_logic_contract,
     keccak256,
     mint_erc20,
+    mint_erc721,
     read_storage_variable,
     write_storage_variable,
 )

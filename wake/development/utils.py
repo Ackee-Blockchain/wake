@@ -831,6 +831,68 @@ def burn_erc20(
     _update_erc20_balance(contract, from_, -amount, balance_slot, total_supply_slot)
 
 
+def mint_erc721(
+    contract: Account,
+    to: Union[Account, Address],
+    token_id: int,
+    *,
+    owner_slot: Optional[int] = None,
+    balance_slot: Optional[int] = None,
+) -> None:
+    if isinstance(to, Address):
+        to = Account(to, chain=contract.chain)
+
+    owner_contract = contract
+    balance_contract = contract
+
+    if owner_slot is None:
+        owner_data = _detect_erc721_owner_slot(contract, token_id)
+        if owner_data is None:
+            raise ValueError("Could not detect ERC721 owner slot")
+        owner_contract, owner_slot = owner_data
+
+    if balance_slot is None:
+        balance_data = _detect_erc20_balance_slot(contract, to)
+        if balance_data is None:
+            raise ValueError("Could not detect ERC721 balance slot")
+        balance_contract, balance_slot = balance_data
+
+    _try_change_erc721_owner(contract, owner_contract, token_id, to, owner_slot)
+    _try_change_erc20_balance(contract, balance_contract, to, balance_slot, 1)
+
+
+def _try_change_erc721_owner(
+    contract: Account, owner_acc: Account, token_id: int, to: Account, slot: int
+):
+    call_acc = contract.chain.default_call_account
+    if call_acc is None and len(contract.chain.accounts) > 0:
+        call_acc = contract.chain.accounts[0]
+
+    data_before = contract.chain.chain_interface.get_storage_at(
+        str(owner_acc.address), slot
+    )
+    contract.chain.chain_interface.set_storage_at(
+        str(owner_acc.address),
+        slot,
+        abi.encode(to.address),
+    )
+
+    try:
+        owner_after = abi.decode(
+            contract.call(
+                data=abi.encode_with_signature("ownerOf(uint256)", token_id),
+                from_=call_acc,
+            ),
+            [Address],
+        )
+        assert owner_after == to.address
+    except Exception:
+        contract.chain.chain_interface.set_storage_at(
+            str(owner_acc.address), slot, data_before
+        )
+        raise ValueError("Owner change failed")
+
+
 def _try_change_erc20_balance(
     erc20: Account, balance_acc: Account, acc: Account, slot: int, amount: int
 ):
@@ -944,6 +1006,68 @@ def _try_change_erc20_supply(
             str(supply_acc.address), slot, data_before
         )
         raise ValueError("Total supply change failed")
+
+
+@lru_cache(maxsize=1024)
+def _detect_erc721_owner_slot(
+    contract: Account, token_id: int
+) -> Optional[Tuple[Account, int]]:
+    access_list_acc = contract.chain.default_access_list_account
+    if access_list_acc is None and len(contract.chain.accounts) > 0:
+        access_list_acc = contract.chain.accounts[0]
+    call_acc = contract.chain.default_call_account
+    if call_acc is None and len(contract.chain.accounts) > 0:
+        call_acc = contract.chain.accounts[0]
+
+    access_list, _ = contract.access_list(
+        data=abi.encode_with_signature("ownerOf(uint256)", token_id),
+        from_=access_list_acc,
+    )
+
+    impl = get_logic_contract(contract)
+
+    try:
+        owner_before = abi.decode(
+            contract.call(
+                data=abi.encode_with_signature("ownerOf(uint256)", token_id),
+                from_=call_acc,
+            ),
+            [Address],
+        )
+    except Exception:
+        return None
+
+    new_owner = Address(int(owner_before) + 1)
+
+    for addr in sorted(access_list.keys(), key=lambda a: 1 if a == impl.address else 0):
+        for slot in access_list[addr]:
+            data_before = contract.chain.chain_interface.get_storage_at(str(addr), slot)
+
+            try:
+                contract.chain.chain_interface.set_storage_at(
+                    str(addr),
+                    slot,
+                    abi.encode(new_owner),
+                )
+            except Exception:
+                continue
+
+            try:
+                owner_after = abi.decode(
+                    contract.call(
+                        data=abi.encode_with_signature("ownerOf(uint256)", token_id),
+                        from_=call_acc,
+                    ),
+                    [Address],
+                )
+                assert owner_after == new_owner
+                return Account(addr, chain=contract.chain), slot
+            except Exception:
+                continue
+            finally:
+                contract.chain.chain_interface.set_storage_at(str(addr), slot, data_before)
+
+    return None
 
 
 @lru_cache(maxsize=1024)
