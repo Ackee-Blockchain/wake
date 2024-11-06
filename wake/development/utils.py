@@ -861,6 +861,51 @@ def mint_erc721(
     _try_change_erc20_balance(contract, balance_contract, to, balance_slot, 1)
 
 
+def mint_erc1155(
+    contract: Account,
+    to: Union[Account, Address],
+    token_id: int,
+    amount: int,
+    *,
+    balance_slot: Optional[int] = None,
+    total_supply_slot: Optional[int] = None,
+) -> None:
+    if isinstance(to, Address):
+        to = Account(to, chain=contract.chain)
+    balance_contract = contract
+
+    if balance_slot is None:
+        balance_data = _detect_erc1155_balance_slot(contract, to, token_id)
+        if balance_data is None:
+            raise ValueError("Could not detect ERC1155 balance slot")
+        balance_contract, balance_slot = balance_data
+
+    if total_supply_slot is None:
+        supply_data = _detect_erc1155_total_supply_slot(contract, token_id)
+        if supply_data is not None:
+            supply_contract, total_supply_slot = supply_data
+
+    _try_change_erc1155_balance(
+        contract, balance_contract, to, token_id, balance_slot, amount
+    )
+    if total_supply_slot is not None:
+        _try_change_erc1155_total_supply(
+            contract, supply_contract, token_id, total_supply_slot, amount
+        )
+
+
+def burn_erc1155(
+    contract: Account,
+    from_: Union[Account, Address],
+    token_id: int,
+    amount: int,
+    *,
+    balance_slot: Optional[int] = None,
+) -> None:
+    # Reuse the mint function with negative amount
+    mint_erc1155(contract, from_, token_id, -amount, balance_slot=balance_slot)
+
+
 def _try_change_erc721_owner(
     contract: Account, owner_acc: Account, token_id: int, to: Account, slot: int
 ):
@@ -1286,6 +1331,256 @@ def _get_storage_layout(
             raise ValueError("Could not get storage layout from contract source code")
 
         return SolcOutputStorageLayout.model_validate(obj._storage_layout)
+
+
+@lru_cache(maxsize=1024)
+def _detect_erc1155_balance_slot(
+    erc1155: Account, account: Account, token_id: int
+) -> Optional[Tuple[Account, int]]:
+    access_list_acc = erc1155.chain.default_access_list_account
+    if access_list_acc is None and len(erc1155.chain.accounts) > 0:
+        access_list_acc = erc1155.chain.accounts[0]
+    call_acc = erc1155.chain.default_call_account
+    if call_acc is None and len(erc1155.chain.accounts) > 0:
+        call_acc = erc1155.chain.accounts[0]
+
+    access_list, _ = erc1155.access_list(
+        data=abi.encode_with_signature("balanceOf(address,uint256)", account, token_id),
+        from_=access_list_acc,
+    )
+
+    impl = get_logic_contract(erc1155)
+
+    try:
+        balance_before = abi.decode(
+            erc1155.call(
+                data=abi.encode_with_signature(
+                    "balanceOf(address,uint256)", account, token_id
+                ),
+                from_=call_acc,
+            ),
+            [uint256],
+        )
+    except Exception:
+        return None
+
+    # Start with the storage slots of the logic contract since they are more likely to be used
+    for addr in sorted(access_list.keys(), key=lambda a: 1 if a == impl.address else 0):
+        for slot in access_list[addr]:
+            data_before = erc1155.chain.chain_interface.get_storage_at(str(addr), slot)
+
+            try:
+                erc1155.chain.chain_interface.set_storage_at(
+                    str(addr),
+                    slot,
+                    (int.from_bytes(data_before, byteorder="big") + 1).to_bytes(
+                        32, byteorder="big"
+                    ),
+                )
+            except Exception:
+                continue
+
+            try:
+                balance_after = abi.decode(
+                    erc1155.call(
+                        data=abi.encode_with_signature(
+                            "balanceOf(address,uint256)", account, token_id
+                        ),
+                        from_=call_acc,
+                    ),
+                    [uint256],
+                )
+                assert balance_after == balance_before + 1
+                return Account(addr, chain=erc1155.chain), slot
+            except Exception:
+                continue
+            finally:
+                # Revert changes
+                erc1155.chain.chain_interface.set_storage_at(
+                    str(addr), slot, data_before
+                )
+
+    return None
+
+
+def _try_change_erc1155_balance(
+    erc1155: Account,
+    balance_acc: Account,
+    acc: Account,
+    token_id: int,
+    slot: int,
+    amount: int,
+):
+    call_acc = erc1155.chain.default_call_account
+    if call_acc is None and len(erc1155.chain.accounts) > 0:
+        call_acc = erc1155.chain.accounts[0]
+
+    try:
+        balance_before = abi.decode(
+            erc1155.call(
+                data=abi.encode_with_signature(
+                    "balanceOf(address,uint256)", acc, token_id
+                ),
+                from_=call_acc,
+            ),
+            [uint256],
+        )
+    except Exception:
+        raise ValueError("Balance change failed")
+
+    if balance_before + amount < 0:
+        raise ValueError("Balance underflow")
+    if balance_before + amount > 2**256 - 1:
+        raise ValueError("Balance overflow")
+
+    data_before = erc1155.chain.chain_interface.get_storage_at(
+        str(balance_acc.address), slot
+    )
+    erc1155.chain.chain_interface.set_storage_at(
+        str(balance_acc.address),
+        slot,
+        (int.from_bytes(data_before, byteorder="big") + amount).to_bytes(
+            32, byteorder="big"
+        ),
+    )
+
+    try:
+        balance_after = abi.decode(
+            erc1155.call(
+                data=abi.encode_with_signature(
+                    "balanceOf(address,uint256)", acc, token_id
+                ),
+                from_=call_acc,
+            ),
+            [uint256],
+        )
+        assert balance_after == balance_before + amount
+    except Exception:
+        erc1155.chain.chain_interface.set_storage_at(
+            str(balance_acc.address), slot, data_before
+        )
+        raise ValueError("Balance change failed")
+
+
+@lru_cache(maxsize=1024)
+def _detect_erc1155_total_supply_slot(
+    erc1155: Account, token_id: int
+) -> Optional[Tuple[Account, int]]:
+    access_list_acc = erc1155.chain.default_access_list_account
+    if access_list_acc is None and len(erc1155.chain.accounts) > 0:
+        access_list_acc = erc1155.chain.accounts[0]
+    call_acc = erc1155.chain.default_call_account
+    if call_acc is None and len(erc1155.chain.accounts) > 0:
+        call_acc = erc1155.chain.accounts[0]
+
+    try:
+        access_list, _ = erc1155.access_list(
+            data=abi.encode_with_signature("totalSupply(uint256)", token_id),
+            from_=access_list_acc,
+        )
+    except Exception:
+        # when token does not support totalSupply
+        return None
+
+    impl = get_logic_contract(erc1155)
+
+    try:
+        supply_before = abi.decode(
+            erc1155.call(
+                data=abi.encode_with_signature("totalSupply(uint256)", token_id),
+                from_=call_acc,
+            ),
+            [uint256],
+        )
+    except Exception:
+        return None
+
+    for addr in sorted(access_list.keys(), key=lambda a: 1 if a == impl.address else 0):
+        for slot in access_list[addr]:
+            data_before = erc1155.chain.chain_interface.get_storage_at(str(addr), slot)
+
+            try:
+                erc1155.chain.chain_interface.set_storage_at(
+                    str(addr),
+                    slot,
+                    (int.from_bytes(data_before, byteorder="big") + 1).to_bytes(
+                        32, byteorder="big"
+                    ),
+                )
+            except Exception:
+                continue
+
+            try:
+                supply_after = abi.decode(
+                    erc1155.call(
+                        data=abi.encode_with_signature(
+                            "totalSupply(uint256)", token_id
+                        ),
+                        from_=call_acc,
+                    ),
+                    [uint256],
+                )
+                assert supply_after == supply_before + 1
+                return Account(addr, chain=erc1155.chain), slot
+            except Exception:
+                continue
+            finally:
+                # Revert changes
+                erc1155.chain.chain_interface.set_storage_at(
+                    str(addr), slot, data_before
+                )
+
+    return None
+
+
+def _try_change_erc1155_total_supply(
+    erc1155: Account, supply_acc: Account, token_id: int, slot: int, amount: int
+):
+    call_acc = erc1155.chain.default_call_account
+    if call_acc is None and len(erc1155.chain.accounts) > 0:
+        call_acc = erc1155.chain.accounts[0]
+
+    try:
+        supply_before = abi.decode(
+            erc1155.call(
+                data=abi.encode_with_signature("totalSupply(uint256)", token_id),
+                from_=call_acc,
+            ),
+            [uint256],
+        )
+    except Exception:
+        raise ValueError("Total supply change failed")
+
+    if supply_before + amount < 0:
+        raise ValueError("Total supply underflow")
+    if supply_before + amount > 2**256 - 1:
+        raise ValueError("Total supply overflow")
+
+    data_before = erc1155.chain.chain_interface.get_storage_at(
+        str(supply_acc.address), slot
+    )
+    erc1155.chain.chain_interface.set_storage_at(
+        str(supply_acc.address),
+        slot,
+        (int.from_bytes(data_before, byteorder="big") + amount).to_bytes(
+            32, byteorder="big"
+        ),
+    )
+
+    try:
+        supply_after = abi.decode(
+            erc1155.call(
+                data=abi.encode_with_signature("totalSupply(uint256)", token_id),
+                from_=call_acc,
+            ),
+            [uint256],
+        )
+        assert supply_after == supply_before + amount
+    except Exception:
+        erc1155.chain.chain_interface.set_storage_at(
+            str(supply_acc.address), slot, data_before
+        )
+        raise ValueError("Total supply change failed")
 
 
 @functools.lru_cache(maxsize=64)
