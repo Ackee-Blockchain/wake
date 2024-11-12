@@ -160,9 +160,19 @@ class SakeLoadStateParams(SakeParams):
 
 class SakeGetAbiParams(SakeParams):
     address: str
+    chain_id: int
 
 
 class SakeGetAbiResult(SakeResult):
+    name: str
+    abi: List
+
+
+class SakeGetAbiWithProxyParams(SakeParams):
+    address: str
+
+
+class SakeGetAbiWithProxyResult(SakeResult):
     name: str
     abi: List
     proxy_name: Optional[str]
@@ -788,8 +798,38 @@ class SakeContext:
         except Exception as e:
             raise LspError(ErrorCodes.InternalError, str(e)) from None
 
-    @chain_connected
     async def get_abi(self, params: SakeGetAbiParams) -> SakeGetAbiResult:
+        try:
+            try:
+                name, abi = get_name_abi_from_explorer(params.address, params.chain_id)
+                return SakeGetAbiResult(success=True, name=name, abi=abi)
+            except AbiNotFound as e:
+                if e.api_key_name is not None:
+                    raise LspError(
+                        ErrorCodes.AbiNotFound,
+                        f"ABI not found for {params.address}",
+                        {
+                            "apiKeyName": e.api_key_name,
+                            "tomlUsed": self.lsp_context.use_toml
+                            and self.lsp_context.toml_path.is_file(),
+                            "configPath": str(
+                                self.lsp_context.config.global_config_path
+                            ),
+                        },
+                    )
+                else:
+                    raise LspError(
+                        ErrorCodes.AbiNotFound,
+                        f"ABI not found for {params.address}",
+                        {},
+                    )
+        except Exception as e:
+            raise LspError(ErrorCodes.InternalError, str(e)) from None
+
+    @chain_connected
+    async def get_abi_with_proxy(
+        self, params: SakeGetAbiWithProxyParams
+    ) -> SakeGetAbiWithProxyResult:
         def info_from_address(address: str) -> Tuple[str, List]:
             fqn = get_fqn_from_address(logic_contract.address, "latest", chain)
             if fqn is not None:
@@ -837,7 +877,7 @@ class SakeContext:
             name, abi = info_from_address(str(logic_contract.address))
 
             if contract != logic_contract:
-                return SakeGetAbiResult(
+                return SakeGetAbiWithProxyResult(
                     success=True,
                     name=name,
                     abi=abi,
@@ -848,7 +888,7 @@ class SakeContext:
             else:
                 proxy_name, proxy_abi = info_from_address(params.address)
 
-                return SakeGetAbiResult(
+                return SakeGetAbiWithProxyResult(
                     success=True,
                     name=name,
                     abi=abi,
