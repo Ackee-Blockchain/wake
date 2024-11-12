@@ -427,6 +427,14 @@ class LspServer:
                 ),
                 SakeGetAbiParams,
             ),
+            RequestMethodEnum.SAKE_GET_ABI_WITH_PROXY: (
+                lambda params: (
+                    self.__sake_context.get_abi_with_proxy(  # pyright: ignore reportAttributeAccessIssue
+                        params,
+                    )
+                ),
+                SakeGetAbiParams,
+            ),
         }
 
         self.__notification_mapping = {
