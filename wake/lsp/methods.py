@@ -142,3 +142,4 @@ class RequestMethodEnum(StrEnum):
     SAKE_GET_BALANCES = "wake/sake/getBalances"
     SAKE_SET_BALANCES = "wake/sake/setBalances"
     SAKE_GET_ABI = "wake/sake/getAbi"
+    SAKE_GET_ABI_WITH_PROXY = "wake/sake/getAbiWithProxy"
