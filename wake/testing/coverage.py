@@ -350,6 +350,8 @@ class CoverageHandler:
     ]
     _callback: Optional[Callable]
 
+    latest_build: ProjectBuild
+
     def __init__(self, config: WakeConfig):
         compiler = SolidityCompiler(config)
         compiler.load(console=console)
@@ -368,6 +370,7 @@ class CoverageHandler:
         self._visited_modifiers = set()
         self._last_statements = defaultdict(returning_none)
         self._callback = None
+        self.latest_build = compiler.latest_build
 
         errored = False
         for cu in compiler.latest_build_info.compilation_units.values():
@@ -397,6 +400,11 @@ class CoverageHandler:
         console.log(
             f"[green]Prepared coverage data in [bold green]{end - start:.2f} s[/bold green][/]"
         )
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+
+        self.latest_build.fix_after_deserialization(lsp=False)
 
     def set_callback(self, callback: Callable) -> None:
         self._callback = callback
