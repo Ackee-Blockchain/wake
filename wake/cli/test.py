@@ -248,11 +248,10 @@ def run_test(
 
     if proc_count == -1:
         proc_count = os.cpu_count()
-    elif proc_count is None:
-        proc_count = 1
-    assert proc_count is not None
+    if coverage == -1:
+        coverage = proc_count or 1
 
-    if coverage > proc_count:
+    if coverage > (proc_count or 1):
         raise click.BadParameter(
             "Coverage process count must be less than or equal to process count."
         )
@@ -276,15 +275,15 @@ def run_test(
     set_verbosity(verbosity)
 
     # generate remaining random seeds
-    if len(random_seeds) < proc_count:
-        for i in range(proc_count - len(random_seeds)):
+    if len(random_seeds) < (proc_count or 1):
+        for i in range((proc_count or 1) - len(random_seeds)):
             random_seeds.append(os.urandom(8))
 
     if no_pytest:
         run_no_pytest(
             config,
             debug,
-            proc_count,
+            proc_count or 1,
             coverage,
             random_seeds,
             attach_first,
@@ -311,7 +310,7 @@ def run_test(
         pytest_args.append("-p")
         pytest_args.append("no:pytest_ethereum")
 
-        if proc_count > 1:
+        if proc_count is not None:
             from wake.testing.pytest_plugin_multiprocess_server import (
                 PytestWakePluginMultiprocessServer,
             )
