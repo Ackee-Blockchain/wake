@@ -6,6 +6,12 @@ small.label {
 }
 </style>
 
+## 4.13.2 <small>(Nov 14, 2024)</small> { id="4.13.2" }
+
+Fixes:
+
+- fixed coverage collection in multiprocess testing <small class="label">[testing framework]</small>
+
 ## 4.13.1 <small>(Nov 4, 2024)</small> { id="4.13.1" }
 
 Fixes:
