@@ -165,7 +165,7 @@ class SakeLoadStateParams(SakeParams):
     chain_dump: str
 
 
-class SakeGetAbiParams(SakeParams):
+class SakeGetAbiParams(LspModel):
     address: str
     chain_id: int
 
@@ -173,7 +173,6 @@ class SakeGetAbiParams(SakeParams):
 class SakeGetAbiResult(SakeResult):
     name: str
     abi: List
-
 
 class SakeGetAbiWithProxyParams(SakeParams):
     address: str
