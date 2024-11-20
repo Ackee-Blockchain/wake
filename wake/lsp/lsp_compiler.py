@@ -482,9 +482,13 @@ class LspCompiler:
 
                 for command_type, data in subprocess.responses.values():
                     if command_type == SubprocessCommandType.DETECTORS_FAILURE:
-                        await self.__server.log_message(f"Detectors error: {data}", MessageType.ERROR)
+                        await self.__server.log_message(
+                            f"Detectors error: {data}", MessageType.ERROR
+                        )
                     elif command_type == SubprocessCommandType.PRINTERS_FAILURE:
-                        await self.__server.log_message(f"Printers error: {data}", MessageType.ERROR)
+                        await self.__server.log_message(
+                            f"Printers error: {data}", MessageType.ERROR
+                        )
 
                 raise RuntimeError("Subprocess has terminated unexpectedly")
 
@@ -1163,7 +1167,10 @@ class LspCompiler:
                 if self.__perform_files_discovery:
                     while True:
                         try:
-                            for f in glob.iglob(str(self.__config.project_root_path / "**/*.sol"), recursive=True):
+                            for f in glob.iglob(
+                                str(self.__config.project_root_path / "**/*.sol"),
+                                recursive=True,
+                            ):
                                 file = Path(f)
                                 if not self.__file_excluded(file) and file.is_file():
                                     self.__discovered_files.add(file.resolve())
@@ -1517,7 +1524,9 @@ class LspCompiler:
         handler = LspLoggingHandler(logging_buffer)
         logger.addHandler(handler)
 
-        compilation_units = self.__compiler.build_compilation_units_maximize(graph, logger)
+        compilation_units = self.__compiler.build_compilation_units_maximize(
+            graph, logger
+        )
 
         for log in logging_buffer:
             await self.__server.log_message(log[0], log[1])
@@ -1651,7 +1660,14 @@ class LspCompiler:
         if progress_token is not None:
             await self.__server.progress_end(progress_token)
 
-        return True, contract_info, asts, errors, skipped_source_units, source_units_to_paths
+        return (
+            True,
+            contract_info,
+            asts,
+            errors,
+            skipped_source_units,
+            source_units_to_paths,
+        )
 
     async def __compile(
         self,
@@ -1735,7 +1751,9 @@ class LspCompiler:
         handler = LspLoggingHandler(logging_buffer)
         logger.addHandler(handler)
 
-        compilation_units = self.__compiler.build_compilation_units_maximize(graph, logger)
+        compilation_units = self.__compiler.build_compilation_units_maximize(
+            graph, logger
+        )
 
         for log in logging_buffer:
             await self.__server.log_message(log[0], log[1])
@@ -1819,11 +1837,17 @@ class LspCompiler:
                     # however, there may be other CUs compiling this file (for different subprojects) where compilation was successful
                     # to prevent the case where files from different subprojects depending on this file would be left orphaned,
                     # we need to remove them from the build as well
-                    files = {source_units_to_paths[to] for (_, to) in nx.edge_bfs(graph, [
-                        source_unit_name
-                        for source_unit_name in graph.nodes
-                        if graph.nodes[source_unit_name]["path"] == file
-                    ])}
+                    files = {
+                        source_units_to_paths[to]
+                        for (_, to) in nx.edge_bfs(
+                            graph,
+                            [
+                                source_unit_name
+                                for source_unit_name in graph.nodes
+                                if graph.nodes[source_unit_name]["path"] == file
+                            ],
+                        )
+                    }
                     files.add(file)
 
                     for file in files:
@@ -2039,11 +2063,17 @@ class LspCompiler:
                     # however, there may be other CUs compiling this file (for different subprojects) where compilation was successful
                     # to prevent the case where files from different subprojects depending on this file would be left orphaned,
                     # we need to remove them from the build as well
-                    files = {source_units_to_paths[to] for (_, to) in nx.edge_bfs(graph, [
-                        source_unit_name
-                        for source_unit_name in graph.nodes
-                        if graph.nodes[source_unit_name]["path"] == file
-                    ])}
+                    files = {
+                        source_units_to_paths[to]
+                        for (_, to) in nx.edge_bfs(
+                            graph,
+                            [
+                                source_unit_name
+                                for source_unit_name in graph.nodes
+                                if graph.nodes[source_unit_name]["path"] == file
+                            ],
+                        )
+                    }
                     files.add(file)
 
                     for file in files:
@@ -2105,7 +2135,9 @@ class LspCompiler:
                         # file was already processed
                         # index AST + register (possibly new) source unit name
                         self.__ir_reference_resolver.index_nodes(ast, path, cu.hash)
-                        self.__source_units[path]._source_unit_names.add(ast.absolute_path)
+                        self.__source_units[path]._source_unit_names.add(
+                            ast.absolute_path
+                        )
                         continue
                     elif cu not in compilation_units_per_file[path]:
                         # file recompiled but canonical AST not indexed yet
@@ -2119,7 +2151,9 @@ class LspCompiler:
                     self.__ir_reference_resolver.index_nodes(ast, path, cu.hash)
 
                     for prev_ast, prev_cu_hash in ast_index[path]:
-                        self.__ir_reference_resolver.index_nodes(prev_ast, path, prev_cu_hash)
+                        self.__ir_reference_resolver.index_nodes(
+                            prev_ast, path, prev_cu_hash
+                        )
 
                     interval_tree = IntervalTree()
                     init = IrInitTuple(
@@ -2421,7 +2455,10 @@ class LspCompiler:
                 # perform Solidity files discovery
                 while True:
                     try:
-                        for f in glob.iglob(str(self.__config.project_root_path / "**/*.sol"), recursive=True):
+                        for f in glob.iglob(
+                            str(self.__config.project_root_path / "**/*.sol"),
+                            recursive=True,
+                        ):
                             file = Path(f)
                             if not self.__file_excluded(file) and file.is_file():
                                 self.__discovered_files.add(file.resolve())

@@ -532,9 +532,7 @@ class SakeContext:
                         "big",
                     )
                     metadata = bytes.fromhex(
-                        info.evm.deployed_bytecode.object[
-                            -metadata_length * 2 - 4 : -4
-                        ]
+                        info.evm.deployed_bytecode.object[-metadata_length * 2 - 4 : -4]
                     )
                     self.fqn_by_metadata[metadata] = fqn
 
