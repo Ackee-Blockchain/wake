@@ -29,6 +29,7 @@ from wake.lsp.exceptions import LspError
 from wake.lsp.lsp_data_model import LspModel
 from wake.lsp.protocol_structures import ErrorCodes
 from wake.testing import Account, Address, Chain, UnknownTransactionRevertedError
+from wake.utils.file_utils import is_relative_to
 
 
 class SakeResult(LspModel):
@@ -417,6 +418,7 @@ class SakeContext:
                 asts,
                 errors,
                 skipped_source_units,
+                source_units_to_paths,
             ) = await self.lsp_context.compiler.bytecode_compile()
 
             self.libraries.clear()
@@ -508,10 +510,33 @@ class SakeContext:
 
                     self.creation_code_index.append((tuple(bytecode_segments), fqn))
 
-                if len(info.evm.deployed_bytecode.object) >= 106:
-                    self.fqn_by_metadata[
-                        bytes.fromhex(info.evm.deployed_bytecode.object[-106:])
-                    ] = fqn
+                config = next(
+                    (
+                        config
+                        for config in self.lsp_context.config.subproject.values()
+                        if any(
+                            is_relative_to(source_units_to_paths[source_unit_name], p)
+                            for p in config.paths
+                        )
+                    ),
+                    self.lsp_context.config.compiler.solc,
+                )
+
+                if (
+                    len(info.evm.deployed_bytecode.object) > 0
+                    and config.metadata.append_CBOR != False
+                    and config.metadata.bytecode_hash != "none"
+                ):
+                    metadata_length = int.from_bytes(
+                        bytes.fromhex(info.evm.deployed_bytecode.object[-4:]),
+                        "big",
+                    )
+                    metadata = bytes.fromhex(
+                        info.evm.deployed_bytecode.object[
+                            -metadata_length * 2 - 4 : -4
+                        ]
+                    )
+                    self.fqn_by_metadata[metadata] = fqn
 
                 bytecode_by_fqn[fqn] = bytecode
 
@@ -898,3 +923,6 @@ class SakeContext:
                 )
         except Exception as e:
             raise LspError(ErrorCodes.InternalError, str(e)) from None
+
+    # @chain_connected
+    # async def register_abi(self, params: SakeRegisterAbiParams) -> SakeResult:
