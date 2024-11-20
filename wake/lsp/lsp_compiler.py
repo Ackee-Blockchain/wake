@@ -1487,11 +1487,12 @@ class LspCompiler:
         Dict[str, Dict],
         Dict[str, Set[Tuple[str, Path, int, int]]],
         Dict[str, Tuple[str, Path]],
+        Dict[str, Path],
     ]:
         try:
             await self.__check_target_versions(show_message=True)
         except CompilationError:
-            return False, {}, {}, {}, {}
+            return False, {}, {}, {}, {}, {}
 
         modified_files = {
             path: info.text.encode("utf-8")
@@ -1510,7 +1511,7 @@ class LspCompiler:
         except CompilationError as e:
             await self.__server.show_message(str(e), MessageType.ERROR)
             await self.__server.log_message(str(e), MessageType.ERROR)
-            return False, {}, {}, {}, {}
+            return False, {}, {}, {}, {}, {}
 
         logging_buffer = []
         handler = LspLoggingHandler(logging_buffer)
@@ -1523,7 +1524,7 @@ class LspCompiler:
         logging_buffer.clear()
 
         if len(compilation_units) == 0:
-            return False, {}, {}, {}, {}
+            return False, {}, {}, {}, {}, {}
 
         subprojects = {cu.subproject for cu in compilation_units}
         build_settings = {
@@ -1590,7 +1591,7 @@ class LspCompiler:
             if progress_token is not None:
                 await self.__server.progress_end(progress_token)
 
-            return False, {}, {}, {}, {}
+            return False, {}, {}, {}, {}, {}
         finally:
             logger.removeHandler(handler)
 
@@ -1650,7 +1651,7 @@ class LspCompiler:
         if progress_token is not None:
             await self.__server.progress_end(progress_token)
 
-        return True, contract_info, asts, errors, skipped_source_units
+        return True, contract_info, asts, errors, skipped_source_units, source_units_to_paths
 
     async def __compile(
         self,
