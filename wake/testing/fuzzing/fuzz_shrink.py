@@ -346,8 +346,10 @@ def shrink_collecting_phase(test_instance: FuzzTest, flows, invariants, flow_sta
 
 def shrink_test(test_class: type[FuzzTest], flows_count: int):
     error_flow_num = get_error_flow_num() # argument
+    actual_error_flow_num = error_flow_num
     print("Fuzz test shrink start! First of all, collect random/flow information!!! >_<")
-    print("current time: ", datetime.now())
+    shrink_start_time = datetime.now()
+    print("Start time: ", shrink_start_time)
     test_instance = test_class()
     chains = get_connected_chains()
     flows: List[Callable] = __get_methods(test_instance, "flow")
@@ -376,6 +378,9 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
     base_date_time = datetime.now()
 
     # sorted_flows sort depends on appeard count in flow_states
+    # sort by flow_name.
+    # try to remove flow from most appeared flow to least appeared flow.
+    # so if most appeared flow is removable, it would significantly reduce the time.
     flow_states_map = defaultdict(int)
     for flow_state in flow_states:
         flow_states_map[flow_state.flow_name] += 1 # flow_name or flow
@@ -406,10 +411,11 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
         print(f"Shrunken flows rate: {removed_sum}/{len(flow_states)} = {(removed_sum*100/len(flow_states)):.2f}%")
 
         if flow_states_map[curr_removing_flow.__name__] <= 1: # since count is 1 is same as brute force test
+            # the 4 is the privious print lines
             clear_previous_lines(4)
             break # since it is sorted, and not required to snapshot, already taken.
-        # print("potencial removing count: ", count)
         success = False
+        shortcut = False
         with print_ignore(debug=False):
             try:
                 for j in range(flows_count):
@@ -449,15 +455,17 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
             except OverRunException:
                 print("overrun!")
                 reason = "Over run (did not reproduce error)"
-                pass
+
             except Exception as e:
                 reason = "at " + str(j) + " with " + str(e)
-
                 # Check exception type and exception lines in the test file.
                 if (IGNORE_FLOW_INDEX or test_instance._flow_num == error_flow_num) and compare_exceptions(e, exception_content):
+                    if test_instance._flow_num != error_flow_num:
+                        shortcut = True
+                        assert test_instance._flow_num == j
 
                     # The removed flow is not necessary to reproduce the same error.  Try to remove next flow
-                    for flow_state_ in flow_states:
+                    for flow_state_ in flow_states[:j]: # 0 to until index j
                         if flow_state_.flow == curr_removing_flow:
                             flow_state_.required = False
                             removed_sum += 1
@@ -473,12 +481,18 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
 
         clear_previous_lines(4)
         if success:
-            print("Remove result: ", curr_removing_flow.__name__, " ✅")
+            print("Remove result: ", curr_removing_flow.__name__, " ✅", end="")
+            if shortcut:
+                print(f" 🌟 shortcut from {error_flow_num} to {j}")
+                removed_sum += error_flow_num - j
+                error_flow_num = j
+            else:
+                print("")
         else:
             print("Remove result: ", curr_removing_flow.__name__, " ⛔", "Reason:", reason)
 
     time_spent_for_one_fuzz = min(time_spent_for_one_fuzz, new_time_spent_for_one_fuzz)
-    print(f"Removed flows: {removed_sum}/{len(flow_states)} = {removed_sum/len(flow_states)*100:.2f}%")
+    print(f"Removed flows: {removed_sum}/{actual_error_flow_num} = {removed_sum/actual_error_flow_num*100:.2f}%")
     print("Time spent for the flow type removal: ", datetime.now() - base_date_time)
 
     base_date_time = datetime.now()
@@ -486,7 +500,7 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
     curr = 0 # current testing flow index
     prev_curr = -1
     print("Brute force removal start")
-    print(f"Estimated maximum completion time for brute force removal: (remaining flow count={error_flow_num-removed_sum}) * (time for one fuzz={time_spent_for_one_fuzz}) = {(error_flow_num-removed_sum) * time_spent_for_one_fuzz}")
+    print(f"Estimated maximum completion time for brute force removal: (remaining flow count={actual_error_flow_num-removed_sum}) * (time for one fuzz={time_spent_for_one_fuzz}) = {(actual_error_flow_num-removed_sum) * time_spent_for_one_fuzz}")
     while curr < len(flow_states) and flow_states[curr].required == False:
         curr += 1
     # remove flow by brute force
@@ -499,10 +513,12 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
         print("")
         print(f"Removing {curr} th flow {flow_states[curr].flow_name}")
         print(f"Brute force flow removal progress: {(curr* 100) / (error_flow_num+1):.2f}%")
-        print(f"Shrunken flows rate: {removed_sum}/{len(flow_states)} = {(removed_sum*100/len(flow_states)):.2f}%")
+        print(f"Shrunken flows rate: {removed_sum}/{actual_error_flow_num} = {(removed_sum*100/actual_error_flow_num):.2f}%")
 
+        success = False
+        shortcut = False
         reason = None
-        with print_ignore():
+        with print_ignore(debug=False):
             try:
                 # Python state and chain state is same as snapshot
                 # and start running from flow at "prev_curr".
@@ -557,7 +573,10 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
                 reason = "at " + str(j) + " with " + str(e)
                 # Check exception type and exception lines in the test file.
                 if (IGNORE_FLOW_INDEX or test_instance._flow_num == error_flow_num) and compare_exceptions(e, exception_content):
-
+                    if test_instance._flow_num != error_flow_num:
+                        print("test_instance._flow_num: ", test_instance._flow_num, "j: ", j, "error_flow_num: ", error_flow_num)
+                        shortcut = True
+                        assert test_instance._flow_num == j
                     # The removed flow is not necessary to reproduce the same error.  Try to remove next flow
                     assert flow_states[curr].required == False
                     success = True
@@ -575,7 +594,16 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
 
         if success:
             removed_sum += 1
-            print("Remove result: ", curr, "th flow: ", flow_states[curr].flow_name, " ✅")
+            print("Remove result: ", curr, "th flow: ", flow_states[curr].flow_name, " ✅", end="")
+            if shortcut:
+                print(f" 🌟 shortcut from {error_flow_num} to {j}")
+
+                for i in range(j, error_flow_num):
+                    if flow_states[i].required == True:
+                        removed_sum += 1
+                error_flow_num = j
+            else:
+                print("")
         else:
             print("Remove result: ", curr, "th flow: ", flow_states[curr].flow_name, " ⛔ ", "Reason:", reason)
         prev_curr = curr
@@ -586,14 +614,14 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
 
     print("Shrinking completed")
     print("Time spent for the brute force removal: ", datetime.now() - base_date_time)
-    print(f"Shrunken flows rate: {removed_sum}/{len(flow_states)} = {(removed_sum*100/len(flow_states)):.2f}%")
+    print(f"Shrunken flows rate: {removed_sum}/{actual_error_flow_num} = {(removed_sum*100/actual_error_flow_num):.2f}%")
     print("Those flows were required to reproduce the error")
-    for i in range(len(flow_states)):
+    for i in range(0, error_flow_num+1):
         if flow_states[i].required:
             print(flow_states[i].flow_name, " : ", flow_states[i].flow_params)
     print("")
     project_root_path = get_config().project_root_path
-
+    print("Time spent for shrinking: ", datetime.now() - shrink_start_time)
     crash_logs_dir = project_root_path / ".wake" / "logs" / "shrank"
 
     crash_logs_dir.mkdir(parents=True, exist_ok=True)
