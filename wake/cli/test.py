@@ -217,6 +217,12 @@ class FileAndPassParamType(click.ParamType):
     help="Distribution of test cases to processes.",
 )
 @click.option(
+    "--remote",
+    is_flag=True,
+    default=False,
+    help="Notifies remote about test run.",
+)
+@click.option(
     "-v",
     "--verbosity",
     default=0,
@@ -235,6 +241,7 @@ def run_test(
     seeds: Tuple[str],
     attach_first: bool,
     dist: str,
+    remote: bool,
     verbosity: int,
     paths_or_pytest_args: Tuple[str, ...],
 ) -> None:
@@ -327,6 +334,7 @@ def run_test(
                             attach_first,
                             debug,
                             dist,
+                            remote,
                             pytest_args,
                         )
                     ],
@@ -339,7 +347,7 @@ def run_test(
                 pytest.main(
                     pytest_args,
                     plugins=[
-                        PytestWakePluginSingle(config, debug, coverage, random_seeds)
+                        PytestWakePluginSingle(config, debug, coverage, random_seeds, remote)
                     ],
                 )
             )
