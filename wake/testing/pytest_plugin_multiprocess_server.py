@@ -262,14 +262,15 @@ class PytestWakePluginMultiprocessServer:
                             exception_info[2],
                         )
 
-                        message = messaging.Message(
-                            token=self._firebase_token,
-                            notification=messaging.Notification(
-                                title=f"Exception {exception_info[0]}",
-                                body=f"Process #{index}",
+                        if self._firebase_token is not None:
+                            message = messaging.Message(
+                                token=self._firebase_token,
+                                notification=messaging.Notification(
+                                    title=f"Exception {exception_info[0]}",
+                                    body=f"Process #{index}",
+                                )
                             )
-                        )
-                        messaging.send(message)
+                            messaging.send(message)
 
                         if progress is not None:
                             progress.stop()
@@ -300,14 +301,15 @@ class PytestWakePluginMultiprocessServer:
                         if progress is not None:
                             progress.start()
                     elif msg[0] == "breakpoint":
-                        message = messaging.Message(
-                            token=self._firebase_token,
-                            notification=messaging.Notification(
-                                title="Breakpoint reached",
-                                body=f"Process #{index}",
+                        if self._firebase_token is not None:
+                            message = messaging.Message(
+                                token=self._firebase_token,
+                                notification=messaging.Notification(
+                                    title="Breakpoint reached",
+                                    body=f"Process #{index}",
+                                )
                             )
-                        )
-                        messaging.send(message)
+                            messaging.send(message)
 
                         (filename, lineno, function_name, syntax) = pickle.loads(msg[2])
                         if progress is not None:
@@ -373,14 +375,15 @@ class PytestWakePluginMultiprocessServer:
 
                         self._processes.pop(index)
                     elif msg[0] == "pytest_internalerror":
-                        message = messaging.Message(
-                            token=self._firebase_token,
-                            notification=messaging.Notification(
-                                title="Internal pytest error",
-                                body=f"Process #{index}",
+                        if self._firebase_token is not None:
+                            message = messaging.Message(
+                                token=self._firebase_token,
+                                notification=messaging.Notification(
+                                    title="Internal pytest error",
+                                    body=f"Process #{index}",
+                                )
                             )
-                        )
-                        messaging.send(message)
+                            messaging.send(message)
 
                         exc_info = pytest.ExceptionInfo.from_exc_info(
                             pickle.loads(msg[2])
