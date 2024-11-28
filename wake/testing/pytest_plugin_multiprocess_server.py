@@ -24,6 +24,8 @@ from wake.testing.coverage import (
 
 from .pytest_plugin_multiprocess import PytestWakePluginMultiprocess
 
+from firebase_admin import credentials, messaging, initialize_app, db
+
 
 class PytestWakePluginMultiprocessServer:
     _config: WakeConfig
@@ -40,6 +42,8 @@ class PytestWakePluginMultiprocessServer:
     _exported_coverages: Dict[
         int, Dict[Path, Dict[IdePosition, IdeFunctionCoverageRecord]]
     ]
+
+    _firebase_token: Optional[str]
 
     def __init__(
         self,
@@ -62,6 +66,18 @@ class PytestWakePluginMultiprocessServer:
         self._dist = dist
         self._pytest_args = pytest_args
         self._exported_coverages = {i: {} for i in range(self._proc_count)}
+
+        if config.wake_remote.uuid is not None:
+            cred = credentials.Certificate(config.global_data_path / "fuzz-firebase-adminsdk.json")
+            initialize_app(
+                cred,
+                {
+                    "databaseURL": "https://wake-remote-default-rtdb.europe-west1.firebasedatabase.app/"
+                }
+            )
+
+            x = db.reference("/")
+            self._firebase_token = x.child("tokens").child(config.wake_remote.uuid).get()
 
     def pytest_sessionstart(self, session: pytest.Session):
         if self._coverage != 0:
@@ -104,6 +120,16 @@ class PytestWakePluginMultiprocessServer:
             )
             p.start()
         signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+        if self._firebase_token is not None:
+            message = messaging.Message(
+                token=self._firebase_token,
+                notification=messaging.Notification(
+                    title="New fuzzing session started",
+                    body=f"{self._proc_count} tasks",
+                )
+            )
+            messaging.send(message)
 
     def pytest_sessionfinish(self, session: pytest.Session):
         self._queue.cancel_join_thread()
@@ -220,6 +246,15 @@ class PytestWakePluginMultiprocessServer:
                             exception_info[2],
                         )
 
+                        message = messaging.Message(
+                            token=self._firebase_token,
+                            notification=messaging.Notification(
+                                title=f"Exception {}",
+                                body=f"Process #{index}",
+                            )
+                        )
+                        messaging.send(message)
+
                         if progress is not None:
                             progress.stop()
 
@@ -249,6 +284,14 @@ class PytestWakePluginMultiprocessServer:
                         if progress is not None:
                             progress.start()
                     elif msg[0] == "breakpoint":
+                        message = messaging.Message(
+                            token=self._firebase_token,
+                            notification=messaging.Notification(
+                                title="Breakpoint reached",
+                                body=f"Process #{index}",
+                            )
+                        )
+                        messaging.send(message)
 
                         (filename, lineno, function_name, syntax) = pickle.loads(msg[2])
                         if progress is not None:
@@ -314,6 +357,15 @@ class PytestWakePluginMultiprocessServer:
 
                         self._processes.pop(index)
                     elif msg[0] == "pytest_internalerror":
+                        message = messaging.Message(
+                            token=self._firebase_token,
+                            notification=messaging.Notification(
+                                title="Internal pytest error",
+                                body=f"Process #{index}",
+                            )
+                        )
+                        messaging.send(message)
+
                         exc_info = pytest.ExceptionInfo.from_exc_info(
                             pickle.loads(msg[2])
                         )

@@ -21,6 +21,7 @@ from .print import run_print
 from .run import run_run
 from .svm import run_svm
 from .test import run_test
+from .qr import run_qr
 
 if platform.system() != "Windows":
     try:
@@ -211,6 +212,7 @@ main.add_command(run_print)
 main.add_command(run_run)
 main.add_command(run_svm)
 main.add_command(run_test)
+main.add_command(run_qr)
 
 
 @main.command(name="config")
