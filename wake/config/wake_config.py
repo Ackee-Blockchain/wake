@@ -380,6 +380,11 @@ class WakeConfig:
         self.load(self.global_config_path)
         self.load(self.local_config_path)
 
+        wake_remote_path = self.global_config_path.parent / "wake_remote.txt"
+        if wake_remote_path.exists():
+            with wake_remote_path.open("r") as f:
+                self.__config.api_keys["wake_remote"] = f.read()
+
     def load(self, path: Path) -> None:
         """
         Load config from the provided file path. Any already loaded config options are overridden by the options loaded

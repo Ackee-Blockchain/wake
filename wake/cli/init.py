@@ -277,17 +277,13 @@ def run_init(
 
     if "wake_remote" not in config.api_keys:
         import uuid
+        # import toml
         wake_remote_key = str(uuid.uuid4())
         config.update({"api_keys": {"wake_remote": wake_remote_key}}, [])
         # global config path already made when WakeConfig was created
-        if not config.global_config_path.exists():
-            with config.global_config_path.open("w") as f:
-                f.write("[api_keys]\n")
-                f.write(f'wake_remote = "{config.api_keys["wake_remote"]}"\n')
-        else:
-            with config.global_config_path.open("a") as f:
-                f.write("\n")
-                f.write(f'wake_remote = "{config.api_keys["wake_remote"]}"\n')
+        wake_remote_file = config.global_config_path.parent / "wake_remote.txt"
+        with wake_remote_file.open("w") as f:
+            f.write(config.api_keys["wake_remote"])
 
     if not config.local_config_path.exists() or force:
         write_config(config)
