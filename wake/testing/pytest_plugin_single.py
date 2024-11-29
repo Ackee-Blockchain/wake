@@ -149,3 +149,4 @@ class PytestWakePluginSingle:
     def pytest_terminal_summary(self, terminalreporter, exitstatus, config):
         terminalreporter.section("Wake")
         terminalreporter.write_line("Random seed: " + self._random_seeds[0].hex())
+        terminalreporter.write_line("Executed flow number: " + str(get_error_flow_num()))
