@@ -199,7 +199,7 @@ class ChainInterfaceAbc(ABC):
             if args[0] == "anvil" and platform.system() != "Windows":
                 args[0] = str(Path.home() / ".foundry/bin/anvil")
                 console.print(f"Launching {' '.join(args)}")
-                process = subprocess.Popen(args, stdout=subprocess.DEVNULL)
+                process = subprocess.Popen(args, stdout=subprocess.DEVNULL, start_new_session=True)
             else:
                 raise
 
