@@ -11,9 +11,38 @@ from .abc import ProtocolAbc
 from .http import HttpProtocol
 from .ipc import IpcProtocol
 from .websocket import WebsocketProtocol
+import signal
+from contextlib import contextmanager
 
 logger = get_logger(__name__)
 
+
+_no_interrupt = False
+_keyboard_interrupt_in_no_interrupt = False
+
+def signal_handler(signum, frame):
+    if _no_interrupt:
+        global _keyboard_interrupt_in_no_interrupt
+        _keyboard_interrupt_in_no_interrupt = True
+    else:
+        raise KeyboardInterrupt
+
+
+@contextmanager
+def set_no_interrupt():
+    global _no_interrupt
+    global _keyboard_interrupt_in_no_interrupt
+    assert _keyboard_interrupt_in_no_interrupt == False # for checking'
+    _no_interrupt = True
+
+    yield
+
+    _no_interrupt = False
+    if _keyboard_interrupt_in_no_interrupt:
+        _keyboard_interrupt_in_no_interrupt = False
+        raise KeyboardInterrupt
+
+signal.signal(signal.SIGINT, signal_handler)
 
 class JsonRpcError(Exception):
     def __init__(self, data: Dict):
@@ -52,17 +81,18 @@ class JsonRpcCommunicator:
         return self._connected
 
     def send_request(self, method_name: str, params: Optional[List] = None) -> Any:
-        post_data = {
-            "jsonrpc": "2.0",
-            "method": method_name,
-            "params": params if params is not None else [],
-            "id": self._request_id,
-        }
-        logger.info(f"Sending request:\n{post_data}")
-        self._request_id += 1
+        with set_no_interrupt():
+            post_data = {
+                "jsonrpc": "2.0",
+                "method": method_name,
+                "params": params if params is not None else [],
+                "id": self._request_id,
+            }
+            logger.info(f"Sending request:\n{post_data}")
+            self._request_id += 1
 
-        response = self._protocol.send_recv(json.dumps(post_data))
-        logger.info(f"Received response:\n{json.dumps(response)}")
-        if "error" in response:
-            raise JsonRpcError(response["error"])
-        return response["result"]
+            response = self._protocol.send_recv(json.dumps(post_data))
+            logger.info(f"Received response:\n{json.dumps(response)}")
+            if "error" in response:
+                raise JsonRpcError(response["error"])
+            return response["result"]
