@@ -17,32 +17,22 @@ from contextlib import contextmanager
 logger = get_logger(__name__)
 
 
-_no_interrupt = False
-_keyboard_interrupt_in_no_interrupt = False
-
-def signal_handler(signum, frame):
-    if _no_interrupt:
-        global _keyboard_interrupt_in_no_interrupt
-        _keyboard_interrupt_in_no_interrupt = True
-    else:
-        raise KeyboardInterrupt
-
-
 @contextmanager
-def set_no_interrupt():
-    global _no_interrupt
-    global _keyboard_interrupt_in_no_interrupt
-    assert _keyboard_interrupt_in_no_interrupt == False # for checking'
-    _no_interrupt = True
+def delayed_keyboard_interrupt():
+    signal_received = []
 
-    yield
+    def signal_handler(signum, frame):
+        signal_received.append((signum, frame))
 
-    _no_interrupt = False
-    if _keyboard_interrupt_in_no_interrupt:
-        _keyboard_interrupt_in_no_interrupt = False
-        raise KeyboardInterrupt
+    original_handler = signal.getsignal(signal.SIGINT)
+    signal.signal(signal.SIGINT, signal_handler)
+    try:
+        yield
+    finally:
+        signal.signal(signal.SIGINT, original_handler)
+        if signal_received:
+            original_handler(*signal_received[0])
 
-signal.signal(signal.SIGINT, signal_handler)
 
 class JsonRpcError(Exception):
     def __init__(self, data: Dict):
@@ -81,7 +71,7 @@ class JsonRpcCommunicator:
         return self._connected
 
     def send_request(self, method_name: str, params: Optional[List] = None) -> Any:
-        with set_no_interrupt():
+        with delayed_keyboard_interrupt():
             post_data = {
                 "jsonrpc": "2.0",
                 "method": method_name,
