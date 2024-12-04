@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import pickle
 import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional, Tuple
@@ -140,7 +139,6 @@ def run_test(
 ) -> None:
     """Execute Wake tests using pytest."""
     import os
-
     import pytest
 
     from wake.config import WakeConfig
@@ -249,7 +247,9 @@ def run_test(
             for arg in args:
                 if Path(arg).exists():
                     if has_path:
-                        raise click.BadParameter("Multiple test files specified for shrinking")
+                        raise click.BadParameter(
+                            "Multiple test files specified for shrinking"
+                        )
                     has_path = True
                     path = arg
             return has_path, path
@@ -351,11 +351,11 @@ def run_test(
             )
 
         if shrink is not None:
+            set_fuzz_mode(1)
             pytest_path_specified, test_path = get_single_test_path(pytest_args)
             shrink_crash_path = get_shrink_argument_path(shrink)
             path = extract_test_path(shrink_crash_path)
             number = extract_executed_flow_number(shrink_crash_path)
-            set_fuzz_mode(1)
             set_error_flow_num(number)
             beginning_random_state_bytes = extract_internal_state(shrink_crash_path)
             set_sequence_initial_internal_state(beginning_random_state_bytes)
@@ -367,10 +367,12 @@ def run_test(
                 pytest_args.insert(0, path)
 
         if shrank:
+            import pickle
+            from wake.testing.fuzzing.fuzz_shrink import ShrankInfoFile
+
             set_fuzz_mode(2)
             pytest_path_specified, test_path = get_single_test_path(pytest_args)
             shrank_data_path = get_shrank_argument_path(shrank)
-            from wake.testing.fuzzing.fuzz_shrink import ShrankInfoFile
 
             with open(shrank_data_path, "rb") as f:
                 store_data: ShrankInfoFile = pickle.load(f)
