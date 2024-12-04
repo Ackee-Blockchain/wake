@@ -107,6 +107,7 @@ class FileAndPassParamType(click.ParamType):
     is_flag=False,
     flag_value=0,
     default=None,
+    required=False,
 )
 @click.option(
     "-SR",
@@ -118,6 +119,7 @@ class FileAndPassParamType(click.ParamType):
     is_flag=False,
     flag_value=0,
     default=None,
+    required=False,
 )
 @click.argument("paths_or_pytest_args", nargs=-1, type=FileAndPassParamType())
 @click.pass_context
@@ -241,7 +243,18 @@ def run_test(
         )
         from wake.testing.pytest_plugin_single import PytestWakePluginSingle
 
-        def extract_test_path(crash_log_file_path):
+        def get_single_test_path(args: list[str]) -> tuple[bool, str | None]:
+            has_path = False
+            path = None
+            for arg in args:
+                if Path(arg).exists():
+                    if has_path:
+                        raise click.BadParameter("Multiple test files specified for shrinking")
+                    has_path = True
+                    path = arg
+            return has_path, path
+
+        def extract_test_path(crash_log_file_path: Path) -> str:
             if crash_log_file_path is not None:
                 with open(crash_log_file_path, "r") as file:
                     for line in file:
@@ -250,9 +263,9 @@ def run_test(
                             parts = line.split(":")
                             if len(parts) == 2:
                                 return parts[1].strip()
-            return None
+            raise ValueError("Unexpected file format")
 
-        def extract_executed_flow_number(crash_log_file_path):
+        def extract_executed_flow_number(crash_log_file_path: Path) -> int:
             if crash_log_file_path is not None:
                 with open(crash_log_file_path, "r") as file:
                     for line in file:
@@ -265,9 +278,9 @@ def run_test(
                                     return executed_flow_number
                                 except ValueError:
                                     pass  # Handle the case where the value after ":" is not an integer
-            return None
+            raise ValueError("Unexpected file format")
 
-        def extract_internal_state(crash_log_file_path):
+        def extract_internal_state(crash_log_file_path: Path) -> bytes:
             if crash_log_file_path is not None:
                 with open(crash_log_file_path, "r") as file:
                     for line in file:
@@ -282,9 +295,9 @@ def run_test(
                                     return internal_state_bytes
                                 except ValueError:
                                     pass  # Handle the case where the value after ":" is not a valid hex string
-            return None
+            raise ValueError("Unexpected file format")
 
-        def get_shrink_argument_path(shrink_path_str) -> Path:
+        def get_shrink_argument_path(shrink_path_str: str) -> Path:
             try:
                 path = Path(shrink_path_str)
                 if not path.exists():
@@ -308,7 +321,7 @@ def run_test(
                 raise click.BadParameter(f"Invalid crash log index: {index}")
             return Path(crash_logs[index])
 
-        def get_shrank_argument_path(shrank_path_str) -> Path:
+        def get_shrank_argument_path(shrank_path_str: str) -> Path:
             try:
                 shrank_path = Path(shrank_path_str)
                 if not shrank_path.exists():
@@ -338,24 +351,24 @@ def run_test(
             )
 
         if shrink is not None:
+            pytest_path_specified, test_path = get_single_test_path(pytest_args)
             shrink_crash_path = get_shrink_argument_path(shrink)
             path = extract_test_path(shrink_crash_path)
             number = extract_executed_flow_number(shrink_crash_path)
-            assert number is not None, "Unexpected file format"
             set_fuzz_mode(1)
             set_error_flow_num(number)
             beginning_random_state_bytes = extract_internal_state(shrink_crash_path)
-            assert beginning_random_state_bytes is not None, "Unexpected file format"
             set_sequence_initial_internal_state(beginning_random_state_bytes)
             if pytest_path_specified:
                 assert (
-                    path == pytest_args[0]
+                    path == test_path
                 ), "crash log file path must be same as the test file path in pytest_args"
             else:
-                pytest_args.insert(0, path)  # pyright: ignore reportArgumentType
+                pytest_args.insert(0, path)
 
         if shrank:
             set_fuzz_mode(2)
+            pytest_path_specified, test_path = get_single_test_path(pytest_args)
             shrank_data_path = get_shrank_argument_path(shrank)
             from wake.testing.fuzzing.fuzz_shrink import ShrankInfoFile
 
@@ -364,7 +377,7 @@ def run_test(
             target_fuzz_path = store_data.target_fuzz_path
             if pytest_path_specified:
                 assert (
-                    target_fuzz_path == pytest_args[0]
+                    target_fuzz_path == test_path
                 ), "Shrank data file path must be same as the test file path in pytest_args"
             else:
                 pytest_args.insert(0, target_fuzz_path)
