@@ -11,8 +11,27 @@ from .abc import ProtocolAbc
 from .http import HttpProtocol
 from .ipc import IpcProtocol
 from .websocket import WebsocketProtocol
+import signal
+from contextlib import contextmanager
 
 logger = get_logger(__name__)
+
+
+@contextmanager
+def delayed_keyboard_interrupt():
+    signal_received = []
+
+    def signal_handler(signum, frame):
+        signal_received.append((signum, frame))
+
+    original_handler = signal.getsignal(signal.SIGINT)
+    signal.signal(signal.SIGINT, signal_handler)
+    try:
+        yield
+    finally:
+        signal.signal(signal.SIGINT, original_handler)
+        if signal_received:
+            original_handler(*signal_received[0])
 
 
 class JsonRpcError(Exception):
@@ -52,17 +71,18 @@ class JsonRpcCommunicator:
         return self._connected
 
     def send_request(self, method_name: str, params: Optional[List] = None) -> Any:
-        post_data = {
-            "jsonrpc": "2.0",
-            "method": method_name,
-            "params": params if params is not None else [],
-            "id": self._request_id,
-        }
-        logger.info(f"Sending request:\n{post_data}")
-        self._request_id += 1
+        with delayed_keyboard_interrupt():
+            post_data = {
+                "jsonrpc": "2.0",
+                "method": method_name,
+                "params": params if params is not None else [],
+                "id": self._request_id,
+            }
+            logger.info(f"Sending request:\n{post_data}")
+            self._request_id += 1
 
-        response = self._protocol.send_recv(json.dumps(post_data))
-        logger.info(f"Received response:\n{json.dumps(response)}")
-        if "error" in response:
-            raise JsonRpcError(response["error"])
-        return response["result"]
+            response = self._protocol.send_recv(json.dumps(post_data))
+            logger.info(f"Received response:\n{json.dumps(response)}")
+            if "error" in response:
+                raise JsonRpcError(response["error"])
+            return response["result"]
