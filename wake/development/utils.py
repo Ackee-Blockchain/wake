@@ -8,7 +8,6 @@ import json
 import logging
 import math
 import warnings
-import logging
 from dataclasses import dataclass
 from functools import lru_cache
 from json import JSONDecodeError
@@ -62,7 +61,7 @@ from .primitive_types import FixedSizeList, bytes32, fixed_list_map, uint256
 # pyright: reportGeneralTypeIssues=false, reportOptionalIterable=false, reportOptionalSubscript=false, reportOptionalMemberAccess=false
 
 
-dummy_logger = logging.getLogger('dummy')
+dummy_logger = logging.getLogger("dummy")
 dummy_logger.addHandler(logging.NullHandler())
 dummy_logger.propagate = False
 
@@ -1718,7 +1717,9 @@ def _get_storage_layout_from_explorer(
         compiler.compile_unit_raw(
             compilation_units[0],
             parsed_version,
-            compiler.create_build_settings([SolcOutputSelectionEnum.STORAGE_LAYOUT], None),
+            compiler.create_build_settings(
+                [SolcOutputSelectionEnum.STORAGE_LAYOUT], None
+            ),
             dummy_logger,
         )
     )
