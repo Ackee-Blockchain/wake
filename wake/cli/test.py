@@ -1,13 +1,12 @@
 from __future__ import annotations
 
+import pickle
 import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional, Tuple
 
 import click.shell_completion as shell_completion
 import rich_click as click
-
-import pickle
 
 if TYPE_CHECKING:
     from wake.config import WakeConfig
@@ -233,14 +232,14 @@ def run_test(
         )
     else:
 
-        from wake.testing.pytest_plugin_single import PytestWakePluginSingle
         from wake.development.globals import (
+            get_config,
+            set_error_flow_num,
             set_fuzz_mode,
             set_sequence_initial_internal_state,
-            set_error_flow_num,
             set_shrank_path,
-            get_config,
         )
+        from wake.testing.pytest_plugin_single import PytestWakePluginSingle
 
         def extract_test_path(crash_log_file_path):
             if crash_log_file_path is not None:
