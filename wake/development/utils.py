@@ -1718,13 +1718,7 @@ def _get_storage_layout_from_explorer(
         compiler.compile_unit_raw(
             compilation_units[0],
             parsed_version,
-<<<<<<< HEAD
             compiler.create_build_settings([SolcOutputSelectionEnum.STORAGE_LAYOUT], None),
-=======
-            compiler.create_build_settings(
-                [SolcOutputSelectionEnum.STORAGE_LAYOUT], None
-            ),
->>>>>>> fc05b42a (:sparkles: single process error fixed but this commit is to remove lator)
             dummy_logger,
         )
     )
