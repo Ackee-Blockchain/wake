@@ -21,7 +21,7 @@ from wake.development.core import Chain
 import pickle
 
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import traceback
 from wake.utils.file_utils import is_relative_to
@@ -239,7 +239,7 @@ def shrank_reproduce(test_class: type[FuzzTest], dry_run: bool = False):
 
     print("Shrunken test passed")
 
-def shrink_collecting_phase(test_instance: FuzzTest, flows, invariants, flow_states:List[FlowState], chains: Tuple[Chain, ...], flows_count: int) -> Tuple[Exception, datetime]:
+def shrink_collecting_phase(test_instance: FuzzTest, flows, invariants, flow_states:List[FlowState], chains: Tuple[Chain, ...], flows_count: int) -> Tuple[Exception, timedelta]:
     data_time = datetime.now()
     flows_counter: DefaultDict[Callable, int] = defaultdict(int)
     invariant_periods: DefaultDict[Callable[[None], None], int] = defaultdict(int)
