@@ -145,7 +145,9 @@ class SolcConfig(WakeConfigModel):
     """
     Solidity files in these paths are excluded from compilation unless imported from a non-excluded file.
     """
-    include_paths: FrozenSet[PurePath] = Field(default_factory=lambda: frozenset([Path.cwd() / "node_modules"]))
+    include_paths: FrozenSet[PurePath] = Field(
+        default_factory=lambda: frozenset([Path.cwd() / "node_modules"])
+    )
     """
     Paths where to search for Solidity files imported using direct (non-relative) import paths.
     """
@@ -176,7 +178,9 @@ class SolcConfig(WakeConfigModel):
     Metadata config options.
     """
 
-    _normalize_paths = field_validator("allow_paths", "include_paths", "exclude_paths", mode="before")(normalize_paths)
+    _normalize_paths = field_validator(
+        "allow_paths", "include_paths", "exclude_paths", mode="before"
+    )(normalize_paths)
 
     @field_serializer("target_version", when_used="json")
     def serialize_target_version(self, version: Optional[SolidityVersion], info):
@@ -279,7 +283,9 @@ class DetectorsConfig(WakeConfigModel):
     Useful for ignoring detections in dependencies.
     """
 
-    _normalize_paths = field_validator("ignore_paths", "exclude_paths", mode="before")(normalize_paths)
+    _normalize_paths = field_validator("ignore_paths", "exclude_paths", mode="before")(
+        normalize_paths
+    )
 
 
 # namespace for detector configs
@@ -434,6 +440,7 @@ class GeneralConfig(WakeConfigModel):
             "value",
             "return_value",
             "error",
+            "events",
         ]
     )
     """

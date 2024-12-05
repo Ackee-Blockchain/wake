@@ -88,7 +88,7 @@ Wake can be configured using configuration options loaded from multiple sources 
     [general]
     call_trace_options = [
         "contract_name", "function_name", "named_arguments", "status",
-        "call_type", "value", "return_value", "error"
+        "call_type", "value", "return_value", "error", "events"
     ]
     json_rpc_timeout = 15
     link_format = "vscode://file/{path}:{line}:{col}"
@@ -214,7 +214,7 @@ Every detector supports at least the `min_confidence` and `min_impact` options:
 
 | Option                            | Description                                                                                                                                                                                                          |
 |:----------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| <nobr>`call_trace_options`</nobr> | What information to display in call traces. Possible options: `contract_name`, `address`, `function_name`, `named_arguments`, `arguments`, `status`, `call_type`, `value`, `gas`, `sender`, `return_value`, `error`. |
+| <nobr>`call_trace_options`</nobr> | What information to display in call traces. Possible options: `contract_name`, `address`, `function_name`, `named_arguments`, `arguments`, `status`, `call_type`, `value`, `gas`, `sender`, `return_value`, `error`, `events`. |
 | `json_rpc_timeout`                | Timeout in seconds when communicating with a node via JSON-RPC.                                                                                                                                                      |
 | `link_format`                     | Format of links to source code files used in detectors and printers. The link should contain `{path}`, `{line}` and `{col}` placeholders.                                                                            |
 
