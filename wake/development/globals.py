@@ -50,10 +50,26 @@ _exception_handler: Optional[
 ] = None
 _exception_handled = False
 
+_initial_internal_state: bytes = b""
+
 _coverage_handler: Optional[CoverageHandler] = None
 
 _config: Optional[WakeConfig] = None
 _verbosity: int = 0
+
+_fuzz_mode: int = 0
+
+_error_flow_num: int = 0
+
+
+_shrank_path: Optional[Path] = None
+
+def set_shrank_path(path: Path):
+    global _shrank_path
+    _shrank_path = path
+
+def get_shrank_path() -> Optional[Path]:
+    return _shrank_path
 
 
 def attach_debugger(
@@ -104,6 +120,20 @@ def attach_debugger(
     p.reset()
     p.interaction(None, tb)
 
+def get_fuzz_mode() -> int:
+    return _fuzz_mode
+
+def set_fuzz_mode(fuzz_mode: int):
+    global _fuzz_mode
+    _fuzz_mode = fuzz_mode
+
+def get_error_flow_num() -> int:
+    return _error_flow_num
+
+def set_error_flow_num(error_flow_num: int):
+    global _error_flow_num
+    _error_flow_num = error_flow_num
+
 
 def get_exception_handler() -> Optional[
     Callable[
@@ -131,6 +161,12 @@ def set_exception_handler(
     global _exception_handler
     _exception_handler = handler
 
+def set_sequence_initial_internal_state(intenral_state: bytes):
+    global _initial_internal_state
+    _initial_internal_state = intenral_state
+
+def get_sequence_initial_internal_state() -> bytes:
+    return _initial_internal_state
 
 def reset_exception_handled():
     global _exception_handled

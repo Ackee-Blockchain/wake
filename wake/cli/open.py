@@ -148,7 +148,7 @@ async def open_address(
             PurePosixPath(filename).is_absolute()
             for filename in standard_input.sources.keys()
         ):
-            raise ValueError("Absolute paths are not supported")
+            raise NotImplementedError("Absolute paths are not supported")
         if standard_input.settings is not None:
             if standard_input.settings.evm_version is not None:
                 project_config_raw["compiler"]["solc"]["evm_version"] = str(
@@ -182,7 +182,7 @@ async def open_address(
             a = TypeAdapter(Dict[str, SolcInputSource])
             s = a.validate_json(code)
             if any(PurePosixPath(filename).is_absolute() for filename in s.keys()):
-                raise ValueError("Absolute paths are not supported")
+                raise NotImplementedError("Absolute paths are not supported")
 
             sources = {project_dir / path: source.content for path, source in s.items()}
         except (ValidationError, json.JSONDecodeError) as e:

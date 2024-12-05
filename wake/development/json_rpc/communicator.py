@@ -1,6 +1,8 @@
 import json
 import logging
 import platform
+import signal
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -11,8 +13,6 @@ from .abc import ProtocolAbc
 from .http import HttpProtocol
 from .ipc import IpcProtocol
 from .websocket import WebsocketProtocol
-import signal
-from contextlib import contextmanager
 
 logger = get_logger(__name__)
 
