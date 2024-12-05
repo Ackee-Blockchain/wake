@@ -2474,11 +2474,9 @@ class Chain(ABC):
 
             for input in fix_library_abi(abi["inputs"]):
                 if input["indexed"]:
-                    if (
-                        input["type"] in {"string", "bytes"}
-                        or input["internalType"].startswith("struct ")
-                        or input["type"].endswith("]")
-                    ):
+                    if input["type"] in {"string", "bytes", "tuple"} or input[
+                        "type"
+                    ].endswith("]"):
                         topic_type = "bytes32"
                     else:
                         topic_type = input["type"]
