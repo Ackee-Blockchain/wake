@@ -104,7 +104,7 @@ class FileAndPassParamType(click.ParamType):
     type=str,
     help="Path to the shrink log file.",
     is_flag=False,
-    flag_value=0,
+    flag_value="0",
     default=None,
     required=False,
 )
@@ -116,7 +116,7 @@ class FileAndPassParamType(click.ParamType):
     type=str,
     help="Path of shrank file.",
     is_flag=False,
-    flag_value=0,
+    flag_value="0",
     default=None,
     required=False,
 )
