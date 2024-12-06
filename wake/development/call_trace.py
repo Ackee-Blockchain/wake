@@ -396,6 +396,9 @@ class CallTrace:
     _abi: Dict[bytes, Any]  # used for error and event decoding
     _output_abi: Optional[List[Dict[str, Any]]]  # used for return value decoding
     _events: List[CallTraceEvent]
+    _all_events: List[
+        CallTraceEvent
+    ]  # recursively, in correct order; only saved in root trace
 
     def __init__(
         self,
@@ -454,6 +457,7 @@ class CallTrace:
             "inputs": [{"internalType": "uint256", "name": "code", "type": "uint256"}],
         }
         self._events = []
+        self._all_events = []
 
     def __str__(self):
         console = Console()
@@ -682,6 +686,26 @@ class CallTrace:
 
         return ret
 
+    @property
+    def event_strings(self) -> List[str]:
+        # all events recursively, in correct order, excluding events from reverting subtraces
+        ret = []
+        for event in self._all_events:
+            event_string = event.name + "("
+            for i, (arg, arg_name) in enumerate(zip(event.args, event.arg_names)):
+                if arg_name is not None and len(arg_name.strip()) > 0:
+                    event_string += f"{arg_name.strip()}={repr(arg)}"
+                else:
+                    event_string += repr(arg)
+
+                if i < len(event.args) - 1:
+                    event_string += ", "
+
+            event_string += ")"
+            ret.append(event_string)
+
+        return ret
+
     def dict(self, config: WakeConfig) -> Dict[str, Union[Optional[str], List]]:
         options = config.general.call_trace_options
         ret: Dict[str, Union[Optional[str], List]] = {}
@@ -798,6 +822,25 @@ class CallTrace:
             ret["error"] += ")"
         else:
             ret["error"] = None
+
+        if "events" in options:
+            ret["events"] = []
+            for event in self._events:
+                event_string = event.name + "("
+
+                for i, (arg, arg_name) in enumerate(zip(event.args, event.arg_names)):
+                    if arg_name is not None and len(arg_name.strip()) > 0:
+                        event_string += f"{arg_name.strip()}={repr(arg)}"
+                    else:
+                        event_string += repr(arg)
+
+                    if i < len(event.args) - 1:
+                        event_string += ", "
+
+                event_string += ")"
+                ret["events"].append(event_string)
+        else:
+            ret["events"] = None
 
         ret["subtraces"] = [sub.dict(config) for sub in self.subtraces]
 
@@ -1184,6 +1227,10 @@ class CallTrace:
                         return_names  # pyright: ignore reportAttributeAccessIssue
                     )
                     current_trace._status = status
+                    if current_trace._parent is not None:
+                        current_trace._parent._all_events.extend(
+                            current_trace._all_events
+                        )
 
                     current_trace = current_trace._parent
                     fqn_overrides.maps[1].update(fqn_overrides.maps[0])
@@ -1205,6 +1252,7 @@ class CallTrace:
                         fqn_overrides.maps.pop(0)
 
                         current_trace._status = False
+                        current_trace._all_events.clear()
                         current_trace = current_trace._parent
                         assert current_trace is not None
                         contracts.pop()
@@ -1425,6 +1473,7 @@ class CallTrace:
                     current_trace._error_name = "UnknownTransactionRevertedError"
                     current_trace._error_arguments = [b""]
                     current_trace._error_names = [None]
+                    current_trace._all_events.clear()
                 elif log["op"] == "RETURN":
                     data_offset = int(log["stack"][-1], 16)
                     data_size = int(log["stack"][-2], 16)
@@ -1449,6 +1498,10 @@ class CallTrace:
                     current_trace._return_names = (
                         return_names  # pyright: ignore reportAttributeAccessIssue
                     )
+                    if current_trace._parent is not None:
+                        current_trace._parent._all_events.extend(
+                            current_trace._all_events
+                        )
                 elif log["op"] == "REVERT":
                     data_offset = int(log["stack"][-1], 16)
                     data_size = int(log["stack"][-2], 16)
@@ -1456,6 +1509,7 @@ class CallTrace:
                         read_from_memory(data_offset, data_size, log["memory"])
                     )
                     current_trace._revert_data = data
+                    current_trace._all_events.clear()
 
                     if any(t._revert_data == data for t in current_trace._subtraces):
                         # error propagated from a subtrace
@@ -1495,7 +1549,7 @@ class CallTrace:
                             )
                             current_trace._error_arguments = [data]
                             current_trace._error_names = [None]
-                else:
+                else:  # STOP, SELFDESTRUCT
                     if current_trace._output_abi is not None:
                         try:
                             # just use a large enough zeroed buffer instead of evaluating the exact size
@@ -1510,6 +1564,10 @@ class CallTrace:
                         return_value, return_names = [], []
                     current_trace._return_value = return_value
                     current_trace._return_names = return_names
+                    if current_trace._parent is not None:
+                        current_trace._parent._all_events.extend(
+                            current_trace._all_events
+                        )
 
                 assert current_trace is not None
                 if (
@@ -1607,6 +1665,7 @@ class CallTrace:
                     arg_names=["data"],
                 )
                 current_trace._events.append(event)
+                current_trace._all_events.append(event)
             elif log["op"] in {"LOG1", "LOG2", "LOG3", "LOG4"}:
                 assert current_trace is not None
                 data_offset = int(log["stack"][-1], 16)
@@ -1630,6 +1689,7 @@ class CallTrace:
                         arg_names=event_names,
                     )
                     current_trace._events.append(event)
+                    current_trace._all_events.append(event)
                 except Exception as ex:
                     event = CallTraceEvent(
                         name="UnknownEvent",
@@ -1637,5 +1697,6 @@ class CallTrace:
                         arg_names=[f"topic{i}" for i in range(topics_count)] + ["data"],
                     )
                     current_trace._events.append(event)
+                    current_trace._all_events.append(event)
 
         return root_trace
