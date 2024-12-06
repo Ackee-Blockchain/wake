@@ -262,6 +262,7 @@ def _decode_event_args(
     topic_index = 0
     decoded_indexed = []
     types = []
+    non_indexed_abi = []
 
     for arg in fix_library_abi(abi):
         if arg["indexed"]:
@@ -280,10 +281,11 @@ def _decode_event_args(
             topic_index += 1
         else:
             types.append(eth_utils.abi.collapse_if_tuple(arg))
+            non_indexed_abi.append(arg)
 
     decoded = list(
         _normalize(arg, type, chain)
-        for arg, type in zip(eth_abi.abi.decode(types, data), abi)
+        for arg, type in zip(eth_abi.abi.decode(types, data), non_indexed_abi)
     )
     merged = []
 
