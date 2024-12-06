@@ -119,6 +119,9 @@ class SakeTransactParams(SakeCallParams):
 class SakeTransactResult(SakeResult):
     return_value: Optional[str]  # raw hex encoded bytes, None for Halt
     error: Optional[str]  # user-friendly error string, None for Success
+    events: List[
+        str
+    ]  # user-friendly event strings, in correct order, excluding events from reverting subtraces
     tx_receipt: Dict[str, Any]
     call_trace: Dict[str, Union[Optional[str], List]]
 
@@ -707,6 +710,7 @@ class SakeContext:
             return SakeTransactResult(
                 success=success,
                 error=call_trace.error_string,
+                events=call_trace.event_strings,
                 return_value=return_value,
                 tx_receipt=tx._tx_receipt,
                 call_trace=call_trace.dict(self.lsp_context.config),
