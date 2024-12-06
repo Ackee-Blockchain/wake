@@ -33,7 +33,12 @@ from wake.cli.console import console
 from contextlib import contextmanager, redirect_stdout, redirect_stderr
 
 
-IGNORE_FLOW_INDEX = True # True if you accept it could reproduce same error earlier.
+EXACT_FLOW_INDEX = False # False if you accept it could reproduce same error earlier.
+
+EXECT_EXCEPTION_MATCH = False # False if you accept the same kind of error.
+# The meaining of the same kind of error is that
+# If the error was in transaction, Same Error is emit and ignore arguments value. except for Error with only message, we compare the message.
+# If the error was in test like assertion error, we care the file and  exception line in python code.
 
 def __get_methods(target, attr: str) -> List[Callable]:
     ret = []
@@ -51,6 +56,12 @@ def clear_previous_lines(num_lines):
         sys.stdout.write("\033[K")  # Clear the line
 
 def compare_exceptions(e1, e2):
+    if EXECT_EXCEPTION_MATCH:
+        if e1 == e2:
+            return True
+        else:
+            return False
+
     if type(e1) != type(e2):
         return False
 
@@ -124,7 +135,7 @@ class StateSnapShot:
         assert self._python_state is not None, "Python state snapshot is missing "
         assert self.flow_number is not None, "Flow number is missing"
 
-        python_instance.__dict__.update(copy.deepcopy(self._python_state.__dict__))
+        python_instance.__dict__ = self._python_state.__dict__
 
         self._python_state = None
         for temp_chain, chain in zip(self.chain_states, chains):
@@ -254,79 +265,78 @@ def shrink_collecting_phase(test_instance: FuzzTest, flows, invariants, flow_sta
         test_instance.pre_sequence()
         exception_content = None
         try:
-            with redirect_stdout(open(os.devnull, 'w')), redirect_stderr(open(os.devnull, 'w')):
-                for j in range(flows_count):
+            for j in range(flows_count):
 
 
-                    if j > error_flow_num:
-                        raise OverRunException()
-                    valid_flows = [
+                if j > error_flow_num:
+                    raise OverRunException()
+                valid_flows = [
+                    f
+                    for f in flows
+                    if (
+                        not hasattr(f, "max_times")
+                        or flows_counter[f] < getattr(f, "max_times")
+                    )
+                    and (
+                        not hasattr(f, "precondition")
+                        or getattr(f, "precondition")(test_instance)
+                    )
+                ]
+                weights = [getattr(f, "weight") for f in valid_flows]
+                if len(valid_flows) == 0:
+                    max_times_flows = [
                         f
                         for f in flows
-                        if (
-                            not hasattr(f, "max_times")
-                            or flows_counter[f] < getattr(f, "max_times")
-                        )
-                        and (
-                            not hasattr(f, "precondition")
-                            or getattr(f, "precondition")(test_instance)
-                        )
+                        if hasattr(f, "max_times")
+                        and flows_counter[f] >= getattr(f, "max_times")
                     ]
-                    weights = [getattr(f, "weight") for f in valid_flows]
-                    if len(valid_flows) == 0:
-                        max_times_flows = [
-                            f
-                            for f in flows
-                            if hasattr(f, "max_times")
-                            and flows_counter[f] >= getattr(f, "max_times")
-                        ]
-                        precondition_flows = [
-                            f
-                            for f in flows
-                            if hasattr(f, "precondition")
-                            and not getattr(f, "precondition")(test_instance)
-                        ]
-                        raise Exception(
-                            f"Could not find a valid flow to run.\nFlows that have reached their max_times: {max_times_flows}\nFlows that do not satisfy their precondition: {precondition_flows}"
-                        )
-
-                    # Pick a flow and generate the parameters
-                    flow = random.choices(valid_flows, weights=weights)[0]
-                    flow_params = [
-                        generate(v)
-                        for k, v in get_type_hints(flow, include_extras=True).items()
-                        if k != "return"
+                    precondition_flows = [
+                        f
+                        for f in flows
+                        if hasattr(f, "precondition")
+                        and not getattr(f, "precondition")(test_instance)
                     ]
+                    raise Exception(
+                        f"Could not find a valid flow to run.\nFlows that have reached their max_times: {max_times_flows}\nFlows that do not satisfy their precondition: {precondition_flows}"
+                    )
 
-                    random_state = pickle.dumps(random.getstate())
-                    flow_states.append(FlowState(
-                        random_state=random_state,
-                        flow_name=flow.__name__,
-                        flow=flow,
-                        flow_params=flow_params,
-                        flow_num=j
-                    ))
+                # Pick a flow and generate the parameters
+                flow = random.choices(valid_flows, weights=weights)[0]
+                flow_params = [
+                    generate(v)
+                    for k, v in get_type_hints(flow, include_extras=True).items()
+                    if k != "return"
+                ]
 
-                    test_instance._flow_num = j
-                    test_instance.pre_flow(flow)
-                    flow(test_instance, *flow_params)  # Execute the selected flow
-                    flows_counter[flow] += 1
-                    test_instance.post_flow(flow)
+                random_state = pickle.dumps(random.getstate())
+                flow_states.append(FlowState(
+                    random_state=random_state,
+                    flow_name=flow.__name__,
+                    flow=flow,
+                    flow_params=flow_params,
+                    flow_num=j
+                ))
 
-                    flow_states[j].before_inv_random_state = pickle.dumps(random.getstate())
+                test_instance._flow_num = j
+                test_instance.pre_flow(flow)
+                flow(test_instance, *flow_params)  # Execute the selected flow
+                flows_counter[flow] += 1
+                test_instance.post_flow(flow)
 
-                    test_instance.pre_invariants()
-                    for inv in invariants:
-                        if invariant_periods[inv] == 0:
-                            test_instance.pre_invariant(inv)
-                            inv(test_instance)
-                            test_instance.post_invariant(inv)
+                flow_states[j].before_inv_random_state = pickle.dumps(random.getstate())
 
-                        invariant_periods[inv] += 1
-                        if invariant_periods[inv] == getattr(inv, "period"):
-                            invariant_periods[inv] = 0
-                    test_instance.post_invariants()
-                test_instance.post_sequence()
+                test_instance.pre_invariants()
+                for inv in invariants:
+                    if invariant_periods[inv] == 0:
+                        test_instance.pre_invariant(inv)
+                        inv(test_instance)
+                        test_instance.post_invariant(inv)
+
+                    invariant_periods[inv] += 1
+                    if invariant_periods[inv] == getattr(inv, "period"):
+                        invariant_periods[inv] = 0
+                test_instance.post_invariants()
+            test_instance.post_sequence()
         except OverRunException:
             raise AssertionError("Unexpected un-failing flow")
         except Exception as e:
@@ -459,7 +469,7 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
             except Exception as e:
                 reason = "at " + str(j) + " with " + str(e)
                 # Check exception type and exception lines in the test file.
-                if (IGNORE_FLOW_INDEX or test_instance._flow_num == error_flow_num) and compare_exceptions(e, exception_content):
+                if (not EXACT_FLOW_INDEX or test_instance._flow_num == error_flow_num) and compare_exceptions(e, exception_content):
                     if test_instance._flow_num != error_flow_num:
                         shortcut = True
                         assert test_instance._flow_num == j
@@ -572,7 +582,7 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
             except Exception as e:
                 reason = "at " + str(j) + " with " + str(e)
                 # Check exception type and exception lines in the test file.
-                if (IGNORE_FLOW_INDEX or test_instance._flow_num == error_flow_num) and compare_exceptions(e, exception_content):
+                if (not EXACT_FLOW_INDEX or test_instance._flow_num == error_flow_num) and compare_exceptions(e, exception_content):
                     if test_instance._flow_num != error_flow_num:
                         print("test_instance._flow_num: ", test_instance._flow_num, "j: ", j, "error_flow_num: ", error_flow_num)
                         shortcut = True
