@@ -3,8 +3,8 @@ from __future__ import annotations
 import asyncio
 import sys
 import time
-from pathlib import Path
-from typing import TYPE_CHECKING, Optional, Set, Tuple
+from pathlib import Path, PurePath
+from typing import TYPE_CHECKING, Iterable, Optional, Set, Tuple
 
 import rich_click as click
 from click.core import Context
@@ -18,41 +18,71 @@ if TYPE_CHECKING:
     from wake.config import WakeConfig
 
 
-def write_config(config: WakeConfig) -> None:
-    rel_path = "../" * len(
-        config.local_config_path.parent.relative_to(config.project_root_path).parts
+def paths_to_str(paths: Iterable[PurePath], config: WakeConfig) -> str:
+    from wake.utils import is_relative_to
+
+    return ", ".join(
+        f'"{p.relative_to(config.local_config_path.parent)}"'
+        if is_relative_to(p, config.local_config_path.parent)
+        else f'"{p}"'
+        for p in paths
     )
 
+
+def write_config(config: WakeConfig) -> None:
     config.local_config_path.parent.mkdir(exist_ok=True, parents=True)
     with config.local_config_path.open("w") as f:
         f.write("[compiler.solc]\n")
-        f.write(
-            f'exclude_paths = ["{rel_path}node_modules", "{rel_path}venv", "{rel_path}.venv", "{rel_path}lib", "{rel_path}script", "{rel_path}test"]\n'
-        )
-        f.write(f'include_paths = ["{rel_path}node_modules"]\n')
+        if len(config.compiler.solc.allow_paths) > 0:
+            f.write(
+                f"allow_paths = [{paths_to_str(config.compiler.solc.allow_paths, config)}]\n"
+            )
+
+        if len(config.compiler.solc.exclude_paths) > 0:
+            f.write(
+                f"exclude_paths = [{paths_to_str(config.compiler.solc.exclude_paths, config)}]\n"
+            )
+
+        if len(config.compiler.solc.include_paths) > 0:
+            f.write(
+                f"include_paths = [{paths_to_str(config.compiler.solc.include_paths, config)}]\n"
+            )
+
         if len(config.compiler.solc.remappings) > 0:
             f.write("remappings = [\n")
             for r in config.compiler.solc.remappings:
                 f.write(f'    "{r}",\n')
             f.write("]\n")
-        if config.compiler.solc.via_IR:
-            f.write("via_IR = true\n")
+
+        if config.compiler.solc.evm_version is not None:
+            f.write(f'evm_version = "{config.compiler.solc.evm_version}"\n')
+
+        if config.compiler.solc.via_IR is not None:
+            f.write(f"via_IR = {str(config.compiler.solc.via_IR).lower()}\n")
+
+        if config.compiler.solc.target_version is not None:
+            f.write(f'target_version = "{config.compiler.solc.target_version}"\n')
+
         f.write("\n")
 
-        if config.compiler.solc.optimizer.enabled:
-            f.write("[compiler.solc.optimizer]\n")
-            f.write("enabled = true\n")
-            f.write(f"runs = {config.compiler.solc.optimizer.runs}\n")
-            f.write("\n")
+        f.write("[compiler.solc.optimizer]\n")
+        f.write(f"enabled = {str(config.compiler.solc.optimizer.enabled).lower()}\n")
+        f.write(f"runs = {config.compiler.solc.optimizer.runs}\n")
+        f.write("\n")
 
         f.write("[detectors]\n")
         f.write("exclude = []\n")
-        f.write(
-            f'ignore_paths = ["{rel_path}venv", "{rel_path}.venv", "{rel_path}test"]\n'
-        )
-        f.write(
-            f'exclude_paths = ["{rel_path}node_modules", "{rel_path}lib", "{rel_path}script"]\n'
-        )
+
+        if len(config.detectors.ignore_paths) > 0:
+            f.write(
+                f"ignore_paths = [{paths_to_str(config.detectors.ignore_paths, config)}]\n"
+            )
+
+        if len(config.compiler.solc.exclude_paths) > 0:
+            f.write(
+                f"exclude_paths = [{paths_to_str(config.compiler.solc.exclude_paths, config)}]\n"
+            )
+
         f.write("\n")
 
         f.write("[testing]\n")
@@ -69,6 +99,50 @@ def write_config(config: WakeConfig) -> None:
 
         f.write("[testing.hardhat]\n")
         f.write(f'cmd_args = "{config.testing.hardhat.cmd_args}"')
+
+
+def import_foundry_profile(
+    config: WakeConfig, toml_str: str, foundry_profile: Optional[str]
+) -> None:
+    import tomli
+
+    if foundry_profile is None:
+        foundry_profile = "default"
+
+    foundry_config = tomli.loads(toml_str)
+
+    if foundry_profile not in foundry_config["profile"]:
+        raise ValueError(f"Profile {foundry_profile} not found in foundry.toml")
+
+    c = foundry_config["profile"][foundry_profile]
+
+    if "remappings" in c:
+        config.update({"compiler": {"solc": {"remappings": c["remappings"]}}}, [])
+
+    if "allow_paths" in c:
+        config.update({"compiler": {"solc": {"allow_paths": c["allow_paths"]}}}, [])
+
+    if "include_paths" in c:
+        config.update({"compiler": {"solc": {"include_paths": c["include_paths"]}}}, [])
+
+    if "evm_version" in c:
+        config.update({"compiler": {"solc": {"evm_version": c["evm_version"]}}}, [])
+
+    if "optimizer" in c:
+        config.update(
+            {"compiler": {"solc": {"optimizer": {"enabled": c["optimizer"]}}}}, []
+        )
+
+    if "optimizer_runs" in c:
+        config.update(
+            {"compiler": {"solc": {"optimizer": {"runs": c["optimizer_runs"]}}}}, []
+        )
+
+    if "via_ir" in c:
+        config.update({"compiler": {"solc": {"via_IR": c["via_ir"]}}}, [])
+
+    if "solc" in c:
+        config.update({"compiler": {"solc": {"target_version": c["solc"]}}}, [])
 
 
 def update_gitignore(file: Path) -> None:
@@ -110,15 +184,24 @@ def update_gitignore(file: Path) -> None:
     type=click.Choice(["counter"], case_sensitive=False),
     help="Initialize example project.",
 )
+@click.option(
+    "--foundry-profile",
+    type=str,
+    help="Foundry profile to import.",
+)
 @click.pass_context
 def run_init(
-    ctx: Context, force: bool, incremental: Optional[bool], example: Optional[str]
+    ctx: Context,
+    force: bool,
+    incremental: Optional[bool],
+    example: Optional[str],
+    foundry_profile: Optional[str],
 ):
     """Initialize project."""
     from wake.config import WakeConfig
 
     config = WakeConfig(local_config_path=ctx.obj.get("local_config_path", None))
-    config.load_configs()
+    config.load(config.global_config_path)  # only load global config
     ctx.obj["config"] = config
 
     if ctx.invoked_subcommand is not None:
@@ -163,14 +246,12 @@ def run_init(
     # update .gitignore, --force is not needed
     update_gitignore(config.project_root_path / ".gitignore")
 
-    # load foundry remappings, if foundry.toml exists
+    # load foundry config, if foundry.toml exists
     if (config.project_root_path / "foundry.toml").exists():
-        remappings = (
-            subprocess.run(["forge", "remappings"], capture_output=True)
-            .stdout.decode("utf-8")
-            .splitlines()
+        toml = subprocess.run(["forge", "config"], capture_output=True).stdout.decode(
+            "utf-8"
         )
-        config.update({"compiler": {"solc": {"remappings": remappings}}}, [])
+        import_foundry_profile(config, toml, foundry_profile)
 
     sol_files: Set[Path] = set()
     start = time.perf_counter()
@@ -562,35 +643,34 @@ def init_pytypes(
     default=None,
     help="Enforce incremental or non-incremental compilation.",
 )
+@click.option(
+    "--foundry-profile",
+    type=str,
+    help="Foundry profile to import.",
+)
 @click.pass_context
-def run_init_config(ctx: Context, force: bool, incremental: Optional[bool]):
+def run_init_config(
+    ctx: Context,
+    force: bool,
+    incremental: Optional[bool],
+    foundry_profile: Optional[str],
+):
     """Initialize project config file."""
     import glob
     import subprocess
-
-    from wake.config import WakeConfig
 
     from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
     from ..compiler.solc_frontend import SolcOutputErrorSeverityEnum
     from ..utils.file_utils import is_relative_to
 
-    config = WakeConfig(local_config_path=ctx.obj.get("local_config_path", None))
-    if config.local_config_path.exists() and not force:
-        raise click.ClickException(
-            f"Config file {config.local_config_path} already exists. Use --force to force overwrite."
-        )
-
-    config.load_configs()
-    ctx.obj["config"] = config
+    config: WakeConfig = ctx.obj["config"]
 
     # load foundry remappings, if foundry.toml exists
     if (config.project_root_path / "foundry.toml").exists():
-        remappings = (
-            subprocess.run(["forge", "remappings"], capture_output=True)
-            .stdout.decode("utf-8")
-            .splitlines()
+        toml = subprocess.run(["forge", "config"], capture_output=True).stdout.decode(
+            "utf-8"
         )
-        config.update({"compiler": {"solc": {"remappings": remappings}}}, [])
+        import_foundry_profile(config, toml, foundry_profile)
 
     sol_files: Set[Path] = set()
     start = time.perf_counter()
