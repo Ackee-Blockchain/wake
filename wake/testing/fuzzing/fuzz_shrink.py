@@ -40,6 +40,8 @@ EXECT_EXCEPTION_MATCH = False # False if you accept the same kind of error.
 # If the error was in transaction, Same Error is emit and ignore arguments value. except for Error with only message, we compare the message.
 # If the error was in test like assertion error, we care the file and  exception line in python code.
 
+ONLY_TARGET_INVARIANTS = False # True if you want to Care only target invariants.
+
 def __get_methods(target, attr: str) -> List[Callable]:
     ret = []
     for x in dir(target):
@@ -450,7 +452,8 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
                         random.setstate(pickle.loads(curr_flow_state.before_inv_random_state))
 
                     test_instance.pre_invariants()
-                    if flow_states[j].required and flow != curr_removing_flow: # this would be changed
+                    if ((not ONLY_TARGET_INVARIANTS and flow_states[j].required and flow != curr_removing_flow)
+                        or (ONLY_TARGET_INVARIANTS and j == error_flow_num)): # this would be changed
                         for inv in invariants:
                             if invariant_periods[inv] == 0:
                                 test_instance.pre_invariant(inv)
@@ -563,7 +566,8 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
                         random.setstate(pickle.loads(curr_flow_state.before_inv_random_state))
 
                     test_instance.pre_invariants()
-                    if flow_states[j].required:
+                    if ((not ONLY_TARGET_INVARIANTS and flow_states[j].required)
+                        or (ONLY_TARGET_INVARIANTS and j == error_flow_num)):
                         for inv in invariants:
                             if invariant_periods[inv] == 0:
                                 test_instance.pre_invariant(inv)
