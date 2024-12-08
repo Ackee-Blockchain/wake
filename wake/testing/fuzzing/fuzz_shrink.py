@@ -108,13 +108,14 @@ class StateSnapShot:
     _python_state: FuzzTest | None
     chain_states: List[str]
     flow_number: int | None # Current flow number
+    random_state: Any | None
 
     def __init__(self):
         self._python_state = None
         self.chain_states = []
         self.flow_number = None
 
-    def take_snapshot(self, python_instance: FuzzTest, new_instance, chains: Tuple[Chain, ...], overwrite: bool):
+    def take_snapshot(self, python_instance: FuzzTest, new_instance, chains: Tuple[Chain, ...], overwrite: bool, random_state: Any | None = None):
         if not overwrite:
             assert self._python_state is None, "Python state already exists"
             assert self.chain_states == [], "Chain state already exists"
@@ -130,9 +131,9 @@ class StateSnapShot:
         self.flow_number = python_instance._flow_num
         self._python_state.__dict__.update(copy.deepcopy(python_instance.__dict__))
         self.chain_states = [chain.snapshot() for chain in chains]
+        self.random_state = random_state
 
-
-    def revert(self, python_instance: FuzzTest, chains: Tuple[Chain, ...]):
+    def revert(self, python_instance: FuzzTest, chains: Tuple[Chain, ...], with_random_state: bool = False):
         assert self.chain_states != [], "Chain snapshot is missing"
         assert self._python_state is not None, "Python state snapshot is missing "
         assert self.flow_number is not None, "Flow number is missing"
@@ -143,6 +144,9 @@ class StateSnapShot:
         for temp_chain, chain in zip(self.chain_states, chains):
             chain.revert(temp_chain)
         self.chain_states = []
+        if with_random_state:
+            assert self.random_state is not None, "Random state is missing"
+            random.setstate(self.random_state)
 
 
 class OverRunException(Exception):
@@ -198,6 +202,8 @@ def fuzz_shrink(test_class: type[FuzzTest], sequences_count: int, flows_count: i
         shrink_test(test_class, flows_count)
     elif fuzz_mode == 2:
         shrank_reproduce(test_class, dry_run)
+    elif fuzz_mode == 3:
+        flow_step_execution(test_class, flows_count)
     else:
         raise Exception("Invalid fuzz mode")
 
@@ -355,6 +361,185 @@ def shrink_collecting_phase(test_instance: FuzzTest, flows, invariants, flow_sta
     print("Time spent for one fuzz test: ", time_spent)
     assert exception_content is not None
     return exception_content, time_spent
+
+def flow_step_execution(test_class: type[FuzzTest], flows_count: int):
+    error_flow_num = get_error_flow_num()
+    user_number = input(f"SNAPSHOT FLOW NUMBER ({error_flow_num}) >")
+    if user_number != "":
+        error_flow_num = int(user_number)
+
+    assert error_flow_num  != flows_count, "Does not support post sequence, comming soon"
+    test_instance = test_class()
+    chains = get_connected_chains()
+    flows: List[Callable] = __get_methods(test_instance, "flow")
+    invariants: List[Callable] = __get_methods(test_instance, "invariant")
+    flows_counter: DefaultDict[Callable, int] = defaultdict(int)
+    invariant_periods: DefaultDict[Callable[[None], None], int] = defaultdict(int)
+    print("Shrinking flow length: ", error_flow_num)
+
+    if error_flow_num < 1:
+        raise Exception("Flow number is less than 1, not supported for shrinking")
+
+    random.setstate(pickle.loads(get_sequence_initial_internal_state()))
+    # ignore print for pre_sequence logging
+    test_instance._flow_num = 0
+    test_instance.pre_sequence()
+    try:
+        for j in range(error_flow_num):
+            valid_flows = [
+                f
+                for f in flows
+                if (
+                    not hasattr(f, "max_times")
+                    or flows_counter[f] < getattr(f, "max_times")
+                )
+                and (
+                    not hasattr(f, "precondition")
+                    or getattr(f, "precondition")(test_instance)
+                )
+            ]
+            weights = [getattr(f, "weight") for f in valid_flows]
+            if len(valid_flows) == 0:
+                max_times_flows = [
+                    f
+                    for f in flows
+                    if hasattr(f, "max_times")
+                    and flows_counter[f] >= getattr(f, "max_times")
+                ]
+                precondition_flows = [
+                    f
+                    for f in flows
+                    if hasattr(f, "precondition")
+                    and not getattr(f, "precondition")(test_instance)
+                ]
+                raise Exception(
+                    f"Could not find a valid flow to run.\nFlows that have reached their max_times: {max_times_flows}\nFlows that do not satisfy their precondition: {precondition_flows}"
+                )
+
+            # Pick a flow and generate the parameters
+            flow = random.choices(valid_flows, weights=weights)[0]
+            flow_params = [
+                generate(v)
+                for k, v in get_type_hints(flow, include_extras=True).items()
+                if k != "return"
+            ]
+
+            test_instance._flow_num = j
+            test_instance.pre_flow(flow)
+            flow(test_instance, *flow_params)  # Execute the selected flow
+            flows_counter[flow] += 1
+            test_instance.post_flow(flow)
+            # DO NOT RUN INVARIANTS HERE
+            # REQUIREMENT: DO NOT CHANGE STATE IN INVARIANTS
+    except Exception as e:
+        print(f"MUST NOT FAIL HERE {e}")
+        raise e
+
+    # take snapshot of previous state!!
+    states = StateSnapShot()
+    states.take_snapshot(test_instance, test_class(), chains, overwrite=False, random_state=random.getstate())
+    error_place = None
+    j = 0
+    for j in range(test_instance._flow_num, flows_count):
+        try:
+            valid_flows = [
+                f
+                for f in flows
+                if (
+                    not hasattr(f, "max_times")
+                    or flows_counter[f] < getattr(f, "max_times")
+                )
+                and (
+                    not hasattr(f, "precondition")
+                    or getattr(f, "precondition")(test_instance)
+                )
+            ]
+            weights = [getattr(f, "weight") for f in valid_flows]
+            if len(valid_flows) == 0:
+                max_times_flows = [
+                    f
+                    for f in flows
+                    if hasattr(f, "max_times")
+                    and flows_counter[f] >= getattr(f, "max_times")
+                ]
+                precondition_flows = [
+                    f
+                    for f in flows
+                    if hasattr(f, "precondition")
+                    and not getattr(f, "precondition")(test_instance)
+                ]
+                raise Exception(
+                    f"Could not find a valid flow to run.\nFlows that have reached their max_times: {max_times_flows}\nFlows that do not satisfy their precondition: {precondition_flows}"
+                )
+
+            # Pick a flow and generate the parameters
+            flow = random.choices(valid_flows, weights=weights)[0]
+            flow_params = [
+                generate(v)
+                for k, v in get_type_hints(flow, include_extras=True).items()
+                if k != "return"
+            ]
+
+            test_instance._flow_num = j
+            test_instance.pre_flow(flow)
+            commands = []
+            commands.append("s")
+            commands.append("s")
+            error_place = "flow"
+            from ipdb.__main__ import _init_pdb
+            frame = sys._getframe() # Get the parent frame
+            p = _init_pdb(commands=['s'])  # Initialize with two step commands
+            p.set_trace(frame)
+            # this flow cause error or vioration of invariant.
+            flow(test_instance, *flow_params)  # Execute the selected flow
+            # After flow execution, I would have option to take snapshot and execute or
+            # Revert to previous state and execute this flow again.
+            # Print flow information before execution
+
+            flows_counter[flow] += 1
+            error_place = "post_flow"
+            test_instance.post_flow(flow)
+            error_place = "pre_invariants"
+            test_instance.pre_invariants()
+            error_place = "invariants"
+            for inv in invariants:
+                if invariant_periods[inv] == 0:
+                    test_instance.pre_invariant(inv)
+                    inv(test_instance)
+                    test_instance.post_invariant(inv)
+
+                invariant_periods[inv] += 1
+                if invariant_periods[inv] == getattr(inv, "period"):
+                    invariant_periods[inv] = 0
+        except Exception as e:
+            exception_content = e
+            print(f"Error at {error_place} with\n{e}")
+        finally:
+            # repeat option till user type valid input
+            quit = False
+            while True:
+                print("Flow Step Execution")
+                print("Options:")
+                print("1. take snapshot and continue")
+                print("2. Revert and repeat current flow")
+                print("3. run post_sequence and exit")
+                choice = input("Enter your choice (1-3): ").strip()
+                if choice == "1":
+                    states.take_snapshot(test_instance, test_class(), chains, overwrite=True, random_state=random.getstate())
+                    break
+                elif choice == "2":
+                    states.revert(test_instance, chains, with_random_state=True)
+                    states.take_snapshot(test_instance, test_class(), chains, overwrite=False, random_state=random.getstate())
+                    j -= 1
+                    break
+                elif choice == "3":
+                    quit = True
+                    break
+                else:
+                    print("Invalid choice. Please try again.")
+            if quit:
+                break
+    test_instance.post_sequence()
 
 def shrink_test(test_class: type[FuzzTest], flows_count: int):
     error_flow_num = get_error_flow_num() # argument

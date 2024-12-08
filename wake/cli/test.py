@@ -120,6 +120,16 @@ class FileAndPassParamType(click.ParamType):
     default=None,
     required=False,
 )
+@click.option(
+    "-SF",
+    "--step-flow",
+    type=str,
+    help="Path to the crash log file.",
+    is_flag=False,
+    flag_value="0",
+    default=None,
+    required=False,
+)
 @click.argument("paths_or_pytest_args", nargs=-1, type=FileAndPassParamType())
 @click.pass_context
 def run_test(
@@ -135,6 +145,7 @@ def run_test(
     verbosity: int,
     shrink: Optional[str],
     shrank: Optional[str],
+    step_flow: Optional[str],
     paths_or_pytest_args: Tuple[str, ...],
 ) -> None:
     """Execute Wake tests using pytest."""
@@ -350,10 +361,27 @@ def run_test(
                 "Both shrink and shrieked cannot be provided at the same time."
             )
 
-        if shrink is not None:
-            set_fuzz_mode(1)
+        if step_flow is not None and shrank is not None:
+            raise click.BadParameter(
+                "Both step-flow and shrank cannot be provided at the same time."
+            )
+
+        if step_flow and shrink is not None:
+            raise click.BadParameter(
+                "Both step-flow and shrink cannot be provided at the same time."
+            )
+
+        if shrink is not None or step_flow is not None:
+            if step_flow:
+                set_fuzz_mode(3)
+                argument_path = step_flow
+            else:
+                assert shrink is not None, "Shrink must be provided when step-flow is not used"
+                set_fuzz_mode(1)
+                argument_path = shrink
+
             pytest_path_specified, test_path = get_single_test_path(pytest_args)
-            shrink_crash_path = get_shrink_argument_path(shrink)
+            shrink_crash_path = get_shrink_argument_path(argument_path)
             path = extract_test_path(shrink_crash_path)
             number = extract_executed_flow_number(shrink_crash_path)
             set_error_flow_num(number)
