@@ -685,6 +685,7 @@ class CallTrace:
                 ret += repr(arg)
             if i < len(self.error_arguments or []) - 1:
                 ret += ", "
+        ret += ")"
 
         return ret
 
