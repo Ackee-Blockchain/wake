@@ -96,6 +96,9 @@ class SakeDeployResult(SakeResult):
     contract_address: Optional[str]
     raw_error: Optional[str]  # raw hex encoded bytes, None for Success or Halt
     error: Optional[str]  # user-friendly error string, None for Success
+    events: List[
+        str
+    ]  # user-friendly event strings, in correct order, excluding events from reverting subtraces
     tx_receipt: Dict[str, Any]
     call_trace: Dict[str, Union[Optional[str], List]]
 
@@ -651,6 +654,7 @@ class SakeContext:
             return SakeDeployResult(
                 success=success,
                 error=call_trace.error_string,
+                events=call_trace.event_strings,
                 raw_error=(
                     tx.raw_error.data.hex()
                     if isinstance(tx.raw_error, UnknownTransactionRevertedError)
