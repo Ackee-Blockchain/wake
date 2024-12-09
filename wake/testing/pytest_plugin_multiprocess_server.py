@@ -1,10 +1,10 @@
+import logging
 import multiprocessing
 import multiprocessing.connection
 import os
 import pickle
 import shutil
 import signal
-import logging
 from contextlib import nullcontext
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
@@ -16,6 +16,7 @@ import rich.traceback
 
 from wake.cli.console import console
 from wake.config import WakeConfig
+from wake.core import get_logger
 from wake.testing.coverage import (
     CoverageHandler,
     IdeFunctionCoverageRecord,
@@ -23,13 +24,12 @@ from wake.testing.coverage import (
     export_merged_ide_coverage,
     write_coverage,
 )
-from wake.core import get_logger
 
 logger = get_logger(__name__)
 
-from .pytest_plugin_multiprocess import PytestWakePluginMultiprocess
+from firebase_admin import credentials, db, initialize_app, messaging
 
-from firebase_admin import credentials, messaging, initialize_app, db
+from .pytest_plugin_multiprocess import PytestWakePluginMultiprocess
 
 
 class PytestWakePluginMultiprocessServer:
@@ -77,17 +77,21 @@ class PytestWakePluginMultiprocessServer:
         self._session_id = str(uuid4())
 
         if remote and config.api_keys.get("wake_remote") is not None:
-            cred = credentials.Certificate(config.global_config_path.parent / "fuzz-firebase-adminsdk.json")
+            cred = credentials.Certificate(
+                config.global_config_path.parent / "fuzz-firebase-adminsdk.json"
+            )
             initialize_app(
                 cred,
                 {
                     "databaseURL": "https://wake-remote-default-rtdb.europe-west1.firebasedatabase.app/"
-                }
+                },
             )
 
             x = db.reference("/")
             try:
-                self._firebase_token = x.child("tokens").child(config.api_keys["wake_remote"]).get()
+                self._firebase_token = (
+                    x.child("token").child(config.api_keys["wake_remote"]).get()
+                )
                 if self._firebase_token is None:
                     logger.warning("No Firebase token found for remote server.")
             except Exception as e:
@@ -143,7 +147,7 @@ class PytestWakePluginMultiprocessServer:
                 notification=messaging.Notification(
                     title="New fuzzing session started",
                     body=f"{self._proc_count} tasks",
-                )
+                ),
             )
             messaging.send(message)
 
@@ -268,7 +272,7 @@ class PytestWakePluginMultiprocessServer:
                                 notification=messaging.Notification(
                                     title=f"Exception {exception_info[0]}",
                                     body=f"Process #{index}",
-                                )
+                                ),
                             )
                             messaging.send(message)
 
@@ -307,7 +311,7 @@ class PytestWakePluginMultiprocessServer:
                                 notification=messaging.Notification(
                                     title="Breakpoint reached",
                                     body=f"Process #{index}",
-                                )
+                                ),
                             )
                             messaging.send(message)
 
@@ -381,7 +385,7 @@ class PytestWakePluginMultiprocessServer:
                                 notification=messaging.Notification(
                                     title="Internal pytest error",
                                     body=f"Process #{index}",
-                                )
+                                ),
                             )
                             messaging.send(message)
 
