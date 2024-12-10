@@ -32,6 +32,7 @@ import sys
 from wake.cli.console import console
 from contextlib import contextmanager, redirect_stdout, redirect_stderr
 
+from wake.testing.core import default_chain as global_default_chain
 
 EXACT_FLOW_INDEX = False # False if you accept it could reproduce same error earlier.
 
@@ -109,6 +110,7 @@ class StateSnapShot:
     chain_states: List[str]
     flow_number: int | None # Current flow number
     random_state: Any | None
+    default_chain: Chain | None
 
     def __init__(self):
         self._python_state = None
@@ -124,19 +126,22 @@ class StateSnapShot:
             assert self.chain_states != [], "Chain state is missing"
             assert self.flow_number is not None, "Flow number is missing"
             print("Overwriting state ", self.flow_number, " to ", python_instance._flow_num)
+            assert self.default_chain is not None, "Default chain is missing"
         # assert self._python_state is None, "Python state already exists"
-
         self._python_state = new_instance
 
         self.flow_number = python_instance._flow_num
         self._python_state.__dict__.update(copy.deepcopy(python_instance.__dict__))
         self.chain_states = [chain.snapshot() for chain in chains]
+        self.default_chain = global_default_chain
         self.random_state = random_state
 
     def revert(self, python_instance: FuzzTest, chains: Tuple[Chain, ...], with_random_state: bool = False):
+        global global_default_chain
         assert self.chain_states != [], "Chain snapshot is missing"
         assert self._python_state is not None, "Python state snapshot is missing "
         assert self.flow_number is not None, "Flow number is missing"
+        assert self.default_chain is not None, "Default chain is missing"
 
         python_instance.__dict__ = self._python_state.__dict__
 
@@ -147,6 +152,7 @@ class StateSnapShot:
         if with_random_state:
             assert self.random_state is not None, "Random state is missing"
             random.setstate(self.random_state)
+        global_default_chain = self.default_chain
 
 
 class OverRunException(Exception):
