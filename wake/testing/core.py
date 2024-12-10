@@ -106,6 +106,24 @@ class Chain(wake.development.core.Chain):
             "txs": dict(self._txs._transactions),
             "tx_hashes": list(self._txs._tx_hashes),
             "blocks": dict(self._blocks._blocks),
+            ## for testing and shrinking
+            "accounts_set": self._accounts_set.copy(),
+            "default_estimate_account": self._default_estimate_account,
+            "default_access_list_account": self._default_access_list_account,
+            "default_tx_type": self._default_tx_type,
+            "default_tx_confirmations": self._default_tx_confirmations,
+            "deployed_libraries": dict(self._deployed_libraries),
+            "single_source_errors": self._single_source_errors.copy(),
+            "chain_id": self._chain_id,
+            "labels": self._labels.copy(),
+            "require_signed_txs": self._require_signed_txs,
+            "fork": self._fork,
+            "forked_chain_id": self._forked_chain_id,
+            "debug_trace_call_supported": self._debug_trace_call_supported,
+            "client_version": self._client_version,
+            "gas_price": self._gas_price,
+            "max_priority_fee_per_gas": self._max_priority_fee_per_gas,
+            "initial_base_fee_per_gas": self._initial_base_fee_per_gas,
         }
         return snapshot_id
 
@@ -124,6 +142,26 @@ class Chain(wake.development.core.Chain):
         self._txs._transactions = snapshot["txs"]
         self._txs._tx_hashes = snapshot["tx_hashes"]
         self._blocks._blocks = snapshot["blocks"]
+
+        # for testing and shrinking
+        self._accounts_set = snapshot["accounts_set"]
+        self._default_estimate_account = snapshot["default_estimate_account"]
+        self._default_access_list_account = snapshot["default_access_list_account"]
+        self._default_tx_type = snapshot["default_tx_type"]
+        self._default_tx_confirmations = snapshot["default_tx_confirmations"]
+        self._deployed_libraries = snapshot["deployed_libraries"]
+        self._single_source_errors = snapshot["single_source_errors"]
+        self._chain_id = snapshot["chain_id"]
+        self._labels = snapshot["labels"]
+        self._require_signed_txs = snapshot["require_signed_txs"]
+        self._fork = snapshot["fork"]
+        self._forked_chain_id = snapshot["forked_chain_id"]
+        self._debug_trace_call_supported = snapshot["debug_trace_call_supported"]
+        self._client_version = snapshot["client_version"]
+        self._gas_price = snapshot["gas_price"]
+        self._max_priority_fee_per_gas = snapshot["max_priority_fee_per_gas"]
+        self._initial_base_fee_per_gas = snapshot["initial_base_fee_per_gas"]
+
         del self._snapshots[snapshot_id]
 
     @property
