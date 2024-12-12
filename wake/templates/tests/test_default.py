@@ -5,7 +5,8 @@ from wake.testing import *
 #     if e.tx is not None:
 #         print(e.tx.call_trace)
 
-@default_chain.connect()
+
+@chain.connect()
 # @on_revert(revert_handler)
 def test_default():
     pass
