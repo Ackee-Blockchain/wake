@@ -25,7 +25,7 @@ from wake.development.core import (
     check_connected,
     fix_library_abi,
 )
-from wake.development.globals import chain_interfaces_manager, get_config
+from wake.development.globals import chain_interfaces_manager, get_config, get_verbosity
 from wake.development.json_rpc.communicator import JsonRpcError
 from wake.development.transactions import (
     Eip1559Transaction,
@@ -404,7 +404,15 @@ class Chain(wake.development.core.Chain):
         config = get_config()
         if config.deployment.silent:
             return
-        pprint(tx, console=console, max_string=200)
+
+        tx_copy = tx.copy()
+        if "data" in tx_copy:
+            tx_copy["data"] = "0x" + tx_copy["data"].hex()
+
+        if get_verbosity() > 0:
+            pprint(tx_copy, console=console, max_string=None)
+        else:
+            pprint(tx_copy, console=console, max_string=1024)
 
         if config.deployment.confirm_transactions:
             confirm = Confirm.ask("Sign and send transaction?")
