@@ -22,7 +22,7 @@ import eth_abi.abi
 import eth_abi.exceptions
 import eth_utils
 from rich.console import Console
-from rich.highlighter import ReprHighlighter
+from rich.highlighter import RegexHighlighter
 from rich.text import Text
 from rich.tree import Tree
 
@@ -47,6 +47,34 @@ from .utils import get_name_abi_from_explorer
 
 if TYPE_CHECKING:
     from wake.config import WakeConfig
+
+
+class ReprHighlighter(RegexHighlighter):
+    """Highlights the text typically produced from ``__repr__`` methods."""
+
+    base_style = "repr."
+    highlights = [
+        r"(?P<tag_start><)(?P<tag_name>[-\w.:|]*)(?P<tag_contents>[\w\W]*)(?P<tag_end>>)",
+        r'(?P<attrib_name>[\w_]{1,50})=(?P<attrib_value>"?[\w_]+"?)?',
+        r"(?P<brace>[][{}()])",
+        "|".join(
+            [
+                r"(?P<ipv4>[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})",
+                r"(?P<ipv6>([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})",
+                r"(?P<eui64>(?:[0-9A-Fa-f]{1,2}-){7}[0-9A-Fa-f]{1,2}|(?:[0-9A-Fa-f]{1,2}:){7}[0-9A-Fa-f]{1,2}|(?:[0-9A-Fa-f]{4}\.){3}[0-9A-Fa-f]{4})",
+                r"(?P<eui48>(?:[0-9A-Fa-f]{1,2}-){5}[0-9A-Fa-f]{1,2}|(?:[0-9A-Fa-f]{1,2}:){5}[0-9A-Fa-f]{1,2}|(?:[0-9A-Fa-f]{4}\.){2}[0-9A-Fa-f]{4})",
+                r"(?P<uuid>[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})",
+                r"(?P<call>[\w.]*?)\(",
+                r"\b(?P<bool_true>True)\b|\b(?P<bool_false>False)\b|\b(?P<none>None)\b",
+                r"(?P<ellipsis>\.\.\.)",
+                r"(?P<number_complex>(?<!\w)(?:\-?[0-9]+\.?[0-9]*(?:e[-+]?\d+?)?)(?:[-+](?:[0-9]+\.?[0-9]*(?:e[-+]?\d+)?))?j)",
+                r"(?P<number>(?<!\w)-?[0-9]+\.?[0-9]*(e[-+]?\d+)?\b|0x[0-9a-fA-F]+|(?<=\.)[0-9a-fA-F]{2,})",
+                r"(?P<path>\B(/[-\w._+]+)*\/)(?P<filename>[-\w._+]*)?",
+                r"(?<![\\\w])(?P<str>b?'''.*?(?<!\\)'''|b?'.*?(?<!\\)'|b?\"\"\".*?(?<!\\)\"\"\"|b?\".*?(?<!\\)\")",
+                r"(?P<url>(file|https|http|ws|wss)://[-0-9a-zA-Z$_+!`(),.?/;:&=%#~@]*)",
+            ]
+        ),
+    ]
 
 
 def get_precompiled_info(
@@ -354,7 +382,7 @@ class CustomIntEnum(int):
 class CustomRepr(reprlib.Repr):
     def repr_CustomNamedTuple(self, obj, level):
         fields_str = ", ".join(
-            f"{name}={repr(value)}"
+            f"{name}={self.repr(value)}"
             for name, value in zip(
                 obj._field_names[: self.maxtuple], obj[: self.maxtuple]
             )
@@ -362,6 +390,9 @@ class CustomRepr(reprlib.Repr):
         if len(obj._field_names) > self.maxtuple:
             fields_str += ", ..."
         return f"{obj._tuple_name}({fields_str})"
+
+    def repr_bytes(self, obj, level):
+        return "0x" + self.repr(obj.hex())[1:-1]
 
 
 @dataclass
@@ -522,8 +553,21 @@ class CallTrace:
                 )
 
         arg_repr = CustomRepr()
-        arg_repr.maxstring = 64
-        arg_repr.maxother = 44
+        if get_verbosity() > 0:
+            arg_repr.maxlevel = 1_000_000
+            arg_repr.maxtuple = 1_000_000
+            arg_repr.maxlist = 1_000_000
+            arg_repr.maxarray = 1_000_000
+            arg_repr.maxdict = 1_000_000
+            arg_repr.maxset = 1_000_000
+            arg_repr.maxfrozenset = 1_000_000
+            arg_repr.maxdeque = 1_000_000
+            arg_repr.maxstring = 1_000_000
+            arg_repr.maxlong = 1_000_000
+            arg_repr.maxother = 1_000_000
+        else:
+            arg_repr.maxstring = 64
+            arg_repr.maxother = 44
 
         if "named_arguments" in options:
             if self.arguments is not None:
@@ -532,10 +576,7 @@ class CallTrace:
                 for i, (arg, arg_name) in enumerate(
                     zip(self.arguments, self.argument_names)
                 ):
-                    if get_verbosity() > 0:
-                        r = repr(arg)
-                    else:
-                        r = arg_repr.repr(arg)
+                    r = arg_repr.repr(arg)
 
                     if arg_name is not None and len(arg_name.strip()) > 0:
                         t = Text(f"{arg_name.strip()}={r}")
@@ -552,10 +593,7 @@ class CallTrace:
             if self.arguments is not None:
                 ret.append("(")
                 for i, arg in enumerate(self.arguments):
-                    if get_verbosity() > 0:
-                        t = Text(repr(arg))
-                    else:
-                        t = Text(arg_repr.repr(arg))
+                    t = Text(arg_repr.repr(arg))
                     ReprHighlighter().highlight(t)
                     ret.append_text(t)
                     if i < len(self.arguments) - 1:
@@ -610,10 +648,7 @@ class CallTrace:
                 for i, (arg, arg_name) in enumerate(
                     zip(self._return_value, self._return_names)
                 ):
-                    if get_verbosity() > 0:
-                        r = repr(arg)
-                    else:
-                        r = arg_repr.repr(arg)
+                    r = arg_repr.repr(arg)
 
                     if arg_name is not None and len(arg_name.strip()) > 0:
                         t = Text(f"{arg_name.strip()}={r}")
@@ -631,10 +666,7 @@ class CallTrace:
                 for i, (arg, arg_name) in enumerate(
                     zip(self.error_arguments or [], self._error_names or [])
                 ):
-                    if get_verbosity() > 0:
-                        r = repr(arg)
-                    else:
-                        r = arg_repr.repr(arg)
+                    r = arg_repr.repr(arg)
 
                     if arg_name is not None and len(arg_name.strip()) > 0:
                         t = Text(f"{arg_name.strip()}={r}")
@@ -713,6 +745,19 @@ class CallTrace:
         options = config.general.call_trace_options
         ret: Dict[str, Union[Optional[str], List]] = {}
 
+        arg_repr = CustomRepr()
+        arg_repr.maxlevel = 1_000_000
+        arg_repr.maxtuple = 1_000_000
+        arg_repr.maxlist = 1_000_000
+        arg_repr.maxarray = 1_000_000
+        arg_repr.maxdict = 1_000_000
+        arg_repr.maxset = 1_000_000
+        arg_repr.maxfrozenset = 1_000_000
+        arg_repr.maxdeque = 1_000_000
+        arg_repr.maxstring = 1_000_000
+        arg_repr.maxlong = 1_000_000
+        arg_repr.maxother = 1_000_000
+
         if "contract_name" in options:
             ret["contract_name"] = self.contract_name or "Unknown"
         else:
@@ -741,9 +786,9 @@ class CallTrace:
                     zip(self.arguments, self.argument_names)
                 ):
                     if arg_name is not None and len(arg_name.strip()) > 0:
-                        ret["arguments"] += f"{arg_name.strip()}={repr(arg)}"
+                        ret["arguments"] += f"{arg_name.strip()}={arg_repr.repr(arg)}"
                     else:
-                        ret["arguments"] += repr(arg)
+                        ret["arguments"] += arg_repr.repr(arg)
 
                     if i < len(self.arguments) - 1:
                         ret["arguments"] += ", "
@@ -754,7 +799,7 @@ class CallTrace:
             if self.arguments is not None:
                 ret["arguments"] = "("
                 for i, arg in enumerate(self.arguments):
-                    ret["arguments"] += repr(arg)
+                    ret["arguments"] += arg_repr.repr(arg)
                     if i < len(self.arguments) - 1:
                         ret["arguments"] += ", "
                 ret["arguments"] += ")"
@@ -800,9 +845,9 @@ class CallTrace:
                 zip(self._return_value, self._return_names)
             ):
                 if arg_name is not None and len(arg_name.strip()) > 0:
-                    ret["return_value"] += f"{arg_name.strip()}={repr(arg)}"
+                    ret["return_value"] += f"{arg_name.strip()}={arg_repr.repr(arg)}"
                 else:
-                    ret["return_value"] += repr(arg)
+                    ret["return_value"] += arg_repr.repr(arg)
 
                 if i < len(self._return_value) - 1:
                     ret["return_value"] += ", "
@@ -816,9 +861,9 @@ class CallTrace:
                 zip(self.error_arguments or [], self._error_names or [])
             ):
                 if arg_name is not None and len(arg_name.strip()) > 0:
-                    ret["error"] += f"{arg_name.strip()}={repr(arg)}"
+                    ret["error"] += f"{arg_name.strip()}={arg_repr.repr(arg)}"
                 else:
-                    ret["error"] += repr(arg)
+                    ret["error"] += arg_repr.repr(arg)
 
                 if i < len(self.error_arguments or []) - 1:
                     ret["error"] += ", "
