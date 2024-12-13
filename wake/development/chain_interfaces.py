@@ -12,9 +12,12 @@ from typing_extensions import Literal, TypedDict
 
 from wake.cli.console import console
 from wake.config import WakeConfig
+from wake.core import get_logger
 from wake.utils.networking import get_free_port
 
-from .json_rpc.communicator import JsonRpcCommunicator
+from .json_rpc.communicator import JsonRpcCommunicator, JsonRpcError
+
+logger = get_logger(__name__)
 
 TxParams = TypedDict(
     "TxParams",
@@ -254,9 +257,13 @@ class ChainInterfaceAbc(ABC):
             elif chain_id in {1101, 1442}:
                 return HermezChainInterface(config, communicator)
             else:
-                raise NotImplementedError(
-                    f"Client version {client_version} not supported"
+                logger.warning(
+                    f"Unknown node '{client_version}', falling back to Geth-like interface"
                 )
+                return GethChainInterface(config, communicator)
+        except JsonRpcError:
+            logger.warning(f"Unknown node, falling back to Geth-like interface")
+            return GethChainInterface(config, communicator)
         except Exception:
             communicator.__exit__(None, None, None)
             raise
