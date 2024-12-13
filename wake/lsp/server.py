@@ -135,6 +135,7 @@ from .sake import (
     SakeCreateChainParams,
     SakeDeployParams,
     SakeGetAbiParams,
+    SakeGetAbiWithProxyParams,
     SakeGetBalancesParams,
     SakeLoadStateParams,
     SakeLoadWorkspaceStateParams,
@@ -433,7 +434,7 @@ class LspServer:
                         params,
                     )
                 ),
-                SakeGetAbiParams,
+                SakeGetAbiWithProxyParams,
             ),
         }
 
