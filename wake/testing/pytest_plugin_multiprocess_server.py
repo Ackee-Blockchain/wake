@@ -98,6 +98,7 @@ class PytestWakePluginMultiprocessServer:
                             i,
                             child_conn,  # pyright: ignore reportGeneralTypeIssues
                             self._queue,
+                            self._config,
                             empty_coverage if i < self._coverage else None,
                             logs_dir,
                             crash_logs_process_dir,
