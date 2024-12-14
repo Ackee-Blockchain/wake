@@ -240,6 +240,7 @@ def run_test(
             set_shrank_path,
         )
         from wake.testing.pytest_plugin_single import PytestWakePluginSingle
+        import json
 
         def get_single_test_path(args: list[str]) -> tuple[bool, str | None]:
             has_path = False
@@ -254,48 +255,13 @@ def run_test(
                     path = arg
             return has_path, path
 
-        def extract_test_path(crash_log_file_path: Path) -> str:
-            if crash_log_file_path is not None:
+        def extract_crash_log_dict(crash_log_file_path: Path) -> dict:
+            try:
                 with open(crash_log_file_path, "r") as file:
-                    for line in file:
-                        if "Current test file" in line:
-                            # Extract the part after the colon
-                            parts = line.split(":")
-                            if len(parts) == 2:
-                                return parts[1].strip()
-            raise ValueError("Unexpected file format")
-
-        def extract_executed_flow_number(crash_log_file_path: Path) -> int:
-            if crash_log_file_path is not None:
-                with open(crash_log_file_path, "r") as file:
-                    for line in file:
-                        if "executed flow number" in line:
-                            # Extract the number after the colon
-                            parts = line.split(":")
-                            if len(parts) == 2:
-                                try:
-                                    executed_flow_number = int(parts[1].strip())
-                                    return executed_flow_number
-                                except ValueError:
-                                    pass  # Handle the case where the value after ":" is not an integer
-            raise ValueError("Unexpected file format")
-
-        def extract_internal_state(crash_log_file_path: Path) -> bytes:
-            if crash_log_file_path is not None:
-                with open(crash_log_file_path, "r") as file:
-                    for line in file:
-                        if "Internal state of beginning of sequence" in line:
-                            # Extract the part after the colon
-                            parts = line.split(":")
-                            if len(parts) == 2:
-                                hex_string = parts[1].strip()
-                                try:
-                                    # Convert the hex string to bytes
-                                    internal_state_bytes = bytes.fromhex(hex_string)
-                                    return internal_state_bytes
-                                except ValueError:
-                                    pass  # Handle the case where the value after ":" is not a valid hex string
-            raise ValueError("Unexpected file format")
+                    crash_log_dict = json.load(file)
+                    return crash_log_dict
+            except json.JSONDecodeError:
+                raise ValueError(f"Invalid JSON format in crash log file: {crash_log_file_path}")
 
         def get_shrink_argument_path(shrink_path_str: str) -> Path:
             try:
@@ -315,7 +281,7 @@ def run_test(
                 )
             index = int(shrink_path_str)
             crash_logs = sorted(
-                crash_logs_dir.glob("*.txt"), key=os.path.getmtime, reverse=True
+                crash_logs_dir.glob("*.json"), key=os.path.getmtime, reverse=True
             )
             if abs(index) > len(crash_logs):
                 raise click.BadParameter(f"Invalid crash log index: {index}")
@@ -350,15 +316,17 @@ def run_test(
                 "Both shrink and shrieked cannot be provided at the same time."
             )
 
+        pytest_path_specified, test_path = get_single_test_path(pytest_args)
+
+
         if shrink is not None:
             set_fuzz_mode(1)
-            pytest_path_specified, test_path = get_single_test_path(pytest_args)
             shrink_crash_path = get_shrink_argument_path(shrink)
-            path = extract_test_path(shrink_crash_path)
-            number = extract_executed_flow_number(shrink_crash_path)
-            set_error_flow_num(number)
-            beginning_random_state_bytes = extract_internal_state(shrink_crash_path)
-            set_sequence_initial_internal_state(beginning_random_state_bytes)
+            print("shrink from crash log: ", shrink_crash_path)
+            crash_log_dict = extract_crash_log_dict(shrink_crash_path)
+            path = crash_log_dict["test_file"]
+            set_error_flow_num(crash_log_dict["crash_flow_number"])
+            set_sequence_initial_internal_state(crash_log_dict["initial_random_state"])
             if pytest_path_specified:
                 assert (
                     path == test_path
@@ -367,20 +335,11 @@ def run_test(
                 pytest_args.insert(0, path)
 
         if shrank:
-            import pickle
-            from wake.testing.fuzzing.fuzz_shrink import ShrankInfoFile
-
             set_fuzz_mode(2)
-            pytest_path_specified, test_path = get_single_test_path(pytest_args)
             shrank_data_path = get_shrank_argument_path(shrank)
-
-            set_fuzz_mode(2)
-            pytest_path_specified, test_path = get_single_test_path(pytest_args)
-            shrank_data_path = get_shrank_argument_path(shrank)
-
-            with open(shrank_data_path, "rb") as f:
-                store_data: ShrankInfoFile = pickle.load(f)
-            target_fuzz_path = store_data.target_fuzz_path
+            print("shrank from shrank data: ", shrank_data_path)
+            with open(shrank_data_path, "r") as f:
+                target_fuzz_path = json.load(f)["target_fuzz_path"]
             if pytest_path_specified:
                 assert (
                     target_fuzz_path == test_path

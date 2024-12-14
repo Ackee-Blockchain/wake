@@ -17,6 +17,7 @@ from pytest import Session
 from tblib import pickling_support
 
 from wake.cli.console import console
+from wake.config.wake_config import WakeConfig
 from wake.development.globals import (
     attach_debugger,
     chain_interfaces_manager,
@@ -32,15 +33,13 @@ from wake.testing.coverage import CoverageHandler
 from wake.utils.tee import StderrTee, StdoutTee
 
 from wake.testing.custom_pdb import CustomPdb
-from datetime import datetime
 
-import rich.traceback
-from rich.console import Console
 
 
 class PytestWakePluginMultiprocess:
     _index: int
     _conn: multiprocessing.connection.Connection
+    _config: WakeConfig
     _coverage: Optional[CoverageHandler]
     _log_file: Path
     _crash_log_file: Path
@@ -58,6 +57,7 @@ class PytestWakePluginMultiprocess:
         index: int,
         conn: multiprocessing.connection.Connection,
         queue: multiprocessing.Queue,
+        config: WakeConfig,
         coverage: Optional[CoverageHandler],
         log_dir: Path,
         crash_log_dir: Path,
@@ -68,6 +68,7 @@ class PytestWakePluginMultiprocess:
     ):
         self._conn = conn
         self._index = index
+        self._config = config
         self._queue = queue
         self._coverage = coverage
         self._log_file = log_dir / sanitize_filename(f"process-{index}.ansi")
@@ -165,6 +166,8 @@ class PytestWakePluginMultiprocess:
         self._queue.put(("pytest_internalerror", self._index, pickled), block=True)
 
     def pytest_exception_interact(self, node, call, report):
+        import json
+        from datetime import datetime
         if self._debug and not self._exception_handled:
             self._exception_handler(
                 call.excinfo.type, call.excinfo.value, call.excinfo.tb
@@ -173,22 +176,40 @@ class PytestWakePluginMultiprocess:
         state = get_sequence_initial_internal_state()
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
 
-        crash_log_file = self._crash_log_dir / F"crash_log_{timestamp}.txt"
+        crash_log_file = self._crash_log_dir / F"{timestamp}.json"
 
-        relative_path = os.path.relpath(node.fspath, self._config.project_root_path)
+         # Find the test file in the traceback that's within project root
+        tb = call.excinfo.tb
+        test_file_path = None
+        while tb:
+            filename = tb.tb_frame.f_code.co_filename
+            try:
+                # Check if the file is within project root
+                relative = os.path.relpath(filename, self._config.project_root_path)
+                if not relative.startswith('..') and filename.endswith('.py'):
+                    test_file_path = relative
+                    break
+            except ValueError:
+                # relpath raises ValueError if paths are on different drives
+                pass
+            if hasattr(tb, 'tb_next'):
+                tb = tb.tb_next
+
+        if test_file_path is None:
+            test_file_path = node.fspath  # fallback to node's path if no test file found
+
+        crash_data = {
+            "test_file": test_file_path,
+            "crash_flow_number": get_error_flow_num(),
+            "exception_content": {
+                "type": str(call.excinfo.type),
+                "value": str(call.excinfo.value),
+            },
+            "initial_random_state": state,
+        }
 
         with crash_log_file.open('w') as f:
-            f.write(f"Current test file: {relative_path}\n")
-            f.write(f"executed flow number : {get_error_flow_num()}\n")
-            f.write(f"Internal state of beginning of sequence : {state.hex()}\n")
-            f.write(f"Assertion type: {call.excinfo.type}\n")
-            f.write(f"Assertion value: {call.excinfo.value}\n")
-            # Create the rich traceback object
-            rich_tb = rich.traceback.Traceback.from_exception(
-                call.excinfo.type, call.excinfo.value, call.excinfo.tb
-            )
-            file_console = Console(file=f, force_terminal=False)
-            file_console.print(rich_tb)
+            json.dump(crash_data, f, indent=2)
 
     def pytest_runtestloop(self, session: Session):
         if (

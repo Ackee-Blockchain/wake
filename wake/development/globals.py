@@ -50,7 +50,7 @@ _exception_handler: Optional[
 ] = None
 _exception_handled = False
 
-_initial_internal_state: bytes = b""
+_initial_internal_state: dict = {}
 
 _coverage_handler: Optional[CoverageHandler] = None
 
@@ -161,11 +161,11 @@ def set_exception_handler(
     global _exception_handler
     _exception_handler = handler
 
-def set_sequence_initial_internal_state(intenral_state: bytes):
+def set_sequence_initial_internal_state(intenral_state: dict):
     global _initial_internal_state
     _initial_internal_state = intenral_state
 
-def get_sequence_initial_internal_state() -> bytes:
+def get_sequence_initial_internal_state() -> dict:
     return _initial_internal_state
 
 def reset_exception_handled():
