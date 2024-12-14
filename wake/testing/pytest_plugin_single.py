@@ -1,11 +1,8 @@
 from functools import partial
+import os
 from typing import Iterable, List, Optional
 
 from pytest import Session
-
-from datetime import datetime
-import rich.traceback
-from rich.console import Console
 
 from wake.cli.console import console
 from wake.config import WakeConfig
@@ -53,6 +50,10 @@ class PytestWakePluginSingle:
         reset_exception_handled()
 
     def pytest_exception_interact(self, node, call, report):
+        import json
+        from datetime import datetime
+        import os
+
         if self._debug:
             attach_debugger(
                 call.excinfo.type,
@@ -61,11 +62,10 @@ class PytestWakePluginSingle:
                 seed=self._random_seeds[0],
             )
 
-        import os
         if get_fuzz_mode() != 0:
             return
-        state = get_sequence_initial_internal_state()
-        if state == b"":
+        random_state_dict = get_sequence_initial_internal_state()
+        if random_state_dict == {}:
             return
         crash_logs_dir = self._config.project_root_path / ".wake" / "logs" / "crashes"
         # shutil.rmtree(crash_logs_dir, ignore_errors=True)
@@ -73,25 +73,39 @@ class PytestWakePluginSingle:
         # write crash log file.
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         # Assuming `call.execinfo` contains the crash information
-        crash_log_file = crash_logs_dir / F"{timestamp}.txt"
+        crash_log_file = crash_logs_dir / F"{timestamp}.json"
 
-        relative_path = os.path.relpath(node.fspath, self._config.project_root_path)
+         # Find the test file in the traceback that's within project root
+        tb = call.excinfo.tb
+        test_file_path = None
+        while tb:
+            filename = tb.tb_frame.f_code.co_filename
+            try:
+                # Check if the file is within project root
+                relative = os.path.relpath(filename, self._config.project_root_path)
+                if not relative.startswith('..') and filename.endswith('.py'):
+                    test_file_path = relative
+                    break
+            except ValueError:
+                # relpath raises ValueError if paths are on different drives
+                pass
+            if hasattr(tb, 'tb_next'):
+                tb = tb.tb_next
 
+        if test_file_path is None:
+            test_file_path = node.fspath  # fallback to node's path if no test file found
 
-        # Write contents to the crash log file
+        crash_data = {
+            "test_file": test_file_path,
+            "crash_flow_number": get_error_flow_num(),
+            "exception_content": {
+                "type": str(call.excinfo.type),
+                "value": str(call.excinfo.value),
+            },
+            "initial_random_state": random_state_dict,
+        }
         with crash_log_file.open('w') as f:
-            f.write(f"Current test file: {relative_path}\n")
-            f.write(f"executed flow number : {get_error_flow_num()}\n")
-            f.write(f"Internal state of beginning of sequence : {state.hex()}\n")
-            f.write(f"Assertion type: {call.excinfo.type}\n")
-            f.write(f"Assertion value: {call.excinfo.value}\n")
-            # Create the rich traceback object
-            rich_tb = rich.traceback.Traceback.from_exception(
-                call.excinfo.type, call.excinfo.value, call.excinfo.tb
-            )
-            file_console = Console(file=f, force_terminal=False)
-            file_console.print(rich_tb)
-
+            json.dump(crash_data, f, indent=2)
 
         console.print(f"Crash log written to {crash_log_file}")
 

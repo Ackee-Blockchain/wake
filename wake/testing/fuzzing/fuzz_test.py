@@ -43,14 +43,14 @@ class FuzzTest:
 
     @classmethod
     def run(
-        self,
+        cls,
         sequences_count: int,
         flows_count: int,
         *,
         dry_run: bool = False,
     ):
         from .fuzz_shrink import fuzz_shrink
-        fuzz_shrink(self, sequences_count, flows_count, dry_run)
+        fuzz_shrink(cls, sequences_count, flows_count, dry_run)
 
     def pre_sequence(self) -> None:
         pass

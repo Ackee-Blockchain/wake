@@ -2,6 +2,7 @@ from __future__ import annotations
 
 
 from collections import defaultdict
+import json
 from typing import Callable, DefaultDict, List, Optional, Any, Tuple
 
 from typing_extensions import get_type_hints
@@ -27,7 +28,6 @@ from wake.development.globals import (
 )
 
 from wake.development.core import Chain
-import pickle
 
 from pathlib import Path
 from datetime import datetime, timedelta
@@ -118,6 +118,23 @@ def compare_exceptions(e1, e2):
     return True
 
 
+def serialize_random_state(state: tuple[int, tuple[int, ...], float | None]) -> dict:
+    """Convert random state to JSON-serializable format"""
+    version, state_tuple, gauss = state
+    return {
+        "version": version,
+        "state_tuple": list(state_tuple),  # convert tuple to list for JSON
+        "gauss": gauss
+    }
+
+def deserialize_random_state(state_dict: dict) -> tuple[int, tuple[int, ...], float | None]:
+    """Convert JSON format back to random state tuple"""
+    return (
+        state_dict["version"],
+        tuple(state_dict["state_tuple"]),  # convert list back to tuple
+        state_dict["gauss"]
+    )
+
 class StateSnapShot:
     _python_state: FuzzTest | None
     chain_states: List[str]
@@ -189,33 +206,60 @@ class OverRunException(Exception):
     def __init__(self):
         super().__init__("Overrun")
 
-
 @dataclass
-class FlowState:
-    random_state: bytes
+class ReproducibleFlowState:
+    random_state: tuple[int, tuple[int, ...], float | None]
     flow_num: int
     flow_name: str
-    flow: Callable  # Store the function itself
-    flow_params: List[Any]  # Store the list of arguments
-    required: bool = True
-    before_inv_random_state: bytes = b""
+    flow_params: List[Any]
 
+    def to_dict(self):
+        return {
+            "random_state": serialize_random_state(self.random_state),
+            "flow_num": self.flow_num,
+            "flow_name": self.flow_name,
+            "flow_params": self.flow_params,
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls(
+            random_state=deserialize_random_state(data["random_state"]),
+            flow_num=data["flow_num"],
+            flow_name=data["flow_name"],
+            flow_params=data["flow_params"],
+        )
 
 @dataclass
-class FlowStateForFile:
-    random_state: bytes
-    flow_num: int
-    flow_name: str
-    flow_params: List[Any]  # Store the list of arguments
-    required: bool = True
-    before_inv_random_state: bytes = b""
-
+class FlowState(ReproducibleFlowState):
+    flow: Callable  # Runtime-only field for analysis
+    required: bool = True  # Runtime-only field for analysis
 
 @dataclass
 class ShrankInfoFile:
     target_fuzz_path: str
-    initial_state: bytes
-    required_flows: List[FlowStateForFile]
+    initial_state: dict
+    required_flows: List[ReproducibleFlowState]
+
+    def to_dict(self):
+        return {
+            "target_fuzz_path": self.target_fuzz_path,
+            "initial_state": self.initial_state,
+            "required_flows": [
+                flow.to_dict() for flow in self.required_flows
+            ]
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls(
+            target_fuzz_path=data["target_fuzz_path"],
+            initial_state=data["initial_state"],
+            required_flows=[
+                ReproducibleFlowState.from_dict(flow)
+                for flow in data["required_flows"]
+            ]
+        )
 
 
 @contextmanager
@@ -260,10 +304,12 @@ def shrank_reproduce(test_class: type[FuzzTest], dry_run: bool = False):
     shrank_path = get_shrank_path()
     if shrank_path is None:
         raise Exception("Shrunken data file path not found")
-    with open(shrank_path, "rb") as f:
-        store_data: ShrankInfoFile = pickle.load(f)
+    # read shrank json file
+    with open(shrank_path, "r") as f:
+        serialized_shrank_info = f.read()
+    store_data: ShrankInfoFile = ShrankInfoFile.from_dict(json.loads(serialized_shrank_info))
 
-    random.setstate(pickle.loads(store_data.initial_state))
+    random.setstate(deserialize_random_state(store_data.initial_state))
     test_instance._flow_num = 0
     test_instance._sequence_num = 0
     test_instance.pre_sequence()
@@ -286,17 +332,10 @@ def shrank_reproduce(test_class: type[FuzzTest], dry_run: bool = False):
         if not hasattr(flow, "precondition") or getattr(flow, "precondition")(
             test_instance
         ):
-            random.setstate(pickle.loads(store_data.required_flows[j].random_state))
+            random.setstate(store_data.required_flows[j].random_state)
             test_instance.pre_flow(flow)
             flow(test_instance, *flow_params)
             test_instance.post_flow(flow)
-
-        try:
-            random.setstate(
-                pickle.loads(store_data.required_flows[j].before_inv_random_state)
-            )
-        except Exception as e:
-            pass
 
         if not dry_run:
             test_instance.pre_invariants()
@@ -312,7 +351,6 @@ def shrank_reproduce(test_class: type[FuzzTest], dry_run: bool = False):
 
     print("Shrunken test passed")
 
-
 def shrink_collecting_phase(
     test_instance: FuzzTest,
     flows,
@@ -320,6 +358,7 @@ def shrink_collecting_phase(
     flow_states: List[FlowState],
     chains: Tuple[Chain, ...],
     flows_count: int,
+    initial_state: Any,
 ) -> Tuple[Exception, timedelta]:
     data_time = datetime.now()
     flows_counter: DefaultDict[Callable, int] = defaultdict(int)
@@ -327,9 +366,7 @@ def shrink_collecting_phase(
     # Snapshot all connected chains
     initial_chain_state_snapshots = [chain.snapshot() for chain in chains]
     error_flow_num = get_error_flow_num()  # argument
-    initial_state = get_sequence_initial_internal_state()  # argument
-
-    random.setstate(pickle.loads(initial_state))
+    random.setstate(initial_state)
     with print_ignore():
         test_instance._flow_num = 0
         test_instance.pre_sequence()
@@ -377,14 +414,14 @@ def shrink_collecting_phase(
                     if k != "return"
                 ]
 
-                random_state = pickle.dumps(random.getstate())
+                random_state = random.getstate()
                 flow_states.append(
                     FlowState(
                         random_state=random_state,
                         flow_name=flow.__name__,
-                        flow=flow,
                         flow_params=flow_params,
                         flow_num=j,
+                        flow=flow,
                     )
                 )
 
@@ -393,8 +430,6 @@ def shrink_collecting_phase(
                 flow(test_instance, *flow_params)  # Execute the selected flow
                 flows_counter[flow] += 1
                 test_instance.post_flow(flow)
-
-                flow_states[j].before_inv_random_state = pickle.dumps(random.getstate())
 
                 test_instance.pre_invariants()
                 for inv in invariants:
@@ -424,6 +459,8 @@ def shrink_collecting_phase(
     second_time = datetime.now()
     time_spent = second_time - data_time
     print("Time spent for one fuzz test: ", time_spent)
+
+    print("exception_content: ", exception_content)
     assert exception_content is not None
     return exception_content, time_spent
 
@@ -433,6 +470,8 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
     print(
         "Fuzz test shrink start! First of all, collect random/flow information!!! >_<"
     )
+    initial_state: tuple[int, tuple[int, ...], float | None] = deserialize_random_state(get_sequence_initial_internal_state())
+
     shrink_start_time = datetime.now()
     print("Start time: ", shrink_start_time)
     test_instance = test_class()
@@ -446,7 +485,7 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
         raise Exception("Flow number is less than 1, not supported for shrinking")
 
     exception_content, time_spent_for_one_fuzz = shrink_collecting_phase(
-        test_instance, flows, invariants, flow_states, chains, flows_count
+        test_instance, flows, invariants, flow_states, chains, flows_count, initial_state
     )
     print(
         "Estimated completion time for shrinking:",
@@ -455,7 +494,7 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
     )  # estimate around half of flow is not related to the error
     print("Starting shrinking")
 
-    random.setstate(pickle.loads(get_sequence_initial_internal_state()))
+    random.setstate(initial_state)
     # ignore print for pre_sequence logging
     with print_ignore():
         test_instance._flow_num = 0
@@ -532,7 +571,7 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
                         raise OverRunException()
 
                     curr_flow_state = flow_states[j]
-                    random.setstate(pickle.loads(curr_flow_state.random_state))
+                    random.setstate(curr_flow_state.random_state)
                     flow = curr_flow_state.flow
                     flow_params = curr_flow_state.flow_params
                     test_instance._flow_num = j
@@ -543,11 +582,6 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
                             test_instance.pre_flow(flow)
                             flow(test_instance, *flow_params)
                             test_instance.post_flow(flow)
-
-                    if curr_flow_state.before_inv_random_state != b"":
-                        random.setstate(
-                            pickle.loads(curr_flow_state.before_inv_random_state)
-                        )
 
                     test_instance.pre_invariants()
                     if (
@@ -671,7 +705,7 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
                     print("flow: ", j, flow_states[j].flow.__name__)
 
                     curr_flow_state = flow_states[j]
-                    random.setstate(pickle.loads(curr_flow_state.random_state))
+                    random.setstate(curr_flow_state.random_state)
                     flow = curr_flow_state.flow
                     flow_params = curr_flow_state.flow_params
 
@@ -683,11 +717,6 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
                             test_instance.pre_flow(flow)
                             flow(test_instance, *flow_params)
                             test_instance.post_flow(flow)
-
-                    if curr_flow_state.before_inv_random_state != b"":
-                        random.setstate(
-                            pickle.loads(curr_flow_state.before_inv_random_state)
-                        )
 
                     test_instance.pre_invariants()
                     if (not ONLY_TARGET_INVARIANTS and flow_states[j].required) or (
@@ -795,7 +824,7 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
     # write crash log file.
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     # Assuming `call.execinfo` contains the crash information
-    crash_log_file = crash_logs_dir / f"{timestamp}.bin"
+    shrank_file = crash_logs_dir / f"{timestamp}.json"
 
     import inspect
 
@@ -805,30 +834,19 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
     relative_test_path = os.path.relpath(current_file_path, project_root_path)
 
     # initial_state
-    required_flows: List[FlowStateForFile] = []
-    for i in range(len(flow_states)):
-        if flow_states[i].required:
-            required_flows.append(
-                FlowStateForFile(
-                    random_state=flow_states[i].random_state,
-                    flow_num=flow_states[i].flow_num,
-                    flow_name=flow_states[i].flow_name,
-                    # ignore flow_states[i].flow
-                    flow_params=flow_states[i].flow_params,
-                    required=flow_states[i].required,
-                    before_inv_random_state=flow_states[i].before_inv_random_state,
-                )
-            )
+    required_flows: List[ReproducibleFlowState] = [flow_states[i] for i in range(len(flow_states)) if flow_states[i].required]
 
     store_data: ShrankInfoFile = ShrankInfoFile(
         target_fuzz_path=relative_test_path,
         initial_state=get_sequence_initial_internal_state(),
         required_flows=required_flows,
     )
+
+    import json
     # Write to a JSON file
-    with open(crash_log_file, "wb") as f:
-        pickle.dump(store_data, f)
-    print(f"Shrunken data file written to {crash_log_file}")
+    with open(shrank_file, "w") as f:
+        json.dump(store_data.to_dict(), f, indent=2)
+    print(f"Shrunken data file written to {shrank_file}")
 
 
 def single_fuzz_test(
@@ -855,7 +873,8 @@ def single_fuzz_test(
         # Snapshot all connected chains
         snapshots = [chain.snapshot() for chain in chains]
 
-        set_sequence_initial_internal_state(pickle.dumps(random.getstate()))
+        state = serialize_random_state(random.getstate())
+        set_sequence_initial_internal_state(state)
 
         test_instance._flow_num = 0
         test_instance._sequence_num = i
