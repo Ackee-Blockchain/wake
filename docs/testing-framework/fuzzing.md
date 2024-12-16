@@ -75,6 +75,7 @@ Execution hooks are functions that are executed during the `FuzzTest` lifecycle.
 
 - `pre_sequence(self)` - executed before each test sequence,
 - `pre_flow(self, flow: Callable)` - executed before each flow, accepts the flow function to be executed as an argument,
+- `call_flow(self, flow: Callable, flow_params: List[Any])` - executes each flow, accepts the flow function to be executed as an argument and the flow parameters which will be passed to the flow function,
 - `post_flow(self, flow: Callable)` - executed after each flow, accepts the flow function that was executed as an argument,
 - `pre_invariants(self)` - executed before each set of invariants,
 - `pre_invariant(self, invariant: Callable)` - executed before each invariant, accepts the invariant function to be executed as an argument,

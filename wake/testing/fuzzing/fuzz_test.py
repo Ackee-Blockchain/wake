@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Callable, DefaultDict, List, Optional
+from typing import Callable, DefaultDict, List, Optional, Any
 
 from typing_extensions import get_type_hints
 
@@ -121,7 +121,7 @@ class FuzzTest:
 
                 self._flow_num = j
                 self.pre_flow(flow)
-                flow(self, *flow_params)
+                self.call_flow(flow, flow_params)
                 flows_counter[flow] += 1
                 self.post_flow(flow)
 
@@ -151,6 +151,9 @@ class FuzzTest:
 
     def pre_flow(self, flow: Callable) -> None:
         pass
+
+    def call_flow(self, flow: Callable, flow_params: List[Any]) -> None:
+        flow(self, *flow_params)
 
     def post_flow(self, flow: Callable) -> None:
         pass
