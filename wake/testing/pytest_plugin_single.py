@@ -1,6 +1,6 @@
 from functools import partial
 import os
-from typing import Iterable, List, Optional
+from typing import Iterable, List, Optional, Tuple
 
 from pytest import Session
 
@@ -23,14 +23,13 @@ from wake.testing.coverage import (
     export_merged_ide_coverage,
     write_coverage,
 )
-import pickle
 
 class PytestWakePluginSingle:
     _config: WakeConfig
     _cov_proc_count: Optional[int]
     _random_seeds: List[bytes]
     _debug: bool
-
+    _crash_log_meta_data: List[Tuple[str, str]]
     def __init__(
         self,
         config: WakeConfig,
@@ -42,6 +41,7 @@ class PytestWakePluginSingle:
         self._debug = debug
         self._cov_proc_count = cov_proc_count
         self._random_seeds = list(random_seeds)
+        self._crash_log_meta_data = []
 
     def pytest_runtest_setup(self, item):
         reset_exception_handled()
@@ -104,7 +104,7 @@ class PytestWakePluginSingle:
         with crash_log_file.open('w') as f:
             json.dump(crash_data, f, indent=2)
 
-        console.print(f"Crash log written to {crash_log_file}")
+        self._crash_log_meta_data.append((str(test_file_path), os.path.relpath(crash_log_file, self._config.project_root_path)))
 
     def pytest_runtestloop(self, session: Session):
         if (
@@ -155,3 +155,6 @@ class PytestWakePluginSingle:
         terminalreporter.section("Wake")
         terminalreporter.write_line("Random seed: " + self._random_seeds[0].hex())
         terminalreporter.write_line("Executed flow number: " + str(get_error_flow_num()))
+
+        for node, crash_log in self._crash_log_meta_data:
+            terminalreporter.write_line( f"{node} Crash log stored at {crash_log}")
