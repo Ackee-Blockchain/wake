@@ -64,23 +64,27 @@ class PytestWakePluginSingle:
         self._test_random_state = {}
 
     def get_shrink_argument_path(self, shrink_path_str: str, dir_name: str) -> Path:
-        try:
-            path = Path(shrink_path_str)
-            if not path.exists():
-                raise UsageError(f"Shrink log not found: {path}")
+
+        path = Path(shrink_path_str)
+        if path.exists():
             return path
-        except UsageError:
-            pass
 
         crash_logs_dir = (
             self._config.project_root_path / ".wake" / "logs" / dir_name
         )
         if not crash_logs_dir.exists():
             raise UsageError(f"Crash logs directory not found: {crash_logs_dir}")
-        index = int(shrink_path_str)
+
         crash_logs = sorted(
             crash_logs_dir.glob("*.json"), key=os.path.getmtime, reverse=True
         )
+        try:
+            index = int(shrink_path_str)
+            if index < 0 or index >= len(crash_logs):
+                raise ValueError()
+        except ValueError:
+            raise UsageError(f"Shrink log not found: {shrink_path_str}")
+
         if abs(index) > len(crash_logs):
             raise UsageError(f"Invalid crash log index: {index}")
         return Path(crash_logs[index])
