@@ -44,7 +44,6 @@ class PytestWakePluginMultiprocess:
     _log_file: Path
     _crash_log_file: Path
     _random_seed: bytes
-    _random_state: Optional[bytes]
     _tee: bool
     _debug: bool
     _exception_handled: bool
@@ -62,7 +61,6 @@ class PytestWakePluginMultiprocess:
         log_dir: Path,
         crash_log_dir: Path,
         random_seed: bytes,
-        random_state: Optional[bytes],
         tee: bool,
         debug: bool,
     ):
@@ -74,7 +72,6 @@ class PytestWakePluginMultiprocess:
         self._log_file = log_dir / sanitize_filename(f"process-{index}.ansi")
         self._crash_log_dir = crash_log_dir
         self._random_seed = random_seed
-        self._random_state = random_state
         self._tee = tee
         self._debug = debug
         self._exception_handled = False
@@ -309,12 +306,9 @@ class PytestWakePluginMultiprocess:
             indexes = self._conn.recv()
             for i in range(len(indexes)):
                 # set random seed before each test item
-                if self._random_state is not None:
-                    random.setstate(pickle.loads(self._random_state))
-                    console.print(f"Using random state '{random.getstate()[1]}'")
-                else:
-                    random.seed(self._random_seed)
-                    console.print(f"Setting random seed '{self._random_seed.hex()}'")
+
+                random.seed(self._random_seed)
+                console.print(f"Setting random seed '{self._random_seed.hex()}'")
 
                 item = session.items[indexes[i]]
                 nextitem = (

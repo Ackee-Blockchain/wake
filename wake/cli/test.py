@@ -71,14 +71,6 @@ class FileAndPassParamType(click.ParamType):
     help="Random seeds",
 )
 @click.option(
-    "--random-state",
-    "-RS",
-    "random_states",
-    multiple=True,
-    type=str,
-    help="Random statuses",
-)
-@click.option(
     "--attach-first",
     is_flag=True,
     default=False,
@@ -129,7 +121,6 @@ def run_test(
     proc_count: Optional[int],
     coverage: int,
     seeds: Tuple[str],
-    random_states: Tuple[str],
     attach_first: bool,
     dist: str,
     verbosity: int,
@@ -163,13 +154,6 @@ def run_test(
         random_seeds = [bytes.fromhex(seed) for seed in seeds]
     except ValueError:
         raise click.BadParameter("Seeds must be hex numbers.")
-
-    try:
-        random_states_byte = [
-            bytes.fromhex(random_state) for random_state in random_states
-        ]
-    except ValueError:
-        raise click.BadParameter("Random states must be hex numbers.")
 
     config = WakeConfig(local_config_path=context.obj.get("local_config_path", None))
     config.load_configs()
@@ -221,7 +205,6 @@ def run_test(
                         coverage,
                         proc_count,
                         random_seeds,
-                        random_states_byte,
                         attach_first,
                         debug,
                         dist,
@@ -263,7 +246,7 @@ def run_test(
             except json.JSONDecodeError:
                 raise ValueError(f"Invalid JSON format in crash log file: {crash_log_file_path}")
 
-        def get_shrink_argument_path(shrink_path_str: str) -> Path:
+        def get_shrink_argument_path(shrink_path_str: str, dir_name: str) -> Path:
             try:
                 path = Path(shrink_path_str)
                 if not path.exists():
@@ -273,7 +256,7 @@ def run_test(
                 pass
 
             crash_logs_dir = (
-                get_config().project_root_path / ".wake" / "logs" / "crashes"
+                get_config().project_root_path / ".wake" / "logs" / dir_name
             )
             if not crash_logs_dir.exists():
                 raise click.BadParameter(
@@ -287,30 +270,6 @@ def run_test(
                 raise click.BadParameter(f"Invalid crash log index: {index}")
             return Path(crash_logs[index])
 
-        def get_shrank_argument_path(shrank_path_str: str) -> Path:
-            try:
-                shrank_path = Path(shrank_path_str)
-                if not shrank_path.exists():
-                    raise ValueError(f"Shrank data file not found: {shrank_path}")
-                return shrank_path
-            except ValueError:
-                pass
-            shrank_data_path = (
-                get_config().project_root_path / ".wake" / "logs" / "shrank"
-            )
-            if not shrank_data_path.exists():
-                raise click.BadParameter(
-                    f"Shrank data file not found: {shrank_data_path}"
-                )
-
-            index = int(shrank_path_str)
-            shrank_files = sorted(
-                shrank_data_path.glob("*.bin"), key=os.path.getmtime, reverse=True
-            )
-            if abs(index) > len(shrank_files):
-                raise click.BadParameter(f"Invalid crash log index: {index}")
-            return Path(shrank_files[index])
-
         if shrank is not None and shrink is not None:
             raise click.BadParameter(
                 "Both shrink and shrieked cannot be provided at the same time."
@@ -318,10 +277,9 @@ def run_test(
 
         pytest_path_specified, test_path = get_single_test_path(pytest_args)
 
-
         if shrink is not None:
             set_fuzz_mode(1)
-            shrink_crash_path = get_shrink_argument_path(shrink)
+            shrink_crash_path = get_shrink_argument_path(shrink, "crashes")
             print("shrink from crash log: ", shrink_crash_path)
             crash_log_dict = extract_crash_log_dict(shrink_crash_path)
             path = crash_log_dict["test_file"]
@@ -336,7 +294,7 @@ def run_test(
 
         if shrank:
             set_fuzz_mode(2)
-            shrank_data_path = get_shrank_argument_path(shrank)
+            shrank_data_path = get_shrink_argument_path(shrank, "shrank")
             print("shrank from shrank data: ", shrank_data_path)
             with open(shrank_data_path, "r") as f:
                 target_fuzz_path = json.load(f)["target_fuzz_path"]
@@ -352,7 +310,7 @@ def run_test(
                 pytest_args,
                 plugins=[
                     PytestWakePluginSingle(
-                        config, debug, coverage, random_seeds, random_states_byte
+                        config, debug, coverage, random_seeds
                     )
                 ],
             )
