@@ -196,6 +196,16 @@ def run_test(
             PytestWakePluginMultiprocessServer,
         )
 
+        if shrink is not None:
+            raise click.BadParameter(
+                "Shrink can not execute with multiprocess mode."
+            )
+
+        if shrank is not None:
+            raise click.BadParameter(
+                "Shrank reproduce can not execute with multiprocess mode."
+            )
+
         sys.exit(
             pytest.main(
                 pytest_args,

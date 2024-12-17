@@ -465,6 +465,9 @@ def shrink_collecting_phase(
     return exception_content, time_spent
 
 def shrink_test(test_class: type[FuzzTest], flows_count: int):
+    import json
+    import inspect
+
     error_flow_num = get_error_flow_num()  # argument
     actual_error_flow_num = error_flow_num
     print(
@@ -824,9 +827,9 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
     # write crash log file.
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     # Assuming `call.execinfo` contains the crash information
-    shrank_file = crash_logs_dir / f"{timestamp}.json"
 
-    import inspect
+
+
 
     current_file_path = os.path.abspath(inspect.getfile(test_class))
 
@@ -842,8 +845,14 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
         required_flows=required_flows,
     )
 
-    import json
     # Write to a JSON file
+    shrank_file = crash_logs_dir / f"{timestamp}.json"
+    # I would like if file already exists, then create new indexed file
+    if shrank_file.exists():
+        i = 0
+        while shrank_file.with_suffix(f"_{i}.json").exists():
+            i += 1
+        shrank_file = shrank_file.with_suffix(f"_{i}.json")
     with open(shrank_file, "w") as f:
         json.dump(store_data.to_dict(), f, indent=2)
     print(f"Shrunken data file written to {shrank_file}")
