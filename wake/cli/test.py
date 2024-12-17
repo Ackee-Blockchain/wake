@@ -89,6 +89,17 @@ class FileAndPassParamType(click.ParamType):
     count=True,
     help="Increase verbosity. Can be specified multiple times.",
 )
+
+@click.option(
+    "-RS",
+    "--random-state",
+    type=str,
+    help="input random state json path",
+    is_flag=False,
+    flag_value="0",
+    default=None,
+    required=False,
+)
 @click.option(
     "-SH",
     "--shrink",
@@ -139,6 +150,7 @@ def run_test(
     attach_first: bool,
     dist: str,
     verbosity: int,
+    random_state: Optional[str],
     shrink: Optional[str],
     exact_flow: bool,
     exact_exception: bool,
@@ -223,7 +235,6 @@ def run_test(
             raise click.BadParameter(
                 "Shrank reproduce can not execute with multiprocess mode."
             )
-
         sys.exit(
             pytest.main(
                 pytest_args,
@@ -250,6 +261,9 @@ def run_test(
         from wake.testing.pytest_plugin_single import PytestWakePluginSingle
         test_mode = 0
         test_info_path = ""
+        if random_state is not None:
+            test_info_path = random_state
+            test_mode = 3
         if shrink is not None:
             test_info_path = shrink
             test_mode = 1

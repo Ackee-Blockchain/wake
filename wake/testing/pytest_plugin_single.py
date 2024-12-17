@@ -44,6 +44,7 @@ class PytestWakePluginSingle:
     _crash_log_meta_data: List[Tuple[str, str]]
     _test_mode: int
     _test_info_path: str
+    _test_random_state: dict
     def __init__(
         self,
         config: WakeConfig,
@@ -60,6 +61,7 @@ class PytestWakePluginSingle:
         self._crash_log_meta_data = []
         self._test_mode = test_mode
         self._test_info_path = test_info_path
+        self._test_random_state = {}
 
     def get_shrink_argument_path(self, shrink_path_str: str, dir_name: str) -> Path:
         try:
@@ -129,6 +131,23 @@ class PytestWakePluginSingle:
                 raise UsageError(f"No test found matching the path '{target_fuzz_node}' from crash log")
 
             set_shrank_path(shrank_data_path)
+        elif self._test_mode == 3:
+            shrink_crash_path = self.get_shrink_argument_path(self._test_info_path, "crashes")
+            try:
+                with open(shrink_crash_path, "r") as file:
+                    crash_log_dict = json.load(file)
+            except json.JSONDecodeError:
+                raise UsageError(f"Invalid JSON format in crash log file: {shrink_crash_path}")
+
+            test_node_id = crash_log_dict["test_node_id"]
+            for item in items:
+                if item.nodeid == test_node_id:
+                    items[:] = [item] # Execute only the target fuzz node.
+                    break
+            else:
+                raise UsageError(f"No test found matching the path '{test_node_id}' from crash log")
+
+            self._test_random_state = crash_log_dict["initial_random_state"]
 
     def pytest_runtest_setup(self, item: Item):
         reset_exception_handled()
@@ -191,7 +210,11 @@ class PytestWakePluginSingle:
 
         coverage = self._cov_proc_count == 1 or self._cov_proc_count == -1
 
-        random.seed(self._random_seeds[0])
+        if self._test_mode == 3:
+            from wake.testing.fuzzing.fuzz_shrink import deserialize_random_state
+            random.setstate(deserialize_random_state(self._test_random_state))
+        else:
+            random.seed(self._random_seeds[0])
         console.print(f"Using random seed '{self._random_seeds[0].hex()}'")
 
         if self._debug:
@@ -231,5 +254,5 @@ class PytestWakePluginSingle:
         if self._crash_log_meta_data:
             terminalreporter.write_line("Crash logs:")
             for node, crash_log in self._crash_log_meta_data:
-                terminalreporter.write_line( f"{node} :{crash_log}")
+                terminalreporter.write_line( f"{node}: {crash_log}")
 
