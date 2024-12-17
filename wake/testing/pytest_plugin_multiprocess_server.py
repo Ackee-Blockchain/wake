@@ -40,6 +40,7 @@ class PytestWakePluginMultiprocessServer:
     _exported_coverages: Dict[
         int, Dict[Path, Dict[IdePosition, IdeFunctionCoverageRecord]]
     ]
+    _crash_log_meta_data: List[Tuple[str, int, str]]
 
     def __init__(
         self,
@@ -63,6 +64,8 @@ class PytestWakePluginMultiprocessServer:
         self._pytest_args = pytest_args
         self._exported_coverages = {i: {} for i in range(self._proc_count)}
 
+        self._crash_log_meta_data = []
+
     def pytest_sessionstart(self, session: pytest.Session):
         if self._coverage != 0:
             empty_coverage = CoverageHandler(self._config)
@@ -82,7 +85,7 @@ class PytestWakePluginMultiprocessServer:
         self._queue = multiprocessing.Queue(1000)
 
         for i in range(self._proc_count):
-            crash_logs_process_dir = crash_logs_dir  / f"process-{i}"
+            crash_logs_process_dir = crash_logs_dir / f"process-{i}"
             crash_logs_process_dir.mkdir(parents=True, exist_ok=True)
 
             parent_conn, child_conn = multiprocessing.Pipe()
@@ -333,6 +336,9 @@ class PytestWakePluginMultiprocessServer:
                     elif msg[0] == "keyboard_interrupt":
                         keyboard_interrupt[index] = True
 
+                    elif msg[0] == "pytest_crashlog_path":
+                        self._crash_log_meta_data.append((msg[1], msg[2], msg[3]))
+
             if True in keyboard_interrupt:
                 raise KeyboardInterrupt
         finally:
@@ -348,6 +354,11 @@ class PytestWakePluginMultiprocessServer:
             "Random seeds: "
             + ", ".join(s.hex() for s in self._random_seeds[: self._proc_count])
         )
+
+        if self._crash_log_meta_data:
+            terminalreporter.write_line("Crash logs:")
+            for index, node, crash_log in self._crash_log_meta_data:
+                terminalreporter.write_line(f"{node} process-{index}: {crash_log}")
 
     def _update_progress(
         self,

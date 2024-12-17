@@ -9,11 +9,20 @@ import time
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from types import TracebackType
-from typing import List, Optional, Type, Union
+from typing import List, Optional, Type, Union, Tuple
 
 import pytest
 from pathvalidate import sanitize_filename
-from pytest import Session, Item, Config, CallInfo, Collector, CollectReport, TestReport, UsageError
+from pytest import (
+    Session,
+    Item,
+    Config,
+    CallInfo,
+    Collector,
+    CollectReport,
+    TestReport,
+    UsageError,
+)
 from tblib import pickling_support
 
 from wake.cli.console import console
@@ -29,13 +38,14 @@ from wake.development.globals import (
     get_executing_flow_num,
     get_executing_sequence_num,
     get_fuzz_mode,
-    get_is_fuzzing
+    get_is_fuzzing,
 )
 
 from wake.testing.coverage import CoverageHandler
 from wake.utils.tee import StderrTee, StdoutTee
 
 from wake.testing.custom_pdb import CustomPdb
+
 
 class PytestWakePluginMultiprocess:
     _index: int
@@ -48,6 +58,7 @@ class PytestWakePluginMultiprocess:
     _tee: bool
     _debug: bool
     _exception_handled: bool
+    _crash_log_meta_data: List[Tuple[str, str]]
 
     _ctx_managers: List
     _keyboard_interrupt: bool
@@ -76,6 +87,7 @@ class PytestWakePluginMultiprocess:
         self._tee = tee
         self._debug = debug
         self._exception_handled = False
+        self._crash_log_meta_data = []
 
         self._keyboard_interrupt = False
         self._ctx_managers = []
@@ -163,9 +175,15 @@ class PytestWakePluginMultiprocess:
             )
         self._queue.put(("pytest_internalerror", self._index, pickled), block=True)
 
-    def pytest_exception_interact(self, node: Union[Item, Collector], call: CallInfo, report: Union[CollectReport, TestReport]):
+    def pytest_exception_interact(
+        self,
+        node: Union[Item, Collector],
+        call: CallInfo,
+        report: Union[CollectReport, TestReport],
+    ):
         import json
         from datetime import datetime
+
         if self._debug and not self._exception_handled:
             self._exception_handler(
                 call.excinfo.type, call.excinfo.value, call.excinfo.tb
@@ -179,9 +197,9 @@ class PytestWakePluginMultiprocess:
         if call.excinfo is None:
             return
 
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-        crash_log_file = self._crash_log_dir / F"{timestamp}.json"
+        crash_log_file = self._crash_log_dir / f"{timestamp}.json"
 
         crash_data = {
             "test_node_id": node.nodeid,
@@ -193,8 +211,24 @@ class PytestWakePluginMultiprocess:
             "initial_random_state": random_state_dict,
         }
 
-        with crash_log_file.open('w') as f:
+        with crash_log_file.open("w") as f:
             json.dump(crash_data, f, indent=2)
+
+        self._crash_log_meta_data.append(
+            (
+                str(node.nodeid),
+                os.path.relpath(crash_log_file, self._config.project_root_path),
+            )
+        )
+
+        self._queue.put(
+            (
+                "pytest_crashlog_path",
+                self._index,
+                str(node.nodeid),
+                os.path.relpath(crash_log_file, self._config.project_root_path),
+            )
+        )
 
     def pytest_runtestloop(self, session: Session):
         if (
@@ -254,13 +288,19 @@ class PytestWakePluginMultiprocess:
 
             for idx, line in enumerate(source_lines_subset):
                 if start_line + idx == relative_lineno:
-                    source_lines_subset[idx] = f"--> {starting_line_no + start_line + idx:>{line_number_width}} {line}"  # Add '>>>' marker
+                    source_lines_subset[idx] = (
+                        f"--> {starting_line_no + start_line + idx:>{line_number_width}} {line}"  # Add '>>>' marker
+                    )
                 else:
-                    source_lines_subset[idx] = f"    {starting_line_no + start_line + idx:>{line_number_width}} {line}"
+                    source_lines_subset[idx] = (
+                        f"    {starting_line_no + start_line + idx:>{line_number_width}} {line}"
+                    )
 
-            source_code = ''.join(source_lines_subset)
+            source_code = "".join(source_lines_subset)
 
-            debugging_data = pickle.dumps((filename, lineno, function_name, source_code))
+            debugging_data = pickle.dumps(
+                (filename, lineno, function_name, source_code)
+            )
             self._queue.put(("breakpoint", self._index, debugging_data), block=True)
             attach: bool = self._conn.recv()
             if attach:
@@ -352,5 +392,14 @@ class PytestWakePluginMultiprocess:
         terminalreporter.section("Wake")
         terminalreporter.write_line("Random seed: " + self._random_seed.hex())
         if get_is_fuzzing():
-            terminalreporter.write_line("Executed sequence number: " + str(get_executing_sequence_num()))
-            terminalreporter.write_line("Executed flow number: " + str(get_executing_flow_num()))
+            terminalreporter.write_line(
+                "Executed sequence number: " + str(get_executing_sequence_num())
+            )
+            terminalreporter.write_line(
+                "Executed flow number: " + str(get_executing_flow_num())
+            )
+
+        if self._crash_log_meta_data:
+            terminalreporter.write_line("Crash logs:")
+            for node, crash_log in self._crash_log_meta_data:
+                terminalreporter.write_line(f"{node}: {crash_log}")
