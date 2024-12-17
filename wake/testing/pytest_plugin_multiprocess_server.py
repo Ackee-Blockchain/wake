@@ -33,7 +33,6 @@ class PytestWakePluginMultiprocessServer:
         int, Tuple[multiprocessing.Process, multiprocessing.connection.Connection]
     ]
     _random_seeds: List[bytes]
-    _random_states: Optional[List[bytes]]
     _attach_first: bool
     _debug: bool
     _pytest_args: List[str]
@@ -48,7 +47,6 @@ class PytestWakePluginMultiprocessServer:
         coverage: int,
         proc_count: int,
         random_seeds: List[bytes],
-        raondom_states: Optional[List[bytes]],
         attach_first: bool,
         debug: bool,
         dist: str,
@@ -59,7 +57,6 @@ class PytestWakePluginMultiprocessServer:
         self._proc_count = proc_count
         self._processes = {}
         self._random_seeds = random_seeds
-        self._random_states = raondom_states
         self._attach_first = attach_first
         self._debug = debug
         self._dist = dist
@@ -103,7 +100,6 @@ class PytestWakePluginMultiprocessServer:
                             logs_dir,
                             crash_logs_process_dir,
                             self._random_seeds[i],
-                            self._random_states[i] if self._random_states else None,
                             self._attach_first and i == 0,
                             self._debug,
                         ),

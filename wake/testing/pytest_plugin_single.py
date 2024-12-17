@@ -29,7 +29,6 @@ class PytestWakePluginSingle:
     _config: WakeConfig
     _cov_proc_count: Optional[int]
     _random_seeds: List[bytes]
-    _random_states: List[Optional[bytes]]
     _debug: bool
 
     def __init__(
@@ -38,13 +37,11 @@ class PytestWakePluginSingle:
         debug: bool,
         cov_proc_count: Optional[int],
         random_seeds: Iterable[bytes],
-        random_states: Iterable[Optional[bytes]],
     ):
         self._config = config
         self._debug = debug
         self._cov_proc_count = cov_proc_count
         self._random_seeds = list(random_seeds)
-        self._random_states = list(random_states)
 
     def pytest_runtest_setup(self, item):
         reset_exception_handled()
@@ -124,14 +121,8 @@ class PytestWakePluginSingle:
 
         coverage = self._cov_proc_count == 1 or self._cov_proc_count == -1
 
-
-        if len(self._random_states) > 0:
-            assert self._random_states[0] is not None
-            random.setstate(pickle.loads(self._random_states[0]))
-            console.print(f"Using random state '{random.getstate()[1]}'")
-        else:
-            random.seed(self._random_seeds[0])
-            console.print(f"Using random seed '{self._random_seeds[0].hex()}'")
+        random.seed(self._random_seeds[0])
+        console.print(f"Using random seed '{self._random_seeds[0].hex()}'")
 
         if self._debug:
             set_exception_handler(partial(attach_debugger, seed=self._random_seeds[0]))
