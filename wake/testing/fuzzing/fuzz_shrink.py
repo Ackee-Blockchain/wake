@@ -49,14 +49,20 @@ from contextlib import contextmanager, redirect_stdout, redirect_stderr
 
 from wake.testing.core import default_chain as global_default_chain
 
-EXACT_FLOW_INDEX = get_shrink_exact_flow()  # Set True if you accept the same error that happened earlier than the crash log.
+EXACT_FLOW_INDEX = (
+    get_shrink_exact_flow()
+)  # Set True if you accept the same error that happened earlier than the crash log.
 
-EXACT_EXCEPTION_MATCH = get_shrink_exact_exception()  # True if you do not accept the same kind of error but different arguments.
+EXACT_EXCEPTION_MATCH = (
+    get_shrink_exact_exception()
+)  # True if you do not accept the same kind of error but different arguments.
 # The meaning of the same kind of error is that
 # # If the Error was in the transaction, the same error emits and ignores the argument's value. Except for errors with only the message, we compare the message.
 # # If the Error was in a test like an assertion error, we care about the file and exception line in Python code.
 
-ONLY_TARGET_INVARIANTS = get_shrink_target_invariants_only()  # True if you want to check only target invariants.
+ONLY_TARGET_INVARIANTS = (
+    get_shrink_target_invariants_only()
+)  # True if you want to check only target invariants.
 # True makes one fuzz test run faster. but it may lose chance to shortcut that finding the same error earlier.
 
 
@@ -130,16 +136,20 @@ def serialize_random_state(state: tuple[int, tuple[int, ...], float | None]) -> 
     return {
         "version": version,
         "state_tuple": list(state_tuple),  # convert tuple to list for JSON
-        "gauss": gauss
+        "gauss": gauss,
     }
 
-def deserialize_random_state(state_dict: dict) -> tuple[int, tuple[int, ...], float | None]:
+
+def deserialize_random_state(
+    state_dict: dict,
+) -> tuple[int, tuple[int, ...], float | None]:
     """Convert JSON format back to random state tuple"""
     return (
         state_dict["version"],
         tuple(state_dict["state_tuple"]),  # convert list back to tuple
-        state_dict["gauss"]
+        state_dict["gauss"],
     )
+
 
 class StateSnapShot:
     _python_state: FuzzTest | None
@@ -212,6 +222,7 @@ class OverRunException(Exception):
     def __init__(self):
         super().__init__("Overrun")
 
+
 @dataclass
 class ReproducibleFlowState:
     random_state: tuple[int, tuple[int, ...], float | None]
@@ -236,10 +247,12 @@ class ReproducibleFlowState:
             flow_params=data["flow_params"],
         )
 
+
 @dataclass
 class FlowState(ReproducibleFlowState):
     flow: Callable  # Runtime-only field for analysis
     required: bool = True  # Runtime-only field for analysis
+
 
 @dataclass
 class ShrankInfoFile:
@@ -251,9 +264,7 @@ class ShrankInfoFile:
         return {
             "target_fuzz_node": self.target_fuzz_node,
             "initial_state": self.initial_state,
-            "required_flows": [
-                flow.to_dict() for flow in self.required_flows
-            ]
+            "required_flows": [flow.to_dict() for flow in self.required_flows],
         }
 
     @classmethod
@@ -262,9 +273,8 @@ class ShrankInfoFile:
             target_fuzz_node=data["target_fuzz_node"],
             initial_state=data["initial_state"],
             required_flows=[
-                ReproducibleFlowState.from_dict(flow)
-                for flow in data["required_flows"]
-            ]
+                ReproducibleFlowState.from_dict(flow) for flow in data["required_flows"]
+            ],
         )
 
 
@@ -315,7 +325,9 @@ def shrank_reproduce(test_class: type[FuzzTest], dry_run: bool = False):
     # read shrank json file
     with open(shrank_path, "r") as f:
         serialized_shrank_info = f.read()
-    store_data: ShrankInfoFile = ShrankInfoFile.from_dict(json.loads(serialized_shrank_info))
+    store_data: ShrankInfoFile = ShrankInfoFile.from_dict(
+        json.loads(serialized_shrank_info)
+    )
 
     random.setstate(deserialize_random_state(store_data.initial_state))
     test_instance._flow_num = 0
@@ -358,6 +370,7 @@ def shrank_reproduce(test_class: type[FuzzTest], dry_run: bool = False):
             test_instance.post_invariants()
 
     print("Shrunken test passed")
+
 
 def shrink_collecting_phase(
     test_instance: FuzzTest,
@@ -455,9 +468,7 @@ def shrink_collecting_phase(
             raise AssertionError("Unexpected un-failing flow")
         except Exception as e:
             exception_content = e
-            assert (
-                test_instance._flow_num == error_flow_num
-            ), "Unexpected failing flow"
+            assert test_instance._flow_num == error_flow_num, "Unexpected failing flow"
         finally:
             for snapshot, chain in zip(initial_chain_state_snapshots, chains):
                 chain.revert(snapshot)
@@ -472,6 +483,7 @@ def shrink_collecting_phase(
     assert exception_content is not None
     return exception_content, time_spent
 
+
 def shrink_test(test_class: type[FuzzTest], flows_count: int):
     import json
     import inspect
@@ -481,7 +493,9 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
     print(
         "Fuzz test shrink start! First of all, collect random/flow information!!! >_<"
     )
-    initial_state: tuple[int, tuple[int, ...], float | None] = deserialize_random_state(get_sequence_initial_internal_state())
+    initial_state: tuple[int, tuple[int, ...], float | None] = deserialize_random_state(
+        get_sequence_initial_internal_state()
+    )
 
     shrink_start_time = datetime.now()
     print("Start time: ", shrink_start_time)
@@ -496,7 +510,14 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
         raise Exception("Flow number is less than 1, not supported for shrinking")
 
     exception_content, time_spent_for_one_fuzz = shrink_collecting_phase(
-        test_instance, flows, invariants, flow_states, chains, flows_count, initial_state, error_flow_num
+        test_instance,
+        flows,
+        invariants,
+        flow_states,
+        chains,
+        flows_count,
+        initial_state,
+        error_flow_num,
     )
     print(
         "Estimated completion time for shrinking:",
@@ -837,7 +858,9 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
     # Assuming `call.execinfo` contains the crash information
 
     # initial_state
-    required_flows: List[ReproducibleFlowState] = [flow_states[i] for i in range(len(flow_states)) if flow_states[i].required]
+    required_flows: List[ReproducibleFlowState] = [
+        flow_states[i] for i in range(len(flow_states)) if flow_states[i].required
+    ]
     current_test_id = get_current_test_id()
     assert current_test_id is not None
     store_data: ShrankInfoFile = ShrankInfoFile(

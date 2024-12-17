@@ -3,7 +3,16 @@ import json
 import os
 from typing import Iterable, List, Optional, Tuple, Union
 
-from pytest import Session, Item, Config, CallInfo, Collector, CollectReport, TestReport, UsageError
+from pytest import (
+    Session,
+    Item,
+    Config,
+    CallInfo,
+    Collector,
+    CollectReport,
+    TestReport,
+    UsageError,
+)
 
 from pathlib import Path
 
@@ -36,6 +45,7 @@ from wake.testing.coverage import (
     write_coverage,
 )
 
+
 class PytestWakePluginSingle:
     _config: WakeConfig
     _cov_proc_count: Optional[int]
@@ -45,6 +55,7 @@ class PytestWakePluginSingle:
     _test_mode: int
     _test_info_path: str
     _test_random_state: dict
+
     def __init__(
         self,
         config: WakeConfig,
@@ -69,9 +80,7 @@ class PytestWakePluginSingle:
         if path.exists():
             return path
 
-        crash_logs_dir = (
-            self._config.project_root_path / ".wake" / "logs" / dir_name
-        )
+        crash_logs_dir = self._config.project_root_path / ".wake" / "logs" / dir_name
         if not crash_logs_dir.exists():
             raise UsageError(f"Crash logs directory not found: {crash_logs_dir}")
 
@@ -89,21 +98,27 @@ class PytestWakePluginSingle:
             raise UsageError(f"Invalid crash log index: {index}")
         return Path(crash_logs[index])
 
-    def pytest_collection_modifyitems(self, session: Session, config: Config, items: List[Item]):
+    def pytest_collection_modifyitems(
+        self, session: Session, config: Config, items: List[Item]
+    ):
         import json
 
         # select correct item from
         if self._test_mode == 0:
             return
         elif self._test_mode == 1:
-        # shrink
+            # shrink
             set_fuzz_mode(1)
-            shrink_crash_path = self.get_shrink_argument_path(self._test_info_path, "crashes")
+            shrink_crash_path = self.get_shrink_argument_path(
+                self._test_info_path, "crashes"
+            )
             try:
                 with open(shrink_crash_path, "r") as file:
                     crash_log_dict = json.load(file)
             except json.JSONDecodeError:
-                raise UsageError(f"Invalid JSON format in crash log file: {shrink_crash_path}")
+                raise UsageError(
+                    f"Invalid JSON format in crash log file: {shrink_crash_path}"
+                )
 
             test_node_id = crash_log_dict["test_node_id"]
             set_executing_flow_num(crash_log_dict["crash_flow_number"])
@@ -111,45 +126,59 @@ class PytestWakePluginSingle:
 
             for item in items:
                 if item.nodeid == test_node_id:
-                    items[:] = [item] # Execute only the target fuzz node.
+                    items[:] = [item]  # Execute only the target fuzz node.
                     break
             else:
-                raise UsageError(f"No test found matching the path '{test_node_id}' from crash log")
+                raise UsageError(
+                    f"No test found matching the path '{test_node_id}' from crash log"
+                )
 
         elif self._test_mode == 2:
-        # shrank reproduce
+            # shrank reproduce
             set_fuzz_mode(2)
-            shrank_data_path = self.get_shrink_argument_path(self._test_info_path, "shrank")
+            shrank_data_path = self.get_shrink_argument_path(
+                self._test_info_path, "shrank"
+            )
             print("shrank from shrank data: ", shrank_data_path)
             try:
                 with open(shrank_data_path, "r") as f:
                     target_fuzz_node = json.load(f)["target_fuzz_node"]
             except json.JSONDecodeError:
-                raise UsageError(f"Invalid JSON format in shrank data file: {shrank_data_path}")
+                raise UsageError(
+                    f"Invalid JSON format in shrank data file: {shrank_data_path}"
+                )
 
             for item in items:
                 if item.nodeid == target_fuzz_node:
-                    items[:] = [item] # Execute only the target fuzz node.
+                    items[:] = [item]  # Execute only the target fuzz node.
                     break
             else:
-                raise UsageError(f"No test found matching the path '{target_fuzz_node}' from crash log")
+                raise UsageError(
+                    f"No test found matching the path '{target_fuzz_node}' from crash log"
+                )
 
             set_shrank_path(shrank_data_path)
         elif self._test_mode == 3:
-            shrink_crash_path = self.get_shrink_argument_path(self._test_info_path, "crashes")
+            shrink_crash_path = self.get_shrink_argument_path(
+                self._test_info_path, "crashes"
+            )
             try:
                 with open(shrink_crash_path, "r") as file:
                     crash_log_dict = json.load(file)
             except json.JSONDecodeError:
-                raise UsageError(f"Invalid JSON format in crash log file: {shrink_crash_path}")
+                raise UsageError(
+                    f"Invalid JSON format in crash log file: {shrink_crash_path}"
+                )
 
             test_node_id = crash_log_dict["test_node_id"]
             for item in items:
                 if item.nodeid == test_node_id:
-                    items[:] = [item] # Execute only the target fuzz node.
+                    items[:] = [item]  # Execute only the target fuzz node.
                     break
             else:
-                raise UsageError(f"No test found matching the path '{test_node_id}' from crash log")
+                raise UsageError(
+                    f"No test found matching the path '{test_node_id}' from crash log"
+                )
 
             self._test_random_state = crash_log_dict["initial_random_state"]
 
@@ -157,7 +186,12 @@ class PytestWakePluginSingle:
         reset_exception_handled()
         set_current_test_id(item.nodeid)
 
-    def pytest_exception_interact(self, node: Union[Item, Collector], call: CallInfo, report: Union[CollectReport, TestReport]):
+    def pytest_exception_interact(
+        self,
+        node: Union[Item, Collector],
+        call: CallInfo,
+        report: Union[CollectReport, TestReport],
+    ):
         import json
         from datetime import datetime
         import os
@@ -181,9 +215,9 @@ class PytestWakePluginSingle:
         # shutil.rmtree(crash_logs_dir, ignore_errors=True)
         crash_logs_dir.mkdir(parents=True, exist_ok=True)
         # write crash log file.
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         # Assuming `call.execinfo` contains the crash information
-        crash_log_file = crash_logs_dir / F"{timestamp}.json"
+        crash_log_file = crash_logs_dir / f"{timestamp}.json"
 
         crash_data = {
             "test_node_id": node.nodeid,
@@ -194,10 +228,15 @@ class PytestWakePluginSingle:
             },
             "initial_random_state": random_state_dict,
         }
-        with crash_log_file.open('w') as f:
+        with crash_log_file.open("w") as f:
             json.dump(crash_data, f, indent=2)
 
-        self._crash_log_meta_data.append((str(node.nodeid), os.path.relpath(crash_log_file, self._config.project_root_path)))
+        self._crash_log_meta_data.append(
+            (
+                str(node.nodeid),
+                os.path.relpath(crash_log_file, self._config.project_root_path),
+            )
+        )
 
     def pytest_runtestloop(self, session: Session):
         if (
@@ -216,10 +255,12 @@ class PytestWakePluginSingle:
 
         if self._test_mode == 3:
             from wake.testing.fuzzing.fuzz_shrink import deserialize_random_state
+
             random.setstate(deserialize_random_state(self._test_random_state))
+            console.print(f"Using random state\n {self._test_random_state}")
         else:
             random.seed(self._random_seeds[0])
-        console.print(f"Using random seed '{self._random_seeds[0].hex()}'")
+            console.print(f"Using random seed '{self._random_seeds[0].hex()}'")
 
         if self._debug:
             set_exception_handler(partial(attach_debugger, seed=self._random_seeds[0]))
@@ -252,11 +293,14 @@ class PytestWakePluginSingle:
         terminalreporter.section("Wake")
         terminalreporter.write_line("Random seed: " + self._random_seeds[0].hex())
         if get_is_fuzzing():
-            terminalreporter.write_line("Executed sequence number: " + str(get_executing_sequence_num()))
-            terminalreporter.write_line("Executed flow number: " + str(get_executing_flow_num()))
+            terminalreporter.write_line(
+                "Executed sequence number: " + str(get_executing_sequence_num())
+            )
+            terminalreporter.write_line(
+                "Executed flow number: " + str(get_executing_flow_num())
+            )
 
         if self._crash_log_meta_data:
             terminalreporter.write_line("Crash logs:")
             for node, crash_log in self._crash_log_meta_data:
-                terminalreporter.write_line( f"{node}: {crash_log}")
-
+                terminalreporter.write_line(f"{node}: {crash_log}")
