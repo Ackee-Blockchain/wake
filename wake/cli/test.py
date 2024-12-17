@@ -101,6 +101,21 @@ class FileAndPassParamType(click.ParamType):
     required=False,
 )
 @click.option(
+    "--exact-flow/--no-exact-flow",
+    default=False,
+    help="Accept the same error that happened earlier than the crash log.",
+)
+@click.option(
+    "--exact-exception/--no-exact-exception",
+    default=False,
+    help="Only accept exactly matching exceptions (including arguments).",
+)
+@click.option(
+    "--target-invariants-only/--all-invariants",
+    default=False,
+    help="Check only target invariants for faster fuzzing.",
+)
+@click.option(
     "-SR",
     "--shrank",
     "--reproduce",
@@ -125,6 +140,9 @@ def run_test(
     dist: str,
     verbosity: int,
     shrink: Optional[str],
+    exact_flow: bool,
+    exact_exception: bool,
+    target_invariants_only: bool,
     shrank: Optional[str],
     paths_or_pytest_args: Tuple[str, ...],
 ) -> None:
@@ -224,103 +242,29 @@ def run_test(
             )
         )
     else:
-
         from wake.development.globals import (
-            get_config,
-            set_error_flow_num,
-            set_fuzz_mode,
-            set_sequence_initial_internal_state,
-            set_shrank_path,
+            set_shrink_exact_flow,
+            set_shrink_exact_exception,
+            set_shrink_target_invariants_only,
         )
         from wake.testing.pytest_plugin_single import PytestWakePluginSingle
-        import json
-
-        def get_single_test_path(args: list[str]) -> tuple[bool, str | None]:
-            has_path = False
-            path = None
-            for arg in args:
-                if Path(arg).exists():
-                    if has_path:
-                        raise click.BadParameter(
-                            "Multiple test files specified for shrinking"
-                        )
-                    has_path = True
-                    path = arg
-            return has_path, path
-
-        def extract_crash_log_dict(crash_log_file_path: Path) -> dict:
-            try:
-                with open(crash_log_file_path, "r") as file:
-                    crash_log_dict = json.load(file)
-                    return crash_log_dict
-            except json.JSONDecodeError:
-                raise ValueError(f"Invalid JSON format in crash log file: {crash_log_file_path}")
-
-        def get_shrink_argument_path(shrink_path_str: str, dir_name: str) -> Path:
-            try:
-                path = Path(shrink_path_str)
-                if not path.exists():
-                    raise ValueError(f"Shrink log not found: {path}")
-                return path
-            except ValueError:
-                pass
-
-            crash_logs_dir = (
-                get_config().project_root_path / ".wake" / "logs" / dir_name
-            )
-            if not crash_logs_dir.exists():
-                raise click.BadParameter(
-                    f"Crash logs directory not found: {crash_logs_dir}"
-                )
-            index = int(shrink_path_str)
-            crash_logs = sorted(
-                crash_logs_dir.glob("*.json"), key=os.path.getmtime, reverse=True
-            )
-            if abs(index) > len(crash_logs):
-                raise click.BadParameter(f"Invalid crash log index: {index}")
-            return Path(crash_logs[index])
-
-        if shrank is not None and shrink is not None:
-            raise click.BadParameter(
-                "Both shrink and shrieked cannot be provided at the same time."
-            )
-
-        pytest_path_specified, test_path = get_single_test_path(pytest_args)
-
+        test_mode = 0
+        test_info_path = ""
         if shrink is not None:
-            set_fuzz_mode(1)
-            shrink_crash_path = get_shrink_argument_path(shrink, "crashes")
-            print("shrink from crash log: ", shrink_crash_path)
-            crash_log_dict = extract_crash_log_dict(shrink_crash_path)
-            path = crash_log_dict["test_file"]
-            set_error_flow_num(crash_log_dict["crash_flow_number"])
-            set_sequence_initial_internal_state(crash_log_dict["initial_random_state"])
-            if pytest_path_specified:
-                assert (
-                    path == test_path
-                ), "crash log file path must be same as the test file path in pytest_args"
-            else:
-                pytest_args.insert(0, path)
-
+            test_info_path = shrink
+            test_mode = 1
+            set_shrink_exact_flow(exact_flow)
+            set_shrink_exact_exception(exact_exception)
+            set_shrink_target_invariants_only(target_invariants_only)
         if shrank:
-            set_fuzz_mode(2)
-            shrank_data_path = get_shrink_argument_path(shrank, "shrank")
-            print("shrank from shrank data: ", shrank_data_path)
-            with open(shrank_data_path, "r") as f:
-                target_fuzz_path = json.load(f)["target_fuzz_path"]
-            if pytest_path_specified:
-                assert (
-                    target_fuzz_path == test_path
-                ), "Shrank data file path must be same as the test file path in pytest_args"
-            else:
-                pytest_args.insert(0, target_fuzz_path)
-            set_shrank_path(shrank_data_path)
+            test_mode = 2
+            test_info_path = shrank
         sys.exit(
             pytest.main(
                 pytest_args,
                 plugins=[
                     PytestWakePluginSingle(
-                        config, debug, coverage, random_seeds
+                        config, debug, coverage, random_seeds, test_mode, test_info_path
                     )
                 ],
             )

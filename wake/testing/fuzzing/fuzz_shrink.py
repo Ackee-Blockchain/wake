@@ -21,10 +21,16 @@ from wake.development.globals import (
     set_sequence_initial_internal_state,
     get_fuzz_mode,
     get_sequence_initial_internal_state,
-    set_error_flow_num,
-    get_error_flow_num,
+    set_executing_flow_num,
+    get_executing_flow_num,
+    set_executing_sequence_num,
     get_config,
     get_shrank_path,
+    get_shrink_exact_flow,
+    get_shrink_exact_exception,
+    get_shrink_target_invariants_only,
+    get_current_test_id,
+    set_is_fuzzing,
 )
 
 from wake.development.core import Chain
@@ -43,14 +49,14 @@ from contextlib import contextmanager, redirect_stdout, redirect_stderr
 
 from wake.testing.core import default_chain as global_default_chain
 
-EXACT_FLOW_INDEX = False  # Set True if you accept the same error that happened earlier than the crash log.
+EXACT_FLOW_INDEX = get_shrink_exact_flow()  # Set True if you accept the same error that happened earlier than the crash log.
 
-EXACT_EXCEPTION_MATCH = False  # True if you do not accept the same kind of error but different arguments.
+EXACT_EXCEPTION_MATCH = get_shrink_exact_exception()  # True if you do not accept the same kind of error but different arguments.
 # The meaning of the same kind of error is that
 # # If the Error was in the transaction, the same error emits and ignores the argument's value. Except for errors with only the message, we compare the message.
 # # If the Error was in a test like an assertion error, we care about the file and exception line in Python code.
 
-ONLY_TARGET_INVARIANTS = False  # True if you want to check only target invariants.
+ONLY_TARGET_INVARIANTS = get_shrink_target_invariants_only()  # True if you want to check only target invariants.
 # True makes one fuzz test run faster. but it may lose chance to shortcut that finding the same error earlier.
 
 
@@ -237,13 +243,13 @@ class FlowState(ReproducibleFlowState):
 
 @dataclass
 class ShrankInfoFile:
-    target_fuzz_path: str
+    target_fuzz_node: str
     initial_state: dict
     required_flows: List[ReproducibleFlowState]
 
     def to_dict(self):
         return {
-            "target_fuzz_path": self.target_fuzz_path,
+            "target_fuzz_node": self.target_fuzz_node,
             "initial_state": self.initial_state,
             "required_flows": [
                 flow.to_dict() for flow in self.required_flows
@@ -253,7 +259,7 @@ class ShrankInfoFile:
     @classmethod
     def from_dict(cls, data):
         return cls(
-            target_fuzz_path=data["target_fuzz_path"],
+            target_fuzz_node=data["target_fuzz_node"],
             initial_state=data["initial_state"],
             required_flows=[
                 ReproducibleFlowState.from_dict(flow)
@@ -287,7 +293,9 @@ def fuzz_shrink(
     assert issubclass(test_class, FuzzTest)
     fuzz_mode = get_fuzz_mode()
     if fuzz_mode == 0:
+        set_is_fuzzing(True)
         single_fuzz_test(test_class, sequences_count, flows_count, dry_run)
+        set_is_fuzzing(False)
     elif fuzz_mode == 1:
         shrink_test(test_class, flows_count)
     elif fuzz_mode == 2:
@@ -359,13 +367,13 @@ def shrink_collecting_phase(
     chains: Tuple[Chain, ...],
     flows_count: int,
     initial_state: Any,
+    error_flow_num: int,
 ) -> Tuple[Exception, timedelta]:
     data_time = datetime.now()
     flows_counter: DefaultDict[Callable, int] = defaultdict(int)
     invariant_periods: DefaultDict[Callable[[None], None], int] = defaultdict(int)
     # Snapshot all connected chains
     initial_chain_state_snapshots = [chain.snapshot() for chain in chains]
-    error_flow_num = get_error_flow_num()  # argument
     random.setstate(initial_state)
     with print_ignore():
         test_instance._flow_num = 0
@@ -448,7 +456,7 @@ def shrink_collecting_phase(
         except Exception as e:
             exception_content = e
             assert (
-                test_instance._flow_num == get_error_flow_num()
+                test_instance._flow_num == error_flow_num
             ), "Unexpected failing flow"
         finally:
             for snapshot, chain in zip(initial_chain_state_snapshots, chains):
@@ -468,7 +476,7 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
     import json
     import inspect
 
-    error_flow_num = get_error_flow_num()  # argument
+    error_flow_num = get_executing_flow_num()  # argument
     actual_error_flow_num = error_flow_num
     print(
         "Fuzz test shrink start! First of all, collect random/flow information!!! >_<"
@@ -488,11 +496,11 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
         raise Exception("Flow number is less than 1, not supported for shrinking")
 
     exception_content, time_spent_for_one_fuzz = shrink_collecting_phase(
-        test_instance, flows, invariants, flow_states, chains, flows_count, initial_state
+        test_instance, flows, invariants, flow_states, chains, flows_count, initial_state, error_flow_num
     )
     print(
         "Estimated completion time for shrinking:",
-        (time_spent_for_one_fuzz * get_error_flow_num()) / 4
+        (time_spent_for_one_fuzz * actual_error_flow_num) / 4
         + time_spent_for_one_fuzz * len(flows) * 3 / 4,
     )  # estimate around half of flow is not related to the error
     print("Starting shrinking")
@@ -828,19 +836,12 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     # Assuming `call.execinfo` contains the crash information
 
-
-
-
-    current_file_path = os.path.abspath(inspect.getfile(test_class))
-
-    # Calculate the relative path
-    relative_test_path = os.path.relpath(current_file_path, project_root_path)
-
     # initial_state
     required_flows: List[ReproducibleFlowState] = [flow_states[i] for i in range(len(flow_states)) if flow_states[i].required]
-
+    current_test_id = get_current_test_id()
+    assert current_test_id is not None
     store_data: ShrankInfoFile = ShrankInfoFile(
-        target_fuzz_path=relative_test_path,
+        target_fuzz_node=current_test_id,
         initial_state=get_sequence_initial_internal_state(),
         required_flows=required_flows,
     )
@@ -886,6 +887,8 @@ def single_fuzz_test(
         set_sequence_initial_internal_state(state)
 
         test_instance._flow_num = 0
+        set_executing_flow_num(0)
+        set_executing_sequence_num(i)
         test_instance._sequence_num = i
         test_instance.pre_sequence()
 
@@ -929,7 +932,7 @@ def single_fuzz_test(
             ]
 
             test_instance._flow_num = j
-            set_error_flow_num(j)
+            set_executing_flow_num(j)
             test_instance.pre_flow(flow)
             flow(test_instance, *flow_params)  # Execute the selected flow
             flows_counter[flow] += 1

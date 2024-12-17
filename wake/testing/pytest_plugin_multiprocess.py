@@ -9,11 +9,11 @@ import time
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from types import TracebackType
-from typing import List, Optional, Type
+from typing import List, Optional, Type, Union
 
 import pytest
 from pathvalidate import sanitize_filename
-from pytest import Session
+from pytest import Session, Item, Config, CallInfo, Collector, CollectReport, TestReport, UsageError
 from tblib import pickling_support
 
 from wake.cli.console import console
@@ -26,15 +26,16 @@ from wake.development.globals import (
     set_coverage_handler,
     set_exception_handler,
     get_sequence_initial_internal_state,
-    get_error_flow_num
+    get_executing_flow_num,
+    get_executing_sequence_num,
+    get_fuzz_mode,
+    get_is_fuzzing
 )
-from ipdb.__main__ import _init_pdb
+
 from wake.testing.coverage import CoverageHandler
 from wake.utils.tee import StderrTee, StdoutTee
 
 from wake.testing.custom_pdb import CustomPdb
-
-
 
 class PytestWakePluginMultiprocess:
     _index: int
@@ -162,7 +163,7 @@ class PytestWakePluginMultiprocess:
             )
         self._queue.put(("pytest_internalerror", self._index, pickled), block=True)
 
-    def pytest_exception_interact(self, node, call, report):
+    def pytest_exception_interact(self, node: Union[Item, Collector], call: CallInfo, report: Union[CollectReport, TestReport]):
         import json
         from datetime import datetime
         if self._debug and not self._exception_handled:
@@ -170,39 +171,26 @@ class PytestWakePluginMultiprocess:
                 call.excinfo.type, call.excinfo.value, call.excinfo.tb
             )
 
-        state = get_sequence_initial_internal_state()
+        if get_fuzz_mode() != 0:
+            return
+        random_state_dict = get_sequence_initial_internal_state()
+        if random_state_dict == {}:
+            return
+        if call.excinfo is None:
+            return
+
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
 
         crash_log_file = self._crash_log_dir / F"{timestamp}.json"
 
-         # Find the test file in the traceback that's within project root
-        tb = call.excinfo.tb
-        test_file_path = None
-        while tb:
-            filename = tb.tb_frame.f_code.co_filename
-            try:
-                # Check if the file is within project root
-                relative = os.path.relpath(filename, self._config.project_root_path)
-                if not relative.startswith('..') and filename.endswith('.py'):
-                    test_file_path = relative
-                    break
-            except ValueError:
-                # relpath raises ValueError if paths are on different drives
-                pass
-            if hasattr(tb, 'tb_next'):
-                tb = tb.tb_next
-
-        if test_file_path is None:
-            test_file_path = node.fspath  # fallback to node's path if no test file found
-
         crash_data = {
-            "test_file": test_file_path,
-            "crash_flow_number": get_error_flow_num(),
+            "test_node_id": node.nodeid,
+            "crash_flow_number": get_executing_flow_num(),
             "exception_content": {
                 "type": str(call.excinfo.type),
                 "value": str(call.excinfo.value),
             },
-            "initial_random_state": state,
+            "initial_random_state": random_state_dict,
         }
 
         with crash_log_file.open('w') as f:
@@ -363,3 +351,6 @@ class PytestWakePluginMultiprocess:
     def pytest_terminal_summary(self, terminalreporter, exitstatus, config):
         terminalreporter.section("Wake")
         terminalreporter.write_line("Random seed: " + self._random_seed.hex())
+        if get_is_fuzzing():
+            terminalreporter.write_line("Executed sequence number: " + str(get_executing_sequence_num()))
+            terminalreporter.write_line("Executed flow number: " + str(get_executing_flow_num()))
