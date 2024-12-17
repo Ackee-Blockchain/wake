@@ -1,8 +1,13 @@
 from functools import partial
+import json
 import os
-from typing import Iterable, List, Optional, Tuple
+from typing import Iterable, List, Optional, Tuple, Union
 
-from pytest import Session
+from pytest import Session, Item, Config, CallInfo, Collector, CollectReport, TestReport, UsageError
+
+from pathlib import Path
+
+import pytest
 
 from wake.cli.console import console
 from wake.config import WakeConfig
@@ -15,8 +20,15 @@ from wake.development.globals import (
     set_coverage_handler,
     set_exception_handler,
     get_sequence_initial_internal_state,
-    get_error_flow_num,
+    get_executing_flow_num,
+    get_executing_sequence_num,
+    set_shrank_path,
+    set_executing_flow_num,
+    set_sequence_initial_internal_state,
+    set_current_test_id,
+    set_fuzz_mode,
     get_fuzz_mode,
+    get_is_fuzzing,
 )
 from wake.testing.coverage import (
     CoverageHandler,
@@ -30,23 +42,99 @@ class PytestWakePluginSingle:
     _random_seeds: List[bytes]
     _debug: bool
     _crash_log_meta_data: List[Tuple[str, str]]
+    _test_mode: int
+    _test_info_path: str
     def __init__(
         self,
         config: WakeConfig,
         debug: bool,
         cov_proc_count: Optional[int],
         random_seeds: Iterable[bytes],
+        test_mode: int,
+        test_info_path: str,
     ):
         self._config = config
         self._debug = debug
         self._cov_proc_count = cov_proc_count
         self._random_seeds = list(random_seeds)
         self._crash_log_meta_data = []
+        self._test_mode = test_mode
+        self._test_info_path = test_info_path
 
-    def pytest_runtest_setup(self, item):
+    def get_shrink_argument_path(self, shrink_path_str: str, dir_name: str) -> Path:
+        try:
+            path = Path(shrink_path_str)
+            if not path.exists():
+                raise UsageError(f"Shrink log not found: {path}")
+            return path
+        except UsageError:
+            pass
+
+        crash_logs_dir = (
+            self._config.project_root_path / ".wake" / "logs" / dir_name
+        )
+        if not crash_logs_dir.exists():
+            raise UsageError(f"Crash logs directory not found: {crash_logs_dir}")
+        index = int(shrink_path_str)
+        crash_logs = sorted(
+            crash_logs_dir.glob("*.json"), key=os.path.getmtime, reverse=True
+        )
+        if abs(index) > len(crash_logs):
+            raise UsageError(f"Invalid crash log index: {index}")
+        return Path(crash_logs[index])
+
+    def pytest_collection_modifyitems(self, session: Session, config: Config, items: List[Item]):
+        import json
+
+        # select correct item from
+        if self._test_mode == 0:
+            return
+        elif self._test_mode == 1:
+        # shrink
+            set_fuzz_mode(1)
+            shrink_crash_path = self.get_shrink_argument_path(self._test_info_path, "crashes")
+            try:
+                with open(shrink_crash_path, "r") as file:
+                    crash_log_dict = json.load(file)
+            except json.JSONDecodeError:
+                raise UsageError(f"Invalid JSON format in crash log file: {shrink_crash_path}")
+
+            test_node_id = crash_log_dict["test_node_id"]
+            set_executing_flow_num(crash_log_dict["crash_flow_number"])
+            set_sequence_initial_internal_state(crash_log_dict["initial_random_state"])
+
+            for item in items:
+                if item.nodeid == test_node_id:
+                    items[:] = [item] # Execute only the target fuzz node.
+                    break
+            else:
+                raise UsageError(f"No test found matching the path '{test_node_id}' from crash log")
+
+        elif self._test_mode == 2:
+        # shrank reproduce
+            set_fuzz_mode(2)
+            shrank_data_path = self.get_shrink_argument_path(self._test_info_path, "shrank")
+            print("shrank from shrank data: ", shrank_data_path)
+            try:
+                with open(shrank_data_path, "r") as f:
+                    target_fuzz_node = json.load(f)["target_fuzz_node"]
+            except json.JSONDecodeError:
+                raise UsageError(f"Invalid JSON format in shrank data file: {shrank_data_path}")
+
+            for item in items:
+                if item.nodeid == target_fuzz_node:
+                    items[:] = [item] # Execute only the target fuzz node.
+                    break
+            else:
+                raise UsageError(f"No test found matching the path '{target_fuzz_node}' from crash log")
+
+            set_shrank_path(shrank_data_path)
+
+    def pytest_runtest_setup(self, item: Item):
         reset_exception_handled()
+        set_current_test_id(item.nodeid)
 
-    def pytest_exception_interact(self, node, call, report):
+    def pytest_exception_interact(self, node: Union[Item, Collector], call: CallInfo, report: Union[CollectReport, TestReport]):
         import json
         from datetime import datetime
         import os
@@ -64,6 +152,8 @@ class PytestWakePluginSingle:
         random_state_dict = get_sequence_initial_internal_state()
         if random_state_dict == {}:
             return
+        if call.excinfo is None:
+            return
         crash_logs_dir = self._config.project_root_path / ".wake" / "logs" / "crashes"
         # shutil.rmtree(crash_logs_dir, ignore_errors=True)
         crash_logs_dir.mkdir(parents=True, exist_ok=True)
@@ -72,29 +162,9 @@ class PytestWakePluginSingle:
         # Assuming `call.execinfo` contains the crash information
         crash_log_file = crash_logs_dir / F"{timestamp}.json"
 
-         # Find the test file in the traceback that's within project root
-        tb = call.excinfo.tb
-        test_file_path = None
-        while tb:
-            filename = tb.tb_frame.f_code.co_filename
-            try:
-                # Check if the file is within project root
-                relative = os.path.relpath(filename, self._config.project_root_path)
-                if not relative.startswith('..') and filename.endswith('.py'):
-                    test_file_path = relative
-                    break
-            except ValueError:
-                # relpath raises ValueError if paths are on different drives
-                pass
-            if hasattr(tb, 'tb_next'):
-                tb = tb.tb_next
-
-        if test_file_path is None:
-            test_file_path = node.fspath  # fallback to node's path if no test file found
-
         crash_data = {
-            "test_file": test_file_path,
-            "crash_flow_number": get_error_flow_num(),
+            "test_node_id": node.nodeid,
+            "crash_flow_number": get_executing_flow_num(),
             "exception_content": {
                 "type": str(call.excinfo.type),
                 "value": str(call.excinfo.value),
@@ -104,7 +174,7 @@ class PytestWakePluginSingle:
         with crash_log_file.open('w') as f:
             json.dump(crash_data, f, indent=2)
 
-        self._crash_log_meta_data.append((str(test_file_path), os.path.relpath(crash_log_file, self._config.project_root_path)))
+        self._crash_log_meta_data.append((str(node.nodeid), os.path.relpath(crash_log_file, self._config.project_root_path)))
 
     def pytest_runtestloop(self, session: Session):
         if (
@@ -154,7 +224,12 @@ class PytestWakePluginSingle:
     def pytest_terminal_summary(self, terminalreporter, exitstatus, config):
         terminalreporter.section("Wake")
         terminalreporter.write_line("Random seed: " + self._random_seeds[0].hex())
-        terminalreporter.write_line("Executed flow number: " + str(get_error_flow_num()))
+        if get_is_fuzzing():
+            terminalreporter.write_line("Executed sequence number: " + str(get_executing_sequence_num()))
+            terminalreporter.write_line("Executed flow number: " + str(get_executing_flow_num()))
 
-        for node, crash_log in self._crash_log_meta_data:
-            terminalreporter.write_line( f"{node} Crash log stored at {crash_log}")
+        if self._crash_log_meta_data:
+            terminalreporter.write_line("Crash logs:")
+            for node, crash_log in self._crash_log_meta_data:
+                terminalreporter.write_line( f"{node} :{crash_log}")
+
