@@ -50,11 +50,47 @@ _exception_handler: Optional[
 ] = None
 _exception_handled = False
 
+_initial_internal_state: dict = {}
+
 _coverage_handler: Optional[CoverageHandler] = None
 
 _config: Optional[WakeConfig] = None
 _verbosity: int = 0
 
+_fuzz_mode: int = 0
+
+_current_test_id: Optional[str] = None
+
+_executing_sequence_num: int = 0
+_executing_flow_num: int = 0
+
+_shrank_path: Optional[Path] = None
+
+_shrink_exact_flow: bool = False
+_shrink_exact_exception: bool = False
+_shrink_target_invariants_only: bool = False
+_is_fuzzing: bool = False
+
+def set_is_fuzzing(is_fuzzing: bool):
+    global _is_fuzzing
+    _is_fuzzing = is_fuzzing
+
+def get_is_fuzzing() -> bool:
+    return _is_fuzzing
+
+def set_shrank_path(path: Path):
+    global _shrank_path
+    _shrank_path = path
+
+def get_shrank_path() -> Optional[Path]:
+    return _shrank_path
+
+def set_current_test_id(test_id: str):
+    global _current_test_id
+    _current_test_id = test_id
+
+def get_current_test_id() -> Optional[str]:
+    return _current_test_id
 
 def attach_debugger(
     e_type: Optional[Type[BaseException]],
@@ -104,6 +140,27 @@ def attach_debugger(
     p.reset()
     p.interaction(None, tb)
 
+def get_fuzz_mode() -> int:
+    return _fuzz_mode
+
+def set_fuzz_mode(fuzz_mode: int):
+    global _fuzz_mode
+    _fuzz_mode = fuzz_mode
+
+def get_executing_sequence_num() -> int:
+    return _executing_sequence_num
+
+def set_executing_sequence_num(sequence_num: int):
+    global _executing_sequence_num
+    _executing_sequence_num = sequence_num
+
+def get_executing_flow_num() -> int:
+    return _executing_flow_num
+
+def set_executing_flow_num(error_flow_num: int):
+    global _executing_flow_num
+    _executing_flow_num = error_flow_num
+
 
 def get_exception_handler() -> Optional[
     Callable[
@@ -131,6 +188,12 @@ def set_exception_handler(
     global _exception_handler
     _exception_handler = handler
 
+def set_sequence_initial_internal_state(intenral_state: dict):
+    global _initial_internal_state
+    _initial_internal_state = intenral_state
+
+def get_sequence_initial_internal_state() -> dict:
+    return _initial_internal_state
 
 def reset_exception_handled():
     global _exception_handled
@@ -153,6 +216,30 @@ def get_config() -> WakeConfig:
 def set_config(config: WakeConfig):
     global _config
     _config = config
+
+
+def set_shrink_exact_flow(exact_flow: bool):
+    global _shrink_exact_flow
+    _shrink_exact_flow = exact_flow
+
+def get_shrink_exact_flow() -> bool:
+    return _shrink_exact_flow
+
+
+def set_shrink_exact_exception(exact_exception: bool):
+    global _shrink_exact_exception
+    _shrink_exact_exception = exact_exception
+
+def get_shrink_exact_exception() -> bool:
+    return _shrink_exact_exception
+
+
+def set_shrink_target_invariants_only(target_invariants_only: bool):
+    global _shrink_target_invariants_only
+    _shrink_target_invariants_only = target_invariants_only
+
+def get_shrink_target_invariants_only() -> bool:
+    return _shrink_target_invariants_only
 
 
 def set_coverage_handler(coverage_handler: CoverageHandler):
