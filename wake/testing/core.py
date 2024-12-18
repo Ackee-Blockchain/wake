@@ -112,7 +112,7 @@ class Chain(wake.development.core.Chain):
             "default_access_list_account": self._default_access_list_account,
             "default_tx_type": self._default_tx_type,
             "default_tx_confirmations": self._default_tx_confirmations,
-            "deployed_libraries": dict(self._deployed_libraries),
+            "deployed_libraries": self._deployed_libraries,
             "single_source_errors": self._single_source_errors.copy(),
             "chain_id": self._chain_id,
             "labels": self._labels.copy(),
