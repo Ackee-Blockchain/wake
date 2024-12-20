@@ -83,9 +83,9 @@ class LspControlFlowGraphPrinter(Printer):
                 line, column = declaration.source_unit.get_line_col_from_byte_offset(
                     first_statement.byte_location[0]
                 )
-                node_attrs[
-                    "URL"
-                ] = f"vscode://file/{first_statement.source_unit.file}:{line}:{column}"
+                node_attrs["URL"] = self.generate_link_from_line_col(
+                    first_statement.source_unit.file, line, column
+                )
             g.node(str(node.id), **node_attrs)
 
         for (

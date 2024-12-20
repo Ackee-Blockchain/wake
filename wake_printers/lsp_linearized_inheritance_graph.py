@@ -43,9 +43,9 @@ class LspLinearizedInheritanceGraphPrinter(Printer):
                 line, column = contract.source_unit.get_line_col_from_byte_offset(
                     contract.name_location[0]
                 )
-                node_attrs[
-                    "URL"
-                ] = f"vscode://file/{contract.source_unit.file}:{line}:{column}"
+                node_attrs["URL"] = self.generate_link_from_line_col(
+                    contract.source_unit.file, line, column
+                )
 
             g.node(node_id, contract.canonical_name, **node_attrs)
             if prev_node_id is not None:
