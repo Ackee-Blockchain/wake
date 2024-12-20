@@ -90,9 +90,11 @@ async def generate_cfg_handler(
             )
             line += 1
             column += 1
-            node_attrs[
-                "URL"
-            ] = f"vscode://file/{first_statement.source_unit.file}:{line}:{column}"
+            node_attrs["URL"] = context.config.general.link_format.format(
+                path=str(first_statement.source_unit.file),
+                line=line,
+                col=column,
+            )
         g.node(str(node.id), **node_attrs)
 
     for (

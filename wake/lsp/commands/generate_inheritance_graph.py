@@ -89,9 +89,11 @@ async def generate_inheritance_graph_handler(
             )
             line += 1
             column += 1
-            node_attrs[
-                "URL"
-            ] = f"vscode://file/{contract.source_unit.file}:{line}:{column}"
+            node_attrs["URL"] = context.config.general.link_format.format(
+                path=str(contract.source_unit.file),
+                line=line,
+                col=column,
+            )
 
         g.node(node_id, contract.canonical_name, **node_attrs)
 

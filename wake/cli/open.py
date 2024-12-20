@@ -97,10 +97,15 @@ async def open_address(
         project_dir = (
             config.global_cache_path / "explorers" / str(chain_id) / address.lower()
         )
+
+    link = config.general.link_format.format(
+        path=str(project_dir),
+        line=0,
+        col=0,
+    )
+
     if project_dir.exists() and not force:
-        console.print(
-            f"{address} already exists at [link=vscode://file/{project_dir}]{project_dir}[/link]"
-        )
+        console.print(f"{address} already exists at [link={link}]{project_dir}[/link]")
         return
 
     project_dir.mkdir(parents=True, exist_ok=True)
@@ -197,9 +202,7 @@ async def open_address(
 
     project_dir.joinpath("wake.toml").write_text(tomli_w.dumps(project_config_raw))
 
-    console.print(
-        f"Opened {address} at [link=vscode://file/{project_dir}]{project_dir}[/link]"
-    )
+    console.print(f"Opened {address} at [link={link}]{project_dir}[/link]")
 
 
 def open_github(
@@ -235,12 +238,19 @@ def open_github(
 
     if project_dir is None:
         project_dir = config.global_cache_path / "github" / owner / repo
+
+    link = config.general.link_format.format(
+        path=str(project_dir),
+        line=0,
+        col=0,
+    )
+
     if project_dir.exists():
         if force:
             shutil.rmtree(project_dir)
         else:
             console.print(
-                f"{owner}/{repo} already exists at [link=vscode://file/{project_dir}]{project_dir}[/link]"
+                f"{owner}/{repo} already exists at [link={link}]{project_dir}[/link]"
             )
             return
 
@@ -254,6 +264,4 @@ def open_github(
             cwd=project_dir.parent,
         )
 
-    console.print(
-        f"Opened {owner}/{repo} at [link=vscode://file/{project_dir}]{project_dir}[/link]"
-    )
+    console.print(f"Opened {owner}/{repo} at [link={link}]{project_dir}[/link]")
