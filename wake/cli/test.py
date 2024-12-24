@@ -89,12 +89,11 @@ class FileAndPassParamType(click.ParamType):
     count=True,
     help="Increase verbosity. Can be specified multiple times.",
 )
-
 @click.option(
     "-RS",
     "--random-state",
     type=str,
-    help="input random state json path",
+    help="Input random state json path.",
     is_flag=False,
     flag_value="0",
     default=None,
@@ -112,19 +111,19 @@ class FileAndPassParamType(click.ParamType):
     required=False,
 )
 @click.option(
-    "--exact-flow/--no-exact-flow",
+    "--shrink-exact-flow/--no-shrink-exact-flow",
     default=False,
-    help="Accept the same error that happened earlier than the crash log.",
+    help="When shrinking, wait for the error to happen in the same flow (not earlier or later).",
 )
 @click.option(
-    "--exact-exception/--no-exact-exception",
+    "--shrink-exact-exception/--no-shrink-exact-exception",
     default=False,
-    help="Only accept exactly matching exceptions (including arguments).",
+    help="When shrinking, only accept exactly matching exceptions (i.e. including same arguments).",
 )
 @click.option(
-    "--target-invariants-only/--all-invariants",
+    "--shrink-target-invariants-only/--shrink-all-invariants",
     default=False,
-    help="Check only target invariants for faster fuzzing.",
+    help="When shrinking, check only target invariants for faster fuzzing.",
 )
 @click.option(
     "-SR",
@@ -152,14 +151,15 @@ def run_test(
     verbosity: int,
     random_state: Optional[str],
     shrink: Optional[str],
-    exact_flow: bool,
-    exact_exception: bool,
-    target_invariants_only: bool,
+    shrink_exact_flow: bool,
+    shrink_exact_exception: bool,
+    shrink_target_invariants_only: bool,
     shrank: Optional[str],
     paths_or_pytest_args: Tuple[str, ...],
 ) -> None:
     """Execute Wake tests using pytest."""
     import os
+
     import pytest
 
     from wake.config import WakeConfig
@@ -227,9 +227,7 @@ def run_test(
         )
 
         if shrink is not None:
-            raise click.BadParameter(
-                "Shrink can not execute with multiprocess mode."
-            )
+            raise click.BadParameter("Shrink can not execute with multiprocess mode.")
 
         if shrank is not None:
             raise click.BadParameter(
@@ -254,11 +252,12 @@ def run_test(
         )
     else:
         from wake.development.globals import (
-            set_shrink_exact_flow,
             set_shrink_exact_exception,
+            set_shrink_exact_flow,
             set_shrink_target_invariants_only,
         )
         from wake.testing.pytest_plugin_single import PytestWakePluginSingle
+
         test_mode = 0
         test_info_path = ""
         if random_state is not None:
@@ -267,9 +266,9 @@ def run_test(
         if shrink is not None:
             test_info_path = shrink
             test_mode = 1
-            set_shrink_exact_flow(exact_flow)
-            set_shrink_exact_exception(exact_exception)
-            set_shrink_target_invariants_only(target_invariants_only)
+            set_shrink_exact_flow(shrink_exact_flow)
+            set_shrink_exact_exception(shrink_exact_exception)
+            set_shrink_target_invariants_only(shrink_target_invariants_only)
         if shrank:
             test_mode = 2
             test_info_path = shrank
