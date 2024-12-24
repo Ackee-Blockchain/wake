@@ -1,53 +1,44 @@
 from __future__ import annotations
 
-
-from collections import defaultdict
+import copy
 import json
-from typing import Callable, DefaultDict, List, Optional, Any, Tuple
+import os
+import sys
+import traceback
+from collections import defaultdict
+from contextlib import contextmanager, redirect_stderr, redirect_stdout
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any, Callable, DefaultDict, List, Optional, Tuple
 
 from typing_extensions import get_type_hints
 
-from wake.development.globals import random
-
-from ..core import get_connected_chains
-from .generators import generate
-
-from dataclasses import dataclass
-
-from .fuzz_test import FuzzTest
-
+from wake.cli.console import console
+from wake.development.core import Chain
 from wake.development.globals import (
-    random,
-    set_sequence_initial_internal_state,
+    get_config,
+    get_current_test_id,
+    get_executing_flow_num,
     get_fuzz_mode,
     get_sequence_initial_internal_state,
-    set_executing_flow_num,
-    get_executing_flow_num,
-    set_executing_sequence_num,
-    get_config,
     get_shrank_path,
-    get_shrink_exact_flow,
     get_shrink_exact_exception,
+    get_shrink_exact_flow,
     get_shrink_target_invariants_only,
-    get_current_test_id,
+    random,
+    set_executing_flow_num,
+    set_executing_sequence_num,
     set_is_fuzzing,
+    set_sequence_initial_internal_state,
 )
-
-from wake.development.core import Chain
-
-from pathlib import Path
-from datetime import datetime, timedelta
-
-import traceback
-from wake.utils.file_utils import is_relative_to
-from wake.development.transactions import Error
-import copy
-import os
-import sys
-from wake.cli.console import console
-from contextlib import contextmanager, redirect_stdout, redirect_stderr
-
+from wake.development.transactions import Error, Panic
 from wake.testing.core import default_chain as global_default_chain
+from wake.utils.file_utils import is_relative_to
+
+from ..core import get_connected_chains
+from .fuzz_test import FuzzTest
+from .generators import generate
 
 EXACT_FLOW_INDEX = (
     get_shrink_exact_flow()
@@ -92,10 +83,13 @@ def compare_exceptions(e1, e2):
     if type(e1) != type(e2):
         return False
 
-    # from wake.development.transactions import Error
     if type(e1) == Error and type(e2) == Error:
         # If it was the Error(TransactionRevertedError), compare message content.
         if e1.message != e2.message:
+            return False
+
+    if type(e1) == Panic and type(e2) == Panic:
+        if e1.code != e2.code:
             return False
 
     tb1 = traceback.extract_tb(e1.__traceback__)
@@ -485,8 +479,8 @@ def shrink_collecting_phase(
 
 
 def shrink_test(test_class: type[FuzzTest], flows_count: int):
-    import json
     import inspect
+    import json
 
     error_flow_num = get_executing_flow_num()  # argument
     actual_error_flow_num = error_flow_num
