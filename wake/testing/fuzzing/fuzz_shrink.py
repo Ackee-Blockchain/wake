@@ -73,16 +73,13 @@ def clear_previous_lines(num_lines):
         sys.stdout.write("\033[K")  # Clear the line
 
 
-def compare_exceptions(e1, e2):
-    if EXACT_EXCEPTION_MATCH:
-        if e1 == e2:
-            return True
-        else:
-            return False
+def compare_exceptions(e1: Exception, e2: Exception):
 
-    if type(e1) != type(e2):
+    if type(e1) is not type(e2):
         return False
 
+    # "type(e1) is Error" would be more strict, but we accept all Error subclasses.
+    # still no class are defined in wake. might be change in the future.
     if type(e1) == Error and type(e2) == Error:
         # If it was the Error(TransactionRevertedError), compare message content.
         if e1.message != e2.message:
@@ -121,6 +118,10 @@ def compare_exceptions(e1, e2):
         )
     ):
         return False
+
+    if EXACT_EXCEPTION_MATCH:
+        if e1.args != e2.args:
+            return False
     return True
 
 
